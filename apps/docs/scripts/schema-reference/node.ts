@@ -5,7 +5,7 @@ import * as IR from '@retikz/core';
 import { z } from 'zod';
 
 /** 节点家族拥有的 schema 与中文说明；共享引用不递归收录 */
-const nodeSchemas = {
+export const nodeSchemas = {
   NodeSchema: {
     description: '带位置、可选文字和视觉形状的节点',
     descriptions: {

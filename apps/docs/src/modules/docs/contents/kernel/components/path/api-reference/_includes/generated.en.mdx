@@ -5,7 +5,7 @@
 ### ArcStepProps
 
 <p>
-  <ApiSourceLink label={'ArcStepProps'} path={'packages/kernel/react/src/kernel/components/Step.tsx'} startLine={151}>
+  <ApiSourceLink label={'ArcStepProps'} path={'packages/kernel/react/src/kernel/components/Step.tsx'} startLine={157}>
     Arc action: draw a circular or elliptical arc between angles; the center defaults to the cursor and can be specified
     explicitly (TikZ `arc[start angle=…, end angle=…, radius=…]`)
   </ApiSourceLink>
@@ -14,6 +14,8 @@
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
 
 | Member       | Type             | Default | Description                                                                                    |
 | ------------ | ---------------- | ------- | ---------------------------------------------------------------------------------------------- |
@@ -24,6 +26,8 @@
 | `label?`     | `InputStepLabel` | —       | Edge label                                                                                     |
 | `radius`     | `IRStepRadius`   | —       | Arc radius: a number for a circle, or &#123; x, y &#125; for an ellipse                        |
 | `startAngle` | `number`         | —       | Start angle in degrees: 0° is +x and 90° is screen-down +y, matching ArcStep and Node labels   |
+
+</div>
 
 </DocTab>
 
@@ -61,6 +65,8 @@ export type ArcStepProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member      | Type                         | Default | Description                                                                                   |
 | ----------- | ---------------------------- | ------- | --------------------------------------------------------------------------------------------- |
 | `axis`      | `'horizontal' \| 'vertical'` | —       | Local host axis whose current coordinate is preserved                                         |
@@ -68,6 +74,8 @@ export type ArcStepProps = {
 | `kind`      | `'axis-line'`                | —       | Discriminant for a single-axis step                                                           |
 | `label?`    | `InputStepLabel`             | —       | Edge label                                                                                    |
 | `to`        | `IRAxisLineTarget \| string` | —       | Projection target: Cartesian coordinates, a NodeTarget, or the corresponding string shorthand |
+
+</div>
 
 </DocTab>
 
@@ -101,17 +109,21 @@ Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles t
 
 <DocTab value="members" label="Members">
 
-| Member           | Type                | Default | Description                                                                                                                                            |
-| ---------------- | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `bendAngle?`     | `number`            | —       | Symmetric bend angle in degrees; defaults to 30                                                                                                        |
-| `bendDirection?` | `'left' \| 'right'` | —       | Symmetric bend direction: 'left' or 'right' relative to from→to; optional alongside the out/in form                                                    |
-| `children?`      | `ReactNode`         | —       | Sugar form                                                                                                                                             |
-| `inAngle?`       | `number`            | —       | Incoming angle in degrees for asymmetric bends or loops (TikZ `in=`); combined with outAngle into a cubic                                              |
-| `kind`           | `'bend'`            | —       | Discriminant for a bend step                                                                                                                           |
-| `label?`         | `InputStepLabel`    | —       | Edge label                                                                                                                                             |
-| `looseness?`     | `number`            | —       | Control-point distance multiplier for asymmetric bends or loops (TikZ `looseness=`); defaults to approximately 1 and also scales the default loop size |
-| `outAngle?`      | `number`            | —       | Outgoing angle in degrees for asymmetric bends or loops (TikZ `out=`); combined with inAngle into a cubic and takes precedence over bendDirection      |
-| `to`             | `DslTarget`         | —       | Endpoint                                                                                                                                               |
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member           | Type                | Default  | Description                                                                                                                                            |
+| ---------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bendAngle?`     | `number`            | `30`     | Symmetric bend angle in degrees; defaults to 30                                                                                                        |
+| `bendDirection?` | `'left' \| 'right'` | `'left'` | Symmetric bend direction: 'left' or 'right' relative to from→to; optional alongside the out/in form                                                    |
+| `children?`      | `ReactNode`         | —        | Sugar form                                                                                                                                             |
+| `inAngle?`       | `number`            | —        | Incoming angle in degrees for asymmetric bends or loops (TikZ `in=`); combined with outAngle into a cubic                                              |
+| `kind`           | `'bend'`            | —        | Discriminant for a bend step                                                                                                                           |
+| `label?`         | `InputStepLabel`    | —        | Edge label                                                                                                                                             |
+| `looseness?`     | `number`            | —        | Control-point distance multiplier for asymmetric bends or loops (TikZ `looseness=`); defaults to approximately 1 and also scales the default loop size |
+| `outAngle?`      | `number`            | —        | Outgoing angle in degrees for asymmetric bends or loops (TikZ `out=`); combined with inAngle into a cubic and takes precedence over bendDirection      |
+| `to`             | `DslTarget`         | —        | Endpoint                                                                                                                                               |
+
+</div>
 
 </DocTab>
 
@@ -141,7 +153,7 @@ export type BendStepProps = {
   <ApiSourceLink
     label={'CirclePathStepProps'}
     path={'packages/kernel/react/src/kernel/components/Step.tsx'}
-    startLine={169}
+    startLine={175}
   >
     CirclePath action: draw around the cursor; without angles, draw a full circle and return to its center; with angles,
     draw a partial circle (TikZ `circle[radius=…]`)
@@ -152,6 +164,8 @@ export type BendStepProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member        | Type                                        | Default | Description                                                                                                |
 | ------------- | ------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
 | `children?`   | `ReactNode`                                 | —       | Sugar form                                                                                                 |
@@ -161,6 +175,8 @@ export type BendStepProps = {
 | `label?`      | `InputStepLabel`                            | —       | Edge label                                                                                                 |
 | `radius`      | `number`                                    | —       | Circle radius in user units                                                                                |
 | `startAngle?` | `number`                                    | —       | Partial-circle start angle in degrees; applies only together with endAngle                                 |
+
+</div>
 
 </DocTab>
 
@@ -194,6 +210,8 @@ export type CirclePathStepProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member      | Type             | Default | Description                                      |
 | ----------- | ---------------- | ------- | ------------------------------------------------ |
 | `children?` | `ReactNode`      | —       | Sugar form                                       |
@@ -202,6 +220,8 @@ export type CirclePathStepProps = {
 | `kind`      | `'cubic'`        | —       | Discriminant for a cubic Bézier step             |
 | `label?`    | `InputStepLabel` | —       | Edge label                                       |
 | `to`        | `DslTarget`      | —       | Curve endpoint                                   |
+
+</div>
 
 </DocTab>
 
@@ -234,6 +254,8 @@ export type CubicStepProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member      | Type             | Default | Description                                         |
 | ----------- | ---------------- | ------- | --------------------------------------------------- |
 | `children?` | `ReactNode`      | —       | Sugar form                                          |
@@ -241,6 +263,8 @@ export type CubicStepProps = {
 | `kind`      | `'curve'`        | —       | Discriminant for a quadratic Bézier step            |
 | `label?`    | `InputStepLabel` | —       | Edge label                                          |
 | `to`        | `DslTarget`      | —       | Curve endpoint                                      |
+
+</div>
 
 </DocTab>
 
@@ -272,9 +296,13 @@ export type CurveStepProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member | Type      | Default | Description                                                                                                   |
 | ------ | --------- | ------- | ------------------------------------------------------------------------------------------------------------- |
 | `kind` | `'cycle'` | —       | Closure discriminant; accepts no `to`, `label`, or `children`, attaches no edge label, and consumes no target |
+
+</div>
 
 </DocTab>
 
@@ -302,6 +330,8 @@ export type CycleStepProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                     | Type                          | Default | Description                                                            |
 | -------------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------- |
 | `readonly arrow?`          | `PathProps['arrow']`          | —       | Path-level arrow direction                                             |
@@ -312,6 +342,8 @@ export type CycleStepProps = {
 | `readonly thickness?`      | `PathThicknessValue`          | —       | Semantic stroke-width shorthand                                        |
 | `readonly way`             | `WayDSL`                      | —       | TikZ-style route shorthand                                             |
 | `readonly zIndex?`         | `IRPath['zIndex']`            | —       | Stack order among siblings                                             |
+
+</div>
 
 </DocTab>
 
@@ -340,7 +372,7 @@ export type DrawProps = Readonly<{
   <ApiSourceLink
     label={'EllipsePathStepProps'}
     path={'packages/kernel/react/src/kernel/components/Step.tsx'}
-    startLine={187}
+    startLine={193}
   >
     EllipsePath action: draw around the cursor; without angles, draw a full ellipse and return to its center; with
     angles, draw a partial ellipse (TikZ `ellipse[x radius=…, y radius=…]`)
@@ -351,6 +383,8 @@ export type DrawProps = Readonly<{
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member        | Type                                        | Default | Description                                                                                     |
 | ------------- | ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
 | `children?`   | `ReactNode`                                 | —       | Sugar form                                                                                      |
@@ -358,8 +392,10 @@ export type DrawProps = Readonly<{
 | `endAngle?`   | `number`                                    | —       | Partial-ellipse end angle in degrees                                                            |
 | `kind`        | `'ellipsePath'`                             | —       | Discriminant for an ellipse-path step                                                           |
 | `label?`      | `InputStepLabel`                            | —       | Edge label                                                                                      |
-| `radius`      | `IRStepAnisotropicRadius`                   | —       | Ellipse radius along the x axis                                                                 |
+| `radius`      | `IRStepAnisotropicRadius`                   | —       | Ellipse radii on the x and y axes                                                               |
 | `startAngle?` | `number`                                    | —       | Partial-ellipse start angle in degrees; applies only together with endAngle                     |
+
+</div>
 
 </DocTab>
 
@@ -391,6 +427,51 @@ export type EllipsePathStepProps = {
 
 `-|` and `|-` use one turn; `-|-` and `|-|` use two turns, with normalized `fraction` controlling the middle leg
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<DocTabs defaultValue="two-segments">
+
+<DocTab value="two-segments" label="Two segments">
+
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member      | Type             | Default | Description                  |
+| ----------- | ---------------- | ------- | ---------------------------- |
+| `children?` | `ReactNode`      | —       | Sugar form                   |
+| `kind`      | `'fold'`         | —       | Discriminant for a fold step |
+| `label?`    | `InputStepLabel` | —       | Edge label                   |
+| `to`        | `DslTarget`      | —       | Fold endpoint                |
+| `via`       | `'-\|' \| '\|-'` | —       | Two-segment fold direction   |
+
+</div>
+
+</DocTab>
+
+<DocTab value="three-segments" label="Three segments">
+
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member      | Type                | Default | Description                           |
+| ----------- | ------------------- | ------- | ------------------------------------- |
+| `children?` | `ReactNode`         | —       | Sugar form                            |
+| `fraction?` | `number`            | `0.5`   | Normalized position of the middle leg |
+| `kind`      | `'fold'`            | —       | Discriminant for a fold step          |
+| `label?`    | `InputStepLabel`    | —       | Edge label                            |
+| `to`        | `DslTarget`         | —       | Fold endpoint                         |
+| `via`       | `'-\|-' \| '\|-\|'` | —       | Three-segment fold direction          |
+
+</div>
+
+</DocTab>
+
+</DocTabs>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type FoldStepProps = FoldStepBaseProps &
   (
@@ -404,13 +485,17 @@ export type FoldStepProps = FoldStepBaseProps &
   );
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### GeneratorStepProps
 
 <p>
   <ApiSourceLink
     label={'GeneratorStepProps'}
     path={'packages/kernel/react/src/kernel/components/Step.tsx'}
-    startLine={236}
+    startLine={244}
   >
     Generator action: invoke a built-in or registered path generator to produce low-level path commands
   </ApiSourceLink>
@@ -420,6 +505,8 @@ export type FoldStepProps = FoldStepBaseProps &
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member      | Type                      | Default | Description                                                                                                       |
 | ----------- | ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
 | `children?` | `ReactNode`               | —       | Sugar form                                                                                                        |
@@ -428,6 +515,8 @@ export type FoldStepProps = FoldStepBaseProps &
 | `name`      | `IRGeneratorStep['name']` | —       | Path generator name: a built-in name or one registered through Layout extensions.pathGenerators                   |
 | `params`    | `JsonObject`              | —       | JSON-safe parameter object; target references must occupy top-level keys listed in the generator's `targetParams` |
 | `to?`       | `DslTarget`               | —       | Optional endpoint passed as `to` in the generator context                                                         |
+
+</div>
 
 </DocTab>
 
@@ -460,12 +549,16 @@ export type GeneratorStepProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member      | Type             | Default | Description                                                                                |
 | ----------- | ---------------- | ------- | ------------------------------------------------------------------------------------------ |
 | `children?` | `ReactNode`      | —       | Sugar form: `<Step><EdgeLabel>...</EdgeLabel></Step>`; other children are silently ignored |
 | `kind?`     | `'line'`         | —       | Line-step discriminant; defaults to 'line' when omitted                                    |
 | `label?`    | `InputStepLabel` | —       | Edge label, equivalent to a sugar `<EdgeLabel>` child                                      |
 | `to`        | `DslTarget`      | —       | Line endpoint                                                                              |
+
+</div>
 
 </DocTab>
 
@@ -496,10 +589,14 @@ export type LineStepProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member | Type        | Default | Description                  |
 | ------ | ----------- | ------- | ---------------------------- |
 | `kind` | `'move'`    | —       | Discriminant for a move step |
 | `to`   | `DslTarget` | —       | Move target                  |
+
+</div>
 
 </DocTab>
 
@@ -518,40 +615,50 @@ export type MoveStepProps = {
 
 ### PathProps
 
+<p>
+  <ApiSourceLink label={'PathProps'} path={'packages/kernel/react/src/kernel/components/Path.tsx'} startLine={9}>
+    Declare a path with steps or shorthand, and configure its style, arrows, and interactions
+  </ApiSourceLink>
+</p>
+
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member            | Type                          | Default | Description                                                                                                                                                                                                                                                                                                         |
-| ----------------- | ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`     | `IRPath['animations']`        | —       | Path-level timeline animation; rendered as animation or a static fallback, without participating in layout                                                                                                                                                                                                          |
-| `arrow?`          | `InputPath['arrow']`          | —       | Path-level arrow direction<br />`'->'` at the end, `'<-'` at the start, or `'<->'` at both ends; omitted or `'none'` means no arrows                                                                                                                                                                                |
-| `arrowDetail?`    | `InputPath['arrowDetail']`    | —       | Detailed arrow configuration<br />Top-level defaults with optional `start` and `end` overrides merged field by field. On hollow shapes (open, openStealth, openDiamond, and openCircle), `fill` is a silent no-op                                                                                                   |
-| `arrowPlacement?` | `InputPath['arrowPlacement']` | —       | Endpoint arrow placement<br />Shared `overlap` for actual endpoints, with per-end `start` and `end` overrides; interpolates from default placement to alignment of the final visual back edge with the logical endpoint                                                                                             |
-| `authoring?`      | `unknown`                     | —       | Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                                                                      |
-| `children?`       | `ReactNode`                   | —       | All children should be `<Step />`                                                                                                                                                                                                                                                                                   |
-| `id?`             | `IRPath['id']`                | —       | Path id, used by other paths or positions to reference it and by hydration to bind event handlers                                                                                                                                                                                                                   |
-| `kind?`           | `IRPath['kind']`              | —       | —                                                                                                                                                                                                                                                                                                                   |
-| `kindOptions?`    | `IRPath['kindOptions']`       | —       | —                                                                                                                                                                                                                                                                                                                   |
-| `label?`          | `IRPath['label']`             | —       | —                                                                                                                                                                                                                                                                                                                   |
-| `marks?`          | `IRPath['marks']`             | —       | Place marks at normalized positions along the path; currently only arrows<br />Each `{ pos, mark }` uses `pos∈[0,1]` and `mark.kind:'arrow'` plus visual settings; shape is a registered arrow name and direction follows the path tangent                                                                          |
-| `meta?`           | `IRPath['meta']`              | —       | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout                                                                                                                                                                                                           |
-| `onClick?`        | `HydrationHandler`            | —       | Click on this element (DOM `click`)                                                                                                                                                                                                                                                                                 |
-| `onDoubleClick?`  | `HydrationHandler`            | —       | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                                                                       |
-| `onPointerDown?`  | `HydrationHandler`            | —       | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                                                                 |
-| `onPointerEnter?` | `HydrationHandler`            | —       | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                                                                     |
-| `onPointerLeave?` | `HydrationHandler`            | —       | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                                                                        |
-| `onPointerMove?`  | `HydrationHandler`            | —       | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                                                                 |
-| `onPointerUp?`    | `HydrationHandler`            | —       | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                                                                  |
-| `onRightClick?`   | `HydrationHandler`            | —       | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu                                                                                                                                                                                         |
-| `onWheel?`        | `HydrationHandler`            | —       | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                                                                         |
-| `rotate?`         | `IRPath['rotate']`            | —       | Rotate the whole path in degrees about its bounding-box center; positive angles are visually clockwise in screen-down coordinates<br />Equivalent to a Scope rotating the path around its bounding-box center; endpoints resolve in the current scope before rotation                                               |
-| `roundedCorners?` | `IRPath['roundedCorners']`    | —       | Geometric rounding radius at polyline corners (TikZ `rounded corners=`)<br />Insert a tangent arc at each line-to-line joint, changing geometry rather than only stroke appearance. Curve, arc, Bézier, and fold joints stay sharp; the radius is clamped to adjacent segment lengths. Omission keeps sharp corners |
-| `scale?`          | `IRPath['scale']`             | —       | Scale the whole path around its bounding-box center: a number for uniform scaling or `{ x, y }` for independent axes                                                                                                                                                                                                |
-| `style?`          | `InputPath['style']`          | —       | Instance visual overrides, replacing inherited defaults field by field                                                                                                                                                                                                                                              |
-| `thickness?`      | `PathThicknessValue`          | —       | Semantic stroke-width shorthand (TikZ `ultra thin` through `ultra thick`), normalized to `strokeWidth`; explicit `strokeWidth` takes precedence                                                                                                                                                                     |
-| `way?`            | `WayDSL`                      | —       | TikZ-style route shorthand, parsed into steps by Vanilla                                                                                                                                                                                                                                                            |
-| `zIndex?`         | `IRPath['zIndex']`            | —       | Explicit stack order: larger values are above; defaults to 0, equal values preserve declaration order, and comparison is limited to siblings                                                                                                                                                                        |
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+
+| Group     | Member            | Type                          | Default    | Description                                                                                                                                                                                                                                                                                                         |
+| --------- | ----------------- | ----------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `children?`       | `ReactNode`                   | —          | All children should be `<Step />`                                                                                                                                                                                                                                                                                   |
+|           | `id?`             | `IRPath['id']`                | —          | Path id, used by other paths or positions to reference it and by hydration to bind event handlers                                                                                                                                                                                                                   |
+|           | `kind?`           | `IRPath['kind']`              | `'stroke'` | Path kind; defaults to built-in stroke. Register custom kinds through Layout.extensions.pathKinds                                                                                                                                                                                                                   |
+|           | `kindOptions?`    | `IRPath['kindOptions']`       | —          | JSON options for the selected path kind; built-in stroke does not accept this field                                                                                                                                                                                                                                 |
+|           | `label?`          | `IRPath['label']`             | —          | One or more geometry labels attached to the whole path                                                                                                                                                                                                                                                              |
+|           | `way?`            | `WayDSL`                      | —          | TikZ-style route shorthand, parsed into steps by Vanilla                                                                                                                                                                                                                                                            |
+| Geometry  | `arrow?`          | `InputPath['arrow']`          | `'none'`   | Path-level arrow direction<br />`'->'` at the end, `'<-'` at the start, or `'<->'` at both ends; omitted or `'none'` means no arrows                                                                                                                                                                                |
+|           | `arrowDetail?`    | `InputPath['arrowDetail']`    | —          | Detailed arrow configuration<br />Top-level defaults with optional `start` and `end` overrides merged field by field. On hollow shapes (open, openStealth, openDiamond, and openCircle), `fill` is a silent no-op                                                                                                   |
+|           | `arrowPlacement?` | `InputPath['arrowPlacement']` | —          | Endpoint arrow placement<br />Shared `overlap` for actual endpoints, with per-end `start` and `end` overrides; interpolates from default placement to alignment of the final visual back edge with the logical endpoint                                                                                             |
+|           | `marks?`          | `IRPath['marks']`             | —          | Place marks at normalized positions along the path; currently only arrows<br />Each `{ pos, mark }` uses `pos∈[0,1]` and `mark.kind:'arrow'` plus visual settings; shape is a registered arrow name and direction follows the path tangent                                                                          |
+|           | `rotate?`         | `IRPath['rotate']`            | —          | Rotate the whole path in degrees about its bounding-box center; positive angles are visually clockwise in screen-down coordinates<br />Equivalent to a Scope rotating the path around its bounding-box center; endpoints resolve in the current scope before rotation                                               |
+|           | `roundedCorners?` | `IRPath['roundedCorners']`    | —          | Geometric rounding radius at polyline corners (TikZ `rounded corners=`)<br />Insert a tangent arc at each line-to-line joint, changing geometry rather than only stroke appearance. Curve, arc, Bézier, and fold joints stay sharp; the radius is clamped to adjacent segment lengths. Omission keeps sharp corners |
+|           | `scale?`          | `IRPath['scale']`             | —          | Scale the whole path around its bounding-box center: a number for uniform scaling or `{ x, y }` for independent axes                                                                                                                                                                                                |
+| Style     | `style?`          | `InputPath['style']`          | —          | Instance visual overrides, replacing inherited defaults field by field                                                                                                                                                                                                                                              |
+|           | `thickness?`      | `PathThicknessValue`          | —          | Semantic stroke-width shorthand (TikZ `ultra thin` through `ultra thick`), normalized to `strokeWidth`; explicit `strokeWidth` takes precedence                                                                                                                                                                     |
+|           | `zIndex?`         | `IRPath['zIndex']`            | `0`        | Explicit stack order: larger values are above; defaults to 0, equal values preserve declaration order, and comparison is limited to siblings                                                                                                                                                                        |
+| Callbacks | `onClick?`        | `HydrationHandler`            | —          | Click on this element (DOM `click`)                                                                                                                                                                                                                                                                                 |
+|           | `onDoubleClick?`  | `HydrationHandler`            | —          | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                                                                       |
+|           | `onPointerDown?`  | `HydrationHandler`            | —          | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                                                                 |
+|           | `onPointerEnter?` | `HydrationHandler`            | —          | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                                                                     |
+|           | `onPointerLeave?` | `HydrationHandler`            | —          | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                                                                        |
+|           | `onPointerMove?`  | `HydrationHandler`            | —          | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                                                                 |
+|           | `onPointerUp?`    | `HydrationHandler`            | —          | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                                                                  |
+|           | `onRightClick?`   | `HydrationHandler`            | —          | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu                                                                                                                                                                                         |
+|           | `onWheel?`        | `HydrationHandler`            | —          | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                                                                         |
+| Animation | `animations?`     | `IRPath['animations']`        | —          | Path-level timeline animation; rendered as animation or a static fallback, without participating in layout                                                                                                                                                                                                          |
+| Runtime   | `authoring?`      | `unknown`                     | —          | Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                                                                      |
+|           | `meta?`           | `IRPath['meta']`              | —          | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout                                                                                                                                                                                                           |
+
+</div>
 
 </DocTab>
 
@@ -591,7 +698,7 @@ export type PathProps = HydrationEventProps & {
   <ApiSourceLink
     label={'RectangleStepProps'}
     path={'packages/kernel/react/src/kernel/components/Step.tsx'}
-    startLine={206}
+    startLine={211}
   >
     Rectangle action: an axis-aligned rectangle from opposite corners, optionally rounded, compiled to path commands
     (TikZ `(a) rectangle (b)`)
@@ -602,12 +709,16 @@ export type PathProps = HydrationEventProps & {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member          | Type          | Default | Description                                                                                          |
 | --------------- | ------------- | ------- | ---------------------------------------------------------------------------------------------------- |
 | `cornerRadius?` | `number`      | —       | Shared corner radius; omitted means sharp corners, and compilation clamps it to half the side length |
 | `from`          | `DslTarget`   | —       | One corner                                                                                           |
 | `kind`          | `'rectangle'` | —       | Discriminant for a rectangle step                                                                    |
 | `to`            | `DslTarget`   | —       | Opposite corner; order is irrelevant                                                                 |
+
+</div>
 
 </DocTab>
 
@@ -632,7 +743,7 @@ export type RectangleStepProps = {
   <ApiSourceLink
     label={'SmoothStepProps'}
     path={'packages/kernel/react/src/kernel/components/Step.tsx'}
-    startLine={222}
+    startLine={227}
   >
     Smooth action: a smooth curve through the cursor and `points` (TikZ `plot[smooth]` or Hobby-style input)
   </ApiSourceLink>
@@ -644,13 +755,17 @@ The cursor is the implicit first knot; the curve passes through each entry in `p
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member      | Type               | Default | Description                                                                                                         |
 | ----------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
 | `children?` | `ReactNode`        | —       | Sugar form                                                                                                          |
 | `kind`      | `'smooth'`         | —       | Discriminant for a smooth step                                                                                      |
 | `label?`    | `InputStepLabel`   | —       | Edge label positioned by Bézier parameter along the generated cubics                                                |
 | `points`    | `Array<DslTarget>` | —       | Ordered points after the cursor; one point creates one segment, and the cursor ends at the last point               |
-| `tension?`  | `number`           | —       | Tangent-length multiplier (TikZ `tension`); defaults to 1, with lower values tighter and higher values more rounded |
+| `tension?`  | `number`           | `1`     | Tangent-length multiplier (TikZ `tension`); defaults to 1, with lower values tighter and higher values more rounded |
+
+</div>
 
 </DocTab>
 
@@ -671,6 +786,12 @@ export type SmoothStepProps = {
 </DocTabs>
 
 ### StepProps
+
+<p>
+  <ApiSourceLink label={'StepProps'} path={'packages/kernel/react/src/kernel/components/Step.tsx'} startLine={262}>
+    View source
+  </ApiSourceLink>
+</p>
 
 Fourteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', 'smooth', and 'generator'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`; 'generator' uses `name` and JSON-safe `params`. Named types for each kind support wrappers and derived props
 
@@ -708,7 +829,7 @@ export declare const Draw: FC<DrawProps>;
 
 ### Path
 
-<p><ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={71}>Path declares a route using a sequence of `<Step>` elements</ApiSourceLink></p>
+<p><ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={82}>Path declares a route using a sequence of `<Step>` elements</ApiSourceLink></p>
 
 This component does not render DOM itself; `<Layout>` produces the final path from steps, styles, arrows, and marks
 
@@ -719,7 +840,7 @@ export declare const Path: FC<PathProps>;
 ### Step
 
 <p>
-  <ApiSourceLink label={'Step'} path={'packages/kernel/react/src/kernel/components/Step.tsx'} startLine={274}>
+  <ApiSourceLink label={'Step'} path={'packages/kernel/react/src/kernel/components/Step.tsx'} startLine={282}>
     Step is a DSL marker component and does not render itself
   </ApiSourceLink>
 </p>
@@ -735,7 +856,7 @@ export declare const Step: FC<StepProps>;
 ### InputPath
 
 <p>
-  <ApiSourceLink label={'InputPath'} path={'packages/kernel/vanilla/src/normalize/path/types.ts'} startLine={162}>
+  <ApiSourceLink label={'InputPath'} path={'packages/kernel/vanilla/src/normalize/path/types.ts'} startLine={163}>
     Authoring input for a path
   </ApiSourceLink>
 </p>
@@ -744,28 +865,32 @@ export declare const Step: FC<StepProps>;
 
 <DocTab value="members" label="Members">
 
-| Member            | Type                                  | Default | Description                                                                     |
-| ----------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------- |
-| `animations?`     | `InputPathBase['animations']`         | —       | —                                                                               |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                      |
-| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                 |
-| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                     |
-| `authoring?`      | `unknown`                             | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR |
-| `children?`       | `ReadonlyArray<InputStep>`            | —       | —                                                                               |
-| `id?`             | `string`                              | —       | —                                                                               |
-| `kind?`           | `string & {} \| "stroke"`             | —       | —                                                                               |
-| `kindOptions?`    | `Record<string, JsonValue>`           | —       | —                                                                               |
-| `label?`          | `InputPathBase['label']`              | —       | —                                                                               |
-| `marks?`          | `InputPathBase['marks']`              | —       | —                                                                               |
-| `meta?`           | `Record<string, JsonValue>`           | —       | —                                                                               |
-| `rotate?`         | `number`                              | —       | —                                                                               |
-| `roundedCorners?` | `number`                              | —       | —                                                                               |
-| `scale?`          | `number \| { x: number; y: number; }` | —       | —                                                                               |
-| `style?`          | `InputPathBase['style']`              | —       | —                                                                               |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                     |
-| `type?`           | `'path'`                              | —       | Explicit path category when authoring fields cannot identify it uniquely        |
-| `way?`            | `WayDSL`                              | —       | TikZ-style route shorthand                                                      |
-| `zIndex?`         | `number`                              | —       | —                                                                               |
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+
+| Group     | Member            | Type                                  | Default | Description                                                                                                                                                                  |
+| --------- | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `children?`       | `ReadonlyArray<InputStep>`            | —       | Path steps; mutually exclusive with way                                                                                                                                      |
+|           | `id?`             | `string`                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+|           | `kind?`           | `string & {} \| "stroke"`             | —       | Path kind provider name. Omitted means built-in `stroke`.                                                                                                                    |
+|           | `kindOptions?`    | `Record<string, JsonValue>`           | —       | JSON-safe option object consumed by the selected path kind provider.                                                                                                         |
+|           | `label?`          | `InputPath["label"]`                  | —       | Host label attached to this path-like relation.                                                                                                                              |
+|           | `type?`           | `'path'`                              | —       | Explicit path category when authoring fields cannot identify it uniquely                                                                                                     |
+|           | `way?`            | `WayDSL`                              | —       | TikZ-style route shorthand                                                                                                                                                   |
+| Geometry  | `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+|           | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
+|           | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
+|           | `marks?`          | `InputPath["marks"]`                  | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+|           | `rotate?`         | `number`                              | —       | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
+|           | `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+|           | `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| Style     | `style?`          | `InputPath["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+|           | `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+|           | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
+| Animation | `animations?`     | `InputPath["animations"]`             | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| Runtime   | `authoring?`      | `unknown`                             | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                              |
+|           | `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+
+</div>
 
 </DocTab>
 
@@ -815,24 +940,24 @@ export type InputStep =
 ### path
 
 <p>
-  <ApiSourceLink label={'path'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={34}>
-    Create authoring path input with an id shorthand or full configuration
+  <ApiSourceLink label={'path'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={30}>
+    Create path authoring input, with identity declared by the configuration id
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const path: (
-  idOrConfig: string | Omit<InputPath, 'type' | 'id'>,
-  maybeConfig?: Omit<InputPath, 'type' | 'id'>,
-) => InputPath;
+export declare const path: (config: Omit<InputPath, 'type'>) => InputPath;
 ```
 
 #### Parameters
 
-| Parameter     | Type                                        | Description |
-| ------------- | ------------------------------------------- | ----------- |
-| `idOrConfig`  | `string \| Omit<InputPath, 'type' \| 'id'>` | —           |
-| `maybeConfig` | `Omit<InputPath, 'type' \| 'id'>`           | —           |
+| Parameter | Type                      | Description                                                 |
+| --------- | ------------------------- | ----------------------------------------------------------- |
+| `config`  | `Omit<InputPath, 'type'>` | Path configuration; way and children are mutually exclusive |
+
+#### Returns
+
+Path authoring input preserving the configuration fields
 
 ## Path syntax and extension contracts
 
@@ -850,6 +975,8 @@ Describes marker dimensions, contact points, and geometry generation; the defini
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member           | Type                                                   | Default                      | Description                                                                                                              |
 | ---------------- | ------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `backX`          | `number`                                               | —                            | Promised back edge of the base marker geometry along its axis; must not lie beyond the line contact point                |
@@ -862,6 +989,8 @@ Describes marker dimensions, contact points, and geometry generation; the defini
 | `name`           | `string`                                               | —                            | Arrow name referenced by IR `marks[].mark.shape`; authoring input uses `arrowDetail.shape`                               |
 | `outerInset?`    | `number`                                               | `hollow ? lineWidth / 2 : 0` | Outer-outline compensation in marker-local coordinates; defaults to lineWidth/2 for hollow arrows and 0 for solid arrows |
 | `tipX?`          | `number`                                               | `baseSize`                   | Tip x coordinate used for shortening; defaults to baseSize                                                               |
+
+</div>
 
 </DocTab>
 
@@ -900,12 +1029,16 @@ Resolved colors, stroke width, and rounding function used to generate marker geo
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member      | Type                    | Default | Description                                                                                    |
 | ----------- | ----------------------- | ------- | ---------------------------------------------------------------------------------------------- |
 | `fill`      | `MarkerFill`            | —       | Fill color, the main color for solid arrows; processed according to `hollow` for hollow arrows |
 | `lineWidth` | `number`                | —       | Stroke width in marker-local user units, used to draw hollow outlines                          |
 | `round`     | `(n: number) => number` | —       | Precision rounding shared with compile and render to keep geometry consistent                  |
 | `stroke`    | `MarkerFill`            | —       | Stroke color; without an override, `{ kind: 'contextStroke' }` inherits the path stroke        |
+
+</div>
 
 </DocTab>
 
@@ -942,12 +1075,16 @@ Describes JSON parameters, resolvable target parameters, and command generation;
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member          | Type                                                        | Default | Description                                                                                                                                             |
 | --------------- | ----------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `generate`      | `(ctx: PathGeneratorGenerateContext) => Array<PathCommand>` | —       | Generate low-level path commands from the context<br />Commands use the same local coordinates as the context and may contain `move` to start a subpath |
 | `name`          | `string`                                                    | —       | Generator name referenced by the generator step's `name`                                                                                                |
 | `paramsSchema`  | `ZodType<JsonObject>`                                       | —       | Instance parameter schema<br />Parsed output must be a JSON object                                                                                      |
 | `targetParams?` | `Array<string>`                                             | `[]`    | Top-level parameter keys to resolve into the current Path's local coordinates                                                                           |
+
+</div>
 
 </DocTab>
 
@@ -984,6 +1121,8 @@ All coordinates are local to the current Path; the owning GroupPrim applies the 
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member            | Type                       | Default | Description                                                                         |
 | ----------------- | -------------------------- | ------- | ----------------------------------------------------------------------------------- |
 | `from`            | `Position`                 | —       | Current local cursor position: the preceding segment endpoint or subpath start      |
@@ -991,6 +1130,8 @@ All coordinates are local to the current Path; the owning GroupPrim applies the 
 | `resolvedTargets` | `Record<string, Position>` | —       | Resolution of top-level targetParams keys into the current Path's local coordinates |
 | `round`           | `(n: number) => number`    | —       | Precision rounding shared with compile and render                                   |
 | `to?`             | `Position`                 | —       | Local coordinates after resolving step.to; absent when the step omits `to`          |
+
+</div>
 
 </DocTab>
 
@@ -1028,15 +1169,19 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 
 <DocTab value="members" label="Members">
 
-| Member            | Type                                                                           | Default                  | Description                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------ | ------------------------ | -------------------------------------------------------------------------------------------- |
-| `appearance`      | `ResolvedPathKindAppearance`                                                   | —                        | Resolved renderer-neutral host appearance                                                    |
-| `emitHostLabels`  | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                 | —                        | Compile shared host labels with optional boundary offsets supplied by the kind               |
-| `emitStroke`      | `EmitStroke`                                                                   | `Use the current `path`` | Reuse Core's standard stroke compiler; omission uses the current `path`                      |
-| `materializePath` | `(input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => MaterializedPath` | —                        | Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry |
-| `ownerOutput`     | `CompileOwnerOutputPublisher<TOwnerOutput>`                                    | —                        | Publisher for the final output owned by the current Path kind                                |
-| `path`            | `TPath`                                                                        | —                        | Path subject parsed through this definition's complete schema                                |
-| `round`           | `(value: number) => number`                                                    | —                        | Rounding function shared with the current compilation                                        |
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member            | Type                                                                           | Default | Description                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------- |
+| `appearance`      | `ResolvedPathKindAppearance`                                                   | —       | Resolved renderer-neutral host appearance                                                    |
+| `emitHostLabels`  | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                 | —       | Compile shared host labels with optional boundary offsets supplied by the kind               |
+| `emitStroke`      | `EmitStroke`                                                                   | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                      |
+| `materializePath` | `(input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => MaterializedPath` | —       | Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry |
+| `ownerOutput`     | `CompileOwnerOutputPublisher<TOwnerOutput>`                                    | —       | Publisher for the final output owned by the current Path kind                                |
+| `path`            | `TPath`                                                                        | —       | Path subject parsed through this definition's complete schema                                |
+| `round`           | `(value: number) => number`                                                    | —       | Rounding function shared with the current compilation                                        |
+
+</div>
 
 </DocTab>
 
@@ -1087,10 +1232,14 @@ A path-kind definition compiles a high-level path into Scene primitives in the c
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member         | Type                    | Default | Description                                                                                  |
 | -------------- | ----------------------- | ------- | -------------------------------------------------------------------------------------------- |
 | `boundsPoints` | `Array<IRPosition>`     | —       | Geometry used for layout and path-level rotate/scale in the current Path's local coordinates |
 | `primitives`   | `Array<ScenePrimitive>` | —       | Actual rendering output in the current Path's local coordinates                              |
+
+</div>
 
 </DocTab>
 
@@ -1108,6 +1257,16 @@ export type PathKindCompileResult = {
 </DocTabs>
 
 ### PathKindDefinition
+
+<p>
+  <ApiSourceLink
+    label={'PathKindDefinition'}
+    path={'packages/kernel/core/src/contract/path-kind/types.ts'}
+    startLine={132}
+  >
+    View source
+  </ApiSourceLink>
+</p>
 
 ```ts
 export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
@@ -1162,6 +1321,12 @@ export type WayItem =
 
 ### definePathKind
 
+<p>
+  <ApiSourceLink label={'definePathKind'} path={'packages/kernel/core/src/contract/path-kind/define.ts'} startLine={51}>
+    View source
+  </ApiSourceLink>
+</p>
+
 ```ts
 export declare const definePathKind: {
   <TPath extends IRPathBase = IRPathBase>(
@@ -1172,6 +1337,43 @@ export declare const definePathKind: {
   ): PathKindDefinition<TPath, TOwnerOutput>;
 };
 ```
+
+#### Overload 1
+
+```ts
+<TPath extends IRPathBase = IRPathBase>(definition: PathKindDefinition<TPath, never>): PathKindDefinition<TPath, never>;
+```
+
+#### Type parameters
+
+| Type parameter | Description |
+| -------------- | ----------- |
+| `TPath`        | —           |
+
+#### Parameters
+
+| Parameter    | Type                               | Description |
+| ------------ | ---------------------------------- | ----------- |
+| `definition` | `PathKindDefinition<TPath, never>` | —           |
+
+#### Overload 2
+
+```ts
+<TPath extends IRPathBase, TOwnerOutput extends JsonValue>(definition: PathKindDefinition<TPath, TOwnerOutput>): PathKindDefinition<TPath, TOwnerOutput>;
+```
+
+#### Type parameters
+
+| Type parameter | Description |
+| -------------- | ----------- |
+| `TPath`        | —           |
+| `TOwnerOutput` | —           |
+
+#### Parameters
+
+| Parameter    | Type                                      | Description |
+| ------------ | ----------------------------------------- | ----------- |
+| `definition` | `PathKindDefinition<TPath, TOwnerOutput>` | —           |
 
 ### DrawWay
 

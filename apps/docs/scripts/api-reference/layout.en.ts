@@ -1,5 +1,19 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  主题样式定义: 'Theme style definitions',
+  '通过 JSX 声明的图形内容': 'Drawing content declared with JSX',
+  处理作者输入的编译驱动: 'Compile driver that processes authoring input',
+  '直接传入 ir 时使用的事件处理函数表': 'Event handlers used when ir is supplied directly',
+  '选择 retained 增量更新或 static 完整编译模式；省略时使用 retained':
+    'Select retained incremental updates or static full compilation; defaults to retained',
+  动画缓动函数注册表: 'Animation easing registry',
+  可动画属性注册表: 'Animatable property registry',
+  请求生成的编译附加产物: 'Requested compilation artifacts',
+  编译附加产物成功提交后的通知: 'Notification after compilation artifacts are committed successfully',
+  '是否播放动画；由动画模式上下文优先决定，未指定时遵循系统减少动态效果偏好':
+    'Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference',
+  'SVG 资源 id 前缀；省略时由 React useId 生成': 'SVG resource ID prefix; generated from React useId when omitted',
+
   '供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR':
     'JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR',
   '渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG':

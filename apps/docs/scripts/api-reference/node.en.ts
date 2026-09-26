@@ -1,5 +1,27 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning':
+    'The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning',
+  '适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx * sy) 深度缩放 params 中的数值叶子':
+    'Use for shapes whose params contain non-length fields such as angles; when omitted, numeric leaves in params are recursively scaled by Math.sqrt(sx * sy)',
+  未提供时使用视觉矩形: 'Uses the visual rectangle when omitted',
+  '未提供时由调用方回退或报告不支持该 anchor':
+    'When omitted, the caller falls back or reports that the anchor is unsupported',
+  'fraction 表示所选边界上的归一化位置，省略时使用 0.5':
+    'fraction is the normalized position along the selected boundary and defaults to 0.5',
+  '节点配置，包含位置及可选的 id、文字和样式': 'Node configuration with a position and optional id, text, and style',
+  '带 node 类别的作者输入': 'Authoring input with the node discriminator',
+  坐标标识与位置配置: 'Coordinate identifier and position',
+  '带 coordinate 类别的作者输入': 'Authoring input with the coordinate discriminator',
+
+  标签附着的节点边界方向: 'Side of the node boundary to which the label attaches',
+  '标签位置；省略时位于节点上方，支持方向、角度或边界比例':
+    'Label position; defaults to above the node, accepting a direction, angle, or boundary fraction',
+  '节点类别标识，可省略': 'Optional node discriminator',
+  '节点中心位置，支持坐标、相对定位和锚点对齐':
+    'Node center position, supporting coordinates, relative positioning, and anchor alignment',
+  附着于节点的一个或多个标签: 'One or more labels attached to the node',
+
   '命名坐标点的 React 输入，不绘制可见内容': 'React input for a named coordinate with no visible content',
   '可选编译驱动解释的运行时载荷，不进入 Core IR':
     'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
@@ -76,6 +98,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   创建作者侧命名坐标输入: 'Create authoring input for a named coordinate',
   '创建作者侧节点输入，支持 id 简写与完整配置':
     'Create node authoring input with an ID shorthand or a complete configuration',
+  '创建作者侧节点输入，身份由配置中的 id 声明':
+    'Create node authoring input with its identity declared by the configuration id',
   '连接面命名 anchor 的名字': 'Name of a boundary anchor',
   '类型接受字符串；Node 引用解析仅将非中心的标准方位名交给 boundary，中心与形状专属名称由视觉 shape 解析':
     'The type accepts strings; Node reference resolution passes only non-center standard directions to the boundary. The visual shape resolves the center and shape-specific names',

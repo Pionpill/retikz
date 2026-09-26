@@ -111,7 +111,6 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
   materializePath: (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => MaterializedPath;
   /**
    * 复用 core 标准描边编译逻辑；不传 path 时使用当前 `path`
-   * @default 使用当前 `path`
    */
   emitStroke: EmitStroke;
   /** 编译共享宿主标签，并支持 kind 提供边界偏移 */

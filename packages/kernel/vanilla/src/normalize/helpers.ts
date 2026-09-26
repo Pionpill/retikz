@@ -5,16 +5,28 @@ import type { InputPath } from './path';
 import type { InputChild, InputLayer, InputScene, InputSceneChildren, InputSceneLayers } from './scene';
 import type { InputScope } from './scope';
 
-/** 创建作者侧节点输入，身份由配置中的 id 声明 */
+/**
+ * 创建作者侧节点输入，身份由配置中的 id 声明
+ * @param config 节点配置，包含位置及可选的 id、文字和样式
+ * @returns 带 node 类别的作者输入
+ */
 export const node = (config: Omit<InputNode, 'type'>): InputNode => ({ type: 'node', ...config });
 
-/** 创建作者侧命名坐标输入 */
+/**
+ * 创建作者侧命名坐标输入
+ * @param config 坐标标识与位置配置
+ * @returns 带 coordinate 类别的作者输入
+ */
 export const coordinate = (config: Omit<InputCoordinate, 'type'>): InputCoordinate => ({
   type: 'coordinate',
   ...config,
 });
 
-/** 创建作者侧路径输入，身份由配置中的 id 声明 */
+/**
+ * 创建作者侧路径输入，身份由配置中的 id 声明
+ * @param config 路径配置，way 与 children 互斥
+ * @returns 保留配置字段的路径作者输入
+ */
 export const path = (config: Omit<InputPath, 'type'>): InputPath => ({ ...config });
 
 /** 创建作者侧 Scope 输入 */
