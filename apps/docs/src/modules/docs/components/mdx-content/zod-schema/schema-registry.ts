@@ -38,6 +38,7 @@ import * as IRTable from '@retikz/table';
 import type { core, z } from 'zod';
 
 import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
+import { GridSchemaZhLocalization, GridLineSchemaZhLocalization } from './standard-presentation-localizations';
 
 /** schema 注册项按语言提供的本地化描述 */
 export type SchemaRegistryLocalization = {
@@ -729,6 +730,18 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: LayoutIR.OverlayLayoutArtifactSchema,
     label: 'OverlayLayoutArtifact',
     url: '/library/layout/reference/contract-artifact#overlaylayoutartifactschema',
+  },
+  GridSchema: {
+    schema: StandardPresentationIR.GridSchema,
+    label: 'Grid',
+    url: '/library/standard/presentation/grid#gridschema',
+    localizations: { zh: GridSchemaZhLocalization },
+  },
+  GridLineInputSchema: {
+    schema: StandardPresentationIR.GridLineInputSchema,
+    label: 'GridLineInput',
+    url: '/library/standard/presentation/grid#gridlineinputschema',
+    localizations: { zh: GridLineSchemaZhLocalization },
   },
   LegendSchema: {
     schema: StandardPresentationIR.LegendSchema,
