@@ -277,6 +277,8 @@
     "dataGetStart": "快速开始",
     "dataContents": "数据能力",
     "chart": "Chart · 图形",
+    "chartIntroduction": "简介",
+    "chartGetStart": "快速开始",
     "chartNavigationDescription": "用常用图表呈现数据关系",
     "chartScatterPoints": "点图",
     "chartScatter": "散点图",

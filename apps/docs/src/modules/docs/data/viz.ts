@@ -167,8 +167,30 @@ export const vizSection: Array<Section> = [
     id: 'chart',
     label: 'viz.chart',
     navigationDescription: 'viz.chartNavigationDescription',
-    document: true,
     pages: [
+      {
+        id: 'introduction',
+        label: 'viz.chartIntroduction',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', capability: 'chart.introduction', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'get-start',
+        label: 'viz.chartGetStart',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', capability: 'chart.get-start', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'chart.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
       {
         id: 'points',
         label: 'viz.chartScatterPoints',
@@ -304,17 +326,6 @@ export const vizSection: Array<Section> = [
           audience: 'integrator',
           capability: 'chart.model',
           sourceOfTruth: 'runtime',
-        },
-      },
-      {
-        id: 'changelog',
-        label: 'viz.changelog',
-        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'chart.release',
-          sourceOfTruth: 'changelog',
         },
       },
     ],

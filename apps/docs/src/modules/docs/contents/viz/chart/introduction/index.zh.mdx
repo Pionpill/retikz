@@ -1,0 +1,40 @@
+---
+title: 简介
+description: 从数据出发，选择具体图形类型，绘制带坐标轴、图例和标题的完整图表。
+---
+
+Chart 按图形类别组织入口，目前提供点图。选择类别中的具体图形并指定数据字段，就能得到完整图表。坐标轴、比例尺和图例由数据映射生成；标题、来源、画布尺寸与坐标系可以按需配置。
+
+## 何时使用
+
+当你已经知道要画哪种图，想把表格数据直接变成可阅读的图表时，从 Chart 开始。无需先学习 Kernel 图元或手动搭建 Plot。
+
+| 图形类别                  | 适合回答的问题                     |
+| ------------------------- | ---------------------------------- |
+| [点图](/viz/chart/points) | 观测如何分布，变量之间有什么关系？ |
+
+## 从字段到图形
+
+下面的“人口规模气泡”使用 Gapminder 2007 年的 142 个国家和地区数据：横轴表示人均 GDP，纵轴表示预期寿命，气泡面积表示人口规模，颜色区分大洲。每行数据对应一个气泡，通过字段映射同时呈现收入、寿命与人口的关系。
+
+<ComponentPreview
+  files={['/viz/chart/points/bubble/bubble-basic', '/viz/chart/points/bubble/bubble-basic.data.ts']}
+  controlPanelDefaultOpen={false}
+  size="xxxl"
+  hideCode
+/>
+
+## 与 Data、Plot 和 Kernel 的关系
+
+Chart 负责具体图形类型和整图展示；需要清洗、派生或聚合数据时，可先使用 [Data](/viz/data/introduction)。需要自由组合图元、通道、比例尺或辅助元素时，继续了解 [Plot](/viz/plot)。需要将图表与其它绘图元素放在同一画布时，可嵌入 Kernel 的 [Layout](/kernel/components/layout)。
+
+## 接下来
+
+<LinkedSections
+  items={[
+    { title: '快速开始', description: '安装并绘制第一张图，了解公共配置与嵌入方式。', url: '/viz/chart/get-start' },
+    { title: '点图', description: '根据数据与阅读任务选择具体图形。', url: '/viz/chart/points' },
+    { title: '图形模型', description: '深入理解图形结构、声明式写法及 Plot 扩展。', url: '/viz/chart/model' },
+    { title: '更新日志', description: '查询已发布版本的真实变化。', url: '/viz/chart/changelog' },
+  ]}
+/>

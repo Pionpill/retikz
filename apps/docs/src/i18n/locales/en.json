@@ -277,6 +277,8 @@
     "dataGetStart": "Quick start",
     "dataContents": "Data capabilities",
     "chart": "Chart",
+    "chartIntroduction": "Introduction",
+    "chartGetStart": "Quick start",
     "chartNavigationDescription": "Present data relationships with familiar chart types",
     "chartScatterPoints": "Point Charts",
     "chartScatter": "Scatter Chart",

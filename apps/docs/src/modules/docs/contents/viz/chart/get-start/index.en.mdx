@@ -1,0 +1,103 @@
+---
+title: Quick start
+description: Install Chart, draw your first scatter chart, and learn data mappings, shared configuration, and canvas embedding.
+---
+
+Add Chart to an existing TypeScript project. This example uses three rows without requiring Data or Plot setup. Both React and Vanilla produce the same chart.
+
+## Install and use
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/chart-react react react-dom" />
+
+Prepare `<div id="chart"></div>` in your HTML and place this code in your TSX entry. In an existing React app, render `ScatterChart` directly without calling `createRoot` again.
+
+```tsx
+import { ScatterChart } from '@retikz/chart-react/point';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 5 },
+];
+
+createRoot(document.getElementById('chart')!).render(
+  <ScatterChart
+    rows={rows}
+    layout={{ width: 640, height: 360 }}
+    presentation={{ title: { text: 'Relationship between two variables' } }}
+    recipe={{ encodings: { x: 'x', y: 'y' }, properties: { size: 8 } }}
+  />,
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/chart-vanilla" />
+
+Prepare `<div id="chart"></div>` in your HTML and place this code in your TypeScript entry. `createScatterChart` creates the chart, and `renderChart` returns SVG for the container.
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 5 },
+];
+
+const chart = createScatterChart({
+  data: rows,
+  layout: { width: 640, height: 360 },
+  title: { text: 'Relationship between two variables' },
+  encodings: { x: 'x', y: 'y' },
+  properties: { size: 8 },
+});
+
+document.getElementById('chart')!.innerHTML = renderChart(chart).svg;
+```
+
+</DocTab>
+</DocTabs>
+
+## The first result
+
+The setup code above checks rendering with three points. The example below uses World Bank data for 186 economies in 2022: fertility maps to the horizontal axis, female labor participation to the vertical axis, and income group to color. Each point represents an economy; field mappings generate the axes and legend.
+
+The example uses shared components such as `ChartData`, `ChartLayout`, and `ChartTitle` for data, dimensions, and chart text. **These components exist only in the React API**; Vanilla uses a configuration object. This example introduces only a few components. Dedicated chapters will cover each component in detail.
+
+<ComponentPreview files={['first-chart', '/viz/chart/points/scatter/scatter-fertility-work.data.ts']} size="xxl" />
+
+`fertilityRate`, `femaleLaborParticipation`, and `incomeGroup` map to `x`, `y`, and `color`. HIC, UMC, LMC, and LIC stand for high, upper-middle, lower-middle, and low income. Replace the rows and field names to use your own data. See [Scatter](/viz/chart/points/scatter) for its fields and properties.
+
+## React hosting and embedding
+
+Rendering a concrete Chart directly creates exactly one `Layout` / Scene host. Without an authored `layout`, Cartesian coordinates default to `800 × 500` and Polar coordinates default to `400 × 500`. Root `layout.width` / `height` configure both Source and that implicit host; when only one dimension is provided, the other keeps the default for the active coordinate system. `ChartLayout.width` / `height` provide equivalent JSX sugar and mirror into Source when no explicit `layout` exists.
+
+Inside an existing `<Layout>`, Chart contributes only its Chart-to-Plot-to-Core Scope/composite, inherits the outer effective Theme, and creates no second SVG. Root `layout` remains the Chart Source border-box. Embedded `ChartLayout` also accepts only `layout`; declaring `width` or `height`, including explicit `undefined`, fails loudly. Configure CSS, renderer/runtime, animation, and compile callbacks on the outer `<Layout>`.
+
+When JSON Source already matches an exact schema, the application selects the concrete entry from `type` and `recipe.chartType`; Chart does not provide a generic `<Chart source={...}>` that dynamically loads every family. Vanilla and JSON Source APIs are unchanged by the React declaration structure.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Introduction',
+      description: 'Explore chart choices and related modules.',
+      url: '/viz/chart/introduction',
+    },
+    { title: 'Point charts', description: 'Choose a chart for your data and reading task.', url: '/viz/chart/points' },
+    {
+      title: 'Chart model',
+      description: 'Explore chart structure, declarations, and Plot extensions.',
+      url: '/viz/chart/model',
+    },
+    { title: 'Changelog', description: 'Read the changes in published releases.', url: '/viz/chart/changelog' },
+  ]}
+/>
