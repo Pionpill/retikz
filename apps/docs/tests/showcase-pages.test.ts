@@ -114,13 +114,8 @@ describe('collectShowcasePages', () => {
     ]);
   });
 
-  it('从实际 Viz 文档树收集 ADR-04 Scatter 的嵌套路由', () => {
-    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
-      path: '/viz/chart/points/scatter',
-      segments: ['viz', 'chart', 'points', 'scatter'],
-      label: 'viz.chartScatter',
-      metadata: { family: 'scatter-points', role: 'primary', preview: 'scatter-minimal', order: 10 },
-    });
+  it('普通散点文档不进入 Showcase 页面集合', () => {
+    expect(collectShowcasePages('viz', vizSection).map(page => page.path)).not.toContain('/viz/chart/points/scatter');
   });
 
   it('从实际 Viz 文档树收集 Bubble 的嵌套路由', () => {
@@ -156,10 +151,10 @@ describe('collectShowcasePages', () => {
     const scatterPage = pointsPage?.children?.find(page => page.id === 'scatter');
 
     expect(scatterPage?.meta).toMatchObject({
-      pageType: 'concept',
-      capability: 'showcase.scatter',
+      pageType: 'component',
+      capability: 'chart.scatter',
       sourceOfTruth: 'docs',
-      layout: 'showcase',
+      layout: 'article',
     });
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
@@ -223,7 +218,9 @@ describe('collectShowcasePages', () => {
     expect(source).not.toMatch(/IRChartShared|createChartComposites|MarkValueProp|NodeShapeChannelValue/);
 
     const compiled = String(await compile(source, compileOptions));
-    expect(compiled).toContain('ShowcaseGallery');
+    expect(compiled).not.toContain('ShowcaseGallery');
+    expect(compiled).toContain('ComponentPreview');
+    expect(compiled).toContain('DocTabs');
     expect(compiled).toContain('h2');
   });
 
@@ -266,18 +263,37 @@ describe('collectShowcasePages', () => {
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 默认展示基础用法，并保留两个互补的进阶示例', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 按文章章节提供示例和实现原理图', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
-
-    expect(source).not.toContain("id: 'scatter-basic'");
-    expect(source.indexOf("id: 'scatter-minimal'")).toBeLessThan(source.indexOf("id: 'scatter-fertility-work'"));
-    expect(source.indexOf("id: 'scatter-fertility-work'")).toBeLessThan(
-      source.indexOf("id: 'scatter-world-cup-shots'"),
+    const previews = [...source.matchAll(/<ComponentPreview[\s\S]*?\/>/g)].map(match => match[0]);
+    expect(previews).toHaveLength(7);
+    for (const [index, name] of [
+      'scatter-minimal',
+      'scatter-fertility-work',
+      'scatter-fertility-work',
+      'scatter-marks',
+      'scatter-facet',
+      'scatter-world-cup-shots',
+      'scatter-padding-figure',
+    ].entries()) {
+      expect(previews[index]).toContain(name);
+    }
+    expect(previews[0]).not.toContain('controls=');
+    expect(previews[0]).toContain('hideCode');
+    const headings = [...source.matchAll(/^## (.+)$/gm)].map(match => match[1]);
+    expect(headings).toEqual(
+      lang === 'zh'
+        ? ['接入方式', '基础用法', '扩展用法', '错误与限制', '实现原理', 'API 参考', '延伸阅读']
+        : [
+            'Using this topic',
+            'Basic usage',
+            'Extended usage',
+            'Errors and limitations',
+            'Implementation',
+            'API reference',
+            'Further reading',
+          ],
     );
-    expect(source.match(/id: 'scatter-minimal'/g)).toHaveLength(1);
-    expect(source.match(/id: 'scatter-fertility-work'/g)).toHaveLength(1);
-    expect(source).not.toContain("id: 'scatter-penguins-facet-jitter'");
-    expect(source.match(/id: 'scatter-world-cup-shots'/g)).toHaveLength(1);
   });
 
   const minimalPointExamples = [
@@ -361,21 +377,24 @@ describe('collectShowcasePages', () => {
     },
   );
 
-  it.each(minimalPointExamples)('$chart 双语页以无 controls 的基础用法作为首例', example => {
-    for (const lang of ['zh', 'en'] as const) {
-      const source = readFileSync(pointChartContentPath(example.chart, lang), 'utf8');
-      const minimalIndex = source.indexOf(`id: '${example.id}'`);
-      const advancedIndex = source.indexOf(`id: '${example.nextId}'`);
-      const minimalBlock = source.slice(minimalIndex, advancedIndex);
+  it.each(minimalPointExamples.filter(example => example.chart !== 'scatter'))(
+    '$chart 双语页以无 controls 的基础用法作为首例',
+    example => {
+      for (const lang of ['zh', 'en'] as const) {
+        const source = readFileSync(pointChartContentPath(example.chart, lang), 'utf8');
+        const minimalIndex = source.indexOf(`id: '${example.id}'`);
+        const advancedIndex = source.indexOf(`id: '${example.nextId}'`);
+        const minimalBlock = source.slice(minimalIndex, advancedIndex);
 
-      expect(minimalIndex).toBeGreaterThanOrEqual(0);
-      expect(advancedIndex).toBeGreaterThan(minimalIndex);
-      expect(minimalBlock).not.toContain('controls:');
-      expect(minimalBlock).toContain(lang === 'zh' ? '最简用法' : 'minimal setup');
-      expect(minimalBlock).toContain('IR');
-      expect(minimalBlock).toContain(example.root);
-    }
-  });
+        expect(minimalIndex).toBeGreaterThanOrEqual(0);
+        expect(advancedIndex).toBeGreaterThan(minimalIndex);
+        expect(minimalBlock).not.toContain('controls:');
+        expect(minimalBlock).toContain(lang === 'zh' ? '最简用法' : 'minimal setup');
+        expect(minimalBlock).toContain('IR');
+        expect(minimalBlock).toContain(example.root);
+      }
+    },
+  );
 
   it('空间 Scatter 提供数据、双语 demo 与双语 controls', () => {
     const id = 'scatter-world-cup-shots';

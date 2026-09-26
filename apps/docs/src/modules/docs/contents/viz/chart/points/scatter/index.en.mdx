@@ -1,51 +1,336 @@
 ---
 title: Scatter
 description: Compare two continuous variables with points, and distinguish categories through color and shape encodings.
-family: scatter-points
-usage: distribution
 ---
 
-<ShowcaseGallery
-  examples={[
+A scatter plot places each observation using two continuous variables. Use it to inspect relationships, distributions, and outliers. Color and shape distinguish categories; facets separate groups for comparison. Correlation alone does not establish causation.
+
+## Using this topic
+
+After [installation and first render](/viz/chart/get-start), choose one of the four entry points below. They share the same movie data, axis mappings, and point appearance. React and the Vanilla API assemble chart definitions automatically; direct IR supplies chart definitions and external data explicitly.
+
+The example compares IMDb and Rotten Tomatoes ratings for 100 films. Each point represents one film.
+
+<ComponentPreview
+  files={['scatter-minimal', 'scatter-minimal.data.ts']}
+  hideCode
+  size="xxxl"
+  caption="IMDb on x, Rotten Tomatoes on y; a static snapshot of 100 films from Vega Datasets."
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+The following tree lists all Scatter-specific children of `ScatterChart`: `ScatterEncodings` declares field mappings, `ScatterProperties` sets point appearance, and `ScatterMark` adds or overrides scatter marks. The latter two are optional; basic charts do not require an explicit `ScatterMark`.
+
+```text
+ScatterChart
+├── ScatterEncodings
+├── ScatterProperties
+└── ScatterMark
+```
+
+This example reuses the movie data above and omits the subtitle and source text. Child declarations are React-only.
+
+```tsx
+import { ChartData, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
+import { scatterMinimalData } from './scatter-minimal.data';
+
+export const Example = () => (
+  <ScatterChart>
+    <ChartData data={scatterMinimalData} />
+    <ChartTitle text="IMDb and Rotten Tomatoes ratings move together" />
+    <ScatterEncodings x="imdbRating" y="rottenTomatoesRating" />
+    <ScatterProperties size={5} opacity={0.65} />
+  </ScatterChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { ScatterChartSchema, createScatterChartProviderContribution } from '@retikz/chart/point/scatter';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { scatterMinimalData } from './scatter-minimal.data';
+import { Layout } from '@retikz/react';
+
+const chart = ScatterChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  presentation: { title: { text: 'IMDb and Rotten Tomatoes ratings move together' } },
+  recipe: {
+    chartType: 'scatter',
+    encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
+    properties: { size: 5, opacity: 0.65 },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createScatterChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': scatterMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { scatterMinimalData } from './scatter-minimal.data';
+
+const chart = createScatterChart({
+  data: scatterMinimalData,
+  title: { text: 'IMDb and Rotten Tomatoes ratings move together' },
+  encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
+  properties: { size: 5, opacity: 0.65 },
+});
+export const svg = renderChart(chart).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { ScatterChartSchema, createScatterChartProviderContribution } from '@retikz/chart/point/scatter';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { scatterMinimalData } from './scatter-minimal.data';
+import { compileToScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = ScatterChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  presentation: { title: { text: 'IMDb and Rotten Tomatoes ratings move together' } },
+  recipe: {
+    chartType: 'scatter',
+    encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
+    properties: { size: 5, opacity: 0.65 },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createScatterChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': scatterMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Scatter mappings
+
+In React, declare field mappings with `ScatterEncodings`. The Vanilla API uses `encodings`, and direct IR uses `recipe.encodings`. These mappings control how data determines point position, color, shape, size, and opacity.
+
+| Prop      | Type                                             | Description                                                                            |
+| --------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `x`       | `string` or mapping object                       | Required; Horizontal field; supports direct, aggregate, or derived mappings            |
+| `y`       | `string` or mapping object                       | Required; Vertical field; supports direct, aggregate, or derived mappings              |
+| `color`   | `string` or mapping object                       | Maps a field to color; supports direct or aggregate mappings                           |
+| `shape`   | `string` or direct mapping object                | Distinguishes categories with point shapes                                             |
+| `size`    | `string` or mapping object                       | Maps numeric values to point size; supports direct, aggregate, or derived mappings     |
+| `opacity` | `string` or mapping object                       | Maps numeric values to opacity; supports direct, aggregate, or derived mappings        |
+| `row`     | Field name, partition object, or partition array | Creates facet rows from a field name, partition object, or ordered array of partitions |
+| `column`  | Field name, partition object, or partition array | Creates facet columns using the same input forms as `row`                              |
+| `facet`   | Facet options object                             | Configures facet headers, spacing, and shared scales; requires `row` or `column`       |
+
+This example uses World Bank data for 186 economies in 2022, with one point per economy. The horizontal axis shows births per woman, and the vertical axis shows labor-force participation among women aged 15 and older. Points farther right have higher fertility, while points higher up have greater participation. Nearby points have similar values on both measures, helping reveal the overall distribution, clusters, and observations away from the majority.
+
+- `x`: Maps `fertilityRate` to the horizontal position.
+- `y`: Maps `femaleLaborParticipation` to the vertical position.
+- `color`: Maps `incomeGroup` to different colors.
+- `shape`: Also maps `incomeGroup`, using shapes to help identify the same categories.
+
+Color and shape provide two ways to identify income groups and compare their spread and overlap. Open the controls and disable color or shape independently to see whether the categories remain distinguishable; these changes do not move the points. The distribution shows relationships between measures, not evidence of causation.
+
+<ComponentPreview
+  files={['scatter-fertility-work', 'scatter-fertility-work.data.ts']}
+  controls={{ name: 'scatter-fertility-work' }}
+  controlPanelDefaultOpen={false}
+  size="xxxl"
+  caption="Keep Cartesian coordinates while toggling categorical color and shape. HIC, UMC, LMC, and LIC mean high, upper-middle, lower-middle, and low income."
+/>
+
+### Scatter properties
+
+In React, set uniform appearance with `ScatterProperties`. The Vanilla API uses `properties`, and direct IR uses `recipe.properties`. The table lists common props; default drawing configuration determines any appearance not explicitly set.
+
+| Prop            | Type                              | Description                                                                                                                                             |
+| --------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `color`         | `string`                          | Sets a uniform color                                                                                                                                    |
+| `shape`         | `string`                          | Sets a uniform shape using a registered shape name                                                                                                      |
+| `size`          | `number`                          | Point radius; must be greater than or equal to `0`                                                                                                      |
+| `opacity`       | `number`                          | Overall opacity from `0` to `1`                                                                                                                         |
+| `fill`          | Color string or paint object      | Fill color or paint configuration                                                                                                                       |
+| `stroke`        | Color string or paint object      | Stroke color or paint configuration                                                                                                                     |
+| `strokeWidth`   | `number`                          | Nonnegative stroke width                                                                                                                                |
+| `fillOpacity`   | `number`                          | Fill opacity from `0` to `1`                                                                                                                            |
+| `strokeOpacity` | `number`                          | Stroke opacity from `0` to `1`                                                                                                                          |
+| `domainPadding` | Number or per-side padding object | A number or per-side configuration object; pads the position domain to prevent edge clipping; omitted padding is computed from the maximum point radius |
+
+This example retains the same economies, fertility and labor-participation axes, and income-group categories. Here the goal is to make observations easier to distinguish: economies with similar values produce overlapping points, so appearance affects how easily readers can judge dense regions and separate neighboring observations.
+
+- `size`: Sets a uniform point radius. Larger points stand out but increase overlap in dense regions.
+- `opacity`: Sets uniform transparency. Lower opacity makes underlying points more visible in overlapping areas.
+- `stroke`: Optionally adds outlines to help distinguish neighboring point boundaries.
+
+These constants apply to every point and do not encode a third numeric measure. Open the point controls and adjust these properties, comparing both dense regions and isolated points to choose a readable appearance.
+
+<ComponentPreview
+  files={['scatter-fertility-work', 'scatter-fertility-work.data.ts']}
+  controls={{ name: 'scatter-fertility-work' }}
+  controlPanelDefaultOpen={false}
+  size="xxxl"
+  caption="Adjust size, stroke, and opacity to compare the readability of overlapping points."
+/>
+
+### Scatter marks
+
+In React, add or replace scatter marks with `ScatterMark`. The Vanilla API uses the `marks` array, and direct IR uses `recipe.marks`; scatter entries in either array require `kind: 'scatter'`. The chart generates points automatically, so ordinary charts need no explicit mark.
+
+| Prop         | Type                    | Description                                                                                                                                                                   |
+| ------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `override`   | `boolean`               | Adds a mark by default; `true` replaces the default scatter mark                                                                                                              |
+| `encodings`  | Field mappings object   | Overrides this mark's fields; optional keys are `x`, `y`, `color`, `size`, `opacity`, and `shape`, each taking a field name string; unspecified fields inherit chart mappings |
+| `properties` | Point properties object | Overrides this mark's point appearance, such as `{ size: 3, opacity: 1 }`; excludes recipe-level `domainPadding`; unspecified entries retain inheritable chart appearance     |
+
+This example compares IMDb and Rotten Tomatoes ratings for 100 films. Each position represents one film, with IMDb ratings on the horizontal axis and Rotten Tomatoes ratings on the vertical axis. A distribution from the lower left toward the upper right helps show whether the ratings generally move together. Points with similar horizontal positions but different vertical positions represent films with similar IMDb ratings and different Rotten Tomatoes ratings.
+
+The example first uses `ScatterProperties` to set the default point radius to `8` and opacity to `0.25`, then configures an additional `ScatterMark`:
+
+- `encodings`: Omitted to inherit the existing data and position mappings, so both layers occupy the same positions.
+- `properties`: Sets `size: 3` and `opacity: 1`, placing a small opaque point at the center of each larger translucent point.
+- `override`: Omitted to use the default append behavior. Setting it to `true` replaces the default points, leaving only the small points.
+
+The translucent outer area preserves the point footprint, while the opaque center identifies its precise position. Both layers represent the same films, not separate datasets. In React, use `ScatterMark` as a direct child of `ScatterChart`.
+
+<ComponentPreview files={['scatter-marks', 'scatter-minimal.data.ts', 'scatter-marks.i18n.ts']} hideCode size="xxl" />
+
+## Extended usage
+
+### Split categories into facets
+
+Separate categories into panels to compare their distributions. This example combines field mappings, facet layout, and point appearance. Mappings belong to `recipe.encodings` and appearance to `recipe.properties`; the corresponding React children provide the same configuration.
+
+| Group        | Prop                            | Type                                             | Description                                                                              |
+| ------------ | ------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `encodings`  | `x`, `y`                        | Field name or mapping object                     | Map fertility and female labor participation with consistent axis meanings across panels |
+|              | `column`                        | Field name, partition object, or partition array | Split columns by income group; `field` selects the field and `order` sets category order |
+|              | `facet.header.column`           | `boolean` or text style object                   | Set to `true` here to display income-group column headers                                |
+|              | `facet.spacing.panelGap`        | `number`                                         | Set to `20` here to space the panels                                                     |
+| `properties` | `size`                          | `number`                                         | A radius of `4` suits the narrower panels                                                |
+|              | `opacity`                       | `number`                                         | Set to `0.65` here to reduce overlap obscuring points                                    |
+| `layout`     | `layout.width`, `layout.height` | `number`                                         | The example uses `720 × 360` for the four columns                                        |
+
+The example reuses World Bank 2022 economy data and splits `incomeGroup` into HIC, UMC, LMC, and LIC columns with shared position scales. Compare where each group concentrates, then inspect its internal spread. Faceting changes grouping, not individual values. Use `row` for vertical arrangement; `facet` options require `row` or `column`.
+
+<ComponentPreview
+  files={['scatter-facet', 'scatter-fertility-work.data.ts', 'scatter-facet.i18n.ts']}
+  controls={{ name: 'scatter-facet' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+  caption="All panels retain the same axis meanings. Faceting changes grouping, not the values of each observation."
+/>
+
+### Use spatial coordinates
+
+When fields contain positions on a playing field, a scatter chart can become an event distribution map. Alongside position and category mappings, this example combines point appearance, axis visibility, and a plot-area background.
+
+| Group           | Prop                                       | Type                         | Description                                                    |
+| --------------- | ------------------------------------------ | ---------------------------- | -------------------------------------------------------------- |
+| `encodings`     | `x`, `y`                                   | Field name or mapping object | Bind shot-origin coordinates through `recipe.encodings`        |
+|                 | `color`                                    | Field name or mapping object | Bind `outcome` to distinguish shot results                     |
+| `properties`    | `size`                                     | `number`                     | Adjust the radius to distinguish nearby events                 |
+|                 | `shape`                                    | Shape name string            | Set a uniform shape for shot locations                         |
+|                 | `stroke`                                   | Color string or paint object | Optionally outline points to separate them from the background |
+|                 | `opacity`                                  | `number`                     | Adjust transparency to reveal overlapping locations            |
+| `guides`        | `recipe.guides.axis`                       | `boolean`                    | Set to `false` here to hide default axes                       |
+| `plotExtension` | `plotExtension.plotDefaults.plotArea.fill` | Paint object                 | Configure a pitch image with `kind: 'image'` and `href`        |
+
+This example uses StatsBomb shot data from the 2022 World Cup. Each point locates the origin of a Messi shot, and color identifies its outcome. Bind `x` and `y` to position fields and add the pitch background to view shot concentrations against a spatial reference. Open the controls to adjust size, shape, stroke, and opacity and compare readability over the background. Read the axes as spatial positions, not a correlation between statistical measures. When replacing the data or background, check that coordinate ranges, directions, and proportions agree.
+
+<ComponentPreview
+  files={['scatter-world-cup-shots', 'scatter-world-cup-shots.data.ts']}
+  controls={{ name: 'scatter-world-cup-shots' }}
+  controlPanelDefaultOpen={false}
+  size="xxxl"
+  caption="Each point locates a shot; outcome colors and point styling distinguish events."
+/>
+
+## Errors and limitations
+
+- `x` and `y` are required, and fields must match their scales.
+- `facet` requires `row` or `column`; facets currently cannot be combined with x/y `bin` mappings.
+- Providing a slot through both root configuration and a declaration, such as `recipe.encodings` and `ScatterEncodings`, raises an error.
+- Scatter does not connect observations. Use [Connected scatter](/viz/chart/points/connected-scatter) when order and connections matter.
+- Overlapping points may hide observations. Opacity improves visibility but does not ensure every point can be distinguished.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="
+  This section explains internal behavior. If you only need to use the component, skip to the API reference below.
+"
+/>
+
+### Automatic edge padding
+
+A point's position identifies its center. Mapping the data minimum and maximum directly to plot boundaries leaves the radius extending outside those boundaries. Scatter charts therefore supply `domainPadding` for continuous position scales that have no padding configured, leaving room inside the edges for point centers. The linear-coordinate illustration compares explicit `domainPadding: 0` with omitting the property. Overflow remains visible on the left to show the clipping risk.
+
+<ComponentPreview files="scatter-padding-figure" hideCode type="illustration" size="lg" />
+
+Both panels use the same data, point radius, and plot dimensions. Automatic padding changes the position-scale domain; it does not change data, shrink points, or enlarge the canvas. Each edge reserves one radius for extreme points in this illustration.
+
+After default, appended, and replacement marks are determined, Chart reads the final point sizes and selects the largest radius. A constant `size` supplies the radius directly. A field-mapped size uses the maximum of the size scale's output range rather than scanning individual rows to estimate it. Without an explicit size, it uses the default point radius. This calculation covers the radius only; it does not measure additional stroke, shadow, or text extents, so it does not guarantee room for those effects.
+
+Padding is supplied according to these rules:
+
+- Omitted `domainPadding`: use `range` units and the maximum point radius on each side. These units measure drawing-coordinate lengths, not data values.
+- Explicit number: apply that value to each side; `0` disables padding. Objects resolve each side from its specific direction, then `x` / `y`, then `default`. Unspecified sides fall back to the maximum radius in `range` mode and to `0` in `ratio` mode.
+- Explicit directions: `left`, `right`, `top`, and `bottom` require Cartesian coordinates. Chart maps visual directions to lower and upper domain ends according to the scale range direction.
+- Configured scales: if a scale already has `domainPadding` or comes from `plotExtension.scales`, Chart preserves it without adding automatic padding.
+
+Automatic padding applies only to supported built-in continuous x/y scales, not categorical or custom scales. This is Chart's defaulting policy before lowering to Plot. This section explains that padding choice; scale transformations themselves belong to Plot.
+
+<SourceLinks
+  sources={[
     {
-      id: 'scatter-minimal',
-      title: 'Basic Usage',
-      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `ScatterChart` root.',
-      preview: {
-        files: ['scatter-minimal', 'scatter-minimal.data.ts'],
-        size: 'xxxl',
-        caption: 'A static snapshot of IMDb and Rotten Tomatoes ratings for 100 films from Vega Datasets.',
-      },
-    },
-    {
-      id: 'scatter-fertility-work',
-      title: 'Advanced playground: categorical encoding',
-      description: 'Compare fertility and female labor-force participation from a real World Bank country cross-section, and control whether color and shape distinguish income groups.',
-      preview: {
-        files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
-        controls: { name: 'scatter-fertility-work' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'Toggle color and shape encodings independently to compare one channel, both channels, or no categorical encoding.',
-      },
-    },
-    {
-      id: 'scatter-world-cup-shots',
-      title: 'Spatial scatter',
-      description: 'Use `ScatterChart` for shot positions in StatsBomb coordinates, with outcome driving point color.',
-      preview: {
-        files: ['scatter-world-cup-shots', 'scatter-world-cup-shots.data.ts'],
-        controls: { name: 'scatter-world-cup-shots' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'Point positions preserve the spatial meaning of shots, while outcome drives color and readable point styling.',
-      },
+      label: 'Point radius calculation and padding defaults',
+      path: 'packages/viz/chart/src/point/shared/plot.ts',
+      startLine: 51,
     },
   ]}
->
+/>
+
+## API reference
+
 This page covers entries and constraints specific to this chart. See the [quick-start example](/viz/chart/get-start#the-first-result) for shared configuration using React components.
 
-## `ScatterChart`
+### Scatter configuration
 
 `ScatterChart` fixes the Point family and Scatter recipe identity. Its root `recipe` directly uses Scatter's exact `encodings`, `properties`, and `marks` shape; component identity supplies `chartType: 'scatter'`:
 
@@ -62,7 +347,7 @@ This page covers entries and constraints specific to this chart. See the [quick-
 
 The three declarations below are equivalent JSX sugar for those recipe slots. Root-only authoring can omit `children`; different slots can mix, while providing the same slot from both root and declaration fails loudly.
 
-## `ScatterEncodings`
+### Scatter mappings
 
 `ScatterEncodingsProps` exactly reuses schema-derived `IRScatterChartEncodings`. Vanilla input and JSON Source keep the same encoding payload; React authors it as a separate declaration.
 
@@ -79,22 +364,7 @@ The three declarations below are equivalent JSX sugar for those recipe slots. Ro
 
 Scatter rejects `series`, `detail`, `order`, `text`, and ordinary slot arrays without a defined consumer. Field types and scale compatibility are handled by the existing Data / Plot contracts and are not expanded here.
 
-### Facet
-
-`row` / `column` / `facet` are Scatter's facet mappings. `facet` cannot be used without `row` or `column`, and x/y `bin` mappings are rejected when a facet is present.
-
-```tsx
-<ScatterEncodings
-  x="billLengthMm"
-  y="flipperLengthMm"
-  column={{ field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] }}
-  facet={{ header: { column: true }, spacing: { panelGap: 20 } }}
-/>
-```
-
-`row` / `column` partition panels; they do not choose a mark type. Scatter continues to use its point mark. Plot owns facet panel arrangement, scale resolution, and location, so Source does not repeat derived panel ids or coordinates.
-
-## `ScatterProperties`
+### Scatter properties
 
 `ScatterProperties` declares recipe-level constants and does not accept field mappings; use `ScatterEncodings` for data-driven visual changes. `ScatterPropertiesProps` fields are grouped below.
 
@@ -107,17 +377,17 @@ Scatter rejects `series`, `detail`, `order`, `text`, and ordinary slot arrays wi
 | `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                                       |
 | `domainPadding?`                                                                            | `number` or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`; defaults to range padding from the largest final Point radius |
 
-## `ScatterMark`
+### Scatter marks
 
 `ScatterMark` is Scatter's direct-child mark API. `ScatterMarkProps` is the props type exported by `@retikz/chart-react/point`; the component identity is fixed to Scatter, so callers do not provide `kind`. Shared Point mark nested fields are not repeated here.
 
-| `ScatterMarkProps` property | Type                             | Default | Scatter-specific behavior                                                                                                                                               |
-| --------------------------- | -------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `override?`                 | `boolean`                        | `false` | When `true`, replaces the implicit primary `scatter` mark in place; if no target exists, it appends and reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` through `onWarn` |
-| `encodings?`                | `ScatterMarkProps['encodings']`  | —       | Overrides inherited point field mappings from the current Scatter recipe; available fields follow the shared Point mark encoding contract                               |
-| `properties?`               | `ScatterMarkProps['properties']` | —       | Overrides inherited point styling from the current Scatter recipe; available fields follow the shared Point properties contract                                         |
+| `ScatterMarkProps` property | Type                             | Scatter-specific behavior                                                                                                                                               |
+| --------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `override?`                 | `boolean`                        | When `true`, replaces the implicit primary `scatter` mark in place; if no target exists, it appends and reports `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` through `onWarn` |
+| `encodings?`                | `ScatterMarkProps['encodings']`  | Overrides inherited point field mappings from the current Scatter recipe; available fields follow the shared Point mark encoding contract                               |
+| `properties?`               | `ScatterMarkProps['properties']` | Overrides inherited point styling from the current Scatter recipe; available fields follow the shared Point properties contract                                         |
 
-## Related reading
+## Further reading
 
 <LinkedSections
   items={[
@@ -133,5 +403,3 @@ Scatter rejects `series`, `detail`, `order`, `text`, and ordinary slot arrays wi
     },
   ]}
 />
-
-</ShowcaseGallery>

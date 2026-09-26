@@ -1,51 +1,324 @@
 ---
 title: 散点图
 description: 用散点比较两个连续变量，并通过颜色和形状编码区分分类数据。
-family: scatter-points
-usage: distribution
 ---
 
-<ShowcaseGallery
-  examples={[
-    {
-      id: 'scatter-minimal',
-      title: '基础用法',
-      description: '这是只传必要配置的最简用法；可切换到 IR 查看配置项，配置简单时只需在 `ScatterChart` 根组件传递。',
-      preview: {
-        files: ['scatter-minimal', 'scatter-minimal.data.ts'],
-        size: 'xxxl',
-        caption: '100 部电影的 IMDb 与 Rotten Tomatoes 评分静态快照，数据来自 Vega Datasets。',
-      },
-    },
-    {
-      id: 'scatter-fertility-work',
-      title: '进阶调试：分类编码',
-      description: '用真实的世界银行国家截面比较生育率与女性劳动参与率，并控制颜色和形状是否区分收入组。',
-      preview: {
-        files: ['scatter-fertility-work', 'scatter-fertility-work.data.ts'],
-        controls: { name: 'scatter-fertility-work' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: '分别开关颜色和形状编码，比较单通道、双通道与不使用分类编码时的差异。',
-      },
-    },
-    {
-      id: 'scatter-world-cup-shots',
-      title: '空间散点图',
-      description: '在 StatsBomb 的空间坐标中，用 `ScatterChart` 表示射门位置，并用结果字段驱动颜色。',
-      preview: {
-        files: ['scatter-world-cup-shots', 'scatter-world-cup-shots.data.ts'],
-        controls: { name: 'scatter-world-cup-shots' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: '点的位置保留射门空间含义，射门结果驱动点的颜色与可读性样式。',
-      },
-    },
-  ]}
->
+散点图用每个点的位置表达两个连续变量，适合观察相关性、分布与离群点。颜色和形状可以继续区分类别；需要逐组比较时，可将同一份数据拆成分面。图中的相关性本身不说明因果关系。
+
+## 接入方式
+
+完成 [安装与首次渲染](/viz/chart/get-start) 后，可选择以下四种入口。示例使用相同的电影数据、坐标映射和点样式；React 与 Vanilla API 自动组装图表定义，直接 IR 则显式提供图表定义和外部数据。
+
+下面比较 100 部电影的 IMDb 与烂番茄评分，每个点对应一部电影。
+
+<ComponentPreview
+  files={['scatter-minimal', 'scatter-minimal.data.ts']}
+  hideCode
+  size="xxxl"
+  caption="横轴为 IMDb 评分，纵轴为烂番茄评分；100 部电影的静态快照来自 Vega Datasets。"
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+下面列出 `ScatterChart` 的全部专属子组件：`ScatterEncodings` 声明字段映射，`ScatterProperties` 设置点样式，`ScatterMark` 追加或覆盖散点标记。后两者按需使用，基础绘图无需显式声明 `ScatterMark`。
+
+```text
+ScatterChart
+├── ScatterEncodings
+├── ScatterProperties
+└── ScatterMark
+```
+
+以下示例沿用上方电影数据，省略副标题和来源文案。子组件声明是 React 写法。
+
+```tsx
+import { ChartData, ChartTitle } from '@retikz/chart-react';
+import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
+import { scatterMinimalData } from './scatter-minimal.data';
+
+export const Example = () => (
+  <ScatterChart>
+    <ChartData data={scatterMinimalData} />
+    <ChartTitle text="IMDb 与烂番茄评分总体同向" />
+    <ScatterEncodings x="imdbRating" y="rottenTomatoesRating" />
+    <ScatterProperties size={5} opacity={0.65} />
+  </ScatterChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { ScatterChartSchema, createScatterChartProviderContribution } from '@retikz/chart/point/scatter';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { scatterMinimalData } from './scatter-minimal.data';
+import { Layout } from '@retikz/react';
+
+const chart = ScatterChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  presentation: { title: { text: 'IMDb 与烂番茄评分总体同向' } },
+  recipe: {
+    chartType: 'scatter',
+    encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
+    properties: { size: 5, opacity: 0.65 },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createScatterChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': scatterMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { scatterMinimalData } from './scatter-minimal.data';
+
+const chart = createScatterChart({
+  data: scatterMinimalData,
+  title: { text: 'IMDb 与烂番茄评分总体同向' },
+  encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
+  properties: { size: 5, opacity: 0.65 },
+});
+export const svg = renderChart(chart).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { ScatterChartSchema, createScatterChartProviderContribution } from '@retikz/chart/point/scatter';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { scatterMinimalData } from './scatter-minimal.data';
+import { compileToScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = ScatterChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  presentation: { title: { text: 'IMDb 与烂番茄评分总体同向' } },
+  recipe: {
+    chartType: 'scatter',
+    encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
+    properties: { size: 5, opacity: 0.65 },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createScatterChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': scatterMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 散点映射
+
+React 可通过 `ScatterEncodings` 声明字段映射，Vanilla API 使用 `encodings`，直接 IR 使用 `recipe.encodings`。映射决定数据如何影响散点的位置、颜色、形状、大小和透明度。
+
+| 属性名    | 类型                       | 说明                                                           |
+| --------- | -------------------------- | -------------------------------------------------------------- |
+| `x`       | `string` 或映射对象        | 必填；横坐标字段；支持直接、聚合或派生映射                     |
+| `y`       | `string` 或映射对象        | 必填；纵坐标字段；支持直接、聚合或派生映射                     |
+| `color`   | `string` 或映射对象        | 按字段着色；支持直接或聚合映射                                 |
+| `shape`   | `string` 或直接映射对象    | 按分类字段区分点形状                                           |
+| `size`    | `string` 或映射对象        | 按数值字段改变点大小；支持直接、聚合或派生映射                 |
+| `opacity` | `string` 或映射对象        | 按数值字段改变透明度；支持直接、聚合或派生映射                 |
+| `row`     | 字段名、分组对象或分组数组 | 按行分面；可传字段名、分组对象或有序的分组数组                 |
+| `column`  | 字段名、分组对象或分组数组 | 按列分面，输入形式与 `row` 相同                                |
+| `facet`   | 分面配置对象               | 分面的标题、间距及尺度共享等配置，须同时设置 `row` 或 `column` |
+
+下面使用世界银行 2022 年的 186 个经济体数据，每个点代表一个经济体。横轴表示每名女性的生育数，纵轴表示 15 岁及以上女性的劳动参与率；点越靠右，生育率越高，越靠上，劳动参与率越高。位置相近的点表示两项指标较为接近，可用来观察整体分布、局部聚集和偏离多数观测的经济体。
+
+- `x`：映射到 `fertilityRate`，用横坐标表示生育率。
+- `y`：映射到 `femaleLaborParticipation`，用纵坐标表示女性劳动参与率。
+- `color`：映射到 `incomeGroup`，用不同颜色区分收入组。
+- `shape`：同样映射到 `incomeGroup`，用不同形状辅助识别同一分类。
+
+颜色和形状提供两种识别收入组的线索，便于比较各组的分布范围与重叠区域。打开控制面板，分别关闭颜色或形状映射，观察类别是否仍容易辨认；这些切换不会改变点的位置。图中展示的是指标之间的分布关系，不能据此推断因果关系。
+
+<ComponentPreview
+  files={['scatter-fertility-work', 'scatter-fertility-work.data.ts']}
+  controls={{ name: 'scatter-fertility-work' }}
+  controlPanelDefaultOpen={false}
+  size="xxxl"
+  caption="先保持笛卡尔坐标不变，再切换分类颜色与形状；HIC、UMC、LMC、LIC 分别表示高、中高、中低和低收入组。"
+/>
+
+### 散点属性
+
+React 可通过 `ScatterProperties` 设置统一外观，Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。下表列出常用属性；未显式设置的外观由默认绘图配置决定。
+
+| 属性名          | 类型                    | 说明                                                                                       |
+| --------------- | ----------------------- | ------------------------------------------------------------------------------------------ |
+| `color`         | `string`                | 设置统一颜色                                                                               |
+| `shape`         | `string`                | 设置统一形状，支持已注册的形状名                                                           |
+| `size`          | `number`                | 点半径，必须大于或等于 `0`                                                                 |
+| `opacity`       | `number`                | 整体透明度，取值 `0`–`1`                                                                   |
+| `fill`          | 颜色字符串或 paint 对象 | 填充颜色或 paint 配置                                                                      |
+| `stroke`        | 颜色字符串或 paint 对象 | 描边颜色或 paint 配置                                                                      |
+| `strokeWidth`   | `number`                | 描边宽度，必须大于或等于 `0`                                                               |
+| `fillOpacity`   | `number`                | 填充透明度，取值 `0`–`1`                                                                   |
+| `strokeOpacity` | `number`                | 描边透明度，取值 `0`–`1`                                                                   |
+| `domainPadding` | 数值或方向留白对象      | 数值或按方向配置的对象；设置坐标域边缘留白，避免边缘散点被裁切；省略时按最大点半径计算留白 |
+
+下面继续展示同一批经济体的生育率与女性劳动参与率，坐标和收入组分类保持不变。本节关注如何让这些观测更容易辨认：当多个经济体的指标接近时，散点会相互遮挡；点的外观会影响读者判断密集区域和识别相邻点的难易程度。
+
+- `size`：统一设置点半径。增大后单个点更醒目，但也会增加密集区域的遮挡。
+- `opacity`：统一设置透明度。降低后可以透过上层散点观察叠加区域。
+- `stroke`：按需添加描边，帮助区分相邻点的轮廓。
+
+这些值作用于整组散点，不表示经济体的第三项数值指标。打开“散点”控件调整上述属性，对比密集区域与孤立点，选择两者都清楚的外观。
+
+<ComponentPreview
+  files={['scatter-fertility-work', 'scatter-fertility-work.data.ts']}
+  controls={{ name: 'scatter-fertility-work' }}
+  controlPanelDefaultOpen={false}
+  size="xxxl"
+  caption="调节大小、描边与透明度，比较散点重叠时的可读性。"
+/>
+
+### 散点图元
+
+React 可通过 `ScatterMark` 追加或覆盖散点图元，Vanilla API 使用 `marks` 数组，直接 IR 使用 `recipe.marks` 数组；数组中的散点图元需要设置 `kind: 'scatter'`。图形默认生成散点，常规绘图无需额外声明图元。
+
+| 属性名       | 类型         | 说明                                                                                                                         |
+| ------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `override`   | `boolean`    | 默认追加标记；设为 `true` 时替换默认散点标记                                                                                 |
+| `encodings`  | 字段映射对象 | 覆盖当前标记的字段；可选字段为 `x`、`y`、`color`、`size`、`opacity`、`shape`，值均为字段名字符串；未指定字段继承当前图形映射 |
+| `properties` | 散点属性对象 | 覆盖当前标记的点样式，例如 `{ size: 3, opacity: 1 }`；不包含 recipe 级的 `domainPadding`；未指定项沿用当前图形可继承的样式   |
+
+下面比较 100 部电影的 IMDb 与烂番茄评分，每个位置对应一部电影，横轴为 IMDb 评分，纵轴为烂番茄评分。沿左下到右上的分布可以观察两种评分是否总体同向；横坐标接近、纵坐标相差较大的点，则表示 IMDb 评分相近但烂番茄评分不同的电影。
+
+本例先用 `ScatterProperties` 将默认散点的半径设为 `8`、透明度设为 `0.25`，再通过 `ScatterMark` 配置叠加图元：
+
+- `encodings`：省略，继承原来的数据与位置映射，使两层散点落在相同位置。
+- `properties`：设置 `size: 3` 与 `opacity: 1`，在较大的半透明散点中心绘制较小的实心点。
+- `override`：省略，使用默认追加行为；若设为 `true`，则替换默认散点，只留下小点。
+
+浅色外围保留点的覆盖范围，实心中心标出准确位置。两层表示的是同一批电影，并非两组不同的数据。React 中 `ScatterMark` 须作为 `ScatterChart` 的直接子组件。
+
+<ComponentPreview files={['scatter-marks', 'scatter-minimal.data.ts', 'scatter-marks.i18n.ts']} hideCode size="xxl" />
+
+## 扩展用法
+
+### 按类别分面
+
+将分类拆成独立面板，可以逐组比较分布。下面组合字段映射、分面布局与散点属性；映射项放在 `recipe.encodings`，散点属性放在 `recipe.properties`，也可使用对应的 React 子组件声明。
+
+| 分组         | 属性名                          | 类型                       | 说明                                                          |
+| ------------ | ------------------------------- | -------------------------- | ------------------------------------------------------------- |
+| `encodings`  | `x`、`y`                        | 字段名或映射对象           | 映射生育率与女性劳动参与率，各面板保持相同轴含义              |
+|              | `column`                        | 字段名、分组对象或分组数组 | 按收入组拆列；对象中的 `field` 指定字段，`order` 指定类别顺序 |
+|              | `facet.header.column`           | `boolean` 或文字样式对象   | 本例设为 `true`，显示各列的收入组标题                         |
+|              | `facet.spacing.panelGap`        | `number`                   | 本例设为 `20`，控制面板间距                                   |
+| `properties` | `size`                          | `number`                   | 本例使用半径 `4`，适应较窄的分面                              |
+|              | `opacity`                       | `number`                   | 本例设为 `0.65`，减轻重叠遮挡                                 |
+| `layout`     | `layout.width`、`layout.height` | `number`                   | 本例使用 `720 × 360`，为四列面板分配展示空间                  |
+
+下面沿用世界银行 2022 年的经济体数据，以 `incomeGroup` 分成 HIC、UMC、LMC、LIC 四列，共享位置尺度。先比较各组散点集中在哪些区间，再观察组内的离散程度；分面改变分组方式，不改变每条记录的数值。需要纵向排列时可改用 `row`，分面选项 `facet` 必须配合 `row` 或 `column` 使用。
+
+<ComponentPreview
+  files={['scatter-facet', 'scatter-fertility-work.data.ts', 'scatter-facet.i18n.ts']}
+  controls={{ name: 'scatter-facet' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+  caption="四个面板保持相同的横纵轴含义；分面改变数据分组，不改变每条记录的数值。"
+/>
+
+### 使用空间坐标
+
+当字段记录的是场地位置时，可以将散点图扩展为事件分布图。除了位置与分类映射，本例还组合了散点样式、坐标轴开关和绘图区背景。
+
+| 分组            | 属性名                                     | 类型                    | 说明                                            |
+| --------------- | ------------------------------------------ | ----------------------- | ----------------------------------------------- |
+| `encodings`     | `x`、`y`                                   | 字段名或映射对象        | 绑定射门起点的场地坐标，位于 `recipe.encodings` |
+|                 | `color`                                    | 字段名或映射对象        | 绑定 `outcome`，用颜色区分射门结果              |
+| `properties`    | `size`                                     | `number`                | 调节点半径，便于辨认相邻事件                    |
+|                 | `shape`                                    | 形状名字符串            | 设置射门位置的统一点形状                        |
+|                 | `stroke`                                   | 颜色字符串或 paint 对象 | 按需添加描边，提高点与背景的区分度              |
+|                 | `opacity`                                  | `number`                | 调整透明度，便于观察重叠位置                    |
+| `guides`        | `recipe.guides.axis`                       | `boolean`               | 本例设为 `false`，隐藏默认坐标轴                |
+| `plotExtension` | `plotExtension.plotDefaults.plotArea.fill` | paint 对象              | 用 `kind: 'image'` 与 `href` 配置球场背景图     |
+
+下面使用 StatsBomb 的 2022 年世界杯射门数据，每个点表示 Messi 的一次射门起点，颜色表示射门结果。把 `x`、`y` 绑定到位置字段，再添加球场背景，可以结合场地参照观察射门集中区域。打开控制面板调整点的大小、形状、描边和透明度，比较事件在背景上的辨识度。这里应按空间位置阅读，不能把两轴解释为统计指标的相关性；更换数据或底图时，还需核对坐标范围、方向与比例是否一致。
+
+<ComponentPreview
+  files={['scatter-world-cup-shots', 'scatter-world-cup-shots.data.ts']}
+  controls={{ name: 'scatter-world-cup-shots' }}
+  controlPanelDefaultOpen={false}
+  size="xxxl"
+  caption="每个点表示一次射门的位置；通过结果颜色和点样式比较不同事件。"
+/>
+
+## 错误与限制
+
+- `x` 和 `y` 必填；字段和比例尺需要匹配。
+- `facet` 不能脱离 `row` 或 `column`；当前不能组合分面与 x/y 的 `bin` 映射。
+- 根 `recipe.encodings` 与 `ScatterEncodings` 等同 slot 写法不能同时提供，发生冲突会报错。
+- Scatter 不连接数据点。需要表达连接顺序时，使用 [连接散点图](/viz/chart/points/connected-scatter)。
+- 重叠点可能遮挡观测。透明度只能改善可见性，不能保证逐点辨认。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。" />
+
+### 自动补齐边缘留白
+
+散点的位置表示点的中心。如果把数据最小值和最大值直接映射到绘图区边缘，点的半径就会伸出边界。散点图因此会为尚未配置留白的连续位置尺度补齐 `domainPadding`，让边缘点的中心向内留出空间。下面以线性坐标对比显式设置 `domainPadding: 0` 与省略该属性时的效果；左图保留越界部分，便于观察裁切风险。
+
+<ComponentPreview files="scatter-padding-figure" hideCode type="illustration" size="lg" />
+
+两侧使用相同的数据、点半径与绘图区尺寸。自动留白改变的是位置尺度的域，不会修改数据、缩小散点或增大画布。图中每边为极值点预留一个半径的空间。
+
+Chart 在默认散点与追加、替换图元确定后，读取最终点图元的尺寸并取最大半径。固定 `size` 直接作为半径；字段映射的大小使用尺寸尺度输出范围的最大值，而不是逐条扫描数据估计。没有显式大小时沿用点的默认半径。这里计算的是点半径，不额外测量描边、阴影或文字的外扩范围，因此不能保证这些效果也被完整容纳。
+
+留白按以下规则补齐：
+
+- 未设置 `domainPadding`：使用 `range` 单位，以最大点半径作为各侧留白；这里的单位是绘图坐标中的长度，不是数据值。
+- 显式设置数值：各侧使用该值，`0` 表示不补留白。对象形式按具体方向、`x` / `y`、`default` 的顺序取值；`range` 模式未指定的方向回到最大半径，`ratio` 模式则回到 `0`。
+- 显式方向：`left`、`right`、`top`、`bottom` 仅用于笛卡尔坐标；Chart 会根据尺度范围方向，将视觉方向换成数据域的上下端。
+- 已配置尺度：尺度自身已有 `domainPadding`，或由 `plotExtension.scales` 提供时，Chart 保留该尺度配置，不再自动补齐。
+
+自动补齐只作用于受支持的内置连续 x/y 尺度，不对分类尺度或自定义尺度执行。这是 Chart 在下沉到 Plot 前的默认策略；此处只解释这一步如何选择留白，尺度本身如何变换由 Plot 负责。
+
+<SourceLinks
+  sources={[{ label: '点半径计算与留白补齐', path: 'packages/viz/chart/src/point/shared/plot.ts', startLine: 51 }]}
+/>
+
+## API 参考
+
 本页介绍当前图形的专属入口与约束；公共配置的 React 组件写法见 [快速开始示例](/viz/chart/get-start#最小结果)。
 
-## `ScatterChart`
+### 散点配置
 
 `ScatterChart` 固定 Point family 与 Scatter recipe 身份。根 `recipe` 直接使用 Scatter 的 exact `encodings`、`properties` 与 `marks` 结构；组件身份会补齐 `chartType: 'scatter'`：
 
@@ -62,7 +335,7 @@ usage: distribution
 
 下面三个 declarations 分别是这些 recipe slots 的等价 JSX sugar。只用根配置时可以省略 `children`；跨 slot 可以混用，根与 declaration 同时提供同一 slot 时会 fail-loud。
 
-## `ScatterEncodings`
+### 散点映射
 
 `ScatterEncodingsProps` 精确复用 schema 派生的 `IRScatterChartEncodings`。Vanilla input 与 JSON Source 继续使用相同 encoding payload，只是 React 把它写成独立 declaration。
 
@@ -79,22 +352,7 @@ usage: distribution
 
 Scatter 不接受 `series`、`detail`、`order`、`text` 或没有明确 consumer 的普通 slot 数组。字段类型与 scale compatibility 由既有 Data / Plot 契约处理，本页不展开。
 
-### Facet
-
-`row` / `column` / `facet` 是 Scatter 的分面映射。`facet` 不能脱离 `row` 或 `column`；带 facet 的 x/y `bin` 也会被拒绝。
-
-```tsx
-<ScatterEncodings
-  x="billLengthMm"
-  y="flipperLengthMm"
-  column={{ field: 'species', order: ['Adelie', 'Chinstrap', 'Gentoo'] }}
-  facet={{ header: { column: true }, spacing: { panelGap: 20 } }}
-/>
-```
-
-`row` / `column` 只决定面板分区，不决定 mark 类型；Scatter 仍使用自己的点 mark。Facet 的面板排列、尺度解析和定位交给 Plot，Source 不重复保存可推导的 panel id 或坐标。
-
-## `ScatterProperties`
+### 散点属性
 
 `ScatterProperties` 声明 recipe 级常量，不接受字段 mapping；字段驱动的视觉变化应写在 `ScatterEncodings`。`ScatterPropertiesProps` 的字段分组如下。
 
@@ -107,15 +365,15 @@ Scatter 不接受 `series`、`detail`、`order`、`text` 或没有明确 consume
 | `boundary`、`shadow`、`blendMode`                                                           | 边界、阴影与混合模式                                                                                              |
 | `domainPadding?`                                                                            | `number` 或 `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`；默认按最终最大 Point 半径使用 range 留白 |
 
-## `ScatterMark`
+### 散点图元
 
 `ScatterMark` 是 Scatter 独有的直接子级 mark API。`ScatterMarkProps` 是 `@retikz/chart-react/point` 导出的 props 类型；组件身份固定为 Scatter，不需要传入 `kind`。公共 Point mark 的嵌套字段不在本页重复。
 
-| `ScatterMarkProps` 属性 | 类型                             | 默认值  | Scatter 专属行为                                                                                                                     |
-| ----------------------- | -------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `override?`             | `boolean`                        | `false` | 为 `true` 时原位替换 recipe 隐式生成的主 `scatter` mark；未命中时仍追加，并通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` |
-| `encodings?`            | `ScatterMarkProps['encodings']`  | —       | 覆盖当前 Scatter recipe 继承的点字段映射；可用字段由公共 Point mark encoding 契约决定                                                |
-| `properties?`           | `ScatterMarkProps['properties']` | —       | 覆盖当前 Scatter recipe 继承的点样式；字段列表由公共 Point properties 契约决定                                                       |
+| `ScatterMarkProps` 属性 | 类型                             | Scatter 专属行为                                                                                                                     |
+| ----------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `override?`             | `boolean`                        | 为 `true` 时原位替换 recipe 隐式生成的主 `scatter` mark；未命中时仍追加，并通过 `onWarn` 报告 `CHART_MARK_OVERRIDE_TARGET_NOT_FOUND` |
+| `encodings?`            | `ScatterMarkProps['encodings']`  | 覆盖当前 Scatter recipe 继承的点字段映射；可用字段由公共 Point mark encoding 契约决定；未指定字段继承当前图形映射                    |
+| `properties?`           | `ScatterMarkProps['properties']` | 覆盖当前 Scatter recipe 继承的点样式；字段列表由公共 Point properties 契约决定；未指定项沿用当前图形可继承的样式                     |
 
 ## 延伸阅读
 
@@ -133,5 +391,3 @@ Scatter 不接受 `series`、`detail`、`order`、`text` 或没有明确 consume
     },
   ]}
 />
-
-</ShowcaseGallery>

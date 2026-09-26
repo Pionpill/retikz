@@ -202,17 +202,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartScatter',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.scatter',
+              capability: 'chart.scatter',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'scatter-minimal',
-                order: 10,
-              },
+              layout: 'article',
             },
           },
           {
