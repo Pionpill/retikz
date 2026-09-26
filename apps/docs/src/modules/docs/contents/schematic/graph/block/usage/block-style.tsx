@@ -1,15 +1,17 @@
 import { Block, BlockHeader, BlockRow, BlockSection, Graph } from '@retikz/graph-react';
 import type { FC } from 'react';
 
+import type { Lang } from '@/i18n';
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
-import { blockStyleControls, previewControlContract } from './block-style.en.controls';
+import { blockStyleControls, createPreviewControlContract } from './block-style.controls';
+import { blockStyleI18n } from './block-style.i18n';
 
 export const previewControls = blockStyleControls;
 
-/** Renders the Block style preview with the supplied control values */
-export const BlockStylePreview = (values: PreviewControlValuesFor<typeof blockStyleControls>) => {
+/** 使用给定 controls 值渲染 Block 样式预览 */
+export const BlockStylePreview = (values: PreviewControlValuesFor<typeof blockStyleControls>, lang: Lang = 'zh') => {
   const backgroundOpacity = typeof values.backgroundOpacity === 'number' ? values.backgroundOpacity : 0.04;
   const borderWidth = typeof values.borderWidth === 'number' ? values.borderWidth : 1;
   const cornerRadius = typeof values.cornerRadius === 'number' ? values.cornerRadius : 8;
@@ -64,7 +66,7 @@ export const BlockStylePreview = (values: PreviewControlValuesFor<typeof blockSt
             opacity: headerTitleOpacity,
           }}
           description={{
-            text: 'Data access interface',
+            text: blockStyleI18n[lang].description,
             textColor: headerDescriptionTextColor,
             font: {
               size: headerDescriptionFontSize,
@@ -74,7 +76,7 @@ export const BlockStylePreview = (values: PreviewControlValuesFor<typeof blockSt
             opacity: headerDescriptionOpacity,
           }}
         />
-        <BlockSection title="Methods">
+        <BlockSection title={blockStyleI18n[lang].methods}>
           <BlockRow
             content={{
               text: 'findById(id)',
@@ -93,11 +95,16 @@ export const BlockStylePreview = (values: PreviewControlValuesFor<typeof blockSt
   );
 };
 
-const controlledPreview = defineControlledPreview(previewControlContract, BlockStylePreview);
-
-export const previewSource = withGraphPreviewSource(controlledPreview.source);
-
-/** Block shell style controls demo */
-const Demo: FC = controlledPreview.Component;
-
+const createPreview = (lang: Lang) =>
+  defineControlledPreview(createPreviewControlContract(lang), values => BlockStylePreview(values, lang));
+const previews = { zh: createPreview('zh'), en: createPreview('en') };
+export const previewSource = withGraphPreviewSource(previews.zh.source);
+/** 示例语言 */
+export type BlockStyleProps = { lang?: Lang };
+/** 结构块交互示例 */
+const Demo: FC<BlockStyleProps> = props => {
+  const { lang = 'zh' } = props;
+  const Preview = previews[lang].Component;
+  return <Preview />;
+};
 export default Demo;

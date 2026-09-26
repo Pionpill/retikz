@@ -2,17 +2,19 @@ import { Block, BlockHeader, Graph } from '@retikz/graph-react';
 import { Node } from '@retikz/react';
 import type { FC } from 'react';
 
+import type { Lang } from '@/i18n';
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
-import { blockCustomControls, previewControlContract } from './block-custom.en.controls';
+import { blockCustomControls, createPreviewControlContract } from './block-custom.controls';
+import { blockCustomI18n } from './block-custom.i18n';
 
 const ACCENT = '#f97316';
 
 export const previewControls = blockCustomControls;
 
-/** Composes custom Block content from open slots and an ordinary Core Node */
-export const BlockCustomPreview = (values: PreviewControlValuesFor<typeof blockCustomControls>) => (
+/** 使用开放 slot 与普通 Core Node 组合自定义 Block 内容 */
+export const BlockCustomPreview = (values: PreviewControlValuesFor<typeof blockCustomControls>, lang: Lang = 'zh') => (
   <Graph viewBox={{ x: -90, y: -64, width: 420, height: 340 }}>
     <Block id="user-service">
       <BlockHeader
@@ -27,7 +29,7 @@ export const BlockCustomPreview = (values: PreviewControlValuesFor<typeof blockC
           </Node>
         }
         title="UserService"
-        description="Application service"
+        description={blockCustomI18n[lang].description}
         trail={
           <Node
             position={[0, 0]}
@@ -62,11 +64,16 @@ export const BlockCustomPreview = (values: PreviewControlValuesFor<typeof blockC
   </Graph>
 );
 
-const controlledPreview = defineControlledPreview(previewControlContract, BlockCustomPreview);
-
-export const previewSource = withGraphPreviewSource(controlledPreview.source);
-
-/** Custom Block elements controls demo */
-const Demo: FC = controlledPreview.Component;
-
+const createPreview = (lang: Lang) =>
+  defineControlledPreview(createPreviewControlContract(lang), values => BlockCustomPreview(values, lang));
+const previews = { zh: createPreview('zh'), en: createPreview('en') };
+export const previewSource = withGraphPreviewSource(previews.zh.source);
+/** 示例语言 */
+export type BlockCustomProps = { lang?: Lang };
+/** 结构块交互示例 */
+const Demo: FC<BlockCustomProps> = props => {
+  const { lang = 'zh' } = props;
+  const Preview = previews[lang].Component;
+  return <Preview />;
+};
 export default Demo;

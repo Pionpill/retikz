@@ -1,0 +1,265 @@
+---
+title: 基础用法
+description: 组合结构化内容，控制布局、样式与独立区域连接。
+---
+
+用 Block 将标题、分区和文本行组合为可以被关系连接的对象。先完成[快速开始](/schematic/graph/get-start)，再选择下方任一接入方式。
+
+## 接入方式
+
+四种写法绘制同一个 User。Vanilla 示例需要已有 `<div id="diagram"></div>`，卸载时调用 `view.dispose()`。
+
+<ComponentPreview files="/schematic/graph/block/block-minimal" size="sm" hideCode />
+
+```text
+Graph
+└── Block
+    ├── BlockHeader
+    └── BlockSection
+        └── BlockRow
+```
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Block, BlockHeader, BlockRow, BlockSection, Graph } from '@retikz/graph-react';
+import type { FC } from 'react';
+const Example: FC = () => (
+  <Graph>
+    <Block id="user">
+      <BlockHeader title="User" description="领域实体" />
+      <BlockSection title="字段">
+        <BlockRow content={['name', 'string']} />
+      </BlockSection>
+    </Block>
+  </Graph>
+);
+export default Example;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'block',
+      id: 'user',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'blockHeader',
+          title: 'User',
+          description: '领域实体',
+        },
+        {
+          namespace: 'graph',
+          type: 'blockSection',
+          title: '字段',
+          children: [
+            {
+              namespace: 'graph',
+              type: 'blockRow',
+              content: ['name', 'string'],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+export default Example;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { block, blockHeader, blockSection, blockRow, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+const input = scene({
+  children: [
+    block({
+      id: 'user',
+      children: [
+        blockHeader({ title: 'User', description: '领域实体' }),
+        blockSection({ title: '字段', children: [blockRow({ content: ['name', 'string'] })] }),
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, { adapters: createGraphVanillaAdapters() });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { mount } from '@retikz/vanilla/dom';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'block',
+      id: 'user',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'blockHeader',
+          title: 'User',
+          description: '领域实体',
+        },
+        {
+          namespace: 'graph',
+          type: 'blockSection',
+          title: '字段',
+          children: [
+            {
+              namespace: 'graph',
+              type: 'blockRow',
+              content: ['name', 'string'],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir, { compile: { composites: createGraphDefinitions() } });
+```
+
+</DocTab>
+</DocTabs>
+
+## 组织内容
+
+### 内置组件
+
+Block family 提供四个常用的内置组件：
+
+| 元素           | 职责                                                        |
+| -------------- | ----------------------------------------------------------- |
+| `Block`        | 提供可被关系引用的外层纵向布局与可见边界                    |
+| `BlockHeader`  | 展示必填 title 与可选 description，并提供 icon / trail slot |
+| `BlockSection` | 为一组有序内容提供可选标题与独立边界                        |
+| `BlockRow`     | 用 `content` 横向排列一个或多个文本项                       |
+
+下面的 playground 只使用内置组件组合最小数据结构。第一个 Section 始终存在；controls 可以为它添加额外 Row，或添加第二个 Section，并分别调整 Block 直接 children、Section 内部 items 与 Row 内容项之间的间距。Row 使用横向 Flex 布局：一个内容项占满可用宽度，两个内容项按 1:1 均分，三个内容项按 1:1:1 均分；每项既可以是字符串，也可以是带局部文字样式的 `IRBlockText` 对象。Row content 默认使用 `sm` 字号；等分所需的 `basis: 0`、`grow: 1`、`shrink: 1` 与 `min: 0` 是 lowering 默认值，不会写回输入 Source IR
+
+<ComponentPreview
+  files="block-builtin"
+  size="lg"
+  caption="添加第二个 Section 或额外 Row，并分别调整 Block、Section 与 Row 的间距。"
+/>
+
+### 自定义元素
+
+`BlockHeader` 的 `icon` 与 `trail` 都接受任意 child，`Block` body 也不限于 Section 或 Row。下面的例子在 Header 两侧放入自定义 Core Node，并在 body 中直接加入一个普通 Node；controls 可以修改这个 Node 的内容、shape、尺寸、变换与外观，所有状态都与内置结构共用同一条编译链路
+
+<ComponentPreview files="block-custom" size="xl" caption="调整自定义 body Node，同时观察 Header slot 保持不变。" />
+
+### 独立区域与连接
+
+Section 与 Row 支持完整的 Core Scope，并可通过显式 `id` 参与 Core 的寻址。Relation 继续复用 `NodeTarget + anchor / boundary`；Block 不建立第二套 Port IR
+
+<ComponentPreview
+  files="block-connection"
+  size="sm"
+  caption="调用方与校验器沿 Block 垂直中心对齐；左侧 Relation 连接整个 user Block，右侧 Relation 折向 user.fields Section，箭头尖端分别停在 Block 外框与 Section 背景边界。"
+/>
+
+本例固定 Block 宽度与内容高度；右侧 way 的终点使用已编写的坐标。修改内容或字体后需要重新调整路径，它不是自动寻路示例。
+
+### 样式调整
+
+Block 外框复用 Standard Surface。这个 playground 通过 controls 改变 shell 的内边距、背景、边框与圆角，并分别调整 `BlockHeader` title、description 与 `BlockRow.content` 的颜色、字号、字重、字形和透明度
+
+<ComponentPreview files="block-style" size="xl" caption="调整 Block 外框、Header 文字与 Row content 的局部样式。" />
+
+### 封装代码实体
+
+需要把名称、属性或逻辑保存为独立实体时，参阅 [Block 扩展用法](/schematic/graph/block/extension)。它使用严格 Source 与 Definition 生成 Block 内容，并复用现有布局、主题和连接能力。
+
+## 错误与限制
+
+- `BlockRow.content` 与 `children` 互斥；文字用 content，需要完整节点外壳或其他组件时使用 children。
+- Header 的 title 必填，icon / trail 各接受至多一个 child。Header 不提供独立 Scope id。
+- Block / Section / Row 的 id 不自动加父级前缀；需要隔离名称时使用 localNamespace。
+- width 与 minWidth 包含水平 padding；省略时 Block 的有效 minWidth 为 240。默认值在编译时生效，不写回 Source。
+- graphDefaults / graphRules 作用于可见后代，当前 Block 外框直接用 background / border / cornerRadius 设置。显式 border 替换主题的整个 border 字段。
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'Block.children',
+      kind: 'property',
+      type: 'ReadonlyArray<IRChild> | ReactNode',
+      description: '按声明顺序纵向排列的内容',
+    },
+    {
+      name: 'Block.width / minWidth',
+      kind: 'property',
+      type: 'number',
+      description: '包含水平 padding 的总宽度；minWidth 默认 240',
+    },
+    {
+      name: 'Block.gap',
+      kind: 'property',
+      type: 'number',
+      description: '直接 children 的间距',
+      defaultValue: '8',
+    },
+    {
+      name: 'BlockHeader.title / description',
+      kind: 'property',
+      type: 'IRBlockText',
+      description: '字符串或带 text、font、textColor 等样式的对象；title 必填',
+    },
+    {
+      name: 'BlockSection.gap',
+      kind: 'property',
+      type: 'number',
+      description: '分区内容间距',
+      defaultValue: '4',
+    },
+    {
+      name: 'BlockRow.content',
+      kind: 'property',
+      type: 'IRBlockText | Array<IRBlockText>',
+      description: '单个文本项占满，多项等分可用宽度；与 children 互斥',
+    },
+    {
+      name: 'BlockRow.gap',
+      kind: 'property',
+      type: 'number',
+      description: '横向文本或 child 间距',
+      defaultValue: '8',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Block 自定义用法', description: '定义领域 Source 与内容组合', url: '/schematic/graph/block/extension' },
+    { title: 'Group', description: '保留子元素位置的可见分组', url: '/schematic/graph/group' },
+  ]}
+/>

@@ -782,22 +782,22 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   BlockSchema: {
     schema: GraphIR.BlockSchema,
     label: 'Block',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/usage',
   },
   BlockHeaderSchema: {
     schema: GraphIR.BlockHeaderSchema,
     label: 'BlockHeader',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/usage',
   },
   BlockSectionSchema: {
     schema: GraphIR.BlockSectionSchema,
     label: 'BlockSection',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/usage',
   },
   BlockRowSchema: {
     schema: GraphIR.BlockRowSchema,
     label: 'BlockRow',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/usage',
   },
   EntitySchema: {
     schema: GraphIR.EntitySchema,

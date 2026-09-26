@@ -108,7 +108,7 @@ export const schematicSection: Array<Section> = [
         label: 'schematic.block',
         sidebarGroup: 'schematic.components',
         children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          { id: 'usage', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
           {
             id: 'extension',
             label: 'schematic.extensionUsage',
