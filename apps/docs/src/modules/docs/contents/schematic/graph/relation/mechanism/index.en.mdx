@@ -1,0 +1,78 @@
+---
+title: Implementation
+description: Trace Relation semantic validation, structure overrides, and lowering to Core Path.
+---
+
+This page explains the resulting directions, markers, and geometry. See [Basic usage](/schematic/graph/relation/usage) for authoring and [Custom usage](/schematic/graph/relation/custom) for domain definitions.
+
+## Semantic validation preserves endpoint identity
+
+React / Vanilla normalizes string endpoints into NodeTargets and way or Step children into route. The Graph resolver looks up role, kind, and predicate, checks ownership and parameters, then selects the effective direction: instance direction → kind default → role default. It must belong to the kind's allowed set, or the role's set when omitted.
+
+<ComponentPreview
+  files="relation-flow"
+  type="flow"
+  size="xs"
+  hideCode
+  caption="Graph resolves relationship semantics and appearance; Core evaluates endpoints, path geometry, and arrow drawing."
+/>
+
+`reverse` selects a different direction recipe. It neither exchanges source and target nor reverses the authored route. A custom predicate receives its schema-parsed parameters, not endpoint geometry.
+
+<SourceLinks
+  sources={[
+    { label: 'Relation normalization', path: 'packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts' },
+    {
+      label: 'Semantics, directions, and parameters',
+      path: 'packages/schematic/graph/src/resolve/relation/resolve.ts',
+    },
+  ]}
+/>
+
+## Structure and appearance resolve separately
+
+Structure determines sourceMarker, targetMarker, and dashPattern. Resolution starts with the role's complete recipe for the effective direction, then applies sparse kind overrides, predicate resolveStructure output, and matching theme structure rules. Overrides replace individual fields; `false` explicitly removes a marker or dashes.
+
+Appearance covers colors, widths, opacity, label fonts, and marker appearance. Graph author defaults / rules apply through content-tree context layers and project onto instances; explicit instance values win. Theme appearance supplies lower-level defaults. Marker appearance cannot change shape, which belongs to the structure recipe.
+
+| Input                                  | Changes                          | Preserves                              |
+| -------------------------------------- | -------------------------------- | -------------------------------------- |
+| role / kind / direction                | Selected structure recipe        | Endpoint identity and route            |
+| predicate.resolveStructure             | Structure fields                 | Endpoint layout and business execution |
+| style, marker appearance, label fields | Path, arrow, and text appearance | Relation role / kind                   |
+| route                                  | Core Step geometry               | Stored source / target                 |
+
+Status and group colors participate through appearance defaults. Numeric stroke, label foreground, and marker color follow the relation color; marker fill follows the resolved marker color. Explicit fields may override each independently. During lowering, `style.dashPattern` takes precedence over the structure's dashPattern.
+
+<SourceLinks
+  sources={[
+    { label: 'Structure and appearance overrides', path: 'packages/schematic/graph/src/resolve/relation/resolve.ts' },
+    { label: 'Built-in direction recipes', path: 'packages/schematic/graph/src/providers/relation/definitions.ts' },
+  ]}
+/>
+
+## One relation lowers to one Core Path
+
+Without route, lowering emits `move(source) → line(target)`. An explicit route becomes Path.children directly; lowering neither compares its endpoints to semantic endpoints nor appends connector segments. sourceMarker / targetMarker become Arrow marks at positions 0 / 1. Core handles shape lookup, marker shortening, and drawing.
+
+Labels become Path.label. Each label's text color and opacity win over defaults, while font fields inherit individually. When placement and side are both absent, lowering sets inside so labels sit on the centerline. Multiple labels remain separate labels rather than a new text model.
+
+The id and non-conflicting Core Path fields pass through; relation-specific fields are removed. Core handles unresolved endpoints, duplicate ids, and position expressions.
+
+<SourceLinks
+  sources={[
+    { label: 'Lower Relation to Path', path: 'packages/schematic/graph/src/pipeline/relation/lower.ts' },
+    { label: 'Relation Source constraints', path: 'packages/schematic/graph/src/schemas/relation/schema.ts' },
+  ]}
+/>
+
+## Registration errors surface at assembly
+
+The registry combines built-in and custom definitions, rejects replacement keys, and checks parent roles, kind ownership, allowed directions, and complete recipes. `define*` only preserves the definition object; a successful call does not prove the assembled dependency set is valid. Predicate parameters and callback results are checked when consumed.
+
+<SourceLinks
+  sources={[
+    { label: 'Definition construction', path: 'packages/schematic/graph/src/contract/relation/define.ts' },
+    { label: 'Registry validation', path: 'packages/schematic/graph/src/providers/relation/registry.ts' },
+  ]}
+/>

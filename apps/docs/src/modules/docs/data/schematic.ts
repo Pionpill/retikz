@@ -84,6 +84,12 @@ export const schematicSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
+          {
+            id: 'mechanism',
+            label: 'schematic.mechanism',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
         ],
       },
       {
