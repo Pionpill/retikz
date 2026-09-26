@@ -8,6 +8,8 @@ import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const translations: Readonly<Record<string, string>> = {
+  '非空对象值的展示方式，递归作用于嵌套 data':
+    'Display mode for nonempty object values, applied recursively to nested data',
   '完整的 List Source，包含 namespace、type 及 items 或 data':
     'Complete List Source including namespace, type, and either items or data',
   '输入的浅拷贝；不校验、不补默认值，嵌套对象与输入共享引用':
@@ -89,11 +91,7 @@ export const writeStandardContainerApiReferences = async (
       {
         suffix: '-react',
         title: { zh: '`@retikz/standard-react`', en: '`@retikz/standard-react`' },
-        symbols: [
-          ...(name === 'List' ? [name] : []),
-          `${name}Props`,
-          ...markers.flatMap(marker => [marker, `${marker}Props`]),
-        ],
+        symbols: [name, `${name}Props`, ...markers.flatMap(marker => [marker, `${marker}Props`])],
       },
       {
         suffix: '-vanilla',
@@ -128,16 +126,11 @@ export const writeStandardContainerApiReferences = async (
               title: owner.title,
               symbols: owner.symbols,
               symbolPairs:
-                name === 'List'
-                  ? owner.suffix === '-react'
-                    ? [
-                        ['List', 'ListProps'],
-                        ['ListItem', 'ListItemProps'],
-                      ]
-                    : owner.suffix === '-vanilla'
-                      ? [['list', 'InputList']]
-                      : undefined
-                  : undefined,
+                owner.suffix === '-react'
+                  ? [[name, `${name}Props`], ...markers.map(marker => [marker, `${marker}Props`] as [string, string])]
+                  : owner.suffix === '-vanilla'
+                    ? [[slug, `Input${name}`]]
+                    : undefined,
               ...(name === 'List' && owner.suffix === ''
                 ? {
                     memberTypeLabels: {

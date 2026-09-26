@@ -12,6 +12,22 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/standard/container#IRMap': [
+    { value: 'entries', field: 'data', type: 'never', label: { zh: '显式键值记录', en: 'Explicit entries' } },
+    { value: 'data', field: 'entries', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
+  ],
+  '@retikz/standard-vanilla/container#InputMap': [
+    { value: 'entries', field: 'data', type: 'never', label: { zh: '显式键值记录', en: 'Explicit entries' } },
+    { value: 'data', field: 'entries', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
+  ],
+  '@retikz/standard-react/container#MapKeyProps': [
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+    { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
+  ],
+  '@retikz/standard-react/container#MapValueProps': [
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+    { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
+  ],
   '@retikz/standard-vanilla/container#InputList': [
     { value: 'items', field: 'data', type: 'never', label: { zh: '显式单元格', en: 'Explicit cells' } },
     { value: 'data', field: 'items', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },

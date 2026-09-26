@@ -177,6 +177,16 @@ console.log(svg);
 
 每个 `MapEntry` 必须恰好包含一个 `MapKey` 和一个 `MapValue`；每格设置 `text` 或唯一的 drawable child，二者互斥。
 
+```text
+Map
+└── MapEntry
+    ├── MapKey
+    └── MapValue
+        └── List
+```
+
+`MapEntry` 是一条记录，`MapKey` 和 `MapValue` 分别占据键列和值列。组合组件只声明内容，不能脱离上述父子关系单独渲染。
+
 多个图元先用 `Scope` 包成一个 child，再放入单元格。React 的数据数组只放文字配置，不嵌 JSX；Vanilla 的单格 `content` 接受文字或一个 authoring child，直接 IR 的 `content` 接受文字或一个可序列化图元。
 
 <ComponentPreview files="map-composition" size="sm" />
