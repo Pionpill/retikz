@@ -13,24 +13,24 @@
 
 <ApiTable>
 
-| 成员              | 类型                                                                                     | 默认值 | 说明                   |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------- |
-| `animations?`     | `AxesInput['animations']`                                                                | —      | —                      |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | —                      |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | —                      |
-| `defaults?`       | `AxesInput['defaults']`                                                                  | —      | —                      |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰 |
-| `id?`             | `string`                                                                                 | —      | —                      |
-| `localNamespace?` | `false \| true`                                                                          | —      | —                      |
-| `meta?`           | `Record<string, JsonValue>`                                                              | —      | —                      |
-| `origin?`         | `AxesInput['origin']`                                                                    | —      | —                      |
-| `placement?`      | `AxesInput['placement']`                                                                 | —      | —                      |
-| `style?`          | `AxesInput['style']`                                                                     | —      | —                      |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | —                      |
-| `transforms?`     | `AxesInput['transforms']`                                                                | —      | —                      |
-| `x`               | `AxesInput['x']`                                                                         | —      | —                      |
-| `y`               | `AxesInput['y']`                                                                         | —      | —                      |
-| `zIndex?`         | `number`                                                                                 | —      | —                      |
+| 成员              | 类型                                                                                     | 默认值                             | 说明                                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `animations?`     | `AxesInput['animations']`                                                                | —                                  | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —                                  | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —                                  | 以 scope 局部坐标描述的裁剪区域                                                                |
+| `defaults?`       | `AxesInput['defaults']`                                                                  | —                                  | 后代默认值通道及继承屏障                                                                       |
+| `frame?`          | `IRScopeFrame`                                                                           | —                                  | 可省略默认值的包络装饰                                                                         |
+| `id?`             | `string`                                                                                 | —                                  | 可选引用 id；始终注册到父级命名空间                                                            |
+| `localNamespace?` | `false \| true`                                                                          | —                                  | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+| `meta?`           | `Record<string, JsonValue>`                                                              | —                                  | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+| `origin?`         | `AxesInput['origin']`                                                                    | `{"position":[0,0],"label":false}` | 坐标轴、网格、刻度与文字共用的原点                                                             |
+| `placement?`      | `AxesInput['placement']`                                                                 | —                                  | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+| `style?`          | `AxesInput['style']`                                                                     | —                                  | 当前实例的视觉覆盖，按字段继承与覆盖                                                           |
+| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —                                  | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+| `transforms?`     | `AxesInput['transforms']`                                                                | —                                  | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| `x`               | `AxesInput['x']`                                                                         | —                                  | 水平轴与垂直网格配置                                                                           |
+| `y`               | `AxesInput['y']`                                                                         | —                                  | 垂直轴与水平网格配置                                                                           |
+| `zIndex?`         | `number`                                                                                 | —                                  | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
 
 </ApiTable>
 

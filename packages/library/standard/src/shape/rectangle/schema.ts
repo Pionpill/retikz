@@ -6,8 +6,8 @@ import { ShapePathSchema } from '../shared';
 
 const properties = {
   ...ShapePathSchema.shape,
-  namespace: literal('standard'),
-  type: literal('rectangle'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('rectangle').describe('Composite type for the rectangle shape.'),
   cornerRadius: NonNegativeNumberSchema.default(0).describe(
     'Corner radius; clamped to half the shorter rectangle side.',
   ),

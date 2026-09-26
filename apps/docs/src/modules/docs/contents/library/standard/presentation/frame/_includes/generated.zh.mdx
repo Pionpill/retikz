@@ -250,21 +250,21 @@ export declare const frameTitle: (input: FrameTitleInput) => IRFrameTitle;
 
 <ApiTable>
 
-| 成员            | 类型                                                                                             | 默认值 | 说明 |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?`   | `ZodInfer<typeof FrameDescriptionSchema.shape["animations"]>`                                    | —      | —    |
-| `boundary?`     | `ZodInfer<typeof FrameDescriptionSchema.shape["boundary"]>`                                      | —      | —    |
-| `cornerRadius?` | `number`                                                                                         | —      | —    |
-| `id?`           | `string`                                                                                         | —      | —    |
-| `label?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["label"]>`                                         | —      | —    |
-| `layout?`       | `ZodInfer<typeof FrameDescriptionSchema.shape["layout"]>`                                        | —      | —    |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —      | —    |
-| `rotate?`       | `number`                                                                                         | —      | —    |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | —    |
-| `shape?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["shape"]>`                                         | —      | —    |
-| `style?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["style"]>`                                         | —      | —    |
-| `text`          | `ZodInfer<typeof FrameDescriptionSchema.shape["text"]>`                                          | —      | —    |
-| `zIndex?`       | `number`                                                                                         | —      | —    |
+| 成员            | 类型                                                                                             | 默认值 | 说明                                     |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------- |
+| `animations?`   | `ZodInfer<typeof FrameDescriptionSchema.shape["animations"]>`                                    | —      | 节点动画轨道，不参与布局或跨作用域继承   |
+| `boundary?`     | `ZodInfer<typeof FrameDescriptionSchema.shape["boundary"]>`                                      | —      | 路径连接此节点时使用的默认边界           |
+| `cornerRadius?` | `number`                                                                                         | —      | 矩形节点的圆角半径                       |
+| `id?`           | `string`                                                                                         | —      | 标题或说明节点的可选引用身份             |
+| `label?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["label"]>`                                         | —      | 附着于节点边界的标签                     |
+| `layout?`       | `ZodInfer<typeof FrameDescriptionSchema.shape["layout"]>`                                        | —      | 节点尺寸、间距与文字排布                 |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传至 Scene 的 JSON 元数据              |
+| `rotate?`       | `number`                                                                                         | —      | 绕节点中心旋转的角度，正值在视觉上顺时针 |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 节点的均匀或分轴缩放                     |
+| `shape?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["shape"]>`                                         | —      | 节点外形，可使用内置或已注册形状         |
+| `style?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["style"]>`                                         | —      | 节点视觉覆盖                             |
+| `text`          | `ZodInfer<typeof FrameDescriptionSchema.shape["text"]>`                                          | —      | 作为标题或辅助说明呈现的必填节点文字     |
+| `zIndex?`       | `number`                                                                                         | —      | 同级图元的绘制层级                       |
 
 </ApiTable>
 
@@ -310,21 +310,21 @@ export type FrameInput = Omit<IRFrame, 'namespace' | 'type'>;
 
 <ApiTable>
 
-| 成员            | 类型                                                                                             | 默认值 | 说明 |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?`   | `ZodInfer<typeof FrameTitleSchema.shape["animations"]>`                                          | —      | —    |
-| `boundary?`     | `ZodInfer<typeof FrameTitleSchema.shape["boundary"]>`                                            | —      | —    |
-| `cornerRadius?` | `number`                                                                                         | —      | —    |
-| `id?`           | `string`                                                                                         | —      | —    |
-| `label?`        | `ZodInfer<typeof FrameTitleSchema.shape["label"]>`                                               | —      | —    |
-| `layout?`       | `ZodInfer<typeof FrameTitleSchema.shape["layout"]>`                                              | —      | —    |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —      | —    |
-| `rotate?`       | `number`                                                                                         | —      | —    |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | —    |
-| `shape?`        | `ZodInfer<typeof FrameTitleSchema.shape["shape"]>`                                               | —      | —    |
-| `style?`        | `ZodInfer<typeof FrameTitleSchema.shape["style"]>`                                               | —      | —    |
-| `text`          | `ZodInfer<typeof FrameTitleSchema.shape["text"]>`                                                | —      | —    |
-| `zIndex?`       | `number`                                                                                         | —      | —    |
+| 成员            | 类型                                                                                             | 默认值 | 说明                                     |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------- |
+| `animations?`   | `ZodInfer<typeof FrameTitleSchema.shape["animations"]>`                                          | —      | 节点动画轨道，不参与布局或跨作用域继承   |
+| `boundary?`     | `ZodInfer<typeof FrameTitleSchema.shape["boundary"]>`                                            | —      | 路径连接此节点时使用的默认边界           |
+| `cornerRadius?` | `number`                                                                                         | —      | 矩形节点的圆角半径                       |
+| `id?`           | `string`                                                                                         | —      | 标题或说明节点的可选引用身份             |
+| `label?`        | `ZodInfer<typeof FrameTitleSchema.shape["label"]>`                                               | —      | 附着于节点边界的标签                     |
+| `layout?`       | `ZodInfer<typeof FrameTitleSchema.shape["layout"]>`                                              | —      | 节点尺寸、间距与文字排布                 |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传至 Scene 的 JSON 元数据              |
+| `rotate?`       | `number`                                                                                         | —      | 绕节点中心旋转的角度，正值在视觉上顺时针 |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 节点的均匀或分轴缩放                     |
+| `shape?`        | `ZodInfer<typeof FrameTitleSchema.shape["shape"]>`                                               | —      | 节点外形，可使用内置或已注册形状         |
+| `style?`        | `ZodInfer<typeof FrameTitleSchema.shape["style"]>`                                               | —      | 节点视觉覆盖                             |
+| `text`          | `ZodInfer<typeof FrameTitleSchema.shape["text"]>`                                                | —      | 作为标题或辅助说明呈现的必填节点文字     |
+| `zIndex?`       | `number`                                                                                         | —      | 同级图元的绘制层级                       |
 
 </ApiTable>
 

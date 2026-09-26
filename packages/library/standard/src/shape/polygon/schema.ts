@@ -6,8 +6,8 @@ import { ShapePathSchema, ShapeVertexAngleSchema } from '../shared';
 
 const properties = {
   ...ShapePathSchema.shape,
-  namespace: literal('standard'),
-  type: literal('polygon'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('polygon').describe('Composite type for the polygon shape.'),
   center: PositionSchema.describe('Shape center; coordinate forms depend on the chosen geometry branch.'),
   sides: number().int().min(3).describe('Number of polygon sides; at least three.'),
   rotate: ShapeVertexAngleSchema,

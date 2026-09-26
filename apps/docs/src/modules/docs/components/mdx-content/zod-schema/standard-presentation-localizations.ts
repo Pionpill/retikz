@@ -1,5 +1,5 @@
 /** 格线、主线与边框复用的描边字段说明 */
-const gridStrokeDescriptions = {
+export const standardStrokeDescriptions = {
   color: '主几何的主色；描边、填充、标签和箭头在未单独覆盖时可继承此颜色',
   stroke: '主几何的描边画笔，可使用上下文颜色或 IRPaint',
   strokeWidth: '描边宽度，单位为用户坐标单位',
@@ -15,7 +15,7 @@ const gridStrokeDescriptions = {
 /** 为共享描边说明生成对应匿名对象的点路径 */
 const gridStrokeDescriptionsAt = (prefix: string): Record<string, string> =>
   Object.fromEntries(
-    Object.entries(gridStrokeDescriptions).map(([field, description]) => [`${prefix}.${field}`, description]),
+    Object.entries(standardStrokeDescriptions).map(([field, description]) => [`${prefix}.${field}`, description]),
   );
 
 /** Grid 的中文字段说明，API 生成与 Schema 展示共用 */

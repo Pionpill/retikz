@@ -34,26 +34,26 @@ export type StarProps = InputStar &
 
 <ApiTable>
 
-| Member            | Type                                  | Default | Description                                     |
-| ----------------- | ------------------------------------- | ------- | ----------------------------------------------- |
-| `animations?`     | `InputStar["animations"]`             | —       | —                                               |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                      |
-| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides |
-| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings     |
-| `center`          | `[number, number]`                    | —       | —                                               |
-| `id?`             | `string`                              | —       | —                                               |
-| `innerRadius`     | `number`                              | —       | —                                               |
-| `label?`          | `InputStar["label"]`                  | —       | —                                               |
-| `marks?`          | `InputStar["marks"]`                  | —       | —                                               |
-| `meta?`           | `Record<string, JsonValue>`           | —       | —                                               |
-| `outerRadius`     | `number`                              | —       | —                                               |
-| `points`          | `number`                              | —       | —                                               |
-| `rotate?`         | `number`                              | —       | —                                               |
-| `roundedCorners?` | `number`                              | —       | —                                               |
-| `scale?`          | `number \| { x: number; y: number; }` | —       | —                                               |
-| `style?`          | `InputStar["style"]`                  | —       | —                                               |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                     |
-| `zIndex?`         | `number`                              | —       | —                                               |
+| Member            | Type                                  | Default | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputStar["animations"]`             | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
+| `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
+| `id?`             | `string`                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+| `innerRadius`     | `number`                              | —       | Inner radius; cannot exceed the outer radius.                                                                                                                                |
+| `label?`          | `InputStar["label"]`                  | —       | Host label attached to this path-like relation.                                                                                                                              |
+| `marks?`          | `InputStar["marks"]`                  | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `outerRadius`     | `number`                              | —       | Circumradius of outer star vertices.                                                                                                                                         |
+| `points`          | `number`                              | —       | Number of outer star vertices; at least two.                                                                                                                                 |
+| `rotate?`         | `number`                              | `-90`   | Angle of the first outer vertex in degrees.                                                                                                                                  |
+| `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `style?`          | `InputStar["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
 
@@ -63,26 +63,26 @@ export type StarProps = InputStar &
 
 <ApiTable>
 
-| Member            | Type                                  | Default | Description                                     |
-| ----------------- | ------------------------------------- | ------- | ----------------------------------------------- |
-| `animations?`     | `InputStar["animations"]`             | —       | —                                               |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                      |
-| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides |
-| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings     |
-| `center`          | `[number, number]`                    | —       | —                                               |
-| `id?`             | `string`                              | —       | —                                               |
-| `innerRatio?`     | `number`                              | —       | —                                               |
-| `label?`          | `InputStar["label"]`                  | —       | —                                               |
-| `marks?`          | `InputStar["marks"]`                  | —       | —                                               |
-| `meta?`           | `Record<string, JsonValue>`           | —       | —                                               |
-| `outerRadius`     | `number`                              | —       | —                                               |
-| `points`          | `number`                              | —       | —                                               |
-| `rotate?`         | `number`                              | —       | —                                               |
-| `roundedCorners?` | `number`                              | —       | —                                               |
-| `scale?`          | `number \| { x: number; y: number; }` | —       | —                                               |
-| `style?`          | `InputStar["style"]`                  | —       | —                                               |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                     |
-| `zIndex?`         | `number`                              | —       | —                                               |
+| Member            | Type                                  | Default | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputStar["animations"]`             | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
+| `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
+| `id?`             | `string`                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+| `innerRatio?`     | `number`                              | `0.5`   | Ratio of inner to outer star radius.                                                                                                                                         |
+| `label?`          | `InputStar["label"]`                  | —       | Host label attached to this path-like relation.                                                                                                                              |
+| `marks?`          | `InputStar["marks"]`                  | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `outerRadius`     | `number`                              | —       | Circumradius of outer star vertices.                                                                                                                                         |
+| `points`          | `number`                              | —       | Number of outer star vertices; at least two.                                                                                                                                 |
+| `rotate?`         | `number`                              | `-90`   | Angle of the first outer vertex in degrees.                                                                                                                                  |
+| `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `style?`          | `InputStar["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
 
@@ -130,24 +130,24 @@ export declare const StarInputEmbedAdapter: InputEmbedAdapter<InputStar & { id?:
 
 <ApiTable>
 
-| Member            | Type                                  | Default | Description |
-| ----------------- | ------------------------------------- | ------- | ----------- |
-| `animations?`     | `IRStar["animations"]`                | —       | —           |
-| `center`          | `[number, number]`                    | —       | —           |
-| `id?`             | `string`                              | —       | —           |
-| `innerRadius`     | `number`                              | —       | —           |
-| `label?`          | `IRStar["label"]`                     | —       | —           |
-| `marks?`          | `IRStar["marks"]`                     | —       | —           |
-| `meta?`           | `Record<string, JsonValue>`           | —       | —           |
-| `namespace`       | `"standard"`                          | —       | —           |
-| `outerRadius`     | `number`                              | —       | —           |
-| `points`          | `number`                              | —       | —           |
-| `rotate?`         | `number`                              | —       | —           |
-| `roundedCorners?` | `number`                              | —       | —           |
-| `scale?`          | `number \| { x: number; y: number; }` | —       | —           |
-| `style?`          | `IRStar["style"]`                     | —       | —           |
-| `type`            | `"star"`                              | —       | —           |
-| `zIndex?`         | `number`                              | —       | —           |
+| Member            | Type                                  | Default | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRStar["animations"]`                | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
+| `id?`             | `string`                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+| `innerRadius`     | `number`                              | —       | Inner radius; cannot exceed the outer radius.                                                                                                                                |
+| `label?`          | `IRStar["label"]`                     | —       | Host label attached to this path-like relation.                                                                                                                              |
+| `marks?`          | `IRStar["marks"]`                     | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `namespace`       | `"standard"`                          | —       | Composite namespace for Standard drawing capabilities.                                                                                                                       |
+| `outerRadius`     | `number`                              | —       | Circumradius of outer star vertices.                                                                                                                                         |
+| `points`          | `number`                              | —       | Number of outer star vertices; at least two.                                                                                                                                 |
+| `rotate?`         | `number`                              | `-90`   | Angle of the first outer vertex in degrees.                                                                                                                                  |
+| `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `style?`          | `IRStar["style"]`                     | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `type`            | `"star"`                              | —       | Composite type for the star shape.                                                                                                                                           |
+| `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
 
@@ -157,24 +157,24 @@ export declare const StarInputEmbedAdapter: InputEmbedAdapter<InputStar & { id?:
 
 <ApiTable>
 
-| Member            | Type                                  | Default | Description |
-| ----------------- | ------------------------------------- | ------- | ----------- |
-| `animations?`     | `IRStar["animations"]`                | —       | —           |
-| `center`          | `[number, number]`                    | —       | —           |
-| `id?`             | `string`                              | —       | —           |
-| `innerRatio?`     | `number`                              | —       | —           |
-| `label?`          | `IRStar["label"]`                     | —       | —           |
-| `marks?`          | `IRStar["marks"]`                     | —       | —           |
-| `meta?`           | `Record<string, JsonValue>`           | —       | —           |
-| `namespace`       | `"standard"`                          | —       | —           |
-| `outerRadius`     | `number`                              | —       | —           |
-| `points`          | `number`                              | —       | —           |
-| `rotate?`         | `number`                              | —       | —           |
-| `roundedCorners?` | `number`                              | —       | —           |
-| `scale?`          | `number \| { x: number; y: number; }` | —       | —           |
-| `style?`          | `IRStar["style"]`                     | —       | —           |
-| `type`            | `"star"`                              | —       | —           |
-| `zIndex?`         | `number`                              | —       | —           |
+| Member            | Type                                  | Default | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRStar["animations"]`                | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
+| `id?`             | `string`                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+| `innerRatio?`     | `number`                              | `0.5`   | Ratio of inner to outer star radius.                                                                                                                                         |
+| `label?`          | `IRStar["label"]`                     | —       | Host label attached to this path-like relation.                                                                                                                              |
+| `marks?`          | `IRStar["marks"]`                     | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `namespace`       | `"standard"`                          | —       | Composite namespace for Standard drawing capabilities.                                                                                                                       |
+| `outerRadius`     | `number`                              | —       | Circumradius of outer star vertices.                                                                                                                                         |
+| `points`          | `number`                              | —       | Number of outer star vertices; at least two.                                                                                                                                 |
+| `rotate?`         | `number`                              | `-90`   | Angle of the first outer vertex in degrees.                                                                                                                                  |
+| `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `style?`          | `IRStar["style"]`                     | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `type`            | `"star"`                              | —       | Composite type for the star shape.                                                                                                                                           |
+| `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
 

@@ -82,13 +82,13 @@ export type MapEntryProps = {
 
 <ApiTable>
 
-| Member      | Type                        | Default | Description |
-| ----------- | --------------------------- | ------- | ----------- |
-| `children?` | `never`                     | —       | —           |
-| `id?`       | `string`                    | —       | —           |
-| `layout?`   | `CellMarkerProps['layout']` | —       | —           |
-| `style?`    | `CellMarkerProps['style']`  | —       | —           |
-| `text`      | `string`                    | —       | —           |
+| Member      | Type                        | Default | Description                                                                                         |
+| ----------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `children?` | `never`                     | —       | —                                                                                                   |
+| `id?`       | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?`   | `CellMarkerProps['layout']` | —       | —                                                                                                   |
+| `style?`    | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a List or Map cell.                                                     |
+| `text`      | `string`                    | —       | —                                                                                                   |
 
 </ApiTable>
 
@@ -98,13 +98,13 @@ export type MapEntryProps = {
 
 <ApiTable>
 
-| Member     | Type                        | Default | Description |
-| ---------- | --------------------------- | ------- | ----------- |
-| `children` | `ReactNode`                 | —       | —           |
-| `id?`      | `string`                    | —       | —           |
-| `layout?`  | `CellMarkerProps['layout']` | —       | —           |
-| `style?`   | `CellMarkerProps['style']`  | —       | —           |
-| `text?`    | `never`                     | —       | —           |
+| Member     | Type                        | Default | Description                                                                                         |
+| ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `children` | `ReactNode`                 | —       | —                                                                                                   |
+| `id?`      | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?`  | `CellMarkerProps['layout']` | —       | —                                                                                                   |
+| `style?`   | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a List or Map cell.                                                     |
+| `text?`    | `never`                     | —       | —                                                                                                   |
 
 </ApiTable>
 
@@ -133,13 +133,13 @@ export type MapKeyProps = CellMarkerProps;
 
 <ApiTable>
 
-| Member      | Type                        | Default | Description |
-| ----------- | --------------------------- | ------- | ----------- |
-| `children?` | `never`                     | —       | —           |
-| `id?`       | `string`                    | —       | —           |
-| `layout?`   | `CellMarkerProps['layout']` | —       | —           |
-| `style?`    | `CellMarkerProps['style']`  | —       | —           |
-| `text`      | `string`                    | —       | —           |
+| Member      | Type                        | Default | Description                                                                                         |
+| ----------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `children?` | `never`                     | —       | —                                                                                                   |
+| `id?`       | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?`   | `CellMarkerProps['layout']` | —       | —                                                                                                   |
+| `style?`    | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a List or Map cell.                                                     |
+| `text`      | `string`                    | —       | —                                                                                                   |
 
 </ApiTable>
 
@@ -149,13 +149,13 @@ export type MapKeyProps = CellMarkerProps;
 
 <ApiTable>
 
-| Member     | Type                        | Default | Description |
-| ---------- | --------------------------- | ------- | ----------- |
-| `children` | `ReactNode`                 | —       | —           |
-| `id?`      | `string`                    | —       | —           |
-| `layout?`  | `CellMarkerProps['layout']` | —       | —           |
-| `style?`   | `CellMarkerProps['style']`  | —       | —           |
-| `text?`    | `never`                     | —       | —           |
+| Member     | Type                        | Default | Description                                                                                         |
+| ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `children` | `ReactNode`                 | —       | —                                                                                                   |
+| `id?`      | `string`                    | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?`  | `CellMarkerProps['layout']` | —       | —                                                                                                   |
+| `style?`   | `CellMarkerProps['style']`  | —       | Sparse visual overrides for a List or Map cell.                                                     |
+| `text?`    | `never`                     | —       | —                                                                                                   |
 
 </ApiTable>
 
@@ -186,26 +186,26 @@ export type MapValueProps = CellMarkerProps;
 
 <ApiTable>
 
-| Member               | Type                                                                                     | Default | Description                                |
-| -------------------- | ---------------------------------------------------------------------------------------- | ------- | ------------------------------------------ |
-| `animations?`        | `IRMap['animations']`                                                                    | —       | —                                          |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —       | —                                          |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | —                                          |
-| `data?`              | `never`                                                                                  | —       | —                                          |
-| `dataObjectDisplay?` | `never`                                                                                  | —       | —                                          |
-| `defaults?`          | `IRMap['defaults']`                                                                      | —       | —                                          |
-| `entries`            | `Array<{`<br />`key: string \| InputCell;`<br />`value: string \| InputCell;`<br />`}>`  | —       | —                                          |
-| `frame?`             | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults |
-| `id?`                | `string`                                                                                 | —       | —                                          |
-| `label?`             | `IRMap['label']`                                                                         | —       | —                                          |
-| `layout?`            | `IRMap['layout']`                                                                        | —       | —                                          |
-| `localNamespace?`    | `false \| true`                                                                          | —       | —                                          |
-| `meta?`              | `Record<string, JsonValue>`                                                              | —       | —                                          |
-| `placement?`         | `IRMap['placement']`                                                                     | —       | —                                          |
-| `style?`             | `input<typeof MapSchema>['style']`                                                       | —       | —                                          |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | —                                          |
-| `transforms?`        | `IRMap['transforms']`                                                                    | —       | —                                          |
-| `zIndex?`            | `number`                                                                                 | —       | —                                          |
+| Member               | Type                                                                                     | Default | Description                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`        | `IRMap['animations']`                                                                    | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `data?`              | `never`                                                                                  | —       | —                                                                                                                                               |
+| `dataObjectDisplay?` | `never`                                                                                  | —       | —                                                                                                                                               |
+| `defaults?`          | `IRMap['defaults']`                                                                      | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `entries`            | `Array<{`<br />`key: string \| InputCell;`<br />`value: string \| InputCell;`<br />`}>`  | —       | —                                                                                                                                               |
+| `frame?`             | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults                                                                                                      |
+| `id?`                | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `label?`             | `IRMap['label']`                                                                         | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`            | `IRMap['layout']`                                                                        | —       | Map two-column allocation and spacing.                                                                                                          |
+| `localNamespace?`    | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`              | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`         | `IRMap['placement']`                                                                     | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`             | `input<typeof MapSchema>['style']`                                                       | —       | —                                                                                                                                               |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`        | `IRMap['transforms']`                                                                    | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`            | `number`                                                                                 | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
 
 </ApiTable>
 
@@ -215,26 +215,26 @@ export type MapValueProps = CellMarkerProps;
 
 <ApiTable>
 
-| Member               | Type                                                                                     | Default | Description                                |
-| -------------------- | ---------------------------------------------------------------------------------------- | ------- | ------------------------------------------ |
-| `animations?`        | `IRMap['animations']`                                                                    | —       | —                                          |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —       | —                                          |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | —                                          |
-| `data`               | `NonNullable<IRMap['data']>`                                                             | —       | —                                          |
-| `dataObjectDisplay?` | `IRMap['dataObjectDisplay']`                                                             | —       | —                                          |
-| `defaults?`          | `IRMap['defaults']`                                                                      | —       | —                                          |
-| `entries?`           | `never`                                                                                  | —       | —                                          |
-| `frame?`             | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults |
-| `id?`                | `string`                                                                                 | —       | —                                          |
-| `label?`             | `IRMap['label']`                                                                         | —       | —                                          |
-| `layout?`            | `IRMap['layout']`                                                                        | —       | —                                          |
-| `localNamespace?`    | `false \| true`                                                                          | —       | —                                          |
-| `meta?`              | `Record<string, JsonValue>`                                                              | —       | —                                          |
-| `placement?`         | `IRMap['placement']`                                                                     | —       | —                                          |
-| `style?`             | `input<typeof MapSchema>['style']`                                                       | —       | —                                          |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | —                                          |
-| `transforms?`        | `IRMap['transforms']`                                                                    | —       | —                                          |
-| `zIndex?`            | `number`                                                                                 | —       | —                                          |
+| Member               | Type                                                                                     | Default | Description                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`        | `IRMap['animations']`                                                                    | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `data`               | `NonNullable<IRMap['data']>`                                                             | —       | —                                                                                                                                               |
+| `dataObjectDisplay?` | `IRMap['dataObjectDisplay']`                                                             | —       | —                                                                                                                                               |
+| `defaults?`          | `IRMap['defaults']`                                                                      | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `entries?`           | `never`                                                                                  | —       | —                                                                                                                                               |
+| `frame?`             | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults                                                                                                      |
+| `id?`                | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `label?`             | `IRMap['label']`                                                                         | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`            | `IRMap['layout']`                                                                        | —       | Map two-column allocation and spacing.                                                                                                          |
+| `localNamespace?`    | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`              | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`         | `IRMap['placement']`                                                                     | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`             | `input<typeof MapSchema>['style']`                                                       | —       | —                                                                                                                                               |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`        | `IRMap['transforms']`                                                                    | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`            | `number`                                                                                 | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
 
 </ApiTable>
 
@@ -299,28 +299,28 @@ export declare const MapInputEmbedAdapter: InputEmbedAdapter<InputMap>;
 
 <ApiTable>
 
-| Member               | Type                                                                                     | Default | Description                                |
-| -------------------- | ---------------------------------------------------------------------------------------- | ------- | ------------------------------------------ |
-| `animations?`        | `IRScopeProps['animations']`                                                             | —       | —                                          |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —       | —                                          |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | —                                          |
-| `data?`              | `never`                                                                                  | —       | —                                          |
-| `dataObjectDisplay?` | `never`                                                                                  | —       | —                                          |
-| `defaults?`          | `IRScopeProps['defaults']`                                                               | —       | —                                          |
-| `entries`            | `Array<{`<br />`key: string \| IRCell;`<br />`value: string \| IRCell;`<br />`}>`        | —       | Explicit key/value cells                   |
-| `frame?`             | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults |
-| `id?`                | `string`                                                                                 | —       | —                                          |
-| `label?`             | `IRMap["label"]`                                                                         | —       | —                                          |
-| `layout?`            | `IRMap["layout"]`                                                                        | —       | —                                          |
-| `localNamespace?`    | `false \| true`                                                                          | —       | —                                          |
-| `meta?`              | `Record<string, JsonValue>`                                                              | —       | —                                          |
-| `namespace`          | `"standard"`                                                                             | —       | —                                          |
-| `placement?`         | `IRScopeProps['placement']`                                                              | —       | —                                          |
-| `style?`             | `input<typeof MapSchema>['style']`                                                       | —       | —                                          |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | —                                          |
-| `transforms?`        | `IRScopeProps['transforms']`                                                             | —       | —                                          |
-| `type`               | `"map"`                                                                                  | —       | —                                          |
-| `zIndex?`            | `number`                                                                                 | —       | —                                          |
+| Member               | Type                                                                                     | Default | Description                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`        | `IRScopeProps['animations']`                                                             | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `data?`              | `never`                                                                                  | —       | —                                                                                                                                               |
+| `dataObjectDisplay?` | `never`                                                                                  | —       | —                                                                                                                                               |
+| `defaults?`          | `IRScopeProps['defaults']`                                                               | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `entries`            | `Array<{`<br />`key: string \| IRCell;`<br />`value: string \| IRCell;`<br />`}>`        | —       | Explicit key/value cells                                                                                                                        |
+| `frame?`             | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults                                                                                                      |
+| `id?`                | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `label?`             | `IRMap["label"]`                                                                         | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`            | `IRMap["layout"]`                                                                        | —       | Map two-column allocation and spacing.                                                                                                          |
+| `localNamespace?`    | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`              | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `namespace`          | `"standard"`                                                                             | —       | Composite namespace for Standard drawing capabilities.                                                                                          |
+| `placement?`         | `IRScopeProps['placement']`                                                              | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`             | `input<typeof MapSchema>['style']`                                                       | —       | —                                                                                                                                               |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`        | `IRScopeProps['transforms']`                                                             | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `type`               | `"map"`                                                                                  | —       | Composite type for the map presentation.                                                                                                        |
+| `zIndex?`            | `number`                                                                                 | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
 
 </ApiTable>
 
@@ -330,28 +330,28 @@ export declare const MapInputEmbedAdapter: InputEmbedAdapter<InputMap>;
 
 <ApiTable>
 
-| Member               | Type                                                                                     | Default | Description                                                                 |
-| -------------------- | ---------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------- |
-| `animations?`        | `IRScopeProps['animations']`                                                             | —       | —                                                                           |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —       | —                                                                           |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | —                                                                           |
-| `data`               | `NonNullable<input<typeof MapSchema>['data']>`                                           | —       | Render a JSON object recursively without inferring cell ids                 |
-| `dataObjectDisplay?` | `input<typeof MapSchema>['dataObjectDisplay']`                                           | `'map'` | Display mode for nonempty object values, applied recursively to nested data |
-| `defaults?`          | `IRScopeProps['defaults']`                                                               | —       | —                                                                           |
-| `entries?`           | `never`                                                                                  | —       | —                                                                           |
-| `frame?`             | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults                                  |
-| `id?`                | `string`                                                                                 | —       | —                                                                           |
-| `label?`             | `IRMap["label"]`                                                                         | —       | —                                                                           |
-| `layout?`            | `IRMap["layout"]`                                                                        | —       | —                                                                           |
-| `localNamespace?`    | `false \| true`                                                                          | —       | —                                                                           |
-| `meta?`              | `Record<string, JsonValue>`                                                              | —       | —                                                                           |
-| `namespace`          | `"standard"`                                                                             | —       | —                                                                           |
-| `placement?`         | `IRScopeProps['placement']`                                                              | —       | —                                                                           |
-| `style?`             | `input<typeof MapSchema>['style']`                                                       | —       | —                                                                           |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | —                                                                           |
-| `transforms?`        | `IRScopeProps['transforms']`                                                             | —       | —                                                                           |
-| `type`               | `"map"`                                                                                  | —       | —                                                                           |
-| `zIndex?`            | `number`                                                                                 | —       | —                                                                           |
+| Member               | Type                                                                                     | Default | Description                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`        | `IRScopeProps['animations']`                                                             | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `data`               | `NonNullable<input<typeof MapSchema>['data']>`                                           | —       | Render a JSON object recursively without inferring cell ids                                                                                     |
+| `dataObjectDisplay?` | `input<typeof MapSchema>['dataObjectDisplay']`                                           | `'map'` | Display mode for nonempty object values, applied recursively to nested data                                                                     |
+| `defaults?`          | `IRScopeProps['defaults']`                                                               | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `entries?`           | `never`                                                                                  | —       | —                                                                                                                                               |
+| `frame?`             | `IRScopeFrame`                                                                           | —       | Envelope decoration with optional defaults                                                                                                      |
+| `id?`                | `string`                                                                                 | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `label?`             | `IRMap["label"]`                                                                         | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`            | `IRMap["layout"]`                                                                        | —       | Map two-column allocation and spacing.                                                                                                          |
+| `localNamespace?`    | `false \| true`                                                                          | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`              | `Record<string, JsonValue>`                                                              | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `namespace`          | `"standard"`                                                                             | —       | Composite namespace for Standard drawing capabilities.                                                                                          |
+| `placement?`         | `IRScopeProps['placement']`                                                              | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`             | `input<typeof MapSchema>['style']`                                                       | —       | —                                                                                                                                               |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`        | `IRScopeProps['transforms']`                                                             | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `type`               | `"map"`                                                                                  | —       | Composite type for the map presentation.                                                                                                        |
+| `zIndex?`            | `number`                                                                                 | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
 
 </ApiTable>
 

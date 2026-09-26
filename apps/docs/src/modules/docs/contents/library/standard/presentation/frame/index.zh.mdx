@@ -180,23 +180,7 @@ lowering 使用 occurrence-local 的匿名 Scope probe 测量内容区，并只 
 
 ### FrameSchema
 
-<ZodSchema
-  name="FrameSchema"
-  descriptions={{
-    namespace: 'Standard 复合组件命名空间',
-    type: '围合 Core Node 的语义分组类型',
-    id: '外层 Scope 的可选稳定身份',
-    localNamespace: '为子节点启用局部命名空间',
-    boundingShape: '外层 Scope 的合成引用边界',
-    border: '独立于根 Scope 级联的边框样式与圆角',
-    padding: '最终内容与标题区边界外的间距，side 优先于 axis，再到 default',
-    gap: '相邻标题组成部分及标题区与内容区的间距',
-    headerDirection: '标题与说明的横向或纵向排列',
-    title: '内容区上方的可选主标题',
-    description: '内容区上方的可选辅助说明',
-    children: '贡献内容边界的非空直接 Core Node 列表',
-  }}
-/>
+<ZodSchema name="FrameSchema" />
 
 ### FrameTitleSchema
 

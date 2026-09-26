@@ -47,8 +47,8 @@ export const ListLayoutSchema = ListCellLayoutSchema.extend({
 }).describe('List cell allocation and ordering.');
 
 const ListBaseSchema = CompositeBaseSchema.extend({
-  namespace: literal('standard'),
-  type: literal('list'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('list').describe('Composite type for the list presentation.'),
   ...ScopePropsSchema.omit({ style: true }).shape,
   items: array(union([string(), ListCellSchema]))
     .optional()
@@ -72,7 +72,10 @@ const ListBaseSchema = CompositeBaseSchema.extend({
 
 export const ListSchema = union([
   ListBaseSchema.required({ items: true })
-    .extend({ data: never().optional(), dataObjectDisplay: never().optional() })
+    .extend({
+      data: never().optional().describe('Not accepted in this input branch.'),
+      dataObjectDisplay: never().optional().describe('Not accepted in this input branch.'),
+    })
     .superRefine((node, context) => {
       if (node.cellIdMode === ListCellIdMode.Index && node.id === undefined) {
         context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a List id.' });
@@ -109,7 +112,10 @@ export const ListSchema = union([
       });
     }),
   ListBaseSchema.required({ data: true })
-    .extend({ items: never().optional(), dataObjectDisplay: DataObjectDisplaySchema })
+    .extend({
+      items: never().optional().describe('Not accepted in this input branch.'),
+      dataObjectDisplay: DataObjectDisplaySchema,
+    })
     .superRefine((node, context) => {
       if (node.cellIdMode === ListCellIdMode.String)
         context.addIssue({

@@ -62,6 +62,12 @@ export type ApiReferencePackageConfig = {
   translate: (source: string) => string;
   /** schema 符号只保留摘要并链接到字段真源 */
   schemaReferences?: Readonly<Record<string, string>>;
+  /** 私有组合字段通过公开父 Schema 的真实子节点投影，不加载私有模块 */
+  reachableSchemas?: Readonly<Partial<Record<string, z.ZodType>>>;
+  /** 按真实对象分支读取共享 Schema 词典，保留联合分支的字段语义 */
+  resolveSchemaLocalization?: (
+    schema: z.ZodObject,
+  ) => { descriptions: Readonly<Partial<Record<string, string>>> } | undefined;
   /** Schema 推导字段的中文翻译；英文说明直接读取 .describe() */
   schemaLocalizations?: Readonly<Partial<Record<string, { descriptions: Readonly<Partial<Record<string, string>>> }>>>;
 };
@@ -423,16 +429,25 @@ const resolveObjectMembers = (
     node: ts.TypeNode,
     memberName: string,
     seen = new Set<ts.Node>(),
+    bindings: ReadonlyMap<ts.Symbol, ts.TypeNode> = new Map(),
   ): string | undefined => {
     if (seen.has(node)) return undefined;
     seen.add(node);
     const nodeType = checker.getTypeFromTypeNode(node);
+    const usesBoundParameter = (part: ts.Node): boolean => {
+      const boundSymbol = ts.isIdentifier(part) ? checker.getSymbolAtLocation(part) : undefined;
+      return (
+        (boundSymbol !== undefined && bindings.has(boundSymbol)) ||
+        (ts.forEachChild(part, child => usesBoundParameter(child) || undefined) ?? false)
+      );
+    };
     if (
+      !usesBoundParameter(node) &&
       !ts.isIndexedAccessTypeNode(node) &&
       !(nodeType.isUnion() ? nodeType.types : [nodeType]).some(part => checker.getPropertyOfType(part, memberName))
     )
       return undefined;
-    if (ts.isParenthesizedTypeNode(node)) return inheritedSchemaName(node.type, memberName, seen);
+    if (ts.isParenthesizedTypeNode(node)) return inheritedSchemaName(node.type, memberName, new Set(seen), bindings);
     if (ts.isIntersectionTypeNode(node) || ts.isUnionTypeNode(node)) {
       if (
         node.types.some(
@@ -441,7 +456,7 @@ const resolveObjectMembers = (
       )
         return undefined;
       for (const part of node.types) {
-        const result = inheritedSchemaName(part, memberName, seen);
+        const result = inheritedSchemaName(part, memberName, new Set(seen), bindings);
         if (result) return result;
       }
     }
@@ -451,10 +466,36 @@ const resolveObjectMembers = (
       ts.isStringLiteral(node.indexType.literal)
     ) {
       const field = node.indexType.literal.text;
-      const owner = inheritedSchemaName(node.objectType, field, seen);
+      const owner = inheritedSchemaName(node.objectType, field, new Set(seen), bindings);
       return owner ? `${owner}.${field}` : undefined;
     }
+    if (ts.isConditionalTypeNode(node)) {
+      const origins = new Set(
+        [node.trueType, node.falseType]
+          .map(branch => inheritedSchemaName(branch, memberName, new Set(seen), bindings))
+          .filter(origin => origin !== undefined),
+      );
+      return origins.size === 1 ? [...origins][0] : undefined;
+    }
+    if (ts.isMappedTypeNode(node)) {
+      const constraint = node.typeParameter.constraint;
+      // 允许条件过滤键；真正重命名的字段不能借用原 Schema 的说明
+      const preservesKey = (key: ts.TypeNode): boolean =>
+        key.kind === ts.SyntaxKind.NeverKeyword ||
+        (ts.isTypeReferenceNode(key) &&
+          checker.getSymbolAtLocation(key.typeName) === checker.getSymbolAtLocation(node.typeParameter.name)) ||
+        (ts.isConditionalTypeNode(key) && preservesKey(key.trueType) && preservesKey(key.falseType));
+      return (!node.nameType || preservesKey(node.nameType)) &&
+        constraint &&
+        ts.isTypeOperatorNode(constraint) &&
+        constraint.operator === ts.SyntaxKind.KeyOfKeyword
+        ? inheritedSchemaName(constraint.type, memberName, new Set(seen), bindings)
+        : undefined;
+    }
     if (!ts.isTypeReferenceNode(node)) return undefined;
+    const referenceSymbol = checker.getSymbolAtLocation(node.typeName);
+    const bound = referenceSymbol && bindings.get(referenceSymbol);
+    if (bound) return inheritedSchemaName(bound, memberName, new Set(seen), bindings);
     const referenceName = node.typeName.getText();
     const argument = node.typeArguments?.[0];
     if (
@@ -476,11 +517,18 @@ const resolveObjectMembers = (
       ['Omit', 'Pick', 'Readonly', 'Partial', 'Required', 'Extract', 'NonNullable'].includes(referenceName) &&
       argument
     )
-      return inheritedSchemaName(argument, memberName, seen);
+      return inheritedSchemaName(argument, memberName, new Set(seen), bindings);
     let referenced = checker.getSymbolAtLocation(node.typeName);
     if (referenced && referenced.flags & ts.SymbolFlags.Alias) referenced = checker.getAliasedSymbol(referenced);
     const alias = referenced?.declarations?.find(ts.isTypeAliasDeclaration);
-    return alias ? inheritedSchemaName(alias.type, memberName, seen) : undefined;
+    if (!alias) return undefined;
+    const nextBindings = new Map(bindings);
+    alias.typeParameters?.forEach((parameter, index) => {
+      const parameterSymbol = checker.getSymbolAtLocation(parameter.name);
+      const value = node.typeArguments?.[index] ?? parameter.default;
+      if (parameterSymbol && value) nextBindings.set(parameterSymbol, value);
+    });
+    return inheritedSchemaName(alias.type, memberName, new Set(seen), nextBindings);
   };
   const isObject = (candidate: ts.Type): boolean =>
     candidate.isIntersection()
@@ -1201,14 +1249,31 @@ const nestedObjectSchema = (
   const matches = branches.filter(schema =>
     members.every(member => {
       const field = schema.shape[member.name];
-      if (member.type === 'never') return field === undefined || field instanceof z.ZodOptional;
-      if (!field) return false;
+      if (!field) return member.type === 'never' || member.type === 'undefined';
+      let inner = field;
+      while (
+        inner instanceof z.ZodOptional ||
+        inner instanceof z.ZodDefault ||
+        inner instanceof z.ZodNullable ||
+        inner instanceof z.ZodReadonly ||
+        inner instanceof z.ZodNonOptional
+      )
+        inner = inner.unwrap();
+      if (member.type === 'never' || member.type === 'undefined') return inner instanceof z.ZodNever;
+      if (inner instanceof z.ZodNever) return false;
       if (field instanceof z.ZodLiteral)
         return [...field.values].some(value => JSON.stringify(value) === member.type.replace(/^'([^']*)'$/, '"$1"'));
       return true;
     }),
   );
-  return matches.length === 1 ? matches[0] : undefined;
+  if (matches.length === 1) return matches[0];
+  // 只查询联合分支的共享字段时，同一字段实例保证说明与默认值一致
+  if (
+    matches.length > 1 &&
+    members.every(member => matches.every(branch => branch.shape[member.name] === matches[0].shape[member.name]))
+  )
+    return matches[0];
+  return undefined;
 };
 /** 从真实声明所属包的 exports 查找同一符号，不依赖同名或私有源码动态导入 */
 const loadPublicSchema = async (program: ts.Program, symbol: ts.Symbol): Promise<Record<string, unknown>> => {
@@ -1243,6 +1308,21 @@ const loadPublicSchema = async (program: ts.Program, symbol: ts.Symbol): Promise
   throw new Error(`Schema ${symbol.name} is not reachable from public exports of ${metadata.name}`);
 };
 
+/** 字段包装器优先使用自身说明，未覆盖时读取被包装契约的说明 */
+const schemaDescription = (schema: z.ZodType): string | undefined => {
+  const description = z.globalRegistry.get(schema)?.description;
+  if (description) return description;
+  if (
+    schema instanceof z.ZodOptional ||
+    schema instanceof z.ZodDefault ||
+    schema instanceof z.ZodNullable ||
+    schema instanceof z.ZodReadonly ||
+    schema instanceof z.ZodNonOptional
+  )
+    return schemaDescription(schema.unwrap() as z.ZodType);
+  return undefined;
+};
+
 /** 将 Schema 的字段描述和真实默认值投影到已由 TypeScript 解析的类型字段 */
 const projectSchemaMembers = (
   members: Array<ApiReferenceMember>,
@@ -1265,7 +1345,7 @@ const projectSchemaMembers = (
     const field = fields[member.name];
     const chinese = localizations.descriptions[member.name];
     if (!field || !chinese) throw new Error(`Missing ${schemaName}.${member.name} Schema field or translation`);
-    const english = z.globalRegistry.get(field)?.description;
+    const english = schemaDescription(field);
     if (!english) throw new Error(`Missing ${schemaName}.${member.name} .describe()`);
     return {
       ...member,
@@ -1855,11 +1935,16 @@ export const createApiReferenceMdx = async (
                   const schemaNames = new Set(
                     members.map(member => member.schemaName).filter(name => name !== undefined),
                   );
-                  for (const schemaName of config.schemaLocalizations ? schemaNames : []) {
+                  for (const schemaName of config.schemaLocalizations || config.resolveSchemaLocalization
+                    ? schemaNames
+                    : []) {
                     const sourceSymbol = members.find(member => member.schemaName === schemaName)?.schemaSymbol;
                     if (!sourceSymbol) throw new Error(`Missing Schema origin ${schemaName}`);
-                    const exports = await loadPublicSchema(program, sourceSymbol);
                     const [rootName, ...fieldPath] = schemaName.split('.');
+                    const reachable = config.reachableSchemas?.[rootName];
+                    const exports = reachable
+                      ? { [rootName]: reachable }
+                      : await loadPublicSchema(program, sourceSymbol);
                     const rootSchema = exports[rootName];
                     const schemaMembers = members.filter(member => member.schemaName === schemaName);
                     const branches = rootSchema instanceof z.ZodType ? objectSchemaBranches(rootSchema, fieldPath) : [];
@@ -1872,7 +1957,9 @@ export const createApiReferenceMdx = async (
                         : Object.keys(exports).find(
                             name => exports[name] === schema && config.schemaLocalizations?.[name],
                           );
-                    const localization = publicName ? config.schemaLocalizations?.[publicName] : undefined;
+                    const localization =
+                      config.resolveSchemaLocalization?.(schema) ??
+                      (publicName ? config.schemaLocalizations?.[publicName] : undefined);
                     if (!localization)
                       throw new Error(
                         `Missing ${schemaName} Schema localization for ${config.packageName}#${symbol.name}`,
@@ -1893,7 +1980,7 @@ export const createApiReferenceMdx = async (
                 const projectedMembers = await projectMembers(unresolvedMembers);
                 symbol.members = (declarationOnly ? [] : projectedMembers).map(member => ({
                   ...member,
-                  defaultValue: localizeText(member.defaultValue, lang, config.translate),
+                  defaultValue: lang === 'en' ? config.translate(member.defaultValue) : member.defaultValue,
                 }));
                 symbol.signature = resolved.signature;
                 symbol.expandedSignature = resolved.expandedSignature;

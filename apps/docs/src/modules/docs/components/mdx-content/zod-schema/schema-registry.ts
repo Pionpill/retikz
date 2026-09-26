@@ -39,6 +39,7 @@ import type { core, z } from 'zod';
 
 import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
 import { GridSchemaZhLocalization, GridLineSchemaZhLocalization } from './standard-presentation-localizations';
+import { standardSchemaLocalizations } from './standard-schema-localizations';
 
 /** schema 注册项按语言提供的本地化描述 */
 export type SchemaRegistryLocalization = {
@@ -1814,6 +1815,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/viz/plot/reference/theme#inspection',
   },
 };
+
+for (const [name, localization] of Object.entries(standardSchemaLocalizations)) {
+  if (Object.hasOwn(SCHEMA_REGISTRY, name)) SCHEMA_REGISTRY[name].localizations = { zh: localization };
+}
 
 export function lookupSchema(schema: core.$ZodType): SchemaRegistryEntry | undefined {
   const match = Object.entries(SCHEMA_REGISTRY).find(([, entry]) => entry.schema === schema);

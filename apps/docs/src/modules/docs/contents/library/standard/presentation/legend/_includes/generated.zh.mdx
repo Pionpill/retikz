@@ -306,11 +306,11 @@ export type IRLegend = Omit<ZodInput<typeof LegendSchema>, keyof IRScopeProps | 
 
 <ApiTable>
 
-| 成员     | 类型                                               | 默认值 | 说明 |
-| -------- | -------------------------------------------------- | ------ | ---- |
-| `key`    | `string`                                           | —      | —    |
-| `label?` | `ZodInfer<typeof LegendItemSchema.shape["label"]>` | —      | —    |
-| `sample` | `IRChild`                                          | —      | —    |
+| 成员     | 类型                                               | 默认值 | 说明                                      |
+| -------- | -------------------------------------------------- | ------ | ----------------------------------------- |
+| `key`    | `string`                                           | —      | 当前 Legend 容器内稳定且唯一的条目标识    |
+| `label?` | `ZodInfer<typeof LegendItemSchema.shape["label"]>` | —      | 解释样本含义的可选 JSON-safe Core child   |
+| `sample` | `IRChild`                                          | —      | 直观展示该条目含义的 JSON-safe Core child |
 
 </ApiTable>
 
@@ -344,15 +344,15 @@ export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;
 
 <ApiTable>
 
-| 成员           | 类型                                         | 默认值 | 说明 |
-| -------------- | -------------------------------------------- | ------ | ---- |
-| `direction?`   | `"horizontal" \| "vertical"`                 | —      | —    |
-| `gap?`         | `number \| { row: number; column: number; }` | —      | —    |
-| `items`        | `Array<IRLegendItem>`                        | —      | —    |
-| `kind`         | `"items"`                                    | —      | —    |
-| `sampleAlign?` | `"center" \| "start" \| "end"`               | —      | —    |
-| `sampleGap?`   | `number`                                     | —      | —    |
-| `wrap?`        | `"nowrap" \| "wrap"`                         | —      | —    |
+| 成员           | 类型                                         | 默认值       | 说明                                       |
+| -------------- | -------------------------------------------- | ------------ | ------------------------------------------ |
+| `direction?`   | `"horizontal" \| "vertical"`                 | `"vertical"` | 按编写顺序放置条目的物理主轴方向           |
+| `gap?`         | `number \| { row: number; column: number; }` | `8`          | 相邻行列之间的物理间距；标量同时应用于两轴 |
+| `items`        | `Array<IRLegendItem>`                        | —            | —                                          |
+| `kind`         | `"items"`                                    | —            | 离散样本与标签列表的判别字段               |
+| `sampleAlign?` | `"center" \| "start" \| "end"`               | `"center"`   | 单个条目中样本与标签在 y 轴上的对齐方式    |
+| `sampleGap?`   | `number`                                     | `8`          | 单个条目中样本与标签的水平间距             |
+| `wrap?`        | `"nowrap" \| "wrap"`                         | `"nowrap"`   | 受约束时条目是否形成额外的行或列           |
 
 </ApiTable>
 
@@ -388,13 +388,13 @@ export type IRLegendItemsContent = Omit<ZodInput<typeof LegendItemsContentSchema
 
 <ApiTable>
 
-| 成员         | 类型                                                                    | 默认值 | 说明 |
-| ------------ | ----------------------------------------------------------------------- | ------ | ---- |
-| `direction?` | `"horizontal" \| "vertical"`                                            | —      | —    |
-| `kind`       | `"ramp"`                                                                | —      | —    |
-| `sample`     | `IRChild`                                                               | —      | —    |
-| `sampleGap?` | `number`                                                                | —      | —    |
-| `ticks`      | `Array<{ key: string; offset: number; label?: IRChild \| undefined; }>` | —      | —    |
+| 成员         | 类型                                                                    | 默认值       | 说明                                    |
+| ------------ | ----------------------------------------------------------------------- | ------------ | --------------------------------------- |
+| `direction?` | `"horizontal" \| "vertical"`                                            | `"vertical"` | 解析归一化刻度位置的物理轴              |
+| `kind`       | `"ramp"`                                                                | —            | 连续样本与归一化刻度的判别字段          |
+| `sample`     | `IRChild`                                                               | —            | 显示连续视觉变化的 JSON-safe Core child |
+| `sampleGap?` | `number`                                                                | `8`          | 连续样本与可选刻度标签区域之间的间距    |
+| `ticks`      | `Array<{ key: string; offset: number; label?: IRChild \| undefined; }>` | —            | 按非递减编写顺序保存的归一化刻度        |
 
 </ApiTable>
 
@@ -429,11 +429,11 @@ export type IRLegendRampContent = Omit<ZodInput<typeof LegendRampContentSchema>,
 
 <ApiTable>
 
-| 成员     | 类型                                               | 默认值 | 说明 |
-| -------- | -------------------------------------------------- | ------ | ---- |
-| `key`    | `string`                                           | —      | —    |
-| `label?` | `ZodInfer<typeof LegendTickSchema.shape["label"]>` | —      | —    |
-| `offset` | `number`                                           | —      | —    |
+| 成员     | 类型                                               | 默认值 | 说明                                      |
+| -------- | -------------------------------------------------- | ------ | ----------------------------------------- |
+| `key`    | `string`                                           | —      | 当前 Legend 容器内稳定且唯一的刻度标识    |
+| `label?` | `ZodInfer<typeof LegendTickSchema.shape["label"]>` | —      | 解释刻度位置的可选 JSON-safe Core child   |
+| `offset` | `number`                                           | —      | 沿样本主轴的归一化编写位置，范围为 0 到 1 |
 
 </ApiTable>
 
@@ -467,13 +467,13 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 
 <ApiTable>
 
-| 成员         | 类型                                                               | 默认值 | 说明 |
-| ------------ | ------------------------------------------------------------------ | ------ | ---- |
-| `bodyBounds` | `{ x: number; y: number; width: number; height: number; } \| null` | —      | —    |
-| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>`         | —      | —    |
-| `items`      | `ZodInfer<typeof LegendArtifactSchema.shape["items"]>`             | —      | —    |
-| `kind`       | `"items"`                                                          | —      | —    |
-| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`             | —      | —    |
+| 成员         | 类型                                                               | 默认值 | 说明                                        |
+| ------------ | ------------------------------------------------------------------ | ------ | ------------------------------------------- |
+| `bodyBounds` | `{ x: number; y: number; width: number; height: number; } \| null` | —      | 条目分配与结构间距的并集；没有条目时为 null |
+| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>`         | —      | 求解后的 Legend 容器几何                    |
+| `items`      | `ZodInfer<typeof LegendArtifactSchema.shape["items"]>`             | —      | 按稳定编写顺序发布的离散条目产物            |
+| `kind`       | `"items"`                                                          | —      | 离散条目 Legend 产物的判别字段              |
+| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`             | —      | 求解后的标题 placement；省略标题时为 null   |
 
 </ApiTable>
 
@@ -483,14 +483,14 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 
 <ApiTable>
 
-| 成员         | 类型                                                       | 默认值 | 说明 |
-| ------------ | ---------------------------------------------------------- | ------ | ---- |
-| `bodyBounds` | `{ x: number; y: number; width: number; height: number; }` | —      | —    |
-| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>` | —      | —    |
-| `kind`       | `"ramp"`                                                   | —      | —    |
-| `sample`     | `ZodInfer<typeof LegendArtifactSchema.shape["sample"]>`    | —      | —    |
-| `ticks`      | `ZodInfer<typeof LegendArtifactSchema.shape["ticks"]>`     | —      | —    |
-| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`     | —      | —    |
+| 成员         | 类型                                                       | 默认值 | 说明                                      |
+| ------------ | ---------------------------------------------------------- | ------ | ----------------------------------------- |
+| `bodyBounds` | `{ x: number; y: number; width: number; height: number; }` | —      | 最终样本与非空刻度标签分配的并集          |
+| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>` | —      | 求解后的 Legend 容器几何                  |
+| `kind`       | `"ramp"`                                                   | —      | 连续样本 Legend 产物的判别字段            |
+| `sample`     | `ZodInfer<typeof LegendArtifactSchema.shape["sample"]>`    | —      | 求解后的连续样本 placement                |
+| `ticks`      | `ZodInfer<typeof LegendArtifactSchema.shape["ticks"]>`     | —      | 按稳定编写顺序发布的刻度 anchor 与标签    |
+| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`     | —      | 求解后的标题 placement；省略标题时为 null |
 
 </ApiTable>
 

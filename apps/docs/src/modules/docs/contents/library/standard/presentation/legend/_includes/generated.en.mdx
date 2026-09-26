@@ -306,11 +306,11 @@ export type IRLegend = Omit<ZodInput<typeof LegendSchema>, keyof IRScopeProps | 
 
 <ApiTable>
 
-| Member   | Type                                               | Default | Description |
-| -------- | -------------------------------------------------- | ------- | ----------- |
-| `key`    | `string`                                           | —       | —           |
-| `label?` | `ZodInfer<typeof LegendItemSchema.shape["label"]>` | —       | —           |
-| `sample` | `IRChild`                                          | —       | —           |
+| Member   | Type                                               | Default | Description                                                    |
+| -------- | -------------------------------------------------- | ------- | -------------------------------------------------------------- |
+| `key`    | `string`                                           | —       | Container-local stable identity for this discrete legend item. |
+| `label?` | `ZodInfer<typeof LegendItemSchema.shape["label"]>` | —       | Optional JSON-safe Core child explaining the sample.           |
+| `sample` | `IRChild`                                          | —       | JSON-safe Core child that visually demonstrates the item.      |
 
 </ApiTable>
 
@@ -344,15 +344,15 @@ export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;
 
 <ApiTable>
 
-| Member         | Type                                         | Default | Description |
-| -------------- | -------------------------------------------- | ------- | ----------- |
-| `direction?`   | `"horizontal" \| "vertical"`                 | —       | —           |
-| `gap?`         | `number \| { row: number; column: number; }` | —       | —           |
-| `items`        | `Array<IRLegendItem>`                        | —       | —           |
-| `kind`         | `"items"`                                    | —       | —           |
-| `sampleAlign?` | `"center" \| "start" \| "end"`               | —       | —           |
-| `sampleGap?`   | `number`                                     | —       | —           |
-| `wrap?`        | `"nowrap" \| "wrap"`                         | —       | —           |
+| Member         | Type                                         | Default      | Description                                                                               |
+| -------------- | -------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------- |
+| `direction?`   | `"horizontal" \| "vertical"`                 | `"vertical"` | Physical main-axis direction used to place items in authored order.                       |
+| `gap?`         | `number \| { row: number; column: number; }` | `8`          | Physical gaps between adjacent rows and columns; a number applies uniformly to both axes. |
+| `items`        | `Array<IRLegendItem>`                        | —            | —                                                                                         |
+| `kind`         | `"items"`                                    | —            | Discriminator for a list of discrete sample-label items.                                  |
+| `sampleAlign?` | `"center" \| "start" \| "end"`               | `"center"`   | Physical y-axis alignment between each item sample and label.                             |
+| `sampleGap?`   | `number`                                     | `8`          | Horizontal gap between an item sample and its label.                                      |
+| `wrap?`        | `"nowrap" \| "wrap"`                         | `"nowrap"`   | Whether constrained items form additional rows or columns.                                |
 
 </ApiTable>
 
@@ -388,13 +388,13 @@ export type IRLegendItemsContent = Omit<ZodInput<typeof LegendItemsContentSchema
 
 <ApiTable>
 
-| Member       | Type                                                                    | Default | Description |
-| ------------ | ----------------------------------------------------------------------- | ------- | ----------- |
-| `direction?` | `"horizontal" \| "vertical"`                                            | —       | —           |
-| `kind`       | `"ramp"`                                                                | —       | —           |
-| `sample`     | `IRChild`                                                               | —       | —           |
-| `sampleGap?` | `number`                                                                | —       | —           |
-| `ticks`      | `Array<{ key: string; offset: number; label?: IRChild \| undefined; }>` | —       | —           |
+| Member       | Type                                                                    | Default      | Description                                                      |
+| ------------ | ----------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------- |
+| `direction?` | `"horizontal" \| "vertical"`                                            | `"vertical"` | Physical axis along which normalized tick offsets are resolved.  |
+| `kind`       | `"ramp"`                                                                | —            | Discriminator for one continuous sample with normalized ticks.   |
+| `sample`     | `IRChild`                                                               | —            | JSON-safe Core child that displays the continuous visual sample. |
+| `sampleGap?` | `number`                                                                | `8`          | Physical gap from the sample to the optional tick-label region.  |
+| `ticks`      | `Array<{ key: string; offset: number; label?: IRChild \| undefined; }>` | —            | Normalized ticks in stable non-decreasing authored order.        |
 
 </ApiTable>
 
@@ -429,11 +429,11 @@ export type IRLegendRampContent = Omit<ZodInput<typeof LegendRampContentSchema>,
 
 <ApiTable>
 
-| Member   | Type                                               | Default | Description |
-| -------- | -------------------------------------------------- | ------- | ----------- |
-| `key`    | `string`                                           | —       | —           |
-| `label?` | `ZodInfer<typeof LegendTickSchema.shape["label"]>` | —       | —           |
-| `offset` | `number`                                           | —       | —           |
+| Member   | Type                                               | Default | Description                                                      |
+| -------- | -------------------------------------------------- | ------- | ---------------------------------------------------------------- |
+| `key`    | `string`                                           | —       | Container-local stable identity for this continuous legend tick. |
+| `label?` | `ZodInfer<typeof LegendTickSchema.shape["label"]>` | —       | Optional JSON-safe Core child explaining the tick position.      |
+| `offset` | `number`                                           | —       | Normalized authored position along the sample main axis.         |
 
 </ApiTable>
 
@@ -467,13 +467,13 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 
 <ApiTable>
 
-| Member       | Type                                                               | Default | Description |
-| ------------ | ------------------------------------------------------------------ | ------- | ----------- |
-| `bodyBounds` | `{ x: number; y: number; width: number; height: number; } \| null` | —       | —           |
-| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>`         | —       | —           |
-| `items`      | `ZodInfer<typeof LegendArtifactSchema.shape["items"]>`             | —       | —           |
-| `kind`       | `"items"`                                                          | —       | —           |
-| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`             | —       | —           |
+| Member       | Type                                                               | Default | Description                                                                            |
+| ------------ | ------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------- |
+| `bodyBounds` | `{ x: number; y: number; width: number; height: number; } \| null` | —       | Union of placed item allocations and structural gaps, or null when there are no items. |
+| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>`         | —       | Resolved Legend container geometry.                                                    |
+| `items`      | `ZodInfer<typeof LegendArtifactSchema.shape["items"]>`             | —       | Discrete item artifacts in stable authored order.                                      |
+| `kind`       | `"items"`                                                          | —       | Discriminator for a discrete-items Legend artifact.                                    |
+| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`             | —       | Resolved title placement, or null when omitted.                                        |
 
 </ApiTable>
 
@@ -483,14 +483,14 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 
 <ApiTable>
 
-| Member       | Type                                                       | Default | Description |
-| ------------ | ---------------------------------------------------------- | ------- | ----------- |
-| `bodyBounds` | `{ x: number; y: number; width: number; height: number; }` | —       | —           |
-| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>` | —       | —           |
-| `kind`       | `"ramp"`                                                   | —       | —           |
-| `sample`     | `ZodInfer<typeof LegendArtifactSchema.shape["sample"]>`    | —       | —           |
-| `ticks`      | `ZodInfer<typeof LegendArtifactSchema.shape["ticks"]>`     | —       | —           |
-| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`     | —       | —           |
+| Member       | Type                                                       | Default | Description                                                     |
+| ------------ | ---------------------------------------------------------- | ------- | --------------------------------------------------------------- |
+| `bodyBounds` | `{ x: number; y: number; width: number; height: number; }` | —       | Union of the final sample and non-empty tick-label allocations. |
+| `container`  | `ZodInfer<typeof LegendArtifactSchema.shape["container"]>` | —       | Resolved Legend container geometry.                             |
+| `kind`       | `"ramp"`                                                   | —       | Discriminator for a continuous-ramp Legend artifact.            |
+| `sample`     | `ZodInfer<typeof LegendArtifactSchema.shape["sample"]>`    | —       | Resolved continuous sample placement.                           |
+| `ticks`      | `ZodInfer<typeof LegendArtifactSchema.shape["ticks"]>`     | —       | Tick anchors and labels in stable authored order.               |
+| `title`      | `ZodInfer<typeof LegendArtifactSchema.shape["title"]>`     | —       | Resolved title placement, or null when omitted.                 |
 
 </ApiTable>
 

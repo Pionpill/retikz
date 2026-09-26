@@ -13,37 +13,37 @@
 
 <ApiTable>
 
-| Member            | Type                                  | Default | Description                                                                                                                     |
-| ----------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`     | `InputArc['animations']`              | —       | —                                                                                                                               |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                      |
-| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                 |
-| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                     |
-| `center`          | `InputTarget`                         | —       | —                                                                                                                               |
-| `close?`          | `"chord" \| "open" \| "sector"`       | —       | —                                                                                                                               |
-| `endAngle?`       | `number`                              | —       | —                                                                                                                               |
-| `id?`             | `string`                              | —       | —                                                                                                                               |
-| `label?`          | `InputArc['label']`                   | —       | —                                                                                                                               |
-| `marks?`          | `InputArc['marks']`                   | —       | —                                                                                                                               |
-| `meta?`           | `Record<string, JsonValue>`           | —       | —                                                                                                                               |
-| `onClick?`        | `HydrationHandler`                    | —       | Click on this element (DOM `click`)                                                                                             |
-| `onDoubleClick?`  | `HydrationHandler`                    | —       | Double-click on this element (DOM `dblclick`)                                                                                   |
-| `onPointerDown?`  | `HydrationHandler`                    | —       | Pointer pressed on this element (DOM `pointerdown`)                                                                             |
-| `onPointerEnter?` | `HydrationHandler`                    | —       | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again |
-| `onPointerLeave?` | `HydrationHandler`                    | —       | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                    |
-| `onPointerMove?`  | `HydrationHandler`                    | —       | Pointer moves over this element (DOM `pointermove`)                                                                             |
-| `onPointerUp?`    | `HydrationHandler`                    | —       | Pointer released on this element (DOM `pointerup`)                                                                              |
-| `onRightClick?`   | `HydrationHandler`                    | —       | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu     |
-| `onWheel?`        | `HydrationHandler`                    | —       | Wheel input over this element (DOM `wheel`)                                                                                     |
-| `radius`          | `number \| { x: number; y: number; }` | —       | —                                                                                                                               |
-| `rotate?`         | `number`                              | —       | —                                                                                                                               |
-| `roundedCorners?` | `number`                              | —       | —                                                                                                                               |
-| `scale?`          | `number \| { x: number; y: number; }` | —       | —                                                                                                                               |
-| `startAngle?`     | `number`                              | —       | —                                                                                                                               |
-| `style?`          | `InputArc['style']`                   | —       | —                                                                                                                               |
-| `sweepAngle?`     | `number`                              | —       | —                                                                                                                               |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                     |
-| `zIndex?`         | `number`                              | —       | —                                                                                                                               |
+| Member            | Type                                  | Default  | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputArc['animations']`              | —        | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `arrow?`          | `InputPathArrowDirectionValue`        | —        | Path-level arrow direction                                                                                                                                                   |
+| `arrowDetail?`    | `IRArrowDetail`                       | —        | Top-level arrow defaults and endpoint overrides                                                                                                                              |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —        | Shared and per-end arrow placement settings                                                                                                                                  |
+| `center`          | `InputTarget`                         | —        | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
+| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
+| `endAngle?`       | `number`                              | —        | End angle in degrees.                                                                                                                                                        |
+| `id?`             | `string`                              | —        | —                                                                                                                                                                            |
+| `label?`          | `InputArc['label']`                   | —        | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |
+| `marks?`          | `InputArc['marks']`                   | —        | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —        | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `onClick?`        | `HydrationHandler`                    | —        | Click on this element (DOM `click`)                                                                                                                                          |
+| `onDoubleClick?`  | `HydrationHandler`                    | —        | Double-click on this element (DOM `dblclick`)                                                                                                                                |
+| `onPointerDown?`  | `HydrationHandler`                    | —        | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                          |
+| `onPointerEnter?` | `HydrationHandler`                    | —        | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                              |
+| `onPointerLeave?` | `HydrationHandler`                    | —        | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                 |
+| `onPointerMove?`  | `HydrationHandler`                    | —        | Pointer moves over this element (DOM `pointermove`)                                                                                                                          |
+| `onPointerUp?`    | `HydrationHandler`                    | —        | Pointer released on this element (DOM `pointerup`)                                                                                                                           |
+| `onRightClick?`   | `HydrationHandler`                    | —        | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu                                                  |
+| `onWheel?`        | `HydrationHandler`                    | —        | Wheel input over this element (DOM `wheel`)                                                                                                                                  |
+| `radius`          | `number \| { x: number; y: number; }` | —        | Radius in user units; an object specifies the two ellipse axes.                                                                                                              |
+| `rotate?`         | `number`                              | —        | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
+| `roundedCorners?` | `number`                              | —        | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —        | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `startAngle?`     | `number`                              | —        | Start angle in degrees.                                                                                                                                                      |
+| `style?`          | `InputArc['style']`                   | —        | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `sweepAngle?`     | `number`                              | —        | Signed sweep in degrees; supply exactly two angle fields.                                                                                                                    |
+| `thickness?`      | `PathThicknessValue`                  | —        | Path stroke-width shorthand                                                                                                                                                  |
+| `zIndex?`         | `number`                              | —        | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
 
@@ -98,28 +98,28 @@ export type SectorProps = InputSector &
 
 <ApiTable>
 
-| Member            | Type                                  | Default | Description                                     |
-| ----------------- | ------------------------------------- | ------- | ----------------------------------------------- |
-| `animations?`     | `InputArc["animations"]`              | —       | —                                               |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                      |
-| `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides |
-| `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings     |
-| `center`          | `InputTarget`                         | —       | —                                               |
-| `close?`          | `"chord" \| "open" \| "sector"`       | —       | —                                               |
-| `endAngle?`       | `number`                              | —       | —                                               |
-| `id?`             | `string`                              | —       | —                                               |
-| `label?`          | `InputArc["label"]`                   | —       | —                                               |
-| `marks?`          | `InputArc["marks"]`                   | —       | —                                               |
-| `meta?`           | `Record<string, JsonValue>`           | —       | —                                               |
-| `radius`          | `number \| { x: number; y: number; }` | —       | —                                               |
-| `rotate?`         | `number`                              | —       | —                                               |
-| `roundedCorners?` | `number`                              | —       | —                                               |
-| `scale?`          | `number \| { x: number; y: number; }` | —       | —                                               |
-| `startAngle?`     | `number`                              | —       | —                                               |
-| `style?`          | `InputArc["style"]`                   | —       | —                                               |
-| `sweepAngle?`     | `number`                              | —       | —                                               |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                     |
-| `zIndex?`         | `number`                              | —       | —                                               |
+| Member            | Type                                  | Default  | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `InputArc["animations"]`              | —        | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `arrow?`          | `InputPathArrowDirectionValue`        | —        | Path-level arrow direction                                                                                                                                                   |
+| `arrowDetail?`    | `IRArrowDetail`                       | —        | Top-level arrow defaults and endpoint overrides                                                                                                                              |
+| `arrowPlacement?` | `InputPathArrowPlacement`             | —        | Shared and per-end arrow placement settings                                                                                                                                  |
+| `center`          | `InputTarget`                         | —        | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
+| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
+| `endAngle?`       | `number`                              | —        | End angle in degrees.                                                                                                                                                        |
+| `id?`             | `string`                              | —        | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+| `label?`          | `InputArc["label"]`                   | —        | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |
+| `marks?`          | `InputArc["marks"]`                   | —        | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —        | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `radius`          | `number \| { x: number; y: number; }` | —        | Radius in user units; an object specifies the two ellipse axes.                                                                                                              |
+| `rotate?`         | `number`                              | —        | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
+| `roundedCorners?` | `number`                              | —        | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —        | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `startAngle?`     | `number`                              | —        | Start angle in degrees.                                                                                                                                                      |
+| `style?`          | `InputArc["style"]`                   | —        | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `sweepAngle?`     | `number`                              | —        | Signed sweep in degrees; supply exactly two angle fields.                                                                                                                    |
+| `thickness?`      | `PathThicknessValue`                  | —        | Path stroke-width shorthand                                                                                                                                                  |
+| `zIndex?`         | `number`                              | —        | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
 
@@ -195,26 +195,26 @@ export declare const SectorInputEmbedAdapter: InputEmbedAdapter<InputSector & { 
 
 <ApiTable>
 
-| Member            | Type                                  | Default | Description |
-| ----------------- | ------------------------------------- | ------- | ----------- |
-| `animations?`     | `IRArc["animations"]`                 | —       | —           |
-| `center`          | `IRArc["center"]`                     | —       | —           |
-| `close?`          | `"chord" \| "open" \| "sector"`       | —       | —           |
-| `endAngle?`       | `number`                              | —       | —           |
-| `id?`             | `string`                              | —       | —           |
-| `label?`          | `IRArc["label"]`                      | —       | —           |
-| `marks?`          | `IRArc["marks"]`                      | —       | —           |
-| `meta?`           | `Record<string, JsonValue>`           | —       | —           |
-| `namespace`       | `"standard"`                          | —       | —           |
-| `radius`          | `number \| { x: number; y: number; }` | —       | —           |
-| `rotate?`         | `number`                              | —       | —           |
-| `roundedCorners?` | `number`                              | —       | —           |
-| `scale?`          | `number \| { x: number; y: number; }` | —       | —           |
-| `startAngle?`     | `number`                              | —       | —           |
-| `style?`          | `IRArc["style"]`                      | —       | —           |
-| `sweepAngle?`     | `number`                              | —       | —           |
-| `type`            | `"arc"`                               | —       | —           |
-| `zIndex?`         | `number`                              | —       | —           |
+| Member            | Type                                  | Default  | Description                                                                                                                                                                  |
+| ----------------- | ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRArc["animations"]`                 | —        | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
+| `center`          | `IRArc["center"]`                     | —        | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
+| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
+| `endAngle?`       | `number`                              | —        | End angle in degrees.                                                                                                                                                        |
+| `id?`             | `string`                              | —        | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
+| `label?`          | `IRArc["label"]`                      | —        | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |
+| `marks?`          | `IRArc["marks"]`                      | —        | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
+| `meta?`           | `Record<string, JsonValue>`           | —        | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
+| `namespace`       | `"standard"`                          | —        | Composite namespace for Standard drawing capabilities.                                                                                                                       |
+| `radius`          | `number \| { x: number; y: number; }` | —        | Radius in user units; an object specifies the two ellipse axes.                                                                                                              |
+| `rotate?`         | `number`                              | —        | Rotate the whole path around its bounding-box center. Endpoints resolve before rotation wraps the resulting geometry.                                                        |
+| `roundedCorners?` | `number`                              | —        | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
+| `scale?`          | `number \| { x: number; y: number; }` | —        | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
+| `startAngle?`     | `number`                              | —        | Start angle in degrees.                                                                                                                                                      |
+| `style?`          | `IRArc["style"]`                      | —        | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
+| `sweepAngle?`     | `number`                              | —        | Signed sweep in degrees; supply exactly two angle fields.                                                                                                                    |
+| `type`            | `"arc"`                               | —        | Composite type for the arc shape.                                                                                                                                            |
+| `zIndex?`         | `number`                              | —        | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
 

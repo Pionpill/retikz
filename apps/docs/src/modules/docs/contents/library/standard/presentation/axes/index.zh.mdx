@@ -9,7 +9,7 @@ description: 为数学插图绘制参考轴、静态刻度、文字与网格
 
 [安装与首次渲染](/library/standard/get-start)后，从 `/presentation` 子入口导入。下面四种接入方式绘制相同的图形；直接使用 IR 时显式注册 Definition。
 
-<ComponentPreview files="entry" hideCode />
+<ComponentPreview files="entry" hideCode size="sm" />
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -171,28 +171,7 @@ Axes 的 `x.grid` 与 `y.grid` 只生成裁切在各自轴范围内的普通格�
 
 ### AxesSchema
 
-<ZodSchema
-  name="AxesSchema"
-  descriptions={{
-    namespace: 'Standard 复合组件命名空间',
-    type: '静态参考轴类型',
-    origin: '坐标轴、网格、刻度与文字共用的原点',
-    'origin.position': '屏幕坐标中的共同原点',
-    'origin.label': '可选的静态原点文字',
-    x: '水平轴与垂直网格配置',
-    y: '垂直轴与水平网格配置',
-    'x.extent': '水平轴负向和正向长度',
-    'y.extent': '垂直轴负向和正向长度',
-    'x.line': '轴线与端点箭头，false 仅隐藏轴线',
-    'y.line': '轴线与端点箭头，false 仅隐藏轴线',
-    'x.ticks': '水平轴刻度与静态文字',
-    'y.ticks': '垂直轴刻度与静态文字',
-    'x.grid': '垂直于水平轴的网格线',
-    'y.grid': '垂直于垂直轴的网格线',
-    'x.label': '轴名、样式化文字或 false',
-    'y.label': '轴名、样式化文字或 false',
-  }}
-/>
+<ZodSchema name="AxesSchema" />
 
 ## 延伸阅读
 

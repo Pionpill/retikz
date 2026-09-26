@@ -5,6 +5,7 @@ import path from 'node:path';
 import { expect, it } from 'vitest';
 
 import { scopeSchemaLocalizations } from '../../scripts/api-reference/scope';
+import { createStandardApiReferenceMdx } from '../../scripts/api-reference/standard-schema';
 import { createApiReferenceMdx } from '../../scripts/api-reference/tex';
 import {
   GridLineSchemaZhLocalization,
@@ -20,10 +21,24 @@ it('跨包继承读取真实 Schema 描述和默认值，联合分支使用相�
     writeFileSync(
       entry,
       `
-import type { GridInput, GridLineInput } from '@retikz/standard/presentation';
-import type { PolygonSchema } from '@retikz/standard/shape';
+import type { SurfaceInput, AxesInput, GridInput, GridLineInput } from '@retikz/standard/presentation';
+import type { IRArc, PolygonSchema } from '@retikz/standard/shape';
+import type { ArcProps } from '@retikz/standard-react/shape';
+import type { InputArc } from '@retikz/standard-vanilla/shape';
+import type { IRList, IRListCell } from '@retikz/standard/container';
 import type { input as ZodInput } from 'zod';
 type PolygonSource = ZodInput<typeof PolygonSchema>;
+export type ArcFields = Pick<IRArc, 'close' | 'startAngle'>;
+export type ReactArcFields = Pick<ArcProps, 'close' | 'startAngle'>;
+export type VanillaArcFields = Pick<InputArc, 'close' | 'startAngle'>;
+export type CustomArc = Omit<IRArc, 'close'> & {
+  /** 自定义闭合选项 */
+  close?: boolean;
+};
+export type CellFields = Pick<IRListCell, 'content' | 'id'>;
+export type ListFields = Pick<IRList, 'index' | 'cellIdMode'>;
+export type SurfaceFields = Pick<SurfaceInput, 'padding' | 'background' | 'overflow'>;
+export type AxesFields = Pick<AxesInput, 'x' | 'y' | 'animations' | 'origin'>;
 export type Grid = Pick<GridInput, 'line' | 'localNamespace' | 'bounds'>;
 export type Line = Pick<GridLineInput, 'spacing' | 'includeBoundary' | 'origin'>;
 export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radius' | 'sides'>
@@ -37,6 +52,7 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
       JSON.stringify({
         compilerOptions: {
           strict: true,
+          jsx: 'react-jsx',
           target: 'ESNext',
           module: 'ESNext',
           moduleResolution: 'Bundler',
@@ -45,6 +61,15 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
             zod: [path.join(repositoryRoot, 'apps/docs/node_modules/zod/index.d.ts')],
             '@retikz/standard/presentation': [
               path.join(repositoryRoot, 'packages/library/standard/src/presentation/index.ts'),
+            ],
+            '@retikz/standard/container': [
+              path.join(repositoryRoot, 'packages/library/standard/src/container/index.ts'),
+            ],
+            '@retikz/standard-react/shape': [
+              path.join(repositoryRoot, 'packages/library/standard-react/src/shape/index.ts'),
+            ],
+            '@retikz/standard-vanilla/shape': [
+              path.join(repositoryRoot, 'packages/library/standard-vanilla/src/shape/index.ts'),
             ],
             '@retikz/standard/shape': [path.join(repositoryRoot, 'packages/library/standard/src/shape/index.ts')],
           },
@@ -57,7 +82,7 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
       packageName: '@retikz/standard/shape',
       packageDirectory: directory,
       tsconfigPath,
-      entries: [{ source: entry, title: { zh: 'Schema', en: 'Schema' } }],
+      entries: [{ source: entry, title: { zh: 'Schema', en: 'Schema' }, symbols: ['Grid', 'Line', 'IRPolygon'] }],
       translate: (text: string) => text,
       schemaLocalizations: {
         GridSchema: GridSchemaZhLocalization,
@@ -72,6 +97,40 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
         PolygonSchema: { descriptions: { radius: '外接半径', sideLength: '正多边形边长', sides: '至少三条边' } },
       },
     };
+    const standardConfig = {
+      ...config,
+      schemaLocalizations: undefined,
+      entries: [
+        {
+          ...config.entries[0],
+          symbols: [
+            'ArcFields',
+            'ReactArcFields',
+            'VanillaArcFields',
+            'CustomArc',
+            'SurfaceFields',
+            'AxesFields',
+            'CellFields',
+            'ListFields',
+          ],
+        },
+      ],
+    };
+    const standardEnglish = await createStandardApiReferenceMdx(standardConfig, 'en');
+    expect(standardEnglish.match(/\| `close\?` \|[^\n]+\| `"open"` \| [^—]/g)).toHaveLength(3);
+    expect(standardEnglish).toMatch(/\| `padding\?` \|[^\n]+\| `0` \| Uniform or side-specific/);
+    expect(standardEnglish).toMatch(/\| `index\?` \|[^\n]+\| `false` \|/);
+    expect(standardEnglish).toMatch(/\| `cellIdMode\?` \|[^\n]+\| `'explicit'` \|/);
+    expect(standardEnglish).toContain('{"position":[0,0],"label":false}');
+    expect(standardEnglish).toContain('Optional fill appearance for the Surface allocation box.');
+    expect(standardEnglish).toContain('Horizontal axis configuration and its perpendicular grid projection.');
+    const standardChinese = await createStandardApiReferenceMdx(standardConfig, 'zh');
+    expect(standardChinese).toContain('水平轴与垂直网格配置');
+    expect(standardChinese).toMatch(/\| `close\?` \|[^\n]+\| — \| 自定义闭合选项/);
+    expect(standardChinese).toContain('覆盖分配区域的可选填充');
+    await expect(
+      createApiReferenceMdx({ ...standardConfig, resolveSchemaLocalization: () => undefined }, 'zh'),
+    ).rejects.toThrow(/Schema localization/);
     const english = await createApiReferenceMdx(config, 'en');
     expect(english).toContain('| `line?`');
     expect(english).toContain('| `true` | Disabled, shared, or direction-specific grid-line configuration. |');

@@ -1,9 +1,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { listSchemaDescriptions } from '../schema-reference/list';
 import { translateDrawApiReference } from './draw.en';
-import { createApiReferenceMdx } from './tex';
+import { createStandardApiReferenceMdx } from './standard-schema';
 import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
@@ -143,30 +142,8 @@ export const writeStandardContainerApiReferences = async (
             },
           ],
           translate: translateContainerApiReference,
-          ...(name === 'List' && owner.suffix === ''
-            ? {
-                schemaLocalizations: Object.fromEntries(
-                  [
-                    ['ListCellSchema', '/union/0/field/"items"/array/union/1'],
-                    ['ListIndexOptionsSchema', '/union/0/field/"index"/union/1'],
-                    ['ListIndexStyleSchema', '/union/0/field/"index"/union/1/field/"style"'],
-                  ].map(([schemaName, prefix]) => [
-                    schemaName,
-                    {
-                      descriptions: Object.fromEntries(
-                        Object.entries(listSchemaDescriptions).flatMap(([key, description]) => {
-                          if (!key.startsWith(`${prefix}/field/`)) return [];
-                          const field = key.slice(`${prefix}/field/`.length);
-                          return /^"[^"]+"$/.test(field) ? [[JSON.parse(field), description]] : [];
-                        }),
-                      ),
-                    },
-                  ]),
-                ),
-              }
-            : {}),
         };
-        const mdx = await createApiReferenceMdx(config, lang);
+        const mdx = await createStandardApiReferenceMdx(config, lang);
         sections.push(mdx.replace(/^(#{2,4}) /gm, '#$1 '));
       }
       writeFileSync(

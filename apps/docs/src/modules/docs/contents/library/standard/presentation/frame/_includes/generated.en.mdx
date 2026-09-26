@@ -250,21 +250,21 @@ export declare const frameTitle: (input: FrameTitleInput) => IRFrameTitle;
 
 <ApiTable>
 
-| Member          | Type                                                                                             | Default | Description |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `animations?`   | `ZodInfer<typeof FrameDescriptionSchema.shape["animations"]>`                                    | —       | —           |
-| `boundary?`     | `ZodInfer<typeof FrameDescriptionSchema.shape["boundary"]>`                                      | —       | —           |
-| `cornerRadius?` | `number`                                                                                         | —       | —           |
-| `id?`           | `string`                                                                                         | —       | —           |
-| `label?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["label"]>`                                         | —       | —           |
-| `layout?`       | `ZodInfer<typeof FrameDescriptionSchema.shape["layout"]>`                                        | —       | —           |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | —           |
-| `rotate?`       | `number`                                                                                         | —       | —           |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —           |
-| `shape?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["shape"]>`                                         | —       | —           |
-| `style?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["style"]>`                                         | —       | —           |
-| `text`          | `ZodInfer<typeof FrameDescriptionSchema.shape["text"]>`                                          | —       | —           |
-| `zIndex?`       | `number`                                                                                         | —       | —           |
+| Member          | Type                                                                                             | Default | Description                                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`   | `ZodInfer<typeof FrameDescriptionSchema.shape["animations"]>`                                    | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                      |
+| `boundary?`     | `ZodInfer<typeof FrameDescriptionSchema.shape["boundary"]>`                                      | —       | Default connection surface for edges meeting this node. Per-edge endpoints may override it.                                                                                   |
+| `cornerRadius?` | `number`                                                                                         | —       | Top-level corner radius in user units. Only effective on `rectangle` shape.                                                                                                   |
+| `id?`           | `string`                                                                                         | —       | Optional unique id; required if any path needs to reference this node by string                                                                                               |
+| `label?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["label"]>`                                         | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                                 |
+| `layout?`       | `ZodInfer<typeof FrameDescriptionSchema.shape["layout"]>`                                        | —       | Node size, spacing, and text layout overrides.                                                                                                                                |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                               |
+| `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                   |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                             |
+| `shape?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["shape"]>`                                         | —       | Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle. |
+| `style?`        | `ZodInfer<typeof FrameDescriptionSchema.shape["style"]>`                                         | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                      |
+| `text`          | `ZodInfer<typeof FrameDescriptionSchema.shape["text"]>`                                          | —       | Required Core Node text rendered as Frame header content.                                                                                                                     |
+| `zIndex?`       | `number`                                                                                         | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                   |
 
 </ApiTable>
 
@@ -310,21 +310,21 @@ export type FrameInput = Omit<IRFrame, 'namespace' | 'type'>;
 
 <ApiTable>
 
-| Member          | Type                                                                                             | Default | Description |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `animations?`   | `ZodInfer<typeof FrameTitleSchema.shape["animations"]>`                                          | —       | —           |
-| `boundary?`     | `ZodInfer<typeof FrameTitleSchema.shape["boundary"]>`                                            | —       | —           |
-| `cornerRadius?` | `number`                                                                                         | —       | —           |
-| `id?`           | `string`                                                                                         | —       | —           |
-| `label?`        | `ZodInfer<typeof FrameTitleSchema.shape["label"]>`                                               | —       | —           |
-| `layout?`       | `ZodInfer<typeof FrameTitleSchema.shape["layout"]>`                                              | —       | —           |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | —           |
-| `rotate?`       | `number`                                                                                         | —       | —           |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —           |
-| `shape?`        | `ZodInfer<typeof FrameTitleSchema.shape["shape"]>`                                               | —       | —           |
-| `style?`        | `ZodInfer<typeof FrameTitleSchema.shape["style"]>`                                               | —       | —           |
-| `text`          | `ZodInfer<typeof FrameTitleSchema.shape["text"]>`                                                | —       | —           |
-| `zIndex?`       | `number`                                                                                         | —       | —           |
+| Member          | Type                                                                                             | Default | Description                                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`   | `ZodInfer<typeof FrameTitleSchema.shape["animations"]>`                                          | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                      |
+| `boundary?`     | `ZodInfer<typeof FrameTitleSchema.shape["boundary"]>`                                            | —       | Default connection surface for edges meeting this node. Per-edge endpoints may override it.                                                                                   |
+| `cornerRadius?` | `number`                                                                                         | —       | Top-level corner radius in user units. Only effective on `rectangle` shape.                                                                                                   |
+| `id?`           | `string`                                                                                         | —       | Optional unique id; required if any path needs to reference this node by string                                                                                               |
+| `label?`        | `ZodInfer<typeof FrameTitleSchema.shape["label"]>`                                               | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                                 |
+| `layout?`       | `ZodInfer<typeof FrameTitleSchema.shape["layout"]>`                                              | —       | Node size, spacing, and text layout overrides.                                                                                                                                |
+| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                               |
+| `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                   |
+| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                             |
+| `shape?`        | `ZodInfer<typeof FrameTitleSchema.shape["shape"]>`                                               | —       | Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle. |
+| `style?`        | `ZodInfer<typeof FrameTitleSchema.shape["style"]>`                                               | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                      |
+| `text`          | `ZodInfer<typeof FrameTitleSchema.shape["text"]>`                                                | —       | Required Core Node text rendered as Frame header content.                                                                                                                     |
+| `zIndex?`       | `number`                                                                                         | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                   |
 
 </ApiTable>
 

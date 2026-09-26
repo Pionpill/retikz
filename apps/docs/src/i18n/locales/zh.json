@@ -471,7 +471,8 @@
     "type": "类型",
     "required": "必填",
     "description": "描述",
-    "typePrefix": "类型："
+    "typePrefix": "类型：",
+    "toggleType": "展开 / 收起类型"
   },
   "examplePrompt": {
     "expandDetail": "详细内容",
