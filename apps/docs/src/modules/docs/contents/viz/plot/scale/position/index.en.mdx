@@ -71,7 +71,7 @@ The mark branch accepts `clearance`, a nonnegative minimum distance from protect
 
 Built-in support covers Cartesian2D with linear/time scales, Point marks, and projected Relation endpoints without placement. Empty data adds no automatic padding. Points outside the baseline domain do not constrain padding and retain existing rendering/clipping semantics. Shared scales use one final domain; incompatible fixed ends and missing capabilities produce errors. Chart generates this branch for its `point-aware` policy.
 
-Custom Mark, position Scale, and Coordinate definitions can expose `domainPadding` capabilities for targets/extents, baseline normalization and final mapping, and independent straight roles. They use the existing registries; size evaluation must not depend on the position padding being solved. See [scatter policy comparison](/viz/chart/points/scatter#automatic-edge-padding).
+Custom Mark, position Scale, and Coordinate definitions can expose `domainPadding` capabilities for targets/extents, baseline normalization and final mapping, and independent straight roles. They use the existing registries; size evaluation must not depend on the position padding being solved. See [point-chart padding comparison](/viz/chart/points#automatic-edge-padding).
 
 ## Time
 

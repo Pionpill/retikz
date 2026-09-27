@@ -8,6 +8,8 @@ import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
+import { previewSource as appearanceSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-appearance';
+import { createPreviewControlContract } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-appearance.controls';
 import { previewControlContract as fertilityWorkZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.controls';
 import {
   fertilityWorkData,
@@ -81,24 +83,6 @@ const canonicalDeclarationProps = (source: PreviewSourceConfig, component: unkno
   return declaration.props;
 };
 
-const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 'subtitle' | 'source', ReactNode> => {
-  const chart = source.canonicalRender?.();
-  if (!isValidElement<{ children?: ReactNode }>(chart)) {
-    throw new Error('Chart preview must provide a canonical element');
-  }
-  const children = Children.toArray(chart.props.children);
-  const textOf = (marker: typeof ChartTitle | typeof ChartSubtitle | typeof ChartSource): ReactNode => {
-    const child = children.find(candidate => isValidElement(candidate) && candidate.type === marker);
-    if (!isValidElement<{ children?: ReactNode }>(child)) throw new Error('Chart preview is missing presentation text');
-    return child.props.children;
-  };
-  return {
-    title: textOf(ChartTitle),
-    subtitle: textOf(ChartSubtitle),
-    source: textOf(ChartSource),
-  };
-};
-
 describe('Viz Chart scatter controls', () => {
   it('生育率与女性劳动参与率示例使用完整的 World Bank 2022 有效快照', () => {
     expect(WORLD_BANK_FERTILITY_WORK_YEAR).toBe(2022);
@@ -119,6 +103,7 @@ describe('Viz Chart scatter controls', () => {
   it('保持各组 controls 的双语结构与 canonical 状态一致', () => {
     for (const [zh, en] of [
       [fertilityWorkZh, fertilityWorkEn],
+      [createPreviewControlContract('zh'), createPreviewControlContract('en')],
       [worldCupZh, worldCupEn],
     ] as const) {
       expect(comparable(zh)).toEqual(comparable(en));
@@ -129,13 +114,8 @@ describe('Viz Chart scatter controls', () => {
 
   it('两个 Scatter 示例只暴露不会与字段 encoding 冲突的公共图元控件', () => {
     expect(fertilityWorkZh.canonicalValues).toEqual({
-      'scatter-fertility-work-coordinate-system': 'cartesian2D',
       'scatter-fertility-work-color-by-category': true,
       'scatter-fertility-work-shape-by-category': true,
-      'scatter-fertility-work-point-size': 5,
-      'scatter-fertility-work-point-stroke-enabled': false,
-      'scatter-fertility-work-point-stroke': 'currentColor',
-      'scatter-fertility-work-point-opacity': 0.65,
     });
     expect(worldCupZh.canonicalValues).toEqual({
       'scatter-world-cup-shots-point-size': 5,
@@ -145,13 +125,8 @@ describe('Viz Chart scatter controls', () => {
       'scatter-world-cup-shots-point-opacity': 0.9,
     });
     expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).toEqual([
-      'scatter-fertility-work-coordinate-system',
       'scatter-fertility-work-color-by-category',
       'scatter-fertility-work-shape-by-category',
-      'scatter-fertility-work-point-size',
-      'scatter-fertility-work-point-stroke-enabled',
-      'scatter-fertility-work-point-stroke',
-      'scatter-fertility-work-point-opacity',
     ]);
     expect(getPreviewControlFields(worldCupZh.controls).map(control => control.id)).toEqual([
       'scatter-world-cup-shots-point-size',
@@ -175,23 +150,15 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('通用 Scatter 示例以笛卡尔为 canonical，并通过 ScatterChart 根 prop 切换 Polar', () => {
-    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
-      expect(canonicalScatterProps(source)).toMatchObject({
-        coordinate: { type: 'cartesian2D' },
-      });
-    }
-
-    for (const locale of ['zh', 'en']) {
-      for (const demo of ['scatter-fertility-work']) {
-        const source = readFileSync(
-          resolve(`src/modules/docs/contents/viz/chart/points/scatter/${demo}.${locale}.demo.tsx`),
-          'utf8',
-        );
-        expect(source).toContain("type: 'polar2D'");
-        expect(source).not.toContain('<ChartCoordinate');
-      }
-    }
+  it('映射与外观示例保持相同字段，外观控件只调整常量属性', () => {
+    expect(canonicalDeclarationProps(appearanceSource, ScatterEncodings)).toEqual(
+      canonicalDeclarationProps(fertilityWorkZhPreviewSource, ScatterEncodings),
+    );
+    expect(canonicalScatterPropertiesProps(appearanceSource)).not.toEqual(
+      canonicalScatterPropertiesProps(fertilityWorkZhPreviewSource),
+    );
+    expect(createPreviewControlContract().relatedApis.every(api => api.startsWith('ScatterProperties.'))).toBe(true);
+    expect(fertilityWorkZh.relatedApis.every(api => api.startsWith('ScatterEncodings.'))).toBe(true);
   });
 
   it('各 Scatter 示例使用互不重叠的 control id，避免切换示例时串用状态', () => {
@@ -217,15 +184,7 @@ describe('Viz Chart scatter controls', () => {
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('fill');
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('shape');
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
-      expect(canonicalScatterProps(source)).toMatchObject({
-        plotExtension: {
-          plotDefaults: {
-            palette: {
-              shape: ['circle', 'rectangle', 'diamond', { type: 'polygon', params: { sides: 3, rotate: -90 } }],
-            },
-          },
-        },
-      });
+      expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension');
     }
   });
 
@@ -236,26 +195,7 @@ describe('Viz Chart scatter controls', () => {
     expect(getPreviewControlFields(fertilityWorkEn.controls).map(control => control.id)).toEqual(
       expect.arrayContaining(['scatter-fertility-work-color-by-category', 'scatter-fertility-work-shape-by-category']),
     );
-    expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).not.toContain(
-      'scatter-fertility-work-point-fill',
-    );
-    expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).not.toContain(
-      'scatter-fertility-work-point-shape',
-    );
-    expect(getPreviewControlFields(fertilityWorkEn.controls).map(control => control.id)).not.toContain(
-      'scatter-fertility-work-point-fill',
-    );
-    expect(getPreviewControlFields(fertilityWorkEn.controls).map(control => control.id)).not.toContain(
-      'scatter-fertility-work-point-shape',
-    );
-    expect(fertilityWorkZh.relatedApis).toEqual([
-      'ScatterChart.coordinate',
-      'ScatterEncodings.color',
-      'ScatterEncodings.shape',
-      'ScatterProperties.size',
-      'ScatterProperties.stroke',
-      'ScatterProperties.opacity',
-    ]);
+    expect(fertilityWorkZh.relatedApis).toEqual(['ScatterEncodings.color', 'ScatterEncodings.shape']);
     expect(fertilityWorkEn.relatedApis).toEqual(fertilityWorkZh.relatedApis);
     expect(fertilityWorkZh.relatedApis).not.toContain('Legend.channel');
     expect(fertilityWorkEn.relatedApis).not.toContain('Legend.channel');
@@ -308,16 +248,19 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('双语 demo 在 Chart-native metadata 中说明字段单位与数据来源', () => {
-    expect(canonicalPresentation(fertilityWorkZhPreviewSource)).toMatchObject({
-      title: '生育率与女性劳动参与率',
-      subtitle: expect.stringContaining('女性劳动参与率（%）'),
-      source: expect.stringContaining('世界银行'),
-    });
-    expect(canonicalPresentation(fertilityWorkEnPreviewSource)).toMatchObject({
-      title: 'Fertility and female labor participation',
-      subtitle: expect.stringContaining('labor-force participation'),
-      source: expect.stringContaining('World Bank'),
-    });
+  it('基础用法 demo 不包含图内 presentation 内容', () => {
+    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource, appearanceSource]) {
+      const props = canonicalScatterProps(source);
+      expect(props).not.toHaveProperty('presentation');
+      expect(props).not.toHaveProperty('plotExtension');
+      const chart = source.canonicalRender?.();
+      if (!isValidElement<{ children?: ReactNode }>(chart)) throw new Error('Missing chart');
+      const types = Children.toArray(chart.props.children)
+        .filter(isValidElement)
+        .map(child => child.type);
+      expect(types).not.toContain(ChartTitle);
+      expect(types).not.toContain(ChartSubtitle);
+      expect(types).not.toContain(ChartSource);
+    }
   });
 });

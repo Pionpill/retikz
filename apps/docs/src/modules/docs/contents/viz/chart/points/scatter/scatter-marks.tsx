@@ -1,34 +1,37 @@
 import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
-import type { Lang } from '@/i18n';
+import type { PreviewDimensions } from '@/modules/docs/components/component-preview/context';
+import { usePreviewControls, usePreviewDimensions } from '@/modules/docs/preview';
 
-import { scatterMarksI18n } from './scatter-marks.i18n';
+import { createPreviewControlContract } from './scatter-marks.controls';
+import type { DemoValues } from './scatter-marks.controls';
 import { scatterMinimalData } from './scatter-minimal.data';
 
-/** 散点图元示例的语言选项 */
-export type ScatterMarksProps = { lang?: Lang };
+const contract = createPreviewControlContract();
 
 /** 叠加两组继承相同位置映射的散点 */
-const ScatterMarks: FC<ScatterMarksProps> = props => {
-  const { lang = 'zh' } = props;
-  const i18n = scatterMarksI18n[lang];
-  return (
-    <ScatterChart
-      rows={scatterMinimalData}
-      layout={{ width: 720, height: 440 }}
-      presentation={{ title: { text: i18n.title }, subtitle: { text: i18n.subtitle } }}
-    >
+const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.canonicalValues) => {
+  const chart = (
+    <ScatterChart rows={scatterMinimalData} layout={dimensions ?? { width: 720, height: 440 }}>
       <ScatterEncodings x="imdbRating" y="rottenTomatoesRating" />
-      <ScatterProperties size={8} opacity={0.25} />
-      <ScatterMark properties={{ size: 3, opacity: 1 }} />
+      <ScatterProperties size={values.baseSize} opacity={values.baseOpacity} />
+      <ScatterMark override={values.override} properties={{ size: values.size, opacity: values.opacity }} />
     </ScatterChart>
   );
+  return chart;
 };
 
 /** 源码视图复用电影评分数据 */
 export const previewSource = {
+  deriveIR: false,
+  canonicalRender: () => render(),
   datasetImports: { 'chart.data': { name: 'scatterMinimalData', from: './scatter-minimal.data' } },
 };
 
+const ScatterMarks: FC = () => render(usePreviewDimensions(), usePreviewControls(contract.controls));
 export default ScatterMarks;
+
+/** 控件模块的显式注册回退 */
+export { createPreviewControlContract } from './scatter-marks.controls';
+export const previewControls = contract.controls;

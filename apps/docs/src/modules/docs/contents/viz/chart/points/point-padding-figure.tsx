@@ -4,15 +4,15 @@ import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
 
-import { scatterPaddingFigureI18n } from './scatter-padding-figure.i18n';
+import { pointPaddingFigureI18n } from './point-padding-figure.i18n';
 
-/** 散点自动留白示意图的语言参数 */
-export type ScatterPaddingFigureProps = { lang?: Lang };
+/** 点图自动留白示意图的语言参数 */
+export type PointPaddingFigureProps = { lang?: Lang };
 
 /** 在线性坐标中对比零留白与一个点半径的范围留白 */
-const ScatterPaddingFigure: FC<ScatterPaddingFigureProps> = props => {
+const PointPaddingFigure: FC<PointPaddingFigureProps> = props => {
   const { lang = 'zh' } = props;
-  const text = scatterPaddingFigureI18n[lang];
+  const text = pointPaddingFigureI18n[lang];
   const radius = 16;
   const samples = [
     [0, 0],
@@ -64,4 +64,4 @@ const ScatterPaddingFigure: FC<ScatterPaddingFigureProps> = props => {
   );
 };
 
-export default ScatterPaddingFigure;
+export default PointPaddingFigure;

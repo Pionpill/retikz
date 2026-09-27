@@ -18,10 +18,6 @@ import { previewControlContract as regressionZh } from '../../src/modules/docs/c
 import { previewControlContract as regressionEn } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.en.controls';
 import { previewSource as regressionEnSource } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.en.demo';
 import { previewSource as regressionZhSource } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.zh.demo';
-import { previewControlContract as fertilityZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.controls';
-import { previewControlContract as fertilityEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.controls';
-import { previewSource as fertilityEnSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
-import { previewSource as fertilityZhSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewControlContract as worldCupZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.controls';
 import { previewControlContract as stripZh } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.controls';
 import { previewControlContract as stripEn } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.controls';
@@ -65,13 +61,6 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     zh: rangedDotZh,
     en: rangedDotEn,
     sources: [rangedDotZhSource, rangedDotEnSource],
-  },
-  {
-    coordinateId: 'scatter-fertility-work-coordinate-system',
-    relatedApi: 'ScatterChart.coordinate',
-    zh: fertilityZh,
-    en: fertilityEn,
-    sources: [fertilityZhSource, fertilityEnSource],
   },
   {
     coordinateId: 'strip-basic-coordinate-system',

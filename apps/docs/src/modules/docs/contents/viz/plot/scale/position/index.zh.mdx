@@ -71,7 +71,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
 
 内置支持 Cartesian2D 的 linear/time 尺度以及无 placement 的 Point 和投影 Relation 端点。空数据不产生自动留白；基准 domain 外的点不参与约束，但绘制裁切语义不变。共享尺度使用同一最终 domain，无法满足的固定端或不支持的能力会报错。Chart 的 `point-aware` 策略自动生成这一配置。
 
-自定义 Mark、position Scale 和 Coordinate 可在各自 Definition 的 `domainPadding` capability 中提供 targets/extent、基准归一化与最终映射、独立直线角色。它们使用既有 registry；尺寸求值不得依赖待求解的位置留白。参见 [散点策略对比](/viz/chart/points/scatter#自动补齐边缘留白)。
+自定义 Mark、position Scale 和 Coordinate 可在各自 Definition 的 `domainPadding` capability 中提供 targets/extent、基准归一化与最终映射、独立直线角色。它们使用既有 registry；尺寸求值不得依赖待求解的位置留白。参见 [点图留白策略对比](/viz/chart/points#自动补齐边缘留白)。
 
 ## 时间
 

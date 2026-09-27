@@ -231,7 +231,9 @@ describe('collectShowcasePages', () => {
     expect(source).toContain('/viz/chart/points/scatter');
 
     const compiled = String(await compile(source, compileOptions));
-    expect(compiled).toContain('ShowcaseGallery');
+    expect(compiled).not.toContain('ShowcaseGallery');
+    expect(compiled).toContain('ComponentPreview');
+    expect(compiled).toContain('DocTabs');
     expect(compiled).toContain('h2');
   });
 
@@ -239,14 +241,14 @@ describe('collectShowcasePages', () => {
     const source = readRequiredFile(regressionContentPath(lang));
 
     for (const publicName of [
-      '`@retikz/chart/point/regression`',
+      '`@retikz/chart/point`',
       '`@retikz/chart-react/point`',
-      '`@retikz/chart-vanilla/point/regression`',
+      '`@retikz/chart-vanilla/point`',
       '`RegressionChart`',
       '`RegressionEncodings`',
       '`RegressionProperties`',
       '`RegressionMark`',
-      '`createRegressionChart`',
+      '`regressionChart`',
       '`normalizeRegressionChart`',
       '`SmoothTransformSchema`',
     ]) {
@@ -259,38 +261,47 @@ describe('collectShowcasePages', () => {
     expect(source).toContain('/viz/plot/mark/path');
 
     const compiled = String(await compile(source, compileOptions));
-    expect(compiled).toContain('ShowcaseGallery');
+    expect(compiled).not.toContain('ShowcaseGallery');
+    expect(compiled).toContain('ComponentPreview');
+    expect(compiled).toContain('DocTabs');
     expect(compiled).toContain('h2');
   });
 
-  it.each(['zh', 'en'] as const)('Scatter %s 按文章章节提供示例和实现原理图', lang => {
+  it.each(['zh', 'en'] as const)('Scatter %s 提供类型示例，总纲承载公共原理图', lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
     const previews = [...source.matchAll(/<ComponentPreview[\s\S]*?\/>/g)].map(match => match[0]);
-    expect(previews).toHaveLength(7);
+    expect(previews).toHaveLength(6);
     for (const [index, name] of [
       'scatter-minimal',
       'scatter-fertility-work',
-      'scatter-fertility-work',
+      'scatter-appearance',
       'scatter-marks',
       'scatter-facet',
       'scatter-world-cup-shots',
-      'scatter-padding-figure',
     ].entries()) {
       expect(previews[index]).toContain(name);
+    }
+    const groupSource = readFileSync(
+      resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/index.${lang}.mdx`),
+      'utf8',
+    );
+    for (const name of ['point-padding-figure', 'point-auto-padding']) {
+      expect(groupSource).toContain(`files="${name}"`);
+      expect(existsSync(resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${name}.tsx`))).toBe(true);
     }
     expect(previews[0]).not.toContain('controls=');
     expect(previews[0]).toContain('hideCode');
     const headings = [...source.matchAll(/^## (.+)$/gm)].map(match => match[1]);
     expect(headings).toEqual(
       lang === 'zh'
-        ? ['接入方式', '基础用法', '扩展用法', '错误与限制', '实现原理', 'API 参考', '延伸阅读']
+        ? ['接入方式', '基础用法', '扩展用法', '错误与限制', 'API 参考', 'Schema 参考', '延伸阅读']
         : [
             'Using this topic',
             'Basic usage',
             'Extended usage',
             'Errors and limitations',
-            'Implementation',
             'API reference',
+            'Schema reference',
             'Further reading',
           ],
     );

@@ -1,39 +1,44 @@
 import type { Lang } from '@/i18n';
-import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
+import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { scatterFacetI18n } from './scatter-facet.i18n';
+import { controlI18n } from './scatter-facet.i18n';
 import { fertilityWorkData } from './scatter-fertility-work.data';
-
-/** 分面示例的数据查询面板 */
-export const createPreviewControlContract = (lang: Lang): PreviewControlContract => {
-  const i18n = scatterFacetI18n[lang];
+/** 示例属性的双语交互契约 */
+export const createPreviewControlContract = (lang: Lang = 'zh') => {
+  const text = controlI18n[lang];
   return {
     controls: definePreviewControls({
       presentation: 'panel',
-      title: i18n.data,
+      title: text.settings,
       sections: [
         {
-          label: i18n.data,
+          label: text.data,
           defaultCollapsed: true,
           controls: [
             {
               kind: 'table',
               id: 'rows',
-              label: i18n.data,
+              label: text.samples,
               rows: fertilityWorkData,
-              columns: [
-                { key: 'country' },
-                { key: 'incomeGroup' },
-                { key: 'fertilityRate' },
-                { key: 'femaleLaborParticipation' },
-              ],
+              columns: Object.keys(fertilityWorkData[0] ?? {}).map(key => ({ key })),
             },
+          ],
+        },
+        {
+          label: text.settings,
+          controls: [
+            { kind: 'switch', id: 'header', label: text.header, defaultValue: true },
+            { kind: 'range', id: 'panelGap', label: text.panelGap, defaultValue: 20, min: 0, max: 40, step: 2 },
+            { kind: 'range', id: 'size', label: text.size, defaultValue: 4, min: 1, max: 12, step: 1 },
+            { kind: 'range', id: 'opacity', label: text.opacity, defaultValue: 0.65, min: 0.1, max: 1, step: 0.05 },
           ],
         },
       ],
     }),
-    canonicalValues: {},
-    relatedApis: ['ScatterEncodings.column', 'ScatterEncodings.facet'],
-  };
+    canonicalValues: { header: true, panelGap: 20, size: 4, opacity: 0.65 } as const,
+    relatedApis: ['ScatterEncodings.facet', 'ScatterProperties'],
+  } satisfies PreviewControlContract;
 };
+/** 当前示例的控件值 */
+export type DemoValues = PreviewControlValuesFor<ReturnType<typeof createPreviewControlContract>['controls']>;

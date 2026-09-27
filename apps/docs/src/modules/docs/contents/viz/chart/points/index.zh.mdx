@@ -1,64 +1,109 @@
 ---
 title: 点图
-description: 用点的位置及点之间的关系展示单个观测，并按图表结构选择合适的点图。
+description: 根据要回答的问题和数据字段，选择合适的点图。
 ---
 
-点图以一个或多个数据点为视觉主体。这个分组帮助读者按视觉结构选择 chartType，也保留源码目录与 `/point` 多入口导入边界；它不对应额外的 Point resolver 或运行时分发层级。
+点图用点的位置展示观测值，适合查看数据分布、变量关系、聚类与异常值，也可以比较变化轨迹或前后差异。数据通常按行记录观测，包含数值字段，并可带有类别或顺序字段。
 
-Scatter、Bubble、Regression、Connected Scatter、Ranged Dot 与 Strip 都属于 `type: 'point'` family，并通过 `recipe.chartType` 选择各自的精确 schema 与 recipe。它们共享根级 `data`、`layout`、`presentation`、`theme` 与 `plotExtension`，而 `recipe.encodings`、`recipe.properties` 和内建 semantic mark 固定具体图表的数据角色与视觉结构。
+## 点图能看出什么
 
-所有类型共享的字段归属、编写主链、整图展示与 Plot 扩展规则统一放在[图形模型](/viz/chart/model)中；本分组只比较点图类型自己的视觉语义。
+点图保留每个观测的位置，适合在比较数值的同时观察差异。相比只看总量或平均值，它更容易让你发现：整体关系是否一致、数据是否形成几组，以及哪些观测偏离了大多数。
 
-Point recipe 会按最终保留的 Point 最大半径，为连续位置 scale 预留 range 空间，避免 domain 边界上的点被裁切：未配置 `size` 时半径为 `5`，字段尺寸默认最大半径为 `20`，常量尺寸或显式 sqrt scale 则取最终 range 的最大值。Regression 与 Connected Scatter 读取组内 Point，Ranged Dot 读取起止两个端点；`plotExtension.marks` 不参与计算。
+例如，比较不同地区的人均收入与预期寿命时，散点的位置呈现两个指标的关系，颜色可以区分地区类别；再用气泡面积表示人口，就能同时观察规模。如果要追踪同一地区多年的变化，则应保留年份顺序，使用连接散点图。
 
-Properties 的 `domainPadding` 接受非负数字，或 `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`。省略 `kind` 时使用 range 单位；只有显式 `kind: 'ratio'` 才按 domain 跨度比例解析，且每个值必须小于 `1`。具体 side 优先于 x / y，x / y 优先于 default；range 未覆盖的 side 继承最大半径，ratio 未覆盖的 side 为 `0`。left / right / top / bottom 只适用于 Cartesian，并会按 scale range 的实际方向映射到 domain lower / upper；Polar 只能使用 default / x / y。
+## 如何选择
 
-优先级依次为自动最大半径、Properties、encoding scale operation。operation 显式声明的 `0` 或 `{ kind?, lower?, upper? }` 不会被 Properties 覆盖；分类 scale 与 `plotExtension` scale 也不会被改写。`domainPadding` 只属于 recipe Properties，不能写进 authored mark。Ranged Dot 的 y 是分类 scale，因此只应用连续的 x 留白。
+| 图形                                              | 什么时候用                       | 适合的数据                     |
+| ------------------------------------------------- | -------------------------------- | ------------------------------ |
+| [散点图](/viz/chart/points/scatter)               | 查看两个变量的关系、聚类、异常值 | 两个数值字段                   |
+| [气泡图](/viz/chart/points/bubble)                | 在两个变量之外比较规模           | 三个数值字段，其中一个表示规模 |
+| [回归图](/viz/chart/points/regression)            | 观察整体、分组趋势               | 两个数值字段，可带分组字段     |
+| [连接散点图](/viz/chart/points/connected-scatter) | 观察一组观测的变化轨迹           | 两个数值字段和明确的顺序       |
+| [范围点图](/viz/chart/points/ranged-dot)          | 比较各类别的前后值、两个端点     | 类别字段和两个数值字段         |
+| [条带图](/viz/chart/points/strip)                 | 比较各类别内的观测分布           | 类别字段和一个数值字段         |
 
-## 职责一览
+## 数据准备与阅读提示
 
-| 图表                                              | `chartType`         | 适合场景                               |
-| ------------------------------------------------- | ------------------- | -------------------------------------- |
-| [散点图](/viz/chart/points/scatter)               | `scatter`           | 查看分布、聚类、离群点或相关趋势       |
-| [气泡图](/viz/chart/points/bubble)                | `bubble`            | 同时比较二维位置与第三个连续字段的量级 |
-| [回归图](/viz/chart/points/regression)            | `regression`        | 在原始观测上比较整体或分组拟合趋势     |
-| [连接散点图](/viz/chart/points/connected-scatter) | `connected-scatter` | 按显式顺序读取观测轨迹                 |
-| [范围点图](/viz/chart/points/ranged-dot)          | `ranged-dot`        | 比较每个类别的两个端点与变化方向       |
-| [条带图](/viz/chart/points/strip)                 | `strip`             | 查看每个类别内的观测分布与重叠         |
+先确定一个点代表什么：一名用户、一次测量、一个地区，还是某个时间点。用于比较的数值应属于同一条观测；比较不同群体时，还需要明确的类别字段。普通散点不依赖数据行的排列顺序，只有需要连线表达轨迹时，才必须明确先后顺序。
+
+读图时先看整体分布，再看类别差异和单个异常点。向上或向下的趋势表示变量可能相关，但不能单凭图形推断因果；回归线概括的是趋势，也不能替代原始观测。
+
+- **点重叠时**：可以缩小点、降低不透明度或分组查看；类别内大量观测挤在同一位置时，可考虑条带图。重叠越深不一定越容易辨认，不能仅凭可见点数判断样本量。
+- **用气泡表示规模时**：按面积而不是直径理解大小，并结合图例比较。需要精确读取每项数值时，应同时查看数据表。
+
+## 公共配置
+
+六种点图共用边缘留白配置。React 通过对应的属性组件（如 `ScatterProperties`）或根 `recipe.properties` 设置；Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。这些配置作用于整张图，不可放入单个图元的属性中。
+
+| 属性            | 类型                                                    | 说明                                                                                               |
+| --------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `autoPadding`   | `'max-radius'`、`'point-aware'`、`{ kind; clearance? }` | 自动留白策略，默认按最终点图元的最大半径留白；对象形式用 `kind` 选择策略、`clearance` 设置外缘净空 |
+| `domainPadding` | `number`、方向留白对象                                  | 显式位置域留白，优先于自动策略；数值 `0` 关闭留白，对象形式支持按方向配置                          |
+
+通常保留默认策略即可。只有需要利用各点已有边缘空间时才选择 `point-aware`；它要求二维笛卡尔坐标、linear/time 位置尺度且无散布。范围点图的分类轴、条带图的离散轴与散布不满足该条件；气泡图使用对数位置轴时也不适用。具体计算与覆盖规则见下方实现原理。
+
+点的大小、颜色和描边虽然常见，但各类型的入口与语义不同：Bubble 的大小必须来自数值映射，Connected Scatter 分别配置点和路径，Ranged Dot 区分共享端点与起终点外观。这些差异仍在各类型的 API 中说明。
+
+## 实现原理
+
+<ComponentAlert
+  type="tip"
+  title="选读"
+  description="本节解释点图家族共享的留白策略。首次使用可先跳过，需要理解边缘空间或调整策略时再阅读。"
+/>
+
+### 自动补齐边缘留白
+
+散点的位置表示点的中心。如果把数据最小值和最大值直接映射到绘图区边缘，点的半径就会伸出边界。点图家族因此会为尚未配置留白的连续位置尺度补齐 `domainPadding`，让边缘点的中心向内留出空间。下面以线性坐标对比显式设置 `domainPadding: 0` 与省略该属性时的效果；左图保留越界部分，便于观察裁切风险。
+
+<ComponentPreview files="point-padding-figure" hideCode type="illustration" size="lg" />
+
+两侧使用相同的数据、点半径与绘图区尺寸。自动留白改变的是位置尺度的域，不会修改数据、缩小散点或增大画布。图中每边为极值点预留一个半径的空间。
+
+#### 默认按最大半径留白
+
+Chart 在默认图元与追加、替换图元确定后，读取最终点图元的尺寸并取最大半径。固定 `size` 直接作为半径；字段映射的大小使用尺寸尺度输出范围的最大值，而不是逐条扫描数据估计。没有显式大小时沿用点的默认半径。这里计算的是点半径，不额外测量描边、阴影或文字的外扩范围，因此不能保证这些效果也被完整容纳。
+
+省略 `domainPadding` 时，各侧使用最大点半径作为留白，单位为绘图坐标中的长度，不是数据值。
+
+#### 逐点计算与外缘净空
+
+默认 `autoPadding: 'max-radius'` 保留上述策略，不扫描逐条数据。选择 `autoPadding: 'point-aware'` 时，Chart 将最终点图元交给 Plot：Plot 用实际数据视图中的位置和半径，在生成图元前求解每条轴所需的紧凑留白。中央大点已有的边缘距离可以抵扣留白，稍靠内的大点也参与约束，不只检查位置极值点。
+
+下面四幅图使用完全相同的数据、尺寸映射和画布，分别对比两种策略在零净空和方向净空（默认 8、上 20、左 0）下的结果。默认策略在各侧保留最大半径；逐点策略利用中央大点已有空间，只为边缘小点补足距离。
+
+对象形式 `autoPadding: { kind: 'point-aware', clearance: 8 }` 可在自动端预留外缘净空；`clearance` 使用非负绘图单位，默认 `0`。最大半径策略同样支持；显式 `domainPadding` 覆盖的端点不叠加净空。
+
+`clearance` 也接受四边间距对象 `IRBoxSpacing`。明确的四边方向仅支持笛卡尔坐标，反向轴仍按视觉方向解释。
+
+<ComponentPreview files="point-auto-padding" hideCode type="illustration" size="lg" />
+
+两种策略都只改变位置域，不改变点大小。`point-aware` 复用位置与尺寸数值，在固定轮数内求可行的紧凑解，并协调最终绘图区尺寸；不会读取渲染结果。它的每轮求解成本与有效点数成正比，比默认的图元级计算更贵，不承诺严格最小留白。
+
+#### 显式配置与适用限制
+
+- 显式 `domainPadding` 优先。数值应用于各侧，`0` 表示不补留白。`range` 对象未指定的方向采用所选自动策略；`ratio` 未指定方向仍为 `0`。全部方向显式指定后，不再启动逐点求解。
+- 尺度自身已配置 `domainPadding`，或由 `plotExtension.scales` 提供时，Chart 保留该尺度配置，不再自动补齐。
+- 当前逐点模式要求二维笛卡尔坐标、linear/time 位置尺度、无 placement。不支持的组合或无可行绘图区会报错，不回退默认策略。
+- 只保护最终有效、位于基准 domain 内的点半径；不保护描边、阴影、文字。域外点不参与计算，绘制与裁切沿用 Plot；扩展 domain 后，少量原域外点仍可能进入绘图区。
+- 共享比例尺在所有面板上共同求解一个 domain。固定像素留白若无法在不同面板尺寸下同时满足，会明确报错。
+- Chart 只自动引用自身最终 Point 图元和 Relation 端点，`plotExtension.marks` 不自动参与。
+
+`autoPadding` 与 `domainPadding` 均属于图形的 `recipe.properties`，不属于单个图元的 `properties`。
+
+<SourceLinks
+  sources={[{ label: '点半径计算与留白补齐', path: 'packages/viz/chart/src/point/shared/plot.ts', startLine: 51 }]}
+/>
 
 ## 章节内容
 
 <LinkedSections
   items={[
-    {
-      title: '散点图',
-      description: '比较两个连续变量，并用颜色或尺寸补充分类与量级',
-      url: '/viz/chart/points/scatter',
-    },
-    {
-      title: '气泡图',
-      description: '用必需的第三个字段控制气泡面积，并保留 Point 的位置语义',
-      url: '/viz/chart/points/bubble',
-    },
-    {
-      title: '回归图',
-      description: '叠加原始观测与一条或多条内置回归趋势',
-      url: '/viz/chart/points/regression',
-    },
-    {
-      title: '连接散点图',
-      description: '保留观测点，并按显式顺序连接一条或多条轨迹',
-      url: '/viz/chart/points/connected-scatter',
-    },
-    {
-      title: '范围点图',
-      description: '用连接线和双端点比较每个类别的前后值',
-      url: '/viz/chart/points/ranged-dot',
-    },
-    {
-      title: '条带图',
-      description: '在离散刻度附近确定性散布每条观测，并保留连续数值位置',
-      url: '/viz/chart/points/strip',
-    },
+    { title: '散点图', description: '从两个数值字段开始，观察变量关系与数据分布。', url: '/viz/chart/points/scatter' },
+    { title: '气泡图', description: '增加规模维度，同时比较位置与气泡面积。', url: '/viz/chart/points/bubble' },
+    { title: '回归图', description: '在观测点上叠加整体或分组趋势。', url: '/viz/chart/points/regression' },
+    { title: '连接散点图', description: '按时间或业务顺序阅读观测轨迹。', url: '/viz/chart/points/connected-scatter' },
+    { title: '范围点图', description: '比较各类别的两个端点和变化方向。', url: '/viz/chart/points/ranged-dot' },
+    { title: '条带图', description: '展开类别内的观测，查看集中程度与离散情况。', url: '/viz/chart/points/strip' },
   ]}
 />

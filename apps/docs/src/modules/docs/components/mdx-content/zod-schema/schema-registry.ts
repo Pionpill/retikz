@@ -1,3 +1,28 @@
+import {
+  ChartPresentationSchema,
+  ChartDefaultsSchema,
+  ChartLayoutSchema,
+  ChartPlotExtensionSchema,
+} from '@retikz/chart';
+import {
+  ScatterPositionScaleBindingSchema,
+  ScatterColorScaleBindingSchema,
+} from '@retikz/chart/point';
+import {
+  ScatterXEncodingSchema,
+  ScatterYEncodingSchema,
+  ScatterColorEncodingSchema,
+  ScatterSizeEncodingSchema,
+  ScatterOpacityEncodingSchema,
+  ScatterShapeEncodingSchema,
+} from '@retikz/chart/point';
+import {
+  ScatterChartSchema,
+  ScatterChartRecipeSchema,
+  ScatterChartEncodingsSchema,
+  ScatterChartPropertiesSchema,
+  ScatterChartMarkSchema,
+} from '@retikz/chart/point';
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
@@ -58,6 +83,67 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
+  ScatterPositionScaleBindingSchema: {
+    schema: ScatterPositionScaleBindingSchema,
+    label: 'ScatterPositionScaleBindingSchema',
+  },
+  ScatterColorScaleBindingSchema: { schema: ScatterColorScaleBindingSchema, label: 'ScatterColorScaleBindingSchema' },
+  PlotPartitionDimensionsSchema: {
+    schema: IRPlot.PlotPartitionDimensionsSchema,
+    label: 'PlotPartitionDimensionsSchema',
+  },
+  SurfaceBackgroundSchema: { schema: ScatterChartSchema.shape.background.unwrap(), label: 'SurfaceBackgroundSchema' },
+  PointRecipeGuidesSchema: { schema: ScatterChartRecipeSchema.shape.guides.unwrap(), label: 'PointRecipeGuidesSchema' },
+  PointMarkEncodingSchema: {
+    schema: ScatterChartMarkSchema.shape.encodings.unwrap(),
+    label: 'PointMarkEncodingSchema',
+  },
+  PointPropertiesSchema: { schema: ScatterChartMarkSchema.shape.properties.unwrap(), label: 'PointPropertiesSchema' },
+  PointAutoPaddingSchema: {
+    schema: ScatterChartPropertiesSchema.shape.autoPadding.unwrap(),
+    label: 'PointAutoPaddingSchema',
+  },
+  PointPositionDomainPaddingSchema: {
+    schema: ScatterChartPropertiesSchema.shape.domainPadding.unwrap(),
+    label: 'PointPositionDomainPaddingSchema',
+  },
+  'ScatterChartSchema.shape.data': { schema: ScatterChartSchema.shape.data, label: 'ScatterChartSchema.shape.data' },
+  ChartPresentationSchema: { schema: ChartPresentationSchema, label: 'ChartPresentationSchema' },
+  ChartDefaultsSchema: { schema: ChartDefaultsSchema, label: 'ChartDefaultsSchema' },
+  ChartLayoutSchema: { schema: ChartLayoutSchema, label: 'ChartLayoutSchema' },
+  ChartPlotExtensionSchema: { schema: ChartPlotExtensionSchema, label: 'ChartPlotExtensionSchema' },
+  ScatterXEncodingSchema: { schema: ScatterXEncodingSchema, label: 'ScatterXEncodingSchema' },
+  ScatterYEncodingSchema: { schema: ScatterYEncodingSchema, label: 'ScatterYEncodingSchema' },
+  ScatterColorEncodingSchema: { schema: ScatterColorEncodingSchema, label: 'ScatterColorEncodingSchema' },
+  ScatterSizeEncodingSchema: { schema: ScatterSizeEncodingSchema, label: 'ScatterSizeEncodingSchema' },
+  ScatterOpacityEncodingSchema: { schema: ScatterOpacityEncodingSchema, label: 'ScatterOpacityEncodingSchema' },
+  ScatterShapeEncodingSchema: { schema: ScatterShapeEncodingSchema, label: 'ScatterShapeEncodingSchema' },
+  PlotFacetOptionsSchema: { schema: IRPlot.PlotFacetOptionsSchema, label: 'PlotFacetOptionsSchema' },
+  ScatterChartSchema: {
+    schema: ScatterChartSchema,
+    label: 'ScatterChartSchema',
+    url: '/viz/chart/points/scatter#scatterchartschema',
+  },
+  ScatterChartRecipeSchema: {
+    schema: ScatterChartRecipeSchema,
+    label: 'ScatterChartRecipeSchema',
+    url: '/viz/chart/points/scatter#scatterchartrecipeschema',
+  },
+  ScatterChartEncodingsSchema: {
+    schema: ScatterChartEncodingsSchema,
+    label: 'ScatterChartEncodingsSchema',
+    url: '/viz/chart/points/scatter#scatterchartencodingsschema',
+  },
+  ScatterChartPropertiesSchema: {
+    schema: ScatterChartPropertiesSchema,
+    label: 'ScatterChartPropertiesSchema',
+    url: '/viz/chart/points/scatter#scatterchartpropertiesschema',
+  },
+  ScatterChartMarkSchema: {
+    schema: ScatterChartMarkSchema,
+    label: 'ScatterChartMarkSchema',
+    url: '/viz/chart/points/scatter#scatterchartmarkschema',
+  },
   AxisScaleSchema: { schema: IR.AxisScaleSchema, label: 'AxisScaleSchema' },
   BoxSizeSchema: { schema: IR.BoxSizeSchema, label: 'BoxSizeSchema' },
   BoxSpacingSchema: { schema: IR.BoxSpacingSchema, label: 'BoxSpacingSchema' },

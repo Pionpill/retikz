@@ -82,7 +82,7 @@ Point 跳过无法投影的行。Path 默认在坏行处分段；`path.connectNu
 | `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径 | 配置连续位置 scale 的 range 或显式 ratio 留白   |
 | `autoPadding?` | `'max-radius'` \| `'point-aware'` \| `{ kind: 'max-radius' \| 'point-aware'; clearance?: number \| IRBoxSpacing }` | `'max-radius'` | 自动留白策略；point-aware 按逐点位置与半径求解；显式 domainPadding 优先 |
 
-`autoPadding` 仅属于 recipe 属性，不属于单个图元属性。`point-aware` 当前要求二维笛卡尔坐标、linear/time 位置尺度且无 placement；Strip 的离散坐标与 jitter、Ranged Dot 的分类轴等常见组合不支持。存在自动端时会明确报错；全部端点显式指定 `domainPadding` 则不启动逐点求解。详见 [散点留白策略](/viz/chart/points/scatter#自动补齐边缘留白)。
+`autoPadding` 仅属于 recipe 属性，不属于单个图元属性。`point-aware` 当前要求二维笛卡尔坐标、linear/time 位置尺度且无 placement；Strip 的离散坐标与 jitter、Ranged Dot 的分类轴等常见组合不支持。存在自动端时会明确报错；全部端点显式指定 `domainPadding` 则不启动逐点求解。详见 [点图留白策略](/viz/chart/points#自动补齐边缘留白)。
 
 对象形式 `autoPadding: { kind: 'point-aware', clearance: 8 }` 可在自动端预留外缘净空；`clearance` 使用非负绘图单位，默认 `0`。最大半径策略同样支持；显式 `domainPadding` 覆盖的端点不叠加净空。
 

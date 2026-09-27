@@ -1,7 +1,7 @@
 import type { Lang } from '@/i18n';
 
 /** 自动留白对照图的可见文案 */
-export const scatterPaddingFigureI18n: Record<
+export const pointPaddingFigureI18n: Record<
   Lang,
   { zero: string; automatic: string; outside: string; inside: string; note: string }
 > = {

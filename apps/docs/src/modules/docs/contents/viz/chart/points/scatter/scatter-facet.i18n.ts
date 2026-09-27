@@ -13,3 +13,25 @@ export const scatterFacetI18n: Record<Lang, { title: string; subtitle: string; d
     data: 'Economy data',
   },
 };
+
+/** 交互面板的双语文案 */
+export const controlI18n = {
+  zh: {
+    data: '数据',
+    settings: '配置',
+    samples: '输入数据',
+    header: '分面标题',
+    panelGap: '面板间距',
+    size: '点半径',
+    opacity: '不透明度',
+  },
+  en: {
+    data: 'Data',
+    settings: 'Settings',
+    samples: 'Input rows',
+    header: 'Facet headers',
+    panelGap: 'Panel gap',
+    size: 'Point radius',
+    opacity: 'Opacity',
+  },
+} satisfies Record<Lang, Record<string, string>>;

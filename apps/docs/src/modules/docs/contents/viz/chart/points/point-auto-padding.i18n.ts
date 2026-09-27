@@ -1,7 +1,7 @@
 import type { Lang } from '@/i18n';
 
 /** 自动留白策略对比文案 */
-export const scatterAutoPaddingI18n: Record<
+export const pointAutoPaddingI18n: Record<
   Lang,
   { maximum: string; aware: string; clearance: string; directional: string }
 > = {
