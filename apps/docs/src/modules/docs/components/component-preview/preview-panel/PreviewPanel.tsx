@@ -1,12 +1,14 @@
 import { AnimationModeProvider } from '@retikz/react';
 import type { CSSProperties, FC, ReactNode } from 'react';
-import { Fragment } from 'react';
+import { Fragment, useLayoutEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
-import { PreviewControlStateContext } from '../context';
+import { PreviewControlStateContext, PreviewDimensionsContext } from '../context';
+import type { PreviewDimensions } from '../context';
 import type { PreviewTheme } from '../theme';
 import { PreviewThemeProvider } from '../theme';
 import type { ComponentPreviewDemoComponent, PreviewControlSlot, RendererMode } from '../types';
@@ -16,6 +18,8 @@ import type { PreviewPanelState } from './usePreviewPanelState';
 
 /** 通用预览面板属性。 */
 export type PreviewPanelProps = {
+  /** 按绘图区实际尺寸向 demo 提供响应式布局上下文，默认关闭 */
+  responsive?: boolean;
   /** 面板宿主创建的独立 controller。 */
   state: PreviewPanelState;
   /** 默认 React demo 组件。 */
@@ -43,6 +47,7 @@ export type PreviewPanelProps = {
 export const PreviewPanel: FC<PreviewPanelProps> = props => {
   const animationMode = useComponentPreviewStore(state => state.animationMode);
   const {
+    responsive = false,
     state,
     Component,
     lang = 'zh',
@@ -69,6 +74,27 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
     beginDrag,
   } = state;
   const dragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
+  const [dimensions, setDimensions] = useState<PreviewDimensions>();
+  useLayoutEffect(() => {
+    if (!responsive) return;
+    const element = renderPaneRef.current;
+    if (!element) return;
+    const update = (width: number, height: number) => {
+      if (width <= 0 || height <= 0) return;
+      setDimensions(previous =>
+        previous?.width === width && previous.height === height ? previous : { width, height },
+      );
+    };
+    update(element.clientWidth, element.clientHeight);
+    const observer = new ResizeObserver(entries => {
+      // ResizeObserver 在绘制前通知尺寸，同步提交避免新容器显示一帧旧图形
+      flushSync(() => {
+        for (const entry of entries) update(entry.contentRect.width, entry.contentRect.height);
+      });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [responsive, renderPaneRef]);
 
   return (
     <div
@@ -89,17 +115,21 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
         )}
         style={{ transform: transformStyle }}
       >
-        <Fragment key={remountKey}>
-          <AnimationModeProvider mode={animationMode}>
-            <PreviewControlStateContext.Provider value={controlState}>
-              {activeRender ? (
-                <PreviewThemeProvider theme={theme}>{activeRender(rendererMode)}</PreviewThemeProvider>
-              ) : (
-                <DemoRenderer Component={Component} lang={lang} rendererMode={rendererMode} theme={theme} />
-              )}
-            </PreviewControlStateContext.Provider>
-          </AnimationModeProvider>
-        </Fragment>
+        <PreviewDimensionsContext.Provider value={responsive ? dimensions : undefined}>
+          {!responsive || dimensions ? (
+            <Fragment key={remountKey}>
+              <AnimationModeProvider mode={animationMode}>
+                <PreviewControlStateContext.Provider value={controlState}>
+                  {activeRender ? (
+                    <PreviewThemeProvider theme={theme}>{activeRender(rendererMode)}</PreviewThemeProvider>
+                  ) : (
+                    <DemoRenderer Component={Component} lang={lang} rendererMode={rendererMode} theme={theme} />
+                  )}
+                </PreviewControlStateContext.Provider>
+              </AnimationModeProvider>
+            </Fragment>
+          ) : null}
+        </PreviewDimensionsContext.Provider>
       </div>
       <PreviewControlSlotLayer slots={controlSlots} runtime={runtime} pinned={toolbarPinned} />
     </div>

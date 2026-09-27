@@ -439,6 +439,8 @@
     "themeDark": "Dark",
     "resetControls": "Reset controls",
     "closeControlsPanel": "Close controls panel",
+    "playRangeHint": "Click to animate",
+    "stopRangeHint": "Click to stop animation",
     "playRange": "Play range",
     "pauseRange": "Pause range",
     "colorMode": "Color mode",

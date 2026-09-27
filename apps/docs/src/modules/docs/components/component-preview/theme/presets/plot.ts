@@ -93,10 +93,21 @@ const rulesOf = (style: ReferenceStyle, mode: ThemeModeValue): ReadonlyArray<IRP
   }
   if (style === PreviewThemeStyle.Clean) {
     return [
-      { select: { dimension: ['x', 'y'] }, axis: { grid: false } },
+      {
+        select: { dimension: 'x' },
+        axis: { grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: false } },
+      },
       {
         select: { dimension: 'y' },
-        axis: { grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true } },
+        axis: {
+          grid: {
+            stroke: 'currentColor',
+            strokeWidth: 1,
+            drawOpacity: 0.15,
+            dashPattern: [4, 4],
+            includeDomain: false,
+          },
+        },
       },
     ];
   }

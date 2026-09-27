@@ -74,13 +74,21 @@ describe('docs-owned theme presets', () => {
               ]
             : [
                 {
-                  select: { dimension: ['x', 'y'] },
-                  axis: { grid: false },
+                  select: { dimension: 'x' },
+                  axis: {
+                    grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: false },
+                  },
                 },
                 {
                   select: { dimension: 'y' },
                   axis: {
-                    grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true },
+                    grid: {
+                      stroke: 'currentColor',
+                      strokeWidth: 1,
+                      drawOpacity: 0.15,
+                      dashPattern: [4, 4],
+                      includeDomain: false,
+                    },
                   },
                 },
               ];

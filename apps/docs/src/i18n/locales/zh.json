@@ -439,6 +439,8 @@
     "themeDark": "暗色",
     "resetControls": "重置控件",
     "closeControlsPanel": "关闭属性面板",
+    "playRangeHint": "点击自动演示",
+    "stopRangeHint": "点击停止演示",
     "playRange": "播放范围",
     "pauseRange": "暂停范围",
     "colorMode": "颜色模式",

@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
@@ -12,6 +12,7 @@ import { useDemoLocationContext } from './context';
 import { mergePreviewControlSlots, resolveBuiltinControlSlots } from './controls';
 import { usePreviewResources } from './hooks';
 import { buildConfiguredControlSlots } from './preview-panel';
+import { PreviewViewport } from './PreviewViewport';
 import { resolvePreviewControlContract } from './registry';
 import { buildPreviewSource } from './source-panel';
 import { isPreviewThemeStyleDocument, PreviewThemeStyle, usePreviewTheme } from './theme';
@@ -29,6 +30,10 @@ import type {
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
+  /** 向 demo 提供绘图区实际宽高，默认关闭 */
+  responsive?: boolean;
+  /** 初始展示布局，可通过工具栏切换；默认保留完整调试卡片 */
+  mode?: 'default' | 'showcase';
   /** 主 demo 与附加源码文件；主 demo id 不含后缀，以 / 开头时相对 contents 根目录，其余相对当前页面 */
   files: ComponentPreviewFiles;
   /** React 源码视图默认选中的附加文件；缺省显示主 demo。 */
@@ -45,7 +50,7 @@ export type ComponentPreviewProps = {
   dialogActions?: Array<PreviewActionSlot>;
   /** 渲染区垂直对齐，默认 center */
   align?: AlignKey;
-  /** 渲染区高度档位，默认 `md`。 */
+  /** 渲染区高度档位，showcase 默认 `xl`，常规模式默认 `md` */
   size?: SizeKey;
   /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-5 / 居中等。 */
   previewClassName?: string;
@@ -63,7 +68,19 @@ export type ComponentPreviewProps = {
 
 /** MDX 内的演示卡入口。 */
 export const ComponentPreview: FC<ComponentPreviewProps> = props => {
+  const { size = props.mode === 'showcase' ? 'xl' : 'md', previewClassName } = props;
+  return (
+    <PreviewViewport size={size} className={previewClassName}>
+      <LoadedComponentPreview {...props} />
+    </PreviewViewport>
+  );
+};
+
+/** 仅在接近视口后加载资源和初始化预览 */
+const LoadedComponentPreview: FC<ComponentPreviewProps> = props => {
   const {
+    responsive = false,
+    mode: initialMode = 'default',
     files,
     defaultSourceFile,
     controls,
@@ -71,7 +88,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     controlPanelDefaultSize,
     dialogActions,
     align = 'center',
-    size = 'md',
+    size = initialMode === 'showcase' ? 'xl' : 'md',
     previewClassName,
     hideCode,
     type,
@@ -79,6 +96,9 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     showBottomStartControls = true,
     caption,
   } = props;
+  const [mode, setMode] = useState(initialMode);
+  const [sourceRequested, setSourceRequested] = useState(false);
+  const requestSource = useCallback(() => setSourceRequested(true), []);
   const [themeStyleSelection, setThemeStyleSelection] = useState<PreviewThemeStyleSelection>('inherit');
   const controlOptions = controls ?? {};
   const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
@@ -144,6 +164,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
             baselineRawSource,
             sourceContents: resourcesState.resources.sourceContents,
             hideCode: false,
+            includeGeneratedSources: sourceRequested,
             irJsonOverride,
             exportedPreviewIR,
             vanillaOverride,
@@ -168,6 +189,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       vanillaSvg,
       previewTheme,
       lang,
+      sourceRequested,
     ],
   );
 
@@ -219,7 +241,9 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   if (!mod || rawSource == null || !Component) return null;
 
   const configuredControlSlots =
-    controlDefinition?.presentation === 'overlay' ? buildConfiguredControlSlots(controlDefinition.controls) : [];
+    mode === 'default' && controlDefinition?.presentation === 'overlay'
+      ? buildConfiguredControlSlots(controlDefinition.controls)
+      : [];
   const builtinControlSlots = resolveBuiltinControlSlots({
     previewIr: sourceResult.previewIr,
     options: controlOptions,
@@ -233,12 +257,16 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
 
   return (
     <ComponentPreviewCard
+      mode={mode}
+      onModeChange={setMode}
       name={name}
       Component={Component}
+      responsive={responsive}
       lang={lang}
       source={sourceResult.source}
+      onSourceRequested={requestSource}
       buildSourceViews={
-        previewSource?.buildViews === undefined
+        !sourceRequested || previewSource?.buildViews === undefined
           ? undefined
           : values => previewSource.buildViews!({ lang, theme: previewTheme, values })
       }

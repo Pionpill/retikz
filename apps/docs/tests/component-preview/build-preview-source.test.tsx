@@ -173,6 +173,19 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('buildPreviewSource', () => {
+  it('仅准备预览时保留必要 IR，打开源码后才提供 Vanilla SVG', () => {
+    const input = createInput({ Component: ChartDemo });
+    const initial = buildPreviewSource({ ...input, includeGeneratedSources: false });
+    expect(initial.previewIr).not.toBeNull();
+    expect(initial.source?.react?.files.length).toBeGreaterThan(0);
+    expect(initial.source?.vanilla).toBeUndefined();
+    expect(initial.source?.ir).toBeUndefined();
+    const complete = buildPreviewSource(input);
+    expect(complete.previewIr?.sourceIr).toEqual(initial.previewIr?.sourceIr);
+    expect(complete.source?.vanilla?.files[0]?.code).toContain('renderChart');
+    expect(renderToStaticMarkup(complete.source?.vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
   it('让 Path Inspector 保持可见，同时不写入 canonical IR 与 Vanilla', () => {
     const preview = buildPreviewIR(PathInspectorCanonical);
     const vanilla = buildVanillaPreview(preview);
