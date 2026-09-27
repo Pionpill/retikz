@@ -7,6 +7,19 @@ import {
 import {
   ScatterPositionScaleBindingSchema,
   ScatterColorScaleBindingSchema,
+  BubbleChartSchema,
+  BubbleChartRecipeSchema,
+  BubbleChartEncodingsSchema,
+  BubbleChartPropertiesSchema,
+  BubbleChartMarkSchema,
+  BubblePositionScaleBindingSchema,
+  BubbleColorScaleBindingSchema,
+  BubbleXEncodingSchema,
+  BubbleYEncodingSchema,
+  BubbleColorEncodingSchema,
+  BubbleSizeEncodingSchema,
+  BubbleOpacityEncodingSchema,
+  BubbleShapeEncodingSchema,
 } from '@retikz/chart/point';
 import {
   ScatterXEncodingSchema,
@@ -88,6 +101,42 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'ScatterPositionScaleBindingSchema',
   },
   ScatterColorScaleBindingSchema: { schema: ScatterColorScaleBindingSchema, label: 'ScatterColorScaleBindingSchema' },
+  BubbleChartSchema: {
+    schema: BubbleChartSchema,
+    label: 'BubbleChartSchema',
+    url: '/viz/chart/points/bubble#bubblechartschema',
+  },
+  BubbleChartRecipeSchema: {
+    schema: BubbleChartRecipeSchema,
+    label: 'BubbleChartRecipeSchema',
+    url: '/viz/chart/points/bubble#bubblechartrecipeschema',
+  },
+  BubbleChartEncodingsSchema: {
+    schema: BubbleChartEncodingsSchema,
+    label: 'BubbleChartEncodingsSchema',
+    url: '/viz/chart/points/bubble#bubblechartencodingsschema',
+  },
+  BubbleChartPropertiesSchema: {
+    schema: BubbleChartPropertiesSchema,
+    label: 'BubbleChartPropertiesSchema',
+    url: '/viz/chart/points/bubble#bubblechartpropertiesschema',
+  },
+  BubbleChartMarkSchema: {
+    schema: BubbleChartMarkSchema,
+    label: 'BubbleChartMarkSchema',
+    url: '/viz/chart/points/bubble#bubblechartmarkschema',
+  },
+  BubblePositionScaleBindingSchema: {
+    schema: BubblePositionScaleBindingSchema,
+    label: 'BubblePositionScaleBindingSchema',
+  },
+  BubbleColorScaleBindingSchema: { schema: BubbleColorScaleBindingSchema, label: 'BubbleColorScaleBindingSchema' },
+  BubbleXEncodingSchema: { schema: BubbleXEncodingSchema, label: 'BubbleXEncodingSchema' },
+  BubbleYEncodingSchema: { schema: BubbleYEncodingSchema, label: 'BubbleYEncodingSchema' },
+  BubbleColorEncodingSchema: { schema: BubbleColorEncodingSchema, label: 'BubbleColorEncodingSchema' },
+  BubbleSizeEncodingSchema: { schema: BubbleSizeEncodingSchema, label: 'BubbleSizeEncodingSchema' },
+  BubbleOpacityEncodingSchema: { schema: BubbleOpacityEncodingSchema, label: 'BubbleOpacityEncodingSchema' },
+  BubbleShapeEncodingSchema: { schema: BubbleShapeEncodingSchema, label: 'BubbleShapeEncodingSchema' },
   PlotPartitionDimensionsSchema: {
     schema: IRPlot.PlotPartitionDimensionsSchema,
     label: 'PlotPartitionDimensionsSchema',
@@ -99,6 +148,14 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PointMarkEncodingSchema',
   },
   PointPropertiesSchema: { schema: ScatterChartMarkSchema.shape.properties.unwrap(), label: 'PointPropertiesSchema' },
+  PointMarkEncodingWithoutSizeSchema: {
+    schema: BubbleChartMarkSchema.shape.encodings.unwrap(),
+    label: 'PointMarkEncodingWithoutSizeSchema',
+  },
+  PointPropertiesWithoutSizeSchema: {
+    schema: BubbleChartMarkSchema.shape.properties.unwrap(),
+    label: 'PointPropertiesWithoutSizeSchema',
+  },
   PointAutoPaddingSchema: {
     schema: ScatterChartPropertiesSchema.shape.autoPadding.unwrap(),
     label: 'PointAutoPaddingSchema',
@@ -108,6 +165,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PointPositionDomainPaddingSchema',
   },
   'ScatterChartSchema.shape.data': { schema: ScatterChartSchema.shape.data, label: 'ScatterChartSchema.shape.data' },
+  'BubbleChartSchema.shape.data': { schema: BubbleChartSchema.shape.data, label: 'BubbleChartSchema.shape.data' },
   ChartPresentationSchema: { schema: ChartPresentationSchema, label: 'ChartPresentationSchema' },
   ChartDefaultsSchema: { schema: ChartDefaultsSchema, label: 'ChartDefaultsSchema' },
   ChartLayoutSchema: { schema: ChartLayoutSchema, label: 'ChartLayoutSchema' },

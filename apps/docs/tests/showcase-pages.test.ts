@@ -118,13 +118,8 @@ describe('collectShowcasePages', () => {
     expect(collectShowcasePages('viz', vizSection).map(page => page.path)).not.toContain('/viz/chart/points/scatter');
   });
 
-  it('从实际 Viz 文档树收集 Bubble 的嵌套路由', () => {
-    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
-      path: '/viz/chart/points/bubble',
-      segments: ['viz', 'chart', 'points', 'bubble'],
-      label: 'viz.chartBubble',
-      metadata: { family: 'scatter-points', role: 'primary', preview: 'bubble-minimal', order: 20 },
-    });
+  it('Bubble 使用普通组件文档布局', () => {
+    expect(collectShowcasePages('viz', vizSection).map(page => page.path)).not.toContain('/viz/chart/points/bubble');
   });
 
   it('从实际 Viz 文档树收集 Regression 的嵌套路由', () => {
@@ -388,7 +383,27 @@ describe('collectShowcasePages', () => {
     },
   );
 
-  it.each(minimalPointExamples.filter(example => example.chart !== 'scatter'))(
+  it.each(minimalPointExamples.filter(example => example.chart === 'bubble'))(
+    '$chart 双语页以无 controls 的基础用法作为首例',
+    async example => {
+      for (const lang of ['zh', 'en'] as const) {
+        const source = readFileSync(pointChartContentPath(example.chart, lang), 'utf8');
+        await expect(compile(source, compileOptions)).resolves.toBeDefined();
+        const previews = [...source.matchAll(/<ComponentPreview[\s\S]*?\/>/g)].map(match => match[0]);
+        expect(previews[0]).toContain(example.id);
+        expect(previews[0]).not.toContain('controls=');
+        expect(previews[0]).toContain('hideCode');
+        expect(previews.some(preview => preview.includes(example.nextId))).toBe(true);
+        expect(source).toContain('value="react-jsx"');
+        expect(source).toContain('value="react-ir"');
+        expect(source).toContain('value="vanilla-api"');
+        expect(source).toContain('value="vanilla-ir"');
+      }
+    },
+  );
+
+
+  it.each(minimalPointExamples.filter(example => example.chart !== 'scatter' && example.chart !== 'bubble'))(
     '$chart 双语页以无 controls 的基础用法作为首例',
     example => {
       for (const lang of ['zh', 'en'] as const) {

@@ -214,17 +214,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartBubble',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.bubble',
+              capability: 'chart.bubble',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'bubble-minimal',
-                order: 20,
-              },
+              layout: 'article',
             },
           },
           {

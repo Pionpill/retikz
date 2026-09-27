@@ -211,7 +211,7 @@ React 可通过 `ScatterMark` 追加或覆盖散点图元，Vanilla API 使用 `
 
 ## 扩展用法
 
-### 按类别分面
+### 分面比较
 
 将分类拆成独立面板，可以逐组比较分布。下面组合字段映射、分面布局与散点属性；映射项放在 `recipe.encodings`，散点属性放在 `recipe.properties`，也可使用对应的 React 子组件声明。
 
@@ -236,7 +236,7 @@ React 可通过 `ScatterMark` 追加或覆盖散点图元，Vanilla API 使用 `
   caption="四个面板保持相同的横纵轴含义；分面改变数据分组，不改变每条记录的数值。"
 />
 
-### 使用空间坐标
+### 空间坐标
 
 当字段记录的是场地位置时，可以将散点图扩展为事件分布图。除了位置与分类映射，本例还组合了散点样式、坐标轴开关和绘图区背景。下表的 `encodings`、`properties`、`guides` 位于 IR 的 `recipe` 中，`plotExtension` 位于图形根配置；属性名均相对于所在分组。
 

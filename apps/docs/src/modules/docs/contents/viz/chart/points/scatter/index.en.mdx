@@ -211,7 +211,7 @@ For complete properties and constraints, see [API reference: Scatter marks](#sca
 
 ## Extended usage
 
-### Split categories into facets
+### Facet comparison
 
 Separate categories into panels to compare their distributions. This example combines field mappings, facet layout, and point appearance. Mappings belong to `recipe.encodings` and appearance to `recipe.properties`; the corresponding React children provide the same configuration.
 
@@ -236,7 +236,7 @@ The example reuses World Bank 2022 economy data and splits `incomeGroup` into HI
   caption="All panels retain the same axis meanings. Faceting changes grouping, not the values of each observation."
 />
 
-### Use spatial coordinates
+### Spatial coordinates
 
 When fields contain positions on a playing field, a scatter chart can become an event distribution map. Alongside position and category mappings, this example combines point appearance, axis visibility, and a plot-area background. In IR, `encodings`, `properties`, and `guides` belong to `recipe`, while `plotExtension` belongs to the chart root. Property names in the table are relative to their group.
 
