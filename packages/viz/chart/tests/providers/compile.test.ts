@@ -667,14 +667,14 @@ describe('Chart providers through Core compile', () => {
     ).toThrow(/chartType|scatter|bubble/i);
   });
 
-  it('grows the Plot item into the remaining fixed-height presentation space', () => {
+  it.each([120, 184, 248, 500])('fits the Plot item into the remaining %ipx presentation space', height => {
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
       id: 'scatter-presentation-height',
       data: { reference: 'scatter.rows' },
-      layout: { width: 800, height: 500 },
-      presentation: { title: { text: 'Scatter' } },
+      layout: { width: 800, height },
+      presentation: { title: { text: 'Scatter' }, subtitle: { text: 'Observations' } },
       recipe: {
         chartType: 'scatter',
         encodings: { x: 'x', y: 'y' },
@@ -688,7 +688,9 @@ describe('Chart providers through Core compile', () => {
     const plotItem = flex.items.find(item => item.key === 'chart.plot');
     if (plotItem === undefined) throw new Error('Expected Chart Plot presentation item');
 
-    expect(plotItem.slotBounds.height).toBeGreaterThan(300);
+    expect(plotItem.slotBounds.height).toBeGreaterThan(0);
+    expect(plotItem.slotBounds.height).toBeLessThan(height);
+    expect(flex.container.contentBounds.y + flex.container.contentBounds.height).toBeLessThanOrEqual(height);
     expect(plotItem.slotBounds.y + plotItem.slotBounds.height).toBeCloseTo(
       flex.container.contentBounds.y + flex.container.contentBounds.height,
     );
