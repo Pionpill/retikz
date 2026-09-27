@@ -1,3 +1,4 @@
+import type { IRChartSource } from '@retikz/chart';
 import type { CompileResult } from '@retikz/core';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
@@ -24,9 +25,9 @@ export type RenderChartResult = Readonly<{
   compileResult: CompileResult;
 }>;
 
-/** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG */
+/** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG；完整布局尺寸作为取景范围，输出尺寸只控制显示大小 */
 export const renderChart = (
-  input: InputEmbed<ChartHostThemeInput>,
+  input: InputEmbed<ChartHostThemeInput & { layout?: IRChartSource['layout'] }>,
   options: RenderChartOptions,
 ): RenderChartResult => {
   const { compile: compileOptions, adapters, ...renderOptions } = options;
@@ -41,8 +42,12 @@ export const renderChart = (
       : explicitThemeStyles === undefined
         ? input.props.themeStyles
         : [...input.props.themeStyles, ...explicitThemeStyles];
+  const layout = input.props.layout;
   const result = toSceneResult(
     scene({
+      ...(layout?.width !== undefined && layout.height !== undefined
+        ? { viewBox: { x: 0, y: 0, width: layout.width, height: layout.height } }
+        : {}),
       ...(input.props.theme === undefined ? {} : { theme: input.props.theme }),
       children: [input],
     }),

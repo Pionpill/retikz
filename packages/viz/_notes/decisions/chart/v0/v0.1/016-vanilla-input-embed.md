@@ -24,7 +24,7 @@ normalizeXxxChart 继续接收精确 JSON Source 编写输入并返回对应 IRX
 
 InputEmbed 可直接放入 Vanilla scene.children，处理调用显式提供所用图类的 adapters。缺失 adapter 由通用 Vanilla 边界诊断。组合场景的 viewport、Core theme 和 Core themeStyles 由宿主 Scene 与处理选项控制。
 
-renderChart 保留为独立图表便捷入口，接收标准 InputEmbed 和显式 adapters，复用 scene、toSceneResult 和 renderToSvgString。返回 svg 与同一次编译的 compileResult，不建立第二条执行链。独立编写输入的 host theme/styles 仍由该便捷入口传递；组合时由宿主显式配置。
+renderChart 保留为独立图表便捷入口，接收标准 InputEmbed 和显式 adapters，复用 scene、toSceneResult 和 renderToSvgString。返回 svg 与同一次编译的 compileResult，不建立第二条执行链。完整 layout.width/height 确定独立取景范围；output 仅控制显示大小，缺少任一维度时保留自动取景。独立编写输入的 host theme/styles 仍由该便捷入口传递；组合时由宿主显式配置。
 
 ## Breaking 与失败语义
 

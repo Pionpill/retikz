@@ -1214,9 +1214,34 @@ describe('Typed Point Chart React declarations', () => {
     );
 
     expect(mirrored).toMatch(/^<svg[^>]*width="640" height="360"/);
-    expect(mirrored).toContain('viewBox="-10 -10 660 380"');
+    expect(mirrored).toContain('viewBox="0 0 640 360"');
     expect(explicit).toMatch(/^<svg[^>]*width="640" height="360"/);
-    expect(explicit).toContain('viewBox="-10 -10 340 200"');
+    expect(explicit).toContain('viewBox="0 0 320 180"');
+  });
+
+  it('固定尺寸取景覆盖根与 declaration 写法，嵌入时仍由外层决定取景', () => {
+    const root = renderToStaticMarkup(
+      <ScatterChart layout={{ width: 320, height: 180 }}>{requiredDeclarations}</ScatterChart>,
+    );
+    const declaration = renderToStaticMarkup(
+      <ScatterChart>
+        {requiredDeclarations}
+        <ChartLayout layout={{ width: 320, height: 180 }} />
+      </ScatterChart>,
+    );
+    const embedded = renderToStaticMarkup(
+      <Layout>
+        <ScatterChart layout={{ width: 320, height: 180 }}>{requiredDeclarations}</ScatterChart>
+      </Layout>,
+    );
+    expect(root).toContain('viewBox="0 0 320 180"');
+    expect(declaration).toContain('viewBox="0 0 320 180"');
+    expect(embedded).toContain('viewBox="-10 -10 340 200"');
+  });
+
+  it('仅指定一个维度时继续自动取景', () => {
+    const svg = renderToStaticMarkup(<ScatterChart layout={{ width: 320 }}>{requiredDeclarations}</ScatterChart>);
+    expect(svg).toContain('viewBox="-10 -10 340 ');
   });
 
   it('rejects embedded host dimensions but accepts Source-only layout', () => {

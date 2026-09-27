@@ -300,6 +300,29 @@ describe('Chart Vanilla authoring', () => {
     );
   });
 
+  it('显式宽高直接决定取景，输出尺寸只改变显示尺寸', () => {
+    const chart = scatterChart({
+      data: rows,
+      encodings: { x: 'x', y: 'y' },
+      layout: { width: 320, height: 200 },
+    });
+    const rendered = renderChart(chart, { adapters });
+    const scaled = renderChart(chart, { adapters, output: { width: 640, height: 400 } });
+    expect(rendered.compileResult.scene.layout).toEqual({ x: 0, y: 0, width: 320, height: 200 });
+    expect(rendered.svg).toContain('viewBox="0 0 320 200"');
+    expect(scaled.compileResult.scene.layout).toEqual(rendered.compileResult.scene.layout);
+    expect(scaled.svg).toContain('width="640" height="400"');
+    expect(scaled.svg).toContain('viewBox="0 0 320 200"');
+  });
+
+  it.each([undefined, { width: 320 }])('没有完整布局尺寸时保留自动取景与显式 padding：%j', layout => {
+    const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' }, layout });
+    const automatic = renderChart(chart, { adapters }).compileResult.scene.layout;
+    const unpadded = renderChart(chart, { adapters, compile: { padding: 0 } }).compileResult.scene.layout;
+    expect(automatic.width).toBeCloseTo(unpadded.width + 20);
+    expect(automatic.height).toBeCloseTo(unpadded.height + 20);
+  });
+
   it('does not synthesize Scene ids for an anonymous Chart without provenance', () => {
     const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
     const rendered = renderChart(chart, { adapters });

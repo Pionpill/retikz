@@ -37,6 +37,8 @@ Chart 把“方便编写”与“稳定执行”分成两个阶段。React 和 V
 
 `ChartData`、`ChartLayout`、presentation markers 与各 chartType 的 Encodings / Properties / Mark declarations 都是同一 owner slot 的 headless JSX sugar。不同 slot 可以混用；同一 slot 同时从根与 declaration 提供时会 fail-loud，不做覆盖或逐字段合并。显式 `recipe.marks: []` 也算已经提供 marks slot。
 
+独立 React Chart 与 Vanilla `renderChart()` 在 `layout.width`、`layout.height` 都已指定时，以 `(0, 0, width, height)` 作为完整图表的取景范围，不再额外增加外层自动取景留白。React 的 `ChartLayout` 写法遵循相同行为；独立的输出宽高只改变显示尺寸。图表内部的布局留白和散点防裁切留白仍然生效。只指定一个维度或未指定尺寸时继续自动取景；嵌入外层 `Layout` 时，取景由外层宿主控制。直接 IR 接入也应在所属 Scene 的 `viewBox` 中声明需要的取景范围。
+
 JSON 是输入旁路，不跳过 schema。应用层先按 `type` 与 `recipe.chartType` 选择具体 schema，active provider 再确认 recipe 与 family 一致；未知 family、未知 recipe、未知字段和不允许的 mark 都 fail-loud。解析结果保留作者写下的 Source，recipe 产生的坐标、guide 和 Plot mark 只存在于后续解析阶段。
 
 坐标系是 Chart 根的一等 authoring slot。Vanilla 与 React concrete Chart 根 prop 可用 `'polar2D'` 等字符串或完整 operation 对象；React 也保留 `ChartCoordinate` 作为声明式替代入口，但两种 React 写法不能同时出现。字符串只归一为 `{ type: 'polar2D' }`，JSON Source 仅接受根 `coordinate` 对象。未声明时不物化默认值，继续使用 recipe spatial scaffold。

@@ -13,7 +13,8 @@ Chart/Plot dependencies during the same traversal as other components.
 
 For a standalone chart, `renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] })`
 is a convenience over the same processing and SVG renderer. Its `{ svg, compileResult }`
-result shares one compilation. In a composed scene,
+result shares one compilation. Complete `layout` dimensions define the standalone
+viewBox; `output` dimensions only resize the displayed SVG. In a composed scene,
 viewport and host theme options belong to the containing scene and processing call.
 
 Runtime datasets, definitions, and callbacks remain outside JSON Source IR.
