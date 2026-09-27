@@ -92,9 +92,13 @@ Bubble defaults to `fillOpacity={0.7}` with a `1px` same-color stroke. `color` d
 | `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                                                                        |
 | `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                                                                    |
 | `domainPadding?`                                                                            | `number` or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`; defaults to the maximum radius of the field-size sqrt range, or `20` when range is omitted |
-| `autoPadding?`                                                                              | `'max-radius'` \| `'point-aware'`; automatic padding policy; omitted means `max-radius`; `point-aware` solves from individual positions and radii; explicit `domainPadding` wins |
+| `autoPadding?`                                                                              | `'max-radius'` \| `'point-aware'` \| `{ kind: 'max-radius' \| 'point-aware'; clearance?: number \| IRBoxSpacing }`; automatic padding policy; omitted means `max-radius`; `point-aware` solves from individual positions and radii; explicit `domainPadding` wins |
 
 `autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [scatter padding policies](/viz/chart/points/scatter#automatic-edge-padding).
+
+Use `autoPadding: { kind: 'point-aware', clearance: 8 }` to reserve clearance between protected point extents and automatic plot-area edges. `clearance` is a nonnegative drawing-coordinate length, defaulting to `0`. Both strategies support it; explicitly configured `domainPadding` ends do not add clearance.
+
+`clearance` also accepts the Kernel `IRBoxSpacing` object with nonnegative `default`, `x`, `y`, `top`, `right`, `bottom`, and `left` fields. Precedence is side → axis → `default` → `0`; `8` equals `{ default: 8 }`. For example, `{ default: 8, x: 12, top: 20, left: 0 }` gives top 20, bottom 8, left 0, and right 12. Explicit visual sides require Cartesian coordinates and retain their visual meaning with reversed axes.
 
 ## `BubbleMark`
 

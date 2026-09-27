@@ -1,3 +1,4 @@
+import { resolveBoxSpacing } from '@retikz/core';
 import type {
   IRPlot,
   IRPlotDomainPadding,
@@ -7,6 +8,7 @@ import type {
   IRPlotScaleOperation,
 } from '@retikz/plot';
 import {
+  DomainPaddingClearanceSchema,
   isBuiltinMark,
   isBuiltinScaleOperation,
   MarkValueKind,
@@ -21,7 +23,7 @@ import {
 
 import type { ChartScaleDefaultsResolveContext } from '../../_chart/contract';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import type { IRPointPositionDomainPadding } from './schema';
+import type { IRPointAutoPadding, IRPointPositionDomainPadding } from './schema';
 
 const pointContinuousPositionScaleTypes = new Set<string>([
   PlotScale.Linear,
@@ -105,6 +107,7 @@ const hasSpecificSide = (padding: IRPointPositionDomainPadding | undefined): boo
 const assertSpecificSidesSupport = (
   padding: IRPointPositionDomainPadding | undefined,
   spatial: Pick<IRPlot, 'coordinate' | 'composition'>,
+  propertyPath: ReadonlyArray<string> = ['domainPadding'],
 ): void => {
   if (!hasSpecificSide(padding)) return;
   const coordinates =
@@ -118,7 +121,7 @@ const assertSpecificSidesSupport = (
   throw invalidPointScaleDefaults('Specific Point domain padding sides require a Cartesian coordinate', [
     'recipe',
     'properties',
-    'domainPadding',
+    ...propertyPath,
     side ?? 'default',
   ]);
 };
@@ -138,15 +141,25 @@ const domainPaddingOf = (
   role: PointPositionRole,
   scale: IRPlotScaleOperation,
   radius: number,
+  clearance: ReturnType<typeof resolveBoxSpacing>,
   marks?: () => Array<string>,
 ): IRPlotDomainPadding => {
   const kind =
     typeof padding === 'object' ? (padding.kind ?? PlotDomainPaddingKind.Range) : PlotDomainPaddingKind.Range;
-  const fallback = kind === PlotDomainPaddingKind.Ratio ? 0 : radius;
   const startSide: PointVisualSide = role === 'x' ? 'left' : 'top';
   const endSide: PointVisualSide = role === 'x' ? 'right' : 'bottom';
-  const start = visualPaddingOf(padding, role, startSide, fallback);
-  const end = visualPaddingOf(padding, role, endSide, fallback);
+  const start = visualPaddingOf(
+    padding,
+    role,
+    startSide,
+    kind === PlotDomainPaddingKind.Ratio ? 0 : radius + clearance[startSide],
+  );
+  const end = visualPaddingOf(
+    padding,
+    role,
+    endSide,
+    kind === PlotDomainPaddingKind.Ratio ? 0 : radius + clearance[endSide],
+  );
   const rawRange = 'range' in scale ? scale.range : undefined;
   const range =
     Array.isArray(rawRange) &&
@@ -161,10 +174,18 @@ const domainPaddingOf = (
     const explicitEnd = visualPaddingOf(padding, role, endSide, NaN);
     if (Number.isNaN(explicitStart) || Number.isNaN(explicitEnd)) {
       const references = marks();
-      if (references.length > 0)
+      if (references.length > 0) {
+        const lowerClearance = clearance[increasing ? startSide : endSide];
+        const upperClearance = clearance[increasing ? endSide : startSide];
         return {
           kind: 'mark',
           marks: references,
+          ...(lowerClearance === 0 && upperClearance === 0
+            ? {}
+            : {
+                clearance:
+                  lowerClearance === upperClearance ? lowerClearance : { lower: lowerClearance, upper: upperClearance },
+              }),
           ...(!Number.isNaN(increasing ? explicitStart : explicitEnd)
             ? { lower: increasing ? explicitStart : explicitEnd }
             : {}),
@@ -172,6 +193,7 @@ const domainPaddingOf = (
             ? { upper: increasing ? explicitEnd : explicitStart }
             : {}),
         };
+      }
       return {
         kind: 'range',
         lower: increasing ? start : end,
@@ -192,7 +214,12 @@ export const resolvePointScaleDefaults = (
 ): ReadonlyArray<IRPlotScaleOperation> => {
   const padding = context.source.recipe.properties?.domainPadding as IRPointPositionDomainPadding | undefined;
   assertSpecificSidesSupport(padding, context.spatial);
-  const pointAware = context.source.recipe.properties?.autoPadding === 'point-aware';
+  const autoPadding = context.source.recipe.properties?.autoPadding as IRPointAutoPadding | undefined;
+  const kind = typeof autoPadding === 'object' ? autoPadding.kind : autoPadding;
+  const authoredClearance = typeof autoPadding === 'object' ? autoPadding.clearance : undefined;
+  assertSpecificSidesSupport(authoredClearance, context.spatial, ['autoPadding', 'clearance']);
+  const clearance = resolveBoxSpacing(authoredClearance, DomainPaddingClearanceSchema.parse(undefined));
+  const pointAware = kind === 'point-aware';
   const radius = pointAware ? 0 : maximumPointRadiusOf(context.chartMarks, context.scales);
   const marks = pointAware
     ? () =>
@@ -224,7 +251,7 @@ export const resolvePointScaleDefaults = (
     ) {
       return scale;
     }
-    return { ...scale, domainPadding: domainPaddingOf(padding, role, scale, radius, marks) };
+    return { ...scale, domainPadding: domainPaddingOf(padding, role, scale, radius, clearance, marks) };
   });
 };
 

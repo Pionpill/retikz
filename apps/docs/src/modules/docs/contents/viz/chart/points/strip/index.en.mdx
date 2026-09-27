@@ -85,10 +85,14 @@ Polar projection still happens after role-space spread: x is angle and y is radi
 | `jitter.distribution.kind`   | `'uniform' \| 'normal'`                                                 | `uniform`                                              | Distribution discriminator                                                    |
 | `jitter.distribution.sigma?` | `number`                                                                | `0.5`                                                  | Normal only; standard deviation relative to the jitter half-span, positive    |
 | `domainPadding?`             | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius                             | Configures only the continuous scale; Plot placement contains discrete spread |
-| `autoPadding?` | `'max-radius'` \| `'point-aware'` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
+| `autoPadding?` | `'max-radius'` \| `'point-aware'` \| `{ kind: 'max-radius' \| 'point-aware'; clearance?: number \| IRBoxSpacing }` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
 | Point appearance             | `IRPointProperties`                                                     | Point defaults                                         | Constant `size`, `shape`, paint, stroke, opacity, and related styling         |
 
 `autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [scatter padding policies](/viz/chart/points/scatter#automatic-edge-padding).
+
+Use `autoPadding: { kind: 'point-aware', clearance: 8 }` to reserve clearance between protected point extents and automatic plot-area edges. `clearance` is a nonnegative drawing-coordinate length, defaulting to `0`. Both strategies support it; explicitly configured `domainPadding` ends do not add clearance.
+
+`clearance` also accepts the Kernel `IRBoxSpacing` object with nonnegative `default`, `x`, `y`, `top`, `right`, `bottom`, and `left` fields. Precedence is side → axis → `default` → `0`; `8` equals `{ default: 8 }`. For example, `{ default: 8, x: 12, top: 20, left: 0 }` gives top 20, bottom 8, left 0, and right 12. Explicit visual sides require Cartesian coordinates and retain their visual meaning with reversed axes.
 
 ### `StripMarkProps`
 

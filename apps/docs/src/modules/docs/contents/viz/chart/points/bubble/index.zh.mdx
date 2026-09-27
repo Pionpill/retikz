@@ -92,9 +92,13 @@ Bubble 默认使用 `fillOpacity={0.7}` 和 `1px` 同色描边。`color` 同时�
 | `zIndex`、`align`、`lineHeight`、`maxTextWidth`、`font`、`label`                            | 绘制顺序、文本与标签配置                                                                                                                |
 | `boundary`、`shadow`、`blendMode`                                                           | 边界、阴影与混合模式                                                                                                                    |
 | `domainPadding?`                                                                            | `number` 或 `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`；默认按字段尺寸 sqrt range 的最大半径留白，省略 range 时为 `20` |
-| `autoPadding?`                                                                              | `'max-radius'` \| `'point-aware'`；自动留白策略；省略为 `max-radius`，`point-aware` 按逐点位置与半径求解；显式 `domainPadding` 优先 |
+| `autoPadding?`                                                                              | `'max-radius'` \| `'point-aware'` \| `{ kind: 'max-radius' \| 'point-aware'; clearance?: number \| IRBoxSpacing }`；自动留白策略；省略为 `max-radius`，`point-aware` 按逐点位置与半径求解；显式 `domainPadding` 优先 |
 
 `autoPadding` 仅属于 recipe 属性。`point-aware` 当前要求二维笛卡尔坐标、linear/time 位置尺度且无 placement；分类轴、Polar 和 jitter 等组合不支持。全部端点显式指定 `domainPadding` 时跳过逐点求解。详见 [散点留白策略](/viz/chart/points/scatter#自动补齐边缘留白)。
+
+对象形式 `autoPadding: { kind: 'point-aware', clearance: 8 }` 可在自动端预留外缘净空；`clearance` 使用非负绘图单位，默认 `0`。最大半径策略同样支持；显式 `domainPadding` 覆盖的端点不叠加净空。
+
+`clearance` 也接受 Kernel 的四边间距对象 `IRBoxSpacing`，可设置 `default`、`x`、`y`、`top`、`right`、`bottom`、`left`，各项均为非负数。优先级为具体边 → 轴 → `default` → `0`；数值 `8` 等价于 `{ default: 8 }`。例如 `{ default: 8, x: 12, top: 20, left: 0 }` 得到上 20、下 8、左 0、右 12；明确的四边方向仅支持笛卡尔坐标，反向轴仍按视觉方向解释。
 
 ## `BubbleMark`
 

@@ -19,6 +19,10 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
 
 `kind: 'mark'` 引用具名图元按外缘求解自动端，可选 `lower` / `upper` 固定一端。内置支持 linear/time 与无 placement 的 Cartesian2D；能力和失败边界见 [按图元外缘留白](/viz/plot/scale/position#按图元外缘留白)。
 
+mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使用非负 range 单位，默认 `0`。例如 `{ kind: 'mark', marks: ['dots'], clearance: 8 }`。固定端不叠加净空；空有效点集不扩域，净空过大导致无解时会报错。
+
+`clearance` 支持数值或 `{ lower?: number, upper?: number }`；数值同时用于两端，对象未指定端为 `0`。这里的 lower / upper 对应 domain 起止端，跟随 range 方向，不固定对应视觉左右；Chart 负责将四边净空转换为各轴的这两个端。
+
 ### LinearScaleSchema
 
 <ZodSchema

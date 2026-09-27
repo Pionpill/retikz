@@ -57,8 +57,8 @@ export const vizV02: Release = {
         {
           label: { zh: '待发布：逐点自动留白', en: 'Unreleased: point-aware padding' },
           content: {
-            zh: 'domainPadding 新增 mark 引用分支，经 Mark / Scale / Coordinate Definition capability 在渲染前有界求解，共享比例尺联合满足面板约束；无解或不支持的组合明确报错。',
-            en: 'domainPadding adds a mark-reference branch using Mark / Scale / Coordinate capabilities for bounded pre-render solving. Shared scales combine panel constraints; infeasible or unsupported combinations produce errors.',
+            zh: 'domainPadding 新增 mark 引用分支，经 Mark / Scale / Coordinate Definition capability 在渲染前有界求解，共享比例尺联合满足面板约束；支持数值或 lower/upper clearance 预留外缘净空；无解或不支持的组合明确报错。',
+            en: 'domainPadding adds a mark-reference branch using Mark / Scale / Coordinate capabilities for bounded pre-render solving. Shared scales combine panel constraints; numeric or lower/upper clearance reserves space beyond mark extents, and infeasible or unsupported combinations produce errors.',
           },
         },
         {

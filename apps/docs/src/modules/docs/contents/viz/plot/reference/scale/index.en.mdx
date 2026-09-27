@@ -19,6 +19,10 @@ Continuous positional scales share `domainPadding` and `singleValueSpan`. Bare n
 
 `kind: 'mark'` references named marks to solve automatic ends from their extents; optional `lower` / `upper` fix one end. Built-in support covers linear/time with Cartesian2D and no placement. See [padding from mark extents](/viz/plot/scale/position#padding-from-mark-extents) for capabilities and errors.
 
+The mark branch accepts `clearance`, a nonnegative minimum distance from protected mark extents to automatic edges in range units, defaulting to `0`. For example: `{ kind: 'mark', marks: ['dots'], clearance: 8 }`. Fixed ends do not add clearance; empty effective samples add no padding, and infeasible clearance produces an error.
+
+`clearance` accepts a number or `{ lower?: number, upper?: number }`. A number applies to both ends; omitted object ends use `0`. These ends follow domain order and range direction, rather than fixed visual left/right. Chart maps its four-sided clearance to these per-axis ends.
+
 ### LinearScaleSchema
 
 <ZodSchema name="LinearScaleSchema" />

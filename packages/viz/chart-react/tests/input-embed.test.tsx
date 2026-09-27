@@ -89,7 +89,7 @@ describe('Chart React InputEmbed routing', () => {
       },
       properties: {
         opacity: 0.75,
-        autoPadding: 'point-aware',
+        autoPadding: { kind: 'point-aware', clearance: { default: 8, top: 20, left: 0 } },
         domainPadding: { kind: 'ratio' as const, default: 0.04, left: 0.02 },
       },
     };

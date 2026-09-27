@@ -108,7 +108,7 @@ describe('Chart Vanilla normalization', () => {
       },
       properties: {
         opacity: 0.75,
-        autoPadding: 'point-aware',
+        autoPadding: { kind: 'point-aware', clearance: { default: 8, top: 20, left: 0 } },
         domainPadding: { kind: 'ratio', default: 0.04, left: 0.02 },
       },
       marks: [{ kind: 'bubble', properties: { strokeWidth: 1 } }],
@@ -130,7 +130,7 @@ describe('Chart Vanilla normalization', () => {
         },
         properties: {
           opacity: 0.75,
-          autoPadding: 'point-aware',
+          autoPadding: { kind: 'point-aware', clearance: { default: 8, top: 20, left: 0 } },
           domainPadding: { kind: 'ratio', default: 0.04, left: 0.02 },
         },
         marks: [{ kind: 'bubble', properties: { strokeWidth: 1 } }],

@@ -59,7 +59,7 @@ describe('mark padding 编译闭环', () => {
 
 describe('shared mark padding', () => {
   it('shares one padded domain across facet panels with different guides', () => {
-    const base = plotOf();
+    const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 8, upper: 15 } });
     const { coordinate, ...rest } = base;
     const spec = PlotSchema.parse({
       ...rest,
@@ -94,8 +94,8 @@ describe('shared mark padding', () => {
     expect(domains.every(domain => JSON.stringify(domain) === JSON.stringify(domains[0]))).toBe(true);
     for (const frame of frames) {
       const scale = frame.roleScales!.x!;
-      expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
-      expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(2);
+      expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(10);
+      expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(17);
     }
     expect(frames[0].roleScales!.y!.domain()).not.toEqual(frames[1].roleScales!.y!.domain());
   });
@@ -170,7 +170,7 @@ describe('mark padding final geometry', () => {
   });
 
   it('adds no padding for an empty visible sample set', () => {
-    const base = plotOf();
+    const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: 80 });
     const spec = {
       ...base,
       scales: base.scales.map(scale =>
@@ -314,5 +314,54 @@ describe('mark padding shared coordinate views', () => {
     expect(frames[0].roleScales!.x!.domain()).toEqual(frames[1].roleScales!.x!.domain());
     for (const frame of frames)
       expect(frame.roleScales!.x!.coordinate(0) - frame.roleScales!.x!.range()[0]).toBeGreaterThanOrEqual(8);
+  });
+});
+
+describe('mark padding clearance', () => {
+  it('protects final extents with additional clearance and honors a fixed zero end', () => {
+    const result = lowerPlotWithDataArtifact(plotOf({ kind: 'mark', marks: ['dots'], clearance: 8, lower: 0 }), {
+      rows,
+    });
+    const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
+    const scale = frame.roleScales!.x!;
+    expect(scale.coordinate(0)).toBe(scale.range()[0]);
+    for (const row of rows) expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(row.r + 8);
+  });
+  it('rejects impossible clearance and invalid JSON numbers', () => {
+    expect(() => lowerPlotWithDataArtifact(plotOf({ kind: 'mark', marks: ['dots'], clearance: 60 }), { rows })).toThrow(
+      /feasible/,
+    );
+    for (const clearance of [-1, Infinity, NaN])
+      expect(() => plotOf({ kind: 'mark', marks: ['dots'], clearance })).toThrow();
+  });
+});
+
+describe('directional mark clearance', () => {
+  it('defaults an omitted clearance end to zero and preserves fixed ends', () => {
+    const result = lowerPlotWithDataArtifact(
+      plotOf({ kind: 'mark', marks: ['dots'], clearance: { upper: 8 }, lower: 0 }),
+      { rows },
+    );
+    const scale = [...result.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales!.x!;
+    expect(scale.coordinate(0)).toBe(scale.range()[0]);
+    expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(10);
+    expect(() => plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: -1 } })).toThrow();
+  });
+  it.each([
+    [0, 100],
+    [100, 0],
+  ])('preserves asymmetric clearance with range %j', (start, end) => {
+    const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 3, upper: 15 } });
+    const plot = PlotSchema.parse({
+      ...base,
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, range: [start, end] } : scale)),
+    });
+    const result = lowerPlotWithDataArtifact(plot, { rows });
+    const scale = [...result.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales!.x!;
+    for (const row of rows) {
+      expect(Math.abs(scale.coordinate(row.x) - scale.range()[0])).toBeGreaterThanOrEqual(row.r + 3);
+      expect(Math.abs(scale.range()[1] - scale.coordinate(row.x))).toBeGreaterThanOrEqual(row.r + 15);
+    }
+    expect(Math.abs(scale.coordinate(0) - scale.range()[0])).toBeLessThan(5.02);
   });
 });

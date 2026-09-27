@@ -62,8 +62,20 @@ const DomainPaddingObjectSchema = strictObject({
   }
 });
 
+/** 自动留白时图元外缘到绘图区边界的最小净空 */
+export const DomainPaddingClearanceSchema = NonNegativeNumberSchema.default(0).describe(
+  'Minimum clearance from protected mark extents to automatic plot-area edges in range units; defaults to 0',
+);
+
 /** 指定图元提供的逐点自动留白约束 */
 export const MarkDomainPaddingSchema = strictObject({
+  clearance: union([
+    DomainPaddingClearanceSchema,
+    strictObject({
+      lower: DomainPaddingClearanceSchema.optional().describe('Minimum clearance at the first domain end'),
+      upper: DomainPaddingClearanceSchema.optional().describe('Minimum clearance at the last domain end'),
+    }),
+  ]).optional(),
   kind: literal('mark').describe('Compute automatic ends from named mark extents'),
   marks: array(NonBlankStringSchema)
     .min(1)

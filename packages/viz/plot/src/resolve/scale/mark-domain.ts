@@ -2,6 +2,7 @@ import type { ExternalRow } from '@retikz/data';
 
 import type { DomainPaddingScale, DomainPaddingTarget, PositionScale } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import { DomainPaddingClearanceSchema } from '../../schemas';
 import type { IRPlotMarkDomainPadding, IRPlotScaleOperation } from '../../schemas';
 import { resolveMarkChannels } from '../channel';
 import type { ChannelResolveContext } from '../channel';
@@ -19,6 +20,7 @@ type DomainPaddingObservation = {
   mapping: DomainPaddingScale;
   range: readonly [number, number];
   length: number;
+  clearance: MarkPaddingResolution;
   fixed: Partial<MarkPaddingResolution>;
 };
 
@@ -66,8 +68,8 @@ export const createMarkPaddingContext = (channels: ChannelResolveContext) => {
           for (const sample of observation.samples)
             constraints.push({
               position: sample.position,
-              lower: sample.lower / observation.length,
-              upper: sample.upper / observation.length,
+              lower: (sample.lower + observation.clearance.lower) / observation.length,
+              upper: (sample.upper + observation.clearance.upper) / observation.length,
             });
           for (const side of ['lower', 'upper'] as const) {
             const value = observation.fixed[side];
@@ -96,8 +98,9 @@ export const createMarkPaddingContext = (channels: ChannelResolveContext) => {
             const distance = (coordinate - start) * Math.sign(end - start);
             if (
               !Number.isFinite(distance) ||
-              (observation.fixed.lower === undefined && distance < sample.lower) ||
-              (observation.fixed.upper === undefined && observation.length - distance < sample.upper)
+              (observation.fixed.lower === undefined && distance < sample.lower + observation.clearance.lower) ||
+              (observation.fixed.upper === undefined &&
+                observation.length - distance < sample.upper + observation.clearance.upper)
             ) {
               throw new RetikzPlotError(`scale ${groupKey} in scope "${scope}" cannot preserve final mark padding`);
             }
@@ -193,6 +196,14 @@ export const createMarkPaddingContext = (channels: ChannelResolveContext) => {
           mapping,
           range,
           length,
+          clearance: {
+            lower:
+              (typeof source.clearance === 'object' ? source.clearance.lower : source.clearance) ??
+              DomainPaddingClearanceSchema.parse(undefined),
+            upper:
+              (typeof source.clearance === 'object' ? source.clearance.upper : source.clearance) ??
+              DomainPaddingClearanceSchema.parse(undefined),
+          },
           fixed: { lower: source.lower, upper: source.upper },
         });
         return mapping.createScale(activeGroup.padding ?? { lower: 0, upper: 0 }, range);

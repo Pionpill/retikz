@@ -98,11 +98,15 @@ Facet creates each panel data view before Smooth fits within it. Shared or indep
 | `sampleCount?`   | `number`                                                                | `64`                       | Predicted samples per group; an integer of at least 2                |
 | `extent?`        | `[number, number]`                                                      | current finite x domain    | Trend sampling interval; lower bound must be smaller than upper      |
 | `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius | Configures continuous position-scale range or explicit ratio padding |
-| `autoPadding?` | `'max-radius'` \| `'point-aware'` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
+| `autoPadding?` | `'max-radius'` \| `'point-aware'` \| `{ kind: 'max-radius' \| 'point-aware'; clearance?: number \| IRBoxSpacing }` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
 | `point?`         | `IRRegressionPointProperties`                                           | Point defaults             | Full Point constant properties for raw observations                  |
 | `trend?`         | `IRRegressionTrendProperties`                                           | Path defaults              | Constant Path stroke, width, opacity, caps, shadows, and peers       |
 
 `autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [scatter padding policies](/viz/chart/points/scatter#automatic-edge-padding).
+
+Use `autoPadding: { kind: 'point-aware', clearance: 8 }` to reserve clearance between protected point extents and automatic plot-area edges. `clearance` is a nonnegative drawing-coordinate length, defaulting to `0`. Both strategies support it; explicitly configured `domainPadding` ends do not add clearance.
+
+`clearance` also accepts the Kernel `IRBoxSpacing` object with nonnegative `default`, `x`, `y`, `top`, `right`, `bottom`, and `left` fields. Precedence is side → axis → `default` → `0`; `8` equals `{ default: 8 }`. For example, `{ default: 8, x: 12, top: 20, left: 0 }` gives top 20, bottom 8, left 0, and right 12. Explicit visual sides require Cartesian coordinates and retain their visual meaning with reversed axes.
 
 When `series` exists, its field color takes precedence over `point.color`, `point.fill`, and `trend.stroke`; other constant appearance remains effective. Points, trends, and the legend therefore keep one categorical scale identity.
 

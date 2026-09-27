@@ -1583,10 +1583,17 @@ describe('Point recipe autoPadding exposure', () => {
       namespace: 'chart',
       type: 'point',
       data: { reference: 'rows' },
-      recipe: { chartType, encodings, properties: { autoPadding: 'point-aware' } },
+      recipe: {
+        chartType,
+        encodings,
+        properties: { autoPadding: { kind: 'point-aware', clearance: { default: 8, top: 20, left: 0 } } },
+      },
     };
     const parsed = schema.parse(JSON.parse(JSON.stringify(source)));
-    expect(parsed.recipe.properties?.autoPadding).toBe('point-aware');
+    expect(parsed.recipe.properties?.autoPadding).toEqual({
+      kind: 'point-aware',
+      clearance: { default: 8, top: 20, left: 0 },
+    });
   });
 });
 
@@ -1621,5 +1628,85 @@ describe('point-aware final mark selection', () => {
     expect(new Set(ids).size).toBe(3);
     expect(result.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ids.slice(0, 2) } });
     expect(result.marks[0]).toMatchObject({ size: { kind: 'constant', value: 2 } });
+  });
+});
+
+describe('Point autoPadding clearance', () => {
+  const resolvePadding = (autoPadding: unknown, domainPadding?: unknown) =>
+    resolveChart(
+      ScatterChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'scatter',
+          encodings: { x: 'x', y: 'y' },
+          properties: { size: 10, autoPadding, domainPadding },
+        },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    ).plot;
+  it.each(['max-radius', 'point-aware'])('preserves %s shorthand semantics with zero clearance', kind => {
+    expect(resolvePadding({ kind })).toEqual(resolvePadding(kind));
+  });
+  it('adds clearance only to automatic range ends', () => {
+    expect(resolvePadding({ kind: 'max-radius', clearance: 8 }, { left: 0 }).scales[0]).toMatchObject({
+      domainPadding: { kind: 'range', lower: 0, upper: 18 },
+    });
+    expect(resolvePadding({ kind: 'point-aware', clearance: 8 }, { left: 0 }).scales[0]).toMatchObject({
+      domainPadding: { kind: 'mark', lower: 0, clearance: 8 },
+    });
+    expect(resolvePadding({ kind: 'point-aware', clearance: 8 }, 0)).toEqual(resolvePadding('point-aware', 0));
+    expect(resolvePadding({ kind: 'max-radius', clearance: 8 }, { kind: 'ratio', left: 0.1 })).toEqual(
+      resolvePadding('max-radius', { kind: 'ratio', left: 0.1 }),
+    );
+  });
+  it('resolves side, axis, default and explicit zero for both policies', () => {
+    const clearance = { default: 8, x: 12, top: 20, left: 0 };
+    const maximum = resolvePadding({ kind: 'max-radius', clearance });
+    expect(maximum.scales[0]).toMatchObject({ domainPadding: { lower: 10, upper: 22 } });
+    expect(maximum.scales[1]).toMatchObject({ domainPadding: { lower: 18, upper: 30 } });
+    const aware = resolvePadding({ kind: 'point-aware', clearance });
+    expect(aware.scales[0]).toMatchObject({ domainPadding: { clearance: { lower: 0, upper: 12 } } });
+    expect(aware.scales[1]).toMatchObject({ domainPadding: { clearance: { lower: 8, upper: 20 } } });
+    expect(resolvePadding({ kind: 'point-aware', clearance: {} })).toEqual(resolvePadding('point-aware'));
+    expect(resolvePadding({ kind: 'point-aware', clearance: { default: 8 } })).toEqual(
+      resolvePadding({ kind: 'point-aware', clearance: 8 }),
+    );
+  });
+  it('maps visual clearance to reversed position ranges', () => {
+    const plot = resolveChart(
+      ScatterChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'scatter',
+          encodings: {
+            x: { field: 'x', scale: { operation: { type: 'linear', name: 'xScale', range: [100, 0] } } },
+            y: { field: 'y', scale: { operation: { type: 'linear', name: 'yScale', range: [0, 100] } } },
+          },
+          properties: { autoPadding: { kind: 'point-aware', clearance: { left: 2, right: 8, top: 3, bottom: 9 } } },
+        },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    ).plot;
+    expect(plot.scales.find(scale => scale.name === 'xScale')).toMatchObject({
+      domainPadding: { clearance: { lower: 8, upper: 2 } },
+    });
+    expect(plot.scales.find(scale => scale.name === 'yScale')).toMatchObject({
+      domainPadding: { clearance: { lower: 3, upper: 9 } },
+    });
+  });
+  it('rejects missing strategy and invalid clearance at the Source boundary', () => {
+    for (const value of [
+      { clearance: 8 },
+      { kind: 'point-aware', clearance: -1 },
+      { kind: 'point-aware', clearance: Infinity },
+      { kind: 'point-aware', clearance: { left: -1 } },
+    ])
+      expect(() => resolvePadding(value)).toThrow();
   });
 });

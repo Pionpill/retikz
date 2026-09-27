@@ -20,14 +20,21 @@ const ScatterAutoPadding: FC<ScatterAutoPaddingProps> = props => {
   const text = scatterAutoPaddingI18n[lang];
   return (
     <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-      {(['max-radius', 'point-aware'] as const).map(autoPadding => (
+      {(
+        [
+          { kind: 'max-radius', clearance: 0 },
+          { kind: 'point-aware', clearance: 0 },
+          { kind: 'max-radius', clearance: { default: 8, top: 20, left: 0 } },
+          { kind: 'point-aware', clearance: { default: 8, top: 20, left: 0 } },
+        ] as const
+      ).map(autoPadding => (
         <ScatterChart
-          key={autoPadding}
+          key={`${autoPadding.kind}-${typeof autoPadding.clearance}`}
           rows={rows}
           layout={{ width: 340, height: 280 }}
           presentation={{
-            title: { text: autoPadding === 'max-radius' ? text.maximum : text.aware },
-            subtitle: { text: text.subtitle },
+            title: { text: autoPadding.kind === 'max-radius' ? text.maximum : text.aware },
+            subtitle: { text: typeof autoPadding.clearance === 'number' ? `${text.clearance}: 0` : text.directional },
           }}
           recipe={{
             encodings: {
@@ -46,7 +53,7 @@ const ScatterAutoPadding: FC<ScatterAutoPaddingProps> = props => {
   );
 };
 
-/** 双图比较只展示 React 示例，不派生单个 Chart IR */
+/** 多图比较只展示 React 示例，不派生单个 Chart IR */
 export const previewSource = { deriveIR: false };
 
 export default ScatterAutoPadding;
