@@ -22,7 +22,7 @@ import { ConnectedScatterChartSchema } from './schema';
 /** Connected Scatter exact schema、调度与消费检查共用的 encoding 顺序 */
 export const ConnectedScatterChartEncodingSlots = ['x', 'y', 'order', 'series', 'row', 'column', 'facet'] as const;
 const markPropertySlots = ['point', 'path'] as const;
-const propertySlots = [...markPropertySlots, 'domainPadding'] as const;
+const propertySlots = [...markPropertySlots, 'domainPadding', 'autoPadding'] as const;
 const seriesScaleName = pointRecipeId(ChartType.ConnectedScatter, 'scale.series');
 const consumers: ReadonlyArray<ChartEncodingFieldConsumer<(typeof ConnectedScatterChartEncodingSlots)[number]>> = [
   ...pointPositionFieldConsumersOf(ChartType.ConnectedScatter),

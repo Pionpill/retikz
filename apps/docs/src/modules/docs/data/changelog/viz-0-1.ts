@@ -190,6 +190,13 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：逐点自动留白', en: 'Unreleased: point-aware padding' },
+          content: {
+            zh: '所有点图 properties 新增 autoPadding：默认 max-radius 保持现有行为，可选 point-aware 按实际位置与半径紧凑留白；显式 domainPadding 优先。首轮支持无 placement 的 Cartesian2D linear/time 组合。',
+            en: 'All Point recipes expose autoPadding: max-radius retains existing defaults, while point-aware uses actual positions and radii for compact padding. Explicit domainPadding wins; initial support covers Cartesian2D linear/time without placement.',
+          },
+        },
+        {
           label: { zh: '单一 Chart 主链', en: 'One Chart resolution path' },
           content: {
             zh: 'Parser 先用根 `type` 识别 family，再用 `recipe.chartType` 选择精确 recipe；recipe 生成共享部分与内建 semantic mark，Chart marks、独立 `plotExtension` fragment、presentation 和 Theme owner slices 进入同一 renderer-neutral 解析主链。',

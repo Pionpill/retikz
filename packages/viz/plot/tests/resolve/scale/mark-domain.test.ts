@@ -1,0 +1,318 @@
+import { describe, expect, it } from 'vitest';
+import { literal } from 'zod';
+
+import { lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
+import { pointMarkDefinition } from '../../../src/providers/mark';
+import { resolveScaleRegistry } from '../../../src/providers/scale';
+import { LinearScaleSchema, PointMarkSchema, PlotSchema } from '../../../src/schemas';
+
+const rows = [
+  { x: 0, y: 0, r: 2 },
+  { x: 5, y: 5, r: 30 },
+  { x: 10, y: 10, r: 2 },
+];
+const plotOf = (padding: unknown = { kind: 'mark', marks: ['dots'] }, guides: Array<unknown> = []) =>
+  PlotSchema.parse({
+    namespace: 'plot',
+    type: 'plot',
+    width: 100,
+    height: 100,
+    data: { reference: 'rows' },
+    scales: [
+      { type: 'linear', name: 'x', domainPadding: padding },
+      { type: 'linear', name: 'y', domainPadding: padding },
+      { type: 'sqrt', name: 'size', domain: [2, 30], range: [2, 30] },
+    ],
+    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+    guides,
+    marks: [
+      {
+        id: 'dots',
+        type: 'point',
+        encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        size: { kind: 'field', value: 'r', scale: 'size' },
+      },
+    ],
+  });
+
+describe('mark padding 编译闭环', () => {
+  it('实际 size 映射和最终 frame 使用紧凑留白', () => {
+    const result = lowerPlotWithDataArtifact(plotOf(), { rows });
+    const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
+    const scale = frame.roleScales?.x;
+    expect(scale).toBeDefined();
+    const [left, right] = scale!.range();
+    expect(scale!.coordinate(0) - left).toBeGreaterThanOrEqual(2);
+    expect(scale!.coordinate(0) - left).toBeLessThan(2.1);
+    expect(right - scale!.coordinate(10)).toBeGreaterThanOrEqual(2);
+    expect(scale!.coordinate(5) - left).toBeGreaterThanOrEqual(30);
+    expect(right - scale!.coordinate(5)).toBeGreaterThanOrEqual(30);
+  });
+  it('未知 mark 不回退', () => {
+    expect(() => lowerPlotWithDataArtifact(plotOf({ kind: 'mark', marks: ['missing'] }), { rows })).toThrow(/missing/);
+  });
+  it('非法 schema 保留诊断', () => {
+    expect(() => plotOf({ kind: 'mark', marks: [] })).toThrow();
+    expect(() => plotOf({ kind: 'mark', marks: ['dots', 'dots'] })).toThrow();
+  });
+});
+
+describe('shared mark padding', () => {
+  it('shares one padded domain across facet panels with different guides', () => {
+    const base = plotOf();
+    const { coordinate, ...rest } = base;
+    const spec = PlotSchema.parse({
+      ...rest,
+      width: 640,
+      height: 300,
+      guides: [
+        { type: 'axis', dimension: 'x' },
+        { type: 'axis', dimension: 'y' },
+      ],
+      composition: {
+        defaultView: 'root',
+        views: [{ id: 'root', coordinate }],
+        arrangements: [
+          {
+            kind: 'facet',
+            id: 'groups',
+            view: 'root',
+            column: { field: 'group' },
+            resolve: { scale: { y: 'independent' } },
+          },
+        ],
+      },
+    });
+    const data = [
+      ...rows.map(row => ({ ...row, group: 'A' })),
+      ...rows.map(row => ({ ...row, y: row.y * 100000, group: 'B' })),
+    ];
+    const result = lowerPlotWithDataArtifact(spec, { rows: data });
+    const frames = [...result.dataArtifact.frameByCoordinateScopeId.values()].slice(1);
+    expect(frames.length).toBeGreaterThanOrEqual(2);
+    const domains = frames.map(frame => frame.roleScales?.x?.domain());
+    expect(domains.every(domain => JSON.stringify(domain) === JSON.stringify(domains[0]))).toBe(true);
+    for (const frame of frames) {
+      const scale = frame.roleScales!.x!;
+      expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
+      expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(2);
+    }
+    expect(frames[0].roleScales!.y!.domain()).not.toEqual(frames[1].roleScales!.y!.domain());
+  });
+  it('rejects unsupported scales without silently changing strategy', () => {
+    const base = plotOf();
+    const spec = PlotSchema.parse({
+      ...base,
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type: 'log', domain: [1, 10] } : scale)),
+    });
+    expect(() => lowerPlotWithDataArtifact(spec, { rows })).toThrow(/does not support mark domainPadding/);
+  });
+});
+
+describe('mark padding final geometry', () => {
+  const frameOf = (spec: unknown, data = rows) =>
+    [
+      ...lowerPlotWithDataArtifact(PlotSchema.parse(spec), {
+        rows: data,
+      }).dataArtifact.frameByCoordinateScopeId.values(),
+    ][0];
+
+  it('preserves a fixed zero end while protecting the opposite end', () => {
+    const scale = frameOf(plotOf({ kind: 'mark', marks: ['dots'], lower: 0 })).roleScales!.x!;
+    const [start, end] = scale.range();
+    expect(scale.coordinate(0)).toBe(start);
+    expect(end - scale.coordinate(10)).toBeGreaterThanOrEqual(2);
+  });
+
+  it('ignores outside-domain targets without filtering rendered data', () => {
+    const base = plotOf();
+    const spec = {
+      ...base,
+      scales: base.scales.map(scale =>
+        scale.name === 'x' || scale.name === 'y' ? { ...scale, domain: [0, 10] } : scale,
+      ),
+    };
+    const outside = [...rows, { x: -1, y: 5, r: 30 }];
+    expect(frameOf(spec, outside).roleScales!.x!.domain()).toEqual(frameOf(spec).roleScales!.x!.domain());
+    expect(lowerPlotWithDataArtifact(PlotSchema.parse(spec), { rows: outside }).dataArtifact).toBeDefined();
+  });
+
+  it('recomputes geometry for a changed drawing area', () => {
+    const base = plotOf();
+    const narrow = frameOf(base).roleScales!.x!;
+    const wide = frameOf({ ...base, width: 300 }).roleScales!.x!;
+    expect(wide.domain()).not.toEqual(narrow.domain());
+    expect(wide.coordinate(0) - wide.range()[0]).toBeGreaterThanOrEqual(2);
+    expect(wide.coordinate(0) - wide.range()[0]).toBeLessThan(2.02);
+  });
+
+  it('retains fractional time padding below one millisecond', () => {
+    const base = plotOf();
+    const spec = {
+      ...base,
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type: 'time', domain: [0, 10] } : scale)),
+    };
+    const scale = frameOf(spec).roleScales!.x!;
+    expect(scale.tickKind).toBe('time');
+    expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
+    expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(2);
+  });
+
+  it('keeps direction-independent protection for a reversed range', () => {
+    const base = plotOf();
+    const spec = {
+      ...base,
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, range: [100, 0] } : scale)),
+    };
+    const scale = frameOf(spec).roleScales!.x!;
+    expect(Math.abs(scale.coordinate(0) - scale.range()[0])).toBeGreaterThanOrEqual(2);
+    expect(Math.abs(scale.coordinate(10) - scale.range()[1])).toBeGreaterThanOrEqual(2);
+  });
+
+  it('adds no padding for an empty visible sample set', () => {
+    const base = plotOf();
+    const spec = {
+      ...base,
+      scales: base.scales.map(scale =>
+        scale.name === 'x' || scale.name === 'y' ? { ...scale, domain: [0, 10] } : scale,
+      ),
+    };
+    expect(frameOf(spec, []).roleScales!.x!.domain()).toEqual([0, 10]);
+  });
+
+  it('reports impossible extent instead of rendering a clipped automatic edge', () => {
+    expect(() => frameOf({ ...plotOf(), width: 40 })).toThrow(/feasible/);
+  });
+
+  it('protects projected relation endpoints independently', () => {
+    const base = plotOf();
+    const spec = {
+      ...base,
+      marks: [
+        {
+          id: 'dots',
+          type: 'relation',
+          source: { project: { x: 'x', y: 'y' } },
+          target: { project: { x: 'x', y: 'y' } },
+          endpoints: {
+            source: { size: { kind: 'constant', value: 8 } },
+            target: { size: { kind: 'constant', value: 12 } },
+          },
+        },
+      ],
+    };
+    const scale = frameOf(spec).roleScales!.x!;
+    expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(12);
+    expect(scale.range()[1] - scale.coordinate(10)).toBeGreaterThanOrEqual(12);
+  });
+});
+
+describe('mark padding capabilities', () => {
+  it('dispatches custom scales and marks through their existing definition registries', () => {
+    const linear = resolveScaleRegistry().get('linear')!;
+    const customScale = { ...linear, schema: LinearScaleSchema.extend({ type: literal('custom-affine') }) };
+    const customMark = {
+      ...pointMarkDefinition,
+      schema: PointMarkSchema.extend({ type: literal('custom-dot') }),
+      lower: ((mark, data, frame, channels, context) =>
+        pointMarkDefinition.lower(
+          { ...mark, type: 'point' },
+          data,
+          frame,
+          channels,
+          context,
+        )) satisfies typeof pointMarkDefinition.lower,
+    };
+    const base = plotOf();
+    const spec = PlotSchema.parse({
+      ...base,
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type: 'custom-affine' } : scale)),
+      marks: base.marks.map(mark => ({ ...mark, type: 'custom-dot' })),
+    });
+    const result = lowerPlotWithDataArtifact(
+      spec,
+      { rows },
+      { scaleDefinitions: [customScale], markDefinitions: [customMark] },
+    );
+    const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
+    const scale = frame.roleScales!.x!;
+    expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
+  });
+
+  it('rejects mark placement before collecting its extents', () => {
+    const base = plotOf();
+    const spec = PlotSchema.parse({
+      ...base,
+      marks: base.marks.map(mark => ({
+        ...mark,
+        placement: { adjustments: [{ kind: 'jitter', role: 'x', span: 4, seed: 1 }] },
+      })),
+    });
+    expect(() => lowerPlotWithDataArtifact(spec, { rows })).toThrow(/placement/);
+  });
+});
+
+describe('mark padding effective observations', () => {
+  it('uses locally transformed positions and sizes', () => {
+    const base = plotOf();
+    const transformed = PlotSchema.parse({
+      ...base,
+      marks: base.marks.map(mark => ({
+        ...mark,
+        transform: [{ kind: 'summarize', groupBy: ['x', 'y'], metrics: [{ kind: 'mean', field: 'r', as: 'r' }] }],
+      })),
+    });
+    const duplicateRows = [
+      { x: 0, y: 0, r: 2 },
+      { x: 0, y: 0, r: 30 },
+      { x: 10, y: 10, r: 2 },
+    ];
+    const compactRows = [
+      { x: 0, y: 0, r: 16 },
+      { x: 10, y: 10, r: 2 },
+    ];
+    const domainOf = (spec: ReturnType<typeof plotOf>, data: typeof rows) =>
+      [
+        ...lowerPlotWithDataArtifact(spec, { rows: data }).dataArtifact.frameByCoordinateScopeId.values(),
+      ][0].roleScales!.x!.domain();
+    expect(domainOf(transformed, duplicateRows)).toEqual(domainOf(base, compactRows));
+  });
+  it('ignores missing positions and mapped sizes', () => {
+    const base = plotOf();
+    const getDomain = (data: Array<Record<string, number | null>>) =>
+      [
+        ...lowerPlotWithDataArtifact(base, { rows: data }).dataArtifact.frameByCoordinateScopeId.values(),
+      ][0].roleScales!.x!.domain();
+    expect(getDomain([...rows, { x: null, y: 0, r: 30 }, { x: 0, y: 0, r: null }])).toEqual(getDomain(rows));
+  });
+});
+
+describe('mark padding shared coordinate views', () => {
+  it('combines marks from overlay views that consume one shared scale', () => {
+    const base = plotOf();
+    const { coordinate, ...rest } = base;
+    const spec = PlotSchema.parse({
+      ...rest,
+      scales: base.scales.map(scale =>
+        scale.name === 'x' ? { ...scale, domainPadding: { kind: 'mark', marks: ['dots', 'overlay-dots'] } } : scale,
+      ),
+      composition: {
+        defaultView: 'root',
+        views: [
+          { id: 'root', coordinate },
+          { id: 'overlay', coordinate, placement: { kind: 'overlay', target: 'root' } },
+        ],
+      },
+      marks: [
+        ...base.marks,
+        { ...base.marks[0], id: 'overlay-dots', coordinateView: 'overlay', size: { kind: 'constant', value: 8 } },
+      ],
+    });
+    const result = lowerPlotWithDataArtifact(spec, { rows });
+    const frames = [...result.dataArtifact.frameByCoordinateScopeId.values()];
+    expect(frames.length).toBe(2);
+    expect(frames[0].roleScales!.x!.domain()).toEqual(frames[1].roleScales!.x!.domain());
+    for (const frame of frames)
+      expect(frame.roleScales!.x!.coordinate(0) - frame.roleScales!.x!.range()[0]).toBeGreaterThanOrEqual(8);
+  });
+});

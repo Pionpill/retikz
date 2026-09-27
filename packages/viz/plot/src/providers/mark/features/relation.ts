@@ -58,6 +58,7 @@ import {
   pathChannelKinds,
   resolveGeometryMarkLabels,
 } from '../shared';
+import { POINT_DEFAULT_RADIUS } from './point-glyph';
 import { pointGlyphStyle } from './point-glyph';
 
 type TargetResolution = {
@@ -725,6 +726,19 @@ const collectRelationStyleFields = (style: IRPlotRelationPrimitiveStyle | undefi
 /** 内置 relation mark definition。 */
 export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
   schema: RelationMarkSchema,
+  domainPadding: (mark, rows, roles) =>
+    rows.flatMap(row =>
+      (['source', 'target'] as const).flatMap(side => {
+        const glyph = mark.endpoints?.[side];
+        if (glyph === undefined) return [];
+        const target = mark[side];
+        if (!('project' in target)) throw new RetikzPlotError('Relation domain padding requires projected endpoints');
+        const radius = resolveMarkValue<number>(glyph.size, row) ?? POINT_DEFAULT_RADIUS;
+        return [
+          { values: roles.map(role => resolveFieldPath(row, target.project[role])), extent: roles.map(() => radius) },
+        ];
+      }),
+    ),
   channelKinds: pathChannelKinds,
   collectFields: (mark, fields) => {
     collectTargetFields(mark.source, fields);

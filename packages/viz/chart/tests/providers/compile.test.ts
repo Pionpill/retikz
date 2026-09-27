@@ -914,3 +914,37 @@ describe('Chart providers through Core compile', () => {
     ]);
   });
 });
+
+describe('point-aware compile boundaries', () => {
+  it('rejects categorical Strip automatic ends but permits fully explicit padding', () => {
+    const sourceOf = (domainPadding?: number) =>
+      StripChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'strip.padding' },
+        layout: { width: 400, height: 300 },
+        recipe: {
+          chartType: 'strip',
+          encodings: {
+            x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+            y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+          },
+          properties: { autoPadding: 'point-aware', ...(domainPadding === undefined ? {} : { domainPadding }) },
+        },
+      });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createStripChartProviderContribution(),
+        createPlotProviderContribution({
+          'strip.padding': [
+            { category: 'A', value: 2 },
+            { category: 'B', value: 4 },
+          ],
+        }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    expect(() => compileToScene(sceneOf(sourceOf()), definitions)).toThrow(/domainPadding/);
+    expect(compileToScene(sceneOf(sourceOf(0)), definitions).scene.primitives.length).toBeGreaterThan(0);
+  });
+});

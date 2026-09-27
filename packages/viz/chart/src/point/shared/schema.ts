@@ -6,6 +6,11 @@ import type { infer as ZodInfer } from 'zod';
 import type { ZodType } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
+/** Point Chart 缺省边缘留白策略 */
+export const PointAutoPaddingSchema = zodEnum(['max-radius', 'point-aware']).describe(
+  'Automatic padding strategy; omitted means max-radius, point-aware uses bounded per-point containment',
+);
+
 const pointPositionDomainPaddingFields = Object.keys(BoxSpacingSchema.shape);
 
 const PointPositionDomainPaddingObjectSchema = strictObject({

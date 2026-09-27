@@ -87,6 +87,9 @@ export type ChartEncodingResolveContext<TSource extends IRChartSource = IRChartS
 
 /** recipe 在最终 Chart semantic marks 已确定后补齐 scale 默认值的窄上下文 */
 export type ChartScaleDefaultsResolveContext = Readonly<{
+  /** 为参与 scale 默认约束的最终 mark 提供稳定 Plot identity */
+  identifyMark: (index: number) => string;
+
   /** 当前 exact schema 已 parse 的 Chart Source */
   source: IRChartSource;
   /** 当前 recipe 的 encoding 解析结果 */

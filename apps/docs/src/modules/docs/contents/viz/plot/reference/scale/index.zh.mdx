@@ -17,6 +17,8 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
 
 连续位置比例尺共用 `domainPadding` 和 `singleValueSpan`。`domainPadding` 的裸数字与省略 kind 的对象使用 range 单位；`kind: 'ratio'` 才使用原始 domain 跨度比例。两种 domain 来源默认都不扩展。
 
+`kind: 'mark'` 引用具名图元按外缘求解自动端，可选 `lower` / `upper` 固定一端。内置支持 linear/time 与无 placement 的 Cartesian2D；能力和失败边界见 [按图元外缘留白](/viz/plot/scale/position#按图元外缘留白)。
+
 ### LinearScaleSchema
 
 <ZodSchema
@@ -29,7 +31,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     range: '图区单位中的输出范围 [start, end]；省略时从坐标 extent 派生。',
     nice: '是否把 domain 取整为易读数值。',
     clamp: '是否把 domain 外输入夹到 range 端点。',
-    domainPadding: '添加到解析 domain 的 range 单位留白，或显式 ratio 留白。',
+    domainPadding: 'range / ratio 留白，或通过 mark 引用求解自动端；具体支持范围见正文。',
     singleValueSpan: 'domain 只有单值时使用的备用跨度。',
   }}
 />
@@ -45,7 +47,7 @@ description: 查询 Plot 的连续、离散、径向、颜色与自定义比例�
     domain: 'epoch 毫秒 [start, end]；Date 实例不进入 IR。',
     nice: '是否向外对齐到易读时间边界。',
     clamp: '是否夹紧 domain 外时刻。',
-    domainPadding: '添加到解析 domain 的 range 单位留白，或显式 ratio 留白。',
+    domainPadding: 'range / ratio 留白，或通过 mark 引用求解自动端；具体支持范围见正文。',
     singleValueSpan: '时间 domain 只有单值时的备用跨度。',
   }}
 />

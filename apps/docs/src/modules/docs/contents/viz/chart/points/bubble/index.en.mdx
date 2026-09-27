@@ -92,6 +92,9 @@ Bubble defaults to `fillOpacity={0.7}` with a `1px` same-color stroke. `color` d
 | `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                                                                        |
 | `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                                                                    |
 | `domainPadding?`                                                                            | `number` or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`; defaults to the maximum radius of the field-size sqrt range, or `20` when range is omitted |
+| `autoPadding?`                                                                              | `'max-radius'` \| `'point-aware'`; automatic padding policy; omitted means `max-radius`; `point-aware` solves from individual positions and radii; explicit `domainPadding` wins |
+
+`autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [scatter padding policies](/viz/chart/points/scatter#automatic-edge-padding).
 
 ## `BubbleMark`
 

@@ -80,6 +80,7 @@ const scaleDefaultsContextOf = (
   chartMarks: ReadonlyArray<IRPlotMarkOperation>,
   scales: ReadonlyArray<IRPlotScaleOperation>,
 ): ChartScaleDefaultsResolveContext => ({
+  identifyMark: index => `__chart.mark.${index}`,
   source,
   encodings: {
     encodings: {},
@@ -1518,5 +1519,107 @@ describe('Point Chart marks', () => {
     expect(result.marks[0]).toMatchObject({
       opacity: { kind: 'field', value: 'explicitOpacity' },
     });
+  });
+});
+
+describe('Point autoPadding strategies', () => {
+  it('keeps the existing default and emits mark constraints only when selected', () => {
+    const source = {
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' }, properties: { size: 10 } },
+    };
+    const original = resolveChart(ScatterChartSchema.parse(source), ScatterChartDefinition, runtime).plot;
+    const explicit = resolveChart(
+      ScatterChartSchema.parse({
+        ...source,
+        recipe: { ...source.recipe, properties: { size: 10, autoPadding: 'max-radius' } },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    ).plot;
+    expect(explicit).toEqual(original);
+    const aware = resolveChart(
+      ScatterChartSchema.parse({
+        ...source,
+        recipe: { ...source.recipe, properties: { autoPadding: 'point-aware', domainPadding: { left: 0 } } },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    ).plot;
+    expect(aware.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], lower: 0 } });
+    expect(aware.marks[0].id).toBe('__chart.mark.0');
+  });
+  it('does not identify or scan marks when explicit padding covers every end', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { autoPadding: 'point-aware', domainPadding: 0 },
+      },
+    });
+    const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
+    expect(result.marks[0].id).toBeUndefined();
+    expect(result.scales).toEqual(
+      expect.arrayContaining([expect.objectContaining({ domainPadding: { kind: 'range', lower: 0, upper: 0 } })]),
+    );
+  });
+});
+
+describe('Point recipe autoPadding exposure', () => {
+  it.each([
+    ['scatter', ScatterChartSchema, { x: 'x', y: 'y' }],
+    ['bubble', BubbleChartSchema, { x: 'x', y: 'y', size: 'size' }],
+    ['regression', RegressionChartSchema, { x: 'x', y: 'y' }],
+    ['connected-scatter', ConnectedScatterChartSchema, { x: 'x', y: 'y', order: 'order' }],
+    ['ranged-dot', RangedDotChartSchema, { category: 'category', start: 'start', end: 'end' }],
+    ['strip', StripChartSchema, { x: 'x', y: 'y' }],
+  ])('%s preserves the author strategy through a JSON round trip', (chartType, schema, encodings) => {
+    const source = {
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType, encodings, properties: { autoPadding: 'point-aware' } },
+    };
+    const parsed = schema.parse(JSON.parse(JSON.stringify(source)));
+    expect(parsed.recipe.properties?.autoPadding).toBe('point-aware');
+  });
+});
+
+describe('point-aware final mark selection', () => {
+  it('references appended and replacement marks but excludes extension marks and avoids identity collisions', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { autoPadding: 'point-aware', size: 40 },
+        marks: [
+          { kind: 'scatter', override: true, properties: { size: 2 } },
+          { kind: 'scatter', properties: { size: 3 } },
+        ],
+      },
+      plotExtension: {
+        marks: [
+          {
+            id: '__chart.mark.0',
+            type: 'point',
+            encoding: { x: { field: 'x' }, y: { field: 'y' } },
+            size: { kind: 'constant', value: 90 },
+          },
+        ],
+      },
+    });
+    const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
+    const ids = result.marks.map(mark => mark.id);
+    expect(new Set(ids).size).toBe(3);
+    expect(result.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ids.slice(0, 2) } });
+    expect(result.marks[0]).toMatchObject({ size: { kind: 'constant', value: 2 } });
   });
 });

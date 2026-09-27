@@ -9,3 +9,4 @@ export * from './position-adjustment';
 export * from './provenance';
 export * from './scale';
 export * from './theme';
+export * from './domain-padding';

@@ -82,6 +82,9 @@ When `color` and member color properties are omitted, the connector and both end
 | `endPoint?`      | `IRRangedDotPointProperties`                                            | inherited                     | End endpoint override                                                                     |
 | `range?`         | `IRRangedDotRangeProperties`                                            | Path                          | Connector color, width, opacity, and style                                                |
 | `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest endpoint Point radius | Configures continuous x-scale range or explicit ratio padding; categorical y is unchanged |
+| `autoPadding?` | `'max-radius'` \| `'point-aware'` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
+
+`autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [scatter padding policies](/viz/chart/points/scatter#automatic-edge-padding).
 
 ### `RangedDotMarkProps`
 

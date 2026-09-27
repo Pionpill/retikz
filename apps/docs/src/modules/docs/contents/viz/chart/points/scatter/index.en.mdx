@@ -177,18 +177,19 @@ Color and shape provide two ways to identify income groups and compare their spr
 
 In React, set uniform appearance with `ScatterProperties`. The Vanilla API uses `properties`, and direct IR uses `recipe.properties`. The table lists common props; default drawing configuration determines any appearance not explicitly set.
 
-| Prop            | Type                              | Description                                                                                                                                             |
-| --------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `color`         | `string`                          | Sets a uniform color                                                                                                                                    |
-| `shape`         | `string`                          | Sets a uniform shape using a registered shape name                                                                                                      |
-| `size`          | `number`                          | Point radius; must be greater than or equal to `0`                                                                                                      |
-| `opacity`       | `number`                          | Overall opacity from `0` to `1`                                                                                                                         |
-| `fill`          | Color string or paint object      | Fill color or paint configuration                                                                                                                       |
-| `stroke`        | Color string or paint object      | Stroke color or paint configuration                                                                                                                     |
-| `strokeWidth`   | `number`                          | Nonnegative stroke width                                                                                                                                |
-| `fillOpacity`   | `number`                          | Fill opacity from `0` to `1`                                                                                                                            |
-| `strokeOpacity` | `number`                          | Stroke opacity from `0` to `1`                                                                                                                          |
-| `domainPadding` | Number or per-side padding object | A number or per-side configuration object; pads the position domain to prevent edge clipping; omitted padding is computed from the maximum point radius |
+| Prop            | Type                              | Description                                                                                                                                                                      |
+| --------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `color`         | `string`                          | Sets a uniform color                                                                                                                                                             |
+| `shape`         | `string`                          | Sets a uniform shape using a registered shape name                                                                                                                               |
+| `size`          | `number`                          | Point radius; must be greater than or equal to `0`                                                                                                                               |
+| `opacity`       | `number`                          | Overall opacity from `0` to `1`                                                                                                                                                  |
+| `fill`          | Color string or paint object      | Fill color or paint configuration                                                                                                                                                |
+| `stroke`        | Color string or paint object      | Stroke color or paint configuration                                                                                                                                              |
+| `strokeWidth`   | `number`                          | Nonnegative stroke width                                                                                                                                                         |
+| `fillOpacity`   | `number`                          | Fill opacity from `0` to `1`                                                                                                                                                     |
+| `strokeOpacity` | `number`                          | Stroke opacity from `0` to `1`                                                                                                                                                   |
+| `domainPadding` | Number or per-side padding object | A number or per-side configuration object; pads the position domain to prevent edge clipping; unconfigured ends follow `autoPadding`, which defaults to the maximum point radius |
+| `autoPadding?`  | `'max-radius'` \| `'point-aware'` | Automatic padding policy; omitted means `max-radius`; `point-aware` solves from individual positions and radii; explicit `domainPadding` wins                                    |
 
 This example retains the same economies, fertility and labor-participation axes, and income-group categories. Here the goal is to make observations easier to distinguish: economies with similar values produce overlapping points, so appearance affects how easily readers can judge dense regions and separate neighboring observations.
 
@@ -210,11 +211,11 @@ These constants apply to every point and do not encode a third numeric measure. 
 
 In React, add or replace scatter marks with `ScatterMark`. The Vanilla API uses the `marks` array, and direct IR uses `recipe.marks`; scatter entries in either array require `kind: 'scatter'`. The chart generates points automatically, so ordinary charts need no explicit mark.
 
-| Prop         | Type                    | Description                                                                                                                                                                   |
-| ------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `override`   | `boolean`               | Adds a mark by default; `true` replaces the default scatter mark                                                                                                              |
-| `encodings`  | Field mappings object   | Overrides this mark's fields; optional keys are `x`, `y`, `color`, `size`, `opacity`, and `shape`, each taking a field name string; unspecified fields inherit chart mappings |
-| `properties` | Point properties object | Overrides this mark's point appearance, such as `{ size: 3, opacity: 1 }`; excludes recipe-level `domainPadding`; unspecified entries retain inheritable chart appearance     |
+| Prop         | Type                    | Description                                                                                                                                                                                 |
+| ------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `override`   | `boolean`               | Adds a mark by default; `true` replaces the default scatter mark                                                                                                                            |
+| `encodings`  | Field mappings object   | Overrides this mark's fields; optional keys are `x`, `y`, `color`, `size`, `opacity`, and `shape`, each taking a field name string; unspecified fields inherit chart mappings               |
+| `properties` | Point properties object | Overrides this mark's point appearance, such as `{ size: 3, opacity: 1 }`; excludes recipe-level `domainPadding` and `autoPadding`; unspecified entries retain inheritable chart appearance |
 
 This example compares IMDb and Rotten Tomatoes ratings for 100 films. Each position represents one film, with IMDb ratings on the horizontal axis and Rotten Tomatoes ratings on the vertical axis. A distribution from the lower left toward the upper right helps show whether the ratings generally move together. Points with similar horizontal positions but different vertical positions represent films with similar IMDb ratings and different Rotten Tomatoes ratings.
 
@@ -310,11 +311,25 @@ After default, appended, and replacement marks are determined, Chart reads the f
 Padding is supplied according to these rules:
 
 - Omitted `domainPadding`: use `range` units and the maximum point radius on each side. These units measure drawing-coordinate lengths, not data values.
-- Explicit number: apply that value to each side; `0` disables padding. Objects resolve each side from its specific direction, then `x` / `y`, then `default`. Unspecified sides fall back to the maximum radius in `range` mode and to `0` in `ratio` mode.
+- Explicit number: apply that value to each side; `0` disables padding. Objects resolve each side from its specific direction, then `x` / `y`, then `default`. Unspecified sides use the automatic policy in `range` mode and to `0` in `ratio` mode.
 - Explicit directions: `left`, `right`, `top`, and `bottom` require Cartesian coordinates. Chart maps visual directions to lower and upper domain ends according to the scale range direction.
 - Configured scales: if a scale already has `domainPadding` or comes from `plotExtension.scales`, Chart preserves it without adding automatic padding.
 
-Automatic padding applies only to supported built-in continuous x/y scales, not categorical or custom scales. This is Chart's defaulting policy before lowering to Plot. This section explains that padding choice; scale transformations themselves belong to Plot.
+The default `autoPadding: 'max-radius'` keeps the policy above without scanning individual rows. With `autoPadding: 'point-aware'`, Chart supplies the final point marks to Plot. Before generating geometry, Plot uses actual data views, positions, and radii to find compact padding. Space already available around large central points counts toward protection; large points near an edge also contribute, even when they are not position extrema.
+
+Both charts below use identical data, size mappings, and canvas dimensions. The default reserves the maximum radius at every edge; point-aware padding uses existing space around the central point and adds the space needed at the edges.
+
+<ComponentPreview files="scatter-auto-padding" hideCode type="illustration" size="lg" />
+
+Both policies change position domains, not point sizes. Point-aware solving reuses numeric positions and sizes with bounded iterations and coordinates final plot-area dimensions. It never reads rendered geometry. Each solve pass is linear in the effective point count, so it costs more than the default mark-level calculation; strictly minimum padding is not guaranteed.
+
+- Explicit `domainPadding` wins. Missing `range` ends use the selected policy; missing `ratio` ends remain `0`. Fully explicit padding bypasses point-aware solving.
+- Point-aware mode currently requires Cartesian2D, linear/time position scales, and no placement. Unsupported combinations or infeasible drawing areas produce errors without falling back.
+- Only effective points inside the baseline domain contribute size-radius constraints. Strokes, shadows, and text are excluded. Outside points retain Plot rendering and clipping semantics; domain expansion may bring some of them into view.
+- Shared scales solve one domain across panels. Incompatible fixed pixel padding across differently sized panels produces an error.
+- Chart references its final Point marks and Relation endpoints; `plotExtension.marks` are not included automatically. Authored scale padding and extension scales still take precedence.
+
+Both `autoPadding` and `domainPadding` belong to recipe properties, not `ScatterMark.properties`.
 
 <SourceLinks
   sources={[
@@ -368,14 +383,15 @@ Scatter rejects `series`, `detail`, `order`, `text`, and ordinary slot arrays wi
 
 `ScatterProperties` declares recipe-level constants and does not accept field mappings; use `ScatterEncodings` for data-driven visual changes. `ScatterPropertiesProps` fields are grouped below.
 
-| Fields                                                                                      | Values                                                                                                                                 |
-| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name                                                                                            |
-| `size`, `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`   | Finite numbers or the corresponding JSON-safe structures                                                                               |
-| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                                                                                                    |
-| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                                           |
-| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                                       |
-| `domainPadding?`                                                                            | `number` or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`; defaults to range padding from the largest final Point radius |
+| Fields                                                                                      | Values                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `color`, `textColor`, `fill`, `stroke`, `shape`                                             | Colors, paints, or an extensible shape name                                                                                                                                      |
+| `size`, `minimumSize`, `scale`, `rotate`, `dx`, `dy`, `padding`, `margin`, `cornerRadius`   | Finite numbers or the corresponding JSON-safe structures                                                                                                                         |
+| `strokeWidth`, `fillOpacity`, `strokeOpacity`, `opacity`, `dashed`, `dotted`, `dashPattern` | Stroke, opacity, and dash constants                                                                                                                                              |
+| `zIndex`, `align`, `lineHeight`, `maxTextWidth`, `font`, `label`                            | Drawing order, text, and label configuration                                                                                                                                     |
+| `boundary`, `shadow`, `blendMode`                                                           | Boundary, shadow, and blend mode                                                                                                                                                 |
+| `domainPadding?`                                                                            | `number` or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`; defaults to range padding from the largest final Point radius                                           |
+| `autoPadding?`                                                                              | `'max-radius'` \| `'point-aware'`; automatic padding policy; omitted means `max-radius`; `point-aware` solves from individual positions and radii; explicit `domainPadding` wins |
 
 ### Scatter marks
 

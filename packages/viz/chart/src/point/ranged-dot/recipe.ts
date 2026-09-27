@@ -23,7 +23,7 @@ import { RangedDotChartSchema } from './schema';
 export const RangedDotChartEncodingSlots = ['category', 'start', 'end', 'color', 'row', 'column', 'facet'] as const;
 
 const markPropertySlots = ['point', 'startPoint', 'endPoint', 'range'] as const;
-const propertySlots = [...markPropertySlots, 'domainPadding'] as const;
+const propertySlots = [...markPropertySlots, 'domainPadding', 'autoPadding'] as const;
 const xScaleName = pointRecipeId(ChartType.RangedDot, 'scale.x');
 const yScaleName = pointRecipeId(ChartType.RangedDot, 'scale.y');
 const colorScaleName = pointRecipeId(ChartType.RangedDot, 'scale.color');

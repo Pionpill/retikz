@@ -23,7 +23,7 @@ import { RegressionChartSchema } from './schema';
 export const RegressionChartEncodingSlots = ['x', 'y', 'series', 'row', 'column', 'facet'] as const;
 
 const regressionMarkPropertySlots = ['method', 'sampleCount', 'extent', 'point', 'trend'] as const;
-const regressionPropertySlots = [...regressionMarkPropertySlots, 'domainPadding'] as const;
+const regressionPropertySlots = [...regressionMarkPropertySlots, 'domainPadding', 'autoPadding'] as const;
 const seriesScaleName = pointRecipeId(ChartType.Regression, 'scale.series');
 
 const regressionFieldConsumers = [

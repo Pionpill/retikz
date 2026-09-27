@@ -106,7 +106,11 @@ describe('Chart Vanilla normalization', () => {
         size: 'population',
         column: 'continent',
       },
-      properties: { opacity: 0.75, domainPadding: { kind: 'ratio', default: 0.04, left: 0.02 } },
+      properties: {
+        opacity: 0.75,
+        autoPadding: 'point-aware',
+        domainPadding: { kind: 'ratio', default: 0.04, left: 0.02 },
+      },
       marks: [{ kind: 'bubble', properties: { strokeWidth: 1 } }],
     });
 
@@ -124,7 +128,11 @@ describe('Chart Vanilla normalization', () => {
           size: 'population',
           column: { field: 'continent' },
         },
-        properties: { opacity: 0.75, domainPadding: { kind: 'ratio', default: 0.04, left: 0.02 } },
+        properties: {
+          opacity: 0.75,
+          autoPadding: 'point-aware',
+          domainPadding: { kind: 'ratio', default: 0.04, left: 0.02 },
+        },
         marks: [{ kind: 'bubble', properties: { strokeWidth: 1 } }],
       },
     });

@@ -68,6 +68,7 @@ import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../
 import { resolveCoordinateFrame } from '../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import { resolveMarkOperation } from '../../resolve/mark';
+import { createMarkPaddingContext, markDomainPaddingOf } from '../../resolve/scale';
 import { orderedCategoryDomain, resolveChannelScale, resolvePositionScaleContinuity } from '../../resolve/scale';
 import {
   resolveAxisGuideTokens,
@@ -397,6 +398,7 @@ export const lowerPlotWithDataArtifact = (
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
     coordinate: source.coordinate,
+    markPadding,
     rows: frameDataView.rows,
     fieldTypes: frameDataView.fieldTypes,
     fieldTypeEvidence: frameDataView.fieldTypeEvidence,
@@ -434,7 +436,11 @@ export const lowerPlotWithDataArtifact = (
     resolveColorScheme,
     palette: resolvedTheme.palette,
   };
+  const markPadding = node.scales.some(scale => markDomainPaddingOf(scale) !== undefined)
+    ? createMarkPaddingContext(channelCtx)
+    : undefined;
   const scopedFramesContext = {
+    markPadding,
     node,
     dataView: rootDataView,
     width,
@@ -560,7 +566,31 @@ export const lowerPlotWithDataArtifact = (
   };
 
   let scopedFramesResolution = resolveScopedFrames(scopedFramesContext);
-  if (compositionFacets.length === 0) {
+  if (markPadding !== undefined) {
+    const boundaryRangesByScope = frameRoleRangesOf(scopedFramesResolution.frameByScope);
+    let placementRangesByScope: ScopedPlacementRanges = new Map();
+    let stable = false;
+    for (let pass = 0; pass < 12; pass += 1) {
+      const nextRanges =
+        compositionFacets.length === 0
+          ? resolveScopedPlacementRanges(scopedFramesResolution.frameByScope, boundaryRangesByScope)
+          : new Map();
+      const placementStable = placementRangesEqual(placementRangesByScope, nextRanges);
+      placementRangesByScope = nextRanges;
+      markPadding.beginLayout();
+      scopedFramesResolution = resolveScopedFrames({
+        ...scopedFramesContext,
+        placementRoleRangeOverridesByScope: placementRangesByScope,
+      });
+      const paddingStable = markPadding.finishLayout();
+      if (paddingStable && placementStable) {
+        stable = true;
+        break;
+      }
+    }
+    if (!stable) throw new RetikzPlotError('mark domainPadding shared layout did not converge');
+  }
+  if (compositionFacets.length === 0 && markPadding === undefined) {
     const boundaryRangesByScope = frameRoleRangesOf(scopedFramesResolution.frameByScope);
     let placementRangesByScope: ScopedPlacementRanges = new Map();
     let didPlacementConverge = false;
@@ -878,6 +908,8 @@ export const lowerPlotWithDataArtifact = (
           margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
           labelGap: panelLayout?.labelGap,
           markDataViews: sharedFacetMarkDataViews,
+          domainPaddingScope: panel.id,
+          paddingMarkDataViews: panelMarkDataViews,
           roleMarkDataViews,
           ...(roleRangeOverrides === undefined ? {} : { roleRangeOverrides }),
         });
@@ -950,146 +982,190 @@ export const lowerPlotWithDataArtifact = (
       return resolution;
     };
 
-    const panelScopes: Array<IRScope> = panels.map((panel, panelIndex) => {
-      const panelAxisGuides = facetAxisGuidesForPanel(panel);
-      const panelFrameGuides = facetFrameGuidesForPanel(panel);
-      const panelResult = panelMarkResults[panelIndex];
-      const panelDataView = panelResult.panelDataView;
-      const panelMarkDataViews = panelResult.markResults.map(markResult => markResult.markDataView);
-      const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
-      for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
-        if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
+    const resolvePanelFrames = () =>
+      panels.map((panel, panelIndex) => {
+        const panelAxisGuides = facetAxisGuidesForPanel(panel);
+        const panelFrameGuides = facetFrameGuidesForPanel(panel);
+        const panelResult = panelMarkResults[panelIndex];
+        const panelDataView = panelResult.panelDataView;
+        const panelMarkDataViews = panelResult.markResults.map(markResult => markResult.markDataView);
+        const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
+        for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
+          if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
+        }
+        const panelNode: IRPlot = {
+          ...node,
+          coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
+          composition: undefined,
+          marks: node.marks,
+          guides: panelFrameGuides,
+        };
+        const panelLayout = arrangementLayoutOf(panel.facet);
+        const frameResolution = resolveFacetFrameWithPlacement(
+          panel,
+          panelNode,
+          panelDataView,
+          panelMarkDataViews,
+          panelFrameGuides,
+          panelLayout,
+          roleMarkDataViews,
+        );
+        return {
+          panel,
+          panelAxisGuides,
+          panelFrameGuides,
+          panelDataView,
+          panelMarkDataViews,
+          roleMarkDataViews,
+          panelNode,
+          panelLayout,
+          frameResolution,
+        };
+      });
+    let preparedPanels = resolvePanelFrames();
+    if (markPadding !== undefined) {
+      let stable = false;
+      for (let pass = 0; pass < 12; pass += 1) {
+        markPadding.beginLayout();
+        preparedPanels = resolvePanelFrames();
+        if (markPadding.finishLayout()) {
+          stable = true;
+          break;
+        }
       }
-      const panelNode: IRPlot = {
-        ...node,
-        coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
-        composition: undefined,
-        marks: node.marks,
-        guides: panelFrameGuides,
-      };
-      const panelLayout = arrangementLayoutOf(panel.facet);
-      const frameResolution = resolveFacetFrameWithPlacement(
+      if (!stable) throw new RetikzPlotError('mark domainPadding facet layout did not converge');
+    }
+    const panelScopes: Array<IRScope> = preparedPanels.map(
+      ({
         panel,
-        panelNode,
+        panelAxisGuides,
+        panelFrameGuides,
         panelDataView,
         panelMarkDataViews,
-        panelFrameGuides,
-        panelLayout,
         roleMarkDataViews,
-      );
-      const axisResolution =
-        panelAxisGuides.length === panelFrameGuides.length
-          ? frameResolution
-          : resolveCoordinateFrame(
-              { ...panelNode, guides: panelAxisGuides },
-              coordinateResolveContextOf({ ...panelNode, guides: panelAxisGuides }, panelDataView, panelAxisGuides, {
-                width: panelWidth,
-                height: panelHeight,
-                margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
-                labelGap: panelLayout?.labelGap,
-                plotAreaOverride: frameResolution.plotArea,
-                markDataViews: sharedFacetMarkDataViews,
-                roleMarkDataViews,
-              }),
+        panelNode,
+        panelLayout,
+        frameResolution,
+      }) => {
+        if (markPadding !== undefined) frameByScope.set(panel.id, frameResolution.frame);
+        const axisResolution =
+          panelAxisGuides.length === panelFrameGuides.length
+            ? frameResolution
+            : resolveCoordinateFrame(
+                { ...panelNode, guides: panelAxisGuides },
+                coordinateResolveContextOf({ ...panelNode, guides: panelAxisGuides }, panelDataView, panelAxisGuides, {
+                  width: panelWidth,
+                  height: panelHeight,
+                  margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+                  labelGap: panelLayout?.labelGap,
+                  plotAreaOverride: frameResolution.plotArea,
+                  markDataViews: sharedFacetMarkDataViews,
+                  domainPaddingScope: panel.id,
+                  paddingMarkDataViews: panelMarkDataViews,
+                  roleMarkDataViews,
+                }),
+              );
+        const panelGridGuides = facetGridGuidesForPanel(panel);
+        const gridResolution =
+          panelGridGuides.length > 0
+            ? resolveCoordinateFrame(
+                { ...panelNode, guides: panelGridGuides },
+                coordinateResolveContextOf({ ...panelNode, guides: panelGridGuides }, panelDataView, panelGridGuides, {
+                  width: panelWidth,
+                  height: panelHeight,
+                  margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
+                  labelGap: panelLayout?.labelGap,
+                  plotAreaOverride: frameResolution.plotArea,
+                  markDataViews: sharedFacetMarkDataViews,
+                  domainPaddingScope: panel.id,
+                  paddingMarkDataViews: panelMarkDataViews,
+                  roleMarkDataViews,
+                }),
+              )
+            : undefined;
+        const facetContext: JsonObject = { id: panel.facet.id };
+        if (panel.row !== undefined) facetContext.row = panel.row;
+        if (panel.column !== undefined) facetContext.column = panel.column;
+        const panelContext: JsonObject = { coordinateView: panel.id, facet: facetContext };
+        const backgroundNode = plotBackgroundNode(
+          frameResolution.plotArea,
+          frameResolution.frame,
+          resolvedTheme.plotArea?.fill,
+          resolvedTheme.typography.textColor ?? 'currentColor',
+        );
+        const markLayers: Array<IRChild> = node.marks
+          .map((mark, markIndex) => {
+            const markDataView = panelMarkDataViews[markIndex]?.dataView ?? panelDataView;
+            const markRows = markDataView.rows;
+            const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
+            const markChannels = resolveMarkChannels(mark, {
+              ...channelCtx,
+              rows: markRows,
+              fieldTypes: markDataView.fieldTypes,
+              fieldTypeEvidence: markDataView.fieldTypeEvidence,
+              defaultColor: categoricalColorAt(
+                resolvedTheme.palette.series,
+                defaultColorPaletteIndices[markIndex] ?? markIndex,
+              ),
+            });
+            const positions = resolveMarkPlacement(
+              operationResolution,
+              markRows,
+              frameResolution.frame,
+              markChannels,
+              { width: panelWidth, height: panelHeight },
+              positionAdjustmentRegistry,
             );
-      const panelGridGuides = facetGridGuidesForPanel(panel);
-      const gridResolution =
-        panelGridGuides.length > 0
-          ? resolveCoordinateFrame(
-              { ...panelNode, guides: panelGridGuides },
-              coordinateResolveContextOf({ ...panelNode, guides: panelGridGuides }, panelDataView, panelGridGuides, {
-                width: panelWidth,
-                height: panelHeight,
-                margin: mergeCompositionMargin(panelLayout?.padding, options.margin),
-                labelGap: panelLayout?.labelGap,
-                plotAreaOverride: frameResolution.plotArea,
-                markDataViews: sharedFacetMarkDataViews,
-                roleMarkDataViews,
-              }),
-            )
-          : undefined;
-      const facetContext: JsonObject = { id: panel.facet.id };
-      if (panel.row !== undefined) facetContext.row = panel.row;
-      if (panel.column !== undefined) facetContext.column = panel.column;
-      const panelContext: JsonObject = { coordinateView: panel.id, facet: facetContext };
-      const backgroundNode = plotBackgroundNode(
-        frameResolution.plotArea,
-        frameResolution.frame,
-        resolvedTheme.plotArea?.fill,
-        resolvedTheme.typography.textColor ?? 'currentColor',
-      );
-      const markLayers: Array<IRChild> = node.marks
-        .map((mark, markIndex) => {
-          const markDataView = panelMarkDataViews[markIndex]?.dataView ?? panelDataView;
-          const markRows = markDataView.rows;
-          const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
-          const markChannels = resolveMarkChannels(mark, {
-            ...channelCtx,
-            rows: markRows,
-            fieldTypes: markDataView.fieldTypes,
-            fieldTypeEvidence: markDataView.fieldTypeEvidence,
-            defaultColor: categoricalColorAt(
-              resolvedTheme.palette.series,
-              defaultColorPaletteIndices[markIndex] ?? markIndex,
+            const layer = lowerMark(operationResolution, markRows, frameResolution.frame, markChannels, {
+              markIndex,
+              plotId: node.id,
+              ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
+              anchors: anchorRegistry,
+              ...(positions !== undefined ? { positions } : {}),
+            });
+            return layer === null ? null : withScopeContext(layer, panelContext);
+          })
+          .filter((layer): layer is IRChild => layer !== null);
+        const meta: JsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
+        if (panel.row !== undefined) meta.row = panel.row;
+        if (panel.column !== undefined) meta.column = panel.column;
+        const base: IRScope = {
+          type: 'scope',
+          id: panel.id,
+          localNamespace: true,
+          meta,
+          children: [
+            ...(backgroundNode ? [backgroundNode] : []),
+            ...(gridResolution?.gridLayers ?? []).map(layer =>
+              withGuideMasterColor(
+                withFacetGuideContext(layer, panelContext, node.id, panel.id),
+                resolvedTheme.typography.textColor ?? 'currentColor',
+              ),
             ),
-          });
-          const positions = resolveMarkPlacement(
-            operationResolution,
-            markRows,
-            frameResolution.frame,
-            markChannels,
-            { width: panelWidth, height: panelHeight },
-            positionAdjustmentRegistry,
-          );
-          const layer = lowerMark(operationResolution, markRows, frameResolution.frame, markChannels, {
-            markIndex,
-            plotId: node.id,
-            ...(provenance !== undefined ? { provenance: { context: provenance, markIndex, registerDatumId } } : {}),
-            anchors: anchorRegistry,
-            ...(positions !== undefined ? { positions } : {}),
-          });
-          return layer === null ? null : withScopeContext(layer, panelContext);
-        })
-        .filter((layer): layer is IRChild => layer !== null);
-      const meta: JsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
-      if (panel.row !== undefined) meta.row = panel.row;
-      if (panel.column !== undefined) meta.column = panel.column;
-      const base: IRScope = {
-        type: 'scope',
-        id: panel.id,
-        localNamespace: true,
-        meta,
-        children: [
-          ...(backgroundNode ? [backgroundNode] : []),
-          ...(gridResolution?.gridLayers ?? []).map(layer =>
-            withGuideMasterColor(
-              withFacetGuideContext(layer, panelContext, node.id, panel.id),
-              resolvedTheme.typography.textColor ?? 'currentColor',
+            ...markLayers,
+            ...axisResolution.axisLayers.map(layer =>
+              withGuideMasterColor(
+                withFacetGuideContext(layer, panelContext, node.id, panel.id),
+                resolvedTheme.typography.textColor ?? 'currentColor',
+              ),
             ),
-          ),
-          ...markLayers,
-          ...axisResolution.axisLayers.map(layer =>
-            withGuideMasterColor(
-              withFacetGuideContext(layer, panelContext, node.id, panel.id),
-              resolvedTheme.typography.textColor ?? 'currentColor',
-            ),
-          ),
-        ],
-      };
-      const translateX = rowLabelWidth + panel.columnIndex * panelStrideX;
-      const translateY = panel.rowIndex * panelStrideY;
-      if (translateX === 0 && translateY === 0) return base;
-      return {
-        ...base,
-        transforms: [
-          {
-            kind: 'translate',
-            x: translateX,
-            y: translateY,
-          },
-        ],
-      };
-    });
+          ],
+        };
+        const translateX = rowLabelWidth + panel.columnIndex * panelStrideX;
+        const translateY = panel.rowIndex * panelStrideY;
+        if (translateX === 0 && translateY === 0) return base;
+        return {
+          ...base,
+          transforms: [
+            {
+              kind: 'translate',
+              x: translateX,
+              y: translateY,
+            },
+          ],
+        };
+      },
+    );
 
     anchorRegistry.assertResolved();
     const children: Array<IRChild> = [...panelScopes, ...facetLabelScopes];

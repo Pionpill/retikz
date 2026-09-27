@@ -402,6 +402,28 @@ const linearScaleDefinition = defineScale<IRPlotLinearScale>({
   family: 'position',
   continuity: 'continuous',
   schema: LinearScaleSchema,
+  domainPadding: (def, values) => {
+    const base = resolveLinearScale({ ...def, clamp: false }, values.filter(isFiniteNumber), [0, 1]).range([0, 1]);
+    const [start, end] = base.domain();
+    return {
+      normalize: value => (isFiniteNumber(value) ? base(value) : NaN),
+      createScale: (padding, range) => {
+        const span = (end - start) / (1 - padding.lower - padding.upper);
+        return linearPositionScale(
+          resolveLinearScale(
+            {
+              ...def,
+              nice: false,
+              domain: [start - span * padding.lower, end + span * padding.upper],
+              range: [range[0], range[1]],
+            },
+            [],
+            range,
+          ),
+        );
+      },
+    };
+  },
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
   resolve: (def, values, range) => linearPositionScale(resolveLinearScale(def, values.filter(isFiniteNumber), range)),
@@ -475,6 +497,43 @@ const timeScaleDefinition = defineScale<IRPlotTimeScale>({
   family: 'position',
   continuity: 'continuous',
   schema: TimeScaleSchema,
+  domainPadding: (def, values) => {
+    const base = resolveTimeScale(def, values, [0, 1]).range([0, 1]).clamp(false);
+    const [startDate, endDate] = base.domain();
+    const start = startDate.getTime();
+    const end = endDate.getTime();
+    return {
+      normalize: value => {
+        const stamp = coerceTimestamp(value);
+        return stamp === null ? NaN : base(stamp);
+      },
+      createScale: (padding, range) => {
+        const span = (end - start) / (1 - padding.lower - padding.upper);
+        // Date 会截断不足一毫秒的域扩展；位置保留数值精度，时间 provider 仍负责刻度
+        const domain: [number, number] = [start - span * padding.lower, end + span * padding.upper];
+        const position = linearPositionScale(
+          d3ScaleLinear()
+            .domain(domain)
+            .range([range[0], range[1]])
+            .clamp(def.clamp ?? false),
+        );
+        const time = timePositionScale(resolveTimeScale({ ...def, nice: false, domain }, [], range));
+        return {
+          ...position,
+          coordinate: value => {
+            const stamp = coerceTimestamp(value);
+            return stamp === null ? NaN : position.coordinate(stamp);
+          },
+          tickKind: 'time',
+          ticks: time.ticks,
+          setRange: next => {
+            position.setRange(next);
+            time.setRange(next);
+          },
+        };
+      },
+    };
+  },
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: true,
   resolve: (def, values, range) => timePositionScale(resolveTimeScale(def, values, range)),

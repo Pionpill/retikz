@@ -13,7 +13,12 @@ import { array, boolean, enum as zodEnum, literal, number, strictObject, union }
 
 import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import { PointPositionDomainPaddingSchema, PointPropertiesSchema, PointRecipeGuidesSchema } from '../shared';
+import {
+  PointAutoPaddingSchema,
+  PointPositionDomainPaddingSchema,
+  PointPropertiesSchema,
+  PointRecipeGuidesSchema,
+} from '../shared';
 import { ConnectedScatterChartEncodingsSchema } from './encoding-schema';
 
 /** Connected Scatter Point member constants without layer ownership */
@@ -43,6 +48,7 @@ const ConnectedScatterMarkPropertiesSchema = strictObject({
 
 /** Connected Scatter recipe properties */
 export const ConnectedScatterChartPropertiesSchema = ConnectedScatterMarkPropertiesSchema.extend({
+  autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 }).describe('Connected Scatter recipe properties');
 

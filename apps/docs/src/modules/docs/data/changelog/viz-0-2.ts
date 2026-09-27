@@ -55,6 +55,13 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：逐点自动留白', en: 'Unreleased: point-aware padding' },
+          content: {
+            zh: 'domainPadding 新增 mark 引用分支，经 Mark / Scale / Coordinate Definition capability 在渲染前有界求解，共享比例尺联合满足面板约束；无解或不支持的组合明确报错。',
+            en: 'domainPadding adds a mark-reference branch using Mark / Scale / Coordinate capabilities for bounded pre-render solving. Shared scales combine panel constraints; infeasible or unsupported combinations produce errors.',
+          },
+        },
+        {
           label: { zh: 'Plot-owned 主题主链', en: 'Plot-owned theme pipeline' },
           content: {
             zh: '42 个 `PlotThemeToken`、随 mode 变化的默认 light/dark preset、开放 style definition、Axis scoped rules、确定性 cascade 与原生 `IRPlotTheme` 映射由 Plot 统一维护；局部 token 与 rule 走同一解析路径。',

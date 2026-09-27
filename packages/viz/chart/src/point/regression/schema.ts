@@ -17,7 +17,12 @@ import { array, boolean, enum as zodEnum, literal, number, strictObject, union }
 
 import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import { PointPositionDomainPaddingSchema, PointPropertiesSchema, PointRecipeGuidesSchema } from '../shared';
+import {
+  PointAutoPaddingSchema,
+  PointPositionDomainPaddingSchema,
+  PointPropertiesSchema,
+  PointRecipeGuidesSchema,
+} from '../shared';
 import { RegressionChartEncodingsSchema } from './encoding-schema';
 
 /** Regression 原始观测点的完整常量 properties */
@@ -69,6 +74,7 @@ const RegressionMarkPropertiesSchema = RegressionPropertiesBaseSchema.superRefin
 
 /** Regression recipe 的拟合、外观与位置 domain 留白 */
 export const RegressionChartPropertiesSchema = RegressionPropertiesBaseSchema.extend({
+  autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 })
   .superRefine(refineRegressionProperties)

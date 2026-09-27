@@ -36,7 +36,7 @@ export const CategoryValueSchema = union([string(), number()]).describe(
 );
 
 const DomainPaddingObjectSchema = strictObject({
-  kind: zodEnum(PlotDomainPaddingKind)
+  kind: zodEnum([PlotDomainPaddingKind.Range, PlotDomainPaddingKind.Ratio])
     .optional()
     .describe('Padding unit: range output units by default, or an explicit source-domain-span ratio'),
   lower: NonNegativeNumberSchema.optional().describe('Padding applied beyond the lower source domain bound'),
@@ -62,13 +62,35 @@ const DomainPaddingObjectSchema = strictObject({
   }
 });
 
-export const DomainPaddingSchema = union([NonNegativeNumberSchema, DomainPaddingObjectSchema]).describe(
-  'Position scale domain padding; numbers and omitted kind use range output units, while kind ratio uses source domain span fractions',
+/** 指定图元提供的逐点自动留白约束 */
+export const MarkDomainPaddingSchema = strictObject({
+  kind: literal('mark').describe('Compute automatic ends from named mark extents'),
+  marks: array(NonBlankStringSchema)
+    .min(1)
+    .refine(marks => new Set(marks).size === marks.length, 'Duplicate mark reference')
+    .describe('Nonempty unique mark identities consuming this position scale'),
+  lower: NonNegativeNumberSchema.optional().describe(
+    'Fixed padding at the first domain end in range units; omitted means automatic',
+  ),
+  upper: NonNegativeNumberSchema.optional().describe(
+    'Fixed padding at the last domain end in range units; omitted means automatic',
+  ),
+}).refine(
+  padding => padding.lower === undefined || padding.upper === undefined,
+  'Use range padding when both ends are fixed',
+);
+
+export const DomainPaddingSchema = union([
+  NonNegativeNumberSchema,
+  DomainPaddingObjectSchema,
+  MarkDomainPaddingSchema,
+]).describe(
+  'Position scale domain padding; numbers and omitted kind use range output units, kind ratio uses source domain span fractions, and kind mark derives automatic ends from mark extents',
 );
 
 const ContinuousPositionDomainShape = {
   domainPadding: DomainPaddingSchema.optional().describe(
-    'Padding added to the resolved domain. Numbers use range output units; kind ratio uses source domain span fractions. Omitted padding defaults to 0',
+    'Padding added to the resolved domain. Numbers use range output units; kind ratio uses source domain span fractions. The mark branch computes automatic ends from named mark extents. Omitted padding defaults to 0',
   ),
   singleValueSpan: PositiveNumberSchema.optional().describe(
     'Fallback domain span used when the resolved domain collapses to a single value',

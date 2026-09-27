@@ -98,8 +98,11 @@ Facet creates each panel data view before Smooth fits within it. Shared or indep
 | `sampleCount?`   | `number`                                                                | `64`                       | Predicted samples per group; an integer of at least 2                |
 | `extent?`        | `[number, number]`                                                      | current finite x domain    | Trend sampling interval; lower bound must be smaller than upper      |
 | `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius | Configures continuous position-scale range or explicit ratio padding |
+| `autoPadding?` | `'max-radius'` \| `'point-aware'` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
 | `point?`         | `IRRegressionPointProperties`                                           | Point defaults             | Full Point constant properties for raw observations                  |
 | `trend?`         | `IRRegressionTrendProperties`                                           | Path defaults              | Constant Path stroke, width, opacity, caps, shadows, and peers       |
+
+`autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [scatter padding policies](/viz/chart/points/scatter#automatic-edge-padding).
 
 When `series` exists, its field color takes precedence over `point.color`, `point.fill`, and `trend.stroke`; other constant appearance remains effective. Points, trends, and the legend therefore keep one categorical scale identity.
 

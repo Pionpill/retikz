@@ -138,6 +138,7 @@ const domainPaddingOf = (
   role: PointPositionRole,
   scale: IRPlotScaleOperation,
   radius: number,
+  marks?: () => Array<string>,
 ): IRPlotDomainPadding => {
   const kind =
     typeof padding === 'object' ? (padding.kind ?? PlotDomainPaddingKind.Range) : PlotDomainPaddingKind.Range;
@@ -155,6 +156,29 @@ const domainPaddingOf = (
       ? rawRange
       : undefined;
   const increasing = range === undefined ? role === 'x' : range[1] >= range[0];
+  if (marks !== undefined && kind === PlotDomainPaddingKind.Range) {
+    const explicitStart = visualPaddingOf(padding, role, startSide, NaN);
+    const explicitEnd = visualPaddingOf(padding, role, endSide, NaN);
+    if (Number.isNaN(explicitStart) || Number.isNaN(explicitEnd)) {
+      const references = marks();
+      if (references.length > 0)
+        return {
+          kind: 'mark',
+          marks: references,
+          ...(!Number.isNaN(increasing ? explicitStart : explicitEnd)
+            ? { lower: increasing ? explicitStart : explicitEnd }
+            : {}),
+          ...(!Number.isNaN(increasing ? explicitEnd : explicitStart)
+            ? { upper: increasing ? explicitEnd : explicitStart }
+            : {}),
+        };
+      return {
+        kind: 'range',
+        lower: increasing ? start : end,
+        upper: increasing ? end : start,
+      };
+    }
+  }
   return {
     kind,
     lower: increasing ? start : end,
@@ -168,7 +192,17 @@ export const resolvePointScaleDefaults = (
 ): ReadonlyArray<IRPlotScaleOperation> => {
   const padding = context.source.recipe.properties?.domainPadding as IRPointPositionDomainPadding | undefined;
   assertSpecificSidesSupport(padding, context.spatial);
-  const radius = maximumPointRadiusOf(context.chartMarks, context.scales);
+  const pointAware = context.source.recipe.properties?.autoPadding === 'point-aware';
+  const radius = pointAware ? 0 : maximumPointRadiusOf(context.chartMarks, context.scales);
+  const marks = pointAware
+    ? () =>
+        context.chartMarks.flatMap((mark, index) =>
+          isBuiltinMark(mark) &&
+          (mark.type === PlotMark.Point || (mark.type === PlotMark.Relation && mark.endpoints !== undefined))
+            ? [context.identifyMark(index)]
+            : [],
+        )
+    : undefined;
   const roleByScaleName = new Map<string, PointPositionRole>([
     [pointRecipeId(context.source.recipe.chartType, 'scale.x'), 'x'],
     [pointRecipeId(context.source.recipe.chartType, 'scale.y'), 'y'],
@@ -190,7 +224,7 @@ export const resolvePointScaleDefaults = (
     ) {
       return scale;
     }
-    return { ...scale, domainPadding: domainPaddingOf(padding, role, scale, radius) };
+    return { ...scale, domainPadding: domainPaddingOf(padding, role, scale, radius, marks) };
   });
 };
 

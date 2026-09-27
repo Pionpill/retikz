@@ -26,7 +26,7 @@ import { StripChartSchema } from './schema';
 /** Strip exact schema、调度与消费检查共用的 encoding 顺序 */
 export const StripChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape'] as const;
 
-const stripPropertySlots = [...pointPropertySlots, 'jitter', 'domainPadding'] as const;
+const stripPropertySlots = [...pointPropertySlots, 'jitter', 'domainPadding', 'autoPadding'] as const;
 
 const invalidStripTopology = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
   new RetikzChartError({

@@ -290,7 +290,7 @@ describe('Typed Point Chart React declarations', () => {
       data: { reference: 'parity.rows' },
       layout: { width: 320, height: 180 },
       presentation: { title: 'Parity' },
-      recipe: { encodings: { x: 'x', y: 'y' }, properties: { opacity: 0.5 } },
+      recipe: { encodings: { x: 'x', y: 'y' }, properties: { opacity: 0.5, autoPadding: 'point-aware' } },
     });
     const declarations = inputOf(
       ScatterChart,
@@ -299,7 +299,7 @@ describe('Typed Point Chart React declarations', () => {
         <ChartLayout layout={{ width: 320, height: 180 }} />
         <ChartTitle>Parity</ChartTitle>
         <ScatterEncodings x="x" y="y" />
-        <ScatterProperties opacity={0.5} />
+        <ScatterProperties opacity={0.5} autoPadding="point-aware" />
       </>,
     );
 

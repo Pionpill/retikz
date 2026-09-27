@@ -17,6 +17,8 @@ Scales are named mappings from data values to positions or visual values. Coordi
 
 Continuous positional scales share `domainPadding` and `singleValueSpan`. Bare numbers and objects without `kind` use range output units; `kind: 'ratio'` explicitly uses a fraction of the original domain span. Both inferred and explicit domains default to no padding.
 
+`kind: 'mark'` references named marks to solve automatic ends from their extents; optional `lower` / `upper` fix one end. Built-in support covers linear/time with Cartesian2D and no placement. See [padding from mark extents](/viz/plot/scale/position#padding-from-mark-extents) for capabilities and errors.
+
 ### LinearScaleSchema
 
 <ZodSchema name="LinearScaleSchema" />

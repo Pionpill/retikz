@@ -85,7 +85,10 @@ Polar projection still happens after role-space spread: x is angle and y is radi
 | `jitter.distribution.kind`   | `'uniform' \| 'normal'`                                                 | `uniform`                                              | Distribution discriminator                                                    |
 | `jitter.distribution.sigma?` | `number`                                                                | `0.5`                                                  | Normal only; standard deviation relative to the jitter half-span, positive    |
 | `domainPadding?`             | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius                             | Configures only the continuous scale; Plot placement contains discrete spread |
+| `autoPadding?` | `'max-radius'` \| `'point-aware'` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
 | Point appearance             | `IRPointProperties`                                                     | Point defaults                                         | Constant `size`, `shape`, paint, stroke, opacity, and related styling         |
+
+`autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [scatter padding policies](/viz/chart/points/scatter#automatic-edge-padding).
 
 ### `StripMarkProps`
 

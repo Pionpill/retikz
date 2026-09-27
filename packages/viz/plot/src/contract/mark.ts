@@ -8,6 +8,7 @@ import type { IRPlotMark, IRPlotMarkOperation } from '../schemas';
 import type { MarkLoweringContext } from './anchor';
 import type { ChannelDefinitionKindValue, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
+import type { MarkDomainPaddingCapability } from './domain-padding';
 import type { MarkPlacementTarget } from './position-adjustment';
 
 /**
@@ -66,6 +67,8 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
       channels: MarkChannels,
     ) => number | undefined;
   };
+  /** 逐点域留白目标，与 placement 及 renderer 无关 */
+  domainPadding?: MarkDomainPaddingCapability<T>;
   /** 下沉到 core IR 图层（无可绘制图元返回 null；不支持的 mark × coordinate 由实现 fail-loud） */
   lower: (
     mark: T,
@@ -104,6 +107,8 @@ export const extractMarkType = (schema: ZodType): string => {
  * @description registry 需要存放不同 mark 子类型的 definition；真正调用前由 lowerMark 按 type 取出，行为函数入参用 never 防误调
  */
 export type AnyMarkDefinition = {
+  /** 注册后按具体 operation 调用的域留白能力 */
+  domainPadding?: MarkDomainPaddingCapability<never>;
   /** 不同 definition 的 schema 泛型不同，registry 只关心 type 提取与运行时 parse */
   schema: ZodType;
   /** 内部宽类型占位；按 type 取出后调用方已知具体 mark */

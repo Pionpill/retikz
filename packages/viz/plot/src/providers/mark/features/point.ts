@@ -8,8 +8,10 @@ import type {
   MarkDefinition,
   MarkLoweringContext,
 } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
 import { PlotMark, PointMarkSchema } from '../../../schemas';
+import { channelValue } from '../../channel';
 import type { MarkPaint } from '../shared';
 import {
   attachDatumAnchor,
@@ -183,6 +185,21 @@ const maximumScaleOf = (scale: number | IRAxisScale | undefined): number => {
 /** 内置 point mark definition */
 export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
   schema: PointMarkSchema,
+  domainPadding: (mark, rows, roles, channels) => {
+    if (mark.encoding.text !== undefined)
+      throw new RetikzPlotError('Text points do not provide size-only domain padding');
+    const size = channels.nodeDeliveries?.find(delivery => delivery.channel === 'size');
+    return rows.flatMap(row => {
+      const radius =
+        size === undefined
+          ? mark.size?.kind === 'constant'
+            ? mark.size.value
+            : POINT_DEFAULT_RADIUS
+          : (size.resolver(row) as number | undefined);
+      if (radius === undefined) return [];
+      return [{ values: roles.map(role => channelValue(mark.encoding[role], row)), extent: roles.map(() => radius) }];
+    });
+  },
   channelKinds: nodeChannelKinds,
   collectFields: (mark, fields: FieldCollector) => {
     collectCommonEncodingFields(mark, fields);
