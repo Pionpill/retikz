@@ -34,11 +34,11 @@ import GridEnDemo from '../../src/modules/docs/contents/library/layout/grid-layo
 import GridZhDemo from '../../src/modules/docs/contents/library/layout/grid-layout/usage/grid-layout-basic.zh.demo';
 import { previewSource as nestedEnSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.en.demo';
 import { previewSource as nestedZhSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.zh.demo';
-import OverlayEnDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-basic.en.demo';
-import OverlayZhDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-basic.zh.demo';
-import { previewControlContract as overlayZhContract } from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-playground.controls';
-import { previewSource as overlayPlaygroundSource } from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-playground.demo';
-import { previewControlContract as overlayEnContract } from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-playground.en.controls';
+import { previewControlContract as overlayZhContract } from '../../src/modules/docs/contents/library/layout/overlay-layout/extended/overlay-layout-playground.controls';
+import { previewSource as overlayPlaygroundSource } from '../../src/modules/docs/contents/library/layout/overlay-layout/extended/overlay-layout-playground.demo';
+import { previewControlContract as overlayEnContract } from '../../src/modules/docs/contents/library/layout/overlay-layout/extended/overlay-layout-playground.en.controls';
+import OverlayEnDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/usage/overlay-layout-basic.en.demo';
+import OverlayZhDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/usage/overlay-layout-basic.zh.demo';
 
 const FlexPlaygroundCanonical: FC = () => flexPlaygroundSource.canonicalRender!();
 const GridPlaygroundCanonical: FC = () => gridPlaygroundSource.canonicalRender!();

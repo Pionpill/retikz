@@ -135,40 +135,51 @@ React `FlexLayoutProps` mirrors the container fields below but changes `children
 
 ## Container allocation and alignment
 
+Choose the main axis and available size first. `gap` reserves fixed spacing; `justifyContent` distributes space remaining after items and gaps. They can be combined.
+
+## Item constraints
+
+`basis` sets the main-axis basis, `grow` and `shrink` distribute surplus or deficit, and `min` / `max` bound the result. Start from content sizing and add weights when proportional allocation is needed.
+
+## Related props
+
+Look up container and item fields used on this page below. See [Schema reference](/library/layout/flex-layout/schema-reference) for the complete persistent input.
+
 <ComponentProps
   items={[
     {
       name: 'size',
       kind: 'property',
-      type: 'LayoutSizeInput',
-      description: 'Per-axis allocation policy; `fill` requires finite parent space',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        'Configure x / y independently: `{ kind: "content", min?, max? }` sizes from content; `{ kind: "fixed", value }` fixes size; `{ kind: "fill", min?, max? }` fills finite parent space.',
       defaultValue: 'content / content',
     },
     {
       name: 'padding',
       kind: 'property',
-      type: 'number | IRBoxSpacing',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
       description: 'Insets from the allocation box to the content box',
       defaultValue: '0',
     },
     {
       name: 'overflow',
       kind: 'property',
-      type: 'LayoutOverflow',
+      type: "'visible' | 'clip'",
       description: '`clip` creates one Scope clip at the container allocation',
       defaultValue: "'visible'",
     },
     {
       name: 'direction',
       kind: 'property',
-      type: 'FlexLayoutDirection',
+      type: "'row' | 'row-reverse' | 'column' | 'column-reverse'",
       description: 'Main axis and forward or reverse traversal',
       defaultValue: "'row'",
     },
     {
       name: 'wrap',
       kind: 'property',
-      type: 'FlexLayoutWrap',
+      type: "'nowrap' | 'wrap' | 'wrap-reverse'",
       description: 'One line, wrapping, or reversed cross placement',
       defaultValue: "'nowrap'",
     },
@@ -182,21 +193,21 @@ React `FlexLayoutProps` mirrors the container fields below but changes `children
     {
       name: 'justifyContent',
       kind: 'property',
-      type: 'FlexMainDistributionValue',
+      type: "'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'",
       description: 'Main-axis free-space distribution within each line',
       defaultValue: "'start'",
     },
     {
       name: 'alignItems',
       kind: 'property',
-      type: 'LayoutAlignment',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
       description: 'Default cross alignment; column directions reject baseline',
       defaultValue: "'stretch'",
     },
     {
       name: 'alignContent',
       kind: 'property',
-      type: 'LayoutDistribution',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
       description: 'Cross-axis free-space distribution between multiple lines',
       defaultValue: "'start'",
     },
@@ -209,8 +220,6 @@ React `FlexLayoutProps` mirrors the container fields below but changes `children
     },
   ]}
 />
-
-## Item constraints
 
 <ComponentProps
   items={[
@@ -238,7 +247,7 @@ React `FlexLayoutProps` mirrors the container fields below but changes `children
     {
       name: 'margin',
       kind: 'property',
-      type: 'number | IRBoxSpacing',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
       description: 'Spacing outside the slot and excluded from the child proposal',
       defaultValue: '0',
     },
@@ -280,7 +289,7 @@ React `FlexLayoutProps` mirrors the container fields below but changes `children
     {
       name: 'alignSelf',
       kind: 'property',
-      type: 'LayoutAlignment',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
       description: 'Overrides cross alignment for this item',
       defaultValue: 'alignItems',
     },

@@ -39,7 +39,7 @@ description: 组合布局约束并检查求解后的边界与产物
   ]}
 />
 
-基础 `GridLayout` 没有 `inspect` 属性。可选的 `InspectGridLayout` 对象形式可分别控制 `tracks`、`cells`、固定 `gaps`、`distributedSpace` 与 `spans`。完整通用字段和宿主 / Scope 规则见[运行时参考](/library/layout/reference/runtime#布局检查器)。
+基础 `GridLayout` 没有 `inspect` 属性。可选的 `InspectGridLayout` 对象形式可分别控制 `tracks`、`cells`、固定 `gaps`、`distributedSpace` 与 `spans`。完整通用字段和宿主 / Scope 规则见[检查器说明](/library/layout/flex-layout/extended#检查器的宿主与范围)。
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -64,6 +64,8 @@ export const Inspected = () => (
   </Layout>
 );
 ```
+
+### GridLayoutInspectOptionsSchema
 
 <ZodSchema
   name="GridLayoutInspectOptionsSchema"
@@ -106,6 +108,8 @@ if (envelope) {
 }
 ```
 
+### GridLayoutArtifactSchema
+
 <ZodSchema
   name="GridLayoutArtifactSchema"
   description="GridLayout 的容器、已求解子项跨轨道范围与行列轨道几何。"
@@ -144,6 +148,10 @@ if (envelope) {
 
 `items[]` 增加 `column`、`row`、`columnSpan` 与 `rowSpan`。`columns[]` 和 `rows[]` 按物理起点排序，并记录连续 `index`、`start`、`size`、`sourceKind` 与 `implicit`。必填的 `spacing[]` 使用完整 content height 记录列间距，使用完整 content width 记录行间距；两种 band 的交叉区域会保留并按 x 后 y 的顺序稳定叠加。
 
+## 共同边界与检查规则
+
+三种布局使用相同的 slot、真实占用与视觉包络语义。读取结果前参阅[产物边界](/library/layout/flex-layout/extended#理解产物边界)；检查宿主、子树范围和屏障见[检查器的宿主与范围](/library/layout/flex-layout/extended#检查器的宿主与范围)。
+
 ## 延伸阅读
 
 <LinkedSections
@@ -156,5 +164,6 @@ if (envelope) {
       description: '查询持久化输入的字段约束',
       url: '/library/layout/grid-layout/schema-reference',
     },
-  ]}
+
+]}
 />

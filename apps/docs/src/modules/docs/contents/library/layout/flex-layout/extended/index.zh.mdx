@@ -45,7 +45,7 @@ max 会让命中上限的子项冻结，剩余空间继续交给其它项。负�
   ]}
 />
 
-基础 `FlexLayout` 没有 `inspect` 属性。安装可选包后，从 `@retikz/layout-react/inspect` 导入 `InspectFlexLayout`；对象形式在通用边界、盒模型间距、溢出和对齐参考线之外，还可分别控制 `lines`、固定 `gaps` 与 `distributedSpace`。完整字段和宿主 / Scope 规则见[运行时参考](/library/layout/reference/runtime#布局检查器)。
+基础 `FlexLayout` 没有 `inspect` 属性。安装可选包后，从 `@retikz/layout-react/inspect` 导入 `InspectFlexLayout`；对象形式在通用边界、盒模型间距、溢出和对齐参考线之外，还可分别控制 `lines`、固定 `gaps` 与 `distributedSpace`。完整字段和宿主 / Scope 规则见[检查器说明](/library/layout/flex-layout/extended#检查器的宿主与范围)。
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -63,6 +63,8 @@ export const Inspected = () => (
   </Layout>
 );
 ```
+
+### FlexLayoutInspectOptionsSchema
 
 <ZodSchema
   name="FlexLayoutInspectOptionsSchema"
@@ -98,6 +100,8 @@ if (envelope) {
   console.log(result.container, result.items);
 }
 ```
+
+### FlexLayoutArtifactSchema
 
 <ZodSchema
   name="FlexLayoutArtifactSchema"
@@ -136,6 +140,135 @@ if (envelope) {
 
 `items[].line` 指向所属布局行；`lines[]` 记录连续 `index`、`itemKeys`、物理主轴、主轴范围与交叉轴范围。两者必须形成完整的双向分组关系。必填的 `spacing[]` 同时记录每条 line 的主轴 gap / distribution，以及多 line 时的交叉轴 gap / `alignContent` 分布；`stretch` 已吸收到 line 尺寸，不重复记录。
 
+## 理解产物边界
+
+### LayoutArtifactSchema
+
+<ZodSchema name="LayoutArtifactSchema" description="由 kind 判别的三个 Layout 类型化布局产物联合。" />
+
+每个具体产物的 `container` 都包含：
+
+| 字段               | 类型                         | 描述                                            |
+| ------------------ | ---------------------------- | ----------------------------------------------- |
+| `allocationBounds` | `LayoutArtifactRect`         | 容器最终的分配矩形                              |
+| `contentBounds`    | `LayoutArtifactRect`         | 扣除内边距后的内容矩形                          |
+| `visualBounds`     | `LayoutArtifactRect`         | 所有已平移子项视觉边界的并集                    |
+| `visibleBounds`    | `LayoutArtifactRect \| null` | 应用溢出策略后仍可见的并集；无正面积时为 `null` |
+
+每个 `items[]` 条目共享：
+
+| 字段               | 类型                              | 描述                                                   |
+| ------------------ | --------------------------------- | ------------------------------------------------------ |
+| `key`              | `string`                          | 作者声明或由 Layout 内部生成的容器局部有效身份         |
+| `sourceIndex`      | `number`                          | 连续且从零开始的声明顺序                               |
+| `marginBounds`     | `LayoutArtifactRect`              | 包含已求解外边距的完整父级分配区域                     |
+| `slotBounds`       | `LayoutArtifactRect`              | 不含外边距、由父级分配的区域                           |
+| `allocationBounds` | `LayoutArtifactRect`              | 子图形接受或拒绝分配区域后的真实布局占用               |
+| `visualBounds`     | `LayoutArtifactRect`              | 包含描边或标签等效果的保守视觉包络                     |
+| `visibleBounds`    | `LayoutArtifactRect \| null`      | 裁切后仍可见的视觉区域                                 |
+| `translation`      | `{ x: number, y: number }`        | 回放前应用的容器局部平移                               |
+| `overflow`         | `{ allocation, visual, clipped }` | 双轴真实占用、视觉包络与裁切状态                       |
+| `alignmentGuide?`  | `{ name, position, fallback }`    | 实际用于放置的基线参考线，或基线不可用时的边缘回退结果 |
+
+`slotBounds`、`allocationBounds` 与 `visualBounds` 不能互换：固定几何可以拒绝父级分配的区域，而描边或标签还可能让视觉包络继续扩大。
+
+### LayoutSpacingArtifactSchema
+
+<ZodSchema
+  name="LayoutSpacingArtifactSchema"
+  description="FlexLayout 与 GridLayout 产物共用的固定 gap 或分布式自由空间片段。"
+  descriptions={{
+    kind: '间距片段的语义判别字段。',
+    axis: '间距片段的物理主轴。',
+    bounds: '当前容器 allocation 坐标中的最终矩形。',
+    'bounds.x': '间距矩形的水平原点。',
+    'bounds.y': '间距矩形的垂直原点。',
+    'bounds.width': '间距矩形的非负宽度；x 主轴时必须为正。',
+    'bounds.height': '间距矩形的非负高度；y 主轴时必须为正。',
+  }}
+/>
+
+主轴长度必须为正，正交轴长度可以为零。`axis: 'x'` 使用 `bounds.x/width` 作为主坐标与长度；`axis: 'y'` 使用 `bounds.y/height`。数组按 x → y、主坐标、正交坐标、gap → distributed 和生成顺序稳定排列。
+
+相邻 item 或 track 的物理间隔同时包含 gap 与 distribution 时，固定 gap 在间隔中居中，剩余正空间平分在两侧。leading / trailing 只记录内容边缘与首末 outer box 或 track 之间的正空间；负 free space、重叠与零长度不会生成 distributed segment。
+
+## 检查器的宿主与范围
+
+布局检查器是可选的运行时开发辅助能力，不进入 Layout IR，也不修改类型化布局产物。`@retikz/layout/inspect` 拥有三种 Inspector Definition、选项 schema 与预设；`@retikz/layout-react/inspect` 和 `@retikz/layout-vanilla/inspect` 负责宿主接线。Layout 根入口不依赖 `@retikz/inspect`。
+
+Flex、Grid 与 Overlay Inspector 读取 Core 观测到的最终类型化 artifact，返回普通 Core Path、Node 与 pattern paint。`@retikz/inspect` 用隔离片段编译这些内容，再转换为 Render 的普通只读图层。SVG 在主图之后绘制 `pointer-events="none"` 分组；Canvas 在主图之后单独绘制，但不把辅助图元加入命中测试。viewBox、主资源、动画和正常交互始终只由主 Scene 决定。
+
+### 颜色、纹理与线型
+
+辅助层用三条正交通道表达不同信息，不再用一种颜色同时暗示边界类别与嵌套层级：
+
+| 通道 | 表达内容            | 规则                                                                                                                                                                                                                           |
+| ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 颜色 | 最终布局 occurrence | Inspect 按最终请求顺序分配 `colorScope`；常规 occurrence 颜色来自当前 Core Theme 的 categorical palette，guide / anchor 使用 `semantic.guide`，溢出 warning 使用 `semantic.warning`，并通过 `InspectionAppearanceContext` 暴露 |
+| 纹理 | 空间语义            | Layout 用普通 `lines` pattern paint 表达：margin 与固定 gap 为 `-45°` 的 `/`，padding 为 `45°` 的 `\`；size 为 12、lineWidth 为 1，三者不铺底色                                                                                |
+| 线型 | 几何类别            | 容器、内容、item box、Flex line、Grid track/cell/span、Overlay placement 与 alignment guide 统一使用虚线；anchor crosshair 使用实线                                                                                            |
+
+同一个 occurrence 的普通辅助图元共享颜色；嵌套容器按各自最终 occurrence 取得 categorical 颜色。颜色数组循环使用，因此颜色只用于快速归属，精确身份仍由 occurrence locator 表达。guide / anchor 使用低强调的 Theme semantic 颜色，溢出警告是普通半透明 fill，辅助标签也是普通 Node。
+
+绘制顺序固定为 spacing hatch / boundary underlay → family structure → box outline → overflow warning → guide/anchor → label。`bounds.content` 与 `bounds.slot` 只控制对应 outline；`spacing.padding` 与 `spacing.margin` 独立控制两种纹理和边界。margin、padding 与固定 gap 使用独立 dashed line 表达边界；ring 只描内外周长，不描四块纹理分片之间的接缝。`distributedSpace` 只显示未占用 content 的 dashed perimeter，内部保持透明留白。若 spacing boundary 已被 content/slot outline 或 Flex line / Grid track 完整覆盖，同一线段只绘制一次；单独开启任一类别时仍保留其完整可见边界。
+
+### 三种选择范围
+
+| 范围          | React                                                              | Vanilla                                                                  | 语义                                        |
+| ------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------- |
+| 整张图        | `LayoutInspectLayout request={...}`                                | figure 的 `createInspectionVanillaAuthoring(...)`                        | 按 Inspector key 选择全部匹配 occurrence    |
+| authored 子树 | `LayoutInspectScope request={...}`                                 | Scope 的 `createInspectionVanillaAuthoring(...)`                         | 只选择该 Scope 的 authored 后代             |
+| 单个容器      | `InspectFlexLayout` / `InspectGridLayout` / `InspectOverlayLayout` | `inspectFlexLayout()` / `inspectGridLayout()` / `inspectOverlayLayout()` | 只选择当前 occurrence，不自动传播到嵌套布局 |
+
+React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查宿主；Vanilla 必须把 `createLayoutInspectionVanillaDriver()` 传给 render / mount 的 `compileDriver`。`LayoutInspectScope request={false}` 与 `createLayoutInspectionBarrier()` 都建立后代不能越过的硬屏障。
+
+同一个 Inspector 的 scene → 外层 subtree → 内层 subtree → self 请求按范围与声明顺序求值。`bounds` 与 `spacing` 的对象形式逐项合并，boolean 与对象互换时由后写值替换整组；请求值 `false` 关闭当前层选择，但更深请求仍可重新开启。省略全部请求时 observer 不捕获布局产物，也不会产生只读图层。
+
+### 通用选项与边界
+
+### BaseLayoutInspectOptionsSchema
+
+<ZodSchema
+  name="BaseLayoutInspectOptionsSchema"
+  description="所有布局检查器共享的选项及静态默认值。"
+  descriptions={{
+    bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖容器、内容、父级分配、真实占用与视觉边界。',
+    spacing: 'false 关闭 padding 与 margin 纹理，true 恢复默认组合，对象形式逐项覆盖两种盒模型间距。',
+    overflow: '是否显示真实占用或视觉包络超出父级分配区域的阴影。',
+    alignmentGuides: '是否显示容器最终采用的对齐参考线。',
+    labels: '是否显示辅助层文字标签；默认关闭。',
+  }}
+/>
+
+### LayoutInspectSpacingOptionsSchema
+
+<ZodSchema
+  name="LayoutInspectSpacingOptionsSchema"
+  description="布局检查器共用的盒模型间距选择及默认值。"
+  descriptions={{
+    padding: '是否为容器已解析的 padding 绘制阴影。',
+    margin: '是否为子项已解析的 margin 绘制阴影。',
+  }}
+/>
+
+### LayoutInspectBoundsOptionsSchema
+
+<ZodSchema
+  name="LayoutInspectBoundsOptionsSchema"
+  description="布局边界辅助层的逐类开关及默认值。"
+  descriptions={{
+    container: '是否显示容器最终分配边界。',
+    content: '是否显示扣除内边距后的内容边界。',
+    slot: '是否显示父级给子项分配的 slot。',
+    allocation: '是否显示子项真实布局占用。',
+    visual: '是否显示包含描边与标签等效果的视觉包络。',
+  }}
+/>
+
+请求值 `true` 使用完整默认轮廓：`container`、`content`、`slot`、`allocation`、padding、margin、`overflow` 与 `alignmentGuides` 开启，`visual` 与 `labels` 关闭。对象形式只覆盖显式字段；例如 `{ spacing: { padding: false } }` 只关闭 padding 纹理。
+
+文档 playground 的“推荐”不是完整轮廓：Flex 显示 content outline、Flex 行区域与固定 gap，Grid 显示 content outline、轨道边界与固定 gap，Overlay 只显示 content outline。选择“全部”会打开每个细节；“关闭”只关闭总开关；Reset 回到推荐值。
+
 ## 延伸阅读
 
 <LinkedSections
@@ -148,5 +281,6 @@ if (envelope) {
       description: '查询持久化输入的字段约束',
       url: '/library/layout/flex-layout/schema-reference',
     },
-  ]}
+
+]}
 />

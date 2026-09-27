@@ -145,6 +145,27 @@ JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla �
 
 ## 容器的分配与对齐
 
+先声明至少一条 `columns` 轨道；未声明的行按内容生成。`justifyItems` / `alignItems` 控制格子内部的子项，`justifyContent` / `alignContent` 控制整组轨道在内容区中的位置。
+
+## 选择轨道类型
+
+| 形态       | 关键字段                       | 含义                           |
+| ---------- | ------------------------------ | ------------------------------ |
+| `fixed`    | `{ kind: 'fixed', value }`     | 固定非负尺寸                   |
+| `content`  | `{ kind: 'content', mode }`    | 子图形最小或自然内容贡献       |
+| `fraction` | `{ kind: 'fraction', factor }` | 有限空间中的正份额权重         |
+| `minmax`   | `{ kind: 'minmax', min, max }` | 非份额下界与固定/内容/份额上界 |
+
+## 子项约束
+
+每个子项使用一个 `child`，由容器决定它的空间与位置。`margin` 留在分配区域外围；`justifySelf` / `alignSelf` 只覆盖当前子项，省略时继承容器。
+
+React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
+
+## 相关属性
+
+以下集中回查本页使用的容器和子项字段。完整持久化输入见 [Schema 参考](/library/layout/grid-layout/schema-reference)。
+
 <ComponentProps
   items={[
     {
@@ -178,14 +199,14 @@ JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla �
     {
       name: 'autoFlow',
       kind: 'property',
-      type: 'GridAutoFlow',
+      type: "'row' | 'column'",
       description: '非密集的确定性自动放置方向',
       defaultValue: "'row'",
     },
     {
       name: 'overlap',
       kind: 'property',
-      type: 'GridOverlap',
+      type: "'reject' | 'allow'",
       description: '完全显式放置子项的重叠策略',
       defaultValue: "'reject'",
     },
@@ -213,42 +234,44 @@ JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla �
     {
       name: 'alignItems',
       kind: 'property',
-      type: 'LayoutAlignment',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
       description: '默认垂直子项对齐',
       defaultValue: "'stretch'",
     },
     {
       name: 'justifyContent',
       kind: 'property',
-      type: 'LayoutDistribution',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
       description: '列组的水平剩余空间分布',
       defaultValue: "'start'",
     },
     {
       name: 'alignContent',
       kind: 'property',
-      type: 'LayoutDistribution',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
       description: '行组的垂直剩余空间分布',
       defaultValue: "'start'",
     },
     {
       name: 'size',
       kind: 'property',
-      type: 'LayoutSizeInput',
-      description: '容器双轴分配策略',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        '分别配置 x / y：`{ kind: "content", min?, max? }` 按内容；`{ kind: "fixed", value }` 固定尺寸；`{ kind: "fill", min?, max? }` 填充父级有限空间。',
       defaultValue: '内容 / 内容',
     },
     {
       name: 'padding',
       kind: 'property',
-      type: 'number | IRBoxSpacing',
-      description: '从分配区域到内容区域的内边距',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description:
+        '分别配置 x / y：`{ kind: "content", min?, max? }` 按内容；`{ kind: "fixed", value }` 固定尺寸；`{ kind: "fill", min?, max? }` 填充父级有限空间。',
       defaultValue: '0',
     },
     {
       name: 'overflow',
       kind: 'property',
-      type: 'LayoutOverflow',
+      type: "'visible' | 'clip'",
       description: '是否在容器分配区域上裁切视觉输出',
       defaultValue: "'visible'",
     },
@@ -261,17 +284,6 @@ JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla �
     },
   ]}
 />
-
-## 选择轨道类型
-
-| 形态       | 关键字段                       | 含义                           |
-| ---------- | ------------------------------ | ------------------------------ |
-| `fixed`    | `{ kind: 'fixed', value }`     | 固定非负尺寸                   |
-| `content`  | `{ kind: 'content', mode }`    | 子图形最小或自然内容贡献       |
-| `fraction` | `{ kind: 'fraction', factor }` | 有限空间中的正份额权重         |
-| `minmax`   | `{ kind: 'minmax', min, max }` | 非份额下界与固定/内容/份额上界 |
-
-## 子项约束
 
 <ComponentProps
   items={[
@@ -313,7 +325,7 @@ JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla �
     {
       name: 'margin',
       kind: 'property',
-      type: 'number | IRBoxSpacing',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
       description: '轨道区域内缩前的子项外边距',
       defaultValue: '0',
     },
@@ -327,14 +339,12 @@ JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla �
     {
       name: 'alignSelf',
       kind: 'property',
-      type: 'LayoutAlignment',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
       description: '覆盖垂直对齐',
       defaultValue: '容器值',
     },
   ]}
 />
-
-React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
 
 ## 延伸阅读
 

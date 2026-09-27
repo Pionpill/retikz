@@ -39,7 +39,7 @@ Switch the non-dense auto-placement direction, fraction weight, gaps, and cell a
   ]}
 />
 
-Base `GridLayout` has no `inspect` prop. The optional `InspectGridLayout` object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. See [Runtime Reference](/library/layout/reference/runtime#layout-inspector) for shared fields and host or Scope rules.
+Base `GridLayout` has no `inspect` prop. The optional `InspectGridLayout` object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. See [Inspector guide](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for shared fields and host or Scope rules.
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -64,6 +64,8 @@ export const Inspected = () => (
   </Layout>
 );
 ```
+
+### GridLayoutInspectOptionsSchema
 
 <ZodSchema name="GridLayoutInspectOptionsSchema" description="Shared and GridLayout-specific inspection options." />
 
@@ -91,6 +93,8 @@ if (envelope) {
 }
 ```
 
+### GridLayoutArtifactSchema
+
 <ZodSchema
   name="GridLayoutArtifactSchema"
   description="GridLayout container, resolved item spans, and column/row track geometry."
@@ -99,6 +103,10 @@ if (envelope) {
 Each item adds `column`, `row`, `columnSpan`, and `rowSpan`. `columns[]` and `rows[]` are sorted by physical start and record contiguous `index`, `start`, `size`, `sourceKind`, and `implicit` fields.
 
 Required `spacing[]` uses the full content height for column spacing and the full content width for row spacing. Intersections between the two bands remain present and paint deterministically in x-then-y order.
+
+## Shared bounds and inspection rules
+
+All layouts distinguish slots, actual allocation, and visual bounds. See [artifact bounds](/library/layout/flex-layout/extended#understanding-artifact-bounds) before interpreting results, and [inspector hosts and scopes](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for subtree selection and barriers.
 
 ## Further reading
 
@@ -120,5 +128,6 @@ Required `spacing[]` uses the full content height for column spacing and the ful
       description: 'Look up persistent input constraints',
       url: '/library/layout/grid-layout/schema-reference',
     },
-  ]}
+
+]}
 />

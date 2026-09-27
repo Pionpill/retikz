@@ -1,0 +1,67 @@
+---
+title: Implementation
+description: Understand measurement, allocation, and final placement
+---
+
+Read [basic usage](/library/layout/overlay-layout/usage) first. This page explains the result; callers do not invoke the internal stages themselves.
+
+## From a local target to placement
+
+Only included items contribute to intrinsic container profiles, while final placement processes every item. A positioned slot is located first and actual child geometry is translated into it. The blue outline below is the allocated slot; its top-right corner meets the target point. overflow determines whether visual overflow is clipped.
+
+<ComponentPreview files="allocation-figure" hideCode type="illustration" size="md" />
+
+The content region is 200 × 100, `at=(150,20)`, the slot is 40 × 20, and `anchor=(1,0)` selects its top-right corner. Its origin is `(150−40,20−0)=(110,20)` before applying `offset`. The anchor belongs to the allocated slot, not the visual envelope including strokes and labels.
+
+## Why excluded items remain visible
+
+`offset` translates after placement. Baseline-aligned items require zero vertical offset, and positioned items require edge alignment, keeping local point positioning separate from cross-item baseline solving.
+
+`sizeParticipation="exclude"` excludes only minimum and natural profiles. It does not hide the item, skip replay, or change paint order. Typed artifacts preserve its slot, allocation, visual, and visible bounds even outside the container allocation.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'OverlayLayout input contract',
+      path: 'packages/library/layout/src/composites/overlay-layout/schema.ts',
+    },
+    {
+      label: 'Overlay profile and placement',
+      path: 'packages/library/layout/src/composites/overlay-layout/solve.ts',
+    },
+    {
+      label: 'Overlay compile and paint order',
+      path: 'packages/library/layout/src/composites/overlay-layout/pipeline.ts',
+    },
+    {
+      label: 'OverlayLayout React adapter',
+      path: 'packages/library/layout-react/src/overlay-layout/OverlayLayout.tsx',
+    },
+  ]}
+/>
+
+All three layouts share candidate isolation, final replay, and occurrence envelopes; see [one layout transaction](/library/layout/flex-layout/mechanism#one-layout-transaction).
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/overlay-layout/usage',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and inspect results',
+      url: '/library/layout/overlay-layout/extended',
+    },
+
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+
+]}
+/>

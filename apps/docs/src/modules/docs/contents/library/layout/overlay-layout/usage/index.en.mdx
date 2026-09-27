@@ -1,0 +1,297 @@
+---
+title: Basic usage
+description: Declare the container and items, then control size, spacing, and alignment
+---
+
+`OverlayLayout` lets several graphical children share one region. Aligned items follow container alignment, while positioned items use local `at` and `anchor` values for badges, callouts, and similar overlays. `sizeParticipation` controls container sizing, while `zIndex` controls only stable paint layers.
+
+## Using this topic
+
+See [Quick start](/library/layout/get-start) for installation. Direct children must use LayoutItem with a matching kind; each item owns one drawable child.
+
+```text
+OverlayLayout
+└── LayoutItem (kind="overlay")
+    └── Node / OverlayLayout
+```
+
+<ComponentPreview files="/library/layout/overlay-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { OverlayLayout, LayoutItem } from '@retikz/layout-react';
+export const Example = () => (
+  <Layout>
+    <OverlayLayout size={{ x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } }}>
+      <LayoutItem kind="overlay">
+        <Node position={[0, 0]} text="A" />
+      </LayoutItem>
+      <LayoutItem kind="overlay" offset={{ x: 30, y: 20 }}>
+        <Node position={[0, 0]} text="B" />
+      </LayoutItem>
+    </OverlayLayout>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { OverlayLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'overlayLayout',
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[OverlayLayoutDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { overlayLayout, OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+const input = scene({
+  children: [
+    overlayLayout({
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    }),
+  ],
+});
+console.log(renderToSvgString(input, { adapters: [OverlayLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { OverlayLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'overlayLayout',
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+console.log(renderToSvgString(ir, { compile: { composites: [OverlayLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+Use `createOverlayLayout()` with `OverlayLayoutDefinition` for JSON/IR, or `overlayLayout()` with `OverlayLayoutInputEmbedAdapter` for Vanilla.
+
+| Scenario         | Public entry                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| React            | `OverlayLayout`, `LayoutItem` (`@retikz/layout-react`)                                                        |
+| Vanilla          | `overlayLayout`, `OverlayLayoutInputEmbedAdapter` (`@retikz/layout-vanilla`)                                  |
+| Optional inspect | `InspectOverlayLayout` (`@retikz/layout-react/inspect`), `inspectOverlayLayout` (Vanilla)                     |
+| IR / persistence | `OverlayLayoutSchema`, `createOverlayLayout`, `IROverlayLayout`, `OverlayLayoutDefinition` (`@retikz/layout`) |
+
+The structural layer contributes intrinsic size. The top-right badge uses positioned placement and excludes its size contribution. The caption remains aligned. Paint order sorts by ascending `zIndex`, preserving authored `sourceIndex` within one layer.
+
+<ComponentPreview files="overlay-layout-basic" size="md" />
+
+## Aligned and positioned
+
+| Mode         | Slot source                                                     | Typical use                             |
+| ------------ | --------------------------------------------------------------- | --------------------------------------- |
+| `aligned`    | Content box after margins, resolved by alignment                | Backgrounds, centered content, captions |
+| `positioned` | `at` selects a target; `anchor` selects the slot point attached | Badges, callouts, local annotations     |
+
+## Container allocation and alignment
+
+All items share one content region. Use container alignment for ordinary layers and item overrides or a local target point for exceptions. Position and paint order are independent choices.
+
+## Item constraints
+
+Each item owns one `child`; its container assigns space and position. `margin` stays outside the slot. Item alignment overrides apply only to that item and otherwise inherit from the container.
+
+## Placement forms
+
+| kind         | Fields                                   | Meaning                                      |
+| ------------ | ---------------------------------------- | -------------------------------------------- |
+| `aligned`    | none                                     | Uses container and item alignment            |
+| `positioned` | `at`, `anchor?`, `width?`, and `height?` | Content-local target and optional exact slot |
+
+In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
+
+## Related props
+
+Look up container and item fields used on this page below. See [Schema reference](/library/layout/overlay-layout/schema-reference) for the complete persistent input.
+
+<ComponentProps
+  items={[
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        'Configure x / y independently: `{ kind: "content", min?, max? }` sizes from content; `{ kind: "fixed", value }` fixes size; `{ kind: "fill", min?, max? }` fills finite parent space.',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: 'Insets from allocation to content',
+      defaultValue: '0',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description: 'Whether visuals clip to allocation',
+      defaultValue: "'visible'",
+    },
+    {
+      name: 'justifyItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: 'Default horizontal alignment',
+      defaultValue: "'center'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: 'Default vertical alignment',
+      defaultValue: "'center'",
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'Array<OverlayLayoutItemInput>',
+      description: 'Authored items; explicit keys must be unique',
+      defaultValue: '[]',
+    },
+  ]}
+/>
+
+<ComponentProps
+  items={[
+    {
+      name: 'kind',
+      kind: 'property',
+      type: "'overlay'",
+      description: 'OverlayLayout item discriminator',
+      required: true,
+    },
+    {
+      name: 'key',
+      kind: 'property',
+      type: 'string',
+      description: 'Optional stable identity; generated from source index when omitted',
+      defaultValue: 'generated',
+    },
+    {
+      name: 'child',
+      kind: 'property',
+      type: 'IRChild',
+      description: 'Any JSON-safe Core child',
+      required: true,
+    },
+    {
+      name: 'placement',
+      kind: 'property',
+      type: "{ kind: 'aligned' } | { kind: 'positioned'; at: { x: number; y: number }; anchor?: { x?: number; y?: number }; width?: number; height?: number }",
+      description: 'Alignment or content-local positioning',
+      defaultValue: 'aligned',
+    },
+    {
+      name: 'offset',
+      kind: 'property',
+      type: '{ x: number, y: number }',
+      description: 'Translation after placement',
+      defaultValue: '{0, 0}',
+    },
+    {
+      name: 'margin',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: 'Margin around the aligned or positioned slot',
+      defaultValue: '0',
+    },
+    {
+      name: 'justifySelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: 'Horizontal alignment override',
+      defaultValue: 'container',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: 'Vertical alignment override',
+      defaultValue: 'container',
+    },
+    {
+      name: 'sizeParticipation',
+      kind: 'property',
+      type: "'include' | 'exclude'",
+      description: 'Whether the item contributes to profiles',
+      defaultValue: "'include'",
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      description: 'Integer paint layer with stable source order',
+      defaultValue: '0',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and inspect results',
+      url: '/library/layout/overlay-layout/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/overlay-layout/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+  ]}
+/>

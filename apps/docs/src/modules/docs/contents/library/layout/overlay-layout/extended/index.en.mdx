@@ -1,0 +1,126 @@
+---
+title: Extended usage
+description: Combine constraints and inspect solved bounds and artifacts
+---
+
+Build on [basic usage](/library/layout/overlay-layout/usage) to combine constraints and inspect results. Change one variable and compare allocated slots with actual geometry.
+
+## Attaching a badge to a local point
+
+For positioned placement, at is relative to the content-box origin and anchor is normalized within the item slot. For a 40×20 slot, at=(150,20) and anchor=(1,0) yield a top-left corner of (110,20). offset translates the result afterward without changing the origin of at.
+
+width and height can request exact allocated dimensions; fixed geometry may still exceed them. Use sizeParticipation="exclude" to prevent a badge from enlarging a content-sized container rather than hiding it or using negative sizes.
+
+## Size contribution is independent of stacking
+
+include and exclude control only minimum and natural contributions. Excluded items are still measured, placed, replayed, and recorded. zIndex controls paint order, with sourceIndex breaking ties stably. A stacking change cannot correct an inappropriate size contribution.
+
+## Interactive comparison
+
+Switch shared alignment, then move the positioned badge's target, anchor, and `zIndex`. The three items overlap, making paint-layer changes directly visible.
+
+<ComponentPreview
+  files="overlay-layout-playground"
+  size="lg"
+  caption="Recommended shows only the content outline; use Inspection overlay to reveal placement, anchors, padding, margin, and other details."
+/>
+
+## Inspecting the layout
+
+<ComponentProps
+  items={[
+    {
+      name: 'inspect',
+      kind: 'property',
+      type: 'false | true | OverlayLayoutInspectOptions',
+      description: '`InspectOverlayLayout` requests this occurrence; `false` only cancels the current instance',
+      defaultValue: 'true',
+    },
+  ]}
+/>
+
+Base `OverlayLayout` has no `inspect` prop. The optional `InspectOverlayLayout` object form controls `placements`, `anchors`, and `stacking` independently while reusing shared bounds and box-spacing switches. See [Inspector guide](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for every field and host or Scope rules.
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { LayoutItem } from '@retikz/layout-react';
+import { LayoutInspectLayout, InspectOverlayLayout } from '@retikz/layout-react/inspect';
+export const Inspected = () => (
+  <Layout>
+    <LayoutInspectLayout>
+      <InspectOverlayLayout
+        size={{ x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } }}
+        inspect={{ bounds: { content: true, slot: true } }}
+      >
+        <LayoutItem kind="overlay">
+          <Node position={[0, 0]} text="A" />
+        </LayoutItem>
+      </InspectOverlayLayout>
+    </LayoutInspectLayout>
+  </Layout>
+);
+```
+
+### OverlayLayoutInspectOptionsSchema
+
+<ZodSchema
+  name="OverlayLayoutInspectOptionsSchema"
+  description="Shared and OverlayLayout-specific inspection options."
+/>
+
+## Reading layout results
+
+An occurrence identifies a concrete container instance; a public id alone cannot distinguish nested instances. Locate the artifact envelope and parse its value. Inspection reads that compilation result without solving again.
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { OverlayLayoutDefinition, OverlayLayoutArtifactSchema, createOverlayLayout } from '@retikz/layout';
+const output = compileToScene(
+  { type: 'scene', version: 1, children: [createOverlayLayout({ children: [] })] },
+  { composites: [OverlayLayoutDefinition] },
+);
+const envelope = output.artifacts.find(
+  item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'overlayLayout',
+);
+if (envelope) {
+  const result = OverlayLayoutArtifactSchema.parse(envelope.value);
+  console.log(result.container, result.items);
+}
+```
+
+### OverlayLayoutArtifactSchema
+
+<ZodSchema
+  name="OverlayLayoutArtifactSchema"
+  description="OverlayLayout container, source-order items, and stable resolved paintOrder."
+/>
+
+Each item adds `placement`, `sizeParticipation`, `zIndex`, and optional `position`. A `positioned` item must expose `position.target` and `position.slotAnchor`; both use container-allocation coordinates and coincide within numeric tolerance. An `aligned` item must omit the field. `paintOrder` is a complete permutation of item keys, sorted by ascending `zIndex` and then stable `sourceIndex`.
+
+## Shared bounds and inspection rules
+
+All layouts distinguish slots, actual allocation, and visual bounds. See [artifact bounds](/library/layout/flex-layout/extended#understanding-artifact-bounds) before interpreting results, and [inspector hosts and scopes](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for subtree selection and barriers.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/overlay-layout/usage',
+    },
+
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/overlay-layout/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+
+]}
+/>

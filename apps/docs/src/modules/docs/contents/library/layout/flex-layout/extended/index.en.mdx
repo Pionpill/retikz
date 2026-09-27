@@ -45,7 +45,7 @@ A slot and the real allocation are distinct quantities. When fixed geometry refu
   ]}
 />
 
-Base `FlexLayout` has no `inspect` prop. After installing the optional package, import `InspectFlexLayout` from `@retikz/layout-react/inspect`. Its object form controls `lines`, fixed `gaps`, and `distributedSpace` in addition to shared bounds, box spacing, overflow, and alignment guides. See [Runtime Reference](/library/layout/reference/runtime#layout-inspector) for every field and host or Scope rules.
+Base `FlexLayout` has no `inspect` prop. After installing the optional package, import `InspectFlexLayout` from `@retikz/layout-react/inspect`. Its object form controls `lines`, fixed `gaps`, and `distributedSpace` in addition to shared bounds, box spacing, overflow, and alignment guides. See [Inspector guide](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for every field and host or Scope rules.
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -63,6 +63,8 @@ export const Inspected = () => (
   </Layout>
 );
 ```
+
+### FlexLayoutInspectOptionsSchema
 
 <ZodSchema name="FlexLayoutInspectOptionsSchema" description="Shared and FlexLayout-specific inspection options." />
 
@@ -86,6 +88,8 @@ if (envelope) {
 }
 ```
 
+### FlexLayoutArtifactSchema
+
 <ZodSchema
   name="FlexLayoutArtifactSchema"
   description="FlexLayout container, source-order items, and physical cross-order lines."
@@ -94,6 +98,102 @@ if (envelope) {
 `items[].line` identifies the item's line. Each `lines[]` entry records a contiguous `index`, `itemKeys`, physical main axis, main range, and cross range. The two collections must form a complete bidirectional partition.
 
 Required `spacing[]` records each line's main-axis gap/distribution and, for multiple lines, cross-axis gaps and `alignContent` distribution. Space absorbed by `stretch` into line sizes is not recorded again.
+
+## Understanding artifact bounds
+
+### LayoutArtifactSchema
+
+<ZodSchema name="LayoutArtifactSchema" description="Kind-discriminated union of the three Layout typed artifacts." />
+
+Every concrete artifact has a `container` with these fields:
+
+| Field              | Type                         | Description                                                  |
+| ------------------ | ---------------------------- | ------------------------------------------------------------ |
+| `allocationBounds` | `LayoutArtifactRect`         | Final container allocation rectangle                         |
+| `contentBounds`    | `LayoutArtifactRect`         | Content rectangle after padding                              |
+| `visualBounds`     | `LayoutArtifactRect`         | Union of translated item visual bounds                       |
+| `visibleBounds`    | `LayoutArtifactRect \| null` | Union still visible after overflow policy; `null` when empty |
+
+Every `items[]` entry shares:
+
+| Field              | Type                              | Description                                               |
+| ------------------ | --------------------------------- | --------------------------------------------------------- |
+| `key`              | `string`                          | Container-local effective identity, authored or generated |
+| `sourceIndex`      | `number`                          | Contiguous zero-based authored order                      |
+| `marginBounds`     | `LayoutArtifactRect`              | Full parent allocation area including resolved margins    |
+| `slotBounds`       | `LayoutArtifactRect`              | Parent-assigned slot excluding margins                    |
+| `allocationBounds` | `LayoutArtifactRect`              | Real child occupancy after accepting or refusing the slot |
+| `visualBounds`     | `LayoutArtifactRect`              | Conservative visual envelope including strokes or labels  |
+| `visibleBounds`    | `LayoutArtifactRect \| null`      | Visual region remaining after clipping                    |
+| `translation`      | `{ x: number, y: number }`        | Container-local translation applied before replay         |
+| `overflow`         | `{ allocation, visual, clipped }` | Per-axis occupancy, visual, and clipping state            |
+| `alignmentGuide?`  | `{ name, position, fallback }`    | Baseline guide or edge fallback used for placement        |
+
+`slotBounds`, `allocationBounds`, and `visualBounds` are not interchangeable. Fixed geometry may refuse its parent slot, and strokes or labels may expand the visual envelope further.
+
+### LayoutSpacingArtifactSchema
+
+<ZodSchema
+  name="LayoutSpacingArtifactSchema"
+  description="Resolved fixed gap or distributed free-space segment shared by FlexLayout and GridLayout artifacts."
+/>
+
+Main-axis length must be positive, while cross-axis length may be zero. `axis: 'x'` uses `bounds.x/width` as main coordinate and length; `axis: 'y'` uses `bounds.y/height`. Arrays are stable by x → y, main coordinate, cross coordinate, gap → distributed, and generation order.
+
+When one physical interval contains both a gap and distribution, the fixed gap is centered and remaining positive space is split equally on both sides. Leading and trailing segments record only positive space between content edges and the first or last outer box or track. Negative free space, overlap, and zero length do not produce distributed segments.
+
+## Inspector hosts and scopes
+
+Layout Inspector is an optional runtime development capability. It never enters Layout IR or changes typed layout artifacts. `@retikz/layout/inspect` owns the three Inspector Definitions, option schemas, and presets. `@retikz/layout-react/inspect` and `@retikz/layout-vanilla/inspect` own host wiring. Base Layout entries do not depend on `@retikz/inspect`.
+
+Flex, Grid, and Overlay Inspectors read final typed artifacts observed by Core and return ordinary Core Path, Node, and pattern-paint children. `@retikz/inspect` compiles those children as isolated fragments and maps them to ordinary Render readonly layers. SVG paints a `pointer-events="none"` group after the primary figure. Canvas paints after the primary bitmap without adding auxiliary primitives to hit testing. Only the primary Scene determines the viewBox, primary resources, animation, and normal interaction.
+
+### Color, pattern, and line style
+
+The overlay uses three independent visual channels instead of overloading color with both geometry class and nesting depth:
+
+| Channel    | Meaning                 | Rule                                                                                                                                                                                                                                                                                   |
+| ---------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color      | Final layout occurrence | Inspect assigns `colorScope` in final request order; regular occurrence colors come from the current Core Theme categorical palette, guide / anchor content uses `semantic.guide`, overflow warnings use `semantic.warning`, and all are exposed through `InspectionAppearanceContext` |
+| Pattern    | Spacing semantics       | Layout uses ordinary `lines` pattern paints: margin and fixed gaps use `-45°` `/`, padding uses `45°` `\`, size is 12, and line width is 1; none adds a base fill                                                                                                                      |
+| Line style | Geometry class          | Container, content, item boxes, Flex lines, Grid tracks/cells/spans, Overlay placements, and alignment guides are dashed; anchor crosshairs are solid                                                                                                                                  |
+
+Regular auxiliary content from one occurrence shares a color. Nested containers receive categorical colors from their own final occurrences. The palette cycles when needed, so color is a quick ownership cue; the occurrence locator remains the exact identity. Guide / anchor content uses the lower-emphasis Theme semantic color, overflow warnings are ordinary translucent fills, and labels are ordinary Nodes.
+
+Paint order is spacing hatch / boundary underlay → family structure → box outline → overflow warning → guide/anchor → label. `bounds.content` and `bounds.slot` control only their outlines; `spacing.padding` and `spacing.margin` independently control both texture and boundary. Margin, padding, and fixed gaps use independent dashed lines for their boundaries. A ring outlines only its outer and inner perimeter, never the seams between its hatch pieces. `distributedSpace` shows only the dashed perimeter of unused content and keeps its interior transparent. If a spacing boundary is already fully covered by a content or slot outline, Flex line, or Grid track, that segment is painted once; enabling any category alone still keeps its complete visible boundary.
+
+### Three selection scopes
+
+| Scope            | React                                                              | Vanilla                                                                  | Meaning                                                |
+| ---------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Whole figure     | `LayoutInspectLayout request={...}`                                | Figure `createInspectionVanillaAuthoring(...)`                           | Select all matching occurrences by Inspector key       |
+| Authored subtree | `LayoutInspectScope request={...}`                                 | Scope `createInspectionVanillaAuthoring(...)`                            | Select authored descendants of that Scope              |
+| One container    | `InspectFlexLayout` / `InspectGridLayout` / `InspectOverlayLayout` | `inspectFlexLayout()` / `inspectGridLayout()` / `inspectOverlayLayout()` | Select one occurrence without selecting nested layouts |
+
+React requires `LayoutInspectLayout`, which hosts a registry preloaded with all three Definitions. Vanilla passes `createLayoutInspectionVanillaDriver()` as the render or mount `compileDriver`. `LayoutInspectScope request={false}` and `createLayoutInspectionBarrier()` are hard barriers that descendants cannot cross.
+
+Requests for one Inspector resolve in scene → outer subtree → inner subtree → self order, with declaration order breaking ties. Object-valued `bounds` and `spacing` merge individual fields; switching between a boolean and an object replaces the whole group with the later value. A request value of `false` disables the current layer but a deeper request may enable it again. With all requests omitted, the observer captures no layout output and creates no readonly layers.
+
+### Shared options and bounds
+
+### BaseLayoutInspectOptionsSchema
+
+<ZodSchema name="BaseLayoutInspectOptionsSchema" description="Sparse options shared by every layout inspector." />
+
+### LayoutInspectSpacingOptionsSchema
+
+<ZodSchema name="LayoutInspectSpacingOptionsSchema" />
+
+### LayoutInspectBoundsOptionsSchema
+
+<ZodSchema
+  name="LayoutInspectBoundsOptionsSchema"
+  description="Per-boundary switches and defaults for layout overlays."
+/>
+
+A request value of `true` uses one full canonical profile: container, content, slot, allocation, padding, margin, overflow, and alignment guides are on; visual bounds and labels are off. Object values override only explicit fields, so `{ spacing: { padding: false } }` disables only padding texture.
+
+The docs playground “Recommended” profile is intentionally smaller: Flex shows the content outline, Flex line regions, and fixed gaps; Grid shows the content outline, track bounds, and fixed gaps; Overlay shows only the content outline. “All” enables every detail, “Off” changes only the master switch, and Reset returns to Recommended.
 
 ## Further reading
 
@@ -115,5 +215,6 @@ Required `spacing[]` records each line's main-axis gap/distribution and, for mul
       description: 'Look up persistent input constraints',
       url: '/library/layout/flex-layout/schema-reference',
     },
-  ]}
+
+]}
 />

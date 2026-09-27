@@ -1,0 +1,289 @@
+---
+title: 基础用法
+description: 声明容器和子项，理解尺寸、间距与对齐
+---
+
+`OverlayLayout` 让多个子图形共享同一区域。对齐子项跟随容器对齐；定位子项用局部 `at` 和 `anchor` 放置徽标、标注框等浮层。`sizeParticipation` 决定子项是否影响容器尺寸，`zIndex` 只决定稳定绘制层级。
+
+## 接入方式
+
+安装见[快速开始](/library/layout/get-start)。容器直属元素必须使用匹配 kind 的 LayoutItem；一个子项负责一个可绘制 child。
+
+```text
+OverlayLayout
+└── LayoutItem (kind="overlay")
+    └── Node / OverlayLayout
+```
+
+<ComponentPreview files="/library/layout/overlay-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { OverlayLayout, LayoutItem } from '@retikz/layout-react';
+export const Example = () => (
+  <Layout>
+    <OverlayLayout size={{ x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } }}>
+      <LayoutItem kind="overlay">
+        <Node position={[0, 0]} text="A" />
+      </LayoutItem>
+      <LayoutItem kind="overlay" offset={{ x: 30, y: 20 }}>
+        <Node position={[0, 0]} text="B" />
+      </LayoutItem>
+    </OverlayLayout>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { OverlayLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'overlayLayout',
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[OverlayLayoutDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { overlayLayout, OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+const input = scene({
+  children: [
+    overlayLayout({
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    }),
+  ],
+});
+console.log(renderToSvgString(input, { adapters: [OverlayLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { OverlayLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'overlayLayout',
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+console.log(renderToSvgString(ir, { compile: { composites: [OverlayLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Vanilla 使用 `overlayLayout()` 与 `OverlayLayoutInputEmbedAdapter`。
+
+| 场景        | 公开入口                                                                                                       |
+| ----------- | -------------------------------------------------------------------------------------------------------------- |
+| React       | `OverlayLayout`、`LayoutItem`（`@retikz/layout-react`）                                                        |
+| Vanilla     | `overlayLayout`、`OverlayLayoutInputEmbedAdapter`（`@retikz/layout-vanilla`）                                  |
+| 可选检查    | `InspectOverlayLayout`（`@retikz/layout-react/inspect`）、`inspectOverlayLayout`（Vanilla）                    |
+| IR / 持久化 | `OverlayLayoutSchema`、`createOverlayLayout`、`IROverlayLayout`、`OverlayLayoutDefinition`（`@retikz/layout`） |
+
+下面的结构层参与固有尺寸计算；右上徽标使用定位放置并排除尺寸贡献；说明文字仍是对齐子项。绘制顺序按 `zIndex` 升序，同层保持作者声明的 `sourceIndex` 顺序。
+
+<ComponentPreview files="overlay-layout-basic" size="md" />
+
+## 对齐与定位
+
+| 模式         | 分配区域来源                                             | 常见用途                     |
+| ------------ | -------------------------------------------------------- | ---------------------------- |
+| `aligned`    | 内容区域扣除外边距后按对齐方式分配                       | 背景、居中内容、底部说明文字 |
+| `positioned` | `at` 决定目标点，`anchor` 决定分配区域的哪一点贴到目标点 | 徽标、标注框、局部注释       |
+
+## 容器的分配与对齐
+
+所有子项共享同一个内容区。容器默认对齐适合大多数图层，单项可用自身对齐或局部目标点覆盖；定位和绘制先后是两个独立选择。
+
+## 子项约束
+
+每个子项使用一个 `child`，由容器决定它的空间与位置。`margin` 留在分配区域外围；`justifySelf` / `alignSelf` 只覆盖当前子项，省略时继承容器。
+
+## 定位形式
+
+| `kind`       | 字段                                 | 语义                                 |
+| ------------ | ------------------------------------ | ------------------------------------ |
+| `aligned`    | 无                                   | 使用容器与子项对齐                   |
+| `positioned` | `at`、`anchor?`、`width?`、`height?` | 内容区域局部目标点与可选精确分配尺寸 |
+
+React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
+
+## 相关属性
+
+以下集中回查本页使用的容器和子项字段。完整持久化输入见 [Schema 参考](/library/layout/overlay-layout/schema-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        '分别配置 x / y：`{ kind: "content", min?, max? }` 按内容；`{ kind: "fixed", value }` 固定尺寸；`{ kind: "fill", min?, max? }` 填充父级有限空间。',
+      defaultValue: '内容 / 内容',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: '从分配区域到内容区域的内边距',
+      defaultValue: '0',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description: '是否在容器分配区域上裁切视觉输出',
+      defaultValue: "'visible'",
+    },
+    {
+      name: 'justifyItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: '默认水平对齐',
+      defaultValue: "'center'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: '默认垂直对齐',
+      defaultValue: "'center'",
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'Array<OverlayLayoutItemInput>',
+      description: '作者声明的子项；显式 `key` 必须唯一',
+      defaultValue: '[]',
+    },
+  ]}
+/>
+
+<ComponentProps
+  items={[
+    {
+      name: 'kind',
+      kind: 'property',
+      type: "'overlay'",
+      description: '叠加布局子项判别字段',
+      required: true,
+    },
+    {
+      name: 'key',
+      kind: 'property',
+      type: 'string',
+      description: '可选稳定身份；省略时按 source index 生成',
+      defaultValue: '内部生成',
+    },
+    {
+      name: 'child',
+      kind: 'property',
+      type: 'IRChild',
+      description: '任意可 JSON 序列化的 Core 子图形',
+      required: true,
+    },
+    {
+      name: 'placement',
+      kind: 'property',
+      type: "{ kind: 'aligned' } | { kind: 'positioned'; at: { x: number; y: number }; anchor?: { x?: number; y?: number }; width?: number; height?: number }",
+      description: '对齐或内容区域局部定位',
+      defaultValue: 'aligned',
+    },
+    {
+      name: 'offset',
+      kind: 'property',
+      type: '{ x: number, y: number }',
+      description: '放置后的偏移',
+      defaultValue: '{0, 0}',
+    },
+    {
+      name: 'margin',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: '对齐或定位分配区域的外边距',
+      defaultValue: '0',
+    },
+    {
+      name: 'justifySelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: '覆盖水平对齐',
+      defaultValue: '容器值',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: '覆盖垂直对齐',
+      defaultValue: '容器值',
+    },
+    {
+      name: 'sizeParticipation',
+      kind: 'property',
+      type: "'include' | 'exclude'",
+      description: '是否参与固有尺寸轮廓计算',
+      defaultValue: "'include'",
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      description: '整数绘制层级；相同值保持作者声明顺序',
+      defaultValue: '0',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/overlay-layout/extended' },
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/overlay-layout/mechanism' },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+  ]}
+/>

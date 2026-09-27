@@ -31,6 +31,20 @@ FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` 测量子图形，
   ]}
 />
 
+## 一次布局事务
+
+布局容器是 Core 的布局感知复合组件。一次编译会按确定顺序完成以下阶段：
+
+1. **解析输入**：Core 按 `namespace` 与 `type` 找到 Definition，由唯一 schema 校验并应用静态默认值；Layout resolver 展开间距简写与上下文语义，不改写作者原始配置。
+2. **测量子图形**：容器通过 `layoutChild` 请求子图形的最小、自然、范围或精确尺寸候选。候选携带父级求值后的 `slotSize`、真实 `allocationBounds`、`visualBounds` 和可用对齐参考线。
+3. **求解容器**：Layout 的纯求解器根据容器规则、可用空间和候选测量结果决定轨道、布局行、分配区域与平移。
+4. **回放最终候选**：每个子图形只回放被选中的候选；未选候选不会发布图元、资源、命名空间或产物。
+5. **发布结果**：Core 把 Layout 返回的值封装为带 occurrence 的复合组件产物，与最终 Scene 一起返回。
+
+固定几何可以拒绝过小的分配区域，因此 `slotSize` 与真实 `allocationBounds` 必须分开观察。容器不会因为拒绝而重新猜测主轴尺寸；可确定的尺寸不足通过溢出状态和可见边界表达，无效或无法求解的配置则直接报错。
+
+嵌套布局仍属于同一次 Core 编译。内层容器作为普通子图形接受外层空间提案，每次复合组件出现（occurrence）分别发布本地 key 空间中的产物，不依赖公开 id 选择实例。
+
 ## 延伸阅读
 
 <LinkedSections
@@ -43,5 +57,6 @@ FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` 测量子图形，
       description: '查询持久化输入的字段约束',
       url: '/library/layout/flex-layout/schema-reference',
     },
-  ]}
+
+]}
 />

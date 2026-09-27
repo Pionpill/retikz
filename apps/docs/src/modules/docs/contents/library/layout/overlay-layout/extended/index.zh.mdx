@@ -1,0 +1,150 @@
+---
+title: 扩展用法
+description: 组合布局约束并检查求解后的边界与产物
+---
+
+本页在[基础用法](/library/layout/overlay-layout/usage)之上组合约束、观察边界并检查布局结果。先调整一个变量，再对照分配区域和真实占用。
+
+## 把徽标贴到局部目标点
+
+positioned 的 at 相对内容区域左上角，anchor 取子项 slot 的归一化位置。例如 slot 为 40×20，at=(150,20)、anchor=(1,0)，slot 左上角就是 (110,20)。offset 在放置完成后再平移，不改变 at 的坐标原点。
+
+width / height 可显式提出精确分配尺寸；固定几何仍可能超出分配区域。若需要让徽标不撑大内容自适应容器，设置 sizeParticipation="exclude"，而不是给它负尺寸或隐藏它。
+
+## 尺寸参与与叠放互相独立
+
+include / exclude 只控制最小和自然尺寸贡献。exclude 的子项依然测量、放置、回放并出现在产物中。zIndex 只决定绘制顺序；同一 zIndex 按 sourceIndex 保持稳定。无法用层级修复错误的尺寸参与策略。
+
+## 交互比较
+
+切换共享对齐，并移动定位徽标的目标点、锚点和 `zIndex`。预览中的三个子项发生重叠，因而层级变化会直接反映到绘制结果。
+
+<ComponentPreview
+  files="overlay-layout-playground"
+  size="lg"
+  caption="推荐态只显示 content 边界；可在“辅助层”中查看放置、锚点、padding、margin 与其它细节。"
+/>
+
+## 布局检查
+
+<ComponentProps
+  items={[
+    {
+      name: 'inspect',
+      kind: 'property',
+      type: 'false | true | OverlayLayoutInspectOptions',
+      description: '`InspectOverlayLayout` 为当前 occurrence 声明请求；`false` 只取消当前实例',
+      defaultValue: 'true',
+    },
+  ]}
+/>
+
+基础 `OverlayLayout` 没有 `inspect` 属性。可选的 `InspectOverlayLayout` 对象形式可分别控制 `placements`、`anchors` 与 `stacking`，并复用通用边界与盒模型间距开关。完整字段和宿主 / Scope 规则见[检查器说明](/library/layout/flex-layout/extended#检查器的宿主与范围)。
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { LayoutItem } from '@retikz/layout-react';
+import { LayoutInspectLayout, InspectOverlayLayout } from '@retikz/layout-react/inspect';
+export const Inspected = () => (
+  <Layout>
+    <LayoutInspectLayout>
+      <InspectOverlayLayout
+        size={{ x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } }}
+        inspect={{ bounds: { content: true, slot: true } }}
+      >
+        <LayoutItem kind="overlay">
+          <Node position={[0, 0]} text="A" />
+        </LayoutItem>
+      </InspectOverlayLayout>
+    </LayoutInspectLayout>
+  </Layout>
+);
+```
+
+### OverlayLayoutInspectOptionsSchema
+
+<ZodSchema
+  name="OverlayLayoutInspectOptionsSchema"
+  description="OverlayLayout 的通用与专属检查选项。"
+  descriptions={{
+    bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
+    spacing: '独立控制 padding 与 margin 纹理。',
+    overflow: '是否显示溢出阴影。',
+    alignmentGuides: '是否显示对齐参考线。',
+    labels: '是否显示辅助标签。',
+    placements: '是否显示对齐或局部定位后的分配区域；默认开启。',
+    anchors: '是否显示 positioned 子项的目标点与锚点；默认开启。',
+    stacking: '是否显示稳定绘制顺序标签；默认关闭。',
+  }}
+/>
+
+## 读取布局结果
+
+编译结果通过 occurrence 标识具体容器实例；不要只用公开 id 区分嵌套实例。先定位产物信封，再用对应 Schema 校验 value。下面只检查同次编译的结果，不重新求解。
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { OverlayLayoutDefinition, OverlayLayoutArtifactSchema, createOverlayLayout } from '@retikz/layout';
+const output = compileToScene(
+  { type: 'scene', version: 1, children: [createOverlayLayout({ children: [] })] },
+  { composites: [OverlayLayoutDefinition] },
+);
+const envelope = output.artifacts.find(
+  item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'overlayLayout',
+);
+if (envelope) {
+  const result = OverlayLayoutArtifactSchema.parse(envelope.value);
+  console.log(result.container, result.items);
+}
+```
+
+### OverlayLayoutArtifactSchema
+
+<ZodSchema
+  name="OverlayLayoutArtifactSchema"
+  description="OverlayLayout 的容器、声明顺序子项与稳定的已求解绘制顺序。"
+  descriptions={{
+    kind: 'OverlayLayout 产物的判别字段。',
+    container: '已求解的容器几何。',
+    'container.allocationBounds': '容器最终的分配矩形。',
+    'container.allocationBounds.x': '容器分配矩形的水平原点。',
+    'container.allocationBounds.y': '容器分配矩形的垂直原点。',
+    'container.allocationBounds.width': '容器分配矩形的非负宽度。',
+    'container.allocationBounds.height': '容器分配矩形的非负高度。',
+    'container.contentBounds': '扣除内边距后的容器内容矩形。',
+    'container.contentBounds.x': '容器内容矩形的水平原点。',
+    'container.contentBounds.y': '容器内容矩形的垂直原点。',
+    'container.contentBounds.width': '容器内容矩形的非负宽度。',
+    'container.contentBounds.height': '容器内容矩形的非负高度。',
+    'container.visualBounds': '所有已平移子项视觉边界的并集。',
+    'container.visualBounds.x': '视觉边界并集的水平原点。',
+    'container.visualBounds.y': '视觉边界并集的垂直原点。',
+    'container.visualBounds.width': '视觉边界并集的非负宽度。',
+    'container.visualBounds.height': '视觉边界并集的非负高度。',
+    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
+    items: '按作者声明顺序排列的子项结果。',
+    paintOrder: '包含全部子项 key 的稳定绘制顺序。',
+  }}
+/>
+
+`items[]` 增加 `placement`、`sizeParticipation`、`zIndex` 与可选 `position`。只有 `positioned` 子项必须提供 `position.target` 和 `position.slotAnchor`；两点都使用容器分配坐标，并在数值容差内重合。`aligned` 子项不得携带该字段。`paintOrder` 必须是所有子项 key 的完整排列：先按 `zIndex` 升序，再按 `sourceIndex` 保持稳定顺序。
+
+## 共同边界与检查规则
+
+三种布局使用相同的 slot、真实占用与视觉包络语义。读取结果前参阅[产物边界](/library/layout/flex-layout/extended#理解产物边界)；检查宿主、子树范围和屏障见[检查器的宿主与范围](/library/layout/flex-layout/extended#检查器的宿主与范围)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/overlay-layout/usage' },
+
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/overlay-layout/mechanism' },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+
+]}
+/>

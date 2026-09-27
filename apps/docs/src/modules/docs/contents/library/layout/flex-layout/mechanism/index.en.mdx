@@ -37,6 +37,20 @@ Each line runs bounded grow/shrink independently. An item freezes when it reache
   ]}
 />
 
+## One layout transaction
+
+A layout container is a Core layout-aware composite. One compilation proceeds through these deterministic stages:
+
+1. **Parse input**: Core resolves the definition by `namespace` and `type`; the single schema validates input and applies static defaults. The Layout resolver expands spacing shorthand and contextual semantics without rewriting authored configuration.
+2. **Probe children**: the container calls `layoutChild` for minimum, natural, ranged, or exact candidates. Results carry the parent-resolved `slotSize`, real `allocationBounds`, `visualBounds`, and available alignment guides.
+3. **Solve the container**: Layout solvers use container rules, available space, and probe measurements to resolve tracks, lines, slots, and translations.
+4. **Replay selected candidates**: each child replays only its selected candidate. Discarded probes publish no primitives, resources, namespaces, or artifacts.
+5. **Publish results**: Core wraps the Layout value in an occurrence-aware composite artifact and returns it with the final Scene.
+
+Fixed geometry may refuse a smaller slot, so `slotSize` and real `allocationBounds` remain distinct. Containers do not guess another main-axis distribution after refusal. Determinate undersizing is represented through overflow and visible bounds, while invalid or unsolvable configuration fails loudly.
+
+Nested layouts remain in the same Core compilation. An inner container receives the outer proposal as an ordinary child. Every composite occurrence publishes an artifact with a local key space, without relying on a public id as an instance selector.
+
 ## Further reading
 
 <LinkedSections
@@ -57,5 +71,6 @@ Each line runs bounded grow/shrink independently. An item freezes when it reache
       description: 'Look up persistent input constraints',
       url: '/library/layout/flex-layout/schema-reference',
     },
-  ]}
+
+]}
 />

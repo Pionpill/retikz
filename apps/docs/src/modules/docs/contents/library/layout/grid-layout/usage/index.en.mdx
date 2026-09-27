@@ -145,6 +145,27 @@ The example combines fixed, `1fr`, and `2fr` tracks, an explicit span, and items
 
 ## Container allocation and alignment
 
+Declare at least one `columns` track; omitted rows are sized from content. `justifyItems` / `alignItems` align items inside cells, while `justifyContent` / `alignContent` position the complete track group.
+
+## Choosing track types
+
+| Form     | Key fields                     | Meaning                                       |
+| -------- | ------------------------------ | --------------------------------------------- |
+| fixed    | `{ kind: 'fixed', value }`     | Fixed non-negative size                       |
+| content  | `{ kind: 'content', mode }`    | Child minimum or natural contribution         |
+| fraction | `{ kind: 'fraction', factor }` | Positive fraction weight in finite space      |
+| minmax   | `{ kind: 'minmax', min, max }` | Non-fraction lower and fixed/content/fr upper |
+
+## Item constraints
+
+Each item owns one `child`; its container assigns space and position. `margin` stays outside the slot. Item alignment overrides apply only to that item and otherwise inherit from the container.
+
+In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
+
+## Related props
+
+Look up container and item fields used on this page below. See [Schema reference](/library/layout/grid-layout/schema-reference) for the complete persistent input.
+
 <ComponentProps
   items={[
     {
@@ -178,14 +199,14 @@ The example combines fixed, `1fr`, and `2fr` tracks, an explicit span, and items
     {
       name: 'autoFlow',
       kind: 'property',
-      type: 'GridAutoFlow',
+      type: "'row' | 'column'",
       description: 'Deterministic non-dense auto-placement axis',
       defaultValue: "'row'",
     },
     {
       name: 'overlap',
       kind: 'property',
-      type: 'GridOverlap',
+      type: "'reject' | 'allow'",
       description: 'Policy for fully explicit item overlap',
       defaultValue: "'reject'",
     },
@@ -213,42 +234,43 @@ The example combines fixed, `1fr`, and `2fr` tracks, an explicit span, and items
     {
       name: 'alignItems',
       kind: 'property',
-      type: 'LayoutAlignment',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
       description: 'Default vertical item alignment',
       defaultValue: "'stretch'",
     },
     {
       name: 'justifyContent',
       kind: 'property',
-      type: 'LayoutDistribution',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
       description: 'Horizontal distribution of the column group',
       defaultValue: "'start'",
     },
     {
       name: 'alignContent',
       kind: 'property',
-      type: 'LayoutDistribution',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
       description: 'Vertical distribution of the row group',
       defaultValue: "'start'",
     },
     {
       name: 'size',
       kind: 'property',
-      type: 'LayoutSizeInput',
-      description: 'Per-axis container allocation policy',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        'Configure x / y independently: `{ kind: "content", min?, max? }` sizes from content; `{ kind: "fixed", value }` fixes size; `{ kind: "fill", min?, max? }` fills finite parent space.',
       defaultValue: 'content / content',
     },
     {
       name: 'padding',
       kind: 'property',
-      type: 'number | IRBoxSpacing',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
       description: 'Insets from allocation to content',
       defaultValue: '0',
     },
     {
       name: 'overflow',
       kind: 'property',
-      type: 'LayoutOverflow',
+      type: "'visible' | 'clip'",
       description: 'Whether visual output clips to allocation',
       defaultValue: "'visible'",
     },
@@ -261,17 +283,6 @@ The example combines fixed, `1fr`, and `2fr` tracks, an explicit span, and items
     },
   ]}
 />
-
-## Choosing track types
-
-| Form     | Key fields                     | Meaning                                       |
-| -------- | ------------------------------ | --------------------------------------------- |
-| fixed    | `{ kind: 'fixed', value }`     | Fixed non-negative size                       |
-| content  | `{ kind: 'content', mode }`    | Child minimum or natural contribution         |
-| fraction | `{ kind: 'fraction', factor }` | Positive fraction weight in finite space      |
-| minmax   | `{ kind: 'minmax', min, max }` | Non-fraction lower and fixed/content/fr upper |
-
-## Item constraints
 
 <ComponentProps
   items={[
@@ -313,7 +324,7 @@ The example combines fixed, `1fr`, and `2fr` tracks, an explicit span, and items
     {
       name: 'margin',
       kind: 'property',
-      type: 'number | IRBoxSpacing',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
       description: 'Item margin inside the track area',
       defaultValue: '0',
     },
@@ -327,14 +338,12 @@ The example combines fixed, `1fr`, and `2fr` tracks, an explicit span, and items
     {
       name: 'alignSelf',
       kind: 'property',
-      type: 'LayoutAlignment',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
       description: 'Vertical alignment override',
       defaultValue: 'container',
     },
   ]}
 />
-
-In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
 
 ## Further reading
 

@@ -11,3 +11,23 @@ This is the persistent input contract. Factories preserve omitted fields; parse(
   name="FlexLayoutSchema"
   description="Canonical input for one-dimensional grow, shrink, wrap, and baseline layout."
 />
+
+## LayoutItem union
+
+### LayoutItemSchema
+
+<ZodSchema
+  name="LayoutItemSchema"
+  description="Closed kind-discriminated union of FlexLayoutItem, GridLayoutItem, and OverlayLayoutItem."
+/>
+
+Every item shares these base fields. Each container page documents its additional distribution fields.
+
+| Field     | Type                            | Default   | Description                                                              |
+| --------- | ------------------------------- | --------- | ------------------------------------------------------------------------ |
+| `kind`    | `'flex' \| 'grid' \| 'overlay'` | —         | Selects the layout container that owns this item                         |
+| `key?`    | `string`                        | generated | Optional stable container-local identity; explicit values must be unique |
+| `child`   | `IRChild`                       | —         | JSON-safe Core or registered Tier 2 child being laid out                 |
+| `margin?` | `number` \| `IRBoxSpacing`      | `0`       | Spacing around the slot, excluded from the child proposal                |
+
+In React, write optional JSON `key` as `itemKey` and provide `child` through one drawable child or `ir`. When omitted, Layout creates a deterministic unique effective key from the source index. Generated keys exist only in internal artifacts and are not written back to Source IR. Inserting, deleting, or reordering items may change positional identities, so pass an explicit `key` when identity must remain stable across reordering. `LayoutItem` represents only a direct container item and emits no primitive by itself.

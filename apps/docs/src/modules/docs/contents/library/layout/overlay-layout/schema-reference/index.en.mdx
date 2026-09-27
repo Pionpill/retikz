@@ -1,0 +1,15 @@
+---
+title: Schema reference
+description: Look up persistent container fields and constraints
+---
+
+This is the persistent input contract. Factories preserve omitted fields; parse() materializes static defaults. See [basic usage](/library/layout/overlay-layout/usage) for items and [extended usage](/library/layout/overlay-layout/extended) for results.
+
+## OverlayLayoutSchema
+
+<ZodSchema
+  name="OverlayLayoutSchema"
+  description="Canonical input for aligned and positioned items sharing one content box."
+/>
+
+Items share `kind`, `key`, `child`, and `margin`. See [LayoutItemSchema](/library/layout/flex-layout/schema-reference#layoutitemschema) for the complete union and [basic usage](/library/layout/overlay-layout/usage) for this container’s fields.

@@ -135,40 +135,51 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
 
 ## 容器的分配与对齐
 
+先确定主轴方向和容器可用尺寸，再选择主轴剩余空间如何分布。`gap` 是固定间距，`justifyContent` 分配的是扣除子项与 gap 后的剩余空间；两者可以同时使用。
+
+## 子项约束
+
+`basis` 提供主轴基础尺寸，`grow` 和 `shrink` 决定空间有余或不足时如何调整，`min` / `max` 限定结果。先使用内容尺寸，确认需要固定比例后再加入权重。
+
+## 相关属性
+
+以下集中回查本页使用的容器和子项字段。完整持久化输入见 [Schema 参考](/library/layout/flex-layout/schema-reference)。
+
 <ComponentProps
   items={[
     {
       name: 'size',
       kind: 'property',
-      type: 'LayoutSizeInput',
-      description: '双轴分配策略；`fixed` 保留作者尺寸，`fill` 需要有限父级空间',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        '分别配置 x / y：`{ kind: "content", min?, max? }` 按内容；`{ kind: "fixed", value }` 固定尺寸；`{ kind: "fill", min?, max? }` 填充父级有限空间。',
       defaultValue: 'content / content',
     },
     {
       name: 'padding',
       kind: 'property',
-      type: 'number | IRBoxSpacing',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
       description: '从分配区域到内容区域的内边距',
       defaultValue: '0',
     },
     {
       name: 'overflow',
       kind: 'property',
-      type: 'LayoutOverflow',
+      type: "'visible' | 'clip'",
       description: '`clip` 在容器分配区域上创建一个 Scope 裁切',
       defaultValue: "'visible'",
     },
     {
       name: 'direction',
       kind: 'property',
-      type: 'FlexLayoutDirection',
+      type: "'row' | 'row-reverse' | 'column' | 'column-reverse'",
       description: '主轴及正反向遍历',
       defaultValue: "'row'",
     },
     {
       name: 'wrap',
       kind: 'property',
-      type: 'FlexLayoutWrap',
+      type: "'nowrap' | 'wrap' | 'wrap-reverse'",
       description: '单行、换行或反向交叉轴放置',
       defaultValue: "'nowrap'",
     },
@@ -182,21 +193,21 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
     {
       name: 'justifyContent',
       kind: 'property',
-      type: 'FlexMainDistributionValue',
+      type: "'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'",
       description: '每条布局行的主轴剩余空间分布',
       defaultValue: "'start'",
     },
     {
       name: 'alignItems',
       kind: 'property',
-      type: 'LayoutAlignment',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
       description: '默认交叉轴对齐；纵向主轴不接受基线对齐',
       defaultValue: "'stretch'",
     },
     {
       name: 'alignContent',
       kind: 'property',
-      type: 'LayoutDistribution',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
       description: '多条布局行的交叉轴剩余空间分布',
       defaultValue: "'start'",
     },
@@ -209,8 +220,6 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
     },
   ]}
 />
-
-## 子项约束
 
 <ComponentProps
   items={[
@@ -238,7 +247,7 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
     {
       name: 'margin',
       kind: 'property',
-      type: 'number | IRBoxSpacing',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
       description: '分配区域外边距；不进入子图形的空间提案',
       defaultValue: '0',
     },
@@ -280,7 +289,7 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
     {
       name: 'alignSelf',
       kind: 'property',
-      type: 'LayoutAlignment',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
       description: '覆盖当前子项的交叉轴对齐',
       defaultValue: 'alignItems',
     },

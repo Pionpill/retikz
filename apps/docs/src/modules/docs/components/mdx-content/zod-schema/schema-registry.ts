@@ -659,78 +659,78 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LayoutInspectBoundsOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
     label: 'LayoutInspectBoundsOptions',
-    url: '/library/layout/reference/runtime#layoutinspectboundsoptionsschema',
+    url: '/library/layout/flex-layout/extended#layoutinspectboundsoptionsschema',
   },
   LayoutInspectSpacingOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
     label: 'LayoutInspectSpacingOptions',
-    url: '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
+    url: '/library/layout/flex-layout/extended#layoutinspectspacingoptionsschema',
   },
   BaseLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
     label: 'BaseLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#baselayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/extended#baselayoutinspectoptionsschema',
   },
   FlexLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
     label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/flex-layout/extended',
+    url: '/library/layout/flex-layout/extended#flexlayoutinspectoptionsschema',
   },
   GridLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
     label: 'GridLayoutInspectOptions',
-    url: '/library/layout/grid-layout/extended',
+    url: '/library/layout/grid-layout/extended#gridlayoutinspectoptionsschema',
   },
   OverlayLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
     label: 'OverlayLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#overlaylayoutinspectoptionsschema',
+    url: '/library/layout/overlay-layout/extended#overlaylayoutinspectoptionsschema',
   },
 
   FlexLayoutSchema: {
     schema: LayoutIR.FlexLayoutSchema,
     label: 'FlexLayout',
-    url: '/library/layout/flex-layout/schema-reference',
+    url: '/library/layout/flex-layout/schema-reference#flexlayoutschema',
   },
   GridLayoutSchema: {
     schema: LayoutIR.GridLayoutSchema,
     label: 'GridLayout',
-    url: '/library/layout/grid-layout/schema-reference',
+    url: '/library/layout/grid-layout/schema-reference#gridlayoutschema',
   },
   OverlayLayoutSchema: {
     schema: LayoutIR.OverlayLayoutSchema,
     label: 'OverlayLayout',
-    url: '/library/layout/reference/contract-input#overlaylayoutschema',
+    url: '/library/layout/overlay-layout/schema-reference#overlaylayoutschema',
   },
   LayoutItemSchema: {
     schema: LayoutIR.LayoutItemSchema,
     label: 'LayoutItem',
-    url: '/library/layout/reference/contract-input#layoutitemschema',
+    url: '/library/layout/flex-layout/schema-reference#layoutitemschema',
   },
   LayoutArtifactSchema: {
     schema: LayoutIR.LayoutArtifactSchema,
     label: 'LayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#layoutartifactschema',
+    url: '/library/layout/flex-layout/extended#layoutartifactschema',
   },
   LayoutSpacingArtifactSchema: {
     schema: LayoutIR.LayoutSpacingArtifactSchema,
     label: 'LayoutSpacingArtifact',
-    url: '/library/layout/reference/contract-artifact#layoutspacingartifactschema',
+    url: '/library/layout/flex-layout/extended#layoutspacingartifactschema',
   },
   FlexLayoutArtifactSchema: {
     schema: LayoutIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',
-    url: '/library/layout/flex-layout/extended',
+    url: '/library/layout/flex-layout/extended#flexlayoutartifactschema',
   },
   GridLayoutArtifactSchema: {
     schema: LayoutIR.GridLayoutArtifactSchema,
     label: 'GridLayoutArtifact',
-    url: '/library/layout/grid-layout/extended',
+    url: '/library/layout/grid-layout/extended#gridlayoutartifactschema',
   },
   OverlayLayoutArtifactSchema: {
     schema: LayoutIR.OverlayLayoutArtifactSchema,
     label: 'OverlayLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#overlaylayoutartifactschema',
+    url: '/library/layout/overlay-layout/extended#overlaylayoutartifactschema',
   },
   FrameSchema: {
     schema: StandardPresentationIR.FrameSchema,

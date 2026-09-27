@@ -87,6 +87,30 @@ console.log(svg);
 
 Both hosts default to horizontal rows (`direction: 'row'`). `LayoutItem kind="flex"` selects Flex item constraints and holds one drawable child. `minimumSize: 32` sets both minimum width and minimum height. A Node without `shape` defaults to a rectangle.
 
+## How hosts recognize layouts
+
+| Granularity    | Public entry                                                              | Purpose                                                   |
+| -------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
+| One definition | `FlexLayoutDefinition`, `GridLayoutDefinition`, `OverlayLayoutDefinition` | Register one layout composite with Core                   |
+| React          | `FlexLayout`, `GridLayout`, `OverlayLayout`, `LayoutItem`                 | Build canonical IR and contribute definitions to `Layout` |
+| Vanilla        | `LayoutInputEmbedAdapters`                                                | Recognize all three embeds in Scene, mount, or SSR hosts  |
+
+Pass one or more of the three layout Definitions directly in `CompileOptions.composites`. React and Vanilla adapters produce the same Layout IR and contribute the same Definitions; their adapter convenience arrays do not become Core compile presets.
+
+### React
+
+The three `@retikz/layout-react` containers are embeddable Tier 2 components. Their direct children must be `LayoutItem` elements with the matching `kind`. Fragments and arrays flatten transparently, but ordinary JSX nodes cannot bypass item semantics.
+
+Every `LayoutItem` requires exactly one of `children` or `ir` and must produce exactly one `IRChild`. Optional React `itemKey` becomes canonical JSON `key`. When omitted, Source IR has no `key`, and Layout generates a container-local effective key from the source index before solving. It never reads React's reserved `key`. Nested Layout containers may contribute the same family, while external datasets or foreign Tier 2 runtime contributions remain the outer host's responsibility.
+
+React containers start no local compilation and perform no DOM measurement. They contribute IR and definitions to the outer `Layout`, which compiles and renders the complete tree. Observe artifacts through the outer host.
+
+### Vanilla
+
+`flexLayout()`, `gridLayout()`, and `overlayLayout()` return `InputEmbed` values. Scene, mount, or SSR hosts need the matching adapter; use `LayoutInputEmbedAdapters` for the complete family.
+
+Each adapter calls the same `createXxxLayout()` factory as direct authoring and contributes the layout Definitions required by its family. Vanilla therefore shares schemas, definitions, solvers, and artifact semantics with direct Core compilation and React.
+
 ## Further reading
 
 Change `gap.column` to adjust spacing. To distribute remaining space, assign a size to the container and set `grow` on an item. Continue with [Flex layout](/library/layout/flex-layout). Use [Grid layout](/library/layout/grid-layout) for two-dimensional regions or [Overlay layout](/library/layout/overlay-layout) for stacking.
