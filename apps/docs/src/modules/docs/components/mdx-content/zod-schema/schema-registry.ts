@@ -679,7 +679,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GridLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
     label: 'GridLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#gridlayoutinspectoptionsschema',
+    url: '/library/layout/grid-layout/extended',
   },
   OverlayLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
@@ -695,7 +695,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GridLayoutSchema: {
     schema: LayoutIR.GridLayoutSchema,
     label: 'GridLayout',
-    url: '/library/layout/reference/contract-input#gridlayoutschema',
+    url: '/library/layout/grid-layout/schema-reference',
   },
   OverlayLayoutSchema: {
     schema: LayoutIR.OverlayLayoutSchema,
@@ -725,7 +725,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GridLayoutArtifactSchema: {
     schema: LayoutIR.GridLayoutArtifactSchema,
     label: 'GridLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#gridlayoutartifactschema',
+    url: '/library/layout/grid-layout/extended',
   },
   OverlayLayoutArtifactSchema: {
     schema: LayoutIR.OverlayLayoutArtifactSchema,

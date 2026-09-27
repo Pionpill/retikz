@@ -1,0 +1,33 @@
+---
+title: Schema 参考
+description: 查询持久化容器输入的字段与约束
+---
+
+下面是持久化输入契约。工厂保留省略字段，parse() 才物化静态默认值。子项写法见[基础用法](/library/layout/grid-layout/usage)，求解结果见[扩展用法](/library/layout/grid-layout/extended)。
+
+## GridLayoutSchema
+
+<ZodSchema
+  name="GridLayoutSchema"
+  description="二维轨道、跨轨道与非密集自动放置布局的规范输入。"
+  descriptions={{
+    size: '包含内边距的容器双轴分配尺寸策略。',
+    padding: '从容器分配区域到内容区域的内边距。',
+    overflow: '视觉溢出保持可见或裁切到容器分配区域的策略。',
+    namespace: 'Layout 排版能力的复合组件命名空间。',
+    type: '确定性二维轨道布局的复合组件类型。',
+    columns: '显式声明的物理列轨道。',
+    rows: '显式声明的物理行轨道。',
+    implicitColumn: '隐式列使用的轨道定义。',
+    implicitRow: '隐式行使用的轨道定义。',
+    autoFlow: '完全自动放置子项的非密集流向。',
+    overlap: '完全显式放置的子项发生重叠时采用的策略。',
+    columnGap: '列轨道之间的水平间距。',
+    rowGap: '行轨道之间的垂直间距。',
+    justifyItems: '网格区域内子项默认的水平对齐方式。',
+    alignItems: '网格区域内子项默认的垂直对齐方式。',
+    justifyContent: '已求解列组的水平分布方式。',
+    alignContent: '已求解行组的垂直分布方式。',
+    children: '按稳定绘制顺序排列、由作者声明的网格子项。',
+  }}
+/>

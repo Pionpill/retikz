@@ -260,7 +260,17 @@ export const librarySection: Array<Section> = [
         id: 'grid-layout',
         label: 'library.gridLayout',
         sidebarGroup: 'library.components',
-        difficulty: 'advanced',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+        children: [
+          { id: 'usage', label: 'schematic.basicUsage', difficulty: 'beginner' },
+          { id: 'extended', label: 'schematic.extensionUsage', difficulty: 'advanced' },
+          { id: 'mechanism', label: 'schematic.mechanism', difficulty: 'internals' },
+          {
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
+          },
+        ],
       },
       {
         id: 'overlay-layout',

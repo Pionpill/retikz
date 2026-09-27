@@ -210,7 +210,7 @@
     "layout": "Layout · 布局包",
     "layoutNavigationDescription": "使用容器与约束组织图形布局",
     "flexLayout": "FlexLayout · 弹性布局",
-    "gridLayout": "网格布局",
+    "gridLayout": "GridLayout · 网格布局",
     "overlayLayout": "叠加布局",
     "layoutReference": "API 参考",
     "layoutContractInput": "契约 - 输入",

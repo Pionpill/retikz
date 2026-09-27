@@ -1,7 +1,7 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { createLayoutInspectionControls } from '../layout-inspection-controls';
+import { createLayoutInspectionControls } from '../../layout-inspection-controls';
 
 /** GridLayout 辅助层的 family 英文开关 */
 export const gridLayoutInspectionFamilyControls = [

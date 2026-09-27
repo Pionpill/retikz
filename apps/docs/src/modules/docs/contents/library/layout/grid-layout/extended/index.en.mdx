@@ -1,0 +1,124 @@
+---
+title: Extended usage
+description: Combine constraints and inspect solved bounds and artifacts
+---
+
+Build on [basic usage](/library/layout/grid-layout/usage) to combine constraints and inspect results. Change one variable and compare allocated slots with actual geometry.
+
+## Explicit tracks and automatic placement
+
+Declare columns and rows, then set start and span for positioned items. start is zero-based and span is a positive integer. autoFlow resolves unspecified axes; implicitColumn and implicitRow define tracks created beyond the explicit grid.
+
+Fixed tracks reserve stable regions; content tracks read contributions; fraction tracks share finite available space; minmax expresses bounds. Fraction sizing requires a finite allocation and is not a pixel size.
+
+## Automatic placement and explicit overlap
+
+Automatic placement uses a non-dense stable cursor; it does not expose dense hole filling. Fully explicit overlaps are rejected unless overlap="allow". Placement never reorders the source array or stable paint order. A spanning region includes intervening gaps. Margins inset that region before item alignment.
+
+## Interactive comparison
+
+Switch the non-dense auto-placement direction, fraction weight, gaps, and cell alignment. A fixed viewBox keeps track proportions, spans, and placement directly comparable.
+
+<ComponentPreview
+  files="grid-layout-playground"
+  size="lg"
+  caption="Recommended shows the content outline, track bounds, and fixed gaps; use Inspection overlay to reveal padding, margin, distributed-space boundaries, and other details."
+/>
+
+## Inspecting the layout
+
+<ComponentProps
+  items={[
+    {
+      name: 'inspect',
+      kind: 'property',
+      type: 'false | true | GridLayoutInspectOptions',
+      description: '`InspectGridLayout` requests this occurrence; `false` only cancels the current instance',
+      defaultValue: 'true',
+    },
+  ]}
+/>
+
+Base `GridLayout` has no `inspect` prop. The optional `InspectGridLayout` object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. See [Runtime Reference](/library/layout/reference/runtime#layout-inspector) for shared fields and host or Scope rules.
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { LayoutItem } from '@retikz/layout-react';
+import { LayoutInspectLayout, InspectGridLayout } from '@retikz/layout-react/inspect';
+export const Inspected = () => (
+  <Layout>
+    <LayoutInspectLayout>
+      <InspectGridLayout
+        columns={[
+          { kind: 'fixed', value: 80 },
+          { kind: 'fixed', value: 80 },
+        ]}
+        columnGap={12}
+        inspect={{ bounds: { content: true, slot: true } }}
+      >
+        <LayoutItem kind="grid">
+          <Node position={[0, 0]} text="A" />
+        </LayoutItem>
+      </InspectGridLayout>
+    </LayoutInspectLayout>
+  </Layout>
+);
+```
+
+<ZodSchema name="GridLayoutInspectOptionsSchema" description="Shared and GridLayout-specific inspection options." />
+
+## Reading layout results
+
+An occurrence identifies a concrete container instance; a public id alone cannot distinguish nested instances. Locate the artifact envelope and parse its value. Inspection reads that compilation result without solving again.
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { GridLayoutDefinition, GridLayoutArtifactSchema, createGridLayout } from '@retikz/layout';
+const output = compileToScene(
+  {
+    type: 'scene',
+    version: 1,
+    children: [createGridLayout({ columns: [{ kind: 'content', mode: 'natural' }], children: [] })],
+  },
+  { composites: [GridLayoutDefinition] },
+);
+const envelope = output.artifacts.find(
+  item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'gridLayout',
+);
+if (envelope) {
+  const result = GridLayoutArtifactSchema.parse(envelope.value);
+  console.log(result.container, result.items);
+}
+```
+
+<ZodSchema
+  name="GridLayoutArtifactSchema"
+  description="GridLayout container, resolved item spans, and column/row track geometry."
+/>
+
+Each item adds `column`, `row`, `columnSpan`, and `rowSpan`. `columns[]` and `rows[]` are sorted by physical start and record contiguous `index`, `start`, `size`, `sourceKind`, and `implicit` fields.
+
+Required `spacing[]` uses the full content height for column spacing and the full content width for row spacing. Intersections between the two bands remain present and paint deterministically in x-then-y order.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/grid-layout/usage',
+    },
+
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/grid-layout/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
+  ]}
+/>

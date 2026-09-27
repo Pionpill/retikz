@@ -27,11 +27,11 @@ import { previewSource as flexPlaygroundSource } from '../../src/modules/docs/co
 import { previewControlContract as flexEnContract } from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-playground.en.controls';
 import FlexEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/usage/flex-layout-basic.en.demo';
 import FlexZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/usage/flex-layout-basic.zh.demo';
-import GridEnDemo from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-basic.en.demo';
-import GridZhDemo from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-basic.zh.demo';
-import { previewControlContract as gridZhContract } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.controls';
-import { previewSource as gridPlaygroundSource } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.demo';
-import { previewControlContract as gridEnContract } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.en.controls';
+import { previewControlContract as gridZhContract } from '../../src/modules/docs/contents/library/layout/grid-layout/extended/grid-layout-playground.controls';
+import { previewSource as gridPlaygroundSource } from '../../src/modules/docs/contents/library/layout/grid-layout/extended/grid-layout-playground.demo';
+import { previewControlContract as gridEnContract } from '../../src/modules/docs/contents/library/layout/grid-layout/extended/grid-layout-playground.en.controls';
+import GridEnDemo from '../../src/modules/docs/contents/library/layout/grid-layout/usage/grid-layout-basic.en.demo';
+import GridZhDemo from '../../src/modules/docs/contents/library/layout/grid-layout/usage/grid-layout-basic.zh.demo';
 import { previewSource as nestedEnSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.en.demo';
 import { previewSource as nestedZhSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.zh.demo';
 import OverlayEnDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-basic.en.demo';

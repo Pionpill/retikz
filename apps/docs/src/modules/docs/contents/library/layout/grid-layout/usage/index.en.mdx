@@ -1,0 +1,359 @@
+---
+title: Basic usage
+description: Declare the container and items, then control size, spacing, and alignment
+---
+
+`GridLayout` divides its content box into physical column and row tracks. Tracks may be fixed, use minimum or natural content contributions, absorb finite free space by fractions, or combine bounds with `minmax`. Items may declare continuous spans or follow `autoFlow` into the next available area.
+
+## Using this topic
+
+See [Quick start](/library/layout/get-start) for installation. Direct children must use LayoutItem with a matching kind; each item owns one drawable child.
+
+```text
+GridLayout
+└── LayoutItem (kind="grid")
+    └── Node / GridLayout
+```
+
+<ComponentPreview files="/library/layout/grid-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { GridLayout, LayoutItem } from '@retikz/layout-react';
+export const Example = () => (
+  <Layout>
+    <GridLayout
+      columns={[
+        { kind: 'fixed', value: 80 },
+        { kind: 'fixed', value: 80 },
+      ]}
+      columnGap={12}
+    >
+      <LayoutItem kind="grid">
+        <Node position={[0, 0]} text="A" />
+      </LayoutItem>
+      <LayoutItem kind="grid">
+        <Node position={[0, 0]} text="B" />
+      </LayoutItem>
+    </GridLayout>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { GridLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'gridLayout',
+      columns: [
+        { kind: 'fixed', value: 80 },
+        { kind: 'fixed', value: 80 },
+      ],
+      columnGap: 12,
+      children: [
+        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[GridLayoutDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { gridLayout, GridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+const input = scene({
+  children: [
+    gridLayout({
+      columns: [
+        { kind: 'fixed', value: 80 },
+        { kind: 'fixed', value: 80 },
+      ],
+      columnGap: 12,
+      children: [
+        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    }),
+  ],
+});
+console.log(renderToSvgString(input, { adapters: [GridLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { GridLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'gridLayout',
+      columns: [
+        { kind: 'fixed', value: 80 },
+        { kind: 'fixed', value: 80 },
+      ],
+      columnGap: 12,
+      children: [
+        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+console.log(renderToSvgString(ir, { compile: { composites: [GridLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+Use `createGridLayout()` with `GridLayoutDefinition` for JSON/IR, or `gridLayout()` with `GridLayoutInputEmbedAdapter` for Vanilla. For the complete family, pass the three layout Definitions in `composites`, or use `LayoutInputEmbedAdapters` for Vanilla embeds.
+
+| Scenario         | Public entry                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| React            | `GridLayout`, `LayoutItem` (`@retikz/layout-react`)                                               |
+| Vanilla          | `gridLayout`, `GridLayoutInputEmbedAdapter` (`@retikz/layout-vanilla`)                            |
+| Optional inspect | `InspectGridLayout` (`@retikz/layout-react/inspect`), `inspectGridLayout` (Vanilla)               |
+| IR / persistence | `GridLayoutSchema`, `createGridLayout`, `IRGridLayout`, `GridLayoutDefinition` (`@retikz/layout`) |
+
+## Tracks and placement
+
+The example combines fixed, `1fr`, and `2fr` tracks, an explicit span, and items without coordinates. Auto placement advances in canonical authored order and does not implement browser-style dense backfilling.
+
+<ComponentPreview files="grid-layout-basic" size="md" />
+
+## Container allocation and alignment
+
+<ComponentProps
+  items={[
+    {
+      name: 'columns',
+      kind: 'property',
+      type: 'Array<GridTrackInput>',
+      description: 'At least one explicit physical column track',
+      required: true,
+    },
+    {
+      name: 'rows',
+      kind: 'property',
+      type: 'Array<GridTrackInput>',
+      description: 'Explicit row tracks',
+      defaultValue: '[]',
+    },
+    {
+      name: 'implicitColumn',
+      kind: 'property',
+      type: 'GridTrackInput',
+      description: 'Track used when placement extends columns',
+      defaultValue: 'content natural',
+    },
+    {
+      name: 'implicitRow',
+      kind: 'property',
+      type: 'GridTrackInput',
+      description: 'Track used when placement extends rows',
+      defaultValue: 'content natural',
+    },
+    {
+      name: 'autoFlow',
+      kind: 'property',
+      type: 'GridAutoFlow',
+      description: 'Deterministic non-dense auto-placement axis',
+      defaultValue: "'row'",
+    },
+    {
+      name: 'overlap',
+      kind: 'property',
+      type: 'GridOverlap',
+      description: 'Policy for fully explicit item overlap',
+      defaultValue: "'reject'",
+    },
+    {
+      name: 'columnGap',
+      kind: 'property',
+      type: 'number',
+      description: 'Physical column gap',
+      defaultValue: '0',
+    },
+    {
+      name: 'rowGap',
+      kind: 'property',
+      type: 'number',
+      description: 'Physical row gap',
+      defaultValue: '0',
+    },
+    {
+      name: 'justifyItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: 'Default horizontal item alignment',
+      defaultValue: "'stretch'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: 'LayoutAlignment',
+      description: 'Default vertical item alignment',
+      defaultValue: "'stretch'",
+    },
+    {
+      name: 'justifyContent',
+      kind: 'property',
+      type: 'LayoutDistribution',
+      description: 'Horizontal distribution of the column group',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'alignContent',
+      kind: 'property',
+      type: 'LayoutDistribution',
+      description: 'Vertical distribution of the row group',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'size',
+      kind: 'property',
+      type: 'LayoutSizeInput',
+      description: 'Per-axis container allocation policy',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | IRBoxSpacing',
+      description: 'Insets from allocation to content',
+      defaultValue: '0',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: 'LayoutOverflow',
+      description: 'Whether visual output clips to allocation',
+      defaultValue: "'visible'",
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'Array<GridLayoutItemInput>',
+      description: 'Authored items; explicit keys must be unique',
+      defaultValue: '[]',
+    },
+  ]}
+/>
+
+## Choosing track types
+
+| Form     | Key fields                     | Meaning                                       |
+| -------- | ------------------------------ | --------------------------------------------- |
+| fixed    | `{ kind: 'fixed', value }`     | Fixed non-negative size                       |
+| content  | `{ kind: 'content', mode }`    | Child minimum or natural contribution         |
+| fraction | `{ kind: 'fraction', factor }` | Positive fraction weight in finite space      |
+| minmax   | `{ kind: 'minmax', min, max }` | Non-fraction lower and fixed/content/fr upper |
+
+## Item constraints
+
+<ComponentProps
+  items={[
+    {
+      name: 'kind',
+      kind: 'property',
+      type: "'grid'",
+      description: 'GridLayout item discriminator',
+      required: true,
+    },
+    {
+      name: 'key',
+      kind: 'property',
+      type: 'string',
+      description: 'Optional stable identity; generated from source index when omitted',
+      defaultValue: 'generated',
+    },
+    {
+      name: 'child',
+      kind: 'property',
+      type: 'IRChild',
+      description: 'Any JSON-safe Core child',
+      required: true,
+    },
+    {
+      name: 'column',
+      kind: 'property',
+      type: '{ start?: number, span?: number }',
+      description: 'Column placement',
+      defaultValue: 'auto / span 1',
+    },
+    {
+      name: 'row',
+      kind: 'property',
+      type: '{ start?: number, span?: number }',
+      description: 'Row placement',
+      defaultValue: 'auto / span 1',
+    },
+    {
+      name: 'margin',
+      kind: 'property',
+      type: 'number | IRBoxSpacing',
+      description: 'Item margin inside the track area',
+      defaultValue: '0',
+    },
+    {
+      name: 'justifySelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: 'Horizontal alignment override',
+      defaultValue: 'container',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: 'LayoutAlignment',
+      description: 'Vertical alignment override',
+      defaultValue: 'container',
+    },
+  ]}
+/>
+
+In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and inspect results',
+      url: '/library/layout/grid-layout/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/grid-layout/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
+  ]}
+/>

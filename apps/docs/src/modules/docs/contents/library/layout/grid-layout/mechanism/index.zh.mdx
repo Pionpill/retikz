@@ -1,0 +1,47 @@
+---
+title: 实现原理
+description: 理解测量、空间求解与最终放置的关系
+---
+
+先阅读[基础用法](/library/layout/grid-layout/usage)。本页解释布局结果为什么成立，使用时不需要调用这些内部步骤。
+
+## 为什么列宽先于行高
+
+横向约束先决定文字可用宽度，再测量折行后的高度。Grid 固定采用物理 x→y 顺序，即使 autoFlow 改为按列搜索，轴求解次序也不变。图中“固定列宽→重测高度”是尺寸依赖，不能反转成先固定行高再猜宽度。
+
+<ComponentPreview files="allocation-figure" hideCode type="flow" size="md" />
+
+## 约束如何成为位置
+
+GridLayout 使用固定的物理 x→y 求解顺序：
+
+1. 校验显式放置，按 `autoFlow` 解析未完整指定的子项，并据此物化隐式轨道。
+2. 沿 x 轴测量最小和自然内容贡献，求列尺寸轮廓与有限宽度分配。
+3. 把最终列分配区域传给子图形，再沿 y 轴测量文本重排后的高度并求行尺寸轮廓。
+4. 按 `justifyItems`、`alignItems` 或子项覆盖值放置真实占用，最后回放被选中的测量候选。
+
+这个物理 x→y 顺序使文本在列宽确定后再决定行高，不需要 DOM 回读或循环猜测。`GridLayoutArtifact` 公开已求解的列与行、隐式轨道标记，以及每个子项最终的跨轨道范围。
+
+<SourceLinks
+  sources={[
+    { label: 'GridLayout 输入契约', path: 'packages/library/layout/src/composites/grid-layout/schema.ts' },
+    { label: '网格自动放置', path: 'packages/library/layout/src/composites/grid-layout/placement.ts' },
+    { label: '网格轨道求解器', path: 'packages/library/layout/src/composites/grid-layout/tracks.ts' },
+    { label: 'GridLayout 编译', path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/grid-layout/usage' },
+    { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/grid-layout/extended' },
+
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
+  ]}
+/>

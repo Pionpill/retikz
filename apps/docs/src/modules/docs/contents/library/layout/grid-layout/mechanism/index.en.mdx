@@ -1,0 +1,58 @@
+---
+title: Implementation
+description: Understand measurement, allocation, and final placement
+---
+
+Read [basic usage](/library/layout/grid-layout/usage) first. This page explains the result; callers do not invoke the internal stages themselves.
+
+## Why column width precedes row height
+
+Horizontal allocation determines text width before wrapped height is measured. Grid always solves physical x before y, even when autoFlow searches by columns. The width-to-height dependency cannot be reversed by guessing a width after fixing row height.
+
+<ComponentPreview files="allocation-figure" hideCode type="flow" size="md" />
+
+## From constraints to placement
+
+GridLayout uses a fixed physical x-to-y solve order:
+
+1. Validate explicit placement, resolve incomplete items by `autoFlow`, and materialize implicit tracks.
+2. Probe minimum and natural contributions along x, then solve column profiles and finite width.
+3. Pass final column slots to children, probe reflowed heights along y, then solve row profiles.
+4. Place real allocation bounds by container or item alignment and replay only selected probes.
+
+This physical x-to-y order lets text determine height after column width is known, without DOM readback or iterative guessing. `GridLayoutArtifact` exposes resolved columns, rows, implicit flags, and final item spans.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'GridLayout input contract',
+      path: 'packages/library/layout/src/composites/grid-layout/schema.ts',
+    },
+    { label: 'Grid placement', path: 'packages/library/layout/src/composites/grid-layout/placement.ts' },
+    { label: 'Grid track solver', path: 'packages/library/layout/src/composites/grid-layout/tracks.ts' },
+    { label: 'GridLayout compile', path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/grid-layout/usage',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and inspect results',
+      url: '/library/layout/grid-layout/extended',
+    },
+
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
+  ]}
+/>
