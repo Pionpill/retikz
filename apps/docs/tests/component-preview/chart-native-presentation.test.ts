@@ -177,7 +177,9 @@ describe('Chart-native Scatter presentation', () => {
       expect(vanilla.code).toContain(`import { ${datasetExport} } from '${datasetModule}';`);
       expect(vanilla.code).not.toContain('const datasets =');
       expect(vanilla.code).toContain("import { renderChart } from '@retikz/chart-vanilla';");
-      expect(vanilla.code).toContain("import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';");
+      expect(vanilla.code).toContain(
+        "import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';",
+      );
       expect(vanilla.code).not.toContain('markDefinitions: [scatterMarkDefinition]');
       expect(vanilla.svg).toContain('<svg');
     }

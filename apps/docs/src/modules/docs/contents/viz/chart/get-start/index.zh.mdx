@@ -39,11 +39,11 @@ createRoot(document.getElementById('chart')!).render(
 
 <PackageManagerInstall packages="@retikz/chart-vanilla" />
 
-在 HTML 中准备 `<div id="chart"></div>`，将代码放入 TypeScript 入口。`createScatterChart` 创建图形，`renderChart` 输出 SVG，再将结果放入容器。
+在 HTML 中准备 `<div id="chart"></div>`，将代码放入 TypeScript 入口。`scatterChart` 创建图形，`renderChart` 输出 SVG，再将结果放入容器。
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 
 const rows = [
   { x: 1, y: 2 },
@@ -51,7 +51,7 @@ const rows = [
   { x: 3, y: 5 },
 ];
 
-const chart = createScatterChart({
+const chart = scatterChart({
   data: rows,
   layout: { width: 640, height: 360 },
   title: { text: '两个变量的关系' },
@@ -59,7 +59,7 @@ const chart = createScatterChart({
   properties: { size: 8 },
 });
 
-document.getElementById('chart')!.innerHTML = renderChart(chart).svg;
+document.getElementById('chart')!.innerHTML = renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] }).svg;
 ```
 
 </DocTab>

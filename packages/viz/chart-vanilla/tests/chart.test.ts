@@ -1,20 +1,43 @@
+import type { IRChartSource } from '@retikz/chart';
 import { defineChartTheme } from '@retikz/chart';
 import { defineThemeStyle } from '@retikz/core';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { definePlotThemeStyle } from '@retikz/plot';
+import type { AnyInputEmbed } from '@retikz/vanilla';
+import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import { renderChart } from '../src';
 import {
-  createBubbleChart,
-  createConnectedScatterChart,
-  createRangedDotChart,
-  createRegressionChart,
-  createScatterChart,
-  createStripChart,
+  ScatterChartInputEmbedAdapter,
+  BubbleChartInputEmbedAdapter,
+  ConnectedScatterChartInputEmbedAdapter,
+  RangedDotChartInputEmbedAdapter,
+  RegressionChartInputEmbedAdapter,
+  StripChartInputEmbedAdapter,
 } from '../src/point';
+import {
+  bubbleChart,
+  connectedScatterChart,
+  rangedDotChart,
+  regressionChart,
+  scatterChart,
+  stripChart,
+} from '../src/point';
+
+const adapters = [
+  ScatterChartInputEmbedAdapter,
+  BubbleChartInputEmbedAdapter,
+  ConnectedScatterChartInputEmbedAdapter,
+  RangedDotChartInputEmbedAdapter,
+  RegressionChartInputEmbedAdapter,
+  StripChartInputEmbedAdapter,
+];
+
+const sourceOf = (chart: AnyInputEmbed): IRChartSource =>
+  normalizeScene(scene({ children: [chart] }), { adapters }).ir.children[0] as IRChartSource;
 
 const rows = [
   { x: 1, y: 2, size: 3, order: 1 },
@@ -41,47 +64,41 @@ const sceneIdsOf = (primitives: ReadonlyArray<ScenePrimitiveLike>): Array<string
 
 describe('Chart Vanilla authoring', () => {
   it('creates Bubble Source, one runtime dataset, and its concrete provider contribution', () => {
-    const chart = createBubbleChart({
+    const chart = bubbleChart({
       data: rows,
       dataRef: 'bubble.rows',
       encodings: { x: 'x', y: 'y', size: 'size' },
     });
 
-    expect(chart.source).toMatchObject({
+    expect(sourceOf(chart)).toMatchObject({
       type: 'point',
       data: { reference: 'bubble.rows' },
       recipe: { chartType: 'bubble', encodings: { size: 'size' } },
     });
-    expect(chart.input.datasets).toEqual({ 'bubble.rows': rows });
-    expect(chart.input.source).toBe(chart.source);
-    expect(chart.input.chartProviderContribution.providers.at(-1)?.key).toEqual({
-      capability: 'composite',
-      namespace: 'chart',
-      type: 'point',
-    });
+    expect({ [chart.props.dataRef ?? 'chart.data']: chart.props.data }).toEqual({ 'bubble.rows': rows });
   });
 
   it('renders Bubble through the same SSR path as other Point charts', () => {
-    const chart = createBubbleChart({
+    const chart = bubbleChart({
       id: 'bubble',
       data: rows,
       encodings: { x: 'x', y: 'y', size: 'size' },
     });
-    const rendered = renderChart(chart);
+    const rendered = renderChart(chart, { adapters });
 
     expect(rendered.svg).toContain('<svg');
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toContain('bubble');
   });
 
   it('creates Regression Source, dataset binding, and its concrete provider contribution', () => {
-    const chart = createRegressionChart({
+    const chart = regressionChart({
       data: regressionRows,
       dataRef: 'regression.rows',
       encodings: { x: 'x', y: 'y', series: 'species' },
       properties: { method: { kind: 'linear' }, sampleCount: 8 },
     });
 
-    expect(chart.source).toMatchObject({
+    expect(sourceOf(chart)).toMatchObject({
       namespace: 'chart',
       type: 'point',
       data: { reference: 'regression.rows' },
@@ -91,29 +108,23 @@ describe('Chart Vanilla authoring', () => {
         properties: { method: { kind: 'linear' }, sampleCount: 8 },
       },
     });
-    expect(chart.input.datasets).toEqual({ 'regression.rows': regressionRows });
-    expect(chart.input.source).toBe(chart.source);
-    expect(chart.input.chartProviderContribution.providers.at(-1)?.key).toEqual({
-      capability: 'composite',
-      namespace: 'chart',
-      type: 'point',
-    });
+    expect({ [chart.props.dataRef ?? 'chart.data']: chart.props.data }).toEqual({ 'regression.rows': regressionRows });
   });
 
   it('renders grouped Regression through SSR without serializing runtime Definitions', () => {
-    const chart = createRegressionChart({
+    const chart = regressionChart({
       id: 'regression',
       data: regressionRows,
       encodings: { x: 'x', y: 'y', series: 'species' },
       properties: { sampleCount: 8 },
     });
-    const rendered = renderChart(chart);
-    const serializedSource = JSON.stringify(chart.source);
+    const rendered = renderChart(chart, { adapters });
+    const serializedSource = JSON.stringify(sourceOf(chart));
 
     expect(rendered.svg).toContain('<svg');
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toContain('regression');
     expect(serializedSource).not.toMatch(/providers|definitions|schema|apply|lowerOptions/iu);
-    expect(JSON.parse(serializedSource)).toEqual(chart.source);
+    expect(JSON.parse(serializedSource)).toEqual(sourceOf(chart));
   });
 
   it('does not expose a generic Chart authoring path', async () => {
@@ -125,16 +136,16 @@ describe('Chart Vanilla authoring', () => {
   it('forwards named Theme definitions and Plot lowering options without putting them in Source', () => {
     const themeDefinitions = [defineChartTheme({ name: 'scatter-theme', defaults: { layout: { gap: 8 } } })];
     const lowerOptions = { fieldMaps: { rows: { x: 'x' } } } as const;
-    const result = createScatterChart({
+    const result = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
       themeDefinitions,
       lowerOptions,
     });
 
-    expect(result.input).not.toHaveProperty('themeDefinitions');
-    expect(result.input.lowerOptions).toBe(lowerOptions);
-    expect(result.source).not.toHaveProperty('themeDefinitions');
+    expect(result.props.themeDefinitions).toBe(themeDefinitions);
+    expect(result.props.lowerOptions).toBe(lowerOptions);
+    expect(sourceOf(result)).not.toHaveProperty('themeDefinitions');
   });
 
   it('keeps the Core host Theme and Theme style definitions in the authoring result and SSR', () => {
@@ -142,7 +153,7 @@ describe('Chart Vanilla authoring', () => {
       name: 'host-style',
       resolve: () => ({ categorical: ['#123456'] }),
     });
-    const result = createScatterChart({
+    const result = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
       theme: { style: 'host-style', mode: 'dark' },
@@ -158,31 +169,31 @@ describe('Chart Vanilla authoring', () => {
       },
     });
 
-    expect(result.theme).toEqual({ style: 'host-style', mode: 'dark' });
-    expect(result.themeStyles).toEqual([hostThemeStyle]);
-    expect(result.input).not.toHaveProperty('theme');
-    expect(result.input).not.toHaveProperty('themeStyles');
-    expect(renderChart(result).svg).toContain('#123456');
+    expect(result.props.theme).toEqual({ style: 'host-style', mode: 'dark' });
+    expect(result.props.themeStyles).toEqual([hostThemeStyle]);
+    expect(sourceOf(result)).not.toHaveProperty('theme');
+    expect(sourceOf(result)).not.toHaveProperty('themeStyles');
+    expect(renderChart(result, { adapters }).svg).toContain('#123456');
   });
 
   it('writes explicit Chart defaults into Source while keeping Core theme in the host result', () => {
-    const result = createScatterChart({
+    const result = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
       chartDefaults: { background: { fill: '#abcdef' } },
     });
 
-    expect(result.source.chartDefaults).toEqual({ background: { fill: '#abcdef' } });
+    expect(sourceOf(result).chartDefaults).toEqual({ background: { fill: '#abcdef' } });
     expect(result).not.toHaveProperty('theme');
   });
 
   it('forwards sparse Point recipe guide controls through concrete factories', () => {
-    const scatter = createScatterChart({
+    const scatter = scatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y', size: 'size' },
       guides: { axis: false, grid: false, legend: false },
     });
-    const strip = createStripChart({
+    const strip = stripChart({
       data: rows,
       encodings: {
         x: { field: 'x', scale: { operation: { type: 'point', name: 'x' } } },
@@ -191,28 +202,28 @@ describe('Chart Vanilla authoring', () => {
       guides: { grid: false },
     });
 
-    expect(scatter.source.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
-    expect(strip.source.recipe.guides).toEqual({ grid: false });
+    expect(sourceOf(scatter).recipe.guides).toEqual({ axis: false, grid: false, legend: false });
+    expect(sourceOf(strip).recipe.guides).toEqual({ grid: false });
   });
 
   it('routes Core host Theme metadata through the shared helper for every Point factory', () => {
     const factories = [
-      () => createScatterChart({ data: rows, encodings: { x: 'x', y: 'y' }, theme: { mode: 'dark' } }),
-      () => createBubbleChart({ data: rows, encodings: { x: 'x', y: 'y', size: 'size' }, theme: { mode: 'dark' } }),
+      () => scatterChart({ data: rows, encodings: { x: 'x', y: 'y' }, theme: { mode: 'dark' } }),
+      () => bubbleChart({ data: rows, encodings: { x: 'x', y: 'y', size: 'size' }, theme: { mode: 'dark' } }),
       () =>
-        createRegressionChart({
+        regressionChart({
           data: regressionRows,
           encodings: { x: 'x', y: 'y' },
           theme: { mode: 'dark' },
         }),
       () =>
-        createConnectedScatterChart({
+        connectedScatterChart({
           data: rows,
           encodings: { x: 'x', y: 'y', order: 'order' },
           theme: { mode: 'dark' },
         }),
       () =>
-        createRangedDotChart({
+        rangedDotChart({
           data: rows,
           encodings: { category: 'x', start: 'y', end: 'size' },
           theme: { mode: 'dark' },
@@ -221,9 +232,9 @@ describe('Chart Vanilla authoring', () => {
 
     for (const create of factories) {
       const result = create();
-      expect(result.theme).toEqual({ mode: 'dark' });
-      expect(result.source).not.toHaveProperty('theme');
-      expect(result.input).not.toHaveProperty('theme');
+      expect(result.props.theme).toEqual({ mode: 'dark' });
+      expect(sourceOf(result)).not.toHaveProperty('theme');
+      expect(sourceOf(result)).not.toHaveProperty('theme');
     }
   });
 
@@ -247,7 +258,7 @@ describe('Chart Vanilla authoring', () => {
       },
       apply: (inputRows, operation) => inputRows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
     });
-    const chart = createScatterChart({
+    const chart = scatterChart({
       id: 'custom-transform',
       data: rows,
       encodings: {
@@ -260,27 +271,27 @@ describe('Chart Vanilla authoring', () => {
       lowerOptions: { transformDefinitions: [copyField] },
     });
 
-    expect(() => renderChart(chart)).not.toThrow();
-    expect(JSON.stringify(chart.source)).toContain('copy-chart-field');
-    expect(JSON.stringify(chart.source)).not.toMatch(/outputModel|apply/);
+    expect(() => renderChart(chart, { adapters })).not.toThrow();
+    expect(JSON.stringify(sourceOf(chart))).toContain('copy-chart-field');
+    expect(JSON.stringify(sourceOf(chart))).not.toMatch(/outputModel|apply/);
   });
 
   it('normalizes typed Point factories to family plus chartType Source IR', () => {
-    const scatter = createScatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
+    const scatter = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
 
-    expect(scatter.source).toMatchObject({ type: 'point', recipe: { chartType: 'scatter' } });
-    expect(scatter.source).not.toHaveProperty('config');
+    expect(sourceOf(scatter)).toMatchObject({ type: 'point', recipe: { chartType: 'scatter' } });
+    expect(sourceOf(scatter)).not.toHaveProperty('config');
   });
 
   it('preserves Chart, derived Plot, mark, and Plot-area identity through the Core adapter', () => {
-    const chart = createScatterChart({
+    const chart = scatterChart({
       id: 'scatter',
       data: rows,
       encodings: { x: 'x', y: 'y' },
       layout: { width: 320, height: 200 },
       lowerOptions: { provenance: true, datumProvenance: true },
     });
-    const rendered = renderChart(chart, { output: { width: 320, height: 200 } });
+    const rendered = renderChart(chart, { adapters, output: { width: 320, height: 200 } });
 
     expect(rendered.svg).toContain('<svg');
     expect(rendered.compileResult.scene.primitives).toHaveLength(1);
@@ -290,8 +301,8 @@ describe('Chart Vanilla authoring', () => {
   });
 
   it('does not synthesize Scene ids for an anonymous Chart without provenance', () => {
-    const chart = createScatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
-    const rendered = renderChart(chart);
+    const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
+    const rendered = renderChart(chart, { adapters });
 
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toEqual([]);
   });

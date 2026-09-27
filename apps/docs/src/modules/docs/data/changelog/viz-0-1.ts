@@ -273,6 +273,13 @@ export const vizV01: Release = {
           },
           items: [
             {
+              label: { zh: 'Vanilla 编写节点统一', en: 'Unified Vanilla authoring nodes' },
+              content: {
+                zh: '点图通过 scatterChart、bubbleChart 等返回标准 InputEmbed，可直接组合进 Scene；各图类 adapter 在处理时规范化 Source 和组装依赖。移除旧 createXxxChart 与 ChartAuthoringResult，renderChart 显式接收 adapters；React 和直接 IR 继续使用同一领域主链。',
+                en: 'Point-chart builders such as scatterChart and bubbleChart return standard InputEmbed nodes for Scene composition. Each chart adapter normalizes Source and assembles dependencies during processing. The old createXxxChart and ChartAuthoringResult APIs are removed, and renderChart takes explicit adapters; React and direct IR retain the same domain pipeline.',
+              },
+            },
+            {
               label: {
                 zh: 'BREAKING：Point 图按最大点半径自动留白',
                 en: 'BREAKING: Point charts pad by their largest Point radius',
@@ -432,15 +439,15 @@ export const vizV01: Release = {
         {
           label: { zh: 'Bubble plain factory 与 SSR', en: 'Bubble plain factory and SSR' },
           content: {
-            zh: '`normalizeBubbleChart` 与 `createBubbleChart` 从精确 input 生成 `type: "point"`、`recipe.chartType: "bubble"` 的 Source，并安装对应 provider；`renderChart` 继续通过同一次 Core compile 输出 SVG。',
-            en: '`normalizeBubbleChart` and `createBubbleChart` produce a `type: "point"`, `recipe.chartType: "bubble"` Source from exact input and install its provider; `renderChart` continues to emit SVG through the same Core compile.',
+            zh: '`normalizeBubbleChart` 与 `bubbleChart` 从精确 input 生成 `type: "point"`、`recipe.chartType: "bubble"` 的 Source，并安装对应 provider；`renderChart` 继续通过同一次 Core compile 输出 SVG。',
+            en: '`normalizeBubbleChart` and `bubbleChart` produce a `type: "point"`, `recipe.chartType: "bubble"` Source from exact input and install its provider; `renderChart` continues to emit SVG through the same Core compile.',
           },
         },
         {
           label: { zh: 'Regression plain factory 与 SSR', en: 'Regression plain factory and SSR' },
           content: {
-            zh: '`normalizeRegressionChart` 与 `createRegressionChart` 保留精确 Regression encodings、properties 与 marks，安装对应 provider，并与 React / JSON Source 共用 Chart、Data 与 Plot 解析主链。',
-            en: '`normalizeRegressionChart` and `createRegressionChart` preserve exact Regression encodings, properties, and marks, install the matching provider, and share the Chart, Data, and Plot resolution path with React and JSON Source.',
+            zh: '`normalizeRegressionChart` 与 `regressionChart` 保留精确 Regression encodings、properties 与 marks，安装对应 provider，并与 React / JSON Source 共用 Chart、Data 与 Plot 解析主链。',
+            en: '`normalizeRegressionChart` and `regressionChart` preserve exact Regression encodings, properties, and marks, install the matching provider, and share the Chart, Data, and Plot resolution path with React and JSON Source.',
           },
         },
       ],

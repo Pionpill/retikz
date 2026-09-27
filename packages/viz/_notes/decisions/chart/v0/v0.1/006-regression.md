@@ -89,7 +89,7 @@ type IRPlotSmoothMethod =
 具体入口为：
 
 - `@retikz/chart/point/regression`：Regression exact Source 与 provider contribution
-- `@retikz/chart-vanilla/point/regression`：`normalizeRegressionChart` 与 `createRegressionChart`
+- `@retikz/chart-vanilla/point/regression`：`normalizeRegressionChart` 与 `regressionChart`
 - `@retikz/chart-react/point/regression`：`RegressionChart`、`RegressionEncodings`、`RegressionProperties` 与 `RegressionMark`
 
 JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`RegressionMark` 默认追加一组新的 Point 与趋势 Path；`override: true` 原位替换内建 `regression` semantic group，两种情况都保留不可移除的 mark-local Smooth 与完整复合结构。

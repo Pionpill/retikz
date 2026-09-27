@@ -1,29 +1,45 @@
 import type { IRChartSource } from '@retikz/chart';
 import { renderChart } from '@retikz/chart-vanilla';
-import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
-import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
-import type { CreateConnectedScatterChartInput } from '@retikz/chart-vanilla/point/connected-scatter';
-import { createConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
-import type { CreateRangedDotChartInput } from '@retikz/chart-vanilla/point/ranged-dot';
-import { createRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
-import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
-import { createRegressionChart } from '@retikz/chart-vanilla/point/regression';
-import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
-import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
-import type { CreateStripChartInput } from '@retikz/chart-vanilla/point/strip';
-import { createStripChart } from '@retikz/chart-vanilla/point/strip';
-import type { IRBubbleChart } from '@retikz/chart/point/bubble';
-import { BubbleChartSchema } from '@retikz/chart/point/bubble';
-import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
-import { ConnectedScatterChartSchema } from '@retikz/chart/point/connected-scatter';
-import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
-import { RangedDotChartSchema } from '@retikz/chart/point/ranged-dot';
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
-import { RegressionChartSchema } from '@retikz/chart/point/regression';
-import type { IRScatterChart } from '@retikz/chart/point/scatter';
-import { ScatterChartSchema } from '@retikz/chart/point/scatter';
-import type { IRStripChart } from '@retikz/chart/point/strip';
-import { StripChartSchema } from '@retikz/chart/point/strip';
+import {
+  ScatterChartInputEmbedAdapter,
+  BubbleChartInputEmbedAdapter,
+  ConnectedScatterChartInputEmbedAdapter,
+  RangedDotChartInputEmbedAdapter,
+  RegressionChartInputEmbedAdapter,
+  StripChartInputEmbedAdapter,
+} from '@retikz/chart-vanilla/point';
+import type {
+  BubbleChartInputEmbedProps,
+  ConnectedScatterChartInputEmbedProps,
+  RangedDotChartInputEmbedProps,
+  RegressionChartInputEmbedProps,
+  ScatterChartInputEmbedProps,
+  StripChartInputEmbedProps,
+} from '@retikz/chart-vanilla/point';
+import {
+  bubbleChart,
+  connectedScatterChart,
+  rangedDotChart,
+  regressionChart,
+  scatterChart,
+  stripChart,
+} from '@retikz/chart-vanilla/point';
+import type {
+  IRBubbleChart,
+  IRConnectedScatterChart,
+  IRRangedDotChart,
+  IRRegressionChart,
+  IRScatterChart,
+  IRStripChart,
+} from '@retikz/chart/point';
+import {
+  BubbleChartSchema,
+  ConnectedScatterChartSchema,
+  RangedDotChartSchema,
+  RegressionChartSchema,
+  ScatterChartSchema,
+  StripChartSchema,
+} from '@retikz/chart/point';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
@@ -915,14 +931,15 @@ const buildChartCode = (
   const typedSource = typedChartSourceOf(chart);
   if (typedSource !== undefined) {
     const factoryByChartType = {
-      bubble: { factory: 'createBubbleChart', subpath: 'bubble' },
-      'connected-scatter': { factory: 'createConnectedScatterChart', subpath: 'connected-scatter' },
-      'ranged-dot': { factory: 'createRangedDotChart', subpath: 'ranged-dot' },
-      regression: { factory: 'createRegressionChart', subpath: 'regression' },
-      scatter: { factory: 'createScatterChart', subpath: 'scatter' },
-      strip: { factory: 'createStripChart', subpath: 'strip' },
+      bubble: 'bubbleChart',
+      'connected-scatter': 'connectedScatterChart',
+      'ranged-dot': 'rangedDotChart',
+      regression: 'regressionChart',
+      scatter: 'scatterChart',
+      strip: 'stripChart',
     } as const;
-    const { factory, subpath } = factoryByChartType[typedSource.recipe.chartType];
+    const factory = factoryByChartType[typedSource.recipe.chartType];
+    const adapter = `${factory[0].toUpperCase()}${factory.slice(1)}InputEmbedAdapter`;
     const datasetImport = buildDatasetImportCode(datasets, options);
     const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
     const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
@@ -944,8 +961,8 @@ const buildChartCode = (
       .replace("'__CHART_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.chart')
       .replace("'__PLOT_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.plot');
     const size = outputSize(preview);
-    const renderOptionsCode = Object.keys(size).length === 0 ? '' : `, ${formatVanillaValue({ output: size })}`;
-    return `import { renderChart } from '@retikz/chart-vanilla';\nimport { ${factory} } from '@retikz/chart-vanilla/point/${subpath}';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
+    const renderOptionsCode = `, { adapters: [${adapter}]${Object.keys(size).length === 0 ? '' : `, output: ${formatVanillaValue(size)}`} }`;
+    return `import { renderChart } from '@retikz/chart-vanilla';\nimport { ${factory}, ${adapter} } from '@retikz/chart-vanilla/point';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
   }
   return diagnostic(`Cannot generate Vanilla preview for unknown Chart Source type "${chart.type}".`).code;
 };
@@ -972,20 +989,28 @@ const buildChartPreview = (
   const runtime = (() => {
     switch (chart.recipe.chartType) {
       case 'bubble':
-        return createBubbleChart(input as CreateBubbleChartInput);
+        return bubbleChart(input as BubbleChartInputEmbedProps);
       case 'connected-scatter':
-        return createConnectedScatterChart(input as CreateConnectedScatterChartInput);
+        return connectedScatterChart(input as ConnectedScatterChartInputEmbedProps);
       case 'ranged-dot':
-        return createRangedDotChart(input as CreateRangedDotChartInput);
+        return rangedDotChart(input as RangedDotChartInputEmbedProps);
       case 'regression':
-        return createRegressionChart(input as CreateRegressionChartInput);
+        return regressionChart(input as RegressionChartInputEmbedProps);
       case 'scatter':
-        return createScatterChart(input as CreateScatterChartInput);
+        return scatterChart(input as ScatterChartInputEmbedProps);
       case 'strip':
-        return createStripChart(input as CreateStripChartInput);
+        return stripChart(input as StripChartInputEmbedProps);
     }
   })();
   const rendered = renderChart(runtime, {
+    adapters: [
+      ScatterChartInputEmbedAdapter,
+      BubbleChartInputEmbedAdapter,
+      ConnectedScatterChartInputEmbedAdapter,
+      RangedDotChartInputEmbedAdapter,
+      RegressionChartInputEmbedAdapter,
+      StripChartInputEmbedAdapter,
+    ],
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),
   });

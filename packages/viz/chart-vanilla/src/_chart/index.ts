@@ -1,19 +1,20 @@
-import { CHART_NAMESPACE } from '@retikz/chart';
 import type { CompileResult } from '@retikz/core';
 import type { RenderToStringOptions } from '@retikz/vanilla';
-import { embed, renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
+import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
+import type { InputEmbed } from '@retikz/vanilla';
 
 import { RetikzChartVanillaError } from '../error';
-import type { ChartAuthoringResult } from '../shared/types';
-import { ChartInputEmbedAdapter } from './adapter';
+import type { ChartHostThemeInput } from '../shared';
 
 export type { InputChartCoordinate } from '../normalize/chart';
 export { normalizeChartCoordinate } from '../normalize/chart';
-export type { ChartAuthoringResult, ChartHostThemeInput, ChartInput, InputChartPanel } from '../shared';
-export { ChartInputEmbedAdapter } from './adapter';
+export type { ChartHostThemeInput, InputChartPanel } from '../shared';
 
 /** Chart 服务端渲染选项 */
-export type RenderChartOptions = Omit<RenderToStringOptions, 'adapters' | 'compileDriver'>;
+export type RenderChartOptions = Omit<RenderToStringOptions, 'adapters' | 'compileDriver'> & {
+  /** 当前图表的 Vanilla adapter */
+  adapters: NonNullable<RenderToStringOptions['adapters']>;
+};
 
 /** Chart 单次编译与服务端渲染结果 */
 export type RenderChartResult = Readonly<{
@@ -24,26 +25,29 @@ export type RenderChartResult = Readonly<{
 }>;
 
 /** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG */
-export const renderChart = (input: ChartAuthoringResult, options: RenderChartOptions = {}): RenderChartResult => {
-  const { compile: compileOptions, ...renderOptions } = options;
+export const renderChart = (
+  input: InputEmbed<ChartHostThemeInput>,
+  options: RenderChartOptions,
+): RenderChartResult => {
+  const { compile: compileOptions, adapters, ...renderOptions } = options;
   const {
     composites: explicitComposites,
     themeStyles: explicitThemeStyles,
     ...compileOptionsWithoutDefinitions
   } = compileOptions ?? {};
   const themeStyles =
-    input.themeStyles === undefined
+    input.props.themeStyles === undefined
       ? explicitThemeStyles
       : explicitThemeStyles === undefined
-        ? input.themeStyles
-        : [...input.themeStyles, ...explicitThemeStyles];
+        ? input.props.themeStyles
+        : [...input.props.themeStyles, ...explicitThemeStyles];
   const result = toSceneResult(
     scene({
-      ...(input.theme === undefined ? {} : { theme: input.theme }),
-      children: [embed({ kind: CHART_NAMESPACE, id: input.source.id ?? CHART_NAMESPACE, props: input.input })],
+      ...(input.props.theme === undefined ? {} : { theme: input.props.theme }),
+      children: [input],
     }),
     {
-      adapters: [ChartInputEmbedAdapter],
+      adapters,
       compile: {
         ...compileOptionsWithoutDefinitions,
         ...(explicitComposites === undefined ? {} : { composites: explicitComposites }),

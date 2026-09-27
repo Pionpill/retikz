@@ -137,7 +137,8 @@
     "@retikz/foundation": "workspace:^",
     "@retikz/plot": "workspace:^",
     "@retikz/plot-react": "workspace:^",
-    "@retikz/react": "workspace:^"
+    "@retikz/react": "workspace:^",
+    "@retikz/vanilla": "workspace:^"
   },
   "peerDependencies": {
     "react": ">=18",

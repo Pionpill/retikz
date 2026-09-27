@@ -69,13 +69,27 @@ plotExtension.transform
 
 ## 三套包，各自只做一段
 
-根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`InputChartCoordinate`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 把根 `coordinate` prop、`ChartData` / `ChartLayout` / `ChartCoordinate` / `ChartExtension`、presentation marker 和 chartType 私有 declaration 折叠到同一 Vanilla Input；Plot declarations 只能位于 `ChartExtension`，并继续复用 Plot normalizer。动态 family / chartType 路由由应用层负责。
+根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；`@retikz/chart/point` 统一公开各点图的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`InputChartCoordinate`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 把根 `coordinate` prop、`ChartData` / `ChartLayout` / `ChartCoordinate` / `ChartExtension`、presentation marker 和 chartType 私有 declaration 折叠到同一 Vanilla Input；Plot declarations 只能位于 `ChartExtension`，并继续复用 Plot normalizer。动态 family / chartType 路由由应用层负责。
 
 | 入口           | 根 `type` | `recipe.chartType` | 导入位置                    |
 | -------------- | --------- | ------------------ | --------------------------- |
 | `ScatterChart` | `point`   | `scatter`          | `@retikz/chart-react/point` |
 
-Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导入。具体子路径只装载对应 chartType；family 根入口仅作为显式聚合入口。它返回保留运行时主题信息的编写结果；最终渲染仍复用共享 Chart 适配与解析主链。
+Vanilla 的 `scatterChart` 从 `@retikz/chart-vanilla/point` 导入。点图创建函数统一从 family 入口按名称导入，不深入具体 chartType 子路径。它返回标准 `InputEmbed`，可直接放入 `scene.children`；`ScatterChartInputEmbedAdapter` 在场景处理时规范化 Source 并组装依赖。运行时数据与主题定义保留在编写输入中，不写入 JSON IR。
+
+将多个组件组合到同一场景时，使用通用 Vanilla 渲染入口，并显式提供对应 adapter：
+
+```ts
+import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { renderToSvgString, scene } from '@retikz/vanilla';
+
+const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
+const svg = renderToSvgString(scene({ children: [chart] }), {
+  adapters: [ScatterChartInputEmbedAdapter],
+});
+```
+
+独立图表可使用 `renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] })` 获取 `{ svg, compileResult }`。需要持久化 Source 时使用 `normalizeScatterChart`；不要序列化包含运行时数据、主题定义或回调的 InputEmbed。
 
 <SourceLinks
   sources={[

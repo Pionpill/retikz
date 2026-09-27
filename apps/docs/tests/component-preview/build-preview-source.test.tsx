@@ -283,7 +283,7 @@ describe('buildPreviewSource', () => {
     expect(ir?.files[0]?.code).not.toContain('__chart.scatter.guide');
     expect(vanilla?.files[0]?.code).toContain("import { renderChart } from '@retikz/chart-vanilla'");
     expect(vanilla?.files[0]?.code).toContain(
-      "import { createScatterChart } from '@retikz/chart-vanilla/point/scatter'",
+      "import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
     );
     expect(vanilla?.files[0]?.code).not.toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
     expect(vanilla?.files[0]?.code).toContain("title: { text: 'Income and life expectancy' }");
@@ -313,7 +313,9 @@ describe('buildPreviewSource', () => {
       presentation: { title: { text: 'Income, life expectancy, and population' } },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
-    expect(vanilla?.files[0]?.code).toContain("import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble'");
+    expect(vanilla?.files[0]?.code).toContain(
+      "import { bubbleChart, BubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
+    );
     expect(vanilla?.files[0]?.code).toContain("size: 'population'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
@@ -335,7 +337,9 @@ describe('buildPreviewSource', () => {
       },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "strip"');
-    expect(vanilla?.files[0]?.code).toContain("import { createStripChart } from '@retikz/chart-vanilla/point/strip'");
+    expect(vanilla?.files[0]?.code).toContain(
+      "import { stripChart, StripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
+    );
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });

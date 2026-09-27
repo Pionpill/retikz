@@ -22,7 +22,7 @@ const pointChartCases = [
 describe('@retikz/chart-vanilla public surface', () => {
   it('keeps only shared rendering primitives on the root entry', () => {
     expect(chart).toHaveProperty('renderChart');
-    expect(chart).toHaveProperty('ChartInputEmbedAdapter');
+    expect(chart).not.toHaveProperty('ChartInputEmbedAdapter');
     expect(chart).toHaveProperty('normalizeChartCoordinate');
     expect(chart).not.toHaveProperty('createChart');
     expect(chart).not.toHaveProperty('normalizeChart');
@@ -32,8 +32,10 @@ describe('@retikz/chart-vanilla public surface', () => {
 
   it('exports precise Point factories and normalizers from the Point entry', () => {
     for (const { prefix } of pointChartCases) {
-      expect(point).toHaveProperty(`create${prefix}Chart`);
+      expect(point).toHaveProperty(`${prefix[0].toLowerCase()}${prefix.slice(1)}Chart`);
       expect(point).toHaveProperty(`normalize${prefix}Chart`);
+      expect(point).toHaveProperty(`${prefix}ChartInputEmbedAdapter`);
+      expect(point).not.toHaveProperty(`create${prefix}Chart`);
     }
     expect(point).not.toHaveProperty('createChart');
     expect(point).not.toHaveProperty('normalizeChart');
@@ -42,7 +44,7 @@ describe('@retikz/chart-vanilla public surface', () => {
   it('publishes concrete chartType subpath entries', async () => {
     for (const { load, prefix } of pointChartCases) {
       const module = await load();
-      expect(module).toHaveProperty(`create${prefix}Chart`);
+      expect(module).toHaveProperty(`${prefix[0].toLowerCase()}${prefix.slice(1)}Chart`);
       expect(module).toHaveProperty(`normalize${prefix}Chart`);
     }
   });

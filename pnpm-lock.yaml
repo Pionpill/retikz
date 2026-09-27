@@ -1482,6 +1482,9 @@ importers:
       '@retikz/react':
         specifier: workspace:^
         version: link:../../kernel/react
+      '@retikz/vanilla':
+        specifier: workspace:^
+        version: link:../../kernel/vanilla
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

@@ -87,16 +87,16 @@ export const Example = () => <Layout ir={ir} extensions={definitions} />;
 
 ```ts
 import { renderChart } from '@retikz/chart-vanilla';
-import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
 import { scatterMinimalData } from './scatter-minimal.data';
 
-const chart = createScatterChart({
+const chart = scatterChart({
   data: scatterMinimalData,
   title: { text: 'IMDb and Rotten Tomatoes ratings move together' },
   encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' },
   properties: { size: 5, opacity: 0.65 },
 });
-export const svg = renderChart(chart).svg;
+export const svg = renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] }).svg;
 ```
 
 </DocTab>

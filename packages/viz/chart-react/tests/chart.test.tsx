@@ -1,3 +1,4 @@
+import type { IRChartSource } from '@retikz/chart';
 import { normalizeBubbleChart } from '@retikz/chart-vanilla/point/bubble';
 import { normalizeConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
 import { normalizeRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
@@ -7,6 +8,8 @@ import { normalizeStripChart } from '@retikz/chart-vanilla/point/strip';
 import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
+import { normalizeScene, scene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -35,14 +38,22 @@ import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '
 import { StripChart, StripEncodings, StripMark, StripProperties } from '../src/point/strip';
 
 type InputComponent<TInput> = {
+  inputEmbedAdapter: InputEmbedAdapter<TInput>;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
 
-const inputOf = <TInput,>(component: InputComponent<TInput>, children: ReactNode): TInput =>
-  component.createInputEmbedProps({ children });
+/** 通过正式场景归一化观察 React 编写结果 */
+const inputFromProps = <TInput,>(component: InputComponent<TInput>, props: Readonly<Record<string, unknown>>) => {
+  const input = component.createInputEmbedProps(props);
+  const normalized = normalizeScene(
+    scene({ children: [{ type: 'embed', kind: component.inputEmbedAdapter.kind, props: input }] }),
+    { adapters: [component.inputEmbedAdapter] },
+  );
+  return { source: normalized.ir.children[0] as IRChartSource, input };
+};
 
-const inputFromProps = <TInput,>(component: InputComponent<TInput>, props: Readonly<Record<string, unknown>>): TInput =>
-  component.createInputEmbedProps(props);
+const inputOf = <TInput,>(component: InputComponent<TInput>, children: ReactNode) =>
+  inputFromProps(component, { children });
 
 const requiredDeclarations = (
   <>
@@ -91,13 +102,12 @@ const requiredStripDeclarations = (
 const coordinateRootPropCases = [
   {
     name: 'BubbleChart',
-    createInput: () =>
-      BubbleChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredBubbleDeclarations }),
+    createInput: () => inputFromProps(BubbleChart, { coordinate: 'polar2D', children: requiredBubbleDeclarations }),
   },
   {
     name: 'ConnectedScatterChart',
     createInput: () =>
-      ConnectedScatterChart.createInputEmbedProps({
+      inputFromProps(ConnectedScatterChart, {
         coordinate: 'polar2D',
         children: (
           <>
@@ -110,7 +120,7 @@ const coordinateRootPropCases = [
   {
     name: 'RangedDotChart',
     createInput: () =>
-      RangedDotChart.createInputEmbedProps({
+      inputFromProps(RangedDotChart, {
         coordinate: 'polar2D',
         children: (
           <>
@@ -123,15 +133,15 @@ const coordinateRootPropCases = [
   {
     name: 'RegressionChart',
     createInput: () =>
-      RegressionChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredRegressionDeclarations }),
+      inputFromProps(RegressionChart, { coordinate: 'polar2D', children: requiredRegressionDeclarations }),
   },
   {
     name: 'ScatterChart',
-    createInput: () => ScatterChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredDeclarations }),
+    createInput: () => inputFromProps(ScatterChart, { coordinate: 'polar2D', children: requiredDeclarations }),
   },
   {
     name: 'StripChart',
-    createInput: () => StripChart.createInputEmbedProps({ coordinate: 'polar2D', children: requiredStripDeclarations }),
+    createInput: () => inputFromProps(StripChart, { coordinate: 'polar2D', children: requiredStripDeclarations }),
   },
 ] as const;
 
@@ -240,7 +250,7 @@ describe('Typed Point Chart React declarations', () => {
     });
 
     expect(root.source).toEqual(vanilla);
-    expect(root.datasets['root.rows']).toBe(rows);
+    expect(root.input.data).toBe(rows);
   });
 
   it('preserves sparse Point recipe guide controls and matches Vanilla normalization', () => {
@@ -310,7 +320,7 @@ describe('Typed Point Chart React declarations', () => {
     );
 
     expect(root.source).toEqual(declarations.source);
-    expect(root.datasets).toEqual(declarations.datasets);
+    expect(root.input.data).toEqual(declarations.input.data);
   });
 
   it('allows root and headless declarations to mix across owner slots', () => {
@@ -483,7 +493,7 @@ describe('Typed Point Chart React declarations', () => {
   );
 
   it('preserves a configured coordinate object from the concrete Chart root prop', () => {
-    const input = ScatterChart.createInputEmbedProps({
+    const input = inputFromProps(ScatterChart, {
       coordinate: { type: 'polar2D', innerRadius: 0, startAngle: -90 },
       children: requiredDeclarations,
     });
@@ -497,7 +507,7 @@ describe('Typed Point Chart React declarations', () => {
 
   it('rejects simultaneous coordinate root prop and ChartCoordinate declaration', () => {
     expect(() =>
-      ScatterChart.createInputEmbedProps({
+      inputFromProps(ScatterChart, {
         coordinate: 'polar2D',
         children: (
           <>
@@ -968,7 +978,7 @@ describe('Typed Point Chart React declarations', () => {
     });
 
     expect(input.source).toEqual(vanilla);
-    expect(input.datasets['strip.rows']).toBe(rows);
+    expect(input.input.data).toBe(rows);
   });
 
   it('supports declaration-only and hybrid Strip authoring while rejecting same-slot duplicates', () => {
