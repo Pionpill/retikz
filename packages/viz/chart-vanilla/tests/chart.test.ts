@@ -1,7 +1,13 @@
 import type { IRChartSource } from '@retikz/chart';
 import { defineChartTheme } from '@retikz/chart';
 import { defineThemeStyle } from '@retikz/core';
-import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
+import {
+  DataTransformBindingClass,
+  DataTransformFieldEffect,
+  DataTransformPhase,
+  defineTransform,
+  defineRegression,
+} from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { definePlotThemeStyle } from '@retikz/plot';
 import type { AnyInputEmbed } from '@retikz/vanilla';
@@ -116,12 +122,14 @@ describe('Chart Vanilla authoring', () => {
       id: 'regression',
       data: regressionRows,
       encodings: { x: 'x', y: 'y', series: 'species' },
-      properties: { sampleCount: 8 },
+      properties: { sampleCount: 8, extraMethods: [{ method: { kind: 'power' }, trend: { stroke: '#ff0000' } }] },
     });
     const rendered = renderChart(chart, { adapters });
     const serializedSource = JSON.stringify(sourceOf(chart));
 
     expect(rendered.svg).toContain('<svg');
+    expect(rendered.svg).toContain('#ff0000');
+    expect((rendered.svg.match(/<ellipse\b/g) ?? []).length).toBe(regressionRows.length);
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toContain('regression');
     expect(serializedSource).not.toMatch(/providers|definitions|schema|apply|lowerOptions/iu);
     expect(JSON.parse(serializedSource)).toEqual(sourceOf(chart));
@@ -328,5 +336,24 @@ describe('Chart Vanilla authoring', () => {
     const rendered = renderChart(chart, { adapters });
 
     expect(sceneIdsOf(rendered.compileResult.scene.primitives)).toEqual([]);
+  });
+});
+
+describe('custom regression SSR', () => {
+  it('consumes runtime definitions and leaves only JSON method parameters in Source', () => {
+    const definition = defineRegression({
+      schema: strictObject({ kind: literal('identity-fit') }),
+      fit: () => ({ predict: x => x }),
+    });
+    const chart = regressionChart({
+      data: regressionRows,
+      encodings: { x: 'x', y: 'y' },
+      properties: { method: { kind: 'identity-fit' }, trend: { curve: 'catmullRom' } },
+      lowerOptions: { regressionDefinitions: [definition] },
+    });
+    const rendered = renderChart(chart, { adapters });
+    expect(rendered.svg).toContain('<svg');
+    expect((rendered.svg.match(/<ellipse\b/g) ?? []).length).toBe(regressionRows.length);
+    expect(JSON.stringify(sourceOf(chart))).not.toMatch(/regressionDefinitions|predict|schema/);
   });
 });

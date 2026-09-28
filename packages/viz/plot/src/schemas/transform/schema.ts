@@ -1,3 +1,4 @@
+import { RegressionMethodSchema } from '@retikz/data';
 import {
   BuiltinTransformSchema as DataBuiltinTransformSchema,
   DataTransform,
@@ -37,7 +38,6 @@ import {
   NormalizeBasis,
   PairMeasureOperationKind,
   PlotTransform,
-  SmoothMethodKind,
   StackOffset,
 } from './constants';
 
@@ -266,44 +266,12 @@ export const DensityTransformSchema = strictObject({
   })
   .describe('Density transform: sample one-dimensional Gaussian KDE rows consumable by PathMark');
 
-export const SmoothMethodSchema = discriminatedUnion('kind', [
-  strictObject({
-    kind: literal(SmoothMethodKind.Linear).describe(
-      'Smooth method discriminator: ordinary least-squares linear regression',
-    ),
-  }).describe('Linear regression smooth method'),
-  strictObject({
-    kind: literal(SmoothMethodKind.Quadratic).describe(
-      'Smooth method discriminator: second-degree polynomial regression',
-    ),
-  }).describe('Quadratic regression smooth method'),
-  strictObject({
-    kind: literal(SmoothMethodKind.Polynomial).describe(
-      'Smooth method discriminator: configurable-degree polynomial regression',
-    ),
-    order: number().int().min(2).max(6).optional().describe('Polynomial degree from 2 through 6; default 3'),
-  }).describe('Polynomial regression smooth method'),
-  strictObject({
-    kind: literal(SmoothMethodKind.Logarithmic).describe(
-      'Smooth method discriminator: logarithmic regression y = a + b ln(x)',
-    ),
-  }).describe('Logarithmic regression smooth method'),
-  strictObject({
-    kind: literal(SmoothMethodKind.Exponential).describe(
-      'Smooth method discriminator: exponential regression y = a exp(bx)',
-    ),
-  }).describe('Exponential regression smooth method'),
-  strictObject({
-    kind: literal(SmoothMethodKind.Power).describe('Smooth method discriminator: power regression y = a x^b'),
-  }).describe('Power regression smooth method'),
-]).describe('Smooth transform method strategy');
-
 export const SmoothTransformSchema = strictObject({
   kind: literal(PlotTransform.Smooth).describe('Discriminator: sample trend rows from a fitted smooth model'),
   x: NonBlankStringSchema.describe('Continuous source field used as the independent x value'),
   y: NonBlankStringSchema.describe('Continuous source field used as the dependent y value'),
   groupBy: GroupBySchema,
-  method: SmoothMethodSchema.optional().describe('Smooth method; default ordinary least-squares linear regression'),
+  method: RegressionMethodSchema.optional().describe('Smooth method; default ordinary least-squares linear regression'),
   sampleCount: number()
     .int()
     .min(2)

@@ -5,6 +5,7 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
+import { defineRegression } from '@retikz/data';
 import type { ExternalDatasets } from '@retikz/data';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
 import { PathClipProvider } from '@retikz/extension';
@@ -14,6 +15,7 @@ import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import type { LowerPlotsOptions } from '@retikz/plot';
 import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
+import { number } from 'zod';
 import { array, boolean, literal, strictObject, string } from 'zod';
 
 import { ChartWarningCode } from '../../src';
@@ -462,6 +464,55 @@ describe('Chart providers through Core compile', () => {
     expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
   });
 
+  it('compiles grouped extra methods with unique IDs and exactly one observation layer', () => {
+    const regressionRows = [
+      { series: 'A', x: 1, y: 2 },
+      { series: 'A', x: 2, y: 4 },
+      { series: 'A', x: 3, y: 6 },
+      { series: 'B', x: 1, y: 3 },
+      { series: 'B', x: 2, y: 5 },
+      { series: 'B', x: 3, y: 7 },
+    ];
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      id: 'regression',
+      data: { reference: 'regression.rows' },
+      recipe: {
+        chartType: 'regression',
+        encodings: { x: 'x', y: 'y', series: 'series' },
+        properties: {
+          sampleCount: 3,
+          trend: { strokeWidth: 7 },
+          extraMethods: [{ method: { kind: 'quadratic' } }, { method: { kind: 'power' } }],
+        },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRegressionChartProviderContribution(),
+        createPlotProviderContribution({ 'regression.rows': regressionRows }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    const result = compileToScene(sceneOf(source), definitions);
+    const serialized = JSON.stringify(result.scene.primitives);
+
+    expect(sceneIdsOf(result.scene.primitives)).toContain('regression');
+    expect(serialized).not.toContain('NaN');
+    expect(serialized).not.toContain('Infinity');
+    const observationPoints = scenePrimitivesOfType(result.scene.primitives, 'ellipse');
+    const trendPaths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
+      primitive => primitive.strokeWidth === 7,
+    );
+
+    expect(observationPoints).toHaveLength(regressionRows.length);
+    expect(trendPaths).toHaveLength(6);
+    const ids = sceneIdsOf(result.scene.primitives);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(observationPoints.map(point => point.fill))).toEqual(new Set(trendPaths.map(path => path.stroke)));
+  });
+
   it('aborts the whole Regression compile when one series cannot be fitted', () => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
@@ -489,6 +540,32 @@ describe('Chart providers through Core compile', () => {
     expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/smooth|regression|series.*B|pairs/i);
   });
 
+  it('aborts when an additional method cannot fit otherwise valid observations', () => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'regression',
+        encodings: { x: 'x', y: 'y' },
+        properties: { extraMethods: [{ method: { kind: 'quadratic' } }] },
+      },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRegressionChartProviderContribution(),
+        createPlotProviderContribution({
+          rows: [
+            { x: 1, y: 2 },
+            { x: 2, y: 4 },
+          ],
+        }),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    expect(() => compileToScene(sceneOf(source), definitions)).toThrow(/smooth|regression|pairs|points/i);
+  });
+
   it('fails loud when Regression Source is compiled without its concrete provider', () => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',
@@ -511,7 +588,7 @@ describe('Chart providers through Core compile', () => {
       recipe: {
         chartType: 'regression',
         encodings: { x: 'x', y: 'y', column: 'panel' },
-        properties: { sampleCount: 2 },
+        properties: { sampleCount: 2, trend: { strokeWidth: 7 }, extraMethods: [{ method: { kind: 'power' } }] },
       },
     });
     const definitions = resolveCoreProviderDependencies({
@@ -528,7 +605,10 @@ describe('Chart providers through Core compile', () => {
         { roots: [PathClipProvider.key], providers: [PathClipProvider] },
       ],
     });
-    const ids = sceneIdsOf(compileToScene(sceneOf(source), definitions).scene.primitives);
+    const primitives = compileToScene(sceneOf(source), definitions).scene.primitives;
+    const ids = sceneIdsOf(primitives);
+    expect(scenePrimitivesOfType(primitives, 'ellipse')).toHaveLength(4);
+    expect(scenePrimitivesOfType(primitives, 'path').filter(path => path.strokeWidth === 7)).toHaveLength(4);
 
     expect(ids.some(id => id.startsWith('__chart.regression.composition.facet.panel.'))).toBe(true);
     expect(ids.some(id => id.startsWith('__chart.scatter.composition.facet'))).toBe(false);
@@ -948,5 +1028,51 @@ describe('point-aware compile boundaries', () => {
     });
     expect(() => compileToScene(sceneOf(sourceOf()), definitions)).toThrow(/domainPadding/);
     expect(compileToScene(sceneOf(sourceOf(0)), definitions).scene.primitives.length).toBeGreaterThan(0);
+  });
+});
+
+describe('registered regression compilation', () => {
+  const definition = defineRegression({
+    schema: strictObject({ kind: literal('custom-polynomial'), degree: number().default(2) }),
+    fit: (_pairs, operation) => ({ predict: x => x ** operation.degree }),
+  });
+  const lowerOptions = { regressionDefinitions: [definition] };
+  const compile = (properties: JsonObject) => {
+    const source = RegressionChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'regression', encodings: { x: 'x', y: 'y' }, properties },
+    });
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [
+        createRegressionChartProviderContribution([], lowerOptions),
+        createPlotProviderContribution({ rows }, lowerOptions),
+        { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+      ],
+    });
+    return compileToScene(sceneOf(source), definitions);
+  };
+  it('uses custom methods for main and extra trends with inherited or overridden curves', () => {
+    const result = compile({
+      method: { kind: 'custom-polynomial' },
+      sampleCount: 6,
+      trend: { strokeWidth: 7 },
+      extraMethods: [
+        { method: { kind: 'custom-polynomial', degree: 1 } },
+        { method: { kind: 'custom-polynomial' }, trend: { curve: 'linear' } },
+      ],
+    });
+    const paths = scenePrimitivesOfType(result.scene.primitives, 'path').filter(path => path.strokeWidth === 7);
+    expect(paths).toHaveLength(3);
+    expect(paths[0].commands?.some(command => command.kind === 'cubic')).toBe(true);
+    expect(paths[1].commands?.some(command => command.kind === 'cubic')).toBe(true);
+    expect(paths[2].commands).toHaveLength(6);
+    expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(rows.length);
+  });
+  it('locates exact parameter errors in additional methods', () => {
+    expect(() => compile({ extraMethods: [{ method: { kind: 'custom-polynomial', unexpected: true } }] })).toThrow(
+      /extraMethods/,
+    );
   });
 });

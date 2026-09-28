@@ -1056,6 +1056,84 @@ describe('Point Chart recipe Definitions', () => {
     });
   });
 
+  it('Regression adds ordered fits without duplicating observations and inherits sampling and style', () => {
+    const result = resolve(
+      RegressionChartDefinition,
+      { x: 'x', y: 'y' },
+      {
+        sampleCount: 12,
+        extent: [1, 8],
+        trend: { strokeWidth: 3, opacity: 0.6 },
+        extraMethods: [
+          { method: { kind: 'quadratic' } },
+          { method: { kind: 'power' }, sampleCount: 20, extent: [2, 6], trend: { opacity: 0.9 } },
+        ],
+      },
+    );
+    const marks = result.semanticMarks[0].plotMarks;
+    expect(marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
+    expect(marks[2]).toMatchObject({
+      strokeWidth: { value: 3 },
+      opacity: { value: 0.6 },
+      transform: [expect.objectContaining({ method: { kind: 'quadratic' }, sampleCount: 12, extent: [1, 8] })],
+    });
+    expect(marks[3]).toMatchObject({
+      strokeWidth: { value: 3 },
+      opacity: { value: 0.9 },
+      transform: [expect.objectContaining({ method: { kind: 'power' }, sampleCount: 20, extent: [2, 6] })],
+    });
+  });
+
+  it('Regression preserves series fitting while only explicit extra stroke overrides series color', () => {
+    const result = resolve(
+      RegressionChartDefinition,
+      { x: 'x', y: 'y', series: 'species' },
+      {
+        trend: { stroke: '#f00' },
+        extraMethods: [{ method: { kind: 'power' } }, { method: { kind: 'linear' }, trend: { stroke: '#00f' } }],
+      },
+    );
+    const marks = result.semanticMarks[0].plotMarks;
+    for (const mark of marks.slice(1))
+      expect(mark).toMatchObject({ series: 'species', transform: [expect.objectContaining({ groupBy: ['species'] })] });
+    expect(marks[1]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
+    expect(marks[2]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
+    expect(marks[3]).toMatchObject({ stroke: { kind: 'constant', value: '#00f' } });
+  });
+
+  it.each([{ extraMethods: undefined }, { extraMethods: [] }, { extraMethods: [{ method: { kind: 'power' } }] }])(
+    'Regression mark inherits or wholly replaces the extra method array: %j',
+    ({ extraMethods }) => {
+      const source = RegressionChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'regression',
+          encodings: { x: 'x', y: 'y' },
+          properties: { extraMethods: [{ method: { kind: 'quadratic' } }], trend: { strokeWidth: 2 } },
+          marks: [
+            {
+              kind: 'regression',
+              override: true,
+              properties: { ...(extraMethods === undefined ? {} : { extraMethods }), trend: { opacity: 0.8 } },
+            },
+          ],
+        },
+      });
+      const result = resolveChart(source, RegressionChartDefinition, regressionRuntime);
+      expect(result.plot.marks.map(mark => mark.type)).toEqual(
+        extraMethods?.length === 0 ? ['point', 'path'] : ['point', 'path', 'path'],
+      );
+      if (extraMethods?.length !== 0)
+        expect(result.plot.marks[2]).toMatchObject({
+          strokeWidth: { value: 2 },
+          opacity: { value: 0.8 },
+          transform: [expect.objectContaining({ method: extraMethods?.[0].method ?? { kind: 'quadratic' } })],
+        });
+    },
+  );
+
   it('Regression creates one Point plus mark-local Smooth Path semantic group', () => {
     const result = resolve(
       RegressionChartDefinition,

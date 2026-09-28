@@ -1,3 +1,4 @@
+import type { IRRegressionMethod } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { normalizeChartCoordinate } from '../src';
@@ -281,6 +282,7 @@ describe('Chart Vanilla normalization', () => {
       },
       properties: {
         method: { kind: 'polynomial', order: 4 },
+        extraMethods: [{ method: { kind: 'linear' }, sampleCount: 10, trend: { stroke: '#f00' } }],
         sampleCount: 32,
         extent: [1, 8],
         point: { opacity: 0.6, size: 5 },
@@ -312,6 +314,7 @@ describe('Chart Vanilla normalization', () => {
         },
         properties: {
           method: { kind: 'polynomial', order: 4 },
+          extraMethods: [{ method: { kind: 'linear' }, sampleCount: 10, trend: { stroke: '#f00' } }],
           sampleCount: 32,
           extent: [1, 8],
           point: { opacity: 0.6, size: 5 },
@@ -329,14 +332,15 @@ describe('Chart Vanilla normalization', () => {
     expect(JSON.parse(JSON.stringify(source))).toEqual(source);
   });
 
-  it.each([
+  const methods: Array<IRRegressionMethod> = [
     { kind: 'linear' },
     { kind: 'quadratic' },
     { kind: 'polynomial', order: 6 },
     { kind: 'logarithmic' },
     { kind: 'exponential' },
     { kind: 'power' },
-  ] as const)('preserves the $kind Regression method without adapter dispatch', method => {
+  ];
+  it.each(methods)('preserves the $kind Regression method without adapter dispatch', method => {
     const source = normalizeRegressionChart({
       data: { reference: 'rows' },
       encodings: { x: 'x', y: 'y' },

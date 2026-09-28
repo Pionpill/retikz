@@ -1,6 +1,7 @@
 export * from './anchor';
 export * from './channel';
 export * from './coordinate';
+export * from './domain-padding';
 export * from './guide';
 export * from './lineage';
 export * from './locator';
@@ -9,4 +10,3 @@ export * from './position-adjustment';
 export * from './provenance';
 export * from './scale';
 export * from './theme';
-export * from './domain-padding';

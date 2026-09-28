@@ -1,3 +1,4 @@
+import { resolveRegression } from '@retikz/data';
 import { ExternalPlotTransformSchema, PlotBuiltinTransformSchema, TransformSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -538,7 +539,7 @@ describe('SmoothTransformSchema', () => {
         kind: 'smooth',
         x: 'time',
         y: 'value',
-        method: { kind: 'loess' },
+        method: { kind: '' },
         xAs: 'trendX',
         yAs: 'trendY',
       },
@@ -556,15 +557,6 @@ describe('SmoothTransformSchema', () => {
     ['unknown method field', { kind: 'quadratic', order: 2 }],
     ['linear method options', { kind: 'linear', order: 2 }],
   ])('smooth_rejects_invalid_method_variant: %s', (_name, method) => {
-    expect(() =>
-      TransformSchema.parse({
-        kind: 'smooth',
-        x: 'time',
-        y: 'value',
-        method,
-        xAs: 'trendX',
-        yAs: 'trendY',
-      }),
-    ).toThrow();
+    expect(() => resolveRegression(method)).toThrow();
   });
 });

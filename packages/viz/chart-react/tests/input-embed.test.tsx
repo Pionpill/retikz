@@ -10,9 +10,11 @@ import type { RegressionChartInputEmbedProps } from '@retikz/chart-vanilla/point
 import { regressionChart } from '@retikz/chart-vanilla/point/regression';
 import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point/scatter';
 import { scatterChart } from '@retikz/chart-vanilla/point/scatter';
+import { defineRegression } from '@retikz/data';
 import { PointMark } from '@retikz/plot-react';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
+import { literal, strictObject } from 'zod';
 
 import { ChartData, ChartExtension, ChartLayout } from '../src';
 import { BubbleChart, BubbleEncodings, BubbleProperties } from '../src/point/bubble';
@@ -55,6 +57,7 @@ describe('Chart React InputEmbed routing', () => {
       },
       properties: {
         method: { kind: 'power' },
+        extraMethods: [{ method: { kind: 'linear' }, trend: { stroke: '#f00' } }],
         sampleCount: 12,
         point: { opacity: 0.5 },
         trend: { strokeWidth: 2 },
@@ -201,5 +204,33 @@ describe('Chart React InputEmbed routing', () => {
     expect(input.lowerOptions?.resolveLabel?.labelled).toBe(explicitResolveLabel);
     expect(input.lowerOptions?.resolveLabel?.['child-only']).toBe(childResolveLabel);
     expect(JSON.stringify(sourceOf(input))).not.toContain('resolveLabel');
+  });
+});
+
+describe('custom Regression adapter parity', () => {
+  it('preserves custom methods and runtime definitions through React and Vanilla', () => {
+    const definition = defineRegression({
+      schema: strictObject({ kind: literal('identity-fit') }),
+      fit: () => ({ predict: x => x }),
+    });
+    const lowerOptions = { regressionDefinitions: [definition] };
+    const rows = [
+      { x: 1, y: 1 },
+      { x: 2, y: 2 },
+    ];
+    const properties = { method: { kind: 'identity-fit' }, trend: { curve: 'catmullRom' as const } };
+    const react = inputOf(RegressionChart, {
+      lowerOptions,
+      children: (
+        <>
+          <ChartData data={rows} />
+          <RegressionEncodings x="x" y="y" />
+          <RegressionProperties {...properties} />
+        </>
+      ),
+    });
+    const vanilla = regressionChart({ data: rows, encodings: { x: 'x', y: 'y' }, properties, lowerOptions }).props;
+    expect(react).toEqual(vanilla);
+    expect(react.lowerOptions?.regressionDefinitions?.[0]).toBe(definition);
   });
 });

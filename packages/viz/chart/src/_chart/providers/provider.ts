@@ -73,6 +73,9 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
       ...(input.lowerOptions?.statisticsReducerDefinitions === undefined
         ? {}
         : { statisticsReducerDefinitions: input.lowerOptions.statisticsReducerDefinitions }),
+      ...(input.lowerOptions?.regressionDefinitions === undefined
+        ? {}
+        : { regressionDefinitions: input.lowerOptions.regressionDefinitions }),
       ...(input.lowerOptions?.rowSelectorDefinitions === undefined
         ? {}
         : { rowSelectorDefinitions: input.lowerOptions.rowSelectorDefinitions }),

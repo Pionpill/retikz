@@ -7,7 +7,7 @@ import { defineChartMark } from '../../_chart/contract';
 import { requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import type { IRRegressionChartProperties, IRRegressionMark } from './schema';
-import { RegressionChartMarkSchema } from './schema';
+import { RegressionChartMarkSchema, RegressionTrendCurveSchema } from './schema';
 
 const trendXField = pointRecipeId('regression', 'trend.x');
 const trendYField = pointRecipeId('regression', 'trend.y');
@@ -64,11 +64,11 @@ const constantPathPropertiesOf = (properties: IRRegressionChartProperties): Json
   return result;
 };
 
-/** 把一个 Regression semantic mark 解析为原始 Point 与 mark-local Smooth Path */
+/** 把一个 Regression semantic mark 解析为唯一观测 Point、主趋势与有序额外趋势 */
 export const resolveRegressionMarkGroup = (
   encodings: JsonObject,
   properties: IRRegressionChartProperties,
-): readonly [IRPlotMarkOperation, IRPlotMarkOperation] => {
+): readonly [IRPlotMarkOperation, IRPlotMarkOperation, ...Array<IRPlotMarkOperation>] => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const series = seriesMappingOf(encodings);
@@ -81,39 +81,53 @@ export const resolveRegressionMarkGroup = (
     pointEncodings.color = { field: series.field, scale: series.scale };
   }
 
-  const smooth: JsonObject = {
-    kind: PlotTransform.Smooth,
-    x,
-    y,
-    ...(series === undefined ? {} : { groupBy: [series.field] }),
-    ...(properties.method === undefined ? {} : { method: properties.method }),
-    ...(properties.sampleCount === undefined ? {} : { sampleCount: properties.sampleCount }),
-    ...(properties.extent === undefined ? {} : { extent: properties.extent }),
-    xAs: trendXField,
-    yAs: trendYField,
-  };
-  const trend = properties.trend ?? {};
-  const path: JsonObject = {
-    type: PlotMark.Path,
-    order: trendXField,
-    closed: false,
-    ...(series === undefined ? {} : { series: series.field }),
-    transform: [smooth],
-    encoding: { x: { field: trendXField }, y: { field: trendYField } },
-    ...constantPathPropertiesOf(properties),
-    ...(series === undefined
-      ? trend.stroke === undefined
-        ? {}
-        : { stroke: { kind: 'constant', value: trend.stroke } }
-      : { stroke: { kind: 'field', value: series.field, scale: series.scale } }),
-  };
+  /** 在共享数据上创建一条 mark-local 趋势，仅额外项显式 stroke 可覆盖分类色 */
+  const createTrend = (settings: IRRegressionChartProperties, explicitStroke = false): IRPlotMarkOperation => {
+    const smooth: JsonObject = {
+      kind: PlotTransform.Smooth,
+      x,
+      y,
+      ...(series === undefined ? {} : { groupBy: [series.field] }),
+      ...(settings.method === undefined ? {} : { method: settings.method }),
+      ...(settings.sampleCount === undefined ? {} : { sampleCount: settings.sampleCount }),
+      ...(settings.extent === undefined ? {} : { extent: settings.extent }),
+      xAs: trendXField,
+      yAs: trendYField,
+    };
+    const trend = settings.trend ?? {};
+    const path: JsonObject = {
+      type: PlotMark.Path,
+      order: trendXField,
+      closed: false,
+      curve: RegressionTrendCurveSchema.parse(trend.curve),
+      ...(series === undefined ? {} : { series: series.field }),
+      transform: [smooth],
+      encoding: { x: { field: trendXField }, y: { field: trendYField } },
+      ...constantPathPropertiesOf(settings),
+      ...(series === undefined || explicitStroke
+        ? trend.stroke === undefined
+          ? {}
+          : { stroke: { kind: 'constant', value: trend.stroke } }
+        : { stroke: { kind: 'field', value: series.field, scale: series.scale } }),
+    };
 
+    const resolved = PathMarkSchema.parse(path);
+    return series === undefined ? { ...resolved, defaultColorGroup: 'trend' } : resolved;
+  };
   const point = resolvePointMark(pointEncodings, pointProperties);
-  const resolvedPath = PathMarkSchema.parse(path);
-  if (series !== undefined) return [point, resolvedPath];
   return [
-    { ...point, defaultColorGroup: 'observation' },
-    { ...resolvedPath, defaultColorGroup: 'trend' },
+    series === undefined ? { ...point, defaultColorGroup: 'observation' } : point,
+    createTrend(properties),
+    ...(properties.extraMethods ?? []).map(extra =>
+      createTrend(
+        {
+          ...properties,
+          ...extra,
+          trend: { ...properties.trend, ...extra.trend },
+        },
+        extra.trend?.stroke !== undefined,
+      ),
+    ),
   ];
 };
 

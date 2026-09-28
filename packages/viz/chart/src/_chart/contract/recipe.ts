@@ -1,3 +1,4 @@
+import type { AnyRegressionDefinition } from '@retikz/data';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition, AnyTransformDefinition } from '@retikz/data';
 import type { JsonObject, NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
 import type {
@@ -22,6 +23,8 @@ export type ChartEncodingRuntime = Readonly<{
   /** Data / Plot transform Definition注册表 */
   transforms: ReadonlyMap<string, AnyTransformDefinition>;
   /** Data statistics reducer Definition注册表 */
+  /** 当前编译的拟合 registry */
+  regressions: ReadonlyMap<string, AnyRegressionDefinition>;
   reducers: ReadonlyMap<string, AnyStatisticsReducerDefinition>;
   /** Data row selector Definition注册表 */
   selectors: ReadonlyMap<string, AnyRowSelectorDefinition>;

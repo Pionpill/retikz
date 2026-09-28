@@ -8,7 +8,7 @@
 
 | 重点能力            | 目标                                                                          | 相关 ADR                                                                                                                                                                                                                                                                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Point family        | 覆盖 Scatter、Bubble、Regression、Connected Scatter、Ranged Dot 与 Strip      | [004](./004-scatter.md)、[005](./005-connected-scatter.md)、[006](./006-regression.md)、[007](./007-ranged-dot.md)、[008](./008-strip.md)、[013](./013-bubble.md)、[014](./014-point-radius-domain-padding.md)                                                                                                           |
+| Point family        | 覆盖 Scatter、Bubble、Regression、Connected Scatter、Ranged Dot 与 Strip      | [004](./004-scatter.md)、[005](./005-connected-scatter.md)、[006](./006-regression.md)、[007](./007-ranged-dot.md)、[008](./008-strip.md)、[013](./013-bubble.md)、[014](./014-point-radius-domain-padding.md)、[017](./017-regression-definition-and-trend-curves.md)                                                   |
 | Line / Area family  | 规划 Line、Area、Range Area 与相关 Pattern                                    | —                                                                                                                                                                                                                                                                                                                        |
 | Bar / Column family | 规划 Bar / Column 系列                                                        | —                                                                                                                                                                                                                                                                                                                        |
 | 主链与外观          | 统一精确 recipe、字段映射、声明式入口、Theme 与呈现                           | [003](./003-presentation-standard-layout.md)、[009](./009-family-recipe-chart-schema.md)、[010](./010-chart-plot-declaration-authoring.md)、[011](./011-chart-encoding-field-mapping.md)、[012](./012-chart-react-declaration-authoring.md)、[016](./016-vanilla-input-embed.md)、[015](./015-theme-source-fragments.md) |
@@ -26,6 +26,7 @@
 规划内容：
 
 - 覆盖 Scatter、Bubble、Regression、Connected Scatter、Ranged Dot 与 Strip。
+- Regression 统一内置与外部拟合方法，支持固定采样与统一的过点趋势曲线。
 - 半径、domain padding 与 placement 依赖 Plot 的公开能力。
 
 预期效果：
