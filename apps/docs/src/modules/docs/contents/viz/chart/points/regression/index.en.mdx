@@ -125,7 +125,41 @@ export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
 
 ### Regression encodings
 
-React uses `RegressionEncodings`; Vanilla API uses `encodings`; direct IR uses `recipe.encodings`. Encodings select the two fitted variables and any groups fitted separately.
+Encodings select the two fitted variables and any groups fitted separately.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RegressionEncodings x="sepalLengthCm" y="petalLengthCm" series="species" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'sepalLengthCm',
+  y: 'petalLengthCm',
+  series: 'species',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'sepalLengthCm',
+    y: 'petalLengthCm',
+    series: 'species',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 Iris contains 150 observations. Sepal length is on x and petal length on y. Species occupy different ranges, so grouping determines which observations each trend summarizes.
 
@@ -135,6 +169,7 @@ Iris contains 150 observations. Sepal length is on x and petal length on y. Spec
 Toggle grouping to compare pooled and within-species trends. A pooled association can partly reflect differences between groups.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['regression-encodings', 'regression-basic.data.ts']}
@@ -143,11 +178,52 @@ Toggle grouping to compare pooled and within-species trends. A pooled associatio
   size="xl"
 />
 
-For complete properties and constraints, see [API reference: Regression encodings](#regression-encodings-1).
+For complete properties and constraints, see [API reference: RegressionEncodings](#regressionencodings).
 
 ### Regression properties
 
-React uses `RegressionProperties`; Vanilla API uses `properties`; direct IR uses `recipe.properties`. Properties select the fitting method and drawing samples, and style observations and trends separately.
+Properties select the fitting method and drawing samples, and style observations and trends separately.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RegressionProperties
+  method={{ kind: 'linear' }}
+  sampleCount={64}
+  point={{ size: 4, opacity: 0.55 }}
+  trend={{ stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  method: { kind: 'linear' },
+  sampleCount: 64,
+  point: { size: 4, opacity: 0.55 },
+  trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    method: { kind: 'linear' },
+    sampleCount: 64,
+    point: { size: 4, opacity: 0.55 },
+    trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 This example fixes the x/y mappings and pools observations by default. Enable “Fit each species separately” to compare the same method across groups. Grouped points and trends use species colors, so the uniform color control is hidden. Different methods can fit the same observations. Method controls the model; sample count controls how many predictions draw its path. These are separate choices.
 
@@ -158,6 +234,7 @@ This example fixes the x/y mappings and pools observations by default. Enable �
 Increasing sampleCount does not raise model order or fix insufficient observations. Check value-domain and sample requirements before selecting a method.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['regression-basic', 'regression-basic.data.ts']}
@@ -166,11 +243,61 @@ Increasing sampleCount does not raise model order or fix insufficient observatio
   size="xl"
 />
 
-For complete properties and constraints, see [API reference: Regression properties](#regression-properties-1).
+For complete properties and constraints, see [API reference: RegressionProperties](#regressionproperties).
 
 ### Regression marks
 
-React uses `RegressionMark`; Vanilla API uses `marks`; direct IR uses `recipe.marks`. React supplies the kind; Vanilla / IR mark objects use `kind: 'regression'`. Each mark contains observations, a primary trend and additional trends. Replace a whole group or overlay different position mappings with marks; use `extraMethods` for multiple fits of the same observations, as shown below.
+Each mark contains observations and trends; replacing or appending affects the complete group. Use `extraMethods` to compare several fits of the same observations, as shown below.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RegressionMark
+  override
+  properties={{
+    method: { kind: 'quadratic' },
+    trend: { strokeWidth: 3 },
+  }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [
+  {
+    kind: 'regression',
+    override: true,
+    properties: {
+      method: { kind: 'quadratic' },
+      trend: { strokeWidth: 3 },
+    },
+  },
+],
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'regression',
+      override: true,
+      properties: {
+        method: { kind: 'quadratic' },
+        trend: { strokeWidth: 3 },
+      },
+    },
+  ],
+},
+```
+
+</DocTab>
+</DocTabs>
 
 This replaces each species’ default linear group with a quadratic group. Observations remain; a more curved trend is another model description, not automatically a better explanation.
 
@@ -181,15 +308,16 @@ This replaces each species’ default linear group with a quadratic group. Obser
 RegressionMark inherits series and cannot introduce a different grouping rule.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['regression-marks', 'regression-basic.data.ts']}
   size="xl"
   controls={{ name: 'regression-marks' }}
-  caption="Switch between replacement and addition, then adjust mark styles to compare inheritance and overrides."
+  caption="Switch fitting methods and adjust trend width to compare the same observations."
 />
 
-For complete properties and constraints, see [API reference: Regression marks](#regression-marks-1).
+For complete properties and constraints, see [API reference: RegressionMark](#regressionmark).
 
 ## Extended usage
 
@@ -252,7 +380,7 @@ See [Fitting methods](#fitting-methods) for equations, sample counts and domain 
 
 In React, supplying the same configuration field through both the root `recipe` and a child component raises an error.
 
-`point-aware` requires Cartesian2D, linear/time position scales, and no jitter. Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
+`point-aware` supports built-in continuous and categorical position scales in Cartesian2D and Polar2D coordinates. Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
 
 ## Implementation
 
@@ -260,6 +388,21 @@ In React, supplying the same configuration field through both the root `recipe` 
   type="tip"
   title="Optional reading"
   description="This section explains behavior specific to this chart type; skip it if you only need the API."
+/>
+
+### Chart construction
+
+Chart resolves a regression mark to a trend Plot Path and, when enabled, an observation Plot Point mark. The table lists conversions specific to fitting.
+
+| Group      | `@retikz/chart`                   | `@retikz/plot`                           | Description                                                             |
+| ---------- | --------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------- |
+| Encodings  | `x`, `y`, `series`                | `smooth.x`, `smooth.y`, `smooth.groupBy` | Fits observation coordinates separately for each series                 |
+| Properties | `method`, `sampleCount`, `extent` | `smooth` transform options               | Passes the fitting method, sample count, and extent to the transform    |
+|            | `trend`, `extraMethods`           | Path appearance and additional Paths     | Styles the primary trend and adds one trend Path per extra method       |
+| Mark       | `IRRegressionMark`                | `IRPlotPathMark`, `IRPlotPointMark`      | Always creates a trend Path; creates Points unless `hidePoints` is true |
+
+<SourceLinks
+  sources={[{ path: 'packages/viz/chart/src/point/regression/mark.ts', label: 'Trend and observation marks' }]}
 />
 
 ### Fitting methods
@@ -445,7 +588,7 @@ React uses `RegressionChart` with its `recipe` prop or dedicated child component
 
 In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, presentation, and guides, see [Authoring](/viz/chart/model/authoring).
 
-### Regression encodings
+#### RegressionEncodings
 
 Corresponds to `RegressionEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
 
@@ -458,7 +601,7 @@ Corresponds to `RegressionEncodings`, Vanilla `encodings` and IR `recipe.encodin
 
 Shared mapping parameters are not expanded here; see the [encoding schema](#regressionchartencodingsschema) for exact inputs.
 
-### Regression properties
+#### RegressionProperties
 
 Corresponds to `RegressionProperties`, Vanilla `properties` and IR `recipe.properties`.
 
@@ -476,7 +619,7 @@ Corresponds to `RegressionProperties`, Vanilla `properties` and IR `recipe.prope
 
 See the [properties schema](#regressionchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
 
-### Regression marks
+#### RegressionMark
 
 Corresponds to `RegressionMark`, Vanilla `marks` and IR `recipe.marks`.
 
@@ -491,29 +634,29 @@ Corresponds to `RegressionMark`, Vanilla `marks` and IR `recipe.marks`.
 
 These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
 
-### RegressionChartSchema
+#### RegressionChartSchema
 
 <ZodSchema name="RegressionChartSchema" shallow />
 
-### RegressionChartRecipeSchema
+#### RegressionChartRecipeSchema
 
 <ZodSchema name="RegressionChartRecipeSchema" shallow />
 
-### RegressionChartEncodingsSchema
+#### RegressionChartEncodingsSchema
 
 <ZodSchema name="RegressionChartEncodingsSchema" shallow />
 
-### RegressionChartPropertiesSchema
+#### RegressionChartPropertiesSchema
 
 <ZodSchema name="RegressionChartPropertiesSchema" shallow />
 
-### RegressionExtraMethodSchema
+#### RegressionExtraMethodSchema
 
 Each entry requires a fitting method and inherits sampling and appearance settings from its group. It generates only a trend line. Array order determines drawing order; method colors and legends are not assigned automatically. A failed fit aborts the whole chart.
 
 <ZodSchema name="RegressionExtraMethodSchema" shallow />
 
-### RegressionChartMarkSchema
+#### RegressionChartMarkSchema
 
 `encodings` accepts only optional field-name strings for x, y, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
 

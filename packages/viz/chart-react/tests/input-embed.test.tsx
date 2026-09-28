@@ -62,7 +62,7 @@ describe('Chart React InputEmbed routing', () => {
         point: { opacity: 0.5 },
         trend: { strokeWidth: 2 },
       },
-      marks: [{ kind: 'regression', override: true, properties: { trend: { strokeOpacity: 0.7 } } }],
+      marks: [{ kind: 'regression', hidePoints: true, override: true, properties: { trend: { strokeOpacity: 0.7 } } }],
     };
     const reactInput = inputOf(RegressionChart, {
       children: (
@@ -71,7 +71,7 @@ describe('Chart React InputEmbed routing', () => {
           <ChartLayout layout={regressionInput.layout} />
           <RegressionEncodings {...regressionInput.encodings} />
           <RegressionProperties {...regressionInput.properties} />
-          <RegressionMark override properties={{ trend: { strokeOpacity: 0.7 } }} />
+          <RegressionMark override hidePoints properties={{ trend: { strokeOpacity: 0.7 } }} />
         </>
       ),
     });

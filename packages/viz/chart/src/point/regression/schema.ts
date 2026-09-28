@@ -106,6 +106,11 @@ export const RegressionMarkEncodingsSchema = strictObject({
 export const RegressionChartMarkSchema = strictObject({
   kind: literal(ChartType.Regression),
   override: boolean().optional().describe('Whether to replace the built-in Regression semantic group'),
+  /** 不生成当前图元的观测点，保留所有拟合趋势；默认关闭 */
+  hidePoints: boolean()
+    .default(false)
+    .optional()
+    .describe('Omit observation points from this mark while retaining all fitted trends'),
   encodings: RegressionMarkEncodingsSchema.optional(),
   properties: RegressionMarkPropertiesSchema.optional(),
 }).describe('Regression Chart mark payload');

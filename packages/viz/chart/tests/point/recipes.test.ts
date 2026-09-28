@@ -1788,3 +1788,39 @@ describe('Point autoPadding clearance', () => {
       expect(() => resolvePadding(value)).toThrow();
   });
 });
+
+describe('Regression hidden observations', () => {
+  const plotOf = (hidePoints: boolean | undefined, override = true) =>
+    resolveChart(
+      RegressionChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'regression',
+          encodings: { x: 'x', y: 'y' },
+          marks: [
+            {
+              kind: 'regression',
+              override,
+              ...(hidePoints === undefined ? {} : { hidePoints }),
+              properties: { extraMethods: [{ method: { kind: 'quadratic' } }] },
+            },
+          ],
+        },
+      }),
+      RegressionChartDefinition,
+      runtime,
+    ).plot;
+  it('keeps observations by default and when explicitly disabled', () => {
+    for (const value of [undefined, false])
+      expect(plotOf(value).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path']);
+  });
+  it('omits only the selected observation mark and preserves every fitting transform', () => {
+    const plot = plotOf(true);
+    expect(plot.marks.map(mark => mark.type)).toEqual(['path', 'path']);
+    for (const mark of plot.marks)
+      expect(mark.transform).toEqual([expect.objectContaining({ kind: 'smooth', x: 'x', y: 'y' })]);
+    expect(plotOf(true, false).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
+  });
+});

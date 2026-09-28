@@ -64,11 +64,12 @@ const constantPathPropertiesOf = (properties: IRRegressionChartProperties): Json
   return result;
 };
 
-/** 把一个 Regression semantic mark 解析为唯一观测 Point、主趋势与有序额外趋势 */
+/** 把一个 Regression semantic mark 解析为可选观测 Point、主趋势与有序额外趋势 */
 export const resolveRegressionMarkGroup = (
   encodings: JsonObject,
   properties: IRRegressionChartProperties,
-): readonly [IRPlotMarkOperation, IRPlotMarkOperation, ...Array<IRPlotMarkOperation>] => {
+  hidePoints?: boolean,
+): readonly [IRPlotMarkOperation, ...Array<IRPlotMarkOperation>] => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const series = seriesMappingOf(encodings);
@@ -114,9 +115,8 @@ export const resolveRegressionMarkGroup = (
     const resolved = PathMarkSchema.parse(path);
     return series === undefined ? { ...resolved, defaultColorGroup: 'trend' } : resolved;
   };
-  const point = resolvePointMark(pointEncodings, pointProperties);
-  return [
-    series === undefined ? { ...point, defaultColorGroup: 'observation' } : point,
+  const point = hidePoints ? undefined : resolvePointMark(pointEncodings, pointProperties);
+  const trends: [IRPlotMarkOperation, ...Array<IRPlotMarkOperation>] = [
     createTrend(properties),
     ...(properties.extraMethods ?? []).map(extra =>
       createTrend(
@@ -129,6 +129,9 @@ export const resolveRegressionMarkGroup = (
       ),
     ),
   ];
+  return point === undefined
+    ? trends
+    : [series === undefined ? { ...point, defaultColorGroup: 'observation' } : point, ...trends];
 };
 
 /** Regression authored mark Definition */
@@ -138,6 +141,6 @@ export const RegressionMarkDefinition: ChartMarkDefinition = defineChartMark({
   resolve: context => {
     const source = context.source as IRRegressionMark;
     const encodings: JsonObject = { ...context.inherited.encodings, ...(source.encodings ?? {}) };
-    return { marks: resolveRegressionMarkGroup(encodings, regressionPropertiesOf(context, source)) };
+    return { marks: resolveRegressionMarkGroup(encodings, regressionPropertiesOf(context, source), source.hidePoints) };
   },
 });

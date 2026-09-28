@@ -125,7 +125,41 @@ export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
 
 ### 回归映射
 
-React 通过 `RegressionEncodings` 声明，Vanilla API 使用 `encodings`，直接 IR 使用 `recipe.encodings`。映射确定拟合使用的两个变量，以及是否按类别分别拟合。
+映射确定拟合使用的两个变量，以及是否按类别分别拟合。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RegressionEncodings x="sepalLengthCm" y="petalLengthCm" series="species" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'sepalLengthCm',
+  y: 'petalLengthCm',
+  series: 'species',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'sepalLengthCm',
+    y: 'petalLengthCm',
+    series: 'species',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 Iris 数据包含 150 条鸢尾花观测。横轴为萼片长度，纵轴为花瓣长度；不同物种可能有不同的分布范围，因此分组决定了趋势线在概括哪些样本。
 
@@ -135,6 +169,7 @@ Iris 数据包含 150 条鸢尾花观测。横轴为萼片长度，纵轴为花�
 切换分组观察整体趋势和组内趋势的差别。整体相关性可能部分来自组间差异，不能直接代替每个物种内部的关系。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['regression-encodings', 'regression-basic.data.ts']}
@@ -143,11 +178,52 @@ Iris 数据包含 150 条鸢尾花观测。横轴为萼片长度，纵轴为花�
   size="xl"
 />
 
-完整属性与约束见 [API 参考：回归映射](#回归映射-1)。
+完整属性与约束见 [API 参考：RegressionEncodings](#regressionencodings)。
 
 ### 回归属性
 
-React 通过 `RegressionProperties` 声明，Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。属性选择拟合方法与绘制采样，并分别设置观测点和趋势线外观。
+属性选择拟合方法与绘制采样，并分别设置观测点和趋势线外观。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RegressionProperties
+  method={{ kind: 'linear' }}
+  sampleCount={64}
+  point={{ size: 4, opacity: 0.55 }}
+  trend={{ stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  method: { kind: 'linear' },
+  sampleCount: 64,
+  point: { size: 4, opacity: 0.55 },
+  trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    method: { kind: 'linear' },
+    sampleCount: 64,
+    point: { size: 4, opacity: 0.55 },
+    trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 本例固定横纵轴映射，默认将全部观测合并拟合，也可开启“按物种分别拟合”，比较相同方法在各组上的趋势。分组后点与趋势线使用物种分类颜色，不再显示统一颜色控件。同一批观测可用不同方法进行拟合。方法控制模型形式，采样数只决定绘制趋势时使用多少预测点；二者不是同一件事。
 
@@ -158,6 +234,7 @@ React 通过 `RegressionProperties` 声明，Vanilla API 使用 `properties`，�
 增加 sampleCount 不会提高模型阶数，也不会修复样本不足。选择方法前应检查该方法对正值与样本数量的要求。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['regression-basic', 'regression-basic.data.ts']}
@@ -166,11 +243,61 @@ React 通过 `RegressionProperties` 声明，Vanilla API 使用 `properties`，�
   size="xl"
 />
 
-完整属性与约束见 [API 参考：回归属性](#回归属性-1)。
+完整属性与约束见 [API 参考：RegressionProperties](#regressionproperties)。
 
 ### 回归图元
 
-React 通过 `RegressionMark` 声明，Vanilla API 使用 `marks`，直接 IR 使用 `recipe.marks`。 React 不传 `kind`；Vanilla / IR 图元对象使用 `kind: 'regression'`。每个图元包含观测点、主趋势与额外趋势，可用于替换整个组合或叠加不同位置映射。同一观测的多方法比较使用 `extraMethods`，见下方扩展用法。
+每个图元包含观测点与趋势；替换或追加作用于完整组合。同一观测的多方法比较使用 `extraMethods`，见下方扩展用法。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RegressionMark
+  override
+  properties={{
+    method: { kind: 'quadratic' },
+    trend: { strokeWidth: 3 },
+  }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [
+  {
+    kind: 'regression',
+    override: true,
+    properties: {
+      method: { kind: 'quadratic' },
+      trend: { strokeWidth: 3 },
+    },
+  },
+],
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'regression',
+      override: true,
+      properties: {
+        method: { kind: 'quadratic' },
+        trend: { strokeWidth: 3 },
+      },
+    },
+  ],
+},
+```
+
+</DocTab>
+</DocTabs>
 
 下面将每个物种的默认线性组合替换为二次组合。观测点仍然存在；更弯的趋势只是另一种模型描述，并不自动意味着解释更好。
 
@@ -181,15 +308,16 @@ React 通过 `RegressionMark` 声明，Vanilla API 使用 `marks`，直接 IR �
 RegressionMark 始终继承 series，不能在同一个图元里改成另一套分组规则。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['regression-marks', 'regression-basic.data.ts']}
   size="xl"
   controls={{ name: 'regression-marks' }}
-  caption="切换替换与叠加模式，调整图元样式，观察继承与覆盖的效果。"
+  caption="切换拟合方法并调整趋势线宽，比较同一组观测点的趋势。"
 />
 
-完整属性与约束见 [API 参考：回归图元](#回归图元-1)。
+完整属性与约束见 [API 参考：RegressionMark](#regressionmark)。
 
 ## 扩展用法
 
@@ -252,11 +380,24 @@ RegressionMark 始终继承 series，不能在同一个图元里改成另一套�
 
 React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，否则报错。
 
-`point-aware` 仅支持二维笛卡尔坐标、linear/time 位置尺度且无散布的组合。全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
+`point-aware` 支持内置连续与分类位置尺度，以及二维笛卡尔和极坐标。全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
 
 ## 实现原理
 
 <ComponentAlert type="tip" title="选读" description="本节解释此类图表的特殊行为；只需使用 API 时可以跳过。" />
+
+### 图形构建
+
+Chart 将回归图元解析为趋势 Plot Path，并按需加入观测 Plot Point。下表只列拟合图元特有的转换。
+
+| 分组 | `@retikz/chart`                   | `@retikz/plot`                           | 描述                                                    |
+| ---- | --------------------------------- | ---------------------------------------- | ------------------------------------------------------- |
+| 映射 | `x`、`y`、`series`                | `smooth.x`、`smooth.y`、`smooth.groupBy` | 使用观测坐标拟合，并按序列分别计算趋势                  |
+| 属性 | `method`、`sampleCount`、`extent` | `smooth` 变换参数                        | 将拟合方法、采样数量和值域传给趋势变换                  |
+|      | `trend`、`extraMethods`           | `Path` 外观与额外 `Path`                 | 设置主趋势外观，并为每个额外方法增加一条趋势路径        |
+| 图元 | `IRRegressionMark`                | `IRPlotPathMark`、`IRPlotPointMark`      | 始终创建趋势 Path；`hidePoints` 为 false 时再创建 Point |
+
+<SourceLinks sources={[{ path: 'packages/viz/chart/src/point/regression/mark.ts', label: '趋势与观测图元构建' }]} />
 
 ### 拟合方法
 
@@ -441,7 +582,7 @@ React 使用 `RegressionChart`，可通过 `recipe` 属性或专属子组件提�
 
 React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局、标题与指南配置见 [编写与解析](/viz/chart/model/authoring)。
 
-### 回归映射
+#### RegressionEncodings
 
 对应 `RegressionEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
 
@@ -454,7 +595,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 
 公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#regressionchartencodingsschema)。
 
-### 回归属性
+#### RegressionProperties
 
 对应 `RegressionProperties`、Vanilla `properties` 和 IR `recipe.properties`。
 
@@ -472,7 +613,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 
 完整属性结构见 [属性 Schema](#regressionchartpropertiesschema)；公共外观配置不在这里展开。
 
-### 回归图元
+#### RegressionMark
 
 对应 `RegressionMark`、Vanilla `marks` 和 IR `recipe.marks`。
 
@@ -487,7 +628,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 
 以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
 
-### RegressionChartSchema
+#### RegressionChartSchema
 
 <ZodSchema
   name="RegressionChartSchema"
@@ -508,7 +649,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
   }}
 />
 
-### RegressionChartRecipeSchema
+#### RegressionChartRecipeSchema
 
 <ZodSchema
   name="RegressionChartRecipeSchema"
@@ -523,7 +664,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
   }}
 />
 
-### RegressionChartEncodingsSchema
+#### RegressionChartEncodingsSchema
 
 <ZodSchema
   name="RegressionChartEncodingsSchema"
@@ -539,7 +680,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
   }}
 />
 
-### RegressionChartPropertiesSchema
+#### RegressionChartPropertiesSchema
 
 <ZodSchema
   name="RegressionChartPropertiesSchema"
@@ -557,7 +698,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
   }}
 />
 
-### RegressionExtraMethodSchema
+#### RegressionExtraMethodSchema
 
 每项必须指定拟合方法，采样与外观沿用上方配置；只生成趋势线。数组顺序决定额外趋势的绘制顺序，不自动分配方法颜色或方法图例。任意一条趋势拟合失败都会使整张图失败。
 
@@ -573,7 +714,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
   }}
 />
 
-### RegressionChartMarkSchema
+#### RegressionChartMarkSchema
 
 `encodings` 只允许 x、y，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
 

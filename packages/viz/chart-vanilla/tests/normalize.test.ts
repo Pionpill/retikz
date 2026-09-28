@@ -291,6 +291,7 @@ describe('Chart Vanilla normalization', () => {
       marks: [
         {
           kind: 'regression',
+          hidePoints: true,
           encodings: { y: 'petalWidthCm' },
           properties: { method: { kind: 'quadratic' }, trend: { strokeOpacity: 0.75 } },
         },
@@ -323,6 +324,7 @@ describe('Chart Vanilla normalization', () => {
         marks: [
           {
             kind: 'regression',
+            hidePoints: true,
             encodings: { y: 'petalWidthCm' },
             properties: { method: { kind: 'quadratic' }, trend: { strokeOpacity: 0.75 } },
           },

@@ -102,7 +102,7 @@ type IRPlotSmoothMethod =
 - `@retikz/chart-vanilla/point/regression`：`normalizeRegressionChart` 与 `regressionChart`
 - `@retikz/chart-react/point/regression`：`RegressionChart`、`RegressionEncodings`、`RegressionProperties` 与 `RegressionMark`
 
-JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`RegressionMark` 默认追加一组新的 Point、主趋势与额外趋势 Path；`override: true` 原位替换内建 `regression` semantic group，两种情况都保留不可移除的 mark-local Smooth 与完整复合结构。
+JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`RegressionMark` 默认追加一组新的 Point、主趋势与额外趋势 Path；`override: true` 原位替换内建 `regression` semantic group，两种情况都保留不可移除的 mark-local Smooth；观测 Point 可由 mark 自身的 hidePoints 关闭。
 
 ## 行为、失败语义与兼容性
 
@@ -126,7 +126,7 @@ JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`Regression
 - 额外项的 sampleCount、extent 省略时继承当前组合属性；最终仍省略时交给 Smooth 的权威默认。method 必填，不能隐式继承主方法。
 - trend 按字段合并当前组合的 trend 与额外项显式 trend。非分组时保留主趋势的默认颜色语义；不自动添加方法图例或方法颜色序列。
 - 分组时，主趋势保持现有 series 颜色优先规则。额外趋势省略 stroke 时同样使用 series 分类颜色；只有额外项自身显式 stroke 才覆盖其趋势颜色，仍按 series 分开拟合与连接。其余外观字段按上述继承规则生效。
-- RegressionMark 追加与 override 继续作用于整个回归组合，包含一套观测、主趋势与所有额外趋势。mark 省略 extraMethods 时继承 recipe；显式数组整体替换，不按索引或方法合并，空数组清除继承的额外趋势。额外项读取覆盖后的当前组合 sampleCount、extent 与 trend。
+- RegressionMark 追加与 override 继续作用于整个回归组合，默认包含一套观测、主趋势与所有额外趋势。mark 省略 extraMethods 时继承 recipe；显式数组整体替换，不按索引或方法合并，空数组清除继承的额外趋势。额外项读取覆盖后的当前组合 sampleCount、extent 与 trend。
 - 任一额外方法的配置、样本或值域无效时，整张图失败，不跳过失败的趋势。局部字段错误指向 extraMethods 对应项；缺省继承后的运行条件由现有 Smooth 校验。
 - React properties、Vanilla properties 与 Source IR recipe.properties 具有相同语义。配置 JSON 可序列化，额外项不接受 point、encodings、series 或递归 extraMethods。
 
@@ -135,3 +135,7 @@ JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`Regression
 Regression 已按本决策形成完整公开闭环：Plot Smooth 提供 linear、quadratic、polynomial、logarithmic、exponential 与 power 六种内置方法；Chart 以精确 Source 和复合 semantic group 组织 Point 与趋势 Path；JSON、Vanilla 与 React 入口复用同一 provider、resolve、transform 和 lowering 主链；用户文档覆盖基础用法、方法选择、分组、样式控制与公开 API
 
 当前实现保留本 ADR 的 Stage 1 边界，不包含权重、robust fitting、非线性最小二乘、置信区间、系数输出或自定义 chartType 注册。同一观测下的多方法趋势比较由 extraMethods 表达；需要独立数据视图、映射或完全控制 transform 时继续直接使用 Plot；这些扩展不构成当前 Regression 契约的残余实现缺口
+
+## 观测图元可选生成
+
+RegressionMark 顶层提供 hidePoints，默认 false。true 时不生成该 semantic group 的观测 Point，主趋势与全部 extraMethods 保留；拟合仍消费相同输入、映射、分组与分面。此字段只作用于当前 mark，不隐藏其他组的观测。与 override 组合时替换完整内置组；普通追加时保留内置组。React 可写为布尔简写 hidePoints，Vanilla 与 IR 使用相同布尔字段。此配置由 Chart 组合层拥有，不改变 Data、Plot 或 renderer 契约。

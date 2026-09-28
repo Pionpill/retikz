@@ -83,6 +83,7 @@ describe('Regression exact Source schema', () => {
         marks: [
           {
             kind: 'regression',
+            hidePoints: false,
             override: true,
             encodings: { x: 'sepalWidth' },
             properties: {
