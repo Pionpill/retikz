@@ -3,6 +3,7 @@ import { ScatterChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
+import { usePreviewDimensions } from '@/modules/docs/preview';
 
 import { fertilityWorkData } from '../points/scatter/scatter-fertility-work.data';
 import { firstChartI18n } from './first-chart.i18n';
@@ -14,20 +15,23 @@ export type FirstChartProps = { lang?: Lang };
 const FirstChart: FC<FirstChartProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = firstChartI18n[lang];
-  return (
+  const dimensions = usePreviewDimensions();
+  const chart = (
     <ScatterChart
+      {...(dimensions ? { layout: dimensions } : {})}
       recipe={{
         encodings: { x: 'fertilityRate', y: 'femaleLaborParticipation', color: 'incomeGroup' },
         properties: { size: 5, opacity: 0.7 },
       }}
     >
       <ChartData data={fertilityWorkData} />
-      <ChartLayout width={720} height={440} />
+      {dimensions ? null : <ChartLayout width={720} height={440} />}
       <ChartTitle>{i18n.title}</ChartTitle>
       <ChartSubtitle>{i18n.subtitle}</ChartSubtitle>
       <ChartSource>{i18n.source}</ChartSource>
     </ScatterChart>
   );
+  return chart;
 };
 
 /** 源码视图复用散点图的经济体数据 */

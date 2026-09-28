@@ -306,22 +306,22 @@ export const vizV01: Release = {
             {
               label: { zh: 'Bubble 精确 Source 与 provider', en: 'Exact Bubble Source and provider' },
               content: {
-                zh: '`@retikz/chart/point/bubble` 提供严格 Bubble schema、recipe、semantic mark 与 provider contribution，并复用 Point mapping、facet、scaffold、lowering 与 guide 主链。',
-                en: '`@retikz/chart/point/bubble` provides the strict Bubble schema, recipe, semantic mark, and provider contribution while reusing the Point mapping, facet, scaffold, lowering, and guide pipeline.',
+                zh: '`@retikz/chart/point` 提供严格 Bubble schema、recipe、semantic mark 与 provider contribution，并复用 Point mapping、facet、scaffold、lowering 与 guide 主链。',
+                en: '`@retikz/chart/point` provides the strict Bubble schema, recipe, semantic mark, and provider contribution while reusing the Point mapping, facet, scaffold, lowering, and guide pipeline.',
               },
             },
             {
               label: { zh: 'Regression 精确 Source 与 provider', en: 'Exact Regression Source and provider' },
               content: {
-                zh: '`@retikz/chart/point/regression` 提供严格 Regression schema、Point + Smooth Path semantic group、series scale / legend、facet panel 拟合与 locator qualification。',
-                en: '`@retikz/chart/point/regression` provides the strict Regression schema, Point + Smooth Path semantic group, series scale / legend, facet-panel fitting, and locator qualification.',
+                zh: '`@retikz/chart/point` 提供严格 Regression schema、Point + Smooth Path semantic group、series scale / legend、facet panel 拟合与 locator qualification。',
+                en: '`@retikz/chart/point` provides the strict Regression schema, Point + Smooth Path semantic group, series scale / legend, facet-panel fitting, and locator qualification.',
               },
             },
             {
               label: { zh: 'Strip Chart 精确 Source 与离散散布', en: 'Exact Strip Chart Source and discrete spread' },
               content: {
-                zh: '`@retikz/chart/point/strip` 新增 direct-only x/y exact schema、确定性 jitter shorthand、唯一离散角色校验与 continuous-only grid；React / Vanilla 入口生成同一 Source，并通过 Plot placement 在笛卡尔与极坐标中完成散布和 glyph containment。',
-                en: '`@retikz/chart/point/strip` adds direct-only x/y exact schemas, deterministic jitter shorthand, sole-discrete-role validation, and a continuous-only grid. React and Vanilla entries produce the same Source, while Plot placement handles spread and glyph containment in Cartesian and Polar coordinates.',
+                zh: '`@retikz/chart/point` 新增 direct-only x/y exact schema、确定性 jitter shorthand、唯一离散角色校验与 continuous-only grid；React / Vanilla 入口生成同一 Source，并通过 Plot placement 在笛卡尔与极坐标中完成散布和 glyph containment。',
+                en: '`@retikz/chart/point` adds direct-only x/y exact schemas, deterministic jitter shorthand, sole-discrete-role validation, and a continuous-only grid. React and Vanilla entries produce the same Source, while Plot placement handles spread and glyph containment in Cartesian and Polar coordinates.',
               },
             },
             {
@@ -496,8 +496,8 @@ export const vizV01: Release = {
         {
           label: { zh: '六种 Smooth 回归方法', en: 'Six Smooth regression methods' },
           content: {
-            zh: '`SmoothMethodKind` 提供 linear、quadratic、polynomial、logarithmic、exponential 与 power；每组使用严格样本、秩、值域与有限预测检查，facet、scale、lineage 和 locator 继续消费同一次 panel-local 结果。',
-            en: '`SmoothMethodKind` provides linear, quadratic, polynomial, logarithmic, exponential, and power fits. Strict per-group sample, rank, domain, and finite-prediction checks feed facet, scale, lineage, and locator from the same panel-local result.',
+            zh: '`BuiltinRegressionMethod` 提供 linear、quadratic、polynomial、logarithmic、exponential 与 power；每组使用严格样本、秩、值域与有限预测检查，facet、scale、lineage 和 locator 继续消费同一次 panel-local 结果。',
+            en: '`BuiltinRegressionMethod` provides linear, quadratic, polynomial, logarithmic, exponential, and power fits. Strict per-group sample, rank, domain, and finite-prediction checks feed facet, scale, lineage, and locator from the same panel-local result.',
           },
         },
       ],

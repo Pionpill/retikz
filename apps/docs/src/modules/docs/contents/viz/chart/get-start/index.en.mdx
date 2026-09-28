@@ -71,7 +71,12 @@ The setup code above checks rendering with three points. The example below uses 
 
 The example uses shared components such as `ChartData`, `ChartLayout`, and `ChartTitle` for data, dimensions, and chart text. **These components exist only in the React API**; Vanilla uses a configuration object. This example introduces only a few components. Dedicated chapters will cover each component in detail.
 
-<ComponentPreview files={['first-chart', '/viz/chart/points/scatter/scatter-fertility-work.data.ts']} size="xxl" />
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['first-chart', '/viz/chart/points/scatter/scatter-fertility-work.data.ts']}
+  size="xxl"
+/>
 
 `fertilityRate`, `femaleLaborParticipation`, and `incomeGroup` map to `x`, `y`, and `color`. HIC, UMC, LMC, and LIC stand for high, upper-middle, lower-middle, and low income. Replace the rows and field names to use your own data. See [Scatter](/viz/chart/points/scatter) for its fields and properties.
 

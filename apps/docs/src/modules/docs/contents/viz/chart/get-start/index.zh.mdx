@@ -71,7 +71,12 @@ document.getElementById('chart')!.innerHTML = renderChart(chart, { adapters: [Sc
 
 示例用 `ChartData`、`ChartLayout`、`ChartTitle` 等公共组件配置数据、尺寸与图形说明。**这些组件仅存在于 React 写法中**；Vanilla 使用配置对象。这里只演示部分组件，各组件的详细说明将在后续独立章节中展开。
 
-<ComponentPreview files={['first-chart', '/viz/chart/points/scatter/scatter-fertility-work.data.ts']} size="xxl" />
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['first-chart', '/viz/chart/points/scatter/scatter-fertility-work.data.ts']}
+  size="xxl"
+/>
 
 `fertilityRate`、`femaleLaborParticipation` 和 `incomeGroup` 分别映射到 `x`、`y` 和 `color`。收入组代码 HIC、UMC、LMC、LIC 分别表示高收入、中高收入、中低收入和低收入。接入自己的数据时，替换数据行与字段名即可；具体图形的字段与属性见 [散点图](/viz/chart/points/scatter)。
 
