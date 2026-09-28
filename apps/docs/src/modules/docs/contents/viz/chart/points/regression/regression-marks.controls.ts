@@ -2,6 +2,7 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/docs/preview';
 
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { irisRegressionData } from './regression-basic.data';
 import { controlI18n } from './regression-marks.i18n';
 /** 示例属性的双语交互契约 */
@@ -25,10 +26,11 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             },
           ],
         },
+
+        createPointCoordinateSection('coordinateSystem', lang),
         {
           label: text.settings,
           controls: [
-            { kind: 'switch', id: 'override', label: text.override, defaultValue: true },
             {
               kind: 'select',
               id: 'method',
@@ -46,8 +48,14 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         },
       ],
     }),
-    canonicalValues: { override: true, method: 'quadratic', strokeWidth: 3, size: 4, opacity: 0.45 } as const,
-    relatedApis: ['RegressionMark.override', 'RegressionMark.properties'],
+    canonicalValues: {
+      coordinateSystem: 'cartesian2D',
+      method: 'quadratic',
+      strokeWidth: 3,
+      size: 4,
+      opacity: 0.45,
+    } as const,
+    relatedApis: ['RegressionChart.coordinate', 'RegressionMark.properties'],
   } satisfies PreviewControlContract;
 };
 /** 当前示例的控件值 */

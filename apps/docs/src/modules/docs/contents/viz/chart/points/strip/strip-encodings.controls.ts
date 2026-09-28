@@ -3,11 +3,11 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { createPointCoordinateSection } from '../point-coordinate-control';
-import { gapminderBubbleData } from './bubble-basic.data';
-import { bubbleEncodingsI18n } from './bubble-encodings.i18n';
-/** 只提供当前映射示例的相关控件 */
+import { stripEncodingsI18n } from './strip-encodings.i18n';
+import { stripVegaBarleyData } from './strip-vega-barley.data';
+/** 仅控制当前示例的数据映射 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
-  const i18n = bubbleEncodingsI18n[lang];
+  const i18n = stripEncodingsI18n[lang];
   return {
     controls: definePreviewControls({
       presentation: 'panel',
@@ -21,29 +21,34 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               kind: 'table',
               id: 'rows',
               label: i18n.samples,
-              rows: gapminderBubbleData,
-              columns: [
-                { key: 'country' },
-                { key: 'continent' },
-                { key: 'gdpPerCapita' },
-                { key: 'lifeExpectancy' },
-                { key: 'population' },
-              ],
+              rows: stripVegaBarleyData,
+              columns: Object.keys(stripVegaBarleyData[0] ?? {}).map(key => ({ key })),
             },
           ],
         },
 
         createPointCoordinateSection('coordinateSystem', lang),
         {
-          label: i18n.section,
-          controls: [{ kind: 'switch', id: 'color', label: i18n.color, defaultValue: true }],
+          label: i18n.title,
+          controls: [
+            {
+              kind: 'select',
+              id: 'role',
+              label: i18n.role,
+              defaultValue: 'x',
+              options: [
+                { value: 'x', label: i18n.x },
+                { value: 'y', label: i18n.y },
+              ],
+            },
+          ],
         },
       ],
     }),
     canonicalValues: {
       coordinateSystem: 'cartesian2D',
-      color: true,
-    },
-    relatedApis: ['BubbleChart.coordinate', 'BubbleEncodings.color'],
+      role: 'x',
+    } as const,
+    relatedApis: ['StripChart.coordinate', 'StripEncodings.x', 'StripEncodings.y'],
   } satisfies PreviewControlContract;
 };

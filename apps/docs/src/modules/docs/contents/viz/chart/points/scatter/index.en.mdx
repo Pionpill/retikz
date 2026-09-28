@@ -136,7 +136,43 @@ export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
 
 ### Scatter mappings
 
-In React, declare field mappings with `ScatterEncodings`. The Vanilla API uses `encodings`, and direct IR uses `recipe.encodings`. These mappings control how data determines point position, color, shape, size, and opacity.
+Mappings determine how data affects point position, color, shape, size, and opacity.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ScatterEncodings x="fertilityRate" y="femaleLaborParticipation" color="incomeGroup" shape="incomeGroup" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'fertilityRate',
+  y: 'femaleLaborParticipation',
+  color: 'incomeGroup',
+  shape: 'incomeGroup',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'fertilityRate',
+    y: 'femaleLaborParticipation',
+    color: 'incomeGroup',
+    shape: 'incomeGroup',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 This example uses World Bank data for 186 economies in 2022. Each point represents an economy; fertility and female labor participation reveal the spread and overlap of income groups.
 
@@ -148,6 +184,7 @@ This example uses World Bank data for 186 economies in 2022. Each point represen
 Color and shape provide two ways to identify income groups. Use the controls below to disable either mapping and compare how easily categories can still be distinguished; these changes do not move the points.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['scatter-fertility-work', 'scatter-fertility-work.data.ts']}
@@ -157,11 +194,47 @@ Color and shape provide two ways to identify income groups. Use the controls bel
   caption="Toggle categorical color and shape while positions and sizes stay fixed. HIC, UMC, LMC, and LIC mean high, upper-middle, lower-middle, and low income."
 />
 
-For complete properties and constraints, see [API reference: Scatter mappings](#scatter-mappings-1).
+For complete properties and constraints, see [API reference: ScatterEncodings](#scatterencodings).
 
 ### Scatter properties
 
-In React, set uniform appearance with `ScatterProperties`. The Vanilla API uses `properties`, and direct IR uses `recipe.properties`. Default drawing configuration determines any appearance not explicitly set.
+Constant properties style the whole point set; unspecified appearance follows the drawing defaults.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ScatterProperties size={8} opacity={0.4} stroke="#475569" strokeWidth={1.5} />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  size: 8,
+  opacity: 0.4,
+  stroke: '#475569',
+  strokeWidth: 1.5,
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    size: 8,
+    opacity: 0.4,
+    stroke: '#475569',
+    strokeWidth: 1.5,
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 This example retains the same economies, fertility and labor-participation axes, and income-group categories. Here the goal is to make observations easier to distinguish: economies with similar values produce overlapping points, so appearance affects how easily readers can judge dense regions and separate neighboring observations.
 
@@ -172,6 +245,7 @@ This example retains the same economies, fertility and labor-participation axes,
 These constants apply to every point and do not encode a third numeric measure. Use the controls below to adjust these properties, comparing both dense regions and isolated points to choose a readable appearance.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['scatter-appearance', 'scatter-fertility-work.data.ts', 'scatter-appearance.i18n.ts']}
@@ -181,21 +255,71 @@ These constants apply to every point and do not encode a third numeric measure. 
   controls={{ name: 'scatter-appearance' }}
 />
 
-For complete properties and constraints, see [API reference: Scatter properties](#scatter-properties-1).
+For complete properties and constraints, see [API reference: ScatterProperties](#scatterproperties).
 
 ### Scatter marks
 
-In React, add or replace scatter marks with `ScatterMark`. The Vanilla API uses the `marks` array, and direct IR uses `recipe.marks`; scatter entries in either array require `kind: 'scatter'`. The chart generates points automatically, so ordinary charts need no explicit mark.
+The chart generates points by default; marks replace or append a complete point set.
 
-This example overlays marks using IMDb and Rotten Tomatoes ratings for 100 films. The horizontal axis shows IMDb ratings and the vertical axis shows Rotten Tomatoes ratings. Each film receives a large translucent point and a small opaque point at the same position.
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-The example first uses `ScatterProperties` to set the default point radius to `8` and opacity to `0.25`, then configures an additional `ScatterMark`:
+```tsx
+<ScatterMark
+  override
+  properties={{
+    size: 3,
+    opacity: 1,
+  }}
+/>
+```
 
-- `encodings`: Omitted to inherit the existing data and position mappings, so both layers occupy the same positions.
-- `properties`: Sets `size: 3` and `opacity: 1`, placing a small opaque point at the center of each larger translucent point.
-- `override`: Disabled (`false`) by default to append the mark. Setting it to `true` replaces the default points, leaving only the small points.
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-The translucent outer area preserves the point footprint, while the opaque center identifies its precise position. Both layers represent the same films, not separate datasets. In React, use `ScatterMark` as a direct child of `ScatterChart`.
+```ts
+marks: [
+  {
+    kind: 'scatter',
+    override: true,
+    properties: {
+      size: 3,
+      opacity: 1,
+    },
+  },
+],
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'scatter',
+      override: true,
+      properties: {
+        size: 3,
+        opacity: 1,
+      },
+    },
+  ],
+},
+```
+
+</DocTab>
+</DocTabs>
+
+This example replaces the default marks using IMDb and Rotten Tomatoes ratings for 100 films. The horizontal axis shows IMDb ratings and the vertical axis shows Rotten Tomatoes ratings. Each film receives one point.
+
+The example uses `ScatterMark` to replace the default marks and adjust their appearance:
+
+- `encodings`: Omitted to inherit the existing data and position mappings.
+- `properties`: Sets `size: 3` and `opacity: 1` for smaller opaque points.
+- `override`: Fixed at `true` to replace the default points.
+
+Adjust the radius and opacity to compare point footprints and dense regions. In React, use `ScatterMark` as a direct child of `ScatterChart`.
 
 <ComponentPreview
   mode="showcase"
@@ -204,10 +328,10 @@ The translucent outer area preserves the point footprint, while the opaque cente
   hideCode
   size="xl"
   controls={{ name: 'scatter-marks' }}
-  caption="Switch between replacement and addition, then adjust mark styles to compare inheritance and overrides."
+  caption="Adjust point radius and opacity to observe occlusion in dense regions."
 />
 
-For complete properties and constraints, see [API reference: Scatter marks](#scatter-marks-1).
+For complete properties and constraints, see [API reference: ScatterMark](#scattermark).
 
 ## Extended usage
 
@@ -274,6 +398,32 @@ This example uses StatsBomb shot data from the 2022 World Cup. Each point locate
 - Scatter does not connect observations. Use [Connected scatter](/viz/chart/points/connected-scatter) when order and connections matter.
 - Overlapping points may hide observations. Opacity improves visibility but does not ensure every point can be distinguished.
 
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains behavior specific to this chart type; skip it if you only need the API."
+/>
+
+### Chart construction
+
+Chart resolves a scatter mark to a Plot Point. The table shows how position and appearance reach that mark.
+
+| Group      | `@retikz/chart`            | `@retikz/plot`             | Description                                                   |
+| ---------- | -------------------------- | -------------------------- | ------------------------------------------------------------- |
+| Encodings  | `x`, `y`                   | `encoding.x`, `encoding.y` | Maps the two fields to horizontal and vertical position       |
+|            | `size`, `shape`, `opacity` | `size`, `shape`, `opacity` | Uses fields for point size, shape, and opacity                |
+| Properties | `size`, `shape`, `opacity` | `size`, `shape`, `opacity` | Applies constant appearance; matching encodings take priority |
+| Mark       | `ScatterChartMarkSchema`   | `PointMarkSchema`          | Resolves each scatter mark to one Plot Point                  |
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/point/scatter/mark.ts', label: 'Scatter mark resolution' },
+    { path: 'packages/viz/chart/src/point/shared/mark.ts', label: 'Point encoding and property conversion' },
+  ]}
+/>
+
 ## API reference
 
 This page covers entries and constraints specific to this chart. See the [quick-start example](/viz/chart/get-start#the-first-result) for shared configuration using React components.
@@ -282,7 +432,7 @@ React uses `ScatterChart`, configured through its `recipe` prop or the dedicated
 
 React can combine root props and child components for different configuration fields, but each field must be declared only once. For example, providing both `recipe.encodings` and `ScatterEncodings` raises an error. Root-only configuration requires no children.
 
-### Scatter mappings
+#### ScatterEncodings
 
 Use `ScatterEncodings` in React, `encodings` in the Vanilla API, and `recipe.encodings` in direct IR.
 
@@ -298,7 +448,7 @@ Use `ScatterEncodings` in React, `encodings` in the Vanilla API, and `recipe.enc
 
 Mapping objects may reference scales, aggregate, or transform data as supported by each channel. Shared transform parameters are not expanded here. See the [Schema reference](#scatterchartencodingsschema) for exact inputs and [Errors and limitations](#errors-and-limitations) for combination constraints.
 
-### Scatter properties
+#### ScatterProperties
 
 Use `ScatterProperties` in React, `properties` in the Vanilla API, and `recipe.properties` in direct IR. Properties set constant appearance; data-driven values belong in encodings.
 
@@ -321,7 +471,7 @@ Use `ScatterProperties` in React, `properties` in the Vanilla API, and `recipe.p
 
 Shared font, label, transform, and shadow options are not explained individually here; see the [properties schema](#scatterchartpropertiesschema) for all fields. See [shared point-chart padding](/viz/chart/points#automatic-edge-padding) for padding behavior and limitations.
 
-### Scatter marks
+#### ScatterMark
 
 Use `ScatterMark` in React, `marks` in the Vanilla API, and `recipe.marks` in direct IR. React marks must be direct children of `ScatterChart`; Vanilla / IR marks declare `kind: 'scatter'`.
 
@@ -337,23 +487,23 @@ Omitted mappings and properties inherit applicable chart settings. If replacemen
 
 These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
 
-### ScatterChartSchema
+#### ScatterChartSchema
 
 <ZodSchema name="ScatterChartSchema" shallow />
 
-### ScatterChartRecipeSchema
+#### ScatterChartRecipeSchema
 
 <ZodSchema name="ScatterChartRecipeSchema" shallow />
 
-### ScatterChartEncodingsSchema
+#### ScatterChartEncodingsSchema
 
 <ZodSchema name="ScatterChartEncodingsSchema" shallow />
 
-### ScatterChartPropertiesSchema
+#### ScatterChartPropertiesSchema
 
 <ZodSchema name="ScatterChartPropertiesSchema" shallow />
 
-### ScatterChartMarkSchema
+#### ScatterChartMarkSchema
 
 `encodings` accepts only optional field-name strings for x, y, color, size, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
 

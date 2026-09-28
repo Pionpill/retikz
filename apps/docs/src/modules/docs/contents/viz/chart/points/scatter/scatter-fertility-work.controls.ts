@@ -1,10 +1,12 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { fertilityWorkData, WORLD_BANK_FERTILITY_WORK_YEAR } from './scatter-fertility-work.data';
 
 /** 分类编码 Scatter 的稳定控件 id */
 export const SCATTER_FERTILITY_WORK_CONTROL_IDS = {
+  coordinateSystem: 'scatter-fertility-work-coordinate-system',
   colorByCategory: 'scatter-fertility-work-color-by-category',
   shapeByCategory: 'scatter-fertility-work-shape-by-category',
 } as const;
@@ -32,6 +34,8 @@ export const scatterFertilityWorkControls = definePreviewControls({
         },
       ],
     },
+
+    createPointCoordinateSection(SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem, 'zh'),
     {
       label: '编码',
       controls: [
@@ -56,8 +60,9 @@ export const scatterFertilityWorkControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterFertilityWorkControls,
   canonicalValues: {
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory]: true,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory]: true,
   },
-  relatedApis: ['ScatterEncodings.color', 'ScatterEncodings.shape'],
+  relatedApis: ['ScatterChart.coordinate', 'ScatterEncodings.color', 'ScatterEncodings.shape'],
 } satisfies PreviewControlContract;

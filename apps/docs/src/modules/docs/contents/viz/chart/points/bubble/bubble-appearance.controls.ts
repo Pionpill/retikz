@@ -2,6 +2,7 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { bubbleAppearanceI18n } from './bubble-appearance.i18n';
 import { gapminderBubbleData } from './bubble-basic.data';
 /** 只提供当前外观示例的相关控件 */
@@ -31,6 +32,8 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             },
           ],
         },
+
+        createPointCoordinateSection('coordinateSystem', lang),
         {
           label: i18n.section,
           controls: [
@@ -60,8 +63,15 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         },
       ],
     }),
-    canonicalValues: { fillOpacity: 0.35, stroke: '#475569', strokeWidth: 1.5, shape: 'circle' },
+    canonicalValues: {
+      coordinateSystem: 'cartesian2D',
+      fillOpacity: 0.35,
+      stroke: '#475569',
+      strokeWidth: 1.5,
+      shape: 'circle',
+    },
     relatedApis: [
+      'BubbleChart.coordinate',
       'BubbleProperties.fillOpacity',
       'BubbleProperties.stroke',
       'BubbleProperties.strokeWidth',

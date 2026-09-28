@@ -8,7 +8,11 @@ import { fertilityWorkData } from './scatter-fertility-work.data';
 
 const contract = createPreviewControlContract();
 const controlledPreview = defineControlledPreview(contract, (values, dimensions) => (
-  <ScatterChart rows={fertilityWorkData} layout={dimensions}>
+  <ScatterChart
+    coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
+    rows={fertilityWorkData}
+    layout={dimensions}
+  >
     <ScatterEncodings x="fertilityRate" y="femaleLaborParticipation" color="incomeGroup" shape="incomeGroup" />
     <ScatterProperties
       size={values.size}

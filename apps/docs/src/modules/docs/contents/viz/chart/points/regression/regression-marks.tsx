@@ -16,6 +16,7 @@ const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.ca
 
   const chart = (
     <RegressionChart
+      coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
       rows={irisRegressionData}
       layout={{ ...bounds, padding: { right: 48 } }}
 
@@ -25,7 +26,7 @@ const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.ca
       }}
     >
       <RegressionMark
-        override={values.override}
+        override
         properties={{ method: { kind: values.method }, trend: { strokeWidth: values.strokeWidth } }}
       />
     </RegressionChart>

@@ -2,6 +2,7 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { scatterAppearanceI18n } from './scatter-appearance.i18n';
 import { fertilityWorkData } from './scatter-fertility-work.data';
 
@@ -31,6 +32,8 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             },
           ],
         },
+
+        createPointCoordinateSection('coordinateSystem', lang),
         {
           label: i18n.points,
           controls: [
@@ -43,12 +46,14 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: {
+      coordinateSystem: 'cartesian2D',
       size: 8,
       opacity: 0.4,
       stroke: '#475569',
       strokeWidth: 1.5,
     },
     relatedApis: [
+      'ScatterChart.coordinate',
       'ScatterProperties.size',
       'ScatterProperties.opacity',
       'ScatterProperties.stroke',

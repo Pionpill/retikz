@@ -19,7 +19,14 @@ const methodOf = (kind: RegressionMethodKind, order: number): IRRegressionMethod
 
 const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) => {
   const chart = (
-    <RegressionChart layout={dimensions ? { ...dimensions, padding: { right: 48 } } : undefined}>
+    <RegressionChart
+      coordinate={
+        values[REGRESSION_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D'
+          ? { type: 'polar2D' }
+          : { type: 'cartesian2D' }
+      }
+      layout={dimensions ? { ...dimensions, padding: { right: 48 } } : undefined}
+    >
       <ChartData data={irisRegressionData} />
       <RegressionEncodings
         x="sepalLengthCm"

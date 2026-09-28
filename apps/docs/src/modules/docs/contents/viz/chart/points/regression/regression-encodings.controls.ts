@@ -2,6 +2,7 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { irisRegressionData } from './regression-basic.data';
 import { regressionEncodingsI18n } from './regression-encodings.i18n';
 /** 仅控制当前示例的数据映射 */
@@ -25,10 +26,15 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             },
           ],
         },
+
+        createPointCoordinateSection('coordinateSystem', lang),
         { label: i18n.title, controls: [{ kind: 'switch', id: 'group', label: i18n.group, defaultValue: true }] },
       ],
     }),
-    canonicalValues: { group: true } as const,
-    relatedApis: ['RegressionEncodings.series'],
+    canonicalValues: {
+      coordinateSystem: 'cartesian2D',
+      group: true,
+    } as const,
+    relatedApis: ['RegressionChart.coordinate', 'RegressionEncodings.series'],
   } satisfies PreviewControlContract;
 };

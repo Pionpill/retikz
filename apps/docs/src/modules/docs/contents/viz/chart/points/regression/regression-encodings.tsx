@@ -9,7 +9,11 @@ import { createPreviewControlContract } from './regression-encodings.controls';
 const contract = createPreviewControlContract();
 const controlled = defineControlledPreview(contract, (values, dimensions) => {
   return (
-    <RegressionChart rows={irisRegressionData} layout={dimensions}>
+    <RegressionChart
+      coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
+      rows={irisRegressionData}
+      layout={dimensions}
+    >
       <RegressionEncodings x="sepalLengthCm" y="petalLengthCm" {...(values.group ? { series: 'species' } : {})} />
     </RegressionChart>
   );

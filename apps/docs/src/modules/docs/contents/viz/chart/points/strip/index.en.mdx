@@ -1,115 +1,523 @@
 ---
-title: Strip Chart
-description: Deterministically spread observations within one discrete position role while preserving values on the other continuous role.
-family: scatter-points
-usage: distribution
+title: Strip chart
+description: A strip chart organizes observations by category and spreads points near each category center to reduce overlap.
 ---
 
-<ShowcaseGallery
-  examples={[
-    {
-      id: 'strip-minimal',
-      title: 'Basic Usage',
-      description: 'This is the minimal setup with only required options. Once one discrete and one continuous scale are explicit, `StripChart` spreads overlapping observations along the discrete role; switch to IR to inspect the exact configuration.',
-      preview: {
-        files: ['strip-minimal', 'strip-palmer-penguins.data.ts'],
-        size: 'xxxl',
-        caption: 'Every point retains its original flipper length; only its position within the species role changes.',
-      },
-    },
-    {
-      id: 'strip-basic',
-      title: 'Advanced playground: roles, coordinates, and spread',
-      description: 'Switch discrete x / y, Point / Band scales, Cartesian / Polar coordinates, then adjust spread width, random seed, and point radius.',
-      preview: {
-        files: ['strip-basic', 'strip-vega-barley.data.ts'],
-        controls: { name: 'strip-basic' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'In Polar coordinates, discrete x spreads along angle arcs while discrete y spreads radially; the same angular offset has a different arc length at each radius.',
-      },
-    },
-  ]}
->
-A Strip Chart organizes categories on one discrete position role and spreads individual observations around each tick. Use it for within-group distributions, overlap, and outliers. When both x and y are continuous, use [Scatter](/viz/chart/points/scatter).
+A strip chart organizes observations by category and spreads points near each category center to reduce overlap. It compares distributions, outliers and dense regions across groups. Exactly one position role must be discrete and the other continuous; spread is not another measured variable.
 
-## `StripChart`
+## Using this topic
 
-The root `recipe` requires both x and y, with exactly one final discrete position scale and one continuous scale. Component identity supplies the Point family and `chartType: 'strip'`:
+After [installation and first rendering](/viz/chart/get-start), choose one of the four equivalent inputs below. They share data and configuration.
+
+30 penguins from each of three species; species is discrete and flipper length is continuous.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-minimal', 'strip-palmer-penguins.data.ts']}
+  hideCode
+  size="xl"
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+The dedicated children of `StripChart` are listed below. Start with encodings; properties and authored marks are optional.
+
+```text
+StripChart
+├── StripEncodings
+├── StripProperties
+└── StripMark
+```
 
 ```tsx
-<StripChart
-  rows={rows}
-  recipe={{
+import { StripChart, StripEncodings } from '@retikz/chart-react/point';
+import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+
+export const Example = () => (
+  <StripChart rows={stripPalmerPenguinsData}>
+    <StripEncodings
+      x={{ field: 'species', scale: { operation: { type: 'point', name: 'species' } } }}
+      y={{ field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } }}
+    />
+  </StripChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { StripChartSchema, createStripChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+import { Layout } from '@retikz/react';
+
+const chart = StripChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: {
+    chartType: 'strip',
     encodings: {
-      x: { field: 'group', scale: { operation: { type: 'point', name: 'group' } } },
-      y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+      x: { field: 'species', scale: { operation: { type: 'point', name: 'species' } } },
+      y: { field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } },
     },
-    properties: { jitter: { span: { kind: 'ratio', value: 0.3 }, seed: 0 } },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createStripChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': stripPalmerPenguinsData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { stripChart, StripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+
+const chart = stripChart({
+  data: stripPalmerPenguinsData,
+  encodings: {
+    x: { field: 'species', scale: { operation: { type: 'point', name: 'species' } } },
+    y: { field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } },
+  },
+});
+export const svg = renderChart(chart, { adapters: [StripChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { StripChartSchema, createStripChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+import { compileToScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = StripChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: {
+    chartType: 'strip',
+    encodings: {
+      x: { field: 'species', scale: { operation: { type: 'point', name: 'species' } } },
+      y: { field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } },
+    },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createStripChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': stripPalmerPenguinsData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+The following snippets compare where React JSX, Vanilla API, and direct IR place each configuration. Each section shows only the part relevant to its task. The previews share the barley data and let you adjust the configuration interactively.
+
+### Strip encodings
+
+Encodings assign categories and continuous values; the resolved discrete axis determines the jitter direction.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<StripEncodings
+  x={{ field: 'site', scale: { operation: { type: 'point', name: 'site' } } }}
+  y={{ field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: { field: 'site', scale: { operation: { type: 'point', name: 'site' } } },
+  y: { field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } },
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: { field: 'site', scale: { operation: { type: 'point', name: 'site' } } },
+    y: { field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } },
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
+
+This dataset contains 120 barley observations across six Minnesota sites: ten varieties over two years. The category axis separates sites; the continuous axis retains yield. Jitter reveals points that would otherwise overlap.
+
+- `x`: By default, bind site to a discrete point scale.
+- `y`: By default, bind yield to a continuous linear scale.
+
+Switch the discrete axis to exchange the category and yield directions. Point marks use only category centers; band width does not change point positions here, so this example uses a point scale. Compare ranges and concentrations along the continuous axis; jitter along the category axis does not rank varieties or imply time order.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-encodings', 'strip-vega-barley.data.ts']}
+  hideCode
+  controls={{ name: 'strip-encodings' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
+
+For complete properties and constraints, see [API reference: StripEncodings](#stripencodings).
+
+### Strip properties
+
+Properties control jitter span, distribution, and constant point appearance.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<StripProperties
+  jitter={{ span: { kind: 'ratio', value: 0.3 }, distribution: { kind: 'uniform' }, seed: 0 }}
+  size={5}
+  opacity={0.75}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  jitter: { span: { kind: 'ratio', value: 0.3 }, distribution: { kind: 'uniform' }, seed: 0 },
+  size: 5,
+  opacity: 0.75,
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    jitter: { span: { kind: 'ratio', value: 0.3 }, distribution: { kind: 'uniform' }, seed: 0 },
+    size: 5,
+    opacity: 0.75,
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
+
+This example fixes site on x with a point scale and yield on y. Each site has twenty observations, with some similar yields. Spread and point radius jointly affect overlap while leaving every yield value unchanged.
+
+- `jitter.span`: Control total width, not one-sided displacement.
+- `jitter.distribution`: Choose uniform or center-concentrated normal placement.
+- `jitter.seed`: Change placement; a fixed seed makes it reproducible.
+- `size`: Adjust point radius.
+
+Keep seed fixed when comparing distributions. Wider jitter does not mean higher variance in the measured data. In Polar coordinates, this example places sites on the angular axis: the `jitter.span` ratio sets an angular spread relative to the spacing between sites. The same angular span makes a longer arc at a larger radius, so its visible width varies with radius rather than staying fixed in pixels. See [Polar jitter](#polar-jitter) below for a concrete example.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-basic', 'strip-vega-barley.data.ts']}
+  hideCode
+  controls={{ name: 'strip-basic' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
+
+For complete properties and constraints, see [API reference: StripProperties](#stripproperties).
+
+### Strip marks
+
+Marks can override jitter and appearance while retaining the chart’s coordinate roles.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<StripMark
+  override
+  properties={{
+    jitter: { span: { kind: 'ratio', value: 0.6 }, distribution: { kind: 'normal', sigma: 0.4 }, seed: 7 },
+    shape: 'diamond',
+    size: 4,
   }}
 />
 ```
 
-`StripEncodings`, `StripProperties`, and `StripMark` are equivalent JSX sugar for the same recipe slots. Root-only authoring can omit `children`; different slots can mix, while two sources for one slot fail loudly.
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-## Position roles and spread
+```ts
+marks: [{
+  kind: 'strip',
+  override: true,
+  properties: {
+    jitter: { span: { kind: 'ratio', value: 0.6 }, distribution: { kind: 'normal', sigma: 0.4 }, seed: 7 },
+    shape: 'diamond',
+    size: 4,
+  },
+}],
+```
 
-`x` and `y` accept direct field mappings only. A scale can be authored inline or refer to a named scale in `plotExtension.scales`. Chart reads the resolved Scale Definition `continuity`, so custom discrete scales and built-ins follow the same registry path.
+</DocTab>
+<DocTab value="direct-ir" label="IR">
 
-`jitter.span` is the **total spread width**. A number uses the current position role's output units directly. `{ kind: 'ratio', value }` uses a `0..1` fraction of the discrete tick interval. `distribution` defaults to `{ kind: 'uniform' }`; switching to `{ kind: 'normal', sigma }` keeps the category center at zero while concentrating offsets near it and truncating them to `[-span / 2, span / 2]`. `sigma` is relative to the spread half-span and defaults to `0.5`. Plot defaults to `0.3` when omitted, and `seed` defaults to `0`. Identical ordered data, scale, span, distribution, and seed produce identical positions.
+```ts
+recipe: {
+  marks: [{
+    kind: 'strip',
+    override: true,
+    properties: {
+      jitter: { span: { kind: 'ratio', value: 0.6 }, distribution: { kind: 'normal', sigma: 0.4 }, seed: 7 },
+      shape: 'diamond',
+      size: 4,
+    },
+  }],
+},
+```
 
-Strip uses placement jitter: it changes only the plotted position on the discrete role and does not modify rows or continuous values. To derive a field before scales, use the `jitter` [Data transform](/viz/plot/transform); Strip keeps the two mechanisms separate.
+</DocTab>
+</DocTabs>
 
-The default grid follows only the continuous role. `domainPadding` also applies only to the continuous position scale. At a discrete boundary, Plot placement narrows the range using half the spread width plus the actual glyph extent, so points are never clamped, shrunk, or painted outside the coordinate boundary. Insufficient space fails loudly.
+Replace the default mark with diamonds and more concentrated normal jitter. Data and position mappings stay fixed; only mark appearance and placement change.
 
-Polar projection still happens after role-space spread: x is angle and y is radius. Discrete x therefore moves along an arc, where the same angular offset produces a different arc length at each radius. Discrete y moves radially.
+- `override`: Replace the default point mark.
+- `properties.jitter`: Set ratio 0.6, normal distribution and seed 7.
+- `properties.shape`: Use diamond.
+- `properties.size`: Set the point radius of this mark directly in the controls.
 
-## API Reference
+The mark inherits coordinate roles and cannot introduce a local scale. Changing jitter does not change a continuous role into a discrete one.
 
-### `StripEncodingsProps`
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-marks', 'strip-vega-barley.data.ts']}
+  hideCode
+  size="xl"
+  controls={{ name: 'strip-marks' }}
+  caption="Adjust mark shape and radius to inspect point positions under normal jitter."
+/>
 
-| Prop       | Type                                    | Default | Description                                                       |
-| ---------- | --------------------------------------- | ------- | ----------------------------------------------------------------- |
-| `x` / `y`  | `IRStripXEncoding` / `IRStripYEncoding` | —       | Required direct mappings; exactly one discrete and one continuous |
-| `color?`   | `IRStripColorEncoding`                  | —       | Optional direct color field and scale binding                     |
-| `size?`    | `IRStripSizeEncoding`                   | —       | Optional direct radius field and sqrt scale binding               |
-| `opacity?` | `IRStripOpacityEncoding`                | —       | Optional direct opacity field and linear scale binding            |
-| `shape?`   | `IRStripShapeEncoding`                  | —       | Optional direct shape field                                       |
+For complete properties and constraints, see [API reference: StripMark](#stripmark).
 
-### `StripPropertiesProps`
+## Extended usage
 
-| Prop                         | Type                                                                    | Default                                                | Description                                                                   |
-| ---------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| `jitter?`                    | `IRStripChartJitter`                                                    | `{ span: ratio(0.3), distribution: uniform, seed: 0 }` | Deterministic spread along the sole discrete role; no authored `role`         |
-| `jitter.distribution?`       | `IRPlotRandomDistribution`                                              | `{ kind: 'uniform' }`                                  | Select even spread or a center-concentrated truncated normal distribution     |
-| `jitter.distribution.kind`   | `'uniform' \| 'normal'`                                                 | `uniform`                                              | Distribution discriminator                                                    |
-| `jitter.distribution.sigma?` | `number`                                                                | `0.5`                                                  | Normal only; standard deviation relative to the jitter half-span, positive    |
-| `domainPadding?`             | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius                             | Configures only the continuous scale; Plot placement contains discrete spread |
-| `autoPadding?` | `'max-radius'` \| `'point-aware'` \| `{ kind: 'max-radius' \| 'point-aware'; clearance?: number \| IRBoxSpacing }` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
-| Point appearance             | `IRPointProperties`                                                     | Point defaults                                         | Constant `size`, `shape`, paint, stroke, opacity, and related styling         |
+### Polar jitter
 
-`autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [point-chart padding policies](/viz/chart/points#automatic-edge-padding).
+Sites map to the angular axis and yield maps to the radial axis. This example sets the total angular jitter span to 0.7 of the spacing between sites. A normal distribution with a smaller sigma concentrates points near each site's center angle. Jitter changes only the angle; the radius still represents yield.
 
-Use `autoPadding: { kind: 'point-aware', clearance: 8 }` to reserve clearance between protected point extents and automatic plot-area edges. `clearance` is a nonnegative drawing-coordinate length, defaulting to `0`. Both strategies support it; explicitly configured `domainPadding` ends do not add clearance.
+In the table below, `coordinate` belongs to the chart root; encodings and properties belong to IR `recipe`. React and Vanilla use the corresponding inputs described above.
 
-`clearance` also accepts the Kernel `IRBoxSpacing` object with nonnegative `default`, `x`, `y`, `top`, `right`, `bottom`, and `left` fields. Precedence is side → axis → `default` → `0`; `8` equals `{ default: 8 }`. For example, `{ default: 8, x: 12, top: 20, left: 0 }` gives top 20, bottom 8, left 0, and right 12. Explicit visual sides require Cartesian coordinates and retain their visual meaning with reversed axes.
+| Group        | Property                | Type                            | Description                                  |
+| ------------ | ----------------------- | ------------------------------- | -------------------------------------------- |
+| `coordinate` | `type`                  | `polar2D`                       | Project positions into angle and radius      |
+| `encodings`  | `x / y`                 | direct fields and scale objects | Site sets angle; yield sets radius           |
+| `properties` | `jitter.span`           | ratio object                    | Angular span is 0.7 of the site tick spacing |
+|              | `jitter.distribution`   | normal object                   | sigma 0.35; offsets stay within the span     |
+|              | `jitter.seed / opacity` | number                          | Fix seed and use opacity to reveal overlap   |
 
-### `StripMarkProps`
+Compare inner and outer points with the same angular offset: arc length equals radius times angle in radians, so a larger radius produces a longer visible arc. Changing the jitter ratio changes the angle range rather than a fixed pixel width. Keep seed fixed to compare settings without mistaking random placement for a yield change.
 
-| Prop          | Type                         | Default   | Description                                                                |
-| ------------- | ---------------------------- | --------- | -------------------------------------------------------------------------- |
-| `override?`   | `boolean`                    | `false`   | Replaces the complete Strip Point mark                                     |
-| `encodings?`  | `IRPointMarkEncoding`        | inherited | Overrides direct fields only; no mark-local scale                          |
-| `properties?` | `IRStripChartMarkProperties` | inherited | Overrides Point appearance and jitter; rejects recipe-only `domainPadding` |
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-distribution', 'strip-vega-barley.data.ts']}
+  size="xxl"
+  controls={{ name: 'strip-distribution' }}
+/>
 
-## Public entries
+## Errors and limitations
 
-- `@retikz/chart/point/strip`: exact schemas, Source types, and provider
-- `@retikz/chart-react/point`: Chart, Encodings, Properties, and Mark declarations
-- `@retikz/chart-vanilla/point/strip`: normalizer, factory, and typed Input
+- Exactly one resolved position scale must be discrete and one continuous; use Scatter for two continuous variables.
+- Only direct mappings are supported; Strip does not support `row`, `column`, or `facet`. Use Plot for other compositions.
+- Jitter does not modify rows. Reproducibility also requires identical row order, scales and placement settings.
+- Insufficient discrete-role space fails explicitly rather than silently shrinking or clipping points.
 
-## Related
+In React, supplying the same configuration field through both the root `recipe` and a child component raises an error.
 
-[Scatter](/viz/chart/points/scatter) · [Point position spread](/viz/plot/mark/point#position-spread) · [Position scales](/viz/plot/scale/position) · [Working with Plot](/viz/chart/model/plot)
+`point-aware` supports discrete axes and uses actual positions after jitter. Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
 
-</ShowcaseGallery>
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains behavior specific to this chart type; skip it if you only need the API."
+/>
+
+### Chart construction
+
+Chart resolves a strip mark to a Plot Point and puts jitter settings in that Point's position adjustments. The table lists only strip-specific conversions.
+
+| Group      | `@retikz/chart`        | `@retikz/plot`             | Description                                                               |
+| ---------- | ---------------------- | -------------------------- | ------------------------------------------------------------------------- |
+| Encodings  | `x`, `y`               | `encoding.x`, `encoding.y` | Keeps category and value fields; resolved scales choose the discrete axis |
+| Properties | `jitter`               | `placement.adjustments`    | Adds a Jitter adjustment whose settings Plot applies                      |
+| Mark       | `StripChartMarkSchema` | `PointMarkSchema`          | Resolves each strip mark to one Plot Point with jitter                    |
+
+<SourceLinks
+  sources={[{ path: 'packages/viz/chart/src/point/strip/mark.ts', label: 'Strip mark and jitter settings' }]}
+/>
+
+### Choose the discrete role automatically
+
+Strip inspects the resolved scales to identify one discrete category axis and one continuous numeric axis, then applies jitter along the discrete axis. Callers cannot specify a separate jitter axis; when the current style shows default grids, they follow only the continuous axis. Each group below originally has only three distinct positions.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-placement-figure', 'strip-placement-figure.data.ts']}
+  hideCode
+  type="illustration"
+  size="xxl"
+/>
+
+After jitter, points still lie at values 1, 2 and 3; only category-direction positions change.
+
+Chart selects the jitter axis and validates the coordinate combination. Plot handles random offsets, boundary constraints, and coordinate projection.
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/point/strip/mark.ts', label: 'Mark composition and inheritance' },
+    { path: 'packages/viz/chart/src/point/strip/recipe.ts', label: 'Recipe configuration and boundaries' },
+  ]}
+/>
+
+## API reference
+
+React uses `StripChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `stripChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'strip'`. React and the Vanilla API supply the chart type automatically.
+
+In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, presentation, and guides, see [Authoring](/viz/chart/model/authoring).
+
+#### StripEncodings
+
+Corresponds to `StripEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
+
+| Channel   | Input form                 | Description                                                                         |
+| --------- | -------------------------- | ----------------------------------------------------------------------------------- |
+| `x / y`   | Field name, direct mapping | Required direct mappings; exactly one resolved scale is discrete and one continuous |
+| `color`   | Field name, direct mapping | Direct color field with a compatible optional scale                                 |
+| `size`    | Field name, direct mapping | Direct numeric size field using a sqrt scale                                        |
+| `opacity` | Field name, direct mapping | Direct numeric opacity field using a linear scale                                   |
+| `shape`   | Field name, direct mapping | Direct categorical shape field                                                      |
+
+Shared mapping parameters are not expanded here; see the [encoding schema](#stripchartencodingsschema) for exact inputs.
+
+#### StripProperties
+
+Corresponds to `StripProperties`, Vanilla `properties` and IR `recipe.properties`.
+
+| Category       | Property              | Type                                                     | Description                                                                                             |
+| -------------- | --------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Shape and size | `size`                | `number`                                                 | Uniform point radius; must be nonnegative                                                               |
+|                | `shape`               | `string`                                                 | Registered shape name                                                                                   |
+| Color and fill | `color`               | `string`                                                 | Sets the primary color                                                                                  |
+|                | `fill`                | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                            |
+| Stroke         | `stroke`              | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                          |
+|                | `strokeWidth`         | `number`                                                 | Stroke width; must be nonnegative                                                                       |
+|                | `dashed`              | `boolean`                                                | Enables a dashed stroke                                                                                 |
+|                | `dotted`              | `boolean`                                                | Enables a dotted stroke                                                                                 |
+|                | `dashPattern`         | `Array<number>`                                          | Custom dash sequence; at least one entry, all entries nonnegative                                       |
+| Opacity        | `opacity`             | `number`                                                 | Overall opacity, from 0 to 1                                                                            |
+|                | `fillOpacity`         | `number`                                                 | Fill opacity, from 0 to 1                                                                               |
+|                | `strokeOpacity`       | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
+| Jitter         | `jitter.span`         | `IRStripChartJitter['span']`                             | Total spread; a number uses role output units, ratio uses 0–1 of tick spacing                           |
+|                | `jitter.distribution` | `IRStripChartJitter['distribution']`                     | Uniform or truncated normal; positive sigma is relative to half the spread                              |
+|                | `jitter.seed`         | `number`                                                 | Repeatable placement for identical ordered data and settings; default 0                                 |
+| Padding        | `autoPadding`         | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+|                | `domainPadding`       | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
+
+See the [properties schema](#stripchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
+
+#### StripMark
+
+Corresponds to `StripMark`, Vanilla `marks` and IR `recipe.marks`.
+
+| Property     | Type                           | Description                                                                       |
+| ------------ | ------------------------------ | --------------------------------------------------------------------------------- |
+| `override`   | `boolean`                      | Replace the complete strip point mark, otherwise append                           |
+| `encodings`  | `StripChartMark['encodings']`  | x, y, color, size, opacity and shape use field name strings; no mark-local scales |
+| `properties` | `StripChartMark['properties']` | Override placement and appearance; excludes domainPadding / autoPadding           |
+
+## Schema reference
+
+These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
+
+#### StripChartSchema
+
+<ZodSchema name="StripChartSchema" shallow />
+
+#### StripChartRecipeSchema
+
+<ZodSchema name="StripChartRecipeSchema" shallow />
+
+#### StripChartEncodingsSchema
+
+<ZodSchema name="StripChartEncodingsSchema" shallow />
+
+#### StripChartPropertiesSchema
+
+<ZodSchema name="StripChartPropertiesSchema" shallow />
+
+#### StripChartMarkSchema
+
+`encodings` accepts only optional field-name strings for x, y, color, size, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+
+<ZodSchema name="StripChartMarkSchema" shallow />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Scatter',
+      description: 'Distribution and categories for two continuous variables',
+      url: '/viz/chart/points/scatter',
+    },
+    { title: 'Authoring', description: 'Compare React, Vanilla and Source IR', url: '/viz/chart/model/authoring' },
+    {
+      title: 'Working with Plot',
+      description: 'Compose capabilities beyond this chart type',
+      url: '/viz/chart/model/plot',
+    },
+    { title: 'Point placement', description: 'Explore generic placement and containment', url: '/viz/plot/mark/point' },
+  ]}
+/>

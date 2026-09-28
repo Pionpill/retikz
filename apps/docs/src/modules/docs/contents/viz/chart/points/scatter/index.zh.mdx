@@ -136,7 +136,43 @@ export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
 
 ### 散点映射
 
-React 可通过 `ScatterEncodings` 声明字段映射，Vanilla API 使用 `encodings`，直接 IR 使用 `recipe.encodings`。映射决定数据如何影响散点的位置、颜色、形状、大小和透明度。
+映射决定数据如何影响散点的位置、颜色、形状、大小和透明度。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ScatterEncodings x="fertilityRate" y="femaleLaborParticipation" color="incomeGroup" shape="incomeGroup" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'fertilityRate',
+  y: 'femaleLaborParticipation',
+  color: 'incomeGroup',
+  shape: 'incomeGroup',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'fertilityRate',
+    y: 'femaleLaborParticipation',
+    color: 'incomeGroup',
+    shape: 'incomeGroup',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 下面使用世界银行 2022 年的 186 个经济体数据，每个点代表一个经济体，通过生育率与女性劳动参与率观察不同收入组的分布与重叠情况。
 
@@ -148,6 +184,7 @@ React 可通过 `ScatterEncodings` 声明字段映射，Vanilla API 使用 `enco
 颜色和形状提供两种识别收入组的线索。使用下方控件分别关闭颜色或形状映射，比较类别是否仍容易辨认；这些切换不会改变点的位置。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['scatter-fertility-work', 'scatter-fertility-work.data.ts']}
@@ -157,11 +194,47 @@ React 可通过 `ScatterEncodings` 声明字段映射，Vanilla API 使用 `enco
   caption="切换分类颜色与形状，点的位置与大小保持不变；HIC、UMC、LMC、LIC 分别表示高、中高、中低和低收入组。"
 />
 
-完整属性与约束见 [API 参考：散点映射](#散点映射-1)。
+完整属性与约束见 [API 参考：ScatterEncodings](#scatterencodings)。
 
 ### 散点属性
 
-React 可通过 `ScatterProperties` 设置统一外观，Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。未显式设置的外观由默认绘图配置决定。
+固定属性设置整组散点的外观；未显式设置的外观由默认绘图配置决定。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ScatterProperties size={8} opacity={0.4} stroke="#475569" strokeWidth={1.5} />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  size: 8,
+  opacity: 0.4,
+  stroke: '#475569',
+  strokeWidth: 1.5,
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    size: 8,
+    opacity: 0.4,
+    stroke: '#475569',
+    strokeWidth: 1.5,
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 下面继续展示同一批经济体的生育率与女性劳动参与率，坐标和收入组分类保持不变。本节关注如何让这些观测更容易辨认：当多个经济体的指标接近时，散点会相互遮挡；点的外观会影响读者判断密集区域和识别相邻点的难易程度。
 
@@ -172,6 +245,7 @@ React 可通过 `ScatterProperties` 设置统一外观，Vanilla API 使用 `pro
 这些值作用于整组散点，不表示经济体的第三项数值指标。使用下方控件调整上述属性，对比密集区域与孤立点，选择两者都清楚的外观。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['scatter-appearance', 'scatter-fertility-work.data.ts', 'scatter-appearance.i18n.ts']}
@@ -181,21 +255,71 @@ React 可通过 `ScatterProperties` 设置统一外观，Vanilla API 使用 `pro
   controls={{ name: 'scatter-appearance' }}
 />
 
-完整属性与约束见 [API 参考：散点属性](#散点属性-1)。
+完整属性与约束见 [API 参考：ScatterProperties](#scatterproperties)。
 
 ### 散点图元
 
-React 可通过 `ScatterMark` 追加或覆盖散点图元，Vanilla API 使用 `marks` 数组，直接 IR 使用 `recipe.marks` 数组；数组中的散点图元需要设置 `kind: 'scatter'`。图形默认生成散点，常规绘图无需额外声明图元。
+图形默认生成散点，图元用于替换或追加整组散点。
 
-下面用 100 部电影的 IMDb 与烂番茄评分演示图元叠加：横轴为 IMDb 评分，纵轴为烂番茄评分，在每部电影的位置绘制一个浅色大点和一个实心小点。
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-本例先用 `ScatterProperties` 将默认散点的半径设为 `8`、透明度设为 `0.25`，再通过 `ScatterMark` 配置叠加图元：
+```tsx
+<ScatterMark
+  override
+  properties={{
+    size: 3,
+    opacity: 1,
+  }}
+/>
+```
 
-- `encodings`：省略，继承原来的数据与位置映射，使两层散点落在相同位置。
-- `properties`：设置 `size: 3` 与 `opacity: 1`，在较大的半透明散点中心绘制较小的实心点。
-- `override`：默认关闭（`false`），使用追加行为；若设为 `true`，则替换默认散点，只留下小点。
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-浅色外围保留点的覆盖范围，实心中心标出准确位置。两层表示的是同一批电影，并非两组不同的数据。React 中 `ScatterMark` 须作为 `ScatterChart` 的直接子组件。
+```ts
+marks: [
+  {
+    kind: 'scatter',
+    override: true,
+    properties: {
+      size: 3,
+      opacity: 1,
+    },
+  },
+],
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'scatter',
+      override: true,
+      properties: {
+        size: 3,
+        opacity: 1,
+      },
+    },
+  ],
+},
+```
+
+</DocTab>
+</DocTabs>
+
+下面用 100 部电影的 IMDb 与烂番茄评分演示图元替换：横轴为 IMDb 评分，纵轴为烂番茄评分，每部电影对应一个散点。
+
+本例通过 `ScatterMark` 替换默认图元并调整外观：
+
+- `encodings`：省略，继承原来的数据与位置映射。
+- `properties`：设置 `size: 3` 与 `opacity: 1`，绘制较小的实心点。
+- `override`：固定为 `true`，替换默认散点。
+
+调整半径与透明度可比较点的覆盖范围和密集区域。React 中 `ScatterMark` 须作为 `ScatterChart` 的直接子组件。
 
 <ComponentPreview
   mode="showcase"
@@ -204,10 +328,10 @@ React 可通过 `ScatterMark` 追加或覆盖散点图元，Vanilla API 使用 `
   hideCode
   size="xl"
   controls={{ name: 'scatter-marks' }}
-  caption="切换替换与叠加模式，调整图元样式，观察继承与覆盖的效果。"
+  caption="调整散点半径与不透明度，观察密集区域的遮挡变化。"
 />
 
-完整属性与约束见 [API 参考：散点图元](#散点图元-1)。
+完整属性与约束见 [API 参考：ScatterMark](#scattermark)。
 
 ## 扩展用法
 
@@ -274,6 +398,28 @@ React 可通过 `ScatterMark` 追加或覆盖散点图元，Vanilla API 使用 `
 - Scatter 不连接数据点。需要表达连接顺序时，使用 [连接散点图](/viz/chart/points/connected-scatter)。
 - 重叠点可能遮挡观测。透明度只能改善可见性，不能保证逐点辨认。
 
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释此类图表的特殊行为；只需使用 API 时可以跳过。" />
+
+### 图形构建
+
+Chart 将散点图元解析为 Plot Point。下表概括散点位置与外观如何进入该图元。
+
+| 分组 | `@retikz/chart`            | `@retikz/plot`             | 描述                                   |
+| ---- | -------------------------- | -------------------------- | -------------------------------------- |
+| 映射 | `x`、`y`                   | `encoding.x`、`encoding.y` | 将两个字段分别用于点的水平和垂直位置   |
+|      | `size`、`shape`、`opacity` | `size`、`shape`、`opacity` | 将字段映射用于点的大小、形状和透明度   |
+| 属性 | `size`、`shape`、`opacity` | `size`、`shape`、`opacity` | 将常量外观应用到点；对应映射优先于常量 |
+| 图元 | `ScatterChartMarkSchema`   | `PointMarkSchema`          | 每个散点图元解析为一个 Plot Point      |
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/point/scatter/mark.ts', label: '散点图元解析' },
+    { path: 'packages/viz/chart/src/point/shared/mark.ts', label: 'Point 映射与属性转换' },
+  ]}
+/>
+
 ## API 参考
 
 本页介绍当前图形的专属入口与约束；公共配置的 React 组件写法见 [快速开始示例](/viz/chart/get-start#最小结果)。
@@ -282,7 +428,7 @@ React 使用 `ScatterChart`，可通过 `recipe` 属性提供配置，也可使�
 
 React 可以混用不同配置项的根属性与子组件写法，但同一项配置不能重复声明。例如，`recipe.encodings` 与 `ScatterEncodings` 不能同时提供，否则报错。仅通过根属性配置时，无需添加子组件。
 
-### 散点映射
+#### ScatterEncodings
 
 React 使用 `ScatterEncodings`，Vanilla API 使用 `encodings`，直接 IR 使用 `recipe.encodings`。
 
@@ -298,7 +444,7 @@ React 使用 `ScatterEncodings`，Vanilla API 使用 `encodings`，直接 IR 使
 
 映射对象可按通道支持情况引用尺度、聚合或转换数据，本节不展开公共转换的参数。精确输入结构见下方 [Schema 参考](#scatterchartencodingsschema)，组合限制见[错误与限制](#错误与限制)。
 
-### 散点属性
+#### ScatterProperties
 
 React 使用 `ScatterProperties`，Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。属性设置常量外观；随数据变化的取值应放在映射中。
 
@@ -321,7 +467,7 @@ React 使用 `ScatterProperties`，Vanilla API 使用 `properties`，直接 IR �
 
 其余字体、标签、变换与阴影等公共外观不在这里逐项解释，完整字段见 [属性 Schema](#scatterchartpropertiesschema)。留白策略的触发条件和边界见[点图公共留白原理](/viz/chart/points#自动补齐边缘留白)。
 
-### 散点图元
+#### ScatterMark
 
 React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `recipe.marks`。React 中须作为 `ScatterChart` 的直接子组件；Vanilla / IR 图元需声明 `kind: 'scatter'`。
 
@@ -337,7 +483,7 @@ React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `reci
 
 以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
 
-### ScatterChartSchema
+#### ScatterChartSchema
 
 <ZodSchema
   name="ScatterChartSchema"
@@ -358,7 +504,7 @@ React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `reci
   }}
 />
 
-### ScatterChartRecipeSchema
+#### ScatterChartRecipeSchema
 
 <ZodSchema
   name="ScatterChartRecipeSchema"
@@ -373,7 +519,7 @@ React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `reci
   }}
 />
 
-### ScatterChartEncodingsSchema
+#### ScatterChartEncodingsSchema
 
 <ZodSchema
   name="ScatterChartEncodingsSchema"
@@ -392,7 +538,7 @@ React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `reci
   }}
 />
 
-### ScatterChartPropertiesSchema
+#### ScatterChartPropertiesSchema
 
 <ZodSchema
   name="ScatterChartPropertiesSchema"
@@ -434,7 +580,7 @@ React 使用 `ScatterMark`，Vanilla API 使用 `marks`，直接 IR 使用 `reci
   }}
 />
 
-### ScatterChartMarkSchema
+#### ScatterChartMarkSchema
 
 `encodings` 只允许 x、y、color、size、opacity、shape，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
 

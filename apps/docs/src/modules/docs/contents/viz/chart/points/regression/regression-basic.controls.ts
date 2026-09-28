@@ -1,10 +1,12 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { irisRegressionData } from './regression-basic.data';
 
 /** Regression 基础 playground 的稳定控件 id */
 export const REGRESSION_BASIC_CONTROL_IDS = {
+  coordinateSystem: 'regression-basic-coordinate-system',
   groupBySpecies: 'regression-basic-group-by-species',
   pointSize: 'regression-basic-pointSize',
   method: 'regression-basic-method',
@@ -36,6 +38,7 @@ export const regressionBasicControls = definePreviewControls({
       ],
     },
 
+    createPointCoordinateSection(REGRESSION_BASIC_CONTROL_IDS.coordinateSystem, 'zh'),
     {
       label: '拟合',
       controls: [
@@ -150,6 +153,7 @@ export const regressionBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: regressionBasicControls,
   canonicalValues: {
+    [REGRESSION_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [REGRESSION_BASIC_CONTROL_IDS.groupBySpecies]: false,
     [REGRESSION_BASIC_CONTROL_IDS.pointSize]: 4,
     [REGRESSION_BASIC_CONTROL_IDS.method]: 'linear',
@@ -162,6 +166,7 @@ export const previewControlContract = {
     [REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity]: 0.9,
   },
   relatedApis: [
+    'RegressionChart.coordinate',
     'RegressionEncodings.series',
     'RegressionProperties.point.size',
     'RegressionProperties.method',

@@ -8,7 +8,11 @@ import { createPreviewControlContract } from './bubble-encodings.controls';
 
 const contract = createPreviewControlContract();
 const controlledPreview = defineControlledPreview(contract, (values, dimensions) => (
-  <BubbleChart rows={gapminderBubbleData} layout={dimensions}>
+  <BubbleChart
+    coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
+    rows={gapminderBubbleData}
+    layout={dimensions}
+  >
     <BubbleEncodings
       x="gdpPerCapita"
       y="lifeExpectancy"

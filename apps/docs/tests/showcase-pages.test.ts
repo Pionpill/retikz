@@ -7,6 +7,7 @@ import rehypeMdxCodeProps from 'rehype-mdx-code-props';
 import rehypeSlug from 'rehype-slug';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import { describe, expect, it } from 'vitest';
 
@@ -52,7 +53,7 @@ const compositeConceptPath = (lang: 'zh' | 'en') =>
 const compileOptions: CompileOptions = {
   outputFormat: 'function-body',
   development: false,
-  remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm],
+  remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm, remarkMath],
   rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
 };
 
@@ -128,13 +129,8 @@ describe('collectShowcasePages', () => {
     );
   });
 
-  it('从实际 Viz 文档树收集 Strip 的嵌套路由', () => {
-    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
-      path: '/viz/chart/points/strip',
-      segments: ['viz', 'chart', 'points', 'strip'],
-      label: 'viz.chartStrip',
-      metadata: { family: 'scatter-points', role: 'primary', preview: 'strip-minimal', order: 60 },
-    });
+  it('Strip 使用普通组件文档布局', () => {
+    expect(collectShowcasePages('viz', vizSection).map(page => page.path)).not.toContain('/viz/chart/points/strip');
   });
 
   it('将 Scatter 页面说明为 Chart-native authoring，并保留独立的 Plot 扩展边界', () => {
@@ -151,8 +147,8 @@ describe('collectShowcasePages', () => {
 
     const zh = readFileSync(scatterContentPath('zh'), 'utf8');
     const en = readFileSync(scatterContentPath('en'), 'utf8');
-    expect(zh).toContain('`@retikz/chart-react/point`');
-    expect(en).toContain('`@retikz/chart-react/point`');
+    expect(zh).toContain("from '@retikz/chart-react/point'");
+    expect(en).toContain("from '@retikz/chart-react/point'");
     expect(zh).toContain('`ScatterChart`');
     expect(en).toContain('`ScatterChart`');
     expect(zh).not.toContain('基于公开 Plot API 的非契约概念预览');
@@ -233,15 +229,14 @@ describe('collectShowcasePages', () => {
     const source = readRequiredFile(regressionContentPath(lang));
 
     for (const publicName of [
-      '`@retikz/chart/point`',
-      '`@retikz/chart-react/point`',
-      '`@retikz/chart-vanilla/point`',
+      '@retikz/chart/point',
+      '@retikz/chart-react/point',
+      '@retikz/chart-vanilla/point',
       '`RegressionChart`',
       '`RegressionEncodings`',
       '`RegressionProperties`',
       '`RegressionMark`',
       '`regressionChart`',
-      '`normalizeRegressionChart`',
       '`SmoothTransformSchema`',
     ]) {
       expect(source, publicName).toContain(publicName);
@@ -286,12 +281,13 @@ describe('collectShowcasePages', () => {
     const headings = [...source.matchAll(/^## (.+)$/gm)].map(match => match[1]);
     expect(headings).toEqual(
       lang === 'zh'
-        ? ['接入方式', '基础用法', '扩展用法', '错误与限制', 'API 参考', 'Schema 参考', '延伸阅读']
+        ? ['接入方式', '基础用法', '扩展用法', '错误与限制', '实现原理', 'API 参考', 'Schema 参考', '延伸阅读']
         : [
             'Using this topic',
             'Basic usage',
             'Extended usage',
             'Errors and limitations',
+            'Implementation',
             'API reference',
             'Schema reference',
             'Further reading',
@@ -356,32 +352,26 @@ describe('collectShowcasePages', () => {
     },
   ] as const;
 
-  it.each(minimalPointExamples)(
-    '$chart 基础用法保持指定数据量、root-only、双语 presentation 且无 controls',
-    example => {
-      expect(example.data).toHaveLength(example.rowCount);
-      expect(Object.keys(example.data[0] ?? {}).sort()).toEqual([...example.fields].sort());
+  it.each(minimalPointExamples)('$chart 接入示例保持指定数据量、root-only、无 presentation 且无 controls', example => {
+    expect(example.data).toHaveLength(example.rowCount);
+    expect(Object.keys(example.data[0] ?? {}).sort()).toEqual([...example.fields].sort());
 
-      for (const lang of ['zh', 'en'] as const) {
-        const demo = readRequiredFile(pointChartExamplePath(example.chart, `${example.id}.${lang}.demo.tsx`));
-        expect(demo).toContain(`<${example.root}`);
-        expect(demo).toContain('rows={');
-        expect(demo).toContain('presentation={{');
-        expect(demo).toContain('title:');
-        expect(demo).toContain('subtitle:');
-        expect(demo).toContain('source:');
-        expect(demo).toContain('recipe={{');
-        expect(demo).toContain('datasetImports');
-        expect(demo).not.toContain('defineControlledPreview');
-        expect(demo).not.toContain('previewControls');
-        expect(demo).not.toContain('Encodings ');
-        expect(demo).not.toContain('Properties ');
-      }
-    },
-  );
+    for (const lang of ['zh', 'en'] as const) {
+      const demo = readRequiredFile(pointChartExamplePath(example.chart, `${example.id}.${lang}.demo.tsx`));
+      expect(demo).toContain(`<${example.root}`);
+      expect(demo).toContain('rows={');
+      expect(demo).not.toContain('presentation={{');
+      expect(demo).toContain('recipe={{');
+      expect(demo).toContain('datasetImports');
+      expect(demo).not.toContain('defineControlledPreview');
+      expect(demo).not.toContain('previewControls');
+      expect(demo).not.toContain('Encodings ');
+      expect(demo).not.toContain('Properties ');
+    }
+  });
 
-  it.each(minimalPointExamples.filter(example => example.chart === 'bubble'))(
-    '$chart 双语页以无 controls 的基础用法作为首例',
+  it.each(minimalPointExamples.filter(example => example.chart !== 'scatter'))(
+    '$chart 双语页以无 controls 的接入示例作为首例',
     async example => {
       for (const lang of ['zh', 'en'] as const) {
         const source = readFileSync(pointChartContentPath(example.chart, lang), 'utf8');
@@ -395,26 +385,6 @@ describe('collectShowcasePages', () => {
         expect(source).toContain('value="react-ir"');
         expect(source).toContain('value="vanilla-api"');
         expect(source).toContain('value="vanilla-ir"');
-      }
-    },
-  );
-
-
-  it.each(minimalPointExamples.filter(example => example.chart !== 'scatter' && example.chart !== 'bubble'))(
-    '$chart 双语页以无 controls 的基础用法作为首例',
-    example => {
-      for (const lang of ['zh', 'en'] as const) {
-        const source = readFileSync(pointChartContentPath(example.chart, lang), 'utf8');
-        const minimalIndex = source.indexOf(`id: '${example.id}'`);
-        const advancedIndex = source.indexOf(`id: '${example.nextId}'`);
-        const minimalBlock = source.slice(minimalIndex, advancedIndex);
-
-        expect(minimalIndex).toBeGreaterThanOrEqual(0);
-        expect(advancedIndex).toBeGreaterThan(minimalIndex);
-        expect(minimalBlock).not.toContain('controls:');
-        expect(minimalBlock).toContain(lang === 'zh' ? '最简用法' : 'minimal setup');
-        expect(minimalBlock).toContain('IR');
-        expect(minimalBlock).toContain(example.root);
       }
     },
   );
@@ -491,7 +461,7 @@ describe('collectShowcasePages', () => {
 
     expect(sources.index).toContain('chart-model-pipeline');
     expect(sources.structure).toContain('`ScatterChartSchema`');
-    expect(sources.structure).toContain('`@retikz/chart/point/scatter`');
+    expect(sources.structure).toContain('`@retikz/chart/point`');
     expect(sources.structure).not.toContain('`ChartRuntimeOptions.familyDefinitions`');
     expect(sources.authoring).toContain('`normalizeXxxChart`');
     expect(sources.presentation).toContain('`ChartTitle`');

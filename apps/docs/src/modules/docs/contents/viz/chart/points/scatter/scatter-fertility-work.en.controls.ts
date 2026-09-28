@@ -1,6 +1,7 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { SCATTER_FERTILITY_WORK_CONTROL_IDS } from './scatter-fertility-work.controls';
 import { fertilityWorkData, WORLD_BANK_FERTILITY_WORK_YEAR } from './scatter-fertility-work.data';
 
@@ -27,6 +28,8 @@ export const scatterFertilityWorkControls = definePreviewControls({
         },
       ],
     },
+
+    createPointCoordinateSection(SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem, 'en'),
     {
       label: 'Encodings',
       controls: [
@@ -51,8 +54,9 @@ export const scatterFertilityWorkControls = definePreviewControls({
 export const previewControlContract = {
   controls: scatterFertilityWorkControls,
   canonicalValues: {
+    [SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory]: true,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory]: true,
   },
-  relatedApis: ['ScatterEncodings.color', 'ScatterEncodings.shape'],
+  relatedApis: ['ScatterChart.coordinate', 'ScatterEncodings.color', 'ScatterEncodings.shape'],
 } satisfies PreviewControlContract;

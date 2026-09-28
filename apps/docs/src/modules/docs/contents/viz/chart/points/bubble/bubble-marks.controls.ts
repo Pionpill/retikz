@@ -2,6 +2,7 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/docs/preview';
 
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { gapminderBubbleData } from './bubble-basic.data';
 import { controlI18n } from './bubble-marks.i18n';
 /** 示例属性的双语交互契约 */
@@ -25,10 +26,11 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
             },
           ],
         },
+
+        createPointCoordinateSection('coordinateSystem', lang),
         {
           label: text.settings,
           controls: [
-            { kind: 'switch', id: 'override', label: text.override, defaultValue: true },
             {
               kind: 'range',
               id: 'fillOpacity',
@@ -43,8 +45,12 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         },
       ],
     }),
-    canonicalValues: { override: true, fillOpacity: 0.15, strokeWidth: 2 } as const,
-    relatedApis: ['BubbleMark.override', 'BubbleMark.properties'],
+    canonicalValues: {
+      coordinateSystem: 'cartesian2D',
+      fillOpacity: 0.15,
+      strokeWidth: 2,
+    } as const,
+    relatedApis: ['BubbleChart.coordinate', 'BubbleMark.properties'],
   } satisfies PreviewControlContract;
 };
 /** 当前示例的控件值 */

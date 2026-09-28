@@ -2,9 +2,8 @@ import type { Lang } from '@/i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import { createPointCoordinateSection } from '../point-coordinate-control';
-import { controlI18n } from './scatter-marks.i18n';
-import { scatterMinimalData } from './scatter-minimal.data';
+import { controlI18n } from './strip-marks.i18n';
+import { stripVegaBarleyData } from './strip-vega-barley.data';
 /** 示例属性的双语交互契约 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const text = controlI18n[lang];
@@ -21,28 +20,36 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
               kind: 'table',
               id: 'rows',
               label: text.samples,
-              rows: scatterMinimalData,
-              columns: Object.keys(scatterMinimalData[0] ?? {}).map(key => ({ key })),
+              rows: stripVegaBarleyData,
+              columns: Object.keys(stripVegaBarleyData[0] ?? {}).map(key => ({ key })),
             },
           ],
         },
 
-        createPointCoordinateSection('coordinateSystem', lang),
         {
           label: text.settings,
           controls: [
-            { kind: 'range', id: 'size', label: text.size, defaultValue: 3, min: 1, max: 12, step: 1 },
-            { kind: 'range', id: 'opacity', label: text.opacity, defaultValue: 1, min: 0.1, max: 1, step: 0.05 },
+            {
+              kind: 'select',
+              id: 'shape',
+              label: text.shape,
+              defaultValue: 'diamond',
+              options: [
+                { value: 'circle', label: text.shape_circle },
+                { value: 'diamond', label: text.shape_diamond },
+                { value: 'rectangle', label: text.shape_rectangle },
+              ],
+            },
+            { kind: 'range', id: 'size', label: text.size, defaultValue: 4, min: 2, max: 10, step: 1 },
           ],
         },
       ],
     }),
     canonicalValues: {
-      coordinateSystem: 'cartesian2D',
-      size: 3,
-      opacity: 1,
+      shape: 'diamond',
+      size: 4,
     } as const,
-    relatedApis: ['ScatterChart.coordinate', 'ScatterMark.properties'],
+    relatedApis: ['StripMark.properties'],
   } satisfies PreviewControlContract;
 };
 /** 当前示例的控件值 */

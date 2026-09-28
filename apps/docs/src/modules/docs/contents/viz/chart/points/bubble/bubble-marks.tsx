@@ -16,6 +16,7 @@ const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.ca
 
   const chart = (
     <BubbleChart
+      coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
       rows={gapminderBubbleData}
       layout={{ ...bounds, padding: { right: 48 } }}
 
@@ -29,10 +30,7 @@ const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.ca
         properties: { fillOpacity: 0.55 },
       }}
     >
-      <BubbleMark
-        override={values.override}
-        properties={{ fillOpacity: values.fillOpacity, strokeWidth: values.strokeWidth }}
-      />
+      <BubbleMark override properties={{ fillOpacity: values.fillOpacity, strokeWidth: values.strokeWidth }} />
     </BubbleChart>
   );
   return chart;
