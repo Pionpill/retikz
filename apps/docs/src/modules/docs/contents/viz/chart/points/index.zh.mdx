@@ -22,6 +22,29 @@ description: 根据要回答的问题和数据字段，选择合适的点图。
 | [范围点图](/viz/chart/points/ranged-dot)          | 比较各类别的前后值、两个端点     | 类别字段和两个数值字段         |
 | [条带图](/viz/chart/points/strip)                 | 比较各类别内的观测分布           | 类别字段和一个数值字段         |
 
+<ComponentPreviews
+  items={[
+    { title: '散点图', url: '/viz/chart/points/scatter', files: '/viz/chart/points/scatter/scatter-fertility-work' },
+    { title: '气泡图', url: '/viz/chart/points/bubble', files: '/viz/chart/points/bubble/bubble-basic' },
+    {
+      title: '回归图',
+      url: '/viz/chart/points/regression',
+      files: '/viz/chart/points/regression/regression-encodings',
+    },
+    {
+      title: '连接散点图',
+      url: '/viz/chart/points/connected-scatter',
+      files: '/viz/chart/points/connected-scatter/connected-scatter-basic',
+    },
+    {
+      title: '范围点图',
+      url: '/viz/chart/points/ranged-dot',
+      files: '/viz/chart/points/ranged-dot/ranged-dot-basic',
+    },
+    { title: '条带图', url: '/viz/chart/points/strip', files: '/viz/chart/points/strip/strip-basic' },
+  ]}
+/>
+
 ## 数据准备与阅读提示
 
 先确定一个点代表什么：一名用户、一次测量、一个地区，还是某个时间点。用于比较的数值应属于同一条观测；比较不同群体时，还需要明确的类别字段。普通散点不依赖数据行的排列顺序，只有需要连线表达轨迹时，才必须明确先后顺序。

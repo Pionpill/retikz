@@ -22,6 +22,29 @@ For example, when comparing income per person and life expectancy across regions
 | [Ranged dot](/viz/chart/points/ranged-dot)               | Compare before-and-after values or two endpoints by category       | A category field and two numeric fields              |
 | [Strip](/viz/chart/points/strip)                         | Compare observation distributions within categories                | A category field and one numeric field               |
 
+<ComponentPreviews
+  items={[
+    { title: 'Scatter', url: '/viz/chart/points/scatter', files: '/viz/chart/points/scatter/scatter-fertility-work' },
+    { title: 'Bubble', url: '/viz/chart/points/bubble', files: '/viz/chart/points/bubble/bubble-basic' },
+    {
+      title: 'Regression',
+      url: '/viz/chart/points/regression',
+      files: '/viz/chart/points/regression/regression-encodings',
+    },
+    {
+      title: 'Connected scatter',
+      url: '/viz/chart/points/connected-scatter',
+      files: '/viz/chart/points/connected-scatter/connected-scatter-basic',
+    },
+    {
+      title: 'Ranged dot',
+      url: '/viz/chart/points/ranged-dot',
+      files: '/viz/chart/points/ranged-dot/ranged-dot-basic',
+    },
+    { title: 'Strip', url: '/viz/chart/points/strip', files: '/viz/chart/points/strip/strip-basic' },
+  ]}
+/>
+
 ## Preparing data and reading the chart
 
 Decide what one point represents: a user, a measurement, a region, or an observation at a particular time. Values being compared should belong to the same observation; comparisons between groups also need a clear category field. An ordinary scatter chart does not depend on row order. An explicit sequence becomes necessary when connecting observations into a trajectory.
