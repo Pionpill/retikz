@@ -2006,6 +2006,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PlotAreaDefaults',
     url: '/viz/plot/reference/theme#plotareadefaultsschema',
   },
+  PlotAreaBorderSchema: {
+    schema: IRPlot.PlotAreaBorderSchema,
+    label: 'PlotAreaBorder',
+    url: '/viz/plot/reference/theme#plotareaborderschema',
+  },
   PlotTypographyDefaultsSchema: {
     schema: IRPlot.PlotTypographyDefaultsSchema,
     label: 'PlotTypographyDefaults',

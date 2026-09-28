@@ -78,6 +78,7 @@ import {
 } from '../../resolve/theme';
 import type {
   IRPlot,
+  IRPlotAreaDefaults,
   IRPlotAxisGuide,
   IRPlotCoordinateOperation,
   IRPlotGuide,
@@ -168,6 +169,16 @@ const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>)
   });
 };
 
+/** 按坐标帧取得绘图区表面的实际几何 */
+const plotAreaGeometryOf = (plotArea: Rect, frame: CoordinateFrame | undefined) =>
+  frame !== undefined && isPolarCoordinateFrame(frame)
+    ? { position: frame.center, shape: 'circle' as const, minimumSize: frame.outerRadius * 2 }
+    : {
+        position: [plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height / 2] as [number, number],
+        shape: 'rectangle' as const,
+        minimumSize: { width: plotArea.width, height: plotArea.height },
+      };
+
 /** 按坐标帧的实际绘图区几何生成背景节点 */
 const plotBackgroundNode = (
   plotArea: Rect,
@@ -176,20 +187,38 @@ const plotBackgroundNode = (
   masterColor: string,
 ): IRNode | null => {
   if (!supportsPlotArea(frame) || fill === undefined || fill === 'none') return null;
-  const geometry =
-    frame !== undefined && isPolarCoordinateFrame(frame)
-      ? { position: frame.center, shape: 'circle' as const, minimumSize: frame.outerRadius * 2 }
-      : {
-          position: [plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height / 2] as [number, number],
-          shape: 'rectangle' as const,
-          minimumSize: { width: plotArea.width, height: plotArea.height },
-        };
+  const geometry = plotAreaGeometryOf(plotArea, frame);
   return {
     type: 'node',
     position: geometry.position,
     shape: geometry.shape,
     zIndex: PlotLayerZIndex.Background,
     style: { strokeWidth: 0, color: masterColor, fill },
+    layout: { minimumSize: geometry.minimumSize, padding: 0 },
+  };
+};
+
+/** 在数据图元之上按实际绘图区几何绘制边框 */
+const plotAreaBorderNode = (
+  plotArea: Rect,
+  frame: CoordinateFrame | undefined,
+  border: IRPlotAreaDefaults['border'],
+  masterColor: string,
+): IRNode | null => {
+  if (!supportsPlotArea(frame) || border === undefined || border === false) return null;
+  const geometry = plotAreaGeometryOf(plotArea, frame);
+  return {
+    type: 'node',
+    position: geometry.position,
+    shape: geometry.shape,
+    zIndex: PlotLayerZIndex.Axis,
+    style: {
+      color: masterColor,
+      fill: 'none',
+      stroke: border.stroke ?? 'currentColor',
+      strokeWidth: border.strokeWidth ?? 1,
+      strokeOpacity: border.drawOpacity ?? 1,
+    },
     layout: { minimumSize: geometry.minimumSize, padding: 0 },
   };
 };
@@ -1105,6 +1134,12 @@ export const lowerPlotWithDataArtifact = (
           resolvedTheme.plotArea?.fill,
           resolvedTheme.typography.textColor ?? 'currentColor',
         );
+        const borderNode = plotAreaBorderNode(
+          frameResolution.plotArea,
+          frameResolution.frame,
+          resolvedTheme.plotArea?.border,
+          resolvedTheme.typography.textColor ?? 'currentColor',
+        );
         const markLayers: Array<IRChild> = node.marks
           .map((mark, markIndex) => {
             const markDataView = panelMarkDataViews[markIndex]?.dataView ?? panelDataView;
@@ -1155,6 +1190,7 @@ export const lowerPlotWithDataArtifact = (
               ),
             ),
             ...markLayers,
+            ...(borderNode ? [borderNode] : []),
             ...axisResolution.axisLayers.map(layer =>
               withGuideMasterColor(
                 withFacetGuideContext(layer, panelContext, node.id, panel.id),
@@ -1281,10 +1317,12 @@ export const lowerPlotWithDataArtifact = (
   const defaultFrame = frameByScope.get(coordinateScopes.defaultScope);
   const guideMasterColor = resolvedTheme.typography.textColor ?? 'currentColor';
   const backgroundNode = plotBackgroundNode(plotArea, defaultFrame, resolvedTheme.plotArea?.fill, guideMasterColor);
+  const borderNode = plotAreaBorderNode(plotArea, defaultFrame, resolvedTheme.plotArea?.border, guideMasterColor);
   const children: Array<IRChild> = [
     ...(backgroundNode ? [backgroundNode] : []),
     ...gridLayers.map(layer => withGuideMasterColor(layer, guideMasterColor)),
     ...markLayers,
+    ...(borderNode ? [borderNode] : []),
     ...axisLayers.map(layer => withGuideMasterColor(layer, guideMasterColor)),
     ...legendLayers.map(layer => withGuideMasterColor(layer, guideMasterColor)),
   ];

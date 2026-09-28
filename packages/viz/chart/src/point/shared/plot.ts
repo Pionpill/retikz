@@ -287,6 +287,5 @@ export const pointAxisGuidesOf = (): ReadonlyArray<IRPlotGuide> => [
   {
     type: PlotGuide.Axis,
     dimension: 'y',
-    grid: true,
   },
 ];

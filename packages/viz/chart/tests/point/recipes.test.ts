@@ -124,8 +124,8 @@ describe('Point Chart recipe Definitions', () => {
       }),
     ]);
     expect(result.plot.guides).toEqual([
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y', grid: true },
+      { type: 'axis', dimension: 'x', grid: false },
+      { type: 'axis', dimension: 'y' },
     ]);
   });
 
@@ -146,17 +146,35 @@ describe('Point Chart recipe Definitions', () => {
       ...horizontal,
       plotExtension: { guides: [{ type: 'axis', dimension: 'y', grid: true }] },
     });
+    const forcedGrid = StripChartSchema.parse({
+      ...horizontal,
+      recipe: { ...horizontal.recipe, guides: { grid: true } },
+    });
 
     expect(resolveChart(horizontal, StripChartDefinition, stripRuntime).plot.guides).toEqual([
-      { type: 'axis', dimension: 'x', grid: true },
-      { type: 'axis', dimension: 'y' },
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: false },
     ]);
     expect(resolveChart(explicit, StripChartDefinition, stripRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'y', grid: true },
     ]);
+    expect(resolveChart(forcedGrid, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x', grid: true },
+      { type: 'axis', dimension: 'y', grid: false },
+    ]);
   });
 
   it('applies sparse Scatter recipe guide controls to the resolved Plot', () => {
+    const themed = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' } },
+    });
+    const forcedGrid = ScatterChartSchema.parse({
+      ...themed,
+      recipe: { ...themed.recipe, guides: { grid: true } },
+    });
     const hidden = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -178,11 +196,19 @@ describe('Point Chart recipe Definitions', () => {
       },
     });
 
+    expect(resolveChart(themed, ScatterChartDefinition, runtime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y' },
+    ]);
+    expect(resolveChart(forcedGrid, ScatterChartDefinition, runtime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: true },
+    ]);
     expect(hidden.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
     expect(resolveChart(hidden, ScatterChartDefinition, runtime).plot.guides).toEqual([]);
     expect(resolveChart(noGridOrLegend, ScatterChartDefinition, runtime).plot.guides).toEqual([
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y' },
+      { type: 'axis', dimension: 'x', grid: false },
+      { type: 'axis', dimension: 'y', grid: false },
     ]);
   });
 
@@ -203,8 +229,8 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(source.recipe.guides).toEqual({ grid: false });
     expect(resolveChart(source, StripChartDefinition, stripRuntime).plot.guides).toEqual([
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y' },
+      { type: 'axis', dimension: 'x', grid: false },
+      { type: 'axis', dimension: 'y', grid: false },
     ]);
   });
 
@@ -266,8 +292,8 @@ describe('Point Chart recipe Definitions', () => {
     });
 
     expect(resolveChart(source, StripChartDefinition, customRuntime).plot.guides).toEqual([
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y', grid: true },
+      { type: 'axis', dimension: 'x', grid: false },
+      { type: 'axis', dimension: 'y' },
     ]);
   });
 

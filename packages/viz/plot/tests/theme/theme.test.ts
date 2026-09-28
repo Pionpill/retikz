@@ -104,6 +104,14 @@ const resolveAxis = (
 };
 
 describe('Plot Source defaults and guide lowering', () => {
+  it('keeps an explicit axis grid when the theme default disables grids', () => {
+    const guide = resolveAxis(
+      { plotDefaults: { axis: { grid: false } } },
+      { type: 'axis', dimension: 'y', grid: true },
+    );
+    expect(guide.grid).toBe(true);
+  });
+
   it('background emits the effective plot area before plot content', () => {
     const root = expandOf(
       baseSpec({
@@ -124,6 +132,34 @@ describe('Plot Source defaults and guide lowering', () => {
     expect(background.layout?.minimumSize).toEqual(plotAreaCarrier.layout?.minimumSize);
   });
 
+  it('draws a plot area border over marks and below axes without a fill', () => {
+    const root = expandOf(
+      baseSpec({
+        id: 'border-plot',
+        guides: [
+          { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' } },
+          { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' } },
+        ],
+        plotDefaults: { plotArea: { border: { stroke: '#334155', strokeWidth: 1.5, drawOpacity: 0.8 } } },
+      }),
+    );
+    const content = root.children[0] as IRScope;
+    const borderIndex = content.children.findIndex(
+      child => child.type === 'node' && (child as IRNode).style?.stroke === '#334155',
+    );
+    const border = content.children[borderIndex] as IRNode;
+    const carrier = root.children[1] as IRNode;
+
+    expect(borderIndex).toBeGreaterThan(0);
+    expect(borderIndex).toBeLessThan(content.children.length - 1);
+    expect(border).toMatchObject({
+      shape: 'rectangle',
+      style: { fill: 'none', stroke: '#334155', strokeWidth: 1.5, strokeOpacity: 0.8 },
+    });
+    expect(border.position).toEqual(carrier.position);
+    expect(border.layout?.minimumSize).toEqual(carrier.layout?.minimumSize);
+  });
+
   it('polar background uses the coordinate circle instead of the plot rectangle', () => {
     const root = expandOf(
       baseSpec({
@@ -140,14 +176,32 @@ describe('Plot Source defaults and guide lowering', () => {
     });
   });
 
+  it('polar plot area border follows the coordinate circle', () => {
+    const root = expandOf(
+      baseSpec({
+        coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
+        plotDefaults: { plotArea: { border: {} } },
+      }),
+    );
+    expect(nodesOf(root)).toContainEqual(
+      expect.objectContaining({
+        shape: 'circle',
+        position: [240, 150],
+        style: expect.objectContaining({ fill: 'none', stroke: 'currentColor', strokeWidth: 1 }),
+        layout: expect.objectContaining({ minimumSize: 300 }),
+      }),
+    );
+  });
+
   it.each([
     ['cartesian1D', { type: 'cartesian1D', x: 'x' }, { type: 'point', encoding: { x: { field: 'x' } } }],
     ['polar1D', { type: 'polar1D', angle: 'x' }, { type: 'point', encoding: { x: { field: 'x' } } }],
   ] as const)('%s does not emit a plot area', (_name, coordinate, mark) => {
     const fill = '#f8fafc';
-    const root = expandOf(baseSpec({ coordinate, marks: [mark], plotDefaults: { plotArea: { fill } } }));
+    const root = expandOf(baseSpec({ coordinate, marks: [mark], plotDefaults: { plotArea: { fill, border: {} } } }));
 
     expect(nodesOf(root).some(node => node.style?.fill === fill)).toBe(false);
+    expect(nodesOf(root).some(node => node.style?.stroke === 'currentColor')).toBe(false);
     expect(nodesOf(root).some(node => node.id?.endsWith('.plotArea'))).toBe(false);
   });
 
@@ -204,7 +258,7 @@ describe('Plot Source defaults and guide lowering', () => {
           { type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'bottom' }, grid: true },
           { type: 'axis', dimension: 'y', placement: { kind: 'side', side: 'left' }, grid: true },
         ],
-        plotDefaults: { plotArea: { fill: '#e2e8f0' } },
+        plotDefaults: { plotArea: { fill: '#e2e8f0', border: { stroke: '#334155' } } },
       }),
     );
     const content = root.children[0] as IRScope;
@@ -212,6 +266,11 @@ describe('Plot Source defaults and guide lowering', () => {
 
     expect(panels).toHaveLength(3);
     expect(panels.every(panel => (panel.children[0] as IRNode).style?.fill === '#e2e8f0')).toBe(true);
+    expect(
+      panels.every(panel =>
+        panel.children.some(child => child.type === 'node' && (child as IRNode).style?.stroke === '#334155'),
+      ),
+    ).toBe(true);
   });
 
   it('plotDefaults palette categorical drives an ordinal scale', () => {
