@@ -1,108 +1,598 @@
 ---
 title: 条带图
-description: 在一个离散位置角色内确定性散布观测点，同时保留另一个连续位置角色的原始数值。
-family: scatter-points
-usage: distribution
+description: 条带图按类别组织观测，并在类别中心附近散布点，以减轻重叠。
 ---
 
-<ShowcaseGallery
-  examples={[
-    {
-      id: 'strip-minimal',
-      title: '基础用法',
-      description: '这是只传必要配置的最简用法；明确一个离散 scale 与一个连续 scale 后，`StripChart` 会自动沿离散角色散布重叠观测，可切换到 IR 查看精确配置。',
-      preview: {
-        files: ['strip-minimal', 'strip-palmer-penguins.data.ts'],
-        size: 'xxxl',
-        caption: '每个点仍保留原始鳍长；同一物种内只改变离散角色上的位置。',
-      },
-    },
-    {
-      id: 'strip-basic',
-      title: '进阶调试：角色、坐标与散布范围',
-      description: '切换离散 x / y、Point / Band scale、笛卡尔 / 极坐标，并调整散布宽度、随机种子和点半径。',
-      preview: {
-        files: ['strip-basic', 'strip-vega-barley.data.ts'],
-        controls: { name: 'strip-basic' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: '极坐标下，离散 x 沿角度圆弧散布，离散 y 沿半径方向散布；不同半径上的相同角度偏移会形成不同弧长。',
-      },
-    },
-  ]}
->
-Strip Chart 用一个离散位置角色组织类别，再在该刻度附近散布每条观测。它适合查看组内分布、重叠和离群值；如果 x、y 都是连续变量，使用 [Scatter](/viz/chart/points/scatter)。
+条带图按类别组织观测，并在类别中心附近散布点，以减轻重叠。它适合比较各组数值分布、离群值与样本密集区域；位置映射必须恰好包含一个离散角色和一个连续角色。散布宽度不表示新的数值变量。
 
-## `StripChart`
+## 接入方式
 
-根 `recipe` 必须同时声明 x 与 y，并让最终位置 scale 恰好一个是离散、一个是连续。组件身份自动补齐 Point family 与 `chartType: 'strip'`：
+完成 [安装与首次渲染](/viz/chart/get-start) 后，可用以下四种入口。示例共用同一数据与配置。
+
+三种企鹅各 30 条观测，物种是离散位置，鳍长是连续位置。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-minimal', 'strip-palmer-penguins.data.ts']}
+  hideCode
+  size="xl"
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+`StripChart` 的专属子组件如下。映射是基础入口，属性和追加图元按需声明。
+
+```text
+StripChart
+├── StripEncodings
+├── StripProperties
+└── StripMark
+```
 
 ```tsx
-<StripChart
-  rows={rows}
-  recipe={{
+import { StripChart, StripEncodings } from '@retikz/chart-react/point';
+import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+
+export const Example = () => (
+  <StripChart rows={stripPalmerPenguinsData}>
+    <StripEncodings
+      x={{ field: 'species', scale: { operation: { type: 'point', name: 'species' } } }}
+      y={{ field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } }}
+    />
+  </StripChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { StripChartSchema, createStripChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+import { Layout } from '@retikz/react';
+
+const chart = StripChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: {
+    chartType: 'strip',
     encodings: {
-      x: { field: 'group', scale: { operation: { type: 'point', name: 'group' } } },
-      y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+      x: { field: 'species', scale: { operation: { type: 'point', name: 'species' } } },
+      y: { field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } },
     },
-    properties: { jitter: { span: { kind: 'ratio', value: 0.3 }, seed: 0 } },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createStripChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': stripPalmerPenguinsData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { stripChart, StripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+
+const chart = stripChart({
+  data: stripPalmerPenguinsData,
+  encodings: {
+    x: { field: 'species', scale: { operation: { type: 'point', name: 'species' } } },
+    y: { field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } },
+  },
+});
+export const svg = renderChart(chart, { adapters: [StripChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { StripChartSchema, createStripChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+import { compileToScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = StripChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: {
+    chartType: 'strip',
+    encodings: {
+      x: { field: 'species', scale: { operation: { type: 'point', name: 'species' } } },
+      y: { field: 'flipperLengthMm', scale: { operation: { type: 'linear', name: 'flipperLength' } } },
+    },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createStripChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': stripPalmerPenguinsData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+以下片段对照 React JSX、Vanilla API 与直接 IR 的配置位置；每节只展示当前任务相关的部分。下方预览共用大麦数据，可用控件调整配置。
+
+### 条带映射
+
+映射指定类别与连续数值；散布方向由最终的离散轴决定。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<StripEncodings
+  x={{ field: 'site', scale: { operation: { type: 'point', name: 'site' } } }}
+  y={{ field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: { field: 'site', scale: { operation: { type: 'point', name: 'site' } } },
+  y: { field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } },
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: { field: 'site', scale: { operation: { type: 'point', name: 'site' } } },
+    y: { field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } },
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
+
+下面是明尼苏达六个地点的大麦产量，共 120 条观测，包含两年各十个品种。类别轴用于分开地点，连续轴保留真实产量，散布只是帮助看见原本重叠的点。
+
+- `x`：默认将 site 绑定到 point 离散尺度。
+- `y`：默认将 yield 绑定到 linear 连续尺度。
+
+切换离散轴可交换类别与产量的横纵方向。点图元只使用类别中心，band 的带宽不会改变本例点位，因此这里固定使用 point。比较各地点在连续轴上的范围和密集位置；类别轴上的散布位置本身没有品种排名或时间顺序含义。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-encodings', 'strip-vega-barley.data.ts']}
+  hideCode
+  controls={{ name: 'strip-encodings' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
+
+完整属性与约束见 [API 参考：StripEncodings](#stripencodings)。
+
+### 条带属性
+
+属性控制散布范围、分布形式及点的固定外观。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<StripProperties
+  jitter={{ span: { kind: 'ratio', value: 0.3 }, distribution: { kind: 'uniform' }, seed: 0 }}
+  size={5}
+  opacity={0.75}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  jitter: { span: { kind: 'ratio', value: 0.3 }, distribution: { kind: 'uniform' }, seed: 0 },
+  size: 5,
+  opacity: 0.75,
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    jitter: { span: { kind: 'ratio', value: 0.3 }, distribution: { kind: 'uniform' }, seed: 0 },
+    size: 5,
+    opacity: 0.75,
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
+
+本例固定横轴为地点、纵轴为产量，使用 point 离散尺度。同一地点有二十个观测，部分产量相近。散布范围与点半径共同决定遮挡程度，但这些设置不会改变任何一个产量值。
+
+- `jitter.span`：控制总散布宽度，而不是单侧偏移。
+- `jitter.distribution`：选择均匀或更集中在中心的正态散布。
+- `jitter.seed`：改变散布位置，固定值可复现。
+- `size`：调整点半径。
+
+用固定 seed 比较分布形式，避免把随机位置变化当作数据变化。较宽的散布并不表示样本的测量方差更大。切换为极坐标后，本例的地点落在角度轴上：`jitter.span` 的 ratio 按相邻地点的角度间距确定散布角度，同一角度跨度在较大半径处对应更长的弧线，因此画面上的散布宽度会随半径变化，不是固定的像素宽度。具体用法见下方[极坐标散布](#极坐标散布)。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-basic', 'strip-vega-barley.data.ts']}
+  hideCode
+  controls={{ name: 'strip-basic' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
+
+完整属性与约束见 [API 参考：StripProperties](#stripproperties)。
+
+### 条带图元
+
+图元可覆盖散布与外观，但保留图形已经确定的坐标角色。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<StripMark
+  override
+  properties={{
+    jitter: { span: { kind: 'ratio', value: 0.6 }, distribution: { kind: 'normal', sigma: 0.4 }, seed: 7 },
+    shape: 'diamond',
+    size: 4,
   }}
 />
 ```
 
-`StripEncodings`、`StripProperties` 与 `StripMark` 是相同 recipe slots 的等价 JSX sugar。root-only 写法可以省略 `children`；不同 slot 可以混用，同一 slot 双来源会 fail-loud。
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-## 位置角色与散布
+```ts
+marks: [{
+  kind: 'strip',
+  override: true,
+  properties: {
+    jitter: { span: { kind: 'ratio', value: 0.6 }, distribution: { kind: 'normal', sigma: 0.4 }, seed: 7 },
+    shape: 'diamond',
+    size: 4,
+  },
+}],
+```
 
-`x` 与 `y` 只接受 direct field mapping。scale 可以直接写 operation，也可以引用 `plotExtension.scales` 中的命名 scale；Chart 通过 Scale Definition 的 `continuity` 判断拓扑，因此自定义离散 scale 与内建 scale 走同一 registry 路径。
+</DocTab>
+<DocTab value="direct-ir" label="IR">
 
-`jitter.span` 是**总散布宽度**。数字直接使用当前位置角色的输出单位；`{ kind: 'ratio', value }` 使用离散刻度间距的 `0..1` 比例。`distribution` 默认是 `{ kind: 'uniform' }`；切换为 `{ kind: 'normal', sigma }` 后，偏移仍以类别中心为零点，但会更集中在中心，并在 `[-span / 2, span / 2]` 内截断。`sigma` 相对于散布半宽，默认 `0.5`。省略时由 Plot 使用 `0.3`，`seed` 省略时为 `0`。相同有序数据、scale、span、distribution 与 seed 会得到相同位置。
+```ts
+recipe: {
+  marks: [{
+    kind: 'strip',
+    override: true,
+    properties: {
+      jitter: { span: { kind: 'ratio', value: 0.6 }, distribution: { kind: 'normal', sigma: 0.4 }, seed: 7 },
+      shape: 'diamond',
+      size: 4,
+    },
+  }],
+},
+```
 
-Strip 使用的是 placement jitter：它只改变离散 role 上的绘制位置，不修改 rows 或连续值。若要在比例尺前派生字段，应使用 [Data transform](/viz/plot/transform) 的 `jitter`；Strip 不把两者混为一个配置。
+</DocTab>
+</DocTabs>
 
-默认 grid 只跟随连续角色。`domainPadding` 也只应用于连续位置 scale；离散边界的安全距离由 Plot placement 根据半个散布宽度与实际 glyph 外扩共同收窄 range，点不会被 clamp、缩小或绘制到坐标边界外。空间不足时会明确报错。
+下面替换默认图元，使用菱形与更集中的正态散布。数据与坐标映射保持一致，变化只来自这个图元的外观和 placement 配置。
 
-极坐标仍按角色空间散布后再投影：x 是 angle，y 是 radius。因此离散 x 沿圆弧移动，同一角度偏移在不同半径上产生不同弧长；离散 y 则沿径向移动。
+- `override`：替换默认点图元。
+- `properties.jitter`：设定 ratio 0.6、normal 分布和 seed 7。
+- `properties.shape`：使用 diamond。
+- `properties.size`：设置当前图元的点半径，可在控件中直接调整。
+
+图元继承 recipe 的坐标角色，不接受另一个局部尺度。改变散布分布不能把连续位置角色变成离散角色。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-marks', 'strip-vega-barley.data.ts']}
+  hideCode
+  size="xl"
+  controls={{ name: 'strip-marks' }}
+  caption="调整菱形等图元形状与半径，观察正态散布中的点位。"
+/>
+
+完整属性与约束见 [API 参考：StripMark](#stripmark)。
+
+## 扩展用法
+
+### 极坐标散布
+
+地点映射到角度轴，产量映射到半径轴。这里把散布总宽设为相邻地点角度间距的 0.7 倍，并用 normal 与较小的 sigma 让点更集中在各地点的中心角附近。散布只改变角度，不改变产量对应的半径。
+
+下表的 `coordinate` 位于图形根层，映射与属性位于 IR `recipe`；React 与 Vanilla 使用上文对应入口。
+
+| 分组         | 属性名                  | 类型               | 说明                              |
+| ------------ | ----------------------- | ------------------ | --------------------------------- |
+| `coordinate` | `type`                  | `polar2D`          | 以角度和半径投影位置              |
+| `encodings`  | `x / y`                 | 直接字段与尺度对象 | 地点为角度，产量为半径            |
+| `properties` | `jitter.span`           | ratio 对象         | 角度总宽为地点刻度间距的 0.7 倍   |
+|              | `jitter.distribution`   | normal 对象        | sigma 为 0.35，偏移仍截断在范围内 |
+|              | `jitter.seed / opacity` | number             | 固定 seed 并用透明度识别重叠      |
+
+沿同一角度偏移观察内外圈：弧长等于半径乘以弧度，外圈半径更大，点在画面上沿圆弧的间距也更大。调节散布比例改变的是角度范围，不是固定像素宽度；固定 seed 后可比较不同散布参数，而不把随机位置误认为产量变化。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-distribution', 'strip-vega-barley.data.ts']}
+  size="xxl"
+  controls={{ name: 'strip-distribution' }}
+/>
+
+## 错误与限制
+
+- 最终位置尺度必须恰好一个离散、一个连续；两个连续变量应使用 Scatter。
+- 只支持直接字段映射；不支持 `row`、`column`、`facet`。需要其他组合时使用 Plot。
+- 散布不修改原始 rows；固定 seed 的复现还要求输入顺序和尺度等配置相同。
+- 离散方向没有足够空间容纳散布与图元时明确报错，不靠缩小或裁切点掩盖问题。
+
+React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，否则报错。
+
+`point-aware` 支持离散位置轴，并使用散布后的实际点位置计算留白。全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释此类图表的特殊行为；只需使用 API 时可以跳过。" />
+
+### 图形构建
+
+Chart 将条带图元解析为 Plot Point，并把散布配置放入该 Point 的位置调整。下表只列条带图特有的转换。
+
+| 分组 | `@retikz/chart`        | `@retikz/plot`             | 描述                                           |
+| ---- | ---------------------- | -------------------------- | ---------------------------------------------- |
+| 映射 | `x`、`y`               | `encoding.x`、`encoding.y` | 保留原始类别与数值字段，由最终尺度确定离散方向 |
+| 属性 | `jitter`               | `placement.adjustments`    | 添加 Jitter 位置调整，散布参数由 Plot 应用     |
+| 图元 | `StripChartMarkSchema` | `PointMarkSchema`          | 每个条带图元解析为一个带散布配置的 Plot Point  |
+
+<SourceLinks sources={[{ path: 'packages/viz/chart/src/point/strip/mark.ts', label: '条带图元与散布配置' }]} />
+
+### 自动选择离散角色进行散布
+
+Strip 根据最终尺度判断哪一轴是离散类别、哪一轴是连续数值，再沿离散轴应用散布。调用方无需也不能指定散布轴；当前风格显示默认网格时，网格只跟随连续轴。下图有两组重复观测，每组原本只有三个不同位置。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['strip-placement-figure', 'strip-placement-figure.data.ts']}
+  hideCode
+  type="illustration"
+  size="xxl"
+/>
+
+散布后点仍落在数值 1、2、3 上，只有类别方向发生偏移。
+
+Chart 负责选择散布轴并检查坐标组合；随机偏移、边界约束与坐标投影由 Plot 完成。
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/point/strip/mark.ts', label: '图元组合与继承' },
+    { path: 'packages/viz/chart/src/point/strip/recipe.ts', label: '类型配置与消费边界' },
+  ]}
+/>
 
 ## API 参考
 
-### `StripEncodingsProps`
+React 使用 `StripChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `stripChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'strip'`。React 与 Vanilla API 会补齐图形类型。
 
-| 属性       | 类型                                    | 默认值 | 描述                                                |
-| ---------- | --------------------------------------- | ------ | --------------------------------------------------- |
-| `x` / `y`  | `IRStripXEncoding` / `IRStripYEncoding` | —      | 必需 direct mapping；最终必须恰好一个离散、一个连续 |
-| `color?`   | `IRStripColorEncoding`                  | —      | 可选 direct 颜色字段与 scale binding                |
-| `size?`    | `IRStripSizeEncoding`                   | —      | 可选 direct 半径字段与 sqrt scale binding           |
-| `opacity?` | `IRStripOpacityEncoding`                | —      | 可选 direct 透明度字段与 linear scale binding       |
-| `shape?`   | `IRStripShapeEncoding`                  | —      | 可选 direct 形状字段                                |
+React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局、标题与指南配置见 [编写与解析](/viz/chart/model/authoring)。
 
-### `StripPropertiesProps`
+#### StripEncodings
 
-| 属性                         | 类型                                                                    | 默认值                                                 | 描述                                                          |
-| ---------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------- |
-| `jitter?`                    | `IRStripChartJitter`                                                    | `{ span: ratio(0.3), distribution: uniform, seed: 0 }` | 沿唯一离散位置角色确定性散布；Chart 不接受手写 `role`         |
-| `jitter.distribution?`       | `IRPlotRandomDistribution`                                              | `{ kind: 'uniform' }`                                  | 选择均匀散布或集中于中心的截断正态分布                        |
-| `jitter.distribution.kind`   | `'uniform' \| 'normal'`                                                 | `uniform`                                              | 随机分布判别值                                                |
-| `jitter.distribution.sigma?` | `number`                                                                | `0.5`                                                  | 仅 normal 使用；相对于 jitter 半宽的标准差，必须大于 `0`      |
-| `domainPadding?`             | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径                                    | 只配置连续位置 scale；离散 containment 由 Plot placement 负责 |
-| Point 外观                   | `IRPointProperties`                                                     | Point 默认                                             | `size`、`shape`、颜色、描边、透明度等常量外观                 |
+对应 `StripEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
 
-### `StripMarkProps`
+| 通道      | 输入形式         | 说明                                                 |
+| --------- | ---------------- | ---------------------------------------------------- |
+| `x / y`   | 字段名、直接映射 | 必需；只接受直接映射，最终尺度恰好一个离散、一个连续 |
+| `color`   | 字段名、直接映射 | 直接颜色字段，可绑定兼容颜色尺度                     |
+| `size`    | 字段名、直接映射 | 直接数值字段，尺寸使用 sqrt 尺度                     |
+| `opacity` | 字段名、直接映射 | 直接数值字段，透明度使用 linear 尺度                 |
+| `shape`   | 字段名、直接映射 | 直接分类形状字段                                     |
 
-| 属性          | 类型                         | 默认值  | 描述                                                         |
-| ------------- | ---------------------------- | ------- | ------------------------------------------------------------ |
-| `override?`   | `boolean`                    | `false` | 原位替换完整 Strip Point mark                                |
-| `encodings?`  | `IRPointMarkEncoding`        | 继承    | 只覆盖 direct 字段；不能声明 mark-local scale                |
-| `properties?` | `IRStripChartMarkProperties` | 继承    | 覆盖 Point 外观与 jitter；不接受 recipe-only `domainPadding` |
+公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#stripchartencodingsschema)。
 
-## 公开入口
+#### StripProperties
 
-- `@retikz/chart/point/strip`：exact schemas、Source 类型与 provider
-- `@retikz/chart-react/point`：Chart、Encodings、Properties 与 Mark declarations
-- `@retikz/chart-vanilla/point/strip`：normalize、factory 与 typed Input
+对应 `StripProperties`、Vanilla `properties` 和 IR `recipe.properties`。
 
-## 相关
+| 分类       | 属性                  | 类型                                                     | 说明                                                             |
+| ---------- | --------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| 形状与尺寸 | `size`                | `number`                                                 | 统一点半径，必须大于或等于 0                                     |
+|            | `shape`               | `string`                                                 | 已注册的形状名                                                   |
+| 颜色与填充 | `color`               | `string`                                                 | 设置主色                                                         |
+|            | `fill`                | `string`、`JsonObject`                                   | 设置填充颜色、画笔                                               |
+| 描边       | `stroke`              | `string`、`JsonObject`                                   | 设置描边颜色、画笔                                               |
+|            | `strokeWidth`         | `number`                                                 | 描边宽度，必须大于或等于 0                                       |
+|            | `dashed`              | `boolean`                                                | 启用虚线描边                                                     |
+|            | `dotted`              | `boolean`                                                | 启用点线描边                                                     |
+|            | `dashPattern`         | `Array<number>`                                          | 自定义虚线序列；至少一项，各项非负                               |
+| 透明度     | `opacity`             | `number`                                                 | 整体透明度，范围 0–1                                             |
+|            | `fillOpacity`         | `number`                                                 | 填充透明度，范围 0–1                                             |
+|            | `strokeOpacity`       | `number`                                                 | 描边透明度，范围 0–1                                             |
+| 散布       | `jitter.span`         | `IRStripChartJitter['span']`                             | 总散布宽度；数字使用角色输出单位，ratio 使用刻度间距的 0–1 比例  |
+|            | `jitter.distribution` | `IRStripChartJitter['distribution']`                     | 均匀、截断正态分布；sigma 大于 0，相对散布半宽                   |
+|            | `jitter.seed`         | `number`                                                 | 相同有序数据与配置下稳定复现散布；省略为 0                       |
+| 留白       | `autoPadding`         | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+|            | `domainPadding`       | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
 
-[散点图](/viz/chart/points/scatter) · [Point 位置散布](/viz/plot/mark/point#位置散布) · [位置 Scale](/viz/plot/scale/position) · [与 Plot 协作](/viz/chart/model/plot)
+完整属性结构见 [属性 Schema](#stripchartpropertiesschema)；公共外观配置不在这里展开。
 
-</ShowcaseGallery>
+#### StripMark
+
+对应 `StripMark`、Vanilla `marks` 和 IR `recipe.marks`。
+
+| 属性         | 类型                           | 说明                                                                       |
+| ------------ | ------------------------------ | -------------------------------------------------------------------------- |
+| `override`   | `boolean`                      | 替换完整条带点图元，否则追加                                               |
+| `encodings`  | `StripChartMark['encodings']`  | x、y、color、size、opacity、shape 各项使用字段名字符串，不声明图元局部尺度 |
+| `properties` | `StripChartMark['properties']` | 覆盖散布与外观；不接受 domainPadding / autoPadding                         |
+
+## Schema 参考
+
+以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
+
+#### StripChartSchema
+
+<ZodSchema
+  name="StripChartSchema"
+  shallow
+  description="条带图的 Source IR；嵌套结构在所属小节说明。"
+  descriptions={{
+    namespace: '固定为 chart',
+    type: '固定为 point，表示点图家族',
+    id: '图表标识',
+    background: '图表背景',
+    presentation: '标题、副标题、注释与来源',
+    chartDefaults: '图表内部默认配置',
+    data: '外部数据集引用，不内嵌运行时数据',
+    layout: '图表布局尺寸与间距',
+    coordinate: '坐标系操作；不能与 plotExtension.composition 同时提供',
+    recipe: '条带图配方',
+    plotExtension: '追加的 Plot 能力配置',
+  }}
+/>
+
+#### StripChartRecipeSchema
+
+<ZodSchema
+  name="StripChartRecipeSchema"
+  shallow
+  description="条带图配方。"
+  descriptions={{
+    chartType: '固定为 strip',
+    encodings: '字段映射，见下方映射 Schema',
+    properties: '常量属性，见下方属性 Schema',
+    guides: '默认坐标轴、网格与图例开关',
+    marks: '有序图元配置，见下方图元 Schema',
+  }}
+/>
+
+#### StripChartEncodingsSchema
+
+<ZodSchema
+  name="StripChartEncodingsSchema"
+  shallow
+  description="条带图的字段映射。"
+  descriptions={{
+    x: '横向位置映射',
+    y: '纵向位置映射',
+    color: '颜色映射',
+    size: '半径映射',
+    opacity: '不透明度映射',
+    shape: '形状映射',
+  }}
+/>
+
+#### StripChartPropertiesSchema
+
+<ZodSchema
+  name="StripChartPropertiesSchema"
+  shallow
+  description="条带图的常量属性。"
+  descriptions={{
+    color: '主色',
+    textColor: '文字颜色',
+    size: '散点半径',
+    shape: '散点形状',
+    fill: '填充颜色或画笔',
+    stroke: '描边颜色或画笔',
+    strokeWidth: '描边宽度',
+    fillOpacity: '填充不透明度，0 到 1',
+    strokeOpacity: '描边不透明度，0 到 1',
+    opacity: '整体不透明度，0 到 1',
+    rotate: '旋转角度',
+    minimumSize: '最小尺寸',
+    zIndex: '绘制层级',
+    align: '文字对齐方式',
+    lineHeight: '文字行高',
+    maxTextWidth: '文字最大宽度',
+    cornerRadius: '圆角半径',
+    scale: '缩放比例',
+    padding: '内间距',
+    margin: '外间距',
+    dashed: '虚线开关',
+    dotted: '点线开关',
+    dashPattern: '自定义虚线序列',
+    font: '字体配置',
+    boundary: '边界配置',
+    shadow: '阴影配置',
+    blendMode: '混合模式',
+    dx: '水平偏移',
+    dy: '垂直偏移',
+    label: '标签配置',
+    autoPadding: '自动留白策略；省略时使用 max-radius',
+    domainPadding: '显式位置域留白，优先于 autoPadding',
+    jitter: '离散轴散布配置，由图表选择作用轴',
+  }}
+/>
+
+#### StripChartMarkSchema
+
+`encodings` 只允许 x、y、color、size、opacity、shape，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
+
+<ZodSchema
+  name="StripChartMarkSchema"
+  shallow
+  description="条带图的单个图元配置。"
+  descriptions={{
+    kind: '固定为 strip',
+    override: '为 true 时替换内置同类图元；省略时追加',
+    encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
+    properties: '参照上方属性说明；不包含 autoPadding 与 domainPadding',
+  }}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '散点图', description: '两个连续变量的分布与分类', url: '/viz/chart/points/scatter' },
+    { title: '编写与解析', description: '对照 React、Vanilla 与 Source IR', url: '/viz/chart/model/authoring' },
+    { title: '与 Plot 协作', description: '组合超出当前类型边界的能力', url: '/viz/chart/model/plot' },
+    { title: 'Point 位置散布', description: '了解通用散布与边界处理', url: '/viz/plot/mark/point' },
+  ]}
+/>

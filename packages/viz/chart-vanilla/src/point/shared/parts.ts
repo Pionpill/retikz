@@ -1,11 +1,10 @@
 import type { IRChartSource } from '@retikz/chart';
-import type { CoreProviderContribution, IRScene, ThemeStyleDefinition } from '@retikz/core';
+import type { CoreProviderContribution } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 
 import type { InputChartCoordinate } from '../../normalize/chart';
-import type { ChartAuthoringResult, InputChartPanel } from '../../shared';
-import { createChartAuthoringResult } from '../../shared';
+import type { ChartRuntimeInput, InputChartPanel } from '../../shared';
 import type { TypedChartCommonInput } from './types';
 
 /** 未显式提供 dataRef 时使用的稳定数据引用 */
@@ -26,8 +25,6 @@ export type TypedChartParts<TSource extends IRChartSource> = Readonly<{
   themeDefinitions?: TypedChartCommonInput<TSource>['themeDefinitions'];
   lowerOptions?: LowerPlotsOptions;
   panel?: InputChartPanel;
-  hostTheme?: IRScene['theme'];
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
 }>;
 
 /** 把 typed Chart 输入拆分为 JSON-safe Source root 与 runtime 输入 */
@@ -41,15 +38,12 @@ export const typedChartPartsOf = <TSource extends IRChartSource>(
     layout,
     coordinate,
     id,
-    theme,
     themeDefinitions,
     background,
     chartDefaults,
     lowerOptions,
     panel,
-    themeStyles,
   } = input;
-  const hostTheme = theme;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
   return {
     root: {
@@ -68,27 +62,18 @@ export const typedChartPartsOf = <TSource extends IRChartSource>(
     ...(themeDefinitions === undefined ? {} : { themeDefinitions }),
     ...(lowerOptions === undefined ? {} : { lowerOptions }),
     ...(panel === undefined ? {} : { panel }),
-    ...(hostTheme === undefined ? {} : { hostTheme }),
-    ...(themeStyles === undefined ? {} : { themeStyles }),
   };
 };
 
 /** 将 typed input 归一为 Source 并复用当前 chartType provider pipeline */
-export const createPointChart = <TSource extends IRChartSource>(
+export const buildPointChartRuntime = <TSource extends IRChartSource>(
   source: TSource,
   parts: TypedChartParts<TSource>,
   provider: CoreProviderContribution,
-): ChartAuthoringResult<TSource> =>
-  createChartAuthoringResult(
-    {
-      source,
-      datasets: parts.datasets,
-      chartProviderContribution: provider,
-      ...(parts.lowerOptions === undefined ? {} : { lowerOptions: parts.lowerOptions }),
-      ...(parts.panel === undefined ? {} : { panel: parts.panel }),
-    },
-    {
-      ...(parts.hostTheme === undefined ? {} : { theme: parts.hostTheme }),
-      ...(parts.themeStyles === undefined ? {} : { themeStyles: parts.themeStyles }),
-    },
-  );
+): ChartRuntimeInput<TSource> => ({
+  source,
+  datasets: parts.datasets,
+  chartProviderContribution: provider,
+  ...(parts.lowerOptions === undefined ? {} : { lowerOptions: parts.lowerOptions }),
+  ...(parts.panel === undefined ? {} : { panel: parts.panel }),
+});

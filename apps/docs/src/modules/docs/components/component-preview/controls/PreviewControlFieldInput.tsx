@@ -116,6 +116,8 @@ export type PreviewControlFieldInputProps = {
    * @default false
    */
   compact?: boolean;
+  /** 是否显示独立播放按钮；标签接管播放时关闭 */
+  showRangePlaybackButton?: boolean;
   /** 字段值变化回调 */
   onValueChange: (value: PreviewControlValue) => void;
   /** 当前正在播放的范围控件 id */
@@ -132,6 +134,7 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
     field,
     value,
     compact = false,
+    showRangePlaybackButton = true,
     onValueChange,
     playingRangeId,
     onRangePlaybackStart,
@@ -318,21 +321,23 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
               rangePointerActiveRef.current = false;
             }}
           />
-          <span className="w-6 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{rangeValue}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size={compact ? 'icon-xs' : 'icon-sm'}
-            aria-label={playbackLabel}
-            title={playbackLabel}
-            disabled={onRangePlaybackStart === undefined || field.min >= field.max}
-            onClick={() => {
-              if (playing) onRangePlaybackStop?.();
-              else onRangePlaybackStart?.(field);
-            }}
-          >
-            {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-          </Button>
+          <span className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">{rangeValue}</span>
+          {showRangePlaybackButton && (
+            <Button
+              type="button"
+              variant="ghost"
+              size={compact ? 'icon-xs' : 'icon-sm'}
+              aria-label={playbackLabel}
+              title={playbackLabel}
+              disabled={onRangePlaybackStart === undefined || field.min >= field.max}
+              onClick={() => {
+                if (playing) onRangePlaybackStop?.();
+                else onRangePlaybackStart?.(field);
+              }}
+            >
+              {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
+            </Button>
+          )}
         </div>
       );
     }

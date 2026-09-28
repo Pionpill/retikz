@@ -10,12 +10,12 @@ import { refineBlockSize } from './refine';
 
 const BlockTextObjectSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this Block text item.'),
-  align: NodeSchema.shape.layout.unwrap().shape.align,
-  lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight,
-  maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth,
-  textColor: NodeSchema.shape.style.unwrap().shape.textColor,
-  font: NodeSchema.shape.style.unwrap().shape.font,
-  opacity: NodeSchema.shape.style.unwrap().shape.opacity,
+  align: NodeSchema.shape.layout.unwrap().shape.align.describe('Text alignment within the text block.'),
+  lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight.describe('Text line height.'),
+  maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth.describe('Maximum text width before wrapping.'),
+  textColor: NodeSchema.shape.style.unwrap().shape.textColor.describe('Local text color override.'),
+  font: NodeSchema.shape.style.unwrap().shape.font.describe('Local font configuration.'),
+  opacity: NodeSchema.shape.style.unwrap().shape.opacity.describe('Text opacity.'),
 });
 
 export const BlockTextSchema = union([string(), BlockTextObjectSchema]).describe(
@@ -28,11 +28,11 @@ const BlockHeaderDirectionSchema = zodEnum(['horizontal', 'vertical']).describe(
 );
 
 const BlockSurfaceFields = {
-  padding: SurfaceSchema.shape.padding.unwrap().optional(),
-  background: SurfaceSchema.shape.background,
-  border: SurfaceSchema.shape.border,
-  cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
-  overflow: SurfaceSchema.shape.overflow.unwrap().optional(),
+  padding: SurfaceSchema.shape.padding.unwrap().optional().describe('Spacing between the content and outer shell.'),
+  background: SurfaceSchema.shape.background.describe('Explicit shell background override.'),
+  border: SurfaceSchema.shape.border.describe('Explicit shell border; replaces the entire theme border field.'),
+  cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional().describe('Shell corner radius.'),
+  overflow: SurfaceSchema.shape.overflow.unwrap().optional().describe('Content overflow: visible or clip.'),
 };
 
 export const BlockHeaderSchema = strictObject({

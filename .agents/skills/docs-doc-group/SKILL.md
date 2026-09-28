@@ -10,6 +10,7 @@ description: Use when writing Retikz solution, package, or component-family land
 分组根页负责定位、成员协作、选择边界和子页导航，固定入门；不另建 overview 子页。
 
 - 写正文前读 [总纲结构](references/structure.md)。
+- 写 Chart 家族总览时，再读 [Chart 家族总览图库](../docs-doc-usage/references/chart.md#chart-家族总览图库)。
 - 可独立安装的包入口再读 [安装与接入](references/package-entry.md)。
 - 改侧栏、子页或路由时读总则的导航 reference。
 

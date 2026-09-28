@@ -14,6 +14,7 @@ import type {
 } from '../../contract';
 import type { IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotMarkOperation } from '../../schemas';
 import type { LegendReserve, Margins, Rect } from '../../shared';
+import type { MarkPaddingContext } from '../scale';
 
 /** 单个图元及其当前可见数据行的 lowering 视图 */
 export type MarkDataView = {
@@ -38,6 +39,12 @@ export type CoordinateAxisLowerer = (
  * @description source IR 通过 resolveCoordinateFrame 的首个参数传入；context 只携带数据、registry、布局输入与 pipeline 注入的下沉回调
  */
 export type CoordinateResolveContext = {
+  /** 当前 lowering 共享的逐点留白求解状态 */
+  markPadding?: MarkPaddingContext;
+  /** 面板或坐标 scope 的稳定身份 */
+  domainPaddingScope?: string;
+  /** 实际绘制数据，与共享域训练数据分离 */
+  paddingMarkDataViews?: Array<MarkDataView>;
   /** composition 已确定的有效坐标 operation；source.coordinate 缺省时由 pipeline 提供 */
   coordinate?: IRPlotCoordinateOperation;
   /** 当前 plot 绑定的数据行 */

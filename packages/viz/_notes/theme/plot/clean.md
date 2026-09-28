@@ -17,7 +17,7 @@
 | Surface    | Light 与 Dark 默认保持透明平面，不为 Plot 增加卡片背景、阴影、渐变或材质                     |
 | Typography | 使用编辑式无衬线 fallback；基础文字、label、显式重新开启的 axis title 与 legend 紧凑但可读   |
 | Axis       | 默认隐藏 axis title、x / y Axis line 与 tick mark，保留 tick label                           |
-| Grid       | 只保留 y Axis 的细、低对比 grid，不能以 Clean 为由删除全部尺度参照                           |
+| Grid       | 保留细、低对比的刻度网格：纵向实线、横向虚线，不额外补绘坐标域边界线                         |
 | Legend     | title、label、swatch、symbol、ramp 与间距保持紧凑，仍满足辨认和交互尺寸                      |
 | Palette    | categorical / series / sector 默认映射 Core effective palette；不在 Plot 复制 Clean 分类色值 |
 
@@ -37,6 +37,6 @@
 
 - marks 和关键 label 先于 surface、grid、axis 与 legend 被注意到。
 - 默认 palette 的长度、索引与 Hue 顺序和 Core effective palette 一致。
-- y grid 与 x / y tick label 足以支撑读数；默认省略 axis title、axis line 与 tick mark 没有破坏比例、单位和分组，显式重新开启仍按正常样式渲染。
+- 纵向实线、横向虚线 grid 与 x / y tick label 足以支撑读数；默认省略 axis title、axis line 与 tick mark 没有破坏比例、单位和分组，显式重新开启仍按正常样式渲染。
 - Light 与 Dark 都保持透明平面和一致层级，没有模式 paint 泄漏。
 - 与同数据下的 Neutral、Academic、Vibrant 相比，Clean 平整、克制且仍完整可读。

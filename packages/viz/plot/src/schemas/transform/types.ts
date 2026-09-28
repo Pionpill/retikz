@@ -7,7 +7,6 @@ import type {
   NormalizeBasis,
   PairMeasureOperationKind,
   PlotTransform,
-  SmoothMethodKind,
   StackOffset,
 } from './constants';
 import type {
@@ -22,7 +21,6 @@ import type {
   PlotBuiltinTransformSchema,
   PlotTransformKindSchema,
   RelateTransformSchema,
-  SmoothMethodSchema,
   SmoothTransformSchema,
   StackTransformSchema,
   TransformSchema,
@@ -48,9 +46,6 @@ export type JitterAxisValue = ValueOf<typeof JitterAxis>;
 
 /** density 带宽策略类型取值 */
 export type DensityBandwidthKindValue = ValueOf<typeof DensityBandwidthKind>;
-
-/** smooth 方法类型取值 */
-export type SmoothMethodKindValue = ValueOf<typeof SmoothMethodKind>;
 
 /** 堆叠变换（跨行累积区间，保行数） */
 export type IRPlotStackTransform = ZodInfer<typeof StackTransformSchema>;
@@ -81,9 +76,6 @@ export type IRPlotDensityBandwidth = ZodInfer<typeof DensityBandwidthSchema>;
 
 /** density 变换（一维 KDE 采样，改行数） */
 export type IRPlotDensityTransform = ZodInfer<typeof DensityTransformSchema>;
-
-/** smooth 回归方法策略 */
-export type IRPlotSmoothMethod = ZodInfer<typeof SmoothMethodSchema>;
 
 /** smooth 变换（回归趋势线采样，改行数） */
 export type IRPlotSmoothTransform = ZodInfer<typeof SmoothTransformSchema>;

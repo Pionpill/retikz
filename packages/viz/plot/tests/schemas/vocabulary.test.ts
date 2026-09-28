@@ -1,5 +1,5 @@
 ﻿import { BendDirection } from '@retikz/core';
-import { FieldOrderMode } from '@retikz/data';
+import { BuiltinRegressionMethod, FieldOrderMode } from '@retikz/data';
 import { DataSortOrder, ReducerOperationKind, RowSelectorTie, SelectorOperationKind } from '@retikz/data';
 import { RibbonAlignment, RibbonTaperInterpolation } from '@retikz/extension';
 import {
@@ -17,7 +17,6 @@ import {
   RelationOrthogonalLabelStep,
   RelationRouteStepKind,
   RelationRoutingKind,
-  SmoothMethodKind,
   TransformSchema,
 } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
@@ -59,7 +58,7 @@ describe('schema vocabulary constants', () => {
     expect(Object.values(NormalizeBasis).sort()).toEqual(['fraction', 'percent']);
     expect(Object.values(JitterAxis).sort()).toEqual(['both', 'x', 'y']);
     expect(Object.values(DensityBandwidthKind).sort()).toEqual(['silverman', 'value']);
-    expect(Object.values(SmoothMethodKind)).toEqual([
+    expect(Object.values(BuiltinRegressionMethod)).toEqual([
       'linear',
       'quadratic',
       'polynomial',

@@ -21,7 +21,9 @@ describe('Bubble Chart exact Source schema', () => {
   it('parses the exact Point family envelope and round-trips JSON', () => {
     const parsed = BubbleChartSchema.parse(bubble);
 
-    expect(parsed).toEqual(bubble);
+    expect(parsed).toEqual({ ...bubble, recipe: { ...bubble.recipe, properties: { autoPadding: 'point-aware' } } });
+    expect(BubbleChartPropertiesSchema.parse({}).autoPadding).toBe('point-aware');
+    expect(BubbleChartPropertiesSchema.parse({ autoPadding: 'max-radius' }).autoPadding).toBe('max-radius');
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
   });
 

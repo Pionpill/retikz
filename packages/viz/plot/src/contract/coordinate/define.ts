@@ -10,6 +10,7 @@ import type {
   IRPlotScaleOperation,
 } from '../../schemas';
 import type { LegendReserve, Margins } from '../../shared';
+import type { CoordinateDomainPaddingCapability } from '../domain-padding';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../provenance';
 import type { PositionScale, PositionScaleContinuityValue, TickSet } from '../scale';
@@ -145,6 +146,8 @@ export type CoordinateDefinitionResolveContext = {
  * @description definition 是含函数的运行时对象，不进入 JSON IR；IR 只保存 `{ type, ...config }` 形态的 coordinate operation
  */
 export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOperation = IRPlotCoordinateOperation> = {
+  /** 位置角色的输出空间边界度量能力 */
+  domainPadding?: CoordinateDomainPaddingCapability;
   /** 完整 coordinate operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
   schema: ZodType<TCoordinateOperation>;
   /** 该坐标系消费的定位角色序，用于 required-channel 与 guide-dimension 校验 */

@@ -167,11 +167,34 @@ export const vizSection: Array<Section> = [
     id: 'chart',
     label: 'viz.chart',
     navigationDescription: 'viz.chartNavigationDescription',
-    document: true,
     pages: [
+      {
+        id: 'introduction',
+        label: 'viz.chartIntroduction',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', capability: 'chart.introduction', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'get-start',
+        label: 'viz.chartGetStart',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', capability: 'chart.get-start', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'chart.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
       {
         id: 'points',
         label: 'viz.chartScatterPoints',
+        sidebarGroup: 'viz.chartComponents',
         icon: 'chart-scatter',
         children: [
           {
@@ -179,17 +202,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartScatter',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.scatter',
+              capability: 'chart.scatter',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'scatter-minimal',
-                order: 10,
-              },
+              layout: 'article',
             },
           },
           {
@@ -197,17 +214,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartBubble',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.bubble',
+              capability: 'chart.bubble',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'bubble-minimal',
-                order: 20,
-              },
+              layout: 'article',
             },
           },
           {
@@ -215,17 +226,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartRegression',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.regression',
+              capability: 'chart.regression',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'regression-minimal',
-                order: 30,
-              },
+              layout: 'article',
             },
           },
           {
@@ -233,17 +238,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartConnectedScatter',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.connected-scatter',
+              capability: 'chart.connected-scatter',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'connected-scatter-minimal',
-                order: 40,
-              },
+              layout: 'article',
             },
           },
           {
@@ -251,17 +250,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartRangedDot',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.ranged-dot',
+              capability: 'chart.ranged-dot',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'ranged-dot-minimal',
-                order: 50,
-              },
+              layout: 'article',
             },
           },
           {
@@ -269,17 +262,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartStrip',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.strip',
+              capability: 'chart.strip',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'strip-minimal',
-                order: 60,
-              },
+              layout: 'article',
             },
           },
         ],
@@ -293,6 +280,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'model',
         label: 'viz.chartModel',
+        sidebarGroup: 'viz.chartInternals',
         children: [
           { id: 'structure', label: 'viz.chartModelStructure', difficulty: DocDifficulty.Advanced },
           { id: 'authoring', label: 'viz.chartModelAuthoring', difficulty: DocDifficulty.Advanced },
@@ -304,17 +292,6 @@ export const vizSection: Array<Section> = [
           audience: 'integrator',
           capability: 'chart.model',
           sourceOfTruth: 'runtime',
-        },
-      },
-      {
-        id: 'changelog',
-        label: 'viz.changelog',
-        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'chart.release',
-          sourceOfTruth: 'changelog',
         },
       },
     ],

@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildPreviewIR } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
-import { previewSource as groupPreviewSource } from '../src/modules/docs/contents/schematic/graph/group/group-basic.zh.demo';
-import { previewSource as groupLabelPreviewSource } from '../src/modules/docs/contents/schematic/graph/group/group-label.zh.demo';
-import { previewSource as groupStylePreviewSource } from '../src/modules/docs/contents/schematic/graph/group/group-style.zh.demo';
+import { previewSource as groupPreviewSource } from '../src/modules/docs/contents/schematic/graph/group/group-basic';
+import { previewSource as groupLabelPreviewSource } from '../src/modules/docs/contents/schematic/graph/group/group-label';
+import { previewSource as groupStylePreviewSource } from '../src/modules/docs/contents/schematic/graph/group/group-style';
 
 describe('Graph Group documentation', () => {
   it('keeps Group children in the executable canonical preview and Vanilla code view', () => {

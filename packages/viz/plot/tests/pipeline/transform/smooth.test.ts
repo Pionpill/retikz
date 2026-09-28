@@ -73,7 +73,7 @@ describe('smooth transform schema (contract)', () => {
         kind: 'smooth',
         x: 'time',
         y: 'value',
-        method: { kind: 'movingAverage' },
+        method: { kind: '' },
         xAs: 'x',
         yAs: 'y',
       }),

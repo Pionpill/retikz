@@ -170,7 +170,7 @@ Entity 提供 `kind` 字段，但不提供内置 kind 值；这个字段预留�
 
 ### 实体分组: `group`
 
-在同一 Graph 中，给属于同一组的 Entity 设置相同的 `group` 值。`group` 表达的是实体之间的分组关系；视觉表现上，同一 `group` 的 Entity 颜色相同。
+在同一 Graph 中，给属于同一组的 Entity 设置相同的 `group` 值，可为它们分配相同的分类主色默认值。作者规则和实例显式样式仍可覆盖颜色；`group` 不会创建可见容器，需要外框时使用 [Group](/schematic/graph/group)。
 
 下图将规划、交付和支持分为三个组，分别包含 2、3、4 个 Entity。
 

@@ -34,7 +34,11 @@ const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): JsonOb
   ] as const) {
     if (source[name] !== undefined) result[name] = { kind: 'constant', value: source[name] };
   }
+  if (properties.colorMode === 'muted' && source.strokeOpacity === undefined) {
+    result.strokeOpacity = { kind: 'constant', value: 0.6 };
+  }
   if (source.connectNulls !== undefined) result.connectNulls = source.connectNulls;
+  if (source.curve !== undefined) result.curve = source.curve;
   return result;
 };
 
@@ -49,6 +53,7 @@ export const resolveConnectedScatterMarkGroup = (
   const series = seriesOf(encodings);
   const pointEncodings: JsonObject = { x, y };
   const pointProperties: JsonObject = { ...(properties.point ?? {}) };
+  const separateColors = properties.colorMode === 'mark';
   const path: JsonObject = {
     type: PlotMark.Path,
     order,
@@ -58,17 +63,26 @@ export const resolveConnectedScatterMarkGroup = (
     ...pathPropertiesOf(properties),
   };
   if (series === undefined) {
+    if (separateColors) path.defaultColorIndex = 1;
     if (properties.path?.stroke !== undefined) path.stroke = { kind: 'constant', value: properties.path.stroke };
   } else {
-    if (!Object.hasOwn(pointProperties, 'color') && !Object.hasOwn(pointProperties, 'fill')) {
+    if (separateColors) {
+      pointEncodings.color = { field: series.field, scale: `${series.scale}.point` };
+      if (!Object.hasOwn(pointProperties, 'fill') && Object.hasOwn(pointProperties, 'color'))
+        pointProperties.fill = pointProperties.color;
+    } else if (!Object.hasOwn(pointProperties, 'color') && !Object.hasOwn(pointProperties, 'fill')) {
       pointEncodings.color = { field: series.field, scale: series.scale };
     }
     path.stroke =
       properties.path?.stroke === undefined
-        ? { kind: 'field', value: series.field, scale: series.scale }
+        ? { kind: 'field', value: series.field, scale: separateColors ? `${series.scale}.path` : series.scale }
         : { kind: 'constant', value: properties.path.stroke };
   }
-  return [PathMarkSchema.parse(path), resolvePointMark(pointEncodings, pointProperties)];
+  const point = resolvePointMark(pointEncodings, pointProperties);
+  return [
+    PathMarkSchema.parse(path),
+    separateColors && series === undefined ? { ...point, defaultColorIndex: 0 } : point,
+  ];
 };
 
 const mergedPropertiesOf = (

@@ -75,7 +75,7 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
       elements: schema.def.items.map(item => walkTypeImpl(item, false, next)),
     };
   }
-  if (schema instanceof z.ZodDefault) {
+  if (schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault) {
     return { kind: 'default', inner: walkTypeImpl(schema.unwrap(), false, next) };
   }
   if (schema instanceof z.ZodNullable) {
@@ -184,7 +184,8 @@ function unwrapOptional(schema: AnySchema): { inner: AnySchema; optional: boolea
 }
 
 function extractConstraints(schema: AnySchema): Array<string> {
-  while (schema instanceof z.ZodDefault || schema instanceof z.ZodNullable) schema = schema.unwrap();
+  while (schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault || schema instanceof z.ZodNullable)
+    schema = schema.unwrap();
   const out: Array<string> = [];
   if (schema instanceof z.ZodNumber) {
     const defs = checkDefsOf(schema);

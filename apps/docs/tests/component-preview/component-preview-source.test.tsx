@@ -138,7 +138,11 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-const renderPreview = async (segments: Array<string>, node: ReactNode): Promise<ComponentPreviewCardProps> => {
+const renderPreview = async (
+  segments: Array<string>,
+  node: ReactNode,
+  requestSource = true,
+): Promise<ComponentPreviewCardProps> => {
   capture.reset();
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -152,10 +156,30 @@ const renderPreview = async (segments: Array<string>, node: ReactNode): Promise<
     await Promise.resolve();
   });
   await vi.waitFor(() => capture.read(), { timeout: 10_000 });
+  if (requestSource) {
+    await act(async () => {
+      capture.read().onSourceRequested?.();
+      await Promise.resolve();
+    });
+  }
   return capture.read();
 };
 
 describe('ComponentPreview Vanilla source', () => {
+  it('打开源码前不生成 Vanilla 视图，打开后提供可用源码', async () => {
+    const initial = await renderPreview(
+      ['viz', 'plot', 'coordinate', '2d'],
+      <ComponentPreview mode="showcase" files="coordinate-cartesian" />,
+      false,
+    );
+    expect(initial.source?.vanilla).toBeUndefined();
+    await act(async () => {
+      initial.onSourceRequested?.();
+      await Promise.resolve();
+    });
+    expect(capture.read().source?.vanilla?.files[0]?.code).toContain('renderPlot');
+    expect(capture.read().source?.vanilla?.render).toBeTypeOf('function');
+  });
   it('不再从组件预览根 barrel 暴露旧卡片入口', () => {
     expect(componentPreviewExports).not.toHaveProperty(['Component', 'Render'].join(''));
   });

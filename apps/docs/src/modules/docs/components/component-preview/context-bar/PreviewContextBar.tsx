@@ -14,6 +14,10 @@ import { FigureGuideButton } from './FigureGuideButton';
 import { ThemeStyleSwitchButton } from './ThemeStyleSwitchButton';
 
 export type PreviewContextBarProps = {
+  /** 将主题工具放在常显工具栏中 */
+  inline?: boolean;
+  /** 仅显示主题图标，名称保留在悬停提示中 */
+  iconOnly?: boolean;
   /** 当前预览使用的局部主题 */
   themeMode: PreviewThemeMode;
   /** 更新局部主题 */
@@ -35,6 +39,8 @@ export type PreviewContextBarProps = {
 /** 悬浮在预览内容上方的局部主题切换 */
 export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
   const {
+    inline = false,
+    iconOnly = false,
     themeMode,
     onThemeModeChange,
     figureType,
@@ -53,7 +59,9 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
     <div
       data-slot="preview-context-bar"
       className={cn(
-        'pointer-events-none absolute top-2 left-1/2 z-20 -translate-x-1/2 opacity-0 transition-opacity group-hover/preview-context:pointer-events-auto group-hover/preview-context:opacity-100 group-focus-within/preview-context:pointer-events-auto group-focus-within/preview-context:opacity-100',
+        inline
+          ? 'relative'
+          : 'pointer-events-none absolute top-2 left-1/2 z-20 -translate-x-1/2 opacity-0 transition-opacity group-hover/preview-context:pointer-events-auto group-hover/preview-context:opacity-100 group-focus-within/preview-context:pointer-events-auto group-focus-within/preview-context:opacity-100',
         (themeStyleMenuOpen || figureGuideOpen) && 'pointer-events-auto opacity-100',
       )}
     >
@@ -77,17 +85,27 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
           aria-label={t('preview.themeMode')}
           className="bg-background shadow-xs"
         >
-          <ToggleGroupItem value="inherit" aria-label="Preview theme inherit" className="px-2">
+          <ToggleGroupItem
+            value="inherit"
+            aria-label="Preview theme inherit"
+            title={t('preview.themeSystem')}
+            className="px-2"
+          >
             <Monitor className="size-3.5" />
-            <span>{t('preview.themeSystem')}</span>
+            {!iconOnly ? <span>{t('preview.themeSystem')}</span> : null}
           </ToggleGroupItem>
-          <ToggleGroupItem value="light" aria-label="Preview theme light" className="px-2">
+          <ToggleGroupItem
+            value="light"
+            aria-label="Preview theme light"
+            title={t('preview.themeLight')}
+            className="px-2"
+          >
             <Sun className="size-3.5" />
-            <span>{t('preview.themeLight')}</span>
+            {!iconOnly ? <span>{t('preview.themeLight')}</span> : null}
           </ToggleGroupItem>
-          <ToggleGroupItem value="dark" aria-label="Preview theme dark" className="px-2">
+          <ToggleGroupItem value="dark" aria-label="Preview theme dark" title={t('preview.themeDark')} className="px-2">
             <Moon className="size-3.5" />
-            <span>{t('preview.themeDark')}</span>
+            {!iconOnly ? <span>{t('preview.themeDark')}</span> : null}
           </ToggleGroupItem>
         </ToggleGroup>
         {enableThemeSwitch && onThemeStyleChange ? (

@@ -1,4 +1,13 @@
+import type { CSSProperties } from 'react';
+
 import type { AlignKey, SizeKey, SourceView } from './types';
+
+/** 预览画布周围空白区域的点阵背景 */
+export const DOT_PATTERN_STYLE: CSSProperties = {
+  backgroundImage:
+    'radial-gradient(circle, color-mix(in oklab, var(--foreground) 15%, transparent) 1px, transparent 1px)',
+  backgroundSize: '14px 14px',
+};
 
 /** 视图展示顺序（toggle 按这个顺序渲染可用视图）：vanilla 夹在 react 与 ir 之间。 */
 export const SOURCE_VIEW_ORDER: ReadonlyArray<SourceView> = ['react', 'vanilla', 'ir', 'config'];

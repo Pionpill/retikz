@@ -1,0 +1,40 @@
+---
+title: Introduction
+description: Describe objects, relations, and containment; let Diagram arrange them into a complete figure with a title, legend, and frame.
+---
+
+Diagram supports structural diagrams such as workflows, dependencies, and system architectures. Describe the objects, connections, and groups; a concrete Diagram component measures the content, computes positions and connection paths, and combines the drawing with its title, description, and legend.
+
+**FlowDiagram** is the concrete component currently available. This request flow declares three objects and two relations without assigning coordinates.
+
+<ComponentPreview files="/schematic/diagram/get-start/request-flow" size="sm" hideCode />
+
+## From relations to a complete diagram
+
+- **Arrange objects automatically**: use relations and a layout direction to place objects; use FlowLayout for fixed ordering or row and column alignment.
+- **Express containment**: use visible FlowGroup boundaries for business areas; containers used only for arrangement do not draw a border.
+- **Include supporting regions**: titles, descriptions, and explicit legends participate in layout alongside the drawing; the frame supplies spacing, background, and boundaries.
+- **Reuse the same content**: React and Vanilla share a serializable Source description, with compiled output rendered through SVG or Canvas.
+
+## When to choose Diagram
+
+Choose Diagram to organize a whole figure from objects and relations. Choose [Graph](/schematic/graph/introduction) when you need direct control over positions, connection endpoints, or freely composed structured blocks. Each Diagram component determines its supported content and layout capabilities; its members cannot be arbitrary drawing components.
+
+Flow currently supports Entity, Group, and Layout, but not Graph Block. Routing offers straight lines, orthogonal paths, and explicit elbow order. It does not guarantee global obstacle avoidance in every scene; adjust the layout to suit the actual figure.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Flow Diagram',
+      description: 'Explore the available diagram component and its basic usage',
+      url: '/schematic/diagram/flow',
+    },
+    {
+      title: 'Design philosophy',
+      description: 'Understand the responsibilities of content, layout, and complete figure assembly',
+      url: '/schematic/diagram/design',
+    },
+  ]}
+/>

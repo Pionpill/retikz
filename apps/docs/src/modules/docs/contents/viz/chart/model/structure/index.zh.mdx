@@ -71,16 +71,16 @@ Chart Source 把“这是什么图”与“这张图如何完整呈现”分开�
 
 family 是有限、稳定、面向发现的分类；chartType 是全局唯一 recipe key，每个 key 只属于一个 family。首批 Point family 的路由如下：
 
-| 路由                          | 精确 schema 与导入路径                                                     | 核心差异                                  |
-| ----------------------------- | -------------------------------------------------------------------------- | ----------------------------------------- |
-| `point` → `scatter`           | `ScatterChartSchema`<br />`@retikz/chart/point/scatter`                    | x/y 必填；visual、aggregate、scale、facet |
-| `point` → `bubble`            | `BubbleChartSchema`<br />`@retikz/chart/point/bubble`                      | x/y/size 必填；size 保持字段映射          |
-| `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point/regression`              | x/y 必填；series、拟合、Point + trend     |
-| `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point/connected-scatter` | x/y/order 必填；series、Path → Point      |
-| `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point/ranged-dot`               | category/start/end；connector + endpoints |
-| `point` → `strip`             | `StripChartSchema`<br />`@retikz/chart/point/strip`                        | x/y direct；一离散一连续；Point + jitter  |
+| 路由                          | 精确 schema 与导入路径                                   | 核心差异                                  |
+| ----------------------------- | -------------------------------------------------------- | ----------------------------------------- |
+| `point` → `scatter`           | `ScatterChartSchema`<br />`@retikz/chart/point`          | x/y 必填；visual、aggregate、scale、facet |
+| `point` → `bubble`            | `BubbleChartSchema`<br />`@retikz/chart/point`           | x/y/size 必填；size 保持字段映射          |
+| `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point`       | x/y 必填；series、拟合、Point + trend     |
+| `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point` | x/y/order 必填；series、Path → Point      |
+| `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point`        | category/start/end；connector + endpoints |
+| `point` → `strip`             | `StripChartSchema`<br />`@retikz/chart/point`            | x/y direct；一离散一连续；Point + jitter  |
 
-精确 schema 从表中对应的具体 chartType subpath 导入。`@retikz/chart/point` 是明确需要整个 Point family 时使用的聚合入口。
+各图表的精确 schema 统一从 `@retikz/chart/point` 按名称导入，无需深入具体 chartType 子路径。
 
 每个 chartType 都有自己的 strict `XxxChartSchema`、`XxxChartEncodingsSchema`、`XxxChartPropertiesSchema` 与 recipe Theme schema。公共原子 schema 只按真实语义复用，不把所有 family 拼成一个宽 union。未知 chartType、family mismatch、未知字段和不匹配的 mark 都在 Source / provider 边界 fail-loud。
 
@@ -123,6 +123,8 @@ plotExtension: {
 ```
 
 ## presentation 与 Theme owner
+
+`layout.height` 是整张图的高度。标题、副标题、注释和来源占用各自的文本空间，绘图主体在扣除这些内容、内边距和间距后填满剩余高度；主体不设最小高度限制，缩小容器时会重新布局。
 
 `presentation` 只有四个可选槽位。解析时始终按 `title → subtitle → plot → note → source` 组成固定内容；JSON 属性出现顺序、Vanilla 对象构造顺序和 React marker 出现顺序都没有语义。需要可组合自由顺序时，使用后续独立能力，不在当前 Source 中猜测。
 

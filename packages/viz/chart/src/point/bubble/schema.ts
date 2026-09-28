@@ -6,6 +6,7 @@ import { ChartFamily, ChartType } from '../constants';
 import {
   createPointChartMarkSchema,
   PointMarkEncodingWithoutSizeSchema,
+  PointAutoPaddingSchema,
   PointPositionDomainPaddingSchema,
   PointPropertiesWithoutSizeSchema,
   PointRecipeGuidesSchema,
@@ -14,6 +15,9 @@ import { BubbleChartEncodingsSchema } from './encoding-schema';
 
 /** Bubble recipe 的精确 constant properties schema */
 export const BubbleChartPropertiesSchema = PointPropertiesWithoutSizeSchema.extend({
+  autoPadding: PointAutoPaddingSchema.default('point-aware')
+    .optional()
+    .describe('Automatic padding strategy; Bubble defaults to point-aware because glyph radii vary'),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 }).describe('Bubble Chart constant properties without size');
 
@@ -28,7 +32,7 @@ export const BubbleChartMarkSchema = createPointChartMarkSchema(
 export const BubbleChartRecipeSchema = strictObject({
   chartType: literal(ChartType.Bubble).describe('Globally unique Bubble recipe key'),
   encodings: BubbleChartEncodingsSchema,
-  properties: BubbleChartPropertiesSchema.optional(),
+  properties: BubbleChartPropertiesSchema.prefault({}).optional(),
   guides: PointRecipeGuidesSchema.optional(),
   marks: array(BubbleChartMarkSchema).optional(),
 }).describe('Bubble Chart recipe payload');

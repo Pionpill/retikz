@@ -309,6 +309,7 @@ export const createCartesian1DCoordinate = (
 };
 
 const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinate> = {
+  domainPadding: { roles: ['x', 'y'] },
   schema: Cartesian2DSchema,
   roles: ['x', 'y'],
   resolve: (coordinate, ctx) => {

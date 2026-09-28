@@ -1,0 +1,12 @@
+---
+title: API reference
+description: Look up Relation components, authoring entries, Source factories, and semantic definitions.
+---
+
+Generated from public exports and JSDoc. See [Basic usage](/schematic/graph/relation/usage), [Schema reference](/schematic/graph/relation/schema-reference), and [Custom usage](/schematic/graph/relation/custom) for authoring, persistence, and assembly.
+
+`InputRelation` shares fields with `RelationCreateOptions`, but source / target accept id strings and route / way form a mutually exclusive union. The generated tables preserve this composition; look up shared fields in `IRGraphRelation`. React adds optional Step children and removes the type input discriminator.
+
+Definitions belong to runtime assembly and cannot be stored in Relation IR. React / Vanilla inject them through Graph; Relations reference registered keys. Structure recipes own shape and dimensions, while marker appearance owns colors and opacity.
+
+{/* @include schematic/graph/relation/api-reference/generated */}

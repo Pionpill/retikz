@@ -173,6 +173,19 @@ const createInput = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('buildPreviewSource', () => {
+  it('仅准备预览时保留必要 IR，打开源码后才提供 Vanilla SVG', () => {
+    const input = createInput({ Component: ChartDemo });
+    const initial = buildPreviewSource({ ...input, includeGeneratedSources: false });
+    expect(initial.previewIr).not.toBeNull();
+    expect(initial.source?.react?.files.length).toBeGreaterThan(0);
+    expect(initial.source?.vanilla).toBeUndefined();
+    expect(initial.source?.ir).toBeUndefined();
+    const complete = buildPreviewSource(input);
+    expect(complete.previewIr?.sourceIr).toEqual(initial.previewIr?.sourceIr);
+    expect(complete.source?.vanilla?.files[0]?.code).toContain('renderChart');
+    expect(renderToStaticMarkup(complete.source?.vanilla?.render?.('svg'))).toContain('<svg');
+  });
+
   it('让 Path Inspector 保持可见，同时不写入 canonical IR 与 Vanilla', () => {
     const preview = buildPreviewIR(PathInspectorCanonical);
     const vanilla = buildVanillaPreview(preview);
@@ -283,7 +296,7 @@ describe('buildPreviewSource', () => {
     expect(ir?.files[0]?.code).not.toContain('__chart.scatter.guide');
     expect(vanilla?.files[0]?.code).toContain("import { renderChart } from '@retikz/chart-vanilla'");
     expect(vanilla?.files[0]?.code).toContain(
-      "import { createScatterChart } from '@retikz/chart-vanilla/point/scatter'",
+      "import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
     );
     expect(vanilla?.files[0]?.code).not.toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
     expect(vanilla?.files[0]?.code).toContain("title: { text: 'Income and life expectancy' }");
@@ -313,7 +326,9 @@ describe('buildPreviewSource', () => {
       presentation: { title: { text: 'Income, life expectancy, and population' } },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
-    expect(vanilla?.files[0]?.code).toContain("import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble'");
+    expect(vanilla?.files[0]?.code).toContain(
+      "import { bubbleChart, BubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
+    );
     expect(vanilla?.files[0]?.code).toContain("size: 'population'");
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
@@ -335,7 +350,9 @@ describe('buildPreviewSource', () => {
       },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "strip"');
-    expect(vanilla?.files[0]?.code).toContain("import { createStripChart } from '@retikz/chart-vanilla/point/strip'");
+    expect(vanilla?.files[0]?.code).toContain(
+      "import { stripChart, StripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point'",
+    );
     expect(vanilla?.render).toBeTypeOf('function');
     expect(renderToStaticMarkup(vanilla?.render?.('svg'))).toContain('<svg');
   });

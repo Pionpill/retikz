@@ -57,7 +57,7 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
   const textOf = (marker: typeof ChartTitle | typeof ChartSubtitle | typeof ChartSource): ReactNode => {
     const child = children.find(candidate => isValidElement(candidate) && candidate.type === marker);
     if (!isValidElement<{ children?: ReactNode }>(child)) {
-      throw new Error('Bubble preview is missing presentation text');
+      return undefined;
     }
     return child.props.children;
   };
@@ -92,6 +92,7 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-x-scale': 'log',
       'bubble-basic-point-stroke-enabled': false,
       'bubble-basic-point-stroke': 'currentColor',
+      'bubble-basic-pointStrokeWidth': 1,
       'bubble-basic-point-shape': 'circle',
       'bubble-basic-point-fill-opacity': 0.7,
     });
@@ -102,6 +103,7 @@ describe('Viz Chart Bubble controls', () => {
       'bubble-basic-x-scale',
       'bubble-basic-point-stroke-enabled',
       'bubble-basic-point-stroke',
+      'bubble-basic-pointStrokeWidth',
       'bubble-basic-point-shape',
       'bubble-basic-point-fill-opacity',
     ]);
@@ -160,16 +162,9 @@ describe('Viz Chart Bubble controls', () => {
     }
   });
 
-  it('双语 demo 在 Chart presentation 中说明尺寸语义、年份与来源', () => {
-    expect(canonicalPresentation(basicZhPreviewSource)).toMatchObject({
-      title: '收入、寿命与人口规模',
-      subtitle: expect.stringContaining('气泡面积由人口字段驱动'),
-      source: expect.stringContaining('Gapminder'),
-    });
-    expect(canonicalPresentation(basicEnPreviewSource)).toMatchObject({
-      title: 'Income, life expectancy, and population',
-      subtitle: expect.stringContaining('bubble area is driven by population'),
-      source: expect.stringContaining('Gapminder'),
-    });
+  it('双语基础 demo 不内嵌 presentation', () => {
+    for (const source of [basicZhPreviewSource, basicEnPreviewSource]) {
+      expect(canonicalPresentation(source)).toEqual({ title: undefined, subtitle: undefined, source: undefined });
+    }
   });
 });

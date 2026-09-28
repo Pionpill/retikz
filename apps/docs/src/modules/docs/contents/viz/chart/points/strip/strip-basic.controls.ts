@@ -1,14 +1,13 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { createPointCoordinateControl } from '../point-coordinate-control';
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { stripVegaBarleyData } from './strip-vega-barley.data';
 
 /** Strip Chart 进阶示例的稳定控件 id */
 export const STRIP_BASIC_CONTROL_IDS = {
-  discreteRole: 'strip-basic-discrete-role',
-  discreteScale: 'strip-basic-discrete-scale',
   coordinateSystem: 'strip-basic-coordinate-system',
+  pointOpacity: 'strip-basic-pointOpacity',
   jitterSpan: 'strip-basic-jitter-span',
   distribution: 'strip-basic-distribution',
   normalSigma: 'strip-basic-normal-sigma',
@@ -34,37 +33,8 @@ export const stripBasicControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: '位置映射',
-      controls: [
-        {
-          kind: 'select',
-          id: STRIP_BASIC_CONTROL_IDS.discreteRole,
-          label: '离散角色',
-          defaultValue: 'x',
-          options: [
-            { value: 'x', label: 'x（极坐标角度）' },
-            { value: 'y', label: 'y（极坐标半径）' },
-          ],
-        },
-        {
-          kind: 'select',
-          id: STRIP_BASIC_CONTROL_IDS.discreteScale,
-          label: '离散 scale',
-          defaultValue: 'point',
-          options: [
-            { value: 'point', label: 'Point' },
-            { value: 'band', label: 'Band' },
-          ],
-        },
-        createPointCoordinateControl({
-          id: STRIP_BASIC_CONTROL_IDS.coordinateSystem,
-          label: '坐标系',
-          cartesianLabel: '笛卡尔',
-          polarLabel: '极坐标',
-        }),
-      ],
-    },
+
+    createPointCoordinateSection(STRIP_BASIC_CONTROL_IDS.coordinateSystem, 'zh'),
     {
       label: '散布与点',
       controls: [
@@ -110,6 +80,15 @@ export const stripBasicControls = definePreviewControls({
         },
         {
           kind: 'range',
+          id: STRIP_BASIC_CONTROL_IDS.pointOpacity,
+          label: '不透明度',
+          defaultValue: 0.75,
+          min: 0.1,
+          max: 1,
+          step: 0.05,
+        },
+        {
+          kind: 'range',
           id: STRIP_BASIC_CONTROL_IDS.pointSize,
           label: '点半径',
           defaultValue: 5,
@@ -126,20 +105,13 @@ export const stripBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: stripBasicControls,
   canonicalValues: {
-    [STRIP_BASIC_CONTROL_IDS.discreteRole]: 'x',
-    [STRIP_BASIC_CONTROL_IDS.discreteScale]: 'point',
     [STRIP_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
+    [STRIP_BASIC_CONTROL_IDS.pointOpacity]: 0.75,
     [STRIP_BASIC_CONTROL_IDS.jitterSpan]: 0.3,
     [STRIP_BASIC_CONTROL_IDS.distribution]: 'uniform',
     [STRIP_BASIC_CONTROL_IDS.normalSigma]: 0.5,
     [STRIP_BASIC_CONTROL_IDS.seed]: 0,
     [STRIP_BASIC_CONTROL_IDS.pointSize]: 5,
   },
-  relatedApis: [
-    'StripEncodings.x',
-    'StripEncodings.y',
-    'StripChart.coordinate',
-    'StripProperties.jitter',
-    'StripProperties.size',
-  ],
+  relatedApis: ['StripChart.coordinate', 'StripProperties.opacity', 'StripProperties.jitter', 'StripProperties.size'],
 } satisfies PreviewControlContract;

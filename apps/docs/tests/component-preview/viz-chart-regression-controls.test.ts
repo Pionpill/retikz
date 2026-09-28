@@ -97,7 +97,7 @@ const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 's
   const children = Children.toArray((chart as { props: { children?: ReactNode } }).props.children);
   const textOf = (marker: typeof ChartTitle | typeof ChartSubtitle | typeof ChartSource): ReactNode => {
     const child = children.find(candidate => isValidElement(candidate) && candidate.type === marker);
-    expect(isValidElement<{ children?: ReactNode }>(child), `Regression presentation ${marker.displayName}`).toBe(true);
+    if (!isValidElement<{ children?: ReactNode }>(child)) return undefined;
     return (child as { props: { children?: ReactNode } }).props.children;
   };
   return {
@@ -132,10 +132,11 @@ describe('Viz Chart Regression controls', () => {
     expect(comparable(zh)).toEqual(comparable(en));
     expect(zh.canonicalValues).toEqual({
       'regression-basic-coordinate-system': 'cartesian2D',
-      'regression-basic-group-by-species': true,
+      'regression-basic-group-by-species': false,
       'regression-basic-method': 'linear',
       'regression-basic-order': 3,
       'regression-basic-sample-count': 64,
+      'regression-basic-pointSize': 4,
       'regression-basic-point-opacity': 0.55,
       'regression-basic-trend-stroke-color': '#e11d48',
       'regression-basic-trend-line-style': 'solid',
@@ -150,6 +151,7 @@ describe('Viz Chart Regression controls', () => {
       'regression-basic-method',
       'regression-basic-order',
       'regression-basic-sample-count',
+      'regression-basic-pointSize',
       'regression-basic-point-opacity',
       'regression-basic-trend-stroke-color',
       'regression-basic-trend-line-style',
@@ -205,6 +207,7 @@ describe('Viz Chart Regression controls', () => {
     expect(zh.relatedApis).toEqual([
       'RegressionChart.coordinate',
       'RegressionEncodings.series',
+      'RegressionProperties.point.size',
       'RegressionProperties.method',
       'RegressionProperties.sampleCount',
       'RegressionProperties.point.opacity',
@@ -240,13 +243,12 @@ describe('Viz Chart Regression controls', () => {
       expect(canonicalDeclarationProps(source, RegressionEncodings)).toEqual({
         x: 'sepalLengthCm',
         y: 'petalLengthCm',
-        series: 'species',
       });
       expect(canonicalDeclarationProps(source, RegressionProperties)).toEqual({
         method: { kind: 'linear' },
         sampleCount: 64,
-        point: { opacity: 0.55 },
-        trend: { strokeWidth: 2, strokeOpacity: 0.9 },
+        point: { size: 4, opacity: 0.55 },
+        trend: { stroke: '#e11d48', strokeWidth: 2, strokeOpacity: 0.9 },
       });
       expect(source.datasetImports).toEqual({
         'chart.data': { name: 'irisRegressionData', from: './regression-basic.data' },
@@ -254,19 +256,10 @@ describe('Viz Chart Regression controls', () => {
     }
   });
 
-  it('双语 demo 在 Chart presentation 中说明变量、分组与可追溯来源', () => {
-    const zh = canonicalPresentation(requiredModule(demoModules, modulePath('zh.demo.tsx')).previewSource);
-    const en = canonicalPresentation(requiredModule(demoModules, modulePath('en.demo.tsx')).previewSource);
-
-    expect(zh).toMatchObject({
-      title: expect.stringContaining('鸢尾花'),
-      subtitle: expect.stringContaining('厘米'),
-      source: expect.stringContaining('10.24432/C56C76'),
-    });
-    expect(en).toMatchObject({
-      title: expect.stringContaining('Iris'),
-      subtitle: expect.stringContaining('centimetres'),
-      source: expect.stringContaining('10.24432/C56C76'),
-    });
+  it('双语基础 demo 不内嵌 presentation', () => {
+    for (const suffix of ['zh.demo.tsx', 'en.demo.tsx']) {
+      const source = requiredModule(demoModules, modulePath(suffix)).previewSource;
+      expect(canonicalPresentation(source)).toEqual({ title: undefined, subtitle: undefined, source: undefined });
+    }
   });
 });

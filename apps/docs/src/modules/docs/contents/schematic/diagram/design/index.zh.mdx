@@ -1,0 +1,79 @@
+---
+title: 设计理念
+description: 把结构描述、领域布局与完整图形装配分开，让同一份内容生成可渲染、可查询的结构图。
+---
+
+一张结构图既要说明对象之间的关系，也要安排节点位置，并容纳标题、说明和图例。Diagram 将这些职责分开：作者描述结构，具体组件计算绘图内容，共享框架负责完整图形的装配。
+
+## 描述结构，推导几何
+
+以 Flow 为例，作者声明对象、关系与包含层级，必要时补充方向、间距和排列约束。Flow 测量实际文本与形状，再计算节点位置和连线路径。因此修改对象文本或新增步骤后，布局可以重新计算，而不必维护一套手写坐标。
+
+Source 是可序列化的结构描述。Entity、Group、Layout 分别保存在平级 catalog 中，根和各容器的 `children` 列表表达直接包含关系与顺序；Relation 只在根声明，通过 id 引用 Entity 或 Group。React 的组件嵌套会转换成同一份结构，不另外保存一套父子关系。
+
+位置、路径和几何缓存属于计算结果，不写回 Source。这也让程序或 LLM 可以通过增删对象、调整引用来修改图，而无需生成绘图坐标。布局能力仍受所选 Definition 的约束，不支持的请求会明确报错。
+
+## 完整图形由三个部分组成
+
+下图中，标题、说明与图例帮助读者理解内容；虚线区域代表具体组件生成的绘图内容；外框统一包住这些区域。
+
+<ComponentPreview files="diagram-framework-overview" hideCode type="illustration" size="lg" />
+
+| 部分           | 负责什么                                     | 配置入口          |
+| -------------- | -------------------------------------------- | ----------------- |
+| 说明区域       | 标题、说明与显式图例                         | `presentation`    |
+| 外框与区域排列 | 内边距、区域间距、图例方位、背景、边框与裁切 | `frame`           |
+| 绘图内容       | 对象的测量、位置、关系路径与领域语义         | 具体组件，如 Flow |
+
+说明区域和外框由共享的 Diagram Framework 装配。Frame 的间距不会变成绘图内容中的节点间距，标题也不参与流程关系。它们最终进入同一个 Scene 和完整输出边界，而不是页面上互不关联的几块内容。
+
+### 说明区域随内容出现
+
+标题与说明采用 `{ text, style?, layout? }`，支持多行文本、行与文本片段的样式，以及文字与 TeX 混排。图例使用显式的 Standard Legend，由作者提供条目，框架不会从领域数据自动猜测图例。
+
+标题、说明与图例都可省略；缺失区域的容器与间距一起折叠，不保留空位。图例可以位于绘图内容的上、右、下、左侧，并沿所在边对齐。
+
+### 外框覆盖完整结果
+
+Frame 分别控制标题与说明、标题区与主体、绘图内容与图例之间的间距，同时提供 padding、背景、边框、圆角与 overflow。绘图内容变化时，这些区域仍作为同一张图参与布局、裁切和输出。
+
+<ComponentAlert
+  type="tip"
+  title="复用基础绘图能力"
+  description="底层装配复用 Layout Flex、Standard Surface 与 Core Scope；文本复用 TextBlock，图例复用 Standard Legend。Diagram 不维护另一套文本、图例或渲染机制。"
+/>
+
+## 通用装配与具体组件分别负责什么
+
+Diagram Framework 接收具体组件已经生成的绘图内容，不读取或改写其中的领域语义。它不提供可实例化的通用 Diagram 根，也没有允许任意内容注入的公开 `body` 字段；使用时从 `FlowDiagram` 等具体组件进入。
+
+Flow 负责测量、布局与路由，并将结果交给 Graph 绘制。它有自己的 `FlowDiagramArtifact`，供调用方查询元素、关系与布局结果；通用框架不另造一份 Diagram identity、metadata 或 artifact。Layout 和 Legend 的结果仍由各自的能力拥有。
+
+<ComponentAlert
+  type="tip"
+  title="Graph 与 Diagram 的边界"
+  description="Graph 提供 Entity、Relation、Group 等结构语义与绘制能力；Diagram 在此基础上组织整张结构图。当前 Flow 不接受 Graph Block 或任意绘图 children，自动布局也不等于全局连线避障。"
+/>
+
+## 默认样式不创造内容
+
+Theme 提供外观基线，`diagramDefaults` 提供作者的显式默认值，实例字段最后覆盖。命名主题通过 `theme.style` 选择同名 Definition，明暗模式由 `theme.mode` 指定；这些设置不代替内容与关系声明。
+
+`diagramDefaults.presentation.title/description` 与正式说明区域路径一致，只包含 `style.textColor/font/opacity` 和 `layout.align/lineHeight/maxTextWidth`，不包含 `text`。设置标题默认字体不会创建一个标题；字体配置整体替换。
+
+`diagramDefaults.frame` 提供 padding、三类间距、背景、边框与圆角，图例方位与 overflow 在正式 `frame` 中指定。Theme Definition 返回同样的稀疏结构，未设置的字段继续沿用基线。
+
+具体组件的默认值单独管理。例如 Flow 的 `flowDefaults` 设置对象和关系的表现默认值；布局方向与 routing 仍使用正式字段，不藏进主题。详细覆盖顺序见 Flow 基础用法。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Flow 基础用法',
+      description: '将分组、布局、路由与默认样式用于实际结构图',
+      url: '/schematic/diagram/flow/basic',
+    },
+    { title: 'Graph 设计理念', description: '了解结构语义与基础组件的职责', url: '/schematic/graph/design' },
+  ]}
+/>

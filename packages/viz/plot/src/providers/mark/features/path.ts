@@ -14,7 +14,13 @@ import type {
 import { seriesPathMeta, slug } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark, PathCurveValue } from '../../../schemas';
-import { PathClosureKind, PathCurve, PathMarkSchema, PlotMark } from '../../../schemas';
+import {
+  PathClosureKind,
+  PathCurve,
+  PathMarkSchema,
+  PlotMark,
+  PlotPathConnectNullsStyleSchema,
+} from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 import type { PolarVertex } from '../../coordinate';
 import {
@@ -344,7 +350,7 @@ const pathDefaultBaseline = (frame: CoordinateFrame): number => {
 const pathClosureOf = (mark: IRPlotPathMark): IRPlotPathClosure | undefined => mark.closure;
 
 type PathRowSegment = Array<ExternalRow>;
-type PathStepSegment = { rows: PathRowSegment; steps: Array<IRStep> };
+type PathStepSegment = { rows: PathRowSegment; steps: Array<IRStep>; bridgesNulls?: boolean };
 
 const projectableTopPoint = (mark: IRPlotPathMark, row: ExternalRow, frame: CoordinateFrame): boolean => {
   if (isGenericCoordinateFrame(frame)) return roleAnchor(mark, row, frame) !== null;
@@ -398,7 +404,7 @@ const pathRowSegments = (
   closure: IRPlotPathClosure | undefined,
 ): Array<PathRowSegment> => {
   const ordered = orderRows(rows, mark.order);
-  const connectNulls = mark.connectNulls ?? false;
+  const connectNulls = mark.connectNulls !== undefined && mark.connectNulls !== false;
   const projectable = (row: ExternalRow): boolean =>
     closure === undefined ? projectableTopPoint(mark, row, frame) : projectableClosurePoint(mark, row, frame, closure);
   return splitRowsByProjectability(ordered, projectable, connectNulls);
@@ -452,8 +458,36 @@ const buildLineStepSegments = (
   rows: Array<ExternalRow>,
   frame: CoordinateFrame,
   closed: boolean,
-): Array<PathStepSegment> =>
-  pathRowSegments(mark, rows, frame, undefined).flatMap(segmentRows => {
+): Array<PathStepSegment> => {
+  const connectNulls = mark.connectNulls !== undefined && mark.connectNulls !== false;
+  if (!closed && connectNulls) {
+    const runs = splitRowsByProjectability(
+      orderRows(rows, mark.order),
+      row => projectableTopPoint(mark, row, frame),
+      false,
+    );
+    const segments: Array<PathStepSegment> = [];
+    for (const [index, run] of runs.entries()) {
+      if (index > 0) {
+        const previous = runs[index - 1];
+        const bridgeRows = [previous[previous.length - 1], run[0]];
+        const steps = pointsToCurveSteps(
+          buildOutlinePoints(mark, bridgeRows, frame, false),
+          false,
+          effectivePathCurve(mark.curve, frame),
+        );
+        if (steps !== null) segments.push({ rows: bridgeRows, steps, bridgesNulls: true });
+      }
+      const steps = pointsToCurveSteps(
+        buildOutlinePoints(mark, run, frame, false),
+        false,
+        effectivePathCurve(mark.curve, frame),
+      );
+      if (steps !== null) segments.push({ rows: run, steps });
+    }
+    return segments;
+  }
+  return pathRowSegments(mark, rows, frame, undefined).flatMap(segmentRows => {
     const steps = pointsToCurveSteps(
       buildOutlinePoints(mark, segmentRows, frame, closed),
       closed,
@@ -461,6 +495,16 @@ const buildLineStepSegments = (
     );
     return steps === null ? [] : [{ rows: segmentRows, steps }];
   });
+};
+
+const defaultNullConnectionStyle = PlotPathConnectNullsStyleSchema.parse({});
+
+/** 通道描边生效后，仅覆盖跨缺值连接段 */
+const applyNullConnectionStyle = (path: IRPath, segment: PathStepSegment, mark: IRPlotPathMark): IRPath => {
+  if (!segment.bridgesNulls) return path;
+  const overrides = typeof mark.connectNulls === 'object' ? mark.connectNulls : defaultNullConnectionStyle;
+  return { ...path, style: { ...path.style, ...defaultNullConnectionStyle, ...overrides } };
+};
 
 const returnCurveSteps = (points: ReadonlyArray<[number, number]>, curve: PathCurveValue): Array<IRStep> | null => {
   const steps = pointsToCurveSteps(points, false, curve);
@@ -567,7 +611,7 @@ export const buildSeriesPathScopes = (
       if (baseId !== undefined && segments.length > 1) {
         path.id = `${baseId}.segment.${index + 1}`;
       }
-      paths.push(path);
+      paths.push(applyNullConnectionStyle(path, segment, mark));
     }
     if (paths.length === 0) continue;
     scopes.push({
@@ -648,15 +692,33 @@ const lowerPath = (
   const seriesField = pathSeriesField(mark, rows);
   const defaultStroke = markPaintOf(mark, channels, 'stroke', rows, defaultColor ?? DEFAULT_FILL) ?? DEFAULT_FILL;
   const defaultFill = markPaintOf(mark, channels, 'fill', rows, undefined);
+  const filled =
+    rows.some(row => {
+      const fill = markPaintOf(mark, channels, 'fill', [row], undefined);
+      return fill !== undefined && fill !== 'none';
+    }) ||
+    (defaultFill !== undefined && defaultFill !== 'none');
+  if (typeof mark.connectNulls === 'object' && (closed || closure !== undefined || filled)) {
+    throw new RetikzPlotError('lowerPlots: connectNulls stroke configuration requires an open unfilled path');
+  }
+  const lineSegments = (segmentRows: Array<ExternalRow>): Array<PathStepSegment> =>
+    filled && !closed && !closure
+      ? pathRowSegments(mark, segmentRows, frame, undefined).flatMap(run => {
+          const steps = pointsToCurveSteps(
+            buildOutlinePoints(mark, run, frame, false),
+            false,
+            effectivePathCurve(mark.curve, frame),
+          );
+          return steps === null ? [] : [{ rows: run, steps }];
+        })
+      : buildLineStepSegments(mark, segmentRows, frame, closed);
   if (seriesField) {
     const seriesScopes = buildSeriesPathScopes(
       mark,
       rows,
       seriesField,
       seriesRows =>
-        closure
-          ? buildClosureStepSegments(mark, seriesRows, frame, closure, closed)
-          : buildLineStepSegments(mark, seriesRows, frame, closed),
+        closure ? buildClosureStepSegments(mark, seriesRows, frame, closure, closed) : lineSegments(seriesRows),
       seriesRows => {
         const fill = markPaintOf(mark, channels, 'fill', seriesRows, undefined);
         return {
@@ -680,9 +742,7 @@ const lowerPath = (
           },
         };
   }
-  const segments = closure
-    ? buildClosureStepSegments(mark, rows, frame, closure, closed)
-    : buildLineStepSegments(mark, rows, frame, closed);
+  const segments = closure ? buildClosureStepSegments(mark, rows, frame, closure, closed) : lineSegments(rows);
   if (segments.length === 0) return null;
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
@@ -691,11 +751,20 @@ const lowerPath = (
     children: segments.map(segment => {
       const row = segment.rows[0] ?? {};
       const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
-      return applyPathChannelDeliveries(
-        { type: 'path', ...pathMarkOptions(mark), ...(label !== undefined ? { label } : {}), children: segment.steps },
+      return applyNullConnectionStyle(
+        applyPathChannelDeliveries(
+          {
+            type: 'path',
+            ...pathMarkOptions(mark),
+            ...(label !== undefined ? { label } : {}),
+            children: segment.steps,
+          },
+          mark,
+          row,
+          channels,
+        ),
+        segment,
         mark,
-        row,
-        channels,
       );
     }),
     defaults: {

@@ -1,3 +1,4 @@
+import type { AnyRegressionDefinition } from '@retikz/data';
 import type {
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
@@ -65,6 +66,8 @@ export type LowerPlotsOptions = {
   coordinates?: Array<AnyCoordinateDefinition>;
   /** 自定义 transform definitions；内置项与自定义项通过同一个 registry 解析 */
   transformDefinitions?: Array<AnyTransformDefinition>;
+  /** 当前运行注入的拟合 Definition */
+  regressionDefinitions?: Array<AnyRegressionDefinition>;
   /** 自定义 statistics reducer definitions；内置项与自定义项通过同一个 registry 解析 */
   statisticsReducerDefinitions?: Array<AnyStatisticsReducerDefinition>;
   /** 自定义 row selector definitions；内置项与自定义项通过同一个 registry 解析 */

@@ -9,9 +9,9 @@ Plot reads `style` and `mode` from the Core effective Theme at its current Scene
 
 The example sets the string master `plotDefaults.typography.textColor` to `#2563EB`, then derives the Plot-area background with `0.08` and the grid stroke with `0.25`; the categorical palette remains a list of string colors. The defaults use the same nested Source fields as Plot IR; contextual colors and opacity remain separate fields.
 
-React, Vanilla, and plain JSON pass the same defaults and rules to the Plot resolver without adapter-owned presets. The structured `plotArea.fill` field fills only the two-dimensional Plot area after axis, legend, and layout reserves are removed. One-dimensional lines and circles expose only a projection path, so they emit neither a fillable Plot area nor a grid layer across one.
+The `plotArea.fill` field fills only the two-dimensional Plot area after axis, legend, and layout reserves are removed. The independent `plotArea.border` field outlines that area; `false` disables an inherited border. Cartesian coordinates use a rectangle, polar coordinates use a circle, and facets outline each panel separately. One-dimensional coordinates have no Plot-area surface. Axis-label regions, facet gaps, and the outer Chart canvas remain transparent. React, Vanilla, and plain JSON pass the same defaults and rules to the Plot resolver without adapter-owned presets.
 
-The site's Vibrant reference preset uses a light blue-gray Plot area in Light mode and a dark Plot area in Dark mode; the default baseline, Academic, and Clean remain transparent. Explicit `plotDefaults.plotArea.fill` values still override the preset through the normal cascade.
+The site's Vibrant reference preset uses a light blue-gray Plot area in Light mode and a dark Plot area in Dark mode; the default baseline, Academic, and Clean remain transparent. Academic hides default grids and outlines the Plot area with the same color and width as the default axes. Explicit `plotDefaults.plotArea.fill` and `border` values still override the preset through the normal cascade, as do local Axis grid settings.
 
 ## Named styles
 
@@ -32,6 +32,10 @@ The resolver applies the Core Neutral baseline, the named Plot style, Chart forw
 ### PlotAreaDefaultsSchema
 
 <ZodSchema name="PlotAreaDefaultsSchema" />
+
+### PlotAreaBorderSchema
+
+<ZodSchema name="PlotAreaBorderSchema" />
 
 ### PlotTypographyDefaultsSchema
 

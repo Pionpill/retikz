@@ -71,16 +71,16 @@ This Point-family Scatter Source preserves author intent. An explicit coordinate
 
 A family is finite, stable, and intended for discovery. A chartType is a globally unique recipe key; each key belongs to exactly one family. The first Point-family routes are:
 
-| Route                         | Exact schema and import path                                               | Core difference                               |
-| ----------------------------- | -------------------------------------------------------------------------- | --------------------------------------------- |
-| `point` → `scatter`           | `ScatterChartSchema`<br />`@retikz/chart/point/scatter`                    | Required x/y; visual, aggregate, scale, facet |
-| `point` → `bubble`            | `BubbleChartSchema`<br />`@retikz/chart/point/bubble`                      | Required x/y/size; size stays field-bound     |
-| `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point/regression`              | Required x/y; series, fit, Point + trend      |
-| `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point/connected-scatter` | Required x/y/order; series, Path → Point      |
-| `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point/ranged-dot`               | category/start/end; connector + endpoints     |
-| `point` → `strip`             | `StripChartSchema`<br />`@retikz/chart/point/strip`                        | Direct x/y; one discrete, one continuous      |
+| Route                         | Exact schema and import path                             | Core difference                               |
+| ----------------------------- | -------------------------------------------------------- | --------------------------------------------- |
+| `point` → `scatter`           | `ScatterChartSchema`<br />`@retikz/chart/point`          | Required x/y; visual, aggregate, scale, facet |
+| `point` → `bubble`            | `BubbleChartSchema`<br />`@retikz/chart/point`           | Required x/y/size; size stays field-bound     |
+| `point` → `regression`        | `RegressionChartSchema`<br />`@retikz/chart/point`       | Required x/y; series, fit, Point + trend      |
+| `point` → `connected-scatter` | `ConnectedScatterChartSchema`<br />`@retikz/chart/point` | Required x/y/order; series, Path → Point      |
+| `point` → `ranged-dot`        | `RangedDotChartSchema`<br />`@retikz/chart/point`        | category/start/end; connector + endpoints     |
+| `point` → `strip`             | `StripChartSchema`<br />`@retikz/chart/point`            | Direct x/y; one discrete, one continuous      |
 
-Import each exact schema from the corresponding concrete chartType subpath in the table. Use the aggregate `@retikz/chart/point` entry only when the application intentionally needs the whole Point family.
+Import each exact schema by name from `@retikz/chart/point`; imports do not need a concrete chartType subpath.
 
 Every chartType owns a strict `XxxChartSchema`, `XxxChartEncodingsSchema`, `XxxChartPropertiesSchema`, and exact recipe Theme schema. Shared atoms are extracted only when the semantic invariant is genuinely shared; there is no wide union containing every family. Unknown chartTypes, family mismatches, unknown keys, and incompatible marks fail at the Source or provider boundary.
 
@@ -123,6 +123,8 @@ plotExtension: {
 ```
 
 ## presentation and Theme owners
+
+`layout.height` is the height of the entire chart. The title, subtitle, note, and source occupy their text space; the plot fills the remaining height after accounting for these regions, padding, and gaps. The plot has no minimum height constraint and is laid out again when the container shrinks.
 
 `presentation` contains four optional slots. Resolution always creates the fixed `title → subtitle → plot → note → source` content order; JSON property order, Vanilla object construction order, and React marker order have no semantic meaning. Free composition requires a later explicit capability and is not inferred from Source ordering.
 

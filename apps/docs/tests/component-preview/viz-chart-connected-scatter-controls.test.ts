@@ -4,10 +4,10 @@ import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { previewControlContract as connectedZh } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.controls';
-import { previewControlContract as connectedEn } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.en.controls';
-import { previewSource as connectedEnSource } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.en.demo';
-import { previewSource as connectedZhSource } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.zh.demo';
+import {
+  createPreviewControlContract,
+  previewSource,
+} from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-encodings';
 import type { PreviewSourceConfig } from '../../src/modules/docs/preview';
 
 const canonicalDeclarationProps = (source: PreviewSourceConfig): Record<string, unknown> => {
@@ -25,18 +25,14 @@ const canonicalDeclarationProps = (source: PreviewSourceConfig): Record<string, 
 };
 
 describe('Viz Chart Connected Scatter controls', () => {
-  it('将可用的 country 字段作为可开关的 series encoding 暴露出来', () => {
-    for (const contract of [connectedZh, connectedEn]) {
-      expect(contract.canonicalValues).toMatchObject({
-        'connected-scatter-series-by-country': true,
-      });
-      expect(getPreviewControlFields(contract.controls).map(control => control.id)).toContain(
-        'connected-scatter-series-by-country',
-      );
+  it('固定按 country 分组，不暴露无意义的分组开关', () => {
+    for (const contract of [createPreviewControlContract('zh'), createPreviewControlContract('en')]) {
+      expect(contract.canonicalValues).not.toHaveProperty('group');
+      expect(getPreviewControlFields(contract.controls).map(control => control.id)).not.toContain('group');
       expect(contract.relatedApis).toContain('ConnectedScatterEncodings.series');
     }
 
-    for (const source of [connectedZhSource, connectedEnSource]) {
+    for (const source of [previewSource]) {
       expect(canonicalDeclarationProps(source)).toMatchObject({
         x: 'urbanization',
         y: 'lifeExpectancy',

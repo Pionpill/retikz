@@ -51,7 +51,7 @@ Definition 的 plotDefaults 原样交给 Plot 的默认片段消费能力；其�
 
 ### Recipe 部件存在性
 
-当前 Point family 各 recipe 的 `recipe.guides` 是可省略的严格对象，只含 axis、grid、legend 三个可选 boolean。axis/legend 决定 recipe 是否生成相应默认 guides；grid 控制 recipe 生成的 Axis 的 grid。省略时保留既有 recipe 默认行为，包括 Strip 只为连续角色默认绘制 grid；显式 false 必须保留。该配置不删除 `plotExtension.guides` 显式替换的 guides。
+当前 Point family 各 recipe 的 `recipe.guides` 是可省略的严格对象，只含 axis、grid、legend 三个可选 boolean。axis/legend 决定 recipe 是否生成相应默认 guides；grid 控制 recipe 生成的 Axis 的 grid。省略 grid 时不将启用网格物化为局部 Axis 配置，交由 Plot style 决定；Strip 的离散角色仍显式关闭网格，只有连续角色可显示主题默认网格。显式 grid false 关闭生成轴的网格，显式 true 对默认数值轴或 Strip 连续轴启用网格。该配置不删除 `plotExtension.guides` 显式替换的 guides。
 
 这些开关不属于 chartDefaults 或 Theme Definition。当前 recipe Theme 只有这些开关，迁出后删除无消费者的 recipe Theme slice、默认映射和校验契约，不预建新的 recipe 默认层。recipe 的 encodings、properties、semantic mark 继承与 override 顺序保持既有契约；Theme 不增删 Axis、Legend、Mark 或 presentation 区域。
 

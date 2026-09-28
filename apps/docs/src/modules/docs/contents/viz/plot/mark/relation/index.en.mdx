@@ -27,7 +27,7 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 `RelationMark` is usually paired with positional marks that define `anchorId`. The positional mark projects rows into core `Node` / `Coordinate` elements and gives them stable ids. The relation mark uses the same rule shape on its own rows to compute source / target ids, then lowers to a core `Path`. When the edge rows do not already exist, `transform` can derive relation rows locally for this mark.
 
-Under polar2D, RelationMark inherits coordinate interpolation only for a default path whose source, target, and every `path.via` use `{ project }`. `path.interpolation` may override that default locally. ID / anchor targets, explicit `route`, `routing`, and ribbon geometry remain owned by Relation routing. Setting interpolation explicitly on those excluded forms fails loudly; omitting it preserves their existing behavior.
+Under polar2D, RelationMark inherits coordinate interpolation only for a default path whose source, target, and every `path.via` use `{ project }`. With `polar` interpolation, it samples projected positions and connects them with a smooth curve that passes through those samples; authored `via` and target positions remain segment endpoints. `path.interpolation` may override that default locally. ID / anchor targets, explicit `route`, `routing`, and ribbon geometry remain owned by Relation routing. Setting interpolation explicitly on those excluded forms fails loudly; omitting it preserves their existing behavior.
 
 ### When to Use
 

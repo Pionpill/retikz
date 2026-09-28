@@ -97,3 +97,6 @@ export type IRPlotCustomScale = ZodInfer<typeof CustomScaleSchema>;
 
 /** scale operation（内置精确 13-union ∪ 自定义 type 开放配置） */
 export type IRPlotScaleOperation = ZodInfer<typeof ScaleOperationSchema>;
+
+/** 图元驱动的自动留白声明 */
+export type IRPlotMarkDomainPadding = Extract<IRPlotDomainPadding, { kind: 'mark' }>;

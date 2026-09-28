@@ -1,26 +1,32 @@
 import { ConnectedScatterChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
+import { usePreviewDimensions } from '@/modules/docs/preview';
+
 import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
 
-/** 只在根组件传入必要配置与图表说明的 Connected Scatter 基础用法 */
-const Demo: FC = () => (
+/** 只在根组件传入必要数据与字段映射的 Connected Scatter 基础用法 */
+const render = (dimensions?: { width: number; height: number }) => (
   <ConnectedScatterChart
+    layout={dimensions}
     rows={connectedScatterMinimalData}
-    presentation={{
-      title: { text: '建筑业失业率的月度轨迹' },
-      subtitle: { text: '连续 100 个月；横轴为月份序号，纵轴为失业率（%）' },
-      source: { text: 'Vega Datasets unemployment-across-industries.json；访问于 2026-09-01' },
-    }}
     recipe={{ encodings: { x: 'month', y: 'unemploymentRate', order: 'month' } }}
   />
 );
 
 /** IR 与 Vanilla 预览使用的数据导入 */
 export const previewSource = {
+  deriveIR: false,
+  canonicalRender: () => render(),
   datasetImports: {
     'chart.data': { name: 'connectedScatterMinimalData', from: './connected-scatter-minimal.data' },
   },
 };
 
+/** 预览尺寸改变时重新布局，源码使用无上下文的配置 */
+const Demo: FC = () => {
+  const dimensions = usePreviewDimensions();
+  const chart = render(dimensions);
+  return chart;
+};
 export default Demo;

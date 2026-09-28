@@ -1,11 +1,20 @@
+const extraText = extraControlI18n.zh;
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { createPointCoordinateControl } from '../point-coordinate-control';
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { rangedDotData } from './ranged-dot-basic.data';
+import { extraControlI18n } from './ranged-dot-basic.i18n';
 
 export const RANGED_DOT_CONTROL_IDS = {
   coordinateSystem: 'ranged-dot-coordinate-system',
+  customEndpoints: 'ranged-dot-custom-endpoints',
+  pointShape: 'ranged-dot-basic-pointShape',
+  pointOpacity: 'ranged-dot-basic-pointOpacity',
+  startSize: 'ranged-dot-basic-startSize',
+  endSize: 'ranged-dot-basic-endSize',
+  endShape: 'ranged-dot-basic-endShape',
+
   lineStyle: 'ranged-dot-line-style',
   lineColor: 'ranged-dot-line-color',
   strokeWidth: 'ranged-dot-stroke-width',
@@ -31,17 +40,8 @@ export const rangedDotBasicControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: '坐标',
-      controls: [
-        createPointCoordinateControl({
-          id: RANGED_DOT_CONTROL_IDS.coordinateSystem,
-          label: '坐标系',
-          cartesianLabel: '笛卡尔',
-          polarLabel: '极坐标',
-        }),
-      ],
-    },
+
+    createPointCoordinateSection(RANGED_DOT_CONTROL_IDS.coordinateSystem, 'zh'),
     {
       label: '连接范围',
       controls: [
@@ -73,6 +73,7 @@ export const rangedDotBasicControls = definePreviewControls({
         {
           kind: 'range',
           id: RANGED_DOT_CONTROL_IDS.pointSize,
+          visibleWhen: { controlId: RANGED_DOT_CONTROL_IDS.customEndpoints, oneOf: [false] },
           label: '半径',
           defaultValue: 5,
           min: 2,
@@ -83,6 +84,65 @@ export const rangedDotBasicControls = definePreviewControls({
         { kind: 'color', id: RANGED_DOT_CONTROL_IDS.endColor, label: '终点颜色', defaultValue: '#f97316' },
       ],
     },
+
+    {
+      label: extraText.appearance,
+      controls: [
+        { kind: 'switch', id: RANGED_DOT_CONTROL_IDS.customEndpoints, label: '单独设置端点', defaultValue: false },
+        {
+          kind: 'select',
+          id: RANGED_DOT_CONTROL_IDS.pointShape,
+          label: extraText.pointShape,
+          defaultValue: 'circle',
+          options: [
+            { value: 'circle', label: extraText.pointShape_circle },
+            { value: 'diamond', label: extraText.pointShape_diamond },
+            { value: 'rectangle', label: extraText.pointShape_rectangle },
+          ],
+        },
+        {
+          kind: 'range',
+          id: RANGED_DOT_CONTROL_IDS.pointOpacity,
+          label: extraText.pointOpacity,
+          defaultValue: 1,
+          min: 0,
+          max: 1,
+          step: 0.05,
+        },
+        {
+          kind: 'range',
+          id: RANGED_DOT_CONTROL_IDS.startSize,
+          visibleWhen: { controlId: RANGED_DOT_CONTROL_IDS.customEndpoints, oneOf: [true] },
+          label: extraText.startSize,
+          defaultValue: 5,
+          min: 1,
+          max: 12,
+          step: 1,
+        },
+        {
+          kind: 'range',
+          id: RANGED_DOT_CONTROL_IDS.endSize,
+          visibleWhen: { controlId: RANGED_DOT_CONTROL_IDS.customEndpoints, oneOf: [true] },
+          label: extraText.endSize,
+          defaultValue: 5,
+          min: 1,
+          max: 12,
+          step: 1,
+        },
+        {
+          kind: 'select',
+          id: RANGED_DOT_CONTROL_IDS.endShape,
+          visibleWhen: { controlId: RANGED_DOT_CONTROL_IDS.customEndpoints, oneOf: [true] },
+          label: extraText.endShape,
+          defaultValue: 'circle',
+          options: [
+            { value: 'circle', label: extraText.endShape_circle },
+            { value: 'diamond', label: extraText.endShape_diamond },
+            { value: 'rectangle', label: extraText.endShape_rectangle },
+          ],
+        },
+      ],
+    },
   ],
 });
 
@@ -90,6 +150,13 @@ export const previewControlContract = {
   controls: rangedDotBasicControls,
   canonicalValues: {
     [RANGED_DOT_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
+    [RANGED_DOT_CONTROL_IDS.customEndpoints]: false,
+    [RANGED_DOT_CONTROL_IDS.pointShape]: 'circle',
+    [RANGED_DOT_CONTROL_IDS.pointOpacity]: 1,
+    [RANGED_DOT_CONTROL_IDS.startSize]: 5,
+    [RANGED_DOT_CONTROL_IDS.endSize]: 5,
+    [RANGED_DOT_CONTROL_IDS.endShape]: 'circle',
+
     [RANGED_DOT_CONTROL_IDS.lineStyle]: 'solid',
     [RANGED_DOT_CONTROL_IDS.lineColor]: '#94a3b8',
     [RANGED_DOT_CONTROL_IDS.strokeWidth]: 2,

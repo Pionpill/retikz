@@ -15,7 +15,13 @@ const makers = new WeakMap<
   { root: CoreDependencyProvider['makeDefinition']; content: CoreDependencyProvider['makeDefinition'] }
 >();
 
-/** 创建代码实体及其完整下层依赖的 Core contribution */
+/**
+ * 创建代码实体及其完整下层依赖的 Core contribution
+ * @template TSource Definition 拥有的领域 Source
+ * @param definition 已定义的代码实体，重复使用同一个对象保持 provider identity
+ * @param options Graph 定义与主题选项
+ * @returns 包含实体根与 Block 下层依赖的贡献；宿主装配时检测冲突
+ */
 export const createCodeBlockContribution = <TSource extends IRCodeBlock>(
   definition: CodeBlockDefinition<TSource>,
   options: GraphDefinitionOptions = {},

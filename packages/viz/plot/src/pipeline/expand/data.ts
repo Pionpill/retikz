@@ -16,6 +16,7 @@ import {
   resolveFieldTypes,
   resolveFormatRegistry,
   resolveRowSelectorRegistry,
+  resolveRegressionRegistry,
   resolveStatisticsReducerRegistry,
 } from '@retikz/data';
 
@@ -98,6 +99,7 @@ export const prepareRows = (
   const transformRegistry = resolvePlotTransformRegistry(options.transformDefinitions);
   const transformContext: TransformContext = {
     ...DEFAULT_TRANSFORM_CONTEXT,
+    regressionRegistry: resolveRegressionRegistry(options.regressionDefinitions),
     statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.statisticsReducerDefinitions),
     rowSelectorRegistry: resolveRowSelectorRegistry(options.rowSelectorDefinitions),
   };

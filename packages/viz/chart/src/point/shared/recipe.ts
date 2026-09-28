@@ -42,17 +42,14 @@ export const resolvePointGuideDefaults = (context: ChartGuideDefaultsResolveCont
 
   const options = context.source.recipe.guides as IRPointRecipeGuides | undefined;
   const axisEnabled = options?.axis ?? true;
-  const gridEnabled = options?.grid ?? true;
+  const grid = options?.grid;
   const legendEnabled = options?.legend ?? true;
 
   return context.guides.flatMap(guide => {
     if (guide.type === PlotGuide.Axis) {
       if (!axisEnabled) return [];
-      if (!gridEnabled && Object.hasOwn(guide, 'grid')) {
-        const { grid: _grid, ...withoutGrid } = guide;
-        void _grid;
-        return [withoutGrid];
-      }
+      if (grid === false) return [{ ...guide, grid: false }];
+      if (grid === true && guide.dimension === 'y') return [{ ...guide, grid: true }];
     }
     if (guide.type === PlotGuide.Legend && !legendEnabled) return [];
     return [guide];

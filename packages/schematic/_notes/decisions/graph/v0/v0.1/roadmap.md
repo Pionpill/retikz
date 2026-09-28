@@ -10,7 +10,7 @@
 | -------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 关系语义       | 支持独立 Entity / Relation、Group 与可选 Graph 上下文                 | [006](./006-graph-entity-registry-theme.md)、[007](./007-entity-data-geometry.md)、[008](./008-relation-data-geometry.md)、[009](./009-composable-graph-context.md)、[010](./010-group-composition.md) |
 | 开放内容节点   | 以 Block、Header、Section、Row 表达有宽度约束的内容                   | [011](./011-block-composition.md)、[012](./012-block-sizing.md)、[013](./013-block-open-content.md)                                                                                                    |
-| 主题与关系外观 | 统一容器继承、UML 关系、status、Defaults / Rules 与颜色分组           | [014](./014-container-theme-inheritance.md)、[015](./015-uml-relation-kind-catalog.md)、[016](./016-graph-status.md)、[017](./017-theme-source-fragments.md)、[018](./018-relation-color-groups.md)    |
+| 主题与关系外观 | 统一容器继承、用户注册的关系分类、status、Defaults / Rules 与颜色分组 | [014](./014-container-theme-inheritance.md)、[015](./015-uml-relation-kind-catalog.md)、[016](./016-graph-status.md)、[017](./017-theme-source-fragments.md)、[018](./018-relation-color-groups.md)    |
 | 代码实体       | 建立共享内容、Interface / Function，并向 Object / Class / Module 扩展 | [019](./019-code-block-contract.md)、[020](./020-interface-block.md)、[021](./021-function-block.md)                                                                                                   |
 | 跨宿主入口     | 直接 IR、React 与 Vanilla 复用同一 Source 和扩展契约                  | [001](./001-graph-package-family.md)、[003](./003-semantic-ir-lightweight-lowering.md)                                                                                                                 |
 
@@ -53,11 +53,11 @@
 主要场景：
 
 - 同一组节点和关系需要一致的默认外观。
-- UML 关系或语义状态需要明确的可选呈现。
+- 用户注册的关系分类或语义状态需要明确的可选呈现。
 
 规划内容：
 
-- 统一容器主题继承、UML relation kinds、status 与颜色分组。
+- 统一容器主题继承、用户注册的 relation kinds、status 与颜色分组。
 - 通过 Defaults / Rules 表达默认和规则，不改变关系数据所有权。
 
 预期效果：

@@ -25,8 +25,8 @@ const relation = (input: Record<string, unknown> = {}) =>
     ...input,
   });
 
-const lower = (source: Graph.IRGraphRelation) => {
-  const options = Graph.resolveGraphDefinitionOptions();
+const lower = (source: Graph.IRGraphRelation, definitions?: Graph.GraphDefinitionOptions) => {
+  const options = Graph.resolveGraphDefinitionOptions(definitions);
   const canonical = Graph.resolveRelation(source, options);
   return Graph.lowerRelation(
     canonical,
@@ -174,57 +174,32 @@ describe('Relation lowering', () => {
   });
 
   it.each([
-    {
-      name: 'UML association',
-      source: { role: 'association', kind: 'uml.association' },
-      expected: {},
-    },
-    {
-      name: 'aggregation',
-      source: { role: 'association', kind: 'uml.aggregation' },
-      expected: { marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'openDiamond' } }] },
-    },
-    {
-      name: 'composition',
-      source: { role: 'association', kind: 'uml.composition' },
-      expected: { marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'diamond' } }] },
-    },
-    {
-      name: 'generalization',
-      source: { role: 'generalization' },
-      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'normal' } }] },
-    },
-    {
-      name: 'UML generalization',
-      source: { role: 'generalization', kind: 'uml.generalization' },
-      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }] },
-    },
-    {
-      name: 'dependency',
-      source: { role: 'dependency' },
-      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }] },
-    },
-    {
-      name: 'UML dependency',
-      source: { role: 'dependency', kind: 'uml.dependency' },
-      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'straightBarb' } }], style: { dashPattern: [6, 4] } },
-    },
-    {
-      name: 'realization',
-      source: { role: 'dependency', kind: 'uml.realization' },
-      expected: { marks: [{ pos: 1, mark: { kind: 'arrow', shape: 'open' } }], style: { dashPattern: [6, 4] } },
-    },
-  ])('lowers UML $name to its path and endpoint structure', ({ source, expected }) => {
-    const loweredRelation = lower(relation(source));
+    { role: 'association', shape: 'diamond' },
+    { role: 'generalization', shape: 'normal' },
+    { role: 'dependency', shape: 'straightBarb' },
+    { role: 'flow', shape: 'stealth' },
+    { role: 'influence', shape: 'circle' },
+  ])('lowers the $role default to a solid path and target marker', ({ role, shape }) => {
+    const lowered = lower(relation({ role }));
+    expect(lowered).toMatchObject({ marks: [{ pos: 1, mark: { kind: 'arrow', shape } }] });
+    expect(lowered).not.toHaveProperty('style.dashPattern');
+  });
 
-    expect(loweredRelation).toMatchObject(expected);
-    if (source.kind === undefined && source.role === 'dependency') {
-      expect(loweredRelation).not.toHaveProperty('style.dashPattern');
-    }
-    if (source.kind === 'uml.association') {
-      expect(loweredRelation).not.toHaveProperty('marks');
-      expect(loweredRelation).not.toHaveProperty('style.dashPattern');
-    }
+  it('lowers an explicitly registered kind with direction narrowing and sparse marker overrides', () => {
+    const kind = Graph.defineRelationKind({
+      kind: 'domain.shared',
+      role: 'association',
+      description: 'Shared ownership',
+      defaultDirection: 'none',
+      allowedDirections: ['none'],
+      directions: { none: { sourceMarker: { shape: 'openDiamond' }, dashPattern: [4, 2] } },
+    });
+    const lowered = lower(relation({ role: 'association', kind: kind.kind }), { relationKinds: [kind] });
+    expect(lowered).toMatchObject({
+      marks: [{ pos: 0, mark: { kind: 'arrow', shape: 'openDiamond' } }],
+      style: { dashPattern: [4, 2] },
+    });
+    expect(lowered.marks).toHaveLength(1);
   });
 
   it('compiles a direct Relation between a Core Node and Scope target', () => {

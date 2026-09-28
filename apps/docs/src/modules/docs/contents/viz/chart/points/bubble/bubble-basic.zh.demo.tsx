@@ -1,4 +1,4 @@
-import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData } from '@retikz/chart-react';
 import { BubbleChart, BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
@@ -7,37 +7,39 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 import { BUBBLE_BASIC_CONTROL_IDS, previewControlContract } from './bubble-basic.controls';
 import { gapminderBubbleData } from './bubble-basic.data';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <BubbleChart
-    coordinate={
-      values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
-    }
-  >
-    <ChartData data={gapminderBubbleData} />
-    <BubbleEncodings
-      x={
-        values[BUBBLE_BASIC_CONTROL_IDS.xScale] === 'log'
-          ? { field: 'gdpPerCapita', scale: { operation: { type: 'log', name: 'gdpPerCapitaScale' } } }
-          : 'gdpPerCapita'
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) => {
+  const chart = (
+    <BubbleChart
+      layout={dimensions ? { ...dimensions, padding: { top: 16, right: 48, bottom: 16, left: 16 } } : undefined}
+      coordinate={
+        values[BUBBLE_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }
       }
-      y="lifeExpectancy"
-      size="population"
-      {...(values[BUBBLE_BASIC_CONTROL_IDS.colorByContinent] ? { color: 'continent' } : {})}
-    />
-    <ChartTitle>收入、寿命与人口规模</ChartTitle>
-    <ChartSubtitle>142 个国家和地区，2007 年；气泡面积由人口字段驱动</ChartSubtitle>
-    <ChartSource>Gapminder 数据包 2007 年截面；人均 GDP 按购买力平价美元计</ChartSource>
-    <BubbleProperties
-      {...(values[BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]
-        ? { stroke: values[BUBBLE_BASIC_CONTROL_IDS.pointStroke] }
-        : {})}
-      {...(values[BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity] === 0.7
-        ? {}
-        : { fillOpacity: values[BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity] })}
-      shape={values[BUBBLE_BASIC_CONTROL_IDS.pointShape]}
-    />
-  </BubbleChart>
-));
+    >
+      <ChartData data={gapminderBubbleData} />
+      <BubbleEncodings
+        x={
+          values[BUBBLE_BASIC_CONTROL_IDS.xScale] === 'log'
+            ? { field: 'gdpPerCapita', scale: { operation: { type: 'log', name: 'gdpPerCapitaScale' } } }
+            : 'gdpPerCapita'
+        }
+        y="lifeExpectancy"
+        size="population"
+        {...(values[BUBBLE_BASIC_CONTROL_IDS.colorByContinent] ? { color: 'continent' } : {})}
+      />
+      <BubbleProperties
+        strokeWidth={values[BUBBLE_BASIC_CONTROL_IDS.pointStrokeWidth]}
+        {...(values[BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled]
+          ? { stroke: values[BUBBLE_BASIC_CONTROL_IDS.pointStroke] }
+          : {})}
+        {...(values[BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity] === 0.7
+          ? {}
+          : { fillOpacity: values[BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity] })}
+        shape={values[BUBBLE_BASIC_CONTROL_IDS.pointShape]}
+      />
+    </BubbleChart>
+  );
+  return chart;
+});
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = {

@@ -1,0 +1,93 @@
+---
+title: 设计理念
+description: 理解 Graph 如何复用绘图能力建立结构图语义，以及它与 Diagram 的职责边界。
+---
+
+结构图里的矩形可能表示活动、参与者或资源，连接线可能表示流程、依赖或继承。Graph 的作用，是让这些含义成为可声明、可复用的绘图约定：你描述对象与关系的语义，组件据此选择结构和默认外观。
+
+Graph 面向两类使用者：需要精确控制位置的绘图作者，以及 Diagram 等负责整图编排的上层包。它提供基础组件，不负责从关系数据中自动求出整张图的布局。
+
+## 复用绘图能力，增加语义表达
+
+Graph 的大部分绘图能力直接来自 Kernel，少量组合能力复用 Standard 与 Layout。它新增的是语义契约、默认结构和组件组合，而不是另一套几何计算、Scene 或渲染器。Scene 是底层编译得到的可绘制场景，SVG、Canvas 等后端据此输出图形。
+
+| Graph 中的表达  | 复用的能力                            | 增加的含义                     |
+| --------------- | ------------------------------------- | ------------------------------ |
+| Entity · 实体   | Core Node 的形状、文字与边界          | 对象的角色及其默认结构         |
+| Relation · 关系 | Core Path 的路径、端点与标记          | 关系的角色、方向和默认线型     |
+| Group · 分组    | Scope 与 Standard Surface             | 一组内容的可见边界和说明       |
+| Block · 结构块  | Standard Surface 与 Layout 的内容排布 | 一个对象内部的标题、分区与条目 |
+
+例如，`role="gateway"` 的 Entity 会采用网关的默认形状；`role="generalization"` 的 Relation 会采用泛化关系的端点约定。最终绘制的仍是节点与路径，渲染后端不需要认识“网关”或“泛化”。因此，Graph 可以沿用底层已有的文字、主题、边界和渲染能力。
+
+下图的虚线箭头表示**使用下层能力**，不是代码执行顺序。Diagram 使用 Graph 的语义组件；Graph 复用底层绘图与组合能力。
+
+<ComponentPreview files="graph-layers" type="illustration" hideCode size="lg" />
+
+## 语义决定结构，样式调整外观
+
+`role` 回答“它是什么”，`kind` 回答“它属于这个角色下的哪一种业务对象”。主题和实例样式再决定如何呈现它。
+
+| 声明               | 负责的事情             | 示例                                |
+| ------------------ | ---------------------- | ----------------------------------- |
+| role               | 通用语义与默认结构     | activity、gateway；flow、dependency |
+| kind               | 用户注册的领域分类     | 自定义的 `workflow.approval`        |
+| 主题、规则与 style | 颜色、描边、文字等外观 | 为审批活动加粗描边                  |
+
+Entity 与 Relation 都不提供内置 kind 目录。业务名称必须先定义并注册，再通过 Graph 上下文使用；仅写一个 kind 字符串不会自动创建能力。内置 role 与自定义 role 也共用定义与解析机制，无需为自定义对象另建渲染路径。
+
+下面保持两个对象的身份、文字和位置不变。改变 Entity 的 role，观察右侧形状；改变 Relation 的 role，观察线型和箭头；切换加粗描边时，语义与位置保持不变。
+
+<ComponentPreview files="semantic-roles" size="md" />
+
+这不是把语义简单换成颜色。Entity role 提供节点结构；Relation role 提供关系方向与端点约定，注册的 Relation kind 还可以细化方向样式。kind 本身不是任意形状名称，实例 style 也不会把活动变成网关。需要领域分类时扩展定义，需要统一外观时使用主题或规则。
+
+## 基础组件可以自由组合
+
+Graph 是可选的上下文，用来集中提供注册定义、默认值、规则和主题，而不是封闭的成员数据库。使用内置能力时，成员也可以放进已有的绘图宿主；需要自定义注册时，再提供相应 Graph 上下文。
+
+Relation 使用公共的节点目标引用，不要求端点一定是 Entity。下面的普通 Node 直接连接到 Entity；Group 为业务内容提供边界；Block 在自己的边界内组织订单详情。
+
+```text
+Graph
+├── Group
+│   ├── Node
+│   ├── Entity
+│   └── Relation
+├── Block
+│   ├── BlockHeader
+│   └── BlockRow
+└── Relation
+```
+
+<ComponentPreview files="open-composition" size="sm" />
+
+图中的节点坐标和 Block 的整体位移由示例明确给出。Group 包住已放置的内容，不替它们求位置；Block 自动排布自己的标题与条目，不替相邻节点做整图布局。Entity 的 `group` 分类字段也不等于 Group 容器：分类可用于统一外观，容器才建立可见边界。
+
+这种开放组合让上层可以逐步采用 Graph：普通绘图节点不必全部改成 Entity，已有布局也不必交给 Graph 接管。React、Vanilla 与直接编写 Source IR 共用语义契约；可保存的 Source 只包含数据，注册定义中的函数留在运行时上下文。
+
+## Graph 与 Diagram 的职责边界
+
+“节点在哪里”与“节点表示什么”是不同的问题。Graph 接受已经确定的位置和关系路径；Diagram 在这些组件之上处理整图编排，例如 Flow 的自动布局与路由，再将结果交给 Graph 表达和绘制。
+
+| 你的需求                                 | 应由谁负责                    |
+| ---------------------------------------- | ----------------------------- |
+| 给定位置，画出参与者、活动与依赖         | Graph                         |
+| 组织一个结构块内部的标题和内容           | Block，复用 Layout            |
+| 从关系数据计算整图节点位置、规划连线路径 | Diagram 的具体图类型，如 Flow |
+| 把已编译场景绘制为 SVG 或 Canvas         | 底层渲染后端                  |
+
+Graph 不提供整图自动布局或障碍避让路由。Relation 没有显式路径时可以连接端点，但这不意味着它会绕开沿途节点。需要固定构图时手动提供位置和路径；需要从数据生成完整布局时，从 Diagram 的相应图类型入手。
+
+这一边界让 Graph 保持为可组合的基础层：上层可以选择不同布局策略，也可以保留作者指定的位置，而无需改变对象和关系的语义。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '快速开始', description: '用给定位置绘制第一张结构图', url: '/schematic/graph/get-start' },
+    { title: 'Entity 自定义用法', description: '定义并注册业务角色与 kind', url: '/schematic/graph/entity/custom' },
+    { title: 'Relation 基础用法', description: '控制方向、端点与显式路径', url: '/schematic/graph/relation/usage' },
+    { title: 'Flow 基础用法', description: '由关系数据生成自动布局的流程图', url: '/schematic/diagram/flow/basic' },
+  ]}
+/>

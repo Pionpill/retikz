@@ -1,0 +1,92 @@
+---
+title: Schema 参考
+description: 查询关系记录、语义 key、方向与端点标记外观的持久化契约。
+---
+
+本页使用 `@retikz/graph` 公开 schema。Relation 引用的 Core NodeTarget、GeometryLabel、Step 和共享 Graph predicate / status 保留所属 schema 名称，不在此复制定义。Definition 中的函数和参数 schema 属于运行时装配，见[自定义用法](/schematic/graph/relation/custom)。
+
+可解析不等于可绘制：role / kind / predicate 的注册与归属、有效方向，以及端点是否存在仍需运行时验证。省略可选字段不会在 Source 中自动写入主题值。
+
+## RelationSchema
+
+<ZodSchema
+  name="RelationSchema"
+  description="连接语义端点并保留非冲突 Core Path 字段的 JSON 记录"
+  descriptions={{
+    namespace: '命名空间，固定为 graph',
+    type: '记录判别字段，固定为 relation',
+    id: '可选稳定引用 id；省略不自动生成',
+    meta: '透传到绘制产物的 JSON 元信息，编译器不解释',
+    animations: '原样传递的动画轨道，不参与布局和边界计算',
+    zIndex: '同级绘制顺序，越大越靠上；省略为 0，同值保留原顺序',
+    roundedCorners: '线段转角的几何圆角，区别于描边 lineJoin',
+    rotate: '路径绕边界中心旋转，端点先求值',
+    scale: '路径绕边界中心缩放',
+    style: '路径外观覆盖，不包含填充字段',
+    source: 'Core 起点目标引用',
+    target: 'Core 终点目标引用',
+    role: '开放关系角色 key，运行时须注册',
+    kind: '开放子类型 key，必须属于选定 role',
+    predicate: '已注册的精确语义名称及 JSON 参数',
+    status: '可选闭合状态：error、success、warning、disabled',
+    direction: '显式语义方向，覆盖 kind / role 默认且须在允许集合内',
+    group: 'Graph 根内的分类色分组 key，不创建 Group 容器',
+    labels: '附着到关系路径的完整 Core 几何标签数组',
+    route: '至少两个 Core Step 的完整路径序列，使用 Graph 根坐标空间且禁止 step.label',
+    sourceMarker: '起点 marker 的外观覆盖，不包含 shape',
+    targetMarker: '终点 marker 的外观覆盖，不包含 shape',
+    labelTextForeground: '关系标签的默认文字颜色',
+    labelFont: '关系标签的默认字体',
+    labelOpacity: '关系标签的默认不透明度',
+    'style.color': '字符串主色',
+    'style.stroke': '描边颜色、主色权重或画笔',
+    'style.strokeWidth': '描边宽度',
+    'style.strokeOpacity': '描边不透明度',
+    'style.opacity': '整体不透明度',
+    'style.shadow': '投影预设或配置',
+    'style.blendMode': '混合模式',
+    'style.dashPattern': '虚线段与间隔长度，优先于结构 recipe',
+    'style.dashOffset': '虚线起点偏移',
+    'style.lineCap': '线段端帽样式',
+    'style.lineJoin': '描边转角样式，不改变路径几何',
+  }}
+/>
+
+没有 route 时直接连接 source 与 target；有 route 时必须自行给出完整路径。IR 的端点使用对象，不支持 React / Vanilla 的字符串简写，也不保存 way 或 JSX children。
+
+## RelationRoleSchema
+
+<ZodSchema name="RelationRoleSchema" description="开放关系角色 key，内置值提供提示，自定义 key 必须注册" />
+
+内置角色为 association、dependency、generalization、flow、influence。role 不是自由的展示字符串。
+
+## RelationKindSchema
+
+<ZodSchema name="RelationKindSchema" description="开放关系子类型 key，使用时必须匹配所属 role" />
+
+kind 是非空字符串，在关系 registry 内全局唯一，并且必须属于选定 role。没有内置 kind，所有 key 都需要用户显式注册，见[自定义](/schematic/graph/relation/custom)。
+
+## RelationDirectionSchema
+
+<ZodSchema name="RelationDirectionSchema" description="none、forward、reverse、both 四种语义方向" />
+
+Schema 提供完整词汇，role 与 kind 可以收窄允许集合；none 不代表没有端点或没有路径。
+
+## GraphRelationMarkerAppearanceSchema
+
+<ZodSchema
+  name="GraphRelationMarkerAppearanceSchema"
+  description="端点 marker 的稀疏外观覆盖"
+  descriptions={{
+    color: 'marker 主色，缺省随关系主色',
+    fill: '填充颜色、主色权重或画笔，缺省跟随已解析的 marker color',
+    opacity: 'marker 不透明度',
+    lineWidth: 'marker 描边宽度',
+  }}
+/>
+
+这里只控制已有 marker 的外观，不能创建 marker、选择 shape 或改变长度与宽度。结构由 role / kind / predicate 决定。
+
+## GraphRelationRouteStepSchema
+
+复用 Core StepSchema 的位置与几何能力，但拒绝任何 step.label；关系标签统一放在 Relation.labels。RelationSchema 额外要求 route 至少包含两个 step。共享 Step 各变体见 [Path Schema 参考](/kernel/components/path/schema-reference)。

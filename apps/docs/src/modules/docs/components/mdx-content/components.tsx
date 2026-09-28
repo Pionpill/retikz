@@ -13,6 +13,7 @@ import { ApiTable } from './api-table';
 import { ApiValues } from './api-values';
 import { Comparison } from './comparison';
 import { ComponentAlert } from './component-alert';
+import { ComponentPreviews } from './component-previews';
 import { ComponentProps } from './component-props';
 import { DocStep, DocSteps } from './doc-steps';
 import { DocTab, DocTabs } from './doc-tabs';
@@ -163,6 +164,7 @@ export const mdxComponents: MDXComponents = {
   ComponentAlert,
   ComponentProps,
   ComponentPreview,
+  ComponentPreviews,
   ExamplePrompt,
   LinkedCard,
   Blocks,
