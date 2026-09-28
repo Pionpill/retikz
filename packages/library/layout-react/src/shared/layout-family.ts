@@ -7,8 +7,13 @@ import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-import type { LayoutItemProps } from '../layout-item';
-import { LayoutItem } from '../layout-item';
+import type { FlexLayoutItemProps, GridLayoutItemProps, OverlayLayoutItemProps } from '../layout-item';
+import { FlexLayoutItem, GridLayoutItem, OverlayLayoutItem } from '../layout-item';
+
+type LayoutItemAuthoringProps = FlexLayoutItemProps | GridLayoutItemProps | OverlayLayoutItemProps;
+
+/** 闭合布局种类对应的 React 子项身份 */
+const layoutItemComponents = { flex: FlexLayoutItem, grid: GridLayoutItem, overlay: OverlayLayoutItem };
 
 type LayoutItemInputByKind = Readonly<{
   flex: InputFlexLayoutItem;
@@ -32,9 +37,9 @@ const flattenLayoutChildren = (children: ReactNode): Array<ReactNode> => {
   return flattened;
 };
 
-/** 收集单个 LayoutItem 的 React child，不在 React 内归一化 */
+/** 收集单个布局子项的 React child，不在 React 内归一化 */
 const resolveLayoutItemChild = (
-  props: LayoutItemProps,
+  props: LayoutItemAuthoringProps,
   embedIdPrefix: string,
 ): Readonly<{
   /** 当前布局项目包含的作者侧子元素 */
@@ -49,14 +54,14 @@ const resolveLayoutItemChild = (
   if (children === undefined || children.length !== 1) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.AuthoringInvalid,
-      message: 'Layout LayoutItem React child must contain exactly one authoring child',
-      details: { component: 'LayoutItem', childCount: children?.length ?? 0 },
+      message: 'Layout item must contain exactly one authoring child',
+      details: { childCount: children?.length ?? 0 },
     });
   }
   return Object.freeze({ child: children[0], adapters: input.adapters });
 };
 
-/** 将 React 直属 LayoutItem 组装为匹配 Vanilla adapter 的 typed Input */
+/** 将 React 直属布局子项组装为匹配 Vanilla adapter 的 typed Input */
 export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
   children: ReactNode,
   expectedKind: TKind,
@@ -69,21 +74,15 @@ export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
 }> => {
   const adapters: Array<AnyInputEmbedAdapter> = [];
   const items = flattenLayoutChildren(children).map((child, index) => {
-    if (!isValidElement(child) || child.type !== LayoutItem) {
+    const expectedComponent = layoutItemComponents[expectedKind];
+    if (!isValidElement(child) || child.type !== expectedComponent) {
       throw new RetikzLayoutError({
         code: RetikzLayoutErrorCode.AuthoringInvalid,
-        message: 'Layout layout container direct children must be LayoutItem',
-        details: { expectedKind, index },
+        message: `Layout container expects ${expectedComponent.displayName} as a direct child`,
+        details: { expectedKind, expectedComponent: expectedComponent.displayName, index },
       });
     }
-    const props = (child as ReactElement<LayoutItemProps>).props;
-    if (props.kind !== expectedKind) {
-      throw new RetikzLayoutError({
-        code: RetikzLayoutErrorCode.AuthoringInvalid,
-        message: `Layout layout container expects LayoutItem kind "${expectedKind}"`,
-        details: { actualKind: props.kind, expectedKind, index },
-      });
-    }
+    const props = (child as ReactElement<LayoutItemAuthoringProps>).props;
     const { children: itemChildren, ir, itemKey, ...item } = props;
     void itemChildren;
     void ir;
@@ -91,6 +90,7 @@ export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
     adapters.push(...resolved.adapters);
     return {
       ...item,
+      kind: expectedKind,
       ...(itemKey === undefined ? {} : { key: itemKey }),
       child: resolved.child,
     } as LayoutItemInputByKind[TKind];
