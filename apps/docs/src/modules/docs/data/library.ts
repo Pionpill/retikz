@@ -250,6 +250,11 @@ export const librarySection: Array<Section> = [
           { id: 'extended', label: 'schematic.extensionUsage', difficulty: 'advanced' },
           { id: 'mechanism', label: 'schematic.mechanism', difficulty: 'internals' },
           {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
             id: 'schema-reference',
             label: 'schematic.schemaReference',
             meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },

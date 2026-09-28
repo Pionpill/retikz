@@ -14,7 +14,6 @@ const Demo: FC = () => (
         >
           <FlexLayoutItem itemKey="visible" basis={72} min={72} max={72}>
             <Node
-              position={[0, 0]}
               text="Visible: fixed geometry"
               style={{ fill: '#dbeafe', stroke: '#2563eb' }}
               layout={{ minimumSize: { width: 220, height: 32 } }}
@@ -30,7 +29,6 @@ const Demo: FC = () => (
         >
           <FlexLayoutItem itemKey="clip" basis={72} min={72} max={72}>
             <Node
-              position={[0, 0]}
               text="Clipped: fixed geometry"
               style={{ fill: '#fee2e2', stroke: '#dc2626' }}
               layout={{ minimumSize: { width: 220, height: 32 } }}

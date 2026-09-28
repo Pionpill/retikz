@@ -19,7 +19,7 @@ const preview = defineFlexPreview(
         alignItems={values.alignItems}
       >
         <FlexLayoutItem itemKey="a" basis={130} grow={0} shrink={0}>
-          <Node position={[0, 0]} text={'First\nNode'} style={{ font: { size: values.fontA }, stroke: 'dodgerblue' }} />
+          <Node text={'First\nNode'} style={{ font: { size: values.fontA }, stroke: 'dodgerblue' }} />
         </FlexLayoutItem>
         <FlexLayoutItem
           itemKey="b"
@@ -28,7 +28,7 @@ const preview = defineFlexPreview(
           shrink={0}
           {...(values.alignSelf === 'auto' ? {} : { alignSelf: values.alignSelf })}
         >
-          <Node position={[0, 0]} text="Secondary Node" style={{ font: { size: values.fontB }, stroke: 'gray' }} />
+          <Node text="Secondary Node" style={{ font: { size: values.fontB }, stroke: 'gray' }} />
         </FlexLayoutItem>
       </FlexLayout>
     </Layout>

@@ -23,7 +23,6 @@ export const createInspectionScene = (values: Readonly<PreviewControlValues>): I
         min: 32,
         child: {
           type: 'node',
-          position: [0, 0],
           text: ['First Node', 'Secondary Node', 'Third Node'][index],
           style: { stroke: index === 0 ? 'dodgerblue' : 'gray' },
           layout: { minimumSize: { width: 40, height: 36 } },

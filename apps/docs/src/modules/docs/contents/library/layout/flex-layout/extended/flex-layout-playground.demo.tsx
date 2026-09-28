@@ -20,7 +20,6 @@ const createPreview = (inspecting: boolean) =>
       <>
         <FlexLayoutItem itemKey="a" basis={values.basis} grow={values.grow} shrink={1}>
           <Node
-            position={[0, 0]}
             text="A"
             style={{ fill: '#dbeafe', stroke: '#2563eb' }}
             layout={{ minimumSize: { width: 48, height: 34 } }}
@@ -28,7 +27,6 @@ const createPreview = (inspecting: boolean) =>
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="b" basis={values.basis} grow={0} shrink={values.shrink}>
           <Node
-            position={[0, 0]}
             text="B"
             style={{ fill: '#dcfce7', stroke: '#16a34a' }}
             layout={{ minimumSize: { width: 48, height: 52 } }}
@@ -36,7 +34,6 @@ const createPreview = (inspecting: boolean) =>
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="c" basis={values.basis} grow={1} shrink={1}>
           <Node
-            position={[0, 0]}
             text="C"
             style={{ fill: '#fef3c7', stroke: '#d97706' }}
             layout={{ minimumSize: { width: 48, height: 42 } }}
@@ -44,7 +41,6 @@ const createPreview = (inspecting: boolean) =>
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="d" basis={values.basis} grow={0} shrink={1}>
           <Node
-            position={[0, 0]}
             text="D"
             style={{ fill: '#f3e8ff', stroke: '#9333ea' }}
             layout={{ minimumSize: { width: 48, height: 30 } }}

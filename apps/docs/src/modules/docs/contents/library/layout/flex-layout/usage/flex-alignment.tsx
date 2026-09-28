@@ -20,12 +20,7 @@ const preview = defineFlexPreview(
         alignItems={values.alignItems}
       >
         <FlexLayoutItem itemKey="a" basis={60} grow={0} shrink={0}>
-          <Node
-            position={[0, 0]}
-            text="A"
-            layout={{ minimumSize: { width: 36, height: 28 } }}
-            style={{ stroke: 'dodgerblue' }}
-          />
+          <Node text="A" layout={{ minimumSize: { width: 36, height: 28 } }} style={{ stroke: 'dodgerblue' }} />
         </FlexLayoutItem>
         <FlexLayoutItem
           itemKey="b"
@@ -34,20 +29,10 @@ const preview = defineFlexPreview(
           shrink={0}
           {...(values.alignSelf === 'auto' ? {} : { alignSelf: values.alignSelf })}
         >
-          <Node
-            position={[0, 0]}
-            text="B"
-            layout={{ minimumSize: { width: 36, height: 44 } }}
-            style={{ stroke: 'gray' }}
-          />
+          <Node text="B" layout={{ minimumSize: { width: 36, height: 44 } }} style={{ stroke: 'gray' }} />
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="c" basis={60} grow={0} shrink={0}>
-          <Node
-            position={[0, 0]}
-            text="C"
-            layout={{ minimumSize: { width: 36, height: 64 } }}
-            style={{ stroke: 'gray' }}
-          />
+          <Node text="C" layout={{ minimumSize: { width: 36, height: 64 } }} style={{ stroke: 'gray' }} />
         </FlexLayoutItem>
       </FlexLayout>
     </Layout>

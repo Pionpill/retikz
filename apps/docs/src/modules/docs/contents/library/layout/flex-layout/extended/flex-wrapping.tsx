@@ -23,35 +23,19 @@ const preview = defineFlexPreview(
       >
         <FlexLayoutItem itemKey="a" basis={values.basis} grow={0} shrink={1} min={32}>
           <Node
-            position={[0, 0]}
             text="First Node"
             layout={{ minimumSize: { width: 32, height: 32 } }}
             style={{ stroke: 'dodgerblue' }}
           />
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="b" basis={values.basis} grow={0} shrink={1} min={32}>
-          <Node
-            position={[0, 0]}
-            text="Secondary Node"
-            layout={{ minimumSize: { width: 32, height: 44 } }}
-            style={{ stroke: 'gray' }}
-          />
+          <Node text="Secondary Node" layout={{ minimumSize: { width: 32, height: 44 } }} style={{ stroke: 'gray' }} />
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="c" basis={values.basis} grow={0} shrink={1} min={32}>
-          <Node
-            position={[0, 0]}
-            text="Third Node"
-            layout={{ minimumSize: { width: 32, height: 36 } }}
-            style={{ stroke: 'gray' }}
-          />
+          <Node text="Third Node" layout={{ minimumSize: { width: 32, height: 36 } }} style={{ stroke: 'gray' }} />
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="d" basis={values.basis} grow={0} shrink={1} min={32}>
-          <Node
-            position={[0, 0]}
-            text="Fourth Node"
-            layout={{ minimumSize: { width: 32, height: 40 } }}
-            style={{ stroke: 'gray' }}
-          />
+          <Node text="Fourth Node" layout={{ minimumSize: { width: 32, height: 40 } }} style={{ stroke: 'gray' }} />
         </FlexLayoutItem>
       </FlexLayout>
     </Layout>

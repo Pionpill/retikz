@@ -20,27 +20,16 @@ const preview = defineFlexPreview(
       >
         <FlexLayoutItem itemKey="a" basis={values.basis} min={32} grow={values.grow} shrink={1}>
           <Node
-            position={[0, 0]}
             text="First Node"
             layout={{ minimumSize: { width: 32, height: 36 } }}
             style={{ stroke: 'dodgerblue' }}
           />
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="b" basis={values.basis} min={32} grow={0} shrink={values.shrink}>
-          <Node
-            position={[0, 0]}
-            text="Secondary Node"
-            layout={{ minimumSize: { width: 32, height: 36 } }}
-            style={{ stroke: 'gray' }}
-          />
+          <Node text="Secondary Node" layout={{ minimumSize: { width: 32, height: 36 } }} style={{ stroke: 'gray' }} />
         </FlexLayoutItem>
         <FlexLayoutItem itemKey="c" basis={values.basis} min={32} grow={1} shrink={1}>
-          <Node
-            position={[0, 0]}
-            text="Third Node"
-            layout={{ minimumSize: { width: 32, height: 36 } }}
-            style={{ stroke: 'gray' }}
-          />
+          <Node text="Third Node" layout={{ minimumSize: { width: 32, height: 36 } }} style={{ stroke: 'gray' }} />
         </FlexLayoutItem>
       </FlexLayout>
     </Layout>

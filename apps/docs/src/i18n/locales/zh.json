@@ -209,7 +209,7 @@
     "standardLegend": "Legend · 图例",
     "layout": "Layout · 布局包",
     "layoutNavigationDescription": "使用容器与约束组织图形布局",
-    "flexLayout": "FlexLayout · 弹性布局",
+    "flexLayout": "flex · 弹性布局",
     "gridLayout": "GridLayout · 网格布局",
     "overlayLayout": "OverlayLayout · 叠加布局",
     "changelog": "更新日志",

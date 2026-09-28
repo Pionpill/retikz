@@ -19,7 +19,6 @@ const preview = defineFlexPreview(
       >
         <FlexLayoutItem itemKey="a" basis={values.basis} min={values.basis} max={values.basis}>
           <Node
-            position={[0, 0]}
             text="First Node"
             layout={{ minimumSize: { width: values.childWidth, height: 44 } }}
             style={{ stroke: 'dodgerblue' }}

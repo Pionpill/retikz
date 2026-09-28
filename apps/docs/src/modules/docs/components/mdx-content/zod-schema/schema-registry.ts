@@ -659,22 +659,22 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LayoutInspectBoundsOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
     label: 'LayoutInspectBoundsOptions',
-    url: '/library/layout/flex-layout/extended#layoutinspectboundsoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   LayoutInspectSpacingOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
     label: 'LayoutInspectSpacingOptions',
-    url: '/library/layout/flex-layout/extended#layoutinspectspacingoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   BaseLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
     label: 'BaseLayoutInspectOptions',
-    url: '/library/layout/flex-layout/extended#baselayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   FlexLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
     label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/flex-layout/extended#flexlayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   GridLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
@@ -710,17 +710,17 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LayoutArtifactSchema: {
     schema: LayoutIR.LayoutArtifactSchema,
     label: 'LayoutArtifact',
-    url: '/library/layout/flex-layout/extended#layoutartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   LayoutSpacingArtifactSchema: {
     schema: LayoutIR.LayoutSpacingArtifactSchema,
     label: 'LayoutSpacingArtifact',
-    url: '/library/layout/flex-layout/extended#layoutspacingartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   FlexLayoutArtifactSchema: {
     schema: LayoutIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',
-    url: '/library/layout/flex-layout/extended#flexlayoutartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   GridLayoutArtifactSchema: {
     schema: LayoutIR.GridLayoutArtifactSchema,
