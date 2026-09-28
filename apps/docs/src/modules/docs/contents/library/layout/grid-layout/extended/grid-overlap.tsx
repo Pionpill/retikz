@@ -27,10 +27,10 @@ const preview = defineGridPreview(
         alignItems="center"
       >
         <GridLayoutItem column={{ start: 0 }} row={{ start: 0 }}>
-          <Node position={[0, 0]} text="First Node" style={{ stroke: 'dodgerblue' }} />
+          <Node text="First Node" style={{ stroke: 'dodgerblue' }} />
         </GridLayoutItem>
         <GridLayoutItem column={{ start: values.overlap ? 0 : 1 }} row={{ start: 0 }}>
-          <Node position={[0, 0]} text="Secondary Node" style={{ stroke: 'darkorange' }} />
+          <Node text="Secondary Node" style={{ stroke: 'darkorange' }} />
         </GridLayoutItem>
       </GridLayout>
     </Layout>

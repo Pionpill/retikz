@@ -34,16 +34,16 @@ const preview = defineGridPreview(
           justifySelf={values.justifySelf}
           alignSelf={values.alignSelf}
         >
-          <Node position={[0, 0]} text="First Node" style={{ stroke: 'dodgerblue' }} />
+          <Node text="First Node" style={{ stroke: 'dodgerblue' }} />
         </GridLayoutItem>
         <GridLayoutItem itemKey="1">
-          <Node position={[0, 0]} text="Secondary Node" style={{ stroke: 'darkorange' }} />
+          <Node text="Secondary Node" style={{ stroke: 'darkorange' }} />
         </GridLayoutItem>
         <GridLayoutItem itemKey="2">
-          <Node position={[0, 0]} text="Third Node" style={{ stroke: 'seagreen' }} />
+          <Node text="Third Node" style={{ stroke: 'seagreen' }} />
         </GridLayoutItem>
         <GridLayoutItem itemKey="3">
-          <Node position={[0, 0]} text="Fourth Node" style={{ stroke: 'gray' }} />
+          <Node text="Fourth Node" style={{ stroke: 'gray' }} />
         </GridLayoutItem>
       </GridLayout>
     </Layout>
