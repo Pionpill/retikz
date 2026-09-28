@@ -156,7 +156,7 @@ export const librarySection: Array<Section> = [
           capability: 'extension.shape',
           sourceOfTruth: 'runtime',
         },
-        sidebarGroup: 'library.extensionCapabilities',
+        sidebarGroup: 'library.components',
       },
       {
         id: 'arrow',
@@ -168,7 +168,7 @@ export const librarySection: Array<Section> = [
           capability: 'extension.arrow',
           sourceOfTruth: 'runtime',
         },
-        sidebarGroup: 'library.extensionCapabilities',
+        sidebarGroup: 'library.components',
       },
       {
         id: 'clip',
@@ -180,7 +180,7 @@ export const librarySection: Array<Section> = [
           capability: 'extension.clip',
           sourceOfTruth: 'runtime',
         },
-        sidebarGroup: 'library.extensionCapabilities',
+        sidebarGroup: 'library.components',
       },
       {
         id: 'ribbon',
@@ -192,32 +192,13 @@ export const librarySection: Array<Section> = [
           capability: 'extension.ribbon',
           sourceOfTruth: 'runtime',
         },
-        sidebarGroup: 'library.extensionCapabilities',
-      },
-      {
-        id: 'capability-loading',
-        label: 'library.extensionCapabilityLoading',
-        difficulty: 'internals',
-        meta: {
-          pageType: 'extension',
-          audience: 'extension-author',
-          capability: 'extension.capability-loading',
-          sourceOfTruth: 'runtime',
-        },
-        sidebarGroup: 'library.extensionCapabilities',
+        sidebarGroup: 'library.components',
       },
       {
         id: 'animation',
-        label: 'library.standardAnimation',
-        sidebarGroup: 'library.extensionCapabilities',
+        label: 'library.extensionAnimation',
+        sidebarGroup: 'library.components',
         meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
-        children: [
-          {
-            id: 'api-reference',
-            label: 'kernel.visualApiReference',
-            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
-          },
-        ],
       },
     ],
   },

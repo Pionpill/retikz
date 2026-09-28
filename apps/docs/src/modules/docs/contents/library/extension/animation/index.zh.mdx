@@ -1,5 +1,5 @@
 ---
-title: 动画预设
+title: animation · 动画预设
 description: 用生长、脉冲、旋转、闪烁和摆动预设生成 Core 动画轨道，直接交给已有组件播放。
 ---
 
@@ -38,7 +38,7 @@ grow 等价于 `scaleIn({ from: 0 })`。pulse、spin 的无限循环可用 Core 
 
 ## 参数与播放保持同一契约
 
-所有效果接受 duration、delay、easing、trigger；grow、growUp、pulse、spin、wiggle 还支持 origin。flash / blink 提供 dim 与 iterations，wiggle 提供 angle 与 iterations，pulse 提供 peak。专属参数详见 [API 参考](/library/extension/animation/api-reference)。
+所有效果接受 duration、delay、easing、trigger；grow、growUp、pulse、spin、wiggle 还支持 origin。flash / blink 提供 dim 与 iterations，wiggle 提供 angle 与 iterations，pulse 提供 peak。通用轨道与播放选项见 [Kernel 动画 API](/kernel/visual/animation/api-reference)。
 
 工厂不会读取目标的当前样式，也不会改变布局或连接关系。Node、Path 与 Scope 的动画目标范围见[组件对接](/kernel/visual/animation/integration)。触发、截帧与减少动态效果策略继续遵循[扩展用法](/kernel/visual/animation/extended-usage)。
 
@@ -59,9 +59,4 @@ grow 等价于 `scaleIn({ from: 0 })`。pulse、spin 的无限循环可用 Core 
 
 ## 延伸阅读
 
-<LinkedSections
-  items={[
-    { title: 'API 参考', url: '/library/extension/animation/api-reference' },
-    { title: 'Kernel 基础动画', url: '/kernel/visual/animation/usage' },
-  ]}
-/>
+<LinkedSections items={[{ title: 'Kernel 基础动画', url: '/kernel/visual/animation/usage' }]} />

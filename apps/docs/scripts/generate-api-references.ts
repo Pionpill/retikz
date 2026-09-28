@@ -3,7 +3,6 @@ import path from 'node:path';
 import { writeBlockApiReferenceMdx } from './api-reference/block';
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
-import { writeExtensionAnimationApiReference } from './api-reference/extension-animation';
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
 import { writeGroupApiReferenceMdx } from './api-reference/group';
 import { writeInspectApiReferenceMdx } from './api-reference/inspect';
@@ -32,9 +31,6 @@ await writeStandardContainerApiReferences(
 );
 await writeEntityApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/entity/api-reference/_includes'),
-);
-await writeExtensionAnimationApiReference(
-  path.resolve(docsRoot, 'src/modules/docs/contents/library/extension/animation/api-reference/_includes'),
 );
 await writeStyleApiReference(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/visual/style/api-reference/_includes'),

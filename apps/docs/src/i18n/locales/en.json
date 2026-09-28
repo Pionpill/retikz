@@ -225,8 +225,7 @@
     "extensionArrow": "Arrows",
     "extensionClip": "Clips",
     "extensionRibbon": "Ribbon",
-    "extensionCapabilityLoading": "Capability Loading",
-    "extensionCapabilities": "Extensions",
+    "extensionAnimation": "Animation presets",
     "extension": "Extension",
     "extensionNavigationDescription": "Add optional node shapes, arrows, clips and ribbons"
   },

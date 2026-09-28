@@ -38,7 +38,7 @@ grow is equivalent to `scaleIn({ from: 0 }).` Wrap pulse or spin with Core loop 
 
 ## Parameters share the existing playback contract
 
-Every factory accepts duration, delay, easing, and trigger. grow, growUp, pulse, spin, and wiggle also accept origin. flash / blink provide dim and iterations; wiggle provides angle and iterations; pulse provides peak. See the [API reference](/library/extension/animation/api-reference).
+Every factory accepts duration, delay, easing, and trigger. grow, growUp, pulse, spin, and wiggle also accept origin. flash / blink provide dim and iterations; wiggle provides angle and iterations; pulse provides peak. See the [Kernel animation APIs](/kernel/visual/animation/api-reference) for shared tracks and playback options.
 
 Factories do not read the target's current style or change layout and connections. See [component integration](/kernel/visual/animation/integration) for Node, Path, and Scope targets, and [extended usage](/kernel/visual/animation/extended-usage) for triggers, snapshots, and reduced-motion policy.
 
@@ -59,9 +59,4 @@ Generated tracks contain ordinary JSON rather than preset names. Saved IR can pl
 
 ## Further reading
 
-<LinkedSections
-  items={[
-    { title: 'API reference', url: '/library/extension/animation/api-reference' },
-    { title: 'Kernel basic animation', url: '/kernel/visual/animation/usage' },
-  ]}
-/>
+<LinkedSections items={[{ title: 'Kernel basic animation', url: '/kernel/visual/animation/usage' }]} />
