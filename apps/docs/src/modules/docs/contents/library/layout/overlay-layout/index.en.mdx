@@ -1,13 +1,69 @@
 ---
 title: OverlayLayout
-description: Usage, implementation, and input contracts for OverlayLayout
+description: Align or position graphics in a shared region while controlling size participation and paint order independently
 ---
 
-`OverlayLayout` lets several graphical children share one region. Aligned items follow container alignment, while positioned items use local `at` and `anchor` values for badges, callouts, and similar overlays. `sizeParticipation` controls container sizing, while `zIndex` controls only stable paint layers.
+`OverlayLayout` lets graphical children share one content region. It suits cards with badges and primary content with overlaid annotations. Items can follow container alignment or place their own anchor at a specified local point.
 
-Start with basic usage. Extended usage covers allocation and inspection; implementation explains why the behavior holds.
+You declare placement, size participation, and paint order separately. Overlays do not reserve exclusive rows or columns, and overlapping graphics are not automatically pushed apart.
+
+## Responsibilities at a glance
+
+Serializable IR describes the container, item rules, and graphical content. Each layer records a different set of facts:
+
+| IR layer                                    | Describes                                                              | Scope                                               |
+| ------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------- |
+| Layout container                            | Shared region, padding, and default alignment                          | Organizes space for the entire group                |
+| Item configuration (an entry in `children`) | Alignment or positioning, offsets, size participation, and paint order | Determines how one child participates in layout     |
+| Child graphic (the entry's `child`)         | Content and geometry declarations for a node, path, or nested graphic  | Defines what is drawn and the basis for measurement |
+
+The container's `children` hold item configurations, and each entry's `child` holds graphical IR. Layout rules and graphical content can therefore change independently: adjusting an item's allocation or placement does not require rewriting its graphic.
+
+React expresses these declarations through JSX composition; Vanilla uses functions and objects. IR can also be supplied directly. These entry points ultimately express the same layout contract. Basic usage compares their syntax, while this overview explains behavior through the shared contract.
+
+## Overlaying a badge on a content card
+
+The card below follows centered container alignment. The badge is positioned independently near its upper-right corner. Both share the same content region; the badge has a higher `zIndex`, so it is painted after the card.
 
 <ComponentPreview files="entry" hideCode size="sm" />
+
+The badge uses `at` for a position relative to the content-region start and `anchor` for the point on its own slot to place there. Here, `{ x: 0.5, y: 0.5 }` places the badge slot's center at the specified point.
+
+The badge uses explicit coordinates in this example; it is not automatically attached to a card corner. Changes to the card or container size require reconsidering the placement rule. Container alignment and local positioning serve different purposes.
+
+The badge sets `sizeParticipation="exclude"`, so it does not contribute to the container's intrinsic size calculation. It is still placed and painted. Because this example uses a fixed container size, the option does not change its current width or height. `zIndex` controls only paint order: it does not change placement or replace size participation rules.
+
+<Comparison target="css" title="Mapping to CSS positioning and stacking">
+
+CSS has no separate layout mode named Overlay. Understand OverlayLayout through three related ideas: alignment within a shared grid area, absolute positioning, and `z-index`. The entire layout is not equivalent to `position: absolute`.
+
+| CSS approach                                                           | OverlayLayout IR                                         | Corresponding meaning                                                                                        |
+| ---------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Align multiple Grid items in the same grid area                        | `placement: { kind: 'aligned' }` and container alignment | Items share the content region and default to centered alignment                                             |
+| `left` / `top` relative to a positioning reference                     | `placement: { kind: 'positioned', at, anchor }`          | Places a chosen slot anchor at a local point in the content region                                           |
+| Translation after positioning                                          | `offset`                                                 | Adds physical horizontal and vertical offsets after placement                                                |
+| `z-index`                                                              | `zIndex`                                                 | Controls sibling paint order                                                                                 |
+| Absolutely positioned elements do not contribute to normal-flow sizing | `sizeParticipation: 'exclude'`                           | Excludes intrinsic size contribution through an independent option, not automatically through placement mode |
+
+The card on this page uses default alignment, while the badge uses local positioning. Its center anchor resembles setting CSS `left` / `top` and applying `translate(-50%, -50%)`, but the reference regions differ: `at` is explicitly relative to the container's content-region start. The 0-to-1 `anchor` coordinates describe a point on the child slot, not percentages of the container.
+
+Positioned OverlayLayout items still participate in sizing by default. Only an explicit `sizeParticipation: 'exclude'` removes their contribution; CSS out-of-flow behavior is not reproduced automatically. Excluded items remain visible and are not clipped merely because they are excluded.
+
+Larger `zIndex` values paint later; ties preserve declaration order. This describes order within the current layout, not browser stacking contexts established by positioning, opacity, transforms, and other properties. Numbers use drawing coordinate units rather than CSS length strings, and the layout does not automatically prevent overlap.
+
+</Comparison>
+
+## Choosing a layout and understanding its limits
+
+| Arrangement goal                                         | Choice                                    |
+| -------------------------------------------------------- | ----------------------------------------- |
+| Shared regions for primary content, badges, and overlays | `OverlayLayout`                           |
+| Sequential items with growth, shrinkage, or wrapping     | [FlexLayout](/library/layout/flex-layout) |
+| Separate row and column regions, with spanning           | [GridLayout](/library/layout/grid-layout) |
+
+OverlayLayout permits overlap and does not provide automatic collision avoidance. It places graphics without generating a background or border for the main content. To add decoration based on content bounds, consider Standard's [Surface](/library/standard/presentation/surface).
+
+Start with basic usage for the shared content box, alignment, and offsets. Extended usage adds local anchors, size participation, paint order, and clipping. The API and Schema references provide field details; implementation explains how sizing, placement, and paint order relate.
 
 ## Contents
 
@@ -20,13 +76,18 @@ Start with basic usage. Extended usage covers allocation and inspection; impleme
     },
     {
       title: 'Extended usage',
-      description: 'Combine constraints and inspect results',
+      description: 'Combine constraints and clipping',
       url: '/library/layout/overlay-layout/extended',
     },
     {
       title: 'Implementation',
       description: 'Understand measurement and placement',
       url: '/library/layout/overlay-layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public functions, types, and props',
+      url: '/library/layout/overlay-layout/api-reference',
     },
     {
       title: 'Schema reference',

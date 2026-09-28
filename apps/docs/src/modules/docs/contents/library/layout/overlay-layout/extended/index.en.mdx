@@ -1,105 +1,98 @@
 ---
 title: Extended usage
-description: Combine constraints and inspect solved bounds and artifacts
+description: Combine size constraints, placement strategies, and clipping
 ---
 
-Build on [basic usage](/library/layout/overlay-layout/usage) to combine constraints and inspect results. Change one variable and compare allocated slots with actual geometry.
+After [basic usage](/library/layout/overlay-layout/usage), explore constraints and observable results. Each example isolates one API group.
 
-## Attaching a badge to a local point
+## Position with a local target and slot anchor
 
-For positioned placement, at is relative to the content-box origin and anchor is normalized within the item slot. For a 40×20 slot, at=(150,20) and anchor=(1,0) yield a top-left corner of (110,20). offset translates the result afterward without changing the origin of at.
+A target coordinate and an item anchor let you place a corner or the center of an item at a specific point in the content box.
 
-width and height can request exact allocated dimensions; fixed geometry may still exceed them. Use sizeParticipation="exclude" to prevent a badge from enlarging a content-sized container rather than hiding it or using negative sizes.
+| Property                             | Available values                        | Explanation                                                                            |
+| ------------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `placement.kind`                     | `positioned`                            | Enable placement at local coordinates                                                  |
+| `placement.at`                       | `{ x, y }`                              | Finite coordinates relative to the content-box origin                                  |
+| `placement.anchor`                   | `{ x, y }`, each coordinate from 0 to 1 | Normalized slot anchor: top-left `(0,0)`, center `(0.5,0.5)`, top-right `(1,0)`        |
+| `placement.width / placement.height` | Optional non-negative numbers           | Provide exact slot width and height; anchors refer to the slot, not strokes or shadows |
 
-## Size contribution is independent of stacking
+Keep the target point fixed and switch between the left, center, and right anchors in the demo. Change slot width to see its left boundary move, then adjust target x / y to move the whole slot. Positioned items cannot use baseline alignment; override a baseline container setting with edge alignment on the item.
 
-include and exclude control only minimum and natural contributions. Excluded items are still measured, placed, replayed, and recorded. zIndex controls paint order, with sourceIndex breaking ties stably. A stacking change cannot correct an inappropriate size contribution.
+<ComponentPreview files="overlay-position" size="md" />
 
-## Interactive comparison
+## Separate size contribution from paint order
 
-Switch shared alignment, then move the positioned badge's target, anchor, and `zIndex`. The three items overlap, making paint-layer changes directly visible.
+Whether an item contributes to container size and whether it paints on top are independent decisions. Excluding size contributions does not hide the item.
 
-<ComponentPreview
-  files="overlay-layout-playground"
-  size="lg"
-  caption="Recommended shows only the content outline; use Inspection overlay to reveal placement, anchors, padding, margin, and other details."
-/>
+| Property              | Available values          | Explanation                                                                                                                |
+| --------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `sizeParticipation`   | `include`, `exclude`      | Whether an item contributes to minimum and natural container sizes; excluded items are still measured, placed, and painted |
+| `zIndex`              | Integer, default 0        | Item paint level; higher values paint later, with ties preserving authored order                                           |
+| `offset.x / offset.y` | Finite numbers, default 0 | Move the item after alignment without contributing to container size                                                       |
 
-## Inspecting the layout
+The blue node stays at layer `0`; the larger orange node is the second item. Toggle its size participation and watch the dashed container boundary. Then change its layer: at `-1` blue paints on top, at `1` orange paints on top, and at `0` the later-declared orange node paints on top. The `z` value inside each node shows its layer. Orange starts with offset `(0, 0)`, aligned to the same starting point as blue. Adjust the horizontal and vertical offsets to change the overlap: positive values move right or down, and negative values move left or up. Offsets change position; layers change paint order. Neither changes the content-sized container dimensions.
+
+<ComponentPreview files="overlay-participation" size="md" />
+
+## Distinguish placement from clipping
+
+When an overlay moves outside the container, its external portion can remain visible or be clipped. Clipping neither removes the item nor changes its resolved placement.
+
+| Property            | Available values     | Explanation                                                                             |
+| ------------------- | -------------------- | --------------------------------------------------------------------------------------- |
+| `overflow`          | `visible`, `clip`    | Keep overflow visible or clip to the container allocation; neither option reruns layout |
+| `offset`            | `{ x?, y? }`         | Horizontal and vertical offsets after placement, each defaulting to 0                   |
+| `sizeParticipation` | `include`, `exclude` | Fixed to `exclude` in this demo, so moving the overlay does not enlarge the container   |
+
+Increase the overlay offset until it extends beyond the container, then switch between `visible` and `clip`. Compare the slot overlay with the visible border: the slot describes layout, clipping changes only what is seen, and the artifact still contains the item.
+
+<ComponentPreview files="overlay-clipping" size="sm" />
+
+## Related props
 
 <ComponentProps
   items={[
     {
-      name: 'inspect',
+      name: 'placement',
       kind: 'property',
-      type: 'false | true | OverlayLayoutInspectOptions',
-      description: '`InspectOverlayLayout` requests this occurrence; `false` only cancels the current instance',
-      defaultValue: 'true',
+      type: 'OverlayPlacementInput',
+      description:
+        'Local target, anchor, and exact slot `{ kind: "aligned" }` uses the content box; `{ kind: "positioned", at: { x, y }, anchor?: { x?, y? }, width?, height? }` pins a normalized slot anchor.',
+      defaultValue: '{ kind: "aligned" }',
+    },
+    {
+      name: 'sizeParticipation',
+      kind: 'property',
+      type: "'include' | 'exclude'",
+      description: '`include` contributes to intrinsic size; `exclude` still measures, places, and paints the item',
+      defaultValue: 'include',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      description: 'Integer layer; higher values paint later, with authored order for ties',
+      defaultValue: '0',
+    },
+    {
+      name: 'offset',
+      kind: 'property',
+      type: '{ x?: number; y?: number }',
+      description: 'Translation and visual clipping',
+      defaultValue: '{ x: 0, y: 0 }',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description:
+        '`visible` keeps outside drawing; `clip` clips at the container allocation without changing solved geometry',
+      defaultValue: 'visible',
     },
   ]}
 />
 
-Base `OverlayLayout` has no `inspect` prop. The optional `InspectOverlayLayout` object form controls `placements`, `anchors`, and `stacking` independently while reusing shared bounds and box-spacing switches. See [Inspector guide](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for every field and host or Scope rules.
-
-```tsx
-import { Layout, Node } from '@retikz/react';
-import { LayoutItem } from '@retikz/layout-react';
-import { LayoutInspectLayout, InspectOverlayLayout } from '@retikz/layout-react/inspect';
-export const Inspected = () => (
-  <Layout>
-    <LayoutInspectLayout>
-      <InspectOverlayLayout
-        size={{ x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } }}
-        inspect={{ bounds: { content: true, slot: true } }}
-      >
-        <LayoutItem kind="overlay">
-          <Node position={[0, 0]} text="A" />
-        </LayoutItem>
-      </InspectOverlayLayout>
-    </LayoutInspectLayout>
-  </Layout>
-);
-```
-
-### OverlayLayoutInspectOptionsSchema
-
-<ZodSchema
-  name="OverlayLayoutInspectOptionsSchema"
-  description="Shared and OverlayLayout-specific inspection options."
-/>
-
-## Reading layout results
-
-An occurrence identifies a concrete container instance; a public id alone cannot distinguish nested instances. Locate the artifact envelope and parse its value. Inspection reads that compilation result without solving again.
-
-```ts
-import { compileToScene } from '@retikz/core';
-import { OverlayLayoutDefinition, OverlayLayoutArtifactSchema, createOverlayLayout } from '@retikz/layout';
-const output = compileToScene(
-  { type: 'scene', version: 1, children: [createOverlayLayout({ children: [] })] },
-  { composites: [OverlayLayoutDefinition] },
-);
-const envelope = output.artifacts.find(
-  item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'overlayLayout',
-);
-if (envelope) {
-  const result = OverlayLayoutArtifactSchema.parse(envelope.value);
-  console.log(result.container, result.items);
-}
-```
-
-### OverlayLayoutArtifactSchema
-
-<ZodSchema
-  name="OverlayLayoutArtifactSchema"
-  description="OverlayLayout container, source-order items, and stable resolved paintOrder."
-/>
-
-Each item adds `placement`, `sizeParticipation`, `zIndex`, and optional `position`. A `positioned` item must expose `position.target` and `position.slotAnchor`; both use container-allocation coordinates and coincide within numeric tolerance. An `aligned` item must omit the field. `paintOrder` is a complete permutation of item keys, sorted by ascending `zIndex` and then stable `sourceIndex`.
-
-## Shared bounds and inspection rules
-
-All layouts distinguish slots, actual allocation, and visual bounds. See [artifact bounds](/library/layout/flex-layout/extended#understanding-artifact-bounds) before interpreting results, and [inspector hosts and scopes](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for subtree selection and barriers.
+Full signatures and constraints: [API reference](/library/layout/overlay-layout/api-reference) · [Schema reference](/library/layout/overlay-layout/schema-reference).
 
 ## Further reading
 
@@ -116,6 +109,7 @@ All layouts distinguish slots, actual allocation, and visual bounds. See [artifa
       description: 'Understand measurement and placement',
       url: '/library/layout/overlay-layout/mechanism',
     },
+    { title: 'API reference', description: 'Look up public functions, types, and props', url: '/library/layout/overlay-layout/api-reference' },
     {
       title: 'Schema reference',
       description: 'Look up persistent input constraints',
