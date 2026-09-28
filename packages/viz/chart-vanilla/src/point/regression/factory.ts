@@ -1,28 +1,43 @@
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import { createRegressionChartProviderContribution } from '@retikz/chart/point/regression';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import type { ChartAuthoringResult } from '../../shared';
-import { createPointChart, typedChartPartsOf } from '../shared';
+import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
+import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeRegressionChart } from './normalize';
-import type { CreateRegressionChartInput } from './types';
+import type { RegressionChartInputEmbedProps } from './types';
 
-/** 创建确定形态的 RegressionChart */
-export const createRegressionChart = (input: CreateRegressionChartInput): ChartAuthoringResult<IRRegressionChart> => {
-  const parts = typedChartPartsOf(input);
-  const source = normalizeRegressionChart({
-    ...parts.root,
-    ...(input.title === undefined ? {} : { title: input.title }),
-    ...(input.subtitle === undefined ? {} : { subtitle: input.subtitle }),
-    ...(input.note === undefined ? {} : { note: input.note }),
-    ...(input.source === undefined ? {} : { source: input.source }),
-    encodings: input.encodings,
-    ...(input.properties === undefined ? {} : { properties: input.properties }),
-    ...(input.guides === undefined ? {} : { guides: input.guides }),
-    ...(input.marks === undefined ? {} : { marks: input.marks }),
-  });
-  return createPointChart(
-    source,
-    parts,
-    createRegressionChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
-  );
+/** 在场景处理时规范化 Regression 输入并组装 provider 依赖 */
+export const RegressionChartInputEmbedAdapter: InputEmbedAdapter<RegressionChartInputEmbedProps> = {
+  kind: 'chart.regression',
+  lower: input => {
+    const parts = typedChartPartsOf(input);
+    const source = normalizeRegressionChart({
+      ...parts.root,
+      ...(input.title === undefined ? {} : { title: input.title }),
+      ...(input.subtitle === undefined ? {} : { subtitle: input.subtitle }),
+      ...(input.note === undefined ? {} : { note: input.note }),
+      ...(input.source === undefined ? {} : { source: input.source }),
+      encodings: input.encodings,
+      ...(input.properties === undefined ? {} : { properties: input.properties }),
+      ...(input.guides === undefined ? {} : { guides: input.guides }),
+      ...(input.marks === undefined ? {} : { marks: input.marks }),
+    });
+    const runtime = buildPointChartRuntime(
+      source,
+      parts,
+      createRegressionChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
+    );
+    return {
+      node: wrapChartPanel(runtime.source, runtime.panel),
+      providerDependencies: buildChartProviderContribution(runtime),
+    };
+  },
 };
+
+/** 创建可直接组合到 Vanilla Scene 的 Regression 节点 */
+export const regressionChart = (input: RegressionChartInputEmbedProps): InputEmbed<RegressionChartInputEmbedProps> => ({
+  type: 'embed',
+  kind: RegressionChartInputEmbedAdapter.kind,
+  ...(input.id === undefined ? {} : { id: input.id }),
+  props: input,
+});

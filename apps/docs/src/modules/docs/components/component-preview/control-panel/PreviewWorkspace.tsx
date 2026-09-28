@@ -29,6 +29,8 @@ import { PreviewResizeHandle } from './PreviewResizeHandle';
 
 /** 带可选属性面板的预览工作区属性 */
 export type PreviewWorkspaceProps = {
+  /** 向 demo 提供绘图区实际宽高，默认关闭 */
+  responsive?: boolean;
   /** 当前 demo 的声明式控件定义 */
   definition?: PreviewControlsDefinition;
   /** 当前 demo 的完整 controls contract */
@@ -119,6 +121,7 @@ const usePreviewWorkspaceDirection = (): {
 /** 用 shadcn Resizable 组合属性面板与预览面板 */
 export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
   const {
+    responsive = false,
     definition,
     controlContract,
     workspaceClassName,
@@ -183,11 +186,12 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
       <PreviewPanel
         state={previewState}
         Component={Component}
+        responsive={responsive}
         lang={lang}
         activeRender={activeRender}
         theme={previewTheme}
         controlSlots={resolvedControlSlots}
-        className={previewClassName}
+        className={cn(previewClassName, responsive && 'min-h-0 flex-1')}
         renderPaneClassName={previewRenderPaneClassName}
         style={previewStyle}
         pinControlsOnClick={pinControlsOnClick}

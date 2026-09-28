@@ -53,6 +53,9 @@ const finiteDomain = (domain: readonly [number, number], scaleName: string): [nu
 };
 
 const resolveDomainPadding = (padding: IRPlotDomainPadding | undefined): DomainPaddingResolution => {
+  if (typeof padding === 'object' && padding.kind === 'mark') {
+    throw new RetikzPlotError('mark domainPadding requires coordinate and mark context');
+  }
   if (padding === undefined) return { kind: PlotDomainPaddingKind.Range, lower: 0, upper: 0 };
   if (typeof padding === 'number') {
     return { kind: PlotDomainPaddingKind.Range, lower: padding, upper: padding };

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
 
 import {
@@ -248,15 +249,49 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
                               <PreviewTableControl field={field} values={controlState.values} density={density} />
                             ) : (
                               <>
-                                <Label
-                                  className={cn(
-                                    'min-w-0 truncate text-xs whitespace-nowrap',
-                                    field.kind === 'switch' ? 'flex-1' : 'shrink',
-                                  )}
-                                  title={field.label}
-                                >
-                                  {field.label}
-                                </Label>
+                                {field.kind === 'range' ? (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          aria-pressed={controlState.rangePlaybackId === field.id}
+                                          disabled={
+                                            controlState.startRangePlayback === undefined || field.min >= field.max
+                                          }
+                                          className={cn(
+                                            'min-w-0 shrink truncate text-xs cursor-pointer rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:opacity-50',
+                                            controlState.rangePlaybackId === field.id && 'text-primary',
+                                          )}
+                                          onClick={() => {
+                                            if (controlState.rangePlaybackId === field.id)
+                                              controlState.stopRangePlayback?.();
+                                            else controlState.startRangePlayback?.(field);
+                                          }}
+                                        >
+                                          {field.label}
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {t(
+                                          controlState.rangePlaybackId === field.id
+                                            ? 'preview.stopRangeHint'
+                                            : 'preview.playRangeHint',
+                                        )}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ) : (
+                                  <Label
+                                    className={cn(
+                                      'min-w-0 truncate text-xs whitespace-nowrap',
+                                      field.kind === 'switch' ? 'flex-1' : 'shrink',
+                                    )}
+                                    title={field.label}
+                                  >
+                                    {field.label}
+                                  </Label>
+                                )}
                                 <div
                                   className={cn(
                                     'flex min-w-0 justify-end',
@@ -271,6 +306,7 @@ const PreviewControlPanelComponent: FC<PreviewControlPanelProps> = props => {
                                     field={field}
                                     value={controlState.values[field.id] ?? field.defaultValue}
                                     compact={compact}
+                                    showRangePlaybackButton={false}
                                     onValueChange={value => controlState.setValue(field.id, value)}
                                     playingRangeId={controlState.rangePlaybackId}
                                     onRangePlaybackStart={controlState.startRangePlayback}

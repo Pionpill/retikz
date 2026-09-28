@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from 'react';
 
-import { usePreviewControls } from '../context';
+import { usePreviewControls, usePreviewDimensions } from '../context';
+import type { PreviewDimensions } from '../context';
 import { buildPreviewControlDefaults } from '../controls/define-preview-controls';
 import type {
   PreviewControlsDefinition,
@@ -15,7 +16,7 @@ export const defineControlledPreview = <const TDefinition extends PreviewControl
     controls: TDefinition;
     canonicalValues: Readonly<PreviewControlValues>;
   },
-  render: (values: PreviewControlValuesFor<TDefinition>) => ReactNode,
+  render: (values: PreviewControlValuesFor<TDefinition>, dimensions?: PreviewDimensions) => ReactNode,
 ): { Component: FC; source: PreviewSourceConfig } => {
   type ControlValues = PreviewControlValuesFor<TDefinition>;
 
@@ -24,7 +25,7 @@ export const defineControlledPreview = <const TDefinition extends PreviewControl
     ...contract.canonicalValues,
   } as ControlValues;
 
-  const Component: FC = () => render(usePreviewControls(contract.controls));
+  const Component: FC = () => render(usePreviewControls(contract.controls), usePreviewDimensions());
   const source: PreviewSourceConfig = {
     deriveIR: false,
     canonicalRender: () => render(canonicalValues),

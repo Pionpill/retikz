@@ -1,17 +1,15 @@
 import { StripChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
+import { usePreviewDimensions } from '@/modules/docs/preview';
+
 import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
 
 /** Strip Chart basic usage with one discrete and one continuous position scale */
-const Demo: FC = () => (
+const render = (dimensions?: { width: number; height: number }) => (
   <StripChart
+    layout={dimensions}
     rows={stripPalmerPenguinsData}
-    presentation={{
-      title: { text: 'Flipper lengths across three penguin species' },
-      subtitle: { text: '90 penguins from the Palmer Archipelago; 30 per species, flipper length in millimetres' },
-      source: { text: 'Palmer Penguins (CC0); after removing missing flipper lengths, first 30 rows per species' },
-    }}
     recipe={{
       encodings: {
         x: { field: 'species', scale: { operation: { type: 'point', name: 'species' } } },
@@ -26,9 +24,17 @@ const Demo: FC = () => (
 
 /** Data import used by the IR and Vanilla previews */
 export const previewSource = {
+  deriveIR: false,
+  canonicalRender: () => render(),
   datasetImports: {
     'chart.data': { name: 'stripPalmerPenguinsData', from: './strip-palmer-penguins.data' },
   },
 };
 
+/** 预览尺寸改变时重新布局，源码使用无上下文的配置 */
+const Demo: FC = () => {
+  const dimensions = usePreviewDimensions();
+  const chart = render(dimensions);
+  return chart;
+};
 export default Demo;

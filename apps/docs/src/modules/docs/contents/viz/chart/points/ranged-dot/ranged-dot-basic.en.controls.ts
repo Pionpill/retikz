@@ -1,9 +1,11 @@
+const extraText = extraControlI18n.en;
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { createPointCoordinateControl } from '../point-coordinate-control';
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { RANGED_DOT_CONTROL_IDS } from './ranged-dot-basic.controls';
 import { rangedDotData } from './ranged-dot-basic.data';
+import { extraControlI18n } from './ranged-dot-basic.i18n';
 
 export const rangedDotBasicControls = definePreviewControls({
   presentation: 'panel',
@@ -22,17 +24,8 @@ export const rangedDotBasicControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: 'Coordinate',
-      controls: [
-        createPointCoordinateControl({
-          id: RANGED_DOT_CONTROL_IDS.coordinateSystem,
-          label: 'Coordinate system',
-          cartesianLabel: 'Cartesian',
-          polarLabel: 'Polar',
-        }),
-      ],
-    },
+
+    createPointCoordinateSection(RANGED_DOT_CONTROL_IDS.coordinateSystem, 'en'),
     {
       label: 'Connector',
       controls: [
@@ -64,6 +57,7 @@ export const rangedDotBasicControls = definePreviewControls({
         {
           kind: 'range',
           id: RANGED_DOT_CONTROL_IDS.pointSize,
+          visibleWhen: { controlId: RANGED_DOT_CONTROL_IDS.customEndpoints, oneOf: [false] },
           label: 'Radius',
           defaultValue: 5,
           min: 2,
@@ -74,6 +68,70 @@ export const rangedDotBasicControls = definePreviewControls({
         { kind: 'color', id: RANGED_DOT_CONTROL_IDS.endColor, label: 'End color', defaultValue: '#f97316' },
       ],
     },
+
+    {
+      label: extraText.appearance,
+      controls: [
+        {
+          kind: 'switch',
+          id: RANGED_DOT_CONTROL_IDS.customEndpoints,
+          label: 'Customize endpoints',
+          defaultValue: false,
+        },
+        {
+          kind: 'select',
+          id: RANGED_DOT_CONTROL_IDS.pointShape,
+          label: extraText.pointShape,
+          defaultValue: 'circle',
+          options: [
+            { value: 'circle', label: extraText.pointShape_circle },
+            { value: 'diamond', label: extraText.pointShape_diamond },
+            { value: 'rectangle', label: extraText.pointShape_rectangle },
+          ],
+        },
+        {
+          kind: 'range',
+          id: RANGED_DOT_CONTROL_IDS.pointOpacity,
+          label: extraText.pointOpacity,
+          defaultValue: 1,
+          min: 0,
+          max: 1,
+          step: 0.05,
+        },
+        {
+          kind: 'range',
+          id: RANGED_DOT_CONTROL_IDS.startSize,
+          visibleWhen: { controlId: RANGED_DOT_CONTROL_IDS.customEndpoints, oneOf: [true] },
+          label: extraText.startSize,
+          defaultValue: 5,
+          min: 1,
+          max: 12,
+          step: 1,
+        },
+        {
+          kind: 'range',
+          id: RANGED_DOT_CONTROL_IDS.endSize,
+          visibleWhen: { controlId: RANGED_DOT_CONTROL_IDS.customEndpoints, oneOf: [true] },
+          label: extraText.endSize,
+          defaultValue: 5,
+          min: 1,
+          max: 12,
+          step: 1,
+        },
+        {
+          kind: 'select',
+          id: RANGED_DOT_CONTROL_IDS.endShape,
+          visibleWhen: { controlId: RANGED_DOT_CONTROL_IDS.customEndpoints, oneOf: [true] },
+          label: extraText.endShape,
+          defaultValue: 'circle',
+          options: [
+            { value: 'circle', label: extraText.endShape_circle },
+            { value: 'diamond', label: extraText.endShape_diamond },
+            { value: 'rectangle', label: extraText.endShape_rectangle },
+          ],
+        },
+      ],
+    },
   ],
 });
 
@@ -81,6 +139,13 @@ export const previewControlContract = {
   controls: rangedDotBasicControls,
   canonicalValues: {
     [RANGED_DOT_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
+    [RANGED_DOT_CONTROL_IDS.customEndpoints]: false,
+    [RANGED_DOT_CONTROL_IDS.pointShape]: 'circle',
+    [RANGED_DOT_CONTROL_IDS.pointOpacity]: 1,
+    [RANGED_DOT_CONTROL_IDS.startSize]: 5,
+    [RANGED_DOT_CONTROL_IDS.endSize]: 5,
+    [RANGED_DOT_CONTROL_IDS.endShape]: 'circle',
+
     [RANGED_DOT_CONTROL_IDS.lineStyle]: 'solid',
     [RANGED_DOT_CONTROL_IDS.lineColor]: '#94a3b8',
     [RANGED_DOT_CONTROL_IDS.strokeWidth]: 2,

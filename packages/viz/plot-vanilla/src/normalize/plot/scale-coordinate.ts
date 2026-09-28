@@ -53,16 +53,18 @@ const continuousPositionScaleOptions = (options: PositionScaleOptions | undefine
 
 const pointPositionScaleOptions = (
   options: PointScaleProps | undefined,
-): Pick<PointScaleProps, 'align' | 'domain' | 'padding'> => ({
+): Pick<PointScaleProps, 'align' | 'domain' | 'domainPadding' | 'padding'> => ({
   ...(options?.domain !== undefined ? { domain: options.domain } : {}),
+  ...(options?.domainPadding !== undefined ? { domainPadding: options.domainPadding } : {}),
   ...(options?.padding !== undefined ? { padding: options.padding } : {}),
   ...(options?.align !== undefined ? { align: options.align } : {}),
 });
 
 const bandPositionScaleOptions = (
   options: BandScaleProps | undefined,
-): Pick<BandScaleProps, 'align' | 'domain' | 'paddingInner' | 'paddingOuter'> => ({
+): Pick<BandScaleProps, 'align' | 'domain' | 'domainPadding' | 'paddingInner' | 'paddingOuter'> => ({
   ...(options?.domain !== undefined ? { domain: options.domain } : {}),
+  ...(options?.domainPadding !== undefined ? { domainPadding: options.domainPadding } : {}),
   ...(options?.paddingInner !== undefined ? { paddingInner: options.paddingInner } : {}),
   ...(options?.paddingOuter !== undefined ? { paddingOuter: options.paddingOuter } : {}),
   ...(options?.align !== undefined ? { align: options.align } : {}),

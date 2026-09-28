@@ -1,4 +1,4 @@
-import type { IRRegressionTrendProperties } from '@retikz/chart/point/regression';
+import type { IRRegressionTrendProperties } from '@retikz/chart/point';
 
 /** Regression Showcase 可选趋势线型 */
 export type RegressionTrendLineStyle = 'solid' | 'dashed';

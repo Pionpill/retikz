@@ -42,6 +42,8 @@ export type BuildPreviewSourceInput = {
   sourceContents: Readonly<Record<string, string | undefined>>;
   /** 是否完全隐藏源码区域。 */
   hideCode: boolean;
+  /** 是否生成 IR / Vanilla 源码与替代渲染；关闭时仅准备 React 源码和交互所需 IR */
+  includeGeneratedSources?: boolean;
   /** 同级 IR JSON 文件覆盖。 */
   irJsonOverride?: string;
   /** demo 模块显式导出的 IR。 */
@@ -80,6 +82,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     baselineRawSource,
     sourceContents,
     hideCode,
+    includeGeneratedSources = true,
     irJsonOverride,
     exportedPreviewIR,
     vanillaOverride,
@@ -103,7 +106,13 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   const extraSourceFiles = reactFiles.filter(file => !file.isMain);
 
   if (previewSource?.buildViews !== undefined) {
-    return { source: { react: { files: reactFiles }, ...previewSource.buildViews({ lang, theme }) }, previewIr: null };
+    return {
+      source: {
+        react: { files: reactFiles },
+        ...(includeGeneratedSources ? previewSource.buildViews({ lang, theme }) : {}),
+      },
+      previewIr: null,
+    };
   }
 
   let resolvedPreviewIr: UnvalidatedPreviewIR | null = null;
@@ -177,6 +186,8 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     }
   }
 
+  if (!includeGeneratedSources) return { source: { react: { files: reactFiles } }, previewIr };
+
   const automaticVanilla =
     previewIr !== null && structureError === undefined
       ? buildVanillaPreview(previewIr, {
@@ -205,7 +216,9 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
             files: [{ filename: `${name}.ir.json`, code: irJson, lang: 'json' as const }],
             render:
               previewIr !== null && !hasComposite
-                ? (mode: RendererMode) => <Layout ir={previewIr.ir} renderer={mode} extensions={{ pathKinds: previewIr.pathKinds }} />
+                ? (mode: RendererMode) => (
+                    <Layout ir={previewIr.ir} renderer={mode} extensions={{ pathKinds: previewIr.pathKinds }} />
+                  )
                 : undefined,
           },
         }

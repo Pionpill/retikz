@@ -6,6 +6,7 @@ import { RetikzDataError } from '../error';
 import type { DataFieldTypeValue, IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataLineageRecorder } from './lineage';
+import type { AnyRegressionDefinition } from './regression';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
 
 /** transform的闭合调度阶段 */
@@ -96,6 +97,8 @@ export type TransformContext = {
   /** 给一个改行数输出行打组级源序标记；成员行无标记时原样返回 */
   groupProvenance: (out: ExternalRow, members: Array<ExternalRow>) => ExternalRow;
   /** 统计 reducer registry；缺省时使用内置 reducer */
+  /** 当前运行的拟合方法 registry */
+  regressionRegistry?: ReadonlyMap<string, AnyRegressionDefinition>;
   statisticsReducerRegistry?: ReadonlyMap<string, AnyStatisticsReducerDefinition>;
   /** row selector registry；缺省时使用内置 selector */
   rowSelectorRegistry?: ReadonlyMap<string, AnyRowSelectorDefinition>;

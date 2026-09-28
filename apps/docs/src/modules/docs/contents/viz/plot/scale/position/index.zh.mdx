@@ -61,6 +61,18 @@ Plot 默认直接使用数据推断出的连续 domain，不额外增加边界�
   description="log 要求数据全为正，sqrt 要求非负；pow 使用非整数指数时也要求非负。显式 domain 含非法边界会在 lowering 时直接报错。"
 />
 
+### 按图元外缘留白
+
+`domainPadding: { kind: 'mark', marks: ['dots'] }` 引用当前位置尺度上的命名图元，根据实际位置与半径共同计算自动端。`marks` 必须非空、无重复且指向当前坐标中的图元；`lower` / `upper` 可固定一端的 range 留白，显式 `0` 关闭该端保护，两端都固定时使用 `range` 分支。
+
+mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使用非负屏幕绘图单位，默认 `0`。例如 `{ kind: 'mark', marks: ['dots'], clearance: 8 }`。固定端不叠加净空；空有效点集不扩域，净空过大导致无解时会报错。
+
+`clearance` 支持数值或 `{ lower?: number, upper?: number }`；数值同时用于两端，对象未指定端为 `0`。这里的 lower / upper 对应 domain 起止端，跟随 range 方向，不固定对应视觉左右；Chart 负责将四边净空转换为各轴的这两个端。
+
+内置支持 Cartesian2D 与 Polar2D 的全部连续位置尺度、band/point 分类尺度，以及 Point 和投影 Relation 端点。role-space placement 使用调整后的实际位置。分类域保持不变，通过压缩输出范围补齐留白；极坐标保护圆形、环形与扇形边界，整圆角轴不产生接缝。空数据不产生自动留白；基准 domain 外的点不参与约束，但绘制裁切语义不变。共享尺度使用同一最终 domain，无法满足的固定端或不支持的能力会报错。Chart 的 `point-aware` 策略自动生成这一配置。
+
+自定义 Mark、position Scale 和 Coordinate 可在各自 Definition 的 `domainPadding` capability 中提供 targets/extent、基准归一化与最终映射、坐标边界度量。它们使用既有 registry；尺寸求值不得依赖待求解的位置留白。参见 [点图留白策略对比](/viz/chart/points#自动补齐边缘留白)。
+
 ## 时间
 
 `temporal` 字段的位置通道默认使用 `time`。它仍是连续映射，但刻度会落在月初、季度、整点等时间边界，标签也按时间格式化；把字段在 model 中声明为 `temporal` 后无需手写 `<PlotScale>`。
@@ -135,19 +147,19 @@ Plot 默认直接使用数据推断出的连续 domain，不额外增加边界�
 
 React `<PlotScale>` 是常用位置类型的声明入口；`band` 可以由 interval 结构自动派生，也可以显式配置柱间距与外侧留白。`pow` 和完整 IR 字段写入 `IRPlot.scales`。`PlotAxis.scale` 是同维度常用类型的快捷入口。
 
-| 属性               | 类型                                                                        | 默认值            | 说明                                                                     |
-| ------------------ | --------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------ |
-| `dimension`        | `'x' \| 'y'`                                                                | —                 | 坐标维度；polar 中仍用 `x` / `y` 表示角向 / 径向                         |
-| `type`             | `PlotScaleProps['type']`                                                    | —                 | `linear`、`time`、`band`、`point`、`log`、`sqrt`、`symlog` 或 `radial`   |
-| `domain?`          | `PlotScaleProps['domain']`                                                  | 从数据推断        | 连续输入范围，或 `band` / `point` 的有序分类列表                         |
-| `domainPadding?`   | `number` \| `{ kind?: 'range' \| 'ratio'; lower?: number; upper?: number }` | `0`               | 连续 domain 留白；裸数字 / 省略 kind 使用 range 单位，ratio 必须显式声明 |
-| `singleValueSpan?` | `PlotScaleProps['singleValueSpan']`                                         | 按类型推断        | 单值 domain 展开时使用的最小跨度                                         |
-| `base?`            | `PlotScaleProps['base']`                                                    | `10`              | 仅用于 `log`，必须大于 `1`                                               |
-| `constant?`        | `PlotScaleProps['constant']`                                                | `1`               | 仅用于 `symlog`，控制零附近线性区宽度                                    |
-| `paddingInner?`    | `number`                                                                    | `0.1`             | 仅用于 `band`；相邻 band 间距占 step 的比例，范围 `0..1`                 |
-| `paddingOuter?`    | `number`                                                                    | 同 `paddingInner` | 仅用于 `band`；首尾外侧留白占 step 的比例，范围 `0..1`                   |
-| `padding?`         | `number`                                                                    | `0.5`             | 仅用于 `point`；首尾外侧留白占 step 的比例，范围 `0..1`                  |
-| `align?`           | `number`                                                                    | `0.5`             | 用于 `band` / `point`；控制首尾留白在范围两端的分配，范围 `0..1`         |
+| 属性               | 类型                                                                                                                                                                                                              | 默认值            | 说明                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------ |
+| `dimension`        | `'x' \| 'y'`                                                                                                                                                                                                      | —                 | 坐标维度；polar 中仍用 `x` / `y` 表示角向 / 径向                                     |
+| `type`             | `PlotScaleProps['type']`                                                                                                                                                                                          | —                 | `linear`、`time`、`band`、`point`、`log`、`sqrt`、`symlog` 或 `radial`               |
+| `domain?`          | `PlotScaleProps['domain']`                                                                                                                                                                                        | 从数据推断        | 连续输入范围，或 `band` / `point` 的有序分类列表                                     |
+| `domainPadding?`   | `number` \| `{ kind?: 'range' \| 'ratio'; lower?: number; upper?: number }` \| `{ kind: 'mark'; marks: Array<string>; clearance?: number \| { lower?: number; upper?: number }; lower?: number; upper?: number }` | `0`               | 位置留白；分类尺度压缩 range，裸数字 / 省略 kind 使用 range 单位，ratio 必须显式声明 |
+| `singleValueSpan?` | `PlotScaleProps['singleValueSpan']`                                                                                                                                                                               | 按类型推断        | 单值 domain 展开时使用的最小跨度                                                     |
+| `base?`            | `PlotScaleProps['base']`                                                                                                                                                                                          | `10`              | 仅用于 `log`，必须大于 `1`                                                           |
+| `constant?`        | `PlotScaleProps['constant']`                                                                                                                                                                                      | `1`               | 仅用于 `symlog`，控制零附近线性区宽度                                                |
+| `paddingInner?`    | `number`                                                                                                                                                                                                          | `0.1`             | 仅用于 `band`；相邻 band 间距占 step 的比例，范围 `0..1`                             |
+| `paddingOuter?`    | `number`                                                                                                                                                                                                          | 同 `paddingInner` | 仅用于 `band`；首尾外侧留白占 step 的比例，范围 `0..1`                               |
+| `padding?`         | `number`                                                                                                                                                                                                          | `0.5`             | 仅用于 `point`；首尾外侧留白占 step 的比例，范围 `0..1`                              |
+| `align?`           | `number`                                                                                                                                                                                                          | `0.5`             | 用于 `band` / `point`；控制首尾留白在范围两端的分配，范围 `0..1`                     |
 
 完整 `IRPlotScale` 还允许给 scale 命名、显式设置输出 `range`，并配置 React DSL 没有暴露的 `pow.exponent`、`nice` 与 `clamp`。各变体和自定义 scale operation 都遵循这一公开 IR 契约；这些 `IRPlot*` 类型与 schema 从 `@retikz/plot` 导入。
 

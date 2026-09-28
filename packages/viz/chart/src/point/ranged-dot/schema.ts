@@ -15,7 +15,7 @@ import { array, boolean, enum as zodEnum, literal, number, strictObject, union }
 
 import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import { PointPositionDomainPaddingSchema, PointRecipeGuidesSchema } from '../shared';
+import { PointAutoPaddingSchema, PointPositionDomainPaddingSchema, PointRecipeGuidesSchema } from '../shared';
 import { RangedDotChartEncodingsSchema } from './encoding-schema';
 
 /** Ranged Dot endpoint 允许的常量 Point 表现 */
@@ -56,6 +56,7 @@ const RangedDotMarkPropertiesSchema = strictObject({
 
 /** Ranged Dot recipe properties */
 export const RangedDotChartPropertiesSchema = RangedDotMarkPropertiesSchema.extend({
+  autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 }).describe('Ranged Dot recipe properties');
 

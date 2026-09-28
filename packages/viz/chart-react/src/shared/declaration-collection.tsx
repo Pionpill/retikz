@@ -1,3 +1,4 @@
+import type { LayoutProps } from '@retikz/react';
 import type { ReactElement, ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
@@ -113,7 +114,7 @@ const sourceLayoutOf = (props: ChartLayoutProps): ChartLayoutProps['layout'] => 
 /** standalone Chart 交给 Layout host 的尺寸与已移除 host dimensions 的 children */
 export type StandaloneChartDeclarations = Readonly<{
   children: ReactNode;
-  host: Pick<ChartLayoutProps, 'width' | 'height'>;
+  host: Pick<LayoutProps, 'width' | 'height' | 'viewBox'>;
 }>;
 
 /** 为 standalone Chart 提取 host 尺寸，并把镜像后的 Source layout 留给内部 InputEmbed */
@@ -139,6 +140,7 @@ export const prepareStandaloneChartDeclarations = (
   const preparedChildren = visit(children);
 
   let childHost: Pick<ChartLayoutProps, 'width' | 'height'> = {};
+  let childLayout: ChartLayoutProps['layout'];
   const readHost = (value: ReactNode): void => {
     if (Array.isArray(value)) {
       value.forEach(readHost);
@@ -151,6 +153,7 @@ export const prepareStandaloneChartDeclarations = (
     }
     if (value.type !== ChartLayout) return;
     const props = value.props as ChartLayoutProps;
+    childLayout = sourceLayoutOf(props);
     childHost = {
       ...(props.width === undefined ? {} : { width: props.width }),
       ...(props.height === undefined ? {} : { height: props.height }),
@@ -166,7 +169,16 @@ export const prepareStandaloneChartDeclarations = (
           ...(rootLayout.width === undefined ? {} : { width: rootLayout.width }),
           ...(rootLayout.height === undefined ? {} : { height: rootLayout.height }),
         };
-  return { children: preparedChildren, host };
+  const layout = rootLayout ?? childLayout;
+  return {
+    children: preparedChildren,
+    host: {
+      ...host,
+      ...(layout?.width !== undefined && layout.height !== undefined
+        ? { viewBox: { x: 0, y: 0, width: layout.width, height: layout.height } }
+        : {}),
+    },
+  };
 };
 
 const isOrdinaryIterable = (value: unknown): value is Iterable<unknown> =>

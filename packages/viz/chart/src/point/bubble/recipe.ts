@@ -29,7 +29,7 @@ export const BubbleChartEncodingSlots = [
   'facet',
 ] as const;
 
-const bubblePropertySlots = [...pointPropertySlotsWithoutSize, 'domainPadding'] as const;
+const bubblePropertySlots = [...pointPropertySlotsWithoutSize, 'domainPadding', 'autoPadding'] as const;
 
 /** Bubble Chart 的内建 semantic recipe Definition */
 export const BubbleChartDefinition: ChartRecipeDefinition<IRBubbleChart> = defineChartRecipe({

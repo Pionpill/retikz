@@ -1,102 +1,532 @@
 ---
 title: 连接散点图
-description: 用显式顺序把观测点连接成一条或多条开放轨迹，同时保留每个观测点的可读性。
-family: scatter-points
-usage: distribution
+description: 连接散点图用点表达观测，再按明确的顺序连接成轨迹。
 ---
 
-<ShowcaseGallery
-  examples={[
-    {
-      id: 'connected-scatter-minimal',
-      title: '基础用法',
-      description: '这是只传必要配置的最简用法；可切换到 IR 查看配置项，配置简单时只需在 `ConnectedScatterChart` 根组件传递。',
-      preview: {
-        files: ['connected-scatter-minimal', 'connected-scatter-minimal.data.ts'],
-        size: 'xxxl',
-        caption: '建筑业连续 100 个月的失业率静态快照，数据来自 Vega Datasets。',
-      },
-    },
-    {
-      id: 'connected-scatter-basic',
-      title: '进阶调试：有序轨迹与缺值策略',
-      description: '用必需的 `order` 连接每个 series 的观测点，并比较默认分段与跨缺值连接。',
-      preview: {
-        files: ['connected-scatter-basic', 'connected-scatter-basic.data.ts'],
-        controls: { name: 'connected-scatter-basic' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: '切换“按国家拆分轨迹”比较一条总轨迹与多条国家轨迹；再切换“跨过缺值连接”，观察 South Africa 在 2005 年缺值处是分段还是桥接。',
-      },
-    },
-  ]}
->
-Connected Scatter 同时表达离散观测与变化轨迹。若只需要点的分布，使用 [Scatter](/viz/chart/points/scatter)；若需要拟合趋势而不是逐观测连接，使用 [Regression](/viz/chart/points/regression)。
+连接散点图用点表达观测，再按明确的顺序连接成轨迹。横纵轴可以都是指标，时间只负责连接顺序；适合观察两个指标如何共同变化，以及不同对象的路径差异。连线连接实际观测，不是回归趋势。
 
-## `ConnectedScatterChart`
+## 接入方式
 
-根 `recipe` 使用 Connected Scatter 的 exact slots；组件身份自动补齐 Point family 与 `chartType: 'connected-scatter'`：
+完成 [安装与首次渲染](/viz/chart/get-start) 后，可用以下四种入口。示例共用同一数据与配置。
+
+100 个月的建筑业失业率，month 同时决定横坐标和连接顺序。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['connected-scatter-minimal', 'connected-scatter-minimal.data.ts']}
+  hideCode
+  size="xl"
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+`ConnectedScatterChart` 的专属子组件如下。映射是基础入口，属性和追加图元按需声明。
+
+```text
+ConnectedScatterChart
+├── ConnectedScatterEncodings
+├── ConnectedScatterProperties
+└── ConnectedScatterMark
+```
 
 ```tsx
-<ConnectedScatterChart
-  rows={rows}
-  recipe={{
-    encodings: { x: 'year', y: 'value', order: 'year', series: 'country' },
-    properties: { path: { connectNulls: true } },
+import { ConnectedScatterChart, ConnectedScatterEncodings } from '@retikz/chart-react/point';
+import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
+
+export const Example = () => (
+  <ConnectedScatterChart rows={connectedScatterMinimalData}>
+    <ConnectedScatterEncodings x="month" y="unemploymentRate" order="month" />
+  </ConnectedScatterChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { ConnectedScatterChartSchema, createConnectedScatterChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
+import { Layout } from '@retikz/react';
+
+const chart = ConnectedScatterChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: { chartType: 'connected-scatter', encodings: { x: 'month', y: 'unemploymentRate', order: 'month' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createConnectedScatterChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': connectedScatterMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { connectedScatterChart, ConnectedScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
+
+const chart = connectedScatterChart({
+  data: connectedScatterMinimalData,
+  encodings: { x: 'month', y: 'unemploymentRate', order: 'month' },
+});
+export const svg = renderChart(chart, { adapters: [ConnectedScatterChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { ConnectedScatterChartSchema, createConnectedScatterChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
+import { compileToScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = ConnectedScatterChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: { chartType: 'connected-scatter', encodings: { x: 'month', y: 'unemploymentRate', order: 'month' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createConnectedScatterChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': connectedScatterMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 连接散点映射
+
+映射同时确定观测位置、组内连接顺序和轨迹分组。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterEncodings x="urbanization" y="lifeExpectancy" order="year" series="country" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'urbanization',
+  y: 'lifeExpectancy',
+  order: 'year',
+  series: 'country',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'urbanization',
+    y: 'lifeExpectancy',
+    order: 'year',
+    series: 'country',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
+
+图中每个点是一个国家某年的城镇化率与预期寿命。六个国家在 1990–2020 年每五年取一条观测，横轴不是时间，因此需要另一个字段明确连接顺序。
+
+- `x / y`：分别绑定 urbanization 和 lifeExpectancy。
+- `order`：绑定 year，按年份连接同一国家的观测。
+- `series`：绑定 country，使国家之间不发生连线。
+
+沿各国轨迹观察指标如何共同变化；时间由连接顺序表达，不对应横轴。
+
+<ComponentPreview
+  hideCode
+  mode="showcase"
+  responsive
+  files={['connected-scatter-encodings', 'connected-scatter-basic.data.ts']}
+  controls={{ name: 'connected-scatter-encodings' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
+
+完整属性与约束见 [API 参考：ConnectedScatterEncodings](#connectedscatterencodings)。
+
+`order` 决定组内连线顺序，不要求输入行预先排好序。下图输入行为 3、1、2、4：开启“按顺序连接”时按 `step` 从 1 到 4 连接，关闭时按输入行顺序连接。点的位置始终由 `x`、`y` 决定。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['connected-scatter-order-figure', 'connected-scatter-order-figure.data.ts']}
+  hideCode
+  type="illustration"
+  size="lg"
+/>
+
+### 连接散点属性
+
+属性分别控制观测点与连接线，也决定如何显示数据缺口。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterProperties
+  colorMode="series"
+  point={{ size: 4, opacity: 1 }}
+  path={{ curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  colorMode: 'series',
+  point: { size: 4, opacity: 1 },
+  path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    colorMode: 'series',
+    point: { size: 4, opacity: 1 },
+    path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
+
+密集轨迹同时包含观测点和连接线。本例将两层外观分别配置，保留点的位置与连接顺序，便于突出离散观测或整体走向。
+
+- `point.size`：调整观测点半径。
+- `path.strokeWidth`：调整连接线宽度。
+- `path.connectNulls`：决定遇到缺失观测时分段还是桥接。
+- `path.curve`：选择直线、阶梯或平滑曲线，默认 `linear`。切换“连接方式”只改变连线，点的位置与连接顺序不变；`basis` 不保证经过所有中间观测点，X/Y 单调插值适用于对应方向单调的数据，在极坐标中沿用 Plot 的直线回退行为。
+
+南非 2005 年寿命值被人为置空用于演示。桥接只改变线，缺失观测不会变成一个有效点。
+
+`colorMode="mark"` 让同一序列的点和线使用相邻的两种色板颜色，图例同步显示这两种颜色；默认 `series` 保持点线同色。`muted` 同样按序列同色，将连线默认透明度设为 60%，点的外观不变；显式 `path.strokeOpacity` 优先。
+
+<ComponentPreview
+  hideCode
+  mode="showcase"
+  responsive
+  files={['connected-scatter-basic', 'connected-scatter-basic.data.ts']}
+  controls={{ name: 'connected-scatter-basic' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
+
+完整属性与约束见 [API 参考：ConnectedScatterProperties](#connectedscatterproperties)。
+
+### 连接散点图元
+
+每个图元同时包含连接线与观测点，追加和替换都作用于完整组合。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterMark
+  override
+  properties={{
+    point: { fillOpacity: 0.1, strokeWidth: 2 },
+    path: { dashPattern: [6, 4] },
   }}
 />
 ```
 
-`ConnectedScatterEncodings`、`ConnectedScatterProperties` 与 `ConnectedScatterMark` 是相同 recipe slots 的 headless JSX sugar。只用根配置时 `children` 可省略；不同 slots 可以混用，同一 slot 双来源会 fail-loud。
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-## 数据角色
+```ts
+marks: [
+  {
+    kind: 'connected-scatter',
+    override: true,
+    properties: {
+      point: { fillOpacity: 0.1, strokeWidth: 2 },
+      path: { dashPattern: [6, 4] },
+    },
+  },
+],
+```
 
-`x`、`y` 与 `order` 必填。Path 按 `order` 字段排序，不能依赖输入数组的偶然顺序；可选 `series` 会拆分独立轨迹，并让 Path、Point 与图例共用一个分类颜色尺度。
+</DocTab>
+<DocTab value="direct-ir" label="IR">
 
-省略 `series` 且未显式设置成员颜色时，Path 与 Point 共享 Plot `palette.series` 的同一个顺序槽位，不会回退为 CSS `currentColor`。显式的 `path.stroke` 或 Point 颜色属性仍分别优先。
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'connected-scatter',
+      override: true,
+      properties: {
+        point: { fillOpacity: 0.1, strokeWidth: 2 },
+        path: { dashPattern: [6, 4] },
+      },
+    },
+  ],
+},
+```
 
-每个 semantic group 固定输出 `[Path, Point]`，因此线先绘制、点后绘制。`ConnectedScatterMark` 无论追加还是 `override`，都处理完整组，不能只替换其中一层。
+</DocTab>
+</DocTabs>
 
-## 缺值行为
+下面用空心点和虚线替换默认轨迹样式。每个国家仍是一组完整的“路径＋观测点”，不会只替换线而遗留另一套点。
 
-Point 跳过无法投影的行。Path 默认在坏行处分段；`path.connectNulls: true` 会跳过该行并连接前后有效观测。Chart 不填补或清洗数据。
+- `override`：设为 true，替换完整组合。
+- `properties.point`：降低填充透明度并添加轮廓。
+- `properties.path`：使用 dashPattern 区分连接线样式。
+
+每组先绘制连接线，再绘制观测点，避免线盖住点。两层默认共用分类颜色或默认色，也可分别用 `point.color`、`point.fill` 与 `path.stroke` 覆盖。 图元中省略的成员属性继续继承 recipe。需要只操作独立 Path 时，应使用 Plot 的图元能力。
+
+<ComponentPreview
+  hideCode
+  mode="showcase"
+  responsive
+  files={['connected-scatter-marks', 'connected-scatter-basic.data.ts']}
+  size="xl"
+  controls={{ name: 'connected-scatter-marks' }}
+  caption="调整观测点与路径样式，观察国家轨迹的连续性。"
+/>
+
+完整属性与约束见 [API 参考：ConnectedScatterMark](#connectedscattermark)。
+
+## 扩展用法
+
+### 缺值连接
+
+多国时间轨迹经常包含缺失年份。保留国家分组和年份排序，再选择是否跨过缺值连接，可以避免把数据缺口误读成没有变化。
+
+下表分组均为 IR `recipe` 内的属性；React 与 Vanilla 使用上文对应入口。
+
+| 分组         | 属性名                          | 类型               | 说明                                                  |
+| ------------ | ------------------------------- | ------------------ | ----------------------------------------------------- |
+| `encodings`  | `x / y / order`                 | 字段映射           | 指标位置与 year 顺序                                  |
+|              | `series`                        | string             | country 使各国独立连接                                |
+| `properties` | `path.connectNulls`             | boolean 或描边对象 | `true` 或 `{}` 启用默认虚线桥接；对象只覆盖缺值连接段 |
+|              | `path.connectNulls.dashPattern` | `Array<number>`    | 缺值连接段的虚线节奏，默认 [6, 4]；正常段样式不变     |
+
+正常观测之间保持实线，仅缺值两侧用虚线连接。可在控件中单独调整缺值段的线宽、不透明度与虚线长度；关闭连接后保留缺口。连续缺值合并为一个缺口，首尾缺值不外推，桥接不会补出观测点。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['connected-scatter-gaps', 'connected-scatter-basic.data.ts']}
+  size="xxl"
+  controls={{ name: 'connected-scatter-gaps' }}
+/>
+
+## 错误与限制
+
+- order 必填，不能用输入行顺序代替。series 只能在 recipe 中指定。
+- 路径保持开放，图元替换针对完整点线组合，不提供单成员替换。
+- 无效观测不绘制 Point；connectNulls 不补值、不清洗数据。
+
+React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，否则报错。
+
+`point-aware` 支持内置连续与分类位置尺度，以及二维笛卡尔和极坐标。全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释此类图表的特殊行为；只需使用 API 时可以跳过。" />
+
+### 图形构建
+
+Chart 将一个连接散点图元解析为一条开放的 Plot Path 和一组 Plot Point。下表只列点线组合特有的转换。
+
+| 分组 | `@retikz/chart`          | `@retikz/plot`                      | 描述                                                     |
+| ---- | ------------------------ | ----------------------------------- | -------------------------------------------------------- |
+| 映射 | `order`、`series`        | `order`、`series`                   | 将排序字段与分组字段写入 Path，依次连接各序列的点        |
+| 属性 | `point`、`path`          | `Point` 外观、`Path` 外观           | 分别应用观测点与连接路径的外观；`connectNulls` 传给 Path |
+|      | `colorMode`              | `color`、`stroke`、`strokeOpacity`  | 决定点线共享序列色、分开取色或减弱路径透明度             |
+| 图元 | `IRConnectedScatterMark` | `IRPlotPathMark`、`IRPlotPointMark` | 一个 Chart 图元产生一组开放 Path 与 Point                |
+
+<SourceLinks
+  sources={[{ path: 'packages/viz/chart/src/point/connected-scatter/mark.ts', label: '点线组合与颜色转换' }]}
+/>
 
 ## API 参考
 
-### `ConnectedScatterEncodingsProps`
+React 使用 `ConnectedScatterChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `connectedScatterChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'connected-scatter'`。React 与 Vanilla API 会补齐图形类型。
 
-| 属性             | 类型                                                                      | 默认值 | 描述                             |
-| ---------------- | ------------------------------------------------------------------------- | ------ | -------------------------------- |
-| `x` / `y`        | Point position mapping                                                    | —      | 必需位置字段映射                 |
-| `order`          | direct field mapping                                                      | —      | 必需的组内连接顺序               |
-| `series?`        | direct field mapping with optional ordinal scale                          | —      | recipe-only 分组、颜色与图例角色 |
-| `row` / `column` | `string`、`IRPlotPartitionDimension` 或 `Array<IRPlotPartitionDimension>` | —      | 可选分面维度                     |
-| `facet?`         | `IRPlotFacetOptions`                                                      | —      | 分面选项；需要 row 或 column     |
+React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局、标题与指南配置见 [编写与解析](/viz/chart/model/authoring)。
 
-### `ConnectedScatterPropertiesProps`
+#### ConnectedScatterEncodings
 
-| 属性             | 类型                                                                    | 默认值              | 描述                                            |
-| ---------------- | ----------------------------------------------------------------------- | ------------------- | ----------------------------------------------- |
-| `point?`         | `IRConnectedScatterPointProperties`                                     | Point               | Point 常量外观；不开放 zIndex                   |
-| `path?`          | `IRConnectedScatterPathProperties`                                      | Path                | 开放轨迹的线条外观与 `connectNulls`；不开放闭合 |
-| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径 | 配置连续位置 scale 的 range 或显式 ratio 留白   |
+对应 `ConnectedScatterEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
 
-### `ConnectedScatterMarkProps`
+| 通道           | 输入形式             | 说明                                              |
+| -------------- | -------------------- | ------------------------------------------------- |
+| `x / y`        | 字段名、位置映射     | 必需；观测坐标，决定点的位置                      |
+| `order`        | 字段名、直接映射     | 必需；组内连接顺序，不依赖数组顺序                |
+| `series`       | 字段名、直接映射     | 拆分轨迹并生成分类颜色和图例，可绑定 ordinal 尺度 |
+| `row / column` | 字段名、分面维度     | 按行、列建立分面                                  |
+| `facet`        | `IRPlotFacetOptions` | 配置分面；须配合 `row`、`column` 中至少一项       |
 
-| 属性          | 类型                                         | 默认值  | 描述                                                       |
-| ------------- | -------------------------------------------- | ------- | ---------------------------------------------------------- |
-| `override?`   | `boolean`                                    | `false` | 原位替换完整 Path + Point 组                               |
-| `encodings?`  | `{ x?: string; y?: string; order?: string }` | 继承    | 覆盖 direct 字段；不能改series                             |
-| `properties?` | `ConnectedScatterMarkProps['properties']`    | 继承    | 按 member 合并常量外观；不接受 recipe-only `domainPadding` |
+公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#connectedscatterchartencodingsschema)。
 
-## 公开入口
+#### ConnectedScatterProperties
 
-- `@retikz/chart/point/connected-scatter`：exact schema、Source 类型、provider 与 locator
-- `@retikz/chart-react/point`：Chart、Encodings、Properties 与 Mark declarations
-- `@retikz/chart-vanilla/point/connected-scatter`：normalize、factory 与 typed Input
+对应 `ConnectedScatterProperties`、Vanilla `properties` 和 IR `recipe.properties`。
 
-## 相关
+| 分类 | 属性                | 类型                                                     | 说明                                                                                                                                       |
+| ---- | ------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 外观 | `point`             | `IRConnectedScatterPointProperties`                      | 设置观测点外观；不开放 `zIndex`                                                                                                            |
+|      | `path`              | `IRConnectedScatterPathProperties`                       | 设置开放路径外观                                                                                                                           |
+|      | `colorMode`         | `'series'`、`'mark'`、`'muted'`                          | 默认 `series`：同一序列的点线同色；`mark`：每个序列的点线依次使用色板中相邻的两色，`muted` 同色且连线默认透明度 60%；显式颜色与透明度优先  |
+| 连接 | `path.curve`        | `PathCurveValue`                                         | 默认 `linear`；支持 linear、step、stepBefore、stepAfter、basis、cardinal、catmullRom、monotoneX、monotoneY、natural                        |
+| 连接 | `path.connectNulls` | boolean 或描边对象                                       | 默认断开；`true` 或 `{}` 用虚线连接缺口两侧有效点。对象支持 stroke、strokeWidth、strokeOpacity、dashPattern、dashOffset、lineCap、lineJoin |
+| 留白 | `autoPadding`       | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空                                                                           |
+|      | `domainPadding`     | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                                                                             |
 
-[散点图](/viz/chart/points/scatter) · [回归图](/viz/chart/points/regression) · [与 Plot 协作](/viz/chart/model/plot)
+完整属性结构见 [属性 Schema](#connectedscatterchartpropertiesschema)；公共外观配置不在这里展开。
 
-</ShowcaseGallery>
+#### ConnectedScatterMark
+
+对应 `ConnectedScatterMark`、Vanilla `marks` 和 IR `recipe.marks`。
+
+| 属性         | 类型                                      | 说明                                       |
+| ------------ | ----------------------------------------- | ------------------------------------------ |
+| `override`   | `boolean`                                 | 替换完整路径与观测点组合，否则追加组合     |
+| `encodings`  | `ConnectedScatterChartMark['encodings']`  | 只覆盖已有直接字段；series 始终继承 recipe |
+| `properties` | `ConnectedScatterChartMark['properties']` | 按成员合并外观，不接受图表留白策略         |
+
+## Schema 参考
+
+以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
+
+#### ConnectedScatterChartSchema
+
+<ZodSchema
+  name="ConnectedScatterChartSchema"
+  shallow
+  description="连接散点图的 Source IR；嵌套结构在所属小节说明。"
+  descriptions={{
+    namespace: '固定为 chart',
+    type: '固定为 point，表示点图家族',
+    id: '图表标识',
+    background: '图表背景',
+    presentation: '标题、副标题、注释与来源',
+    chartDefaults: '图表内部默认配置',
+    data: '外部数据集引用，不内嵌运行时数据',
+    layout: '图表布局尺寸与间距',
+    coordinate: '坐标系操作；不能与 plotExtension.composition 同时提供',
+    recipe: '连接散点图配方',
+    plotExtension: '追加的 Plot 能力配置',
+  }}
+/>
+
+#### ConnectedScatterChartRecipeSchema
+
+<ZodSchema
+  name="ConnectedScatterChartRecipeSchema"
+  shallow
+  description="连接散点图配方。"
+  descriptions={{
+    chartType: '固定为 connected-scatter',
+    encodings: '字段映射，见下方映射 Schema',
+    properties: '常量属性，见下方属性 Schema',
+    guides: '默认坐标轴、网格与图例开关',
+    marks: '有序图元配置，见下方图元 Schema',
+  }}
+/>
+
+#### ConnectedScatterChartEncodingsSchema
+
+<ZodSchema
+  name="ConnectedScatterChartEncodingsSchema"
+  shallow
+  description="连接散点图的字段映射。"
+  descriptions={{
+    x: '横向位置映射',
+    y: '纵向位置映射',
+    order: '连接顺序字段',
+    series: '序列分组映射',
+    row: '行分面维度',
+    column: '列分面维度',
+    facet: '分面配置，须配合 row 或 column 使用',
+  }}
+/>
+
+#### ConnectedScatterChartPropertiesSchema
+
+<ZodSchema
+  name="ConnectedScatterChartPropertiesSchema"
+  shallow
+  description="连接散点图的常量属性。"
+  descriptions={{
+    point: '观测点外观',
+    path: '连接路径外观',
+    autoPadding: '自动留白策略；省略时使用 max-radius',
+    colorMode: 'series：同序列点线同色；mark：每个序列点线分色；muted：同色且连线默认透明度 60%，显式配置优先',
+    domainPadding: '显式位置域留白，优先于 autoPadding',
+  }}
+/>
+
+#### ConnectedScatterChartMarkSchema
+
+`encodings` 只允许 x、y、order，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `colorMode`、`autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
+
+<ZodSchema
+  name="ConnectedScatterChartMarkSchema"
+  shallow
+  description="连接散点图的单个图元配置。"
+  descriptions={{
+    kind: '固定为 connected-scatter',
+    override: '为 true 时替换内置同类图元；省略时追加',
+    encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
+    properties: '参照上方属性说明；不包含 colorMode、autoPadding 与 domainPadding',
+  }}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '散点图', description: '两个连续变量的分布与分类', url: '/viz/chart/points/scatter' },
+    { title: '编写与解析', description: '对照 React、Vanilla 与 Source IR', url: '/viz/chart/model/authoring' },
+    { title: '与 Plot 协作', description: '组合超出当前类型边界的能力', url: '/viz/chart/model/plot' },
+  ]}
+/>

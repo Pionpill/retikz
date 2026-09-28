@@ -92,6 +92,7 @@ const parseAggregateMapping = (
 const transformContextOf = (context: ChartEncodingResolveContext): TransformContext => ({
   ...DEFAULT_TRANSFORM_CONTEXT,
   statisticsReducerRegistry: context.runtime.reducers,
+  regressionRegistry: context.runtime.regressions,
   rowSelectorRegistry: context.runtime.selectors,
 });
 

@@ -6,6 +6,7 @@ import { ZodLiteral, ZodObject } from 'zod';
 import { RetikzPlotError } from '../error';
 import type { IRPlotScale, IRPlotScaleOperation } from '../schemas';
 import { BUILTIN_SCALE_TYPES } from '../schemas';
+import type { DomainPaddingScale } from './domain-padding';
 
 /** 刻度值 + 标签集（axis 与同维 grid 复用同一份） */
 export type TickSet = { values: Array<IRDataScalarValue>; labels: Array<string> };
@@ -94,6 +95,8 @@ export type ChannelScaleResolution = {
 export type PositionScaleDefinition<TScaleOperation extends IRPlotScaleOperation = IRPlotScaleOperation> = {
   /** 族判别：position scale 产坐标数值 */
   family: 'position';
+  /** 在基准域上提供不钳位归一化与留白后的最终映射 */
+  domainPadding?: (operation: TScaleOperation, values: Array<unknown>) => DomainPaddingScale;
   /** 位置域是否在相邻值之间连续，用于 coordinate 选择空间插值默认 */
   continuity: PositionScaleContinuityValue;
   /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
@@ -143,6 +146,8 @@ export const defineScale = <TScaleOperation extends IRPlotScaleOperation>(
 export type AnyScaleDefinition =
   | {
       family: 'position';
+      /** 注册定义提供的仿射域留白能力 */
+      domainPadding?: (operation: never, values: Array<unknown>) => DomainPaddingScale;
       continuity: PositionScaleContinuityValue;
       schema: ZodType;
       isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;

@@ -39,7 +39,7 @@ describe('Plot Source defaults and rules', () => {
   it('accepts Source-shaped plotDefaults and ordered plotRules with JSON-safe round-trip', () => {
     const source = basePlot({
       plotDefaults: {
-        plotArea: { fill: '#f8fafc' },
+        plotArea: { fill: '#f8fafc', border: { stroke: '#334155', strokeWidth: 1.5, drawOpacity: 0.8 } },
         typography: { font: { family: 'Source Serif 4', size: 14 }, textColor: '#334155' },
         axis: {
           line: { stroke: '#475569', strokeWidth: 0 },
@@ -67,6 +67,17 @@ describe('Plot Source defaults and rules', () => {
 
     expect(parsed).toEqual(source);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
+  });
+
+  it('rejects invalid plot area border fields', () => {
+    for (const border of [{ strokeWidth: -1 }, { drawOpacity: 2 }, { unknown: true }]) {
+      const result = PlotSchema.safeParse(basePlot({ plotDefaults: { plotArea: { border } } }));
+      expect(result.success).toBe(false);
+      if (!result.success)
+        expect(result.error.issues.some(issue => issue.path.join('.').startsWith('plotDefaults.plotArea.border'))).toBe(
+          true,
+        );
+    }
   });
 
   it('rejects the removed token and native theme roots', () => {

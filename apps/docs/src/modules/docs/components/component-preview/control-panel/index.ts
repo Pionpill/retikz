@@ -4,3 +4,5 @@ export * from './PreviewTableControl';
 export * from './PreviewWorkspace';
 export * from './table-utils';
 export * from './utils';
+
+export * from './PreviewControlBar';

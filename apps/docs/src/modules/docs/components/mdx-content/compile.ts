@@ -27,8 +27,28 @@ const createCompileOptions = async (source: string): Promise<CompileOptions> => 
   };
 };
 
-/** 编译页面 MDX，按需加载 MathJax 以转换正文公式 */
-export const compileMdx = async (source: string): Promise<string> => {
-  const compiled = await compile(source, await createCompileOptions(source));
-  return String(compiled);
+const compiledSources = new Map<string, Promise<string>>();
+const MAX_CACHED_SOURCES = 32;
+
+/** 按完整源码复用编译任务；限制缓存数量，源码更新自动使用新结果，失败允许重试 */
+export const compileMdx = (source: string): Promise<string> => {
+  const cached = compiledSources.get(source);
+  if (cached) {
+    compiledSources.delete(source);
+    compiledSources.set(source, cached);
+    return cached;
+  }
+  const pending = createCompileOptions(source)
+    .then(options => compile(source, options))
+    .then(String)
+    .catch(error => {
+      if (compiledSources.get(source) === pending) compiledSources.delete(source);
+      throw error;
+    });
+  compiledSources.set(source, pending);
+  if (compiledSources.size > MAX_CACHED_SOURCES) {
+    const oldest = compiledSources.keys().next().value;
+    if (oldest !== undefined) compiledSources.delete(oldest);
+  }
+  return pending;
 };

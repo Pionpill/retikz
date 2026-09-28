@@ -1,3 +1,3 @@
-export { createScatterChart } from './factory';
+export { scatterChart, ScatterChartInputEmbedAdapter } from './factory';
 export { normalizeScatterChart } from './normalize';
-export type { CreateScatterChartInput, InputScatterChart } from './types';
+export type { ScatterChartInputEmbedProps, InputScatterChart } from './types';

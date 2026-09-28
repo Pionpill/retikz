@@ -1,4 +1,4 @@
-import type { IRCoordinate, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
+import type { IRCoordinate, IRNode, IRPath, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { PositionScale } from '../../../src/contract';
@@ -109,13 +109,6 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   };
   walk(layer.children);
   return out;
-};
-
-const targetIdOf = (step: IRStep): string | undefined => {
-  if (!('to' in step)) return undefined;
-  const target = step.to;
-  if (target === undefined || Array.isArray(target) || !('id' in target)) return undefined;
-  return target.id;
 };
 
 const baseSpec = (marks: unknown): IRPlot =>
@@ -427,7 +420,8 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const [path] = collectPaths(markLayer(root, 0));
     expect(path.children[0]).toMatchObject({ kind: 'move' });
-    expect(path.children.filter(step => step.kind === 'line').length).toBeGreaterThan(1);
+    expect(path.children[1]).toMatchObject({ kind: 'smooth' });
+    expect(path.children[1].kind === 'smooth' && path.children[1].points.length).toBeGreaterThan(2);
   });
 
   it('lets a relation polar override take precedence over a chord coordinate', () => {
@@ -446,7 +440,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: [{ sourceAngle: 0, sourceRadius: 4, targetAngle: 10, targetRadius: 8 }] },
     );
     const [path] = collectPaths(markLayer(root, 0));
-    expect(path.children.filter(step => step.kind === 'line').length).toBeGreaterThan(1);
+    expect(path.children[1]).toMatchObject({ kind: 'smooth' });
   });
 
   it('samples projected via segments while preserving every authored target identity', () => {
@@ -490,11 +484,12 @@ describe('RelationMark and anchorId lowering', () => {
     );
     const [path] = collectPaths(markLayer(root, 0));
     expect(path.children[0]).toMatchObject({ kind: 'move', to: { id: 'source.A' } });
-    expect(path.children.some(step => step.kind === 'line' && Array.isArray(step.to))).toBe(true);
-    expect(path.children.some(step => step.kind === 'line' && targetIdOf(step) === 'via.A')).toBe(true);
+    expect(path.children.filter(step => step.kind === 'smooth')).toHaveLength(2);
+    expect(path.children.some(step => step.kind === 'smooth' && step.points.some(Array.isArray))).toBe(true);
+    expect(path.children[1]).toMatchObject({ kind: 'smooth', points: expect.arrayContaining([{ id: 'via.A' }]) });
     expect(path.children[path.children.length - 1]).toMatchObject({
-      kind: 'line',
-      to: { id: 'target.A' },
+      kind: 'smooth',
+      points: expect.arrayContaining([{ id: 'target.A' }]),
       label: { text: 'route' },
     });
   });
@@ -531,7 +526,7 @@ describe('RelationMark and anchorId lowering', () => {
     ) as IRScope;
     const [path] = collectPaths(layer);
 
-    expect(path.children.filter(step => step.kind === 'line').length).toBeGreaterThan(1);
+    expect(path.children[1]).toMatchObject({ kind: 'smooth' });
   });
 
   it('rejects explicit relation interpolation on unsupported coordinate and target forms', () => {

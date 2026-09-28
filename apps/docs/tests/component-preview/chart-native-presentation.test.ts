@@ -142,7 +142,7 @@ describe('Chart-native Scatter presentation', () => {
     expect(preview.ir.children[0]).not.toHaveProperty('presentation');
   });
 
-  it('uses the ScatterChart shorthand path for the World Bank example', () => {
+  it('uses the ScatterChart shorthand without presentation for the World Bank example', () => {
     for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
       const chart = canonicalScatterChartOf(source);
 
@@ -153,12 +153,8 @@ describe('Chart-native Scatter presentation', () => {
         type: 'point',
         data: { reference: 'chart.data' },
         recipe: { chartType: 'scatter' },
-        presentation: {
-          title: expect.anything(),
-          subtitle: expect.anything(),
-          source: expect.anything(),
-        },
       });
+      expect(contribution.node).not.toHaveProperty('presentation');
     }
   });
 
@@ -177,7 +173,9 @@ describe('Chart-native Scatter presentation', () => {
       expect(vanilla.code).toContain(`import { ${datasetExport} } from '${datasetModule}';`);
       expect(vanilla.code).not.toContain('const datasets =');
       expect(vanilla.code).toContain("import { renderChart } from '@retikz/chart-vanilla';");
-      expect(vanilla.code).toContain("import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';");
+      expect(vanilla.code).toContain(
+        "import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';",
+      );
       expect(vanilla.code).not.toContain('markDefinitions: [scatterMarkDefinition]');
       expect(vanilla.svg).toContain('<svg');
     }

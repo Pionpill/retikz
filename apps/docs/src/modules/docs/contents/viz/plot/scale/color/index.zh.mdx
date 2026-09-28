@@ -104,6 +104,8 @@ resolver 按 scale 类型解析 domain、分档边界与 scheme / range，得到
   ]}
 />
 
+`ordinal.rangeIndex` 控制色板索引：`{ step: 2, offset: 0 }` 使第 i 个分类取色板的 `(2i) % length` 色；offset 为 1 时取 `(2i + 1) % length` 色。step 默认为 1 且必须为正整数，offset 默认为 0 且必须为非负整数。索引作用于显式 range 或最终主题色板，奇数长度色板也按同一规则循环。
+
 ## API 参考
 
 颜色 scale 在 full spec 中都需要 `name`，mark 的 color field binding 再通过 `scale` 引用它。自动派生只覆盖 `ordinal` 与 `sequential`；其余类型和显式 domain / scheme / range 写入 `IRPlot.scales`。

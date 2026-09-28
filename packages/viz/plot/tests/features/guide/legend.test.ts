@@ -886,3 +886,64 @@ describe('lowerPlots legend — core schema 合法性回归（修 PathSchema.min
     assertLegendSchemaValid(expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS }));
   });
 });
+
+describe('composite categorical legend symbols', () => {
+  it('overlays line and point colors from a bound scale and explicit paint', () => {
+    const spec = ordinalColorLegendSpec({
+      symbols: [
+        { kind: 'line', paint: '#112233' },
+        { kind: 'point', scale: 'kindColor' },
+      ],
+    });
+    const layer = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
+    expect(layer).toBeDefined();
+    const symbols = swatchNodesOf(layer!);
+    expect(symbols).toHaveLength(6);
+    expect(symbols.filter(node => node.shape === 'rectangle').map(node => node.style?.fill)).toEqual([
+      '#112233',
+      '#112233',
+      '#112233',
+    ]);
+    expect(symbols.filter(node => node.shape === 'circle')).toHaveLength(3);
+  });
+  it('rejects a symbol without a color source at parse', () => {
+    expect(() => ordinalColorLegendSpec({ symbols: [{ kind: 'point' }] })).toThrow();
+  });
+  it('rejects missing symbol scale and continuous legends', () => {
+    expect(() =>
+      expandOf(ordinalColorLegendSpec({ symbols: [{ kind: 'line', scale: 'missing' }] }), { d: ORDINAL_ROWS }),
+    ).toThrow(/unknown scale/);
+    const spec = sequentialColorLegendSpec();
+    spec.guides = [
+      { type: 'legend', channel: 'color', scale: 'tempColor', symbols: [{ kind: 'point', paint: '#112233' }] },
+    ];
+    expect(() => expandOf(spec, { d: CONTINUOUS_ROWS })).toThrow(/categorical/);
+  });
+});
+
+it('rejects different ordered category domains in composite symbols', () => {
+  const spec = ordinalColorLegendSpec({ symbols: [{ kind: 'point', scale: 'otherColor' }] });
+  spec.scales.push({ type: 'ordinal', name: 'otherColor', domain: ['C', 'B', 'A'] });
+  spec.marks.push({
+    type: 'point',
+    color: { kind: 'field', value: 'kind', scale: 'otherColor' },
+    encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
+  });
+  expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow(/same ordered categorical domain/);
+});
+it.each([{ step: 0 }, { step: -1 }, { offset: -1 }, { step: 1.5 }])(
+  'rejects invalid ordinal palette indexing %j',
+  rangeIndex => {
+    const spec = ordinalColorLegendSpec();
+    expect(() => PlotSchema.parse({ ...spec, scales: [{ type: 'ordinal', name: 'bad', rangeIndex }] })).toThrow();
+  },
+);
+it('applies ordinal index steps to the effective theme palette', () => {
+  const spec = ordinalColorLegendSpec();
+  spec.scales = spec.scales.map(scale =>
+    scale.type === 'ordinal' ? { ...scale, rangeIndex: { step: 2, offset: 1 } } : scale,
+  );
+  spec.plotDefaults = { palette: { categorical: ['#111111', '#222222', '#333333'] } };
+  const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
+  expect(swatchNodesOf(legend!).map(node => node.style?.fill)).toEqual(['#222222', '#111111', '#333333']);
+});

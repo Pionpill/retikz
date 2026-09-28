@@ -7,6 +7,8 @@ Marks are the geometry layer of the graphic grammar. They answer “what geometr
 
 Choose a mark from the geometric relationship in the data, not from the final chart name. The same `IntervalMark` can form bars, heatmaps, or pies, while the same `PointMark` can appear as scatter points, bubbles, or text.
 
+For a mark without an authored color, `defaultColorIndex` selects a zero-based, cycling index in `plotDefaults.palette.series`. It takes precedence over `defaultColorGroup`, does not consume an automatic group slot, and never overrides explicit paints or field mappings.
+
 ## Responsibilities
 
 | Category   | Mark            | What it expresses                          | Common uses                              |

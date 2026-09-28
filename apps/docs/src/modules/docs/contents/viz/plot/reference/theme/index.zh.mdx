@@ -9,9 +9,9 @@ Plot 从当前位置的 Core effective Theme 读取 `style` 与 `mode`。Plot �
 
 示例把 `plotDefaults.typography.textColor` 设为字符串主色 `#2563EB`，再用 `0.08` 派生绘图区背景、用 `0.25` 派生 grid 描边；categorical palette 仍由字符串颜色组成。defaults 沿用 Plot IR 的嵌套 Source 字段；上下文颜色与 opacity 仍由各自字段表达。
 
-结构化 theme 中对应的绘图区字段是 `plotArea.fill`；它只填充二维坐标中扣除 axis、legend 与布局预留后的 Plot area，坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。一维直线与一维圆周只有投影路径，不生成可填充的 Plot area，也不输出跨绘图区的 grid layer。React、Vanilla 和 plain JSON 都把同一 defaults 与 rule 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `style` / `mode` 与 shared colors。
+绘图区字段 `plotArea.fill` 只填充二维坐标中扣除 axis、legend 与布局预留后的 Plot area；`plotArea.border` 独立描绘其边界，可用 `false` 关闭继承的边框。直角坐标绘制矩形，极坐标绘制圆形，facet 按面板分别绘制；一维坐标不生成绘图区表面。坐标轴标签区、facet 间隙和外围 Chart canvas 保持透明。React、Vanilla 和 plain JSON 都把同一 defaults 与 rule 原样交给 Plot resolver，adapter 不补自己的 preset；Core Theme 提供 effective `style` / `mode` 与 shared colors。
 
-本站参考 Vibrant preset 在 Light 下使用浅蓝灰绘图区，在 Dark 下使用深色绘图区；默认 baseline、Academic 与 Clean 保持透明。显式 `plotDefaults.plotArea.fill` 仍按正常级联覆盖 preset。
+本站参考 Vibrant preset 在 Light 下使用浅蓝灰绘图区，在 Dark 下使用深色绘图区；默认 baseline、Academic 与 Clean 保持透明。Academic 默认不显示网格，并使用与默认轴线同色同宽的绘图区边框。显式 `plotDefaults.plotArea.fill` / `border` 仍按正常级联覆盖 preset，具体 Axis grid 配置也保留优先级。
 
 ## 命名 style
 
@@ -40,7 +40,17 @@ resolver 依次应用 Core Neutral baseline、命名 Plot style、Chart 转发�
 
 ### PlotAreaDefaultsSchema
 
-<ZodSchema name="PlotAreaDefaultsSchema" descriptions={{ fill: '绘图区背景填充。' }} />
+<ZodSchema
+  name="PlotAreaDefaultsSchema"
+  descriptions={{ fill: '绘图区背景填充。', border: '绘图区边框；false 关闭继承边框。' }}
+/>
+
+### PlotAreaBorderSchema
+
+<ZodSchema
+  name="PlotAreaBorderSchema"
+  descriptions={{ stroke: '描边颜色。', strokeWidth: '描边宽度。', drawOpacity: '描边不透明度。' }}
+/>
 
 ### PlotTypographyDefaultsSchema
 

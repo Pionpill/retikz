@@ -1,6 +1,7 @@
 export * from './anchor';
 export * from './channel';
 export * from './coordinate';
+export * from './domain-padding';
 export * from './guide';
 export * from './lineage';
 export * from './locator';

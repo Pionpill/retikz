@@ -32,8 +32,8 @@ export const DocDifficultyDot: FC<DocDifficultyDotProps> = props => {
           aria-label={tooltip}
           data-doc-difficulty-slot={difficulty}
           className={cn(
-            'pointer-events-none ml-1 inline-flex size-6 shrink-0 items-center justify-center opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100',
-            isActive && 'pointer-events-auto opacity-100',
+            'ml-1 mr-1 size-4 shrink-0 items-center justify-center group-hover:inline-flex',
+            isActive ? 'inline-flex' : 'hidden',
           )}
         >
           <span

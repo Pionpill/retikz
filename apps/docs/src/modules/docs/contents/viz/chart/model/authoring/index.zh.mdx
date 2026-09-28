@@ -37,6 +37,8 @@ Chart 把“方便编写”与“稳定执行”分成两个阶段。React 和 V
 
 `ChartData`、`ChartLayout`、presentation markers 与各 chartType 的 Encodings / Properties / Mark declarations 都是同一 owner slot 的 headless JSX sugar。不同 slot 可以混用；同一 slot 同时从根与 declaration 提供时会 fail-loud，不做覆盖或逐字段合并。显式 `recipe.marks: []` 也算已经提供 marks slot。
 
+独立 React Chart 与 Vanilla `renderChart()` 在 `layout.width`、`layout.height` 都已指定时，以 `(0, 0, width, height)` 作为完整图表的取景范围，不再额外增加外层自动取景留白。React 的 `ChartLayout` 写法遵循相同行为；独立的输出宽高只改变显示尺寸。图表内部的布局留白和散点防裁切留白仍然生效。只指定一个维度或未指定尺寸时继续自动取景；嵌入外层 `Layout` 时，取景由外层宿主控制。直接 IR 接入也应在所属 Scene 的 `viewBox` 中声明需要的取景范围。
+
 JSON 是输入旁路，不跳过 schema。应用层先按 `type` 与 `recipe.chartType` 选择具体 schema，active provider 再确认 recipe 与 family 一致；未知 family、未知 recipe、未知字段和不允许的 mark 都 fail-loud。解析结果保留作者写下的 Source，recipe 产生的坐标、guide 和 Plot mark 只存在于后续解析阶段。
 
 坐标系是 Chart 根的一等 authoring slot。Vanilla 与 React concrete Chart 根 prop 可用 `'polar2D'` 等字符串或完整 operation 对象；React 也保留 `ChartCoordinate` 作为声明式替代入口，但两种 React 写法不能同时出现。字符串只归一为 `{ type: 'polar2D' }`，JSON Source 仅接受根 `coordinate` 对象。未声明时不物化默认值，继续使用 recipe spatial scaffold。
@@ -69,13 +71,27 @@ plotExtension.transform
 
 ## 三套包，各自只做一段
 
-根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；具体 chartType 子路径公开自己的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`InputChartCoordinate`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 把根 `coordinate` prop、`ChartData` / `ChartLayout` / `ChartCoordinate` / `ChartExtension`、presentation marker 和 chartType 私有 declaration 折叠到同一 Vanilla Input；Plot declarations 只能位于 `ChartExtension`，并继续复用 Plot normalizer。动态 family / chartType 路由由应用层负责。
+根 `@retikz/chart` 公开 Chart Source 的共享 schema、constants 与 Theme contract；`@retikz/chart/point` 统一公开各点图的精确 schema 与 provider contribution。recipe / mark Definition 和 resolver 只属于包内实现契约，不是第三方扩展入口。plain `InputScatterChart`、`InputChartCoordinate`、`normalizeXxxChart` 与创建函数属于 `@retikz/chart-vanilla`。React typed Chart 把根 `coordinate` prop、`ChartData` / `ChartLayout` / `ChartCoordinate` / `ChartExtension`、presentation marker 和 chartType 私有 declaration 折叠到同一 Vanilla Input；Plot declarations 只能位于 `ChartExtension`，并继续复用 Plot normalizer。动态 family / chartType 路由由应用层负责。
 
 | 入口           | 根 `type` | `recipe.chartType` | 导入位置                    |
 | -------------- | --------- | ------------------ | --------------------------- |
 | `ScatterChart` | `point`   | `scatter`          | `@retikz/chart-react/point` |
 
-Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导入。具体子路径只装载对应 chartType；family 根入口仅作为显式聚合入口。它返回保留运行时主题信息的编写结果；最终渲染仍复用共享 Chart 适配与解析主链。
+Vanilla 的 `scatterChart` 从 `@retikz/chart-vanilla/point` 导入。点图创建函数统一从 family 入口按名称导入，不深入具体 chartType 子路径。它返回标准 `InputEmbed`，可直接放入 `scene.children`；`ScatterChartInputEmbedAdapter` 在场景处理时规范化 Source 并组装依赖。运行时数据与主题定义保留在编写输入中，不写入 JSON IR。
+
+将多个组件组合到同一场景时，使用通用 Vanilla 渲染入口，并显式提供对应 adapter：
+
+```ts
+import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { renderToSvgString, scene } from '@retikz/vanilla';
+
+const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
+const svg = renderToSvgString(scene({ children: [chart] }), {
+  adapters: [ScatterChartInputEmbedAdapter],
+});
+```
+
+独立图表可使用 `renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] })` 获取 `{ svg, compileResult }`。需要持久化 Source 时使用 `normalizeScatterChart`；不要序列化包含运行时数据、主题定义或回调的 InputEmbed。
 
 <SourceLinks
   sources={[

@@ -7,6 +7,7 @@ import { ChartFamily, ChartType } from '../constants';
 import {
   createPointChartMarkSchema,
   PointMarkEncodingSchema,
+  PointAutoPaddingSchema,
   PointPositionDomainPaddingSchema,
   PointPropertiesSchema,
   PointRecipeGuidesSchema,
@@ -21,6 +22,7 @@ export const StripChartJitterSchema = JitterPositionAdjustmentSchema.omit({ kind
 /** Strip recipe 的精确 constant properties schema */
 export const StripChartPropertiesSchema = PointPropertiesSchema.extend({
   jitter: StripChartJitterSchema.optional(),
+  autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 }).describe('Strip Chart constant properties');
 

@@ -36,7 +36,7 @@ describe('Connected Scatter exact Source schema', () => {
       ConnectedScatterChartPropertiesSchema.parse({
         domainPadding: { kind: 'range', x: 8, top: 3 },
       }),
-    ).toEqual({ domainPadding: { kind: 'range', x: 8, top: 3 } });
+    ).toEqual({ colorMode: 'series', domainPadding: { kind: 'range', x: 8, top: 3 } });
     expect(
       ConnectedScatterChartMarkSchema.safeParse({
         kind: 'connected-scatter',

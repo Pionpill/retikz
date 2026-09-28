@@ -4,6 +4,21 @@ import { z } from 'zod';
 import { walk, walkType } from '@/modules/docs/components';
 
 describe('walker — primitives & literal', () => {
+  it('preserves prefault field types and constraints', () => {
+    const result = walk(z.strictObject({ value: z.number().min(2).prefault(3).optional() }));
+    expect(result).toMatchObject({
+      kind: 'object',
+      fields: [
+        {
+          name: 'value',
+          optional: true,
+          type: { kind: 'default', inner: { kind: 'primitive', name: 'number' } },
+          constraints: ['min 2'],
+        },
+      ],
+    });
+  });
+
   it('walks z.string() to primitive', () => {
     expect(walkType(z.string())).toEqual({ kind: 'primitive', name: 'string' });
   });

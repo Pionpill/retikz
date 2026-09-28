@@ -1,11 +1,16 @@
-import type { ExternalRow, TransformContext } from '@retikz/data';
-import { groupRowsByFields, linearSamplesOf, resolveFieldPath } from '@retikz/data';
+import type { ExternalRow, IRRegressionMethod, TransformContext } from '@retikz/data';
+import {
+  BuiltinRegressionMethod,
+  groupRowsByFields,
+  linearSamplesOf,
+  resolveFieldPath,
+  resolveRegression,
+  RetikzDataError,
+} from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import { RetikzPlotError } from '../../error';
-import type { IRPlotSmoothMethod, IRPlotSmoothTransform } from '../../schemas';
-import { SmoothMethodKind } from '../../schemas';
-import { assertRegressionExtent, fitRegressionModel } from './regression';
+import type { IRPlotSmoothTransform } from '../../schemas';
 
 const DEFAULT_SMOOTH_SAMPLE_COUNT = 64;
 
@@ -32,6 +37,9 @@ const sampleExtentOf = (operation: IRPlotSmoothTransform, pairs: Array<SmoothPai
     min = Math.min(min, pair.x);
     max = Math.max(max, pair.x);
   }
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) {
+    throw new RetikzPlotError('lowerPlots: smooth inferred extent requires at least two distinct finite x values');
+  }
   return [min, max];
 };
 
@@ -40,8 +48,8 @@ const groupSummaryOf = (operation: IRPlotSmoothTransform, values: ExternalRow): 
     ? 'ungrouped rows'
     : operation.groupBy.map(field => `${field}=${JSON.stringify(values[field])}`).join(', ');
 
-const smoothMethodOf = (operation: IRPlotSmoothTransform): IRPlotSmoothMethod =>
-  operation.method ?? { kind: SmoothMethodKind.Linear };
+const smoothMethodOf = (operation: IRPlotSmoothTransform): IRRegressionMethod =>
+  operation.method ?? { kind: BuiltinRegressionMethod.Linear };
 
 /** 返回 smooth transform 读取的源字段 */
 export const smoothInputFields = (operation: IRPlotSmoothTransform): Array<string> => [
@@ -58,16 +66,17 @@ export const applySmooth = (
   rows: Array<ExternalRow>,
   operation: IRPlotSmoothTransform,
   context: TransformContext,
-): Array<ExternalRow> =>
-  groupRowsByFields(rows, operation.groupBy).flatMap(group => {
-    const method = smoothMethodOf(operation);
+): Array<ExternalRow> => {
+  const method = smoothMethodOf(operation);
+  const regression = resolveRegression(method, context.regressionRegistry);
+  return groupRowsByFields(rows, operation.groupBy).flatMap(group => {
     try {
       const pairs = finitePairsOf(group.rows, operation.x, operation.y);
-      const model = fitRegressionModel(pairs, method);
+      const model = regression.fit(pairs);
       const extent = sampleExtentOf(operation, pairs);
-      assertRegressionExtent(method, extent);
+      regression.validateExtent(extent);
       const sampleCount = operation.sampleCount ?? DEFAULT_SMOOTH_SAMPLE_COUNT;
-      return linearSamplesOf(extent, sampleCount).map(x =>
+      const predictions = linearSamplesOf(extent, sampleCount).map(x =>
         context.groupProvenance(
           {
             ...group.values,
@@ -77,11 +86,13 @@ export const applySmooth = (
           group.rows,
         ),
       );
+      return predictions;
     } catch (cause) {
-      const reason = cause instanceof RetikzPlotError ? `: ${cause.message}` : '';
+      const reason = cause instanceof RetikzPlotError || cause instanceof RetikzDataError ? `: ${cause.message}` : '';
       throw new RetikzPlotError(
         `lowerPlots: smooth transform ${method.kind} regression failed for group ${groupSummaryOf(operation, group.values)}${reason}`,
         { cause },
       );
     }
   });
+};

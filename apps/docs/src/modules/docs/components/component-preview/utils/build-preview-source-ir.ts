@@ -16,12 +16,14 @@ import {
   ScatterChart,
   StripChart,
 } from '@retikz/chart-react/point';
-import type { IRBubbleChart } from '@retikz/chart/point/bubble';
-import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
-import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
-import type { IRScatterChart } from '@retikz/chart/point/scatter';
-import type { IRStripChart } from '@retikz/chart/point/strip';
+import type {
+  IRBubbleChart,
+  IRConnectedScatterChart,
+  IRRangedDotChart,
+  IRRegressionChart,
+  IRScatterChart,
+  IRStripChart,
+} from '@retikz/chart/point';
 import type { IRChild, IRScene, IRScope } from '@retikz/core';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramEmbedKind, normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
@@ -44,8 +46,8 @@ import {
   normalizeRelation,
   RelationEmbedKind,
 } from '@retikz/graph-vanilla';
-import type { AnyInputEmbed, InputChild, InputPath, InputScene, InputScope } from '@retikz/vanilla';
-import { normalizeNode, normalizePath } from '@retikz/vanilla';
+import type { AnyInputEmbed, InputEmbedAdapter, InputChild, InputPath, InputScene, InputScope } from '@retikz/vanilla';
+import { normalizeNode, normalizePath, normalizeScene, scene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
@@ -59,13 +61,14 @@ type TypedChartSource =
   | IRRegressionChart
   | IRStripChart;
 
-type TypedChartComponent<TSource extends TypedChartSource> = {
-  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => Readonly<{ source: TSource }>;
+type TypedChartComponent<TInput> = {
+  inputEmbedAdapter: InputEmbedAdapter<TInput>;
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
 
-const sceneChildrenOf = (scene: InputScene): ReadonlyArray<InputChild> => {
-  if ('children' in scene) return scene.children ?? [];
-  return scene.layers
+const sceneChildrenOf = (inputScene: InputScene): ReadonlyArray<InputChild> => {
+  if ('children' in inputScene) return inputScene.children ?? [];
+  return inputScene.layers
     .map((layer, index) => ({ layer, index }))
     .sort((left, right) => (left.layer.zIndex ?? 0) - (right.layer.zIndex ?? 0) || left.index - right.index)
     .flatMap(({ layer }) => layer.children);
@@ -278,7 +281,11 @@ const sourceGraphChildOf = (
   chartIndex: { value: number },
 ): IRChild => {
   if (isInputGraphEmbed(input)) {
-    if (input.kind === CHART_NAMESPACE) {
+    if (
+      [ScatterChart, BubbleChart, ConnectedScatterChart, RangedDotChart, RegressionChart, StripChart].some(
+        component => input.kind === component.inputEmbedAdapter.kind,
+      )
+    ) {
       const source = chartSources.at(chartIndex.value);
       chartIndex.value += 1;
       return source ?? runtime ?? (input as unknown as IRChild);
@@ -309,11 +316,22 @@ const sourceChildOf = (
 ): IRChild => sourceGraphChildOf(input, runtime, chartSources, chartIndex);
 
 /** 从 typed Chart React component 的同一 Vanilla bridge 读取精简 Source IR */
-const typedChartSourceOf = <TProps, TSource extends TypedChartSource>(
-  component: TypedChartComponent<TSource>,
+const typedChartSourceOf = <TProps, TInput>(
+  component: TypedChartComponent<TInput>,
   props: TProps,
-): TSource =>
-  component.createInputEmbedProps(previewEmbedPropsOf(component, props as Readonly<Record<string, unknown>>)).source;
+): TypedChartSource => {
+  const input = component.createInputEmbedProps(
+    previewEmbedPropsOf(component, props as Readonly<Record<string, unknown>>),
+  );
+  const result = normalizeScene(
+    scene({ children: [{ type: 'embed', kind: component.inputEmbedAdapter.kind, props: input }] }),
+    { adapters: [component.inputEmbedAdapter] },
+  );
+  let node = result.ir.children[0];
+  while (node.type === 'scope') node = (node as IRScope).children[0];
+  if (!isPreviewChartSource(node)) throw new Error('Chart adapter must produce Chart Source IR');
+  return node;
+};
 
 const sourceOf = (value: ReactNode): TypedChartSource | undefined => {
   if (!isValidElement(value)) return undefined;

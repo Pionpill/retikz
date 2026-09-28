@@ -13,6 +13,7 @@ import type {
   TickSet,
 } from '../../../contract';
 import { cellInterval, PositionScaleContinuity, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import type { IRPlotCoordinate, IRPlotPolar1DCoordinate, PolarInterpolationValue } from '../../../schemas';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema, PolarInterpolation } from '../../../schemas';
 import { computePolarCoordinate } from '../../../shared';
@@ -574,6 +575,39 @@ export const densifyPolarSegments = (
 };
 
 const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
+  domainPadding: {
+    roles: ['x', 'y'],
+    measure: ({ frame, role, mappedRoles, extent, clearance }) => {
+      const boundary = frame.placementBoundary!;
+      if (boundary.isCyclic(role)) return null;
+      const range = frame.roleScales![role]!.range();
+      const measure = (screenExtent: number): number => {
+        if (screenExtent === 0) return 0;
+        const measured = boundary.glyphExtentInRoleUnits(role, mappedRoles, screenExtent);
+        if (measured === null || !Number.isFinite(measured))
+          throw new RetikzPlotError(
+            `polar domainPadding cannot contain glyph extent ${screenExtent} on role "${role}"`,
+          );
+        return measured;
+      };
+      if (role === 'y') {
+        const angularRange = frame.roleScales!.x!.range();
+        const sweep = Math.abs(angularRange[1] - angularRange[0]);
+        const closed = boundary.isCyclic('x');
+        const nearCenter = Math.min(...range) === 0;
+        const inner = (screenExtent: number): number =>
+          nearCenter
+            ? closed
+              ? 0
+              : screenExtent / Math.sin((Math.min(90, sweep / 4) * Math.PI) / 180)
+            : measure(screenExtent);
+        return range[1] > range[0]
+          ? { lower: inner(extent + clearance.lower), upper: measure(extent + clearance.upper) }
+          : { lower: measure(extent + clearance.lower), upper: inner(extent + clearance.upper) };
+      }
+      return { lower: measure(extent + clearance.lower), upper: measure(extent + clearance.upper) };
+    },
+  },
   schema: Polar2DSchema,
   roles: ['x', 'y'],
   scaleBinding: {

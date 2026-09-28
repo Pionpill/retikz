@@ -1,0 +1,48 @@
+---
+title: Introduction
+description: Choose a concrete chart type and turn data into a complete chart with axes, legends, and a title.
+---
+
+Chart organizes its entries by chart family, with point charts currently available. Choose a chart within the family and map your data fields to get a complete graphic. Data mappings generate axes, scales, and legends; configure titles, sources, canvas dimensions, and coordinates as needed.
+
+## When to use Chart
+
+Start with Chart when you know the kind of chart you need and want to turn tabular data into a readable graphic. You can begin without learning Kernel primitives or assembling a Plot manually.
+
+| Chart family                      | Question it helps answer                                         |
+| --------------------------------- | ---------------------------------------------------------------- |
+| [Point charts](/viz/chart/points) | How are observations distributed, and how are variables related? |
+
+## From fields to a chart
+
+The population bubble chart below uses Gapminder data for 142 countries and regions in 2007. GDP per capita maps to the horizontal axis, life expectancy to the vertical axis, population to bubble area, and continent to color. Each row becomes a bubble, showing income, life expectancy, and population together through field mappings.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['/viz/chart/points/bubble/bubble-basic', '/viz/chart/points/bubble/bubble-basic.data.ts']}
+  size="xxl"
+/>
+
+## Working with Data, Plot, and Kernel
+
+Chart owns concrete chart types and chart-wide presentation. Use [Data](/viz/data/introduction) first when you need to clean, derive, or aggregate rows. Explore [Plot](/viz/plot) to compose marks, channels, scales, and guides freely. Embed a chart in Kernel [Layout](/kernel/components/layout) to combine it with other drawing elements on one canvas.
+
+## Next steps
+
+<LinkedSections
+  items={[
+    {
+      title: 'Quick start',
+      description: 'Install and draw your first chart, then explore shared configuration and embedding.',
+      url: '/viz/chart/get-start',
+    },
+    { title: 'Point charts', description: 'Choose a chart for your data and reading task.', url: '/viz/chart/points' },
+    {
+      title: 'Chart model',
+      description: 'Explore chart structure, declarations, and Plot extensions.',
+      url: '/viz/chart/model',
+    },
+    { title: 'Changelog', description: 'Read the changes in published releases.', url: '/viz/chart/changelog' },
+  ]}
+/>

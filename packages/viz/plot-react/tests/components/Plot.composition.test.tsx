@@ -24,6 +24,39 @@ const geometry = (svg: string) => {
 };
 
 describe('<Plot data>{marks} 组合 DSL', () => {
+  it.each([{}, { strokeWidth: 4, dashPattern: [2, 3] }])('React 与 IR 缺值连接配置渲染一致：%j', connectNulls => {
+    const data = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 14 },
+      { month: 2, revenue: null },
+      { month: 3, revenue: 9 },
+      { month: 4, revenue: 11 },
+    ];
+    const viaDsl = renderToStaticMarkup(
+      <Plot data={data} width={480} height={300}>
+        <PathMark x="month" y="revenue" order="month" connectNulls={connectNulls} />
+      </Plot>,
+    );
+    const spec: IRPlot = {
+      namespace: 'plot',
+      type: 'plot',
+      data: { reference: '__plot' },
+      scales: [
+        { type: 'linear', name: '__x' },
+        { type: 'linear', name: '__y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: '__x', y: '__y' },
+      marks: [
+        { type: 'path', order: 'month', connectNulls, encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
+      ],
+      guides: [],
+    };
+    const viaSpec = renderToStaticMarkup(<Plot spec={spec} data={{ __plot: data }} width={480} height={300} />);
+    expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
+    const dashes = (svg: string) => svg.match(/stroke-dasharray="[^"]+"/g) ?? [];
+    expect(dashes(viaDsl)).toHaveLength(1);
+    expect(dashes(viaDsl)).toEqual(dashes(viaSpec));
+  });
   it('多个嵌入 Plot 通过 provider graph 合并数据并各自渲染', () => {
     const svg = renderToStaticMarkup(
       <Layout width={480} height={300}>

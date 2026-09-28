@@ -1,3 +1,3 @@
-export { createRegressionChart } from './factory';
+export { regressionChart, RegressionChartInputEmbedAdapter } from './factory';
 export { normalizeRegressionChart } from './normalize';
-export type { CreateRegressionChartInput, InputRegressionChart } from './types';
+export type { RegressionChartInputEmbedProps, InputRegressionChart } from './types';

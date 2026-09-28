@@ -4,6 +4,7 @@ import { defineComposite, LayoutAxisProposalKind, LayoutChildProbeKind } from '@
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { CHART_NAMESPACE } from '../constants';
 import type { IRChartSource } from '../schemas';
+import { contextualizeChartFailure } from './diagnostics';
 import { resolveChartFromProvider } from './resolve';
 import type { ChartProviderRegistry } from './types';
 
@@ -73,7 +74,13 @@ export const createChartDefinition = (
       }
       const proposal = chartProposalOf(source, resolution.presentation.layout, context.proposal);
       const probe = context.layoutChild(resolution.presentation.surface, proposal);
-      if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+      if (probe.kind === LayoutChildProbeKind.Failed) {
+        try {
+          return context.raise(probe.failure);
+        } catch (cause) {
+          throw contextualizeChartFailure(source, cause);
+        }
+      }
       return {
         children: [context.replay(probe.result)],
         allocationBounds: {

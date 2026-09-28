@@ -6,6 +6,7 @@ import { GAPMINDER_BUBBLE_YEAR, gapminderBubbleData } from './bubble-basic.data'
 
 /** 基础 Bubble playground 的稳定控件 id */
 export const BUBBLE_BASIC_CONTROL_IDS = {
+  pointStrokeWidth: 'bubble-basic-pointStrokeWidth',
   coordinateSystem: 'bubble-basic-coordinate-system',
   colorByContinent: 'bubble-basic-color-by-continent',
   xScale: 'bubble-basic-x-scale',
@@ -88,6 +89,16 @@ export const bubbleBasicControls = definePreviewControls({
           visibleWhen: { controlId: BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled, oneOf: [true] },
         },
         {
+          kind: 'range',
+          id: BUBBLE_BASIC_CONTROL_IDS.pointStrokeWidth,
+          visibleWhen: { controlId: BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled, oneOf: [true] },
+          label: '描边宽度',
+          defaultValue: 1,
+          min: 0,
+          max: 5,
+          step: 0.5,
+        },
+        {
           kind: 'select',
           id: BUBBLE_BASIC_CONTROL_IDS.pointShape,
           label: '形状',
@@ -116,6 +127,7 @@ export const bubbleBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: bubbleBasicControls,
   canonicalValues: {
+    [BUBBLE_BASIC_CONTROL_IDS.pointStrokeWidth]: 1,
     [BUBBLE_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [BUBBLE_BASIC_CONTROL_IDS.colorByContinent]: true,
     [BUBBLE_BASIC_CONTROL_IDS.xScale]: 'log',
@@ -125,6 +137,7 @@ export const previewControlContract = {
     [BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity]: 0.7,
   },
   relatedApis: [
+    'BubbleProperties.strokeWidth',
     'BubbleChart.coordinate',
     'BubbleEncodings.x',
     'BubbleEncodings.y',

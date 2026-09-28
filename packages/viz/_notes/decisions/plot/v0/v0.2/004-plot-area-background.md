@@ -9,6 +9,7 @@ keywords: 'Plot、background、plot.surface.fill、plotArea.fill、plot.area.fil
 - 决策日期：2026-08-10
 - 关联：[alpha.1 roadmap](./roadmap.md) · [ADR-001：Plot 主题 token 所有权与 Chart 消费边界](./001-chart-layering.md) · [ADR-003：Plot 绘图边界与 Chart presentation 归属](./003-plot-presentation-boundary.md) · [Plot 可视化完备设计](../../../../architecture/plot-visualization-complete.md)
 - Supersedes in part：ADR-001 中顶层 `IRPlotTheme.background` 与 `plot.surface.fill` 的公开名称；Plot theme owner、paint value contract 与 Chart 消费边界继续有效
+- Superseded in part by：[ADR-013：Plot 绘图区边框](./013-plot-area-border.md) 扩展绘图区视觉默认值；本文的 `plotArea.fill` 范围继续有效
 
 ## 背景与目标
 

@@ -409,8 +409,48 @@ export const buildLegendLayers = (
 
     if (descriptor?.colorScale !== undefined) {
       const options = resolveColorLegend(descriptor, guide, base, showLabels);
+      if (guide.symbols !== undefined) {
+        const primary = descriptor.colorScale;
+        if (primary.legendForm !== 'swatch' || primary.edges !== undefined) {
+          throw new RetikzPlotError('Composite legend symbols require a categorical color scale');
+        }
+        const layers = guide.symbols.map(symbol => {
+          if (symbol.paint !== undefined) return { symbol, colors: undefined };
+          if (symbol.scale === undefined) throw new RetikzPlotError('Legend symbol requires paint or scale');
+          const matches = channelDescriptors.filter(
+            candidate => candidate.scaleName === symbol.scale && candidate.colorScale !== undefined,
+          );
+          if (matches.length === 0)
+            throw new RetikzPlotError(
+              `Composite legend references unknown scale or unbound color scale "${symbol.scale}"`,
+            );
+          const colors = matches[0].colorScale;
+          if (matches.some(candidate => !descriptorValuesEqual(candidate.domain, primary.domain))) {
+            throw new RetikzPlotError('Composite legend symbols must share the same ordered categorical domain');
+          }
+          if (
+            colors === undefined ||
+            colors.legendForm !== 'swatch' ||
+            colors.edges !== undefined ||
+            !descriptorValuesEqual(primary.domain, colors.domain)
+          ) {
+            throw new RetikzPlotError('Composite legend symbols must share the same ordered categorical domain');
+          }
+          return { symbol, colors };
+        });
+        options.entries = options.entries.map((entry, index) => ({
+          ...entry,
+          symbols: layers.map(({ symbol, colors }) => {
+            const paint = symbol.paint ?? colors?.range[index];
+            if (paint === undefined) throw new RetikzPlotError('Composite legend symbol has no resolved color');
+            return { kind: symbol.kind, paint };
+          }),
+        }));
+      }
       return lowerLegend(options);
     }
+    if (guide.symbols !== undefined)
+      throw new RetikzPlotError('Composite legend symbols require a categorical color scale');
     if (guide.channel === 'color') {
       throw new RetikzPlotError(
         'lowerPlots: legend channel "color" has no bound color scale; bind a color encoding with a scale or give the legend an explicit scale',

@@ -9,6 +9,8 @@ keywords: 'Regression、semantic、mark、series、RegressionMark、Smooth、com
 - 决策日期：2026-08-29
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Chart 总设计](../../../../architecture/chart-design.md) · [Chart 封装完备设计](../../../../architecture/chart-encapsulation-complete.md) · [Data 能力完备设计](../../../../architecture/data-capability-complete.md) · [Plot 可视化完备设计](../../../../architecture/plot-visualization-complete.md)
 
+> 方法扩展与趋势连接契约由 [017](./017-regression-definition-and-trend-curves.md) 替代：方法统一通过 Data Definition / registry，trend.curve 复用 Plot Path，默认 catmullRom。其余契约继续有效。
+
 ## 背景与目标
 
 Regression 需要同时展示原始观测点与拟合趋势，并允许按一个稳定的数据角色为每组生成独立趋势线。原始 Point 必须继续读取 root transforms 与 encoding-derived operations 之后的共同数据；趋势 Path 则需要在同一数据视图上执行只属于自身的拟合，不能用 root transform 替换 Point 输入，也不能由 Chart 预扫描 rows、实现回归算法或建立第二条数据管线。
@@ -17,7 +19,7 @@ Plot 已拥有 mark-local transform、`Smooth` Definition、分组后的 replace
 
 ## 决策：独立 Regression recipe 生成 Point 与 mark-local Smooth Path
 
-Regression 使用 `namespace: 'chart'`、`type: 'point'` 与全局唯一的 `recipe.chartType: 'regression'`。它生成唯一 `kind: 'regression'` semantic group，组内按固定顺序包含原始 Point 与趋势 Path：Point 消费共同数据，Path 在当前 mark data view 上执行 `Smooth` 后消费派生趋势 rows。
+Regression 使用 `namespace: 'chart'`、`type: 'point'` 与全局唯一的 `recipe.chartType: 'regression'`。它生成唯一 `kind: 'regression'` semantic group，组内按固定顺序包含唯一原始 Point、主趋势 Path 与按声明顺序追加的趋势 Paths：Point 消费共同数据，Path 在当前 mark data view 上执行 `Smooth` 后消费派生趋势 rows。
 
 `series` 是 Regression 私有的可选分组角色。省略时拟合整份当前数据视图；提供时按每个 series 独立拟合，并让 Point 与 Path 共享同一个 categorical color binding、scale identity 与 legend。Regression 不增加第二个可能与分组产生函数依赖冲突的字段颜色角色；常量外观继续通过 point / trend properties 表达。
 
@@ -49,9 +51,17 @@ type IRRegressionChartRecipe = {
 
 type IRRegressionChartProperties = {
   method?: IRPlotSmoothMethod;
+  extraMethods?: Array<IRRegressionExtraMethod>;
   sampleCount?: number;
   extent?: [number, number];
   point?: IRRegressionPointProperties;
+  trend?: IRRegressionTrendProperties;
+};
+
+type IRRegressionExtraMethod = {
+  method: IRPlotSmoothMethod;
+  sampleCount?: number;
+  extent?: [number, number];
   trend?: IRRegressionTrendProperties;
 };
 
@@ -89,15 +99,15 @@ type IRPlotSmoothMethod =
 具体入口为：
 
 - `@retikz/chart/point/regression`：Regression exact Source 与 provider contribution
-- `@retikz/chart-vanilla/point/regression`：`normalizeRegressionChart` 与 `createRegressionChart`
+- `@retikz/chart-vanilla/point/regression`：`normalizeRegressionChart` 与 `regressionChart`
 - `@retikz/chart-react/point/regression`：`RegressionChart`、`RegressionEncodings`、`RegressionProperties` 与 `RegressionMark`
 
-JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`RegressionMark` 默认追加一组新的 Point 与趋势 Path；`override: true` 原位替换内建 `regression` semantic group，两种情况都保留不可移除的 mark-local Smooth 与完整复合结构。
+JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`RegressionMark` 默认追加一组新的 Point、主趋势与额外趋势 Path；`override: true` 原位替换内建 `regression` semantic group，两种情况都保留不可移除的 mark-local Smooth；观测 Point 可由 mark 自身的 hidePoints 关闭。
 
 ## 行为、失败语义与兼容性
 
 - 默认行为：`method` 省略时使用普通最小二乘线性回归；`sampleCount` 必须是至少为 2 的整数，省略时每组输出 64 个按 x 等距排列的预测点；`extent` 省略时每组使用当前有效观测的 x 范围
-- 分组与颜色：省略 recipe `series` 时生成一条全局趋势，Chart 为 Point 与趋势 Path 写入同一 semantic group 内两个不同的 Plot `defaultColorGroup`，使省略 point color / fill 与 trend stroke 时依次使用 `palette.series` 的不同槽位；提供时每组独立拟合，Point 与 Path 使用同一个 categorical color scale identity，并默认生成一个 categorical legend。series 生成的 field color 高于 `point.color` / `point.fill` 与 `trend.stroke`，其它常量外观保持有效
+- 分组与颜色：省略 recipe `series` 时每个拟合方法生成一条全局趋势，Chart 为 Point 与趋势 Path 写入同一 semantic group 内两个不同的 Plot `defaultColorGroup`，使省略 point color / fill 与 trend stroke 时依次使用 `palette.series` 的不同槽位；提供时每组独立拟合，Point 与 Path 使用同一个 categorical color scale identity，并默认生成一个 categorical legend。series 生成的 field color 高于 `point.color` / `point.fill` 与公共 `trend.stroke`；额外方法显式 `trend.stroke` 的优先级见下文，其它常量外观保持有效
 - mark 继承：`RegressionMark` 省略的 x / y 与 properties 继承 recipe；显式 x / y 使用 direct 字段覆盖。所有 Regression group 无条件继承 recipe series；recipe 省略 series 时所有 group 都保持未分组，并为 Point 与趋势 Path 分别保留 member-local Plot 默认色板组。method / sampleCount / extent 按字段覆盖，point / trend block 按各自 property 字段合并。普通 mark 不增加自动 guide；`override: true` 也不改变 recipe scaffold，因此 recipe `series` 是共享 categorical scale 与默认 legend 的唯一来源
 - 数据顺序：root transforms 与 encoding-derived operations 先作用于共同输入；Point 直接消费该数据，Smooth 只在趋势 Path 上运行。facet 时拟合针对每个 panel 的当前 rows 独立执行；坐标投影只改变最终展示，不改变数据空间中的拟合，趋势 Path 始终保持开放
 - 模型约束：linear、logarithmic、exponential 与 power 每组至少需要两个有效 pair 和两个不同的自变量值；quadratic 至少需要三个，polynomial 至少需要 `order + 1` 个并形成满秩拟合。秩退化、不可确定系数或非有限预测必须 fail-loud
@@ -107,8 +117,25 @@ JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`Regression
 - 兼容性：这是新的 `regression` chartType，并扩展既有 Plot Smooth method union；既有 Smooth 省略 method 或显式 `linear` 的行为保持不变。旧根 `type: 'regression'`、`encoding`、`components`、patch、短 method 名和兼容 fallback 不保留
 - React / Vanilla 等价性：React 只把 declarations 组装成 Vanilla Input，Vanilla 只生成精确 Source；算法选择、分组、默认、mark-local transform、provider lookup、facet、lineage、locator 与 lowering 只在 Chart / Data / Plot 正式主链中解析
 
+## 多方法比较与单一观测层
+
+单方法入口保留 method，省略时仍为线性拟合。extraMethods 是可选的有序数组，每项必须声明 method，只追加趋势 Path，不创建 Point，不改变观测数据。省略或空数组均只保留主趋势。同一种方法可重复出现，以比较不同参数、范围或外观，不按方法名称去重。
+
+每个额外方法复用同一数据视图、x/y、series、坐标和分面；各趋势独立执行 Plot Smooth，拟合计算由 Plot/Data 负责。对照 [Vega-Lite 回归分层](https://vega.github.io/vega-lite/docs/regression.html)，Chart 封装的是一次观测与多个拟合的组合，不新建算法或数据处理管线。
+
+- 额外项的 sampleCount、extent 省略时继承当前组合属性；最终仍省略时交给 Smooth 的权威默认。method 必填，不能隐式继承主方法。
+- trend 按字段合并当前组合的 trend 与额外项显式 trend。非分组时保留主趋势的默认颜色语义；不自动添加方法图例或方法颜色序列。
+- 分组时，主趋势保持现有 series 颜色优先规则。额外趋势省略 stroke 时同样使用 series 分类颜色；只有额外项自身显式 stroke 才覆盖其趋势颜色，仍按 series 分开拟合与连接。其余外观字段按上述继承规则生效。
+- RegressionMark 追加与 override 继续作用于整个回归组合，默认包含一套观测、主趋势与所有额外趋势。mark 省略 extraMethods 时继承 recipe；显式数组整体替换，不按索引或方法合并，空数组清除继承的额外趋势。额外项读取覆盖后的当前组合 sampleCount、extent 与 trend。
+- 任一额外方法的配置、样本或值域无效时，整张图失败，不跳过失败的趋势。局部字段错误指向 extraMethods 对应项；缺省继承后的运行条件由现有 Smooth 校验。
+- React properties、Vanilla properties 与 Source IR recipe.properties 具有相同语义。配置 JSON 可序列化，额外项不接受 point、encodings、series 或递归 extraMethods。
+
 ## 实现结果与剩余边界
 
 Regression 已按本决策形成完整公开闭环：Plot Smooth 提供 linear、quadratic、polynomial、logarithmic、exponential 与 power 六种内置方法；Chart 以精确 Source 和复合 semantic group 组织 Point 与趋势 Path；JSON、Vanilla 与 React 入口复用同一 provider、resolve、transform 和 lowering 主链；用户文档覆盖基础用法、方法选择、分组、样式控制与公开 API
 
-当前实现保留本 ADR 的 Stage 1 边界，不包含权重、robust fitting、非线性最小二乘、置信区间、系数输出或自定义 chartType 注册。需要完全控制数据视图、transform 或多层趋势结构时继续直接使用 Plot；这些扩展不构成当前 Regression 契约的残余实现缺口
+当前实现保留本 ADR 的 Stage 1 边界，不包含权重、robust fitting、非线性最小二乘、置信区间、系数输出或自定义 chartType 注册。同一观测下的多方法趋势比较由 extraMethods 表达；需要独立数据视图、映射或完全控制 transform 时继续直接使用 Plot；这些扩展不构成当前 Regression 契约的残余实现缺口
+
+## 观测图元可选生成
+
+RegressionMark 顶层提供 hidePoints，默认 false。true 时不生成该 semantic group 的观测 Point，主趋势与全部 extraMethods 保留；拟合仍消费相同输入、映射、分组与分面。此字段只作用于当前 mark，不隐藏其他组的观测。与 override 组合时替换完整内置组；普通追加时保留内置组。React 可写为布尔简写 hidePoints，Vanilla 与 IR 使用相同布尔字段。此配置由 Chart 组合层拥有，不改变 Data、Plot 或 renderer 契约。

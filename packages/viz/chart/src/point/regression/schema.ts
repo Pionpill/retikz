@@ -10,14 +10,20 @@ import {
   StrokeDashPatternSchema,
   StrokeWidthSchema,
 } from '@retikz/core';
+import { RegressionMethodSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { SmoothTransformSchema } from '@retikz/plot';
+import { PathCurve, PathMarkSchema, SmoothTransformSchema } from '@retikz/plot';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import { PointPositionDomainPaddingSchema, PointPropertiesSchema, PointRecipeGuidesSchema } from '../shared';
+import {
+  PointAutoPaddingSchema,
+  PointPositionDomainPaddingSchema,
+  PointPropertiesSchema,
+  PointRecipeGuidesSchema,
+} from '../shared';
 import { RegressionChartEncodingsSchema } from './encoding-schema';
 
 /** Regression 原始观测点的完整常量 properties */
@@ -25,8 +31,12 @@ export const RegressionPointPropertiesSchema = PointPropertiesSchema.describe(
   'Regression observation Point constant properties',
 );
 
+/** Regression 趋势默认连接策略；继承合并后才物化 */
+export const RegressionTrendCurveSchema = PathMarkSchema.shape.curve.unwrap().default(PathCurve.CatmullRom);
+
 /** Regression 趋势 Path 允许的精确常量 properties */
 export const RegressionTrendPropertiesSchema = strictObject({
+  curve: RegressionTrendCurveSchema.unwrap().optional().describe('Trend connection curve; default catmullRom'),
   stroke: union([CssColorSchema, PaintSchema]).optional().describe('Constant trend stroke paint'),
   strokeWidth: StrokeWidthSchema.optional().describe('Constant trend stroke width'),
   strokeOpacity: OpacitySchema.optional().describe('Constant trend stroke opacity'),
@@ -41,18 +51,8 @@ export const RegressionTrendPropertiesSchema = strictObject({
   blendMode: zodEnum(BlendMode).optional().describe('Constant trend blend mode'),
 }).describe('Regression trend Path constant properties');
 
-const RegressionPropertiesBaseSchema = strictObject({
-  method: SmoothTransformSchema.shape.method,
-  sampleCount: SmoothTransformSchema.shape.sampleCount,
-  extent: SmoothTransformSchema.shape.extent,
-  point: RegressionPointPropertiesSchema.optional(),
-  trend: RegressionTrendPropertiesSchema.optional(),
-});
-
-const refineRegressionProperties = (
-  properties: ZodInfer<typeof RegressionPropertiesBaseSchema>,
-  context: RefinementCtx,
-): void => {
+/** 校验趋势采样区间 */
+const refineRegressionExtent = (properties: { extent?: Array<number> }, context: RefinementCtx): void => {
   if (properties.extent !== undefined && properties.extent[0] >= properties.extent[1]) {
     context.addIssue({
       code: 'custom',
@@ -62,16 +62,38 @@ const refineRegressionProperties = (
   }
 };
 
+/** 共享观测数据的额外拟合；省略项继承所在语义组的配置 */
+export const RegressionExtraMethodSchema = strictObject({
+  method: RegressionMethodSchema,
+  sampleCount: SmoothTransformSchema.shape.sampleCount,
+  extent: SmoothTransformSchema.shape.extent,
+  trend: RegressionTrendPropertiesSchema.optional(),
+})
+  .superRefine(refineRegressionExtent)
+  .describe('Additional regression fit sharing observations with inherited sampling and trend properties');
+
+const RegressionPropertiesBaseSchema = strictObject({
+  method: SmoothTransformSchema.shape.method,
+  sampleCount: SmoothTransformSchema.shape.sampleCount,
+  extent: SmoothTransformSchema.shape.extent,
+  point: RegressionPointPropertiesSchema.optional(),
+  trend: RegressionTrendPropertiesSchema.optional(),
+  extraMethods: array(RegressionExtraMethodSchema)
+    .optional()
+    .describe('Ordered additional fits; replaces inherited entries, with an empty array clearing them'),
+});
+
 /** Regression authored mark 的拟合和外观 properties */
-const RegressionMarkPropertiesSchema = RegressionPropertiesBaseSchema.superRefine(refineRegressionProperties).describe(
+const RegressionMarkPropertiesSchema = RegressionPropertiesBaseSchema.superRefine(refineRegressionExtent).describe(
   'Regression authored mark fitting and constant appearance properties',
 );
 
 /** Regression recipe 的拟合、外观与位置 domain 留白 */
 export const RegressionChartPropertiesSchema = RegressionPropertiesBaseSchema.extend({
+  autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 })
-  .superRefine(refineRegressionProperties)
+  .superRefine(refineRegressionExtent)
   .describe('Regression Chart fitting and constant appearance properties');
 
 /** Regression authored mark 只能覆盖共同数据中的 direct x/y 字段 */
@@ -84,6 +106,11 @@ export const RegressionMarkEncodingsSchema = strictObject({
 export const RegressionChartMarkSchema = strictObject({
   kind: literal(ChartType.Regression),
   override: boolean().optional().describe('Whether to replace the built-in Regression semantic group'),
+  /** 不生成当前图元的观测点，保留所有拟合趋势；默认关闭 */
+  hidePoints: boolean()
+    .default(false)
+    .optional()
+    .describe('Omit observation points from this mark while retaining all fitted trends'),
   encodings: RegressionMarkEncodingsSchema.optional(),
   properties: RegressionMarkPropertiesSchema.optional(),
 }).describe('Regression Chart mark payload');
@@ -122,3 +149,6 @@ export type IRRegressionTrendProperties = ZodInfer<typeof RegressionTrendPropert
 
 /** Regression authored mark Source IR */
 export type IRRegressionMark = ZodInfer<typeof RegressionChartMarkSchema>;
+
+/** Regression 额外趋势配置 */
+export type IRRegressionExtraMethod = ZodInfer<typeof RegressionExtraMethodSchema>;

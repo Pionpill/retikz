@@ -1,3 +1,5 @@
+import type { Lang } from '@/i18n';
+
 /** Point family 示例坐标系控件的可选值 */
 export type PointCoordinateSystem = 'cartesian2D' | 'polar2D';
 
@@ -24,5 +26,18 @@ export const createPointCoordinateControl = <const TId extends string>(
   options: [
     { value: 'cartesian2D' as const, label: options.cartesianLabel },
     { value: 'polar2D' as const, label: options.polarLabel },
+  ],
+});
+
+/** 创建紧跟数据表的 Point 坐标系控件分组 */
+export const createPointCoordinateSection = <const TId extends string>(id: TId, lang: Lang = 'zh') => ({
+  label: lang === 'zh' ? '坐标' : 'Coordinate',
+  controls: [
+    createPointCoordinateControl({
+      id,
+      label: lang === 'zh' ? '坐标系' : 'Coordinate system',
+      cartesianLabel: lang === 'zh' ? '笛卡尔' : 'Cartesian',
+      polarLabel: lang === 'zh' ? '极坐标' : 'Polar',
+    }),
   ],
 });
