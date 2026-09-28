@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRAnimationTrack, IRScene, PathCommand, ScenePrimitive, SceneResource } from '../../src';
+import type { IRAnimationTrack, IRScene, PathCommand, ScenePrimitive, SceneResource, TextPrim } from '../../src';
 import { compileToScene, defineArrow } from '../../src';
 import { visualBoundsOfPrimitives } from '../../src/compile/orchestration/visual-bounds';
 
@@ -8,6 +8,31 @@ const boundsOf = (primitives: ReadonlyArray<ScenePrimitive>, resources: Readonly
   visualBoundsOfPrimitives(primitives, resources);
 
 describe('canonical visual bounds', () => {
+  it.each<{ baseline: TextPrim['baseline']; y: number }>([
+    { baseline: 'alphabetic', y: 20 },
+    { baseline: 'top', y: 30 },
+    { baseline: 'middle', y: 13 },
+    { baseline: 'bottom', y: -4 },
+  ])('positions multiline text by its $baseline anchor', ({ baseline, y }) => {
+    expect(
+      boundsOf([
+        {
+          type: 'text',
+          x: 20,
+          y: 30,
+          lines: [{ text: 'first' }, { text: 'second' }, { text: 'third' }],
+          fontSize: 16,
+          align: 'middle',
+          baseline,
+          lineHeight: 12,
+          measuredWidth: 40,
+          measuredHeight: 34,
+          fill: '#000',
+        },
+      ]),
+    ).toEqual({ x: 0, y, width: 40, height: 34 });
+  });
+
   it('uses measured Text alignment and baseline without remeasuring', () => {
     expect(
       boundsOf([
