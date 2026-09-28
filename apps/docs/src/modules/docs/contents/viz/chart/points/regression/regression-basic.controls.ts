@@ -1,13 +1,12 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { createPointCoordinateControl } from '../point-coordinate-control';
 import { irisRegressionData } from './regression-basic.data';
 
 /** Regression 基础 playground 的稳定控件 id */
 export const REGRESSION_BASIC_CONTROL_IDS = {
-  coordinateSystem: 'regression-basic-coordinate-system',
   groupBySpecies: 'regression-basic-group-by-species',
+  pointSize: 'regression-basic-pointSize',
   method: 'regression-basic-method',
   order: 'regression-basic-order',
   sampleCount: 'regression-basic-sample-count',
@@ -36,17 +35,7 @@ export const regressionBasicControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: '坐标',
-      controls: [
-        createPointCoordinateControl({
-          id: REGRESSION_BASIC_CONTROL_IDS.coordinateSystem,
-          label: '坐标系',
-          cartesianLabel: '笛卡尔',
-          polarLabel: '极坐标',
-        }),
-      ],
-    },
+
     {
       label: '拟合',
       controls: [
@@ -54,7 +43,7 @@ export const regressionBasicControls = definePreviewControls({
           kind: 'switch',
           id: REGRESSION_BASIC_CONTROL_IDS.groupBySpecies,
           label: '按物种分别拟合',
-          defaultValue: true,
+          defaultValue: false,
         },
         {
           kind: 'select',
@@ -94,6 +83,15 @@ export const regressionBasicControls = definePreviewControls({
     {
       label: '观测点',
       controls: [
+        {
+          kind: 'range',
+          id: REGRESSION_BASIC_CONTROL_IDS.pointSize,
+          label: '点半径',
+          defaultValue: 4,
+          min: 1,
+          max: 12,
+          step: 1,
+        },
         {
           kind: 'range',
           id: REGRESSION_BASIC_CONTROL_IDS.pointOpacity,
@@ -152,8 +150,8 @@ export const regressionBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: regressionBasicControls,
   canonicalValues: {
-    [REGRESSION_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
-    [REGRESSION_BASIC_CONTROL_IDS.groupBySpecies]: true,
+    [REGRESSION_BASIC_CONTROL_IDS.groupBySpecies]: false,
+    [REGRESSION_BASIC_CONTROL_IDS.pointSize]: 4,
     [REGRESSION_BASIC_CONTROL_IDS.method]: 'linear',
     [REGRESSION_BASIC_CONTROL_IDS.order]: 3,
     [REGRESSION_BASIC_CONTROL_IDS.sampleCount]: 64,
@@ -164,8 +162,8 @@ export const previewControlContract = {
     [REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity]: 0.9,
   },
   relatedApis: [
-    'RegressionChart.coordinate',
     'RegressionEncodings.series',
+    'RegressionProperties.point.size',
     'RegressionProperties.method',
     'RegressionProperties.sampleCount',
     'RegressionProperties.point.opacity',

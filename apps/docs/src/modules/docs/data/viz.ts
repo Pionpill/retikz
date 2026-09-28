@@ -226,17 +226,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartRegression',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.regression',
+              capability: 'chart.regression',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'regression-minimal',
-                order: 30,
-              },
+              layout: 'article',
             },
           },
           {

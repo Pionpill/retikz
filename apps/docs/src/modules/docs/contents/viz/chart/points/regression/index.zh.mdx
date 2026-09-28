@@ -1,163 +1,603 @@
 ---
 title: 回归图
-description: 在原始观测点上叠加一条或多条拟合趋势，用统一的 Chart authoring 比较两个连续变量的关系。
-family: scatter-points
-usage: distribution
+description: 回归图在原始观测点上叠加拟合趋势，用来概括两个连续变量的关系。
 ---
 
-<ShowcaseGallery
-  examples={[
-    {
-      id: 'regression-minimal',
-      title: '基础用法',
-      description: '这是只传必要配置的最简用法；可切换到 IR 查看配置项，配置简单时只需在 `RegressionChart` 根组件传递。',
-      preview: {
-        files: ['regression-minimal', 'regression-minimal.data.ts'],
-        size: 'xxxl',
-        caption: '100 个航班的飞行距离与延误分钟数静态快照，数据来自 Vega Datasets。',
-      },
-    },
-    {
-      id: 'regression-basic',
-      title: '进阶调试：观测与分组趋势',
-      description: '用 `RegressionChart` 同时显示 Iris 观测点和趋势线，并比较全局拟合与按物种分别拟合。',
-      preview: {
-        files: ['regression-basic', 'regression-basic.data.ts', 'regression-basic-style.ts'],
-        controls: { name: 'regression-basic' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: '切换六种内置方法、分组方式与采样密度；只有 polynomial 会显示阶数控件。',
-      },
-    },
-  ]}
->
-Regression 适合在保留每个观测的同时，概括两个连续变量之间的整体或分组趋势。若只需要点的分布，使用 [Scatter](/viz/chart/points/scatter)；若需要完全控制数据视图、变换或趋势图元，直接使用 Plot。
+回归图在原始观测点上叠加拟合趋势，用来概括两个连续变量的关系。每行数据提供一对观测值；可按 series 分别拟合。趋势不会经过所有点，也不代表因果关系或预测已经过验证。
 
-本页介绍当前图形的专属入口与约束；公共配置的 React 组件写法见 [快速开始示例](/viz/chart/get-start#最小结果)。
+## 接入方式
 
-## `RegressionChart`
+完成 [安装与首次渲染](/viz/chart/get-start) 后，可用以下四种入口。示例共用同一数据与配置。
 
-根 `recipe` 直接使用 Regression 的 exact slots；组件身份会补齐 Point family 与 `chartType: 'regression'`：
+100 个航班，横轴为航程、纵轴为到达延误，橙色直线表示默认的线性拟合趋势。
 
-```tsx
-<RegressionChart
-  rows={rows}
-  recipe={{
-    encodings: { x: 'sepalLength', y: 'petalLength', series: 'species' },
-    properties: { method: { kind: 'linear' }, sampleCount: 64 },
-  }}
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-minimal', 'regression-minimal.data.ts']}
+  hideCode
+  size="xl"
 />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+`RegressionChart` 的专属子组件如下。映射是基础入口，属性和追加图元按需声明。
+
+```text
+RegressionChart
+├── RegressionEncodings
+├── RegressionProperties
+└── RegressionMark
 ```
 
-`RegressionEncodings`、`RegressionProperties` 与 `RegressionMark` 是相同 recipe slots 的等价 JSX sugar。root-only 写法可以省略 `children`；跨 slot 可以混用，同一 slot 双来源会 fail-loud。
+```tsx
+import { RegressionChart, RegressionEncodings } from '@retikz/chart-react/point';
+import { regressionMinimalData } from './regression-minimal.data';
 
-## 如何读图
+export const Example = () => (
+  <RegressionChart rows={regressionMinimalData}>
+    <RegressionEncodings x="distanceMiles" y="delayMinutes" />
+  </RegressionChart>
+);
+```
 
-每个 Regression semantic group 固定包含两层：Point 显示当前数据视图中的原始观测，Path 在同一数据视图上执行 mark-local `smooth`，再连接预测采样。趋势线不是对原始点的逐点连线，也不会替换 Point 的输入。
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-`RegressionEncodings.series` 是 recipe-only 的可选角色。省略它会对当前数据整体拟合一条趋势；提供它会按每个字段值独立拟合，并让 Point 与 Path 共享同一分类颜色尺度、图例和 series identity。`RegressionMark` 不能改写或移除这个角色。
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { RegressionChartSchema, createRegressionChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { regressionMinimalData } from './regression-minimal.data';
+import { Layout } from '@retikz/react';
 
-省略 `series` 且未显式设置成员颜色时，观测点与趋势线会依次使用 Plot `palette.series` 的不同顺序槽位，以便区分两层，不会回退为 CSS `currentColor`。显式 point color / fill 与 trend stroke 仍分别优先。
+const chart = RegressionChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: { chartType: 'regression', encodings: { x: 'distanceMiles', y: 'delayMinutes' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createRegressionChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': regressionMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
 
-## 六种内置方法
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
 
-`RegressionProperties.method` 使用 `IRPlotSmoothMethod` 的严格判别联合。省略时默认 `linear`；完整名称是公开 Source discriminator，不接受 `quad`、`poly`、`log`、`exp` 或 `pow`。
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-| `kind`        | 拟合方程                  | 每组最低条件                                 | 额外约束                      |
-| ------------- | ------------------------- | -------------------------------------------- | ----------------------------- |
-| `linear`      | `y = a + bx`              | 2 个有效 pair，至少 2 个不同 x               | 默认方法                      |
-| `quadratic`   | `y = a + bx + cx²`        | 3 个有效 pair，并形成满秩拟合                | 固定二次                      |
-| `polynomial`  | `y = c₀ + c₁x + … + cₙxⁿ` | 至少 `order + 1` 个有效 pair，并形成满秩拟合 | `order` 为 2～6 整数，默认 3  |
-| `logarithmic` | `y = a + b ln(x)`         | 2 个有效 pair，至少 2 个不同 x               | 所有有限 x 与采样范围必须为正 |
-| `exponential` | `y = a exp(bx)`           | 2 个有效 pair，至少 2 个不同 x               | 所有有限 y 必须为正           |
-| `power`       | `y = a xᵇ`                | 2 个有效 pair，至少 2 个不同 x               | 所有有限 x、y 与采样范围为正  |
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { regressionChart, RegressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { regressionMinimalData } from './regression-minimal.data';
 
-`sampleCount` 控制每组趋势 Path 的等距预测点数，默认 64 且至少为 2。`extent` 只改变预测采样范围；省略时使用该组有限 x 的观测范围。拟合发生在数据空间，坐标投影只影响最终显示。
+const chart = regressionChart({
+  data: regressionMinimalData,
+  encodings: { x: 'distanceMiles', y: 'delayMinutes' },
+});
+export const svg = renderChart(chart, { adapters: [RegressionChartInputEmbedAdapter] }).svg;
+```
 
-## `RegressionEncodings`
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
 
-`RegressionEncodingsProps` 精确复用 `IRRegressionChartEncodings`。
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { RegressionChartSchema, createRegressionChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { regressionMinimalData } from './regression-minimal.data';
+import { compileToScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
 
-| Slot             | 类型                                                                      | 必填 | Regression 行为                                                               |
-| ---------------- | ------------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------- |
-| `x`              | Point position mapping                                                    | 是   | 回归自变量；支持 Point 位置字段、aggregate、允许的 derived transform 与 scale |
-| `y`              | Point position mapping                                                    | 是   | 回归因变量；支持与 x 相同的 Point position 能力                               |
-| `series`         | `string` 或带可选 ordinal scale 的 direct mapping                         | 否   | 只属于 recipe；控制分组、分类颜色、图例与稳定 identity                        |
-| `row` / `column` | `string`、`IRPlotPartitionDimension` 或 `Array<IRPlotPartitionDimension>` | 否   | 按当前 panel rows 独立拟合                                                    |
-| `facet`          | `IRPlotFacetOptions`                                                      | 否   | 配置分面；必须同时存在 row 或 column                                          |
+const chart = RegressionChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: { chartType: 'regression', encodings: { x: 'distanceMiles', y: 'delayMinutes' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createRegressionChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': regressionMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
 
-Facet 先建立 panel data view，再让每个 panel 内的 Smooth 独立拟合。共享或独立尺度仍由 Plot facet resolve 决定；它不会把面板外的 rows 混入模型。
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
 
-## `RegressionProperties`
+</DocTab>
+</DocTabs>
 
-`RegressionPropertiesProps` 同时配置拟合策略与 Point / trend 的常量外观。
+## 基础用法
 
-| 属性             | 类型                                                                    | 默认值              | 行为                                                      |
-| ---------------- | ----------------------------------------------------------------------- | ------------------- | --------------------------------------------------------- |
-| `method?`        | `IRPlotSmoothMethod`                                                    | `linear`            | 选择上表的完整方法对象                                    |
-| `sampleCount?`   | `number`                                                                | `64`                | 每组预测采样数，必须是至少 2 的整数                       |
-| `extent?`        | `[number, number]`                                                      | 当前组有限 x 域     | 趋势采样范围；下界必须小于上界                            |
-| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径 | 配置连续位置 scale 的 range 或显式 ratio 留白             |
-| `autoPadding?` | `'max-radius'` \| `'point-aware'` \| `{ kind: 'max-radius' \| 'point-aware'; clearance?: number \| IRBoxSpacing }` | `'max-radius'` | 自动留白策略；point-aware 按逐点位置与半径求解；显式 domainPadding 优先 |
-| `point?`         | `IRRegressionPointProperties`                                           | Point 默认值        | 原始观测点的完整 Point 常量 properties                    |
-| `trend?`         | `IRRegressionTrendProperties`                                           | Path 默认值         | 只允许 Path 的 stroke、线宽、透明度、端点、阴影等常量外观 |
+### 回归映射
 
-`autoPadding` 仅属于 recipe 属性。`point-aware` 当前要求二维笛卡尔坐标、linear/time 位置尺度且无 placement；分类轴、Polar 和 jitter 等组合不支持。全部端点显式指定 `domainPadding` 时跳过逐点求解。详见 [点图留白策略](/viz/chart/points#自动补齐边缘留白)。
+React 通过 `RegressionEncodings` 声明，Vanilla API 使用 `encodings`，直接 IR 使用 `recipe.encodings`。映射确定拟合使用的两个变量，以及是否按类别分别拟合。
 
-对象形式 `autoPadding: { kind: 'point-aware', clearance: 8 }` 可在自动端预留外缘净空；`clearance` 使用非负绘图单位，默认 `0`。最大半径策略同样支持；显式 `domainPadding` 覆盖的端点不叠加净空。
+Iris 数据包含 150 条鸢尾花观测。横轴为萼片长度，纵轴为花瓣长度；不同物种可能有不同的分布范围，因此分组决定了趋势线在概括哪些样本。
 
-`clearance` 也接受 Kernel 的四边间距对象 `IRBoxSpacing`，可设置 `default`、`x`、`y`、`top`、`right`、`bottom`、`left`，各项均为非负数。优先级为具体边 → 轴 → `default` → `0`；数值 `8` 等价于 `{ default: 8 }`。例如 `{ default: 8, x: 12, top: 20, left: 0 }` 得到上 20、下 8、左 0、右 12；明确的四边方向仅支持笛卡尔坐标，反向轴仍按视觉方向解释。
+- `x / y`：分别绑定 sepalLengthCm 和 petalLengthCm。
+- `series`：绑定 species，让物种分别拟合。
 
-当存在 `series` 时，字段颜色优先于 `point.color`、`point.fill` 和 `trend.stroke`，其余常量外观仍有效。这样点、趋势和图例始终使用同一个分类 scale identity。
+切换分组观察整体趋势和组内趋势的差别。整体相关性可能部分来自组间差异，不能直接代替每个物种内部的关系。
 
-## `RegressionMark`
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-encodings', 'regression-basic.data.ts']}
+  controls={{ name: 'regression-encodings' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
 
-`RegressionMark` 是 RegressionChart 的直接子级 declaration。普通 mark 追加完整的“Point + Smooth Path”组；`override` 原位替换 recipe 的隐式主组。
+完整属性与约束见 [API 参考：回归映射](#回归映射-1)。
 
-| `RegressionMarkProps` 属性 | 类型                                | 默认值  | 行为                                                                                                   |
-| -------------------------- | ----------------------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `override?`                | `boolean`                           | `false` | 替换完整 semantic group；未命中时追加并通过 `onWarn` 报告                                              |
-| `encodings?`               | `{ x?: string; y?: string }`        | 继承    | 只覆盖共同数据视图中已存在的 direct x / y 字段                                                         |
-| `properties?`              | `RegressionMarkProps['properties']` | 继承    | method / sampleCount / extent 按字段覆盖，point / trend 按属性合并；不接受 recipe-only `domainPadding` |
+### 回归属性
 
-无论追加还是 override，mark 都继承 recipe `series`，也不能删除 Smooth、重写趋势输出字段或只留下 Point。
+React 通过 `RegressionProperties` 声明，Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。属性选择拟合方法与绘制采样，并分别设置观测点和趋势线外观。
 
-## 失败边界
+本例固定横纵轴映射，默认将全部观测合并拟合，也可开启“按物种分别拟合”，比较相同方法在各组上的趋势。分组后点与趋势线使用物种分类颜色，不再显示统一颜色控件。同一批观测可用不同方法进行拟合。方法控制模型形式，采样数只决定绘制趋势时使用多少预测点；二者不是同一件事。
 
-Regression 以整张 Chart fail-loud：任一分组样本不足、秩退化、方法值域不成立、显式 extent 非递增或预测出现非有限值时，不会静默跳过该组，也不会降级为 Point-only 图。错误摘要包含方法和稳定的 group 字段/值，便于定位失败分组。
+- `method`：选择线性、二次或其他支持的方法。
+- `sampleCount`：增加曲线绘制采样，不增加原始样本。
+- `point / trend`：分别调整观测和趋势的视觉权重。
 
-非有限 x / y 继续沿用 Smooth 的无效 pair 过滤策略；值域检查针对过滤后的有限 pair。`logarithmic`、`exponential` 与 `power` 的正值要求不同，切换方法前应确认数据满足上表约束。
+增加 sampleCount 不会提高模型阶数，也不会修复样本不足。选择方法前应检查该方法对正值与样本数量的要求。
 
-## 公开入口
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-basic', 'regression-basic.data.ts']}
+  controls={{ name: 'regression-basic' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
 
-| 包入口                                   | 主要公开导出                                                                                                                                                                                                    | 用途                         | 边界                               |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------------------------------- |
-| `@retikz/chart/point/regression`         | `RegressionChartSchema`、`RegressionChartRecipeSchema`、`RegressionChartEncodingsSchema`、`RegressionChartPropertiesSchema`、`RegressionChartMarkSchema`、对应 `IRRegression*` 类型、provider 与 locator helper | JSON Source、schema 与运行时 | 不提供 React 或 plain factory      |
-| `@retikz/chart-react/point`              | `RegressionChart`、`RegressionEncodings`、`RegressionProperties`、`RegressionMark` 及其 Props                                                                                                                   | React declaration authoring  | 公共 Chart 声明从包根入口导入      |
-| `@retikz/chart-vanilla/point/regression` | `InputRegressionChart`、`RegressionChartInputEmbedProps`、`normalizeRegressionChart`、`regressionChart`                                                                                                       | plain authoring 与 SSR 接线  | 最终生成同一个 `IRRegressionChart` |
-| `@retikz/plot`                           | `SmoothMethodKind`、`SmoothMethodSchema`、`SmoothTransformSchema`、`IRPlotSmoothMethod`、`IRPlotSmoothTransform`                                                                                                | Plot Smooth 原子             | 内置 method 是闭合集合             |
+完整属性与约束见 [API 参考：回归属性](#回归属性-1)。
 
-## 完全自定义拟合
+### 回归图元
 
-六个 `method.kind` 是闭合集合，Regression 不提供“注册第七种 method”的扩展点。若需要 robust regression、加权拟合、独立 series、多数据视图或完全控制输出字段，请直接组合 [`<PathMark>`](/viz/plot/mark/path) 与 mark-local transform，并按 [自定义 Plot transform](/viz/plot/transform/custom-transform) 注册完整 `TransformDefinition`；`SmoothTransformSchema` 的字段参考见 [Transform Schema](/viz/plot/reference/transform)。
+React 通过 `RegressionMark` 声明，Vanilla API 使用 `marks`，直接 IR 使用 `recipe.marks`。 React 不传 `kind`；Vanilla / IR 图元对象使用 `kind: 'regression'`。每个图元包含观测点、主趋势与额外趋势，可用于替换整个组合或叠加不同位置映射。同一观测的多方法比较使用 `extraMethods`，见下方扩展用法。
 
-这种路径由 Plot 拥有数据、transform、Path、scale、lineage 与 locator；它不是 Regression recipe 的 method extension，也不会继承 Regression 的自动 Point、legend 或 semantic override。
+下面将每个物种的默认线性组合替换为二次组合。观测点仍然存在；更弯的趋势只是另一种模型描述，并不自动意味着解释更好。
 
-## 相关内容
+- `override`：替换主回归组合。
+- `properties.method`：设为 quadratic。
+- `properties.trend.strokeWidth`：加粗趋势方便辨认。
+
+RegressionMark 始终继承 series，不能在同一个图元里改成另一套分组规则。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-marks', 'regression-basic.data.ts']}
+  size="xl"
+  controls={{ name: 'regression-marks' }}
+  caption="切换替换与叠加模式，调整图元样式，观察继承与覆盖的效果。"
+/>
+
+完整属性与约束见 [API 参考：回归图元](#回归图元-1)。
+
+## 扩展用法
+
+### 分面比较
+
+将 species 同时用于分组与面板，可以把密集观测拆开，并检查每个物种的趋势是否由足够的组内变化支撑。
+
+下表分组均为 IR `recipe` 内的属性；React 与 Vanilla 使用上文对应入口。
+
+| 分组         | 属性名          | 类型         | 说明                         |
+| ------------ | --------------- | ------------ | ---------------------------- |
+| `encodings`  | `x / y`         | 字段映射     | 萼片与花瓣长度               |
+|              | `series / row`  | string       | species 负责拟合分组与行分面 |
+|              | `facet`         | 分面配置对象 | 共享尺度以比较各组位置       |
+| `properties` | `point / trend` | 外观对象     | 减轻点遮挡并突出趋势         |
+
+每条线只使用其面板中的观测进行拟合。共享尺度不意味着共享拟合参数。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-facet', 'regression-basic.data.ts']}
+  size="xxxl"
+  controls={{ name: 'regression-facet' }}
+/>
+
+### 拟合方法比较
+
+保留整体线性趋势，通过 `extraMethods` 追加多项式拟合，观察模型形式如何影响同一数据上的趋势。观测点只绘制一次，各条趋势共享位置映射和分组；示例默认使用三次多项式，可通过控件调整阶数。
+
+下表分组均为 IR `recipe` 内的属性；React 与 Vanilla 使用上文对应入口。
+
+| 分组         | 属性名                 | 类型                             | 说明                                       |
+| ------------ | ---------------------- | -------------------------------- | ------------------------------------------ |
+| `encodings`  | `x / y`                | 字段映射                         | 两个模型使用相同观测                       |
+| `properties` | `trend`                | 路径外观对象                     | 主模型使用蓝色实线                         |
+|              | `extraMethods`         | `Array<IRRegressionExtraMethod>` | 追加多项式趋势，不重复绘制观测点           |
+|              | `extraMethods[].trend` | `IRRegressionTrendProperties`    | 继承公共趋势样式，以橙色虚线覆盖颜色与线型 |
+
+额外项必须指定 `method`；省略的 `sampleCount`、`extent` 和 `trend` 成员继承当前组合的配置。使用 series 时，各条趋势分别按同一类别拟合；额外项显式设置的 `trend.stroke` 可覆盖该条趋势的类别颜色。
+
+曲线的差异提示模型假设的重要性。这里只比较描述性拟合，不提供误差带、模型选择或样本外验证。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-compare', 'regression-basic.data.ts']}
+  size="xxl"
+  controls={{ name: 'regression-compare' }}
+/>
+
+## 错误与限制
+
+各方法的方程、样本数量与值域要求见 [拟合方法](#拟合方法)。
+
+- 任一分组样本不足、秩退化或预测非有限时，整张图明确失败，不静默退化成散点图。
+- 非有限 x / y 对先过滤；对数、指数与幂方法的正值条件仍需满足。
+- 自定义方法必须注入当前运行的 registry；方法名不能与内置或其他注入项重复。
+- 默认过点曲线可能在采样点之间过冲；它改善视觉连续性，不保证点间严格等于模型，也不替代预测验证。
+
+React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，否则报错。
+
+`point-aware` 仅支持二维笛卡尔坐标、linear/time 位置尺度且无散布的组合。全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释此类图表的特殊行为；只需使用 API 时可以跳过。" />
+
+### 拟合方法
+
+Regression 通过 Plot 的 `smooth` 变换拟合趋势。每个分面、每个 `series` 分组独立计算；先过滤非有限的 x / y 数据对，再用剩余的 $N$ 对观测 $(x_i,y_i)$ 求解模型。`method` 和 `extraMethods` 中的每种方法都执行这一过程。
+
+| 名称       | 方法          | 方程                          | 有效样本与值域                            | 拟合时间复杂度 |
+| ---------- | ------------- | ----------------------------- | ----------------------------------------- | -------------- |
+| 线性       | `linear`      | $\hat y=a+bx$                 | 至少两对且至少两个不同 x                  | $O(N)$         |
+| 二次多项式 | `quadratic`   | $\hat y=a+bx+cx^2$            | 至少三对、三个不同 x，且拟合满秩          | $O(N)$         |
+| 多项式     | `polynomial`  | $\hat y=\sum_{k=0}^{n}c_kx^k$ | 至少 n + 1 对、n + 1 个不同 x，且拟合满秩 | $O(Nn^2+n^3)$  |
+| 对数       | `logarithmic` | $\hat y=a+b\ln x$             | 至少两对、不同 x；x 与采样范围为正        | $O(N)$         |
+| 指数       | `exponential` | $\hat y=ae^{bx}$              | 至少两对、不同 x；y 为正                  | $O(N)$         |
+| 幂         | `power`       | $\hat y=ax^b$                 | 至少两对、不同 x；x、y 和采样范围为正     | $O(N)$         |
+
+其中 $\hat y$ 是预测值。`polynomial` 的阶数 $n$ 由 `order` 指定，省略为 3，允许 2–6 的整数。
+
+表中复杂度针对当前实现中单组、单个模型的参数求解，$N$ 为过滤后的有效样本数，$n$ 为多项式阶数；按固定精度数值运算计，不包含分组、趋势采样及渲染。多个分组、多个拟合方法的计算开销分别累加。
+
+#### 线性拟合
+
+`linear` 寻找一条直线，使观测值与预测值之间的纵向残差平方和最小：
+
+$$
+\min_{a,b}\sum_{i=1}^{N}\left(y_i-a-bx_i\right)^2
+$$
+
+先计算横纵坐标的均值 $\bar x$、$\bar y$，再得到斜率与截距：
+
+$$
+b=\frac{\sum_{i=1}^{N}(x_i-\bar x)(y_i-\bar y)}{\sum_{i=1}^{N}(x_i-\bar x)^2},\qquad a=\bar y-b\bar x
+$$
+
+如果所有 x 都相同，分母为零，无法确定斜率，因此拟合失败。
+
+**时间复杂度：** 求均值、方差和协方差只需常数次遍历样本，因此参数求解为 $O(N)$；求得系数后，单次预测为 $O(1)$。
+
+#### 二次与多项式拟合
+
+`quadratic` 固定使用二阶多项式；`polynomial` 使用指定阶数。两者都求解原始 y 空间中的最小二乘问题。为减轻高次幂带来的数值问题，实现先将 x 平移、缩放到 $[-1,1]$：
+
+$$
+m=\frac{x_{\min}+x_{\max}}{2},\qquad s=\max_i\lvert x_i-m\rvert,\qquad z_i=\frac{x_i-m}{s}
+$$
+
+以 $1,z_i,z_i^2,\ldots,z_i^n$ 作为设计矩阵 $V$ 的第 i 行，求归一化坐标下的系数向量 $\boldsymbol\beta$：
+
+$$
+\min_{\boldsymbol\beta}\sum_{i=1}^{N}\left(y_i-\sum_{k=0}^{n}\beta_kz_i^k\right)^2,
+\qquad
+(V^{\mathsf T}V)\boldsymbol\beta=V^{\mathsf T}\mathbf y
+$$
+
+实现使用带缩放选主元的高斯消元与回代求解该方程组，并以 Horner 法计算预测值。预测时仍先将输入 x 转换为 z；归一化不改变拟合的多项式阶数。样本不足、不同 x 数量不足或数值上秩退化时会报错，不自动降低阶数。
+
+**时间复杂度：** 累加正规方程矩阵需要 $O(Nn^2)$，消元求解需要 $O(n^3)$，合计 $O(Nn^2+n^3)$；Horner 法单次预测为 $O(n)$。二次拟合的阶数固定为 2，因此拟合为 $O(N)$、单次预测为 $O(1)$。当前多项式阶数限定为 2–6，固定阶数时也随样本数线性增长。
+
+#### 对数、指数与幂拟合
+
+这三种方法先变换数据，再复用线性拟合中的斜率、截距计算，最后将结果转换回原始 y 空间：
+
+| 方法          | 用于线性拟合的数据            | 还原预测值                       |
+| ------------- | ----------------------------- | -------------------------------- |
+| `logarithmic` | $(u_i,v_i)=(\ln x_i,y_i)$     | $\hat y=\alpha+\beta\ln x$       |
+| `exponential` | $(u_i,v_i)=(x_i,\ln y_i)$     | $\hat y=\exp(\alpha+\beta x)$    |
+| `power`       | $(u_i,v_i)=(\ln x_i,\ln y_i)$ | $\hat y=\exp(\alpha+\beta\ln x)$ |
+
+指数与幂模型中的系数为 $a=e^\alpha$、$b=\beta$。它们最小化的是对数 y 空间中的残差平方和，因此通常与直接最小化原始 y 残差的非线性拟合结果不同。取对数的字段必须为正；仅将坐标轴设置为 log 尺度不会改变拟合方法。
+
+**时间复杂度：** 对数变换与后续线性拟合均为 $O(N)$，因此这三种方法的参数求解各为 $O(N)$；单次预测只需固定次数的算术与对数、指数运算，为 $O(1)$。
+
+#### 从模型得到趋势线
+
+求得系数后，在 `extent` 指定的范围内均匀选取 `sampleCount` 个 x，再代入模型得到预测值。省略范围时使用当前组有效 x 的最小值与最大值；采样数默认 64。设范围为 $[L,U]$、采样数为 $M$：
+
+$$
+x_j=L+\frac{j}{M-1}(U-L),\qquad \hat y_j=f(x_j),\qquad j=0,\ldots,M-1
+$$
+
+趋势线默认用 `catmullRom` 过点曲线按 x 顺序连接预测点，经三次贝塞尔绘制。`trend.curve: 'linear'` 改为逐点折线；其他取值复用 Plot Path 的连接方式。增加采样数只让曲线绘制更细致，不改变拟合系数，也不会增加原始样本。超出观测范围的 `extent` 会产生外推结果，其可靠性需要另行判断。
+
+所有拟合方法统一使用完整的固定采样与所选连接方式，不单独简化线性拟合。在线性坐标下，共线预测点经过默认过点曲线连接后仍呈现直线；非线性坐标下按投影后的采样点连接。
+
+**采样时间复杂度：** 生成 $M$ 个预测点时，线性、二次、对数、指数与幂模型为 $O(M)$，n 阶多项式为 $O(Mn)$。加上参数求解，前五种方法合计 $O(N+M)$，多项式合计 $O(Nn^2+n^3+Mn)$；这些是拟合与数值采样开销，不代表整张图的渲染复杂度。
+
+### 自定义拟合
+
+自定义方法只需定义参数 schema 和 `fit`：schema 用唯一的字面量 `kind` 标识方法，负责参数约束与默认值；`fit(pairs, operation)` 接收当前组的有效观测与已解析参数，返回带 `predict(x)` 的模型。Data 不生成绘图路径，Plot 负责按 `extent`、`sampleCount` 采样，再用 `trend.curve` 连接预测点。
+
+下面沿一次回归图的执行过程，展示各个包提供的能力：
+
+<ComponentPreview files="regression-fitting-flow" size="lg" hideCode type="flow" />
+
+用 `@retikz/data` 的 `defineRegression` 定义方法，再通过 `lowerOptions.regressionDefinitions` 注入。内置与外部方法使用同一注册与执行流程；JSON 只保存方法名和参数，不保存函数。
+
+下面实现一个**固定斜率拟合算法**：调用方给定斜率，算法根据观测数据自动求解截距，使残差平方和最小。它适合斜率已由先验关系确定、只需估计整体偏移的情况。
+
+与同时估计斜率和截距的内置线性回归不同，这个方法只拟合截距。`slope` 是自定义参数，省略时由 schema 补为 `1`。
+
+固定斜率 $b$ 后，只需求解截距 $a$：
+
+$$
+a=\frac{1}{N}\sum_{i=1}^{N}(y_i-bx_i),\qquad \hat y=a+bx
+$$
+
+这个例子的拟合复杂度为 $O(N)$，单次预测为 $O(1)$。使用下面的三对观测并设置 `slope: 2`，得到 $a=4/3$；在 $x=0,1,2$ 处的预测值分别为 $4/3,10/3,16/3$。斜率由调用方指定，截距仍由当前组数据计算。
+
+```ts
+import { defineRegression, RetikzDataError } from '@retikz/data';
+import { literal, number, strictObject } from 'zod';
+
+export const fixedSlopeFit = defineRegression({
+  schema: strictObject({
+    kind: literal('fixed-slope'),
+    slope: number().default(1),
+  }),
+  fit: (pairs, { slope }) => {
+    if (pairs.length === 0) throw new RetikzDataError('fixed-slope requires at least one observation');
+    const intercept = pairs.reduce((sum, pair) => sum + pair.y - slope * pair.x, 0) / pairs.length;
+    return { predict: x => intercept + slope * x };
+  },
+});
+
+export const lowerOptions = { regressionDefinitions: [fixedSlopeFit] };
+export const rows = [
+  { x: 0, y: 1 },
+  { x: 1, y: 4 },
+  { x: 2, y: 5 },
+];
+```
+
+下面的 demo 使用同一个算法。圆点是观测值，橙线是拟合结果；调整斜率后，算法会重新求解截距，直线始终经过观测均值点 $(1,10/3)$。
+
+<ComponentPreview
+  responsive
+  mode="showcase"
+  controlPanelDefaultOpen={false}
+  files={['regression-custom', 'regression-custom-fit.ts', 'regression-custom.data.ts']}
+  size="xl"
+/>
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+React 将 `lowerOptions` 传给 `RegressionChart`，并在 `recipe.properties` 中引用方法：
+
+```tsx
+import { RegressionChart } from '@retikz/chart-react/point';
+
+<RegressionChart
+  rows={rows}
+  lowerOptions={lowerOptions}
+  recipe={{ encodings: { x: 'x', y: 'y' }, properties: { method: { kind: 'fixed-slope', slope: 2 } } }}
+/>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Vanilla 使用同一份 Definition、数据和方法参数：
+
+```ts
+import { regressionChart } from '@retikz/chart-vanilla/point';
+
+const chart = regressionChart({
+  data: rows,
+  encodings: { x: 'x', y: 'y' },
+  properties: { method: { kind: 'fixed-slope', slope: 2 } },
+  lowerOptions,
+});
+```
+
+</DocTab>
+</DocTabs>
+
+直接 IR 在 `recipe.properties.method` 保存同一 JSON 对象，并将同一 `lowerOptions` 分别交给 `createRegressionChartProviderContribution([], lowerOptions)` 与 `createPlotProviderContribution({ rows }, lowerOptions)`。这些入口分别从 `@retikz/chart/point` 与 `@retikz/plot` 导入。
+
+`extraMethods[].method` 也可以引用自定义方法。每个分组独立拟合，`fit` 必须是同步纯函数，不修改观测；输出非有限值、未知参数、未注册或重复方法都会报错。需要特殊预测域时使用 `validateExtent(operation, extent)`。
+
+## API 参考
+
+React 使用 `RegressionChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `regressionChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'regression'`。React 与 Vanilla API 会补齐图形类型。
+
+React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局、标题与指南配置见 [编写与解析](/viz/chart/model/authoring)。
+
+### 回归映射
+
+对应 `RegressionEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
+
+| 通道           | 输入形式             | 说明                                                    |
+| -------------- | -------------------- | ------------------------------------------------------- |
+| `x / y`        | 字段名、位置映射     | 必需；自变量与因变量，决定点的位置                      |
+| `series`       | 字段名、直接映射     | 分别拟合各组，并共享分类颜色与图例；可绑定 ordinal 尺度 |
+| `row / column` | 字段名、分面维度     | 按当前面板数据独立拟合                                  |
+| `facet`        | `IRPlotFacetOptions` | 配置分面；须配合 `row`、`column` 中至少一项             |
+
+公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#regressionchartencodingsschema)。
+
+### 回归属性
+
+对应 `RegressionProperties`、Vanilla `properties` 和 IR `recipe.properties`。
+
+| 分类 | 属性            | 类型                                                     | 说明                                                             |
+| ---- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| 拟合 | `method`        | `IRRegressionChartProperties['method']`                  | 选择拟合方法及参数                                               |
+|      | `extraMethods`  | `Array<IRRegressionExtraMethod>`                         | 有序追加拟合趋势，共享观测点；省略不追加                         |
+|      | `sampleCount`   | `number`                                                 | 每组预测点数，至少为 2 的整数；省略为 64                         |
+|      | `extent`        | `[number, number]`                                       | 递增的预测范围；省略使用该组有限 x 范围                          |
+| 外观 | `point`         | `IRRegressionPointProperties`                            | 设置观测点外观                                                   |
+| 趋势 | `trend.curve`   | `IRRegressionTrendProperties['curve']`                   | 默认 `catmullRom`，额外趋势继承并可覆盖                          |
+|      | `trend`         | `IRRegressionTrendProperties`                            | 设置趋势线外观，不改变拟合方法                                   |
+| 留白 | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+|      | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
+
+完整属性结构见 [属性 Schema](#regressionchartpropertiesschema)；公共外观配置不在这里展开。
+
+### 回归图元
+
+对应 `RegressionMark`、Vanilla `marks` 和 IR `recipe.marks`。
+
+| 属性         | 类型                                | 说明                                                                                                              |
+| ------------ | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `override`   | `boolean`                           | 替换完整观测＋趋势组合，否则追加                                                                                  |
+| `hidePoints` | `boolean`                           | 默认 `false`；为 `true` 时不生成当前图元的散点，保留主趋势和额外趋势。                                            |
+| `encodings`  | `RegressionChartMark['encodings']`  | 覆盖同一数据中的直接字段；不覆盖 series                                                                           |
+| `properties` | `RegressionChartMark['properties']` | method、sampleCount、extent 按字段覆盖，point / trend 内逐项合并；extraMethods 整体替换，空数组清空；不含留白策略 |
+
+## Schema 参考
+
+以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
+
+### RegressionChartSchema
+
+<ZodSchema
+  name="RegressionChartSchema"
+  shallow
+  description="回归图的 Source IR；嵌套结构在所属小节说明。"
+  descriptions={{
+    namespace: '固定为 chart',
+    type: '固定为 point，表示点图家族',
+    id: '图表标识',
+    background: '图表背景',
+    presentation: '标题、副标题、注释与来源',
+    chartDefaults: '图表内部默认配置',
+    data: '外部数据集引用，不内嵌运行时数据',
+    layout: '图表布局尺寸与间距',
+    coordinate: '坐标系操作；不能与 plotExtension.composition 同时提供',
+    recipe: '回归图配方',
+    plotExtension: '追加的 Plot 能力配置',
+  }}
+/>
+
+### RegressionChartRecipeSchema
+
+<ZodSchema
+  name="RegressionChartRecipeSchema"
+  shallow
+  description="回归图配方。"
+  descriptions={{
+    chartType: '固定为 regression',
+    encodings: '字段映射，见下方映射 Schema',
+    properties: '常量属性，见下方属性 Schema',
+    guides: '默认坐标轴、网格与图例开关',
+    marks: '有序图元配置，见下方图元 Schema',
+  }}
+/>
+
+### RegressionChartEncodingsSchema
+
+<ZodSchema
+  name="RegressionChartEncodingsSchema"
+  shallow
+  description="回归图的字段映射。"
+  descriptions={{
+    x: '横向位置映射',
+    y: '纵向位置映射',
+    series: '序列分组映射',
+    row: '行分面维度',
+    column: '列分面维度',
+    facet: '分面配置，须配合 row 或 column 使用',
+  }}
+/>
+
+### RegressionChartPropertiesSchema
+
+<ZodSchema
+  name="RegressionChartPropertiesSchema"
+  shallow
+  description="回归图的常量属性。"
+  descriptions={{
+    method: '拟合方法及其参数',
+    extraMethods: '有序额外趋势，见下方额外方法 Schema',
+    sampleCount: '拟合曲线的采样数量',
+    extent: '拟合区间，下界必须小于上界',
+    point: '观测点外观',
+    trend: '拟合趋势线外观',
+    autoPadding: '自动留白策略；省略时使用 max-radius',
+    domainPadding: '显式位置域留白，优先于 autoPadding',
+  }}
+/>
+
+### RegressionExtraMethodSchema
+
+每项必须指定拟合方法，采样与外观沿用上方配置；只生成趋势线。数组顺序决定额外趋势的绘制顺序，不自动分配方法颜色或方法图例。任意一条趋势拟合失败都会使整张图失败。
+
+<ZodSchema
+  name="RegressionExtraMethodSchema"
+  description="共享观测的额外拟合配置。"
+  shallow
+  descriptions={{
+    method: '必需的拟合方法',
+    sampleCount: '覆盖当前组合的采样数量',
+    extent: '覆盖当前组合的拟合区间',
+    trend: '逐项覆盖当前组合的趋势外观',
+  }}
+/>
+
+### RegressionChartMarkSchema
+
+`encodings` 只允许 x、y，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。
+
+<ZodSchema
+  name="RegressionChartMarkSchema"
+  shallow
+  description="回归图的单个图元配置。"
+  descriptions={{
+    kind: '固定为 regression',
+    override: '为 true 时替换内置同类图元；省略时追加',
+    hidePoints: '默认 false；为 true 时不生成当前图元的散点，保留主趋势与额外趋势',
+    encodings: '参照上方映射说明；仅接受上述可选字段名覆盖',
+    properties: '参照上方属性说明；不包含 autoPadding 与 domainPadding',
+  }}
+/>
+
+## 延伸阅读
+
+自定义拟合见上方 [自定义拟合](#自定义拟合)。需要独立的数据变换与图层组织时使用 [Plot Path](/viz/plot/mark/path) 与 [自定义变换](/viz/plot/transform/custom-transform)。`SmoothTransformSchema` 的字段见 [Transform Schema](/viz/plot/reference/transform)；该路径不继承 Regression 的自动观测点和图元替换行为。
 
 <LinkedSections
   items={[
-    {
-      title: '散点图',
-      description: '只观察分布、聚类和离群点时使用',
-      url: '/viz/chart/points/scatter',
-    },
-    {
-      title: '与 Plot 协作',
-      description: '理解 Chart 与 Plot 的 owner 边界',
-      url: '/viz/chart/model/plot',
-    },
+    { title: '散点图', description: '两个连续变量的分布与分类', url: '/viz/chart/points/scatter' },
+    { title: '编写与解析', description: '对照 React、Vanilla 与 Source IR', url: '/viz/chart/model/authoring' },
+    { title: '与 Plot 协作', description: '组合超出当前类型边界的能力', url: '/viz/chart/model/plot' },
   ]}
 />
-
-</ShowcaseGallery>

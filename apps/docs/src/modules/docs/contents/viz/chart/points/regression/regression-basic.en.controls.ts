@@ -1,7 +1,6 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { createPointCoordinateControl } from '../point-coordinate-control';
 import { REGRESSION_BASIC_CONTROL_IDS } from './regression-basic.controls';
 import { irisRegressionData } from './regression-basic.data';
 
@@ -23,25 +22,15 @@ export const regressionBasicControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: 'Coordinate',
-      controls: [
-        createPointCoordinateControl({
-          id: REGRESSION_BASIC_CONTROL_IDS.coordinateSystem,
-          label: 'Coordinate system',
-          cartesianLabel: 'Cartesian',
-          polarLabel: 'Polar',
-        }),
-      ],
-    },
+
     {
       label: 'Fit',
       controls: [
         {
           kind: 'switch',
           id: REGRESSION_BASIC_CONTROL_IDS.groupBySpecies,
-          label: 'Fit each species',
-          defaultValue: true,
+          label: 'Fit each species separately',
+          defaultValue: false,
         },
         {
           kind: 'select',
@@ -81,6 +70,15 @@ export const regressionBasicControls = definePreviewControls({
     {
       label: 'Observations',
       controls: [
+        {
+          kind: 'range',
+          id: REGRESSION_BASIC_CONTROL_IDS.pointSize,
+          label: 'Point radius',
+          defaultValue: 4,
+          min: 1,
+          max: 12,
+          step: 1,
+        },
         {
           kind: 'range',
           id: REGRESSION_BASIC_CONTROL_IDS.pointOpacity,
@@ -139,8 +137,8 @@ export const regressionBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: regressionBasicControls,
   canonicalValues: {
-    [REGRESSION_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
-    [REGRESSION_BASIC_CONTROL_IDS.groupBySpecies]: true,
+    [REGRESSION_BASIC_CONTROL_IDS.groupBySpecies]: false,
+    [REGRESSION_BASIC_CONTROL_IDS.pointSize]: 4,
     [REGRESSION_BASIC_CONTROL_IDS.method]: 'linear',
     [REGRESSION_BASIC_CONTROL_IDS.order]: 3,
     [REGRESSION_BASIC_CONTROL_IDS.sampleCount]: 64,
@@ -151,8 +149,8 @@ export const previewControlContract = {
     [REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity]: 0.9,
   },
   relatedApis: [
-    'RegressionChart.coordinate',
     'RegressionEncodings.series',
+    'RegressionProperties.point.size',
     'RegressionProperties.method',
     'RegressionProperties.sampleCount',
     'RegressionProperties.point.opacity',

@@ -25,7 +25,7 @@ import {
   Side,
   WebFontSizePreset,
 } from '@retikz/core';
-import { DataFieldFormat, DataFieldType, DataSortOrder, FieldOrderMode } from '@retikz/data';
+import { BuiltinRegressionMethod, DataFieldFormat, DataFieldType, DataSortOrder, FieldOrderMode } from '@retikz/data';
 import { EntityRole, GraphStatus } from '@retikz/graph';
 import {
   FlexLayoutDirection,
@@ -51,7 +51,6 @@ import {
   PositionScaleContinuity,
   ReferenceMarkKind,
   RelationGeometryKind,
-  SmoothMethodKind,
   StackOffset,
 } from '@retikz/plot';
 import {
@@ -260,8 +259,8 @@ export const API_VALUE_REGISTRY = {
   Side: {
     values: Object.values(Side),
   },
-  SmoothMethodKind: {
-    values: Object.values(SmoothMethodKind),
+  BuiltinRegressionMethod: {
+    values: Object.values(BuiltinRegressionMethod),
   },
   StackOffset: {
     values: Object.values(StackOffset),

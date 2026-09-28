@@ -122,13 +122,10 @@ describe('collectShowcasePages', () => {
     expect(collectShowcasePages('viz', vizSection).map(page => page.path)).not.toContain('/viz/chart/points/bubble');
   });
 
-  it('从实际 Viz 文档树收集 Regression 的嵌套路由', () => {
-    expect(collectShowcasePages('viz', vizSection)).toContainEqual({
-      path: '/viz/chart/points/regression',
-      segments: ['viz', 'chart', 'points', 'regression'],
-      label: 'viz.chartRegression',
-      metadata: { family: 'scatter-points', role: 'primary', preview: 'regression-minimal', order: 30 },
-    });
+  it('Regression 使用普通组件文档布局', () => {
+    expect(collectShowcasePages('viz', vizSection).map(page => page.path)).not.toContain(
+      '/viz/chart/points/regression',
+    );
   });
 
   it('从实际 Viz 文档树收集 Strip 的嵌套路由', () => {

@@ -1,163 +1,540 @@
 ---
-title: Regression Chart
-description: Overlay one or more fitted trends on raw observations, using one Chart authoring path to compare relationships between continuous variables.
-family: scatter-points
-usage: distribution
+title: Regression chart
+description: A regression chart overlays a fitted trend on original observations to summarize the relationship between two continuous variables.
 ---
 
-<ShowcaseGallery
-  examples={[
-    {
-      id: 'regression-minimal',
-      title: 'Basic Usage',
-      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `RegressionChart` root.',
-      preview: {
-        files: ['regression-minimal', 'regression-minimal.data.ts'],
-        size: 'xxxl',
-        caption: 'A static snapshot of distance and delay for 100 flights from Vega Datasets.',
-      },
-    },
-    {
-      id: 'regression-basic',
-      title: 'Advanced playground: observations and grouped trends',
-      description: 'Use `RegressionChart` to show Iris observations and trend lines together, comparing one global fit with separate fits by species.',
-      preview: {
-        files: ['regression-basic', 'regression-basic.data.ts', 'regression-basic-style.ts'],
-        controls: { name: 'regression-basic' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'Switch among six built-in methods, grouping modes, and sampling densities; only polynomial exposes the order control.',
-      },
-    },
-  ]}
->
-Regression is useful when you want to preserve every observation while summarizing an overall or grouped relationship between two continuous variables. Use [Scatter](/viz/chart/points/scatter) when the point distribution is enough; use Plot directly when you need full control over data views, transforms, or trend marks.
+A regression chart overlays a fitted trend on original observations to summarize the relationship between two continuous variables. Each row supplies a pair; series can fit groups separately. A trend need not pass through every observation and does not establish causation or validated predictive power.
 
-This page covers entries and constraints specific to this chart. See the [quick-start example](/viz/chart/get-start#the-first-result) for shared configuration using React components.
+## Using this topic
 
-## `RegressionChart`
+After [installation and first rendering](/viz/chart/get-start), choose one of the four equivalent inputs below. They share data and configuration.
 
-The root `recipe` directly uses Regression's exact slots. Component identity supplies the Point family and `chartType: 'regression'`:
+100 flights, with distance on the x-axis and arrival delay on the y-axis. The orange line shows the default linear fit.
 
-```tsx
-<RegressionChart
-  rows={rows}
-  recipe={{
-    encodings: { x: 'sepalLength', y: 'petalLength', series: 'species' },
-    properties: { method: { kind: 'linear' }, sampleCount: 64 },
-  }}
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-minimal', 'regression-minimal.data.ts']}
+  hideCode
+  size="xl"
 />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+The dedicated children of `RegressionChart` are listed below. Start with encodings; properties and authored marks are optional.
+
+```text
+RegressionChart
+├── RegressionEncodings
+├── RegressionProperties
+└── RegressionMark
 ```
 
-`RegressionEncodings`, `RegressionProperties`, and `RegressionMark` are equivalent JSX sugar for the same recipe slots. Root-only authoring can omit `children`; different slots can mix, while two sources for one slot fail loudly.
+```tsx
+import { RegressionChart, RegressionEncodings } from '@retikz/chart-react/point';
+import { regressionMinimalData } from './regression-minimal.data';
 
-## Reading the chart
+export const Example = () => (
+  <RegressionChart rows={regressionMinimalData}>
+    <RegressionEncodings x="distanceMiles" y="delayMinutes" />
+  </RegressionChart>
+);
+```
 
-Every Regression semantic group has two fixed layers. Point shows raw observations from the current data view. Path runs a mark-local `smooth` on that same view and connects the predicted samples. The trend is not a line through the source rows, and it does not replace Point's input.
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-`RegressionEncodings.series` is an optional recipe-only role. Omit it to fit one trend across the current data view. Provide it to fit each field value independently while Point and Path share one categorical color scale, legend, and series identity. `RegressionMark` cannot rewrite or remove this role.
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { RegressionChartSchema, createRegressionChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { regressionMinimalData } from './regression-minimal.data';
+import { Layout } from '@retikz/react';
 
-When `series` and explicit member colors are omitted, observations and the trend use consecutive, distinct slots from Plot's `palette.series` so the two layers remain distinguishable instead of falling back to CSS `currentColor`. Explicit point color / fill and trend stroke still take precedence for their respective members.
+const chart = RegressionChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: { chartType: 'regression', encodings: { x: 'distanceMiles', y: 'delayMinutes' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createRegressionChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': regressionMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
 
-## Six built-in methods
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
 
-`RegressionProperties.method` uses the strict `IRPlotSmoothMethod` discriminated union. Omission defaults to `linear`. The complete names are public Source discriminators; `quad`, `poly`, `log`, `exp`, and `pow` are not accepted.
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-| `kind`        | Fitted equation           | Minimum per-group requirement                  | Additional constraint                       |
-| ------------- | ------------------------- | ---------------------------------------------- | ------------------------------------------- |
-| `linear`      | `y = a + bx`              | 2 valid pairs and at least 2 distinct x values | Default method                              |
-| `quadratic`   | `y = a + bx + cx²`        | 3 valid pairs and a full-rank fit              | Fixed second degree                         |
-| `polynomial`  | `y = c₀ + c₁x + … + cₙxⁿ` | At least `order + 1` valid pairs and full rank | Integer `order` from 2 through 6; default 3 |
-| `logarithmic` | `y = a + b ln(x)`         | 2 valid pairs and at least 2 distinct x values | Every finite x and the sampled extent > 0   |
-| `exponential` | `y = a exp(bx)`           | 2 valid pairs and at least 2 distinct x values | Every finite y > 0                          |
-| `power`       | `y = a xᵇ`                | 2 valid pairs and at least 2 distinct x values | Every finite x, y, and sampled extent > 0   |
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { regressionChart, RegressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { regressionMinimalData } from './regression-minimal.data';
 
-`sampleCount` controls the evenly spaced predictions in each trend Path; it defaults to 64 and must be at least 2. `extent` changes only the prediction sampling interval and defaults to that group's finite observed x range. Fitting happens in data space; coordinate projection affects only display.
+const chart = regressionChart({
+  data: regressionMinimalData,
+  encodings: { x: 'distanceMiles', y: 'delayMinutes' },
+});
+export const svg = renderChart(chart, { adapters: [RegressionChartInputEmbedAdapter] }).svg;
+```
 
-## `RegressionEncodings`
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
 
-`RegressionEncodingsProps` exactly reuses `IRRegressionChartEncodings`.
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { RegressionChartSchema, createRegressionChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { regressionMinimalData } from './regression-minimal.data';
+import { compileToScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
 
-| Slot             | Type                                                                       | Required | Regression behavior                                                                     |
-| ---------------- | -------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------- |
-| `x`              | Point position mapping                                                     | yes      | Independent field; supports Point fields, aggregates, allowed derived transforms, scale |
-| `y`              | Point position mapping                                                     | yes      | Dependent field with the same Point position capabilities as x                          |
-| `series`         | `string` or direct mapping with an optional ordinal scale                  | no       | Recipe-only grouping, categorical color, legend, and stable identity                    |
-| `row` / `column` | `string`, `IRPlotPartitionDimension`, or `Array<IRPlotPartitionDimension>` | no       | Fits independently against the current panel rows                                       |
-| `facet`          | `IRPlotFacetOptions`                                                       | no       | Configures faceting and requires row or column                                          |
+const chart = RegressionChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: { chartType: 'regression', encodings: { x: 'distanceMiles', y: 'delayMinutes' } },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createRegressionChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': regressionMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
 
-Facet creates each panel data view before Smooth fits within it. Shared or independent scale resolution remains owned by Plot facet resolve, and rows from other panels are not mixed into a model.
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
 
-## `RegressionProperties`
+</DocTab>
+</DocTabs>
 
-`RegressionPropertiesProps` configures both fitting strategy and constant Point / trend appearance.
+## Basic usage
 
-| Property         | Type                                                                    | Default                    | Behavior                                                             |
-| ---------------- | ----------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------- |
-| `method?`        | `IRPlotSmoothMethod`                                                    | `linear`                   | Selects a complete method object from the table above                |
-| `sampleCount?`   | `number`                                                                | `64`                       | Predicted samples per group; an integer of at least 2                |
-| `extent?`        | `[number, number]`                                                      | current finite x domain    | Trend sampling interval; lower bound must be smaller than upper      |
-| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest final Point radius | Configures continuous position-scale range or explicit ratio padding |
-| `autoPadding?` | `'max-radius'` \| `'point-aware'` \| `{ kind: 'max-radius' \| 'point-aware'; clearance?: number \| IRBoxSpacing }` | `'max-radius'` | Automatic padding policy; point-aware solves from individual positions and radii; explicit domainPadding wins |
-| `point?`         | `IRRegressionPointProperties`                                           | Point defaults             | Full Point constant properties for raw observations                  |
-| `trend?`         | `IRRegressionTrendProperties`                                           | Path defaults              | Constant Path stroke, width, opacity, caps, shadows, and peers       |
+### Regression encodings
 
-`autoPadding` belongs to recipe properties. `point-aware` requires Cartesian2D, linear/time position scales, and no placement. Categorical axes, Polar, and jitter are unsupported. Fully explicit `domainPadding` bypasses point-aware solving. See [point-chart padding policies](/viz/chart/points#automatic-edge-padding).
+React uses `RegressionEncodings`; Vanilla API uses `encodings`; direct IR uses `recipe.encodings`. Encodings select the two fitted variables and any groups fitted separately.
 
-Use `autoPadding: { kind: 'point-aware', clearance: 8 }` to reserve clearance between protected point extents and automatic plot-area edges. `clearance` is a nonnegative drawing-coordinate length, defaulting to `0`. Both strategies support it; explicitly configured `domainPadding` ends do not add clearance.
+Iris contains 150 observations. Sepal length is on x and petal length on y. Species occupy different ranges, so grouping determines which observations each trend summarizes.
 
-`clearance` also accepts the Kernel `IRBoxSpacing` object with nonnegative `default`, `x`, `y`, `top`, `right`, `bottom`, and `left` fields. Precedence is side → axis → `default` → `0`; `8` equals `{ default: 8 }`. For example, `{ default: 8, x: 12, top: 20, left: 0 }` gives top 20, bottom 8, left 0, and right 12. Explicit visual sides require Cartesian coordinates and retain their visual meaning with reversed axes.
+- `x / y`: Bind sepalLengthCm and petalLengthCm.
+- `series`: Bind species for separate species fits.
 
-When `series` exists, its field color takes precedence over `point.color`, `point.fill`, and `trend.stroke`; other constant appearance remains effective. Points, trends, and the legend therefore keep one categorical scale identity.
+Toggle grouping to compare pooled and within-species trends. A pooled association can partly reflect differences between groups.
 
-## `RegressionMark`
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-encodings', 'regression-basic.data.ts']}
+  controls={{ name: 'regression-encodings' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
 
-`RegressionMark` is a direct child declaration of RegressionChart. A plain mark appends a complete “Point + Smooth Path” group; `override` replaces the recipe's implicit primary group in place.
+For complete properties and constraints, see [API reference: Regression encodings](#regression-encodings-1).
 
-| `RegressionMarkProps` property | Type                                | Default   | Behavior                                                                                               |
-| ------------------------------ | ----------------------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
-| `override?`                    | `boolean`                           | `false`   | Replaces the whole semantic group; a miss appends and reports `onWarn`                                 |
-| `encodings?`                   | `{ x?: string; y?: string }`        | inherited | Overrides only existing direct x / y fields in the shared data view                                    |
-| `properties?`                  | `RegressionMarkProps['properties']` | inherited | Field-merges fit options and property-merges point / trend blocks; rejects recipe-only `domainPadding` |
+### Regression properties
 
-Appended and override marks both inherit recipe `series`. They cannot remove Smooth, rewrite trend output fields, or leave only Point behind.
+React uses `RegressionProperties`; Vanilla API uses `properties`; direct IR uses `recipe.properties`. Properties select the fitting method and drawing samples, and style observations and trends separately.
 
-## Failure boundary
+This example fixes the x/y mappings and pools observations by default. Enable “Fit each species separately” to compare the same method across groups. Grouped points and trends use species colors, so the uniform color control is hidden. Different methods can fit the same observations. Method controls the model; sample count controls how many predictions draw its path. These are separate choices.
 
-Regression fails the whole Chart loudly. If any group lacks samples, is rank-deficient, violates a method domain, uses a non-increasing explicit extent, or predicts a non-finite value, the runtime neither skips that group nor falls back to a Point-only result. The error summary includes the method and stable group field/value context.
+- `method`: Choose linear, quadratic or another supported method.
+- `sampleCount`: Increase drawing samples, not observed samples.
+- `point / trend`: Style observations and trends separately.
 
-Non-finite x / y values continue through Smooth's invalid-pair policy before domain checks. `logarithmic`, `exponential`, and `power` have different positivity requirements, so confirm the data against the table before switching methods.
+Increasing sampleCount does not raise model order or fix insufficient observations. Check value-domain and sample requirements before selecting a method.
 
-## Public entries
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-basic', 'regression-basic.data.ts']}
+  controls={{ name: 'regression-basic' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
 
-| Package entry                            | Main public exports                                                                                                                                                                                                   | Use                          | Boundary                                   |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------ |
-| `@retikz/chart/point/regression`         | `RegressionChartSchema`, `RegressionChartRecipeSchema`, `RegressionChartEncodingsSchema`, `RegressionChartPropertiesSchema`, `RegressionChartMarkSchema`, matching `IRRegression*` types, provider and locator helper | JSON Source, schema, runtime | No React or plain factory                  |
-| `@retikz/chart-react/point`              | `RegressionChart`, `RegressionEncodings`, `RegressionProperties`, `RegressionMark`, and their Props                                                                                                                   | React declaration authoring  | Import shared Chart declarations from root |
-| `@retikz/chart-vanilla/point/regression` | `InputRegressionChart`, `RegressionChartInputEmbedProps`, `normalizeRegressionChart`, `regressionChart`                                                                                                             | Plain authoring and SSR      | Produces the same `IRRegressionChart`      |
-| `@retikz/plot`                           | `SmoothMethodKind`, `SmoothMethodSchema`, `SmoothTransformSchema`, `IRPlotSmoothMethod`, `IRPlotSmoothTransform`                                                                                                      | Plot Smooth atom             | Built-in methods form a closed set         |
+For complete properties and constraints, see [API reference: Regression properties](#regression-properties-1).
 
-## Fully custom fitting
+### Regression marks
 
-The six `method.kind` branches are closed; Regression does not provide an extension point for registering a seventh method. For robust regression, weighted fitting, independent series, multiple data views, or complete output-field control, compose [`<PathMark>`](/viz/plot/mark/path) with a mark-local transform and register a complete `TransformDefinition` through [custom Plot transforms](/viz/plot/transform/custom-transform). See [Transform Schema](/viz/plot/reference/transform) for `SmoothTransformSchema` fields.
+React uses `RegressionMark`; Vanilla API uses `marks`; direct IR uses `recipe.marks`. React supplies the kind; Vanilla / IR mark objects use `kind: 'regression'`. Each mark contains observations, a primary trend and additional trends. Replace a whole group or overlay different position mappings with marks; use `extraMethods` for multiple fits of the same observations, as shown below.
 
-That route leaves data, transforms, Path, scale, lineage, and locator under Plot ownership. It is not a Regression recipe method extension and does not inherit Regression's automatic Point, legend, or semantic override.
+This replaces each species’ default linear group with a quadratic group. Observations remain; a more curved trend is another model description, not automatically a better explanation.
 
-## Related
+- `override`: Replace the primary regression group.
+- `properties.method`: Select quadratic.
+- `properties.trend.strokeWidth`: Make the trend easier to identify.
+
+RegressionMark inherits series and cannot introduce a different grouping rule.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-marks', 'regression-basic.data.ts']}
+  size="xl"
+  controls={{ name: 'regression-marks' }}
+  caption="Switch between replacement and addition, then adjust mark styles to compare inheritance and overrides."
+/>
+
+For complete properties and constraints, see [API reference: Regression marks](#regression-marks-1).
+
+## Extended usage
+
+### Facet comparison
+
+Use species for grouping and panel partitioning to separate dense observations and inspect the variation supporting each within-species trend.
+
+Groups below are properties inside IR `recipe`; React and Vanilla use the corresponding inputs described above.
+
+| Group        | Property        | Type                 | Description                                    |
+| ------------ | --------------- | -------------------- | ---------------------------------------------- |
+| `encodings`  | `x / y`         | field mappings       | Sepal and petal length                         |
+|              | `series / row`  | string               | species controls fitting groups and row facets |
+|              | `facet`         | facet options object | Shared scales make group positions comparable  |
+| `properties` | `point / trend` | appearance objects   | Reduce occlusion and emphasize trends          |
+
+Each line fits only its panel’s observations. Shared scales do not imply shared fitted parameters.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-facet', 'regression-basic.data.ts']}
+  size="xxxl"
+  controls={{ name: 'regression-facet' }}
+/>
+
+### Fitting method comparison
+
+Keep the pooled linear fit and add a polynomial fit through `extraMethods`. Observations are drawn once, while all trends share position mappings and grouping. The example starts with a cubic polynomial; use the control to change its order.
+
+Groups below are properties inside IR `recipe`; React and Vanilla use the corresponding inputs described above.
+
+| Group        | Property               | Type                             | Description                                                       |
+| ------------ | ---------------------- | -------------------------------- | ----------------------------------------------------------------- |
+| `encodings`  | `x / y`                | field mappings                   | Both models use the same observations                             |
+| `properties` | `trend`                | path appearance object           | The primary model uses a blue solid line                          |
+|              | `extraMethods`         | `Array<IRRegressionExtraMethod>` | Add a polynomial trend without repeating observations             |
+|              | `extraMethods[].trend` | `IRRegressionTrendProperties`    | Inherit shared appearance and override the color and dash pattern |
+
+Each entry requires `method`. Omitted `sampleCount`, `extent` and `trend` members inherit the current group configuration. With series, each trend fits the same categories independently; an explicit extra entry `trend.stroke` overrides the category color for that trend.
+
+Differences reveal the impact of model assumptions. This comparison supplies no confidence band, model selection or out-of-sample validation.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['regression-compare', 'regression-basic.data.ts']}
+  size="xxl"
+  controls={{ name: 'regression-compare' }}
+/>
+
+## Errors and limitations
+
+See [Fitting methods](#fitting-methods) for equations, sample counts and domain requirements.
+
+- Insufficient samples, rank deficiency or nonfinite predictions in any group fail the chart rather than silently reducing it to scatter.
+- Nonfinite x/y pairs are filtered first; logarithmic, exponential and power methods still require valid positive domains.
+- Custom methods must be injected into the current runtime registry, with no duplicate built-in or custom names.
+- The default interpolating curve may overshoot between samples. It improves visual continuity without guaranteeing exact agreement with the fitted function between samples.
+
+In React, supplying the same configuration field through both the root `recipe` and a child component raises an error.
+
+`point-aware` requires Cartesian2D, linear/time position scales, and no jitter. Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains behavior specific to this chart type; skip it if you only need the API."
+/>
+
+### Fitting methods
+
+Regression fits trends through Plot’s `smooth` transform, independently for each facet and `series` group. It filters nonfinite x/y pairs, then fits the remaining $N$ observations $(x_i,y_i)$. The primary `method` and each `extraMethods` entry follow this process.
+
+| Name                 | Method        | Equation                      | Valid sample and domain requirements                                      | Fitting time complexity |
+| -------------------- | ------------- | ----------------------------- | ------------------------------------------------------------------------- | ----------------------- |
+| Linear               | `linear`      | $\hat y=a+bx$                 | At least two pairs and two distinct x values                              | $O(N)$                  |
+| Quadratic polynomial | `quadratic`   | $\hat y=a+bx+cx^2$            | At least three pairs, three distinct x values and full rank               | $O(N)$                  |
+| Polynomial           | `polynomial`  | $\hat y=\sum_{k=0}^{n}c_kx^k$ | At least n + 1 pairs, n + 1 distinct x values and full rank               | $O(Nn^2+n^3)$           |
+| Logarithmic          | `logarithmic` | $\hat y=a+b\ln x$             | At least two pairs with distinct x; positive x and prediction interval    | $O(N)$                  |
+| Exponential          | `exponential` | $\hat y=ae^{bx}$              | At least two pairs with distinct x; positive y                            | $O(N)$                  |
+| Power                | `power`       | $\hat y=ax^b$                 | At least two pairs with distinct x; positive x, y and prediction interval | $O(N)$                  |
+
+Here $\hat y$ denotes a prediction. For `polynomial`, `order` sets the degree $n$: an integer from 2 to 6, defaulting to 3.
+
+Complexities describe parameter fitting for one group and one model in the current implementation. $N$ is the valid sample count after filtering and $n$ is the polynomial degree. They assume fixed-precision arithmetic and exclude grouping, prediction sampling and rendering. Costs add across groups and fitting methods.
+
+#### Linear fitting
+
+`linear` finds the line that minimizes the sum of squared vertical residuals:
+
+$$
+\min_{a,b}\sum_{i=1}^{N}\left(y_i-a-bx_i\right)^2
+$$
+
+After computing the means $\bar x$ and $\bar y$, the slope and intercept are:
+
+$$
+b=\frac{\sum_{i=1}^{N}(x_i-\bar x)(y_i-\bar y)}{\sum_{i=1}^{N}(x_i-\bar x)^2},\qquad a=\bar y-b\bar x
+$$
+
+If all x values are identical, the denominator is zero and the slope cannot be determined, so fitting fails.
+
+**Time complexity:** Means, variance and covariance take a constant number of passes over the samples, so parameter fitting is $O(N)$. Once fitted, a single prediction is $O(1)$.
+
+#### Quadratic and polynomial fitting
+
+`quadratic` fixes the degree at two; `polynomial` uses the specified degree. Both minimize squared residuals in the original y space. To reduce numerical problems from higher powers, the implementation first centers and scales x into $[-1,1]$:
+
+$$
+m=\frac{x_{\min}+x_{\max}}{2},\qquad s=\max_i\lvert x_i-m\rvert,\qquad z_i=\frac{x_i-m}{s}
+$$
+
+Row i of the design matrix $V$ contains $1,z_i,z_i^2,\ldots,z_i^n$. The coefficient vector $\boldsymbol\beta$ in these normalized coordinates solves:
+
+$$
+\min_{\boldsymbol\beta}\sum_{i=1}^{N}\left(y_i-\sum_{k=0}^{n}\beta_kz_i^k\right)^2,
+\qquad
+(V^{\mathsf T}V)\boldsymbol\beta=V^{\mathsf T}\mathbf y
+$$
+
+The implementation solves the normal equations with scaled pivot selection, Gaussian elimination and back substitution, then evaluates predictions with Horner’s method. Prediction inputs are also converted from x to z; normalization does not change the polynomial degree. Insufficient samples, too few distinct x values or numerical rank deficiency raise an error instead of automatically reducing the degree.
+
+**Time complexity:** Accumulating the normal-equation matrix takes $O(Nn^2)$ and elimination takes $O(n^3)$, giving $O(Nn^2+n^3)$ overall. Horner evaluation takes $O(n)$ per prediction. Quadratic fitting fixes the degree at two, so fitting is $O(N)$ and each prediction is $O(1)$. Polynomial degrees are currently restricted to 2–6; at any fixed degree, fitting also grows linearly with sample count.
+
+#### Logarithmic, exponential and power fitting
+
+These methods transform the observations, reuse the linear slope and intercept calculation, then return predictions in the original y space:
+
+| Method        | Data used for linear fitting  | Prediction in original coordinates |
+| ------------- | ----------------------------- | ---------------------------------- |
+| `logarithmic` | $(u_i,v_i)=(\ln x_i,y_i)$     | $\hat y=\alpha+\beta\ln x$         |
+| `exponential` | $(u_i,v_i)=(x_i,\ln y_i)$     | $\hat y=\exp(\alpha+\beta x)$      |
+| `power`       | $(u_i,v_i)=(\ln x_i,\ln y_i)$ | $\hat y=\exp(\alpha+\beta\ln x)$   |
+
+For exponential and power models, $a=e^\alpha$ and $b=\beta$. They minimize squared residuals in log-y space, so results generally differ from nonlinear fitting that minimizes residuals in the original y space. Every log-transformed field must be positive. Setting an axis to a log scale alone does not change the fitting method.
+
+**Time complexity:** The logarithmic transformation and subsequent linear fit each take $O(N)$, so each of these three methods fits in $O(N)$. A prediction uses a fixed number of arithmetic, logarithm and exponential operations, taking $O(1)$.
+
+#### Sampling the fitted trend
+
+After fitting the coefficients, `sampleCount` x values are spaced evenly over `extent` and evaluated with the fitted model. The default interval is the current group’s minimum and maximum valid x; the default sample count is 64. For an interval $[L,U]$ and $M$ samples:
+
+$$
+x_j=L+\frac{j}{M-1}(U-L),\qquad \hat y_j=f(x_j),\qquad j=0,\ldots,M-1
+$$
+
+The trend connects these predictions in x order using the default `catmullRom` interpolating curve, rendered as cubic Bézier segments. Set `trend.curve: 'linear'` for a polyline; other values reuse Plot Path connection modes. More samples refine the drawn curve without changing fitted coefficients or adding observations. An `extent` outside the observed range produces extrapolations whose reliability requires separate assessment.
+
+All fitting methods retain the complete fixed sample sequence and selected connection mode. With linear coordinates, collinear predictions still appear as a straight line through the default interpolating curve. Nonlinear coordinates connect the projected samples using the same pipeline.
+
+**Sampling time complexity:** Generating $M$ predictions takes $O(M)$ for linear, quadratic, logarithmic, exponential and power models, or $O(Mn)$ for a degree-n polynomial. Including parameter fitting, the former methods take $O(N+M)$ and polynomial fitting takes $O(Nn^2+n^3+Mn)$. These costs cover fitting and numerical sampling, not rendering the entire chart.
+
+### Custom fitting
+
+A custom method defines a parameter schema and `fit`. The schema uses a unique literal `kind` and owns parameter constraints and defaults. `fit(pairs, operation)` receives the current group's valid observations and parsed parameters, then returns a model with `predict(x)`. Data does not generate drawing paths: Plot samples the model using `extent` and `sampleCount`, then connects the predictions with `trend.curve`.
+
+The flow below follows one regression chart through the capabilities provided by each package:
+
+<ComponentPreview files="regression-fitting-flow" size="lg" hideCode type="flow" />
+
+Define a method with `defineRegression` from `@retikz/data`, then inject it through `lowerOptions.regressionDefinitions`. Built-in and external methods share registration and execution. JSON stores only the method name and parameters, never callbacks.
+
+This example implements a **fixed-slope fitting algorithm**: the caller supplies the slope, and the algorithm estimates the intercept that minimizes squared residuals. Use it when a prior relationship determines the slope and only an overall offset needs to be estimated.
+
+Unlike built-in linear regression, which estimates both slope and intercept, this method fits only the intercept. The custom `slope` parameter defaults to `1` through its schema.
+
+With a fixed slope $b$, only the intercept $a$ needs to be fitted:
+
+$$
+a=\frac{1}{N}\sum_{i=1}^{N}(y_i-bx_i),\qquad \hat y=a+bx
+$$
+
+Fitting takes $O(N)$ time and each prediction takes $O(1)$. For the three observations below and `slope: 2`, the intercept is $a=4/3$; predictions at $x=0,1,2$ are $4/3,10/3,16/3$. The caller fixes the slope while each group's data determines the intercept.
+
+```ts
+import { defineRegression, RetikzDataError } from '@retikz/data';
+import { literal, number, strictObject } from 'zod';
+
+export const fixedSlopeFit = defineRegression({
+  schema: strictObject({
+    kind: literal('fixed-slope'),
+    slope: number().default(1),
+  }),
+  fit: (pairs, { slope }) => {
+    if (pairs.length === 0) throw new RetikzDataError('fixed-slope requires at least one observation');
+    const intercept = pairs.reduce((sum, pair) => sum + pair.y - slope * pair.x, 0) / pairs.length;
+    return { predict: x => intercept + slope * x };
+  },
+});
+
+export const lowerOptions = { regressionDefinitions: [fixedSlopeFit] };
+export const rows = [
+  { x: 0, y: 1 },
+  { x: 1, y: 4 },
+  { x: 2, y: 5 },
+];
+```
+
+The demo below runs this algorithm. Points show observations and the orange line shows the fitted result. Changing the slope recomputes the intercept; the line always passes through the observation mean $(1,10/3)$.
+
+<ComponentPreview
+  responsive
+  mode="showcase"
+  controlPanelDefaultOpen={false}
+  files={['regression-custom', 'regression-custom-fit.ts', 'regression-custom.data.ts']}
+  size="xl"
+/>
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+In React, pass `lowerOptions` to `RegressionChart` and reference the method in `recipe.properties`:
+
+```tsx
+import { RegressionChart } from '@retikz/chart-react/point';
+
+<RegressionChart
+  rows={rows}
+  lowerOptions={lowerOptions}
+  recipe={{ encodings: { x: 'x', y: 'y' }, properties: { method: { kind: 'fixed-slope', slope: 2 } } }}
+/>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Vanilla uses the same Definition, data and method parameters:
+
+```ts
+import { regressionChart } from '@retikz/chart-vanilla/point';
+
+const chart = regressionChart({
+  data: rows,
+  encodings: { x: 'x', y: 'y' },
+  properties: { method: { kind: 'fixed-slope', slope: 2 } },
+  lowerOptions,
+});
+```
+
+</DocTab>
+</DocTabs>
+
+Direct IR stores the same JSON object in `recipe.properties.method`; pass the same `lowerOptions` to both `createRegressionChartProviderContribution([], lowerOptions)` and `createPlotProviderContribution({ rows }, lowerOptions)`, imported from `@retikz/chart/point` and `@retikz/plot`, respectively.
+
+Custom methods also work in `extraMethods[].method`. Each group is fitted independently. `fit` must be synchronous and pure without mutating observations. Nonfinite predictions, unknown parameters, missing methods and duplicate registrations fail explicitly. Use `validateExtent(operation, extent)` for method-specific prediction domains.
+
+## API reference
+
+React uses `RegressionChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `regressionChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'regression'`. React and the Vanilla API supply the chart type automatically.
+
+In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, presentation, and guides, see [Authoring](/viz/chart/model/authoring).
+
+### Regression encodings
+
+Corresponds to `RegressionEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
+
+| Channel        | Input form                   | Description                                                                               |
+| -------------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `x / y`        | Field name, position mapping | Required predictor and response                                                           |
+| `series`       | Field name, direct mapping   | Fit groups separately with shared categorical colors and legend; accepts an ordinal scale |
+| `row / column` | Field name, facet dimension  | Fit independently within each panel                                                       |
+| `facet`        | `IRPlotFacetOptions`         | Configures facets; requires at least one of `row` and `column`                            |
+
+Shared mapping parameters are not expanded here; see the [encoding schema](#regressionchartencodingsschema) for exact inputs.
+
+### Regression properties
+
+Corresponds to `RegressionProperties`, Vanilla `properties` and IR `recipe.properties`.
+
+| Category   | Property        | Type                                                     | Description                                                                                             |
+| ---------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Fitting    | `method`        | `IRRegressionChartProperties['method']`                  | Selects the fitting method and parameters                                                               |
+|            | `extraMethods`  | `Array<IRRegressionExtraMethod>`                         | Ordered additional trends sharing the observations; omitted means none                                  |
+|            | `sampleCount`   | `number`                                                 | Prediction count per group; integer at least 2, default 64                                              |
+|            | `extent`        | `[number, number]`                                       | Increasing prediction interval; defaults to that group’s finite x range                                 |
+| Appearance | `point`         | `IRRegressionPointProperties`                            | Sets observation point appearance                                                                       |
+| Trend      | `trend.curve`   | `IRRegressionTrendProperties['curve']`                   | Default `catmullRom`; inherited by extra trends unless overridden                                       |
+|            | `trend`         | `IRRegressionTrendProperties`                            | Sets trend appearance without changing the fit                                                          |
+| Padding    | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+|            | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
+
+See the [properties schema](#regressionchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
+
+### Regression marks
+
+Corresponds to `RegressionMark`, Vanilla `marks` and IR `recipe.marks`.
+
+| Property     | Type                                | Description                                                                                                                                       |
+| ------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `override`   | `boolean`                           | Replace the complete observation-and-trend group, otherwise append                                                                                |
+| `hidePoints` | `boolean`                           | Defaults to `false`; `true` omits this mark’s observation points while retaining the main and additional trends.                                  |
+| `encodings`  | `RegressionChartMark['encodings']`  | Override direct fields in the same data; series cannot be overridden                                                                              |
+| `properties` | `RegressionChartMark['properties']` | Replace method, sampleCount or extent; merge point/trend members; replace extraMethods as a whole, with [] clearing it; excludes padding policies |
+
+## Schema reference
+
+These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
+
+### RegressionChartSchema
+
+<ZodSchema name="RegressionChartSchema" shallow />
+
+### RegressionChartRecipeSchema
+
+<ZodSchema name="RegressionChartRecipeSchema" shallow />
+
+### RegressionChartEncodingsSchema
+
+<ZodSchema name="RegressionChartEncodingsSchema" shallow />
+
+### RegressionChartPropertiesSchema
+
+<ZodSchema name="RegressionChartPropertiesSchema" shallow />
+
+### RegressionExtraMethodSchema
+
+Each entry requires a fitting method and inherits sampling and appearance settings from its group. It generates only a trend line. Array order determines drawing order; method colors and legends are not assigned automatically. A failed fit aborts the whole chart.
+
+<ZodSchema name="RegressionExtraMethodSchema" shallow />
+
+### RegressionChartMarkSchema
+
+`encodings` accepts only optional field-name strings for x, y, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+
+<ZodSchema name="RegressionChartMarkSchema" shallow />
+
+## Further reading
+
+For custom fitting, see [Custom fitting](#custom-fitting). For independently organized data transforms and layers, use [Plot Path](/viz/plot/mark/path) with a [custom transform](/viz/plot/transform/custom-transform). See [Transform Schema](/viz/plot/reference/transform) for `SmoothTransformSchema`; this route does not inherit Regression’s automatic observations or mark replacement.
 
 <LinkedSections
   items={[
     {
-      title: 'Scatter Chart',
-      description: 'Use it for distributions, clusters, and outliers alone',
+      title: 'Scatter',
+      description: 'Distribution and categories for two continuous variables',
       url: '/viz/chart/points/scatter',
     },
+    { title: 'Authoring', description: 'Compare React, Vanilla and Source IR', url: '/viz/chart/model/authoring' },
     {
-      title: 'Plot Integration',
-      description: 'Understand the owner boundary between Chart and Plot',
+      title: 'Working with Plot',
+      description: 'Compose capabilities beyond this chart type',
       url: '/viz/chart/model/plot',
     },
   ]}
 />
-
-</ShowcaseGallery>

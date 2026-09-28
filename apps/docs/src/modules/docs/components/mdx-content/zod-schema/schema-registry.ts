@@ -20,6 +20,19 @@ import {
   BubbleSizeEncodingSchema,
   BubbleOpacityEncodingSchema,
   BubbleShapeEncodingSchema,
+  RegressionChartSchema,
+  RegressionChartRecipeSchema,
+  RegressionChartEncodingsSchema,
+  RegressionChartPropertiesSchema,
+  RegressionChartMarkSchema,
+  RegressionPointPropertiesSchema,
+  RegressionTrendPropertiesSchema,
+  RegressionExtraMethodSchema,
+  RegressionMarkEncodingsSchema,
+  RegressionSeriesScaleBindingSchema,
+  RegressionXEncodingSchema,
+  RegressionYEncodingSchema,
+  RegressionSeriesEncodingSchema,
 } from '@retikz/chart/point';
 import {
   ScatterXEncodingSchema,
@@ -137,6 +150,48 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   BubbleSizeEncodingSchema: { schema: BubbleSizeEncodingSchema, label: 'BubbleSizeEncodingSchema' },
   BubbleOpacityEncodingSchema: { schema: BubbleOpacityEncodingSchema, label: 'BubbleOpacityEncodingSchema' },
   BubbleShapeEncodingSchema: { schema: BubbleShapeEncodingSchema, label: 'BubbleShapeEncodingSchema' },
+  RegressionChartSchema: {
+    schema: RegressionChartSchema,
+    label: 'RegressionChartSchema',
+    url: '/viz/chart/points/regression#regressionchartschema',
+  },
+  RegressionChartRecipeSchema: {
+    schema: RegressionChartRecipeSchema,
+    label: 'RegressionChartRecipeSchema',
+    url: '/viz/chart/points/regression#regressionchartrecipeschema',
+  },
+  RegressionChartEncodingsSchema: {
+    schema: RegressionChartEncodingsSchema,
+    label: 'RegressionChartEncodingsSchema',
+    url: '/viz/chart/points/regression#regressionchartencodingsschema',
+  },
+  RegressionExtraMethodSchema: { schema: RegressionExtraMethodSchema, label: 'RegressionExtraMethodSchema' },
+  RegressionChartPropertiesSchema: {
+    schema: RegressionChartPropertiesSchema,
+    label: 'RegressionChartPropertiesSchema',
+    url: '/viz/chart/points/regression#regressionchartpropertiesschema',
+  },
+  RegressionChartMarkSchema: {
+    schema: RegressionChartMarkSchema,
+    label: 'RegressionChartMarkSchema',
+    url: '/viz/chart/points/regression#regressionchartmarkschema',
+  },
+  RegressionPointPropertiesSchema: {
+    schema: RegressionPointPropertiesSchema,
+    label: 'RegressionPointPropertiesSchema',
+  },
+  RegressionTrendPropertiesSchema: {
+    schema: RegressionTrendPropertiesSchema,
+    label: 'RegressionTrendPropertiesSchema',
+  },
+  RegressionMarkEncodingsSchema: { schema: RegressionMarkEncodingsSchema, label: 'RegressionMarkEncodingsSchema' },
+  RegressionSeriesScaleBindingSchema: {
+    schema: RegressionSeriesScaleBindingSchema,
+    label: 'RegressionSeriesScaleBindingSchema',
+  },
+  RegressionXEncodingSchema: { schema: RegressionXEncodingSchema, label: 'RegressionXEncodingSchema' },
+  RegressionYEncodingSchema: { schema: RegressionYEncodingSchema, label: 'RegressionYEncodingSchema' },
+  RegressionSeriesEncodingSchema: { schema: RegressionSeriesEncodingSchema, label: 'RegressionSeriesEncodingSchema' },
   PlotPartitionDimensionsSchema: {
     schema: IRPlot.PlotPartitionDimensionsSchema,
     label: 'PlotPartitionDimensionsSchema',
@@ -166,6 +221,14 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   'ScatterChartSchema.shape.data': { schema: ScatterChartSchema.shape.data, label: 'ScatterChartSchema.shape.data' },
   'BubbleChartSchema.shape.data': { schema: BubbleChartSchema.shape.data, label: 'BubbleChartSchema.shape.data' },
+  RegressionMarkPropertiesSchema: {
+    schema: RegressionChartMarkSchema.shape.properties.unwrap(),
+    label: 'RegressionMarkPropertiesSchema',
+  },
+  'RegressionChartSchema.shape.data': {
+    schema: RegressionChartSchema.shape.data,
+    label: 'RegressionChartSchema.shape.data',
+  },
   ChartPresentationSchema: { schema: ChartPresentationSchema, label: 'ChartPresentationSchema' },
   ChartDefaultsSchema: { schema: ChartDefaultsSchema, label: 'ChartDefaultsSchema' },
   ChartLayoutSchema: { schema: ChartLayoutSchema, label: 'ChartLayoutSchema' },
@@ -1454,10 +1517,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'SmoothTransform',
     url: '/viz/plot/reference/transform#smoothtransformschema',
   },
-  SmoothMethodSchema: {
-    schema: IRPlot.SmoothMethodSchema,
-    label: 'SmoothMethod',
-    url: '/viz/plot/reference/transform#smoothmethodschema',
+  RegressionMethodSchema: {
+    schema: DataIR.RegressionMethodSchema,
+    label: 'RegressionMethod',
+    url: '/viz/plot/reference/transform#regressionmethodschema',
   },
   MarkSchema: {
     schema: IRPlot.MarkSchema,
