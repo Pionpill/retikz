@@ -349,7 +349,7 @@ const relationInterpolationOf = (
 };
 
 /**
- * 按 Polar 输出空间采样默认 Relation path，同时保留每个作者 target 作为段终点
+ * 按 Polar 输出空间采样默认 Relation path，并用过点曲线连接采样点
  * @description 中间采样点使用屏幕坐标，source、via 与 target 的 identity、offset 和 boundary 继续由 Core target 消费
  */
 const interpolatedPolarRoute = (
@@ -369,10 +369,11 @@ const interpolatedPolarRoute = (
       );
     }
     const sampledPoints = densifyPolarSegments(frame, [sourceVertex, targetVertex]);
-    for (const point of sampledPoints.slice(1, -1)) {
-      steps.push({ type: 'step', kind: RelationRouteStepKind.Line, to: point });
-    }
-    steps.push({ type: 'step', kind: RelationRouteStepKind.Line, to: targetResolution.target });
+    steps.push({
+      type: 'step',
+      kind: 'smooth',
+      points: [...sampledPoints.slice(1, -1), targetResolution.target],
+    });
   }
   return applyStepLabel(steps, label);
 };

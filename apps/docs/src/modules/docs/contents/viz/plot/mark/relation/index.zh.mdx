@@ -27,7 +27,7 @@ import { Plot, PointMark, RelationMark } from '@retikz/plot-react';
 
 `RelationMark` 通常和带 `anchorId` 的位置 mark 搭配使用。位置 mark 负责把数据行投影成 core `Node` / `Coordinate` 并生成稳定 id，relation mark 只用同一套规则从自己的数据行里算出 source / target id，然后降低成 core `Path`。如果边数据还不存在，可以用 `transform` 只为当前 relation mark 动态派生关系行。
 
-在 polar2D 下，只有默认 path 且 source、target 与全部 `path.via` 都使用 `{ project }` 时，RelationMark 才继承 coordinate interpolation。`path.interpolation` 可局部覆盖该默认；ID / anchor 目标、显式 `route`、`routing` 与 ribbon 仍由 Relation 自己的路由契约决定。对这些排除形态显式配置 interpolation 会直接报错，省略时旧行为不变。
+在 polar2D 下，只有默认 path 且 source、target 与全部 `path.via` 都使用 `{ project }` 时，RelationMark 才继承 coordinate interpolation。选择 `polar` 插值时，先在投影空间生成采样点，再用经过这些点的平滑曲线连接；作者指定的 `via` 和 target 仍是各段终点。`path.interpolation` 可局部覆盖该默认；ID / anchor 目标、显式 `route`、`routing` 与 ribbon 仍由 Relation 自己的路由契约决定。对这些排除形态显式配置 interpolation 会直接报错，省略时旧行为不变。
 
 ### 何时使用
 
