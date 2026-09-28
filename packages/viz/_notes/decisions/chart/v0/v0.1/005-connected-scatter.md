@@ -58,11 +58,11 @@ type IRConnectedScatterMark = {
 
 默认 `colorMode: series` 下，`series` 存在时，Path 按该字段分组，Point 与 Path 绑定同一个 ordinal color scale，并默认生成分类图例；没有 series 时，Chart 为两者写入同一个 Plot `defaultColorGroup`，使省略 member paint 的 Path 与 Point 复用 `palette.series` 中的同一槽位。合法的 member properties 仍可显式覆盖各自颜色。
 
-公开入口为：
+公开入口按名称导入对应能力：
 
-- `@retikz/chart/point/connected-scatter`
-- `@retikz/chart-vanilla/point/connected-scatter`
-- `@retikz/chart-react/point/connected-scatter`
+- `@retikz/chart/point`
+- `@retikz/chart-vanilla/point`
+- `@retikz/chart-react/point`
 
 React 最小 authoring 为：
 

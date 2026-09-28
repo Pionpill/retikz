@@ -1,4 +1,4 @@
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
+import type { IRRegressionChart } from '@retikz/chart/point';
 
 import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
 import type { InputRegressionChart } from './types';

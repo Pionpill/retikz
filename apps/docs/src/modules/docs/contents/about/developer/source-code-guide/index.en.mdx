@@ -108,12 +108,12 @@ chart/src/
   index.ts                Package-root public entry
 ```
 
-Consumers import only from entries declared in `package.json`: `@retikz/chart` for shared Chart APIs, `@retikz/chart/point` for named Point chart capabilities, or a concrete chart subpath such as `@retikz/chart/point/scatter`. Do not deep-import `_chart/`, `schema.ts`, or other implementation files: they are not stable package contracts.
+Consumers import only from entries declared in `package.json`: `@retikz/chart` for shared Chart APIs and `@retikz/chart/point` for named Point chart capabilities. Do not deep-import `_chart/`, `schema.ts`, or other implementation files: they are not stable package contracts.
 
-| Extension package | Shared owner and public subdomain                                                                  |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| `@retikz/diagram` | `_diagram/` shares diagram capability; `./flow` exposes the Flow subdomain                         |
-| `@retikz/chart`   | `_chart/` shares chart capability; `./point` and concrete point-chart subpaths expose Point charts |
+| Extension package | Shared owner and public subdomain                                                       |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| `@retikz/diagram` | `_diagram/` shares diagram capability; `./flow` exposes the Flow subdomain              |
+| `@retikz/chart`   | `_chart/` shares chart capability; `./point` exposes Point charts through named imports |
 
 ## API adapter packages
 

@@ -92,5 +92,5 @@
 
 - 当前不设计多 Chart composition、concat、repeat 或自由 presentation 顺序
 - 不把函数、ReactNode、Definition 实例、provider 实例或宿主运行时状态写入 IR
-- 具体 chartType subpath 公开可组合的 Core provider contribution；不公开 provider 实例、active registry 或内部 Base identity
+- `/point` 按名称公开具体 chartType 的精确 schema 与可组合的 Core provider contribution；不公开 `point/<chartType>` package subpath、provider 实例、active registry 或内部 Base identity
 - 下层 capability 不足时先补正确 owner 或登记缺口，不在 Chart、adapter 或 renderer 中建立平行能力

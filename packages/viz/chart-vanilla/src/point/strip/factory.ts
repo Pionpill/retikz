@@ -1,4 +1,4 @@
-import { createStripChartProviderContribution } from '@retikz/chart/point/strip';
+import { createStripChartProviderContribution } from '@retikz/chart/point';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';

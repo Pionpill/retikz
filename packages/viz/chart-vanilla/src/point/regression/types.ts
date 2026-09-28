@@ -1,4 +1,4 @@
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
+import type { IRRegressionChart } from '@retikz/chart/point';
 
 import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 

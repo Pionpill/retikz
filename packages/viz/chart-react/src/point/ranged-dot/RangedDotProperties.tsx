@@ -1,4 +1,4 @@
-import type { IRRangedDotChartProperties } from '@retikz/chart/point/ranged-dot';
+import type { IRRangedDotChartProperties } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** RangedDotProperties React 属性 */

@@ -7,12 +7,6 @@ export default defineRetikzLibraryConfig({
   entry: [
     'src/index.ts',
     'src/point/index.ts',
-    'src/point/bubble/index.ts',
-    'src/point/connected-scatter/index.ts',
-    'src/point/ranged-dot/index.ts',
-    'src/point/regression/index.ts',
-    'src/point/scatter/index.ts',
-    'src/point/strip/index.ts',
   ],
   test: {
     environment: 'node',

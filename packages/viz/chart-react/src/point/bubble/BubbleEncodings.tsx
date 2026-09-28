@@ -1,4 +1,4 @@
-import type { IRBubbleChartEncodings } from '@retikz/chart/point/bubble';
+import type { IRBubbleChartEncodings } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** Bubble 字段映射声明属性 */

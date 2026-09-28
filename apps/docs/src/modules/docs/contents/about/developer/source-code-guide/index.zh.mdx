@@ -108,12 +108,12 @@ chart/src/
   index.ts                包根公开入口
 ```
 
-消费者只能从 `package.json` 声明的入口导入：`@retikz/chart` 获取共享 Chart API，`@retikz/chart/point` 按名称获取 Point 家族中的具体图表能力，也可以使用 `@retikz/chart/point/scatter` 等具体图表子路径。不要 deep import `_chart/`、`schema.ts` 或其它实现文件；它们不是稳定的包外契约。
+消费者只能从 `package.json` 声明的入口导入：`@retikz/chart` 获取共享 Chart API，`@retikz/chart/point` 按名称获取 Point 家族中的具体图表能力。不要 deep import `_chart/`、`schema.ts` 或其它实现文件；它们不是稳定的包外契约。
 
-| 扩展包            | 共享 owner 与公开子域                                                   |
-| ----------------- | ----------------------------------------------------------------------- |
-| `@retikz/diagram` | `_diagram/` 共享图式能力，`./flow` 提供 Flow 子域                       |
-| `@retikz/chart`   | `_chart/` 共享图表能力，`./point` 与具体图表子路径均提供 Point 图表能力 |
+| 扩展包            | 共享 owner 与公开子域                                       |
+| ----------------- | ----------------------------------------------------------- |
+| `@retikz/diagram` | `_diagram/` 共享图式能力，`./flow` 提供 Flow 子域           |
+| `@retikz/chart`   | `_chart/` 共享图表能力，`./point` 按名称提供 Point 图表能力 |
 
 ## API 适配包
 

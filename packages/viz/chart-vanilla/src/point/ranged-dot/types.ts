@@ -1,4 +1,4 @@
-import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
+import type { IRRangedDotChart } from '@retikz/chart/point';
 
 import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 

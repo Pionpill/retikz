@@ -1,4 +1,4 @@
-import type { IRRegressionChartProperties } from '@retikz/chart/point/regression';
+import type { IRRegressionChartProperties } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** Regression 拟合与常量外观属性声明 */

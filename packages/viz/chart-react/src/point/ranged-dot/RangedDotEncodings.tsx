@@ -1,4 +1,4 @@
-import type { IRRangedDotChartEncodings } from '@retikz/chart/point/ranged-dot';
+import type { IRRangedDotChartEncodings } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** RangedDotEncodings React 属性 */

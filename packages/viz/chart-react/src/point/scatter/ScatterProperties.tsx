@@ -1,4 +1,4 @@
-import type { IRScatterChartProperties } from '@retikz/chart/point/scatter';
+import type { IRScatterChartProperties } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** Scatter 常量属性声明 */

@@ -8,9 +8,9 @@ public runtime/authoring boundary.
 
 The root package exports family-neutral Source schemas and the public theme
 contract, including `IRChartSource`, `createChartSourceSchema`, and
-`defineChartTheme`. Scatter, Bubble, and Regression are the currently
-implemented Point chartTypes; each owns an exact schema and provider contribution under its
-concrete `@retikz/chart/point/*` subpath. A Source uses
+`defineChartTheme`. The six implemented Point chartTypes each own an exact
+schema and provider contribution, exported by name from `@retikz/chart/point`.
+A Source uses
 `type: 'point'` for family discovery and `recipe.chartType` for exact recipe
 selection. There is no public family-wide schema, global catalog, global Chart
 parser/router, or Base Chart compatibility path. Applications that need dynamic

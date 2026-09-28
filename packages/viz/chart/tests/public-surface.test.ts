@@ -5,12 +5,6 @@ import { boolean, literal, strictObject } from 'zod';
 import type { ChartLocatorOptions } from '../src';
 import * as chart from '../src';
 import * as point from '../src/point';
-import * as bubble from '../src/point/bubble';
-import * as connectedScatter from '../src/point/connected-scatter';
-import * as rangedDot from '../src/point/ranged-dot';
-import * as regression from '../src/point/regression';
-import * as scatter from '../src/point/scatter';
-import * as strip from '../src/point/strip';
 
 const RecipeSchema = strictObject({
   chartType: literal('fixture'),
@@ -75,52 +69,21 @@ describe('@retikz/chart public surface', () => {
     expect(point).not.toHaveProperty('PathMarkDefinition');
   });
 
-  it('keeps concrete chartType entries limited to schema and provider contribution', () => {
-    for (const [concrete, contributionName, locatorName] of [
-      [bubble, 'createBubbleChartProviderContribution', 'qualifyBubbleChartLocatorOptions'],
-      [
-        connectedScatter,
-        'createConnectedScatterChartProviderContribution',
-        'qualifyConnectedScatterChartLocatorOptions',
-      ],
-      [rangedDot, 'createRangedDotChartProviderContribution', 'qualifyRangedDotChartLocatorOptions'],
-      [regression, 'createRegressionChartProviderContribution', 'qualifyRegressionChartLocatorOptions'],
-      [scatter, 'createScatterChartProviderContribution', 'qualifyScatterChartLocatorOptions'],
-    ] as const) {
-      expect(concrete).toHaveProperty(contributionName);
-      expect(concrete).toHaveProperty(locatorName);
-      expect(concrete).not.toHaveProperty('defineChartRecipe');
-      expect(concrete).not.toHaveProperty('defineChartMark');
-      expect(concrete).not.toHaveProperty('ScatterChartDefinition');
-      expect(concrete).not.toHaveProperty('ScatterMarkDefinition');
-      expect(concrete).not.toHaveProperty('BubbleChartDefinition');
-      expect(concrete).not.toHaveProperty('BubbleMarkDefinition');
-      expect(concrete).not.toHaveProperty('RegressionChartDefinition');
-      expect(concrete).not.toHaveProperty('RegressionMarkDefinition');
-      expect(concrete).not.toHaveProperty('PathMarkDefinition');
-    }
-
-    expect(strip).toHaveProperty('StripChartSchema');
-    expect(strip).toHaveProperty('createStripChartProviderContribution');
-    expect(strip).not.toHaveProperty('StripChartDefinition');
-    expect(strip).not.toHaveProperty('StripMarkDefinition');
-  });
-
   it('publishes Chart-facing locator options without exposing recipe identities', () => {
     const options: ChartLocatorOptions = { facet: { row: 'north' } };
-    expect(scatter.qualifyScatterChartLocatorOptions(options)).toEqual({
+    expect(point.qualifyScatterChartLocatorOptions(options)).toEqual({
       facet: {
         id: '__chart.scatter.composition.facet',
         row: 'north',
       },
     });
-    expect(bubble.qualifyBubbleChartLocatorOptions(options)).toEqual({
+    expect(point.qualifyBubbleChartLocatorOptions(options)).toEqual({
       facet: {
         id: '__chart.bubble.composition.facet',
         row: 'north',
       },
     });
-    expect(regression.qualifyRegressionChartLocatorOptions(options)).toEqual({
+    expect(point.qualifyRegressionChartLocatorOptions(options)).toEqual({
       facet: {
         id: '__chart.regression.composition.facet',
         row: 'north',

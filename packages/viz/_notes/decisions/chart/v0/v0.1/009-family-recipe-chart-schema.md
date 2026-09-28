@@ -46,7 +46,7 @@ Chart 根只保存跨图表类型可复用的 shell；所有决定当前图形�
 
 所有 family 都成立的 Chart shell、recipe / mark / Theme contract、已选 recipe resolve、Theme、Plot 组合与 Core provider 汇合机制进入内部 `_chart` owner。`_chart` 只合并当前 Core contribution 实际安装的 recipe 与主题，不维护全局 builtins、family catalog、LLM 路由或跨 family 自动发现。family 间只有出现真实稳定复用后才抽取原子，不因未来可能复用提前上移。
 
-`_chart` 的通用模块不导入任何具体 family，`_assembly` 与内置组合根被删除。每个具体 chartType 创建只携带自身 recipe 的 provider contribution；同一 family 的多个 contribution 使用同一个 Core composite key，并只在当前 compile 边界合并为临时 recipe registry 与精确 schema union。该 union 是派生编译产物，不导出为 family schema，也不写回 Definition 或 Source IR。包根不转发具体 family；family 与 chartType 通过显式 package subpath 暴露。
+`_chart` 的通用模块不导入任何具体 family，`_assembly` 与内置组合根被删除。每个具体 chartType 创建只携带自身 recipe 的 provider contribution；同一 family 的多个 contribution 使用同一个 Core composite key，并只在当前 compile 边界合并为临时 recipe registry 与精确 schema union。该 union 是派生编译产物，不导出为 family schema，也不写回 Definition 或 Source IR。包根不转发具体 family；`@retikz/chart/point` 按名称公开 Point 家族的精确 schema 与 provider contribution，不再公开具体 chartType package subpath。公开入口的聚合不改变所选 chartType 的 provider 安装范围。
 
 ## 基础数据结构与公开契约
 
@@ -327,3 +327,4 @@ Theme 分为三个 owner slice：`tokens.chart` 只控制所有 Chart 共用的 
 - 兼容性 / breaking：ADR-001 只继续保留 Chart lower 到 Plot 正式主链的原则；ADR-002 的 Proposed Theme 输入由本 ADR 完整替代；ADR-003 只继续保留 Source / Vanilla Input / React 边界和 Standard presentation lowering。ADR-004～008 的具体图表语义不在此处重新裁决，但其旧 Source shape 与配置标记必须在接受前重写
 - React / Vanilla 等价性：具体 factory 或组件从入口身份推断 family 与 chartType；Vanilla normalize 仍只把 typed Input 组装为精确 Source IR，React 仍映射到同一 Vanilla Input。具体 JSON schema、Vanilla 与 React 的等价输入必须生成相同 Source IR，并进入同一 active provider / resolver
 - 兼容性 / breaking：删除 `_assembly`、family Definition / catalog、generic Chart parse / authoring API 与 runtime family 注入，不保留 alias、fallback 或双轨；完全动态的 family / chartType 选择由应用层承担，复杂自定义图形直接使用 Plot
+- 兼容性 / breaking：Chart、Vanilla 与 React 的具体 `point/<chartType>` package subpath 均收口至各自的 `/point`，调用方改为按名称导入；不保留旧路径别名
