@@ -696,6 +696,13 @@ export const RelationEndpointGlyphsSchema = strictObject({
   })
   .describe('Optional source and target glyphs emitted atomically with a projected Relation row');
 
+/** 开放轨迹跨缺值连接段的常量描边覆盖 */
+export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
+  stroke: CssColorSchema.optional(),
+  strokeOpacity: number().min(0).max(1).optional(),
+  dashPattern: PathStrokeSchema.shape.dashPattern.unwrap().default([6, 4]).optional(),
+}).describe('Stroke overrides for bridges across missing projected points in an open unfilled path');
+
 export const PathMarkSchema = object({
   type: literal(PlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
   order: NonBlankStringSchema.optional().describe(
@@ -709,10 +716,10 @@ export const PathMarkSchema = object({
     .describe(
       'Connect the last point back to the first, closing the path into a polygon; under polar this yields a radar outline. Default false',
     ),
-  connectNulls: boolean()
+  connectNulls: union([boolean(), PlotPathConnectNullsStyleSchema])
     .optional()
     .describe(
-      'Whether invalid or missing projected points should be skipped and connected across; default false splits the path into separate core Path segments',
+      'False or omitted splits at invalid projected points. True or an object bridges open unfilled paths with a default dashed stroke; object fields override bridge stroke only. Closed or filled paths accept boolean only',
     ),
   closure: PathClosureSchema.optional().describe(
     'Close the path using a cycle, a baseline, or a per-row stacked baseline. Set fill when the closed path should render as an area',

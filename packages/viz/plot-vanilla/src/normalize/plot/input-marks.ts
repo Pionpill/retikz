@@ -35,6 +35,7 @@ import type {
   IRPlotNodePositiveNumberStyle,
   IRPlotNodeTextAlignStyle,
   IRPlotPathClosure,
+  IRPlotPathMark,
   IRPlotPathFillRuleStyle,
   IRPlotPathScaleStyle,
   IRPlotPathThicknessStyle,
@@ -262,8 +263,8 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     roundedCorners?: InputPlotMarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
     /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；cartesian 缺省 false，polar2D 缺省 true */
     closed?: boolean;
-    /** 是否跨过缺失 / 无效点继续连接；缺省 false 时会切成多个 core Path */
-    connectNulls?: boolean;
+    /** 开放轨迹跨缺值段默认虚线；对象覆盖该段描边，省略或 false 断开 */
+    connectNulls?: IRPlotPathMark['connectNulls'];
     /** 构建闭合路径：cycle 首尾闭合，baseline 回到基线，stack 回到逐行基线字段；是否填充由 fill 控制 */
     closure?: IRPlotPathClosure;
     /** 相邻点连接方式；缺省 linear */
