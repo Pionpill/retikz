@@ -12,6 +12,38 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/layout-react#FlexLayoutItemProps': [
+    { value: 'jsx', field: 'ir', type: 'never', label: { zh: 'JSX 子元素', en: 'JSX child' } },
+    { value: 'ir', field: 'children', type: 'never', label: { zh: 'IR 子图形', en: 'IR child' } },
+  ],
+  '@retikz/layout-react#GridLayoutItemProps': [
+    { value: 'jsx', field: 'ir', type: 'never', label: { zh: 'JSX 子元素', en: 'JSX child' } },
+    { value: 'ir', field: 'children', type: 'never', label: { zh: 'IR 子图形', en: 'IR child' } },
+  ],
+  '@retikz/layout-react#OverlayLayoutItemProps': [
+    { value: 'jsx', field: 'ir', type: 'never', label: { zh: 'JSX 子元素', en: 'JSX child' } },
+    { value: 'ir', field: 'children', type: 'never', label: { zh: 'IR 子图形', en: 'IR child' } },
+  ],
+  '@retikz/layout#LayoutAxisSizeInput': [
+    { value: 'content', field: 'kind', type: '"content"', label: { zh: '内容尺寸', en: 'Content' } },
+    { value: 'fixed', field: 'kind', type: '"fixed"', label: { zh: '固定尺寸', en: 'Fixed' } },
+    { value: 'fill', field: 'kind', type: '"fill"', label: { zh: '填充空间', en: 'Fill' } },
+  ],
+  '@retikz/layout#GridTrackBreadthInput': [
+    { value: 'fixed', field: 'kind', type: '"fixed"', label: { zh: '固定尺寸', en: 'Fixed' } },
+    { value: 'content', field: 'kind', type: '"content"', label: { zh: '内容尺寸', en: 'Content' } },
+    { value: 'fraction', field: 'kind', type: '"fraction"', label: { zh: '份额', en: 'Fraction' } },
+  ],
+  '@retikz/layout#GridTrackInput': [
+    { value: 'fixed', field: 'kind', type: '"fixed"', label: { zh: '固定尺寸', en: 'Fixed' } },
+    { value: 'content', field: 'kind', type: '"content"', label: { zh: '内容尺寸', en: 'Content' } },
+    { value: 'fraction', field: 'kind', type: '"fraction"', label: { zh: '份额', en: 'Fraction' } },
+    { value: 'minmax', field: 'kind', type: '"minmax"', label: { zh: '上下界', en: 'Minmax' } },
+  ],
+  '@retikz/layout#OverlayPlacementInput': [
+    { value: 'aligned', field: 'kind', type: '"aligned"', label: { zh: '对齐', en: 'Aligned' } },
+    { value: 'positioned', field: 'kind', type: '"positioned"', label: { zh: '局部定位', en: 'Positioned' } },
+  ],
   '@retikz/standard/presentation#LegendArtifact': [
     { value: 'items', field: 'kind', type: '"items"', label: { zh: '离散条目', en: 'Discrete items' } },
     { value: 'ramp', field: 'kind', type: '"ramp"', label: { zh: '连续样本', en: 'Continuous sample' } },

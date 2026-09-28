@@ -25,15 +25,24 @@ export type InputOverlayLayoutItem = InputLayoutItem<OverlayLayoutItemInput>;
 
 /** Vanilla FlexLayout authoring 输入 */
 export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
+  /** 作者声明的直属子项，省略时按空列表处理
+   * @default []
+   */
   children?: ReadonlyArray<InputFlexLayoutItem>;
 };
 
 /** Vanilla GridLayout authoring 输入 */
 export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
+  /** 作者声明的直属子项，省略时按空列表处理
+   * @default []
+   */
   children?: ReadonlyArray<InputGridLayoutItem>;
 };
 
 /** Vanilla OverlayLayout authoring 输入 */
 export type InputOverlayLayout = Omit<OverlayLayoutInput, 'children'> & {
+  /** 作者声明的直属子项，省略时按空列表处理
+   * @default []
+   */
   children?: ReadonlyArray<InputOverlayLayoutItem>;
 };
