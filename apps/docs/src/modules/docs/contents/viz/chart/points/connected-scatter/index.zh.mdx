@@ -125,7 +125,43 @@ export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
 
 ### 连接散点映射
 
-React 通过 `ConnectedScatterEncodings` 声明，Vanilla API 使用 `encodings`，直接 IR 使用 `recipe.encodings`。映射同时确定观测位置、组内连接顺序和轨迹分组。
+映射同时确定观测位置、组内连接顺序和轨迹分组。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterEncodings x="urbanization" y="lifeExpectancy" order="year" series="country" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'urbanization',
+  y: 'lifeExpectancy',
+  order: 'year',
+  series: 'country',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'urbanization',
+    y: 'lifeExpectancy',
+    order: 'year',
+    series: 'country',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 图中每个点是一个国家某年的城镇化率与预期寿命。六个国家在 1990–2020 年每五年取一条观测，横轴不是时间，因此需要另一个字段明确连接顺序。
 
@@ -136,6 +172,7 @@ React 通过 `ConnectedScatterEncodings` 声明，Vanilla API 使用 `encodings`
 沿各国轨迹观察指标如何共同变化；时间由连接顺序表达，不对应横轴。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['connected-scatter-encodings', 'connected-scatter-basic.data.ts']}
@@ -159,7 +196,45 @@ React 通过 `ConnectedScatterEncodings` 声明，Vanilla API 使用 `encodings`
 
 ### 连接散点属性
 
-React 通过 `ConnectedScatterProperties` 声明，Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。属性分别控制观测点与连接线，也决定如何显示数据缺口。
+属性分别控制观测点与连接线，也决定如何显示数据缺口。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterProperties
+  colorMode="series"
+  point={{ size: 4, opacity: 1 }}
+  path={{ curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  colorMode: 'series',
+  point: { size: 4, opacity: 1 },
+  path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    colorMode: 'series',
+    point: { size: 4, opacity: 1 },
+    path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 密集轨迹同时包含观测点和连接线。本例将两层外观分别配置，保留点的位置与连接顺序，便于突出离散观测或整体走向。
 
@@ -173,6 +248,7 @@ React 通过 `ConnectedScatterProperties` 声明，Vanilla API 使用 `propertie
 `colorMode="mark"` 让同一序列的点和线使用相邻的两种色板颜色，图例同步显示这两种颜色；默认 `series` 保持点线同色。`muted` 同样按序列同色，将连线默认透明度设为 60%，点的外观不变；显式 `path.strokeOpacity` 优先。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['connected-scatter-basic', 'connected-scatter-basic.data.ts']}
@@ -185,7 +261,57 @@ React 通过 `ConnectedScatterProperties` 声明，Vanilla API 使用 `propertie
 
 ### 连接散点图元
 
-React 通过 `ConnectedScatterMark` 声明，Vanilla API 使用 `marks`，直接 IR 使用 `recipe.marks`。 React 不传 `kind`；Vanilla / IR 图元对象使用 `kind: 'connected-scatter'`。每个图元同时包含连接线与观测点，追加和替换都作用于完整组合。
+每个图元同时包含连接线与观测点，追加和替换都作用于完整组合。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterMark
+  override
+  properties={{
+    point: { fillOpacity: 0.1, strokeWidth: 2 },
+    path: { dashPattern: [6, 4] },
+  }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [
+  {
+    kind: 'connected-scatter',
+    override: true,
+    properties: {
+      point: { fillOpacity: 0.1, strokeWidth: 2 },
+      path: { dashPattern: [6, 4] },
+    },
+  },
+],
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'connected-scatter',
+      override: true,
+      properties: {
+        point: { fillOpacity: 0.1, strokeWidth: 2 },
+        path: { dashPattern: [6, 4] },
+      },
+    },
+  ],
+},
+```
+
+</DocTab>
+</DocTabs>
 
 下面用空心点和虚线替换默认轨迹样式。每个国家仍是一组完整的“路径＋观测点”，不会只替换线而遗留另一套点。
 
@@ -196,6 +322,7 @@ React 通过 `ConnectedScatterMark` 声明，Vanilla API 使用 `marks`，直接
 每组先绘制连接线，再绘制观测点，避免线盖住点。两层默认共用分类颜色或默认色，也可分别用 `point.color`、`point.fill` 与 `path.stroke` 覆盖。 图元中省略的成员属性继续继承 recipe。需要只操作独立 Path 时，应使用 Plot 的图元能力。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['connected-scatter-marks', 'connected-scatter-basic.data.ts']}
@@ -239,7 +366,7 @@ React 通过 `ConnectedScatterMark` 声明，Vanilla API 使用 `marks`，直接
 
 React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，否则报错。
 
-`point-aware` 仅支持二维笛卡尔坐标、linear/time 位置尺度且无散布的组合。全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
+`point-aware` 支持内置连续与分类位置尺度，以及二维笛卡尔和极坐标。全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
 
 ## 实现原理
 

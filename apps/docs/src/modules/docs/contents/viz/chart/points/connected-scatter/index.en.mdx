@@ -125,7 +125,43 @@ export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
 
 ### Connected scatter encodings
 
-React uses `ConnectedScatterEncodings`; Vanilla API uses `encodings`; direct IR uses `recipe.encodings`. Encodings determine observation positions, connection order, and trajectory groups.
+Encodings determine observation positions, connection order, and trajectory groups.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterEncodings x="urbanization" y="lifeExpectancy" order="year" series="country" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'urbanization',
+  y: 'lifeExpectancy',
+  order: 'year',
+  series: 'country',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'urbanization',
+    y: 'lifeExpectancy',
+    order: 'year',
+    series: 'country',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 Each point is a country-year observation of urbanization and life expectancy. Six countries are sampled every five years from 1990 to 2020. Time is not on the x-axis, so connection order needs its own field.
 
@@ -136,6 +172,7 @@ Each point is a country-year observation of urbanization and life expectancy. Si
 Follow each country's trajectory to read joint change. Time is represented by connection order, not the x-axis.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['connected-scatter-encodings', 'connected-scatter-basic.data.ts']}
@@ -159,7 +196,45 @@ For complete properties and constraints, see [API reference: ConnectedScatterEnc
 
 ### Connected scatter properties
 
-React uses `ConnectedScatterProperties`; Vanilla API uses `properties`; direct IR uses `recipe.properties`. Properties style observations and paths separately and control how gaps are displayed.
+Properties style observations and paths separately and control how gaps are displayed.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterProperties
+  colorMode="series"
+  point={{ size: 4, opacity: 1 }}
+  path={{ curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  colorMode: 'series',
+  point: { size: 4, opacity: 1 },
+  path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    colorMode: 'series',
+    point: { size: 4, opacity: 1 },
+    path: { curve: 'linear', connectNulls: false, strokeOpacity: 1, strokeWidth: 2 },
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 Dense trajectories contain both observations and connecting lines. Configure those layers separately while retaining their positions and order to emphasize either observations or the overall path.
 
@@ -173,6 +248,7 @@ South Africa 2005 is intentionally missing in this example. Bridging changes the
 `colorMode="mark"` gives each series point and path adjacent palette colors, with a matching two-color legend. The default `series` keeps their colors shared. `muted` uses the same series colors with 60% path opacity and unchanged points. An explicit `path.strokeOpacity` takes precedence.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['connected-scatter-basic', 'connected-scatter-basic.data.ts']}
@@ -185,7 +261,57 @@ For complete properties and constraints, see [API reference: ConnectedScatterPro
 
 ### Connected scatter marks
 
-React uses `ConnectedScatterMark`; Vanilla API uses `marks`; direct IR uses `recipe.marks`. React supplies the kind; Vanilla / IR mark objects use `kind: 'connected-scatter'`. Each mark contains both paths and observations; append and replace operations affect the complete group.
+Each mark contains both paths and observations; append and replace operations affect the complete group.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<ConnectedScatterMark
+  override
+  properties={{
+    point: { fillOpacity: 0.1, strokeWidth: 2 },
+    path: { dashPattern: [6, 4] },
+  }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [
+  {
+    kind: 'connected-scatter',
+    override: true,
+    properties: {
+      point: { fillOpacity: 0.1, strokeWidth: 2 },
+      path: { dashPattern: [6, 4] },
+    },
+  },
+],
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'connected-scatter',
+      override: true,
+      properties: {
+        point: { fillOpacity: 0.1, strokeWidth: 2 },
+        path: { dashPattern: [6, 4] },
+      },
+    },
+  ],
+},
+```
+
+</DocTab>
+</DocTabs>
 
 Outlined points and dashed paths replace the default trajectory appearance. Each country remains a complete path-and-observation group rather than a replaced line with an unrelated point layer.
 
@@ -196,6 +322,7 @@ Outlined points and dashed paths replace the default trajectory appearance. Each
 Each group draws the path before its points so the line does not cover observations. The layers share a series color or default color unless `point.color`, `point.fill`, or `path.stroke` overrides it. Omitted member properties retain their recipe values. Use Plot when a path must be manipulated independently.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['connected-scatter-marks', 'connected-scatter-basic.data.ts']}
@@ -241,7 +368,7 @@ Compare South Africa with the segmented path in basic usage. Bridging is a displ
 
 In React, supplying the same configuration field through both the root `recipe` and a child component raises an error.
 
-`point-aware` requires Cartesian2D, linear/time position scales, and no jitter. Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
+`point-aware` supports built-in continuous and categorical position scales in Cartesian2D and Polar2D coordinates. Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
 
 ## Implementation
 

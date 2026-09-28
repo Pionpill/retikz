@@ -353,14 +353,18 @@ describe('Chart providers through Core compile', () => {
       ],
     });
     const result = compileToScene(sceneOf(source), definitions);
-    const [trajectory] = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
+    const trajectories = scenePrimitivesOfType(result.scene.primitives, 'path').filter(
       primitive => primitive.stroke === '#0f766e' && primitive.strokeWidth === 5,
     );
-    const positions = trajectory.commands?.flatMap(command => (Array.isArray(command.to) ? [command.to] : [])) ?? [];
+    const positions = trajectories.flatMap(
+      trajectory => trajectory.commands?.flatMap(command => (Array.isArray(command.to) ? [command.to] : [])) ?? [],
+    );
+    const uniquePositions = [...new Map(positions.map(position => [JSON.stringify(position), position])).values()];
 
-    expect(positions).toHaveLength(3);
-    expect(positions.map(position => position[0])).toEqual(
-      [...positions.map(position => position[0])].sort((a, b) => a - b),
+    expect(trajectories.some(trajectory => trajectory.dashPattern?.join(',') === '6,4')).toBe(true);
+    expect(uniquePositions).toHaveLength(3);
+    expect(uniquePositions.map(position => position[0])).toEqual(
+      [...uniquePositions.map(position => position[0])].sort((a, b) => a - b),
     );
     expect(scenePrimitivesOfType(result.scene.primitives, 'ellipse')).toHaveLength(3);
     expect(JSON.stringify(result.scene.primitives)).not.toMatch(/NaN|Infinity/);

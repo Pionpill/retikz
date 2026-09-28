@@ -8,6 +8,7 @@ import {
   StrokeDashPatternSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import { PathMarkSchema } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
@@ -28,6 +29,8 @@ export const ConnectedScatterPointPropertiesSchema = PointPropertiesSchema.omit(
 
 /** Connected Scatter Path member constants */
 export const ConnectedScatterPathPropertiesSchema = strictObject({
+  /** 相邻观测点的连接方式，省略时使用直线 */
+  curve: PathMarkSchema.shape.curve,
   stroke: CssColorSchema.optional(),
   strokeWidth: number().nonnegative().optional(),
   strokeOpacity: number().min(0).max(1).optional(),
@@ -37,7 +40,7 @@ export const ConnectedScatterPathPropertiesSchema = strictObject({
   dashPattern: StrokeDashPatternSchema.optional(),
   shadow: union([zodEnum(ShadowPreset), DropShadowSchema]).optional(),
   blendMode: zodEnum(BlendMode).optional(),
-  connectNulls: boolean().optional(),
+  connectNulls: PathMarkSchema.shape.connectNulls,
 }).describe('Connected Scatter open Path constant properties');
 
 /** Connected Scatter authored mark member properties */
@@ -48,6 +51,13 @@ const ConnectedScatterMarkPropertiesSchema = strictObject({
 
 /** Connected Scatter recipe properties */
 export const ConnectedScatterChartPropertiesSchema = ConnectedScatterMarkPropertiesSchema.extend({
+  /** 按序列同色、点线分色或淡化连接线 */
+  colorMode: zodEnum(['series', 'mark', 'muted'])
+    .default('series')
+    .optional()
+    .describe(
+      'Color allocation: series shares point/path colors (default); mark assigns consecutive palette colors to each series point and path; muted shares series colors and defaults path.strokeOpacity to 0.6 without changing points',
+    ),
   autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 }).describe('Connected Scatter recipe properties');

@@ -154,7 +154,7 @@ export const lowerPoint = (
         },
       }
     : colorGroupedScope(placed, fill =>
-        isText ? textStyle(textColorConstant ?? fill, mark) : pointGlyphStyle(fill, mark),
+        isText ? textStyle(textColorConstant ?? fill, mark) : pointGlyphStyle(fillConstant ?? fill, mark),
       );
   return attachMarkLayer(layer, mark, ctx);
 };
