@@ -1,112 +1,132 @@
 ---
 title: Extended usage
-description: Combine constraints and inspect solved bounds and artifacts
+description: Combine size constraints, placement strategies, and clipping
 ---
 
-Build on [basic usage](/library/layout/grid-layout/usage) to combine constraints and inspect results. Change one variable and compare allocated slots with actual geometry.
+After [basic usage](/library/layout/grid-layout/usage), explore constraints and observable results. Each example isolates one API group.
 
-## Explicit tracks and automatic placement
+## Combine intrinsic sizing and track bounds
 
-Declare columns and rows, then set start and span for positioned items. start is zero-based and span is a positive integer. autoFlow resolves unspecified axes; implicitColumn and implicitRow define tracks created beyond the explicit grid.
+Content tracks size to the space required by text or drawings, while bounded tracks limit how much their width can change. Both can be used in one container.
 
-Fixed tracks reserve stable regions; content tracks read contributions; fraction tracks share finite available space; minmax expresses bounds. Fraction sizing requires a finite allocation and is not a pixel size.
+| Property                        | Available values                                                      | Explanation                                                                                                                    |
+| ------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `columns[].kind`                | `fixed`, `content`, `fraction`, `minmax`                              | Select the sizing strategy; this demo uses `content` for the first column and `minmax` for the second                          |
+| `columns[].mode`                | `minimum`, `natural`                                                  | The content track’s `mode`: use minimum or natural intrinsic contributions                                                     |
+| `columns[].min`                 | `fixed` or `content` breadth                                          | The bounded track’s `min`: lower bound; fractions are not accepted                                                             |
+| `columns[].max`                 | `fixed`, `content`, or `fraction` breadth                             | The bounded track’s `max`: upper bound or fractional growth policy; a fixed upper bound must be at least the fixed lower bound |
+| `size.x / size.y`               | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | Physical container width and height: size to content, use a fixed value, or fill finite parent space                           |
+| `Node.layout.minimumSize.width` | Non-negative number                                                   | Node minimum width, independent of track bounds; compare wide and narrow content                                               |
 
-## Automatic placement and explicit overlap
+Switch the content mode to compare the first column’s minimum and natural width. The orange node in the second column defaults to a minimum width of 220, while the upper bound ranges from 110 to 250. Raise the upper bound from 110 to 220 to see the dashed column boundary and the node below move. Increasing it further to 250 leaves the track at the required width of 220; an upper bound does not force the track to fill it. The orange node retains its own minimum width: the bound limits the track, not the child’s geometry. To explore the lower bound, reduce Node minimum width to 40, then increase the second column’s minimum and watch short content receive a wider track.
 
-Automatic placement uses a non-dense stable cursor; it does not expose dense hole filling. Fully explicit overlaps are rejected unless overlap="allow". Placement never reorders the source array or stable paint order. A spanning region includes intervening gaps. Margins inset that region before item alignment.
+<ComponentPreview files="grid-bounds" size="md" />
 
-## Interactive comparison
+## Combine explicit spans and implicit tracks
 
-Switch the non-dense auto-placement direction, fraction weight, gaps, and cell alignment. A fixed viewBox keeps track proportions, spans, and placement directly comparable.
+When an item targets a position beyond the explicit rows or columns, the container adds the required tracks. Implicit track settings determine their sizes.
 
-<ComponentPreview
-  files="grid-layout-playground"
-  size="lg"
-  caption="Recommended shows the content outline, track bounds, and fixed gaps; use Inspection overlay to reveal padding, margin, distributed-space boundaries, and other details."
-/>
+| Property                       | Available values                                  | Explanation                                                                       |
+| ------------------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `row.start / column.start`     | Optional non-negative integer                     | Zero-based item start; tracks are added when the start exceeds the explicit range |
+| `row.span / column.span`       | Positive integer, default 1                       | Number of consecutive rows or columns to span                                     |
+| `implicitRow / implicitColumn` | `fixed`, `content`, `fraction`, or `minmax` track | Sizing policy for added rows and columns; defaults to natural content sizing      |
+| `autoFlow`                     | `row`, `column`                                   | Auto-placement direction; does not swap physical row and column meanings          |
 
-## Inspecting the layout
+The first demo item spans two columns. Change its starting row to reveal the intervening tracks, then adjust implicit row height to compare empty and occupied rows. Switching auto-placement direction changes automatic placement only: sizing still follows physical x→y, and row and column gaps do not swap.
+
+<ComponentPreview files="grid-implicit" size="md" />
+
+## Handle overlap and visual overflow explicitly
+
+Items sharing a grid area overlap; drawings extending beyond the container overflow. Different properties control these behaviors.
+
+| Property       | Available values    | Explanation                                                                                                             |
+| -------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `overlap`      | `reject`, `allow`   | Container property: allow or reject overlap between fully explicit placements; automatic free-space search is unchanged |
+| `column / row` | `{ start?, span? }` | Item properties: define the occupied area; the demo’s overlap toggle also changes the second item’s placement           |
+| `overflow`     | `visible`, `clip`   | Keep overflow visible or clip to the container allocation; neither option reruns layout                                 |
+
+With overlap disabled, the second demo item occupies the adjacent column. Enabling overlap sets `allow` and moves it into the first item’s area, so each control state is valid. The container is deliberately narrower than the two fixed columns. Switch clipping to compare visibility without changing tracks or placement.
+
+<ComponentPreview files="grid-overlap" size="sm" />
+
+## Related props
 
 <ComponentProps
   items={[
     {
-      name: 'inspect',
+      name: 'columns',
       kind: 'property',
-      type: 'false | true | GridLayoutInspectOptions',
-      description: '`InspectGridLayout` requests this occurrence; `false` only cancels the current instance',
-      defaultValue: 'true',
+      type: 'Array<GridTrackInput>',
+      description:
+        'Intrinsic contributions and bounded tracks `content` selects `minimum` / `natural`; `minmax` has `min` and `max` breadths, with no fractional minimum.',
+      required: true,
+    },
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        'Finite available space Each axis accepts `{ kind: "content", min?, max? }`, `{ kind: "fixed", value }`, or `{ kind: "fill", min?, max? }`.',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'implicitRow',
+      kind: 'property',
+      type: 'GridTrackInput',
+      description:
+        'Materialize rows beyond explicit entries; this page uses `{ kind: "fixed", value }` for implicit row height',
+      defaultValue: '{ kind: "content", mode: "natural" }',
+    },
+    {
+      name: 'implicitColumn',
+      kind: 'property',
+      type: 'GridTrackInput',
+      description: 'Materialize columns beyond explicit entries using the same track definitions as columns',
+      defaultValue: '{ kind: "content", mode: "natural" }',
+    },
+    {
+      name: 'column',
+      kind: 'property',
+      type: '{ start?: number; span?: number }',
+      description: 'Spans, explicit positions, and search',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'row',
+      kind: 'property',
+      type: '{ start?: number; span?: number }',
+      description: 'Spans, explicit positions, and search',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'autoFlow',
+      kind: 'property',
+      type: "'row' | 'column'",
+      description: '`row` searches row-first; `column` searches column-first; neither performs dense backfilling',
+      defaultValue: 'row',
+    },
+    {
+      name: 'overlap',
+      kind: 'property',
+      type: "'reject' | 'allow'",
+      description:
+        '`reject` rejects fully explicit overlap; `allow` permits it without changing automatic vacancy search',
+      defaultValue: 'reject',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description:
+        '`visible` keeps outside drawing; `clip` clips at the container allocation without changing solved geometry',
+      defaultValue: 'visible',
     },
   ]}
 />
 
-Base `GridLayout` has no `inspect` prop. The optional `InspectGridLayout` object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. See [Inspector guide](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for shared fields and host or Scope rules.
-
-```tsx
-import { Layout, Node } from '@retikz/react';
-import { LayoutItem } from '@retikz/layout-react';
-import { LayoutInspectLayout, InspectGridLayout } from '@retikz/layout-react/inspect';
-export const Inspected = () => (
-  <Layout>
-    <LayoutInspectLayout>
-      <InspectGridLayout
-        columns={[
-          { kind: 'fixed', value: 80 },
-          { kind: 'fixed', value: 80 },
-        ]}
-        columnGap={12}
-        inspect={{ bounds: { content: true, slot: true } }}
-      >
-        <LayoutItem kind="grid">
-          <Node position={[0, 0]} text="A" />
-        </LayoutItem>
-      </InspectGridLayout>
-    </LayoutInspectLayout>
-  </Layout>
-);
-```
-
-### GridLayoutInspectOptionsSchema
-
-<ZodSchema name="GridLayoutInspectOptionsSchema" description="Shared and GridLayout-specific inspection options." />
-
-## Reading layout results
-
-An occurrence identifies a concrete container instance; a public id alone cannot distinguish nested instances. Locate the artifact envelope and parse its value. Inspection reads that compilation result without solving again.
-
-```ts
-import { compileToScene } from '@retikz/core';
-import { GridLayoutDefinition, GridLayoutArtifactSchema, createGridLayout } from '@retikz/layout';
-const output = compileToScene(
-  {
-    type: 'scene',
-    version: 1,
-    children: [createGridLayout({ columns: [{ kind: 'content', mode: 'natural' }], children: [] })],
-  },
-  { composites: [GridLayoutDefinition] },
-);
-const envelope = output.artifacts.find(
-  item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'gridLayout',
-);
-if (envelope) {
-  const result = GridLayoutArtifactSchema.parse(envelope.value);
-  console.log(result.container, result.items);
-}
-```
-
-### GridLayoutArtifactSchema
-
-<ZodSchema
-  name="GridLayoutArtifactSchema"
-  description="GridLayout container, resolved item spans, and column/row track geometry."
-/>
-
-Each item adds `column`, `row`, `columnSpan`, and `rowSpan`. `columns[]` and `rows[]` are sorted by physical start and record contiguous `index`, `start`, `size`, `sourceKind`, and `implicit` fields.
-
-Required `spacing[]` uses the full content height for column spacing and the full content width for row spacing. Intersections between the two bands remain present and paint deterministically in x-then-y order.
-
-## Shared bounds and inspection rules
-
-All layouts distinguish slots, actual allocation, and visual bounds. See [artifact bounds](/library/layout/flex-layout/extended#understanding-artifact-bounds) before interpreting results, and [inspector hosts and scopes](/library/layout/flex-layout/extended#inspector-hosts-and-scopes) for subtree selection and barriers.
+Full signatures and constraints: [API reference](/library/layout/grid-layout/api-reference) · [Schema reference](/library/layout/grid-layout/schema-reference).
 
 ## Further reading
 
@@ -123,6 +143,7 @@ All layouts distinguish slots, actual allocation, and visual bounds. See [artifa
       description: 'Understand measurement and placement',
       url: '/library/layout/grid-layout/mechanism',
     },
+    { title: 'API reference', description: 'Look up public functions, types, and props', url: '/library/layout/grid-layout/api-reference' },
     {
       title: 'Schema reference',
       description: 'Look up persistent input constraints',

@@ -1,13 +1,73 @@
 ---
 title: GridLayout · 网格布局
-description: GridLayout · 网格布局的用法、实现原理与输入契约
+description: 用共享行列轨道排列图形，组合固定尺寸、份额分配与跨行跨列
 ---
 
-`GridLayout` 把内容区域划分为物理列轨道和行轨道。轨道可以固定、按最小或自然内容贡献求值、按份额吸收有限剩余空间，或用 `minmax` 组合上下界；子项可以显式指定连续的跨轨道范围，也可以按 `autoFlow` 放入下一处空位。
+`GridLayout` 把内容区域划分成行与列。每一行或列都是一条轨道，同一轨道上的子项共享尺寸与对齐参照。它适合多列信息区、对齐的图形矩阵，以及标题跨列、内容分栏的组合。
 
-从基础用法开始；需要调节空间分配与检查结果时阅读扩展用法，实现原理解释行为依据。
+你声明轨道尺寸和子项占用范围，布局负责求出行列边界并放置内容。轨道既可以固定宽高，也可以根据内容求值，或按份额分配有限空间；未指定位置的子项可以自动寻找空位。
+
+## 职责一览
+
+布局以可序列化的 IR 描述容器、子项规则和图形内容。三者分别保存不同的事实：
+
+| IR 层次                         | 描述内容                               | 作用范围                       |
+| ------------------------------- | -------------------------------------- | ------------------------------ |
+| 布局容器                        | 行列轨道、容器尺寸、间距与自动放置方向 | 决定整组内容的空间组织         |
+| 子项配置（`children` 中的条目） | 行列位置、跨度与单项对齐               | 决定单个子图形如何参与布局     |
+| 子图形（条目的 `child`）        | 节点、路径或嵌套图形的内容与几何声明   | 决定实际绘制的内容及其测量依据 |
+
+容器的 `children` 保存子项配置，每个条目的 `child` 保存子图形 IR。布局规则与图形内容因此可以分别调整：修改子项的分配或放置规则，不必重写图形本身。
+
+React 通过 JSX 组合、Vanilla 通过函数与对象编写这些声明，也可以直接提供 IR。各入口最终表达同一份布局契约；具体写法在基础用法中对照，总览按这份共同契约解释行为。
+
+## 理解轨道与跨列
+
+下面的网格有两行三列：第一列固定为 100，另外两列按 1∶2 的份额分配可用空间。标题占据第一行的全部三列，后面的三个子项自动填入第二行。
 
 <ComponentPreview files="entry" hideCode size="sm" />
+
+标题跨列时占用一个连续区域，其中包含跨过的列间距；它不会把三列合并成一条新轨道，第二行仍沿用原来的列边界。
+
+份额列的计算需要有限的可用宽度。这个示例显式设置容器宽度，先扣除内边距、列间距和固定列，再由份额列分配空间；有内容最小尺寸或其它约束时，不能仅凭份额数字推断最终宽度。
+
+槽位是网格分给子项的区域，不等于图形边框。示例中的 Node 居中放在槽位内，保持自身内容尺寸；跨三列的标题也不会自动变成铺满三列的矩形。
+
+<Comparison target="css" title="与 CSS Grid 的对应关系">
+
+CSS Grid 与 GridLayout 都用行列轨道组织内容。下表对照的是布局 IR：容器声明轨道，`children` 中的条目声明占用范围，React 与 Vanilla 共用这些语义。
+
+| CSS Grid                                       | GridLayout IR                        | 对应语义                                                      |
+| ---------------------------------------------- | ------------------------------------ | ------------------------------------------------------------- |
+| `display: grid`                                | `type: 'gridLayout'`                 | 采用网格布局；IR 还需布局包的 `namespace`                     |
+| `grid-template-columns` / `grid-template-rows` | `columns` / `rows`                   | 显式列轨道与行轨道                                            |
+| 固定长度 / `fr` / `minmax()`                   | `fixed` / `fraction` / `minmax` 轨道 | 固定尺寸、份额与上下界策略                                    |
+| `grid-auto-columns` / `grid-auto-rows`         | `implicitColumn` / `implicitRow`     | 自动生成轨道的尺寸策略                                        |
+| `grid-auto-flow`                               | `autoFlow`                           | 按行或按列自动寻找空位，不支持 `dense`                        |
+| `grid-column` / `grid-row`                     | 子项的 `column` / `row`              | 用 `start` 与 `span` 指定起始轨道和跨度                       |
+| `column-gap` / `row-gap`                       | `columnGap` / `rowGap`               | 轨道之间的物理横纵间距                                        |
+| `justify-items` / `align-items`                | `justifyItems` / `alignItems`        | 子项在区域内的默认对齐，可由 `justifySelf` / `alignSelf` 覆盖 |
+| `justify-content` / `align-content`            | `justifyContent` / `alignContent`    | 整组列轨道或行轨道在容器内的空间分布                          |
+
+本页列定义可类比为 `grid-template-columns: 100px 1fr 2fr`，标题的 `column: { span: 3 }` 类似 `grid-column: span 3`。这些 CSS 片段帮助理解分配规则，不是 GridLayout 接受的输入语法。
+
+显式位置的编号不同：CSS 正向网格线从 1 开始，GridLayout 的 `start` 从 0 开始。例如 CSS 的 `grid-column: 1 / span 2` 对应 `column: { start: 0, span: 2 }`；不能直接复制 CSS 网格线编号、负索引或命名区域。
+
+GridLayout 使用绘图坐标单位和结构化轨道配置，不执行 CSS 样式级联或完整的浏览器轨道算法。内容轨道根据子图形的最小或自然尺寸贡献求值；份额轨道需要有限空间。显式区域重叠默认由 `overlap: 'reject'` 拒绝，也不同于 CSS Grid 允许网格项目重叠的行为。实际支持的取值以 API、Schema 参考为准。
+
+</Comparison>
+
+## 选择与边界
+
+| 排列目标                             | 选择                                            |
+| ------------------------------------ | ----------------------------------------------- |
+| 多行多列共享边界，需要跨行或跨列     | `GridLayout`                                    |
+| 沿一个方向排列，按内容顺序伸缩或换行 | [FlexLayout](/library/layout/flex-layout)       |
+| 多个图形共享同一区域，需要叠加与定位 | [OverlayLayout](/library/layout/overlay-layout) |
+
+GridLayout 排列子图形，不主动绘制表格边框或参考网格。需要独立的参考线图形时，使用标准包的 [Grid](/library/standard/presentation/grid)。
+
+从基础用法学习轨道和子项声明；扩展用法进一步组合内容轨道、上下界、隐式轨道与重叠策略。API、Schema 参考用于查询接口和字段，实现原理解释自动放置与轨道求解的过程。
 
 ## 章节内容
 
@@ -16,6 +76,7 @@ description: GridLayout · 网格布局的用法、实现原理与输入契约
     { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/grid-layout/usage' },
     { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/grid-layout/extended' },
     { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/grid-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/grid-layout/api-reference' },
     {
       title: 'Schema 参考',
       description: '查询持久化输入的字段约束',

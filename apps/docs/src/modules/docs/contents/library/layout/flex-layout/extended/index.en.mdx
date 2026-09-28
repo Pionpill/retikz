@@ -1,9 +1,9 @@
 ---
 title: Extended usage
-description: Combine flex limits, wrapping, and alignment, then inspect overflow and layout results
+description: Combine flex limits, wrapping, and alignment, handle overflow and clipping
 ---
 
-Building on [Basic usage](/library/layout/flex-layout/usage), this page covers insufficient space, multiple lines, and result inspection. Each section follows a cooperating API group: establish size constraints, choose wrapping and alignment, then inspect the actual allocation.
+Building on [Basic usage](/library/layout/flex-layout/usage), this page covers insufficient space, multiple lines, and clipping. Each section follows a cooperating API group: establish size constraints, choose wrapping and alignment, then choose how to handle overflow.
 
 ## Combining flex allocation with size limits
 
@@ -54,7 +54,6 @@ Centering borders does not necessarily align text with different font sizes or l
 | ---------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `alignItems`           | This section compares `center`, `first-baseline`, `last-baseline` | Default container alignment; first and last baseline modes require a horizontal main axis          |
 | `alignSelf`            | Omit, or use an alignment value                                   | Override one item, or inherit the container when omitted                                           |
-| `alignmentGuides`      | `true`, `false`                                                   | Inspection option: show the alignment guides actually used                                         |
 | `Node.style.font.size` | `number`                                                          | Node font size, controlled separately for each item to compare baselines at different text heights |
 
 The first item has two explicit lines; the second wraps to its available width. Change both font sizes and compare center, first-baseline, and last-baseline alignment. The second item inherits the default only when its override is unset. A child without the requested guide falls back to edge alignment. Use ordinary edge alignment for a vertical main axis.
@@ -80,67 +79,9 @@ Narrow the container or increase the node minimum width until it extends beyond 
 
 <ComponentPreview files="flex-clipping" size="md" />
 
-## Inspecting and reading layout results
-
-Inspection layers distinguish assigned space from actual allocation, while the result table reads data from the same compilation. Inspection options only affect overlays and are not stored in layout IR.
-
-| Property            | Available values                                                      | Explanation                                                                                          |
-| ------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `size.x / size.y`   | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | Physical container width and height: size to content, use a fixed value, or fill finite parent space |
-| `basis`             | `content` or a non-negative number                                    | Item main-axis starting size; `content` uses intrinsic measurement                                   |
-| `wrap`              | `nowrap`, `wrap`, `wrap-reverse`                                      | Keep one line, wrap, or reverse line placement without changing authored item order                  |
-| `bounds.slot`       | `true`, `false`                                                       | Inspection option: show or hide the slot assigned by the parent                                      |
-| `bounds.allocation` | `true`, `false`                                                       | Inspection option: show or hide the allocation actually accepted by the child                        |
-| `gaps`              | `true`, `false`                                                       | Inspection option: show fixed gaps                                                                   |
-
-Change container width, base size, and wrapping, then compare the line, slot width, and actual width in the result table. Toggle slots, allocations, and gaps separately to identify each overlay. Inspection toggles do not change the table values.
-
-<ComponentPreview files={['flex-inspection', 'flex-inspection.data.ts']} size="lg" controlPanelDefaultSize={50} />
-
-### Inspector hosts and scopes
-
-- React: use `LayoutInspectLayout` + `InspectFlexLayout`, with `inspect` configuring the current container.
-- Vanilla: declare requests with `inspectFlexLayout` and pass the driver created by `createLayoutInspectionVanillaDriver` as the render / mount `compileDriver`.
-- IR: keep the original layout input and select targets through the inspection driver’s runtime `selection`; do not add inspection fields to IR.
-
-Start with `bounds.slot` and `bounds.allocation` to compare assigned slots with actual occupancy. Add `gaps` and `distributedSpace` to distinguish fixed gaps from distributed free space. The panel's recommended preset selects details useful for this explanation; it is not the complete default inspect configuration.
-
-A container request does not automatically propagate to nested layouts. React can select the scene through the host's `request` or a subtree through `LayoutInspectScope`; Vanilla can use `createInspectionVanillaAuthoring` on the scene or a Scope. To block an entire subtree, use `LayoutInspectScope request={false}` or `createLayoutInspectionBarrier()`. Setting one request to `false` disables selection at that level but allows deeper requests to enable it again.
-
-See [API reference](/library/layout/flex-layout/api-reference) for full entry points and option types, and [Schema reference](/library/layout/flex-layout/schema-reference) for layout input fields.
-
-### Reading results from the same compilation
-
-A compilation can contain multiple layout instances; a public id alone is insufficient to identify nested instances. This example takes the first Flex artifact to demonstrate reading it. For multiple instances, also use the artifact's occurrence to locate the intended target.
-
-```ts
-import { compileToScene } from '@retikz/core';
-import { FlexLayoutDefinition, FlexLayoutArtifactSchema, createFlexLayout } from '@retikz/layout';
-
-const output = compileToScene(
-  { type: 'scene', version: 1, children: [createFlexLayout({ children: [] })] },
-  { composites: [FlexLayoutDefinition] },
-);
-
-const envelope = output.artifacts.find(
-  item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'flexLayout',
-);
-
-if (envelope) {
-  const result = FlexLayoutArtifactSchema.parse(envelope.value);
-  console.log(result.container, result.items);
-}
-```
-
-### Understanding artifact bounds
-
-Distinguish three quantities: `slotBounds` is the parent-assigned slot, `allocationBounds` is the layout space actually accepted by the child, and `visualBounds` includes visual effects such as strokes and labels. Fixed geometry may exceed its slot; `visibleBounds` separately describes visibility after clipping.
-
-Flex artifact `items` retain declaration order, `lines` describe the final grouping, and `spacing` distinguishes fixed gaps from distributed free space. Use them to answer questions such as which line an item belongs to or where overflow occurs, without rerunning allocation. See [API reference](/library/layout/flex-layout/api-reference) for all artifact members and [Implementation](/library/layout/flex-layout/mechanism) for the solving process.
-
 ## Related props
 
-These properties cover this page's constraints, wrapping, baselines, clipping, and inspection. See [Basic usage's related props](/library/layout/flex-layout/usage#related-props) for basic sizing, spacing, and ordinary alignment. Shared allocation and alignment properties are described here in the context of combined constraints. See [API reference](/library/layout/flex-layout/api-reference) for full signatures and [Schema reference](/library/layout/flex-layout/schema-reference) for field constraints. The final four entries are runtime inspector options, not layout input fields.
+These properties cover this page's constraints, wrapping, baselines, and clipping. See [Basic usage's related props](/library/layout/flex-layout/usage#related-props) for basic sizing, spacing, and ordinary alignment. Shared allocation and alignment properties are described here in the context of combined constraints. See [API reference](/library/layout/flex-layout/api-reference) for full signatures and [Schema reference](/library/layout/flex-layout/schema-reference) for field constraints.
 
 <ComponentProps
   items={[
@@ -215,34 +156,6 @@ These properties cover this page's constraints, wrapping, baselines, clipping, a
       type: "'visible' | 'clip'",
       description: 'Container visible preserves overflowing content; clip clips it. Neither reallocates sizes',
       defaultValue: "'visible'",
-    },
-    {
-      name: 'bounds.slot',
-      kind: 'property',
-      type: 'boolean',
-      description: 'Inspector option: show parent-assigned slots; kept outside layout IR',
-      defaultValue: 'true',
-    },
-    {
-      name: 'bounds.allocation',
-      kind: 'property',
-      type: 'boolean',
-      description: "Inspector option: show the child's accepted allocation for comparison with its slot",
-      defaultValue: 'true',
-    },
-    {
-      name: 'gaps',
-      kind: 'property',
-      type: 'boolean',
-      description: 'Inspector option: show fixed gaps; disabling only hides the overlay',
-      defaultValue: 'true',
-    },
-    {
-      name: 'alignmentGuides',
-      kind: 'property',
-      type: 'boolean',
-      description: 'Inspector option: show actual alignment guides to inspect first and last baselines',
-      defaultValue: 'true',
     },
   ]}
 />

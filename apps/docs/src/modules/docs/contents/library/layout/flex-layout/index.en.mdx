@@ -27,7 +27,7 @@ All three items below have a `basis` of 100. The first does not grow; the others
 
 <ComponentPreview files="entry" hideCode size="sm" />
 
-Inspection is enabled by default, showing container bounds, child slots, padding, and gaps. A slot is the rectangular region assigned to an item by its parent. Compare the dashed slots to see how allocation differs between the fixed item and the two flexible items.
+A slot is the rectangular region assigned to an item by its parent. Compare the dashed slots to see how allocation differs between the fixed item and the two flexible items.
 
 The item with `grow=2` receives twice as much **additional space** as the item with `grow=1`; its final width is not necessarily twice as large. Each final slot also includes its base width. This relationship applies to the example because no size limits constrain the distribution.
 
@@ -65,7 +65,7 @@ FlexLayout does not execute browser CSS. It measures and places child graphics e
 
 FlexLayout wrapping still allocates items sequentially within each line; it does not establish shared column tracks across lines. It also does not turn content into list cells or key-value entries. For those visual structures, choose Standard's [List](/library/standard/container/list) or [Map](/library/standard/container/map).
 
-Start with basic usage to declare containers and items. Continue to extended usage when combining size constraints or inspecting results. Consult the API or Schema reference directly for parameters, and read implementation when you need to understand why the behavior holds.
+Start with basic usage to declare containers and items. Continue to extended usage when combining size constraints and clipping. Consult the API or Schema reference directly for parameters, and read implementation when you need to understand why the behavior holds.
 
 ## Contents
 
@@ -78,7 +78,7 @@ Start with basic usage to declare containers and items. Continue to extended usa
     },
     {
       title: 'Extended usage',
-      description: 'Combine constraints and inspect results',
+      description: 'Combine constraints and clipping',
       url: '/library/layout/flex-layout/extended',
     },
     {

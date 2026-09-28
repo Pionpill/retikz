@@ -7,22 +7,23 @@ description: 声明容器和子项，理解尺寸、间距与对齐
 
 ## 接入方式
 
-安装见[快速开始](/library/layout/get-start)。容器直属元素必须使用匹配 kind 的 LayoutItem；一个子项负责一个可绘制 child。
-
-```text
-GridLayout
-└── LayoutItem (kind="grid")
-    └── Node / GridLayout
-```
-
 <ComponentPreview files="/library/layout/grid-layout/entry" hideCode size="sm" />
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
 
+React + JSX 中，`GridLayout` 的直属子元素使用 `GridLayoutItem`，每个子项承载一个可绘制内容：
+
+```text
+GridLayout
+└── GridLayoutItem
+    └── Node / GridLayout
+```
+
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { GridLayout, LayoutItem } from '@retikz/layout-react';
+import { GridLayout, GridLayoutItem } from '@retikz/layout-react';
+
 export const Example = () => (
   <Layout>
     <GridLayout
@@ -32,16 +33,18 @@ export const Example = () => (
       ]}
       columnGap={12}
     >
-      <LayoutItem kind="grid">
-        <Node position={[0, 0]} text="A" />
-      </LayoutItem>
-      <LayoutItem kind="grid">
-        <Node position={[0, 0]} text="B" />
-      </LayoutItem>
+      <GridLayoutItem>
+        <Node text="A" />
+      </GridLayoutItem>
+      <GridLayoutItem>
+        <Node text="B" />
+      </GridLayoutItem>
     </GridLayout>
   </Layout>
 );
 ```
+
+React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
 
 </DocTab>
 <DocTab value="react-ir" label="React + IR">
@@ -50,6 +53,7 @@ export const Example = () => (
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
 import { GridLayoutDefinition } from '@retikz/layout';
+
 const ir: IRScene = {
   type: 'scene',
   version: 1,
@@ -63,13 +67,14 @@ const ir: IRScene = {
       ],
       columnGap: 12,
       children: [
-        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'A' } },
-        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'B' } },
+        { kind: 'grid', child: { type: 'node', text: 'A' } },
+        { kind: 'grid', child: { type: 'node', text: 'B' } },
       ],
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[GridLayoutDefinition]} />;
+
+export const Example = () => <Layout ir={ir} extensions={{ composites: [GridLayoutDefinition] }} />;
 ```
 
 </DocTab>
@@ -78,6 +83,7 @@ export const Example = () => <Layout ir={ir} composites={[GridLayoutDefinition]}
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
 import { gridLayout, GridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+
 const input = scene({
   children: [
     gridLayout({
@@ -87,12 +93,13 @@ const input = scene({
       ],
       columnGap: 12,
       children: [
-        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'A' } },
-        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'B' } },
+        { kind: 'grid', child: { type: 'node', text: 'A' } },
+        { kind: 'grid', child: { type: 'node', text: 'B' } },
       ],
     }),
   ],
 });
+
 console.log(renderToSvgString(input, { adapters: [GridLayoutInputEmbedAdapter] }));
 ```
 
@@ -103,6 +110,7 @@ console.log(renderToSvgString(input, { adapters: [GridLayoutInputEmbedAdapter] }
 import type { IRScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
 import { GridLayoutDefinition } from '@retikz/layout';
+
 const ir: IRScene = {
   type: 'scene',
   version: 1,
@@ -116,55 +124,77 @@ const ir: IRScene = {
       ],
       columnGap: 12,
       children: [
-        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'A' } },
-        { kind: 'grid', child: { type: 'node', position: [0, 0], text: 'B' } },
+        { kind: 'grid', child: { type: 'node', text: 'A' } },
+        { kind: 'grid', child: { type: 'node', text: 'B' } },
       ],
     },
   ],
 };
+
 console.log(renderToSvgString(ir, { compile: { composites: [GridLayoutDefinition] } }));
 ```
 
 </DocTab>
 </DocTabs>
 
-JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutInputEmbedAdapter`。完整布局家族可在 `composites` 中传入三个 layout Definition，或使用 `LayoutInputEmbedAdapters` 装载 Vanilla embed
+## 列宽与容器空间
 
-| 场景        | 公开入口                                                                                           |
-| ----------- | -------------------------------------------------------------------------------------------------- |
-| React       | `GridLayout`、`LayoutItem`（`@retikz/layout-react`）                                               |
-| Vanilla     | `gridLayout`、`GridLayoutInputEmbedAdapter`（`@retikz/layout-vanilla`）                            |
-| 可选检查    | `InspectGridLayout`（`@retikz/layout-react/inspect`）、`inspectGridLayout`（Vanilla）              |
-| IR / 持久化 | `GridLayoutSchema`、`createGridLayout`、`IRGridLayout`、`GridLayoutDefinition`（`@retikz/layout`） |
+列轨道决定每列分到多少宽度。固定列保留指定宽度，份额列按比例分享容器中剩余的空间。
 
-## 轨道与放置
+| 属性                 | 可用值                                                                      | 解释                                                           |
+| -------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `columns`            | 轨道数组；本节用 `{ kind: "fixed", value }`、`{ kind: "fraction", factor }` | 至少一列；固定值非负，份额系数大于 0。内容与有界轨道见扩展用法 |
+| `size.x / size.y`    | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }`       | 容器的物理宽、高：按内容求尺寸、固定尺寸或接收父级有限空间     |
+| `padding`            | 非负数，或按 `x` / `y` / 四边配置的对象                                     | 从容器四边留出内边距，剩余部分为内容区                         |
+| `columnGap / rowGap` | 非负数                                                                      | 分别控制列间距和行间距；跨度区域包含内部间距                   |
 
-下面同时使用固定轨道、`1fr`、`2fr`、显式跨轨道范围和未指定坐标的子项。自动放置只按规范的作者声明顺序前进，不实现浏览器式密集回填。
+demo 的第一列固定为 100，后两列分配余量。调整末列份额，比较后两列宽度；再缩小容器，观察文字换行。改变内边距和列间距会减少可分配宽度。未指定行轨道时，行高由内容决定；槽位宽度不等于 Node 边框宽度。
 
-<ComponentPreview files="grid-layout-basic" size="md" />
+<ComponentPreview files="grid-tracks" size="md" />
 
-## 容器的分配与对齐
+## 子项行列放置
 
-先声明至少一条 `columns` 轨道；未声明的行按内容生成。`justifyItems` / `alignItems` 控制格子内部的子项，`justifyContent` / `alignContent` 控制整组轨道在内容区中的位置。
+子项可以占一个格子，也可以跨越相邻行列。没有指定起始位置的子项，会按行或按列自动排列，并跳过已占用区域。
 
-## 选择轨道类型
+| 属性           | 可用值                   | 解释                                                                     |
+| -------------- | ------------------------ | ------------------------------------------------------------------------ |
+| `column / row` | `{ start?, span? }`      | 子项的列、行位置；`start` 是从 0 开始的非负整数，`span` 是正整数，默认 1 |
+| `autoFlow`     | `row`, `column`          | 容器按行或按列搜索空位，不进行 `dense` 回填                              |
+| `rows`         | 轨道数组；本节用固定轨道 | 声明已有行；本例保留两行以比较自动排列方向                               |
 
-| 形态       | 关键字段                       | 含义                           |
-| ---------- | ------------------------------ | ------------------------------ |
-| `fixed`    | `{ kind: 'fixed', value }`     | 固定非负尺寸                   |
-| `content`  | `{ kind: 'content', mode }`    | 子图形最小或自然内容贡献       |
-| `fraction` | `{ kind: 'fraction', factor }` | 有限空间中的正份额权重         |
-| `minmax`   | `{ kind: 'minmax', min, max }` | 非份额下界与固定/内容/份额上界 |
+切换 demo 的自动排列方向，观察子项顺序如何映射到格子；再将首项跨度从 1 改为 2，查看后续子项如何避开已占用区域。跨列区域包含中间间距，但不会合并列轨道。
 
-## 子项约束
+<ComponentPreview files="grid-placement" size="md" />
 
-每个子项使用一个 `child`，由容器决定它的空间与位置。`margin` 留在分配区域外围；`justifySelf` / `alignSelf` 只覆盖当前子项，省略时继承容器。
+## 轨道分布与子项对齐
 
-React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
+轨道分布控制整组行列的位置，子项对齐控制图形在各自格子里的位置。两者作用在不同层级。
+
+| 属性                            | 可用值                                                                               | 解释                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| `justifyContent / alignContent` | `start`, `center`, `end`, `stretch`, `space-between`, `space-around`, `space-evenly` | 容器属性：分别分布整组列和整组行；默认 `start` |
+| `justifyItems`                  | `start`, `center`, `end`, `stretch`                                                  | 容器属性：子项默认水平对齐；默认 `stretch`     |
+| `alignItems`                    | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`               | 容器属性：子项默认垂直对齐；默认 `stretch`     |
+
+demo 使用固定轨道并预留空白，初始居中便于观察。先改变列组或行组分布，查看轨道整体移动；再改变子项对齐，查看轨道不动而 Node 改变位置。`stretch` 提供尺寸约束，不保证固定几何发生变形。
+
+<ComponentPreview files="grid-alignment" size="md" />
+
+## 子项外边距与独立对齐
+
+单个子项可以留出外边距，也可以覆盖容器的默认对齐，不影响其他子项的配置。
+
+| 属性          | 可用值                                                                         | 解释                                       |
+| ------------- | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| `margin`      | 非负数，或按 `x` / `y` / 四边配置的对象                                        | 子项外边距，减少槽位内可供子图形使用的空间 |
+| `justifySelf` | `start`, `center`, `end`, `stretch`；可省略                                    | 子项水平对齐；省略时继承 `justifyItems`    |
+| `alignSelf`   | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`；可省略 | 子项垂直对齐；省略时继承 `alignItems`      |
+
+demo 只改变 First Node。增大它的外边距，再切换水平和垂直对齐，观察它与其他居中子项的差别。外边距属于布局输入；空间不足时，子图形仍可能超出槽位，槽位边界不代表裁切边界。
+
+<ComponentPreview files="grid-item" size="md" />
 
 ## 相关属性
-
-以下集中回查本页使用的容器和子项字段。完整持久化输入见 [Schema 参考](/library/layout/grid-layout/schema-reference)。
 
 <ComponentProps
   items={[
@@ -172,179 +202,120 @@ React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `i
       name: 'columns',
       kind: 'property',
       type: 'Array<GridTrackInput>',
-      description: '至少一条显式物理列轨道',
+      description:
+        '显式物理列轨道，至少一列。用 `{ kind: "fixed", value }` 固定宽度，用 `{ kind: "fraction", factor }` 分配有限剩余空间',
       required: true,
     },
     {
       name: 'rows',
       kind: 'property',
       type: 'Array<GridTrackInput>',
-      description: '显式行轨道；不足部分由隐式定义补齐',
+      description: '显式物理行轨道；不足时按隐式行策略补齐。本页使用 `{ kind: "fixed", value }` 便于观察对齐',
       defaultValue: '[]',
-    },
-    {
-      name: 'implicitColumn',
-      kind: 'property',
-      type: 'GridTrackInput',
-      description: '自动放置扩展列时使用',
-      defaultValue: '内容自然尺寸',
-    },
-    {
-      name: 'implicitRow',
-      kind: 'property',
-      type: 'GridTrackInput',
-      description: '自动放置扩展行时使用',
-      defaultValue: '内容自然尺寸',
-    },
-    {
-      name: 'autoFlow',
-      kind: 'property',
-      type: "'row' | 'column'",
-      description: '非密集的确定性自动放置方向',
-      defaultValue: "'row'",
-    },
-    {
-      name: 'overlap',
-      kind: 'property',
-      type: "'reject' | 'allow'",
-      description: '完全显式放置子项的重叠策略',
-      defaultValue: "'reject'",
-    },
-    {
-      name: 'columnGap',
-      kind: 'property',
-      type: 'number',
-      description: '物理列间距',
-      defaultValue: '0',
-    },
-    {
-      name: 'rowGap',
-      kind: 'property',
-      type: 'number',
-      description: '物理行间距',
-      defaultValue: '0',
-    },
-    {
-      name: 'justifyItems',
-      kind: 'property',
-      type: "'start' | 'center' | 'end' | 'stretch'",
-      description: '默认水平子项对齐',
-      defaultValue: "'stretch'",
-    },
-    {
-      name: 'alignItems',
-      kind: 'property',
-      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
-      description: '默认垂直子项对齐',
-      defaultValue: "'stretch'",
-    },
-    {
-      name: 'justifyContent',
-      kind: 'property',
-      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
-      description: '列组的水平剩余空间分布',
-      defaultValue: "'start'",
-    },
-    {
-      name: 'alignContent',
-      kind: 'property',
-      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
-      description: '行组的垂直剩余空间分布',
-      defaultValue: "'start'",
     },
     {
       name: 'size',
       kind: 'property',
       type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
       description:
-        '分别配置 x / y：`{ kind: "content", min?, max? }` 按内容；`{ kind: "fixed", value }` 固定尺寸；`{ kind: "fill", min?, max? }` 填充父级有限空间。',
-      defaultValue: '内容 / 内容',
+        '容器尺寸策略与内容区内缩 每个轴支持 `{ kind: "content", min?, max? }` 内容策略、`{ kind: "fixed", value }` 固定尺寸或 `{ kind: "fill", min?, max? }` 填充父级有限空间。',
+      defaultValue: 'content / content',
     },
     {
       name: 'padding',
       kind: 'property',
       type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
-      description:
-        '分别配置 x / y：`{ kind: "content", min?, max? }` 按内容；`{ kind: "fixed", value }` 固定尺寸；`{ kind: "fill", min?, max? }` 填充父级有限空间。',
+      description: '从容器分配区域向内缩出内容区，支持统一值或各方向覆盖',
       defaultValue: '0',
     },
     {
-      name: 'overflow',
+      name: 'columnGap',
       kind: 'property',
-      type: "'visible' | 'clip'",
-      description: '是否在容器分配区域上裁切视觉输出',
-      defaultValue: "'visible'",
+      type: 'number',
+      description: '相邻物理列的间距；跨度包含内部列间距',
+      defaultValue: '0',
     },
     {
-      name: 'children',
+      name: 'rowGap',
       kind: 'property',
-      type: 'Array<GridLayoutItemInput>',
-      description: '作者声明的子项；显式 `key` 必须唯一',
-      defaultValue: '[]',
-    },
-  ]}
-/>
-
-<ComponentProps
-  items={[
-    {
-      name: 'kind',
-      kind: 'property',
-      type: "'grid'",
-      description: '网格布局子项判别字段',
-      required: true,
+      type: 'number',
+      description: '相邻物理行的间距，不随自动排列方向交换',
+      defaultValue: '0',
     },
     {
-      name: 'key',
+      name: 'autoFlow',
       kind: 'property',
-      type: 'string',
-      description: '可选稳定身份；省略时按 source index 生成',
-      defaultValue: '内部生成',
-    },
-    {
-      name: 'child',
-      kind: 'property',
-      type: 'IRChild',
-      description: '任意可 JSON 序列化的 Core 子图形',
-      required: true,
+      type: "'row' | 'column'",
+      description: '`row` 按行搜索，`column` 按列搜索；均不进行密集回填',
+      defaultValue: 'row',
     },
     {
       name: 'column',
       kind: 'property',
-      type: '{ start?: number, span?: number }',
-      description: '列放置范围',
-      defaultValue: '自动 / 跨 1 轨',
+      type: '{ start?: number; span?: number }',
+      description: '从 0 开始的位置与跨度',
+      defaultValue: 'start: auto, span: 1',
     },
     {
       name: 'row',
       kind: 'property',
-      type: '{ start?: number, span?: number }',
-      description: '行放置范围',
-      defaultValue: '自动 / 跨 1 轨',
+      type: '{ start?: number; span?: number }',
+      description: '从 0 开始的位置与跨度',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'justifyContent',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
+      description: '在水平方向分布整组列轨道；`start` / `center` / `end` 决定位置，`space-*` 分配剩余间隔',
+      defaultValue: 'start',
+    },
+    {
+      name: 'alignContent',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
+      description: '在垂直方向分布整组行轨道，固定行高时可观察剩余空间分布',
+      defaultValue: 'start',
+    },
+    {
+      name: 'justifyItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: '默认子项对齐',
+      defaultValue: 'stretch',
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: '默认子项对齐',
+      defaultValue: 'stretch',
     },
     {
       name: 'margin',
       kind: 'property',
       type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
-      description: '轨道区域内缩前的子项外边距',
+      description: '子项参与测量与放置的外边距，支持统一值或各方向覆盖',
       defaultValue: '0',
     },
     {
       name: 'justifySelf',
       kind: 'property',
       type: "'start' | 'center' | 'end' | 'stretch'",
-      description: '覆盖水平对齐',
-      defaultValue: '容器值',
+      description: '覆盖当前子项的水平对齐；`start` / `center` / `end` 定位，`stretch` 提供精确约束',
+      defaultValue: '继承容器',
     },
     {
       name: 'alignSelf',
       kind: 'property',
       type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
-      description: '覆盖垂直对齐',
-      defaultValue: '容器值',
+      description: '覆盖当前子项的垂直对齐；省略则继承容器',
+      defaultValue: '继承容器',
     },
   ]}
 />
+
+完整签名与字段约束见 [API 参考](/library/layout/grid-layout/api-reference) · [Schema 参考](/library/layout/grid-layout/schema-reference)。
 
 ## 延伸阅读
 
@@ -352,6 +323,7 @@ React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `i
   items={[
     { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/grid-layout/extended' },
     { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/grid-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/grid-layout/api-reference' },
     {
       title: 'Schema 参考',
       description: '查询持久化输入的字段约束',

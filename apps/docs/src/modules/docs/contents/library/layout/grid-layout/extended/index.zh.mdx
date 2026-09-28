@@ -1,156 +1,129 @@
 ---
 title: 扩展用法
-description: 组合布局约束并检查求解后的边界与产物
+description: 组合尺寸约束、放置策略与视觉裁切
 ---
 
-本页在[基础用法](/library/layout/grid-layout/usage)之上组合约束、观察边界并检查布局结果。先调整一个变量，再对照分配区域和真实占用。
+在[基础用法](/library/layout/grid-layout/usage)的容器与子项声明之上，本页组合约束并解释结果。每节固定一组观察对象，只调整当前 API。
 
-## 显式轨道与自动放置
+## 组合内容测量与轨道上下界
 
-先声明 columns / rows，再给需要固定位置的子项设置 start 与 span。start 从 0 开始，span 必须是正整数。省略的轴由 autoFlow 补齐；超出显式轨道范围时，由 implicitColumn / implicitRow 提供隐式轨道规则。
+内容轨道根据文字或图形需要的空间求宽度，有界轨道则限制宽度的变化范围。两者可以在同一容器中配合使用。
 
-固定轨道用于保留稳定区域，content 读取内容贡献，fraction 按有限剩余空间分配份额，minmax 表达上下界。只有父级提供有限空间时，份额轨道才有确定的分配依据。不要把 fraction 当作固定像素。
+| 属性                            | 可用值                                                                | 解释                                                                 |
+| ------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `columns[].kind`                | `fixed`, `content`, `fraction`, `minmax`                              | 选择轨道的尺寸策略；本例第一列用 `content`，第二列用 `minmax`        |
+| `columns[].mode`                | `minimum`, `natural`                                                  | 内容轨道的 `mode`：读取最小尺寸或自然尺寸贡献                        |
+| `columns[].min`                 | `fixed` 或 `content` 轨道                                             | 有界轨道的 `min`：下界，不接受份额轨道                               |
+| `columns[].max`                 | `fixed`、`content` 或 `fraction` 轨道                                 | 有界轨道的 `max`：上界或份额增长策略；固定上界不得小于固定下界       |
+| `size.x / size.y`               | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | 容器的物理宽、高：按内容求尺寸、固定尺寸或接收父级有限空间           |
+| `Node.layout.minimumSize.width` | 非负数                                                                | 节点自身的最小宽度；与列轨道上下界独立，用于比较内容较宽和较窄的情况 |
 
-## 自动放置与显式重叠
+切换内容模式，比较第一列的最小宽度与自然宽度。第二列的橙色节点默认最小宽度为 220，上界可在 110–250 之间调整。将上界从 110 增大到 220，观察虚线列边界和下方节点的位置变化；继续增大到 250，列宽会停在内容所需的 220，而不会自动填满上界。橙色节点仍保持自身最小宽度，上界限制列宽，不会强迫节点缩小。要观察下界，可将“节点最小宽度”减到 40，再增大第二列下界，查看短内容如何被分配到更宽的列中。
 
-自动放置使用非 dense 的稳定游标搜索，不提供回填早期空洞的 dense 选项。完全显式的区域默认拒绝重叠，只有 overlap="allow" 才允许这类重叠。几何位置不会重排源数组或绘制顺序。跨轨道项的区域包含中间 gap；margin 从该区域内扣除，再应用子项对齐。
+<ComponentPreview files="grid-bounds" size="md" />
 
-## 交互比较
+## 让显式跨度与隐式轨道协作
 
-切换非密集自动放置方向、份额权重、间距与单元格对齐。固定 `viewBox` 让轨道比例、跨轨道范围和放置位置的变化可以直接比较。
+子项指定的位置超出已有行列时，容器会补出需要的轨道。隐式轨道属性决定这些新增行列如何求尺寸。
 
-<ComponentPreview
-  files="grid-layout-playground"
-  size="lg"
-  caption="推荐态显示 content 边界、轨道边界与固定 gap；可在“辅助层”中查看 padding、margin、自由空间边界与其它细节。"
-/>
+| 属性                           | 可用值                                          | 解释                                              |
+| ------------------------------ | ----------------------------------------------- | ------------------------------------------------- |
+| `row.start / column.start`     | 非负整数，可省略                                | 子项起始行、列，从 0 开始；超出显式范围时补齐轨道 |
+| `row.span / column.span`       | 正整数，默认 1                                  | 连续跨越的行数或列数                              |
+| `implicitRow / implicitColumn` | `fixed`、`content`、`fraction` 或 `minmax` 轨道 | 补充行、列的尺寸策略；默认自然内容尺寸            |
+| `autoFlow`                     | `row`, `column`                                 | 自动子项的排列方向，不交换物理行列的含义          |
 
-## 布局检查
+demo 的首项横跨两列。调整它的起始行，查看中间新增的轨道；再改变隐式行高，比较空行与占用行。切换自动排列方向只影响自动放置，尺寸仍按物理 x→y 求解，行间距与列间距也不会交换。
+
+<ComponentPreview files="grid-implicit" size="md" />
+
+## 明确处理重叠与视觉溢出
+
+子项占据相同格子属于重叠，图形超出容器属于溢出。这两个问题由不同属性控制。
+
+| 属性           | 可用值              | 解释                                                                   |
+| -------------- | ------------------- | ---------------------------------------------------------------------- |
+| `overlap`      | `reject`, `allow`   | 容器属性：是否允许完整显式指定行列的子项区域重叠；不改变自动找空位规则 |
+| `column / row` | `{ start?, span? }` | 子项属性：指定占据区域；本例重叠开关同时调整第二项的位置               |
+| `overflow`     | `visible`, `clip`   | 保留超出容器的内容，或在容器分配区域裁切；不重新求解布局               |
+
+demo 关闭重叠时让第二项位于相邻列，开启时设置 `allow` 并将它移到第一项区域，因此各个控件状态都是合法输入。容器刻意比两列总宽度窄，再切换裁切方式，观察超出部分的可见性；轨道和放置结果保持不变。
+
+<ComponentPreview files="grid-overlap" size="sm" />
+
+## 相关属性
 
 <ComponentProps
   items={[
     {
-      name: 'inspect',
+      name: 'columns',
       kind: 'property',
-      type: 'false | true | GridLayoutInspectOptions',
-      description: '`InspectGridLayout` 为当前 occurrence 声明请求；`false` 只取消当前实例',
-      defaultValue: 'true',
+      type: 'Array<GridTrackInput>',
+      description:
+        '内容贡献与有界轨道 `content` 用 `mode: "minimum" / "natural"` 选择贡献；`minmax` 用 `min` / `max` 指定上下界，下界不能是份额。',
+      required: true,
+    },
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        '有限空间约束 每个轴支持 `{ kind: "content", min?, max? }` 内容策略、`{ kind: "fixed", value }` 固定尺寸或 `{ kind: "fill", min?, max? }` 填充父级有限空间。',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'implicitRow',
+      kind: 'property',
+      type: 'GridTrackInput',
+      description: '显式行不足时补齐行轨道；本页使用 `{ kind: "fixed", value }` 固定隐式行高',
+      defaultValue: '{ kind: "content", mode: "natural" }',
+    },
+    {
+      name: 'implicitColumn',
+      kind: 'property',
+      type: 'GridTrackInput',
+      description: '显式列不足时补齐列轨道，接受与 columns 相同的轨道定义',
+      defaultValue: '{ kind: "content", mode: "natural" }',
+    },
+    {
+      name: 'column',
+      kind: 'property',
+      type: '{ start?: number; span?: number }',
+      description: '跨度、显式位置与自动搜索',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'row',
+      kind: 'property',
+      type: '{ start?: number; span?: number }',
+      description: '跨度、显式位置与自动搜索',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'autoFlow',
+      kind: 'property',
+      type: "'row' | 'column'",
+      description: '`row` 按行搜索，`column` 按列搜索；均不进行密集回填',
+      defaultValue: 'row',
+    },
+    {
+      name: 'overlap',
+      kind: 'property',
+      type: "'reject' | 'allow'",
+      description: '`reject` 拒绝完整显式区域重叠；`allow` 允许这类重叠，不改变自动避让',
+      defaultValue: 'reject',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description: '`visible` 保留超出部分；`clip` 在容器分配区域裁切，不改写求解结果',
+      defaultValue: 'visible',
     },
   ]}
 />
 
-基础 `GridLayout` 没有 `inspect` 属性。可选的 `InspectGridLayout` 对象形式可分别控制 `tracks`、`cells`、固定 `gaps`、`distributedSpace` 与 `spans`。完整通用字段和宿主 / Scope 规则见[检查器说明](/library/layout/flex-layout/extended#检查器的宿主与范围)。
-
-```tsx
-import { Layout, Node } from '@retikz/react';
-import { LayoutItem } from '@retikz/layout-react';
-import { LayoutInspectLayout, InspectGridLayout } from '@retikz/layout-react/inspect';
-export const Inspected = () => (
-  <Layout>
-    <LayoutInspectLayout>
-      <InspectGridLayout
-        columns={[
-          { kind: 'fixed', value: 80 },
-          { kind: 'fixed', value: 80 },
-        ]}
-        columnGap={12}
-        inspect={{ bounds: { content: true, slot: true } }}
-      >
-        <LayoutItem kind="grid">
-          <Node position={[0, 0]} text="A" />
-        </LayoutItem>
-      </InspectGridLayout>
-    </LayoutInspectLayout>
-  </Layout>
-);
-```
-
-### GridLayoutInspectOptionsSchema
-
-<ZodSchema
-  name="GridLayoutInspectOptionsSchema"
-  description="GridLayout 的通用与专属检查选项。"
-  descriptions={{
-    bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
-    spacing: '独立控制 padding 与 margin 纹理。',
-    overflow: '是否显示溢出阴影。',
-    alignmentGuides: '是否显示对齐参考线。',
-    labels: '是否显示辅助标签。',
-    tracks: '是否显示已求解的行列轨道；默认开启。',
-    cells: '是否显示每个网格单元格；默认关闭。',
-    gaps: '是否显示作者声明的固定轨道 gap；默认开启。',
-    distributedSpace: '是否以虚线边界显示内容分布产生的正自由空间；内部不填色，默认开启。',
-    spans: '是否显示跨轨道子项的范围；默认开启。',
-  }}
-/>
-
-## 读取布局结果
-
-编译结果通过 occurrence 标识具体容器实例；不要只用公开 id 区分嵌套实例。先定位产物信封，再用对应 Schema 校验 value。下面只检查同次编译的结果，不重新求解。
-
-```ts
-import { compileToScene } from '@retikz/core';
-import { GridLayoutDefinition, GridLayoutArtifactSchema, createGridLayout } from '@retikz/layout';
-const output = compileToScene(
-  {
-    type: 'scene',
-    version: 1,
-    children: [createGridLayout({ columns: [{ kind: 'content', mode: 'natural' }], children: [] })],
-  },
-  { composites: [GridLayoutDefinition] },
-);
-const envelope = output.artifacts.find(
-  item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'gridLayout',
-);
-if (envelope) {
-  const result = GridLayoutArtifactSchema.parse(envelope.value);
-  console.log(result.container, result.items);
-}
-```
-
-### GridLayoutArtifactSchema
-
-<ZodSchema
-  name="GridLayoutArtifactSchema"
-  description="GridLayout 的容器、已求解子项跨轨道范围与行列轨道几何。"
-  descriptions={{
-    kind: 'GridLayout 产物的判别字段。',
-    container: '已求解的容器几何。',
-    'container.allocationBounds': '容器最终的分配矩形。',
-    'container.allocationBounds.x': '容器分配矩形的水平原点。',
-    'container.allocationBounds.y': '容器分配矩形的垂直原点。',
-    'container.allocationBounds.width': '容器分配矩形的非负宽度。',
-    'container.allocationBounds.height': '容器分配矩形的非负高度。',
-    'container.contentBounds': '扣除内边距后的容器内容矩形。',
-    'container.contentBounds.x': '容器内容矩形的水平原点。',
-    'container.contentBounds.y': '容器内容矩形的垂直原点。',
-    'container.contentBounds.width': '容器内容矩形的非负宽度。',
-    'container.contentBounds.height': '容器内容矩形的非负高度。',
-    'container.visualBounds': '所有已平移子项视觉边界的并集。',
-    'container.visualBounds.x': '视觉边界并集的水平原点。',
-    'container.visualBounds.y': '视觉边界并集的垂直原点。',
-    'container.visualBounds.width': '视觉边界并集的非负宽度。',
-    'container.visualBounds.height': '视觉边界并集的非负高度。',
-    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
-    items: '按作者声明顺序排列的子项结果。',
-    columns: '按物理起点顺序排列的已求解列轨道。',
-    rows: '按物理起点顺序排列的已求解行轨道。',
-    spacing: '按 canonical 物理顺序排列的固定 gap 与内容分布区域。',
-    'spacing.kind': '固定 gap 或内容对齐产生的自由空间。',
-    'spacing.axis': '该间距区域的物理主轴。',
-    'spacing.bounds': '当前容器分配坐标中的间距矩形。',
-    'spacing.bounds.x': '间距矩形的水平原点。',
-    'spacing.bounds.y': '间距矩形的垂直原点。',
-    'spacing.bounds.width': '间距矩形的非负宽度；x 主轴时必须为正。',
-    'spacing.bounds.height': '间距矩形的非负高度；y 主轴时必须为正。',
-  }}
-/>
-
-`items[]` 增加 `column`、`row`、`columnSpan` 与 `rowSpan`。`columns[]` 和 `rows[]` 按物理起点排序，并记录连续 `index`、`start`、`size`、`sourceKind` 与 `implicit`。必填的 `spacing[]` 使用完整 content height 记录列间距，使用完整 content width 记录行间距；两种 band 的交叉区域会保留并按 x 后 y 的顺序稳定叠加。
-
-## 共同边界与检查规则
-
-三种布局使用相同的 slot、真实占用与视觉包络语义。读取结果前参阅[产物边界](/library/layout/flex-layout/extended#理解产物边界)；检查宿主、子树范围和屏障见[检查器的宿主与范围](/library/layout/flex-layout/extended#检查器的宿主与范围)。
+完整签名与字段约束见 [API 参考](/library/layout/grid-layout/api-reference) · [Schema 参考](/library/layout/grid-layout/schema-reference)。
 
 ## 延伸阅读
 
@@ -159,6 +132,7 @@ if (envelope) {
     { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/grid-layout/usage' },
 
     { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/grid-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/grid-layout/api-reference' },
     {
       title: 'Schema 参考',
       description: '查询持久化输入的字段约束',

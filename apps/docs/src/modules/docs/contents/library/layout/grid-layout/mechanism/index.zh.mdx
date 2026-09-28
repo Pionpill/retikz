@@ -5,33 +5,49 @@ description: 理解测量、空间求解与最终放置的关系
 
 先阅读[基础用法](/library/layout/grid-layout/usage)。本页解释布局结果为什么成立，使用时不需要调用这些内部步骤。
 
-## 为什么列宽先于行高
+## 先决定占位，再建立轨道
 
-横向约束先决定文字可用宽度，再测量折行后的高度。Grid 固定采用物理 x→y 顺序，即使 autoFlow 改为按列搜索，轴求解次序也不变。图中“固定列宽→重测高度”是尺寸依赖，不能反转成先固定行高再猜宽度。
+轨道尺寸求解前，先确定每个子项占据哪些格子。完整显式位置先占位；其余子项按作者顺序和 `autoFlow` 搜索可用区域。搜索结果超出显式行列时，再按隐式定义补齐轨道。因此隐式轨道不是视觉补线，而是参与后续测量的真实轨道。
 
-<ComponentPreview files="allocation-figure" hideCode type="flow" size="md" />
-
-## 约束如何成为位置
-
-GridLayout 使用固定的物理 x→y 求解顺序：
-
-1. 校验显式放置，按 `autoFlow` 解析未完整指定的子项，并据此物化隐式轨道。
-2. 沿 x 轴测量最小和自然内容贡献，求列尺寸轮廓与有限宽度分配。
-3. 把最终列分配区域传给子图形，再沿 y 轴测量文本重排后的高度并求行尺寸轮廓。
-4. 按 `justifyItems`、`alignItems` 或子项覆盖值放置真实占用，最后回放被选中的测量候选。
-
-这个物理 x→y 顺序使文本在列宽确定后再决定行高，不需要 DOM 回读或循环猜测。`GridLayoutArtifact` 公开已求解的列与行、隐式轨道标记，以及每个子项最终的跨轨道范围。
+<ComponentPreview files="placement-flow" hideCode type="flow" size="xs" />
 
 <SourceLinks
-  sources={[
-    { label: 'GridLayout 输入契约', path: 'packages/library/layout/src/composites/grid-layout/schema.ts' },
-    { label: '网格自动放置', path: 'packages/library/layout/src/composites/grid-layout/placement.ts' },
-    { label: '网格轨道求解器', path: 'packages/library/layout/src/composites/grid-layout/tracks.ts' },
-    { label: 'GridLayout 编译', path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts' },
-  ]}
+  sources={[{ label: 'placement.ts', path: 'packages/library/layout/src/composites/grid-layout/placement.ts' }]}
 />
 
-三种布局共享候选隔离、最终回放和 occurrence 产物封装，详见[一次布局事务](/library/layout/flex-layout/mechanism#一次布局事务)。
+## 为什么列宽先于行高
+
+文字的可用宽度会改变折行高度。GridLayout 固定采用物理 x→y 顺序：先测量横向最小与自然贡献并求列宽，再把列区域作为约束重测子项，最后求行高。`autoFlow` 控制搜索方向，不会反转这个依赖。
+
+内容贡献、轨道份额和上下界共同参与求解。固定列直接给出尺寸；内容列读取子项贡献；份额列在有限空间中分配剩余。最小贡献与边界可能限制份额比例，不能简单按总宽度乘以 `fr` 比例推算所有情况。
+
+<ComponentPreview files="allocation-figure" hideCode type="flow" size="xs" />
+
+<SourceLinks sources={[{ label: 'tracks.ts', path: 'packages/library/layout/src/composites/grid-layout/tracks.ts' }]} />
+
+## 跨度怎样变成连续槽位
+
+两列分别宽 100 与 140，中间间距 12，跨两列的槽位宽度为 `100 + 12 + 140 = 252`。子项跨过的是已有轨道组成的连续区域；下一行仍保留原来的两条列边界。求内容贡献时会扣除内部间距，避免把间距再作为轨道需求重复计入。
+
+外边距随后缩小可用区域，对齐再把实际占用放入其中。槽位、真实占用和视觉边界必须分别记录：Node 的描边范围不能替代列区域。
+
+<ComponentPreview files="span-figure" hideCode type="illustration" size="lg" />
+
+<SourceLinks sources={[{ label: 'solve.ts', path: 'packages/library/layout/src/composites/grid-layout/solve.ts' }]} />
+
+## 最终候选如何成为输出
+
+轨道确定后，布局依据子项对齐策略发送精确或有界尺寸约束。测量返回的候选携带自己的结果，最终只回放选中的候选，再应用平移与裁切。试测不会把未选中的图元混入 Scene。
+
+`GridLayoutArtifact` 保存容器、物理行列、隐式标记和子项最终跨度。嵌套布局的局部 key 由 occurrence 区分，不能只凭相同 key 合并结果。
+
+<ComponentPreview files="output-flow" hideCode type="flow" size="xs" />
+
+<SourceLinks
+  sources={[{ label: 'pipeline.ts', path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts' }]}
+/>
+
+共享的候选隔离和最终回放见[一次布局事务](/library/layout/flex-layout/mechanism#一次布局事务)。
 
 ## 延伸阅读
 
@@ -39,6 +55,8 @@ GridLayout 使用固定的物理 x→y 求解顺序：
   items={[
     { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/grid-layout/usage' },
     { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/grid-layout/extended' },
+
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/grid-layout/api-reference' },
 
     {
       title: 'Schema 参考',

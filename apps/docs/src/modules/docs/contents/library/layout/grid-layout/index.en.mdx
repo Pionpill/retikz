@@ -1,13 +1,73 @@
 ---
 title: GridLayout
-description: Usage, implementation, and input contracts for GridLayout
+description: Arrange graphics on shared row and column tracks with fixed sizes, fractional space, and spanning
 ---
 
-`GridLayout` divides its content box into physical column and row tracks. Tracks may be fixed, use minimum or natural content contributions, absorb finite free space by fractions, or combine bounds with `minmax`. Items may declare continuous spans or follow `autoFlow` into the next available area.
+`GridLayout` divides a content area into rows and columns. Each row or column is a track: items on that track share sizing and alignment references. It suits multi-column information, aligned matrices of graphics, and compositions with a spanning heading above separate columns.
 
-Start with basic usage. Extended usage covers allocation and inspection; implementation explains why the behavior holds.
+You declare track sizes and item ranges; the layout resolves boundaries and places content. Tracks can have fixed sizes, derive sizes from content, or share finite space by fractional weights. Items without explicit positions can find available cells automatically.
+
+## Responsibilities at a glance
+
+Serializable IR describes the container, item rules, and graphical content. Each layer records a different set of facts:
+
+| IR layer                                    | Describes                                                                      | Scope                                               |
+| ------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------- |
+| Layout container                            | Row and column tracks, container size, gaps, and automatic placement direction | Organizes space for the entire group                |
+| Item configuration (an entry in `children`) | Row and column positions, spans, and individual alignment                      | Determines how one child participates in layout     |
+| Child graphic (the entry's `child`)         | Content and geometry declarations for a node, path, or nested graphic          | Defines what is drawn and the basis for measurement |
+
+The container's `children` hold item configurations, and each entry's `child` holds graphical IR. Layout rules and graphical content can therefore change independently: adjusting an item's allocation or placement does not require rewriting its graphic.
+
+React expresses these declarations through JSX composition; Vanilla uses functions and objects. IR can also be supplied directly. These entry points ultimately express the same layout contract. Basic usage compares their syntax, while this overview explains behavior through the shared contract.
+
+## Understanding tracks and spanning
+
+The grid below has two rows and three columns. The first column has a fixed width of 100; the other columns share available space with weights of 1:2. The heading spans all three columns in the first row, and the remaining items automatically fill the second row.
 
 <ComponentPreview files="entry" hideCode size="sm" />
+
+A spanning heading occupies one continuous region, including the gaps it crosses. It does not merge the columns into a new track: the second row retains the original column boundaries.
+
+Fractional tracks need a finite available width. This example sets the container width explicitly, subtracts padding, column gaps, and the fixed column, then distributes space between the fractional tracks. Content minimums and other constraints can affect the result, so fractional weights alone do not always determine final widths.
+
+A slot is the region assigned to an item, not its visible border. The Nodes remain centered within their slots at their own content sizes; spanning three columns does not automatically stretch the heading into a full-width rectangle.
+
+<Comparison target="css" title="Mapping to CSS Grid">
+
+CSS Grid and GridLayout both organize content through row and column tracks. This table maps layout IR: the container declares tracks, while entries in `children` declare occupied regions. React and Vanilla share these semantics.
+
+| CSS Grid                                       | GridLayout IR                          | Corresponding meaning                                                      |
+| ---------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
+| `display: grid`                                | `type: 'gridLayout'`                   | Selects grid layout; the IR also requires the layout package's `namespace` |
+| `grid-template-columns` / `grid-template-rows` | `columns` / `rows`                     | Explicit column and row tracks                                             |
+| Fixed lengths / `fr` / `minmax()`              | `fixed` / `fraction` / `minmax` tracks | Fixed sizing, fractional shares, and bounds                                |
+| `grid-auto-columns` / `grid-auto-rows`         | `implicitColumn` / `implicitRow`       | Sizing policies for generated tracks                                       |
+| `grid-auto-flow`                               | `autoFlow`                             | Automatic row or column placement; `dense` is not supported                |
+| `grid-column` / `grid-row`                     | Item `column` / `row`                  | Starting tracks and spans through `start` and `span`                       |
+| `column-gap` / `row-gap`                       | `columnGap` / `rowGap`                 | Physical horizontal and vertical track gaps                                |
+| `justify-items` / `align-items`                | `justifyItems` / `alignItems`          | Default item alignment, overridden by `justifySelf` / `alignSelf`          |
+| `justify-content` / `align-content`            | `justifyContent` / `alignContent`      | Distribution of the resolved column or row group within the container      |
+
+This page's columns are comparable to `grid-template-columns: 100px 1fr 2fr`, and the heading's `column: { span: 3 }` resembles `grid-column: span 3`. These CSS fragments explain allocation rules; they are not input syntax accepted by GridLayout.
+
+Explicit placement uses different numbering: positive CSS grid lines start at 1, while GridLayout `start` begins at 0. For example, CSS `grid-column: 1 / span 2` maps to `column: { start: 0, span: 2 }`. CSS line numbers, negative indexes, and named areas cannot be copied directly.
+
+GridLayout uses drawing coordinate units and structured track configurations rather than CSS cascading or the full browser track-sizing algorithm. Content tracks use child graphics' minimum or natural size contributions, and fractional tracks require finite space. Explicit region overlap is rejected by default through `overlap: 'reject'`, unlike CSS Grid's allowance for overlapping items. Consult the API and Schema references for supported values.
+
+</Comparison>
+
+## Choosing a layout and understanding its limits
+
+| Arrangement goal                                                     | Choice                                          |
+| -------------------------------------------------------------------- | ----------------------------------------------- |
+| Shared boundaries across rows and columns, with spanning             | `GridLayout`                                    |
+| Sequential items along one axis, with growth, shrinkage, or wrapping | [FlexLayout](/library/layout/flex-layout)       |
+| Graphics sharing a region, with layering and positioning             | [OverlayLayout](/library/layout/overlay-layout) |
+
+GridLayout arranges child graphics; it does not draw table borders or reference grid lines. For an independent reference grid graphic, use Standard's [Grid](/library/standard/presentation/grid).
+
+Start with basic usage to declare tracks and items. Extended usage combines intrinsic and bounded tracks, implicit tracks, and overlap. The API and Schema references provide interface and field details; implementation explains automatic placement and track solving.
 
 ## Contents
 
@@ -20,13 +80,18 @@ Start with basic usage. Extended usage covers allocation and inspection; impleme
     },
     {
       title: 'Extended usage',
-      description: 'Combine constraints and inspect results',
+      description: 'Combine constraints and clipping',
       url: '/library/layout/grid-layout/extended',
     },
     {
       title: 'Implementation',
       description: 'Understand measurement and placement',
       url: '/library/layout/grid-layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public functions, types, and props',
+      url: '/library/layout/grid-layout/api-reference',
     },
     {
       title: 'Schema reference',
