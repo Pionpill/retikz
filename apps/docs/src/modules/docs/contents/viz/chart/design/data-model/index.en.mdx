@@ -1,0 +1,127 @@
+---
+title: Data Model
+description: Learn the shared Chart Source fields and recipe, and how concise configuration produces Plot grammar.
+---
+
+Plot precisely describes how data becomes a graphic through marks, channels, scales, coordinates, and guides. Once you have chosen a chart type, Chart condenses that stricter grammar into shared configuration and a type-specific `recipe`. You supply data and a small set of options for the type; its recipe then forms the Plot configuration it needs.
+
+## Two levels in one Source
+
+The scatter example below shows the Chart Source structure. The default Primary configuration keeps only common fields; switch to Detailed configuration for more shared fields and `recipe` levels. `?` marks an optional field, `......` stands for further fields, and a trailing `#` in the detailed view introduces a reading note. Each concrete type's exact schema still determines which channels and properties are allowed. In the detailed view, `data.reference` points to a dataset supplied by the caller, while `x` and `y` name fields in that dataset. This is a structural guide, not a configuration to copy directly.
+
+<DocTabs defaultValue="primary">
+<DocTab value="primary" label="Primary configuration">
+
+```tree
+Chart Source
+├── namespace: 'chart'
+├── type: 'point'
+├── presentation?
+├── data
+├── layout?
+└── recipe
+    ├── chartType: 'scatter'
+    ├── encodings
+    └── properties?
+```
+
+</DocTab>
+<DocTab value="detailed" label="Detailed configuration">
+
+```tree
+Chart Source
+├── namespace: 'chart'                     # capability domain
+├── type: 'point'
+├── id?
+├── background?
+├── presentation?
+│   ├── title?
+│   ├── subtitle?
+│   └── ......
+├── chartDefaults?
+├── data                                   # shared data entry
+│   ├── reference: 'rows'
+│   └── model?
+├── layout?
+│   ├── width?
+│   ├── height?
+│   └── ......
+├── coordinate?
+├── recipe                                 # concrete chart type
+│   ├── chartType: 'scatter'
+│   ├── encodings
+│   │   ├── x: 'weight'
+│   │   ├── y: 'efficiency'
+│   │   └── ......
+│   ├── properties?
+│   │   ├── size?
+│   │   ├── opacity?
+│   │   └── ......
+│   ├── guides?
+│   │   ├── axis?
+│   │   ├── grid?
+│   │   └── legend?
+│   └── marks?
+└── plotExtension?                         # optional Plot fragment
+    ├── transform?
+    ├── scales?
+    └── ......
+```
+
+</DocTab>
+</DocTabs>
+
+`namespace: 'chart'` declares the Chart Source domain. Root `type` is Retikz's type discriminator and identifies a chart family such as `point`. Together they select the appropriate contract. `recipe.chartType` identifies the concrete type, such as `scatter`. An optional `id` identifies this chart; none of these fields is a visual data channel.
+
+## Shared fields describe the whole chart
+
+`data` names the dataset reference and can include a data model. Data owns field types and related semantics; each chart type does not redefine them. Every recipe starts from this dataset, while `recipe.encodings` decides how its fields enter the drawing.
+
+`layout` controls the outer Chart size and spacing between regions. `width` and `height` set the external bounds; `padding` and `gap` adjust space around existing presentation regions and Plot content. They do not define Plot's internal coordinate domain or mark positions.
+
+`coordinate` can select a Plot coordinate configuration. A chart type normally supplies a suitable default; you can specify a compatible coordinate at the root when you need a different form. Field-to-position mappings remain in the recipe: `coordinate` does not replace `encodings`.
+
+`presentation` offers four convenient text slots: `title`, `subtitle`, `note`, and `source`. Using Standard Surface and Layout, Chart arranges the present slots in title, subtitle, Plot, note, source order. These texts explain the whole chart; they are not Plot axis labels or data annotations. Optional `background` sets the chart-wide background; `chartDefaults` provides Chart-owned background, layout, and text defaults.
+
+## recipe carries the type semantics
+
+`recipe` is the center of the simplified model. `chartType` selects a concrete type, and that type's exact schema constrains the other fields. Different types can require different fields and expose different properties.
+
+| Recipe field | Responsibility                                                | Example                                            |
+| ------------ | ------------------------------------------------------------- | -------------------------------------------------- |
+| `encodings`  | Bind data fields to channels supported by the type            | Scatter `x`, `y`, and `color`                      |
+| `properties` | Set constant properties and options specific to the type      | Point size and opacity                             |
+| `marks`      | Compose multiple Chart semantic marks within the type's rules | Append a mark or override a default mark by `kind` |
+
+`encodings` answers which field expresses each role. It supports field shorthand, while richer mappings follow the exact contract of their owner. `properties` answers how this type is presented without pretending a constant is a data field. `marks` allows multiple marks in one chart, and some types already consist of several Plot marks. It still follows the current chart type's allowed mark structure and inheritance rules; it is not an unrestricted list of Plot marks.
+
+## Use Plot extensions last
+
+`plotExtension` accepts an explicit Plot fragment when the shortcuts do not cover a transform, scale, mark, or guide you need. It does not store the Plot generated by the recipe or transfer ownership of the drawing grammar to Chart. Chart aims to make common types expressible through `recipe` and shared fields, so `plotExtension` should rarely be necessary. For full control over the drawing grammar, start with Plot directly.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Chart encapsulation',
+      description: 'Understand how type-specific recipes share responsibilities with Plot.',
+      url: '/viz/chart/design/encapsulation',
+    },
+    {
+      title: 'Structure and types',
+      description: 'Look up exact schemas, field owners, and mark rules.',
+      url: '/viz/chart/model/structure',
+    },
+    {
+      title: 'Presentation',
+      description: 'Explore text slots and layout behavior.',
+      url: '/viz/chart/model/presentation',
+    },
+    {
+      title: 'Plot integration',
+      description: 'Learn the detailed boundary of plotExtension.',
+      url: '/viz/chart/model/plot',
+    },
+  ]}
+/>

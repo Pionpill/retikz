@@ -1,0 +1,53 @@
+---
+title: Chart Encapsulation
+description: Learn how type-based charts reduce learning and generation effort, provide ready-to-use entries, and extend Plot in another direction.
+---
+
+When drawing a scatter chart, you usually start by choosing fields for horizontal position, vertical position, and color, rather than assembling a Point mark, scales, and a legend one by one. Chart makes the concrete type the entry point and lets its `recipe` fill in the familiar composition.
+
+## Reduce learning and generation effort
+
+Writing Plot directly requires understanding how marks, channels, scales, coordinates, and guides work together. With Chart, you choose a chart type and supply the data fields it requires; the recipe generates the common Plot structure. New users can begin with familiar names such as scatter and bubble, then learn the underlying grammar as they need more control.
+
+Asking an LLM to understand and generate the full grammar of graphics requires it to reason about constraints across marks, channels, scales, and coordinates. That takes more reasoning time and makes each configuration more costly to validate. A valid configuration can still miss details specific to a chart type. For example, a point chart needs automatic edge padding that accounts for point sizes and positions; asking the model to assemble this behavior from general grammar alone makes a satisfactory result hard to achieve consistently.
+
+Chart keeps the required configuration as small as possible and packages those details into concrete types. Point charts expose an automatic padding strategy through `recipe.properties.autoPadding`; Chart turns it into Plot padding configuration, and drawing still uses Plot. An LLM can therefore choose a family and type, then fill in required fields and a few options against the exact schema: scatter requires `x` and `y`; bubble also requires `size`. The resulting Source can be validated against that type's schema. The final result still depends on choosing the right chart and mapping the data correctly.
+
+## Use a type directly
+
+Root `type` identifies the chart family, and `recipe.chartType` selects the concrete type. Each type has its own field requirements, constant properties, and default mark composition: scatter shows observations as points, connected scatter also needs a path, and regression includes a trend. Supply data and configuration for that type to get a chart with the necessary drawing structure, then adjust properties or compose marks allowed by the type when needed.
+
+The saved Source still contains the type, data, and authored options, rather than an expanded list of Plot marks. When you change fields or properties, the same recipe forms the required drawing configuration again; you do not have to maintain the generated details.
+
+## Plot extends in depth; Chart extends across types
+
+Plot extends the layers of the drawing grammar: new marks, data channels, scales, coordinates, or guides can be reused across different charts. Chart extends across chart types: it combines existing Plot capabilities into directly usable types such as scatter and bubble, each with an exact recipe. A new type should compose existing capabilities; a missing general drawing capability belongs in Plot.
+
+| Direction                  | Question it answers                       | Example                            |
+| -------------------------- | ----------------------------------------- | ---------------------------------- |
+| Plot · deeper capabilities | How is data mapped and drawn?             | A new mark, channel, or coordinate |
+| Chart · more types         | How do I use a particular chart directly? | Scatter, bubble, or regression     |
+
+The Chart recipe interprets fields for its type, supplies defaults, and composes marks. Plot still provides the actual marks, channels, scales, coordinates, axes, and legends. Chart also arranges chart-wide titles, notes, and sources with Standard Surface and Layout. Use `plotExtension` for a Plot fragment beyond the shortcuts, or use Plot directly when you need free composition of the underlying grammar.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Data model',
+      description: 'See the roles of shared fields and recipe.',
+      url: '/viz/chart/design/data-model',
+    },
+    {
+      title: 'Structure and types',
+      description: 'Explore families, chart types, and exact schemas.',
+      url: '/viz/chart/model/structure',
+    },
+    {
+      title: 'Plot integration',
+      description: 'Learn more about Chart marks and independent Plot fragments.',
+      url: '/viz/chart/model/plot',
+    },
+  ]}
+/>

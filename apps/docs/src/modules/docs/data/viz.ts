@@ -181,6 +181,20 @@ export const vizSection: Array<Section> = [
         meta: { pageType: 'entry', audience: 'user', capability: 'chart.get-start', sourceOfTruth: 'runtime' },
       },
       {
+        id: 'design',
+        label: 'viz.chartDesign',
+        children: [
+          { id: 'encapsulation', label: 'viz.chartDesignEncapsulation', difficulty: DocDifficulty.Beginner },
+          { id: 'data-model', label: 'viz.chartDesignDataModel', difficulty: DocDifficulty.Beginner },
+        ],
+        meta: {
+          pageType: 'concept',
+          audience: 'user',
+          capability: 'chart.design',
+          sourceOfTruth: 'runtime',
+        },
+      },
+      {
         id: 'changelog',
         label: 'viz.changelog',
         children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
