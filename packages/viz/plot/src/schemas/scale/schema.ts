@@ -171,6 +171,12 @@ export const OrdinalScaleSchema = object({
     'Discriminator: ordinal scale mapping a discrete domain to a discrete output range (typically colors)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional channel scale ref'),
+  rangeIndex: strictObject({
+    step: number().int().positive().default(1),
+    offset: number().int().nonnegative().default(0),
+  })
+    .optional()
+    .describe('Map category index i to range[(i * step + offset) % range.length], including the theme palette'),
   domain: array(CategoryValueSchema)
     .optional()
     .describe('Ordered category list; omit to infer the distinct field values in data-encounter order at lowering'),

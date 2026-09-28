@@ -157,6 +157,7 @@ const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>)
   const indices = new Map<string, number>();
   let nextIndex = 0;
   return marks.map(mark => {
+    if (mark.defaultColorIndex !== undefined) return mark.defaultColorIndex;
     const group = mark.defaultColorGroup;
     if (group === undefined) return nextIndex++;
     const existing = indices.get(group);

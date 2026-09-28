@@ -94,12 +94,15 @@ The selected form lowers into an independent PlotLegend scope inside the band re
   ]}
 />
 
+Categorical color legends accept overlaid `symbols`. For example, `symbols={[{ kind: 'line', scale: 'pathColor' }, { kind: 'point', scale: 'pointColor' }]}` uses colors from two bound scales with identical ordered category domains. A symbol may use an explicit `paint`, which takes precedence over `scale`. Continuous and binned legends do not support this option.
+
 ## API Reference
 
 | Prop          | Type                                | Default       | Description                                                                                                                                                                   |
 | ------------- | ----------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `channel`     | `PlotLegendProps['channel']`        | —             | Non-positional channel to explain; built-ins are color / size / opacity / shape, and registered custom channels work the same way                                             |
 | `scale?`      | `PlotLegendProps['scale']`          | unique scale  | Named scale used to disambiguate when one channel has several scales; failure to resolve one uniquely is an error                                                             |
+| `symbols?`    | `PlotLegendProps['symbols']`        | —             | Overlaid categorical symbols: kind is point / line; paint or scale supplies color                                                                                             |
 | `title?`      | `PlotLegendProps['title']`          | none          | PlotLegend title; accepts strings, multiple lines, and structured text                                                                                                        |
 | `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | Edge that contains the legend; layout reserves a legend band on that edge                                                                                                     |
 | `orient?`     | <ApiValues name="LegendOrient" />   | by `position` | Item direction; left/right default to vertical, while top/bottom default to horizontal                                                                                        |
