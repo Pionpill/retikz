@@ -7,35 +7,40 @@ description: 声明容器和子项，理解尺寸、间距与对齐
 
 ## 接入方式
 
-安装见[快速开始](/library/layout/get-start)。容器直属元素必须使用匹配 kind 的 LayoutItem；一个子项负责一个可绘制 child。
-
-```text
-FlexLayout
-└── LayoutItem (kind="flex")
-    └── Node / FlexLayout
-```
+容器的 `children` 是一组子项，每项通过 `child` 承载图形。React 用 `FlexLayoutItem` 表达子项，Vanilla 与 IR 使用 `{ kind: 'flex', child: ... }`。下面先展示分配空间后的效果，四种接入代码则从两个内容尺寸的子项开始，说明最小组合关系。
 
 <ComponentPreview files="/library/layout/flex-layout/entry" hideCode size="sm" />
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
 
+React + JSX 中，`FlexLayout` 的直属子元素使用 `FlexLayoutItem`，每个子项承载一个可绘制内容：
+
+```text
+FlexLayout
+└── FlexLayoutItem
+    └── Node / FlexLayout
+```
+
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
+
 export const Example = () => (
   <Layout>
     <FlexLayout gap={12}>
-      <LayoutItem kind="flex">
-        <Node position={[0, 0]} text="A" />
-      </LayoutItem>
-      <LayoutItem kind="flex">
-        <Node position={[0, 0]} text="B" />
-      </LayoutItem>
+      <FlexLayoutItem>
+        <Node text="A" />
+      </FlexLayoutItem>
+      <FlexLayoutItem>
+        <Node text="B" />
+      </FlexLayoutItem>
     </FlexLayout>
   </Layout>
 );
 ```
+
+`itemKey` 可以省略；Layout 会在内部生成容器局部有效 key，且不会把它写回 Source IR。只有需要跨重排保持稳定身份时才显式传入 `itemKey`；它不读取 React 保留的 `key`。每个 `FlexLayoutItem` 恰好接受一个可绘制子元素，或用 `ir` 显式传入一个 `IRChild`。
 
 </DocTab>
 <DocTab value="react-ir" label="React + IR">
@@ -44,6 +49,7 @@ export const Example = () => (
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
 import { FlexLayoutDefinition } from '@retikz/layout';
+
 const ir: IRScene = {
   type: 'scene',
   version: 1,
@@ -53,13 +59,14 @@ const ir: IRScene = {
       type: 'flexLayout',
       gap: 12,
       children: [
-        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
-        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
       ],
     },
   ],
 };
-export const Example = () => <Layout ir={ir} composites={[FlexLayoutDefinition]} />;
+
+export const Example = () => <Layout ir={ir} extensions={{ composites: [FlexLayoutDefinition] }} />;
 ```
 
 </DocTab>
@@ -68,17 +75,19 @@ export const Example = () => <Layout ir={ir} composites={[FlexLayoutDefinition]}
 ```ts
 import { scene, renderToSvgString } from '@retikz/vanilla';
 import { flexLayout, FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+
 const input = scene({
   children: [
     flexLayout({
       gap: 12,
       children: [
-        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
-        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
       ],
     }),
   ],
 });
+
 console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }));
 ```
 
@@ -89,6 +98,7 @@ console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }
 import type { IRScene } from '@retikz/core';
 import { renderToSvgString } from '@retikz/vanilla';
 import { FlexLayoutDefinition } from '@retikz/layout';
+
 const ir: IRScene = {
   type: 'scene',
   version: 1,
@@ -98,52 +108,79 @@ const ir: IRScene = {
       type: 'flexLayout',
       gap: 12,
       children: [
-        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
-        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
       ],
     },
   ],
 };
+
 console.log(renderToSvgString(ir, { compile: { composites: [FlexLayoutDefinition] } }));
 ```
 
 </DocTab>
 </DocTabs>
 
-`itemKey` 可以省略；Layout 会在内部生成容器局部有效 key，且不会把它写回 Source IR。只有需要跨重排保持稳定身份时才显式传入 `itemKey`；它不读取 React 保留的 `key`。每个 `LayoutItem` 恰好接受一个可绘制子元素，或用 `ir` 显式传入一个 `IRChild`。
+## 设置方向、尺寸与间距
 
-`gap` 可以写成数字，也可以写成 `{ column, row }` 对象。数字同时设置两个物理轴；对象允许分别设置列间距与行间距，且不随 `direction` 改变字段含义。
+方向决定子项横着排还是竖着排，尺寸决定容器有多少空间，内边距和间距负责留白。以下都是容器属性。
 
-| 场景        | 公开入口                                                                                           |
-| ----------- | -------------------------------------------------------------------------------------------------- |
-| React       | `FlexLayout`、`LayoutItem`（`@retikz/layout-react`）                                               |
-| Vanilla     | `flexLayout`、`FlexLayoutInputEmbedAdapter`（`@retikz/layout-vanilla`）                            |
-| 可选检查    | `InspectFlexLayout`（`@retikz/layout-react/inspect`）、`inspectFlexLayout`（Vanilla）              |
-| IR / 持久化 | `FlexLayoutSchema`、`createFlexLayout`、`IRFlexLayout`、`FlexLayoutDefinition`（`@retikz/layout`） |
+| 属性              | 可用值                                                                | 解释                                                       |
+| ----------------- | --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `direction`       | `row`, `row-reverse`, `column`, `column-reverse`                      | 横向或纵向主轴；反向模式只改变放置方向，不改变绘制顺序     |
+| `size.x / size.y` | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | 容器的物理宽、高：按内容求尺寸、固定尺寸或接收父级有限空间 |
+| `padding`         | 非负数，或按 `x` / `y` / 四边配置的对象                               | 从容器四边留出内边距，剩余部分为内容区                     |
+| `gap`             | 非负数，或 `{ column, row }` 非负间距对象                             | 相邻子项的固定间隔，在分配剩余空间前扣除                   |
 
-## 分配一行空间
+在 demo 中切换方向和尺寸策略，再调整内边距与间距。`size.x` / `size.y` 始终是物理宽、高：改为纵向排列后，应调整 y 轴的可用空间。初次使用可让两轴按内容求尺寸；需要指定行宽时只固定 x 轴。`fill` 需要父级提供有限空间。
 
-下面三个子项保持作者声明的绘制顺序。中间标签接收剩余主轴空间；两侧子项不参与收缩，`gap.column` 与 `gap.row` 始终分别表示物理水平方向和垂直方向的间距。
+<ComponentPreview
+  files="flex-geometry"
+  size="md"
+  controlPanelDefaultSize={50}
+  caption="切换主轴和尺寸策略，再调整内边距与间隔。固定尺寸时才显示该轴的尺寸控件。"
+/>
 
-<ComponentPreview files="flex-layout-basic" size="sm" />
+## 分配子项空间
 
-`direction` 决定主轴与遍历方向，`wrap` 决定是否形成多条布局行。反向模式只改变布局遍历和放置位置，不改变 `children`、子项 `key` 或绘制顺序。
+子项先取得基础尺寸，再根据容器剩余空间伸展或收缩。以下属性设置在子项上。
 
-`FlexLayoutInput` 是工厂函数接受的作者输入；`IRFlexLayout` 允许省略字段与简写。工厂保留原始写法，`FlexLayoutSchema.parse()` 则会补齐 schema 声明的静态默认值；编译期 resolver 复用这些默认值并展开简写。
+| 属性     | 可用值                     | 解释                                                       |
+| -------- | -------------------------- | ---------------------------------------------------------- |
+| `basis`  | `content` 或非负数         | 子项的主轴基础尺寸；`content` 从内容测量取得               |
+| `grow`   | 非负数                     | 子项分配剩余空间的权重；`0` 不参与伸展，不表示最终尺寸比例 |
+| `shrink` | 非负数                     | 子项收缩权重；`0` 不收缩，实际权重还要乘以未约束基础尺寸   |
+| `size.x` | `{ kind: "fixed", value }` | 容器的固定宽度，`value` 为非负数                           |
 
-React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为直属 `LayoutItem`；`FlexLayoutItemProps` 把可选 JSON `key` 命名为 `itemKey`，并要求在 `children` 与 `ir` 中二选一。
+demo 中三个子项使用相同基础尺寸，并保留最小分配 32。减小基础尺寸，调整第一项的 `grow`，观察它如何分走余量；再增大基础尺寸或缩小容器，调整第二项的 `shrink`，观察收缩。第三项保持 `grow=1`、`shrink=1` 作为对照，固定几何不会自动缩放到槽位大小。
 
-## 容器的分配与对齐
+<ComponentPreview
+  files="flex-allocation"
+  size="md"
+  caption="先减小基础尺寸观察伸展，再增大基础尺寸或减小容器宽度观察收缩；虚线框表示槽位。"
+/>
 
-先确定主轴方向和容器可用尺寸，再选择主轴剩余空间如何分布。`gap` 是固定间距，`justifyContent` 分配的是扣除子项与 gap 后的剩余空间；两者可以同时使用。
+## 对齐容器与子项
 
-## 子项约束
+对齐决定剩余空间放在哪里，以及子项在另一条轴上靠哪一边。容器默认值可以被单个子项覆盖。
 
-`basis` 提供主轴基础尺寸，`grow` 和 `shrink` 决定空间有余或不足时如何调整，`min` / `max` 限定结果。先使用内容尺寸，确认需要固定比例后再加入权重。
+| 属性             | 可用值                                                                         | 解释                                             |
+| ---------------- | ------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `justifyContent` | `start`, `center`, `end`, `space-between`, `space-around`, `space-evenly`      | 容器属性：分布每行主轴上的剩余空间               |
+| `alignItems`     | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`         | 容器属性：默认交叉轴对齐；基线模式仅用于横向主轴 |
+| `alignSelf`      | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`；可省略 | 子项属性：覆盖 `alignItems`；省略时继承容器      |
+
+demo 保持横向排列，子项不伸展。先改变主轴分布，再把默认交叉轴对齐从居中改为起点，最后调整第二项的单独覆盖。`gap` 始终保留固定间隔；若伸展已经耗尽余量，改变主轴分布可能没有效果。`stretch` 提供尺寸约束，不保证固定图形变形。
+
+<ComponentPreview
+  files="flex-alignment"
+  size="md"
+  caption="先调整主轴分布，再比较容器默认对齐与 B 的单独覆盖；子项不伸展，保留可观察的自由空间。"
+/>
 
 ## 相关属性
 
-以下集中回查本页使用的容器和子项字段。完整持久化输入见 [Schema 参考](/library/layout/flex-layout/schema-reference)。
+以下仅回查本页接入、尺寸与间距、单行分配和普通对齐涉及的属性。伸缩边界、换行、基线、裁切与检查选项见[扩展用法的相关属性](/library/layout/flex-layout/extended#相关属性)。完整签名见 [API 参考](/library/layout/flex-layout/api-reference)，持久化字段与默认值见 [Schema 参考](/library/layout/flex-layout/schema-reference)。
 
 <ComponentProps
   items={[
@@ -152,7 +189,7 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
       kind: 'property',
       type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
       description:
-        '分别配置 x / y：`{ kind: "content", min?, max? }` 按内容；`{ kind: "fixed", value }` 固定尺寸；`{ kind: "fill", min?, max? }` 填充父级有限空间。',
+        '本页使用 `{ kind: "content" }` 按内容求尺寸与 `{ kind: "fixed", value }` 固定尺寸，x / y 分别对应物理宽、高。嵌套时可用 `{ kind: "fill" }` 接收父级有限空间。',
       defaultValue: 'content / content',
     },
     {
@@ -163,25 +200,11 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
       defaultValue: '0',
     },
     {
-      name: 'overflow',
-      kind: 'property',
-      type: "'visible' | 'clip'",
-      description: '`clip` 在容器分配区域上创建一个 Scope 裁切',
-      defaultValue: "'visible'",
-    },
-    {
       name: 'direction',
       kind: 'property',
       type: "'row' | 'row-reverse' | 'column' | 'column-reverse'",
       description: '主轴及正反向遍历',
       defaultValue: "'row'",
-    },
-    {
-      name: 'wrap',
-      kind: 'property',
-      type: "'nowrap' | 'wrap' | 'wrap-reverse'",
-      description: '单行、换行或反向交叉轴放置',
-      defaultValue: "'nowrap'",
     },
     {
       name: 'gap',
@@ -201,15 +224,9 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
       name: 'alignItems',
       kind: 'property',
       type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
-      description: '默认交叉轴对齐；纵向主轴不接受基线对齐',
+      description:
+        '本页使用 start / center / end / stretch：分别靠起点、居中、靠终点或传递交叉轴拉伸提案；固定几何不保证被拉伸。基线模式见扩展用法',
       defaultValue: "'stretch'",
-    },
-    {
-      name: 'alignContent',
-      kind: 'property',
-      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
-      description: '多条布局行的交叉轴剩余空间分布',
-      defaultValue: "'start'",
     },
     {
       name: 'children',
@@ -223,34 +240,6 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
 
 <ComponentProps
   items={[
-    {
-      name: 'kind',
-      kind: 'property',
-      type: "'flex'",
-      description: '子项判别字段；可使用 `LayoutItemKind.Flex`',
-      required: true,
-    },
-    {
-      name: 'key',
-      kind: 'property',
-      type: 'string',
-      description: '可选的容器局部稳定身份；省略时按 source index 生成',
-      defaultValue: '内部生成',
-    },
-    {
-      name: 'child',
-      kind: 'property',
-      type: 'IRChild',
-      description: '参与布局的任意可 JSON 序列化 Core 子图形',
-      required: true,
-    },
-    {
-      name: 'margin',
-      kind: 'property',
-      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
-      description: '分配区域外边距；不进入子图形的空间提案',
-      defaultValue: '0',
-    },
     {
       name: 'basis',
       kind: 'property',
@@ -273,24 +262,11 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
       defaultValue: '1',
     },
     {
-      name: 'min',
-      kind: 'property',
-      type: 'number',
-      description: '显式值替代自动最小值；子图形拒绝时以真实占用溢出表达',
-      defaultValue: '子图形最小值',
-    },
-    {
-      name: 'max',
-      kind: 'property',
-      type: 'number',
-      description: '作者给出的主轴分配尺寸硬上限',
-      defaultValue: '无上限',
-    },
-    {
       name: 'alignSelf',
       kind: 'property',
       type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
-      description: '覆盖当前子项的交叉轴对齐',
+      description:
+        '用 start / center / end / stretch 覆盖当前子项的交叉轴对齐；省略时跟随 alignItems。基线模式见扩展用法',
       defaultValue: 'alignItems',
     },
   ]}
@@ -302,6 +278,7 @@ React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为�
   items={[
     { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/flex-layout/extended' },
     { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/flex-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/flex-layout/api-reference' },
     {
       title: 'Schema 参考',
       description: '查询持久化输入的字段约束',

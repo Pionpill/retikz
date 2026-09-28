@@ -1,273 +1,249 @@
 ---
 title: 扩展用法
-description: 组合布局约束并检查求解后的边界与产物
+description: 组合伸缩边界、换行与对齐，检查溢出和布局结果
 ---
 
-本页在[基础用法](/library/layout/flex-layout/usage)之上组合约束、观察边界并检查布局结果。先调整一个变量，再对照分配区域和真实占用。
+本页承接[基础用法](/library/layout/flex-layout/usage)，处理空间不足、多行排列和结果检查。每节围绕一组配合使用的 API：先确定尺寸约束，再选择换行与对齐，最后用 inspect 验证实际分配。
 
-## 伸展、收缩与硬边界
+## 组合伸缩与尺寸边界
 
-容器主轴固定为 200、间距为 12，两个子项的 basis 都为 40，grow 分别为 1 和 3。扣除基础尺寸与间距后剩余 108，因此分得 27 和 81，最终 slot 为 67 和 121。这是分配尺寸，不保证固定几何会缩放到相同大小。
+伸缩决定空间如何分配，尺寸边界决定每个子项最多和最少拿到多少空间。达到边界后，剩余调整由其他可伸缩子项承担。
 
-max 会让命中上限的子项冻结，剩余空间继续交给其它项。负剩余空间按 shrink × 未约束基础尺寸分摊；shrink=0 保留该项的基础分配。不要用 grow 控制绘制顺序。
+| 属性              | 可用值                                                                | 解释                                                       |
+| ----------------- | --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `size.x / size.y` | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | 容器的物理宽、高：按内容求尺寸、固定尺寸或接收父级有限空间 |
+| `basis`           | `content` 或非负数                                                    | 子项的主轴基础尺寸；`content` 从内容测量取得               |
+| `grow`            | 非负数                                                                | 子项分配剩余空间的权重；`0` 不参与伸展，不表示最终尺寸比例 |
+| `shrink`          | 非负数                                                                | 子项收缩权重；`0` 不收缩，实际权重还要乘以未约束基础尺寸   |
+| `min / max`       | 可省略的非负数，`min ≤ max`                                           | 子项主轴槽位的硬下限与上限；不强迫固定图形缩小             |
 
-## 换行与基线的边界
-
-换行先分组，再对每行分配空间。justifyContent 调整行内主轴自由空间，alignContent 调整多行之间的交叉轴空间；只有一行或没有剩余空间时，不应期待它们产生同样效果。横向主轴可使用 first-baseline / last-baseline；纵向主轴的交叉轴为 x，不接受基线对齐。
-
-## 交互比较
-
-切换主轴、换行与交叉轴对齐，并调节子项的基础尺寸（`basis`）、伸展系数（`grow`）和收缩系数（`shrink`）。预览使用固定 `viewBox`；当基础尺寸增大或取消换行时，可以直接观察负剩余空间如何触发收缩。
+demo 只调整第一项的伸缩和边界，第二项保持可伸缩。增大第一项的 `grow` 后降低 `max`，观察它何时停止增长；再缩小容器并调整 `min`，观察下限如何限制收缩。达到下限后，内容仍可能溢出。
 
 <ComponentPreview
-  files="flex-layout-playground"
+  files="flex-limits"
+  size="md"
+  controlPanelDefaultSize={50}
+  caption="最小分配范围为 30–70，最大分配范围为 80–160，始终满足 min ≤ max。先改变一个参数，再比较两个槽位。"
+/>
+
+## 换行与多行对齐
+
+换行把放不下的子项分到多条布局行。每行内部的排列与多行整体的排列分别控制。
+
+| 属性             | 可用值                                                                               | 解释                                             |
+| ---------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `wrap`           | `nowrap`, `wrap`, `wrap-reverse`                                                     | 不换行、换行或反向排列布局行；不改写子项声明顺序 |
+| `basis`          | `content` 或非负数                                                                   | 子项的主轴基础尺寸；`content` 从内容测量取得     |
+| `justifyContent` | `start`, `center`, `end`, `space-between`, `space-around`, `space-evenly`            | 分配每一行主轴上的剩余空间                       |
+| `alignContent`   | `start`, `center`, `end`, `stretch`, `space-between`, `space-around`, `space-evenly` | 分布多行整体的交叉轴空间；需要多行且交叉轴有余量 |
+| `size.x`         | `{ kind: "fixed", value }`                                                           | 控制横向可用空间，影响一行能容纳多少子项         |
+
+demo 固定横向主轴。切换换行方式并调整基础尺寸或容器宽度，先形成至少两行；再分别改变 `alignContent` 和 `justifyContent`，比较行与行之间、每行子项之间的变化。`wrap-reverse` 反转行的交叉轴放置方向，主轴反向则由 `direction` 决定。
+
+<ComponentPreview
+  files="flex-wrapping"
   size="lg"
-  caption="推荐态显示 content 边界、Flex 行区域与固定 gap；可在“辅助层”中查看 padding、margin、自由空间边界与其它细节。"
+  caption="比较不换行、换行和反向换行；至少形成两行时，再观察多行分布。"
 />
 
-### 溢出与裁切
+## 基线对齐
 
-父级分配区域（slot）与真实占用是两个量。固定几何拒绝较小的分配区域时，`visible` 保留完整视觉；`clip` 只改变可见区域，类型化产物仍保留真实边界与 `clipped` 状态。
+字号或行数不同时，边框居中不一定能让文字排齐。基线对齐让子项按首行或末行文字的参考线对齐。
 
-<ComponentPreview files="flex-layout-overflow" size="sm" />
+| 属性                   | 可用值                                               | 解释                                                     |
+| ---------------------- | ---------------------------------------------------- | -------------------------------------------------------- |
+| `alignItems`           | 本节比较 `center`, `first-baseline`, `last-baseline` | 容器的默认对齐；首基线或末基线模式仅用于横向主轴         |
+| `alignSelf`            | 省略，或同类对齐值                                   | 覆盖单个子项的对齐；省略时跟随容器                       |
+| `alignmentGuides`      | `true`, `false`                                      | 检查选项：显示实际采用的对齐参考线                       |
+| `Node.style.font.size` | `number`                                             | 节点字号，本例分别控制两项，用于比较不同文字高度下的基线 |
 
-## 布局检查
+demo 的第一项显式分成两行，第二项随宽度排版。调整两项字号，比较居中、首基线与末基线；第二项选择跟随容器时才继承默认对齐。没有提供对应参考线的子图形会回退到边缘对齐。纵向主轴应使用普通边缘对齐。
 
-<ComponentProps
-  items={[
-    {
-      name: 'inspect',
-      kind: 'property',
-      type: 'false | true | FlexLayoutInspectOptions',
-      description: '`InspectFlexLayout` 为当前 occurrence 声明请求；`false` 只取消当前实例',
-      defaultValue: 'true',
-    },
-  ]}
+<ComponentPreview
+  files="flex-baseline"
+  size="md"
+  caption="调整两个子项的字号，比较首、末基线；第二项的对齐覆盖设为跟随容器时才使用默认值。辅助线标出实际参考位置。"
 />
 
-基础 `FlexLayout` 没有 `inspect` 属性。安装可选包后，从 `@retikz/layout-react/inspect` 导入 `InspectFlexLayout`；对象形式在通用边界、盒模型间距、溢出和对齐参考线之外，还可分别控制 `lines`、固定 `gaps` 与 `distributedSpace`。完整字段和宿主 / Scope 规则见[检查器说明](/library/layout/flex-layout/extended#检查器的宿主与范围)。
+## 处理溢出与裁切
 
-```tsx
-import { Layout, Node } from '@retikz/react';
-import { LayoutItem } from '@retikz/layout-react';
-import { LayoutInspectLayout, InspectFlexLayout } from '@retikz/layout-react/inspect';
-export const Inspected = () => (
-  <Layout>
-    <LayoutInspectLayout>
-      <InspectFlexLayout gap={12} inspect={{ bounds: { content: true, slot: true } }}>
-        <LayoutItem kind="flex">
-          <Node position={[0, 0]} text="A" />
-        </LayoutItem>
-      </InspectFlexLayout>
-    </LayoutInspectLayout>
-  </Layout>
-);
-```
+内容放不下时，可以保留超出的部分，也可以将它隐藏。裁切只影响可见内容，不改变空间分配。
 
-### FlexLayoutInspectOptionsSchema
+| 属性                            | 可用值                     | 解释                                                             |
+| ------------------------------- | -------------------------- | ---------------------------------------------------------------- |
+| `overflow`                      | `visible`, `clip`          | 保留超出容器的内容，或在容器分配区域裁切；不重新求解布局         |
+| `size.x`                        | `{ kind: "fixed", value }` | 容器固定宽度，决定裁切区域的宽度                                 |
+| `basis / min / max`             | `number`                   | 子项基础尺寸和边界；本例由同一控件设置为相同非负值，固定槽位宽度 |
+| `Node.layout.minimumSize.width` | `number`                   | 节点自身的最小宽度，可大于槽位；非负数                           |
 
-<ZodSchema
-  name="FlexLayoutInspectOptionsSchema"
-  description="FlexLayout 的通用与专属检查选项。"
-  descriptions={{
-    bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
-    spacing: '独立控制 padding 与 margin 纹理。',
-    overflow: '是否显示溢出阴影。',
-    alignmentGuides: '是否显示对齐参考线。',
-    labels: '是否显示辅助标签。',
-    lines: '是否显示每条弹性布局行的区域；默认开启。',
-    gaps: '是否显示作者声明的固定 gap；默认开启。',
-    distributedSpace: '是否以虚线边界显示内容分布产生的正自由空间；内部不填色，默认开启。',
-  }}
-/>
+在 demo 中缩小容器或增大节点最小宽度，让节点超出边界；再切换 `visible` 与 `clip`，比较可见部分。调整基础尺寸时，槽位宽度会变化，但不强迫节点缩小。若希望内容真正放得下，应调整尺寸、换行或子项约束；只在需要隐藏外部内容时使用裁切。
 
-## 读取布局结果
+<ComponentPreview files="flex-clipping" size="md" />
 
-编译结果通过 occurrence 标识具体容器实例；不要只用公开 id 区分嵌套实例。先定位产物信封，再用对应 Schema 校验 value。下面只检查同次编译的结果，不重新求解。
+## 检查与读取布局结果
+
+检查图层用来区分分配空间与实际占用，结果表用来读取同一次编译的数据。检查选项只改变辅助显示，不写入布局 IR。
+
+| 属性                | 可用值                                                                | 解释                                                       |
+| ------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `size.x / size.y`   | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | 容器的物理宽、高：按内容求尺寸、固定尺寸或接收父级有限空间 |
+| `basis`             | `content` 或非负数                                                    | 子项的主轴基础尺寸；`content` 从内容测量取得               |
+| `wrap`              | `nowrap`, `wrap`, `wrap-reverse`                                      | 不换行、换行或反向排列布局行；不改写子项声明顺序           |
+| `bounds.slot`       | `true`, `false`                                                       | 检查选项：显示或隐藏父级分给子项的槽位                     |
+| `bounds.allocation` | `true`, `false`                                                       | 检查选项：显示或隐藏子图形实际接受的布局占用               |
+| `gaps`              | `true`, `false`                                                       | 检查选项：显示固定间距                                     |
+
+调整容器宽度、基础尺寸和换行方式，观察结果表中的所属行、槽位宽度与实际宽度。分别关闭槽位、占用和间距辅助层，核对图中各区域；开关检查层不会改变结果表数值。
+
+<ComponentPreview files={['flex-inspection', 'flex-inspection.data.ts']} size="lg" controlPanelDefaultSize={50} />
+
+### 检查器的宿主与范围
+
+- React：通过 `LayoutInspectLayout` + `InspectFlexLayout` 接入，用 `inspect` 配置当前容器。
+- Vanilla：用 `inspectFlexLayout` 声明请求，将 `createLayoutInspectionVanillaDriver` 创建的驱动传给 render / mount 的 `compileDriver`。
+- IR：保留原始布局输入，通过检查驱动的运行时 `selection` 选择目标，不向 IR 添加检查字段。
+
+查看布局分配时，优先打开 `bounds.slot` 与 `bounds.allocation` 比较槽位和真实占用；需要分辨固定间隔与分布自由空间时，再打开 `gaps` 与 `distributedSpace`。面板的“推荐”仅选择当前讲解需要的辅助层，不等于 inspect 的完整默认配置。
+
+单个容器的请求不自动传播到嵌套布局。React 可通过宿主的 `request` 选择整图，通过 `LayoutInspectScope` 选择子树；Vanilla 可在 scene / Scope 上使用 `createInspectionVanillaAuthoring`。需要屏蔽整个子树时，使用 `LayoutInspectScope request={false}` 或 `createLayoutInspectionBarrier()`；单个请求的 `false` 只关闭当前层选择，更深的请求仍可开启。
+
+完整入口与选项类型见 [API 参考](/library/layout/flex-layout/api-reference)。布局输入字段见 [Schema 参考](/library/layout/flex-layout/schema-reference)。
+
+### 读取同次编译的结果
+
+编译结果可能包含多个布局实例，不能仅用一个公开 id 判断嵌套实例。下面只取第一个 Flex 产物演示读取流程；处理多个实例时，应进一步结合产物的 occurrence 定位目标。
 
 ```ts
 import { compileToScene } from '@retikz/core';
 import { FlexLayoutDefinition, FlexLayoutArtifactSchema, createFlexLayout } from '@retikz/layout';
+
 const output = compileToScene(
   { type: 'scene', version: 1, children: [createFlexLayout({ children: [] })] },
   { composites: [FlexLayoutDefinition] },
 );
+
 const envelope = output.artifacts.find(
   item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'flexLayout',
 );
+
 if (envelope) {
   const result = FlexLayoutArtifactSchema.parse(envelope.value);
   console.log(result.container, result.items);
 }
 ```
 
-### FlexLayoutArtifactSchema
+### 理解产物边界
 
-<ZodSchema
-  name="FlexLayoutArtifactSchema"
-  description="FlexLayout 的容器、声明顺序子项与物理交叉轴顺序布局行。"
-  descriptions={{
-    kind: 'FlexLayout 产物的判别字段。',
-    container: '已求解的容器几何。',
-    'container.allocationBounds': '容器最终的分配矩形。',
-    'container.allocationBounds.x': '容器分配矩形的水平原点。',
-    'container.allocationBounds.y': '容器分配矩形的垂直原点。',
-    'container.allocationBounds.width': '容器分配矩形的非负宽度。',
-    'container.allocationBounds.height': '容器分配矩形的非负高度。',
-    'container.contentBounds': '扣除内边距后的容器内容矩形。',
-    'container.contentBounds.x': '容器内容矩形的水平原点。',
-    'container.contentBounds.y': '容器内容矩形的垂直原点。',
-    'container.contentBounds.width': '容器内容矩形的非负宽度。',
-    'container.contentBounds.height': '容器内容矩形的非负高度。',
-    'container.visualBounds': '所有已平移子项视觉边界的并集。',
-    'container.visualBounds.x': '视觉边界并集的水平原点。',
-    'container.visualBounds.y': '视觉边界并集的垂直原点。',
-    'container.visualBounds.width': '视觉边界并集的非负宽度。',
-    'container.visualBounds.height': '视觉边界并集的非负高度。',
-    'container.visibleBounds': '容器内仍可见的视觉并集；没有正面积时为 null。',
-    items: '按作者声明顺序排列的子项结果。',
-    lines: '按最终物理交叉轴顺序排列的布局行。',
-    spacing: '按 canonical 物理顺序排列的固定 gap 与自由空间分布区域。',
-    'spacing.kind': '固定 gap 或对齐产生的自由空间。',
-    'spacing.axis': '该间距区域的物理主轴。',
-    'spacing.bounds': '当前容器分配坐标中的间距矩形。',
-    'spacing.bounds.x': '间距矩形的水平原点。',
-    'spacing.bounds.y': '间距矩形的垂直原点。',
-    'spacing.bounds.width': '间距矩形的非负宽度；x 主轴时必须为正。',
-    'spacing.bounds.height': '间距矩形的非负高度；y 主轴时必须为正。',
-  }}
+读取结果时，先区分三个量：`slotBounds` 是父级分配的槽位，`allocationBounds` 是子图形实际接受的布局占用，`visualBounds` 还包含描边、标签等视觉范围。固定几何可能超出槽位；裁切后的可见范围另由 `visibleBounds` 表达。
+
+Flex 产物的 `items` 保持声明顺序，`lines` 表达最终分行，`spacing` 区分固定间距与分布自由空间。用它们回答“属于哪一行”“哪里发生溢出”等问题即可，不需要在读取时重新执行分配算法。完整产物成员查询 [API 参考](/library/layout/flex-layout/api-reference)，求解过程见[实现原理](/library/layout/flex-layout/mechanism)。
+
+## 相关属性
+
+以下仅列本页伸缩约束、换行、基线、裁切与检查涉及的属性；基础尺寸、间距与普通对齐见[基础用法的相关属性](/library/layout/flex-layout/usage#相关属性)。`basis`、`grow`、`shrink` 与对齐属性在本页按组合约束的语境回查。完整签名见 [API 参考](/library/layout/flex-layout/api-reference)，字段约束见 [Schema 参考](/library/layout/flex-layout/schema-reference)。最后四项属于运行时检查器选项，不是布局输入字段。
+
+<ComponentProps
+  items={[
+    {
+      name: 'basis',
+      kind: 'property',
+      type: "'content' | number",
+      description: '子项的主轴基础尺寸；与 grow、shrink、min、max 一起决定分配起点和边界',
+      defaultValue: "'content'",
+    },
+    {
+      name: 'grow',
+      kind: 'property',
+      type: 'number',
+      description: '子项吸收正剩余空间的权重；达到 max 后，余量继续分给其它项',
+      defaultValue: '0',
+    },
+    {
+      name: 'shrink',
+      kind: 'property',
+      type: 'number',
+      description: '子项收缩权重为 shrink × 未约束基础尺寸；0 表示不参与收缩',
+      defaultValue: '1',
+    },
+    {
+      name: 'min',
+      kind: 'property',
+      type: 'number',
+      description: '子项主轴槽位的非负下限；与 max 同时设置时必须 min ≤ max，不代表能缩小固定几何',
+    },
+    {
+      name: 'max',
+      kind: 'property',
+      type: 'number',
+      description: '子项主轴槽位的非负上限；达到上限后停止增长',
+    },
+    {
+      name: 'wrap',
+      kind: 'property',
+      type: "'nowrap' | 'wrap' | 'wrap-reverse'",
+      description: 'nowrap 保持单行；wrap 允许分行；wrap-reverse 反转布局行的交叉轴放置方向',
+      defaultValue: "'nowrap'",
+    },
+    {
+      name: 'alignContent',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
+      description:
+        '多行整体的交叉轴分布：start / center / end 靠起点、居中、靠终点；stretch 拉伸行；space-between 只分配行间空间，space-around 在各行两侧分配，space-evenly 使行间及两端等距。需形成多行且有剩余空间',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description:
+        '本页使用 first-baseline / last-baseline 对齐首、末基线，并用 center 比较效果；基线模式仅适用于横向主轴，其它模式见基础用法',
+      defaultValue: "'stretch'",
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: '对子项覆盖默认基线对齐；省略时跟随容器，不使用 auto 作为 API 值',
+      defaultValue: 'alignItems',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description: '容器的 visible 保留超出内容，clip 裁切；两者都不重新分配尺寸',
+      defaultValue: "'visible'",
+    },
+    {
+      name: 'bounds.slot',
+      kind: 'property',
+      type: 'boolean',
+      description: '检查器选项：显示父级分配的槽位；不写入布局 IR',
+      defaultValue: 'true',
+    },
+    {
+      name: 'bounds.allocation',
+      kind: 'property',
+      type: 'boolean',
+      description: '检查器选项：显示子图形实际接受的占用，与槽位作对照',
+      defaultValue: 'true',
+    },
+    {
+      name: 'gaps',
+      kind: 'property',
+      type: 'boolean',
+      description: '检查器选项：显示固定间距；关闭仅隐藏辅助层',
+      defaultValue: 'true',
+    },
+    {
+      name: 'alignmentGuides',
+      kind: 'property',
+      type: 'boolean',
+      description: '检查器选项：显示实际对齐参考线，用于检查首、末基线',
+      defaultValue: 'true',
+    },
+  ]}
 />
-
-`items[].line` 指向所属布局行；`lines[]` 记录连续 `index`、`itemKeys`、物理主轴、主轴范围与交叉轴范围。两者必须形成完整的双向分组关系。必填的 `spacing[]` 同时记录每条 line 的主轴 gap / distribution，以及多 line 时的交叉轴 gap / `alignContent` 分布；`stretch` 已吸收到 line 尺寸，不重复记录。
-
-## 理解产物边界
-
-### LayoutArtifactSchema
-
-<ZodSchema name="LayoutArtifactSchema" description="由 kind 判别的三个 Layout 类型化布局产物联合。" />
-
-每个具体产物的 `container` 都包含：
-
-| 字段               | 类型                         | 描述                                            |
-| ------------------ | ---------------------------- | ----------------------------------------------- |
-| `allocationBounds` | `LayoutArtifactRect`         | 容器最终的分配矩形                              |
-| `contentBounds`    | `LayoutArtifactRect`         | 扣除内边距后的内容矩形                          |
-| `visualBounds`     | `LayoutArtifactRect`         | 所有已平移子项视觉边界的并集                    |
-| `visibleBounds`    | `LayoutArtifactRect \| null` | 应用溢出策略后仍可见的并集；无正面积时为 `null` |
-
-每个 `items[]` 条目共享：
-
-| 字段               | 类型                              | 描述                                                   |
-| ------------------ | --------------------------------- | ------------------------------------------------------ |
-| `key`              | `string`                          | 作者声明或由 Layout 内部生成的容器局部有效身份         |
-| `sourceIndex`      | `number`                          | 连续且从零开始的声明顺序                               |
-| `marginBounds`     | `LayoutArtifactRect`              | 包含已求解外边距的完整父级分配区域                     |
-| `slotBounds`       | `LayoutArtifactRect`              | 不含外边距、由父级分配的区域                           |
-| `allocationBounds` | `LayoutArtifactRect`              | 子图形接受或拒绝分配区域后的真实布局占用               |
-| `visualBounds`     | `LayoutArtifactRect`              | 包含描边或标签等效果的保守视觉包络                     |
-| `visibleBounds`    | `LayoutArtifactRect \| null`      | 裁切后仍可见的视觉区域                                 |
-| `translation`      | `{ x: number, y: number }`        | 回放前应用的容器局部平移                               |
-| `overflow`         | `{ allocation, visual, clipped }` | 双轴真实占用、视觉包络与裁切状态                       |
-| `alignmentGuide?`  | `{ name, position, fallback }`    | 实际用于放置的基线参考线，或基线不可用时的边缘回退结果 |
-
-`slotBounds`、`allocationBounds` 与 `visualBounds` 不能互换：固定几何可以拒绝父级分配的区域，而描边或标签还可能让视觉包络继续扩大。
-
-### LayoutSpacingArtifactSchema
-
-<ZodSchema
-  name="LayoutSpacingArtifactSchema"
-  description="FlexLayout 与 GridLayout 产物共用的固定 gap 或分布式自由空间片段。"
-  descriptions={{
-    kind: '间距片段的语义判别字段。',
-    axis: '间距片段的物理主轴。',
-    bounds: '当前容器 allocation 坐标中的最终矩形。',
-    'bounds.x': '间距矩形的水平原点。',
-    'bounds.y': '间距矩形的垂直原点。',
-    'bounds.width': '间距矩形的非负宽度；x 主轴时必须为正。',
-    'bounds.height': '间距矩形的非负高度；y 主轴时必须为正。',
-  }}
-/>
-
-主轴长度必须为正，正交轴长度可以为零。`axis: 'x'` 使用 `bounds.x/width` 作为主坐标与长度；`axis: 'y'` 使用 `bounds.y/height`。数组按 x → y、主坐标、正交坐标、gap → distributed 和生成顺序稳定排列。
-
-相邻 item 或 track 的物理间隔同时包含 gap 与 distribution 时，固定 gap 在间隔中居中，剩余正空间平分在两侧。leading / trailing 只记录内容边缘与首末 outer box 或 track 之间的正空间；负 free space、重叠与零长度不会生成 distributed segment。
-
-## 检查器的宿主与范围
-
-布局检查器是可选的运行时开发辅助能力，不进入 Layout IR，也不修改类型化布局产物。`@retikz/layout/inspect` 拥有三种 Inspector Definition、选项 schema 与预设；`@retikz/layout-react/inspect` 和 `@retikz/layout-vanilla/inspect` 负责宿主接线。Layout 根入口不依赖 `@retikz/inspect`。
-
-Flex、Grid 与 Overlay Inspector 读取 Core 观测到的最终类型化 artifact，返回普通 Core Path、Node 与 pattern paint。`@retikz/inspect` 用隔离片段编译这些内容，再转换为 Render 的普通只读图层。SVG 在主图之后绘制 `pointer-events="none"` 分组；Canvas 在主图之后单独绘制，但不把辅助图元加入命中测试。viewBox、主资源、动画和正常交互始终只由主 Scene 决定。
-
-### 颜色、纹理与线型
-
-辅助层用三条正交通道表达不同信息，不再用一种颜色同时暗示边界类别与嵌套层级：
-
-| 通道 | 表达内容            | 规则                                                                                                                                                                                                                           |
-| ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 颜色 | 最终布局 occurrence | Inspect 按最终请求顺序分配 `colorScope`；常规 occurrence 颜色来自当前 Core Theme 的 categorical palette，guide / anchor 使用 `semantic.guide`，溢出 warning 使用 `semantic.warning`，并通过 `InspectionAppearanceContext` 暴露 |
-| 纹理 | 空间语义            | Layout 用普通 `lines` pattern paint 表达：margin 与固定 gap 为 `-45°` 的 `/`，padding 为 `45°` 的 `\`；size 为 12、lineWidth 为 1，三者不铺底色                                                                                |
-| 线型 | 几何类别            | 容器、内容、item box、Flex line、Grid track/cell/span、Overlay placement 与 alignment guide 统一使用虚线；anchor crosshair 使用实线                                                                                            |
-
-同一个 occurrence 的普通辅助图元共享颜色；嵌套容器按各自最终 occurrence 取得 categorical 颜色。颜色数组循环使用，因此颜色只用于快速归属，精确身份仍由 occurrence locator 表达。guide / anchor 使用低强调的 Theme semantic 颜色，溢出警告是普通半透明 fill，辅助标签也是普通 Node。
-
-绘制顺序固定为 spacing hatch / boundary underlay → family structure → box outline → overflow warning → guide/anchor → label。`bounds.content` 与 `bounds.slot` 只控制对应 outline；`spacing.padding` 与 `spacing.margin` 独立控制两种纹理和边界。margin、padding 与固定 gap 使用独立 dashed line 表达边界；ring 只描内外周长，不描四块纹理分片之间的接缝。`distributedSpace` 只显示未占用 content 的 dashed perimeter，内部保持透明留白。若 spacing boundary 已被 content/slot outline 或 Flex line / Grid track 完整覆盖，同一线段只绘制一次；单独开启任一类别时仍保留其完整可见边界。
-
-### 三种选择范围
-
-| 范围          | React                                                              | Vanilla                                                                  | 语义                                        |
-| ------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------- |
-| 整张图        | `LayoutInspectLayout request={...}`                                | figure 的 `createInspectionVanillaAuthoring(...)`                        | 按 Inspector key 选择全部匹配 occurrence    |
-| authored 子树 | `LayoutInspectScope request={...}`                                 | Scope 的 `createInspectionVanillaAuthoring(...)`                         | 只选择该 Scope 的 authored 后代             |
-| 单个容器      | `InspectFlexLayout` / `InspectGridLayout` / `InspectOverlayLayout` | `inspectFlexLayout()` / `inspectGridLayout()` / `inspectOverlayLayout()` | 只选择当前 occurrence，不自动传播到嵌套布局 |
-
-React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查宿主；Vanilla 必须把 `createLayoutInspectionVanillaDriver()` 传给 render / mount 的 `compileDriver`。`LayoutInspectScope request={false}` 与 `createLayoutInspectionBarrier()` 都建立后代不能越过的硬屏障。
-
-同一个 Inspector 的 scene → 外层 subtree → 内层 subtree → self 请求按范围与声明顺序求值。`bounds` 与 `spacing` 的对象形式逐项合并，boolean 与对象互换时由后写值替换整组；请求值 `false` 关闭当前层选择，但更深请求仍可重新开启。省略全部请求时 observer 不捕获布局产物，也不会产生只读图层。
-
-### 通用选项与边界
-
-### BaseLayoutInspectOptionsSchema
-
-<ZodSchema
-  name="BaseLayoutInspectOptionsSchema"
-  description="所有布局检查器共享的选项及静态默认值。"
-  descriptions={{
-    bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖容器、内容、父级分配、真实占用与视觉边界。',
-    spacing: 'false 关闭 padding 与 margin 纹理，true 恢复默认组合，对象形式逐项覆盖两种盒模型间距。',
-    overflow: '是否显示真实占用或视觉包络超出父级分配区域的阴影。',
-    alignmentGuides: '是否显示容器最终采用的对齐参考线。',
-    labels: '是否显示辅助层文字标签；默认关闭。',
-  }}
-/>
-
-### LayoutInspectSpacingOptionsSchema
-
-<ZodSchema
-  name="LayoutInspectSpacingOptionsSchema"
-  description="布局检查器共用的盒模型间距选择及默认值。"
-  descriptions={{
-    padding: '是否为容器已解析的 padding 绘制阴影。',
-    margin: '是否为子项已解析的 margin 绘制阴影。',
-  }}
-/>
-
-### LayoutInspectBoundsOptionsSchema
-
-<ZodSchema
-  name="LayoutInspectBoundsOptionsSchema"
-  description="布局边界辅助层的逐类开关及默认值。"
-  descriptions={{
-    container: '是否显示容器最终分配边界。',
-    content: '是否显示扣除内边距后的内容边界。',
-    slot: '是否显示父级给子项分配的 slot。',
-    allocation: '是否显示子项真实布局占用。',
-    visual: '是否显示包含描边与标签等效果的视觉包络。',
-  }}
-/>
-
-请求值 `true` 使用完整默认轮廓：`container`、`content`、`slot`、`allocation`、padding、margin、`overflow` 与 `alignmentGuides` 开启，`visual` 与 `labels` 关闭。对象形式只覆盖显式字段；例如 `{ spacing: { padding: false } }` 只关闭 padding 纹理。
-
-文档 playground 的“推荐”不是完整轮廓：Flex 显示 content outline、Flex 行区域与固定 gap，Grid 显示 content outline、轨道边界与固定 gap，Overlay 只显示 content outline。选择“全部”会打开每个细节；“关闭”只关闭总开关；Reset 回到推荐值。
 
 ## 延伸阅读
 
@@ -276,6 +252,7 @@ React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查
     { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/flex-layout/usage' },
 
     { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/flex-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/flex-layout/api-reference' },
     {
       title: 'Schema 参考',
       description: '查询持久化输入的字段约束',

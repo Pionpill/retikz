@@ -1,13 +1,71 @@
 ---
 title: FlexLayout
-description: Usage, implementation, and input contracts for FlexLayout
+description: Arrange graphics along one axis and use item weights to distribute space, shrink, or wrap
 ---
 
-`FlexLayout` arranges arbitrary graphical children along one main axis. It distributes free space, shrinks or wraps when space is tight, keeps fixed geometry at its real size, and lets text reflow against its allocated width.
+`FlexLayout` arranges graphical children along a main axis: the direction in which items follow one another, either horizontally or vertically. It suits icon-and-description groups, rows of labels with different widths, and content areas that mix fixed and flexible items.
 
-Start with basic usage. Extended usage covers allocation and inspection; implementation explains why the behavior holds.
+You declare the direction, available size, and item rules. The layout measures content, distributes space, and places the graphics. Items can grow when space is available or shrink and wrap when it is tight, without requiring individual positions.
+
+## Responsibilities at a glance
+
+Serializable IR describes the container, item rules, and graphical content. Each layer records a different set of facts:
+
+| IR layer                                    | Describes                                                             | Scope                                               |
+| ------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------- |
+| Layout container                            | Container size, direction, gaps, alignment, and wrapping              | Organizes space for the entire group                |
+| Item configuration (an entry in `children`) | `basis`, `grow`, `shrink`, size limits, and individual alignment      | Determines how one child participates in layout     |
+| Child graphic (the entry's `child`)         | Content and geometry declarations for a node, path, or nested graphic | Defines what is drawn and the basis for measurement |
+
+The container's `children` hold item configurations, and each entry's `child` holds graphical IR. Layout rules and graphical content can therefore change independently: adjusting an item's allocation or placement does not require rewriting its graphic.
+
+React expresses these declarations through JSX composition; Vanilla uses functions and objects. IR can also be supplied directly. These entry points ultimately express the same layout contract. Basic usage compares their syntax, while this overview explains behavior through the shared contract.
+
+## Understanding flexible space allocation
+
+All three items below have a `basis` of 100. The first does not grow; the others have `grow` weights of 1 and 2. After subtracting padding, gaps, and base widths, the container distributes the remaining space according to those weights.
 
 <ComponentPreview files="entry" hideCode size="sm" />
+
+Inspection is enabled by default, showing container bounds, child slots, padding, and gaps. A slot is the rectangular region assigned to an item by its parent. Compare the dashed slots to see how allocation differs between the fixed item and the two flexible items.
+
+The item with `grow=2` receives twice as much **additional space** as the item with `grow=1`; its final width is not necessarily twice as large. Each final slot also includes its base width. This relationship applies to the example because no size limits constrain the distribution.
+
+The Node borders still surround their own content; a wider slot does not automatically stretch them. This illustrates the division of responsibility: the layout allocates a region, and each graphic uses it according to its capabilities. Reflowable text can respond to the allocated width, while fixed geometry retains its real size.
+
+<Comparison target="css" title="Mapping to CSS Flexbox">
+
+If you know CSS Flexbox, use this table to read FlexLayout IR fields. Container rules belong to the layout object, and item rules belong to entries in `children`. React and Vanilla provide different ways to author these declarations.
+
+| CSS Flexbox                                | FlexLayout IR                      | Corresponding meaning                                                                          |
+| ------------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `display: flex`                            | `type: 'flexLayout'`               | Selects one-dimensional flexible layout; the IR also requires the layout package's `namespace` |
+| `flex-direction` / `flex-wrap`             | `direction` / `wrap`               | Main-axis direction, order, and wrapping                                                       |
+| `justify-content`                          | `justifyContent`                   | Distribution of remaining main-axis space                                                      |
+| `align-items` / `align-self`               | `alignItems` / item `alignSelf`    | Default and per-item cross-axis alignment                                                      |
+| `align-content`                            | `alignContent`                     | Cross-axis distribution of multiple lines                                                      |
+| `gap` / `column-gap` / `row-gap`           | Numeric `gap` or `{ column, row }` | Uniform or physical horizontal and vertical gaps                                               |
+| `flex-basis` / `flex-grow` / `flex-shrink` | Item `basis` / `grow` / `shrink`   | Base size, growth weight, and shrink weight                                                    |
+
+The three items on this page are comparable to `flex: 0 0 100px`, `flex: 1 1 100px`, and `flex: 2 1 100px`, with `align-items: center` on the container. This is an analogy for allocation rules, not a CSS string accepted by the API.
+
+FlexLayout does not execute browser CSS. It measures and places child graphics expressed as IR, without DOM style cascading, CSS units, or the full set of CSS property values. Numbers use drawing coordinate units; `size` policies declare container sizing, and item `min` / `max` constrain the current main-axis slot. The default `basis` is `'content'`, which is not equivalent to CSS `auto`.
+
+`stretch` requests an allocated region but does not guarantee that every graphic will stretch. Each graphic's measurement capabilities determine its response, so the final appearance of a DOM box cannot be assumed for graphical content. Use the mapping to transfer layout concepts; consult the API and Schema references for supported values and limits.
+
+</Comparison>
+
+## Choosing a layout and understanding its limits
+
+| Arrangement goal                                                     | Choice                                          |
+| -------------------------------------------------------------------- | ----------------------------------------------- |
+| Sequential items along one axis, with growth, shrinkage, or wrapping | `FlexLayout`                                    |
+| Shared row and column tracks, spanning, or two-dimensional alignment | [GridLayout](/library/layout/grid-layout)       |
+| Graphics sharing the same region, with layering and positioning      | [OverlayLayout](/library/layout/overlay-layout) |
+
+FlexLayout wrapping still allocates items sequentially within each line; it does not establish shared column tracks across lines. It also does not turn content into list cells or key-value entries. For those visual structures, choose Standard's [List](/library/standard/container/list) or [Map](/library/standard/container/map).
+
+Start with basic usage to declare containers and items. Continue to extended usage when combining size constraints or inspecting results. Consult the API or Schema reference directly for parameters, and read implementation when you need to understand why the behavior holds.
 
 ## Contents
 
@@ -27,6 +85,11 @@ Start with basic usage. Extended usage covers allocation and inspection; impleme
       title: 'Implementation',
       description: 'Understand measurement and placement',
       url: '/library/layout/flex-layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public functions, types, and props',
+      url: '/library/layout/flex-layout/api-reference',
     },
     {
       title: 'Schema reference',

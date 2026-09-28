@@ -1,13 +1,71 @@
 ---
 title: FlexLayout · 弹性布局
-description: FlexLayout · 弹性布局的用法、实现原理与输入契约
+description: 沿一个方向排列图形，并通过子项权重分配空间、控制收缩与换行
 ---
 
-`FlexLayout` 沿一个主轴排布任意子图形。它可以把剩余空间分给可伸展项、在空间不足时收缩或换行，同时让固定几何保持真实尺寸、让文本按分配宽度重新排版。
+`FlexLayout` 沿一个主轴排列子图形，主轴就是内容依次排开的方向，可以横向，也可以纵向。它适合图标与说明的组合、一排宽度不同的标签，以及固定项和弹性项共存的内容区。
 
-从基础用法开始；需要调节空间分配与检查结果时阅读扩展用法，实现原理解释行为依据。
+你声明排列方向、可用尺寸和子项规则，布局负责测量内容、分配空间并放置图形。需要更多空间的子项可以伸展，空间不足时可以收缩或换行，无需逐个计算位置。
+
+## 职责一览
+
+布局以可序列化的 IR 描述容器、子项规则和图形内容。三者分别保存不同的事实：
+
+| IR 层次                         | 描述内容                                        | 作用范围                       |
+| ------------------------------- | ----------------------------------------------- | ------------------------------ |
+| 布局容器                        | 容器尺寸、方向、间距、对齐与换行                | 决定整组内容的空间组织         |
+| 子项配置（`children` 中的条目） | `basis`、`grow`、`shrink`、尺寸上下限与单项对齐 | 决定单个子图形如何参与布局     |
+| 子图形（条目的 `child`）        | 节点、路径或嵌套图形的内容与几何声明            | 决定实际绘制的内容及其测量依据 |
+
+容器的 `children` 保存子项配置，每个条目的 `child` 保存子图形 IR。布局规则与图形内容因此可以分别调整：修改子项的分配或放置规则，不必重写图形本身。
+
+React 通过 JSX 组合、Vanilla 通过函数与对象编写这些声明，也可以直接提供 IR。各入口最终表达同一份布局契约；具体写法在基础用法中对照，总览按这份共同契约解释行为。
+
+## 理解弹性空间分配
+
+下面三个子项的基础宽度 `basis` 都是 100。第一项不伸展，其余两项的 `grow` 分别为 1 和 2。容器扣除内边距、项间距和基础宽度后，把剩余空间按这两个权重分配。
 
 <ComponentPreview files="entry" hideCode size="sm" />
+
+示例默认开启 inspect，辅助层标出容器边界、子项槽位、内边距与间距。槽位是父容器分给子项的矩形区域；观察虚线槽位，就能看到固定项与两种弹性项的分配差异。
+
+`grow=2` 获得的**额外空间**是 `grow=1` 的两倍，不代表最终宽度是两倍；最终槽位还包含各自的基础宽度。这个关系适用于当前示例中没有尺寸上下限干预的分配。
+
+图中的 Node 边框仍围绕自己的内容，不会因为槽位变宽就自动拉伸。这也说明了布局与图形的分工：布局分配区域，子图形按照自身能力使用区域。可重排文本可以响应分配宽度，固定几何则保留真实尺寸。
+
+<Comparison target="css" title="与 CSS Flexbox 的对应关系">
+
+熟悉 CSS Flexbox 时，可以用下表理解 FlexLayout 的 IR 字段。容器规则位于布局对象上，子项规则位于 `children` 的条目上；React 和 Vanilla 只是这些声明的不同编写入口。
+
+| CSS Flexbox                                | FlexLayout IR                      | 对应语义                                          |
+| ------------------------------------------ | ---------------------------------- | ------------------------------------------------- |
+| `display: flex`                            | `type: 'flexLayout'`               | 采用一维弹性布局；IR 同时需要布局包的 `namespace` |
+| `flex-direction` / `flex-wrap`             | `direction` / `wrap`               | 主轴方向、顺序与换行                              |
+| `justify-content`                          | `justifyContent`                   | 主轴上的剩余空间分布                              |
+| `align-items` / `align-self`               | `alignItems` / 子项的 `alignSelf`  | 默认与单项交叉轴对齐                              |
+| `align-content`                            | `alignContent`                     | 多行在交叉轴上的空间分布                          |
+| `gap` / `column-gap` / `row-gap`           | `gap` 数值或 `{ column, row }`     | 统一间距或物理横纵间距                            |
+| `flex-basis` / `flex-grow` / `flex-shrink` | 子项的 `basis` / `grow` / `shrink` | 基础尺寸、伸展与收缩权重                          |
+
+本页三个子项可类比为 `flex: 0 0 100px`、`flex: 1 1 100px` 和 `flex: 2 1 100px`，容器使用 `align-items: center`。这是空间分配规则的类比，不是可直接传入的 CSS 字符串。
+
+FlexLayout 并不执行浏览器 CSS：它测量和放置子图形 IR，没有 DOM 样式级联、CSS 单位或完整的属性值集合。数值使用绘图坐标单位；容器尺寸由 `size` 策略声明，子项的 `min` / `max` 限制当前主轴槽位。`basis` 默认是 `'content'`，也不等同于 CSS 的 `auto`。
+
+`stretch` 表达对分配区域的要求，不保证任意子图形都会拉伸。图形如何响应尺寸由其测量能力决定，因此不能把 DOM 盒子的最终外观直接套用到图形上。上表用于迁移布局思路，具体取值与边界以 API、Schema 参考为准。
+
+</Comparison>
+
+## 选择与边界
+
+| 排列目标                                   | 选择                                            |
+| ------------------------------------------ | ----------------------------------------------- |
+| 沿一个方向按顺序排列，允许伸缩或换行       | `FlexLayout`                                    |
+| 多行多列共享轨道，需要跨行、跨列或二维对齐 | [GridLayout](/library/layout/grid-layout)       |
+| 多个图形放在同一区域，需要叠加与定位       | [OverlayLayout](/library/layout/overlay-layout) |
+
+FlexLayout 的换行仍然按顺序逐行分配，不建立跨行共享的列轨道。它也不负责将内容转换成列表单元格或键值条目；需要这些可视结构时，选择标准包的 [List](/library/standard/container/list) 或 [Map](/library/standard/container/map)。
+
+首次使用从基础用法开始，了解如何声明容器与子项。需要组合尺寸约束或观察求解结果时进入扩展用法；查参数直接阅读 API 或 Schema 参考，只有需要理解行为依据时才阅读实现原理。
 
 ## 章节内容
 
@@ -16,6 +74,7 @@ description: FlexLayout · 弹性布局的用法、实现原理与输入契约
     { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/flex-layout/usage' },
     { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/flex-layout/extended' },
     { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/flex-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/flex-layout/api-reference' },
     {
       title: 'Schema 参考',
       description: '查询持久化输入的字段约束',

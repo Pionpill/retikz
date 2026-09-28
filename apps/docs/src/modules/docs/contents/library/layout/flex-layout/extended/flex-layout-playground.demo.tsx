@@ -1,4 +1,4 @@
-import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
 import { InspectFlexLayout, LayoutInspectLayout } from '@retikz/layout-react/inspect';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
@@ -18,38 +18,38 @@ const createPreview = (inspecting: boolean) =>
   defineControlledPreview(previewControlContract, values => {
     const children = (
       <>
-        <LayoutItem kind="flex" itemKey="a" basis={values.basis} grow={values.grow} shrink={1}>
+        <FlexLayoutItem itemKey="a" basis={values.basis} grow={values.grow} shrink={1}>
           <Node
             position={[0, 0]}
             text="A"
             style={{ fill: '#dbeafe', stroke: '#2563eb' }}
             layout={{ minimumSize: { width: 48, height: 34 } }}
           />
-        </LayoutItem>
-        <LayoutItem kind="flex" itemKey="b" basis={values.basis} grow={0} shrink={values.shrink}>
+        </FlexLayoutItem>
+        <FlexLayoutItem itemKey="b" basis={values.basis} grow={0} shrink={values.shrink}>
           <Node
             position={[0, 0]}
             text="B"
             style={{ fill: '#dcfce7', stroke: '#16a34a' }}
             layout={{ minimumSize: { width: 48, height: 52 } }}
           />
-        </LayoutItem>
-        <LayoutItem kind="flex" itemKey="c" basis={values.basis} grow={1} shrink={1}>
+        </FlexLayoutItem>
+        <FlexLayoutItem itemKey="c" basis={values.basis} grow={1} shrink={1}>
           <Node
             position={[0, 0]}
             text="C"
             style={{ fill: '#fef3c7', stroke: '#d97706' }}
             layout={{ minimumSize: { width: 48, height: 42 } }}
           />
-        </LayoutItem>
-        <LayoutItem kind="flex" itemKey="d" basis={values.basis} grow={0} shrink={1}>
+        </FlexLayoutItem>
+        <FlexLayoutItem itemKey="d" basis={values.basis} grow={0} shrink={1}>
           <Node
             position={[0, 0]}
             text="D"
             style={{ fill: '#f3e8ff', stroke: '#9333ea' }}
             layout={{ minimumSize: { width: 48, height: 30 } }}
           />
-        </LayoutItem>
+        </FlexLayoutItem>
       </>
     );
     const layoutProps = {

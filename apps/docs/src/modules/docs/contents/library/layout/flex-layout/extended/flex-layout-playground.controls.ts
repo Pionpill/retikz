@@ -111,8 +111,8 @@ export const previewControlContract = {
     'FlexLayout.direction',
     'FlexLayout.wrap',
     'FlexLayout.alignItems',
-    'LayoutItem.basis',
-    'LayoutItem.grow',
-    'LayoutItem.shrink',
+    'FlexLayoutItem.basis',
+    'FlexLayoutItem.grow',
+    'FlexLayoutItem.shrink',
   ],
 } satisfies PreviewControlContract;

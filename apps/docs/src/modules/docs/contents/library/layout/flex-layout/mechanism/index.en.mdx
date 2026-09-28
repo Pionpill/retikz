@@ -5,13 +5,28 @@ description: Understand measurement, allocation, and final placement
 
 Read [basic usage](/library/layout/flex-layout/usage) first. This page explains the result; callers do not invoke the internal stages themselves.
 
-## Why remeasurement does not restart allocation
+## Remeasurement preserves main-axis allocation
 
-Minimum and natural probes establish constraints. The main-axis slots are frozen before exact probes determine cross-axis sizes after text wrapping. Fixed geometry can reject a smaller slot; actual bounds and overflow expose that difference without restarting main-axis allocation. Both rows use the same scale.
+In a horizontal layout, FlexLayout first measures how much width each item needs, then assigns its width. Text may wrap at that width, so the layout measures its height again. This second measurement does not change the widths already assigned.
 
-<ComponentPreview files="allocation-figure" hideCode type="illustration" size="md" />
+If a fixed-size drawing cannot fit inside its assigned area, it may extend beyond the boundary. That does not make the row redistribute its widths. The diagram uses the same scale before and after allocation so the widths are easy to compare.
+
+<ComponentPreview files="allocation-figure" hideCode type="illustration" size="xs" />
 
 The content width is 200, gap is 12, and both bases are 40. Distributing the remaining 108 by grow=1:3 produces 67 and 121. The dotted outline keeps the same container reference. Child geometry receives these slots afterward; allocation and painted size are distinct.
+
+The flow marks the freeze point: `exact` receives the chosen main-axis slots and passes measured heights and baselines to placement. It does not feed back into main-axis allocation.
+
+<ComponentPreview files="measurement-flow" hideCode type="flow" size="xs" />
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Proposals and exact remeasurement',
+      path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts',
+    },
+  ]}
+/>
 
 ## From constraints to placement
 
@@ -19,8 +34,20 @@ FlexLayout first probes each child with `intrinsic.minimum` and `intrinsic.natur
 
 Each line runs bounded grow/shrink independently. An item freezes when it reaches `min` or `max`, and remaining space is redistributed among unfrozen items. Only the selected result is replayed; discarded probes publish no primitives, resources, namespaces, or artifacts.
 
+Keep width 200, gap 12, bases 40, and grow=1:3, but add `max=100` to the second item. Compare the three geometric states: once the first round reaches that limit, the remaining 21 goes to the first item rather than exceeding the second item's maximum.
+
+<ComponentPreview files="freeze-figure" hideCode type="illustration" size="xl" />
+
+The final slots are 88 and 100; together with the gap they fill 200. Shrinking uses the same bounded allocation process, with weights `shrink × unclamped basis` and lower limits. Allocation also ends when no eligible item remains, leaving residual space or overflow for later handling.
+
+<ComponentPreview files="bounded-allocation-flow" hideCode type="flow" size="lg" />
+
 <SourceLinks
   sources={[
+    {
+      label: 'Bounded weighted redistribution',
+      path: 'packages/library/layout/src/composites/internal/distribution.ts',
+    },
     {
       label: 'FlexLayout input contract',
       path: 'packages/library/layout/src/composites/flex-layout/schema.ts',
@@ -47,9 +74,30 @@ A layout container is a Core layout-aware composite. One compilation proceeds th
 4. **Replay selected candidates**: each child replays only its selected candidate. Discarded probes publish no primitives, resources, namespaces, or artifacts.
 5. **Publish results**: Core wraps the Layout value in an occurrence-aware composite artifact and returns it with the final Scene.
 
+The diagram separates candidate selection from publication. A measurement candidate is not committed drawing output: only selected candidates are replayed into the final result. Unused candidates have no publication edge to the Scene.
+
+<ComponentPreview files="transaction-flow" hideCode type="flow" size="md" />
+
 Fixed geometry may refuse a smaller slot, so `slotSize` and real `allocationBounds` remain distinct. Containers do not guess another main-axis distribution after refusal. Determinate undersizing is represented through overflow and visible bounds, while invalid or unsolvable configuration fails loudly.
 
 Nested layouts remain in the same Core compilation. An inner container receives the outer proposal as an ordinary child. Every composite occurrence publishes an artifact with a local key space, without relying on a public id as an instance selector.
+
+Here one outer container contains two inner layouts. Borders show geometric containment; the numbers are reading aids, not serialized occurrence locators. Both inner layouts can use the local key `item`; their distinct occurrences still identify their results.
+
+<ComponentPreview files="occurrence-figure" hideCode type="illustration" size="lg" />
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Selected replay and layout artifacts',
+      path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts',
+    },
+    {
+      label: 'Core composite output boundary',
+      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+    },
+  ]}
+/>
 
 ## Further reading
 
@@ -65,6 +113,8 @@ Nested layouts remain in the same Core compilation. An inner container receives 
       description: 'Combine constraints and inspect results',
       url: '/library/layout/flex-layout/extended',
     },
+
+    { title: 'API reference', description: 'Look up public functions, types, and props', url: '/library/layout/flex-layout/api-reference' },
 
     {
       title: 'Schema reference',

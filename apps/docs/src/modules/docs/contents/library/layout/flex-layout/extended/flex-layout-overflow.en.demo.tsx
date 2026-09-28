@@ -1,4 +1,4 @@
-import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
@@ -6,38 +6,38 @@ import type { FC } from 'react';
 const Demo: FC = () => (
   <Layout>
     <FlexLayout direction="column" gap={18}>
-      <LayoutItem kind="flex" itemKey="visible-row">
+      <FlexLayoutItem itemKey="visible-row">
         <FlexLayout
           size={{ x: { kind: 'fixed', value: 170 }, y: { kind: 'fixed', value: 52 } }}
           padding={8}
           overflow="visible"
         >
-          <LayoutItem kind="flex" itemKey="visible" basis={72} min={72} max={72}>
+          <FlexLayoutItem itemKey="visible" basis={72} min={72} max={72}>
             <Node
               position={[0, 0]}
               text="Visible: fixed geometry"
               style={{ fill: '#dbeafe', stroke: '#2563eb' }}
               layout={{ minimumSize: { width: 220, height: 32 } }}
             />
-          </LayoutItem>
+          </FlexLayoutItem>
         </FlexLayout>
-      </LayoutItem>
-      <LayoutItem kind="flex" itemKey="clip-row">
+      </FlexLayoutItem>
+      <FlexLayoutItem itemKey="clip-row">
         <FlexLayout
           size={{ x: { kind: 'fixed', value: 170 }, y: { kind: 'fixed', value: 52 } }}
           padding={8}
           overflow="clip"
         >
-          <LayoutItem kind="flex" itemKey="clip" basis={72} min={72} max={72}>
+          <FlexLayoutItem itemKey="clip" basis={72} min={72} max={72}>
             <Node
               position={[0, 0]}
               text="Clipped: fixed geometry"
               style={{ fill: '#fee2e2', stroke: '#dc2626' }}
               layout={{ minimumSize: { width: 220, height: 32 } }}
             />
-          </LayoutItem>
+          </FlexLayoutItem>
         </FlexLayout>
-      </LayoutItem>
+      </FlexLayoutItem>
     </FlexLayout>
   </Layout>
 );

@@ -18,13 +18,13 @@ const AllocationFigure: FC<AllocationFigureProps> = props => {
       <Rectangle corner1={[52, 0]} width={40} height={24} style={{ stroke: 'darkorange' }} />
       <Node style={{ stroke: 'none', fill: 'none', font: { size: 14 } }} position={[20, 12]} text="40" />
       <Node style={{ stroke: 'none', fill: 'none', font: { size: 14 } }} position={[72, 12]} text="40" />
-      <Node style={{ stroke: 'none', fill: 'none', font: { size: 14 } }} position={[100, 60]} text={text.after} />
-      <Rectangle corner1={[0, 90]} width={67} height={24} style={{ stroke: 'dodgerblue' }} />
-      <Rectangle corner1={[79, 90]} width={121} height={24} style={{ stroke: 'darkorange' }} />
-      <Node style={{ stroke: 'none', fill: 'none', font: { size: 14 } }} position={[33.5, 102]} text="67" />
-      <Node style={{ stroke: 'none', fill: 'none', font: { size: 14 } }} position={[139.5, 102]} text="121" />
+      <Node style={{ stroke: 'none', fill: 'none', font: { size: 14 } }} position={[380, -30]} text={text.after} />
+      <Rectangle corner1={[280, 0]} width={67} height={24} style={{ stroke: 'dodgerblue' }} />
+      <Rectangle corner1={[359, 0]} width={121} height={24} style={{ stroke: 'darkorange' }} />
+      <Node style={{ stroke: 'none', fill: 'none', font: { size: 14 } }} position={[313.5, 12]} text="67" />
+      <Node style={{ stroke: 'none', fill: 'none', font: { size: 14 } }} position={[419.5, 12]} text="121" />
       <Rectangle corner1={[0, -4]} width={200} height={32} style={{ stroke: 'gray', dashPattern: [1, 4] }} />
-      <Rectangle corner1={[0, 86]} width={200} height={32} style={{ stroke: 'gray', dashPattern: [1, 4] }} />
+      <Rectangle corner1={[280, -4]} width={200} height={32} style={{ stroke: 'gray', dashPattern: [1, 4] }} />
     </Layout>
   );
 };
