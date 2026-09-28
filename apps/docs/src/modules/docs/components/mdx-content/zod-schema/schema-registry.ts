@@ -20,6 +20,14 @@ import {
   BubbleSizeEncodingSchema,
   BubbleOpacityEncodingSchema,
   BubbleShapeEncodingSchema,
+  ConnectedScatterChartSchema,
+  ConnectedScatterChartRecipeSchema,
+  ConnectedScatterChartEncodingsSchema,
+  ConnectedScatterChartPropertiesSchema,
+  ConnectedScatterChartMarkSchema,
+  ConnectedScatterPointPropertiesSchema,
+  ConnectedScatterPathPropertiesSchema,
+  ConnectedScatterMarkEncodingsSchema,
   RegressionChartSchema,
   RegressionChartRecipeSchema,
   RegressionChartEncodingsSchema,
@@ -150,6 +158,67 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   BubbleSizeEncodingSchema: { schema: BubbleSizeEncodingSchema, label: 'BubbleSizeEncodingSchema' },
   BubbleOpacityEncodingSchema: { schema: BubbleOpacityEncodingSchema, label: 'BubbleOpacityEncodingSchema' },
   BubbleShapeEncodingSchema: { schema: BubbleShapeEncodingSchema, label: 'BubbleShapeEncodingSchema' },
+  ConnectedScatterChartSchema: {
+    schema: ConnectedScatterChartSchema,
+    label: 'ConnectedScatterChartSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartschema',
+  },
+  ConnectedScatterChartRecipeSchema: {
+    schema: ConnectedScatterChartRecipeSchema,
+    label: 'ConnectedScatterChartRecipeSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartrecipeschema',
+  },
+  ConnectedScatterChartEncodingsSchema: {
+    schema: ConnectedScatterChartEncodingsSchema,
+    label: 'ConnectedScatterChartEncodingsSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartencodingsschema',
+  },
+  'ConnectedScatterChartEncodingsSchema.shape.x': {
+    schema: ConnectedScatterChartEncodingsSchema.shape.x,
+    label: 'ConnectedScatterChartEncodingsSchema.shape.x',
+  },
+  'ConnectedScatterChartEncodingsSchema.shape.y': {
+    schema: ConnectedScatterChartEncodingsSchema.shape.y,
+    label: 'ConnectedScatterChartEncodingsSchema.shape.y',
+  },
+  'ConnectedScatterChartEncodingsSchema.shape.order': {
+    schema: ConnectedScatterChartEncodingsSchema.shape.order,
+    label: 'ConnectedScatterChartEncodingsSchema.shape.order',
+  },
+  'ConnectedScatterChartEncodingsSchema.shape.series': {
+    schema: ConnectedScatterChartEncodingsSchema.shape.series.unwrap(),
+    label: 'ConnectedScatterChartEncodingsSchema.shape.series',
+  },
+  ConnectedScatterChartPropertiesSchema: {
+    schema: ConnectedScatterChartPropertiesSchema,
+    label: 'ConnectedScatterChartPropertiesSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartpropertiesschema',
+  },
+  ConnectedScatterChartMarkSchema: {
+    schema: ConnectedScatterChartMarkSchema,
+    label: 'ConnectedScatterChartMarkSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartmarkschema',
+  },
+  ConnectedScatterPointPropertiesSchema: {
+    schema: ConnectedScatterPointPropertiesSchema,
+    label: 'ConnectedScatterPointPropertiesSchema',
+  },
+  ConnectedScatterPathPropertiesSchema: {
+    schema: ConnectedScatterPathPropertiesSchema,
+    label: 'ConnectedScatterPathPropertiesSchema',
+  },
+  ConnectedScatterMarkEncodingsSchema: {
+    schema: ConnectedScatterMarkEncodingsSchema,
+    label: 'ConnectedScatterMarkEncodingsSchema',
+  },
+  ConnectedScatterMarkPropertiesSchema: {
+    schema: ConnectedScatterChartMarkSchema.shape.properties.unwrap(),
+    label: 'ConnectedScatterMarkPropertiesSchema',
+  },
+  'ConnectedScatterChartSchema.shape.data': {
+    schema: ConnectedScatterChartSchema.shape.data,
+    label: 'ConnectedScatterChartSchema.shape.data',
+  },
   RegressionChartSchema: {
     schema: RegressionChartSchema,
     label: 'RegressionChartSchema',

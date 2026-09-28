@@ -238,17 +238,11 @@ export const vizSection: Array<Section> = [
             label: 'viz.chartConnectedScatter',
             difficulty: DocDifficulty.Beginner,
             meta: {
-              pageType: 'concept',
+              pageType: 'component',
               audience: 'user',
-              capability: 'showcase.connected-scatter',
+              capability: 'chart.connected-scatter',
               sourceOfTruth: 'docs',
-              layout: 'showcase',
-              showcase: {
-                family: 'scatter-points',
-                role: 'primary',
-                preview: 'connected-scatter-minimal',
-                order: 40,
-              },
+              layout: 'article',
             },
           },
           {

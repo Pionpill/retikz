@@ -285,7 +285,7 @@
     "chartScatterPoints": "点图",
     "chartScatter": "scatter · 散点图",
     "chartBubble": "bubble · 气泡图",
-    "chartConnectedScatter": "连接散点图",
+    "chartConnectedScatter": "connected · 连接散点图",
     "chartRangedDot": "范围点图",
     "chartStrip": "条带图",
     "chartRegression": "regression · 回归图",
