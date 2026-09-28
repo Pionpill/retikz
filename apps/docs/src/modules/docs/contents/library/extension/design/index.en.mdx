@@ -1,0 +1,43 @@
+---
+title: Design Philosophy
+description: Understand how Extension uses Kernel's customization protocol to offer familiar drawing elements on demand.
+---
+
+The same node can be drawn as a rectangle or a cross, and the same path can use different arrowheads. Extension supplies ready-made drawing definitions for these common variations; authors choose only what the current drawing needs.
+
+## Use the existing extension protocol
+
+Kernel provides a public protocol for defining and using custom drawing behavior. A drawing definition is a rule associated with a name. Extension uses this protocol to implement official node shapes, arrows, clips, and ribbons. These definitions are loaded in the same way as definitions written by an author.
+
+| Existing drawing object | What Extension offers               | What the object remains |
+| ----------------------- | ----------------------------------- | ----------------------- |
+| Node                    | Cross, cylinder, and other outlines | A node                  |
+| Path                    | Diamond and other arrowheads        | A path                  |
+| Drawing content         | Circular, path, and other clips     | The original content    |
+| Path                    | A ribbon with width                 | A path                  |
+
+These choices add geometry and drawing options without assigning a new business role to the object. A cross-shaped node is still a Node; whether it represents a hospital is up to the domain using the drawing.
+
+## Load only the definitions a drawing needs
+
+Installing or importing Extension does not enable every capability automatically. The author selects a definition and passes it into the current drawing's configuration. In the quick start, for example, `shape="cross"` selects the cross; after `CrossShapeDefinition` is supplied, that name can find its drawing rule.
+
+Loading definitions explicitly lets different drawings choose different shapes, arrows, and clips. It also keeps official and custom implementations on the same usage path. Drawing authors can use these elements directly, while higher-level components can reuse them across the Retikz ecosystem.
+
+## How it differs from Standard
+
+Extension enriches **how existing primitives can be drawn**. Standard packages **general drawing objects you can use directly**. Choose Extension to give a Node another outline; choose Standard to declare a complete object such as List, Surface, or Legend. Both reuse the drawing foundation rather than creating another scene or renderer.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Node shapes', description: 'Choose more outlines for Nodes', url: '/library/extension/shape' },
+    { title: 'Arrows', description: 'Choose path endpoint styles', url: '/library/extension/arrow' },
+    {
+      title: 'Capability loading',
+      description: 'Combine and enable definitions as needed',
+      url: '/library/extension/capability-loading',
+    },
+  ]}
+/>

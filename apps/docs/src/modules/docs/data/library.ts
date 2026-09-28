@@ -19,6 +19,12 @@ export const librarySection: Array<Section> = [
         difficulty: 'beginner',
       },
       {
+        id: 'design',
+        label: 'library.design',
+        difficulty: 'beginner',
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
         id: 'changelog',
         label: 'library.changelog',
         children: [
@@ -129,6 +135,12 @@ export const librarySection: Array<Section> = [
       { id: 'introduction', label: 'library.introduction', difficulty: 'beginner' },
       { id: 'get-start', label: 'library.getStart', difficulty: 'beginner' },
       {
+        id: 'design',
+        label: 'library.design',
+        difficulty: 'beginner',
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
         id: 'changelog',
         label: 'library.changelog',
         children: [{ id: 'v0-1', label: 'library.changelogV01' }],
@@ -223,6 +235,12 @@ export const librarySection: Array<Section> = [
         id: 'get-start',
         label: 'library.getStart',
         difficulty: 'beginner',
+      },
+      {
+        id: 'design',
+        label: 'library.design',
+        difficulty: 'beginner',
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
       },
       {
         id: 'changelog',

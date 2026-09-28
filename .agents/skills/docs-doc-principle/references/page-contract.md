@@ -11,7 +11,8 @@
 | 更新日志                           | docs-doc-entry     | 不设              | 按版本查阅实际变更                             |
 | 基础、专题、扩展用法：调用现有能力 | docs-doc-usage     | beginner（入门）  | 给最小结果与可复制步骤，就近解释调用约束       |
 | 基础概念                           | docs-doc-concept   | beginner（入门）  | 先场景后术语，建立调用前必需模型               |
-| 核心概念、设计理念                 | docs-doc-concept   | advanced（进阶）  | 解释公共约束、抽象关系与设计取舍               |
+| 设计理念：包职责导览               | docs-doc-concept   | beginner（入门）  | 说明包解决什么问题、复用什么能力及职责边界     |
+| 核心概念、设计理念：抽象取舍       | docs-doc-concept   | advanced（进阶）  | 解释公共约束、抽象关系与设计取舍               |
 | 自定义用法：定义并注册新能力       | docs-doc-extension | advanced（进阶）  | 在已有用法上完成定义、注入、引用与验证         |
 | API 参考、Schema 参考              | docs-doc-reference | 不设              | 完整、准确、可扫描地查询契约，不穿插入门教程   |
 | 进阶专题、实现原理、运行原理       | docs-doc-mechanism | internals（底层） | 明确前提，解释执行、数据变化、边界与源码定位   |
