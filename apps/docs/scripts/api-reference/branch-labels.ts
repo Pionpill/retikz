@@ -88,6 +88,20 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],
+  '@retikz/graph#BlockRowCreateOptions': [
+    {
+      value: 'text',
+      field: 'content',
+      type: 'BlockRowCreateOptions["content"]',
+      label: { zh: '文本内容', en: 'Text content' },
+    },
+    {
+      value: 'children',
+      field: 'children',
+      type: 'Array<IRChild>',
+      label: { zh: '任意子元素', en: 'Arbitrary children' },
+    },
+  ],
   '@retikz/tex#MathJaxLowerTexState': [
     { value: 'loading', field: 'status', type: "'loading'", label: { zh: '初始化中', en: 'Loading' } },
     { value: 'ready', field: 'status', type: "'ready'", label: { zh: '就绪', en: 'Ready' } },

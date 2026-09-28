@@ -11,33 +11,47 @@ import {
 } from '../src/modules/docs/components/component-preview/registry';
 import { buildPreviewIR } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
-import { previewControlContract as blockBuiltinContract } from '../src/modules/docs/contents/schematic/graph/block/basic/block-builtin.controls';
-import {
-  BlockBuiltinPreview as BlockBuiltinPreviewEn,
-  previewControls as blockBuiltinControlsEn,
-  previewSource as blockBuiltinPreviewSourceEn,
-} from '../src/modules/docs/contents/schematic/graph/block/basic/block-builtin.en.demo';
 import {
   BlockBuiltinPreview,
   previewControls as blockBuiltinControls,
   previewSource as blockBuiltinPreviewSource,
-} from '../src/modules/docs/contents/schematic/graph/block/basic/block-builtin.zh.demo';
-import { previewSource as blockConnectionPreviewSourceEn } from '../src/modules/docs/contents/schematic/graph/block/basic/block-connection.en.demo';
-import { previewSource as blockConnectionPreviewSource } from '../src/modules/docs/contents/schematic/graph/block/basic/block-connection.zh.demo';
-import * as blockCustomPreviewModuleEn from '../src/modules/docs/contents/schematic/graph/block/basic/block-custom.en.demo';
-import * as blockCustomPreviewModule from '../src/modules/docs/contents/schematic/graph/block/basic/block-custom.zh.demo';
-import { previewControlContract as blockStyleContract } from '../src/modules/docs/contents/schematic/graph/block/basic/block-style.controls';
-import { previewControlContract as blockStyleContractEn } from '../src/modules/docs/contents/schematic/graph/block/basic/block-style.en.controls';
+} from '../src/modules/docs/contents/schematic/graph/block/usage/block-builtin';
 import {
-  BlockStylePreview as BlockStylePreviewEn,
-  previewSource as blockStylePreviewSourceEn,
-} from '../src/modules/docs/contents/schematic/graph/block/basic/block-style.en.demo';
+  previewControlContract as blockBuiltinContract,
+  createPreviewControlContract as createBlockBuiltinContract,
+} from '../src/modules/docs/contents/schematic/graph/block/usage/block-builtin.controls';
+import BlockConnection, {
+  previewSource as blockConnectionPreviewSource,
+} from '../src/modules/docs/contents/schematic/graph/block/usage/block-connection';
+import * as blockCustomPreviewModule from '../src/modules/docs/contents/schematic/graph/block/usage/block-custom';
+import { blockCustomCanonicalValues } from '../src/modules/docs/contents/schematic/graph/block/usage/block-custom.controls';
 import {
   BlockStylePreview,
   previewSource as blockStylePreviewSource,
-} from '../src/modules/docs/contents/schematic/graph/block/basic/block-style.zh.demo';
+} from '../src/modules/docs/contents/schematic/graph/block/usage/block-style';
+import { previewControlContract as blockStyleContract } from '../src/modules/docs/contents/schematic/graph/block/usage/block-style.controls';
+import { createPreviewControlContract as createBlockStyleContract } from '../src/modules/docs/contents/schematic/graph/block/usage/block-style.controls';
 import { createGraphPreviewSource } from '../src/modules/docs/preview';
 
+const BlockBuiltinPreviewEn = (values: Parameters<typeof BlockBuiltinPreview>[0]) => BlockBuiltinPreview(values, 'en');
+const BlockStylePreviewEn = (values: Parameters<typeof BlockStylePreview>[0]) => BlockStylePreview(values, 'en');
+const blockBuiltinControlsEn = createBlockBuiltinContract('en').controls;
+const blockStyleContractEn = createBlockStyleContract('en');
+const blockBuiltinPreviewSourceEn = createGraphPreviewSource(() =>
+  BlockBuiltinPreviewEn(blockBuiltinContract.canonicalValues),
+);
+const blockStylePreviewSourceEn = createGraphPreviewSource(() =>
+  BlockStylePreviewEn(blockStyleContract.canonicalValues),
+);
+const blockConnectionPreviewSourceEn = createGraphPreviewSource(() => BlockConnection({ lang: 'en' }));
+const blockCustomPreviewModuleEn = {
+  ...blockCustomPreviewModule,
+  previewSource: createGraphPreviewSource(() =>
+    blockCustomPreviewModule.BlockCustomPreview(blockCustomCanonicalValues, 'en'),
+  ),
+  BlockCustomPreview: (values: Parameters<typeof blockCustomPreviewModule.BlockCustomPreview>[0]) =>
+    blockCustomPreviewModule.BlockCustomPreview(values, 'en'),
+};
 const { previewSource: blockCustomPreviewSourceEn } = blockCustomPreviewModuleEn;
 const { previewSource: blockCustomPreviewSource } = blockCustomPreviewModule;
 
@@ -140,7 +154,7 @@ describe('Graph Block documentation', () => {
 
   it.each(['zh', 'en'] as const)('%s exposes a text control for custom Node content', async lang => {
     const result = await loadPreviewResources({
-      segments: ['schematic', 'graph', 'block', 'basic'],
+      segments: ['schematic', 'graph', 'block', 'usage'],
       name: 'block-custom',
       lang,
       controlName: null,

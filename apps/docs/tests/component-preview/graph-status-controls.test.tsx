@@ -4,10 +4,11 @@ import { describe, expect, it } from 'vitest';
 import type { PreviewControlContract } from '@/modules/docs/components/component-preview';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
-import { relationStatusOf } from '@/modules/docs/contents/schematic/graph/relation/basic/relation-role-controls';
+import { relationStatusOf } from '@/modules/docs/contents/schematic/graph/relation/usage/relation-role-controls';
 
 type ControlModule = Readonly<{
   previewControlContract: PreviewControlContract;
+  createPreviewControlContract: (lang: 'zh' | 'en') => PreviewControlContract;
 }>;
 
 type DemoModule = Readonly<{
@@ -16,55 +17,45 @@ type DemoModule = Readonly<{
 }>;
 
 const relationRoleControlPaths = [
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-association.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-dependency.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-generalization.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-flow.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-influence.controls.ts',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-association.controls.ts',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-dependency.controls.ts',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-generalization.controls.ts',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-flow.controls.ts',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-influence.controls.ts',
 ] as const;
 
 const styleControlPaths = [
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-style.controls.ts',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-style.controls.ts',
 ] as const;
 
 const relationRoleDemoPaths = [
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-association.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-dependency.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-generalization.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-flow.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-influence.zh.demo.tsx',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-association.tsx',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-dependency.tsx',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-generalization.tsx',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-flow.tsx',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-influence.tsx',
 ] as const;
 
 const roleControls: Partial<Record<string, ControlModule>> = {
   ...import.meta.glob<ControlModule>(
-    '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-*.controls.ts',
-    { eager: true },
-  ),
-};
-
-const englishRoleControls: Partial<Record<string, ControlModule>> = {
-  ...import.meta.glob<ControlModule>(
-    '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-*.en.controls.ts',
+    '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-*.controls.ts',
     { eager: true },
   ),
 };
 
 const roleDemos: Partial<Record<string, DemoModule>> = {
-  ...import.meta.glob<DemoModule>(
-    '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-*.zh.demo.tsx',
-    { eager: true },
-  ),
+  ...import.meta.glob<DemoModule>('../../src/modules/docs/contents/schematic/graph/relation/usage/relation-*.tsx', {
+    eager: true,
+  }),
 };
 
 const expectedStatusValues = ['', 'error', 'success', 'warning', 'disabled'];
-
-const englishPathOf = (path: string): string => path.replace('.controls.ts', '.en.controls.ts');
 
 describe('Graph semantic status controls', () => {
   it('adds an unstyled option and every closed status to every bilingual Relation playground', () => {
     for (const path of [...relationRoleControlPaths, ...styleControlPaths]) {
       const controls = roleControls[path];
-      const englishControls = englishRoleControls[englishPathOf(path)];
+      const englishControls = controls?.createPreviewControlContract('en');
 
       expect(controls).toBeDefined();
       expect(englishControls).toBeDefined();
@@ -76,10 +67,8 @@ describe('Graph semantic status controls', () => {
       expect(status).toMatchObject({ kind: 'select', defaultValue: '' });
       expect(status?.kind === 'select' ? status.options.map(option => option.value) : []).toEqual(expectedStatusValues);
       expect(controls.previewControlContract.canonicalValues).toMatchObject({ status: '' });
-      expect(englishControls.previewControlContract.canonicalValues).toEqual(
-        controls.previewControlContract.canonicalValues,
-      );
-      expect(englishControls.previewControlContract.relatedApis).toEqual(controls.previewControlContract.relatedApis);
+      expect(englishControls.canonicalValues).toEqual(controls.previewControlContract.canonicalValues);
+      expect(englishControls.relatedApis).toEqual(controls.previewControlContract.relatedApis);
     }
   });
 

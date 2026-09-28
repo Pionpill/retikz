@@ -1,18 +1,28 @@
 ---
 title: Relation
-description: Store general Core endpoints, relation semantics, labels, and an optional route in one record.
+description: Connect named objects to express association, dependency, flow, generalization, or influence.
 ---
 
-Relation expresses who is related to whom. It uses Core NodeTarget to reference a Node, Coordinate, Scope, or target published by an upper composite, and stores source/target, role, direction, and optional kind/predicate. The route only describes how to draw the relationship and independently lowers to an ordinary Core Path. Graph is optional context rather than a member container. Numeric stroke, label foreground, and marker color derive from the final Relation master; marker fill then derives from the resolved marker color
-
-`labels[].text` directly reuses Core GeometryLabel TextBlock: `\n` in a string or an array of lines both form one multi-line relation label. Graph adds no text or measurement model; the final Path uses the whole block's visual bounds for placement and any optional stroke gap.
+Relation describes a relationship between two objects. Reference endpoints with `source` and `target`, choose a `role` for its semantics and default markers, then add labels, direction, or a route as needed. Endpoints may be Entities, Core Nodes, Coordinates, or named targets published by other components.
 
 ## Responsibilities
 
-| Topic       | Responsibility                                      | Reach for it when                  |
-| ----------- | --------------------------------------------------- | ---------------------------------- |
-| Basic usage | Endpoints, direction, labels, and route authoring   | Connecting any named targets       |
-| Extensions  | Custom roles, kinds, predicates, and marker recipes | Building domain relation semantics |
+| Capability             | Responsibility                                                                            | When to use it                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Endpoint references    | Preserve source and target even when markers reverse                                      | Connect existing named objects                           |
+| Relationship semantics | role, kind, and predicate describe the relation; direction selects an allowed orientation | Express dependency, inheritance, or domain relationships |
+| Paths and labels       | Connect directly by default; accept explicit routes and labels                            | Adjust geometry or explain a relationship                |
+| Appearance             | Inherit theme, status, and Graph rules with instance overrides                            | Coordinate a diagram's style or emphasize one relation   |
+
+<ComponentPreview files="relation-minimal" size="xs" hideCode />
+
+The two Entities provide named endpoints. The Relation uses `flow` to express transmission from sender to receiver. Objects determine their positions; the relation connects them.
+
+## Boundaries
+
+Relation does not create endpoints, lay out objects, or route around obstacles. Use Core Path for free-form geometry, or [FlowDiagram](/schematic/diagram/flow) for automatic flow-node placement. Graph supplies optional shared definitions and appearance context.
+
+`source` / `target`, `direction`, and `route` describe endpoint identity, semantic direction, and geometry respectively. A custom route does not rewrite endpoints, and reversing markers does not exchange object identities.
 
 ## Chapters
 
@@ -20,13 +30,28 @@ Relation expresses who is related to whom. It uses Core NodeTarget to reference 
   items={[
     {
       title: 'Basic usage',
-      description: 'Stable endpoints, direction, and a direct route',
-      url: '/schematic/graph/relation/basic',
+      description: 'Connect endpoints and choose roles, directions, labels, and styles',
+      url: '/schematic/graph/relation/usage',
     },
     {
-      title: 'Extensions',
-      description: 'Relation Definitions and registry consumption',
-      url: '/schematic/graph/relation/extension',
+      title: 'Custom usage',
+      description: 'Define and inject roles, kinds, and predicates',
+      url: '/schematic/graph/relation/custom',
+    },
+    {
+      title: 'Implementation',
+      description: 'Semantic validation, structure, and Core Path lowering',
+      url: '/schematic/graph/relation/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Persisted relation fields and constraints',
+      url: '/schematic/graph/relation/schema-reference',
+    },
+    {
+      title: 'API reference',
+      description: 'Components, types, factories, and custom definitions',
+      url: '/schematic/graph/relation/api-reference',
     },
   ]}
 />

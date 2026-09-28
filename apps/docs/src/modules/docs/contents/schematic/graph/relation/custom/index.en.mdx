@@ -1,0 +1,111 @@
+---
+title: Custom usage
+description: Define and inject relationship roles, kinds, and parameterized domain predicates.
+---
+
+Built-in and custom Relation semantics use the same definition, registration, and drawing path. This page assumes the endpoints and directions covered in [Basic usage](/schematic/graph/relation/usage).
+
+Like Entity, Relation has no built-in kinds. Define each kind and register it through `relationKinds` in the provider assembly that consumes it; calling `defineRelationKind` alone does not register it.
+
+## Scope
+
+Register a definition when several relations share stable semantics, direction constraints, or marker structure. Configure an instance for a one-off path, label, or color; use Graph rules to change appearance based on existing semantics. Definitions do not perform layout, obstacle avoidance, or business-condition evaluation.
+
+<ComponentPreview
+  files="relation-definition"
+  size="xs"
+  caption="The feedback kind supplies dashes. The priority predicate stores urgent; a Graph rule displays urgent feedback as a thick red line."
+/>
+
+The example extends `flow`: kind supplies the dashed structure, the predicate validates parameters, and an author rule consumes those parameters to choose appearance. Registering a predicate alone neither changes colors nor executes a business action.
+
+## Define capabilities
+
+| Entry                     | Contract                                                                             | Constraint                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `defineRelationRole`      | role, description, defaultDirection, allowedDirections, directions                   | Every allowed direction needs a complete sourceMarker / targetMarker / dashPattern recipe |
+| `defineRelationKind`      | Globally unique kind, owning role, optional direction constraints and sparse recipes | May only narrow the role's directions; omitted fields inherit                             |
+| `defineRelationPredicate` | name, role, optional kinds, paramsSchema, optional resolveStructure                  | Resolver receives parsed parameters and returns a non-empty sparse structure override     |
+
+A role recipe uses `{ shape: 'registered Arrow key' }` or `false` for each marker, and a number array or `false` for dashPattern. `false` explicitly removes a marker or dashes; it does not mean inheritance. Kind and predicate overrides only need fields they change.
+
+```ts
+import { defineRelationRole } from '@retikz/graph';
+
+const signalRole = defineRelationRole({
+  role: 'domain.signal',
+  description: 'One-way domain signal',
+  defaultDirection: 'forward',
+  allowedDirections: ['forward'],
+  directions: {
+    forward: { sourceMarker: false, targetMarker: { shape: 'stealth' }, dashPattern: false },
+  },
+});
+```
+
+`define*` returns a definition ready for assembly; it does not immediately register or validate the whole registry. Inject custom keys through the host before referencing them. Marker shapes use Core Arrow providers, with no separate Graph marker registry.
+
+## Inject and use
+
+In React, pass `relationRoles`, `relationKinds`, and `relationPredicates` to `<Graph>` and reference their keys from nested Relations. Vanilla uses the same options on `graph({ ... })`, referenced by `relation({ ... })`. The example source shows definition → Graph injection → Relation reference → rule consumption end to end.
+
+For direct IR compilation, pass definitions to `createGraphDefinitions(options)` and install its composite extensions on the host. Provider-based hosts use `createGraphProviders(options)`. Functions, schemas, and resolvers belong to runtime assembly and cannot be persisted in IR. IR stores only role, kind, and predicate names with JSON parameters.
+
+## Errors and limitations
+
+- Registry assembly rejects duplicate keys, replacement of built-ins, unknown parent roles, and conflicting role / kind ownership.
+- A role's default direction must be allowed and every allowed direction needs a complete recipe. A kind may only narrow directions, and its effective default must remain allowed.
+- Predicates may restrict kinds. Parameter parse failures prevent `resolveStructure` from running. Callback exceptions or invalid overrides become Graph errors with the cause preserved.
+- Register custom Arrow shapes in the Core host. Missing providers do not fall back to another shape.
+- Custom structure does not rewrite source / target or route. Omitted routes still connect endpoints directly.
+
+## Related props
+
+[API reference](/schematic/graph/relation/api-reference) contains the complete public declarations.
+
+These members assemble relationship semantics.
+
+<ComponentProps
+  items={[
+    {
+      name: 'Graph.relationRoles',
+      kind: 'property',
+      type: 'ReadonlyArray<RelationRoleDefinition>',
+      description:
+        'Each entry supplies role, description, defaultDirection, allowedDirections, and directions. Each recipe contains sourceMarker, targetMarker, and dashPattern.',
+    },
+    {
+      name: 'Graph.relationKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<RelationKindDefinition>',
+      description:
+        'Each entry supplies kind, role, description and optional defaultDirection, allowedDirections, directions. A kind is globally unique within the registry.',
+    },
+    {
+      name: 'Graph.relationPredicates',
+      kind: 'property',
+      type: 'ReadonlyArray<RelationPredicateDefinition>',
+      description:
+        'Construct with defineRelationPredicate: name, role, paramsSchema, and optional kinds / resolveStructure.',
+    },
+    {
+      name: 'Relation.predicate',
+      kind: 'property',
+      type: '{ name: string; params?: JsonObject }',
+      description:
+        'References an injected predicate. params must pass its schema. Omitting the kinds restriction allows every kind of that role.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Author endpoints, directions, labels, and routes',
+      url: '/schematic/graph/relation/usage',
+    },
+  ]}
+/>

@@ -5,7 +5,7 @@ description: Define and register Entity roles, subtypes and parameterized semant
 
 Define and register a Definition when several entities share a stable business meaning. For a one-off color change, use style from [Basic usage](/schematic/graph/entity/usage). Attach incidental data with `meta` rather than creating a semantic capability for every field.
 
-## Choosing an extension point
+## Scope
 
 | Entry point             | Responsibility                                                                    |
 | ----------------------- | --------------------------------------------------------------------------------- |
@@ -15,13 +15,13 @@ Define and register a Definition when several entities share a stable business m
 
 Role owns the outline and padding; kind and predicate do not duplicate shapes. Rules in `graphRules` provide appearance by matching semantics, and instance style can still override them. Definitions can contain runtime schemas, while persistent Entity records store keys and JSON parameters only.
 
-## Defining a service gateway
+## Minimal example
 
 This example defines a service role, a service.gateway subtype and a service.availability predicate. Changing availability changes the color; enabling critical service thickens the outline.
 
 <ComponentPreview files={['entity-definition', 'entity-definition.data']} size="sm" />
 
-## Registering and using definitions
+## Define the capability
 
 `defineEntityPredicate` declares a registrable, parameterized Entity meaning. `name` is the key referenced by an Entity; `role` and optional `kinds` limit where it applies, while `paramsSchema` validates the JSON parameters. It only creates a Definition: it neither registers itself nor changes appearance. After passing the Definition to Graph's `entityPredicates`, an Entity can reference it, and matching `graphRules` determine appearance from its name and parameters.
 
@@ -77,6 +77,8 @@ export const availabilityRules: Array<IRGraphRule> = [
 ```
 
 The parameter schema requires status to be available, degraded or offline, and critical to be boolean. The four rules are fixed data: three match status and the last matches critical, so color and outline weight can apply together. The controls in the preview above change only Entity predicate.params, not colors directly.
+
+## Inject and use
 
 In React, declare definitions on Graph only. Entities inside it share those registrations and rules. Even for one Entity, pass custom definitions to Graph; a custom key alone is not registration.
 

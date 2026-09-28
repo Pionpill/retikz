@@ -5,6 +5,8 @@ description: 追踪 Entity 如何解析语义、合并外观，并把角色结�
 
 Entity 的语义决定“如何解释对象”，而不是增加一套独立渲染器。相同的内置或自定义 role 都经过语义解析、外观合并，再转换成可绘制的 Node。本页解释为什么未注册 key 会报错，以及为什么显式样式会覆盖默认值。
 
+先阅读[基础用法](/schematic/graph/entity/usage)；下文的网关示例来自[自定义用法](/schematic/graph/entity/custom)。
+
 ## Entity 分阶段转换为 Node
 
 下面只画 Entity 自身的处理顺序。输入是 Source 中的语义 key 与实例字段；Definition 和当前 Graph/主题上下文由每个阶段按需读取，不写回持久化数据。
@@ -21,6 +23,13 @@ Entity 的语义决定“如何解释对象”，而不是增加一套独立渲�
 | `lowerEntity`             | `type: 'node', shape: 'rectangle', layout: { …, padding: { x: 14, y: 10 }, minimumSize: { width: 110, height: 46 } }` |
 
 表格只摘录发生变化的字段，不是完整中间对象，也不是供用户编写的另一种 IR。
+
+<SourceLinks
+  sources={[
+    { label: '语义与外观解析', path: 'packages/schematic/graph/src/resolve/entity/resolve.ts' },
+    { label: '角色结构下沉为 Node', path: 'packages/schematic/graph/src/pipeline/entity/lower.ts' },
+  ]}
+/>
 
 ## 语义解析依赖已注册定义
 

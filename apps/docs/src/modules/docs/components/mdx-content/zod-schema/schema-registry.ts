@@ -813,30 +813,81 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: GraphIR.GraphSchema,
     label: 'Graph',
   },
+  GroupCaptionSchema: { schema: GraphIR.GroupCaptionSchema, label: 'GroupCaption', url: '/schematic/graph/group' },
+  GroupCaptionTextSchema: {
+    schema: GraphIR.GroupCaptionTextSchema,
+    label: 'GroupCaptionText',
+    url: '/schematic/graph/group',
+  },
+  GroupCaptionSideSchema: {
+    schema: GraphIR.GroupCaptionSideSchema,
+    label: 'GroupCaptionSide',
+    url: '/schematic/graph/group',
+  },
+  GroupCaptionDirectionSchema: {
+    schema: GraphIR.GroupCaptionDirectionSchema,
+    label: 'GroupCaptionDirection',
+    url: '/schematic/graph/group',
+  },
   GroupSchema: {
     schema: GraphIR.GroupSchema,
     label: 'Group',
     url: '/schematic/graph/group',
   },
+  BlockTextSchema: {
+    schema: GraphIR.BlockTextSchema,
+    label: 'BlockText',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeBlockPropsSchema: {
+    schema: GraphIR.CodeBlockPropsSchema,
+    label: 'CodeBlockProps',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeParameterSchema: {
+    schema: GraphIR.CodeParameterSchema,
+    label: 'CodeParameter',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeSignatureSchema: {
+    schema: GraphIR.CodeSignatureSchema,
+    label: 'CodeSignature',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodePropertySchema: {
+    schema: GraphIR.CodePropertySchema,
+    label: 'CodeProperty',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeMethodSchema: {
+    schema: GraphIR.CodeMethodSchema,
+    label: 'CodeMethod',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeLogicSchema: {
+    schema: GraphIR.CodeLogicSchema,
+    label: 'CodeLogic',
+    url: '/schematic/graph/block/schema-reference',
+  },
   BlockSchema: {
     schema: GraphIR.BlockSchema,
     label: 'Block',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockHeaderSchema: {
     schema: GraphIR.BlockHeaderSchema,
     label: 'BlockHeader',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockSectionSchema: {
     schema: GraphIR.BlockSectionSchema,
     label: 'BlockSection',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockRowSchema: {
     schema: GraphIR.BlockRowSchema,
     label: 'BlockRow',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
@@ -851,6 +902,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
+    url: '/schematic/graph/relation/schema-reference',
+  },
+  RelationRoleSchema: {
+    schema: GraphIR.RelationRoleSchema,
+    label: 'RelationRole',
+    url: '/schematic/graph/relation/schema-reference#relationroleschema',
+  },
+  RelationKindSchema: {
+    schema: GraphIR.RelationKindSchema,
+    label: 'RelationKind',
+    url: '/schematic/graph/relation/schema-reference#relationkindschema',
+  },
+  RelationDirectionSchema: {
+    schema: GraphIR.RelationDirectionSchema,
+    label: 'RelationDirection',
+    url: '/schematic/graph/relation/schema-reference#relationdirectionschema',
+  },
+  GraphRelationMarkerAppearanceSchema: {
+    schema: GraphIR.GraphRelationMarkerAppearanceSchema,
+    label: 'GraphRelationMarkerAppearance',
+    url: '/schematic/graph/relation/schema-reference#graphrelationmarkerappearanceschema',
   },
   GraphPredicateRefSchema: {
     schema: GraphIR.GraphPredicateRefSchema,

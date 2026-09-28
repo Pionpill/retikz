@@ -2,6 +2,39 @@ import { translateNodeApiReference } from './node.en';
 
 /** 经审阅的 Entity API 英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '传给 GraphDefinitionOptions.entityRoles 的定义；此函数不执行注册或校验':
+    'Definition supplied through GraphDefinitionOptions.entityRoles; this function does not register or validate it',
+  '原样返回 definition，不复制或修改输入对象': 'The original definition object, without copying or modifying it',
+  '传给 GraphDefinitionOptions.entityKinds 的定义；此函数不执行注册或校验':
+    'Definition supplied through GraphDefinitionOptions.entityKinds; this function does not register or validate it',
+  '约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约':
+    'JSON object schema type constraining paramsSchema and defining how predicate parameters are parsed',
+  '传给 GraphDefinitionOptions.entityPredicates 的定义；此函数不执行注册或校验':
+    'Definition supplied through GraphDefinitionOptions.entityPredicates; this function does not register or validate it',
+  '实体字段，不包含由工厂补齐的 namespace 和 type':
+    'Entity fields excluding namespace and type, which are supplied by the factory',
+  '新建的 Entity Source 记录；不解析 Schema、不生成 id，也不补齐位置或主题默认值':
+    'A new Entity Source record; does not parse the schema, generate an id, or fill in position or theme defaults',
+  '实体编写字段；自定义语义仅引用已由 Graph 注册的 key':
+    'Entity authoring fields; custom semantics reference only keys registered through Graph',
+  '供 Vanilla 内容树使用的 embed 节点，由 EntityInputEmbedAdapter 转换为 Entity Source':
+    'An embed node for a Vanilla content tree, converted to Entity Source by EntityInputEmbedAdapter',
+  '带 type 判别字段的实体编写输入': 'Entity authoring input with its type discriminator',
+  '新建的 Entity Source 记录；保留输入字段，不生成 id 或布局位置':
+    'A new Entity Source record preserving input fields without generating an id or layout position',
+  '包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组':
+    'A new adapter array containing Graph, Group, the Block family, Entity, and Relation',
+  '自定义语义与主题定义；省略时仅使用内置定义，调用时完成注册校验':
+    'Custom semantic and theme definitions; omission uses only built-ins, with registration validated during this call',
+  '新建的 composite definition 数组，包含 Graph 元素及其布局和表面依赖':
+    'A new composite definition array containing Graph elements and their layout and surface dependencies',
+  'RetikzGraphError 定义重复、语义引用未注册或定义约束冲突时抛出':
+    'RetikzGraphError when definitions are duplicated, semantic references are unregistered, or definition constraints conflict',
+  '自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配':
+    'Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly',
+  '只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖':
+    'A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies',
+  '实体编写输入的判别字段，固定为 entity': 'Entity authoring input discriminator, fixed to entity',
   'Entity Source 的 React 编写参数': 'React authoring props for an Entity Source',
   '仅接受 Core Node-compatible 文本 authoring，与 text prop 互斥':
     'Accepts only Node-compatible text authoring; mutually exclusive with the text prop',

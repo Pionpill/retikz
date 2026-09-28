@@ -23,5 +23,9 @@ export const RelationInputEmbedAdapter: InputEmbedAdapter<RelationInputEmbedProp
   }),
 };
 
-/** 创建 Relation Source 的 authoring embed 节点 */
+/**
+ * 创建 Relation Source 的 authoring embed 节点
+ * @param input 关系编写字段，端点可使用 id 字符串，路径可使用 way
+ * @returns 供 Vanilla 内容树使用的 embed 节点，由 RelationInputEmbedAdapter 转换为 Relation Source
+ */
 export const relation = (input: RelationInputEmbedProps) => createGraphInputEmbed(RelationEmbedKind, input, input.id);

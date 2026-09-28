@@ -3,7 +3,7 @@ import { assertNonEmptyString } from '@retikz/foundation';
 import type { RelationKindDefinition, RelationPredicateDefinition, RelationRoleDefinition } from '../../contract';
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import type { RelationDirectionValue } from '../../schemas';
-import { BUILTIN_RELATION_KIND_DEFINITIONS, BUILTIN_RELATION_ROLE_DEFINITIONS } from './definitions';
+import { BUILTIN_RELATION_ROLE_DEFINITIONS } from './definitions';
 
 const duplicateDefinition = (capability: string, key: string): RetikzGraphError =>
   new RetikzGraphError({
@@ -76,13 +76,13 @@ export const resolveRelationRoleRegistry = (
   return registry;
 };
 
-/** 合并内置与自定义 Relation kinds，并校验 role 与方向收窄 */
+/** 注册用户提供的 Relation kinds，并校验 role 与方向收窄 */
 export const resolveRelationKindRegistry = (
   custom: ReadonlyArray<RelationKindDefinition> | undefined,
   roles: ReadonlyMap<string, RelationRoleDefinition>,
 ): ReadonlyMap<string, RelationKindDefinition> => {
   const registry = new Map<string, RelationKindDefinition>();
-  for (const definition of [...BUILTIN_RELATION_KIND_DEFINITIONS, ...(custom ?? [])]) {
+  for (const definition of custom ?? []) {
     assertNonEmptyString(definition.kind, 'Relation kind', invalidDefinition('Relation kind', definition.kind));
     assertNonEmptyString(
       definition.role,

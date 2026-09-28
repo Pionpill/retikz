@@ -1,6 +1,7 @@
 import {
   defineEntityRole,
   defineGraphThemeStyle,
+  defineRelationKind,
   defineRelationRole,
   EntityProviderKey,
   GraphProviderKey,
@@ -8,7 +9,7 @@ import {
   RelationProviderKey,
 } from '@retikz/graph';
 import type { InputGraph } from '@retikz/graph-vanilla';
-import { normalizeGraph } from '@retikz/graph-vanilla';
+import { createGraphVanillaAdapters, graph, normalizeGraph, relation } from '@retikz/graph-vanilla';
 import { createInputScene, Node, Step, Text } from '@retikz/react';
 import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
@@ -356,7 +357,7 @@ describe('Entity and Relation React authoring', () => {
         createElement(Entity, { role: 'participant', status: 'success', position: [0, 80] }, 'Preview'),
         createElement(Relation, {
           role: 'association',
-          kind: 'uml.association',
+          kind: 'domain.association',
           status: 'warning',
           source: { id: 'source' },
           target: { id: 'target' },
@@ -381,7 +382,7 @@ describe('Entity and Relation React authoring', () => {
         namespace: 'graph',
         type: 'relation',
         role: 'association',
-        kind: 'uml.association',
+        kind: 'domain.association',
         status: 'warning',
         source: { id: 'source' },
         target: { id: 'target' },
@@ -728,6 +729,57 @@ describe('Graph standalone and embedded host classification', () => {
 });
 
 describe('Graph Definition options parity', () => {
+  it('compiles an explicitly registered Relation kind identically through React and Vanilla', () => {
+    const kind = defineRelationKind({
+      kind: 'domain.contract',
+      role: 'dependency',
+      description: 'Contract dependency',
+      directions: { forward: { targetMarker: { shape: 'open' }, dashPattern: [4, 2] } },
+    });
+    const props = {
+      id: 'edge',
+      role: 'dependency',
+      kind: kind.kind,
+      source: { id: 'a' },
+      target: { id: 'b' },
+    };
+    const react = createInputScene(
+      <Graph relationKinds={[kind]}>
+        <Node id="a" position={[0, 0]} />
+        <Node id="b" position={[100, 0]} />
+        <Relation {...props} />
+      </Graph>,
+    );
+    const reactResult = processToStaticInputResult(react.scene, { adapters: react.adapters, compile: { padding: 0 } });
+    const vanillaResult = processToStaticInputResult(
+      {
+        children: [
+          graph({
+            relationKinds: [kind],
+            children: [
+              { type: 'node', id: 'a', position: [0, 0] },
+              { type: 'node', id: 'b', position: [100, 0] },
+              relation(props),
+            ],
+          }),
+        ],
+      },
+      { adapters: createGraphVanillaAdapters(), compile: { padding: 0 } },
+    );
+    expect(reactResult.scene).toEqual(vanillaResult.scene);
+    type ScenePrimitive = (typeof reactResult.scene.primitives)[number];
+    const flatten = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
+      primitives.flatMap(primitive => (primitive.type === 'group' ? flatten(primitive.children) : [primitive]));
+    expect(flatten(reactResult.scene.primitives).find(primitive => primitive.id === 'edge')).toMatchObject({
+      type: 'path',
+      arrowEnd: { shape: 'open' },
+      dashPattern: [4, 2],
+    });
+    const normalized = normalizeScene(react.scene, { adapters: react.adapters });
+    expect(normalized.ir.children[0]).toMatchObject({ children: [{ id: 'a' }, { id: 'b' }, { kind: kind.kind }] });
+    expect(normalized.ir.children[0]).not.toHaveProperty('relationKinds');
+  });
+
   it('keeps Graph definitions out of Source and compiles standalone members with built-in definitions', () => {
     const entityRole = defineEntityRole({
       role: 'custom-entity',

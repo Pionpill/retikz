@@ -1,30 +1,37 @@
 ---
 title: Block · 结构块
-description: 用开放内容的纵向布局容器承载代码和工程对象，并按需组合独立结构组件。
+description: 用可连接的纵向容器组织标题、分区、文本行和任意绘图内容。
 ---
 
-结构块（`Block`）表达一个具有 Graph identity 的纵向内容容器。它接受任意 child；Header、Section 与 Row 是可选且可独立使用的组合组件，更高层的类图等语义可以继续下沉到 Block
+Block 把一组内容组织成可被关系连接的对象。它按声明顺序纵向布局 children，并提供可见外框；Header、Section 和 Row 是可选的组合组件，也可以独立使用。
 
 ## 职责一览
 
-| 主题     | 职责                               | 何时查阅             |
-| -------- | ---------------------------------- | -------------------- |
-| 基础用法 | 组织任意内容、常见结构、连接与样式 | 第一次创建结构块     |
-| 扩展用法 | 独立代码实体、共享内容与主题 token | 封装可复用的代码节点 |
+| 组件         | 负责什么                                | 何时使用                           |
+| ------------ | --------------------------------------- | ---------------------------------- |
+| Block        | 纵向排列任意内容，提供外框和可选引用 id | 数据结构、工程对象或自定义内容节点 |
+| BlockHeader  | icon、标题 / 说明、trail 三个区域       | 描述对象身份与摘要                 |
+| BlockSection | 带可选标题和背景的纵向区域              | 对字段、方法或步骤分区             |
+| BlockRow     | 横向等分文本项或任意 child              | 一行展示名称、类型或多个值         |
+
+<ComponentPreview files="block-minimal" size="sm" hideCode />
+
+Header 描述 User，Section 将字段收在一起，Row 并列显示字段名与类型。外层 Block 决定整体纵向布局与连接边界。
+
+## 职责与边界
+
+只展示一个带文字的语义对象时使用 [Entity](/schematic/graph/entity)。只需要围住已放置内容、保留原有位置时使用 [Group](/schematic/graph/group)。Block 会主动排列内容，但不解释类、接口或函数的业务含义。
+
+需要持久化领域数据并复用同一种结构时，可用 CodeBlock Definition 把数据组合为 Block 内容。连接仍复用 Core 目标引用，不额外建立 Port 模型。
 
 ## 章节内容
 
 <LinkedSections
   items={[
-    {
-      title: '基础用法',
-      description: '开放内容、独立结构、局部连接和样式',
-      url: '/schematic/graph/block/basic',
-    },
-    {
-      title: '扩展用法',
-      description: '定义代码实体并注入同一编译链路',
-      url: '/schematic/graph/block/extension',
-    },
+    { title: '基础用法', description: '内容组合、间距、连接与局部文字样式', url: '/schematic/graph/block/usage' },
+    { title: '自定义用法', description: '定义并注入可复用的代码实体', url: '/schematic/graph/block/custom' },
+    { title: '实现原理', description: '布局、寻址与局部主题', url: '/schematic/graph/block/mechanism' },
+    { title: 'API 参考', description: '组件、工厂与扩展契约', url: '/schematic/graph/block/api-reference' },
+    { title: 'Schema 参考', description: '持久化字段与校验约束', url: '/schematic/graph/block/schema-reference' },
   ]}
 />

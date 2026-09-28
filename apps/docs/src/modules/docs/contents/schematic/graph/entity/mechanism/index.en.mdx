@@ -5,6 +5,8 @@ description: Trace how Entity resolves semantics, merges appearance and applies 
 
 Entity semantics determine how an object is interpreted, not a separate renderer. Built-in and custom roles follow the same semantic resolution and appearance merging before becoming a drawable Node. This page explains unregistered-key errors and explicit style precedence.
 
+Read [Basic usage](/schematic/graph/entity/usage) first. The gateway used below comes from [Custom usage](/schematic/graph/entity/custom).
+
 ## Entity becomes a Node in stages
 
 The diagram shows only Entity's processing order. Input consists of Source semantic keys and instance fields. Each stage reads definitions and current Graph/theme context as needed, without persisting those runtime objects.
@@ -21,6 +23,13 @@ For example, the gateway from Custom usage retains its service role, service.gat
 | `lowerEntity`             | `type: 'node', shape: 'rectangle', layout: { …, padding: { x: 14, y: 10 }, minimumSize: { width: 110, height: 46 } }`      |
 
 The table shows selected changing fields, not complete intermediate objects or another authoring IR.
+
+<SourceLinks
+  sources={[
+    { label: 'Semantic and appearance resolution', path: 'packages/schematic/graph/src/resolve/entity/resolve.ts' },
+    { label: 'Lowering role structure into a Node', path: 'packages/schematic/graph/src/pipeline/entity/lower.ts' },
+  ]}
+/>
 
 ## Semantic resolution uses registered definitions
 

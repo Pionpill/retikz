@@ -1,0 +1,106 @@
+---
+title: Quick start
+description: Install Diagram and draw your first automatically arranged request flow using React or Vanilla.
+---
+
+Create a request flow with three steps and two relations. This example uses the currently available `FlowDiagram` without calculating node coordinates by hand.
+
+## Installation and usage
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/diagram-react react react-dom" />
+
+Render `RequestDiagram` in an existing React application. `FlowDiagram` is the figure root, `FlowEntities` declares objects, and `FlowRelations` connects their ids. Both declarations are direct children of the root.
+
+```text
+FlowDiagram
+├── FlowEntities
+└── FlowRelations
+```
+
+```tsx
+import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
+
+export const RequestDiagram = () => (
+  <FlowDiagram presentation={{ title: { text: 'Request handling' } }} layout={{ direction: 'right' }}>
+    <FlowEntities
+      items={[
+        { id: 'request', text: 'Receive request', role: 'activity' },
+        { id: 'process', text: 'Process task', role: 'activity' },
+        { id: 'result', text: 'Return result', role: 'activity' },
+      ]}
+    />
+    <FlowRelations
+      items={[
+        ['request', 'process'],
+        ['process', 'result'],
+      ]}
+    />
+  </FlowDiagram>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/diagram-vanilla @retikz/vanilla" />
+
+Add a `<div id="diagram"></div>` container to the page, then run the code below. `flowDiagram()` creates the input; the adapter lets `mount()` recognize and compile it. Root `children` lists direct members, and relations reference their ids.
+
+```ts
+import { createFlowDiagramVanillaAdapters, flowDiagram } from '@retikz/diagram-vanilla/flow';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    flowDiagram({
+      presentation: { title: { text: 'Request handling' } },
+      layout: { direction: 'right' },
+      entities: [
+        { id: 'request', text: 'Receive request', role: 'activity' },
+        { id: 'process', text: 'Process task', role: 'activity' },
+        { id: 'result', text: 'Return result', role: 'activity' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['request', 'process', 'result'],
+      relations: [
+        { source: 'request', target: 'process' },
+        { source: 'process', target: 'result' },
+      ],
+    }),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input, {
+  adapters: createFlowDiagramVanillaAdapters(),
+});
+```
+
+Call `view.dispose()` before removing the container to release mounting resources.
+
+</DocTab>
+</DocTabs>
+
+## Minimal result
+
+Both versions produce the same three steps, two directed connections, and a title. `id` is the stable name referenced by relations; `text` is the display text. Changing the text does not require changing relations. `layout.direction` arranges the flow from left to right, while Flow derives positions and connection paths.
+
+<ComponentPreview files="request-flow" size="sm" hideCode />
+
+Here, `activity` is a built-in semantic `role`, not a `kind`. Kinds are defined and registered by users; this minimal flow needs no kind registration.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Flow basic usage',
+      description: 'Continue with groups, fixed arrangements, routing, and appearance',
+      url: '/schematic/diagram/flow/basic',
+    },
+  ]}
+/>
