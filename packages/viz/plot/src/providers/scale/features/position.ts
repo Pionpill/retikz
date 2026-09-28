@@ -20,7 +20,7 @@ import {
   scaleUtc as d3ScaleUtc,
 } from 'd3-scale';
 
-import type { AnyScaleDefinition, PositionScale, TickSet } from '../../../contract';
+import type { AnyScaleDefinition, DomainPaddingScale, PositionScale, TickSet } from '../../../contract';
 import { defineScale } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type {
@@ -398,6 +398,95 @@ export const pointPositionScale = (scale: D3ScalePoint<string | number>): Positi
 
 // ── position 族 scale definition ──────────────────────────────────────────────────
 
+/** 在原尺度的变换空间扩域，保留原 provider 的刻度和输入合法性 */
+const continuousDomainPadding = (
+  base: D3ScaleContinuousNumeric<number, number>,
+  valid: (value: unknown) => boolean = isFiniteNumber,
+  minimum?: number,
+): DomainPaddingScale => {
+  const clamp = base.clamp();
+  base.range([0, 1]).clamp(false);
+  return {
+    normalize: value => (valid(value) ? base(value as number) : NaN),
+    createScale: (padding, range) => {
+      const span = 1 / (1 - padding.lower - padding.upper);
+      const domain = [base.invert(-padding.lower * span), base.invert(1 + padding.upper * span)].map(value =>
+        minimum === undefined ? value : Math.max(minimum, value),
+      );
+      const resolved = base.copy().domain(domain).clamp(clamp);
+      let outerRange = range;
+      const setRange = (next: readonly [number, number]): void => {
+        outerRange = next;
+        resolved.range(domain.map(value => next[0] + (next[1] - next[0]) * (padding.lower + base(value) / span)));
+      };
+      setRange(range);
+      return { ...continuousPositionScale(resolved, valid), range: () => [outerRange[0], outerRange[1]], setRange };
+    },
+  };
+};
+
+/** 分类域保持不变，在原有带宽和类别间距之外压缩输出 range */
+const categoryDomainPadding = (base: PositionScale): DomainPaddingScale => ({
+  normalize: base.coordinate,
+  createScale: (padding, initialRange) => {
+    let range = initialRange;
+    const span = (): number => (range[1] - range[0]) * (1 - padding.lower - padding.upper);
+    return {
+      coordinate: value => range[0] + (range[1] - range[0]) * padding.lower + span() * base.coordinate(value),
+      domain: base.domain,
+      ticks: base.ticks,
+      tickKind: base.tickKind,
+      get bandwidth() {
+        return Math.abs(span()) * base.bandwidth;
+      },
+      get step() {
+        return Math.abs(span()) * base.step;
+      },
+      range: () => [range[0], range[1]],
+      setRange: next => {
+        range = next;
+      },
+    };
+  },
+});
+
+/** 分类尺度的显式留白与自动留白共享 range 压缩语义，类别域不增加虚拟项 */
+const paddedCategoryScale = (
+  base: PositionScale,
+  padding: IRPlotBandScale['domainPadding'],
+  initialRange: readonly [number, number],
+): PositionScale => {
+  const mapping = categoryDomainPadding(base);
+  const resolveRange = (range: readonly [number, number]): PositionScale => {
+    if (typeof padding === 'object' && padding.kind === 'mark')
+      throw new RetikzPlotError('mark domainPadding requires a coordinate padding context');
+    const lower = typeof padding === 'number' ? padding : (padding?.lower ?? 0);
+    const upper = typeof padding === 'number' ? padding : (padding?.upper ?? 0);
+    const divisor =
+      typeof padding === 'object' && padding.kind === 'ratio' ? 1 + lower + upper : Math.abs(range[1] - range[0]);
+    if (divisor <= 0 || lower + upper >= divisor)
+      throw new RetikzPlotError('categorical domainPadding leaves no positive range');
+    return mapping.createScale({ lower: lower / divisor, upper: upper / divisor }, range);
+  };
+  let current = resolveRange(initialRange);
+  return {
+    coordinate: value => current.coordinate(value),
+    domain: () => current.domain(),
+    ticks: count => current.ticks(count),
+    tickKind: base.tickKind,
+    get bandwidth() {
+      return current.bandwidth;
+    },
+    get step() {
+      return current.step;
+    },
+    range: () => current.range(),
+    setRange: range => {
+      current = resolveRange(range);
+    },
+  };
+};
+
 const linearScaleDefinition = defineScale<IRPlotLinearScale>({
   family: 'position',
   continuity: 'continuous',
@@ -433,6 +522,11 @@ const logScaleDefinition = defineScale<IRPlotLogScale>({
   family: 'position',
   continuity: 'continuous',
   schema: LogScaleSchema,
+  domainPadding: (def, values) =>
+    continuousDomainPadding(
+      resolveLogScale(def, values.filter(isFiniteNumber), [0, 1]),
+      value => isFiniteNumber(value) && value > 0,
+    ),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
   resolve: (def, values, range) =>
@@ -446,6 +540,12 @@ const powScaleDefinition = defineScale<IRPlotPowScale>({
   family: 'position',
   continuity: 'continuous',
   schema: PowScaleSchema,
+  domainPadding: (def, values) =>
+    continuousDomainPadding(
+      resolvePowScale(def, values.filter(isFiniteNumber), [0, 1]),
+      value => isFiniteNumber(value) && (Number.isInteger(def.exponent ?? 2) || value >= 0),
+      Number.isInteger(def.exponent ?? 2) ? undefined : 0,
+    ),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
   resolve: (def, values, range) => {
@@ -461,6 +561,12 @@ const sqrtScaleDefinition = defineScale<IRPlotSqrtScale>({
   family: 'position',
   continuity: 'continuous',
   schema: SqrtScaleSchema,
+  domainPadding: (def, values) =>
+    continuousDomainPadding(
+      resolveSqrtScale(def, values.filter(isFiniteNumber), [0, 1]),
+      value => isFiniteNumber(value) && value >= 0,
+      0,
+    ),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   allowsBaseline: false,
   resolve: (def, values, range) =>
@@ -474,6 +580,8 @@ const symlogScaleDefinition = defineScale<IRPlotSymlogScale>({
   family: 'position',
   continuity: 'continuous',
   schema: SymlogScaleSchema,
+  domainPadding: (def, values) =>
+    continuousDomainPadding(resolveSymlogScale(def, values.filter(isFiniteNumber), [0, 1])),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   // 与 log/pow/sqrt 同属非线性连续 scale → 不作 interval / area 值轴（柱 / 面积长度会失真）
   allowsBaseline: false,
@@ -486,6 +594,22 @@ const radialScaleDefinition = defineScale<IRPlotRadialScale>({
   family: 'position',
   continuity: 'continuous',
   schema: RadialScaleSchema,
+  domainPadding: (def, values) => {
+    const base = resolveRadialScale(def, values.filter(isFiniteNumber), [0, 1]);
+    const mapping = continuousDomainPadding(d3ScaleLinear().domain(base.domain()));
+    const square = (value: number): number => Math.sign(value) * value * value;
+    return {
+      normalize: mapping.normalize,
+      parameter: (position, range) => (square(position) - square(range[0])) / (square(range[1]) - square(range[0])),
+      createScale: (padding, range) =>
+        continuousPositionScale(
+          base
+            .copy()
+            .domain(mapping.createScale(padding, [0, 1]).domain() as [number, number])
+            .range([range[0], range[1]]),
+        ),
+    };
+  },
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Categorical,
   // 面积感知半径，自 0 基线起算（南丁格尔 / 玫瑰图扇区面积编码值）→ 允许作 interval / path closure 值轴
   allowsBaseline: true,
@@ -543,18 +667,26 @@ const bandScaleDefinition = defineScale<IRPlotBandScale>({
   family: 'position',
   continuity: 'discrete',
   schema: BandScaleSchema,
+  domainPadding: (def, values) => categoryDomainPadding(bandPositionScale(resolveBandScale(def, values, [0, 1]))),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Temporal,
   allowsBaseline: true,
-  resolve: (def, values, range) => bandPositionScale(resolveBandScale(def, values, range)),
+  resolve: (def, values, range) =>
+    def.domainPadding === undefined
+      ? bandPositionScale(resolveBandScale(def, values, range))
+      : paddedCategoryScale(bandPositionScale(resolveBandScale(def, values, [0, 1])), def.domainPadding, range),
 });
 
 const pointScaleDefinition = defineScale<IRPlotPointScale>({
   family: 'position',
   continuity: 'discrete',
   schema: PointScaleSchema,
+  domainPadding: (def, values) => categoryDomainPadding(pointPositionScale(resolvePointScale(def, values, [0, 1]))),
   isFieldCompatible: fieldType => fieldType !== DataFieldType.Temporal,
   allowsBaseline: true,
-  resolve: (def, values, range) => pointPositionScale(resolvePointScale(def, values, range)),
+  resolve: (def, values, range) =>
+    def.domainPadding === undefined
+      ? pointPositionScale(resolvePointScale(def, values, range))
+      : paddedCategoryScale(pointPositionScale(resolvePointScale(def, values, [0, 1])), def.domainPadding, range),
 });
 
 /** position 族 scale definition（连续 6 + 时间 1 + 分类 2 = 9）：产坐标，喂 coordinate projector + guide */

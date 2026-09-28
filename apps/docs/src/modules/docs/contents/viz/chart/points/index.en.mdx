@@ -35,12 +35,12 @@ Read the overall distribution first, then compare groups and inspect individual 
 
 All six point chart types share edge-padding configuration. React accepts it through the corresponding properties component, such as `ScatterProperties`, or the root `recipe.properties` prop. The Vanilla API uses `properties`; direct IR uses `recipe.properties`. These settings apply to the chart, not individual marks.
 
-| Property        | Type                                                    | Description                                                                                                                                        |
-| --------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `autoPadding`   | `'max-radius'`, `'point-aware'`, `{ kind; clearance? }` | Automatic padding policy; defaults to the largest final point radius. Object form selects a policy with `kind` and edge clearance with `clearance` |
-| `domainPadding` | `number`, Directional padding object                    | Explicit position-domain padding takes precedence over automatic padding. Numeric `0` disables padding; objects configure individual directions    |
+| Property        | Type                                                    | Description                                                                                                                                                                      |
+| --------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoPadding`   | `'max-radius'`, `'point-aware'`, `{ kind; clearance? }` | Automatic padding policy; Bubble defaults to point-aware, other point charts to the largest radius. Object form selects a policy with `kind` and edge clearance with `clearance` |
+| `domainPadding` | `number`, Directional padding object                    | Explicit position-domain padding takes precedence over automatic padding. Numeric `0` disables padding; objects configure individual directions                                  |
 
-Keep the default policy for ordinary use. Choose `point-aware` when existing space around individual points should reduce padding; it requires Cartesian2D, linear/time position scales, and no jitter. Ranged dot’s categorical axis and Strip’s discrete axis and jitter do not meet these requirements. Bubble charts with a logarithmic position axis are also unsupported. The implementation section below explains calculation and precedence.
+Keep the default policy for ordinary use. `point-aware` uses existing space around each point and supports built-in continuous scales, band/point categorical scales, Cartesian2D, and Polar2D. Jittered marks use their adjusted positions. Bubble defaults to this policy because its radii vary. The implementation section below explains calculation and precedence.
 
 Size, color, and stroke are common concepts, but their inputs and semantics vary. Bubble requires a numeric size encoding; Connected Scatter styles points and paths separately; Ranged Dot distinguishes shared endpoint styles from start and end overrides. Each chart’s API retains these differences.
 
@@ -62,7 +62,7 @@ A point's position identifies its center. Mapping the data minimum and maximum d
 
 Both panels use the same data, point radius, and plot dimensions. Automatic padding changes the position-scale domain; it does not change data, shrink points, or enlarge the canvas. Each edge reserves one radius for extreme points in this illustration.
 
-#### Default maximum-radius padding
+#### Maximum-radius padding
 
 After default, appended, and replacement marks are determined, Chart reads the final point sizes and selects the largest radius. A constant `size` supplies the radius directly. A field-mapped size uses the maximum of the size scale's output range rather than scanning individual rows to estimate it. Without an explicit size, it uses the default point radius. This calculation covers the radius only; it does not measure additional stroke, shadow, or text extents, so it does not guarantee room for those effects.
 
@@ -70,9 +70,9 @@ When `domainPadding` is omitted, each side reserves the maximum point radius in 
 
 #### Per-point calculation and clearance
 
-The default `autoPadding: 'max-radius'` keeps the policy above without scanning individual rows. With `autoPadding: 'point-aware'`, Chart supplies the final point marks to Plot. Before generating geometry, Plot uses actual data views, positions, and radii to find compact padding. Space already available around large central points counts toward protection; large points near an edge also contribute, even when they are not position extrema.
+`autoPadding: 'max-radius'` keeps the policy above without scanning individual rows. With `autoPadding: 'point-aware'`, Chart supplies the final point marks to Plot. Before generating geometry, Plot uses actual data views, positions, and radii to find compact padding. Space already available around large central points counts toward protection; large points near an edge also contribute, even when they are not position extrema.
 
-The four charts below use identical data, size mappings, and canvas dimensions, comparing each policy with zero clearance and directional clearance (default 8, top 20, left 0). The default reserves the maximum radius at every edge; point-aware padding uses existing space around the central point and adds the space needed at the edges.
+The four charts below use identical data, size mappings, and canvas dimensions, comparing each policy with zero clearance and directional clearance (default 8, top 20, left 0). Maximum-radius padding reserves the maximum radius at every edge; point-aware padding uses existing space around the central point and adds the space needed at the edges.
 
 Use `autoPadding: { kind: 'point-aware', clearance: 8 }` to reserve clearance between protected point extents and automatic plot-area edges. `clearance` is a nonnegative drawing-coordinate length, defaulting to `0`. Both strategies support it; explicitly configured `domainPadding` ends do not add clearance.
 
@@ -80,13 +80,13 @@ Use `autoPadding: { kind: 'point-aware', clearance: 8 }` to reserve clearance be
 
 <ComponentPreview files="point-auto-padding" hideCode type="illustration" size="lg" />
 
-Both policies change position domains, not point sizes. Point-aware solving reuses numeric positions and sizes with bounded iterations and coordinates final plot-area dimensions. It never reads rendered geometry. Each solve pass is linear in the effective point count, so it costs more than the default mark-level calculation; strictly minimum padding is not guaranteed.
+Both policies adjust position mappings without changing point sizes. Continuous scales usually expand their domains; categorical scales preserve category domains and compress their output ranges. Point-aware solving reuses numeric positions and sizes with bounded iterations and coordinates final plot-area dimensions. It never reads rendered geometry. Each solve pass is linear in the effective point count, so it costs more than the mark-level maximum-radius calculation; strictly minimum padding is not guaranteed.
 
 #### Explicit configuration and limitations
 
 - Explicit `domainPadding` wins. A number applies to all sides; `0` disables padding. Missing `range` ends use the selected policy; missing `ratio` ends remain `0`. Fully explicit padding bypasses point-aware solving.
 - When a scale already defines `domainPadding` or comes from `plotExtension.scales`, Chart preserves it without adding automatic padding.
-- Point-aware mode currently requires Cartesian2D, linear/time position scales, and no placement. Unsupported combinations or infeasible drawing areas produce errors without falling back.
+- Point-aware mode supports linear, time, log, pow, sqrt, symlog, radial, band, and point position scales. Polar coordinates protect outer circles, annular inner circles, and sector sides without adding a seam to a full-circle angular axis. Infeasible drawing areas or custom definitions missing required capabilities produce errors without falling back.
 - Only effective points inside the baseline domain contribute size-radius constraints. Strokes, shadows, and text are excluded. Outside points retain Plot rendering and clipping semantics; domain expansion may bring some of them into view.
 - Shared scales solve one domain across panels. Incompatible fixed pixel padding across differently sized panels produces an error.
 - Chart references its final Point marks and Relation endpoints; `plotExtension.marks` are not included automatically.

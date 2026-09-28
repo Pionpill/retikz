@@ -1,7 +1,7 @@
 import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
 import { DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
-import type { DomainPaddingScale, PositionScale } from '../../contract';
+import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
 import { isBuiltinScaleOperation, readCoordinateScaleNames } from '../../contract';
 import { RetikzPlotError } from '../../error';
@@ -505,15 +505,13 @@ export const resolveCoordinateFrame = (
     const roleIndex = roles.indexOf(role);
     const localViews = context.paddingMarkDataViews ?? markDataViews;
     const paddingContext = context.markPadding;
-    const sampleKey = JSON.stringify([
-      roles.map(candidate =>
-        paddingContext.groupOf(operationsByRole.get(candidate)!.name, candidate, markDataViewsForRole(candidate)),
-      ),
-      paddingContext.groupOf(operation.name, role, localViews),
-      padding.marks,
-    ]);
-    const samples = paddingContext.samplesOf(sampleKey, () => {
+    const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+    const samples = () => {
       const constraints = [];
+      const clearance = {
+        lower: (typeof padding.clearance === 'object' ? padding.clearance.lower : padding.clearance) ?? 0,
+        upper: (typeof padding.clearance === 'object' ? padding.clearance.upper : padding.clearance) ?? 0,
+      };
       for (const id of padding.marks) {
         const view = localViews.find(candidate => candidate.mark.id === id);
         if (view === undefined) {
@@ -523,22 +521,76 @@ export const resolveCoordinateFrame = (
             `scale "${operation.name}" references unknown padding mark "${id}" or a mark that does not consume this scale`,
           );
         }
+        const placed = paddingContext.placedTargetsOf(view, paddingFrame);
+        const placedByKey = new Map(placed?.targets.map(target => [target.key, target]));
         for (const target of paddingContext.targetsOf(view, roles)) {
           const positions = roles.map(
             (targetRole, index) => mappingsByRole.get(targetRole)?.normalize(target.values[index]) ?? NaN,
           );
           if (positions.some(position => !Number.isFinite(position) || position < 0 || position > 1)) continue;
+          const mapped = paddingFrame.mapRoles?.(target.values);
+          const placedTarget = target.key === undefined ? undefined : placedByKey.get(target.key);
+          if (placed !== undefined && placedTarget === undefined)
+            throw new RetikzPlotError(`mark "${id}" padding target must identify its placement target`);
+          const effectiveMapped = placedTarget?.mappedRoles ?? mapped;
+          if (coordinateDefinition.domainPadding?.measure !== undefined && effectiveMapped == null)
+            throw new RetikzPlotError(
+              `coordinate "${coordinateOperation.type}" requires mapped roles for domainPadding measurement`,
+            );
+          if (
+            placedTarget !== undefined &&
+            placedTarget.position !== null &&
+            effectiveMapped !== undefined &&
+            effectiveMapped !== null
+          ) {
+            const expected = paddingFrame.projectMappedRoles?.(effectiveMapped);
+            if (
+              expected !== undefined &&
+              expected !== null &&
+              (Math.abs(expected[0] - placedTarget.position[0]) > 1e-9 ||
+                Math.abs(expected[1] - placedTarget.position[1]) > 1e-9)
+            )
+              throw new RetikzPlotError(`mark "${id}" screen placement cannot be measured in role space`);
+          }
+          const measured =
+            effectiveMapped != null && coordinateDefinition.domainPadding?.measure !== undefined
+              ? coordinateDefinition.domainPadding.measure({
+                  frame: paddingFrame,
+                  role,
+                  mappedRoles: effectiveMapped,
+                  extent: target.extent[roleIndex],
+                  clearance,
+                })
+              : {
+                  lower: target.extent[roleIndex] + clearance.lower,
+                  upper: target.extent[roleIndex] + clearance.upper,
+                };
+          if (measured === null) continue;
+          if (
+            !Number.isFinite(measured.lower) ||
+            !Number.isFinite(measured.upper) ||
+            measured.lower < 0 ||
+            measured.upper < 0
+          )
+            throw new RetikzPlotError(
+              `coordinate "${coordinateOperation.type}" returned invalid domainPadding extents`,
+            );
+          const currentRange = paddingFrame.roleScales?.[role]?.range();
+          const position =
+            placedTarget?.mappedRoles != null && currentRange !== undefined
+              ? paddingContext.positionOf(group, placedTarget.mappedRoles[roleIndex], mapping, currentRange)
+              : positions[roleIndex];
           constraints.push({
             value: target.values[roleIndex],
-            position: positions[roleIndex],
-            lower: target.extent[roleIndex],
-            upper: target.extent[roleIndex],
+            position,
+            ...(placedTarget?.mappedRoles == null ? {} : { actual: placedTarget.mappedRoles[roleIndex] }),
+            lower: measured.lower - clearance.lower,
+            upper: measured.upper - clearance.upper,
           });
         }
       }
       return constraints;
-    });
-    const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+    };
     const scale = context.markPadding.scaleOf(
       group,
       context.domainPaddingScope ?? 'root',
@@ -582,6 +634,7 @@ export const resolveCoordinateFrame = (
     rows,
     marks: node.marks,
   });
+  const paddingFrame: CoordinateFrame = resolution.frame;
   if (resolution.frame.type !== coordinateOperation.type) {
     throw new RetikzPlotError(
       `lowerPlots: coordinate definition "${coordinateOperation.type}" returned frame type "${resolution.frame.type}"; frame type must match the registered coordinate type`,

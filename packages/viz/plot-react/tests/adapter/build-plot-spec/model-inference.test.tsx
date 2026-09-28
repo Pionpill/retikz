@@ -120,6 +120,19 @@ describe('buildPlotIR model → type-driven 派生（alpha.6 ADR-03，评审 P1�
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
+  it.each(['band', 'point'] as const)('分类 %s 声明保留逐点留白配置', type => {
+    const domainPadding = { kind: 'mark', marks: ['dots'], clearance: 3 } as const;
+    const spec = buildPlotIR(
+      <>
+        <PathMark x="month" y="revenue" />
+        <PlotScale dimension="x" type={type} domainPadding={{ ...domainPadding, marks: ['dots'] }} />
+      </>,
+      '__plot',
+    );
+    expect(spec.scales).toContainEqual({ type, name: '__x', domainPadding });
+    expect(PlotSchema.parse(spec).scales).toContainEqual({ type, name: '__x', domainPadding });
+  });
+
   it('显式 point <PlotScale> 会把分类 domain、padding 与 align 转发到 IRPlot', () => {
     const spec = buildPlotIR(
       <>

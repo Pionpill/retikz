@@ -119,7 +119,43 @@ export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
 
 ### Bubble encodings
 
-React uses `BubbleEncodings`; Vanilla API uses `encodings`; direct IR uses `recipe.encodings`. Encodings determine bubble positions, numeric size, and category colors.
+Encodings determine bubble positions, numeric size, and category colors.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<BubbleEncodings x="gdpPerCapita" y="lifeExpectancy" size="population" color="continent" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'gdpPerCapita',
+  y: 'lifeExpectancy',
+  size: 'population',
+  color: 'continent',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'gdpPerCapita',
+    y: 'lifeExpectancy',
+    size: 'population',
+    color: 'continent',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 This view uses 142 countries and territories from Gapminder 2007 to compare income, life expectancy, and population across continents.
 
@@ -131,6 +167,7 @@ This view uses 142 countries and territories from Gapminder 2007 to compare inco
 Toggle category coloring to see how `color` distinguishes continents. Compare differently sized bubbles at similar positions to distinguish similar indicators from similar population sizes. The association does not control for other influencing factors.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['bubble-encodings', 'bubble-basic.data.ts']}
@@ -139,11 +176,47 @@ Toggle category coloring to see how `color` distinguishes continents. Compare di
   size="xl"
 />
 
-For complete properties and constraints, see [API reference: Bubble encodings](#bubble-encodings-1).
+For complete properties and constraints, see [API reference: BubbleEncodings](#bubbleencodings).
 
 ### Bubble properties
 
-React uses `BubbleProperties`; Vanilla API uses `properties`; direct IR uses `recipe.properties`. Properties control constant appearance without replacing the required numeric size encoding.
+Constant properties style bubbles without replacing the required numeric size encoding. Bubble sizes usually vary, so `autoPadding` defaults to `'point-aware'`, using each bubble’s actual position and radius. See [Point charts: automatic edge padding](/viz/chart/points#automatic-edge-padding) for the strategies and a visual comparison.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<BubbleProperties fillOpacity={0.35} stroke="#475569" strokeWidth={1.5} shape="circle" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  fillOpacity: 0.35,
+  stroke: '#475569',
+  strokeWidth: 1.5,
+  shape: 'circle',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    fillOpacity: 0.35,
+    stroke: '#475569',
+    strokeWidth: 1.5,
+    shape: 'circle',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 In the same data, larger populations can obscure nearby countries. Appearance controls make overlaps easier to read while preserving positions and population encoding.
 
@@ -155,6 +228,7 @@ In the same data, larger populations can obscure nearby countries. Appearance co
 Use the controls below to compare fill and stroke combinations. Use Scatter when every observation should have the same radius.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['bubble-appearance', 'bubble-basic.data.ts']}
@@ -163,11 +237,61 @@ Use the controls below to compare fill and stroke combinations. Use Scatter when
   size="xl"
 />
 
-For complete properties and constraints, see [API reference: Bubble properties](#bubble-properties-1).
+For complete properties and constraints, see [API reference: BubbleProperties](#bubbleproperties).
 
 ### Bubble marks
 
-React uses `BubbleMark`; Vanilla API uses `marks`; direct IR uses `recipe.marks`. React supplies the kind; Vanilla / IR mark objects use `kind: 'bubble'`. Marks append or replace bubbles while inheriting the chart’s size encoding.
+Marks append or replace bubbles while inheriting the chart’s numeric size encoding.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<BubbleMark
+  override
+  properties={{
+    fillOpacity: 0.15,
+    strokeWidth: 2,
+  }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [
+  {
+    kind: 'bubble',
+    override: true,
+    properties: {
+      fillOpacity: 0.15,
+      strokeWidth: 2,
+    },
+  },
+],
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'bubble',
+      override: true,
+      properties: {
+        fillOpacity: 0.15,
+        strokeWidth: 2,
+      },
+    },
+  ],
+},
+```
+
+</DocTab>
+</DocTabs>
 
 This example retains income, longevity and population but replaces the primary bubbles with lighter fills and stronger outlines. Replacement does not add a second population layer.
 
@@ -178,15 +302,16 @@ This example retains income, longevity and population but replaces the primary b
 Size remains inherited from the recipe population field. Bubble marks deliberately have no size override, so the third numeric role is retained.
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['bubble-marks', 'bubble-basic.data.ts']}
   size="xl"
   controls={{ name: 'bubble-marks' }}
-  caption="Switch between replacement and addition, then adjust mark styles to compare inheritance and overrides."
+  caption="Adjust fill opacity and outline width to compare occlusion and bubble boundaries."
 />
 
-For complete properties and constraints, see [API reference: Bubble marks](#bubble-marks-1).
+For complete properties and constraints, see [API reference: BubbleMark](#bubblemark).
 
 ## Extended usage
 
@@ -245,7 +370,32 @@ Compare panels within the same x interval. The number of bubbles represents coun
 
 In React, supplying the same configuration field through both the root `recipe` and a child component raises an error.
 
-Bubble does not support `point-aware` with logarithmic position axes; its sqrt size scale is not a position-axis restriction. Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
+Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains behavior specific to this chart type; skip it if you only need the API."
+/>
+
+### Chart construction
+
+Chart resolves a bubble mark to a Plot Point whose size comes from a numeric field. The table lists only bubble-specific conversions.
+
+| Group      | `@retikz/chart`              | `@retikz/plot`               | Description                                                                       |
+| ---------- | ---------------------------- | ---------------------------- | --------------------------------------------------------------------------------- |
+| Encodings  | `size`                       | `size`                       | Maps the required numeric field to point size; the default size scale uses `sqrt` |
+| Properties | `fillOpacity`, `strokeWidth` | `fillOpacity`, `strokeWidth` | Applies defaults of 0.7 and 1 before explicit properties override them            |
+| Mark       | `BubbleChartMarkSchema`      | `PointMarkSchema`            | Resolves each bubble mark to one Plot Point                                       |
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/point/bubble/mark.ts', label: 'Bubble defaults and mark resolution' },
+    { path: 'packages/viz/chart/src/point/shared/mark.ts', label: 'Point field mapping' },
+  ]}
+/>
 
 ## API reference
 
@@ -253,7 +403,7 @@ React uses `BubbleChart` with its `recipe` prop or dedicated child components. T
 
 In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, presentation, and guides, see [Authoring](/viz/chart/model/authoring).
 
-### Bubble encodings
+#### BubbleEncodings
 
 Corresponds to `BubbleEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
 
@@ -269,32 +419,32 @@ Corresponds to `BubbleEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
 
 Shared mapping parameters are not expanded here; see the [encoding schema](#bubblechartencodingsschema) for exact inputs.
 
-### Bubble properties
+#### BubbleProperties
 
 Corresponds to `BubbleProperties`, Vanilla `properties` and IR `recipe.properties`.
 
-| Category       | Property        | Type                                                     | Description                                                                                             |
-| -------------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Shape          | `shape`         | `string`                                                 | Registered shape name                                                                                   |
-| Color and fill | `color`         | `string`                                                 | Sets the primary color                                                                                  |
-|                | `fill`          | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                            |
-| Stroke         | `stroke`        | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                          |
-|                | `strokeWidth`   | `number`                                                 | Stroke width; must be nonnegative; default 1                                                            |
-|                | `dashed`        | `boolean`                                                | Enables a dashed stroke                                                                                 |
-|                | `dotted`        | `boolean`                                                | Enables a dotted stroke                                                                                 |
-|                | `dashPattern`   | `Array<number>`                                          | Custom dash sequence; at least one entry, all entries nonnegative                                       |
-| Opacity        | `opacity`       | `number`                                                 | Overall opacity, from 0 to 1                                                                            |
-|                | `fillOpacity`   | `number`                                                 | Fill opacity, from 0 to 1; default 0.7                                                                  |
-|                | `strokeOpacity` | `number`                                                 | Stroke opacity, from 0 to 1                                                                             |
-| Transform      | `rotate`        | `number`                                                 | Rotation angle                                                                                          |
-|                | `dx`            | `number`                                                 | Horizontal offset                                                                                       |
-|                | `dy`            | `number`                                                 | Vertical offset                                                                                         |
-| Padding        | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
-|                | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
+| Category       | Property        | Type                                                     | Description                                                                                                                  |
+| -------------- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Shape          | `shape`         | `string`                                                 | Registered shape name                                                                                                        |
+| Color and fill | `color`         | `string`                                                 | Sets the primary color                                                                                                       |
+|                | `fill`          | `string`, `JsonObject`                                   | Sets the fill color or paint                                                                                                 |
+| Stroke         | `stroke`        | `string`, `JsonObject`                                   | Sets the stroke color or paint                                                                                               |
+|                | `strokeWidth`   | `number`                                                 | Stroke width; must be nonnegative; default 1                                                                                 |
+|                | `dashed`        | `boolean`                                                | Enables a dashed stroke                                                                                                      |
+|                | `dotted`        | `boolean`                                                | Enables a dotted stroke                                                                                                      |
+|                | `dashPattern`   | `Array<number>`                                          | Custom dash sequence; at least one entry, all entries nonnegative                                                            |
+| Opacity        | `opacity`       | `number`                                                 | Overall opacity, from 0 to 1                                                                                                 |
+|                | `fillOpacity`   | `number`                                                 | Fill opacity, from 0 to 1; default 0.7                                                                                       |
+|                | `strokeOpacity` | `number`                                                 | Stroke opacity, from 0 to 1                                                                                                  |
+| Transform      | `rotate`        | `number`                                                 | Rotation angle                                                                                                               |
+|                | `dx`            | `number`                                                 | Horizontal offset                                                                                                            |
+|                | `dy`            | `number`                                                 | Vertical offset                                                                                                              |
+| Padding        | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy, default point-aware; the object form uses kind for the strategy and clearance for edge clearance |
+|                | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                                     |
 
 See the [properties schema](#bubblechartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
 
-### Bubble marks
+#### BubbleMark
 
 Corresponds to `BubbleMark`, Vanilla `marks` and IR `recipe.marks`.
 
@@ -308,23 +458,23 @@ Corresponds to `BubbleMark`, Vanilla `marks` and IR `recipe.marks`.
 
 These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
 
-### BubbleChartSchema
+#### BubbleChartSchema
 
 <ZodSchema name="BubbleChartSchema" shallow />
 
-### BubbleChartRecipeSchema
+#### BubbleChartRecipeSchema
 
 <ZodSchema name="BubbleChartRecipeSchema" shallow />
 
-### BubbleChartEncodingsSchema
+#### BubbleChartEncodingsSchema
 
 <ZodSchema name="BubbleChartEncodingsSchema" shallow />
 
-### BubbleChartPropertiesSchema
+#### BubbleChartPropertiesSchema
 
 <ZodSchema name="BubbleChartPropertiesSchema" shallow />
 
-### BubbleChartMarkSchema
+#### BubbleChartMarkSchema
 
 `encodings` accepts only optional field-name strings for x, y, color, opacity, shape, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties. Bubble size comes from the recipe size mapping and cannot be overridden by a mark.
 

@@ -64,7 +64,7 @@ const DomainPaddingObjectSchema = strictObject({
 
 /** 自动留白时图元外缘到绘图区边界的最小净空 */
 export const DomainPaddingClearanceSchema = NonNegativeNumberSchema.default(0).describe(
-  'Minimum clearance from protected mark extents to automatic plot-area edges in range units; defaults to 0',
+  'Minimum clearance from protected mark extents to automatic plot-area edges in screen drawing units; defaults to 0',
 );
 
 /** 指定图元提供的逐点自动留白约束 */
@@ -124,6 +124,9 @@ export const LinearScaleSchema = object({
 }).describe('Linear scale: a continuous numeric mapping from domain to range');
 
 export const BandScaleSchema = object({
+  domainPadding: DomainPaddingSchema.optional().describe(
+    'Output range padding beyond existing categorical spacing; mark padding protects individual glyphs',
+  ),
   type: literal(PlotScale.Band).describe(
     'Discriminator: categorical band scale; each category occupies one equal-width band',
   ),
@@ -149,6 +152,9 @@ export const BandScaleSchema = object({
 }).describe('Band scale: maps a discrete category set to equal-width bands across the range');
 
 export const PointScaleSchema = object({
+  domainPadding: DomainPaddingSchema.optional().describe(
+    'Output range padding beyond existing categorical spacing; mark padding protects individual glyphs',
+  ),
   type: literal(PlotScale.Point).describe(
     'Discriminator: categorical point scale; categories land on evenly spaced points (zero bandwidth)',
   ),

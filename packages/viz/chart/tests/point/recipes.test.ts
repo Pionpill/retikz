@@ -406,12 +406,12 @@ describe('Point Chart recipe Definitions', () => {
       {
         type: 'linear',
         name: '__chart.bubble.scale.x',
-        domainPadding: { kind: 'range', lower: 20, upper: 20 },
+        domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], clearance: 0 },
       },
       {
         type: 'linear',
         name: '__chart.bubble.scale.y',
-        domainPadding: { kind: 'range', lower: 20, upper: 20 },
+        domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], clearance: 0 },
       },
     ]);
     expect(regression.plot.scales.slice(0, 2)).toEqual([

@@ -192,8 +192,8 @@ export const vizV01: Release = {
         {
           label: { zh: '待发布：逐点自动留白', en: 'Unreleased: point-aware padding' },
           content: {
-            zh: '所有点图 properties 新增 autoPadding：默认 max-radius 保持现有行为，可选 point-aware 按实际位置与半径紧凑留白；显式 domainPadding 优先。autoPadding 同时支持 { kind, clearance } 对象形式，可用数值或四边间距对象预留图元外缘净空。首轮支持无 placement 的 Cartesian2D linear/time 组合。',
-            en: 'All Point recipes expose autoPadding: max-radius retains existing defaults, while point-aware uses actual positions and radii for compact padding. The { kind, clearance } form reserves minimum edge clearance with a number or directional spacing object. Explicit domainPadding wins; initial support covers Cartesian2D linear/time without placement.',
+            zh: '所有点图 properties 新增 autoPadding：Bubble 默认 point-aware，其它点图默认 max-radius；逐点策略按实际位置与半径紧凑留白，显式 domainPadding 优先。autoPadding 同时支持 { kind, clearance } 对象形式，可用数值或四边间距对象预留图元外缘净空。逐点策略支持全部内置连续与分类位置尺度、二维极坐标及 role-space 散布。',
+            en: 'All Point recipes expose autoPadding: Bubble defaults to point-aware and other point charts to max-radius. Point-aware uses actual positions and radii for compact padding. The { kind, clearance } form reserves minimum edge clearance with a number or directional spacing object. Explicit domainPadding wins; point-aware supports all built-in continuous and categorical position scales, Polar2D, and role-space placement.',
           },
         },
         {

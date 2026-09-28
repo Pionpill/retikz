@@ -146,7 +146,7 @@ export type CoordinateDefinitionResolveContext = {
  * @description definition 是含函数的运行时对象，不进入 JSON IR；IR 只保存 `{ type, ...config }` 形态的 coordinate operation
  */
 export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOperation = IRPlotCoordinateOperation> = {
-  /** 独立直线角色的输出空间留白能力 */
+  /** 位置角色的输出空间边界度量能力 */
   domainPadding?: CoordinateDomainPaddingCapability;
   /** 完整 coordinate operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
   schema: ZodType<TCoordinateOperation>;

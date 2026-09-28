@@ -246,8 +246,7 @@ export const resolvePointScaleDefaults = (
       role === undefined ||
       extensionScaleNames.has(scale.name) ||
       Object.hasOwn(scale, 'domainPadding') ||
-      !isBuiltinScaleOperation(scale) ||
-      !pointContinuousPositionScaleTypes.has(scale.type)
+      (!pointAware && (!isBuiltinScaleOperation(scale) || !pointContinuousPositionScaleTypes.has(scale.type)))
     ) {
       return scale;
     }

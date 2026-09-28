@@ -1,3 +1,4 @@
+import type { IRNode, IRScope } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
@@ -11,6 +12,16 @@ const rows = [
   { x: 5, y: 5, r: 30 },
   { x: 10, y: 10, r: 2 },
 ];
+
+/** 用例尺寸尺度将平方根映射到半径范围 */
+const radiusOf = (value: number) => 2 + ((Math.sqrt(value) - Math.sqrt(2)) / (Math.sqrt(30) - Math.sqrt(2))) * 28;
+
+const pointPositions = (scope: IRScope): Array<[number, number]> =>
+  scope.children.flatMap(child => {
+    if (child.type === 'scope' && 'children' in child) return pointPositions(child as IRScope);
+    if (child.type === 'node' && 'position' in child) return [(child as IRNode).position as [number, number]];
+    return [];
+  });
 const plotOf = (padding: unknown = { kind: 'mark', marks: ['dots'] }, guides: Array<unknown> = []) =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -58,11 +69,12 @@ describe('mark padding 编译闭环', () => {
 });
 
 describe('shared mark padding', () => {
-  it('shares one padded domain across facet panels with different guides', () => {
+  it.each(['linear', 'radial'])('shares one padded %s domain across facet panels with different guides', type => {
     const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 8, upper: 15 } });
     const { coordinate, ...rest } = base;
     const spec = PlotSchema.parse({
       ...rest,
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type } : scale)),
       width: 640,
       height: 300,
       guides: [
@@ -99,17 +111,141 @@ describe('shared mark padding', () => {
     }
     expect(frames[0].roleScales!.y!.domain()).not.toEqual(frames[1].roleScales!.y!.domain());
   });
-  it('rejects unsupported scales without silently changing strategy', () => {
+  it.each(['log', 'pow', 'sqrt', 'symlog', 'radial'])('protects glyphs with %s position mapping', type => {
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
-      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type: 'log', domain: [1, 10] } : scale)),
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type, domain: [1, 10] } : scale)),
     });
-    expect(() => lowerPlotWithDataArtifact(spec, { rows })).toThrow(/does not support mark domainPadding/);
+    const data = [{ x: 1, y: 0, r: 2 }, rows[1], rows[2]];
+    const result = lowerPlotWithDataArtifact(spec, { rows: data });
+    const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
+    const scale = frame.roleScales!.x!;
+    for (const row of data) {
+      expect(scale.coordinate(row.x) - scale.range()[0]).toBeGreaterThanOrEqual(radiusOf(row.r));
+      expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r));
+    }
   });
 });
 
 describe('mark padding final geometry', () => {
+  it.each(['sqrt', 'pow'])('keeps %s domains valid at zero while preserving edge space', type => {
+    const base = plotOf();
+    const spec = PlotSchema.parse({
+      ...base,
+      scales: base.scales.map(scale =>
+        scale.name === 'x' ? { ...scale, type, ...(type === 'pow' ? { exponent: 0.7 } : {}), domain: [0, 10] } : scale,
+      ),
+    });
+    const scale = [...lowerPlotWithDataArtifact(spec, { rows }).dataArtifact.frameByCoordinateScopeId.values()][0]
+      .roleScales!.x!;
+    expect(scale.domain()[0]).toBe(0);
+    expect(scale.ticks().values.every(value => typeof value === 'number' && value >= 0)).toBe(true);
+    expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
+  });
+
+  it.each(['log', 'radial'])('protects reversed %s ranges with directional clearance', type => {
+    const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: { lower: 3, upper: 9 } });
+    const data = [{ x: 1, y: 0, r: 2 }, rows[1], rows[2]];
+    const spec = PlotSchema.parse({
+      ...base,
+      scales: base.scales.map(scale =>
+        scale.name === 'x' ? { ...scale, type, range: [100, 0], domain: [1, 10] } : scale,
+      ),
+    });
+    const scale = [...lowerPlotWithDataArtifact(spec, { rows: data }).dataArtifact.frameByCoordinateScopeId.values()][0]
+      .roleScales!.x!;
+    for (const row of data) {
+      expect(100 - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r) + 3);
+      expect(scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r) + 9);
+    }
+  });
+
+  it('protects both annular boundaries using radial scale and screen-unit clearance', () => {
+    const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: 4 });
+    const spec = PlotSchema.parse({
+      ...base,
+      width: 400,
+      height: 400,
+      scales: base.scales.map(scale => (scale.name === 'y' ? { ...scale, type: 'radial' } : scale)),
+      coordinate: { type: 'polar2D', angle: 'x', radius: 'y', innerRadius: 0.3 },
+    });
+    const scale = [...lowerPlotWithDataArtifact(spec, { rows }).dataArtifact.frameByCoordinateScopeId.values()][0]
+      .roleScales!.y!;
+    for (const row of rows) {
+      expect(scale.coordinate(row.y) - scale.range()[0]).toBeGreaterThanOrEqual(radiusOf(row.r) + 4);
+      expect(scale.range()[1] - scale.coordinate(row.y)).toBeGreaterThanOrEqual(radiusOf(row.r) + 4);
+    }
+  });
+  it.each(['band', 'point'])('protects categorical %s edges without changing category order', type => {
+    const base = plotOf();
+    const data = [
+      { x: 'a', y: 0, r: 12 },
+      { x: 'b', y: 5, r: 30 },
+      { x: 'c', y: 10, r: 8 },
+    ];
+    const spec = PlotSchema.parse({
+      ...base,
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type } : scale)),
+    });
+    const frame = [
+      ...lowerPlotWithDataArtifact(spec, { rows: data }).dataArtifact.frameByCoordinateScopeId.values(),
+    ][0];
+    const scale = frame.roleScales!.x!;
+    expect(scale.domain()).toEqual(['a', 'b', 'c']);
+    for (const row of data) {
+      expect(scale.coordinate(row.x) - scale.range()[0]).toBeGreaterThanOrEqual(radiusOf(row.r));
+      expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r));
+    }
+  });
+
+  it.each([360, 90, -90, 270])('protects polar boundaries for a %s degree sweep', endAngle => {
+    const base = plotOf();
+    const spec = PlotSchema.parse({
+      ...base,
+      width: 300,
+      height: 300,
+      coordinate: { type: 'polar2D', angle: 'x', radius: 'y', startAngle: 0, endAngle },
+    });
+    const frame = [...lowerPlotWithDataArtifact(spec, { rows }).dataArtifact.frameByCoordinateScopeId.values()][0];
+    const radial = frame.roleScales!.y!;
+    const angular = frame.roleScales!.x!;
+    for (const row of rows) {
+      const radius = radial.coordinate(row.y);
+      expect(radial.range()[1] - radius).toBeGreaterThanOrEqual(radiusOf(row.r));
+      if (endAngle !== 360) {
+        const angle = (Math.abs(angular.coordinate(row.x)) * Math.PI) / 180;
+        const sweep = (Math.abs(endAngle) * Math.PI) / 180;
+        expect(radius * Math.sin(Math.min(Math.PI / 2, angle))).toBeGreaterThanOrEqual(radiusOf(row.r) - 1e-10);
+        expect(radius * Math.sin(Math.min(Math.PI / 2, sweep - angle))).toBeGreaterThanOrEqual(radiusOf(row.r) - 1e-10);
+      }
+    }
+    if (endAngle === 360) expect(angular.domain()).toEqual([0, 10]);
+  });
+  it('contains discrete polar points inside their chord boundary', () => {
+    const base = plotOf({ kind: 'mark', marks: ['dots'], clearance: 3 });
+    const data = ['a', 'b', 'c', 'd'].map((x, index) => ({ x, y: index * 3, r: 8 }));
+    const spec = PlotSchema.parse({
+      ...base,
+      width: 400,
+      height: 400,
+      coordinate: { type: 'polar2D', angle: 'x', radius: 'y' },
+      scales: base.scales.map(scale =>
+        scale.name === 'x' ? { ...scale, type: 'band', paddingInner: 0, paddingOuter: 0 } : scale,
+      ),
+    });
+    const frame = [
+      ...lowerPlotWithDataArtifact(spec, { rows: data }).dataArtifact.frameByCoordinateScopeId.values(),
+    ][0];
+    const radial = frame.roleScales!.y!;
+    for (const row of data) {
+      const mapped = frame.mapRoles!([row.x, row.y])!;
+      const extent = frame.placementBoundary!.glyphExtentInRoleUnits('y', mapped, radiusOf(row.r) + 3)!;
+      expect(radial.range()[1] - mapped[1]).toBeGreaterThanOrEqual(extent);
+    }
+    expect(frame.roleScales!.x!.domain()).toEqual(data.map(row => row.x));
+  });
+
   const frameOf = (spec: unknown, data = rows) =>
     [
       ...lowerPlotWithDataArtifact(PlotSchema.parse(spec), {
@@ -239,16 +375,26 @@ describe('mark padding capabilities', () => {
     expect(scale.coordinate(0) - scale.range()[0]).toBeGreaterThanOrEqual(2);
   });
 
-  it('rejects mark placement before collecting its extents', () => {
+  it.each([4, { kind: 'ratio', value: 1 }])('protects actual jittered positions for span %j', span => {
     const base = plotOf();
     const spec = PlotSchema.parse({
       ...base,
+      width: 180,
+      scales: base.scales.map(scale => (scale.name === 'x' ? { ...scale, type: 'point', padding: 0 } : scale)),
       marks: base.marks.map(mark => ({
         ...mark,
-        placement: { adjustments: [{ kind: 'jitter', role: 'x', span: 4, seed: 1 }] },
+        placement: { adjustments: [{ kind: 'jitter', role: 'x', span, seed: 1 }] },
       })),
     });
-    expect(() => lowerPlotWithDataArtifact(spec, { rows })).toThrow(/placement/);
+    const result = lowerPlotWithDataArtifact(spec, { rows });
+    const scale = [...result.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales!.x!;
+    const positions = pointPositions(result.child as IRScope);
+    expect(positions).toHaveLength(rows.length);
+    expect(positions.some((position, index) => position[0] !== scale.coordinate(rows[index].x))).toBe(true);
+    positions.forEach((position, index) => {
+      expect(position[0] - scale.range()[0]).toBeGreaterThanOrEqual(radiusOf(rows[index].r));
+      expect(scale.range()[1] - position[0]).toBeGreaterThanOrEqual(radiusOf(rows[index].r));
+    });
   });
 });
 
@@ -325,7 +471,8 @@ describe('mark padding clearance', () => {
     const frame = [...result.dataArtifact.frameByCoordinateScopeId.values()][0];
     const scale = frame.roleScales!.x!;
     expect(scale.coordinate(0)).toBe(scale.range()[0]);
-    for (const row of rows) expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(row.r + 8);
+    for (const row of rows)
+      expect(scale.range()[1] - scale.coordinate(row.x)).toBeGreaterThanOrEqual(radiusOf(row.r) + 8);
   });
   it('rejects impossible clearance and invalid JSON numbers', () => {
     expect(() => lowerPlotWithDataArtifact(plotOf({ kind: 'mark', marks: ['dots'], clearance: 60 }), { rows })).toThrow(
@@ -359,8 +506,8 @@ describe('directional mark clearance', () => {
     const result = lowerPlotWithDataArtifact(plot, { rows });
     const scale = [...result.dataArtifact.frameByCoordinateScopeId.values()][0].roleScales!.x!;
     for (const row of rows) {
-      expect(Math.abs(scale.coordinate(row.x) - scale.range()[0])).toBeGreaterThanOrEqual(row.r + 3);
-      expect(Math.abs(scale.range()[1] - scale.coordinate(row.x))).toBeGreaterThanOrEqual(row.r + 15);
+      expect(Math.abs(scale.coordinate(row.x) - scale.range()[0])).toBeGreaterThanOrEqual(radiusOf(row.r) + 3);
+      expect(Math.abs(scale.range()[1] - scale.coordinate(row.x))).toBeGreaterThanOrEqual(radiusOf(row.r) + 15);
     }
     expect(Math.abs(scale.coordinate(0) - scale.range()[0])).toBeLessThan(5.02);
   });

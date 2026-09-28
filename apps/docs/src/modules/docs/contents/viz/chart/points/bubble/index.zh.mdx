@@ -119,7 +119,43 @@ export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
 
 ### 气泡映射
 
-React 通过 `BubbleEncodings` 声明，Vanilla API 使用 `encodings`，直接 IR 使用 `recipe.encodings`。映射决定气泡的位置、数值字段对应的大小，以及分类颜色。
+映射决定气泡的位置、数值字段对应的大小，以及分类颜色。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<BubbleEncodings x="gdpPerCapita" y="lifeExpectancy" size="population" color="continent" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  x: 'gdpPerCapita',
+  y: 'lifeExpectancy',
+  size: 'population',
+  color: 'continent',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    x: 'gdpPerCapita',
+    y: 'lifeExpectancy',
+    size: 'population',
+    color: 'continent',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 下面使用 Gapminder 2007 年的 142 个国家和地区数据，将收入、预期寿命与人口规模放在同一张图中，比较不同洲的分布。
 
@@ -131,6 +167,7 @@ React 通过 `BubbleEncodings` 声明，Vanilla API 使用 `encodings`，直接 
 切换分类着色，观察 `color` 如何区分洲。对比相近位置的不同大小气泡，可区分“指标接近”和“人口规模接近”。收入与寿命的关联不意味着已控制其他影响因素。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['bubble-encodings', 'bubble-basic.data.ts']}
@@ -139,11 +176,47 @@ React 通过 `BubbleEncodings` 声明，Vanilla API 使用 `encodings`，直接 
   size="xl"
 />
 
-完整属性与约束见 [API 参考：气泡映射](#气泡映射-1)。
+完整属性与约束见 [API 参考：BubbleEncodings](#bubbleencodings)。
 
 ### 气泡属性
 
-React 通过 `BubbleProperties` 声明，Vanilla API 使用 `properties`，直接 IR 使用 `recipe.properties`。属性控制固定外观，不替代必需的数值大小映射。
+固定属性控制气泡外观，不替代必需的数值大小映射。气泡大小通常不统一，因此默认使用 `autoPadding: 'point-aware'`，按各气泡的实际位置与半径计算留白。策略说明与效果对比见 [点图总览：自动补齐边缘留白](/viz/chart/points#自动补齐边缘留白)。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<BubbleProperties fillOpacity={0.35} stroke="#475569" strokeWidth={1.5} shape="circle" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  fillOpacity: 0.35,
+  stroke: '#475569',
+  strokeWidth: 1.5,
+  shape: 'circle',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    fillOpacity: 0.35,
+    stroke: '#475569',
+    strokeWidth: 1.5,
+    shape: 'circle',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
 
 同一数据中，人口较大的气泡可能盖住邻近国家。本节用透明填充和轮廓调整可读性，位置与人口映射保持不变。
 
@@ -155,6 +228,7 @@ React 通过 `BubbleProperties` 声明，Vanilla API 使用 `properties`，直�
 使用下方控件比较填充和描边的组合。不要用固定半径调整人口编码；需要相同大小的点时应使用散点图。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['bubble-appearance', 'bubble-basic.data.ts']}
@@ -163,11 +237,61 @@ React 通过 `BubbleProperties` 声明，Vanilla API 使用 `properties`，直�
   size="xl"
 />
 
-完整属性与约束见 [API 参考：气泡属性](#气泡属性-1)。
+完整属性与约束见 [API 参考：BubbleProperties](#bubbleproperties)。
 
 ### 气泡图元
 
-React 通过 `BubbleMark` 声明，Vanilla API 使用 `marks`，直接 IR 使用 `recipe.marks`。 React 不传 `kind`；Vanilla / IR 图元对象使用 `kind: 'bubble'`。图元用于追加或替换气泡，大小始终继承图形的数值映射。
+图元用于追加或替换气泡，大小始终继承图形的数值映射。
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<BubbleMark
+  override
+  properties={{
+    fillOpacity: 0.15,
+    strokeWidth: 2,
+  }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+marks: [
+  {
+    kind: 'bubble',
+    override: true,
+    properties: {
+      fillOpacity: 0.15,
+      strokeWidth: 2,
+    },
+  },
+],
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'bubble',
+      override: true,
+      properties: {
+        fillOpacity: 0.15,
+        strokeWidth: 2,
+      },
+    },
+  ],
+},
+```
+
+</DocTab>
+</DocTabs>
 
 下面仍展示收入、寿命与人口，但将主气泡替换为低透明度填充和较粗轮廓。图中不会因这次替换增加第二套人口数据。
 
@@ -178,15 +302,16 @@ React 通过 `BubbleMark` 声明，Vanilla API 使用 `marks`，直接 IR 使用
 替换前后 size 都来自 recipe 的 population 字段。Bubble 图元没有 size 覆盖入口，因此不会无意中失去第三个数值角色。
 
 <ComponentPreview
+  hideCode
   mode="showcase"
   responsive
   files={['bubble-marks', 'bubble-basic.data.ts']}
   size="xl"
   controls={{ name: 'bubble-marks' }}
-  caption="切换替换与叠加模式，调整图元样式，观察继承与覆盖的效果。"
+  caption="调整填充不透明度与轮廓线宽，观察气泡的遮挡和边界。"
 />
 
-完整属性与约束见 [API 参考：气泡图元](#气泡图元-1)。
+完整属性与约束见 [API 参考：BubbleMark](#bubblemark)。
 
 ## 扩展用法
 
@@ -245,7 +370,28 @@ React 通过 `BubbleMark` 声明，Vanilla API 使用 `marks`，直接 IR 使用
 
 React 中，同一项配置不能同时通过根 `recipe` 与子组件声明，否则报错。
 
-气泡图使用对数位置轴时不支持 `point-aware`；尺寸映射的 sqrt 尺度不属于位置轴限制。全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
+全部方向显式指定 `domainPadding` 时不启动逐点求解。公共属性和覆盖规则见 [点图公共配置](/viz/chart/points#公共配置)。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释此类图表的特殊行为；只需使用 API 时可以跳过。" />
+
+### 图形构建
+
+Chart 将气泡图元解析为 Plot Point，以数值字段控制点的大小。下表只列气泡图特有的转换。
+
+| 分组 | `@retikz/chart`              | `@retikz/plot`               | 描述                                                  |
+| ---- | ---------------------------- | ---------------------------- | ----------------------------------------------------- |
+| 映射 | `size`                       | `size`                       | 将必需的数值字段映射到点尺寸；尺寸尺度默认使用 `sqrt` |
+| 属性 | `fillOpacity`、`strokeWidth` | `fillOpacity`、`strokeWidth` | 先应用 0.7 和 1 的默认外观，再由显式属性覆盖          |
+| 图元 | `BubbleChartMarkSchema`      | `PointMarkSchema`            | 每个气泡图元解析为一个 Plot Point                     |
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/point/bubble/mark.ts', label: '气泡默认外观与图元解析' },
+    { path: 'packages/viz/chart/src/point/shared/mark.ts', label: 'Point 字段映射' },
+  ]}
+/>
 
 ## API 参考
 
@@ -253,7 +399,7 @@ React 使用 `BubbleChart`，可通过 `recipe` 属性或专属子组件提供�
 
 React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局、标题与指南配置见 [编写与解析](/viz/chart/model/authoring)。
 
-### 气泡映射
+#### BubbleEncodings
 
 对应 `BubbleEncodings`、Vanilla `encodings` 和 IR `recipe.encodings`。
 
@@ -269,32 +415,32 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 
 公共映射参数不在这里展开；精确输入结构见 [映射 Schema](#bubblechartencodingsschema)。
 
-### 气泡属性
+#### BubbleProperties
 
 对应 `BubbleProperties`、Vanilla `properties` 和 IR `recipe.properties`。
 
-| 分类       | 属性            | 类型                                                     | 说明                                                             |
-| ---------- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
-| 形状       | `shape`         | `string`                                                 | 已注册的形状名                                                   |
-| 颜色与填充 | `color`         | `string`                                                 | 设置主色                                                         |
-|            | `fill`          | `string`、`JsonObject`                                   | 设置填充颜色、画笔                                               |
-| 描边       | `stroke`        | `string`、`JsonObject`                                   | 设置描边颜色、画笔                                               |
-|            | `strokeWidth`   | `number`                                                 | 描边宽度，必须大于或等于 0；默认 1                               |
-|            | `dashed`        | `boolean`                                                | 启用虚线描边                                                     |
-|            | `dotted`        | `boolean`                                                | 启用点线描边                                                     |
-|            | `dashPattern`   | `Array<number>`                                          | 自定义虚线序列；至少一项，各项非负                               |
-| 透明度     | `opacity`       | `number`                                                 | 整体透明度，范围 0–1                                             |
-|            | `fillOpacity`   | `number`                                                 | 填充透明度，范围 0–1；默认 0.7                                   |
-|            | `strokeOpacity` | `number`                                                 | 描边透明度，范围 0–1                                             |
-| 变换       | `rotate`        | `number`                                                 | 旋转角度                                                         |
-|            | `dx`            | `number`                                                 | 水平偏移                                                         |
-|            | `dy`            | `number`                                                 | 垂直偏移                                                         |
-| 留白       | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
-|            | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                   |
+| 分类       | 属性            | 类型                                                     | 说明                                                                               |
+| ---------- | --------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 形状       | `shape`         | `string`                                                 | 已注册的形状名                                                                     |
+| 颜色与填充 | `color`         | `string`                                                 | 设置主色                                                                           |
+|            | `fill`          | `string`、`JsonObject`                                   | 设置填充颜色、画笔                                                                 |
+| 描边       | `stroke`        | `string`、`JsonObject`                                   | 设置描边颜色、画笔                                                                 |
+|            | `strokeWidth`   | `number`                                                 | 描边宽度，必须大于或等于 0；默认 1                                                 |
+|            | `dashed`        | `boolean`                                                | 启用虚线描边                                                                       |
+|            | `dotted`        | `boolean`                                                | 启用点线描边                                                                       |
+|            | `dashPattern`   | `Array<number>`                                          | 自定义虚线序列；至少一项，各项非负                                                 |
+| 透明度     | `opacity`       | `number`                                                 | 整体透明度，范围 0–1                                                               |
+|            | `fillOpacity`   | `number`                                                 | 填充透明度，范围 0–1；默认 0.7                                                     |
+|            | `strokeOpacity` | `number`                                                 | 描边透明度，范围 0–1                                                               |
+| 变换       | `rotate`        | `number`                                                 | 旋转角度                                                                           |
+|            | `dx`            | `number`                                                 | 水平偏移                                                                           |
+|            | `dy`            | `number`                                                 | 垂直偏移                                                                           |
+| 留白       | `autoPadding`   | `'max-radius'`、`'point-aware'`、`object`                | 自动留白策略，默认 point-aware；对象写法通过 kind 选择策略、clearance 设置外缘净空 |
+|            | `domainPadding` | `number`、`IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | 显式位置域留白，优先于自动策略                                                     |
 
 完整属性结构见 [属性 Schema](#bubblechartpropertiesschema)；公共外观配置不在这里展开。
 
-### 气泡图元
+#### BubbleMark
 
 对应 `BubbleMark`、Vanilla `marks` 和 IR `recipe.marks`。
 
@@ -308,7 +454,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 
 以下 Schema 从 `@retikz/chart/point` 导出，描述可持久化的 JSON IR。根结构与公共配置仅保留类型名称；当前图形的配方、映射、属性和图元在下方依次说明。React 与 Vanilla 编写入口见 API 参考。
 
-### BubbleChartSchema
+#### BubbleChartSchema
 
 <ZodSchema
   name="BubbleChartSchema"
@@ -329,7 +475,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
   }}
 />
 
-### BubbleChartRecipeSchema
+#### BubbleChartRecipeSchema
 
 <ZodSchema
   name="BubbleChartRecipeSchema"
@@ -344,7 +490,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
   }}
 />
 
-### BubbleChartEncodingsSchema
+#### BubbleChartEncodingsSchema
 
 <ZodSchema
   name="BubbleChartEncodingsSchema"
@@ -363,7 +509,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
   }}
 />
 
-### BubbleChartPropertiesSchema
+#### BubbleChartPropertiesSchema
 
 <ZodSchema
   name="BubbleChartPropertiesSchema"
@@ -399,12 +545,12 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
     dx: '水平偏移',
     dy: '垂直偏移',
     label: '标签配置',
-    autoPadding: '自动留白策略；省略时使用 max-radius',
+    autoPadding: '自动留白策略；省略时使用 point-aware',
     domainPadding: '显式位置域留白，优先于 autoPadding',
   }}
 />
 
-### BubbleChartMarkSchema
+#### BubbleChartMarkSchema
 
 `encodings` 只允许 x、y、color、opacity、shape，各项均可省略且仅接受字段名字符串，不接受 recipe 的完整映射对象。`properties` 复用上方属性的含义与成员结构，但不包含 `autoPadding`、`domainPadding`；省略的配置沿用当前图形可继承的映射与属性。 Bubble 的尺寸来自 recipe.encodings.size 映射，图元不能单独覆盖 size。
 

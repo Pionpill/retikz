@@ -998,7 +998,7 @@ describe('Chart providers through Core compile', () => {
 });
 
 describe('point-aware compile boundaries', () => {
-  it('rejects categorical Strip automatic ends but permits fully explicit padding', () => {
+  it('compiles categorical Strip automatic ends and fully explicit padding', () => {
     const sourceOf = (domainPadding?: number) =>
       StripChartSchema.parse({
         namespace: 'chart',
@@ -1026,7 +1026,7 @@ describe('point-aware compile boundaries', () => {
         { roots: [PathClipProvider.key], providers: [PathClipProvider] },
       ],
     });
-    expect(() => compileToScene(sceneOf(sourceOf()), definitions)).toThrow(/domainPadding/);
+    expect(compileToScene(sceneOf(sourceOf()), definitions).scene.primitives.length).toBeGreaterThan(0);
     expect(compileToScene(sceneOf(sourceOf(0)), definitions).scene.primitives.length).toBeGreaterThan(0);
   });
 });

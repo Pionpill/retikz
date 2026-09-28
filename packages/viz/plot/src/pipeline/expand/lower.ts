@@ -437,7 +437,16 @@ export const lowerPlotWithDataArtifact = (
     palette: resolvedTheme.palette,
   };
   const markPadding = node.scales.some(scale => markDomainPaddingOf(scale) !== undefined)
-    ? createMarkPaddingContext(channelCtx)
+    ? createMarkPaddingContext(channelCtx, (view, frame) =>
+        resolveMarkPlacement(
+          resolveMarkOperation(view.mark, { registry: markRegistry }),
+          view.dataView.rows,
+          frame,
+          resolveMarkChannels(view.mark, { ...channelCtx, ...view.dataView }),
+          { width, height },
+          positionAdjustmentRegistry,
+        ),
+      )
     : undefined;
   const scopedFramesContext = {
     markPadding,
@@ -538,6 +547,7 @@ export const lowerPlotWithDataArtifact = (
         { width, height },
         positionAdjustmentRegistry,
         boundaryRangesByScope.get(scopeId),
+        frame.roles.filter(role => markPadding?.protects(frame.roleScales?.[role], mark.id)),
       );
       if (markRanges === undefined) continue;
       const scopeRanges = rangesByScope.get(scopeId) ?? {};
@@ -944,6 +954,7 @@ export const lowerPlotWithDataArtifact = (
             { width: panelWidth, height: panelHeight },
             positionAdjustmentRegistry,
             boundaryRanges,
+            resolution.frame.roles.filter(role => markPadding?.protects(resolution.frame.roleScales?.[role], mark.id)),
           );
           if (markRanges === undefined) continue;
           for (const [role, candidateRange] of Object.entries(markRanges)) {

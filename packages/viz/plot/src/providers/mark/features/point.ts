@@ -189,7 +189,7 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
     if (mark.encoding.text !== undefined)
       throw new RetikzPlotError('Text points do not provide size-only domain padding');
     const size = channels.nodeDeliveries?.find(delivery => delivery.channel === 'size');
-    return rows.flatMap(row => {
+    return rows.flatMap((row, index) => {
       const radius =
         size === undefined
           ? mark.size?.kind === 'constant'
@@ -197,7 +197,13 @@ export const pointMarkDefinition: MarkDefinition<IRPlotPointMark> = {
             : POINT_DEFAULT_RADIUS
           : (size.resolver(row) as number | undefined);
       if (radius === undefined) return [];
-      return [{ values: roles.map(role => channelValue(mark.encoding[role], row)), extent: roles.map(() => radius) }];
+      return [
+        {
+          key: String(index),
+          values: roles.map(role => channelValue(mark.encoding[role], row)),
+          extent: roles.map(() => radius),
+        },
+      ];
     });
   },
   channelKinds: nodeChannelKinds,
