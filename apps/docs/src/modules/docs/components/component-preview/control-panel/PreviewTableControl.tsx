@@ -24,6 +24,8 @@ export type PreviewTableControlProps = {
   density?: 'compact' | 'default';
   /** 当前实时控件值 */
   values: Readonly<PreviewControlValues>;
+  /** 在独立数据页签内占满可用高度 */
+  fillAvailableHeight?: boolean;
 };
 
 const STATIC_VIEW_ID = '__preview-table-static-view__';
@@ -51,7 +53,7 @@ const resolveTableRows = (
 
 /** 在属性面板内显示只读二维数据 */
 export const PreviewTableControl: FC<PreviewTableControlProps> = props => {
-  const { field, density = 'default', values } = props;
+  const { field, density = 'default', values, fillAvailableHeight = false } = props;
   const { t } = useTranslation();
   const compact = density === 'compact';
   const views = tableViewsOf(field);
@@ -69,7 +71,11 @@ export const PreviewTableControl: FC<PreviewTableControlProps> = props => {
   const scrollAreaMaxHeight = rowHeight * (PREVIEW_TABLE_DEFAULT_VISIBLE_ROWS + 1) + 2;
 
   return (
-    <div data-slot="preview-table-control" data-table-density={density} className="min-w-0 space-y-1.5">
+    <div
+      data-slot="preview-table-control"
+      data-table-density={density}
+      className={cn('min-w-0 space-y-1.5', fillAvailableHeight && 'flex h-full min-h-0 flex-col')}
+    >
       <div className="flex min-w-0 items-center justify-between gap-2">
         <span className="min-w-0 truncate text-xs font-medium" title={field.label}>
           {field.label}
@@ -131,8 +137,11 @@ export const PreviewTableControl: FC<PreviewTableControlProps> = props => {
           <div
             data-slot="preview-table-scroll-area"
             data-visible-body-rows={PREVIEW_TABLE_DEFAULT_VISIBLE_ROWS}
-            className="max-w-full overflow-auto rounded-md border bg-background"
-            style={{ maxHeight: `${scrollAreaMaxHeight}px` }}
+            className={cn(
+              'max-w-full overflow-auto rounded-md border bg-background',
+              fillAvailableHeight && 'min-h-0 flex-1',
+            )}
+            style={fillAvailableHeight ? undefined : { maxHeight: `${scrollAreaMaxHeight}px` }}
           >
             <table className="w-max min-w-full border-separate border-spacing-0 text-xs">
               <thead>

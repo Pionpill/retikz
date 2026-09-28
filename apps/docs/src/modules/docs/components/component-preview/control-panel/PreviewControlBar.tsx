@@ -1,6 +1,5 @@
 import { RotateCcw, Table2 } from 'lucide-react';
 import type { FC } from 'react';
-import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -26,8 +25,7 @@ export type PreviewControlBarProps = {
 export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
   const { definition, controlState, controlContract } = props;
   const { t } = useTranslation();
-  const barRef = useRef<HTMLDivElement>(null);
-  const [tableBoundary, setTableBoundary] = useState<Element | null>(null);
+
   if (!definition) return null;
   const sections = resolveVisiblePreviewControlSections(
     definition.presentation === 'panel' ? definition.sections : [{ controls: definition.controls }],
@@ -35,7 +33,7 @@ export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
   );
   return (
     <TooltipProvider delayDuration={250}>
-      <div ref={barRef} data-slot="preview-control-bar" className="flex flex-wrap items-center gap-2 py-3">
+      <div data-slot="preview-control-bar" className="flex flex-wrap items-center gap-2 py-3">
         {controlContract?.presets?.map(preset => (
           <Button
             key={preset.id}
@@ -55,12 +53,7 @@ export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
           .flatMap(section => section.controls)
           .map(field =>
             field.kind === 'table' ? (
-              <Popover
-                key={field.id}
-                onOpenChange={open => {
-                  if (open) setTableBoundary(barRef.current?.closest('[data-slot="preview-showcase"]') ?? null);
-                }}
-              >
+              <Popover key={field.id}>
                 <PopoverTrigger
                   className={cn(
                     buttonVariants({ size: 'sm', variant: 'ghost' }),
@@ -71,9 +64,8 @@ export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
                   {field.label}
                 </PopoverTrigger>
                 <PopoverContent
-                  side="top"
+                  side="bottom"
                   align="start"
-                  collisionBoundary={tableBoundary}
                   collisionPadding={4}
                   className="max-h-[min(24rem,var(--radix-popover-content-available-height))] w-[min(42rem,var(--radix-popover-content-available-width))] overflow-auto"
                 >

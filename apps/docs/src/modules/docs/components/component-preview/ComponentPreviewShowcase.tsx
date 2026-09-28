@@ -11,7 +11,8 @@ import { HighlightCode } from '../highlight-code';
 import { ToolbarIconButton } from './components';
 import { DOT_PATTERN_STYLE } from './constants';
 import { PreviewContextBar, PreviewThemeBoundary } from './context-bar';
-import { PreviewControlBar } from './control-panel';
+import { PreviewControlBar, PreviewTableControl } from './control-panel';
+import { resolveVisiblePreviewControlSections } from './controls';
 import { PreviewPanel } from './preview-panel';
 import type { PreviewPanelState } from './preview-panel';
 import { filenameFromKey } from './registry';
@@ -87,16 +88,25 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
     width: previewWidth = 0,
   } = props;
   const [codeExpanded, setCodeExpanded] = useState(false);
-  const [tab, setTab] = useState<'preview' | 'code'>('preview');
+  const [tab, setTab] = useState<'preview' | 'data' | 'code'>('preview');
   const theme = usePreviewTheme(themeStyleSelection, themeMode);
   const display = sourceState.display(true);
   const views = sourceState.views;
+  const tableFields = definition
+    ? resolveVisiblePreviewControlSections(
+        definition.presentation === 'panel' ? definition.sections : [{ controls: definition.controls }],
+        previewState.controlState.values,
+      )
+        .flatMap(section => section.controls)
+        .filter(field => field.kind === 'table')
+    : [];
+  const activeTab = tab === 'data' && tableFields.length === 0 ? 'preview' : tab;
   return (
     <Tabs
-      value={tab}
+      value={activeTab}
       onValueChange={value => {
         if (value === 'code') onSourceRequested?.();
-        if (value === 'preview' || value === 'code') setTab(value);
+        if (value === 'preview' || value === 'data' || value === 'code') setTab(value);
       }}
       className="min-w-0 w-full gap-0"
       data-slot="preview-showcase"
@@ -105,10 +115,11 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
         <div className="flex items-center gap-2">
           <TabsList aria-label={lang === 'zh' ? '展示视图' : 'Display view'}>
             <TabsTrigger value="preview">{lang === 'zh' ? '预览' : 'Preview'}</TabsTrigger>
+            {tableFields.length > 0 ? <TabsTrigger value="data">{lang === 'zh' ? '数据' : 'Data'}</TabsTrigger> : null}
             {views.length > 0 ? <TabsTrigger value="code">{lang === 'zh' ? '代码' : 'Code'}</TabsTrigger> : null}
           </TabsList>
-          <div className={cn('flex items-center', tab === 'preview' && 'showcase-hover-tools')}>
-            {tab === 'code' ? (
+          <div className={cn('flex items-center', activeTab === 'preview' && 'showcase-hover-tools')}>
+            {activeTab === 'code' ? (
               <Tabs
                 value={sourceState.view}
                 onValueChange={value => {
@@ -124,7 +135,7 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
                   ))}
                 </TabsList>
               </Tabs>
-            ) : (
+            ) : activeTab === 'preview' ? (
               <PreviewContextBar
                 inline
                 iconOnly
@@ -136,16 +147,16 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
                 themeStyleSelection={themeStyleSelection}
                 onThemeStyleChange={onThemeStyleChange}
               />
-            )}
+            ) : null}
           </div>
         </div>
-        {tab === 'preview' ? (
+        {activeTab === 'preview' ? (
           <div className="flex flex-wrap items-center gap-1">
             {tools.map(tool => (
               <div key={tool.id}>{tool.render(previewState.runtime)}</div>
             ))}
           </div>
-        ) : (
+        ) : activeTab === 'code' ? (
           <div className="flex min-w-0 items-center gap-2">
             {sourceState.files.length > 1 ? (
               <Select
@@ -184,12 +195,15 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
               </ToolbarIconButton>
             ) : null}
           </div>
-        )}
+        ) : null}
       </div>
       <div className="grid min-w-0 grid-cols-1">
         <div
-          className={cn('col-start-1 row-start-1 min-w-0', tab === 'code' && 'invisible pointer-events-none opacity-0')}
-          aria-hidden={tab === 'code' ? true : undefined}
+          className={cn(
+            'col-start-1 row-start-1 min-w-0',
+            activeTab !== 'preview' && 'invisible pointer-events-none opacity-0',
+          )}
+          aria-hidden={activeTab !== 'preview' ? true : undefined}
         >
           <div className="w-full overflow-hidden rounded-xl" style={previewWidth ? DOT_PATTERN_STYLE : undefined}>
             <div
@@ -217,6 +231,20 @@ export const ComponentPreviewShowcase: FC<ComponentPreviewShowcaseProps> = props
             controlState={previewState.controlState}
           />
         </div>
+        {tableFields.length > 0 ? (
+          <TabsContent value="data" className="col-start-1 row-start-1 h-0 min-h-full min-w-0 overflow-auto rounded-xl">
+            <div data-slot="showcase-data" className={cn('min-h-full min-w-0', tableFields.length === 1 && 'h-full')}>
+              {tableFields.map(field => (
+                <PreviewTableControl
+                  key={field.id}
+                  field={field}
+                  values={previewState.controlState.values}
+                  fillAvailableHeight={tableFields.length === 1}
+                />
+              ))}
+            </div>
+          </TabsContent>
+        ) : null}
         <TabsContent
           value="code"
           className={cn(
