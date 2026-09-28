@@ -1,150 +1,102 @@
 ---
 title: GridLayout
-description: Arrange arbitrary graphical children with explicit and implicit two-dimensional tracks, spans, and deterministic auto placement.
+description: Arrange graphics on shared row and column tracks with fixed sizes, fractional space, and spanning
 ---
 
-`GridLayout` divides its content box into physical column and row tracks. Tracks may be fixed, use minimum or natural content contributions, absorb finite free space by fractions, or combine bounds with `minmax`. Items may declare continuous spans or follow `autoFlow` into the next available area.
+`GridLayout` divides a content area into rows and columns. Each row or column is a track: items on that track share sizing and alignment references. It suits multi-column information, aligned matrices of graphics, and compositions with a spanning heading above separate columns.
 
-## Usage
+You declare track sizes and item ranges; the layout resolves boundaries and places content. Tracks can have fixed sizes, derive sizes from content, or share finite space by fractional weights. Items without explicit positions can find available cells automatically.
 
-```tsx
-import { Layout, Node } from '@retikz/react';
-import { GridLayout, LayoutItem } from '@retikz/layout-react';
-```
+## Responsibilities at a glance
 
-```tsx
-<Layout>
-  <GridLayout
-    columns={[
-      { kind: 'fixed', value: 100 },
-      { kind: 'fraction', factor: 1 },
-    ]}
-    columnGap={8}
-  >
-    <LayoutItem kind="grid">
-      <Node position={[0, 0]} text="Label" />
-    </LayoutItem>
-    <LayoutItem kind="grid">
-      <Node position={[0, 0]} text="42%" />
-    </LayoutItem>
-  </GridLayout>
-</Layout>
-```
+Serializable IR describes the container, item rules, and graphical content. Each layer records a different set of facts:
 
-Use `createGridLayout()` with `GridLayoutDefinition` for JSON/IR, or `gridLayout()` with `GridLayoutInputEmbedAdapter` for Vanilla. For the complete family, pass the three layout Definitions in `composites`, or use `LayoutInputEmbedAdapters` for Vanilla embeds.
+| IR layer                                    | Describes                                                                      | Scope                                               |
+| ------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------- |
+| Layout container                            | Row and column tracks, container size, gaps, and automatic placement direction | Organizes space for the entire group                |
+| Item configuration (an entry in `children`) | Row and column positions, spans, and individual alignment                      | Determines how one child participates in layout     |
+| Child graphic (the entry's `child`)         | Content and geometry declarations for a node, path, or nested graphic          | Defines what is drawn and the basis for measurement |
 
-| Scenario         | Public entry                                                                                      |
-| ---------------- | ------------------------------------------------------------------------------------------------- |
-| React            | `GridLayout`, `LayoutItem` (`@retikz/layout-react`)                                               |
-| Vanilla          | `gridLayout`, `GridLayoutInputEmbedAdapter` (`@retikz/layout-vanilla`)                            |
-| Optional inspect | `InspectGridLayout` (`@retikz/layout-react/inspect`), `inspectGridLayout` (Vanilla)               |
-| IR / persistence | `GridLayoutSchema`, `createGridLayout`, `IRGridLayout`, `GridLayoutDefinition` (`@retikz/layout`) |
+The container's `children` hold item configurations, and each entry's `child` holds graphical IR. Layout rules and graphical content can therefore change independently: adjusting an item's allocation or placement does not require rewriting its graphic.
 
-## Examples
+React expresses these declarations through JSX composition; Vanilla uses functions and objects. IR can also be supplied directly. These entry points ultimately express the same layout contract. Basic usage compares their syntax, while this overview explains behavior through the shared contract.
 
-### Tracks, spans, and auto placement
+## Understanding tracks and spanning
 
-The example combines fixed, `1fr`, and `2fr` tracks, an explicit span, and items without coordinates. Auto placement advances in canonical authored order and does not implement browser-style dense backfilling.
+The grid below has two rows and three columns. The first column has a fixed width of 100; the other columns share available space with weights of 1:2. The heading spans all three columns in the first row, and the remaining items automatically fill the second row.
 
-<ComponentPreview files="grid-layout-basic" size="md" />
+<ComponentPreview files="entry" hideCode size="sm" />
 
-### Controls
+A spanning heading occupies one continuous region, including the gaps it crosses. It does not merge the columns into a new track: the second row retains the original column boundaries.
 
-Switch the non-dense auto-placement direction, fraction weight, gaps, and cell alignment. A fixed viewBox keeps track proportions, spans, and placement directly comparable.
+Fractional tracks need a finite available width. This example sets the container width explicitly, subtracts padding, column gaps, and the fixed column, then distributes space between the fractional tracks. Content minimums and other constraints can affect the result, so fractional weights alone do not always determine final widths.
 
-<ComponentPreview
-  files="grid-layout-playground"
-  size="lg"
-  caption="Recommended shows the content outline, track bounds, and fixed gaps; use Inspection overlay to reveal padding, margin, distributed-space boundaries, and other details."
-/>
+A slot is the region assigned to an item, not its visible border. The Nodes remain centered within their slots at their own content sizes; spanning three columns does not automatically stretch the heading into a full-width rectangle.
 
-## How it works
+<Comparison target="css" title="Mapping to CSS Grid">
 
-<ComponentAlert
-  type="tip"
-  title="Optional for everyday use"
-  description="Revisit this section when diagnosing track contributions, auto placement, or text-reflow height."
-/>
+CSS Grid and GridLayout both organize content through row and column tracks. This table maps layout IR: the container declares tracks, while entries in `children` declare occupied regions. React and Vanilla share these semantics.
 
-GridLayout uses a fixed physical x-to-y solve order:
+| CSS Grid                                       | GridLayout IR                          | Corresponding meaning                                                      |
+| ---------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
+| `display: grid`                                | `type: 'gridLayout'`                   | Selects grid layout; the IR also requires the layout package's `namespace` |
+| `grid-template-columns` / `grid-template-rows` | `columns` / `rows`                     | Explicit column and row tracks                                             |
+| Fixed lengths / `fr` / `minmax()`              | `fixed` / `fraction` / `minmax` tracks | Fixed sizing, fractional shares, and bounds                                |
+| `grid-auto-columns` / `grid-auto-rows`         | `implicitColumn` / `implicitRow`       | Sizing policies for generated tracks                                       |
+| `grid-auto-flow`                               | `autoFlow`                             | Automatic row or column placement; `dense` is not supported                |
+| `grid-column` / `grid-row`                     | Item `column` / `row`                  | Starting tracks and spans through `start` and `span`                       |
+| `column-gap` / `row-gap`                       | `columnGap` / `rowGap`                 | Physical horizontal and vertical track gaps                                |
+| `justify-items` / `align-items`                | `justifyItems` / `alignItems`          | Default item alignment, overridden by `justifySelf` / `alignSelf`          |
+| `justify-content` / `align-content`            | `justifyContent` / `alignContent`      | Distribution of the resolved column or row group within the container      |
 
-1. Validate explicit placement, resolve incomplete items by `autoFlow`, and materialize implicit tracks.
-2. Probe minimum and natural contributions along x, then solve column profiles and finite width.
-3. Pass final column slots to children, probe reflowed heights along y, then solve row profiles.
-4. Place real allocation bounds by container or item alignment and replay only selected probes.
+This page's columns are comparable to `grid-template-columns: 100px 1fr 2fr`, and the heading's `column: { span: 3 }` resembles `grid-column: span 3`. These CSS fragments explain allocation rules; they are not input syntax accepted by GridLayout.
 
-This physical x-to-y order lets text determine height after column width is known, without DOM readback or iterative guessing. `GridLayoutArtifact` exposes resolved columns, rows, implicit flags, and final item spans.
+Explicit placement uses different numbering: positive CSS grid lines start at 1, while GridLayout `start` begins at 0. For example, CSS `grid-column: 1 / span 2` maps to `column: { start: 0, span: 2 }`. CSS line numbers, negative indexes, and named areas cannot be copied directly.
 
-<SourceLinks
-  sources={[
+GridLayout uses drawing coordinate units and structured track configurations rather than CSS cascading or the full browser track-sizing algorithm. Content tracks use child graphics' minimum or natural size contributions, and fractional tracks require finite space. Explicit region overlap is rejected by default through `overlap: 'reject'`, unlike CSS Grid's allowance for overlapping items. Consult the API and Schema references for supported values.
+
+</Comparison>
+
+## Choosing a layout and understanding its limits
+
+| Arrangement goal                                                     | Choice                                          |
+| -------------------------------------------------------------------- | ----------------------------------------------- |
+| Shared boundaries across rows and columns, with spanning             | `GridLayout`                                    |
+| Sequential items along one axis, with growth, shrinkage, or wrapping | [FlexLayout](/library/layout/flex-layout)       |
+| Graphics sharing a region, with layering and positioning             | [OverlayLayout](/library/layout/overlay-layout) |
+
+GridLayout arranges child graphics; it does not draw table borders or reference grid lines. For an independent reference grid graphic, use Standard's [Grid](/library/standard/presentation/grid).
+
+Start with basic usage to declare tracks and items. Extended usage combines intrinsic and bounded tracks, implicit tracks, and overlap. The API and Schema references provide interface and field details; implementation explains automatic placement and track solving.
+
+## Contents
+
+<LinkedSections
+  items={[
     {
-      label: 'GridLayout input contract',
-      path: 'packages/library/layout/src/composites/grid-layout/schema.ts',
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/grid-layout/usage',
     },
-    { label: 'Grid placement', path: 'packages/library/layout/src/composites/grid-layout/placement.ts' },
-    { label: 'Grid track solver', path: 'packages/library/layout/src/composites/grid-layout/tracks.ts' },
-    { label: 'GridLayout compile', path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts' },
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and clipping',
+      url: '/library/layout/grid-layout/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/grid-layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public functions, types, and props',
+      url: '/library/layout/grid-layout/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
   ]}
 />
-
-## API Reference
-
-### Optional React inspection component
-
-| Prop       | Type                                            | Default | Description                                                                             |
-| ---------- | ----------------------------------------------- | ------- | --------------------------------------------------------------------------------------- |
-| `inspect?` | `false` \| `true` \| `GridLayoutInspectOptions` | `true`  | `InspectGridLayout` requests this occurrence; `false` only cancels the current instance |
-
-Base `GridLayout` has no `inspect` prop. The optional `InspectGridLayout` object form controls `tracks`, `cells`, fixed `gaps`, `distributedSpace`, and `spans` independently. See [Runtime Reference](/library/layout/reference/runtime#layout-inspector) for shared fields and host or Scope rules.
-
-### `GridLayoutInput`
-
-| Prop              | Type                                        | Default           | Description                                  |
-| ----------------- | ------------------------------------------- | ----------------- | -------------------------------------------- |
-| `columns`         | `Array<GridTrackInput>`                     | —                 | At least one explicit physical column track  |
-| `rows?`           | `Array<GridTrackInput>`                     | `[]`              | Explicit row tracks                          |
-| `implicitColumn?` | `GridTrackInput`                            | content natural   | Track used when placement extends columns    |
-| `implicitRow?`    | `GridTrackInput`                            | content natural   | Track used when placement extends rows       |
-| `autoFlow?`       | <ApiValues name="GridAutoFlow" />           | `'row'`           | Deterministic non-dense auto-placement axis  |
-| `overlap?`        | <ApiValues name="GridOverlap" />            | `'reject'`        | Policy for fully explicit item overlap       |
-| `columnGap?`      | `number`                                    | `0`               | Physical column gap                          |
-| `rowGap?`         | `number`                                    | `0`               | Physical row gap                             |
-| `justifyItems?`   | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'`       | Default horizontal item alignment            |
-| `alignItems?`     | <ApiValues name="LayoutAlignment" />        | `'stretch'`       | Default vertical item alignment              |
-| `justifyContent?` | <ApiValues name="LayoutDistribution" />     | `'start'`         | Horizontal distribution of the column group  |
-| `alignContent?`   | <ApiValues name="LayoutDistribution" />     | `'start'`         | Vertical distribution of the row group       |
-| `size?`           | `LayoutSizeInput`                           | content / content | Per-axis container allocation policy         |
-| `padding?`        | `number` \| `IRBoxSpacing`                  | `0`               | Insets from allocation to content            |
-| `overflow?`       | <ApiValues name="LayoutOverflow" />         | `'visible'`       | Whether visual output clips to allocation    |
-| `children?`       | `Array<GridLayoutItemInput>`                | `[]`              | Authored items; explicit keys must be unique |
-
-### `GridTrackInput`
-
-| Form     | Key fields                     | Meaning                                       |
-| -------- | ------------------------------ | --------------------------------------------- |
-| fixed    | `{ kind: 'fixed', value }`     | Fixed non-negative size                       |
-| content  | `{ kind: 'content', mode }`    | Child minimum or natural contribution         |
-| fraction | `{ kind: 'fraction', factor }` | Positive fraction weight in finite space      |
-| minmax   | `{ kind: 'minmax', min, max }` | Non-fraction lower and fixed/content/fr upper |
-
-### `GridLayoutItemInput`
-
-| Prop           | Type                                        | Default       | Description                                                        |
-| -------------- | ------------------------------------------- | ------------- | ------------------------------------------------------------------ |
-| `kind`         | `'grid'`                                    | —             | GridLayout item discriminator                                      |
-| `key?`         | `string`                                    | generated     | Optional stable identity; generated from source index when omitted |
-| `child`        | `IRChild`                                   | —             | Any JSON-safe Core child                                           |
-| `column?`      | `{ start?: number, span?: number }`         | auto / span 1 | Column placement                                                   |
-| `row?`         | `{ start?: number, span?: number }`         | auto / span 1 | Row placement                                                      |
-| `margin?`      | `number` \| `IRBoxSpacing`                  | `0`           | Item margin inside the track area                                  |
-| `justifySelf?` | `'start' \| 'center' \| 'end' \| 'stretch'` | container     | Horizontal alignment override                                      |
-| `alignSelf?`   | <ApiValues name="LayoutAlignment" />        | container     | Vertical alignment override                                        |
-
-In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
-
-## Related
-
-- [Layout containers](/library/layout): choosing a container and reading common artifacts
-- [API Reference](/library/layout/reference): input contracts, artifact contracts, and runtime wiring
-- [FlexLayout](/library/layout/flex-layout): one-axis distribution and wrapping
-- [OverlayLayout](/library/layout/overlay-layout): stacking inside one box

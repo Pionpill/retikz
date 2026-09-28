@@ -1,0 +1,288 @@
+---
+title: 基础用法
+description: 声明容器和子项，理解尺寸、间距与对齐
+---
+
+`FlexLayout` 沿一个主轴排布任意子图形。它可以把剩余空间分给可伸展项、在空间不足时收缩或换行，同时让固定几何保持真实尺寸、让文本按分配宽度重新排版。
+
+## 接入方式
+
+容器的 `children` 是一组子项，每项通过 `child` 承载图形。React 用 `FlexLayoutItem` 表达子项，Vanilla 与 IR 使用 `{ kind: 'flex', child: ... }`。下面先展示分配空间后的效果，四种接入代码则从两个内容尺寸的子项开始，说明最小组合关系。
+
+<ComponentPreview files="/library/layout/flex-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+React + JSX 中，`FlexLayout` 的直属子元素使用 `FlexLayoutItem`，每个子项承载一个可绘制内容：
+
+```text
+FlexLayout
+└── FlexLayoutItem
+    └── Node / FlexLayout
+```
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
+
+export const Example = () => (
+  <Layout>
+    <FlexLayout gap={12}>
+      <FlexLayoutItem>
+        <Node text="A" />
+      </FlexLayoutItem>
+      <FlexLayoutItem>
+        <Node text="B" />
+      </FlexLayoutItem>
+    </FlexLayout>
+  </Layout>
+);
+```
+
+`itemKey` 可以省略；Layout 会在内部生成容器局部有效 key，且不会把它写回 Source IR。只有需要跨重排保持稳定身份时才显式传入 `itemKey`；它不读取 React 保留的 `key`。每个 `FlexLayoutItem` 恰好接受一个可绘制子元素，或用 `ir` 显式传入一个 `IRChild`。
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { FlexLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'flexLayout',
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+export const Example = () => <Layout ir={ir} extensions={{ composites: [FlexLayoutDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { flexLayout, FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+
+const input = scene({
+  children: [
+    flexLayout({
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
+      ],
+    }),
+  ],
+});
+
+console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { FlexLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'flexLayout',
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+console.log(renderToSvgString(ir, { compile: { composites: [FlexLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+## 设置方向、尺寸与间距
+
+方向决定子项横着排还是竖着排，尺寸决定容器有多少空间，内边距和间距负责留白。以下都是容器属性。
+
+| 属性              | 可用值                                                                | 解释                                                       |
+| ----------------- | --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `direction`       | `row`, `row-reverse`, `column`, `column-reverse`                      | 横向或纵向主轴；反向模式只改变放置方向，不改变绘制顺序     |
+| `size.x / size.y` | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | 容器的物理宽、高：按内容求尺寸、固定尺寸或接收父级有限空间 |
+| `padding`         | 非负数，或按 `x` / `y` / 四边配置的对象                               | 从容器四边留出内边距，剩余部分为内容区                     |
+| `gap`             | 非负数，或 `{ column, row }` 非负间距对象                             | 相邻子项的固定间隔，在分配剩余空间前扣除                   |
+
+在 demo 中切换方向和尺寸策略，再调整内边距与间距。`size.x` / `size.y` 始终是物理宽、高：改为纵向排列后，应调整 y 轴的可用空间。初次使用可让两轴按内容求尺寸；需要指定行宽时只固定 x 轴。`fill` 需要父级提供有限空间。
+
+<ComponentPreview
+  files="flex-geometry"
+  size="md"
+  controlPanelDefaultSize={50}
+  caption="切换主轴和尺寸策略，再调整内边距与间隔。固定尺寸时才显示该轴的尺寸控件。"
+/>
+
+## 分配子项空间
+
+子项先取得基础尺寸，再根据容器剩余空间伸展或收缩。以下属性设置在子项上。
+
+| 属性     | 可用值                     | 解释                                                       |
+| -------- | -------------------------- | ---------------------------------------------------------- |
+| `basis`  | `content` 或非负数         | 子项的主轴基础尺寸；`content` 从内容测量取得               |
+| `grow`   | 非负数                     | 子项分配剩余空间的权重；`0` 不参与伸展，不表示最终尺寸比例 |
+| `shrink` | 非负数                     | 子项收缩权重；`0` 不收缩，实际权重还要乘以未约束基础尺寸   |
+| `size.x` | `{ kind: "fixed", value }` | 容器的固定宽度，`value` 为非负数                           |
+
+demo 中三个子项使用相同基础尺寸，并保留最小分配 32。减小基础尺寸，调整第一项的 `grow`，观察它如何分走余量；再增大基础尺寸或缩小容器，调整第二项的 `shrink`，观察收缩。第三项保持 `grow=1`、`shrink=1` 作为对照，固定几何不会自动缩放到槽位大小。
+
+<ComponentPreview
+  files="flex-allocation"
+  size="md"
+  caption="先减小基础尺寸观察伸展，再增大基础尺寸或减小容器宽度观察收缩；虚线框表示槽位。"
+/>
+
+## 对齐容器与子项
+
+对齐决定剩余空间放在哪里，以及子项在另一条轴上靠哪一边。容器默认值可以被单个子项覆盖。
+
+| 属性             | 可用值                                                                         | 解释                                             |
+| ---------------- | ------------------------------------------------------------------------------ | ------------------------------------------------ |
+| `justifyContent` | `start`, `center`, `end`, `space-between`, `space-around`, `space-evenly`      | 容器属性：分布每行主轴上的剩余空间               |
+| `alignItems`     | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`         | 容器属性：默认交叉轴对齐；基线模式仅用于横向主轴 |
+| `alignSelf`      | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`；可省略 | 子项属性：覆盖 `alignItems`；省略时继承容器      |
+
+demo 保持横向排列，子项不伸展。先改变主轴分布，再把默认交叉轴对齐从居中改为起点，最后调整第二项的单独覆盖。`gap` 始终保留固定间隔；若伸展已经耗尽余量，改变主轴分布可能没有效果。`stretch` 提供尺寸约束，不保证固定图形变形。
+
+<ComponentPreview
+  files="flex-alignment"
+  size="md"
+  caption="先调整主轴分布，再比较容器默认对齐与 B 的单独覆盖；子项不伸展，保留可观察的自由空间。"
+/>
+
+## 相关属性
+
+以下仅回查本页接入、尺寸与间距、单行分配和普通对齐涉及的属性。伸缩边界、换行、基线、裁切选项见[扩展用法的相关属性](/library/layout/flex-layout/extended#相关属性)。完整签名见 [API 参考](/library/layout/flex-layout/api-reference)，持久化字段与默认值见 [Schema 参考](/library/layout/flex-layout/schema-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        '本页使用 `{ kind: "content" }` 按内容求尺寸与 `{ kind: "fixed", value }` 固定尺寸，x / y 分别对应物理宽、高。嵌套时可用 `{ kind: "fill" }` 接收父级有限空间。',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: '从分配区域到内容区域的内边距',
+      defaultValue: '0',
+    },
+    {
+      name: 'direction',
+      kind: 'property',
+      type: "'row' | 'row-reverse' | 'column' | 'column-reverse'",
+      description: '主轴及正反向遍历',
+      defaultValue: "'row'",
+    },
+    {
+      name: 'gap',
+      kind: 'property',
+      type: 'number 或 { column: number; row: number }',
+      description: '数字同时设置两个物理轴；对象分别设置列、行间距',
+      defaultValue: '0 → { column: 0, row: 0 }',
+    },
+    {
+      name: 'justifyContent',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'",
+      description: '每条布局行的主轴剩余空间分布',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description:
+        '本页使用 start / center / end / stretch：分别靠起点、居中、靠终点或传递交叉轴拉伸提案；固定几何不保证被拉伸。基线模式见扩展用法',
+      defaultValue: "'stretch'",
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'Array<FlexLayoutItemInput>',
+      description: '作者声明的子项；显式 `key` 在同一容器内必须唯一',
+      defaultValue: '[]',
+    },
+  ]}
+/>
+
+<ComponentProps
+  items={[
+    {
+      name: 'basis',
+      kind: 'property',
+      type: "'content' | number",
+      description: '自然主轴贡献，或作者给出的有限非负基础分配尺寸',
+      defaultValue: "'content'",
+    },
+    {
+      name: 'grow',
+      kind: 'property',
+      type: 'number',
+      description: '接收正剩余空间的有限非负系数',
+      defaultValue: '0',
+    },
+    {
+      name: 'shrink',
+      kind: 'property',
+      type: 'number',
+      description: '与未约束基础尺寸相乘，用于回收负剩余空间',
+      defaultValue: '1',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description:
+        '用 start / center / end / stretch 覆盖当前子项的交叉轴对齐；省略时跟随 alignItems。基线模式见扩展用法',
+      defaultValue: 'alignItems',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/flex-layout/extended' },
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/flex-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/flex-layout/api-reference' },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/flex-layout/schema-reference',
+    },
+  ]}
+/>

@@ -1,33 +1,174 @@
 ---
 title: Group
-description: Organize arbitrary content in a nestable visible boundary with top/bottom captions and Core boundary labels.
+description: Preserve content layout and express containment with a shell, caption, and boundary labels.
 ---
 
-`Group` states that a set of content belongs to one visible group. It accepts any Core or Tier 2 child, reuses Standard Surface for the shell, uses Layout for caption arrangement, and attaches outside text through Core Node labels. Group does not calculate child positions; authors, explicit Layout containers, or the future Diagram package still own placement in flowcharts and logic diagrams
+Group expresses containment with a visible boundary while preserving the relative layout of children. Use [Block](/schematic/graph/block) to arrange content vertically. This single page includes usage, implementation, API, and Schema. See [Getting started](/schematic/graph/get-start) for installation and host setup.
 
-## Basic usage
+## Using Group
+
+These four examples draw the same group. Vanilla requires an existing `<div id="diagram"></div>`; call `view.dispose()` on teardown.
+
+<ComponentPreview files="group-minimal" size="xs" hideCode />
+
+```text
+Graph
+└── Group
+    ├── Entity
+    ├── Entity
+    └── Relation
+```
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
 import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
+import type { FC } from 'react';
+const Example: FC = () => (
+  <Graph>
+    <Group id="runtime">
+      <Entity id="compiler" role="activity" position={[80, 60]}>
+        Compile
+      </Entity>
+      <Entity id="renderer" role="participant" position={[240, 60]}>
+        Renderer
+      </Entity>
+      <Relation role="flow" source="compiler" target="renderer" />
+    </Group>
+  </Graph>
+);
+export default Example;
 ```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
 ```tsx
-<Graph>
-  <Group id="runtime">
-    <Entity id="compiler" role="activity" position={[110, 100]}>
-      Compile
-    </Entity>
-    <Entity id="renderer" role="participant" position={[250, 100]}>
-      Renderer
-    </Entity>
-    <Relation role="flow" source={{ id: 'compiler' }} target={{ id: 'renderer' }} />
-  </Group>
-</Graph>
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'group',
+      id: 'runtime',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'entity',
+          id: 'compiler',
+          role: 'activity',
+          position: [80, 60],
+          text: 'Compile',
+        },
+        {
+          namespace: 'graph',
+          type: 'entity',
+          id: 'renderer',
+          role: 'participant',
+          position: [240, 60],
+          text: 'Renderer',
+        },
+        {
+          namespace: 'graph',
+          type: 'relation',
+          role: 'flow',
+          source: {
+            id: 'compiler',
+          },
+          target: {
+            id: 'renderer',
+          },
+        },
+      ],
+    },
+  ],
+};
+const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+export default Example;
 ```
 
-`Group` can appear directly in Graph, Layout, Scope, or any other Core-child position. It supplies only the visible shell and optional caption or labels; authors or higher-level layout capabilities still own child positions, arrangement, and connections
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-## Examples
+```tsx
+import { entity, group, relation, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+const input = scene({
+  children: [
+    group({
+      id: 'runtime',
+      children: [
+        entity({ id: 'compiler', role: 'activity', position: [80, 60], text: 'Compile' }),
+        entity({ id: 'renderer', role: 'participant', position: [240, 60], text: 'Renderer' }),
+        relation({ role: 'flow', source: 'compiler', target: 'renderer' }),
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, { adapters: createGraphVanillaAdapters() });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { mount } from '@retikz/vanilla/dom';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'group',
+      id: 'runtime',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'entity',
+          id: 'compiler',
+          role: 'activity',
+          position: [80, 60],
+          text: 'Compile',
+        },
+        {
+          namespace: 'graph',
+          type: 'entity',
+          id: 'renderer',
+          role: 'participant',
+          position: [240, 60],
+          text: 'Renderer',
+        },
+        {
+          namespace: 'graph',
+          type: 'relation',
+          role: 'flow',
+          source: {
+            id: 'compiler',
+          },
+          target: {
+            id: 'renderer',
+          },
+        },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir, { compile: { composites: createGraphDefinitions() } });
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
 
 ### caption
 
@@ -35,7 +176,7 @@ import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
 
 <ComponentPreview
   files="group-basic"
-  size="sm"
+  size="lg"
   caption="Use the controls to change caption position, direction, and spacing while observing the title, description, and arbitrary Graph children inside the shell."
 />
 
@@ -45,7 +186,7 @@ import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
 
 <ComponentPreview
   files="group-label"
-  size="sm"
+  size="md"
   caption="Use the controls to adjust three Group label positions and compare Core directional placement."
 />
 
@@ -55,11 +196,26 @@ Group style adjustments focus on the shell background, border, line style, corne
 
 <ComponentPreview
   files="group-style"
-  size="sm"
+  size="md"
   caption="Adjust the background, border color and width, border line style, opacity, corner radius, and padding independently."
 />
 
-## How it works
+## Extended usage
+
+Nested Groups express subsystem boundaries. Give outer and inner groups distinct ids to let Relations target either shell. Internal Entity ids receive no group prefix. For repeated instances, enable localNamespace on each instance and author internal connections within it.
+
+<ComponentPreview files="group-nested" size="sm" />
+
+Place FlexLayout / GridLayout inside Group when objects need arrangement. The layout container determines relative positions and Group encloses the result. Use [Flow](/schematic/diagram/flow/basic) for whole-graph arrangement. The `Entity.group` categorical color key has no automatic association with a Group container.
+
+## Errors and limits
+
+- caption requires title or description, using `{ text: ... }` objects. A provided labels array must be nonempty.
+- Group does not avoid obstacles or label collisions and does not connect children automatically. Ids must be unique within their namespace.
+- graphDefaults / graphRules affect visible descendants, not the current shell, caption, or boundary labels. Set background / border on the current shell.
+- overflow constrains Surface content. Outside labels still contribute to visual bounds; do not assume they are clipped.
+
+## Implementation
 
 <ComponentAlert
   type="tip"
@@ -77,9 +233,23 @@ Group style adjustments focus on the shell background, border, line style, corne
 - Group does not stack children automatically and owns no routing, obstacle avoidance, or label collision. Put FlexLayout, GridLayout, or OverlayLayout inside when ordinary arrangement is required
 - An explicit Group `id` names the shell envelope and remains targetable through Core `IRNodeTarget`
 
+<SourceLinks
+  sources={[
+    { label: 'Descendant context and shell theme', path: 'packages/schematic/graph/src/resolve/group/resolve.ts' },
+  ]}
+/>
+
 ### Surface, caption, and boundary-label lowering
 
 Group lowering combines the caption and authored children into the single Surface content, lowers the shell to Standard Surface, and uses a transparent Core Node to carry boundary labels. The caption participates in the shell's inner allocation; labels expand only the final visual bounds and do not change the shell boundary used when a Relation targets the Group. Neither Graph nor Group stores automatic layout results or defines a second position or boundary model for labels
+
+<ComponentPreview
+  files="group-boundary"
+  size="xs"
+  type="illustration"
+  hideCode
+  caption="The caption expands the left shell; the label stays outside the right shell. Both contain identical content."
+/>
 
 <SourceLinks
   sources={[
@@ -95,31 +265,42 @@ Group lowering combines the caption and authored children into the single Surfac
   ]}
 />
 
-## API Reference
+## API reference
 
-React, IR, and Vanilla Group entry points share the same JSON-safe fields. The table lists fields added or redefined by Group; the remaining Core Scope properties retain the Core contract
+Generated from public exports and comments. Composed inputs retain their declarations; complete persistent fields are available in the Schema section below.
 
-The shell defaults in the table are the Neutral Graph Theme baseline. After selecting a same-name Graph Theme Definition, omitted `background`, `border`, and `cornerRadius` fields use its Group defaults; explicit Source values still win
+{/* @include schematic/graph/group/generated */}
 
-| Prop                 | Type                                   | Default                  | Description                                                                                                                                                                                                           |
-| -------------------- | -------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id?`                | `string`                               | —                        | Optional Scope target id                                                                                                                                                                                              |
-| `caption?`           | `IRGroupCaption`                       | —                        | Title / description region inside the shell                                                                                                                                                                           |
-| `caption.side?`      | `'top' \| 'bottom'`                    | `'top'`                  | Place the caption above or below the body                                                                                                                                                                             |
-| `caption.direction?` | `'horizontal' \| 'vertical'`           | `'horizontal'`           | Arrange title and description                                                                                                                                                                                         |
-| `caption.itemGap?`   | `number`                               | `4`                      | Gap between title and description                                                                                                                                                                                     |
-| `caption.bodyGap?`   | `number`                               | `4`                      | Gap between a non-empty body and caption                                                                                                                                                                              |
-| `labels?`            | `ReadonlyArray<IRNodeLabel>`           | —                        | Shell labels that expand visual bounds only; default to `xs` font size and gray (`gray`), omitted `align` defaults to `start`, and omitted position defaults to `{ boundary: 'bottom', fraction: 0 }` below the shell |
-| `padding?`           | `SurfaceInput['padding']`              | `10`                     | Insets around caption/body                                                                                                                                                                                            |
-| `background?`        | `SurfaceInput['background']`           | `lightgray / 0.04`       | Surface fill and opacity                                                                                                                                                                                              |
-| `border?`            | `SurfaceInput['border']`               | `lightgray / 1 + [4, 3]` | Gray dashed Surface border                                                                                                                                                                                            |
-| `cornerRadius?`      | `number`                               | `4`                      | Shell corner radius                                                                                                                                                                                                   |
-| `overflow?`          | `'visible' \| 'clip'`                  | `'visible'`              | Surface content overflow; outside labels remain unclipped                                                                                                                                                             |
-| `graphDefaults?`     | `IRGraphDefaults`                      | —                        | Sparse defaults for visible descendants                                                                                                                                                                               |
-| `graphRules?`        | `Array<IRGraphRule>`                   | —                        | Ordered rules for visible Entities and Relations                                                                                                                                                                      |
-| `children?`          | `ReadonlyArray<IRChild>` / `ReactNode` | —                        | Arbitrary embeddable content                                                                                                                                                                                          |
+## Schema reference
 
-## Related
+These schemas come from the public `@retikz/graph` entry. Layout and theme defaults apply during compilation without mutating sparse Source. Shared Scope / Surface fields retain their owning types.
 
-- [FlexLayout](/library/layout/flex-layout): explicitly arrange authored children inside Group
-- [Surface](/library/standard/presentation/surface): the presentation shell reused by Group
+### GroupSchema
+
+<ZodSchema name="GroupSchema" shallow />
+
+### GroupCaptionSchema
+
+<ZodSchema name="GroupCaptionSchema" shallow />
+
+### GroupCaptionTextSchema
+
+<ZodSchema name="GroupCaptionTextSchema" shallow />
+
+### GroupCaptionSideSchema
+
+<ZodSchema name="GroupCaptionSideSchema" shallow />
+
+### GroupCaptionDirectionSchema
+
+<ZodSchema name="GroupCaptionDirectionSchema" shallow />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Block', description: 'Arrange open content vertically', url: '/schematic/graph/block' },
+    { title: 'FlexLayout', description: 'Arrange content inside a group', url: '/library/layout/flex-layout' },
+    { title: 'Surface', description: 'Visible shells and padding', url: '/library/standard/presentation/surface' },
+  ]}
+/>

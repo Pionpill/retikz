@@ -1,0 +1,186 @@
+---
+title: Extended usage
+description: Combine flex limits, wrapping, and alignment, handle overflow and clipping
+---
+
+Building on [Basic usage](/library/layout/flex-layout/usage), this page covers insufficient space, multiple lines, and clipping. Each section follows a cooperating API group: establish size constraints, choose wrapping and alignment, then choose how to handle overflow.
+
+## Combining flex allocation with size limits
+
+Flex weights determine how space is shared, while size limits bound each item’s allocation. Once an item reaches a limit, other flexible items absorb the remaining adjustment.
+
+| Property          | Available values                                                      | Explanation                                                                                            |
+| ----------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `size.x / size.y` | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | Physical container width and height: size to content, use a fixed value, or fill finite parent space   |
+| `basis`           | `content` or a non-negative number                                    | Item main-axis starting size; `content` uses intrinsic measurement                                     |
+| `grow`            | Non-negative number                                                   | Item weight for extra space; `0` disables growth. This is not a final size ratio                       |
+| `shrink`          | Non-negative number                                                   | Item shrink weight; `0` disables shrinking. Effective weight also includes the unconstrained base size |
+| `min / max`       | Optional non-negative numbers, `min ≤ max`                            | Hard lower and upper limits for the item’s main-axis slot; they do not force fixed geometry to shrink  |
+
+The demo changes only the first item’s flex settings and limits; the second stays flexible. Increase `grow`, then lower `max` to see where growth stops. Narrow the container and adjust `min` to see where shrinking stops. Content can still overflow after a minimum is reached.
+
+<ComponentPreview
+  files="flex-limits"
+  size="md"
+  controlPanelDefaultSize={50}
+  caption="Minimum allocation ranges from 30–70; maximum allocation from 80–160, so min ≤ max always holds. Change one parameter at a time and compare the slots."
+/>
+
+## Wrapping and aligning multiple lines
+
+Wrapping moves items that do not fit onto additional layout lines. Alignment within each line and distribution of the lines are separate controls.
+
+| Property         | Available values                                                                     | Explanation                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `wrap`           | `nowrap`, `wrap`, `wrap-reverse`                                                     | Keep one line, wrap, or reverse line placement without changing authored item order            |
+| `basis`          | `content` or a non-negative number                                                   | Item main-axis starting size; `content` uses intrinsic measurement                             |
+| `justifyContent` | `start`, `center`, `end`, `space-between`, `space-around`, `space-evenly`            | Distribute remaining main-axis space within each line                                          |
+| `alignContent`   | `start`, `center`, `end`, `stretch`, `space-between`, `space-around`, `space-evenly` | Distribute lines across the cross axis; requires multiple lines and available cross-axis space |
+| `size.x`         | `{ kind: "fixed", value }`                                                           | Set horizontal space, affecting how many items fit on a line                                   |
+
+The demo keeps a horizontal main axis. Switch wrapping and adjust the base size or container width until at least two lines appear. Change `alignContent` and `justifyContent` separately to compare spacing between lines and between items. `wrap-reverse` reverses line placement on the cross axis; `direction` controls main-axis reversal.
+
+<ComponentPreview
+  files="flex-wrapping"
+  size="lg"
+  caption="Compare no wrap, wrap, and reverse wrap; form at least two lines before comparing line distribution."
+/>
+
+## Aligning baselines
+
+Centering borders does not necessarily align text with different font sizes or line counts. Baseline alignment lines up the first or last text baseline instead.
+
+| Property               | Available values                                                  | Explanation                                                                                        |
+| ---------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `alignItems`           | This section compares `center`, `first-baseline`, `last-baseline` | Default container alignment; first and last baseline modes require a horizontal main axis          |
+| `alignSelf`            | Omit, or use an alignment value                                   | Override one item, or inherit the container when omitted                                           |
+| `Node.style.font.size` | `number`                                                          | Node font size, controlled separately for each item to compare baselines at different text heights |
+
+The first item has two explicit lines; the second wraps to its available width. Change both font sizes and compare center, first-baseline, and last-baseline alignment. The second item inherits the default only when its override is unset. A child without the requested guide falls back to edge alignment. Use ordinary edge alignment for a vertical main axis.
+
+<ComponentPreview
+  files="flex-baseline"
+  size="md"
+  caption="Change both font sizes and compare first and last baselines. The second item uses the container setting only when its override is Inherit. Guides show the selected positions."
+/>
+
+## Handling overflow and clipping
+
+When content does not fit, it can remain visible or be clipped. Clipping affects visibility without changing space allocation.
+
+| Property                        | Available values           | Explanation                                                                                             |
+| ------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `overflow`                      | `visible`, `clip`          | Keep overflow visible or clip to the container allocation; neither option reruns layout                 |
+| `size.x`                        | `{ kind: "fixed", value }` | Fixed container width, which determines the clipping region width                                       |
+| `basis / min / max`             | `number`                   | Item base size and limits; one control sets all three to the same non-negative value, fixing slot width |
+| `Node.layout.minimumSize.width` | `number`                   | The node’s own non-negative minimum width, which can exceed its slot                                    |
+
+Narrow the container or increase the node minimum width until it extends beyond the boundary, then switch between `visible` and `clip`. Changing the base size changes slot width without forcing the node to shrink. To make content fit, adjust sizing, wrapping, or item constraints; choose clipping when the external portion should be hidden.
+
+<ComponentPreview files="flex-clipping" size="md" />
+
+## Related props
+
+These properties cover this page's constraints, wrapping, baselines, and clipping. See [Basic usage's related props](/library/layout/flex-layout/usage#related-props) for basic sizing, spacing, and ordinary alignment. Shared allocation and alignment properties are described here in the context of combined constraints. See [API reference](/library/layout/flex-layout/api-reference) for full signatures and [Schema reference](/library/layout/flex-layout/schema-reference) for field constraints.
+
+<ComponentProps
+  items={[
+    {
+      name: 'basis',
+      kind: 'property',
+      type: "'content' | number",
+      description: 'Item main-axis basis; combine with grow, shrink, min, and max to constrain allocation',
+      defaultValue: "'content'",
+    },
+    {
+      name: 'grow',
+      kind: 'property',
+      type: 'number',
+      description: 'Weight for receiving positive free space; after max is reached, other items receive the remainder',
+      defaultValue: '0',
+    },
+    {
+      name: 'shrink',
+      kind: 'property',
+      type: 'number',
+      description: 'Shrink weight is shrink × unclamped basis; 0 excludes the item from shrinking',
+      defaultValue: '1',
+    },
+    {
+      name: 'min',
+      kind: 'property',
+      type: 'number',
+      description:
+        'Non-negative minimum main-axis slot; min must not exceed max when both are set; it does not shrink fixed geometry',
+    },
+    {
+      name: 'max',
+      kind: 'property',
+      type: 'number',
+      description: 'Non-negative maximum main-axis slot; growth stops at this limit',
+    },
+    {
+      name: 'wrap',
+      kind: 'property',
+      type: "'nowrap' | 'wrap' | 'wrap-reverse'",
+      description: 'nowrap keeps one line; wrap allows line breaks; wrap-reverse reverses cross-axis line placement',
+      defaultValue: "'nowrap'",
+    },
+    {
+      name: 'alignContent',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
+      description:
+        'Cross-axis distribution of wrapped lines: start / center / end position the group; stretch expands lines; space-between distributes between lines, space-around around each line, and space-evenly equally between lines and at both edges. Requires multiple lines and free space',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description:
+        'This page uses first-baseline / last-baseline to align the first or last baseline, with center for comparison. Baseline modes require a horizontal main axis; see Basic usage for other modes',
+      defaultValue: "'stretch'",
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description:
+        'Override baseline alignment for one item; omission inherits the container setting, rather than passing auto as an API value',
+      defaultValue: 'alignItems',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description: 'Container visible preserves overflowing content; clip clips it. Neither reallocates sizes',
+      defaultValue: "'visible'",
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/flex-layout/usage',
+    },
+
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/flex-layout/mechanism',
+    },
+    { title: 'API reference', description: 'Look up public functions, types, and props', url: '/library/layout/flex-layout/api-reference' },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/flex-layout/schema-reference',
+    },
+
+]}
+/>

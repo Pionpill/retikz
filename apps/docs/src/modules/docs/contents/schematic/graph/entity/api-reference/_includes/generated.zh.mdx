@@ -2,47 +2,34 @@
 
 ## `@retikz/graph-react`
 
-### EntityProps
+### Entity / EntityProps
 
-<p>
-  <ApiSourceLink label={'EntityProps'} path={'packages/schematic/graph-react/src/graph/Entity.tsx'} startLine={10}>
-    Entity Source 的 React 编写参数
-  </ApiSourceLink>
-</p>
+- `Entity`：<ApiSourceLink label={"Entity"} path={"packages/schematic/graph-react/src/graph/Entity.tsx"} startLine={22}>将 Entity Source 接入 React 编写流程</ApiSourceLink>
+- `EntityProps`：<ApiSourceLink label={"EntityProps"} path={"packages/schematic/graph-react/src/graph/Entity.tsx"} startLine={10}>Entity Source 的 React 编写参数</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
-<DocTab value="members" label="属性">
+<DocTab value="members" label="直接属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+其余属性继承自 `InputEntity`，并移除 `'type'`。完整组合关系见“类型定义”
 
-| 成员                 | 类型                                                                                             | 默认值 | 说明                                                          |
-| -------------------- | ------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------- |
-| `animations?`        | `Array<IRAnimationTrack>`                                                                        | —      | —                                                             |
-| `readonly children?` | `ReactNode`                                                                                      | —      | 仅接受 Core Node-compatible 文本 authoring，与 text prop 互斥 |
-| `group?`             | `string`                                                                                         | —      | —                                                             |
-| `id?`                | `string`                                                                                         | —      | —                                                             |
-| `kind?`              | `string`                                                                                         | —      | —                                                             |
-| `label?`             | `InputEntity['label']`                                                                           | —      | —                                                             |
-| `layout?`            | `InputEntity['layout']`                                                                          | —      | —                                                             |
-| `meta?`              | `Record<string, JsonValue>`                                                                      | —      | —                                                             |
-| `position?`          | `InputEntity['position']`                                                                        | —      | —                                                             |
-| `predicate?`         | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | —                                                             |
-| `role`               | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | —                                                             |
-| `rotate?`            | `number`                                                                                         | —      | —                                                             |
-| `scale?`             | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | —                                                             |
-| `status?`            | <ApiValues name="GraphStatus" />                                                                 | —      | —                                                             |
-| `style?`             | `InputEntity['style']`                                                                           | —      | —                                                             |
-| `text?`              | `InputEntity['text']`                                                                            | —      | —                                                             |
-| `zIndex?`            | `number`                                                                                         | —      | —                                                             |
+<ApiTable>
 
-</div>
+| 成员                 | 类型        | 默认值 | 说明                                                          |
+| -------------------- | ----------- | ------ | ------------------------------------------------------------- |
+| `readonly children?` | `ReactNode` | —      | 仅接受 Core Node-compatible 文本 authoring，与 text prop 互斥 |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="类型定义">
 
 ```ts
+export declare const Entity: {
+  (props: EntityProps, context?: any): ReactNode;
+};
+
 export type EntityProps = Omit<InputEntity, 'type'> &
   Readonly<{
     children?: ReactNode;
@@ -53,62 +40,49 @@ export type EntityProps = Omit<InputEntity, 'type'> &
 
 </DocTabs>
 
-### Entity
-
-<p>
-  <ApiSourceLink label={'Entity'} path={'packages/schematic/graph-react/src/graph/Entity.tsx'} startLine={22}>
-    将 Entity Source 接入 React 编写流程
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const Entity: {
-  (props: EntityProps, context?: any): ReactNode;
-};
-```
-
 ## `@retikz/graph-vanilla`
 
-### EntityInputEmbedProps
+### entity / EntityInputEmbedProps
 
-<p>
-  <ApiSourceLink label={'EntityInputEmbedProps'} path={'packages/schematic/graph-vanilla/src/entity.ts'} startLine={11}>
-    Entity embed 的 Source authoring 输入
-  </ApiSourceLink>
-</p>
+- `entity`：<ApiSourceLink label={"entity"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={31}>创建 Entity Source 的 authoring embed 节点</ApiSourceLink>
+- `EntityInputEmbedProps`：<ApiSourceLink label={"EntityInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={11}>Entity embed 的 Source authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable grouped>
 
-| 成员          | 类型                                                                                             | 默认值 | 说明 |
-| ------------- | ------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?` | `Array<IRAnimationTrack>`                                                                        | —      | —    |
-| `group?`      | `string`                                                                                         | —      | —    |
-| `id?`         | `string`                                                                                         | —      | —    |
-| `kind?`       | `string`                                                                                         | —      | —    |
-| `label?`      | `EntityInputEmbedProps["label"]`                                                                 | —      | —    |
-| `layout?`     | `EntityInputEmbedProps["layout"]`                                                                | —      | —    |
-| `meta?`       | `Record<string, JsonValue>`                                                                      | —      | —    |
-| `position?`   | `EntityInputEmbedProps["position"]`                                                              | —      | —    |
-| `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | —    |
-| `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | —    |
-| `rotate?`     | `number`                                                                                         | —      | —    |
-| `scale?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | —    |
-| `status?`     | <ApiValues name="GraphStatus" />                                                                 | —      | —    |
-| `style?`      | `EntityInputEmbedProps["style"]`                                                                 | —      | —    |
-| `text?`       | `EntityInputEmbedProps["text"]`                                                                  | —      | —    |
-| `zIndex?`     | `number`                                                                                         | —      | —    |
+| 分组 | 成员           | 类型                                                                                             | 默认值 | 说明                                                                                |
+| ---- | -------------- | ------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------- |
+| 主要 | `group?`       | `string`                                                                                         | —      | —                                                                                   |
+|      | `id?`          | `string`                                                                                         | —      | —                                                                                   |
+|      | `kind?`        | `string`                                                                                         | —      | —                                                                                   |
+|      | `label?`       | `EntityInputEmbedProps["label"]`                                                                 | —      | —                                                                                   |
+|      | `predicate?`   | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | —                                                                                   |
+|      | `role`         | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | —                                                                                   |
+|      | `text?`        | `EntityInputEmbedProps["text"]`                                                                  | —      | —                                                                                   |
+| 几何 | `position?`    | `EntityInputEmbedProps["position"]`                                                              | —      | —                                                                                   |
+|      | `rotate?`      | `number`                                                                                         | —      | —                                                                                   |
+|      | `scale?`       | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | —                                                                                   |
+| 布局 | `layout?`      | `EntityInputEmbedProps["layout"]`                                                                | —      | —                                                                                   |
+| 样式 | `status?`      | <ApiValues name="GraphStatus" />                                                                 | —      | —                                                                                   |
+|      | `style?`       | `EntityInputEmbedProps["style"]`                                                                 | —      | —                                                                                   |
+|      | `zIndex?`      | `number`                                                                                         | —      | —                                                                                   |
+| 动画 | `animations?`  | `Array<IRAnimationTrack>`                                                                        | —      | —                                                                                   |
+| 数据 | `meta?`        | `Record<string, JsonValue>`                                                                      | —      | —                                                                                   |
+|      | `input` (参数) | `EntityInputEmbedProps`                                                                          | —      | 实体编写字段；自定义语义仅引用已由 Graph 注册的 key                                 |
+|      | 返回值         | `InputEmbed<Omit<InputEntity, 'type'>>`                                                          | —      | 供 Vanilla 内容树使用的 embed 节点，由 EntityInputEmbedAdapter 转换为 Entity Source |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="类型定义">
 
 ```ts
+export declare const entity: (input: EntityInputEmbedProps) => InputEmbed<Omit<InputEntity, 'type'>>;
+
 export type EntityInputEmbedProps = WithoutInputType<InputEntity>;
 ```
 
@@ -116,51 +90,48 @@ export type EntityInputEmbedProps = WithoutInputType<InputEntity>;
 
 </DocTabs>
 
-### InputEntity
+### normalizeEntity / InputEntity
 
-<p>
-  <ApiSourceLink
-    label={'InputEntity'}
-    path={'packages/schematic/graph-vanilla/src/normalize/graph/types.ts'}
-    startLine={17}
-  >
-    Entity 的 Vanilla authoring 输入
-  </ApiSourceLink>
-</p>
+- `normalizeEntity`：<ApiSourceLink label={"normalizeEntity"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={42}>将 Entity authoring 输入组装为单个 Source record</ApiSourceLink>
+- `InputEntity`：<ApiSourceLink label={"InputEntity"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={17}>Entity 的 Vanilla authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable grouped>
 
-| 成员            | 类型                                                                                             | 默认值 | 说明 |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?`   | `Array<IRAnimationTrack>`                                                                        | —      | —    |
-| `group?`        | `string`                                                                                         | —      | —    |
-| `id?`           | `string`                                                                                         | —      | —    |
-| `kind?`         | `string`                                                                                         | —      | —    |
-| `label?`        | `EntityCreateOptions['label']`                                                                   | —      | —    |
-| `layout?`       | `EntityCreateOptions['layout']`                                                                  | —      | —    |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —      | —    |
-| `position?`     | `EntityCreateOptions['position']`                                                                | —      | —    |
-| `predicate?`    | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | —    |
-| `role`          | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | —    |
-| `rotate?`       | `number`                                                                                         | —      | —    |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | —    |
-| `status?`       | <ApiValues name="GraphStatus" />                                                                 | —      | —    |
-| `style?`        | `EntityCreateOptions['style']`                                                                   | —      | —    |
-| `text?`         | `EntityCreateOptions['text']`                                                                    | —      | —    |
-| `readonly type` | `'entity'`                                                                                       | —      | —    |
-| `zIndex?`       | `number`                                                                                         | —      | —    |
+| 分组 | 成员            | 类型                                                                                             | 默认值 | 说明                                                                                        |
+| ---- | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------- |
+| 主要 | `group?`        | `string`                                                                                         | —      | Graph 内 Entity 的语义分组 key；同组默认使用相同分类色，Relation 也可共享该颜色；不创建容器 |
+|      | `id?`           | `string`                                                                                         | —      | 可选引用标识；省略不自动生成                                                                |
+|      | `kind?`         | `string`                                                                                         | —      | 可选稳定子类型；注册身份为当前 role 与 kind 的组合                                          |
+|      | `label?`        | `EntityCreateOptions['label']`                                                                   | —      | 附着的单个或多个标签                                                                        |
+|      | `predicate?`    | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | 已注册精确语义的名称与 JSON 参数                                                            |
+|      | `role`          | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | 开放角色 key；绘制时必须在当前宿主中注册                                                    |
+|      | `text?`         | `EntityCreateOptions['text']`                                                                    | —      | 字符串或文字行数组                                                                          |
+|      | `readonly type` | `'entity'`                                                                                       | —      | 实体编写输入的判别字段，固定为 entity                                                       |
+| 几何 | `position?`     | `EntityCreateOptions['position']`                                                                | —      | 可选位置；实际绘制前必须由作者或布局补齐                                                    |
+|      | `rotate?`       | `number`                                                                                         | —      | 绕中心旋转的角度                                                                            |
+|      | `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 统一或分轴缩放                                                                              |
+| 布局 | `layout?`       | `EntityCreateOptions['layout']`                                                                  | —      | 尺寸和文字布局，不包含 role 拥有的 padding                                                  |
+| 样式 | `status?`       | <ApiValues name="GraphStatus" />                                                                 | —      | 可选闭合状态：error、success、warning、disabled                                             |
+|      | `style?`        | `EntityCreateOptions['style']`                                                                   | —      | 逐字段合并的实例外观                                                                        |
+|      | `zIndex?`       | `number`                                                                                         | —      | 同层绘制顺序，数值越大越靠上                                                                |
+| 动画 | `animations?`   | `Array<IRAnimationTrack>`                                                                        | —      | 动画轨道，不参与布局                                                                        |
+| 数据 | `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传的 JSON 元信息                                                                          |
+|      | `input` (参数)  | `InputEntity`                                                                                    | —      | 带 type 判别字段的实体编写输入                                                              |
+|      | 返回值          | `IRGraphEntity`                                                                                  | —      | 新建的 Entity Source 记录；保留输入字段，不生成 id 或布局位置                               |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="类型定义">
 
 ```ts
+export declare const normalizeEntity: (input: InputEntity) => IRGraphEntity;
+
 export type InputEntity = EntityCreateOptions &
   Readonly<{
     type: 'entity';
@@ -193,78 +164,69 @@ export declare const EntityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbed
   <ApiSourceLink
     label={'createGraphVanillaAdapters'}
     path={'packages/schematic/graph-vanilla/src/adapters.ts'}
-    startLine={19}
+    startLine={22}
   >
     创建可一次性传给 Vanilla normalize 的 Graph adapter 集合
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称 | 类型 / 签名                         | 说明                                                                |
+| ------ | ---- | ----------------------------------- | ------------------------------------------------------------------- |
+| 返回值 | —    | `Array<InputEmbedAdapter<unknown>>` | 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const createGraphVanillaAdapters: () => Array<InputEmbedAdapter<unknown>>;
 ```
 
-### entity
+</DocTab>
 
-<p>
-  <ApiSourceLink label={'entity'} path={'packages/schematic/graph-vanilla/src/entity.ts'} startLine={27}>
-    创建 Entity Source 的 authoring embed 节点
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const entity: (input: EntityInputEmbedProps) => InputEmbed<Omit<InputEntity, 'type'>>;
-```
-
-#### 参数
-
-| 参数    | 类型                    | 说明 |
-| ------- | ----------------------- | ---- |
-| `input` | `EntityInputEmbedProps` | —    |
-
-### normalizeEntity
-
-<p>
-  <ApiSourceLink
-    label={'normalizeEntity'}
-    path={'packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts'}
-    startLine={29}
-  >
-    将 Entity authoring 输入组装为单个 Source record
-  </ApiSourceLink>
-</p>
-
-<details>
-<summary>查看完整推断签名</summary>
-
-```ts
-export declare const normalizeEntity: (input: InputEntity) => { animations?: Array<{ delay?: number; direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> | [number, number, number, number]; fill?: 'none' | 'forwards' | 'backwards' | 'both'; iterations?: number | 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> | [number, number, number, number]; value: JsonValue }>; origin?: 'center' | [number, number] | 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' | 'visible' | 'manual' | { onEvent: string } }>; group?: string; id?: string; kind?: string; label?: { align?: 'start' | 'middle' | 'end'; distance?: number; font?: { family?: string; size?: string | number; style?: 'normal' | 'italic' | 'oblique'; weight?: number | 'normal' | 'bold' }; keepUpright?: boolean; opacity?: number; pin?: boolean | { dashOffset?: number; dashPattern?: Array<number>; stroke?: string | number; strokeWidth?: number }; placement?: 'outside' | 'inside'; position?: number | 'center' | 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | { boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }; rotate?: number | 'none' | 'radial' | 'tangent'; text: string | { runs: Array<{ fill?: string | number; font?: { family?: ... | ...; size?: ... | ... | ...; style?: ... | ... | ... | ...; weight?: ... | ... | ... | ... }; opacity?: number; text: string } | { displayMode?: boolean; fill?: string | number; opacity?: number; tex: string }> }; textColor?: string | number } | Array<{ align?: 'start' | 'middle' | 'end'; distance?: number; font?: { family?: string; size?: string | number; style?: 'normal' | 'italic' | 'oblique'; weight?: number | 'normal' | 'bold' }; keepUpright?: boolean; opacity?: number; pin?: boolean | { dashOffset?: number; dashPattern?: Array<number>; stroke?: string | number; strokeWidth?: number }; placement?: 'outside' | 'inside'; position?: number | 'center' | 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | { boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }; rotate?: number | 'none' | 'radial' | 'tangent'; text: string | { runs: Array<{ fill?: string | number; font?: { family?: ...; size?: ...; style?: ...; weight?: ... }; opacity?: number; text: string } | { displayMode?: boolean; fill?: string | number; opacity?: number; tex: string }> }; textColor?: string | number }>; layout?: { align?: 'start' | 'middle' | 'end'; lineHeight?: number; margin?: number | { bottom?: number; default?: number; left?: number; right?: number; top?: number; x?: number; y?: number }; maxTextWidth?: number; minimumSize?: number | { default?: number; height?: number; width?: number }; width?: number }; meta?: Record<string, JsonValue>; namespace: 'graph'; position?: [number, number] | SharedPolarPosition | { of: string | [number, number] | SharedPolarPosition; offset: [number, number] } | IRBetweenPosition | { kind: 'anchor'; selfAnchor?: number | OpenString<ValueOf<{ Bottom: 'bottom'; BottomLeft: 'bottom-left'; BottomRight: 'bottom-right'; Center: 'center'; Left: 'left'; Right: 'right'; Top: 'top'; TopLeft: 'top-left'; TopRight: 'top-right' }>> | { fraction: number; side: 'top' | 'right' | 'bottom' | 'left' }; target: { anchor?: number | OpenString<ValueOf<{ Bottom: 'bottom'; BottomLeft: 'bottom-left'; BottomRight: 'bottom-right'; Center: 'center'; Left: 'left'; Right: 'right'; Top: 'top'; TopLeft: 'top-left'; TopRight: 'top-right' }>> | { fraction: number; side: 'top' | 'right' | 'bottom' | 'left' }; boundary?: OpenString<ValueOf<{ Circle: 'circle'; Diamond: 'diamond'; Ellipse: 'ellipse'; Polygon: 'polygon'; Rectangle: 'rectangle'; Self: 'shape' }>> | { params?: Record<string, JsonValue>; type: OpenString<ValueOf<{ Circle: 'circle'; Diamond: 'diamond'; Ellipse: 'ellipse'; Polygon: 'polygon'; Rectangle: 'rectangle' }>> }; id: string; offset?: [number, number] } } | { direction: 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'; distance?: number; of: string }; predicate?: { name: string; params?: Record<string, JsonValue> }; role: OpenString<ValueOf<{ Activity: 'activity'; Concept: 'concept'; Event: 'event'; Gateway: 'gateway'; Participant: 'participant'; Resource: 'resource'; State: 'state' }>>; rotate?: number; scale?: number | { default?: number; x?: number; y?: number }; status?: 'error' | 'success' | 'warning' | 'disabled'; style?: { blendMode?: 'color' | 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'luminosity'; color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; fill?: string | number | { angle?: number; kind: 'linearGradient'; stops: Array<{ color: string; offset: number; opacity?: number }> } | { center?: [number, number]; kind: 'radialGradient'; radius?: number; stops: Array<{ color: string; offset: number; opacity?: number }> } | { angle?: number; center?: [number, number]; kind: 'conicGradient'; stops: Array<{ color: string; offset: number; opacity?: number }> } | { background?: string; color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; horizontalStyle?: { color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineWidth?: number }; kind: 'pattern'; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineStyleCycle?: { overrides: Array<{ index: number; style: { color?: ... | ...; dashed?: ... | ... | ...; dashOffset?: ... | ...; dashPattern?: ... | ...; dotted?: ... | ... | ...; lineCap?: ... | ... | ... | ...; lineJoin?: ... | ... | ... | ...; lineWidth?: ... | ... } }>; period: number }; lineWidth?: number; rotation?: number; shape: OpenString<ValueOf<{ Dots: 'dots'; Grid: 'grid'; Lines: 'lines' }>>; size?: number; verticalStyle?: { color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineWidth?: number } } | { fit?: 'fill' | 'contain' | 'cover'; href: string; kind: 'image' }; fillOpacity?: number; font?: { family?: string; size?: string | number; style?: 'normal' | 'italic' | 'oblique'; weight?: number | 'normal' | 'bold' }; opacity?: number; shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | { blur?: number; color?: string; offsetX?: number; offsetY?: number; opacity?: number; preset?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' }; stroke?: string | number | { angle?: number; kind: 'linearGradient'; stops: Array<{ color: string; offset: number; opacity?: number }> } | { center?: [number, number]; kind: 'radialGradient'; radius?: number; stops: Array<{ color: string; offset: number; opacity?: number }> } | { angle?: number; center?: [number, number]; kind: 'conicGradient'; stops: Array<{ color: string; offset: number; opacity?: number }> } | { background?: string; color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; horizontalStyle?: { color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineWidth?: number }; kind: 'pattern'; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineStyleCycle?: { overrides: Array<{ index: number; style: { color?: ... | ...; dashed?: ... | ... | ...; dashOffset?: ... | ...; dashPattern?: ... | ...; dotted?: ... | ... | ...; lineCap?: ... | ... | ... | ...; lineJoin?: ... | ... | ... | ...; lineWidth?: ... | ... } }>; period: number }; lineWidth?: number; rotation?: number; shape: OpenString<ValueOf<{ Dots: 'dots'; Grid: 'grid'; Lines: 'lines' }>>; size?: number; verticalStyle?: { color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineWidth?: number } } | { fit?: 'fill' | 'contain' | 'cover'; href: string; kind: 'image' }; strokeOpacity?: number; strokeWidth?: number; textColor?: string | number }; text?: string | Array<string | { fill?: string | number; font?: { family?: string; size?: string | number; style?: 'normal' | 'italic' | 'oblique'; weight?: number | 'normal' | 'bold' }; opacity?: number; text: string } | { runs: Array<{ fill?: string | number; font?: { family?: ... | ...; size?: ... | ... | ...; style?: ... | ... | ... | ...; weight?: ... | ... | ... | ... }; opacity?: number; text: string } | { displayMode?: boolean; fill?: string | number; opacity?: number; tex: string }> }>; type: 'entity'; zIndex?: number };
-```
-
-</details>
-
-#### 参数
-
-| 参数    | 类型          | 说明 |
-| ------- | ------------- | ---- |
-| `input` | `InputEntity` | —    |
+</DocTabs>
 
 ## `@retikz/graph`
 
-### EntityCreateOptions
+### createEntity / EntityCreateOptions
 
-<p>
-  <ApiSourceLink
-    label={'EntityCreateOptions'}
-    path={'packages/schematic/graph/src/contract/authoring/entity.ts'}
-    startLine={7}
-  >
-    Entity 单 record 工厂的作者输入
-  </ApiSourceLink>
-</p>
+- `createEntity`：<ApiSourceLink label={"createEntity"} path={"packages/schematic/graph/src/contract/authoring/entity.ts"} startLine={14}>组装 Graph root 使用的 Entity Source record</ApiSourceLink>
+- `EntityCreateOptions`：<ApiSourceLink label={"EntityCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/entity.ts"} startLine={7}>Entity 单 record 工厂的作者输入</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员           | 类型                  | 默认值 | 说明                                                                          |
+| -------------- | --------------------- | ------ | ----------------------------------------------------------------------------- |
+| `input` (参数) | `EntityCreateOptions` | —      | 实体字段，不包含由工厂补齐的 namespace 和 type                                |
+| 返回值         | `IRGraphEntity`       | —      | 新建的 Entity Source 记录；不解析 Schema、不生成 id，也不补齐位置或主题默认值 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
+export declare const createEntity: (input: EntityCreateOptions) => IRGraphEntity;
+
 export type EntityCreateOptions = Omit<ZodInfer<typeof EntitySchema>, 'namespace' | 'type'>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### EntityKindDefinition
 
@@ -282,7 +244,7 @@ export type EntityCreateOptions = Omit<ZodInfer<typeof EntitySchema>, 'namespace
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员                   | 类型     | 默认值 | 说明                              |
 | ---------------------- | -------- | ------ | --------------------------------- |
@@ -290,7 +252,7 @@ export type EntityCreateOptions = Omit<ZodInfer<typeof EntitySchema>, 'namespace
 | `readonly kind`        | `string` | —      | role 内唯一的开放 Entity kind key |
 | `readonly role`        | `string` | —      | kind 所属的 Entity role           |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -314,7 +276,7 @@ export type EntityKindDefinition = Readonly<{
   <ApiSourceLink
     label={'EntityPredicateDefinition'}
     path={'packages/schematic/graph/src/contract/entity/types.ts'}
-    startLine={48}
+    startLine={51}
   >
     Entity predicate registry 保存的参数擦除定义
   </ApiSourceLink>
@@ -324,7 +286,7 @@ export type EntityKindDefinition = Readonly<{
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员                    | 类型                                        | 默认值 | 说明                                                     |
 | ----------------------- | ------------------------------------------- | ------ | -------------------------------------------------------- |
@@ -334,7 +296,7 @@ export type EntityKindDefinition = Readonly<{
 | `readonly paramsSchema` | `EntityPredicateDefinition["paramsSchema"]` | —      | Source params 的 JSON object schema                      |
 | `readonly role`         | `string`                                    | —      | predicate 所属的 Entity role                             |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -354,7 +316,7 @@ export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<J
   <ApiSourceLink
     label={'EntityPredicateDefinitionInput'}
     path={'packages/schematic/graph/src/contract/entity/types.ts'}
-    startLine={34}
+    startLine={37}
   >
     Entity predicate 作者侧的类型安全定义
   </ApiSourceLink>
@@ -364,17 +326,18 @@ export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<J
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| 成员                    | 类型                    | 默认值 | 说明                                                     |
-| ----------------------- | ----------------------- | ------ | -------------------------------------------------------- |
-| `readonly description`  | `string`                | —      | 面向作者与工具的稳定语义说明                             |
-| `readonly kinds?`       | `ReadonlyArray<string>` | —      | 可选允许的 Entity kind keys；省略表示该 role 的全部 kind |
-| `readonly name`         | `string`                | —      | 全局唯一的 predicate definition name                     |
-| `readonly paramsSchema` | `TSchema`               | —      | Source params 的 JSON object schema                      |
-| `readonly role`         | `string`                | —      | predicate 所属的 Entity role                             |
+| 成员                    | 类型                          | 默认值 | 说明                                                                      |
+| ----------------------- | ----------------------------- | ------ | ------------------------------------------------------------------------- |
+| `TSchema` (泛型)        | `extends ZodType<JsonObject>` | —      | 约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约 |
+| `readonly description`  | `string`                      | —      | 面向作者与工具的稳定语义说明                                              |
+| `readonly kinds?`       | `ReadonlyArray<string>`       | —      | 可选允许的 Entity kind keys；省略表示该 role 的全部 kind                  |
+| `readonly name`         | `string`                      | —      | 全局唯一的 predicate definition name                                      |
+| `readonly paramsSchema` | `TSchema`                     | —      | Source params 的 JSON object schema                                       |
+| `readonly role`         | `string`                      | —      | predicate 所属的 Entity role                                              |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -394,12 +357,6 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 
 </DocTabs>
 
-#### 类型参数
-
-| 类型参数  | 说明 |
-| --------- | ---- |
-| `TSchema` | —    |
-
 ### EntityRoleDefinition
 
 <p>
@@ -416,7 +373,7 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员                     | 类型                                                    | 默认值 | 说明                         |
 | ------------------------ | ------------------------------------------------------- | ------ | ---------------------------- |
@@ -428,7 +385,7 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 | `readonly role`          | `string`                                                | —      | 开放的 Entity role key       |
 | `readonly shape`         | `NonNullable<IRNode['shape']>`                          | —      | role 独占的 Core Node shape  |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -458,15 +415,25 @@ export type EntityRoleDefinition = Readonly<{
   </ApiSourceLink>
 </p>
 
-```ts
-export type EntityRoleValue = ValueOf<typeof EntityRole>;
-```
+<DocTabs defaultValue="expanded">
 
-#### 展开类型
+<DocTab value="expanded" label="展开类型">
 
 ```ts
 export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | 'gateway' | 'resource' | 'concept';
 ```
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type EntityRoleValue = ValueOf<typeof EntityRole>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### GraphDefinitionOptions
 
@@ -484,7 +451,7 @@ export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | '
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员                           | 类型                                         | 默认值 | 说明                                               |
 | ------------------------------ | -------------------------------------------- | ------ | -------------------------------------------------- |
@@ -496,7 +463,7 @@ export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | '
 | `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | —      | 自定义 Relation predicate definitions              |
 | `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | —      | 自定义 Relation role definitions                   |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -521,20 +488,30 @@ export type GraphDefinitionOptions = Readonly<{
 ### GraphStatusValue
 
 <p>
-  <ApiSourceLink label={'GraphStatusValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={18}>
+  <ApiSourceLink label={'GraphStatusValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={15}>
     Graph 内置语义状态词汇值
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="expanded">
+
+<DocTab value="expanded" label="展开类型">
+
+```ts
+export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
+```
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export type GraphStatusValue = ValueOf<typeof GraphStatus>;
 ```
 
-#### 展开类型
+</DocTab>
 
-```ts
-export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
-```
+</DocTabs>
 
 ### IRGraphEntity
 
@@ -548,30 +525,30 @@ export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable grouped>
 
-| 成员          | 类型                                                                                             | 默认值 | 说明 |
-| ------------- | ------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?` | `Array<IRAnimationTrack>`                                                                        | —      | —    |
-| `group?`      | `string`                                                                                         | —      | —    |
-| `id?`         | `string`                                                                                         | —      | —    |
-| `kind?`       | `string`                                                                                         | —      | —    |
-| `label?`      | `ZodInfer<typeof EntitySchema.shape["label"]>`                                                   | —      | —    |
-| `layout?`     | `ZodInfer<typeof EntitySchema.shape["layout"]>`                                                  | —      | —    |
-| `meta?`       | `Record<string, JsonValue>`                                                                      | —      | —    |
-| `namespace`   | `"graph"`                                                                                        | —      | —    |
-| `position?`   | `ZodInfer<typeof EntitySchema.shape["position"]>`                                                | —      | —    |
-| `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | —    |
-| `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | —    |
-| `rotate?`     | `number`                                                                                         | —      | —    |
-| `scale?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | —    |
-| `status?`     | <ApiValues name="GraphStatus" />                                                                 | —      | —    |
-| `style?`      | `ZodInfer<typeof EntitySchema.shape["style"]>`                                                   | —      | —    |
-| `text?`       | `ZodInfer<typeof EntitySchema.shape["text"]>`                                                    | —      | —    |
-| `type`        | `"entity"`                                                                                       | —      | —    |
-| `zIndex?`     | `number`                                                                                         | —      | —    |
+| 分组 | 成员          | 类型                                                                                             | 默认值 | 说明                                                                                        |
+| ---- | ------------- | ------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------- |
+| 主要 | `group?`      | `string`                                                                                         | —      | Graph 内 Entity 的语义分组 key；同组默认使用相同分类色，Relation 也可共享该颜色；不创建容器 |
+|      | `id?`         | `string`                                                                                         | —      | 可选引用标识；省略不自动生成                                                                |
+|      | `kind?`       | `string`                                                                                         | —      | 可选稳定子类型；注册身份为当前 role 与 kind 的组合                                          |
+|      | `label?`      | `ZodInfer<typeof EntitySchema.shape["label"]>`                                                   | —      | 附着的单个或多个标签                                                                        |
+|      | `namespace`   | `"graph"`                                                                                        | —      | 命名空间，固定为 graph                                                                      |
+|      | `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —      | 已注册精确语义的名称与 JSON 参数                                                            |
+|      | `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —      | 开放角色 key；绘制时必须在当前宿主中注册                                                    |
+|      | `text?`       | `ZodInfer<typeof EntitySchema.shape["text"]>`                                                    | —      | 字符串或文字行数组                                                                          |
+|      | `type`        | `"entity"`                                                                                       | —      | 记录判别字段，固定为 entity                                                                 |
+| 几何 | `position?`   | `ZodInfer<typeof EntitySchema.shape["position"]>`                                                | —      | 可选位置；实际绘制前必须由作者或布局补齐                                                    |
+|      | `rotate?`     | `number`                                                                                         | —      | 绕中心旋转的角度                                                                            |
+|      | `scale?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 统一或分轴缩放                                                                              |
+| 布局 | `layout?`     | `ZodInfer<typeof EntitySchema.shape["layout"]>`                                                  | —      | 尺寸和文字布局，不包含 role 拥有的 padding                                                  |
+| 样式 | `status?`     | <ApiValues name="GraphStatus" />                                                                 | —      | 可选闭合状态：error、success、warning、disabled                                             |
+|      | `style?`      | `ZodInfer<typeof EntitySchema.shape["style"]>`                                                   | —      | 逐字段合并的实例外观                                                                        |
+|      | `zIndex?`     | `number`                                                                                         | —      | 同层绘制顺序，数值越大越靠上                                                                |
+| 动画 | `animations?` | `Array<IRAnimationTrack>`                                                                        | —      | 动画轨道，不参与布局                                                                        |
+| 数据 | `meta?`       | `Record<string, JsonValue>`                                                                      | —      | 透传的 JSON 元信息                                                                          |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -605,34 +582,10 @@ export const EntityRole = {
 } as const;
 ```
 
-### EntityRoleSchema
-
-<p>
-  <ApiSourceLink
-    label={'EntityRoleSchema'}
-    path={'packages/schematic/graph/src/schemas/entity/schema.ts'}
-    startLine={9}
-  >
-    查看源码
-  </ApiSourceLink>
-</p>
-
-[Schema 参考](/schematic/graph/entity/schema-reference#entityroleschema)
-
-### EntitySchema
-
-<p>
-  <ApiSourceLink label={'EntitySchema'} path={'packages/schematic/graph/src/schemas/entity/schema.ts'} startLine={22}>
-    查看源码
-  </ApiSourceLink>
-</p>
-
-[Schema 参考](/schematic/graph/entity/schema-reference)
-
 ### GraphStatus
 
 <p>
-  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={73}>
+  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={57}>
     Graph Entity 与 Relation 共享的图式语义状态
   </ApiSourceLink>
 </p>
@@ -646,49 +599,43 @@ export const GraphStatus = {
 } as const;
 ```
 
-### createEntity
-
-<p>
-  <ApiSourceLink
-    label={'createEntity'}
-    path={'packages/schematic/graph/src/contract/authoring/entity.ts'}
-    startLine={10}
-  >
-    组装 Graph root 使用的 Entity Source record
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const createEntity: (input: EntityCreateOptions) => IRGraphEntity;
-```
-
-#### 参数
-
-| 参数    | 类型                  | 说明 |
-| ------- | --------------------- | ---- |
-| `input` | `EntityCreateOptions` | —    |
-
 ### createGraphDefinitions
 
 <p>
   <ApiSourceLink
     label={'createGraphDefinitions'}
     path={'packages/schematic/graph/src/pipeline/definitions.ts'}
-    startLine={17}
+    startLine={22}
   >
     创建当前 Graph 包族的完整 composite definition 集合
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称       | 类型 / 签名                     | 说明                                                                |
+| ------ | ---------- | ------------------------------- | ------------------------------------------------------------------- |
+| 参数   | `options?` | `GraphDefinitionOptions`        | 自定义语义与主题定义；省略时仅使用内置定义，调用时完成注册校验      |
+| 返回值 | —          | `Array<AnyCompositeDefinition>` | 新建的 composite definition 数组，包含 Graph 元素及其布局和表面依赖 |
+| 错误   | —          | —                               | RetikzGraphError 定义重复、语义引用未注册或定义约束冲突时抛出       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) => Array<AnyCompositeDefinition>;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数      | 类型                     | 说明 |
-| --------- | ------------------------ | ---- |
-| `options` | `GraphDefinitionOptions` | —    |
+</DocTabs>
 
 ### createGraphProviders
 
@@ -696,21 +643,36 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
   <ApiSourceLink
     label={'createGraphProviders'}
     path={'packages/schematic/graph/src/pipeline/definitions.ts'}
-    startLine={35}
+    startLine={44}
   >
     创建当前 Graph 包族的完整 composite dependency provider 集合
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称       | 类型 / 签名                             | 说明                                                                       |
+| ------ | ---------- | --------------------------------------- | -------------------------------------------------------------------------- |
+| 参数   | `options?` | `GraphDefinitionOptions`                | 自定义语义与主题定义；省略时复用内置 provider 集合，注册校验延迟至依赖装配 |
+| 返回值 | —          | `ReadonlyArray<CoreDependencyProvider>` | 只读 provider 集合，包含 Graph 元素及其所需的布局、形状与箭头依赖          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数      | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 说明 |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| `options` | `Readonly<{ entityKinds?: readonly Array<Readonly<{ description: string; kind: string; role: string }>>; entityPredicates?: readonly Array<Readonly<{ description: string; kinds?: readonly Array<string>; name: string; paramsSchema: ZodType; role: string }>>; entityRoles?: readonly Array<Readonly<{ boundary?: OpenString<ValueOf<{ Circle: ...; Diamond: ...; Ellipse: ...; Polygon: ...; Rectangle: ...; Self: ... }>> \| { params?: Record<..., ...>; type: OpenString<ValueOf<...>> }; cornerRadius?: number; description: string; minimumSize?: number \| { default?: number; height?: number; width?: number }; padding: NonNullable<number \| { bottom?: ... \| ...; default?: ... \| ...; left?: ... \| ...; right?: ... \| ...; top?: ... \| ...; x?: ... \| ...; y?: ... \| ... } \| undefined>; role: string; shape: NonNullable<OpenString<ValueOf<...>> \| { params?: ... \| ...; type: OpenString<...> } \| undefined> }>>; graphThemeStyles?: readonly Array<Readonly<{ name: string; resolve: (theme: ResolvedTheme) => GraphThemeStyleSource }>>; relationKinds?: readonly Array<Readonly<{ allowedDirections?: readonly Array<RelationDirectionValue>; defaultDirection?: RelationDirectionValue; description: string; directions?: Readonly<Partial<Record<..., ...>>>; kind: string; role: string }>>; relationPredicates?: readonly Array<Readonly<{ description: string; kinds?: readonly Array<string>; name: string; paramsSchema: ZodType; resolveStructure?: (params: ZodOutput<TSchema>) => { dashPattern?: ... \| ... \| ...; sourceMarker?: ... \| ... \| ...; targetMarker?: ... \| ... \| ... }; role: string }>>; relationRoles?: readonly Array<Readonly<{ allowedDirections: readonly Array<RelationDirectionValue>; defaultDirection: RelationDirectionValue; description: string; directions: Readonly<Partial<Record<RelationDirectionValue, IRGraphRelationRoleTokenRecipe>>>; role: string }>> }>` | —    |
+</DocTabs>
 
 ### defineEntityKind
 
@@ -718,21 +680,36 @@ export declare const createGraphProviders: (options?: GraphDefinitionOptions) =>
   <ApiSourceLink
     label={'defineEntityKind'}
     path={'packages/schematic/graph/src/contract/entity/define.ts'}
-    startLine={15}
+    startLine={23}
   >
     定义一个可注册的 Entity kind
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称         | 类型 / 签名            | 说明                                                                   |
+| ------ | ------------ | ---------------------- | ---------------------------------------------------------------------- |
+| 参数   | `definition` | `EntityKindDefinition` | 传给 GraphDefinitionOptions.entityKinds 的定义；此函数不执行注册或校验 |
+| 返回值 | —            | `EntityKindDefinition` | 原样返回 definition，不复制或修改输入对象                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const defineEntityKind: (definition: EntityKindDefinition) => EntityKindDefinition;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数         | 类型                   | 说明 |
-| ------------ | ---------------------- | ---- |
-| `definition` | `EntityKindDefinition` | —    |
+</DocTabs>
 
 ### defineEntityPredicate
 
@@ -740,11 +717,29 @@ export declare const defineEntityKind: (definition: EntityKindDefinition) => Ent
   <ApiSourceLink
     label={'defineEntityPredicate'}
     path={'packages/schematic/graph/src/contract/entity/define.ts'}
-    startLine={18}
+    startLine={31}
   >
     定义一个类型安全并可注册的 Entity predicate
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称         | 类型 / 签名                               | 说明                                                                        |
+| ------ | ------------ | ----------------------------------------- | --------------------------------------------------------------------------- |
+| 泛型   | `TSchema`    | `extends ZodType<JsonObject>`             | 约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约   |
+| 参数   | `definition` | `EntityPredicateDefinitionInput<TSchema>` | 传给 GraphDefinitionOptions.entityPredicates 的定义；此函数不执行注册或校验 |
+| 返回值 | —            | `EntityPredicateDefinition`               | 原样返回 definition，不复制或修改输入对象                                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const defineEntityPredicate: <TSchema extends ZodType<JsonObject>>(
@@ -752,17 +747,9 @@ export declare const defineEntityPredicate: <TSchema extends ZodType<JsonObject>
 ) => EntityPredicateDefinition;
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数  | 说明 |
-| --------- | ---- |
-| `TSchema` | —    |
-
-#### 参数
-
-| 参数         | 类型                                      | 说明 |
-| ------------ | ----------------------------------------- | ---- |
-| `definition` | `EntityPredicateDefinitionInput<TSchema>` | —    |
+</DocTabs>
 
 ### defineEntityRole
 
@@ -770,18 +757,33 @@ export declare const defineEntityPredicate: <TSchema extends ZodType<JsonObject>
   <ApiSourceLink
     label={'defineEntityRole'}
     path={'packages/schematic/graph/src/contract/entity/define.ts'}
-    startLine={12}
+    startLine={16}
   >
     定义一个可注册的 Entity role
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称         | 类型 / 签名            | 说明                                                                   |
+| ------ | ------------ | ---------------------- | ---------------------------------------------------------------------- |
+| 参数   | `definition` | `EntityRoleDefinition` | 传给 GraphDefinitionOptions.entityRoles 的定义；此函数不执行注册或校验 |
+| 返回值 | —            | `EntityRoleDefinition` | 原样返回 definition，不复制或修改输入对象                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const defineEntityRole: (definition: EntityRoleDefinition) => EntityRoleDefinition;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数         | 类型                   | 说明 |
-| ------------ | ---------------------- | ---- |
-| `definition` | `EntityRoleDefinition` | —    |
+</DocTabs>

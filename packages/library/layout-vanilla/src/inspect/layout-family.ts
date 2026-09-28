@@ -11,7 +11,10 @@ export type CreateLayoutInspectionVanillaDriverOptions = Omit<CreateInspectionVa
     registry?: InspectorRegistry;
   }>;
 
-/** 创建默认包含三种 Layout 布局检查器的 Vanilla 编译驱动 */
+/** 创建默认包含三种 Layout 布局检查器的 Vanilla 编译驱动
+ * @param options 可选驱动配置；省略时只注册内置布局检查器
+ * @returns 传给 Vanilla render 或 mount 入口的检查编译驱动
+ */
 export const createLayoutInspectionVanillaDriver = (
   options: CreateLayoutInspectionVanillaDriverOptions = {},
 ): ReturnType<typeof createInspectionVanillaDriver> => {
@@ -27,6 +30,8 @@ export const createLayoutInspectionVanillaDriver = (
   });
 };
 
-/** 创建阻止当前图形或作用域内全部检查器的边界标记 */
+/** 创建阻止当前图形或作用域内全部检查器的边界标记
+ * @returns 交给 Vanilla authored site 的不透明屏障标记
+ */
 export const createLayoutInspectionBarrier = (): ReturnType<typeof createInspectionVanillaAuthoring> =>
   createInspectionVanillaAuthoring(false);

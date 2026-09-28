@@ -12,40 +12,45 @@ describe('Entity API 公开参考', () => {
     const source = sections.join('\n\n');
     const headings = [...source.matchAll(/^### (.+)$/gm)].map(match => match[1]);
     for (const name of [
-      'Entity',
-      'EntityProps',
-      'entity',
-      'InputEntity',
-      'createEntity',
+      'Entity / EntityProps',
+      'entity / EntityInputEmbedProps',
+      'normalizeEntity / InputEntity',
+      'createEntity / EntityCreateOptions',
       'defineEntityRole',
       'defineEntityKind',
       'defineEntityPredicate',
-      'EntitySchema',
-      'EntityRoleSchema',
     ])
       expect(headings).toContain(name);
-    const props = source.split('### EntityProps\n')[1]?.split('\n### ')[0] ?? '';
-    expect(props).toContain('label="Members"');
-    expect(props).toContain('`role`');
+    expect(headings).not.toContain('EntitySchema');
+    expect(headings).not.toContain('EntityRoleSchema');
+    const section = (name: string): string => source.split(`### ${name}\n`)[1]?.split(/\n##?# /)[0] ?? '';
+    const props = section('Entity / EntityProps');
+    expect(props).toContain('label="Direct members"');
     expect(props).toContain('`readonly children?`');
-    expect(props).not.toContain('`type`');
-    expect(props).toContain('<ApiValues name="EntityRole" /> \\| `string`');
-    expect(props).toContain('<ApiValues name="GraphStatus" />');
-    expect(props).not.toContain('OpenString<ValueOf<');
-    expect(source.match(/<ApiValues name="EntityRole" \/>/g)).toHaveLength(4);
-    expect(props).toContain('`Array<IRAnimationTrack>`');
-    expect(props).not.toContain("InputEntity['animations']");
-    expect(source.match(/`Array<IRAnimationTrack>`/g)).toHaveLength(4);
-    const component = source.split('### Entity\n')[1]?.split('\n## ')[0] ?? '';
-    expect(component).toContain('props: EntityProps');
-    expect(component).not.toContain('props: P,');
-    const factory = source.split('### createEntity\n')[1]?.split('\n### ')[0] ?? '';
+    expect(props).toContain('inherited from `InputEntity`');
+    expect(props).not.toContain('`role`');
+    expect(props).toContain('props: EntityProps');
+    expect(props).not.toContain('props: P,');
+    const input = section('normalizeEntity / InputEntity');
+    expect(input).toContain('| Group |');
+    expect(input).toContain('<ApiValues name="EntityRole" /> \\| `string`');
+    expect(input).toContain('<ApiValues name="GraphStatus" />');
+    expect(input).toContain('`Array<IRAnimationTrack>`');
+    expect(input).toContain('Open Entity role key resolved by the configured Graph role registry.');
+    expect(input).not.toContain('| — | — |');
+    const factory = section('createEntity / EntityCreateOptions');
     expect(factory).toContain('(input: EntityCreateOptions) => IRGraphEntity');
-    expect(factory.length).toBeLessThan(2000);
+    expect(factory).toContain('does not parse the schema, generate an id');
     expect(source).toContain('(options?: GraphDefinitionOptions) => Array<AnyCompositeDefinition>');
     expect(source).not.toContain('GraphDefinitionOptions = {}');
-    expect(source).toContain('View full inferred signature');
-    expect(source).toContain('/schematic/graph/entity/schema-reference');
+    expect(section('createGraphProviders')).toContain('`GraphDefinitionOptions`');
+    const predicate = section('defineEntityPredicate');
+    expect(predicate.match(/<ApiTable/g)).toHaveLength(1);
+    expect(predicate).toContain('Type parameters');
+    expect(predicate).toContain('JSON object schema type constraining paramsSchema');
+    expect(predicate).toContain('does not register or validate it');
+    expect(predicate).toContain('The original definition object, without copying or modifying it');
+    expect(source).not.toContain('#### Parameters');
     expect(source).not.toMatch(/[\u3400-\u9fff]/u);
     await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeDefined();
   }, 60_000);

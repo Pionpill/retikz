@@ -1,0 +1,152 @@
+---
+title: Polygon · 正多边形
+description: 用 Standard 的形状语义绘制正多边形，在 React、Vanilla 和 JSON 之间保持一致
+---
+
+`Polygon` 按边数和外接半径或边长绘制正多边形，适合规则徽标、六边形单元和几何示意。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，从三个包的 `/shape` 子入口选择宿主。四种写法绘制相同的最小图形；React 与 Vanilla adapter 自动提供所需定义，直接 IR 需要显式注入 Definition。
+
+<ComponentPreview files="entry" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Polygon } from '@retikz/standard-react/shape';
+
+export const Example = () => (
+  <Layout>
+    <Polygon center={[0, 0]} radius={36} sides={6} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { PolygonDefinition } from '@retikz/standard/shape';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'polygon', center: [0, 0], radius: 36, sides: 6 }],
+};
+export const Example = () => <Layout ir={ir} composites={[PolygonDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { shape, PolygonInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({ children: [shape.polygon({ center: [0, 0], radius: 36, sides: 6 })] });
+const svg = renderToSvgString(input, { adapters: [PolygonInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { PolygonDefinition } from '@retikz/standard/shape';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'polygon', center: [0, 0], radius: 36, sides: 6 }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [PolygonDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+`<Polygon>` 在指定位置画一个等边多边形，展开成底层 `<Path>`。
+
+```tsx
+import { Polygon } from '@retikz/standard-react/shape';
+```
+
+```tsx
+<Polygon center={[0, 0]} radius={36} sides={6} />
+```
+
+`<Polygon>` 用外接半径或边长确定大小。`sides` 至少为 `3`，`rotate` 可以调整整体朝向。
+
+| 写法                            | 适合         |
+| ------------------------------- | ------------ |
+| `{ center, radius, sides }`     | 已知外接半径 |
+| `{ center, sideLength, sides }` | 已知边长     |
+
+下面的 playground 同时显示外接圆和第一个顶点方向。调整 `sides`、半径与 `rotate`，观察顶点始终均匀落在参考圆上。
+
+<ComponentPreview files="polygon-playground" size="md" controlPanelDefaultSize={50} />
+
+## 错误与限制
+
+在 radius 与 sideLength 中选择一个，数值必须有限且非负。sides 必须为至少 3 的整数，center 使用字面坐标。rotate 默认 −90°，只在生成顶点时应用一次。
+
+## 实现原理
+
+<ComponentAlert type="tip">
+
+本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。
+
+</ComponentAlert>
+
+### 正多边形的顶点展开
+
+图中的半径与边长输入先收敛为同一个顶点环，再由唯一的主链展开成 Path：
+
+<ComponentPreview files="polygon-lowering-flow" size="md" hideCode type="illustration" />
+
+`radius` 可以直接作为外接半径；边长为 $s$、边数为 $n$ 时，半径为 $R = s / (2\sin(\pi/n))$。第 $k$ 个顶点的角度为 $\theta_k = \mathrm{rotate} + 360k/n$（度）；旋转直接计入顶点坐标，不会再作为路径变换应用一次。
+
+因此输出拓扑始终是一次 `move`、`sides - 1` 次 `line` 和一次 `cycle`。`center` 不是字面 `[x, y]`，或 `sides` 不是至少为 3 的整数时，会在生成顶点环之前报错。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Polygon 输入归一与 Path 展开',
+      path: 'packages/library/standard/src/shape/polygon/pipeline.ts',
+      startLine: 1,
+    },
+    {
+      label: '正多边形顶点计算',
+      path: 'packages/library/standard/src/shape/shared/geometry.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## API 参考
+
+{/* @include library/standard/shape/polygon/generated */}
+
+## Schema 参考
+
+### PolygonSchema
+
+<ZodSchema name="PolygonSchema" />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'shape · 形状', description: '比较不同几何轮廓的输入方式和适用场景', url: '/library/standard/shape' },
+  ]}
+/>

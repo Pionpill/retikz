@@ -1,8 +1,12 @@
 import type { FC } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib';
 
 import { ApiValues, API_VALUE_REGISTRY } from '../api-values';
+import { MAX_SCHEMA_TYPE_CHARACTERS, schemaTypeText } from './type-text';
 import type { TypeRepr } from './types';
 
 const code = 'rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]';
@@ -14,12 +18,45 @@ const unionMembers = (repr: TypeRepr): Array<TypeRepr> =>
 export type RenderTypeProps = {
   repr: TypeRepr;
   className?: string;
+  /** 顶层收起时保留 Schema 的公开名称 */
+  name?: string;
   /** 嵌套在复合类型中时复用外层代码样式 */
   plain?: boolean;
 };
 
 /** TypeRepr → 类型声明；具名类型保留原名，公开枚举提供值提示 */
 export const RenderType: FC<RenderTypeProps> = props => {
+  const { repr, name, className } = props;
+  const { t } = useTranslation();
+  const text = schemaTypeText(repr);
+  if (text.length <= MAX_SCHEMA_TYPE_CHARACTERS) return <RenderTypeContent {...props} />;
+  const summary = name ?? `${text.slice(0, MAX_SCHEMA_TYPE_CHARACTERS - 1)}…`;
+  return (
+    <Collapsible asChild>
+      <span className={cn('inline-block max-w-full align-top', className)} data-schema-type-collapsed>
+        <span className={cn(code, 'break-words')}>{summary}</span>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-1 h-auto py-0.5 text-xs"
+            aria-label={t('zodSchema.toggleType')}
+          >
+            {t('zodSchema.toggleType')}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent asChild>
+          <span className="mt-2 block border-l pl-3">
+            <RenderTypeContent {...props} />
+          </span>
+        </CollapsibleContent>
+      </span>
+    </Collapsible>
+  );
+};
+
+/** 渲染当前层；子类型仍独立遵守默认展开上限 */
+const RenderTypeContent: FC<RenderTypeProps> = props => {
   const { repr, className, plain = false } = props;
   const codeClassName = plain ? undefined : code;
 

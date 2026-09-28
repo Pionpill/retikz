@@ -124,7 +124,7 @@ import {
   CircleInputEmbedAdapter,
   EllipseInputEmbedAdapter,
   RectangleInputEmbedAdapter,
-  RegularPolygonInputEmbedAdapter,
+  PolygonInputEmbedAdapter,
   StarInputEmbedAdapter,
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
@@ -150,8 +150,8 @@ import {
   EllipseDefinition,
   RectangleSchema,
   RectangleDefinition,
-  RegularPolygonSchema,
-  RegularPolygonDefinition,
+  PolygonSchema,
+  PolygonDefinition,
   StarSchema,
   StarDefinition,
   ArcSchema,
@@ -256,7 +256,7 @@ type StandardKind =
   | 'circle'
   | 'ellipse'
   | 'rectangle'
-  | 'regularPolygon'
+  | 'polygon'
   | 'star'
   | 'arc'
   | 'sector'
@@ -312,11 +312,11 @@ const convertStandardChild = (
       void _type;
       return shape.rectangle(input);
     }
-    case 'regularPolygon': {
-      const { namespace: _namespace, type: _type, ...input } = RegularPolygonSchema.parse(child);
+    case 'polygon': {
+      const { namespace: _namespace, type: _type, ...input } = PolygonSchema.parse(child);
       void _namespace;
       void _type;
-      return shape.regularPolygon(input);
+      return shape.polygon(input);
     }
     case 'star': {
       const { namespace: _namespace, type: _type, ...input } = StarSchema.parse(child);
@@ -624,7 +624,7 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInput
   ...(state.adapters.has('circle') ? [CircleInputEmbedAdapter] : []),
   ...(state.adapters.has('ellipse') ? [EllipseInputEmbedAdapter] : []),
   ...(state.adapters.has('rectangle') ? [RectangleInputEmbedAdapter] : []),
-  ...(state.adapters.has('regularPolygon') ? [RegularPolygonInputEmbedAdapter] : []),
+  ...(state.adapters.has('polygon') ? [PolygonInputEmbedAdapter] : []),
   ...(state.adapters.has('star') ? [StarInputEmbedAdapter] : []),
   ...(state.adapters.has('arc') ? [ArcInputEmbedAdapter] : []),
   ...(state.adapters.has('sector') ? [SectorInputEmbedAdapter] : []),
@@ -659,7 +659,7 @@ const standardDefinitionByName = {
   CircleDefinition,
   EllipseDefinition,
   RectangleDefinition,
-  RegularPolygonDefinition,
+  PolygonDefinition,
   StarDefinition,
   ArcDefinition,
   SectorDefinition,
@@ -718,7 +718,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'circle',
           'ellipse',
           'rectangle',
-          'regularPolygon',
+          'polygon',
           'star',
           'arc',
           'sector',

@@ -1,0 +1,60 @@
+---
+title: Schema reference
+description: Look up persistent fields for the Block family and CodeBlock domain data.
+---
+
+This page covers public `@retikz/graph` inputs for Block, Header, Section, Row, text, and CodeBlock domain data. Shared Scope, Surface, and Theme fields retain their owning types. Start with [Basic usage](/schematic/graph/block/usage).
+
+Dimensions must be nonnegative. When width and minWidth are both provided, minWidth cannot exceed width. Compile defaults do not mutate Source. CodeBlockPropsSchema excludes discriminators and children; custom entities add stable namespace / type and domain fields through safeExtend.
+
+## BlockSchema
+
+<ZodSchema name="BlockSchema" shallow />
+
+## BlockHeaderSchema
+
+<ZodSchema name="BlockHeaderSchema" shallow />
+
+## BlockSectionSchema
+
+<ZodSchema name="BlockSectionSchema" shallow />
+
+## BlockRowSchema
+
+<ZodSchema name="BlockRowSchema" shallow />
+
+## BlockTextSchema
+
+<ZodSchema name="BlockTextSchema" shallow />
+
+## CodeBlockPropsSchema
+
+<ZodSchema name="CodeBlockPropsSchema" shallow />
+
+## CodeParameterSchema
+
+<ZodSchema name="CodeParameterSchema" shallow />
+
+## CodeSignatureSchema
+
+<ZodSchema name="CodeSignatureSchema" shallow />
+
+## CodePropertySchema
+
+<ZodSchema name="CodePropertySchema" shallow />
+
+## CodeMethodSchema
+
+<ZodSchema name="CodeMethodSchema" shallow />
+
+## CodeLogicSchema
+
+<ZodSchema name="CodeLogicSchema" shallow />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Custom usage', description: 'Define and validate domain Source', url: '/schematic/graph/block/custom' },
+  ]}
+/>

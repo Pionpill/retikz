@@ -1,0 +1,86 @@
+---
+title: Implementation
+description: Understand measurement, allocation, and final placement
+---
+
+Read [basic usage](/library/layout/overlay-layout/usage) first. This page explains the result; callers do not invoke the internal stages themselves.
+
+## Size participation and placement are separate rules
+
+All items require measurement, but only `include` items contribute to the container minimum and natural profiles. After container sizing, `exclude` items still receive final constraints, placement, and output. Fixed sizing supplies an authored allocation rather than forcing every drawing to change size.
+
+<ComponentPreview files="participation-flow" hideCode type="flow" size="xs" />
+
+<SourceLinks
+  sources={[{ label: 'solve.ts', path: 'packages/library/layout/src/composites/overlay-layout/solve.ts' }]}
+/>
+
+## How a local target determines the slot
+
+`at` is relative to the content-box origin; `anchor` chooses a normalized slot point. In this 200 × 100 content box, target `(150,20)`, slot 40 × 20, and anchor `(1,0)` place the slot origin at `(150−40,20)=(110,20)`.
+
+The relation below uses $\odot$ for component-wise multiplication:
+
+$$
+\mathbf{o}_{slot} = \mathbf{o}_{content} + \mathbf{at} - \mathbf{anchor} \odot \mathbf{size}_{slot} + \mathbf{offset}
+$$
+
+Anchors do not use visual bounds, so changing strokes or labels does not redefine the coordinate system.
+
+<ComponentPreview files="allocation-figure" hideCode type="illustration" size="md" />
+
+<SourceLinks
+  sources={[{ label: 'solve.ts', path: 'packages/library/layout/src/composites/overlay-layout/solve.ts' }]}
+/>
+
+## From slots to allocations and visible bounds
+
+`aligned` uses the content box as its reference; `positioned` first resolves a locally anchored slot. Alignment places the actual child allocation inside that space, followed by `offset`. Fixed geometry may resist stretching, so the slot and drawing need not have equal sizes.
+
+Container clipping applies during replay. Baseline alignment requires a common vertical reference: baseline-aligned items cannot use nonzero vertical offsets, and positioned items must use edge alignment. Input constraints prevent mixing these placement models.
+
+<ComponentPreview files="placement-flow" hideCode type="flow" size="xs" />
+
+<SourceLinks
+  sources={[{ label: 'solve.ts', path: 'packages/library/layout/src/composites/overlay-layout/solve.ts' }]}
+/>
+
+## Why paint order does not rewrite item identity
+
+Painting sorts by ascending `zIndex`, then by `sourceIndex` for stable ties. First, Second, and Third have layers 2, 0, and 2, so Second paints first, followed by First and Third. Size participation does not affect this sort.
+
+`OverlayLayoutArtifact.items` retains authored order, while `paintOrder` separately records drawing order. One traces input identity; the other explains overlap.
+
+<ComponentPreview files="stacking-figure" hideCode type="illustration" size="lg" />
+
+<SourceLinks
+  sources={[{ label: 'pipeline.ts', path: 'packages/library/layout/src/composites/overlay-layout/pipeline.ts' }]}
+/>
+
+[Shared candidate isolation and replay](/library/layout/flex-layout/mechanism#one-layout-transaction) are explained in the FlexLayout implementation page.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/overlay-layout/usage',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and clipping',
+      url: '/library/layout/overlay-layout/extended',
+    },
+
+    { title: 'API reference', description: 'Look up public functions, types, and props', url: '/library/layout/overlay-layout/api-reference' },
+
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+
+]}
+/>

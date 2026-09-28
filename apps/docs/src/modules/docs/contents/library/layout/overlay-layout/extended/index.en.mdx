@@ -1,0 +1,120 @@
+---
+title: Extended usage
+description: Combine size constraints, placement strategies, and clipping
+---
+
+After [basic usage](/library/layout/overlay-layout/usage), explore constraints and observable results. Each example isolates one API group.
+
+## Position with a local target and slot anchor
+
+A target coordinate and an item anchor let you place a corner or the center of an item at a specific point in the content box.
+
+| Property                             | Available values                        | Explanation                                                                            |
+| ------------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `placement.kind`                     | `positioned`                            | Enable placement at local coordinates                                                  |
+| `placement.at`                       | `{ x, y }`                              | Finite coordinates relative to the content-box origin                                  |
+| `placement.anchor`                   | `{ x, y }`, each coordinate from 0 to 1 | Normalized slot anchor: top-left `(0,0)`, center `(0.5,0.5)`, top-right `(1,0)`        |
+| `placement.width / placement.height` | Optional non-negative numbers           | Provide exact slot width and height; anchors refer to the slot, not strokes or shadows |
+
+Keep the target point fixed and switch between the left, center, and right anchors in the demo. Change slot width to see its left boundary move, then adjust target x / y to move the whole slot. Positioned items cannot use baseline alignment; override a baseline container setting with edge alignment on the item.
+
+<ComponentPreview files="overlay-position" size="md" />
+
+## Separate size contribution from paint order
+
+Whether an item contributes to container size and whether it paints on top are independent decisions. Excluding size contributions does not hide the item.
+
+| Property              | Available values          | Explanation                                                                                                                |
+| --------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `sizeParticipation`   | `include`, `exclude`      | Whether an item contributes to minimum and natural container sizes; excluded items are still measured, placed, and painted |
+| `zIndex`              | Integer, default 0        | Item paint level; higher values paint later, with ties preserving authored order                                           |
+| `offset.x / offset.y` | Finite numbers, default 0 | Move the item after alignment without contributing to container size                                                       |
+
+The blue node stays at layer `0`; the larger orange node is the second item. Toggle its size participation and watch the dashed container boundary. Then change its layer: at `-1` blue paints on top, at `1` orange paints on top, and at `0` the later-declared orange node paints on top. The `z` value inside each node shows its layer. Orange starts with offset `(0, 0)`, aligned to the same starting point as blue. Adjust the horizontal and vertical offsets to change the overlap: positive values move right or down, and negative values move left or up. Offsets change position; layers change paint order. Neither changes the content-sized container dimensions.
+
+<ComponentPreview files="overlay-participation" size="md" />
+
+## Distinguish placement from clipping
+
+When an overlay moves outside the container, its external portion can remain visible or be clipped. Clipping neither removes the item nor changes its resolved placement.
+
+| Property            | Available values     | Explanation                                                                             |
+| ------------------- | -------------------- | --------------------------------------------------------------------------------------- |
+| `overflow`          | `visible`, `clip`    | Keep overflow visible or clip to the container allocation; neither option reruns layout |
+| `offset`            | `{ x?, y? }`         | Horizontal and vertical offsets after placement, each defaulting to 0                   |
+| `sizeParticipation` | `include`, `exclude` | Fixed to `exclude` in this demo, so moving the overlay does not enlarge the container   |
+
+Increase the overlay offset until it extends beyond the container, then switch between `visible` and `clip`. Compare the slot overlay with the visible border: the slot describes layout, clipping changes only what is seen, and the artifact still contains the item.
+
+<ComponentPreview files="overlay-clipping" size="sm" />
+
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'placement',
+      kind: 'property',
+      type: 'OverlayPlacementInput',
+      description:
+        'Local target, anchor, and exact slot `{ kind: "aligned" }` uses the content box; `{ kind: "positioned", at: { x, y }, anchor?: { x?, y? }, width?, height? }` pins a normalized slot anchor.',
+      defaultValue: '{ kind: "aligned" }',
+    },
+    {
+      name: 'sizeParticipation',
+      kind: 'property',
+      type: "'include' | 'exclude'",
+      description: '`include` contributes to intrinsic size; `exclude` still measures, places, and paints the item',
+      defaultValue: 'include',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      description: 'Integer layer; higher values paint later, with authored order for ties',
+      defaultValue: '0',
+    },
+    {
+      name: 'offset',
+      kind: 'property',
+      type: '{ x?: number; y?: number }',
+      description: 'Translation and visual clipping',
+      defaultValue: '{ x: 0, y: 0 }',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description:
+        '`visible` keeps outside drawing; `clip` clips at the container allocation without changing solved geometry',
+      defaultValue: 'visible',
+    },
+  ]}
+/>
+
+Full signatures and constraints: [API reference](/library/layout/overlay-layout/api-reference) · [Schema reference](/library/layout/overlay-layout/schema-reference).
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/overlay-layout/usage',
+    },
+
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/overlay-layout/mechanism',
+    },
+    { title: 'API reference', description: 'Look up public functions, types, and props', url: '/library/layout/overlay-layout/api-reference' },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+
+]}
+/>

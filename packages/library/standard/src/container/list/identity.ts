@@ -6,6 +6,7 @@ import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/error
  * 返回 List 直属格子的零基下标 id，不检查该位置是否存在
  * @param listId 非空白 List id
  * @param index 直属单元格的非负整数下标
+ * @returns 由 listId、连字符与零基下标组成的单元格 id
  * @throws 参数非法时抛出 RetikzStandardError
  */
 export const getListCellId = (listId: string, index: number): string => {

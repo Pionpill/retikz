@@ -49,6 +49,21 @@ afterEach(() => {
 });
 
 describe('ZodSchema deep expansion', () => {
+  it('将带默认值的 Node position 展示为可省略，Coordinate position 仍必填', () => {
+    const render = (name: string) =>
+      renderToStaticMarkup(
+        <MemoryRouter>
+          <ZodSchema name={name} />
+        </MemoryRouter>,
+      );
+    const positionRow = (markup: string) => markup.split('<tr').find(row => row.includes('>position<'));
+    const nodeRow = positionRow(render('NodeSchema'));
+    const coordinateRow = positionRow(render('CoordinateSchema'));
+    expect(nodeRow).toBeDefined();
+    expect(nodeRow).not.toContain('✓');
+    expect(coordinateRow).toContain('✓');
+  });
+
   it('renders JsonObjectSchema as a string-keyed JsonValue record', () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>

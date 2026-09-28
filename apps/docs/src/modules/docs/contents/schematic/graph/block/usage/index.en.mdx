@@ -1,0 +1,277 @@
+---
+title: Basic usage
+description: Compose structured content and control layout, styling, and region connections.
+---
+
+Use Block to combine a header, sections, and rows into an object that Relations can target. Complete [Getting started](/schematic/graph/get-start), then choose one of the entry points below.
+
+## Using this topic
+
+All four examples draw the same User. Vanilla requires an existing `<div id="diagram"></div>`; call `view.dispose()` on teardown.
+
+<ComponentPreview files="/schematic/graph/block/block-minimal" size="sm" hideCode />
+
+```text
+Graph
+└── Block
+    ├── BlockHeader
+    └── BlockSection
+        └── BlockRow
+```
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Block, BlockHeader, BlockRow, BlockSection, Graph } from '@retikz/graph-react';
+import type { FC } from 'react';
+const Example: FC = () => (
+  <Graph>
+    <Block id="user">
+      <BlockHeader title="User" description="Domain entity" />
+      <BlockSection title="Fields">
+        <BlockRow content={['name', 'string']} />
+      </BlockSection>
+    </Block>
+  </Graph>
+);
+export default Example;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'block',
+      id: 'user',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'blockHeader',
+          title: 'User',
+          description: 'Domain entity',
+        },
+        {
+          namespace: 'graph',
+          type: 'blockSection',
+          title: 'Fields',
+          children: [
+            {
+              namespace: 'graph',
+              type: 'blockRow',
+              content: ['name', 'string'],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+export default Example;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { block, blockHeader, blockSection, blockRow, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+const input = scene({
+  children: [
+    block({
+      id: 'user',
+      children: [
+        blockHeader({ title: 'User', description: 'Domain entity' }),
+        blockSection({ title: 'Fields', children: [blockRow({ content: ['name', 'string'] })] }),
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, { adapters: createGraphVanillaAdapters() });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { mount } from '@retikz/vanilla/dom';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'block',
+      id: 'user',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'blockHeader',
+          title: 'User',
+          description: 'Domain entity',
+        },
+        {
+          namespace: 'graph',
+          type: 'blockSection',
+          title: 'Fields',
+          children: [
+            {
+              namespace: 'graph',
+              type: 'blockRow',
+              content: ['name', 'string'],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir, { compile: { composites: createGraphDefinitions() } });
+```
+
+</DocTab>
+</DocTabs>
+
+## Organize content
+
+### Built-in components
+
+The Block family provides four common built-in components:
+
+| Element        | Responsibility                                                            |
+| -------------- | ------------------------------------------------------------------------- |
+| `Block`        | Provides the targetable outer column layout and visible boundary          |
+| `BlockHeader`  | Shows a required title, optional description, and open icon / trail slots |
+| `BlockSection` | Gives ordered content an optional title and independent boundary          |
+| `BlockRow`     | Arranges one or more text items horizontally through `content`            |
+
+The playground builds a minimal data structure using only built-in components. The first Section is always present. Its controls can add an extra Row to that Section or add a second Section, then independently adjust spacing between the Block's direct children, items inside each Section, and content items inside each Row. Row uses a horizontal Flex layout: one item fills the available width, two split it 1:1, and three split it 1:1:1. Every item can be a string or an `IRBlockText` object with local text styles. Row content defaults to the `sm` font size. The equal-sharing defaults—`basis: 0`, `grow: 1`, `shrink: 1`, and `min: 0`—apply during lowering and are not written back to Source IR
+
+<ComponentPreview
+  files="block-builtin"
+  size="lg"
+  caption="Add a second Section or extra Row, then tune the Block, Section, and Row gaps independently."
+/>
+
+### Custom elements
+
+Both `BlockHeader.icon` and `BlockHeader.trail` accept an arbitrary child, and a Block body is not limited to Section or Row. This example places custom Core Nodes on both sides of the Header and adds an ordinary Node directly to the body. Its controls change that Node's content, shape, size, transform, and appearance while every state keeps sharing the same compilation path as the built-in structure
+
+<ComponentPreview
+  files="block-custom"
+  size="xl"
+  caption="Adjust the custom body Node while the Header slots stay fixed."
+/>
+
+### Independent regions and connections
+
+Section and Row support the complete Core Scope and can participate in Core addressing through explicit ids. Relation keeps using `NodeTarget + anchor / boundary`; Block does not create a second Port IR
+
+<ComponentPreview
+  files="block-connection"
+  size="sm"
+  caption="Caller and Validator align on the Block's vertical center; the left Relation targets the whole user Block, while the right Relation folds toward user.fields Section, with arrow tips ending on the Block stroke and Section background boundary."
+/>
+
+This example fixes the Block width and content height. The right-hand way ends at an authored coordinate. Update the path after changing content or fonts; it does not demonstrate automatic routing.
+
+### Style adjustments
+
+The Block shell reuses Standard Surface. This playground controls shell padding, background, border, and corner radius, then independently adjusts the color, size, weight, style, and opacity of the `BlockHeader` title, description, and `BlockRow.content`
+
+<ComponentPreview
+  files="block-style"
+  size="xl"
+  caption="Adjust the Block shell, Header text, and local Row content styles."
+/>
+
+### Encapsulating code entities
+
+To store names, properties, or logic as an independent entity, see [Block extension usage](/schematic/graph/block/custom). A strict Source and Definition generate Block content while reusing its layout, theme, and connection capabilities.
+
+## Errors and limits
+
+- `BlockRow.content` and `children` are mutually exclusive. Use content for text and children for full nodes or other components.
+- Header requires title and accepts at most one child in each icon / trail slot. Header has no independent Scope id.
+- Block / Section / Row ids receive no parent prefix. Use localNamespace when names need isolation.
+- width and minWidth include horizontal padding; omitted Block minWidth resolves to 240. Compile defaults do not mutate Source.
+- graphDefaults / graphRules affect visible descendants. Style the current shell with background / border / cornerRadius. An explicit border replaces the entire theme border field.
+
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'Block.children',
+      kind: 'property',
+      type: 'ReadonlyArray<IRChild> | ReactNode',
+      description: 'Content arranged vertically in authored order',
+    },
+    {
+      name: 'Block.width / minWidth',
+      kind: 'property',
+      type: 'number',
+      description: 'Total width including horizontal padding; minWidth defaults to 240',
+    },
+    {
+      name: 'Block.gap',
+      kind: 'property',
+      type: 'number',
+      description: 'Gap between direct children',
+      defaultValue: '8',
+    },
+    {
+      name: 'BlockHeader.title / description',
+      kind: 'property',
+      type: 'IRBlockText',
+      description: 'String or an object with text, font, textColor and text styles; title is required',
+    },
+    {
+      name: 'BlockSection.gap',
+      kind: 'property',
+      type: 'number',
+      description: 'Gap between section items',
+      defaultValue: '4',
+    },
+    {
+      name: 'BlockRow.content',
+      kind: 'property',
+      type: 'IRBlockText | Array<IRBlockText>',
+      description: 'One item fills the width; multiple items share it equally; mutually exclusive with children',
+    },
+    {
+      name: 'BlockRow.gap',
+      kind: 'property',
+      type: 'number',
+      description: 'Horizontal gap between text items or children',
+      defaultValue: '8',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Custom Block usage',
+      description: 'Define domain Source and composition',
+      url: '/schematic/graph/block/custom',
+    },
+    { title: 'Group', description: 'Visible grouping that preserves child positions', url: '/schematic/graph/group' },
+  ]}
+/>

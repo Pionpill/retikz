@@ -11,8 +11,13 @@ Choose the host used by your project and run its example below. Packages use ES 
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
+<DocSteps>
+<DocStep title="Install dependencies">
 
 <PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
+
+</DocStep>
+<DocStep title="Draw and mount the grid">
 
 Render the following `Example` component in an existing React app. The host peers `react` and `react-dom` require version 18 or later.
 
@@ -42,10 +47,19 @@ if (root) createRoot(root).render(<Example />);
 
 The root `Layout` outputs SVG by default; this example needs no renderer configuration. Sizes and gaps use the same graphic units. At the default natural display size, one unit equals one CSS pixel.
 
+</DocStep>
+</DocSteps>
 </DocTab>
 <DocTab value="vanilla" label="Vanilla">
+<DocSteps>
+<DocStep title="Install dependencies">
 
 <PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
+
+</DocStep>
+<DocStep title="Draw and export SVG">
+
+Import grid and its adapter from the Standard subpath, then use Vanilla scene and rendering functions to produce the output.
 
 ```ts
 import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
@@ -65,11 +79,33 @@ console.log(svg);
 
 `svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. `GridInputEmbedAdapter` allows `grid(...)` to be used as a child of `scene`; keep the `adapters` option.
 
+</DocStep>
+</DocSteps>
 </DocTab>
 </DocTabs>
 
+## Check the result
+
+Both hosts should produce the same 240-by-120 grid with 20-unit spacing. Change bounds.end to resize it or line.spacing to change density. React mounts SVG in the page; Vanilla returns an SVG string, and logging it does not display a drawing automatically.
+
 ## Further reading
 
-Change `bounds` to resize the grid and `line.spacing` to change its density. Continue with [Grid](/library/standard/presentation/grid), or add a background and border to content with [Surface](/library/standard/presentation/surface). See [capability loading](/library/extension/capability-loading) to add optional drawing definitions.
-
-See version changes in the [changelog](/library/standard/changelog).
+<LinkedSections
+  items={[
+    {
+      title: 'Grid',
+      description: 'Configure directional lines, alignment, major lines, and borders',
+      url: '/library/standard/presentation/grid',
+    },
+    {
+      title: 'Surface',
+      description: 'Add padding, a background, and a border to existing content',
+      url: '/library/standard/presentation/surface',
+    },
+    {
+      title: 'Capability loading',
+      description: 'Register direct IR and optional drawing definitions',
+      url: '/library/extension/capability-loading',
+    },
+  ]}
+/>

@@ -1,0 +1,75 @@
+---
+title: 实现原理
+description: 追踪 Relation 的语义校验、结构覆盖与 Core Path 下沉。
+---
+
+本页用于解释方向、箭头和路径为何产生当前结果。编写关系见[基础用法](/schematic/graph/relation/usage)，装配领域定义见[自定义用法](/schematic/graph/relation/custom)。
+
+## 语义校验保留端点身份
+
+React / Vanilla 入口把字符串端点归一为 NodeTarget，并把 way 或 Step children 归一为 route。Graph resolver 查找 role、kind 与 predicate，验证归属和参数，确定有效方向：实例 direction → kind 默认 → role 默认。方向必须落在 kind 的允许集合（省略则使用 role 集合）内。
+
+<ComponentPreview
+  files="relation-flow"
+  type="flow"
+  size="xs"
+  hideCode
+  caption="Graph 确定关系语义与外观；Core 负责端点求值、路径几何和箭头绘制。"
+/>
+
+`reverse` 改变选用的方向 recipe，不交换 source 与 target，也不反转作者给出的 route。自定义 predicate 只获得经自身 schema 解析的参数，不获得端点几何。
+
+<SourceLinks
+  sources={[
+    { label: 'Relation 入口归一', path: 'packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts' },
+    { label: '语义、方向和参数解析', path: 'packages/schematic/graph/src/resolve/relation/resolve.ts' },
+  ]}
+/>
+
+## 结构覆盖与外观分别解析
+
+结构决定 sourceMarker、targetMarker 与 dashPattern。解析从 role 对有效方向的完整 recipe 开始，再依次应用 kind 的稀疏覆盖、predicate 的 resolveStructure 返回值和匹配的主题结构规则。覆盖以字段为单位；`false` 明确关闭 marker 或虚线。
+
+外观处理颜色、线宽、不透明度、label 字体和 marker appearance。Graph 作者 defaults / rules 按内容树的上下文层应用，并投影到实例；显式实例值优先。主题 appearance 是下层默认。不能通过 marker appearance 改写 shape，shape 属于结构 recipe。
+
+| 输入                                 | 影响                 | 不改变                 |
+| ------------------------------------ | -------------------- | ---------------------- |
+| role / kind / direction              | 选择结构 recipe      | 端点身份与 route       |
+| predicate.resolveStructure           | 覆盖结构字段         | 端点布局与业务执行     |
+| style、marker appearance、label 字段 | 路径、箭头和文字外观 | 关系的 role / kind     |
+| route                                | Core Step 几何       | 保存的 source / target |
+
+状态颜色和组色最终通过外观默认参与合并。Relation 的数值 stroke、label 前景和 marker color 跟随主色，marker fill 再跟随已解析的 marker color；显式字段可分别覆盖。`style.dashPattern` 在下沉时优先于结构的 dashPattern。
+
+<SourceLinks
+  sources={[
+    { label: '结构与外观覆盖', path: 'packages/schematic/graph/src/resolve/relation/resolve.ts' },
+    { label: '内置方向 recipe', path: 'packages/schematic/graph/src/providers/relation/definitions.ts' },
+  ]}
+/>
+
+## 一个关系下沉为一个 Core Path
+
+没有 route 时，下沉生成 `move(source) → line(target)`；显式 route 直接成为 Path.children，不检查首尾是否等于语义端点，也不追加自动接线。sourceMarker / targetMarker 分别成为位置 0 / 1 的 Arrow marks，shape lookup、箭头缩短与绘制交给 Core。
+
+labels 被转为 Path.label。单个 label 的文字颜色、不透明度优先，font 按子字段继承；没有 placement 和 side 时设为 inside，使标签默认居于中心线。多个标签仍是独立标签，不合成一个新文字模型。
+
+`id` 和非冲突 Core Path 字段继续传递；关系专属字段在此被去除。由 Core 统一处理未解析端点、重复 id 与位置表达式。
+
+<SourceLinks
+  sources={[
+    { label: 'Relation 下沉为 Path', path: 'packages/schematic/graph/src/pipeline/relation/lower.ts' },
+    { label: 'Relation Source 字段约束', path: 'packages/schematic/graph/src/schemas/relation/schema.ts' },
+  ]}
+/>
+
+## 注册错误在装配边界暴露
+
+role registry 合并内置与用户 Definition，kind 和 predicate registry 仅接收用户定义；各 registry 拒绝覆盖已有 key，并检查父 role、kind 归属、允许方向与完整 recipe。`define*` 只是保留定义对象；不能用调用成功来证明整套依赖合法。predicate 参数与回调返回值则在实际消费时验证。
+
+<SourceLinks
+  sources={[
+    { label: 'Definition 构造入口', path: 'packages/schematic/graph/src/contract/relation/define.ts' },
+    { label: 'Registry 装配校验', path: 'packages/schematic/graph/src/providers/relation/registry.ts' },
+  ]}
+/>

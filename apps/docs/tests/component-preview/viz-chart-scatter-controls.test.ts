@@ -112,8 +112,9 @@ describe('Viz Chart scatter controls', () => {
     }
   });
 
-  it('两个 Scatter 示例只暴露不会与字段 encoding 冲突的公共图元控件', () => {
+  it('两个 Scatter 示例只暴露不会与字段 encoding 冲突的控件', () => {
     expect(fertilityWorkZh.canonicalValues).toEqual({
+      'scatter-fertility-work-coordinate-system': 'cartesian2D',
       'scatter-fertility-work-color-by-category': true,
       'scatter-fertility-work-shape-by-category': true,
     });
@@ -125,6 +126,7 @@ describe('Viz Chart scatter controls', () => {
       'scatter-world-cup-shots-point-opacity': 0.9,
     });
     expect(getPreviewControlFields(fertilityWorkZh.controls).map(control => control.id)).toEqual([
+      'scatter-fertility-work-coordinate-system',
       'scatter-fertility-work-color-by-category',
       'scatter-fertility-work-shape-by-category',
     ]);
@@ -157,8 +159,16 @@ describe('Viz Chart scatter controls', () => {
     expect(canonicalScatterPropertiesProps(appearanceSource)).not.toEqual(
       canonicalScatterPropertiesProps(fertilityWorkZhPreviewSource),
     );
-    expect(createPreviewControlContract().relatedApis.every(api => api.startsWith('ScatterProperties.'))).toBe(true);
-    expect(fertilityWorkZh.relatedApis.every(api => api.startsWith('ScatterEncodings.'))).toBe(true);
+    expect(
+      createPreviewControlContract().relatedApis.every(
+        api => api === 'ScatterChart.coordinate' || api.startsWith('ScatterProperties.'),
+      ),
+    ).toBe(true);
+    expect(
+      fertilityWorkZh.relatedApis.every(
+        api => api === 'ScatterChart.coordinate' || api.startsWith('ScatterEncodings.'),
+      ),
+    ).toBe(true);
   });
 
   it('各 Scatter 示例使用互不重叠的 control id，避免切换示例时串用状态', () => {
@@ -195,7 +205,11 @@ describe('Viz Chart scatter controls', () => {
     expect(getPreviewControlFields(fertilityWorkEn.controls).map(control => control.id)).toEqual(
       expect.arrayContaining(['scatter-fertility-work-color-by-category', 'scatter-fertility-work-shape-by-category']),
     );
-    expect(fertilityWorkZh.relatedApis).toEqual(['ScatterEncodings.color', 'ScatterEncodings.shape']);
+    expect(fertilityWorkZh.relatedApis).toEqual([
+      'ScatterChart.coordinate',
+      'ScatterEncodings.color',
+      'ScatterEncodings.shape',
+    ]);
     expect(fertilityWorkEn.relatedApis).toEqual(fertilityWorkZh.relatedApis);
     expect(fertilityWorkZh.relatedApis).not.toContain('Legend.channel');
     expect(fertilityWorkEn.relatedApis).not.toContain('Legend.channel');

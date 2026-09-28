@@ -178,6 +178,16 @@ Overall font, text color, and `defaults.label` supply label defaults, overridden
 
 Each `MapEntry` must contain exactly one `MapKey` and one `MapValue`. Each cell accepts either `text` or exactly one drawable child, never both.
 
+```text
+Map
+└── MapEntry
+    ├── MapKey
+    └── MapValue
+        └── List
+```
+
+`MapEntry` represents one record; `MapKey` and `MapValue` occupy its key and value columns. These markers declare content and cannot render independently outside this parent-child structure.
+
 Wrap multiple drawings in one `Scope` before putting them in a cell. React data arrays contain text configurations, not JSX. Vanilla cell `content` accepts text or one authoring child; direct IR `content` accepts text or one serializable drawable.
 
 <ComponentPreview files="map-composition" size="sm" />

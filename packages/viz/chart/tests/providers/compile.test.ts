@@ -59,6 +59,7 @@ type ScenePrimitiveLike = {
   fill?: unknown;
   stroke?: unknown;
   strokeWidth?: number;
+  dashPattern?: ReadonlyArray<number>;
   fillOpacity?: number;
   rx?: number;
   ry?: number;

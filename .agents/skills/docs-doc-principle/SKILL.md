@@ -39,7 +39,7 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 | ComponentPreview、源码视图、多文件 demo      | [预览契约](references/component-preview.md)                         |
 | controls、presets、交互试验场                | [Controls](references/controls.md)                                  |
 | 调整 demo 高度、面板宽度或裁切               | [尺寸测量](references/preview-sizing.md)                            |
-| 接入方式、安装、宿主切换                     | [DocTabs / DocSteps](references/doc-tabs-steps.md)                  |
+| 正文代码、接入方式、安装、宿主切换           | [DocTabs / DocSteps](references/doc-tabs-steps.md)                  |
 | 章节涉及可集中回查的公开成员                 | [相关属性](references/component-props.md)                           |
 | 文中 API、公开常量或 SourceLinks             | [文中 API](references/inline-api.md)                                |
 | 章节索引或延伸阅读                           | [LinkedSections](references/linked-sections.md)                     |
@@ -50,13 +50,17 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 
 ## 共性约束
 
+- 所有文档中，讲解可操作功能的每个小节必须就地提供 demo，并提供直接控制本节 API、效果可观察的 controls；不得仅引用其它小节的试验场代替。接入说明、纯概念、原理与参考清单不算功能节；入门接入保留最小静态示例。按 [Controls](references/controls.md) 验证参数、边界值与 Reset。
+
 - 普通文档 zh/en 成对，zh 为写作真源；博客语言例外由博客入口规定。公开签名、JSDoc、schema 与默认值仍以源码为契约真源。
 - Kernel 之外可独立安装、直接使用的上层包，其正文以本包的概念、任务与入口自洽；不把 Kernel 作为读者前提，不在主线比较或展开与 Kernel 的关系。确有必要说明依赖或边界时，用简短 `<ComponentAlert type="tip">` 补充，移除该 Tip 后主线仍应能完成当前任务。
 - contents、data、i18n 协同；URL 段、目录段和 data id 对齐。共享概念与完整 API/Schema 各有唯一 owner。
 - 开篇说明问题与可观察结果；段落围绕一个观点，术语首次出现就近解释。步骤用列表，重复比较用表格，不按行数或字数强行拆段。
 - H1 来自 frontmatter；description 脱离页面也能说明职责或使用入口。小节按读者任务命名，不按 prop 数量分节。
 - 可复制例子使用真实公开导入和最上层 Source IR；不把内部 Canonical 或 lower 结果展示为用户写法。
-- React API 依靠父子组件组合时，在首次解释组合关系处用简短的 `text` 树展示真实可用的组件层级，再给可复制 JSX 或 ComponentPreview；树只列组件，不把 props 当子节点，也不替代运行示例。例如：
+- 文档与示例不默认以 React 为主；共同语义以 IR / 共享契约为基础。小章节可直接使用组件名，但优先按“组件 / Vanilla / IR”并列对应入口，或用“组件（备注对应 Vanilla / IR）”简写；只列实际支持的形式。
+- 正文代码优先用 DocTabs 切换同一任务的不同 API 形式，细则见 [DocTabs / DocSteps](references/doc-tabs-steps.md)。demo 保持 ComponentPreview 的现有 API 切换机制，不为本规则另建多份 demo 或重复已有源码。
+- 仅在讲解 React 组合用法的小章节或 React Tab 内，API 依靠父子组件组合时，在首次解释组合关系处用简短的 `text` 树展示真实可用的组件层级，再给可复制 JSX 或 ComponentPreview；树只列组件，不把 props 当子节点，也不替代运行示例。例如：
 
   ```text
   List

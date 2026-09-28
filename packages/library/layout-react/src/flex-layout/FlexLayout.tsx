@@ -14,11 +14,13 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
   Readonly<{
     /** 交给可选编译驱动解释的不透明声明数据 */
     authoring?: unknown;
-    /** 必须由 Flex 类型布局项目组成的子元素 */
+    /** 必须由 Flex 类型布局项目组成的子元素；省略时容器为空
+     * @default []
+     */
     children?: ReactNode;
   }>;
 
-/** 将 React LayoutItem children 组装为 Vanilla FlexLayout 输入 */
+/** 将 React FlexLayoutItem children 组装为 Vanilla FlexLayout 输入 */
 const createFlexLayoutInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { authoring: _authoring, children, ...input } = props as FlexLayoutProps;
   void _authoring;

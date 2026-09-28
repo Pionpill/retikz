@@ -28,7 +28,7 @@ Set `complete` when one batch marker declares the whole category for its current
 
 `FlowDiagram` can reuse `Layout` directly as a standalone host or embed in an outer `Layout`. Source never carries `position` or routes. With no runtime selection, Flow uses the built-in `layered` Definition and straight relation routing. Select `orthogonal` for a polyline, or `-|` / `|-` for an explicit turn order.
 
-## Examples
+## Basic usage
 
 ### Basic layout
 
@@ -132,7 +132,7 @@ Exclusion changes only the bounds reported to the parent, not visibility or abso
 
 The complete canvas still contains attached nodes and relations, and visible `FlowGroup` shells still enclose all descendants. Exclusion does not provide obstacle avoidance. A Layout artifact's `bounds` describes its layout footprint, not its complete descendant drawing extent or clip. Custom providers must forward the exclusion configuration and preserve every child and relative coordinate returned by `placeLayout`.
 
-### Single-elbow connections
+### Connection routing
 
 Connecting the same A to B, `-|` goes horizontally then vertically; `|-` goes vertically then horizontally. Neither the primary layout direction nor arrow direction changes this order, and neither mode routes around other nodes. The preview's React and Vanilla source use the same `routing` configuration.
 
@@ -144,7 +144,11 @@ Connecting the same A to B, `-|` goes horizontally then vertically; `|-` goes ve
 
 Aligned endpoints produce a straight line; coincident centers report a routing error. Set `cornerRadius: 0` for a sharp corner or a positive value for rounding. Parallel edges can overlap; adjust the layout when needed, rather than treating single-elbow routing as an obstacle-avoidance algorithm.
 
-### Global configuration
+Root and Group `routing` declare routing separately from layout; Relation `routing` takes precedence. Otherwise, routing follows the nearest common Group of the endpoints, then the root and layout Definition defaults. FlowLayout does not establish a routing layer: orthogonal routing on a Group remains effective inside its nested Layout even when the root uses straight routing.
+
+All three axis-aligned modes share radius inheritance: instance `cornerRadius`, then the ancestor's effective routing radius, then the Definition's `orthogonalCornerRadius`, which is `8` for the built-in layout. Changing `kind` preserves an inherited radius; explicit `0` disables rounding.
+
+### Defaults and themes
 
 `flowDefaults` supplies one shared default style for each Flow object category at the root. `entity.style` applies to every Entity, while `relation.style` applies to every Relation; neither setting changes Source ids, containment, node layout, or routing. Local `style` can still override a global value when needed, but this example shows global configuration only.
 
@@ -154,7 +158,11 @@ Aligned endpoints produce a straight line; coincident centers report a routing e
   caption="Changing either section updates every object of that category, while the nodes, relations, and their relative positions remain unchanged."
 />
 
-## How it works
+`theme: { style, mode }` selects the theme environment; `flowThemeStyles` / `diagramThemeStyles` inject matching Definitions. `graphRules` is a root-level Graph conditional-appearance rule list: it projects only to Flow-materialized Entities and Relations, never layout, routing, or containment. Explicit `flowDefaults` and `diagramDefaults` use the same paths as formal Source. Entity and Relation `group` directly reuse Graph: equal groups in one Flow root share an automatic color taken from the head of the categorical palette, while ungrouped elements keep their existing appearance. Entity and Relation appearance precedence is Graph Theme, root `graphRules`, `flowDefaults`, then instance fields.
+
+Flow defaults contain only `layout.nodeGap/rankGap`, `entity.style/layout`, Group Surface appearance and `caption.title` formatting, and Relation path, marker, and label formatting. They exclude content, identity, children, direction, routing, and overflow, and never create titles, Groups, or markers. Empty objects and undefined do not override values; 0 and false remain meaningful. Node fonts replace as a whole; Relation `labelFont` merges by field.
+
+## Implementation
 
 <ComponentAlert
   type="tip"
@@ -170,17 +178,7 @@ Aligned endpoints produce a straight line; coincident centers report a routing e
 
 The layout callback must synchronously return JSON-safe plain data and call `placeLayout` exactly once for every authored Layout. Flow uses the `@retikz/layout` Flex/Grid compiler for fixed placement, then verifies that the provider did not rewrite relative Layout bounds. It also validates ids, sizes, containment, collisions, routes, and label coverage before Graph/Core renders the result. Definitions must declare supported `placementKinds`; unsupported requests fail before the callback.
 
-## Defaults and routing
-
-`theme: { style, mode }` selects the theme environment; `flowThemeStyles` / `diagramThemeStyles` inject matching Definitions. `graphRules` is a root-level Graph conditional-appearance rule list: it projects only to Flow-materialized Entities and Relations, never layout, routing, or containment. Explicit `flowDefaults` and `diagramDefaults` use the same paths as formal Source. Entity and Relation `group` directly reuse Graph: equal groups in one Flow root share an automatic color taken from the head of the categorical palette, while ungrouped elements keep their existing appearance. Entity and Relation appearance precedence is Graph Theme, root `graphRules`, `flowDefaults`, then instance fields.
-
-Flow defaults contain only `layout.nodeGap/rankGap`, `entity.style/layout`, Group Surface appearance and `caption.title` formatting, and Relation path, marker, and label formatting. They exclude content, identity, children, direction, routing, and overflow, and never create titles, Groups, or markers. Empty objects and undefined do not override values; 0 and false remain meaningful. Node fonts replace as a whole; Relation `labelFont` merges by field.
-
-Root and Group `routing` declare routing separately from layout; Relation `routing` takes precedence. Otherwise, routing follows the nearest common Group of the endpoints, then the root and layout Definition defaults. FlowLayout does not establish a routing layer: orthogonal routing on a Group remains effective inside its nested Layout even when the root uses straight routing.
-
-All three axis-aligned modes share radius inheritance: instance `cornerRadius`, then the ancestor's effective routing radius, then the Definition's `orthogonalCornerRadius`, which is `8` for the built-in layout. Changing `kind` preserves an inherited radius; explicit `0` disables rounding.
-
-A custom Layout Definition must declare each supported mode in `capabilities.routingKinds` and supply `defaults.routing.orthogonalCornerRadius` whenever it supports an axis-aligned mode. For the new modes, return a single-elbow chain connecting the source and target bounds centers. A reversed elbow, extra detour, or off-center endpoint raises `FlowLayoutOutputInvalid`. Artifacts retain the mode and unclipped reference points; Core applies final boundary clipping and rounding.
+A custom Layout Definition must declare each supported mode in `capabilities.routingKinds` and supply `defaults.routing.orthogonalCornerRadius` whenever it supports an axis-aligned mode. For single-elbow modes, return a single-elbow chain connecting the source and target bounds centers. A reversed elbow, extra detour, or off-center endpoint raises `FlowLayoutOutputInvalid`. Artifacts retain the mode and unclipped reference points; Core applies final boundary clipping and rounding.
 
 ## API Reference
 
@@ -215,5 +213,5 @@ A custom Layout Definition must declare each supported mode in `capabilities.rou
 
 ## Related
 
-- [Diagram Framework](/schematic/diagram/framework)
+- [Design philosophy](/schematic/diagram/design)
 - [Graph](/schematic/graph)

@@ -44,10 +44,11 @@ export type NodeProps = HydrationEventProps & {
   /** 元素级时间轴动画；每条 track 描述一个可动画属性，渲染端播放或降级为静态，不参与布局 */
   animations?: IRNode['animations'];
   /**
-   * 节点中心位置
+   * 节点中心位置；省略时使用当前局部坐标系的原点
+   * @default [0, 0]
    * @description 六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center
    */
-  position:
+  position?:
     | IRPosition
     | PolarPosition
     | IRAtPosition

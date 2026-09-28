@@ -126,6 +126,15 @@ Pass a JSON array read from a JSON file, storage, or an API. Nested arrays and o
 
 In React, use `ListItem` children as declarative shorthand for content authored alongside your page JSX. Supply text through `text`, or nest one drawable component, without assembling the children into an `items` array.
 
+```text
+List
+├── ListItem
+└── ListItem
+    └── Map
+```
+
+`ListItem` must be a direct child of `List`. Supply text through `text`, or a nested drawable as its child. The example below starts with two text cells; see extended usage for drawable composition.
+
 ```tsx
 import { List, ListItem } from '@retikz/standard-react/container';
 

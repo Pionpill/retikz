@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { readSchemaDescriptions } from '../schema-reference/descriptions';
 import { translateEntityApiReference } from './entity.en';
 import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
 import { createApiReferenceMdx } from './tex';
@@ -35,8 +36,6 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'EntityRoleValue',
       'GraphStatus',
       'GraphStatusValue',
-      'EntitySchema',
-      'EntityRoleSchema',
       'IRGraphEntity',
       'createEntity',
       'EntityCreateOptions',
@@ -61,10 +60,18 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       source: path.resolve(repositoryRoot, `packages/schematic/${owner}/src/index.ts`),
       title: { zh: `\`@retikz/${owner}\``, en: `\`@retikz/${owner}\`` },
       symbols,
-      fullMemberSymbols: owner === 'graph-react' ? ['EntityProps'] : undefined,
+      symbolPairs:
+        owner === 'graph-react'
+          ? [['Entity', 'EntityProps']]
+          : owner === 'graph-vanilla'
+            ? [
+                ['entity', 'EntityInputEmbedProps'],
+                ['normalizeEntity', 'InputEntity'],
+              ]
+            : [['createEntity', 'EntityCreateOptions']],
       memberValueSets:
         owner === 'graph-react'
-          ? { EntityProps: entityMemberValueSets }
+          ? undefined
           : owner === 'graph-vanilla'
             ? {
                 EntityInputEmbedProps: entityMemberValueSets,
@@ -73,7 +80,7 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
             : { IRGraphEntity: entityMemberValueSets },
       memberTypeLabels:
         owner === 'graph-react'
-          ? { EntityProps: entityMemberTypeLabels }
+          ? undefined
           : owner === 'graph-vanilla'
             ? {
                 EntityInputEmbedProps: entityMemberTypeLabels,
@@ -82,9 +89,16 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
             : { IRGraphEntity: entityMemberTypeLabels },
     },
   ],
-  schemaReferences: {
-    EntitySchema: '/schematic/graph/entity/schema-reference',
-    EntityRoleSchema: '/schematic/graph/entity/schema-reference#entityroleschema',
+  schemaLocalizations: {
+    EntitySchema: {
+      descriptions: readSchemaDescriptions(
+        path.resolve(
+          repositoryRoot,
+          'apps/docs/src/modules/docs/contents/schematic/graph/entity/schema-reference/index.zh.mdx',
+        ),
+        'EntitySchema',
+      ),
+    },
   },
   translate: translateEntityApiReference,
 }));

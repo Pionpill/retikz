@@ -278,7 +278,10 @@ const primitiveBounds = (
         ? primitive.y
         : primitive.baseline === 'middle'
           ? primitive.y - primitive.measuredHeight / 2
-          : primitive.y - primitive.measuredHeight;
+          : primitive.baseline === 'alphabetic'
+            ? // alphabetic 锚点属于首行，后续行向下展开，不能把整块高度都扣到首行上方
+              primitive.y - primitive.measuredHeight + (primitive.lines.length - 1) * primitive.lineHeight
+            : primitive.y - primitive.measuredHeight;
     return { x, y, width: primitive.measuredWidth, height: primitive.measuredHeight };
   }
   if (primitive.type === 'group') {

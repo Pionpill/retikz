@@ -3,6 +3,7 @@
 ## 适用场景
 
 - `DocTabs` 用于同一任务的替代方案；共同安装、限制和比较放在外部；宿主专属依赖放对应 Tab 内，包管理器仍用 `PackageManagerInstall`
+- 正文代码支持多种 API 形式时优先用 DocTabs 对照同一结果，不默认只给 React。按当前任务列出实际可用的组件、Vanilla 与 IR 写法；共同 IR 片段可共享，单入口能力不凑齐 Tab。demo 继续使用 ComponentPreview 自带的 API 切换，不重复其已覆盖的源码。
 - `DocSteps` 用于有顺序且每步含说明或代码的接入操作；简单短步骤用普通有序列表
 - 两者可独立使用或组合；不要多层嵌套方案 Tab。API 参考例外：「属性」页签内可用一层 DocTabs 切换具名联合分支，规则见 [API 参考](../../docs-doc-reference/references/api.md)
 - 基础、专题与扩展用法页的首个“接入方式”按下述四栏规则；后续示例先检查 ComponentPreview 源码，已覆盖的完整用法不再重复 DocTabs，正文只补关键差异。

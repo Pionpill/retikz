@@ -6,8 +6,8 @@ import { ShapePathSchema, ShapeVertexAngleSchema, ShapeInnerRatioSchema } from '
 
 const properties = {
   ...ShapePathSchema.shape,
-  namespace: literal('standard'),
-  type: literal('star'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('star').describe('Composite type for the star shape.'),
   center: PositionSchema.describe('Shape center; coordinate forms depend on the chosen geometry branch.'),
   points: number().int().min(2).describe('Number of outer star vertices; at least two.'),
   outerRadius: NonNegativeNumberSchema.describe('Circumradius of outer star vertices.'),

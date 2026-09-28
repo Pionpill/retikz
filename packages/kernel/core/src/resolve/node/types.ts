@@ -81,6 +81,7 @@ export type CanonicalNodeLabel = Omit<
 export type CanonicalNode = Omit<
   Omit<ResolvedNodeSource, 'style' | 'layout'> & NonNullable<ResolvedNodeSource['style']> & IRNodeLayout,
   | 'padding'
+  | 'position'
   | 'margin'
   | 'minimumSize'
   | 'scale'
@@ -93,6 +94,8 @@ export type CanonicalNode = Omit<
   | 'dashPattern'
   | 'shadow'
 > & {
+  /** 已补齐默认值的位置，非笛卡尔形态交由布局阶段定位 */
+  position: NonNullable<IRNode['position']>;
   /** 完整内边距 */
   padding: BoundsInsets;
   /** 完整外边距 */

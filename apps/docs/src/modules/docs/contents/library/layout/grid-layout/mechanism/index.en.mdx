@@ -1,0 +1,76 @@
+---
+title: Implementation
+description: Understand measurement, allocation, and final placement
+---
+
+Read [basic usage](/library/layout/grid-layout/usage) first. This page explains the result; callers do not invoke the internal stages themselves.
+
+## Resolve occupancy before materializing tracks
+
+Before sizing tracks, placement determines which cells each item occupies. Fully explicit positions reserve areas first; remaining items search in authored order using `autoFlow`. Implicit definitions materialize tracks beyond the explicit lists. These are real tracks used by measurement, not decorative grid lines.
+
+<ComponentPreview files="placement-flow" hideCode type="flow" size="xs" />
+
+<SourceLinks
+  sources={[{ label: 'placement.ts', path: 'packages/library/layout/src/composites/grid-layout/placement.ts' }]}
+/>
+
+## Why columns are solved before rows
+
+Available text width affects wrapped height. GridLayout always solves physical x before y: measure horizontal minimum and natural contributions, resolve columns, remeasure children under column constraints, then resolve rows. `autoFlow` changes search order without reversing this dependency.
+
+Contributions, weights, and bounds all affect sizing. Fixed columns supply a size; intrinsic columns read child contributions; fractional columns distribute finite remaining space. Minimum contributions and bounds may constrain the ratio, so multiplying total width by a fraction is not a general solution.
+
+<ComponentPreview files="allocation-figure" hideCode type="flow" size="xs" />
+
+<SourceLinks sources={[{ label: 'tracks.ts', path: 'packages/library/layout/src/composites/grid-layout/tracks.ts' }]} />
+
+## How spans become continuous slots
+
+Columns of 100 and 140 with a gap of 12 yield a spanning slot of `100 + 12 + 140 = 252`. The item occupies a continuous area across existing tracks; the next row retains both column boundaries. Contribution constraints subtract internal gaps to avoid counting them again as track demand.
+
+Margins reduce available space, and alignment places the actual allocation inside it. Slots, allocations, and visual bounds remain distinct: Node stroke bounds cannot stand in for the track area.
+
+<ComponentPreview files="span-figure" hideCode type="illustration" size="lg" />
+
+<SourceLinks sources={[{ label: 'solve.ts', path: 'packages/library/layout/src/composites/grid-layout/solve.ts' }]} />
+
+## How the final candidate becomes output
+
+After tracks are resolved, alignment determines exact or bounded proposals. Each measured candidate carries its result; only selected candidates are replayed with translation and clipping. Rejected probes do not leak drawing primitives into the Scene.
+
+`GridLayoutArtifact` records the container, physical tracks, implicit flags, and final item spans. Occurrences distinguish local keys in nested layouts; equal keys alone do not identify the same item.
+
+<ComponentPreview files="output-flow" hideCode type="flow" size="xs" />
+
+<SourceLinks
+  sources={[{ label: 'pipeline.ts', path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts' }]}
+/>
+
+[Shared candidate isolation and replay](/library/layout/flex-layout/mechanism#one-layout-transaction) are explained in the FlexLayout implementation page.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/grid-layout/usage',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and clipping',
+      url: '/library/layout/grid-layout/extended',
+    },
+
+    { title: 'API reference', description: 'Look up public functions, types, and props', url: '/library/layout/grid-layout/api-reference' },
+
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
+
+]}
+/>

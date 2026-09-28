@@ -10,11 +10,24 @@ import type { CellProps } from '../cell';
 import { collectCellMarkers, createCellsInput, markerCell } from '../cell';
 import { ListItem } from './ListItem';
 
-/** List 的 React authoring 属性 */
+/**
+ * List 的 React authoring 属性
+ * @description data、items 与 ListItem children 三种内容入口互斥；全部省略时生成空列表。dataObjectDisplay 仅用于 data 入口
+ */
 export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
   (
-    | { data: NonNullable<IRList['data']>; items?: never; children?: never; dataObjectDisplay?: IRList['dataObjectDisplay'] }
-    | { data?: never; items: Array<string | CellProps<IRListCell['layout']>>; children?: never; dataObjectDisplay?: never }
+    | {
+        data: NonNullable<IRList['data']>;
+        items?: never;
+        children?: never;
+        dataObjectDisplay?: IRList['dataObjectDisplay'];
+      }
+    | {
+        data?: never;
+        items: Array<string | CellProps<IRListCell['layout']>>;
+        children?: never;
+        dataObjectDisplay?: never;
+      }
     | { data?: never; items?: never; children?: ReactNode; dataObjectDisplay?: never }
   );
 

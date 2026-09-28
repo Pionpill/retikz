@@ -1,148 +1,82 @@
 ---
-title: 叠加布局
-description: 在同一区域内混合对齐与局部定位，并独立控制尺寸参与和稳定叠放顺序。
+title: overlay · 叠加布局
+description: 在共享区域内对齐或定位图形，并独立控制尺寸参与与绘制层级
 ---
 
-`OverlayLayout` 让多个子图形共享同一区域。对齐子项跟随容器对齐；定位子项用局部 `at` 和 `anchor` 放置徽标、标注框等浮层。`sizeParticipation` 决定子项是否影响容器尺寸，`zIndex` 只决定稳定绘制层级。
+`OverlayLayout` 让多个子图形共享同一个内容区域，适合卡片与角标、主体与浮层说明等叠加场景。子项可以跟随容器对齐，也可以把自身锚点放到容器内的指定位置。
 
-## 用法
+你分别声明放在哪里、是否影响容器尺寸、先画还是后画。叠加不需要为每个子项预留独占的行列空间，也不会自动把相互覆盖的图形推开。
 
-```tsx
-import { Layout, Node } from '@retikz/react';
-import { LayoutItem, OverlayLayout } from '@retikz/layout-react';
-```
+## 职责一览
 
-```tsx
-<Layout>
-  <OverlayLayout size={{ x: { kind: 'fixed', value: 280 }, y: { kind: 'fixed', value: 120 } }}>
-    <LayoutItem kind="overlay">
-      <Node position={[0, 0]} text="Base" />
-    </LayoutItem>
-    <LayoutItem
-      kind="overlay"
-      placement={{ kind: 'positioned', at: { x: 270, y: 10 }, anchor: { x: 1, y: 0 } }}
-      sizeParticipation="exclude"
-      zIndex={1}
-    >
-      <Node position={[0, 0]} text="3" shape="circle" />
-    </LayoutItem>
-  </OverlayLayout>
-</Layout>
-```
+布局以可序列化的 IR 描述容器、子项规则和图形内容。三者分别保存不同的事实：
 
-JSON/IR 路径使用 `createOverlayLayout()` 与 `OverlayLayoutDefinition`；Vanilla 使用 `overlayLayout()` 与 `OverlayLayoutInputEmbedAdapter`。
+| IR 层次                         | 描述内容                             | 作用范围                       |
+| ------------------------------- | ------------------------------------ | ------------------------------ |
+| 布局容器                        | 共享区域、内边距与默认对齐           | 决定整组内容的空间组织         |
+| 子项配置（`children` 中的条目） | 对齐或定位、偏移、尺寸参与与绘制层级 | 决定单个子图形如何参与布局     |
+| 子图形（条目的 `child`）        | 节点、路径或嵌套图形的内容与几何声明 | 决定实际绘制的内容及其测量依据 |
 
-| 场景        | 公开入口                                                                                                       |
-| ----------- | -------------------------------------------------------------------------------------------------------------- |
-| React       | `OverlayLayout`、`LayoutItem`（`@retikz/layout-react`）                                                        |
-| Vanilla     | `overlayLayout`、`OverlayLayoutInputEmbedAdapter`（`@retikz/layout-vanilla`）                                  |
-| 可选检查    | `InspectOverlayLayout`（`@retikz/layout-react/inspect`）、`inspectOverlayLayout`（Vanilla）                    |
-| IR / 持久化 | `OverlayLayoutSchema`、`createOverlayLayout`、`IROverlayLayout`、`OverlayLayoutDefinition`（`@retikz/layout`） |
+容器的 `children` 保存子项配置，每个条目的 `child` 保存子图形 IR。布局规则与图形内容因此可以分别调整：修改子项的分配或放置规则，不必重写图形本身。
 
-## 例子
+React 通过 JSX 组合、Vanilla 通过函数与对象编写这些声明，也可以直接提供 IR。各入口最终表达同一份布局契约；具体写法在基础用法中对照，总览按这份共同契约解释行为。
 
-下面的结构层参与固有尺寸计算；右上徽标使用定位放置并排除尺寸贡献；说明文字仍是对齐子项。绘制顺序按 `zIndex` 升序，同层保持作者声明的 `sourceIndex` 顺序。
+## 将徽标叠加到内容卡片
 
-<ComponentPreview files="overlay-layout-basic" size="md" />
+下面的卡片跟随容器居中对齐，徽标则独立定位在卡片右上方。二者共享同一内容区域；徽标的 `zIndex` 更高，因此在卡片之后绘制。
 
-### 对齐与定位
+<ComponentPreview files="entry" hideCode size="sm" />
 
-| 模式         | 分配区域来源                                             | 常见用途                     |
-| ------------ | -------------------------------------------------------- | ---------------------------- |
-| `aligned`    | 内容区域扣除外边距后按对齐方式分配                       | 背景、居中内容、底部说明文字 |
-| `positioned` | `at` 决定目标点，`anchor` 决定分配区域的哪一点贴到目标点 | 徽标、标注框、局部注释       |
+徽标用 `at` 指定相对内容区域起点的位置，再用 `anchor` 选择自身槽位的对齐点。这里 `anchor` 为 `{ x: 0.5, y: 0.5 }`，表示把徽标槽位的中心放到指定位置。
 
-### 控制面板
+这个示例中的徽标位置是显式坐标，并不是自动绑定到卡片角点。卡片尺寸或容器尺寸变化后，需要重新选择定位规则；容器对齐和局部定位承担不同任务。
 
-切换共享对齐，并移动定位徽标的目标点、锚点和 `zIndex`。预览中的三个子项发生重叠，因而层级变化会直接反映到绘制结果。
+徽标设置 `sizeParticipation="exclude"`，表示它不参与容器的固有尺寸计算；它仍然会被放置和绘制。示例采用固定容器尺寸，因此这个选项不会改变当前容器的宽高。`zIndex` 只控制绘制顺序，不改变位置，也不替代尺寸参与规则。
 
-<ComponentPreview
-  files="overlay-layout-playground"
-  size="lg"
-  caption="推荐态只显示 content 边界；可在“辅助层”中查看放置、锚点、padding、margin 与其它细节。"
-/>
+<Comparison target="css" title="与 CSS 定位和层叠的对应关系">
 
-## 技术原理
+CSS 没有名为 Overlay 的独立布局模式。理解 OverlayLayout 时，可以分别类比同一网格区域内的对齐、绝对定位和 `z-index`，而不是把整个布局等同于 `position: absolute`。
 
-<ComponentAlert
-  type="tip"
-  title="上手阶段可跳过本节"
-  description="只有在排查基线、结构尺寸参与或稳定绘制顺序时，才需要理解这些约束。"
-/>
+| CSS 中的做法                         | OverlayLayout IR                                | 对应语义                                               |
+| ------------------------------------ | ----------------------------------------------- | ------------------------------------------------------ |
+| 多个 Grid 项目放入同一网格区域并对齐 | `placement: { kind: 'aligned' }` 与容器对齐规则 | 子项共享内容区域，默认居中                             |
+| `left` / `top` 配合定位参照          | `placement: { kind: 'positioned', at, anchor }` | 将子项槽位的指定锚点放到内容区域内的局部坐标           |
+| 定位后再作平移                       | `offset`                                        | 在放置结果上增加物理横纵偏移                           |
+| `z-index`                            | `zIndex`                                        | 控制兄弟子项的绘制先后                                 |
+| 绝对定位元素不参与常规流尺寸         | `sizeParticipation: 'exclude'`                  | 不贡献容器固有尺寸；这是独立选项，不由定位方式自动决定 |
 
-`offset` 在放置后平移。按基线对齐的子项，其纵向偏移必须为零；定位子项必须采用边缘对齐，避免把局部点定位和跨子项基线求解混为一件事。
+本页卡片使用默认对齐，徽标使用局部定位。徽标的中心锚点可类比 CSS 中用 `left` / `top` 定位后再作 `translate(-50%, -50%)`，但参照区域不同：这里的 `at` 明确从容器内容区域起点计算，`anchor` 的 0 到 1 表示子项槽位上的相对位置，不是容器百分比坐标。
 
-`sizeParticipation="exclude"` 只排除最小和自然尺寸轮廓，不隐藏子项、不跳过回放，也不改变绘制顺序。即使子项位于容器分配区域外，类型化产物仍保留其父级分配区域、真实占用、视觉边界和可见边界。
+OverlayLayout 的定位子项默认仍参与尺寸计算，只有显式设置 `sizeParticipation: 'exclude'` 才排除；它不是 CSS 脱离文档流规则的自动复刻。被排除的子项仍然绘制，也不因此被裁剪。
 
-<SourceLinks
-  sources={[
+`zIndex` 越大越晚绘制，同值保留声明顺序。这里说明的是当前布局内的顺序，不是浏览器由定位、透明度和 transform 等共同建立的 stacking context。数值使用绘图坐标单位，不接受 CSS 长度字符串；布局也不会自动避让重叠内容。
+
+</Comparison>
+
+## 选择与边界
+
+| 排列目标                               | 选择                                      |
+| -------------------------------------- | ----------------------------------------- |
+| 主体与角标、浮层共享区域，需要覆盖关系 | `OverlayLayout`                           |
+| 子项依次排列，需要伸缩或换行           | [FlexLayout](/library/layout/flex-layout) |
+| 子项占据不同的行列区域，需要跨行或跨列 | [GridLayout](/library/layout/grid-layout) |
+
+OverlayLayout 允许重叠，不提供自动避让。它负责放置，不会自动为主体生成背景或边框；只需按内容范围添加装饰外观时，可选择标准包的 [Surface](/library/standard/presentation/surface)。
+
+从基础用法学习对齐和定位；需要组合偏移、尺寸参与与层级规则时阅读扩展用法。API、Schema 参考用于查询字段，实现原理解释尺寸计算、定位与绘制顺序之间的关系。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/overlay-layout/usage' },
+    { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/overlay-layout/extended' },
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/overlay-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/overlay-layout/api-reference' },
     {
-      label: 'OverlayLayout 输入契约',
-      path: 'packages/library/layout/src/composites/overlay-layout/schema.ts',
-    },
-    {
-      label: '叠加布局尺寸轮廓与放置',
-      path: 'packages/library/layout/src/composites/overlay-layout/solve.ts',
-    },
-    {
-      label: '叠加布局编译与绘制顺序',
-      path: 'packages/library/layout/src/composites/overlay-layout/pipeline.ts',
-    },
-    {
-      label: 'OverlayLayout React 适配器',
-      path: 'packages/library/layout-react/src/overlay-layout/OverlayLayout.tsx',
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/overlay-layout/schema-reference',
     },
   ]}
 />
-
-## API 参考
-
-### 可选 React 检查组件
-
-| 属性       | 类型                                               | 默认值 | 描述                                                                      |
-| ---------- | -------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
-| `inspect?` | `false` \| `true` \| `OverlayLayoutInspectOptions` | `true` | `InspectOverlayLayout` 为当前 occurrence 声明请求；`false` 只取消当前实例 |
-
-基础 `OverlayLayout` 没有 `inspect` 属性。可选的 `InspectOverlayLayout` 对象形式可分别控制 `placements`、`anchors` 与 `stacking`，并复用通用边界与盒模型间距开关。完整字段和宿主 / Scope 规则见[运行时参考](/library/layout/reference/runtime#布局检查器)。
-
-### `OverlayLayoutInput`
-
-| 属性            | 类型                                        | 默认值      | 描述                                |
-| --------------- | ------------------------------------------- | ----------- | ----------------------------------- |
-| `size?`         | `LayoutSizeInput`                           | 内容 / 内容 | 双轴分配策略                        |
-| `padding?`      | `number` \| `IRBoxSpacing`                  | `0`         | 从分配区域到内容区域的内边距        |
-| `overflow?`     | <ApiValues name="LayoutOverflow" />         | `'visible'` | 是否在容器分配区域上裁切视觉输出    |
-| `justifyItems?` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'center'`  | 默认水平对齐                        |
-| `alignItems?`   | <ApiValues name="LayoutAlignment" />        | `'center'`  | 默认垂直对齐                        |
-| `children?`     | `Array<OverlayLayoutItemInput>`             | `[]`        | 作者声明的子项；显式 `key` 必须唯一 |
-
-### `OverlayLayoutItemInput`
-
-| 属性                 | 类型                                         | 默认值      | 描述                                     |
-| -------------------- | -------------------------------------------- | ----------- | ---------------------------------------- |
-| `kind`               | `'overlay'`                                  | —           | 叠加布局子项判别字段                     |
-| `key?`               | `string`                                     | 内部生成    | 可选稳定身份；省略时按 source index 生成 |
-| `child`              | `IRChild`                                    | —           | 任意可 JSON 序列化的 Core 子图形         |
-| `placement?`         | `OverlayPlacementInput`                      | `aligned`   | 对齐或内容区域局部定位                   |
-| `offset?`            | `{ x: number, y: number }`                   | `{0, 0}`    | 放置后的偏移                             |
-| `margin?`            | `number` \| `IRBoxSpacing`                   | `0`         | 对齐或定位分配区域的外边距               |
-| `justifySelf?`       | `'start' \| 'center' \| 'end' \| 'stretch'`  | 容器值      | 覆盖水平对齐                             |
-| `alignSelf?`         | <ApiValues name="LayoutAlignment" />         | 容器值      | 覆盖垂直对齐                             |
-| `sizeParticipation?` | <ApiValues name="LayoutSizeParticipation" /> | `'include'` | 是否参与固有尺寸轮廓计算                 |
-| `zIndex?`            | `number`                                     | `0`         | 整数绘制层级；相同值保持作者声明顺序     |
-
-### `OverlayPlacementInput`
-
-| `kind`       | 字段                                 | 语义                                 |
-| ------------ | ------------------------------------ | ------------------------------------ |
-| `aligned`    | 无                                   | 使用容器与子项对齐                   |
-| `positioned` | `at`、`anchor?`、`width?`、`height?` | 内容区域局部目标点与可选精确分配尺寸 |
-
-React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
-
-## 相关
-
-- [布局容器](/library/layout)：递归组合与共同产物
-- [API 参考](/library/layout/reference)：输入契约、产物契约与运行时接线
-- [网格布局](/library/layout/grid-layout)：二维结构排布
-- [弹性布局](/library/layout/flex-layout)：单轴分配与换行

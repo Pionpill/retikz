@@ -37,6 +37,12 @@ const resolve = (source: IRNode, styleFrames: ReadonlyArray<StyleResolveFrame> =
   });
 
 describe('resolveNode', () => {
+  it('在 Core 解析阶段补齐局部原点且不修改 Source', () => {
+    const source: IRNode = { type: 'node' };
+    expect(resolve(source).node.position).toEqual([0, 0]);
+    expect(source).not.toHaveProperty('position');
+  });
+
   it('expands numeric and CSS-like box spacing while preserving explicit zero', () => {
     expect(
       resolve(

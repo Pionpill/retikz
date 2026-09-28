@@ -5,7 +5,18 @@ description: Represent an actor, task, resource or concept as a semantic node wi
 
 An Entity represents one object in a graph: an actor, a task, a resource or a concept. Choose a `role` for its structure, then supply text and a position. Add an `id` when a relation needs to refer to it.
 
+## Responsibilities at a glance
+
+| Capability           | Responsibility                                  | When to use it                                        |
+| -------------------- | ----------------------------------------------- | ----------------------------------------------------- |
+| role                 | Primary meaning and base outline                | Represent actors, tasks, resources, and other objects |
+| kind / predicate     | Registered subtypes and parameterized semantics | Reuse domain meaning across entities                  |
+| status / group       | State and categorical color defaults            | Mark object state or semantic membership              |
+| id / position / text | Reference identity, position, and text          | Place an object and make it a relation endpoint       |
+
 <ComponentPreview files="/schematic/graph/entity/usage/entity-minimal" size="xs" hideCode />
+
+The example uses activity to represent a task. Its role supplies the outline, text describes the task, and position determines where it appears. Connections are authored separately with Relation.
 
 ## Responsibilities and boundaries
 

@@ -1,4 +1,13 @@
-import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
+import type {
+  IRBlock,
+  IRBlockHeader,
+  IRBlockRow,
+  IRBlockSection,
+  IRGraph,
+  IRGraphEntity,
+  IRGraphRelation,
+  IRGroup,
+} from '@retikz/graph';
 import {
   createBlock,
   createBlockHeader,
@@ -25,8 +34,12 @@ import type {
   InputRelationEndpoint,
 } from './types';
 
-/** 将 Entity authoring 输入组装为单个 Source record */
-export const normalizeEntity = (input: InputEntity) => {
+/**
+ * 将 Entity authoring 输入组装为单个 Source record
+ * @param input 带 type 判别字段的实体编写输入
+ * @returns 新建的 Entity Source 记录；保留输入字段，不生成 id 或布局位置
+ */
+export const normalizeEntity = (input: InputEntity): IRGraphEntity => {
   const { type, ...entity } = input;
   void type;
   return createEntity(entity);
@@ -36,8 +49,12 @@ export const normalizeEntity = (input: InputEntity) => {
 const normalizeRelationEndpoint = (endpoint: InputRelationEndpoint) =>
   typeof endpoint === 'string' ? { id: endpoint } : endpoint;
 
-/** 将 endpoint 与可选 Way sugar 归一为直接持有 route 的 Relation Source record */
-export const normalizeRelation = (input: InputRelation) => {
+/**
+ * 将 endpoint 与可选 Way sugar 归一为直接持有 route 的 Relation Source record
+ * @param input 带 type 判别字段的关系编写输入
+ * @returns 端点为完整 NodeTarget、way 转为 route 的 Relation Source 记录
+ */
+export const normalizeRelation = (input: InputRelation): IRGraphRelation => {
   const { type, way, source, target, ...relation } = input;
   void type;
   const endpointRelation = {

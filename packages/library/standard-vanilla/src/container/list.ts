@@ -6,7 +6,10 @@ import { StandardListEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCells } from './cell';
 
-/** List 的 Vanilla authoring 输入 */
+/**
+ * List 的 Vanilla authoring 输入
+ * @description items 与 data 二选一；dataObjectDisplay 仅用于 data 入口。其余字段沿用 IRList，namespace 与 type 由 adapter 补齐
+ */
 export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
   (
     | { items: Array<string | InputCell<IRListCell>>; data?: never; dataObjectDisplay?: never }
@@ -41,7 +44,11 @@ export const ListInputEmbedAdapter: InputEmbedAdapter<InputList> = {
   },
 };
 
-/** 创建 List embed；显式 input.id 同时用作领域与 embed 身份 */
+/**
+ * 创建 List embed；显式 input.id 同时用作领域与 embed 身份
+ * @param input 使用显式单元格或 JSON 数组的 List 输入
+ * @returns 持有原始 input 引用的 embed；内容归一与校验在后续 adapter 和编译阶段执行
+ */
 export const list = (input: InputList): InputEmbed<InputList> => ({
   type: 'embed',
   kind: StandardListEmbedKind,
