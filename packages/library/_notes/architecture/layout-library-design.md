@@ -48,6 +48,8 @@ Layout 不拥有 Core IR、Scene、renderer、字体测量实现、跨 compile c
 
 `@retikz/layout/inspect` 是可选 inspection 入口，消费独立 `@retikz/inspect` 契约而不污染 Layout 根入口。React 与 Vanilla 包提供对应 `/inspect` authoring 入口。
 
+React 根入口为三个容器分别提供 `FlexLayoutItem`、`GridLayoutItem`、`OverlayLayoutItem`。子项组件身份确定所属容器，JSX 不再显式传 `kind`；adapter 补充判别字段后复用 Vanilla Input。JSON IR 与 Vanilla 保留原有带 `kind` 的布局子项契约，共享尺寸与内容语义不受 React 命名影响
+
 ## Canonical identity
 
 Layout package family 使用 `layout` namespace。FlexLayout、GridLayout 与 OverlayLayout 的 canonical composite identity 分别为 `layout.flexLayout`、`layout.gridLayout` 与 `layout.overlayLayout`；Definition、直接 IR、React 和 Vanilla 使用同一 identity。

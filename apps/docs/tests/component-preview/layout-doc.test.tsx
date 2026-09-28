@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';
 import { createGrid, LegendContentKind } from '@retikz/standard/presentation';
@@ -20,29 +20,19 @@ import { svg as scopeInspectionVanillaSvg } from '../../src/modules/docs/content
 import ScopeInspectionZhDemo, {
   previewSource as scopeInspectionZhSource,
 } from '../../src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.zh.demo';
-import FlexEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-basic.en.demo';
-import FlexZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-basic.zh.demo';
-import OverflowEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-overflow.en.demo';
-import OverflowZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-overflow.zh.demo';
-import { previewControlContract as flexZhContract } from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-playground.controls';
-import { previewSource as flexPlaygroundSource } from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-playground.demo';
-import { previewControlContract as flexEnContract } from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-playground.en.controls';
-import GridEnDemo from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-basic.en.demo';
-import GridZhDemo from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-basic.zh.demo';
-import { previewControlContract as gridZhContract } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.controls';
-import { previewSource as gridPlaygroundSource } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.demo';
-import { previewControlContract as gridEnContract } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.en.controls';
-import { previewSource as nestedEnSource } from '../../src/modules/docs/contents/library/layout/layout-nested.en.demo';
-import { previewSource as nestedZhSource } from '../../src/modules/docs/contents/library/layout/layout-nested.zh.demo';
-import OverlayEnDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-basic.en.demo';
-import OverlayZhDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-basic.zh.demo';
-import { previewControlContract as overlayZhContract } from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-playground.controls';
-import { previewSource as overlayPlaygroundSource } from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-playground.demo';
-import { previewControlContract as overlayEnContract } from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-playground.en.controls';
+import OverflowEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-overflow.en.demo';
+import OverflowZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-overflow.zh.demo';
+import { previewControlContract as flexZhContract } from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-playground.controls';
+import { previewSource as flexPlaygroundSource } from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-playground.demo';
+import { previewControlContract as flexEnContract } from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-playground.en.controls';
+import { previewSource as flexBasicEnSource } from '../../src/modules/docs/contents/library/layout/flex-layout/usage/flex-layout-basic.en.demo';
+import { previewSource as flexBasicZhSource } from '../../src/modules/docs/contents/library/layout/flex-layout/usage/flex-layout-basic.zh.demo';
+import { previewSource as nestedEnSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.en.demo';
+import { previewSource as nestedZhSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.zh.demo';
 
+const FlexEnDemo: FC = () => flexBasicEnSource.canonicalRender!();
+const FlexZhDemo: FC = () => flexBasicZhSource.canonicalRender!();
 const FlexPlaygroundCanonical: FC = () => flexPlaygroundSource.canonicalRender!();
-const GridPlaygroundCanonical: FC = () => gridPlaygroundSource.canonicalRender!();
-const OverlayPlaygroundCanonical: FC = () => overlayPlaygroundSource.canonicalRender!();
 const NestedEnCanonical: FC = () => nestedEnSource.canonicalRender();
 const NestedZhCanonical: FC = () => nestedZhSource.canonicalRender();
 const ScopeInspectionEnCanonical: FC = () => scopeInspectionEnSource.canonicalRender();
@@ -62,8 +52,7 @@ const LegendWithNestedStandardDemo: FC = () => (
         itemKey="nested-grid"
         sample={
           <FlexLayout>
-            <LayoutItem
-              kind="flex"
+            <FlexLayoutItem
               itemKey="grid"
               ir={createGrid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })}
             />
@@ -82,12 +71,7 @@ const demos: ReadonlyArray<Readonly<{ name: string; Component: FC }>> = [
   { name: 'flex overflow zh', Component: OverflowZhDemo },
   { name: 'flex overflow en', Component: OverflowEnDemo },
   { name: 'flex controls', Component: FlexPlaygroundCanonical },
-  { name: 'grid zh', Component: GridZhDemo },
-  { name: 'grid en', Component: GridEnDemo },
-  { name: 'grid controls', Component: GridPlaygroundCanonical },
-  { name: 'overlay zh', Component: OverlayZhDemo },
-  { name: 'overlay en', Component: OverlayEnDemo },
-  { name: 'overlay controls', Component: OverlayPlaygroundCanonical },
+
   { name: 'nested zh', Component: NestedZhCanonical },
   { name: 'nested en', Component: NestedEnCanonical },
 ];
@@ -104,38 +88,32 @@ describe('Layout documentation demos', () => {
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('Nested');
   });
-  it.each([
-    ['flex', flexZhContract, flexEnContract],
-    ['grid', gridZhContract, gridEnContract],
-    ['overlay', overlayZhContract, overlayEnContract],
-  ])('keeps %s controls structurally aligned across languages', (_name, chinese, english) => {
-    expect(english.stateOnlyIds).toEqual(chinese.stateOnlyIds);
-    expect(english.canonicalValues).toEqual(chinese.canonicalValues);
-    expect(
-      english.presets.map(preset => ({ id: preset.id, values: preset.values, applyMode: preset.applyMode })),
-    ).toEqual(chinese.presets.map(preset => ({ id: preset.id, values: preset.values, applyMode: preset.applyMode })));
-    expect(english.relatedApis).toEqual(chinese.relatedApis);
-    expect(english.controls.sections.map(section => section.controls.map(control => control.id))).toEqual(
-      chinese.controls.sections.map(section => section.controls.map(control => control.id)),
-    );
-  });
+  it.each([['flex', flexZhContract, flexEnContract]])(
+    'keeps %s controls structurally aligned across languages',
+    (_name, chinese, english) => {
+      expect(english.stateOnlyIds).toEqual(chinese.stateOnlyIds);
+      expect(english.canonicalValues).toEqual(chinese.canonicalValues);
+      expect(
+        english.presets.map(preset => ({ id: preset.id, values: preset.values, applyMode: preset.applyMode })),
+      ).toEqual(chinese.presets.map(preset => ({ id: preset.id, values: preset.values, applyMode: preset.applyMode })));
+      expect(english.relatedApis).toEqual(chinese.relatedApis);
+      expect(english.controls.sections.map(section => section.controls.map(control => control.id))).toEqual(
+        chinese.controls.sections.map(section => section.controls.map(control => control.id)),
+      );
+    },
+  );
 
-  it.each([
-    ['flex', flexEnContract, 'Inspection details', 'Inspection preset'],
-    ['grid', gridEnContract, 'Inspection details', 'Inspection preset'],
-    ['overlay', overlayEnContract, 'Overlay details', 'Overlay preset'],
-  ])('uses family-accurate English inspection labels for %s', (_name, contract, detailsLabel, presetLabel) => {
-    expect(contract.controls.sections[0].label).toBe(detailsLabel);
-    expect(contract.presetSelector.label).toBe(presetLabel);
-  });
+  it.each([['flex', flexEnContract, 'Inspection details', 'Inspection preset']])(
+    'uses family-accurate English inspection labels for %s',
+    (_name, contract, detailsLabel, presetLabel) => {
+      expect(contract.controls.sections[0].label).toBe(detailsLabel);
+      expect(contract.presetSelector.label).toBe(presetLabel);
+    },
+  );
 
   it.each([
     ['flex zh', flexZhContract],
     ['flex en', flexEnContract],
-    ['grid zh', gridZhContract],
-    ['grid en', gridEnContract],
-    ['overlay zh', overlayZhContract],
-    ['overlay en', overlayEnContract],
   ])('resolves preset-only inspection state for %s', (_name, contract) => {
     expect(resolvePreviewControlContract({ previewControlContract: contract })).toBe(contract);
   });
@@ -148,26 +126,6 @@ describe('Layout documentation demos', () => {
         inspectLines: true,
         inspectGaps: true,
         inspectDistributedSpace: false,
-      },
-    ],
-    [
-      'grid',
-      gridZhContract,
-      {
-        inspectTracks: true,
-        inspectCells: false,
-        inspectGaps: true,
-        inspectDistributedSpace: false,
-        inspectSpans: false,
-      },
-    ],
-    [
-      'overlay',
-      overlayZhContract,
-      {
-        inspectPlacements: false,
-        inspectAnchors: false,
-        inspectStacking: false,
       },
     ],
   ])('offers reusable recommended, all, and off inspection profiles for %s', (_name, contract, familyValues) => {
@@ -222,30 +180,25 @@ describe('Layout documentation demos', () => {
   it.each([
     ['flex zh', FlexZhDemo],
     ['flex en', FlexEnDemo],
-    ['grid zh', GridZhDemo],
-    ['grid en', GridEnDemo],
-    ['overlay zh', OverlayZhDemo],
-    ['overlay en', OverlayEnDemo],
   ] as const)('keeps %s basic Source IR free of optional item keys', (_name, Component) => {
     const source = JSON.stringify(buildPreviewIR(Component).sourceIr);
 
     expect(source).not.toContain('"key":');
   });
 
-  it.each([
-    ['flexLayout', FlexPlaygroundCanonical],
-    ['gridLayout', GridPlaygroundCanonical],
-    ['overlayLayout', OverlayPlaygroundCanonical],
-  ])('keeps runtime-only %s inspection out of canonical IR and Vanilla output', (kind, Component) => {
-    const preview = buildPreviewIR(Component);
-    const vanilla = buildVanillaPreview(preview);
+  it.each([['flexLayout', FlexPlaygroundCanonical]])(
+    'keeps runtime-only %s inspection out of canonical IR and Vanilla output',
+    (kind, Component) => {
+      const preview = buildPreviewIR(Component);
+      const vanilla = buildVanillaPreview(preview);
 
-    expect(preview).not.toHaveProperty('inspectionRoots');
-    expect(preview).not.toHaveProperty('inspect');
-    expect(vanilla.code).toContain(`${kind}(`);
-    expect(vanilla.code).not.toMatch(/\binspect\b/);
-    expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
-  });
+      expect(preview).not.toHaveProperty('inspectionRoots');
+      expect(preview).not.toHaveProperty('inspect');
+      expect(vanilla.code).toContain(`${kind}(`);
+      expect(vanilla.code).not.toMatch(/\binspect\b/);
+      expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
+    },
+  );
 
   it.each([
     ['zh', NestedZhCanonical],

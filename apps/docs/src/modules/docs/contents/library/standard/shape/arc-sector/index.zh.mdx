@@ -1,23 +1,79 @@
 ---
-title: 圆弧与扇形
+title: Arc / Sector · 圆弧与扇形
 description: 用 Standard 的形状语义绘制圆弧与扇形，在 React、Vanilla 和 JSON 之间保持一致
 ---
 
-用 Standard 的 Arc / Sector 保留形状与尺寸意图，编译时生成一条 Core Path。适合已知几何参数的独立轮廓；需要节点文字占位与连接边界时，使用[节点形状](/library/extension/shape)。
+`Arc` 绘制开放或闭合的弧，`Sector` 绘制实心或空心扇形，适合角度标记、圆环片段与扇区高亮。
 
 ## 接入方式
 
-形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/extension`。
+[安装与首次渲染](/library/standard/get-start)后，从三个包的 `/shape` 子入口选择宿主。四种写法绘制相同的最小图形；React 与 Vanilla adapter 自动提供所需定义，直接 IR 需要显式注入 Definition。
 
-React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx({ id, ...input })`，显式 id 同时标识 embed 和最终路径；Vanilla 与 React 省略 id 时均不生成持久化图元 id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
+<ComponentPreview files="entry" hideCode />
 
-| 入口    | 公开 API                                                                                |
-| ------- | --------------------------------------------------------------------------------------- |
-| React   | `Arc, Sector` — `@retikz/standard-react/shape`                                          |
-| Vanilla | `shape.arc, shape.sector` — `@retikz/standard-vanilla/shape`                            |
-| JSON    | `ArcSchema / ArcDefinition, SectorSchema / SectorDefinition` — `@retikz/standard/shape` |
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-## 用法
+```tsx
+import { Layout } from '@retikz/react';
+import { Arc } from '@retikz/standard-react/shape';
+
+export const Example = () => (
+  <Layout>
+    <Arc center={[0, 0]} radius={40} startAngle={0} endAngle={90} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { ArcDefinition } from '@retikz/standard/shape';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'arc', center: [0, 0], radius: 40, startAngle: 0, endAngle: 90 }],
+};
+export const Example = () => <Layout ir={ir} composites={[ArcDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { shape, ArcInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({ children: [shape.arc({ center: [0, 0], radius: 40, startAngle: 0, endAngle: 90 })] });
+const svg = renderToSvgString(input, { adapters: [ArcInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { ArcDefinition } from '@retikz/standard/shape';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'arc', center: [0, 0], radius: 40, startAngle: 0, endAngle: 90 }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [ArcDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
 
 `<Arc>`（开放弧）/ `<Sector>`（闭合扇形）在指定位置画一段角度片段，展开成底层 `<Path>`。适合角度标记、圆环片段、扇区高亮这类图。
 
@@ -78,7 +134,9 @@ import { Arc, Sector } from '@retikz/standard-react/shape';
 
 <ComponentPreview files="sector-basic" size="sm" />
 
-**圆心接节点、扇区标注**
+## 扩展用法
+
+### 圆心接节点与扇区标注
 
 实心扇形的圆心就是游标，所以 `center` 可以直接接节点 id（或极坐标），把扇形钉在某个节点上；配合 `sweepAngle` 和 `label`，几段就能拼出带标签的饼图。
 
@@ -86,7 +144,7 @@ import { Arc, Sector } from '@retikz/standard-react/shape';
 
 <ComponentPreview files="sector-label" size="sm" />
 
-**整体变换**
+### 整体变换
 
 `rotate` / `scale` 透传到 `<Path>`，把整条扇形绕包围盒中心变换（免包 `<Scope>`）。`rotate` 让轴对齐椭圆扇形倾斜——这是目前画"斜椭圆扇形"的方式。
 
@@ -96,13 +154,17 @@ Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法�
 
 <ComponentPreview files="arc-sector-playground" size="sm" controlPanelDefaultSize={50} />
 
-## 输入约束
+## 错误与限制
 
 半径必须为有限非负数。恰好提供 startAngle、endAngle、sweepAngle 中的两个，保留 sweep 的方向和圈数。 环形扇区要求字面坐标中心，内半径不能大于外半径。内半径为零时画实心扇形；椭圆内半径的两轴必须同时为零或同时为正。label 只落在外弧。
 
-## 编译过程
+## 实现原理
 
-Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时把形状意图展开为 Path steps，Core 再解析 Target、生成几何并渲染。不会添加 Node 或额外 Scope。除正多边形和星形将 rotate 烘焙进顶点外，其余旋转与缩放使用 Path 规则。
+<ComponentAlert type="tip">
+
+本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。
+
+</ComponentAlert>
 
 ### 角度范围如何确定
 
@@ -149,6 +211,10 @@ Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时�
   ]}
 />
 
+## API 参考
+
+{/* @include library/standard/shape/arc-sector/generated */}
+
 ## Schema 参考
 
 ### ArcSchema
@@ -159,6 +225,10 @@ Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时�
 
 <ZodSchema name="SectorSchema" />
 
-## API 参考
+## 延伸阅读
 
-{/* @include library/standard/shape/arc-sector/generated */}
+<LinkedSections
+  items={[
+    { title: 'shape · 形状', description: '比较不同几何轮廓的输入方式和适用场景', url: '/library/standard/shape' },
+  ]}
+/>

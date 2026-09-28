@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import type { ComparisonTargetValue } from '@/modules/docs/data';
@@ -11,6 +11,7 @@ export type ComparisonTargetVisibility = Record<ComparisonTargetValue, boolean>;
 export const DEFAULT_COMPARISON_TARGET_VISIBILITY: ComparisonTargetVisibility = {
   [ComparisonTarget.TikZ]: true,
   [ComparisonTarget.Vega]: true,
+  [ComparisonTarget.CSS]: true,
 };
 
 /** Comparison store：托管文档站中所有可选对照内容的显示开关。 */

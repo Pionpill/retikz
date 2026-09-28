@@ -6,20 +6,30 @@ import type { RefinementCtx, input as ZodInput } from 'zod';
 /** 形状复用的完整 Path 实例与呈现字段 */
 export const ShapePathSchema = PathBaseSchema.omit({ type: true, kind: true, kindOptions: true, children: true });
 /** 盒拟合策略及其默认值 */
-export const ShapeFitSchema = zodEnum(['contain', 'cover']).default('contain');
+export const ShapeFitSchema = zodEnum(['contain', 'cover'])
+  .default('contain')
+  .describe('Fit inside or cover the authored bounding box.');
 /** 局部圆弧闭合策略 */
-export const ShapeClosedSchema = zodEnum(['open', 'chord', 'sector']).default('chord');
+export const ShapeClosedSchema = zodEnum(['open', 'chord', 'sector'])
+  .default('chord')
+  .describe('Closure of a partial outline: open, chord, or sector.');
 /** 开放弧闭合策略 */
-export const ShapeArcCloseSchema = zodEnum(['open', 'chord', 'sector']).default('open');
+export const ShapeArcCloseSchema = zodEnum(['open', 'chord', 'sector'])
+  .default('open')
+  .describe('Arc closure: open, chord, or sector.');
 /** 星形内半径比例 */
-export const ShapeInnerRatioSchema = number().min(0).max(1).default(0.5);
+export const ShapeInnerRatioSchema = number()
+  .min(0)
+  .max(1)
+  .default(0.5)
+  .describe('Ratio of inner to outer star radius.');
 /** 首顶点的默认方向 */
-export const ShapeVertexAngleSchema = number().default(-90);
+export const ShapeVertexAngleSchema = number().default(-90).describe('Angle of the first outer vertex in degrees.');
 /** 形状拟合的轴对齐盒 */
 export const ShapeBoxSchema = union([
   strictObject({ x: number(), y: number(), width: PositiveNumberSchema, height: PositiveNumberSchema }),
   strictObject({ origin: PositionSchema, width: PositiveNumberSchema, height: PositiveNumberSchema }),
-]);
+]).describe('Axis-aligned bounding box used to fit the shape.');
 /** 角度字段，不在无角度完整轮廓上物化默认值 */
 export const ShapeAnglesSchema = strictObject({
   startAngle: number().optional().describe('Start angle in degrees.'),

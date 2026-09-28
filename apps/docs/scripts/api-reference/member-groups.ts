@@ -61,8 +61,40 @@ const scopeMemberGroups = {
   zIndex: 'Style',
 } as const satisfies Readonly<Record<string, ApiReferenceGroupName>>;
 
+/** Entity 实例字段按作者查阅任务归类 */
+const entityMemberGroups = {
+  id: 'Main',
+  role: 'Main',
+  kind: 'Main',
+  group: 'Main',
+  predicate: 'Main',
+  text: 'Main',
+  label: 'Main',
+  position: 'Geometry',
+  rotate: 'Geometry',
+  scale: 'Geometry',
+  layout: 'Layout',
+  status: 'Style',
+  style: 'Style',
+  zIndex: 'Style',
+  animations: 'Animation',
+  meta: 'Data',
+} as const satisfies Readonly<Record<string, ApiReferenceGroupName>>;
+
 /** 以公开包名和符号名定位分组，不在各 API 页面脚本中设置条件 */
 export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiReferenceGroupPlan>>> = {
+  '@retikz/graph#IRGraphEntity': {
+    order: ['Main', 'Geometry', 'Layout', 'Style', 'Animation', 'Data'],
+    members: { ...entityMemberGroups, namespace: 'Main', type: 'Main' },
+  },
+  '@retikz/graph-vanilla#EntityInputEmbedProps': {
+    order: ['Main', 'Geometry', 'Layout', 'Style', 'Animation', 'Data'],
+    members: entityMemberGroups,
+  },
+  '@retikz/graph-vanilla#InputEntity': {
+    order: ['Main', 'Geometry', 'Layout', 'Style', 'Animation', 'Data'],
+    members: { ...entityMemberGroups, type: 'Main' },
+  },
   '@retikz/inspect#InspectLayoutProps': {
     order: ['Main', 'Layout', 'Style', 'Rendering', 'Callbacks', 'Animation', 'Runtime', 'Output', 'Extensions'],
     members: {

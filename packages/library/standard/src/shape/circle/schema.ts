@@ -16,10 +16,10 @@ import {
 
 const properties = {
   ...ShapePathSchema.shape,
-  namespace: literal(STANDARD_NAMESPACE),
-  type: literal('circle'),
+  namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('circle').describe('Composite type for the circle shape.'),
   ...ShapeAnglesSchema.shape,
-  closed: ShapeClosedSchema.unwrap().optional(),
+  closed: ShapeClosedSchema.unwrap().optional().describe('Closure of a partial outline: open, chord, or sector.'),
 };
 const fitProperties = { ...ShapeBoxAdjustmentSchema.shape, fit: ShapeFitSchema };
 /** 持久化圆形 composite 的互斥几何输入 */

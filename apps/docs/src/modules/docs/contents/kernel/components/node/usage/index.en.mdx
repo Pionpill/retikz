@@ -5,6 +5,8 @@ description: Create, name, and connect nodes, then configure shape, size, and ap
 
 Node combines position, text, and shape in one declaration. An `id` lets other nodes reference its position and paths connect to its border.
 
+`position` is optional and defaults to `[0, 0]` in the current local coordinate system. Layout components arrange their children; multiple nodes with omitted positions in an ordinary Scope still overlap.
+
 ## Using this topic
 
 All four forms draw the same Hello node at the origin. React examples export a component; Vanilla examples require an existing `<div id="diagram"></div>`.

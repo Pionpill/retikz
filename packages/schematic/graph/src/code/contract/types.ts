@@ -12,7 +12,10 @@ export type CodeBlockComposeContext = Readonly<{
   codeBlockTokens: CodeBlockTokens;
 }>;
 
-/** 用独立 Source 描述一个封装代码实体，内容下沉为唯一 Graph Block */
+/**
+ * 用独立 Source 描述一个封装代码实体，内容下沉为唯一 Graph Block
+ * @template TSource schema 校验且传入 compose 的领域 Source
+ */
 export type CodeBlockDefinition<TSource extends IRCodeBlock> = Readonly<{
   /** 自定义实体的公开命名空间 */
   namespace: TSource['namespace'];

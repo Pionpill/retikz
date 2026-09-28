@@ -13,7 +13,7 @@
 
 基础用法先按 [docs-doc-usage](../../docs-doc-usage/SKILL.md) 展示无 controls 的最小源码示例，再引入交互试验场；不要用 playground 替代首个入门 demo。 Chart 类型页按 [Chart 专项](../../docs-doc-usage/references/chart.md)：无 controls 的最小示例放在接入方式，基础与扩展用法的功能 demo 均提供 controls。
 
-后续同一任务、主体和结构下的连续参数、闭合集合与通用样式，优先合并为一个 playground。controls 很少也可以使用 panel；不要为了字段少而制造额外静态 demo。不同 JSX 结构、组合关系、职责边界、错误行为或编译机制仍保留独立案例。
+同一功能节内，同一任务、主体和结构下的连续参数、闭合集合与通用样式，优先合并为一个 playground；跨功能节仍须各有就地 demo 与相关 controls。controls 很少也可以使用 panel；不要为了字段少而制造额外静态 demo。不同 JSX 结构、组合关系、职责边界、错误行为或编译机制仍保留独立案例。
 
 ## 面板组织
 

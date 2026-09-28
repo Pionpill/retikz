@@ -1,0 +1,103 @@
+---
+title: 自定义用法
+description: 定义并注入关系角色、子类型与带参数的领域谓词。
+---
+
+Relation 的内置与自定义语义共用 Definition、注册与绘制流程。本页假定你已了解[基础用法](/schematic/graph/relation/usage)中的端点与方向。
+
+Relation 与 Entity 一样不提供内置 kind。每个 kind 都需要先定义，再通过 `relationKinds` 注册到实际使用它的 provider assembly；只调用 `defineRelationKind` 不会自动注册。
+
+## 适用边界
+
+多个关系共享稳定含义、方向约束或箭头结构时，注册 Definition。只调整一条线的路径、标签或颜色时直接配置实例；只根据已有语义改变外观时使用 Graph rules。Definition 不负责自动布局、避障或业务条件执行。
+
+<ComponentPreview
+  files="relation-definition"
+  size="xs"
+  caption="feedback kind 提供虚线；priority predicate 保存 urgent 参数，Graph rule 将紧急反馈显示为红色粗线。"
+/>
+
+示例从 `flow` 派生反馈关系。`kind` 定义虚线结构，predicate 校验参数，作者规则消费参数来选择外观；仅注册 predicate 并不会自动产生颜色或执行业务动作。
+
+## 定义能力
+
+| 定义入口                  | 应放入的契约                                                       | 约束                                                                  |
+| ------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `defineRelationRole`      | role、description、defaultDirection、allowedDirections、directions | 每个允许方向都有完整 sourceMarker / targetMarker / dashPattern recipe |
+| `defineRelationKind`      | 全局唯一 kind、所属 role、可选方向约束与稀疏 recipe                | 只能收窄 role 允许的方向；未覆盖字段继承 role                         |
+| `defineRelationPredicate` | name、role、可选 kinds、paramsSchema 与可选 resolveStructure       | 参数经 schema 解析后才交给 resolver；返回非空稀疏结构覆盖             |
+
+role 的完整 recipe 中，`sourceMarker` / `targetMarker` 使用 `{ shape: '已注册 Arrow key' }` 或 `false`；`dashPattern` 使用数值数组或 `false`。`false` 表示明确取消 marker 或虚线，不是继承。kind 与 predicate 只需返回需要覆盖的结构字段。
+
+```ts
+import { defineRelationRole } from '@retikz/graph';
+
+const signalRole = defineRelationRole({
+  role: 'domain.signal',
+  description: 'One-way domain signal',
+  defaultDirection: 'forward',
+  allowedDirections: ['forward'],
+  directions: {
+    forward: { sourceMarker: false, targetMarker: { shape: 'stealth' }, dashPattern: false },
+  },
+});
+```
+
+`define*` 返回可装配的定义，不立即注册或校验整套 registry。自定义 key 必须通过下一步的宿主选项注入后才能引用。marker shape 使用 Core Arrow provider，不另设 Graph marker registry。
+
+## 注入与使用
+
+React 在 `<Graph>` 上传入 `relationRoles`、`relationKinds` 和 `relationPredicates`，内部 Relation 引用对应 key。Vanilla 在 `graph({ ... })` 传入同名选项，并由 `relation({ ... })` 引用。完整示例的源码展示了 definition → Graph 注入 → Relation 引用 → rule 消费参数的闭环。
+
+直接编译 IR 时，把定义传给 `createGraphDefinitions(options)`，并作为宿主的 composite 扩展；provider 模式使用 `createGraphProviders(options)`。函数、schema 和 resolver 属于运行时装配，不能写进可持久化 IR。IR 只保存 role、kind、predicate 的名称与 JSON 参数。
+
+## 错误与限制
+
+- 注册装配拒绝重复 key、覆盖内置 key、未注册的父 role、kind 与 role 归属冲突。
+- role 的默认方向必须属于允许集合，且每个方向有完整 recipe；kind 的方向只能收窄，默认方向也必须仍在集合内。
+- predicate 可限定 kinds；参数解析失败时不执行 `resolveStructure`。回调抛错或返回非法覆盖会包装为 Graph 错误并保留 cause。
+- 自定义 Arrow shape 必须在 Core 宿主中注册；缺失 provider 不回退到其它形状。
+- 自定义结构不改写 source / target 或 route；没有 route 时仍直连端点。
+
+## 相关属性
+
+[完整 API 参考](/schematic/graph/relation/api-reference)包含公开接口声明。
+
+本节聚焦装配关系语义所需成员。
+
+<ComponentProps
+  items={[
+    {
+      name: 'Graph.relationRoles',
+      kind: 'property',
+      type: 'ReadonlyArray<RelationRoleDefinition>',
+      description:
+        '每项提供 role、description、defaultDirection、allowedDirections 与 directions。directions 的每项包含 sourceMarker、targetMarker、dashPattern。',
+    },
+    {
+      name: 'Graph.relationKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<RelationKindDefinition>',
+      description:
+        '每项提供 kind、role、description，可选 defaultDirection、allowedDirections、directions；kind 在 registry 内全局唯一。',
+    },
+    {
+      name: 'Graph.relationPredicates',
+      kind: 'property',
+      type: 'ReadonlyArray<RelationPredicateDefinition>',
+      description: '通过 defineRelationPredicate 构造，包含 name、role、paramsSchema，可选 kinds 与 resolveStructure。',
+    },
+    {
+      name: 'Relation.predicate',
+      kind: 'property',
+      type: '{ name: string; params?: JsonObject }',
+      description: '引用已注入的 predicate；params 必须通过其 schema。省略 kinds 限制时可用于该 role 的全部 kind。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: '基础用法', description: '端点、方向、标签与路径编写', url: '/schematic/graph/relation/usage' }]}
+/>

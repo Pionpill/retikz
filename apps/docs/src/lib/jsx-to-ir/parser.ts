@@ -1,6 +1,6 @@
 import { Coordinate, Draw, EdgeLabel, Layout, Node, Path, Scope, Step, Text } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react/presentation';
-import { Arc, Circle, Ellipse, Rectangle, RegularPolygon, Sector, Star } from '@retikz/standard-react/shape';
+import { Arc, Circle, Ellipse, Rectangle, Polygon, Sector, Star } from '@retikz/standard-react/shape';
 import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';
 import type { FC, ReactElement, ReactNode } from 'react';
@@ -28,7 +28,7 @@ const COMPONENT_REGISTRY: Record<string, FC<Record<string, unknown>> | undefined
   Frame: Frame as unknown as FC<Record<string, unknown>>,
   FrameTitle,
   FrameDescription,
-  RegularPolygon: RegularPolygon as unknown as FC<Record<string, unknown>>,
+  Polygon: Polygon as unknown as FC<Record<string, unknown>>,
   Star: Star as unknown as FC<Record<string, unknown>>,
 };
 

@@ -1,23 +1,79 @@
 ---
-title: Stars
+title: Star
 description: Draw stars with shared Standard semantics across React, Vanilla and JSON
 ---
 
-Standard Star preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/extension/shape).
+`Star` alternates vertices between inner and outer radii to draw a closed star. Use it for ratings, emphasis markers, and decorative outlines.
 
-## Entry points
+## Using this topic
 
-Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/extension`.
+After [installation and first rendering](/library/standard/get-start), choose a host from the three `/shape` subpaths. All four forms draw the same minimal shape. React and Vanilla adapters supply the required definitions; direct IR requires explicit Definition injection.
 
-React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx({ id, ...input })` with the same explicit identity for the embed and its final path. Neither Vanilla nor React generates a persistent graphic id when id is omitted. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
+<ComponentPreview files="entry" hideCode />
 
-| Entry   | Public API                                               |
-| ------- | -------------------------------------------------------- |
-| React   | `Star` — `@retikz/standard-react/shape`                  |
-| Vanilla | `shape.star` — `@retikz/standard-vanilla/shape`          |
-| JSON    | `StarSchema / StarDefinition` — `@retikz/standard/shape` |
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-## Usage
+```tsx
+import { Layout } from '@retikz/react';
+import { Star } from '@retikz/standard-react/shape';
+
+export const Example = () => (
+  <Layout>
+    <Star center={[0, 0]} outerRadius={36} innerRadius={16} points={5} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { StarDefinition } from '@retikz/standard/shape';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'star', center: [0, 0], outerRadius: 36, innerRadius: 16, points: 5 }],
+};
+export const Example = () => <Layout ir={ir} composites={[StarDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { shape, StarInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({ children: [shape.star({ center: [0, 0], outerRadius: 36, innerRadius: 16, points: 5 })] });
+const svg = renderToSvgString(input, { adapters: [StarInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { StarDefinition } from '@retikz/standard/shape';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'star', center: [0, 0], outerRadius: 36, innerRadius: 16, points: 5 }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [StarDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
 
 `<Star>` alternates points on an outer and inner radius, connects them into a closed path, and expands to an underlying `<Path>`. Useful for rating stars, emphasis marks, and decorative multi-point shapes.
 
@@ -29,7 +85,9 @@ import { Star } from '@retikz/standard-react/shape';
 <Star center={[0, 0]} outerRadius={36} innerRadius={16} points={5} />
 ```
 
-`points` is the number of star points. Give `innerRadius` directly, or use `innerRatio` to derive it from the outer radius.
+### Choose the inner radius and point count
+
+`points` is the number of star points and must be an integer of at least 2. Give `innerRadius` directly, or use `innerRatio` to derive it from the outer radius.
 
 | Form                                           | Best for                         |
 | ---------------------------------------------- | -------------------------------- |
@@ -38,21 +96,37 @@ import { Star } from '@retikz/standard-react/shape';
 
 <ComponentPreview files="star-basic" size="sm" />
 
+## Extended usage
+
+### Adjust notch depth and orientation
+
 The two dashed circles in the playground are the inner and outer radii. Adjust the point count, `innerRatio`, and start angle to see how notch depth and orientation shape the contour together.
 
 <ComponentPreview files="star-playground" size="md" controlPanelDefaultSize={50} />
 
-## Input constraints
+## Errors and limitations
 
 Choose either innerRadius or innerRatio to describe the inner radius. Radii must be finite and nonnegative, the inner radius cannot exceed the outer radius, and the ratio must lie in [0, 1]. center requires a literal coordinate; rotate defaults to −90° and is applied once when generating vertices.
 
-## Compilation
+## Implementation
 
-The Standard schema validates exclusive geometry inputs and dimensional relations. Its Definition expands the shape into Path steps during compilation; Core then resolves Targets and generates geometry. No Node or extra Scope is added. RegularPolygon and Star bake rotate into vertices once; other rotations and all scaling use Path semantics.
+<ComponentAlert type="tip">
+
+This section explains internal implementation. If you only need to use the component, skip to the API reference below.
+
+</ComponentAlert>
 
 ### Star vertex expansion
 
 Star alternates inner and outer radii to produce `2 × points` vertices, then emits one move, `2 × points - 1` lines and one cycle. Rotation is baked into the vertices and is not forwarded as a Path transform, avoiding double rotation.
+
+<SourceLinks
+  sources={[{ label: 'Star vertex construction', path: 'packages/library/standard/src/shape/star/pipeline.ts' }]}
+/>
+
+## API reference
+
+{/* @include library/standard/shape/star/generated */}
 
 ## Schema reference
 
@@ -60,6 +134,14 @@ Star alternates inner and outer radii to produce `2 × points` vertices, then em
 
 <ZodSchema name="StarSchema" />
 
-## API reference
+## Further reading
 
-{/* @include library/standard/shape/star/generated */}
+<LinkedSections
+  items={[
+    {
+      title: 'Shapes',
+      description: 'Compare geometry inputs and choose a suitable outline',
+      url: '/library/standard/shape',
+    },
+  ]}
+/>

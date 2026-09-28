@@ -1,5 +1,7 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '节点中心位置；省略时在 Core 解析为当前局部坐标系的原点':
+    'Node center position; Core resolves an omitted value to the origin of the current local coordinate system',
   '结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning':
     'The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning',
   '适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx * sy) 深度缩放 params 中的数值叶子':
@@ -18,8 +20,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '标签位置；省略时位于节点上方，支持方向、角度或边界比例':
     'Label position; defaults to above the node, accepting a direction, angle, or boundary fraction',
   '节点类别标识，可省略': 'Optional node discriminator',
-  '节点中心位置，支持坐标、相对定位和锚点对齐':
-    'Node center position, supporting coordinates, relative positioning, and anchor alignment',
+  '节点中心位置，支持坐标、相对定位和锚点对齐；省略时使用当前局部坐标系的原点':
+    'Node center position, supporting coordinates, relative positioning, and anchor alignment; defaults to the origin of the current local coordinate system',
   附着于节点的一个或多个标签: 'One or more labels attached to the node',
 
   '指向同一节点几何的额外 id；要求主 id，别名非空白且不重复':
@@ -63,7 +65,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()`':
     'Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so call `event.preventDefault()` in the handler when needed',
   '在该图元上滚轮（DOM `wheel`）': 'Wheel input over this element (DOM `wheel`)',
-  节点中心位置: 'Node center position',
+  '节点中心位置；省略时使用当前局部坐标系的原点':
+    'Node center position; defaults to the origin of the current local coordinate system',
   "六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center":
     "Six forms: Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, between `{ between: [A, B], fraction }`, or anchor alignment `{ kind: 'anchor', target, selfAnchor? }`. Anchor alignment lays out text, shape, padding, margin, scale, and rotation before translating the node; both anchors default to center",
   '绕节点中心旋转的角度，单位为度；正值顺时针': 'Rotation around the node center in degrees; positive is clockwise',

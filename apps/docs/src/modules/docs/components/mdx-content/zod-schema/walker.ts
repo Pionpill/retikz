@@ -174,6 +174,9 @@ function extractFields(obj: z.ZodObject, ctx: WalkCtx = ROOT_CTX): Array<ObjectF
 }
 
 function unwrapOptional(schema: AnySchema): { inner: AnySchema; optional: boolean } {
+  if (schema instanceof z.ZodDefault) {
+    return { inner: schema, optional: true };
+  }
   if (schema instanceof z.ZodOptional) {
     return { inner: schema.unwrap(), optional: true };
   }

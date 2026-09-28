@@ -376,7 +376,7 @@ const inputNodeFromProps = (props: NodeProps): InputNode => {
   const text = readNodeText(props);
   return {
     type: 'node',
-    position: props.position,
+    ...(props.position === undefined ? {} : { position: props.position }),
     ...pickDefined(props, NODE_FIELDS),
     ...(text === undefined ? {} : { text }),
     ...(props.label === undefined ? {} : { label: props.label }),

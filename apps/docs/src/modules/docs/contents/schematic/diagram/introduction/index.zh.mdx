@@ -1,0 +1,32 @@
+---
+title: 简介
+description: 用对象、关系和包含层级描述结构图，让 Diagram 自动排布内容并生成带标题、图例和外框的完整图形。
+---
+
+Diagram 面向流程、依赖和系统架构等结构图。你描述有哪些对象、它们如何连接与分组，由具体的 Diagram 组件测量内容、计算位置和连线路径，再把标题、说明、图例与绘图内容组合成完整结果。
+
+当前可直接使用的组件是 **FlowDiagram**。下面的请求流程只声明三个对象和两条关系，不需要逐个指定坐标。
+
+<ComponentPreview files="/schematic/diagram/get-start/request-flow" size="sm" hideCode />
+
+## 从关系描述到完整结构图
+
+- **自动安排位置**：根据关系与布局方向排布对象；需要固定顺序或行列对齐时，使用 FlowLayout。
+- **表达包含关系**：用可见的 FlowGroup 组织业务区域；纯排版容器不额外绘制边框。
+- **组合说明区域**：标题、说明和显式图例与绘图内容一起参与布局，外框统一提供间距、背景和边界。
+- **复用同一份内容**：React 与 Vanilla 接入共享可序列化的 Source 描述，编译结果可交给 SVG 或 Canvas 渲染。
+
+## 何时选择 Diagram
+
+需要根据对象和关系自动组织整张图时，选择 Diagram；需要直接控制对象位置、连接端点或自由组合结构块时，选择 [Graph](/schematic/graph/introduction)。Diagram 的具体组件决定允许的内容与布局能力，并不接受任意绘图组件作为内部成员。
+
+Flow 当前支持 Entity、Group 和 Layout，尚不支持 Graph Block。连线路由提供直线、正交折线和指定转折顺序，不保证任意场景下的全局避障；应根据实际图形调整布局。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Flow Diagram', description: '了解当前结构图组件及其基础用法', url: '/schematic/diagram/flow' },
+    { title: '设计理念', description: '理解内容、布局与完整图形装配之间的职责', url: '/schematic/diagram/design' },
+  ]}
+/>

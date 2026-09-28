@@ -15,11 +15,22 @@ Manually maintained coordinates become fragile when label counts, content sizes,
 
 Containers compose recursively: arrange panels with Flex, then divide each panel with Grid. Layout owns arrangement, not chart data semantics or automatic graph-layout algorithms.
 
+## Composing layouts
+
+<ComponentPreview
+  files="layout-nested"
+  hideCode
+  size="md"
+  caption="The inspection overlay is separate from the real figure: it does not expand layout bounds or participate in hit testing."
+/>
+
+This example uses `LayoutInspectLayout` from `@retikz/layout-react/inspect` to install the layout Inspectors, then selects individual occurrences with `InspectFlexLayout`, `InspectGridLayout`, and `InspectOverlayLayout`. Use `LayoutInspectScope request={false}` as a hard barrier when one authored subtree must not inherit inspection requests. The Layout root does not statically load the optional inspection capability.
+
 ## Two meanings of Layout
 
 `Layout` from `@retikz/react` hosts and renders the whole diagram. Components such as `FlexLayout` from `@retikz/layout-react` arrange content inside that root. They are normally used together.
 
-`LayoutItem` declares constraints for one child graphic. For example, `grow` lets a Flex item receive remaining space. Containers solve from measured sizes and constraints; text measurement still depends on fonts and their loading state.
+`FlexLayoutItem`, `GridLayoutItem`, and `OverlayLayoutItem` declare constraints for one child graphic in their respective containers. For example, `grow` lets a Flex item receive remaining space. Containers solve from measured sizes and constraints; text measurement still depends on fonts and their loading state.
 
 ## Choose an entry
 
@@ -29,6 +40,6 @@ Containers compose recursively: arrange panels with Flex, then divide each panel
 
 Optional inspection capabilities help visualize layout boundaries. They are not required for ordinary layout.
 
-## Next steps
+## Further reading
 
 Arrange two graphics with the [quick start](/library/layout/get-start), then explore [Flex](/library/layout/flex-layout), [Grid](/library/layout/grid-layout), or [Overlay](/library/layout/overlay-layout). See the [changelog](/library/layout/changelog) for version changes.

@@ -21,6 +21,12 @@ export const schematicSection: Array<Section> = [
         meta: { pageType: 'entry', audience: 'user', sourceOfTruth: 'runtime' },
       },
       {
+        id: 'design',
+        label: 'schematic.design',
+        difficulty: DocDifficulty.Advanced,
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
         id: 'changelog',
         label: 'schematic.changelog',
         children: [{ id: 'v0-1', label: 'schematic.changelogV01' }],
@@ -71,11 +77,12 @@ export const schematicSection: Array<Section> = [
         id: 'relation',
         label: 'schematic.relation',
         sidebarGroup: 'schematic.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'runtime' },
         children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          { id: 'usage', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
           {
-            id: 'extension',
-            label: 'schematic.extensionUsage',
+            id: 'custom',
+            label: 'schematic.customUsage',
             difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'extension',
@@ -84,17 +91,34 @@ export const schematicSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
+          {
+            id: 'mechanism',
+            label: 'schematic.mechanism',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
+          },
         ],
       },
       {
         id: 'block',
         label: 'schematic.block',
         sidebarGroup: 'schematic.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'runtime' },
         children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          { id: 'usage', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
           {
-            id: 'extension',
-            label: 'schematic.extensionUsage',
+            id: 'custom',
+            label: 'schematic.customUsage',
             difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'extension',
@@ -102,6 +126,22 @@ export const schematicSection: Array<Section> = [
               capability: 'graph.codeBlock',
               sourceOfTruth: 'runtime',
             },
+          },
+          {
+            id: 'mechanism',
+            label: 'schematic.mechanism',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
           },
         ],
       },
@@ -117,13 +157,24 @@ export const schematicSection: Array<Section> = [
     id: 'diagram',
     label: 'schematic.diagram',
     navigationDescription: 'schematic.diagramNavigationDescription',
-    document: true,
     pages: [
-      { id: 'framework', label: 'schematic.diagramFramework' },
       {
-        id: 'flow',
-        label: 'schematic.flowDiagram',
-        children: [{ id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner }],
+        id: 'introduction',
+        label: 'schematic.introduction',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'get-start',
+        label: 'schematic.getStart',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'design',
+        label: 'schematic.design',
+        difficulty: DocDifficulty.Advanced,
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
       },
       {
         id: 'changelog',
@@ -135,6 +186,13 @@ export const schematicSection: Array<Section> = [
           capability: 'diagram.release',
           sourceOfTruth: 'changelog',
         },
+      },
+      {
+        id: 'flow',
+        label: 'schematic.flowDiagram',
+        sidebarGroup: 'schematic.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'runtime' },
+        children: [{ id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner }],
       },
     ],
   },

@@ -1,45 +1,45 @@
 ---
-description: UML Relation kind 目录与结构默认；背景：Relation 已有开放的 role → kind → predicate Definition / registry 链路，但内置 kind 仅覆盖部分 UML 关系，还混入了 Provenance 语义
-keywords: 'UML、Relation、kind、dependency、association、generalization、uml.realization'
+description: Relation 保留通用 role 默认结构，kind 与 Entity 一样由用户显式注册，不提供内置领域目录
+keywords: 'Relation、kind、role、Definition、registry、用户注册'
 ---
 
-# ADR-015：UML Relation kind 目录与结构默认
+# ADR-015：Relation 用户注册 kind 与 role 默认结构
 
 - 状态：Accepted
 - 决策日期：2026-09-02
+- 修订日期：2026-09-26
 - 关联：[Graph roadmap](./roadmap.md) · [Relation contract](./008-relation-data-geometry.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md)
 
 ## 背景与目标
 
-Relation 已有开放的 `role → kind → predicate` Definition / registry 链路，但内置 kind 仅覆盖部分 UML 关系，还混入了 Provenance 语义。用户需要一组可发现、可序列化的 UML 类图与组件图常用关系，并且只以路径和端点表达它们；不在 Relation 中引入 stereotype、multiplicity、接口球棒、关联类或其它额外 UML 图元
+Graph 提供通用关系语义和呈现，不拥有 UML 等领域分类目录。Relation 与 Entity 采用一致的能力边界：role 提供内置上位语义和默认结构，kind 表达用户注册的领域子类型。领域用户通过现有 Definition / registry 表达 UML、工作流或其它关系，不需要修改 Graph 的公开词汇
 
 ## 决策
 
-`role` 继续是开放的通用关系家族和无 kind 时的结构兜底；`kind` 是在所属 role 内注册的稳定 UML 关系语义。Graph 只提供内置 Definition，不保存 UML 元模型、类型约束或执行语义。自定义 role、kind 与 predicate 仍通过原有统一 registry 注册和解析
+Relation 不提供任何内置 kind，不导出内置 kind 常量或对应字面量联合类型。所有 kind 都通过 `defineRelationKind` 定义，并通过 `GraphDefinitionOptions.relationKinds` 显式注册；定义函数本身不执行注册。Graph 不保存 UML 元模型、类型约束或执行语义
 
-内置 UML kind 为：
+五个内置 role 保留原有默认结构：
 
-| kind                 | role             | 路径与端点结构                               |
-| -------------------- | ---------------- | -------------------------------------------- |
-| `uml.association`    | `association`    | 实线；两端无 marker，direction 固定为 `none` |
-| `uml.aggregation`    | `association`    | 实线；source（whole）端空心菱形              |
-| `uml.composition`    | `association`    | 实线；source（whole）端实心菱形              |
-| `uml.generalization` | `generalization` | 实线；target（supertype）端空心三角          |
-| `uml.dependency`     | `dependency`     | 虚线；target 端开放 Straight Barb 箭头       |
-| `uml.realization`    | `dependency`     | 虚线；target 端空心三角                      |
+| role             | 默认 / 允许 direction                            | 默认结构                                                 |
+| ---------------- | ------------------------------------------------ | -------------------------------------------------------- |
+| `association`    | `forward` / `none`、`forward`、`reverse`、`both` | 实线；有效方向端为实心 `diamond`，`none` 时两端无 marker |
+| `dependency`     | `forward` / `forward`                            | 实线；target 端开放 `straightBarb`                       |
+| `generalization` | `forward` / `forward`                            | 实线；target 端实心 `normal`                             |
+| `flow`           | `forward` / `forward`、`reverse`、`both`         | 实线；有效方向端为 `stealth`                             |
+| `influence`      | `forward` / `forward`、`reverse`、`both`         | 实线；有效方向端为 `circle`                              |
 
-内置 kind 只保留相对所属 role 有独立路径或端点结构的 UML 关系。没有 stereotype 文本时，usage、abstraction、binding、permission、manifestation、deployment 与 substitution 都不能提供独立可见结构，因此不作为内置 kind；领域需要保留这些语义时使用 label、meta 或自定义 kind。`uml.realization` 从原先的 `generalization` role 移到 `dependency` role，符合其 UML 依赖关系性质；其空心三角保留为 kind 的结构 delta
-
-本决策取代 ADR-008 的旧内置目录与 role 默认结构；其余 Relation 契约保持有效。最终 role 默认结构为：`association` 的默认 direction 为 `forward`，target 端使用实心菱形；`dependency` 使用实线与开放 Straight Barb；`generalization` 使用实线与实心 normal 箭头。只有 UML kind 通过所属 role 的 direction recipe 覆盖结构：`uml.association` 使用无 marker 实线，aggregation / composition 使用菱形，`uml.generalization` 使用空心三角，UML dependency kind 使用虚线。`flow` 与 `influence` 仍是 Graph 的通用 role，不作为内置 UML kind
+未指定 kind 时采用 role 默认结构。用户 kind 绑定一个 role，通过 direction recipe 稀疏覆盖该 role 的结构，并可收窄允许方向；未覆盖字段继续继承。predicate 与主题、作者实例外观沿用现有解析规则
 
 ## 基础数据结构与公开契约
 
-不新增 Relation 字段、schema 分支、Role 或 Arrow capability。`RelationKind` 的内置词汇提示替换为上表值，所有 kind 继续通过既有 `RelationKindDefinition` 指向所属 role，并通过 direction recipe 覆盖 role 的完整结构。虚线 recipe 使用既有 Core `dashPattern` 表达，endpoint 继续引用 Standard 已注册的 marker Definition
+`Relation.kind` 仍为可选的非空字符串，`RelationKindSchema` 不携带内置枚举提示。kind key 在 Relation registry 内全局唯一，注册时必须引用有效 role；这不改变既有 Relation key 身份规则
 
-`provenance.derivation`、`uml.usage`、`uml.abstraction`、`uml.binding`、`uml.permission`、`uml.manifestation`、`uml.deployment` 与 `uml.substitution` 从内置 catalog、常量、文档、demo 与测试中删除；0.x 不保留别名、fallback 或旧 key 的隐式解释。用户仍可用自定义 Relation kind 注册相同领域语义
+`RelationKindDefinition`、`defineRelationKind` 与 `GraphDefinitionOptions.relationKinds` 保留同一契约。直接 IR、React 与 Vanilla 通过同一 provider assembly 解析 definitions，definitions 不写入 JSON-safe Source。Diagram 等上层消费者复用同一开放字段和注册通道
 
 ## 行为、失败语义与兼容性
 
-直接 IR、React 与 Vanilla 必须产生同一 Relation Source，并由同一 registry 解析内置 kind。kind 与 role 不匹配、未注册 kind、或 kind 收窄后不允许的 direction 继续 fail-loud，不回退到 role 默认外观
+指定未注册 kind 必须报错，不回退到 role 默认结构。重复 kind、无效所属 role、方向集合扩张或默认方向不在允许集合内仍明确报错。注册成功后，kind 只能与所属 role 一起使用
 
-这是破坏性视觉与内置目录变更：未指定 kind 的 association 与 dependency 采用本决策的默认结构，generalization 保留 normal 箭头；`uml.realization` 必须使用 `dependency` role；`provenance.derivation` 不再是内置 key。Relation 不自动插入任何文本标签、stereotype 或额外图元
+删除原有六种 UML kind 的内置定义及 `RelationKind`、`RelationKindValue` 公开词汇，不保留别名、隐式注册或兼容 fallback。旧 UML key 与其它非空字符串同样可由用户显式注册；Graph 不保留这些名称。这是内置能力目录的破坏性变更，未指定 kind 的 role 外观保持不变
+
+本决策取代 ADR-008 的旧内置 kind 目录与 role 默认结构；其余 Relation 契约保持有效

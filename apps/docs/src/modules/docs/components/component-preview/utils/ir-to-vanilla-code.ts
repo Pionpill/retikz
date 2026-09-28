@@ -287,7 +287,7 @@ const STANDARD_SHAPE_KINDS: ReadonlyArray<string> = [
   'circle',
   'ellipse',
   'rectangle',
-  'regularPolygon',
+  'polygon',
   'star',
   'arc',
   'sector',
@@ -307,7 +307,7 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'CircleInputEmbedAdapter',
   'EllipseInputEmbedAdapter',
   'RectangleInputEmbedAdapter',
-  'RegularPolygonInputEmbedAdapter',
+  'PolygonInputEmbedAdapter',
   'StarInputEmbedAdapter',
   'ArcInputEmbedAdapter',
   'SectorInputEmbedAdapter',
@@ -351,7 +351,7 @@ export type StandardPreviewDefinitionName =
   | 'CircleDefinition'
   | 'EllipseDefinition'
   | 'RectangleDefinition'
-  | 'RegularPolygonDefinition'
+  | 'PolygonDefinition'
   | 'StarDefinition'
   | 'ArcDefinition'
   | 'SectorDefinition'
@@ -381,7 +381,7 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   circle: 'CircleDefinition',
   ellipse: 'EllipseDefinition',
   rectangle: 'RectangleDefinition',
-  regularPolygon: 'RegularPolygonDefinition',
+  polygon: 'PolygonDefinition',
   star: 'StarDefinition',
   arc: 'ArcDefinition',
   sector: 'SectorDefinition',

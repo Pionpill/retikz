@@ -29,6 +29,14 @@ const input: InputFrame = {
 };
 
 describe('frame()', () => {
+  it('正文节点可省略位置且 authoring 保留稀疏 Source', () => {
+    const result = normalizeScene(scene([frame({ children: [{ type: 'node', text: 'origin' }] })]), {
+      adapters: [FrameInputEmbedAdapter],
+    });
+    expect(result.ir.children[0]).toMatchObject({ children: [{ type: 'node', text: 'origin' }] });
+    expect(JSON.stringify(result.ir)).not.toContain('position');
+  });
+
   it('validates JSON-safe title and description builders', () => {
     expect(
       frameTitle({

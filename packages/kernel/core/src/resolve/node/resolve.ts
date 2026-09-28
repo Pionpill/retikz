@@ -12,6 +12,7 @@ import type {
   IRPaintValue,
   IRTextRun,
 } from '../../schemas';
+import { NodeSchema } from '../../schemas';
 import { resolvePaint } from '../resource';
 import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
 import { resolveDashPattern, resolveDropShadow } from '../style';
@@ -154,6 +155,7 @@ const canonicalizeNode = (node: ResolvedNodeSource): CanonicalNode => {
   const source = { ...structure, ...visual, ...layout };
   return {
     ...source,
+    position: source.position ?? NodeSchema.shape.position.parse(undefined),
     padding: expandBoxSpacing(source.padding, DEFAULT_NODE_PADDING),
     margin: expandBoxSpacing(source.margin, 0),
     minimumSize: expandBoxSize(source.minimumSize),

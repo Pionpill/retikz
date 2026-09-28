@@ -1,23 +1,81 @@
 ---
-title: 圆与椭圆
+title: Circle / Ellipse · 圆与椭圆
 description: 用 Standard 的形状语义绘制圆与椭圆，在 React、Vanilla 和 JSON 之间保持一致
 ---
 
-用 Standard 的 Circle / Ellipse 保留形状与尺寸意图，编译时生成一条 Core Path。适合已知几何参数的独立轮廓；需要节点文字占位与连接边界时，使用[节点形状](/library/extension/shape)。
+`Circle` 与 `Ellipse` 根据中心、半径或包围范围绘制圆形轮廓，适合圆形标记、椭圆边框和局部闭合区域。
 
 ## 接入方式
 
-形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/extension`。
+[安装与首次渲染](/library/standard/get-start)后，从三个包的 `/shape` 子入口选择宿主。四种写法绘制相同的最小图形；React 与 Vanilla adapter 自动提供所需定义，直接 IR 需要显式注入 Definition。
 
-React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx({ id, ...input })`，显式 id 同时标识 embed 和最终路径；Vanilla 与 React 省略 id 时均不生成持久化图元 id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
+<ComponentPreview files="entry" hideCode />
 
-| 入口    | 公开 API                                                                                        |
-| ------- | ----------------------------------------------------------------------------------------------- |
-| React   | `Circle, Ellipse` — `@retikz/standard-react/shape`                                              |
-| Vanilla | `shape.circle, shape.ellipse` — `@retikz/standard-vanilla/shape`                                |
-| JSON    | `CircleSchema / CircleDefinition, EllipseSchema / EllipseDefinition` — `@retikz/standard/shape` |
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-## 用法
+```tsx
+import { Layout } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
+
+export const Example = () => (
+  <Layout>
+    <Circle center={[0, 0]} radius={32} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { CircleDefinition } from '@retikz/standard/shape';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'circle', center: [0, 0], radius: 32 }],
+};
+export const Example = () => <Layout ir={ir} composites={[CircleDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { shape, CircleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({ children: [shape.circle({ center: [0, 0], radius: 32 })] });
+const svg = renderToSvgString(input, { adapters: [CircleInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { CircleDefinition } from '@retikz/standard/shape';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'circle', center: [0, 0], radius: 32 }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [CircleDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 选择圆的几何输入
 
 `<Circle>` / `<Ellipse>` 在指定位置画一条圆 / 椭圆轮廓，展开成底层 `<Path>`。适合「我知道中心和半径」「我只有一个包围盒」这类场景。
 
@@ -45,6 +103,8 @@ import { Circle, Ellipse } from '@retikz/standard-react/shape';
 
 <ComponentPreview files="circle-basic" size="sm" />
 
+### 选择椭圆的几何输入
+
 椭圆和圆很像，只是半径拆成了 `radius: { x, y }`。它也支持 `corner1 + corner2` 和 `box`。
 
 | 写法                               | 适合                                              |
@@ -58,17 +118,23 @@ import { Circle, Ellipse } from '@retikz/standard-react/shape';
 
 <ComponentPreview files="ellipse-basic" size="sm" />
 
+### 比较包围范围与局部闭合
+
 下面的 playground 把四种输入放进同一张参考框中。切换构造方式、收缩 / 扩张范围，再打开局部弧段，观察输入框、最终椭圆与闭合区域的关系。
 
 <ComponentPreview files="ellipse-playground" size="sm" controlPanelDefaultSize={50} />
 
-## 输入约束
+## 错误与限制
 
 只选择一套几何描述；半径、直径、边长和尺寸必须为有限非负数。盒调整后的宽高必须大于零。局部圆弧恰好提供 startAngle、endAngle、sweepAngle 中的两个，保留 sweep 的方向和圈数。
 
-## 编译过程
+## 实现原理
 
-Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时把形状意图展开为 Path steps，Core 再解析 Target、生成几何并渲染。不会添加 Node 或额外 Scope。除正多边形和星形将 rotate 烘焙进顶点外，其余旋转与缩放使用 Path 规则。
+<ComponentAlert type="tip">
+
+本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。
+
+</ComponentAlert>
 
 ### 圆与椭圆的路径展开
 
@@ -93,6 +159,10 @@ Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时�
   ]}
 />
 
+## API 参考
+
+{/* @include library/standard/shape/circle-ellipse/generated */}
+
 ## Schema 参考
 
 ### CircleSchema
@@ -103,6 +173,10 @@ Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时�
 
 <ZodSchema name="EllipseSchema" />
 
-## API 参考
+## 延伸阅读
 
-{/* @include library/standard/shape/circle-ellipse/generated */}
+<LinkedSections
+  items={[
+    { title: 'shape · 形状', description: '比较不同几何轮廓的输入方式和适用场景', url: '/library/standard/shape' },
+  ]}
+/>

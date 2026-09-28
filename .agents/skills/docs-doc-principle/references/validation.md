@@ -24,6 +24,8 @@ Docs 提交前必须运行 `pnpm --filter @retikz/docs run check:static`；完�
 
 ## 页面与图形
 
+- 逐个功能节核对就地 demo 与本节 API controls；实际操作确认效果可见，不以其它小节的试验场或纯源码替代。
+
 - 核对公开导入、默认值应用处和关键分支；zh/en 语义一致，不只比较标题数量。
 - 实际打开页面检查 demo、controls、源码栏、caption、表格与导航；叙述图按 [插图契约](figure-contract.md)，尺寸按 [测量规则](preview-sizing.md)。
 - 新 demo 必须确认 registry 能发现。出现 `Demo ... not found` 时先重启当前工作区 dev 服务再复查；未经用户要求不以生产构建替代。

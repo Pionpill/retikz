@@ -26,7 +26,7 @@ import {
   WebFontSizePreset,
 } from '@retikz/core';
 import { BuiltinRegressionMethod, DataFieldFormat, DataFieldType, DataSortOrder, FieldOrderMode } from '@retikz/data';
-import { EntityRole, GraphStatus } from '@retikz/graph';
+import { EntityRole, GraphStatus, RelationRole, RelationDirection } from '@retikz/graph';
 import {
   FlexLayoutDirection,
   FlexLayoutWrap,
@@ -53,6 +53,7 @@ import {
   RelationGeometryKind,
   StackOffset,
 } from '@retikz/plot';
+import { ListIndexPosition } from '@retikz/standard/container';
 import {
   AxesArrowMode,
   AxesLabelEnd,
@@ -82,6 +83,9 @@ export type ApiValueRegistryEntry = {
 
 /** MDX 可引用的公开 API 值集合 */
 export const API_VALUE_REGISTRY = {
+  ListIndexPosition: {
+    values: Object.values(ListIndexPosition),
+  },
   AnimationDirection: {
     values: Object.values(AnimationDirection),
   },
@@ -139,6 +143,8 @@ export const API_VALUE_REGISTRY = {
   DensityBandwidthKind: {
     values: Object.values(DensityBandwidthKind),
   },
+  RelationRole: { values: Object.values(RelationRole) },
+  RelationDirection: { values: Object.values(RelationDirection) },
   EntityRole: {
     values: Object.values(EntityRole),
   },

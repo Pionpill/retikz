@@ -5,7 +5,7 @@ description: 定义并注册 Entity 的角色、子类型和带参数语义，�
 
 当多个实体需要稳定复用一种业务含义时，用 Definition 定义它，再向宿主注册。一次性修改颜色只需[基础用法](/schematic/graph/entity/usage)中的 style；附带业务数据可用 `meta`，不必为每个字段建立新语义。
 
-## 选择扩展点
+## 适用边界
 
 | 入口                    | 拥有的职责                                                |
 | ----------------------- | --------------------------------------------------------- |
@@ -15,13 +15,13 @@ description: 定义并注册 Entity 的角色、子类型和带参数语义，�
 
 role 决定轮廓与内边距；kind 和 predicate 不复制形状。外观由 `graphRules` 匹配语义后提供，实例 style 仍可覆盖。Definition 可以包含运行时 schema，但持久化 Entity 只保存 key 与 JSON 参数，不保存 Definition。
 
-## 定义服务网关
+## 最小示例
 
 示例定义一个 service 角色、service.gateway 子类型和 service.availability predicate。切换可用性会改变颜色，打开“关键服务”会加粗边框。
 
 <ComponentPreview files={['entity-definition', 'entity-definition.data']} size="sm" />
 
-## 注册并使用
+## 定义能力
 
 `defineEntityPredicate` 用来声明可注册的、带参数的实体语义。`name` 是 Entity 引用的 key，`role` 和可选的 `kinds` 限定适用范围，`paramsSchema` 校验传入的 JSON 参数。它只创建 Definition，不会自动注册或改变样式；将 Definition 传给 Graph 的 `entityPredicates` 后，Entity 才能引用它，外观由匹配该语义和参数的 `graphRules` 决定。
 
@@ -77,6 +77,8 @@ export const availabilityRules: Array<IRGraphRule> = [
 ```
 
 `paramsSchema` 声明 status 只能是 available、degraded、offline，critical 必须是 boolean。示例的四条规则是固定数据：前三条匹配 status，最后一条只匹配 critical，因此加粗与颜色可以同时生效。上方预览的控件仅改变 Entity 的 predicate.params，没有绕开规则直接改颜色。
+
+## 注入与使用
 
 React 只能在 Graph 上声明 definitions；Graph 内的 Entity 共用这些注册项和规则。即使只有一个 Entity，也要把自定义 definitions 传给 Graph，不能只填写自定义 key 而遗漏注册。
 

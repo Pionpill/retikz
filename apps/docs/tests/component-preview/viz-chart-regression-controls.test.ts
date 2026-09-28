@@ -131,6 +131,7 @@ describe('Viz Chart Regression controls', () => {
 
     expect(comparable(zh)).toEqual(comparable(en));
     expect(zh.canonicalValues).toEqual({
+      'regression-basic-coordinate-system': 'cartesian2D',
       'regression-basic-group-by-species': false,
       'regression-basic-method': 'linear',
       'regression-basic-order': 3,
@@ -145,6 +146,7 @@ describe('Viz Chart Regression controls', () => {
 
     const fields = getPreviewControlFields(zh.controls);
     expect(fields.map(field => field.id)).toEqual([
+      'regression-basic-coordinate-system',
       'regression-basic-group-by-species',
       'regression-basic-method',
       'regression-basic-order',
@@ -203,6 +205,7 @@ describe('Viz Chart Regression controls', () => {
     });
     expect(Object.keys(zh.canonicalValues).sort()).toEqual(fields.map(field => field.id).sort());
     expect(zh.relatedApis).toEqual([
+      'RegressionChart.coordinate',
       'RegressionEncodings.series',
       'RegressionProperties.point.size',
       'RegressionProperties.method',

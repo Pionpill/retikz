@@ -1,0 +1,41 @@
+/** 分组示例与面板文案 */
+export const groupBasicI18n = {
+  zh: {
+    title: '运行时',
+    description: '编译与渲染',
+    compiler: '编译',
+    renderer: '渲染器',
+    controls: [
+      'Group 标题与说明',
+      '位置与排列',
+      '位置',
+      '上方',
+      '下方',
+      '排列方向',
+      '横向',
+      '纵向',
+      '间距',
+      '标题与说明间距',
+      '内容与说明间距',
+    ],
+  },
+  en: {
+    title: 'Runtime',
+    description: 'Compile and render',
+    compiler: 'Compile',
+    renderer: 'Renderer',
+    controls: [
+      'Group caption',
+      'Position and arrangement',
+      'Position',
+      'Top',
+      'Bottom',
+      'Direction',
+      'Horizontal',
+      'Vertical',
+      'Spacing',
+      'Title-description gap',
+      'Body-caption gap',
+    ],
+  },
+};

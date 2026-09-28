@@ -68,10 +68,10 @@ describe('SCHEMA_REGISTRY', () => {
         schema: SurfaceSchema,
         url: '/library/standard/presentation/surface#surfaceschema',
       },
-      BlockSchema: { schema: BlockSchema, url: '/schematic/graph/block/basic' },
-      BlockHeaderSchema: { schema: BlockHeaderSchema, url: '/schematic/graph/block/basic' },
-      BlockSectionSchema: { schema: BlockSectionSchema, url: '/schematic/graph/block/basic' },
-      BlockRowSchema: { schema: BlockRowSchema, url: '/schematic/graph/block/basic' },
+      BlockSchema: { schema: BlockSchema, url: '/schematic/graph/block/schema-reference' },
+      BlockHeaderSchema: { schema: BlockHeaderSchema, url: '/schematic/graph/block/schema-reference' },
+      BlockSectionSchema: { schema: BlockSectionSchema, url: '/schematic/graph/block/schema-reference' },
+      BlockRowSchema: { schema: BlockRowSchema, url: '/schematic/graph/block/schema-reference' },
       EntitySchema: { schema: EntitySchema, url: '/schematic/graph/entity/schema-reference' },
       RelationSchema: { schema: RelationSchema },
     });
@@ -92,7 +92,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/components/path/schema-reference#axislinestepschema');
     expect(lookupSchema(RelativeTargetSchema)?.url).toBeUndefined();
     expect(lookupSchema(LayoutInspectSpacingOptionsSchema)?.url).toBe(
-      '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
+      '/library/layout/flex-layout/extended#layoutinspectspacingoptionsschema',
     );
     expect(lookupSchema(TableSchema)?.url).toBe('/viz/table/reference/contract-table#tableschema');
     expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/presentation/legend#legendschema');
@@ -100,8 +100,8 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/presentation/surface#surfaceschema');
   });
 
-  it('documents the Layout Inspector spacing schema on the Layout runtime reference page', () => {
-    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/layout/reference/runtime');
+  it('documents the Layout Inspector spacing schema in the shared Layout extended usage guide', () => {
+    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/layout/flex-layout/extended');
     const zhSource = readFileSync(resolve(referenceRoot, 'index.zh.mdx'), 'utf8');
     const enSource = readFileSync(resolve(referenceRoot, 'index.en.mdx'), 'utf8');
 

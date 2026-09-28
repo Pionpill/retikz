@@ -1,32 +1,49 @@
 ---
 title: Relation · 关系
-description: 用一个 record 保存通用 Core endpoint、关系语义、label 与可选 route。
+description: 连接图中的命名对象，表达关联、依赖、流动、泛化或影响。
 ---
 
-Relation 负责表达“谁与谁存在什么关系”。它通过 Core NodeTarget 引用 Node、Coordinate、Scope 或上层 composite 发布的 target，保存 source/target、role、direction 与可选 kind/predicate；route 只描述怎么画，最终独立 lower 为普通 Core Path。Graph 是可选上下文，不是 Relation 的成员容器。Relation 的数值 stroke、label 前景与 marker color 跟随最终 Relation 主色，marker fill 再跟随已解析的 marker color
-
-`labels[].text` 直接复用 Core GeometryLabel 的 TextBlock：字符串中的 `\n` 或行数组都能形成一个多行关系标签。Graph 不另建文字或测量模型；最终 Path 用整个标签块的视觉边界处理位置与可选描边断口。
+Relation 表达两个对象之间的关系。用 `source` 和 `target` 引用端点，选择 `role` 决定关系语义与默认箭头，再按需要添加标签、方向和路径。端点可以是 Entity，也可以是 Core Node、Coordinate 或其它组件发布的命名目标。
 
 ## 职责一览
 
-| 主题     | 职责                                          | 何时查阅            |
-| -------- | --------------------------------------------- | ------------------- |
-| 基础用法 | endpoint、direction、label 与 route authoring | 连接任意命名 target |
-| 扩展用法 | 自定义 role、kind、predicate 与 marker recipe | 建立领域关系语义    |
+| 能力       | 负责什么                                                   | 何时使用                   |
+| ---------- | ---------------------------------------------------------- | -------------------------- |
+| 端点引用   | 保存 source 与 target，不因箭头反向而交换                  | 连接已有命名对象           |
+| 关系语义   | role、kind 与 predicate 描述关系，direction 选择允许的方向 | 表达依赖、继承或领域关系   |
+| 路径与标签 | 默认直连，接受显式 route 和沿线 labels                     | 调整走线或补充关系说明     |
+| 外观       | 继承主题、状态和 Graph 规则，允许实例覆盖                  | 统一图表风格或强调一条关系 |
+
+<ComponentPreview files="relation-minimal" size="xs" hideCode />
+
+图中的两个 Entity 提供命名端点；Relation 用 `flow` 表达从发送到接收的流动。端点的位置由对象决定，关系负责连接它们。
+
+## 职责与边界
+
+Relation 不创建端点，也不自动布局或避障。只需要自由绘制路径时使用 Core Path；需要自动安排流程节点时使用 [FlowDiagram](/schematic/diagram/flow)。Graph 可以提供共享定义与外观上下文。
+
+`source` / `target`、`direction` 与 `route` 分别描述端点、语义方向和几何路径。自定义路径不会反过来改写端点；改变箭头方向也不会交换对象的身份。
 
 ## 章节内容
 
 <LinkedSections
   items={[
+    { title: '基础用法', description: '连接端点，选择关系、方向、标签与样式', url: '/schematic/graph/relation/usage' },
     {
-      title: '基础用法',
-      description: '稳定端点、方向和直接 route',
-      url: '/schematic/graph/relation/basic',
+      title: '自定义用法',
+      description: '定义并注入 role、kind 与 predicate',
+      url: '/schematic/graph/relation/custom',
     },
     {
-      title: '扩展用法',
-      description: '关系 Definition 与 registry 消费链',
-      url: '/schematic/graph/relation/extension',
+      title: '实现原理',
+      description: '语义校验、结构覆盖与 Core Path 下沉',
+      url: '/schematic/graph/relation/mechanism',
+    },
+    { title: 'Schema 参考', description: '持久化关系字段与约束', url: '/schematic/graph/relation/schema-reference' },
+    {
+      title: 'API 参考',
+      description: '组件、类型、工厂与自定义 Definition',
+      url: '/schematic/graph/relation/api-reference',
     },
   ]}
 />

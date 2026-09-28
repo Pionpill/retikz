@@ -5,6 +5,10 @@ import type { InputNode, InputPath, InputScene } from '../../src';
 import { InputPathArrowDirection, normalizeNode, normalizePath, normalizeScene } from '../../src';
 
 describe('Vanilla Input normalizers', () => {
+  it('省略 Node position 时保留稀疏 Source', () => {
+    expect(normalizeNode({ id: 'origin' })).toStrictEqual({ type: 'node', id: 'origin' });
+  });
+
   it('将 typed Node 输入收敛为唯一 Source IR', () => {
     const input: InputNode = {
       id: 'source',

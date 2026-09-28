@@ -11,7 +11,11 @@ import {
   normalizeLayoutBoundaryGroups,
 } from '../shared';
 
-/** 把 Flex 布局产物转换为普通 Core 辅助子元素 */
+/** 把 Flex 布局产物转换为普通 Core 辅助子元素
+ * @param artifact 同次编译已求解的布局产物
+ * @param context 包含已解析检查选项与主题外观的检查上下文
+ * @returns 只读辅助子图形列表，不重新求解或修改布局产物
+ */
 export const inspectFlexLayoutArtifact = (
   artifact: FlexLayoutArtifact,
   context: InspectorContext<CanonicalFlexLayoutInspectOptions>,

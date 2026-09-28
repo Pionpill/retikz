@@ -115,7 +115,7 @@ import {
   CircleSchema,
   EllipseSchema,
   RectangleSchema,
-  RegularPolygonSchema,
+  PolygonSchema,
   StarSchema,
   ArcSchema,
   SectorSchema,
@@ -124,6 +124,8 @@ import * as IRTable from '@retikz/table';
 import type { core, z } from 'zod';
 
 import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
+import { GridSchemaZhLocalization, GridLineSchemaZhLocalization } from './standard-presentation-localizations';
+import { standardSchemaLocalizations } from './standard-schema-localizations';
 
 /** schema 注册项按语言提供的本地化描述 */
 export type SchemaRegistryLocalization = {
@@ -980,10 +982,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Rectangle',
     url: '/library/standard/shape/rectangle#rectangleschema',
   },
-  RegularPolygonSchema: {
-    schema: RegularPolygonSchema,
-    label: 'RegularPolygon',
-    url: '/library/standard/shape/regular-polygon#regularpolygonschema',
+  PolygonSchema: {
+    schema: PolygonSchema,
+    label: 'Polygon',
+    url: '/library/standard/shape/polygon#polygonschema',
   },
   StarSchema: { schema: StarSchema, label: 'Star', url: '/library/standard/shape/star#starschema' },
   ArcSchema: { schema: ArcSchema, label: 'Arc', url: '/library/standard/shape/arc-sector#arcschema' },
@@ -1042,78 +1044,115 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LayoutInspectBoundsOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
     label: 'LayoutInspectBoundsOptions',
-    url: '/library/layout/reference/runtime#layoutinspectboundsoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   LayoutInspectSpacingOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
     label: 'LayoutInspectSpacingOptions',
-    url: '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   BaseLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
     label: 'BaseLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#baselayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   FlexLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
     label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#flexlayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   GridLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
     label: 'GridLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#gridlayoutinspectoptionsschema',
+    url: '/library/layout/grid-layout/extended#gridlayoutinspectoptionsschema',
   },
   OverlayLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
     label: 'OverlayLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#overlaylayoutinspectoptionsschema',
+    url: '/library/layout/overlay-layout/extended#overlaylayoutinspectoptionsschema',
   },
 
   FlexLayoutSchema: {
     schema: LayoutIR.FlexLayoutSchema,
     label: 'FlexLayout',
-    url: '/library/layout/reference/contract-input#flexlayoutschema',
+    url: '/library/layout/flex-layout/schema-reference#flexlayoutschema',
   },
   GridLayoutSchema: {
     schema: LayoutIR.GridLayoutSchema,
     label: 'GridLayout',
-    url: '/library/layout/reference/contract-input#gridlayoutschema',
+    url: '/library/layout/grid-layout/schema-reference#gridlayoutschema',
   },
   OverlayLayoutSchema: {
     schema: LayoutIR.OverlayLayoutSchema,
     label: 'OverlayLayout',
-    url: '/library/layout/reference/contract-input#overlaylayoutschema',
+    url: '/library/layout/overlay-layout/schema-reference#overlaylayoutschema',
   },
   LayoutItemSchema: {
     schema: LayoutIR.LayoutItemSchema,
     label: 'LayoutItem',
-    url: '/library/layout/reference/contract-input#layoutitemschema',
+    url: '/library/layout/flex-layout/schema-reference#layoutitemschema',
   },
   LayoutArtifactSchema: {
     schema: LayoutIR.LayoutArtifactSchema,
     label: 'LayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#layoutartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   LayoutSpacingArtifactSchema: {
     schema: LayoutIR.LayoutSpacingArtifactSchema,
     label: 'LayoutSpacingArtifact',
-    url: '/library/layout/reference/contract-artifact#layoutspacingartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   FlexLayoutArtifactSchema: {
     schema: LayoutIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#flexlayoutartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   GridLayoutArtifactSchema: {
     schema: LayoutIR.GridLayoutArtifactSchema,
     label: 'GridLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#gridlayoutartifactschema',
+    url: '/library/layout/grid-layout/extended#gridlayoutartifactschema',
   },
   OverlayLayoutArtifactSchema: {
     schema: LayoutIR.OverlayLayoutArtifactSchema,
     label: 'OverlayLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#overlaylayoutartifactschema',
+    url: '/library/layout/overlay-layout/extended#overlaylayoutartifactschema',
+  },
+  FrameSchema: {
+    schema: StandardPresentationIR.FrameSchema,
+    label: 'Frame',
+    url: '/library/standard/presentation/frame#frameschema',
+  },
+  FrameTitleSchema: {
+    schema: StandardPresentationIR.FrameTitleSchema,
+    label: 'FrameTitle',
+    url: '/library/standard/presentation/frame#frametitleschema',
+  },
+  FrameDescriptionSchema: {
+    schema: StandardPresentationIR.FrameDescriptionSchema,
+    label: 'FrameDescription',
+    url: '/library/standard/presentation/frame#framedescriptionschema',
+  },
+  FrameBorderSchema: {
+    schema: StandardPresentationIR.FrameBorderSchema,
+    label: 'FrameBorder',
+    url: '/library/standard/presentation/frame#frameborderschema',
+  },
+  AxesSchema: {
+    schema: StandardPresentationIR.AxesSchema,
+    label: 'Axes',
+    url: '/library/standard/presentation/axes#axesschema',
+  },
+  GridSchema: {
+    schema: StandardPresentationIR.GridSchema,
+    label: 'Grid',
+    url: '/library/standard/presentation/grid#gridschema',
+    localizations: { zh: GridSchemaZhLocalization },
+  },
+  GridLineInputSchema: {
+    schema: StandardPresentationIR.GridLineInputSchema,
+    label: 'GridLineInput',
+    url: '/library/standard/presentation/grid#gridlineinputschema',
+    localizations: { zh: GridLineSchemaZhLocalization },
   },
   LegendSchema: {
     schema: StandardPresentationIR.LegendSchema,
@@ -1159,30 +1198,81 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: GraphIR.GraphSchema,
     label: 'Graph',
   },
+  GroupCaptionSchema: { schema: GraphIR.GroupCaptionSchema, label: 'GroupCaption', url: '/schematic/graph/group' },
+  GroupCaptionTextSchema: {
+    schema: GraphIR.GroupCaptionTextSchema,
+    label: 'GroupCaptionText',
+    url: '/schematic/graph/group',
+  },
+  GroupCaptionSideSchema: {
+    schema: GraphIR.GroupCaptionSideSchema,
+    label: 'GroupCaptionSide',
+    url: '/schematic/graph/group',
+  },
+  GroupCaptionDirectionSchema: {
+    schema: GraphIR.GroupCaptionDirectionSchema,
+    label: 'GroupCaptionDirection',
+    url: '/schematic/graph/group',
+  },
   GroupSchema: {
     schema: GraphIR.GroupSchema,
     label: 'Group',
     url: '/schematic/graph/group',
   },
+  BlockTextSchema: {
+    schema: GraphIR.BlockTextSchema,
+    label: 'BlockText',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeBlockPropsSchema: {
+    schema: GraphIR.CodeBlockPropsSchema,
+    label: 'CodeBlockProps',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeParameterSchema: {
+    schema: GraphIR.CodeParameterSchema,
+    label: 'CodeParameter',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeSignatureSchema: {
+    schema: GraphIR.CodeSignatureSchema,
+    label: 'CodeSignature',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodePropertySchema: {
+    schema: GraphIR.CodePropertySchema,
+    label: 'CodeProperty',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeMethodSchema: {
+    schema: GraphIR.CodeMethodSchema,
+    label: 'CodeMethod',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeLogicSchema: {
+    schema: GraphIR.CodeLogicSchema,
+    label: 'CodeLogic',
+    url: '/schematic/graph/block/schema-reference',
+  },
   BlockSchema: {
     schema: GraphIR.BlockSchema,
     label: 'Block',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockHeaderSchema: {
     schema: GraphIR.BlockHeaderSchema,
     label: 'BlockHeader',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockSectionSchema: {
     schema: GraphIR.BlockSectionSchema,
     label: 'BlockSection',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockRowSchema: {
     schema: GraphIR.BlockRowSchema,
     label: 'BlockRow',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
@@ -1197,6 +1287,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
+    url: '/schematic/graph/relation/schema-reference',
+  },
+  RelationRoleSchema: {
+    schema: GraphIR.RelationRoleSchema,
+    label: 'RelationRole',
+    url: '/schematic/graph/relation/schema-reference#relationroleschema',
+  },
+  RelationKindSchema: {
+    schema: GraphIR.RelationKindSchema,
+    label: 'RelationKind',
+    url: '/schematic/graph/relation/schema-reference#relationkindschema',
+  },
+  RelationDirectionSchema: {
+    schema: GraphIR.RelationDirectionSchema,
+    label: 'RelationDirection',
+    url: '/schematic/graph/relation/schema-reference#relationdirectionschema',
+  },
+  GraphRelationMarkerAppearanceSchema: {
+    schema: GraphIR.GraphRelationMarkerAppearanceSchema,
+    label: 'GraphRelationMarkerAppearance',
+    url: '/schematic/graph/relation/schema-reference#graphrelationmarkerappearanceschema',
   },
   GraphPredicateRefSchema: {
     schema: GraphIR.GraphPredicateRefSchema,
@@ -2166,6 +2277,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/viz/plot/reference/theme#inspection',
   },
 };
+
+for (const [name, localization] of Object.entries(standardSchemaLocalizations)) {
+  if (Object.hasOwn(SCHEMA_REGISTRY, name)) SCHEMA_REGISTRY[name].localizations = { zh: localization };
+}
 
 export function lookupSchema(schema: core.$ZodType): SchemaRegistryEntry | undefined {
   const match = Object.entries(SCHEMA_REGISTRY).find(([, entry]) => entry.schema === schema);

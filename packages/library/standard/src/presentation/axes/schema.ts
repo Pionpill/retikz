@@ -128,7 +128,9 @@ const AxesBaseSchema = CompositeBaseSchema.extend({
   namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('axes').describe('Composite type for static Cartesian reference axes.'),
   ...ScopePropsSchema.shape,
-  origin: AxesOriginSchema.default(() => AxesOriginSchema.parse({})),
+  origin: AxesOriginSchema.default(() => AxesOriginSchema.parse({})).describe(
+    'Shared screen-space origin and optional static origin label for both axes.',
+  ),
   x: AxesAxisSchema.describe('Horizontal axis configuration and its perpendicular grid projection.'),
   y: AxesAxisSchema.describe('Vertical axis configuration and its perpendicular grid projection.'),
 });

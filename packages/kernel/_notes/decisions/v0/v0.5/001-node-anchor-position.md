@@ -15,6 +15,8 @@ keywords: 'Node、Node.position、target.offset、AnchorPositionSchema、NodeSch
 
 ## 决策
 
+`Node.position` 可省略，缺省表示当前局部坐标系的 `[0, 0]`。该默认值由 Core 契约统一拥有，适用于普通节点与布局子项；不表示自动排列、视口中心或 Path 当前点。React、Vanilla 与 Source IR 保留省略状态，Core 解析后的位置始终确定，直接 schema parse 则物化默认值。显式定位保持原有语义，Coordinate 的位置仍必填。
+
 新增只属于 `Node.position` 的结构化 anchor 分支：
 
 ```ts

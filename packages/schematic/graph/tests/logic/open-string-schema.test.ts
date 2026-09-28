@@ -35,11 +35,11 @@ describe('Graph registry-backed open string schemas', () => {
         source: { id: 'source' },
         target: { id: 'target' },
         role: 'custom.relation-role',
-        kind: Graph.RelationKind.UmlAggregation,
+        kind: 'custom.relation-kind',
       }),
     ).toMatchObject({
       role: 'custom.relation-role',
-      kind: 'uml.aggregation',
+      kind: 'custom.relation-kind',
     });
     expect(() => Graph.EntitySchema.parse({ namespace: 'graph', type: 'entity', role: '   ' })).toThrow();
   });
@@ -47,7 +47,13 @@ describe('Graph registry-backed open string schemas', () => {
   it('exposes built-in values without closing Entity and Relation extension keys', () => {
     expectOpenStringSchema(Graph.EntityRoleSchema, Object.values(Graph.EntityRole));
     expectOpenStringSchema(Graph.RelationRoleSchema, Object.values(Graph.RelationRole));
-    expectOpenStringSchema(Graph.RelationKindSchema, Object.values(Graph.RelationKind));
+    expect(toJSONSchema(Graph.RelationKindSchema)).toMatchObject({ type: 'string' });
+    expect(toJSONSchema(Graph.RelationKindSchema)).not.toHaveProperty('anyOf');
+    expect(toJSONSchema(Graph.RelationKindSchema)).not.toHaveProperty('enum');
+    for (const kind of ['', '   ']) expect(Graph.RelationKindSchema.safeParse(kind).success).toBe(false);
+    expect(Graph.RelationKindSchema.parse(JSON.parse(JSON.stringify('custom.relation-kind')))).toBe(
+      'custom.relation-kind',
+    );
   });
 
   it('uses the same hinted schemas in semantic Theme selectors without visual keys', () => {

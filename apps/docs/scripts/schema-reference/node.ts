@@ -15,7 +15,8 @@ export const nodeSchemas = {
       shape:
         '视觉形状名称或带参数引用；省略时继承 Scope.defaults.node.shape，无继承值时使用 rectangle，未注册名称在编译时失败',
       boundary: '连线使用的连接面；可由单个路径端点覆盖，不改变节点外观',
-      position: '笛卡尔、极坐标、相对、偏移、比例或锚点对齐位置；非笛卡尔形式在编译时求值',
+      position:
+        '笛卡尔、极坐标、相对、偏移、比例或锚点对齐位置；省略时为当前局部坐标系的 [0, 0]，非笛卡尔形式在编译时求值',
       rotate: '绕节点中心的旋转角度，正值顺时针',
       text: '正文字符串或行数组，支持行级样式及文字与公式混排；公式需要 lowerTex',
       cornerRadius: '仅 rectangle 使用的顶层圆角半径，单位为用户单位',
@@ -121,8 +122,8 @@ export const writeNodeSchemaReferenceMdx = (outputDirectory: string): void => {
   for (const lang of ['zh', 'en'] as const) {
     const zh = lang === 'zh';
     const intro = zh
-      ? '本页仅收录节点家族拥有的输入 Schema，来自 `@retikz/core`。共享的位置、形状、文字、字体、颜色和几何 Schema 只保留引用名称，不递归展开。React 的 Text 是行级语法糖，没有独立持久化 Schema。首次使用见[基础用法](/kernel/components/node/usage)。\n\nNode 的 style / layout 和标签配置按需提供；字段省略时继续参与继承与编译默认值解析，不代表已写入固定值。显式字段覆盖继承值；label 的实际距离还取决于编译配置 labelDistance。Schema 表中的默认值只展示源码声明的默认。'
-      : 'This page includes only input schemas owned by the node family, exported by `@retikz/core`. Shared position, shape, text, font, paint, and geometry schemas remain named references. React Text is line syntax with no separate persistent schema. Start with [Basic usage](/kernel/components/node/usage).\n\nProvide Node style / layout and label options as needed. Omitted fields remain subject to inheritance and compile defaults; they are not materialized fixed values. Explicit fields override inherited values, and label distance also depends on compile labelDistance. Default columns show only defaults declared by the schema.';
+      ? '本页仅收录节点家族拥有的输入 Schema，来自 `@retikz/core`。共享的位置、形状、文字、字体、颜色和几何 Schema 只保留引用名称，不递归展开。React 的 Text 是行级语法糖，没有独立持久化 Schema。首次使用见[基础用法](/kernel/components/node/usage)。\n\nNode.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schema parse 会物化此默认值。Node 的 style / layout 和标签配置按需提供；字段省略时继续参与继承与编译默认值解析，不代表已写入固定值。显式字段覆盖继承值；label 的实际距离还取决于编译配置 labelDistance。Schema 表中的默认值只展示源码声明的默认。'
+      : 'This page includes only input schemas owned by the node family, exported by `@retikz/core`. Shared position, shape, text, font, paint, and geometry schemas remain named references. React Text is line syntax with no separate persistent schema. Start with [Basic usage](/kernel/components/node/usage).\n\nNode.position is optional and resolves to the local origin [0, 0] in Core; direct schema parsing materializes this default. Provide Node style / layout and label options as needed. Omitted fields remain subject to inheritance and compile defaults; they are not materialized fixed values. Explicit fields override inherited values, and label distance also depends on compile labelDistance. Default columns show only defaults declared by the schema.';
     const sections = Object.entries(nodeSchemas).map(
       ([name, config]) =>
         `## ${name}\n\n<ZodSchema name="${name}"${zh ? ` description=${JSON.stringify(config.description)} descriptions={${JSON.stringify(config.descriptions, null, 2)}}` : ''} />`,

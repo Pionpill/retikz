@@ -12,10 +12,10 @@ import type { InputRectangle } from './rectangle';
 import { RectangleInputEmbedAdapter } from './rectangle';
 
 export * from './rectangle';
-import type { InputRegularPolygon } from './regular-polygon';
-import { RegularPolygonInputEmbedAdapter } from './regular-polygon';
+import type { InputPolygon } from './polygon';
+import { PolygonInputEmbedAdapter } from './polygon';
 
-export * from './regular-polygon';
+export * from './polygon';
 import type { InputStar } from './star';
 import { StarInputEmbedAdapter } from './star';
 
@@ -51,10 +51,10 @@ export const shape = Object.freeze({
     ...(input.id === undefined ? {} : { id: input.id }),
     props: input,
   }),
-  /** 创建 RegularPolygon，显式身份同时用于 embed 与最终路径 */
-  regularPolygon: (input: InputRegularPolygon): InputEmbed<InputRegularPolygon> => ({
+  /** 创建 Polygon，显式身份同时用于 embed 与最终路径 */
+  polygon: (input: InputPolygon): InputEmbed<InputPolygon> => ({
     type: 'embed',
-    kind: RegularPolygonInputEmbedAdapter.kind,
+    kind: PolygonInputEmbedAdapter.kind,
     ...(input.id === undefined ? {} : { id: input.id }),
     props: input,
   }),

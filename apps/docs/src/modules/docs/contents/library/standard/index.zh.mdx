@@ -1,37 +1,53 @@
 ---
 title: Standard · 标准包
-description: 用标准组件组合网格、坐标轴、表面、图例与几何图形。
+description: 用现成组件组合几何轮廓、结构化内容、参考线与图形说明
 ---
 
-Standard 为常见绘图任务提供标准组件。你可以为一张图放置参考网格，用表面包裹内容，再添加说明符号的图例；每个组件以自己的参数描述一个完整任务。
+Standard 提供通用绘图组件：形状组件把几何参数变成轮廓，容器组件组织列表与键值内容，展示组件补充参考线、分组边界和图例。它们可以与 Kernel 的 Node、Path 和 Scope 放在同一张图中。
 
 ## 职责一览
 
-| 入口                   | 用途                                 |
-| ---------------------- | ------------------------------------ |
-| 三包的 `/presentation` | 网格、坐标轴、分组框、表面与图例     |
-| 三包的 `/container`    | 列表、映射及后续结构化内容容器       |
-| 三包的 `/shape`        | 圆、矩形、正多边形、星形、圆弧与扇形 |
+| 家族                | 职责                                                   | 何时阅读                           |
+| ------------------- | ------------------------------------------------------ | ---------------------------------- |
+| shape · 形状        | Circle、Ellipse、Rectangle、Polygon、Star、Arc、Sector | 已知中心、尺寸或角度，需要独立轮廓 |
+| container · 容器    | List 与 Map 的单元格、索引和嵌套内容                   | 需要表达顺序或键值关系             |
+| presentation · 展示 | Grid、Axes、Frame、Surface 与 Legend                   | 为已有图形补充参考、外观和含义     |
+
+## 将组件组合成一张图
+
+下面把 Grid 与 Axes 放在同一个 Layout 中：网格提供等距参考，坐标轴提供方向。两者保留各自参数，修改格距无需重写坐标轴。
+
+<ComponentPreview files="/library/standard/presentation/presentation-composition" />
+
+这两个组件都使用普通绘图坐标放置，不改变其它图元的坐标系。需要内容背景时再包一层 Surface，需要符号说明时再添加 Legend；每个组件承担自己的绘图任务。
 
 ## 安装与使用
 
-React 项目安装作者入口及宿主：
+React 项目安装组件入口与宿主：
 
 <PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
 
-无需 React 时安装 `@retikz/standard-vanilla` 与 `@retikz/vanilla`，并按所选组件使用对应子入口。[快速开始](/library/standard/get-start)展示两种入口绘制相同网格的完整步骤。
+无需 React 时安装 Vanilla 入口与宿主：
 
-需要排列多个内容时阅读 [Layout](/library/layout)；需要可选节点形状、箭头、裁剪或流带时阅读 [Extension](/library/extension)。
+<PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
+
+组件从对应包的 `/shape`、`/container` 或 `/presentation` 子入口导入。需要直接操作 JSON 契约或 Definition 时，显式安装 `@retikz/standard` 并使用相同家族子入口。[快速开始](/library/standard/get-start)提供安装、挂载与 SVG 输出的完整步骤；每个组件页进一步对照 React + JSX、React + IR、Vanilla API 与 Vanilla + IR。
+
+## 选择与边界
+
+首次接入从快速开始进入；已有具体图形目标时，直接选择下面的组件家族。组件页先介绍可运行的接入方式，再展开使用场景、限制、原理与参考，查参数不需要先读内部实现。
+
+Standard 不处理数据 domain 或业务含义。数据可视化使用 [Plot](/viz/plot)，通用排列使用 [Layout](/library/layout)，可选节点形状、箭头和裁剪定义使用 [Extension](/library/extension)。
 
 ## 章节内容
 
 <LinkedSections
   items={[
-    { title: '简介', description: '简介', url: '/library/standard/introduction' },
-    { title: '快速开始', description: '快速开始', url: '/library/standard/get-start' },
-    { title: '更新日志', description: '更新日志', url: '/library/standard/changelog' },
-    { title: '展示', description: '参考网格、坐标轴、分组外观与图例', url: '/library/standard/presentation' },
-    { title: '容器', description: '按顺序或键值组织结构化内容', url: '/library/standard/container' },
-    { title: '形状', description: '用几何参数组合独立轮廓', url: '/library/standard/shape' },
+    { title: '简介', description: '判断 Standard 是否适合当前绘图任务', url: '/library/standard/introduction' },
+    { title: '快速开始', description: '安装并绘制第一个可见网格', url: '/library/standard/get-start' },
+    { title: '更新日志', description: '核对版本变化与已交付能力', url: '/library/standard/changelog' },
+    { title: 'shape · 形状', description: '用几何参数绘制独立轮廓', url: '/library/standard/shape' },
+    { title: 'container · 容器', description: '按顺序或键值组织结构化内容', url: '/library/standard/container' },
+    { title: 'presentation · 展示', description: '添加参考轴、分组外观与图例', url: '/library/standard/presentation' },
   ]}
 />

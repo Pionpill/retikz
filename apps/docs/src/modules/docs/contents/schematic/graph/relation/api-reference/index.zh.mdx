@@ -1,0 +1,12 @@
+---
+title: API 参考
+description: 查询 Relation 的组件、编写入口、Source 工厂与语义 Definition。
+---
+
+本页从公开导出与 JSDoc 生成。用法见[基础用法](/schematic/graph/relation/usage)，持久化字段见 [Schema 参考](/schematic/graph/relation/schema-reference)，装配过程见[自定义用法](/schematic/graph/relation/custom)。
+
+`InputRelation` 的公共字段来自 `RelationCreateOptions`，但 source / target 接受 id 字符串，route / way 使用互斥 union。生成表保留这种组合类型；完整的共有字段在 `IRGraphRelation` 中查询。React 另加可选 Step children，并排除输入判别字段 type。
+
+Definition 属于运行时装配，不能写入 Relation IR。React / Vanilla 通过 Graph 注入定义；Relation 只引用已注册的 key。结构 recipe 与 marker appearance 是不同契约：shape / 长宽属于前者，颜色 / 不透明度属于后者。
+
+{/* @include schematic/graph/relation/api-reference/generated */}

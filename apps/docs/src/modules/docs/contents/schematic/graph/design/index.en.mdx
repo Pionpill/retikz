@@ -1,0 +1,109 @@
+---
+title: Design Philosophy
+description: Understand how Graph builds structural semantics on drawing capabilities and where its responsibility ends and Diagram begins.
+---
+
+A rectangle in a structural diagram can represent an activity, a participant, or a resource. A line can represent flow, dependency, or generalization. Graph turns these meanings into declarative, reusable drawing conventions: describe the semantics of objects and relationships, and the components select their structure and default appearance.
+
+Graph serves both drawing authors who need precise positioning and higher-level packages such as Diagram that orchestrate complete diagrams. It supplies foundational components; it does not compute an entire layout from relationship data.
+
+## Reuse drawing capabilities, add semantic meaning
+
+Most Graph drawing capabilities come directly from Kernel, with a small amount of composition built on Standard and Layout. Graph adds semantic contracts, default structures, and component composition, rather than another geometry engine, Scene, or renderer. A Scene is the drawable result of compilation, consumed by backends such as SVG and Canvas.
+
+| Graph expression | Reused capability                               | Added meaning                                         |
+| ---------------- | ----------------------------------------------- | ----------------------------------------------------- |
+| Entity           | Core Node shapes, text, and boundaries          | An object's role and default structure                |
+| Relation         | Core Path geometry, endpoints, and markers      | Relationship role, direction, and default line style  |
+| Group            | Scope and Standard Surface                      | A visible boundary and caption around related content |
+| Block            | Standard Surface and Layout content arrangement | Headings, sections, and entries inside one object     |
+
+For example, an Entity with `role="gateway"` uses the default gateway shape, while a Relation with `role="generalization"` uses the endpoint conventions of generalization. The final drawing still consists of nodes and paths. Rendering backends do not need to understand gateways or generalization, so Graph can reuse existing text, theme, boundary, and rendering capabilities.
+
+Dashed arrows below mean **uses capabilities from the lower layer**, not execution order. Diagram uses Graph's semantic components; Graph reuses drawing and composition capabilities underneath.
+
+<ComponentPreview files="graph-layers" type="illustration" hideCode size="lg" />
+
+## Semantics determine structure; styles adjust appearance
+
+`role` answers “what is it?” and `kind` answers “which domain-specific category within this role does it belong to?” Themes and instance styles then control its appearance.
+
+| Declaration              | Responsibility                               | Example                                   |
+| ------------------------ | -------------------------------------------- | ----------------------------------------- |
+| role                     | General semantics and default structure      | activity, gateway; flow, dependency       |
+| kind                     | A user-registered domain category            | A custom `workflow.approval`              |
+| Themes, rules, and style | Colors, outlines, text, and other appearance | A thicker outline for approval activities |
+
+Neither Entity nor Relation provides a built-in catalog of kinds. Define and register a domain name before using it through Graph context; writing a kind string alone does not create a capability. Built-in and custom roles also share the same definition and resolution mechanism, so custom objects need no separate rendering path.
+
+The example keeps both objects' identities, text, and positions fixed. Change the Entity role to inspect the shape on the right; change the Relation role to inspect its line and arrow; toggle the thicker outline while preserving semantics and position.
+
+<ComponentPreview files="semantic-roles" size="md" />
+
+Semantics are more than colors. Entity roles provide node structure; Relation roles provide direction and endpoint conventions, and registered Relation kinds can refine directional styles. A kind is not an arbitrary shape name, and an instance style does not turn an activity into a gateway. Extend definitions for domain categories; use themes or rules for consistent appearance.
+
+## Foundational components compose freely
+
+Graph is an optional context for registered definitions, defaults, rules, and themes, rather than a closed database of members. Members using built-in capabilities can also live in an existing drawing host. Add the appropriate Graph context when custom registration is needed.
+
+Relation uses public node-target references; its endpoints do not have to be Entity components. Here, an ordinary Node connects directly to an Entity. Group provides the business boundary, and Block organizes order details within its own boundary.
+
+```text
+Graph
+├── Group
+│   ├── Node
+│   ├── Entity
+│   └── Relation
+├── Block
+│   ├── BlockHeader
+│   └── BlockRow
+└── Relation
+```
+
+<ComponentPreview files="open-composition" size="sm" />
+
+The example explicitly supplies node coordinates and the translation of the whole Block. Group encloses already positioned content without computing its positions. Block arranges its own heading and entries without laying out neighboring nodes. Entity's `group` classification field is also distinct from a Group container: classification can drive shared appearance, while the container establishes a visible boundary.
+
+This open composition supports gradual adoption. Ordinary drawing nodes do not all need to become Entity components, and Graph does not need to take over an existing layout. React, Vanilla, and directly authored Source IR share semantic contracts. Persistable Source contains data only; functions in registered definitions remain in runtime context.
+
+## The boundary between Graph and Diagram
+
+“Where is the node?” and “What does it mean?” are different questions. Graph accepts determined positions and relationship paths. Diagram orchestrates complete diagrams on top of these components—for example, Flow computes layout and routes, then lets Graph express and draw the result.
+
+| What you need                                                       | Responsible layer                |
+| ------------------------------------------------------------------- | -------------------------------- |
+| Draw participants, activities, and dependencies at given positions  | Graph                            |
+| Organize a block's heading and contents                             | Block, reusing Layout            |
+| Compute node positions and connection routes from relationship data | A Diagram type such as Flow      |
+| Draw a compiled scene as SVG or Canvas                              | The underlying rendering backend |
+
+Graph provides neither automatic whole-graph layout nor obstacle-avoiding routing. A Relation can connect endpoints without an explicit path, but that does not mean it will avoid intervening nodes. Supply positions and paths for a fixed composition; start with the appropriate Diagram type when generating an entire layout from data.
+
+This boundary keeps Graph a composable foundation. Higher layers can choose different layout strategies or preserve authored positions without changing object and relationship semantics.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Quick Start',
+      description: 'Draw your first structural diagram at given positions',
+      url: '/schematic/graph/get-start',
+    },
+    {
+      title: 'Custom Entity Usage',
+      description: 'Define and register domain roles and kinds',
+      url: '/schematic/graph/entity/custom',
+    },
+    {
+      title: 'Relation Basic Usage',
+      description: 'Control direction, endpoints, and explicit paths',
+      url: '/schematic/graph/relation/usage',
+    },
+    {
+      title: 'Flow Basic Usage',
+      description: 'Generate an automatically laid-out flowchart from relationships',
+      url: '/schematic/diagram/flow/basic',
+    },
+  ]}
+/>
