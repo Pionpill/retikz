@@ -113,6 +113,8 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
 
 ## API Reference
 
+#### PlotAxisProps
+
 | Prop          | Type                          | Default       | Description                                                                                                                                    |
 | ------------- | ----------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dimension`   | `PlotAxisProps['dimension']`  | —             | Dimension to explain: Cartesian / polar use x / y; it must belong to the current coordinate system                                             |
@@ -127,7 +129,7 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
 | `layer?`      | `PlotAxisProps['layer']`      | axis layer    | Override the semantic layer of the axis scope without changing the grid's background layer                                                     |
 | `id?`         | `PlotAxisProps['id']`         | —             | Optional guide handle used to identify the axis and its derived grid consistently                                                              |
 
-### Key object fields
+The nested `PlotAxisProps` fields are:
 
 | Object field         | Type                                                | Default                     | Purpose                                                                                                                |
 | -------------------- | --------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |

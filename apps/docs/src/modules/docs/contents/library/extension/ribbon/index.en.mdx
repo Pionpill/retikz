@@ -208,7 +208,7 @@ The responsibilities in one compile are:
 
 ## API reference
 
-### Public exports
+Ribbon's public exports and their uses are:
 
 | Export                                         | Use                                                                                 |
 | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -219,7 +219,7 @@ The responsibilities in one compile are:
 | `RibbonPathSchema` / `RibbonPathOptionsSchema` | Validate the complete Ribbon Path subject and `kindOptions`                         |
 | `IRRibbonPath` / `IRRibbonPathOptions`         | Schema-derived complete Path and options types                                      |
 
-### Path host and `kindOptions`
+#### IRRibbonPath
 
 | Field                         | Type                                          | Description                                                          |
 | ----------------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
@@ -231,9 +231,13 @@ The responsibilities in one compile are:
 
 Ribbon options include `mode`, `width`, `start`, `end`, `interpolation`, `align`, `samples`, `sampling`, `upper`, and `lower`. `RibbonPathOptionsSchema` is the authority for complete fields and cross-field constraints.
 
-### Profile contract
+#### RibbonWidthProfileDefinitionInput
 
-`RibbonWidthProfileDefinitionInput` contains `name`, an optional `paramsSchema`, and `widthAt`; `RibbonWidthProfileContext` supplies normalized `offset`, centerline `length`, and validated `params`. These functions belong only to runtime assembly and never enter persisted IR.
+`RibbonWidthProfileDefinitionInput` contains `name`, an optional `paramsSchema`, and `widthAt`.
+
+#### RibbonWidthProfileContext
+
+`RibbonWidthProfileContext` supplies normalized `offset`, centerline `length`, and validated `params`. These functions belong only to runtime assembly and never enter persisted IR.
 
 ## Related
 

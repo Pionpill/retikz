@@ -182,16 +182,7 @@ A custom Layout Definition must declare each supported mode in `capabilities.rou
 
 ## API Reference
 
-### Routing options
-
-| `routing.kind` | Behavior                                      | Rounding                |
-| -------------- | --------------------------------------------- | ----------------------- |
-| `straight`     | Straight line; built-in default               | No `cornerRadius`       |
-| `orthogonal`   | Orthogonal polyline based on layout direction | Optional `cornerRadius` |
-| `-\|`          | Horizontal then vertical from source          | Optional `cornerRadius` |
-| `\|-`          | Vertical then horizontal from source          | Optional `cornerRadius` |
-
-### React authoring
+The public React authoring components and their props are summarized below:
 
 | Component       | Core props                                                                                                                                                                                       | Default                                                                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -203,13 +194,24 @@ A custom Layout Definition must declare each supported mode in `capabilities.rou
 | `FlowRelation`  | `source`, `target`, `label?`, `role?`, `kind?`, `status?`, `direction?`, `group?`, `style?`, `sourceMarker?`, `targetMarker?`, `labelTextForeground?`, `labelFont?`, `labelOpacity?`, `routing?` | role=`flow`                                                                                               | Ordered root relation without an independent id; endpoints are Entities or Groups, never Layouts. `label` reuses Core TextBlock, supports `\n` and line arrays, and must contain a non-blank text or TeX run. `group` reuses Graph visual color grouping; path appearance lives in `style`, while markers, label formatting, and routing are root fields                                                                                                                                                        |
 | `FlowRelations` | `items: ReadonlyArray<readonly [string, string] \| InputFlowRelation>`<br />`complete?: boolean`                                                                                                 | complete=`false`                                                                                          | Declares Relations at the Flow root in array order. It is additive by default; `complete` makes it the root's sole complete Relation list                                                                                                                                                                                                                                                                                                                                                                       |
 
-### Public entries
+These entries provide Direct IR, React, and Vanilla authoring respectively:
 
 | Entry                          | Main exports                                                                                                      | Use                                    |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | `@retikz/diagram/flow`         | `FlowDiagramSchema`, `FlowDiagramArtifactSchema`, `createFlowDiagramProviderContribution`, `getFlowLayoutCatalog` | Direct IR, compile, and tool discovery |
 | `@retikz/diagram-react/flow`   | `FlowDiagram`, `FlowEntities`, `FlowEntity`, `FlowGroup`, `FlowLayout`, `FlowRelations`, `FlowRelation`           | JSX authoring                          |
 | `@retikz/diagram-vanilla/flow` | `flowDiagram`, `normalizeFlowDiagram`, `FlowDiagramInputEmbedAdapter`                                             | Vanilla authoring and embed            |
+
+#### routing
+
+The `FlowDiagram` `routing.kind` values are:
+
+| `routing.kind` | Behavior                                      | Rounding                |
+| -------------- | --------------------------------------------- | ----------------------- |
+| `straight`     | Straight line; built-in default               | No `cornerRadius`       |
+| `orthogonal`   | Orthogonal polyline based on layout direction | Optional `cornerRadius` |
+| `-\|`          | Horizontal then vertical from source          | Optional `cornerRadius` |
+| `\|-`          | Vertical then horizontal from source          | Optional `cornerRadius` |
 
 ## Related
 

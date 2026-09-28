@@ -208,7 +208,7 @@ Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Cor
 
 ## API 参考
 
-### 公开导出
+Ribbon 的公开导出及用途如下：
 
 | 导出                                           | 用途                                                                        |
 | ---------------------------------------------- | --------------------------------------------------------------------------- |
@@ -219,7 +219,7 @@ Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Cor
 | `RibbonPathSchema` / `RibbonPathOptionsSchema` | 校验完整 Ribbon Path subject 与 `kindOptions`                               |
 | `IRRibbonPath` / `IRRibbonPathOptions`         | 从 Extension schema 派生的完整 Path 与 options 类型                         |
 
-### Path host 与 `kindOptions`
+#### IRRibbonPath
 
 | 字段                          | 类型                                          | 说明                                                             |
 | ----------------------------- | --------------------------------------------- | ---------------------------------------------------------------- |
@@ -231,9 +231,13 @@ Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Cor
 
 `kindOptions` 的核心字段包括：`mode`、`width`、`start`、`end`、`interpolation`、`align`、`samples`、`sampling`、`upper` 和 `lower`。完整字段与跨字段约束以 `RibbonPathOptionsSchema` 为准。
 
-### Profile 契约
+#### RibbonWidthProfileDefinitionInput
 
-`RibbonWidthProfileDefinitionInput` 包含 `name`、可选 `paramsSchema` 与 `widthAt`；`RibbonWidthProfileContext` 向函数提供归一化 `offset`、中心线 `length` 和校验后的 `params`。这些函数只属于当前运行时装配，不进入持久化 IR。
+`RibbonWidthProfileDefinitionInput` 包含 `name`、可选 `paramsSchema` 与 `widthAt`。
+
+#### RibbonWidthProfileContext
+
+`RibbonWidthProfileContext` 向函数提供归一化 `offset`、中心线 `length` 和校验后的 `params`。这些函数只属于当前运行时装配，不进入持久化 IR。
 
 ## 相关
 

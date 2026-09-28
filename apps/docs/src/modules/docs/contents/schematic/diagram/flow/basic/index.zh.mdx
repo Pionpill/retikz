@@ -184,16 +184,7 @@ Layout callback 必须同步返回 JSON-safe plain data，并为每个 authored 
 
 ## API 参考
 
-### 路由配置
-
-| `routing.kind` | 行为                   | 圆角                  |
-| -------------- | ---------------------- | --------------------- |
-| `straight`     | 直线；内置默认         | 不接受 `cornerRadius` |
-| `orthogonal`   | 按布局方向生成正交折线 | 可选 `cornerRadius`   |
-| `-\|`          | 从 source 先水平后垂直 | 可选 `cornerRadius`   |
-| `\|-`          | 从 source 先垂直后水平 | 可选 `cornerRadius`   |
-
-### React authoring
+React authoring 的公开组件与属性摘要如下：
 
 | 组件            | 核心属性                                                                                                                                                                                         | 默认值                                                                               | 描述                                                                                                                                                                                                                                                                                                                                                      |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -205,13 +196,24 @@ Layout callback 必须同步返回 JSON-safe plain data，并为每个 authored 
 | `FlowRelation`  | `source`、`target`、`label?`、`role?`、`kind?`、`status?`、`direction?`、`group?`、`style?`、`sourceMarker?`、`targetMarker?`、`labelTextForeground?`、`labelFont?`、`labelOpacity?`、`routing?` | role=`flow`                                                                          | 根级有序关系，无独立 id；endpoint 可为 Entity 或 Group，不能为 Layout。`label` 复用 Core TextBlock，支持 `\n` 和行数组，且至少须有一条非空文本或 TeX run；`group` 复用 Graph 的视觉颜色分组；路径外观放在 `style`，marker、标签格式与 routing 直接放在关系根                                                                                              |
 | `FlowRelations` | `items: ReadonlyArray<readonly [string, string] \| InputFlowRelation>`<br />`complete?: boolean`                                                                                                 | complete=`false`                                                                     | 在 Flow 根按数组顺序声明 Relation。默认可与其它 Relation marker 追加混用；`complete` 表示根级唯一完整 Relation 清单                                                                                                                                                                                                                                       |
 
-### 公开入口
+以下入口分别提供 Direct IR、React 与 Vanilla authoring：
 
 | 入口                           | 主要导出                                                                                                          | 用途                       |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `@retikz/diagram/flow`         | `FlowDiagramSchema`、`FlowDiagramArtifactSchema`、`createFlowDiagramProviderContribution`、`getFlowLayoutCatalog` | Direct IR、编译与工具发现  |
 | `@retikz/diagram-react/flow`   | `FlowDiagram`、`FlowEntities`、`FlowEntity`、`FlowGroup`、`FlowLayout`、`FlowRelations`、`FlowRelation`           | JSX authoring              |
 | `@retikz/diagram-vanilla/flow` | `flowDiagram`、`normalizeFlowDiagram`、`FlowDiagramInputEmbedAdapter`                                             | Vanilla authoring 与 embed |
+
+#### routing
+
+`FlowDiagram` 的 `routing.kind` 可选值如下：
+
+| `routing.kind` | 行为                   | 圆角                  |
+| -------------- | ---------------------- | --------------------- |
+| `straight`     | 直线；内置默认         | 不接受 `cornerRadius` |
+| `orthogonal`   | 按布局方向生成正交折线 | 可选 `cornerRadius`   |
+| `-\|`          | 从 source 先水平后垂直 | 可选 `cornerRadius`   |
+| `\|-`          | 从 source 先垂直后水平 | 可选 `cornerRadius`   |
 
 ## 相关
 

@@ -76,7 +76,7 @@ Field parsing normalizes individual values. It does not reorder rows, change row
 
 The following contracts are exported from the `@retikz/data` package root.
 
-### `FieldFormatDefinition`
+#### `FieldFormatDefinition`
 
 `defineFieldFormat(definition)` accepts and returns the same `FieldFormatDefinition`.
 
@@ -86,12 +86,13 @@ The following contracts are exported from the `@retikz/data` package root.
 | `impliedType` | <ApiValues name="DataFieldType" />   | Measurement type used when the model omits `type`                         |
 | `parse`       | `(raw: unknown) => ParsedFieldValue` | Converts a raw value to a canonical string, finite number, or `undefined` |
 
-### `ResolveField` and `FieldResolution`
+#### `ResolveField`
 
-| Export            | Type                                                                                                                     | Description                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| `ResolveField`    | `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution \| undefined`                                  | Returns an override for one logical field; `undefined` falls back   |
-| `FieldResolution` | `FieldResolution`<br />- `type?:` <ApiValues name="DataFieldType" /><br />- `parse?: (raw: unknown) => ParsedFieldValue` | Runtime override<br />- Final measurement type<br />- Custom parser |
+`ResolveField` is `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution | undefined`. It returns an override for one logical field; `undefined` falls back to the standard path.
+
+#### `FieldResolution`
+
+`FieldResolution` is a runtime override for one field: `type?` supplies the final measurement type <ApiValues name="DataFieldType" />, and `parse?: (raw: unknown) => ParsedFieldValue` supplies a custom parser.
 
 <SourceLinks
   sources={[

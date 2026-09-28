@@ -98,6 +98,8 @@ Categorical color legends accept overlaid `symbols`. For example, `symbols={[{ k
 
 ## API Reference
 
+#### PlotLegendProps
+
 | Prop          | Type                                | Default       | Description                                                                                                                                                                   |
 | ------------- | ----------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `channel`     | `PlotLegendProps['channel']`        | —             | Non-positional channel to explain; built-ins are color / size / opacity / shape, and registered custom channels work the same way                                             |
@@ -111,7 +113,7 @@ Categorical color legends accept overlaid `symbols`. For example, `symbols={[{ k
 | `style?`      | `PlotLegendProps['style']`          | theme legend  | Local visual tokens for swatch / ramp size, gaps, and text. Size symbols default to `symbolFit:'fit'` inside the `symbolSize` box; use `'preserve'` to retain rendered radius |
 | `layer?`      | `PlotLegendProps['layer']`          | legend layer  | Override the semantic layer of the whole legend scope                                                                                                                         |
 
-### Tick support matrix
+Support for `PlotLegendProps['ticks']` by legend form:
 
 | PlotLegend form                          | `ticks` support                            | `tickLabels.format` |
 | ---------------------------------------- | ------------------------------------------ | ------------------- |
@@ -119,7 +121,7 @@ Categorical color legends accept overlaid `symbols`. For example, `symbols={[{ k
 | size                                     | `count` only; 3 representatives by default | ignored             |
 | Categorical or binned swatches, shape    | ignored                                    | ignored             |
 
-### Key object fields
+The nested `PlotLegendProps` fields are:
 
 | Object field          | Type                                             | Default            | Purpose                                                      |
 | --------------------- | ------------------------------------------------ | ------------------ | ------------------------------------------------------------ |
