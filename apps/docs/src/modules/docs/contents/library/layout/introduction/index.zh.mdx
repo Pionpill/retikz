@@ -32,7 +32,7 @@ description: Layout 用容器安排子图形的位置和尺寸，提供一维弹
 
 `@retikz/react` 的 `Layout` 是承载和渲染整张图的根容器；`@retikz/layout-react` 的 `FlexLayout` 等组件是放在其中的排版容器。通常两者配合使用。
 
-`LayoutItem` 为一个子图形声明布局约束。例如，在 Flex 中设置 `grow` 可以让该子项获得剩余空间。容器根据测量尺寸与约束求解，文字测量仍受字体及字体加载状态影响。
+`FlexLayoutItem`、`GridLayoutItem` 和 `OverlayLayoutItem` 分别为对应容器中的一个子图形声明布局约束。例如，在 Flex 中设置 `grow` 可以让该子项获得剩余空间。容器根据测量尺寸与约束求解，文字测量仍受字体及字体加载状态影响。
 
 ## 选择入口
 

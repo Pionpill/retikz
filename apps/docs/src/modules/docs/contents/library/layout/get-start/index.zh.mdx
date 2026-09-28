@@ -24,23 +24,23 @@ description: 安装 Layout，用 React 或 Vanilla 将两个图形排成一行�
 ```tsx
 import type { FC } from 'react';
 import { Layout, Node } from '@retikz/react';
-import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
 
 export const Example: FC = () => (
   <Layout>
     <FlexLayout gap={{ column: 12, row: 0 }}>
-      <LayoutItem kind="flex">
-        <Node shape="circle" position={[0, 0]} layout={{ minimumSize: 32 }} />
-      </LayoutItem>
-      <LayoutItem kind="flex">
-        <Node position={[0, 0]} layout={{ minimumSize: 32 }} />
-      </LayoutItem>
+      <FlexLayoutItem>
+        <Node shape="circle" layout={{ minimumSize: 32 }} />
+      </FlexLayoutItem>
+      <FlexLayoutItem>
+        <Node layout={{ minimumSize: 32 }} />
+      </FlexLayoutItem>
     </FlexLayout>
   </Layout>
 );
 ```
 
-结果是一个圆形和一个矩形沿水平方向排列，间隔 12 个用户单位。每个 `LayoutItem` 包含一个图形；它们虽然都从局部 `[0, 0]` 开始，最终位置由 Flex 容器分配。
+结果是一个圆形和一个矩形沿水平方向排列，间隔 12 个用户单位。每个 `FlexLayoutItem` 包含一个图形；它们虽然都从局部 `[0, 0]` 开始，最终位置由 Flex 容器分配。
 
 将上面的组件保存为 `Example.tsx`，在已有 React 应用入口挂载（HTML 中准备 `<div id="root"></div>`）：
 
@@ -69,11 +69,11 @@ const input = scene({
       children: [
         {
           kind: 'flex',
-          child: node({ id: 'circle', shape: 'circle', position: [0, 0], layout: { minimumSize: 32 } }),
+          child: node({ id: 'circle', shape: 'circle', layout: { minimumSize: 32 } }),
         },
         {
           kind: 'flex',
-          child: node({ id: 'box', position: [0, 0], layout: { minimumSize: 32 } }),
+          child: node({ id: 'box', layout: { minimumSize: 32 } }),
         },
       ],
     }),
@@ -85,23 +85,23 @@ console.log(svg);
 
 `svg` 是可保存为 `.svg` 文件或交给页面宿主展示的完整 SVG 字符串。helper 创建普通输入，`adapters` 让 Vanilla 识别对应的嵌入项并收集其能力依赖；省略 adapter 会使输入无法解析。
 
-两端默认方向都是水平行（`direction: 'row'`）。`LayoutItem kind="flex"` 选择 Flex 子项约束，每项包含一个可绘制子图形；`minimumSize: 32` 同时约束最小宽和最小高。未指定 `shape` 的 Node 默认是矩形。
+两端默认方向都是水平行（`direction: 'row'`）。`FlexLayoutItem` 选择 Flex 子项约束，每项包含一个可绘制子图形；`minimumSize: 32` 同时约束最小宽和最小高。未指定 `shape` 的 Node 默认是矩形。
 
 ## 宿主如何识别布局
 
-| 粒度     | 公开入口                                                                  | 用途                                              |
-| -------- | ------------------------------------------------------------------------- | ------------------------------------------------- |
-| 单一定义 | `FlexLayoutDefinition`、`GridLayoutDefinition`、`OverlayLayoutDefinition` | 只向 Core 注册一个布局复合组件                    |
-| React    | `FlexLayout`、`GridLayout`、`OverlayLayout`、`LayoutItem`                 | 从组件树生成规范 IR，并向外层 `<Layout>` 贡献定义 |
-| Vanilla  | `LayoutInputEmbedAdapters`                                                | 让 Scene、挂载与 SSR 入口识别三种布局嵌入项       |
+| 粒度     | 公开入口                                                                                                     | 用途                                              |
+| -------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| 单一定义 | `FlexLayoutDefinition`、`GridLayoutDefinition`、`OverlayLayoutDefinition`                                    | 只向 Core 注册一个布局复合组件                    |
+| React    | `FlexLayout`、`GridLayout`、`OverlayLayout` 及各自的 `FlexLayoutItem`、`GridLayoutItem`、`OverlayLayoutItem` | 从组件树生成规范 IR，并向外层 `<Layout>` 贡献定义 |
+| Vanilla  | `LayoutInputEmbedAdapters`                                                                                   | 让 Scene、挂载与 SSR 入口识别三种布局嵌入项       |
 
 将一个或多个布局 Definition 直接放入 `CompileOptions.composites`。React 与 Vanilla 适配器生成相同的 Layout IR，并贡献所需的 Definition；adapter 便利数组不成为 Core compile preset
 
 ### React
 
-`@retikz/layout-react` 的三个容器都是可嵌入 Tier 2 组件。容器直属 children 必须是匹配 `kind` 的 `LayoutItem`；Fragment 和数组会透明展开，但普通 JSX 节点不能绕过子项语义。
+`@retikz/layout-react` 的三个容器都是可嵌入 Tier 2 组件。容器直属 children 必须分别是 `FlexLayoutItem`、`GridLayoutItem` 或 `OverlayLayoutItem`；组件身份决定所属布局，不传 `kind`；Fragment 和数组会透明展开，但普通 JSX 节点不能绕过子项语义。
 
-每个 `LayoutItem` 必须在 `children` 与 `ir` 中二选一，并最终生成恰好一个 `IRChild`。可选的 React `itemKey` 会写入规范 JSON 的 `key`；省略时 Source IR 不含 `key`，Layout 在 solver 前按 source index 生成容器局部有效 key。它不读取 React 保留的 `key`。嵌套 Layout 布局可以继续贡献同一布局家族，外部数据集或其它 Tier 2 运行时贡献则应由外层宿主负责。
+每个布局子项必须在 `children` 与 `ir` 中二选一，并最终生成恰好一个 `IRChild`。可选的 React `itemKey` 会写入规范 JSON 的 `key`；省略时 Source IR 不含 `key`，Layout 在 solver 前按 source index 生成容器局部有效 key。它不读取 React 保留的 `key`。嵌套 Layout 布局可以继续贡献同一布局家族，外部数据集或其它 Tier 2 运行时贡献则应由外层宿主负责。
 
 React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 Definition 贡献给外层 `<Layout>`，由宿主统一编译和渲染；需要读取产物时使用外层的产物观察入口。
 

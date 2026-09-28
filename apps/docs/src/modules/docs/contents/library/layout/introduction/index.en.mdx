@@ -30,7 +30,7 @@ This example uses `LayoutInspectLayout` from `@retikz/layout-react/inspect` to i
 
 `Layout` from `@retikz/react` hosts and renders the whole diagram. Components such as `FlexLayout` from `@retikz/layout-react` arrange content inside that root. They are normally used together.
 
-`LayoutItem` declares constraints for one child graphic. For example, `grow` lets a Flex item receive remaining space. Containers solve from measured sizes and constraints; text measurement still depends on fonts and their loading state.
+`FlexLayoutItem`, `GridLayoutItem`, and `OverlayLayoutItem` declare constraints for one child graphic in their respective containers. For example, `grow` lets a Flex item receive remaining space. Containers solve from measured sizes and constraints; text measurement still depends on fonts and their loading state.
 
 ## Choose an entry
 
