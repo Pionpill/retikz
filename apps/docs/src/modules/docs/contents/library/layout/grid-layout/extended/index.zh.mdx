@@ -1,0 +1,143 @@
+---
+title: 扩展用法
+description: 组合尺寸约束、放置策略与视觉裁切
+---
+
+在[基础用法](/library/layout/grid-layout/usage)的容器与子项声明之上，本页组合约束并解释结果。每节固定一组观察对象，只调整当前 API。
+
+## 组合内容测量与轨道上下界
+
+内容轨道根据文字或图形需要的空间求宽度，有界轨道则限制宽度的变化范围。两者可以在同一容器中配合使用。
+
+| 属性                            | 可用值                                                                | 解释                                                                 |
+| ------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `columns[].kind`                | `fixed`, `content`, `fraction`, `minmax`                              | 选择轨道的尺寸策略；本例第一列用 `content`，第二列用 `minmax`        |
+| `columns[].mode`                | `minimum`, `natural`                                                  | 内容轨道的 `mode`：读取最小尺寸或自然尺寸贡献                        |
+| `columns[].min`                 | `fixed` 或 `content` 轨道                                             | 有界轨道的 `min`：下界，不接受份额轨道                               |
+| `columns[].max`                 | `fixed`、`content` 或 `fraction` 轨道                                 | 有界轨道的 `max`：上界或份额增长策略；固定上界不得小于固定下界       |
+| `size.x / size.y`               | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | 容器的物理宽、高：按内容求尺寸、固定尺寸或接收父级有限空间           |
+| `Node.layout.minimumSize.width` | 非负数                                                                | 节点自身的最小宽度；与列轨道上下界独立，用于比较内容较宽和较窄的情况 |
+
+切换内容模式，比较第一列的最小宽度与自然宽度。第二列的橙色节点默认最小宽度为 220，上界可在 110–250 之间调整。将上界从 110 增大到 220，观察虚线列边界和下方节点的位置变化；继续增大到 250，列宽会停在内容所需的 220，而不会自动填满上界。橙色节点仍保持自身最小宽度，上界限制列宽，不会强迫节点缩小。要观察下界，可将“节点最小宽度”减到 40，再增大第二列下界，查看短内容如何被分配到更宽的列中。
+
+<ComponentPreview files="grid-bounds" size="md" />
+
+## 让显式跨度与隐式轨道协作
+
+子项指定的位置超出已有行列时，容器会补出需要的轨道。隐式轨道属性决定这些新增行列如何求尺寸。
+
+| 属性                           | 可用值                                          | 解释                                              |
+| ------------------------------ | ----------------------------------------------- | ------------------------------------------------- |
+| `row.start / column.start`     | 非负整数，可省略                                | 子项起始行、列，从 0 开始；超出显式范围时补齐轨道 |
+| `row.span / column.span`       | 正整数，默认 1                                  | 连续跨越的行数或列数                              |
+| `implicitRow / implicitColumn` | `fixed`、`content`、`fraction` 或 `minmax` 轨道 | 补充行、列的尺寸策略；默认自然内容尺寸            |
+| `autoFlow`                     | `row`, `column`                                 | 自动子项的排列方向，不交换物理行列的含义          |
+
+demo 的首项横跨两列。调整它的起始行，查看中间新增的轨道；再改变隐式行高，比较空行与占用行。切换自动排列方向只影响自动放置，尺寸仍按物理 x→y 求解，行间距与列间距也不会交换。
+
+<ComponentPreview files="grid-implicit" size="md" />
+
+## 明确处理重叠与视觉溢出
+
+子项占据相同格子属于重叠，图形超出容器属于溢出。这两个问题由不同属性控制。
+
+| 属性           | 可用值              | 解释                                                                   |
+| -------------- | ------------------- | ---------------------------------------------------------------------- |
+| `overlap`      | `reject`, `allow`   | 容器属性：是否允许完整显式指定行列的子项区域重叠；不改变自动找空位规则 |
+| `column / row` | `{ start?, span? }` | 子项属性：指定占据区域；本例重叠开关同时调整第二项的位置               |
+| `overflow`     | `visible`, `clip`   | 保留超出容器的内容，或在容器分配区域裁切；不重新求解布局               |
+
+demo 关闭重叠时让第二项位于相邻列，开启时设置 `allow` 并将它移到第一项区域，因此各个控件状态都是合法输入。容器刻意比两列总宽度窄，再切换裁切方式，观察超出部分的可见性；轨道和放置结果保持不变。
+
+<ComponentPreview files="grid-overlap" size="sm" />
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'columns',
+      kind: 'property',
+      type: 'Array<GridTrackInput>',
+      description:
+        '内容贡献与有界轨道 `content` 用 `mode: "minimum" / "natural"` 选择贡献；`minmax` 用 `min` / `max` 指定上下界，下界不能是份额。',
+      required: true,
+    },
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        '有限空间约束 每个轴支持 `{ kind: "content", min?, max? }` 内容策略、`{ kind: "fixed", value }` 固定尺寸或 `{ kind: "fill", min?, max? }` 填充父级有限空间。',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'implicitRow',
+      kind: 'property',
+      type: 'GridTrackInput',
+      description: '显式行不足时补齐行轨道；本页使用 `{ kind: "fixed", value }` 固定隐式行高',
+      defaultValue: '{ kind: "content", mode: "natural" }',
+    },
+    {
+      name: 'implicitColumn',
+      kind: 'property',
+      type: 'GridTrackInput',
+      description: '显式列不足时补齐列轨道，接受与 columns 相同的轨道定义',
+      defaultValue: '{ kind: "content", mode: "natural" }',
+    },
+    {
+      name: 'column',
+      kind: 'property',
+      type: '{ start?: number; span?: number }',
+      description: '跨度、显式位置与自动搜索',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'row',
+      kind: 'property',
+      type: '{ start?: number; span?: number }',
+      description: '跨度、显式位置与自动搜索',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'autoFlow',
+      kind: 'property',
+      type: "'row' | 'column'",
+      description: '`row` 按行搜索，`column` 按列搜索；均不进行密集回填',
+      defaultValue: 'row',
+    },
+    {
+      name: 'overlap',
+      kind: 'property',
+      type: "'reject' | 'allow'",
+      description: '`reject` 拒绝完整显式区域重叠；`allow` 允许这类重叠，不改变自动避让',
+      defaultValue: 'reject',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description: '`visible` 保留超出部分；`clip` 在容器分配区域裁切，不改写求解结果',
+      defaultValue: 'visible',
+    },
+  ]}
+/>
+
+完整签名与字段约束见 [API 参考](/library/layout/grid-layout/api-reference) · [Schema 参考](/library/layout/grid-layout/schema-reference)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/grid-layout/usage' },
+
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/grid-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/grid-layout/api-reference' },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
+
+]}
+/>

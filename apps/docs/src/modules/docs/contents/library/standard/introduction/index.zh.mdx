@@ -1,24 +1,53 @@
 ---
 title: 简介
-description: Standard 提供可复用的标准绘图组件，适合绘制参考网格、坐标轴、边框、表面和图例。
+description: 用现成组件表达常见几何轮廓、结构化内容与图形说明
 ---
 
-Standard 是 Retikz 的标准包，为常见的绘图任务提供可复用组件：画出参考网格和坐标轴，为内容增加背景、边框或表面，或将符号和说明组织成图例。
+Standard 是 Retikz 的标准组件库。已经知道要画“一个列表”“一组参考轴”或“包住内容的边框”时，可以直接描述这个对象的参数，无需逐条计算路径、文字位置和外围尺寸。
 
-## 能力分组
+它适合数学与算法插图、结构示意和通用图形界面。React 与 Vanilla 使用相同的组件语义；需要保存或传输绘图意图时，还可以使用对应的 JSON IR。
 
-展现组件以一个对象表达完整的绘图任务：网格描述参考线的分布，图例描述符号与说明的对应关系，表面描述内容的背景和边框。
+## 从内容意图开始
 
-| 分组 | 提供什么                                                      | 何时使用                       |
-| ---- | ------------------------------------------------------------- | ------------------------------ |
-| 展示 | Grid、Axes、Frame、Surface、Legend                            | 组织图的参考、框架、表面与说明 |
-| 容器 | List、Map                                                     | 组织可嵌套的结构化内容         |
-| 形状 | Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector | 用几何参数绘制独立路径轮廓     |
+下面的 List 用单元格表达顺序，其中一个单元格嵌入 Map 表达记录。你控制“哪些内容属于哪一格”，组件负责各自的排布与边界。
 
-展现组件可以直接放在 React 的 `Layout` 中，也可以通过 Vanilla 入口使用。
+<ComponentPreview files="/library/standard/container/list/list-composition" size="sm" />
 
-## 选择入口
+这类组合不需要你给每一格手动指定坐标。同样，Frame 会根据 Node 内容更新分组边框，Surface 为一个子图增加留白、背景与裁剪；已知中心、半径或角度时，形状组件则直接绘制对应轮廓。
 
-- 三包的 `/presentation` 子入口：使用展示组件的 Source、React 组件或 Vanilla 输入
-- 三包的 `/container` 子入口：使用 List、Map 等结构化内容组件
-- 三包的 `/shape` 子入口：使用形状 Source、React 组件或 Vanilla `shape.xxx`
+## 选择合适的能力层
+
+| 当前任务                         | 选择                  | 原因                             |
+| -------------------------------- | --------------------- | -------------------------------- |
+| 已知几何参数，绘制独立轮廓       | Standard 形状组件     | 直接保留矩形、圆、星形等几何意图 |
+| 展示顺序或键值关系               | Standard List / Map   | 单元格承担内容、身份与嵌套关系   |
+| 添加参考轴、背景、分组或符号说明 | Standard 展示组件     | 围绕已有图形补充呈现信息         |
+| 给任意子图做通用排列             | Layout                | 用尺寸与排列策略组织内容         |
+| 根据数据域映射数值、生成数据刻度 | Plot                  | 拥有数据与 scale 语义            |
+| 自己定义任意路径或节点连接       | Kernel 的 Node / Path | 直接控制基础图元                 |
+
+Standard 不推断业务数据的含义。Axes 的刻度文字由你提供，Legend 的样本由你构造，List 与 Map 展示结构而不实现运行时集合。需要数据可视化时，先由领域包处理数据，再复用这些通用组件。
+
+## 按宿主选择写法
+
+React 组件来自 `@retikz/standard-react` 的家族子入口，Vanilla 函数来自 `@retikz/standard-vanilla`；JSON 契约与 Definition 来自 `@retikz/standard`。三个包都按 `/shape`、`/container`、`/presentation` 划分，具体组件页的“接入方式”会给出四种等价写法。
+
+首次使用先完成快速开始。日常配置先读基础用法与错误限制；需要查参数时跳到 API 或 Schema 参考，实现原理可以留到需要诊断时再读。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'List · 列表',
+      description: '从顺序内容开始，学习单格控制与嵌套组合',
+      url: '/library/standard/container/list',
+    },
+    {
+      title: 'Surface · 表面',
+      description: '给一个已有子图增加留白、外观与裁剪',
+      url: '/library/standard/presentation/surface',
+    },
+    { title: 'Layout', description: '需要通用排列时选择布局能力', url: '/library/layout' },
+  ]}
+/>

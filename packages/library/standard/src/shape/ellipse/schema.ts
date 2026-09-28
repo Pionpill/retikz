@@ -15,10 +15,10 @@ import {
 
 const properties = {
   ...ShapePathSchema.shape,
-  namespace: literal('standard'),
-  type: literal('ellipse'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('ellipse').describe('Composite type for the ellipse shape.'),
   ...ShapeAnglesSchema.shape,
-  closed: ShapeClosedSchema.unwrap().optional(),
+  closed: ShapeClosedSchema.unwrap().optional().describe('Closure of a partial outline: open, chord, or sector.'),
 };
 /** Ellipse 的持久化几何契约 */
 export const EllipseSchema = union([

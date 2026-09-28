@@ -5,6 +5,16 @@ description: Install Layout and arrange two graphics in a row with React or Vani
 
 Choose the host used by your project and run its example below. Packages use ES modules and require Node.js 24 or later in Node environments.
 
+## Three packages
+
+| Package                  | Responsibility                             | Use it when                                        |
+| ------------------------ | ------------------------------------------ | -------------------------------------------------- |
+| `@retikz/layout`         | Schemas, factories, Definitions, and solve | Validating or persisting IR and compiling directly |
+| `@retikz/layout-react`   | React DSL for layout containers            | Authoring inside a React `Layout`                  |
+| `@retikz/layout-vanilla` | Plain-spec helpers and adapters            | Authoring in browsers or scripts without React     |
+
+For React authoring, compose `FlexLayout`, `GridLayout`, or `OverlayLayout` inside the `Layout` from `@retikz/react`. For Vanilla, combine the helpers and adapters from `@retikz/layout-vanilla`. When loading persisted JSON, validate complete layout IR with `@retikz/layout` and pass the required Definitions to the Core compiler.
+
 ## React
 
 <PackageManagerInstall packages="@retikz/layout-react @retikz/react react react-dom" />
@@ -14,23 +24,23 @@ Render the following `Example` component in an existing React app. The host peer
 ```tsx
 import type { FC } from 'react';
 import { Layout, Node } from '@retikz/react';
-import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
 
 export const Example: FC = () => (
   <Layout>
     <FlexLayout gap={{ column: 12, row: 0 }}>
-      <LayoutItem kind="flex">
-        <Node shape="circle" position={[0, 0]} layout={{ minimumSize: 32 }} />
-      </LayoutItem>
-      <LayoutItem kind="flex">
-        <Node position={[0, 0]} layout={{ minimumSize: 32 }} />
-      </LayoutItem>
+      <FlexLayoutItem>
+        <Node shape="circle" layout={{ minimumSize: 32 }} />
+      </FlexLayoutItem>
+      <FlexLayoutItem>
+        <Node layout={{ minimumSize: 32 }} />
+      </FlexLayoutItem>
     </FlexLayout>
   </Layout>
 );
 ```
 
-The result is a circle and a rectangle arranged horizontally with a 12-unit gap. Each `LayoutItem` contains one graphic. Both start at local `[0, 0]`; the Flex container assigns their final positions.
+The result is a circle and a rectangle arranged horizontally with a 12-unit gap. Each `FlexLayoutItem` contains one graphic. Both start at local `[0, 0]`; the Flex container assigns their final positions.
 
 Save the component above as `Example.tsx` and mount it from an existing React app entry (provide `<div id="root"></div>` in HTML):
 
@@ -59,11 +69,11 @@ const input = scene({
       children: [
         {
           kind: 'flex',
-          child: node({ id: 'circle', shape: 'circle', position: [0, 0], layout: { minimumSize: 32 } }),
+          child: node({ id: 'circle', shape: 'circle', layout: { minimumSize: 32 } }),
         },
         {
           kind: 'flex',
-          child: node({ id: 'box', position: [0, 0], layout: { minimumSize: 32 } }),
+          child: node({ id: 'box', layout: { minimumSize: 32 } }),
         },
       ],
     }),
@@ -75,9 +85,33 @@ console.log(svg);
 
 `svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. The helper creates ordinary input; `adapters` lets Vanilla recognize the embed and collect its capability dependencies. Omitting the adapter leaves the embed unresolved.
 
-The first argument `'row'` to `flexLayout` is a container identifier, not a direction option. Both hosts default to horizontal rows (`direction: 'row'`). `LayoutItem kind="flex"` selects Flex item constraints and holds one drawable child. `minimumSize: 32` sets both minimum width and minimum height. A Node without `shape` defaults to a rectangle.
+Both hosts default to horizontal rows (`direction: 'row'`). `FlexLayoutItem` selects Flex item constraints and holds one drawable child. `minimumSize: 32` sets both minimum width and minimum height. A Node without `shape` defaults to a rectangle.
 
-## Next steps
+## How hosts recognize layouts
+
+| Granularity    | Public entry                                                                                                             | Purpose                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| One definition | `FlexLayoutDefinition`, `GridLayoutDefinition`, `OverlayLayoutDefinition`                                                | Register one layout composite with Core                   |
+| React          | `FlexLayout`, `GridLayout`, `OverlayLayout` and their respective `FlexLayoutItem`, `GridLayoutItem`, `OverlayLayoutItem` | Build canonical IR and contribute definitions to `Layout` |
+| Vanilla        | `LayoutInputEmbedAdapters`                                                                                               | Recognize all three embeds in Scene, mount, or SSR hosts  |
+
+Pass one or more of the three layout Definitions directly in `CompileOptions.composites`. React and Vanilla adapters produce the same Layout IR and contribute the same Definitions; their adapter convenience arrays do not become Core compile presets.
+
+### React
+
+The three `@retikz/layout-react` containers are embeddable Tier 2 components. Their direct children must be the matching `FlexLayoutItem`, `GridLayoutItem`, or `OverlayLayoutItem`. Component identity selects the layout; JSX takes no `kind` prop. Fragments and arrays flatten transparently, but ordinary JSX nodes cannot bypass item semantics.
+
+Every layout item requires exactly one of `children` or `ir` and must produce exactly one `IRChild`. Optional React `itemKey` becomes canonical JSON `key`. When omitted, Source IR has no `key`, and Layout generates a container-local effective key from the source index before solving. It never reads React's reserved `key`. Nested Layout containers may contribute the same family, while external datasets or foreign Tier 2 runtime contributions remain the outer host's responsibility.
+
+React containers start no local compilation and perform no DOM measurement. They contribute IR and definitions to the outer `Layout`, which compiles and renders the complete tree. Observe artifacts through the outer host.
+
+### Vanilla
+
+`flexLayout()`, `gridLayout()`, and `overlayLayout()` return `InputEmbed` values. Scene, mount, or SSR hosts need the matching adapter; use `LayoutInputEmbedAdapters` for the complete family.
+
+Each adapter calls the same `createXxxLayout()` factory as direct authoring and contributes the layout Definitions required by its family. Vanilla therefore shares schemas, definitions, solvers, and artifact semantics with direct Core compilation and React.
+
+## Further reading
 
 Change `gap.column` to adjust spacing. To distribute remaining space, assign a size to the container and set `grow` on an item. Continue with [Flex layout](/library/layout/flex-layout). Use [Grid layout](/library/layout/grid-layout) for two-dimensional regions or [Overlay layout](/library/layout/overlay-layout) for stacking.
 

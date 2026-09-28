@@ -25,7 +25,11 @@ export const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLayout> = {
   },
 };
 
-/** 创建由 Layout 适配器下沉的 Grid 布局嵌入项 */
+/** 创建GridLayout 嵌入项
+ * @param input 容器与子项输入，保留传入对象引用
+ * @param authoring 交给编译驱动的不透明声明数据；省略时不附加声明
+ * @returns 由布局适配器消费的 InputEmbed，不在创建时求解布局
+ */
 export const gridLayout = (input: InputGridLayout, authoring?: unknown): InputEmbed<InputGridLayout> => ({
   type: 'embed',
   kind: GridLayoutEmbedKind,

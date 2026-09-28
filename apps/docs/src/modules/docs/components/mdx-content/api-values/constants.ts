@@ -54,6 +54,7 @@ import {
   SmoothMethodKind,
   StackOffset,
 } from '@retikz/plot';
+import { ListIndexPosition } from '@retikz/standard/container';
 import {
   AxesArrowMode,
   AxesLabelEnd,
@@ -83,6 +84,9 @@ export type ApiValueRegistryEntry = {
 
 /** MDX 可引用的公开 API 值集合 */
 export const API_VALUE_REGISTRY = {
+  ListIndexPosition: {
+    values: Object.values(ListIndexPosition),
+  },
   AnimationDirection: {
     values: Object.values(AnimationDirection),
   },

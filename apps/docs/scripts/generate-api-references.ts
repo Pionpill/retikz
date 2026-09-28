@@ -6,15 +6,20 @@ import { writeExtensionAnimationApiReference } from './api-reference/extension-a
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
 import { writeInspectApiReferenceMdx } from './api-reference/inspect';
 import { writeLayoutApiReferenceMdx } from './api-reference/layout';
+import { writeLayoutComponentApiReferences } from './api-reference/layout-components';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
 import { writeStandardContainerApiReferences } from './api-reference/standard-containers';
+import { writeStandardPresentationApiReferences } from './api-reference/standard-presentation';
 import { writeStandardShapeApiReferences } from './api-reference/standard-shapes';
 import { writeTexApiReferenceMdx } from './api-reference/tex';
 import { writeAnimationApiReference, writeStyleApiReference } from './api-reference/visual';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+await writeStandardPresentationApiReferences(
+  path.resolve(docsRoot, 'src/modules/docs/contents/library/standard/presentation'),
+);
 await writeStandardContainerApiReferences(
   path.resolve(docsRoot, 'src/modules/docs/contents/library/standard/container'),
 );
@@ -61,3 +66,5 @@ await writeLayoutApiReferenceMdx(
 await writeScopeApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/scope/api-reference/_includes'),
 );
+
+await writeLayoutComponentApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/layout'));

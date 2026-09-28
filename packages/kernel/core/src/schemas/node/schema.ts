@@ -223,8 +223,8 @@ const NodeBaseSchema = strictObject({
     .describe(
       'Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.',
     ),
-  position: NodePositionSchema.describe(
-    'Node placement: Cartesian [x, y], polar, relative-to-node, offset, between two endpoints, or anchor-to-anchor alignment. Non-Cartesian forms resolve at compile time.',
+  position: NodePositionSchema.default([0, 0]).describe(
+    'Node placement: Cartesian [x, y], polar, relative-to-node, offset, between two endpoints, or anchor-to-anchor alignment. Defaults to [0, 0] in the current local coordinate system. Non-Cartesian forms resolve at compile time.',
   ),
   rotate: AngleDegreesSchema.optional().describe(
     'Rotation in degrees around the node center; positive is visually clockwise.',

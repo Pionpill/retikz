@@ -1,34 +1,79 @@
 ---
 title: Grid
-description: Describe regular guide lines, major lines, and borders as JSON-safe Tier 2 Grid IR that lowers to Core Paths or Scopes when loaded.
+description: Draw bounded reference grids with periodic major lines and a border
 ---
 
-`<Grid>` is an optional Standard Tier 2 component. It retains bounds, line configuration, and border styles as compact JSON fields; it lowers to Core `Path` nodes or a center-translating `Scope` when the current figure loads `GridDefinition`.
+`Grid` draws regular reference lines within a bounded area. Configure each direction, periodic major lines, and an optional border.
 
-## Usage
+## Using this topic
+
+After [installation and first rendering](/library/standard/get-start), import from `/presentation`. The four forms below draw the same output; register the Definition explicitly when using IR.
+
+<ComponentPreview files="entry" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
 import { Layout } from '@retikz/react';
 import { Grid } from '@retikz/standard-react/presentation';
+
+export const Example = () => (
+  <Layout>
+    <Grid bounds={{ start: [0, 0], end: [120, 80] }} line={{ spacing: 20 }} />
+  </Layout>
+);
 ```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
 ```tsx
-<Layout>
-  <Grid bounds={{ start: [20, 20], end: [260, 150] }} line={{ spacing: 20, style: { stroke: 'lightgray' } }} />
-</Layout>
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { GridDefinition } from '@retikz/standard/presentation';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'grid', bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } }],
+};
+export const Example = () => <Layout ir={ir} composites={[GridDefinition]} />;
 ```
 
-The React entry contributes `GridDefinition` locally to the current `Layout`. For persistence or non-React use, create IR through `createGrid` from `@retikz/standard/presentation` and explicitly provide `GridDefinition` to Core compile options.
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-| Scenario         | Public entry point                                                                    |
-| ---------------- | ------------------------------------------------------------------------------------- |
-| React            | `Grid` from `@retikz/standard-react/presentation`                                     |
-| Vanilla          | `grid` and `GridInputEmbedAdapter` from `@retikz/standard-vanilla/presentation`       |
-| IR / persistence | `GridSchema`, `createGrid`, and `GridDefinition` from `@retikz/standard/presentation` |
+```ts
+import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { scene, renderToSvgString } from '@retikz/vanilla';
 
-See [Standard](/library/standard) for the package family and its three entry points. This page focuses on Grid-specific fields and semantics.
+const input = scene({ children: [grid({ bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } })] });
+const svg = renderToSvgString(input, { adapters: [GridInputEmbedAdapter] });
+console.log(svg);
+```
 
-## Examples
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { GridDefinition } from '@retikz/standard/presentation';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'grid', bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [GridDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
 
 ### Basic grid
 
@@ -49,13 +94,15 @@ The grid below covers `[20, 20]` through `[260, 150]` and emits a line every 20 
 
 `line.origin` follows the bounds form. Corner bounds use scene coordinates and default to the normalized start; centered bounds use center-local coordinates and default to `[-width / 2, -height / 2]`. Set `line: { origin: 0 }` in a centered configuration to align both lattices through the geometric center. Direction-specific configurations can use different scalar origins. Core resolves the center `PolarPosition`.
 
-### Common variants
+## Extended usage
+
+### Configure directions and major lines
 
 These four side-by-side cases compare direction-specific line settings, center-plus-size bounds, periodic major lines, and reversed corners with a padded border.
 
 <ComponentPreview files="grid-variants" size="sm" />
 
-### Controls
+### Adjust spacing, alignment, and borders
 
 Use the panel to change corner bounds, uniform or direction-specific spacing, line alignment, major lines, and the border. The preview keeps a fixed view, so each change is visible as a change in position, density, or drawing order.
 
@@ -65,7 +112,11 @@ Use the panel to change corner bounds, uniform or direction-specific spacing, li
   caption="Adjust bounds, line spacing, line origins, major settings, and border to see how the fields determine the final grid."
 />
 
-## How it works
+## Errors and limitations
+
+Spacing must be positive, major.every a positive integer, and dimensions and border padding nonnegative. Corner bounds may be reversed or coincident. Center positioning does not create a polar grid. Direct IR without GridDefinition reports COMPOSITE_NOT_REGISTERED.
+
+## Implementation
 
 <ComponentAlert
   type="tip"
@@ -92,19 +143,29 @@ A handwritten `IRGrid` without a loaded definition is never silently interpreted
   ]}
 />
 
-## API Reference
+## API reference
 
-`GridProps` is a public alias of `GridInput`, and the Vanilla adapter accepts that same `GridInput`. `createGrid` only assembles sparse `IRGrid`. `GridSchema.parse()` validates external JSON and materializes static defaults; compilation resolution reuses those defaults and handles context. `Position` and `PolarPosition` in the table below come from Core's positioning contract.
+{/* @include library/standard/presentation/grid/generated */}
 
-### `GridInput`
+## Schema reference
 
-| Prop      | Type                                                                                                                                                                                                                                                                                                                                                                           | Default                                                                                                                             | Description                                                                                                                                                                                                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `bounds`  | `GridInput['bounds']`<br />- `{ start: Position; end: Position }`<br />- `{ position: Position \| PolarPosition; width: number; height: number }`                                                                                                                                                                                                                              | —<br />- —<br />- —                                                                                                                 | Grid bounds; the two forms are mutually exclusive<br />- Two unordered Cartesian corners, sorted independently on x and y during lowering<br />- Geometric center and non-negative dimensions; Core resolves PolarPosition as the center of a Cartesian grid |
-| `line?`   | `GridInput['line']`<br />- `boolean`<br />- `GridLineInput`<br />- `{ vertical: GridLineInput; horizontal: GridLineInput }`<br /><br />`GridLineInput`<br />- `spacing?: number`<br />- `origin?: number`<br />- `includeBoundary?: boolean`<br />- `style?: IRStandardPathStrokeStyle`<br />- `major?: { every: number; offset?: number; style?: IRStandardPathStrokeStyle }` | `true`<br />- both directions, spacing `10`<br />- `false` disables both directions<br />- shared object applies to both directions | Shared or direction-specific line configuration; `origin`, `includeBoundary`, `style`, and `major` are interpreted independently for vertical and horizontal lines when the pair form is used. `major.offset` defaults to `0`                                |
-| `border?` | `GridInput['border']`<br />- `padding?: number`<br />- `order?:` <ApiValues name="GridBorderOrder" /><br />- `extendLines?: boolean`<br />- `style?: IRStandardPathBorderStyle`                                                                                                                                                                                                | —<br />- `0`<br />- `'front'`<br />- `false`<br />- —                                                                               | Optional border configuration<br />- Uniform outward padding<br />- Emits the border behind or in front of grid lines<br />- Extends grid lines to the padded border bounds<br />- Border Path stroke and fill fields                                        |
+### GridSchema
 
-## Related
+<ZodSchema name="GridSchema" />
 
-- [Tier 2 Composites](/kernel/components/design/composite): how Core registers and lowers high-level IR
-- [Path](/kernel/components/path/step): the Core path primitive emitted by Grid lowering
+### GridLineInputSchema
+
+<ZodSchema name="GridLineInputSchema" />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Presentation',
+      description: 'Choose reference lines, frames, and legends',
+      url: '/library/standard/presentation',
+    },
+    { title: 'Path', description: 'Explore the underlying path primitives', url: '/kernel/components/path/step' },
+  ]}
+/>

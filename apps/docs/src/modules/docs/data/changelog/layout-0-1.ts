@@ -130,10 +130,18 @@ export const layoutV01: Release = {
       pkg: '@retikz/layout-react',
       version: 'v0.1',
       description: {
-        zh: 'Layout 的 React authoring：提供 FlexLayout、GridLayout、OverlayLayout、LayoutItem 与可选 Inspector JSX。',
-        en: 'React authoring for Layout with FlexLayout, GridLayout, OverlayLayout, LayoutItem, and optional Inspector JSX.',
+        zh: 'Layout 的 React authoring：提供 FlexLayout、GridLayout、OverlayLayout、各自的专属子项与可选 Inspector JSX。',
+        en: 'React authoring for Layout with FlexLayout, GridLayout, OverlayLayout, their dedicated item components, and optional Inspector JSX.',
       },
-      highlights: [],
+      highlights: [
+        {
+          label: { zh: '未发布 · BREAKING：专属布局子项', en: 'Unreleased · BREAKING: dedicated layout items' },
+          content: {
+            zh: 'React 移除 LayoutItem / LayoutItemProps，改用 FlexLayoutItem、GridLayoutItem、OverlayLayoutItem 及对应 Props。将 LayoutItem kind="flex|grid|overlay" 替换为匹配组件并移除 kind；必须放在对应布局或 Inspect 容器下。Vanilla 与 JSON IR 继续保留 kind，布局求解、itemKey 和子内容语义不变。',
+            en: 'React removes LayoutItem / LayoutItemProps in favor of FlexLayoutItem, GridLayoutItem, OverlayLayoutItem, and their Props. Replace LayoutItem kind="flex|grid|overlay" with the matching component and omit kind; place it under the corresponding layout or Inspect container. Vanilla and JSON IR keep kind, with solving, itemKey, and child-content semantics unchanged.',
+          },
+        },
+      ],
       subVersions: [
         {
           version: 'alpha.2',

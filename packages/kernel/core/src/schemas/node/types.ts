@@ -1,5 +1,5 @@
 import type { OpenString, ValueOf } from '@retikz/foundation';
-import type { infer as ZodInfer } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { BuiltinShapeValue } from '../shape';
 import type { NodeTextAlign } from '../text';
@@ -30,7 +30,13 @@ export type IRNodeLabelBoundaryPosition = ZodInfer<typeof NodeLabelBoundaryPosit
 export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 /** 节点：可定位的形状容器（矩形/圆/椭圆/菱形）+ 可选文本标签 */
-export type IRNode = ZodInfer<typeof NodeSchema>;
+export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
+  /**
+   * 节点中心位置；省略时在 Core 解析为当前局部坐标系的原点
+   * @default [0, 0]
+   */
+  position?: ZodInfer<typeof NodeSchema>['position'];
+};
 
 /**
  * 节点形状名：开放字符串

@@ -1,0 +1,31 @@
+/** 功能示例的双语面板文案 */
+export const demoI18n = {
+  zh: {
+    title: '文字基线对齐',
+    alignItems: '默认对齐',
+    alignItemsOption0: '首基线',
+    alignItemsOption1: '末基线',
+    alignItemsOption2: '居中对照',
+    fontA: '第一项字号',
+    fontB: '第二项字号',
+    alignSelf: '第二项对齐覆盖',
+    alignSelfOption0: '跟随容器',
+    alignSelfOption1: '首基线',
+    alignSelfOption2: '末基线',
+    alignSelfOption3: '居中对照',
+  },
+  en: {
+    title: 'Text baseline alignment',
+    alignItems: 'Default alignment',
+    alignItemsOption0: 'First baseline',
+    alignItemsOption1: 'Last baseline',
+    alignItemsOption2: 'Center comparison',
+    fontA: 'First font size',
+    fontB: 'Second font size',
+    alignSelf: 'Second alignment override',
+    alignSelfOption0: 'Inherit',
+    alignSelfOption1: 'First baseline',
+    alignSelfOption2: 'Last baseline',
+    alignSelfOption3: 'Center comparison',
+  },
+} as const;

@@ -16,17 +16,19 @@ export const MapStyleSchema = CellStyleSchema.extend({
 
 /** Map 共用单元格布局、间距及键值角色覆盖 */
 export const MapLayoutSchema = CellLayoutSchema.extend({
-  gap: union([NonNegativeNumberSchema, MapGapSchema]).default(2),
+  gap: union([NonNegativeNumberSchema, MapGapSchema])
+    .default(2)
+    .describe('Uniform or separate row and column gaps between cells.'),
   key: CellLayoutSchema.optional().describe('Key cell layout overrides over shared layout fields.'),
   value: CellLayoutSchema.optional().describe('Value cell layout overrides over shared layout fields.'),
 }).describe('Map two-column allocation and spacing.');
 export const MapEntrySchema = strictObject({
-  key: union([string(), CellSchema]),
-  value: union([string(), CellSchema]),
+  key: union([string(), CellSchema]).describe('Text or drawable content for the key cell.'),
+  value: union([string(), CellSchema]).describe('Text or drawable content for the value cell.'),
 }).describe('One key/value display pair; displayed keys may repeat.');
 const MapBaseSchema = CompositeBaseSchema.extend({
-  namespace: literal('standard'),
-  type: literal('map'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('map').describe('Composite type for the map presentation.'),
   ...ScopePropsSchema.omit({ style: true }).shape,
   entries: array(MapEntrySchema).optional().describe('Ordered key/value pairs, not a JavaScript Map.'),
   data: JsonObjectSchema.optional().describe(
@@ -39,7 +41,10 @@ const MapBaseSchema = CompositeBaseSchema.extend({
 
 export const MapSchema = union([
   MapBaseSchema.required({ entries: true })
-    .extend({ data: never().optional(), dataObjectDisplay: never().optional() })
+    .extend({
+      data: never().optional().describe('Not accepted in this input branch.'),
+      dataObjectDisplay: never().optional().describe('Not accepted in this input branch.'),
+    })
     .superRefine((node, context) => {
       const seen = new Set<string>();
       node.entries.forEach((entry, index) => {
@@ -58,7 +63,7 @@ export const MapSchema = union([
       });
     }),
   MapBaseSchema.required({ data: true }).extend({
-    entries: never().optional(),
+    entries: never().optional().describe('Not accepted in this input branch.'),
     dataObjectDisplay: DataObjectDisplaySchema,
   }),
 ]).describe('Two-column ordered key/value presentation.');
