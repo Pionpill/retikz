@@ -45,6 +45,10 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
   const isActive = normalizedPathname === normalizedPath;
   const isActiveBranch = hasChildren && normalizedPathname.startsWith(`${normalizedPath}/`);
   const ItemIcon = item.Icon;
+  const iconClass = cn(
+    'mr-1.5 size-3.5 shrink-0 text-muted-foreground group-hover:text-foreground',
+    isActive && 'text-foreground',
+  );
 
   const [open, setOpen] = useState(isActiveBranch);
   const wasActiveBranch = useRef(isActiveBranch);
@@ -68,7 +72,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
             onNavigate?.();
           }}
         >
-          {ItemIcon && <ItemIcon className="mr-1.5 size-3.5 shrink-0" />}
+          {ItemIcon && <ItemIcon className={iconClass} />}
           <span className="min-w-0 flex-1 truncate text-left" title={item.label}>
             {item.label}
           </span>
@@ -91,7 +95,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
               onNavigate?.();
             }}
           >
-            {ItemIcon && <ItemIcon className="mr-1.5 size-3.5 shrink-0" />}
+            {ItemIcon && <ItemIcon className={iconClass} />}
             <span className="truncate" title={item.label}>
               {item.label}
             </span>

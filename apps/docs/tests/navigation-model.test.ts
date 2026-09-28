@@ -61,7 +61,7 @@ describe('layout utils', () => {
     expect(navigation.next).toBeNull();
   });
 
-  it('将 Showcase 图标放在一级页面条目而非分组标题', () => {
+  it('Point 图表分组复用散点图图标，六个子文档各有图标', () => {
     const t = ((key: string) => key) as TFunction;
     const categories = buildSidebarCategories(t, 'viz', vizSection);
     const chart = categories.find(category => category.value === 'chart');
@@ -76,6 +76,9 @@ describe('layout utils', () => {
       'ranged-dot',
       'strip',
     ]);
+    expect(points?.children?.every(child => child.Icon !== undefined)).toBe(true);
+    expect(new Set(points?.children?.map(child => child.Icon)).size).toBe(6);
+    expect(points?.children?.find(child => child.value === 'scatter')?.Icon).toBe(points?.Icon);
   });
 
   it('Plot 末尾注册 API 参考与更新日志路由', () => {

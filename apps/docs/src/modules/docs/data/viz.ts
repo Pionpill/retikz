@@ -200,6 +200,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'scatter',
             label: 'viz.chartScatter',
+            icon: 'chart-scatter',
             difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'component',
@@ -212,6 +213,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'bubble',
             label: 'viz.chartBubble',
+            icon: 'chart-bubble',
             difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'component',
@@ -224,6 +226,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'regression',
             label: 'viz.chartRegression',
+            icon: 'chart-regression',
             difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'component',
@@ -236,6 +239,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'connected-scatter',
             label: 'viz.chartConnectedScatter',
+            icon: 'chart-connected-scatter',
             difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'component',
@@ -248,6 +252,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'ranged-dot',
             label: 'viz.chartRangedDot',
+            icon: 'chart-ranged-dot',
             difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'component',
@@ -260,6 +265,7 @@ export const vizSection: Array<Section> = [
           {
             id: 'strip',
             label: 'viz.chartStrip',
+            icon: 'chart-strip',
             difficulty: DocDifficulty.Beginner,
             meta: {
               pageType: 'component',
