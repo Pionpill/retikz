@@ -13,7 +13,10 @@ import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS } from './fields';
  * @description NODE_FIELDS 字段表透传纯字段（与 builder.ts 共享）；text / position / label 特化字段独立处理
  */
 const nodePropsFromIR = (n: IRNode): NodeProps => {
-  const props: NodeProps = { position: n.position, ...pickDefined(n, NODE_FIELDS) };
+  const props: NodeProps = {
+    ...(n.position === undefined ? {} : { position: n.position }),
+    ...pickDefined(n, NODE_FIELDS),
+  };
   if (n.text !== undefined) props.text = n.text;
   if (n.label !== undefined) props.label = n.label;
   return props;

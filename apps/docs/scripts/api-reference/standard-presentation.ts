@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { standardSchemaLocalizations } from '../../src/modules/docs/components/mdx-content/zod-schema/standard-schema-localizations';
 import { translateDrawApiReference } from './draw.en';
 import { translateNodeApiReference } from './node.en';
 import { createStandardApiReferenceMdx } from './standard-schema';
@@ -67,6 +68,7 @@ const pages = {
 } as const;
 
 const translations: Readonly<Partial<Record<string, string>>> = {
+  'Frame 正文使用 Core Node Source，保留可省略的位置': 'Frame body uses Core Node Source with optional positions',
   'Standard Legend 的 React Tier 2 无头 authoring 组件':
     'React Tier 2 headless authoring component for Standard Legend',
   'React Legend 的两个显式无头 authoring form': 'Two explicit headless React Legend authoring forms',
@@ -198,6 +200,7 @@ export const writeStandardPresentationApiReferences = async (
           packageDirectory,
           tsconfigPath: path.resolve(repositoryRoot, packageDirectory, 'tsconfig.json'),
           translate: translatePresentationApiReference,
+          schemaLocalizations: standardSchemaLocalizations,
           entries: [
             {
               source: path.resolve(repositoryRoot, packageDirectory, 'src/presentation/index.ts'),

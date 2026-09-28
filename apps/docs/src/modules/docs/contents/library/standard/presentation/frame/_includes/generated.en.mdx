@@ -283,7 +283,7 @@ export type FrameDescriptionInput = ZodInfer<typeof FrameDescriptionSchema>;
 #### FrameInput
 
 <p>
-  <ApiSourceLink label={'FrameInput'} path={'packages/library/standard/src/presentation/frame/types.ts'} startLine={29}>
+  <ApiSourceLink label={'FrameInput'} path={'packages/library/standard/src/presentation/frame/types.ts'} startLine={32}>
     Frame input allowing fixed discriminators and schema defaults to be omitted
   </ApiSourceLink>
 </p>
@@ -348,11 +348,35 @@ export type FrameTitleInput = ZodInfer<typeof FrameTitleSchema>;
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Direct members">
+
+The remaining members are inherited from `ZodInput<typeof FrameSchema>`, `ZodInfer<typeof FrameSchema>`, with `'children'`, `'title'`, `'description'` removed. See “Type definition” for the complete composition.
+
+<ApiTable>
+
+| Member     | Type            | Default | Description                                              |
+| ---------- | --------------- | ------- | -------------------------------------------------------- |
+| `children` | `Array<IRNode>` | —       | Frame body uses Core Node Source with optional positions |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type IRFrame = Omit<ZodInput<typeof FrameSchema>, keyof IRScopeProps | 'children' | 'title' | 'description'> &
   IRScopeProps &
-  Pick<ZodInfer<typeof FrameSchema>, 'children' | 'title' | 'description'>;
+  Pick<ZodInfer<typeof FrameSchema>, 'title' | 'description'> & {
+    children: Array<IRNode>;
+  };
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### FrameDefinition
 

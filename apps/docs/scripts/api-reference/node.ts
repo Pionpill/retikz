@@ -60,6 +60,7 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
   },
   {
     owner: 'core',
+    fullMemberSymbols: ['IRNode'],
     symbols: [
       'IRNode',
       'IRNodeStyle',

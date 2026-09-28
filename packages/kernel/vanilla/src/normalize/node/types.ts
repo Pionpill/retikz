@@ -54,8 +54,11 @@ export type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
   authoring?: unknown;
   /** 节点类别标识，可省略 */
   type?: 'node';
-  /** 节点中心位置，支持坐标、相对定位和锚点对齐 */
-  position: InputPosition;
+  /**
+   * 节点中心位置，支持坐标、相对定位和锚点对齐；省略时使用当前局部坐标系的原点
+   * @default [0, 0]
+   */
+  position?: InputPosition;
   /** 附着于节点的一个或多个标签 */
   label?: InputNodeLabel | ReadonlyArray<InputNodeLabel>;
 };

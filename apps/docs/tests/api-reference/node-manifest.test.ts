@@ -33,6 +33,12 @@ describe('Node API 公开范围', () => {
     expect(source).toContain('<TParams extends JsonObject>');
     const inputNode = source.split('### node / InputNode\n')[1]?.split('\n### ')[0] ?? '';
     expect(inputNode).toContain('`InputPosition`');
+    expect(inputNode).toContain('`position?`');
+    expect(inputNode).toContain('`[0, 0]`');
+    const irNode = source.split('### IRNode\n')[1]?.split('\n### ')[0] ?? '';
+    expect(irNode).toContain('`position?`');
+    expect(irNode).toContain('`[0, 0]`');
+    expect(irNode).toContain('`text?`');
     expect(inputNode).not.toContain("`IRNode['position']`");
     expect(inputNode).toContain('`Array<IRAnimationTrack>`');
     expect(inputNode).toContain('| Returns |');
