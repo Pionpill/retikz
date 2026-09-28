@@ -1,0 +1,25 @@
+---
+title: Schema 参考
+description: 查询持久化容器输入的字段与约束
+---
+
+下面是持久化输入契约。工厂保留省略字段，parse() 才物化静态默认值。子项写法见[基础用法](/library/layout/overlay-layout/usage)，求解结果见[扩展用法](/library/layout/overlay-layout/extended)。
+
+## OverlayLayoutSchema
+
+<ZodSchema
+  name="OverlayLayoutSchema"
+  description="在共享内容区域内对齐或定位子项的规范输入。"
+  descriptions={{
+    size: '包含内边距的容器双轴分配尺寸策略。',
+    padding: '从容器分配区域到内容区域的内边距。',
+    overflow: '视觉溢出保持可见或裁切到容器分配区域的策略。',
+    namespace: 'Layout 排版能力的复合组件命名空间。',
+    type: '确定性叠加布局的复合组件类型。',
+    justifyItems: '对齐或定位子项默认继承的水平对齐方式。',
+    alignItems: '对齐或定位子项默认继承的垂直对齐方式。',
+    children: '按稳定标识顺序排列、由作者声明的叠加子项。',
+  }}
+/>
+
+子项共用 `kind`、`key`、`child` 与 `margin`。完整联合见 [LayoutItemSchema](/library/layout/flex-layout/schema-reference#layoutitemschema)，本容器的子项字段见[基础用法](/library/layout/overlay-layout/usage)。

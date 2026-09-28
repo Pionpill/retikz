@@ -1,24 +1,53 @@
 ---
 title: Introduction
-description: Standard provides reusable drawing components for grids, axes, frames, surfaces, and legends.
+description: Express common outlines, structured content, and visual explanations with ready-made components
 ---
 
-Standard provides reusable components for common drawing tasks: draw reference grids and axes, add a background, frame, or surface to content, or organize symbols and labels into a legend.
+Standard is Retikz's standard component library. When you already know you need a list, reference axes, or a border around content, describe that object's parameters without calculating every path, text position, or outer dimension.
 
-## Capability groups
+Use it for mathematical and algorithmic illustrations, structural diagrams, and general drawing interfaces. React and Vanilla share the same component semantics. Corresponding JSON IR lets you persist or transmit the drawing intent.
 
-Presentation components express a complete drawing task in one object: a grid describes the distribution of reference lines, a legend describes how symbols correspond to labels, and a surface describes a content background and frame.
+## Start with the content
 
-| Group        | Provides                                                      | Use it for                                                          |
-| ------------ | ------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Presentation | Grid, Axes, Frame, Surface, Legend                            | Organizing a figure's references, framing, surface, and explanation |
-| Container    | List, Map                                                     | Organizing nested structured content                                |
-| Shapes       | Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, Sector | Draw standalone path contours from geometric parameters             |
+This List expresses order through cells, with a Map inside one cell to represent a record. You specify which content belongs in each cell; the components handle their own arrangement and boundaries.
 
-Presentation components can be placed directly inside a React `Layout` or used through the Vanilla entry.
+<ComponentPreview files="/library/standard/container/list/list-composition" size="sm" />
 
-## Choose an entry
+You do not need to position each cell manually. Similarly, Frame updates a group border around Nodes, while Surface adds padding, appearance, and clipping around one child drawing. Shape components draw an outline directly when its center, radii, or angles are known.
 
-- The three packages’ `/presentation` subpaths: presentation Sources, React components, and Vanilla inputs
-- The three packages’ `/container` subpaths: List, Map, and other structured-content components
-- The three packages’ `/shape` subpaths: shape Sources, React components, and Vanilla `shape.xxx`
+## Choose the right capability
+
+| Task                                                      | Choose                | Why                                                          |
+| --------------------------------------------------------- | --------------------- | ------------------------------------------------------------ |
+| Draw an independent outline from geometry                 | Standard shapes       | Preserve rectangle, circle, star, and other geometric intent |
+| Display sequential or keyed content                       | Standard List / Map   | Cells own content, identity, and nesting                     |
+| Add axes, a background, grouping, or a symbol explanation | Standard presentation | Add presentation information around an existing drawing      |
+| Arrange arbitrary child drawings                          | Layout                | Organize content using sizing and arrangement policies       |
+| Map values from data domains and generate data ticks      | Plot                  | Own data and scale semantics                                 |
+| Define arbitrary paths or node connections                | Kernel Node / Path    | Control drawing primitives directly                          |
+
+Standard does not infer domain meaning. You supply Axes tick labels and Legend samples; List and Map visualize structures rather than implementing runtime collections. For data visualization, let a domain package process data before reusing these generic components.
+
+## Choose a host syntax
+
+React components come from family subpaths of `@retikz/standard-react`, Vanilla functions from `@retikz/standard-vanilla`, and JSON contracts and Definitions from `@retikz/standard`. All three expose `/shape`, `/container`, and `/presentation`. Each component page provides four equivalent forms in its integration section.
+
+Start with the quick start for first use. Read basic usage and limitations for everyday configuration, or jump to API and Schema references for parameters. Save implementation details for diagnosis.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'List',
+      description: 'Start with sequential content, cell control, and nested composition',
+      url: '/library/standard/container/list',
+    },
+    {
+      title: 'Surface',
+      description: 'Add padding, appearance, and clipping to an existing child drawing',
+      url: '/library/standard/presentation/surface',
+    },
+    { title: 'Layout', description: 'Choose layout capabilities for general arrangement', url: '/library/layout' },
+  ]}
+/>

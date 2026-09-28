@@ -48,7 +48,6 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
-    schemaPackageName: '@retikz/core',
     schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
   },
   {
@@ -65,7 +64,6 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
-    schemaPackageName: '@retikz/core',
     schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
   },
   {
@@ -100,7 +98,6 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
-    schemaPackageName: '@retikz/core',
     schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
   },
 ];

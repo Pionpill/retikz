@@ -1,63 +1,163 @@
 ---
-title: Scatter & Points
-description: Show individual observations through point positions and relationships, then choose a point chart by its structure.
+title: Point Charts
+description: Choose a point chart based on your question and data fields.
 ---
 
-Point charts use one or more data points as their visual subject. This group helps readers choose a chartType by visual structure and remains a source-directory and `/point` multi-entry import boundary. It does not introduce another Point resolver or runtime dispatch layer.
+Point charts use position to show observations. They help reveal distributions, relationships, clusters, and outliers, and can also show trajectories or before-and-after differences. Data typically has one observation per row, with numeric fields and optional category or ordering fields.
 
-Scatter, Bubble, Regression, Connected Scatter, Ranged Dot, and Strip all belong to the `type: 'point'` family, with `recipe.chartType` selecting each exact schema and recipe. They share root `data`, `layout`, `presentation`, `theme`, and `plotExtension`, while `recipe.encodings`, `recipe.properties`, and the built-in semantic mark fix each chart's data roles and visual structure.
+## What point charts reveal
 
-Field ownership, the authoring pipeline, chart-wide presentation, and Plot extension rules shared by every type live under [Chart Model](/viz/chart/model). This section compares only the visual semantics unique to point chart types.
+Point charts preserve the position of each observation, helping you compare values while seeing individual differences. Instead of showing only totals or averages, they reveal whether a relationship is consistent, whether observations form distinct groups, and which observations stand apart.
 
-Point recipes reserve range space on continuous position scales from the largest final Point radius, preventing boundary points from being clipped. A Point without `size` uses radius `5`; a field-sized Point defaults to maximum radius `20`; a constant size or explicit sqrt scale uses the largest final range value. Regression and Connected Scatter inspect their grouped Point, Ranged Dot inspects both endpoints, and `plotExtension.marks` never participate.
+For example, when comparing income per person and life expectancy across regions, position shows the relationship between the two measures and color can distinguish region categories. Bubble area can add population, bringing magnitude into the comparison. To follow one region over several years, preserve the year order and use a connected scatter chart.
 
-Properties `domainPadding` accepts a nonnegative number or `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }`. Omitting `kind` means range units. Only explicit `kind: 'ratio'` uses a source-domain-span ratio, and every ratio must be below `1`. A concrete side overrides x / y, which override default. Missing range sides inherit the maximum radius; missing ratio sides become `0`. left / right / top / bottom are Cartesian-only and map to domain lower / upper through the scale's actual range direction. Polar accepts only default / x / y.
+## Choosing a chart
 
-Precedence is the automatic maximum radius, then Properties, then an encoding scale operation. An operation's explicit `0` or `{ kind?, lower?, upper? }` is preserved. Categorical scales and `plotExtension` scales are not rewritten. `domainPadding` belongs only to recipe Properties and is rejected on authored marks. Ranged Dot uses a categorical y scale, so only its continuous x padding applies.
+| Chart                                                    | When to use it                                                     | Suitable data                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------- |
+| [Scatter](/viz/chart/points/scatter)                     | Explore relationships between two variables, clusters, or outliers | Two numeric fields                                   |
+| [Bubble](/viz/chart/points/bubble)                       | Compare magnitude alongside two variables                          | Three numeric fields, one representing magnitude     |
+| [Regression](/viz/chart/points/regression)               | Examine overall or grouped trends                                  | Two numeric fields, optionally with a grouping field |
+| [Connected scatter](/viz/chart/points/connected-scatter) | Follow observations along a trajectory                             | Two numeric fields and an explicit order             |
+| [Ranged dot](/viz/chart/points/ranged-dot)               | Compare before-and-after values or two endpoints by category       | A category field and two numeric fields              |
+| [Strip](/viz/chart/points/strip)                         | Compare observation distributions within categories                | A category field and one numeric field               |
 
-## Responsibilities
+<ComponentPreviews
+  items={[
+    { title: 'Scatter', url: '/viz/chart/points/scatter', files: '/viz/chart/points/scatter/scatter-fertility-work' },
+    { title: 'Bubble', url: '/viz/chart/points/bubble', files: '/viz/chart/points/bubble/bubble-basic' },
+    {
+      title: 'Regression',
+      url: '/viz/chart/points/regression',
+      files: '/viz/chart/points/regression/regression-encodings',
+    },
+    {
+      title: 'Connected scatter',
+      url: '/viz/chart/points/connected-scatter',
+      files: '/viz/chart/points/connected-scatter/connected-scatter-basic',
+    },
+    {
+      title: 'Ranged dot',
+      url: '/viz/chart/points/ranged-dot',
+      files: '/viz/chart/points/ranged-dot/ranged-dot-basic',
+    },
+    { title: 'Strip', url: '/viz/chart/points/strip', files: '/viz/chart/points/strip/strip-basic' },
+  ]}
+/>
 
-| Chart                                                    | `chartType`         | Use it when                                                 |
-| -------------------------------------------------------- | ------------------- | ----------------------------------------------------------- |
-| [Scatter](/viz/chart/points/scatter)                     | `scatter`           | Inspecting distributions, clusters, outliers, or trends     |
-| [Bubble Chart](/viz/chart/points/bubble)                 | `bubble`            | Comparing two positions with the magnitude of a third field |
-| [Regression Chart](/viz/chart/points/regression)         | `regression`        | Comparing global or grouped fitted trends over observations |
-| [Connected Scatter](/viz/chart/points/connected-scatter) | `connected-scatter` | Reading explicitly ordered observation trajectories         |
-| [Ranged Dot](/viz/chart/points/ranged-dot)               | `ranged-dot`        | Comparing two endpoints and direction for each category     |
-| [Strip Chart](/viz/chart/points/strip)                   | `strip`             | Inspecting observation distributions within each category   |
+## Preparing data and reading the chart
 
-## Pages
+Decide what one point represents: a user, a measurement, a region, or an observation at a particular time. Values being compared should belong to the same observation; comparisons between groups also need a clear category field. An ordinary scatter chart does not depend on row order. An explicit sequence becomes necessary when connecting observations into a trajectory.
+
+Read the overall distribution first, then compare groups and inspect individual outliers. An upward or downward trend can suggest association, but a chart alone does not establish causation. A regression line summarizes a trend and should not replace the original observations.
+
+- **When points overlap:** try smaller points, lower opacity, or separate views for groups. Consider a strip chart when observations crowd together within categories. Visible point counts can underestimate the number of observations.
+- **When bubbles represent magnitude:** read their area, rather than their diameter, and compare against the legend. Use the data table as well when you need exact values.
+
+## Shared configuration
+
+All six point chart types share edge-padding configuration. React accepts it through the corresponding properties component, such as `ScatterProperties`, or the root `recipe.properties` prop. The Vanilla API uses `properties`; direct IR uses `recipe.properties`. These settings apply to the chart, not individual marks.
+
+| Property        | Type                                                    | Description                                                                                                                                                                      |
+| --------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoPadding`   | `'max-radius'`, `'point-aware'`, `{ kind; clearance? }` | Automatic padding policy; Bubble defaults to point-aware, other point charts to the largest radius. Object form selects a policy with `kind` and edge clearance with `clearance` |
+| `domainPadding` | `number`, Directional padding object                    | Explicit position-domain padding takes precedence over automatic padding. Numeric `0` disables padding; objects configure individual directions                                  |
+
+Keep the default policy for ordinary use. `point-aware` uses existing space around each point and supports built-in continuous scales, band/point categorical scales, Cartesian2D, and Polar2D. Jittered marks use their adjusted positions. Bubble defaults to this policy because its radii vary. The implementation section below explains calculation and precedence.
+
+Size, color, and stroke are common concepts, but their inputs and semantics vary. Bubble requires a numeric size encoding; Connected Scatter styles points and paths separately; Ranged Dot distinguishes shared endpoint styles from start and end overrides. Each chart’s API retains these differences.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="
+  This section explains padding shared by point charts. Skip it on your first visit and return when you need to understand edge space or choose a padding policy.
+"
+/>
+
+### Automatic edge padding
+
+A point's position identifies its center. Mapping the data minimum and maximum directly to plot boundaries leaves the radius extending outside those boundaries. Point charts therefore supply `domainPadding` for continuous position scales that have no padding configured, leaving room inside the edges for point centers. The linear-coordinate illustration compares explicit `domainPadding: 0` with omitting the property. Overflow remains visible on the left to show the clipping risk.
+
+<ComponentPreview files="point-padding-figure" hideCode type="illustration" size="lg" />
+
+Both panels use the same data, point radius, and plot dimensions. Automatic padding changes the position-scale domain; it does not change data, shrink points, or enlarge the canvas. Each edge reserves one radius for extreme points in this illustration.
+
+#### Maximum-radius padding
+
+After default, appended, and replacement marks are determined, Chart reads the final point sizes and selects the largest radius. A constant `size` supplies the radius directly. A field-mapped size uses the maximum of the size scale's output range rather than scanning individual rows to estimate it. Without an explicit size, it uses the default point radius. This calculation covers the radius only; it does not measure additional stroke, shadow, or text extents, so it does not guarantee room for those effects.
+
+When `domainPadding` is omitted, each side reserves the maximum point radius in drawing-coordinate lengths, not data values.
+
+#### Per-point calculation and clearance
+
+`autoPadding: 'max-radius'` keeps the policy above without scanning individual rows. With `autoPadding: 'point-aware'`, Chart supplies the final point marks to Plot. Before generating geometry, Plot uses actual data views, positions, and radii to find compact padding. Space already available around large central points counts toward protection; large points near an edge also contribute, even when they are not position extrema.
+
+The four charts below use identical data, size mappings, and canvas dimensions, comparing each policy with zero clearance and directional clearance (default 8, top 20, left 0). Maximum-radius padding reserves the maximum radius at every edge; point-aware padding uses existing space around the central point and adds the space needed at the edges.
+
+Use `autoPadding: { kind: 'point-aware', clearance: 8 }` to reserve clearance between protected point extents and automatic plot-area edges. `clearance` is a nonnegative drawing-coordinate length, defaulting to `0`. Both strategies support it; explicitly configured `domainPadding` ends do not add clearance.
+
+`clearance` also accepts an `IRBoxSpacing` object. Explicit visual sides require Cartesian coordinates and retain their visual meaning with reversed axes.
+
+<ComponentPreview files="point-auto-padding" hideCode type="illustration" size="lg" />
+
+Both policies adjust position mappings without changing point sizes. Continuous scales usually expand their domains; categorical scales preserve category domains and compress their output ranges. Point-aware solving reuses numeric positions and sizes with bounded iterations and coordinates final plot-area dimensions. It never reads rendered geometry. Each solve pass is linear in the effective point count, so it costs more than the mark-level maximum-radius calculation; strictly minimum padding is not guaranteed.
+
+#### Explicit configuration and limitations
+
+- Explicit `domainPadding` wins. A number applies to all sides; `0` disables padding. Missing `range` ends use the selected policy; missing `ratio` ends remain `0`. Fully explicit padding bypasses point-aware solving.
+- When a scale already defines `domainPadding` or comes from `plotExtension.scales`, Chart preserves it without adding automatic padding.
+- Point-aware mode supports linear, time, log, pow, sqrt, symlog, radial, band, and point position scales. Polar coordinates protect outer circles, annular inner circles, and sector sides without adding a seam to a full-circle angular axis. Infeasible drawing areas or custom definitions missing required capabilities produce errors without falling back.
+- Only effective points inside the baseline domain contribute size-radius constraints. Strokes, shadows, and text are excluded. Outside points retain Plot rendering and clipping semantics; domain expansion may bring some of them into view.
+- Shared scales solve one domain across panels. Incompatible fixed pixel padding across differently sized panels produces an error.
+- Chart references its final Point marks and Relation endpoints; `plotExtension.marks` are not included automatically.
+
+Both `autoPadding` and `domainPadding` belong to the chart’s `recipe.properties`, not an individual mark’s `properties`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Point radius calculation and padding defaults',
+      path: 'packages/viz/chart/src/point/shared/plot.ts',
+      startLine: 51,
+    },
+  ]}
+/>
+
+## Contents
 
 <LinkedSections
   items={[
     {
       title: 'Scatter',
-      description: 'Compare two continuous variables, then add category or magnitude with color and size',
+      description: 'Start with two numeric fields to explore relationships and distributions.',
       url: '/viz/chart/points/scatter',
     },
     {
-      title: 'Bubble Chart',
-      description: 'Drive bubble area with a required third field while retaining Point position semantics',
+      title: 'Bubble',
+      description: 'Add magnitude to compare position and bubble area together.',
       url: '/viz/chart/points/bubble',
     },
     {
-      title: 'Regression Chart',
-      description: 'Overlay raw observations with one or more built-in regression trends',
+      title: 'Regression',
+      description: 'Overlay an overall or grouped trend on the observations.',
       url: '/viz/chart/points/regression',
     },
     {
       title: 'Connected Scatter',
-      description: 'Retain observations while connecting one or more explicitly ordered trajectories',
+      description: 'Follow observations in time or business order.',
       url: '/viz/chart/points/connected-scatter',
     },
     {
       title: 'Ranged Dot',
-      description: 'Compare before and after values with one connector and two endpoints',
+      description: 'Compare two endpoints and the direction of change in each category.',
       url: '/viz/chart/points/ranged-dot',
     },
     {
-      title: 'Strip Chart',
-      description: 'Deterministically spread observations around discrete ticks while preserving continuous values',
+      title: 'Strip',
+      description: 'Spread observations within categories to inspect concentration and variation.',
       url: '/viz/chart/points/strip',
     },
   ]}

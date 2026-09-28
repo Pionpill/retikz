@@ -32,6 +32,7 @@ import {
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from '../../../resolve/coordinate';
 import { resolveCoordinateDefinition, resolveCoordinateFrame } from '../../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../../resolve/guide';
+import type { MarkPaddingContext } from '../../../resolve/scale';
 import type { IRPlot, IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide } from '../../../schemas';
 import { AxisGridApplyTo, CoordinateViewPlacementKind, PlotGuide, ScaffoldFrameMode } from '../../../schemas';
 import type { Rect } from '../../../shared';
@@ -43,6 +44,8 @@ import type { LowerPlotsOptions } from '../types';
 
 /** scoped/scaffold frame 解析所需的显式上下文 */
 export type ScopedFramesResolveContext = {
+  /** 一次 lowering 内的共享留白状态 */
+  markPadding?: MarkPaddingContext;
   node: IRPlot;
   dataView: DataView;
   width: number;
@@ -108,6 +111,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     overrides: Partial<CoordinateResolveContext> = {},
   ): CoordinateResolveContext => ({
     coordinate: source.coordinate,
+    markPadding: context.markPadding,
     rows: dataView.rows,
     fieldTypes: dataView.fieldTypes,
     fieldTypeEvidence: dataView.fieldTypeEvidence,
@@ -411,6 +415,8 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
           ? { plotAreaOverride: scaffoldFrame.plotArea }
           : {}),
         ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
+        domainPaddingScope: scope.id,
+        paddingMarkDataViews: scopedMarkDataViews,
         markDataViews: scopedMarkDataViews,
         ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
       }),
@@ -424,6 +430,8 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
               labelGap: scopedLayout?.labelGap,
               plotAreaOverride: rawResolution.plotArea,
               ...(Object.keys(roleRangeOverrides).length > 0 ? { roleRangeOverrides } : {}),
+              domainPaddingScope: scope.id,
+              paddingMarkDataViews: scopedMarkDataViews,
               markDataViews: scopedMarkDataViews,
               ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
             }),

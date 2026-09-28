@@ -1,0 +1,348 @@
+---
+title: Basic usage
+description: Declare the container and items, then control size, spacing, and alignment
+---
+
+`GridLayout` divides its content box into physical column and row tracks. Tracks may be fixed, use minimum or natural content contributions, absorb finite free space by fractions, or combine bounds with `minmax`. Items may declare continuous spans or follow `autoFlow` into the next available area.
+
+## Using this topic
+
+<ComponentPreview files="/library/layout/grid-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+In React + JSX, direct children of `GridLayout` use `GridLayoutItem`. Each item carries one drawable child:
+
+```text
+GridLayout
+└── GridLayoutItem
+    └── Node / GridLayout
+```
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { GridLayout, GridLayoutItem } from '@retikz/layout-react';
+
+export const Example = () => (
+  <Layout>
+    <GridLayout
+      columns={[
+        { kind: 'fixed', value: 80 },
+        { kind: 'fixed', value: 80 },
+      ]}
+      columnGap={12}
+    >
+      <GridLayoutItem>
+        <Node text="A" />
+      </GridLayoutItem>
+      <GridLayoutItem>
+        <Node text="B" />
+      </GridLayoutItem>
+    </GridLayout>
+  </Layout>
+);
+```
+
+In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { GridLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'gridLayout',
+      columns: [
+        { kind: 'fixed', value: 80 },
+        { kind: 'fixed', value: 80 },
+      ],
+      columnGap: 12,
+      children: [
+        { kind: 'grid', child: { type: 'node', text: 'A' } },
+        { kind: 'grid', child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+export const Example = () => <Layout ir={ir} extensions={{ composites: [GridLayoutDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { gridLayout, GridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+
+const input = scene({
+  children: [
+    gridLayout({
+      columns: [
+        { kind: 'fixed', value: 80 },
+        { kind: 'fixed', value: 80 },
+      ],
+      columnGap: 12,
+      children: [
+        { kind: 'grid', child: { type: 'node', text: 'A' } },
+        { kind: 'grid', child: { type: 'node', text: 'B' } },
+      ],
+    }),
+  ],
+});
+
+console.log(renderToSvgString(input, { adapters: [GridLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { GridLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'gridLayout',
+      columns: [
+        { kind: 'fixed', value: 80 },
+        { kind: 'fixed', value: 80 },
+      ],
+      columnGap: 12,
+      children: [
+        { kind: 'grid', child: { type: 'node', text: 'A' } },
+        { kind: 'grid', child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+console.log(renderToSvgString(ir, { compile: { composites: [GridLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+## Column widths and container space
+
+Column tracks determine how much width each column receives. Fixed tracks keep their specified width; fractional tracks share the remaining container space.
+
+| Property             | Available values                                                                             | Explanation                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `columns`            | Track array; this section uses `{ kind: "fixed", value }` and `{ kind: "fraction", factor }` | At least one column; fixed values are non-negative and factors are positive. Content and bounded tracks are covered in extended usage |
+| `size.x / size.y`    | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }`                        | Physical container width and height: size to content, use a fixed value, or fill finite parent space                                  |
+| `padding`            | Non-negative number, or an object with `x` / `y` / per-side values                           | Inset the container on each side to form the content box                                                                              |
+| `columnGap / rowGap` | Non-negative number                                                                          | Set column and row gaps respectively; spanned areas include internal gaps                                                             |
+
+The first demo column is fixed at 100; the other two share the remainder. Adjust the last column’s factor, then narrow the container to observe text wrapping. Padding and column gaps reduce the distributable width. Without explicit row tracks, content determines row height. Slot width and Node border width need not match.
+
+<ComponentPreview files="grid-tracks" size="md" />
+
+## Item placement in rows and columns
+
+An item can occupy one cell or span adjacent rows and columns. Items without an explicit start are placed by row or by column, skipping occupied areas.
+
+| Property       | Available values                            | Explanation                                                                                                                |
+| -------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `column / row` | `{ start?, span? }`                         | Item column and row placement: `start` is a zero-based non-negative integer; `span` is a positive integer, defaulting to 1 |
+| `autoFlow`     | `row`, `column`                             | Search by rows or columns without dense backfilling                                                                        |
+| `rows`         | Track array; this section uses fixed tracks | Declare explicit rows; the demo keeps two rows to compare auto-placement directions                                        |
+
+Switch the demo’s auto-placement direction to see how authored order maps to cells. Change the first item’s span from 1 to 2 and watch later items avoid occupied space. A span includes internal gaps without merging the tracks.
+
+<ComponentPreview files="grid-placement" size="md" />
+
+## Track distribution and item alignment
+
+Track distribution positions the entire set of rows or columns. Item alignment positions a drawing inside its own grid area. They operate at different levels.
+
+| Property                        | Available values                                                                     | Explanation                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `justifyContent / alignContent` | `start`, `center`, `end`, `stretch`, `space-between`, `space-around`, `space-evenly` | Container properties: distribute columns and rows respectively; default to `start` |
+| `justifyItems`                  | `start`, `center`, `end`, `stretch`                                                  | Container property: default horizontal item alignment; defaults to `stretch`       |
+| `alignItems`                    | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`               | Container property: default vertical item alignment; defaults to `stretch`         |
+
+The demo uses fixed tracks with free space and starts centered for comparison. Change column or row distribution to move the tracks together, then change item alignment to move Nodes inside unchanged tracks. `stretch` provides a size constraint but does not guarantee deformation of fixed geometry.
+
+<ComponentPreview files="grid-alignment" size="md" />
+
+## Item margins and individual alignment
+
+An item can reserve margins and override default alignment independently of its siblings.
+
+| Property      | Available values                                                                 | Explanation                                                          |
+| ------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `margin`      | Non-negative number, or an object with `x` / `y` / per-side values               | Item margins reduce the space available to the child inside its slot |
+| `justifySelf` | `start`, `center`, `end`, `stretch`; optional                                    | Horizontal item alignment; inherits `justifyItems` when omitted      |
+| `alignSelf`   | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`; optional | Vertical item alignment; inherits `alignItems` when omitted          |
+
+Only First Node changes in this demo. Increase its margin and switch horizontal and vertical alignment to compare it with the centered siblings. Margins participate in layout; a child can still exceed its slot when space is insufficient. Slot boundaries are not clipping boundaries.
+
+<ComponentPreview files="grid-item" size="md" />
+
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'columns',
+      kind: 'property',
+      type: 'Array<GridTrackInput>',
+      description:
+        'Explicit physical columns; at least one. Use `{ kind: "fixed", value }` for fixed widths and `{ kind: "fraction", factor }` for finite remaining space',
+      required: true,
+    },
+    {
+      name: 'rows',
+      kind: 'property',
+      type: 'Array<GridTrackInput>',
+      description:
+        'Explicit physical rows; implicit rows fill missing entries. This page uses `{ kind: "fixed", value }` to expose alignment',
+      defaultValue: '[]',
+    },
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        'Container sizing and content insets Each axis accepts `{ kind: "content", min?, max? }`, `{ kind: "fixed", value }`, or `{ kind: "fill", min?, max? }`.',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: 'Inset the content box from the container allocation, uniformly or per edge',
+      defaultValue: '0',
+    },
+    {
+      name: 'columnGap',
+      kind: 'property',
+      type: 'number',
+      description: 'Gap between physical columns; spans include internal gaps',
+      defaultValue: '0',
+    },
+    {
+      name: 'rowGap',
+      kind: 'property',
+      type: 'number',
+      description: 'Gap between physical rows, independent of auto-flow direction',
+      defaultValue: '0',
+    },
+    {
+      name: 'autoFlow',
+      kind: 'property',
+      type: "'row' | 'column'",
+      description: '`row` searches row-first; `column` searches column-first; neither performs dense backfilling',
+      defaultValue: 'row',
+    },
+    {
+      name: 'column',
+      kind: 'property',
+      type: '{ start?: number; span?: number }',
+      description: 'Zero-based position and span',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'row',
+      kind: 'property',
+      type: '{ start?: number; span?: number }',
+      description: 'Zero-based position and span',
+      defaultValue: 'start: auto, span: 1',
+    },
+    {
+      name: 'justifyContent',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
+      description:
+        'Distribute the column group horizontally; `start` / `center` / `end` place the group, and `space-*` distribute free gaps',
+      defaultValue: 'start',
+    },
+    {
+      name: 'alignContent',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'",
+      description: 'Distribute the row group vertically; fixed row sizes expose remaining free space',
+      defaultValue: 'start',
+    },
+    {
+      name: 'justifyItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: 'Default item alignment',
+      defaultValue: 'stretch',
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: 'Default item alignment',
+      defaultValue: 'stretch',
+    },
+    {
+      name: 'margin',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: 'Item margin used by measurement and placement, uniformly or per edge',
+      defaultValue: '0',
+    },
+    {
+      name: 'justifySelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description:
+        'Override horizontal alignment; `start` / `center` / `end` place the item and `stretch` supplies an exact proposal',
+      defaultValue: 'Inherited',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: 'Override vertical alignment; omission inherits the container',
+      defaultValue: 'Inherited',
+    },
+  ]}
+/>
+
+Full signatures and constraints: [API reference](/library/layout/grid-layout/api-reference) · [Schema reference](/library/layout/grid-layout/schema-reference).
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and clipping',
+      url: '/library/layout/grid-layout/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/grid-layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public functions, types, and props',
+      url: '/library/layout/grid-layout/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
+  ]}
+/>

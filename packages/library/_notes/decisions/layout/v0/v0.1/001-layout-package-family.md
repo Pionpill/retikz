@@ -1,6 +1,6 @@
 ---
 description: Layout 独立包及排版所有权迁移，覆盖 Flex、Grid、Overlay、组合与检查入口；不负责自动图布局
-keywords: 'FlexLayout、GridLayout、OverlayLayout、排版、布局迁移'
+keywords: 'FlexLayout、GridLayout、OverlayLayout、LayoutItem、React 子项、排版、布局迁移'
 ---
 
 # ADR-001：建立 Layout package family 并迁移排版布局
@@ -74,6 +74,14 @@ Layout 不建立专用 solver registry 或 `defineLayout()` 扩展轴。三个�
 - Standard 三包的 Layout 导出、`@retikz/standard/layout`、旧 Inspector API 与 `standard.*Layout` identity 直接删除，不提供 alias、双注册或双 namespace
 - Direct IR、React 与 Vanilla 进入同一稀疏 Source IR、Definition、领域 resolve、compile 和 artifact 主链；adapter 不复制 schema、solver、默认或诊断
 - renderer 只消费 Core Scene，不增加 Layout 分支或布局回读
+
+### React 子项与跨宿主等价性
+
+React 通过 `FlexLayoutItem`、`GridLayoutItem`、`OverlayLayoutItem` 分别声明对应容器的直属子项。组件身份决定所属布局，Props 不接收 `kind`；三者分别提供对应布局的分配与放置属性。React 不再导出通用 `LayoutItem` 或 `LayoutItemProps`，不保留旧名别名
+
+子项必须置于匹配的布局容器下，包括对应的 Inspect 容器；Fragment 和数组透明展开。独立使用、放入错误的布局容器、容器直接接收普通图元或子项包含多个可绘制内容时明确报错。`children` 的 JSX 子内容与 `ir` 二选一，每个子项承载一个内容；`itemKey` 仍映射到持久化 `key`，React 自身的 `key` 不作为布局身份，省略值保持稀疏
+
+React adapter 由子项组件身份补充 `kind: 'flex' | 'grid' | 'overlay'`，继续经 Vanilla Input 进入现有 Source IR 与布局编译链。Vanilla / JSON IR 保留显式 `kind` 判别联合，不为 JSX 命名引入平行 schema 或改变求解语义。React 与 Vanilla 表达同一排版契约，但采用各自宿主自然的声明形式
 
 ## 结果与长期边界
 

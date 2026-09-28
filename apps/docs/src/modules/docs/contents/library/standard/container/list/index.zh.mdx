@@ -126,6 +126,15 @@ console.log(svg);
 
 在 React 中可用 `ListItem` 子组件作为声明式简写，适合与页面 JSX 一起编写的内容。用 `text` 表达文字，也可以嵌入一个图形组件；无需把子组件组织成 `items` 数组。
 
+```text
+List
+├── ListItem
+└── ListItem
+    └── Map
+```
+
+`ListItem` 必须直属于 `List`；文字由 `text` 提供，嵌套图形作为它的子组件。下例先使用两个文字单元格，图形组合见扩展用法。
+
 ```tsx
 import { List, ListItem } from '@retikz/standard-react/container';
 
@@ -333,157 +342,7 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 
 ### ListSchema
 
-<ZodSchema
-  name="ListSchema"
-  description="一维内容的单元格展示，支持显式单元格或 JSON 数组"
-  expandNested
-  descriptions={{
-    '/union/0/field/"namespace"': '命名空间，固定为 standard',
-    '/union/0/field/"type"': '组件类型判别字段',
-    '/union/0/field/"frame"': '绘制在容器内容下方的可选外框',
-    '/union/0/field/"theme"': '由后代继承的稀疏主题覆盖',
-    '/union/0/field/"id"': '可选命名引用 id，注册在父命名空间',
-    '/union/0/field/"localNamespace"': '将后代节点、坐标及嵌套作用域的 id 限定在本地；容器自身 id 仍注册在父命名空间',
-    '/union/0/field/"transforms"': '作用于全部内容的局部变换，数组末项先作用；平移在编译时展开',
-    '/union/0/field/"placement"': '内在布局与局部变换后的最终放置方式',
-    '/union/0/field/"zIndex"': '容器整体在同级图元中的堆叠顺序，不控制内部子图元',
-    '/union/0/field/"clip"': '容器局部坐标中的整体裁切区域',
-    '/union/0/field/"boundingShape"': '命名引用使用的包围轮廓：矩形或圆形',
-    '/union/0/field/"meta"': '保留到 Scene 的 JSON 元数据，编译器不解释其内容',
-    '/union/0/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
-    '/union/0/field/"defaults"': '后代默认样式及其继承屏障',
-    '/union/0/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-    '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-    '/union/0/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/union/0/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/union/0/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
-    '/union/0/field/"items"': '按顺序排列的单元格；字符串默认只提供文字',
-    '/union/0/field/"cellIdMode"':
-      '身份来源：explicit 仅显式 id，string 使用 items 字符串，index 由 List id 与零基下标生成',
-    '/union/0/field/"items"/array/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
-    '/union/0/field/"items"/array/union/1/field/"content"': '文字或唯一可绘制 child，支持已注册的第三方复合组件',
-    '/union/0/field/"items"/array/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"color"':
-      '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"lineCap"':
-      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"lineJoin"':
-      '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"opacity"': '单元格整体透明度',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"textColor"':
-      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
-    '/union/0/field/"items"/array/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
-    '/union/0/field/"items"/array/union/1/field/"layout"': '稀疏单格尺寸、内边距和溢出覆盖',
-    '/union/0/field/"items"/array/union/1/field/"layout"/field/"width"':
-      '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用当前格内容宽度加内边距',
-    '/union/0/field/"items"/array/union/1/field/"layout"/field/"height"':
-      '含内边距的固定边框高度，auto 使用结构的自然尺寸',
-    '/union/0/field/"items"/array/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
-    '/union/0/field/"items"/array/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
-    '/union/0/field/"data"': '此分支禁止 data',
-    '/union/0/field/"dataObjectDisplay"': '此分支禁止 dataObjectDisplay',
-    '/union/0/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
-    '/union/0/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/union/0/field/"style"/field/"stroke"': '描边颜色或绘制对象',
-    '/union/0/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
-    '/union/0/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/union/0/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/union/0/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/union/0/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/0/field/"style"/field/"opacity"': '单元格整体透明度',
-    '/union/0/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/union/0/field/"style"/field/"fill"': '填充颜色或绘制对象',
-    '/union/0/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/union/0/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
-    '/union/0/field/"style"/field/"textColor"':
-      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
-    '/union/0/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
-    '/union/0/field/"label"': '容器附属标签，通过 position 与 distance 定位',
-    '/union/0/field/"layout"': 'List 单元格分配与排列',
-    '/union/0/field/"layout"/field/"width"':
-      '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用各格内容宽度加内边距',
-    '/union/0/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
-    '/union/0/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
-    '/union/0/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
-    '/union/0/field/"layout"/field/"direction"': '单轴排列方向，不自动换行',
-    '/union/0/field/"layout"/field/"gap"': '相邻单元格及索引条之间的距离',
-    '/union/0/field/"index"': 'false 隐藏索引；true 或对象启用索引带',
-    '/union/0/field/"index"/union/1/field/"position"': 'before 为横排上方或竖排左侧，after 为横排下方或竖排右侧',
-    '/union/0/field/"index"/union/1/field/"start"': '显示索引的非负整数起点，不作为单元格身份',
-    '/union/0/field/"index"/union/1/field/"style"': '索引文本样式，字体按字段继承整体字体，不受单格样式影响',
-    '/union/0/field/"index"/union/1/field/"style"/field/"font"': '索引字体，按字段继承整体字体',
-    '/union/0/field/"index"/union/1/field/"style"/field/"textColor"':
-      '索引文字颜色，默认继承整体文本颜色；支持主色派生与对比色',
-    '/union/0/field/"index"/union/1/field/"style"/field/"color"': '索引主色，沿用 Core 的 currentColor 继承规则',
-    '/union/0/field/"index"/union/1/field/"style"/field/"opacity"': '索引文字透明度，范围为 0 到 1',
-    '/union/1/field/"namespace"': '命名空间，固定为 standard',
-    '/union/1/field/"type"': '组件类型判别字段',
-    '/union/1/field/"frame"': '绘制在容器内容下方的可选外框',
-    '/union/1/field/"theme"': '由后代继承的稀疏主题覆盖',
-    '/union/1/field/"id"': '可选命名引用 id，注册在父命名空间',
-    '/union/1/field/"localNamespace"': '将后代节点、坐标及嵌套作用域的 id 限定在本地；容器自身 id 仍注册在父命名空间',
-    '/union/1/field/"transforms"': '作用于全部内容的局部变换，数组末项先作用；平移在编译时展开',
-    '/union/1/field/"placement"': '内在布局与局部变换后的最终放置方式',
-    '/union/1/field/"zIndex"': '容器整体在同级图元中的堆叠顺序，不控制内部子图元',
-    '/union/1/field/"clip"': '容器局部坐标中的整体裁切区域',
-    '/union/1/field/"boundingShape"': '命名引用使用的包围轮廓：矩形或圆形',
-    '/union/1/field/"meta"': '保留到 Scene 的 JSON 元数据，编译器不解释其内容',
-    '/union/1/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
-    '/union/1/field/"defaults"': '后代默认样式及其继承屏障',
-    '/union/1/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
-    '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
-    '/union/1/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
-    '/union/1/field/"defaults"/field/"arrow"': '箭头默认样式',
-    '/union/1/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
-    '/union/1/field/"items"': '此分支禁止显式单元格',
-    '/union/1/field/"data"': '递归展示 JSON 数组，默认不推导单元格 id',
-    '/union/1/field/"dataObjectDisplay"':
-      '非空对象值的展示方式：map 递归绘制，text 显示紧凑 JSON 文本；默认 map，嵌套数组继承此设置',
-    '/union/1/field/"cellIdMode"': '身份来源：explicit 默认不生成 id，index 由 List id 与零基下标生成；禁止 string',
-    '/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
-    '/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
-    '/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
-    '/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
-    '/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
-    '/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
-    '/union/1/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
-    '/union/1/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
-    '/union/1/field/"style"/field/"opacity"': '单元格整体透明度',
-    '/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
-    '/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
-    '/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
-    '/union/1/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
-    '/union/1/field/"style"/field/"textColor"':
-      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
-    '/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
-    '/union/1/field/"label"': '容器附属标签，通过 position 与 distance 定位',
-    '/union/1/field/"layout"': 'List 单元格分配与排列',
-    '/union/1/field/"layout"/field/"width"':
-      '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用各格内容宽度加内边距',
-    '/union/1/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
-    '/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
-    '/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
-    '/union/1/field/"layout"/field/"direction"': '单轴排列方向，不自动换行',
-    '/union/1/field/"layout"/field/"gap"': '相邻单元格及索引条之间的距离',
-    '/union/1/field/"index"': 'false 隐藏索引；true 或对象启用索引带',
-    '/union/1/field/"index"/union/1/field/"position"': 'before 为横排上方或竖排左侧，after 为横排下方或竖排右侧',
-    '/union/1/field/"index"/union/1/field/"start"': '显示索引的非负整数起点，不作为单元格身份',
-    '/union/1/field/"index"/union/1/field/"style"': '索引文本样式，字体按字段继承整体字体，不受单格样式影响',
-    '/union/1/field/"index"/union/1/field/"style"/field/"font"': '索引字体，按字段继承整体字体',
-    '/union/1/field/"index"/union/1/field/"style"/field/"textColor"':
-      '索引文字颜色，默认继承整体文本颜色；支持主色派生与对比色',
-    '/union/1/field/"index"/union/1/field/"style"/field/"color"': '索引主色，沿用 Core 的 currentColor 继承规则',
-    '/union/1/field/"index"/union/1/field/"style"/field/"opacity"': '索引文字透明度，范围为 0 到 1',
-  }}
-/>
+<ZodSchema name="ListSchema" description="一维内容的单元格展示，支持显式单元格或 JSON 数组" expandNested />
 
 ## 延伸阅读
 

@@ -1,8 +1,9 @@
 import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
 import { DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
+import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
-import { isBuiltinScaleOperation } from '../../contract';
+import { isBuiltinScaleOperation, readCoordinateScaleNames } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import {
   buildProportionalIntervals,
@@ -29,6 +30,9 @@ import {
   orderedCategoryDomain,
   resolvePositionScale,
   resolvePositionScaleContinuity,
+  resolveScaleDefinition,
+  resolveBuiltinPositionOperation,
+  markDomainPaddingOf,
 } from '../scale';
 import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
 
@@ -447,6 +451,158 @@ export const resolveCoordinateFrame = (
     values: Array<unknown>,
   ): IRPlotScaleOperation => resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
 
+  const paddedScales = new Map<string, PositionScale>();
+  const coordinateScaleNames = readCoordinateScaleNames(coordinateDefinition, coordinateOperation);
+  const hasMarkPadding = Object.values(coordinateScaleNames).some(name => {
+    const scale = name === undefined ? undefined : scaleByName.get(name);
+    return scale !== undefined && markDomainPaddingOf(scale) !== undefined;
+  });
+  const operationsByRole = new Map<string, IRPlotScaleOperation>();
+  const mappingsByRole = new Map<string, DomainPaddingScale>();
+  if (hasMarkPadding) {
+    if (context.markPadding === undefined || coordinateDefinition.domainPadding === undefined) {
+      throw new RetikzPlotError(`coordinate "${coordinateOperation.type}" has no mark domainPadding capability`);
+    }
+    for (const role of roles) {
+      if (!coordinateDefinition.domainPadding.roles.includes(role))
+        throw new RetikzPlotError(`coordinate role "${role}" does not support mark domainPadding`);
+      const values = collectValues(role, role === 'x' ? 'primary' : 'secondary', roleChannelOf(role), role === 'y');
+      const scaleName = coordinateScaleNames[role];
+      const operation = resolveScaleForDefinitionRole(
+        role,
+        typeof scaleName === 'string' ? scaleName : undefined,
+        values,
+      );
+      operationsByRole.set(role, operation);
+      const definition = resolveScaleDefinition(operation, { registry: scaleRegistry });
+      if (definition.family !== 'position' || definition.domainPadding === undefined) {
+        throw new RetikzPlotError(`scale "${operation.name}" does not support mark domainPadding`);
+      }
+      const capability = definition.domainPadding;
+      const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+      mappingsByRole.set(
+        role,
+        context.markPadding.mappingOf(group, () => {
+          const effective = resolveBuiltinPositionOperation({ ...operation, domainPadding: undefined }, values, [0, 1]);
+          return capability(definition.schema.parse(effective) as never, values);
+        }),
+      );
+    }
+  }
+  const buildPositionScale = (
+    operation: IRPlotScaleOperation,
+    values: Array<unknown>,
+    range: readonly [number, number],
+  ): PositionScale => {
+    const padding = markDomainPaddingOf(operation);
+    if (padding === undefined) return resolvePositionScale(operation, values, range, { registry: scaleRegistry });
+    const existing = paddedScales.get(operation.name);
+    if (existing !== undefined) return existing;
+    const role = roles.find(candidate => operationsByRole.get(candidate)?.name === operation.name);
+    const mapping = role === undefined ? undefined : mappingsByRole.get(role);
+    if (role === undefined || mapping === undefined || context.markPadding === undefined)
+      throw new RetikzPlotError(`scale "${operation.name}" has no padding role`);
+    const roleIndex = roles.indexOf(role);
+    const localViews = context.paddingMarkDataViews ?? markDataViews;
+    const paddingContext = context.markPadding;
+    const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+    const samples = () => {
+      const constraints = [];
+      const clearance = {
+        lower: (typeof padding.clearance === 'object' ? padding.clearance.lower : padding.clearance) ?? 0,
+        upper: (typeof padding.clearance === 'object' ? padding.clearance.upper : padding.clearance) ?? 0,
+      };
+      for (const id of padding.marks) {
+        const view = localViews.find(candidate => candidate.mark.id === id);
+        if (view === undefined) {
+          // 共享域可引用其它消费视图的图元；由该图元所在视图提交其实际 range 约束
+          if (markDataViewsForRole(role).some(candidate => candidate.mark.id === id)) continue;
+          throw new RetikzPlotError(
+            `scale "${operation.name}" references unknown padding mark "${id}" or a mark that does not consume this scale`,
+          );
+        }
+        const placed = paddingContext.placedTargetsOf(view, paddingFrame);
+        const placedByKey = new Map(placed?.targets.map(target => [target.key, target]));
+        for (const target of paddingContext.targetsOf(view, roles)) {
+          const positions = roles.map(
+            (targetRole, index) => mappingsByRole.get(targetRole)?.normalize(target.values[index]) ?? NaN,
+          );
+          if (positions.some(position => !Number.isFinite(position) || position < 0 || position > 1)) continue;
+          const mapped = paddingFrame.mapRoles?.(target.values);
+          const placedTarget = target.key === undefined ? undefined : placedByKey.get(target.key);
+          if (placed !== undefined && placedTarget === undefined)
+            throw new RetikzPlotError(`mark "${id}" padding target must identify its placement target`);
+          const effectiveMapped = placedTarget?.mappedRoles ?? mapped;
+          if (coordinateDefinition.domainPadding?.measure !== undefined && effectiveMapped == null)
+            throw new RetikzPlotError(
+              `coordinate "${coordinateOperation.type}" requires mapped roles for domainPadding measurement`,
+            );
+          if (
+            placedTarget !== undefined &&
+            placedTarget.position !== null &&
+            effectiveMapped !== undefined &&
+            effectiveMapped !== null
+          ) {
+            const expected = paddingFrame.projectMappedRoles?.(effectiveMapped);
+            if (
+              expected !== undefined &&
+              expected !== null &&
+              (Math.abs(expected[0] - placedTarget.position[0]) > 1e-9 ||
+                Math.abs(expected[1] - placedTarget.position[1]) > 1e-9)
+            )
+              throw new RetikzPlotError(`mark "${id}" screen placement cannot be measured in role space`);
+          }
+          const measured =
+            effectiveMapped != null && coordinateDefinition.domainPadding?.measure !== undefined
+              ? coordinateDefinition.domainPadding.measure({
+                  frame: paddingFrame,
+                  role,
+                  mappedRoles: effectiveMapped,
+                  extent: target.extent[roleIndex],
+                  clearance,
+                })
+              : {
+                  lower: target.extent[roleIndex] + clearance.lower,
+                  upper: target.extent[roleIndex] + clearance.upper,
+                };
+          if (measured === null) continue;
+          if (
+            !Number.isFinite(measured.lower) ||
+            !Number.isFinite(measured.upper) ||
+            measured.lower < 0 ||
+            measured.upper < 0
+          )
+            throw new RetikzPlotError(
+              `coordinate "${coordinateOperation.type}" returned invalid domainPadding extents`,
+            );
+          const currentRange = paddingFrame.roleScales?.[role]?.range();
+          const position =
+            placedTarget?.mappedRoles != null && currentRange !== undefined
+              ? paddingContext.positionOf(group, placedTarget.mappedRoles[roleIndex], mapping, currentRange)
+              : positions[roleIndex];
+          constraints.push({
+            value: target.values[roleIndex],
+            position,
+            ...(placedTarget?.mappedRoles == null ? {} : { actual: placedTarget.mappedRoles[roleIndex] }),
+            lower: measured.lower - clearance.lower,
+            upper: measured.upper - clearance.upper,
+          });
+        }
+      }
+      return constraints;
+    };
+    const scale = context.markPadding.scaleOf(
+      group,
+      context.domainPaddingScope ?? 'root',
+      padding,
+      samples,
+      mapping,
+      'range' in operation && Array.isArray(operation.range) ? (operation.range as [number, number]) : range,
+    );
+    paddedScales.set(operation.name, scale);
+    return scale;
+  };
+
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
   const parsedCoordinateOperation = coordinateDefinition.schema.parse(coordinateOperation) as never;
   const resolution = coordinateDefinition.resolve(parsedCoordinateOperation, {
@@ -469,8 +625,7 @@ export const resolveCoordinateFrame = (
     resolveVisibleGuideTicks: context.resolveVisibleGuideTicks,
     resolveScaleForRole: resolveScaleForDefinitionRole,
     resolvePositionScaleContinuity: operation => resolvePositionScaleContinuity(operation, { registry: scaleRegistry }),
-    buildPositionScale: (def, values, range) =>
-      resolvePositionScale(def, values, [range[0], range[1]], { registry: scaleRegistry }),
+    buildPositionScale,
     assertBaselineScaleCompatible: (scaleType, marks) =>
       assertBaselineScaleCompatible(scaleType, marks, { registry: scaleRegistry }),
     axisGuides,
@@ -479,6 +634,7 @@ export const resolveCoordinateFrame = (
     rows,
     marks: node.marks,
   });
+  const paddingFrame: CoordinateFrame = resolution.frame;
   if (resolution.frame.type !== coordinateOperation.type) {
     throw new RetikzPlotError(
       `lowerPlots: coordinate definition "${coordinateOperation.type}" returned frame type "${resolution.frame.type}"; frame type must match the registered coordinate type`,

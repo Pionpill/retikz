@@ -1,7 +1,7 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { createPointCoordinateControl } from '../point-coordinate-control';
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { STRIP_BASIC_CONTROL_IDS } from './strip-basic.controls';
 import { stripVegaBarleyData } from './strip-vega-barley.data';
 
@@ -23,37 +23,8 @@ export const stripBasicControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: 'Position mapping',
-      controls: [
-        {
-          kind: 'select',
-          id: STRIP_BASIC_CONTROL_IDS.discreteRole,
-          label: 'Discrete role',
-          defaultValue: 'x',
-          options: [
-            { value: 'x', label: 'x (polar angle)' },
-            { value: 'y', label: 'y (polar radius)' },
-          ],
-        },
-        {
-          kind: 'select',
-          id: STRIP_BASIC_CONTROL_IDS.discreteScale,
-          label: 'Discrete scale',
-          defaultValue: 'point',
-          options: [
-            { value: 'point', label: 'Point' },
-            { value: 'band', label: 'Band' },
-          ],
-        },
-        createPointCoordinateControl({
-          id: STRIP_BASIC_CONTROL_IDS.coordinateSystem,
-          label: 'Coordinate system',
-          cartesianLabel: 'Cartesian',
-          polarLabel: 'Polar',
-        }),
-      ],
-    },
+
+    createPointCoordinateSection(STRIP_BASIC_CONTROL_IDS.coordinateSystem, 'en'),
     {
       label: 'Spread and points',
       controls: [
@@ -99,6 +70,15 @@ export const stripBasicControls = definePreviewControls({
         },
         {
           kind: 'range',
+          id: STRIP_BASIC_CONTROL_IDS.pointOpacity,
+          label: 'Opacity',
+          defaultValue: 0.75,
+          min: 0.1,
+          max: 1,
+          step: 0.05,
+        },
+        {
+          kind: 'range',
           id: STRIP_BASIC_CONTROL_IDS.pointSize,
           label: 'Point radius',
           defaultValue: 5,
@@ -115,20 +95,13 @@ export const stripBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: stripBasicControls,
   canonicalValues: {
-    [STRIP_BASIC_CONTROL_IDS.discreteRole]: 'x',
-    [STRIP_BASIC_CONTROL_IDS.discreteScale]: 'point',
     [STRIP_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
+    [STRIP_BASIC_CONTROL_IDS.pointOpacity]: 0.75,
     [STRIP_BASIC_CONTROL_IDS.jitterSpan]: 0.3,
     [STRIP_BASIC_CONTROL_IDS.distribution]: 'uniform',
     [STRIP_BASIC_CONTROL_IDS.normalSigma]: 0.5,
     [STRIP_BASIC_CONTROL_IDS.seed]: 0,
     [STRIP_BASIC_CONTROL_IDS.pointSize]: 5,
   },
-  relatedApis: [
-    'StripEncodings.x',
-    'StripEncodings.y',
-    'StripChart.coordinate',
-    'StripProperties.jitter',
-    'StripProperties.size',
-  ],
+  relatedApis: ['StripChart.coordinate', 'StripProperties.opacity', 'StripProperties.jitter', 'StripProperties.size'],
 } satisfies PreviewControlContract;

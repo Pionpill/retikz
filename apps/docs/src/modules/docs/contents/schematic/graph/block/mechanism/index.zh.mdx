@@ -1,0 +1,98 @@
+---
+title: 实现原理
+description: 理解结构块的纵向布局、等分行、外框寻址与局部主题组合。
+---
+
+先阅读[基础用法](/schematic/graph/block/usage)。本页解释同一个 Block 为什么既能排列任意内容，又能作为整体连接目标；Header、Section 与 Row 的局部布局也分别说明。
+
+## 外框包住纵向布局
+
+Block 不要求 children 属于某个固定组件集合。它将每个 child 包装为一个 Flex item，再交给纵向 FlexLayout；Standard Surface 在布局结果外添加 padding、背景和边框。Surface 保留 Block 的 Scope 字段，因此显示外框和发布 id 使用同一个容器边界。
+
+- Flex item：一次 child 出现对应的布局项，保留声明顺序，默认按内容取高。
+- Surface：根据内容尺寸形成可见外框，并承接变换、局部命名空间和引用身份。
+
+`gap` 调整直接 children 的间距，`padding` 调整内容与外框的距离。`width` / `minWidth` 是包含水平 padding 的外层尺寸；resolve 在省略 minWidth 时使用 240，lowering 再应用默认 gap 8 和 padding 8。这些有效值不写回稀疏 Source。
+
+<SourceLinks
+  sources={[
+    { label: '有效最小宽度与主题外框', path: 'packages/schematic/graph/src/resolve/block/resolve.ts' },
+    { label: 'Surface 与纵向 Flex 组合', path: 'packages/schematic/graph/src/pipeline/block/lower.ts' },
+    { label: '宽度 proposal 与布局结果', path: 'packages/schematic/graph/src/pipeline/block/compile.ts' },
+  ]}
+/>
+
+## Header 改方向时只改变文字区
+
+Header 外层始终横向排列 icon、文字区和 trail。`direction` 控制的是文字区内 title 与 description 的排列；它不会把 icon 移到标题上方。文字区可以增长以占据剩余宽度，slot 保留各自内容尺寸。
+
+title 默认使用 base 粗体，description 使用 xs 和 0.7 不透明度。`IRBlockText` 对象的显式文字字段覆盖这些默认；生成文字周围使用重置 Node 默认值的 Scope，避免外部 Node 外壳样式意外进入 Header 文本。
+
+<SourceLinks
+  sources={[
+    { label: 'Header 两层 Flex 与文字隔离', path: 'packages/schematic/graph/src/pipeline/block/structure-lower.ts' },
+  ]}
+/>
+
+## Row 等分直接内容
+
+Section 将可选标题放在 children 前面，再使用纵向 Flex。Row 则将 `content` 文本转换为普通文字 Node，或直接使用 `children`，然后统一生成横向 Flex items。
+
+Row 的每项使用 `basis: 0`、`grow: 1`、`shrink: 1`、`min: 0`。因此等分的是扣除间距后的可用宽度，不是按文字长度分配比例。一个长文本不会自动获得两倍列宽；需要换行时显式提供文字约束。Section 与 Row 分别生成自己的 Surface，显式 id 可以成为独立连接目标。
+
+Header、Section、Row 各有独立的 composite definition，编译时测量下沉后的布局并重放结果；不依赖外层一定存在 Block。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Section 与 Row 的布局、文字和外框',
+      path: 'packages/schematic/graph/src/pipeline/block/structure-lower.ts',
+    },
+    { label: '独立结构组件的测量与重放', path: 'packages/schematic/graph/src/pipeline/block/structure-compile.ts' },
+  ]}
+/>
+
+## 当前外框与后代规则分别解析
+
+Block 当前外框先取得有效 Graph Theme 的基线，再让显式 background、border、cornerRadius 覆盖对应顶层字段。一个显式 border 对象替换整个主题 border，不会逐字段继承其中的虚线或透明度。
+
+Block 上的 graphDefaults / graphRules 则为可见后代建立上下文：defaults 可影响 Entity、Relation、Group、Block；rules 匹配 Entity / Relation。它们沿已知内容边界传播，不修改当前 Block 外框、普通 Core child 或未知 composite。局部 theme 不清除这些作者规则。
+
+id 原样进入 Scope；Block 不生成父级前缀。需要独立命名空间时显式开启 localNamespace，引用解析与边界诊断继续使用 Core 的同一套规则。
+
+<SourceLinks
+  sources={[
+    { label: 'Block 上下文与后代投影入口', path: 'packages/schematic/graph/src/resolve/graph/resolve.ts' },
+    { label: '外框显式字段优先', path: 'packages/schematic/graph/src/pipeline/block/lower.ts' },
+  ]}
+/>
+
+## CodeBlock 先建立主题边界再组合内容
+
+自定义代码实体的 compose 需要读取局部主题。如果先生成内容再应用 theme，回调就会拿到外层主题。因此扩展先建立主题 Scope，再在其内部求值 codeBlockTokens 并调用 compose，最后把返回的内容装入唯一 Block 根。
+
+<ComponentPreview
+  files="block-compose-flow"
+  size="xs"
+  type="flow"
+  hideCode
+  caption="主题边界影响 compose 的输入；compose 的输出只是内容，Block 根由公共实现建立。"
+/>
+
+领域 Source 保留名称、逻辑等事实；生成的 Header / Section / Row 不写回 Source。公共根字段由 resolveCodeBlockSurface 转发，领域字段不重复投影到 Block。compose 抛出的异常被包装为 RetikzGraphError，并保留 cause。
+
+<SourceLinks
+  sources={[
+    { label: '主题边界与唯一 Block 根', path: 'packages/schematic/graph/src/code/pipeline/definition.ts' },
+    { label: '公共外框字段提取', path: 'packages/schematic/graph/src/code/resolve/resolve.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '验证布局与连接效果', url: '/schematic/graph/block/usage' },
+    { title: '自定义用法', description: '定义领域 Source 和 compose', url: '/schematic/graph/block/custom' },
+  ]}
+/>

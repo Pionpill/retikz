@@ -19,6 +19,7 @@ import {
   resolvePointScaleDefaults,
   sizeGuideOf,
 } from '../shared';
+import type { IRPointRecipeGuides } from '../shared';
 import { resolveStripPointMark, StripMarkDefinition } from './mark';
 import type { IRStripChart, IRStripChartProperties } from './schema';
 import { StripChartSchema } from './schema';
@@ -26,7 +27,7 @@ import { StripChartSchema } from './schema';
 /** Strip exact schema、调度与消费检查共用的 encoding 顺序 */
 export const StripChartEncodingSlots = ['x', 'y', 'color', 'size', 'opacity', 'shape'] as const;
 
-const stripPropertySlots = [...pointPropertySlots, 'jitter', 'domainPadding'] as const;
+const stripPropertySlots = [...pointPropertySlots, 'jitter', 'domainPadding', 'autoPadding'] as const;
 
 const invalidStripTopology = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
   new RetikzChartError({
@@ -104,14 +105,13 @@ export const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveCont
 
   const continuousRole = continuousRoles[0];
   const guides = resolvePointGuideDefaults(context);
-  const hasDefaultGrid = guides.some(guide => guide.type === PlotGuide.Axis && guide.grid === true);
+  const grid = (context.source.recipe.guides as IRPointRecipeGuides | undefined)?.grid;
   return guides.map(guide => {
     if (guide.type !== PlotGuide.Axis || (guide.dimension !== 'x' && guide.dimension !== 'y')) return guide;
     const { grid: previousGrid, ...guideWithoutGrid } = guide;
     void previousGrid;
-    return guide.dimension === continuousRole && hasDefaultGrid
-      ? { ...guideWithoutGrid, grid: true }
-      : guideWithoutGrid;
+    if (guide.dimension !== continuousRole) return { ...guideWithoutGrid, grid: false };
+    return grid === undefined ? guideWithoutGrid : { ...guideWithoutGrid, grid };
   });
 };
 

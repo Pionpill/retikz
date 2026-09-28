@@ -36,7 +36,7 @@ export const CategoryValueSchema = union([string(), number()]).describe(
 );
 
 const DomainPaddingObjectSchema = strictObject({
-  kind: zodEnum(PlotDomainPaddingKind)
+  kind: zodEnum([PlotDomainPaddingKind.Range, PlotDomainPaddingKind.Ratio])
     .optional()
     .describe('Padding unit: range output units by default, or an explicit source-domain-span ratio'),
   lower: NonNegativeNumberSchema.optional().describe('Padding applied beyond the lower source domain bound'),
@@ -62,13 +62,47 @@ const DomainPaddingObjectSchema = strictObject({
   }
 });
 
-export const DomainPaddingSchema = union([NonNegativeNumberSchema, DomainPaddingObjectSchema]).describe(
-  'Position scale domain padding; numbers and omitted kind use range output units, while kind ratio uses source domain span fractions',
+/** 自动留白时图元外缘到绘图区边界的最小净空 */
+export const DomainPaddingClearanceSchema = NonNegativeNumberSchema.default(0).describe(
+  'Minimum clearance from protected mark extents to automatic plot-area edges in screen drawing units; defaults to 0',
+);
+
+/** 指定图元提供的逐点自动留白约束 */
+export const MarkDomainPaddingSchema = strictObject({
+  clearance: union([
+    DomainPaddingClearanceSchema,
+    strictObject({
+      lower: DomainPaddingClearanceSchema.optional().describe('Minimum clearance at the first domain end'),
+      upper: DomainPaddingClearanceSchema.optional().describe('Minimum clearance at the last domain end'),
+    }),
+  ]).optional(),
+  kind: literal('mark').describe('Compute automatic ends from named mark extents'),
+  marks: array(NonBlankStringSchema)
+    .min(1)
+    .refine(marks => new Set(marks).size === marks.length, 'Duplicate mark reference')
+    .describe('Nonempty unique mark identities consuming this position scale'),
+  lower: NonNegativeNumberSchema.optional().describe(
+    'Fixed padding at the first domain end in range units; omitted means automatic',
+  ),
+  upper: NonNegativeNumberSchema.optional().describe(
+    'Fixed padding at the last domain end in range units; omitted means automatic',
+  ),
+}).refine(
+  padding => padding.lower === undefined || padding.upper === undefined,
+  'Use range padding when both ends are fixed',
+);
+
+export const DomainPaddingSchema = union([
+  NonNegativeNumberSchema,
+  DomainPaddingObjectSchema,
+  MarkDomainPaddingSchema,
+]).describe(
+  'Position scale domain padding; numbers and omitted kind use range output units, kind ratio uses source domain span fractions, and kind mark derives automatic ends from mark extents',
 );
 
 const ContinuousPositionDomainShape = {
   domainPadding: DomainPaddingSchema.optional().describe(
-    'Padding added to the resolved domain. Numbers use range output units; kind ratio uses source domain span fractions. Omitted padding defaults to 0',
+    'Padding added to the resolved domain. Numbers use range output units; kind ratio uses source domain span fractions. The mark branch computes automatic ends from named mark extents. Omitted padding defaults to 0',
   ),
   singleValueSpan: PositiveNumberSchema.optional().describe(
     'Fallback domain span used when the resolved domain collapses to a single value',
@@ -90,6 +124,9 @@ export const LinearScaleSchema = object({
 }).describe('Linear scale: a continuous numeric mapping from domain to range');
 
 export const BandScaleSchema = object({
+  domainPadding: DomainPaddingSchema.optional().describe(
+    'Output range padding beyond existing categorical spacing; mark padding protects individual glyphs',
+  ),
   type: literal(PlotScale.Band).describe(
     'Discriminator: categorical band scale; each category occupies one equal-width band',
   ),
@@ -115,6 +152,9 @@ export const BandScaleSchema = object({
 }).describe('Band scale: maps a discrete category set to equal-width bands across the range');
 
 export const PointScaleSchema = object({
+  domainPadding: DomainPaddingSchema.optional().describe(
+    'Output range padding beyond existing categorical spacing; mark padding protects individual glyphs',
+  ),
   type: literal(PlotScale.Point).describe(
     'Discriminator: categorical point scale; categories land on evenly spaced points (zero bandwidth)',
   ),
@@ -131,6 +171,12 @@ export const OrdinalScaleSchema = object({
     'Discriminator: ordinal scale mapping a discrete domain to a discrete output range (typically colors)',
   ),
   name: NonBlankStringSchema.describe('Scale name; referenced by a non-positional channel scale ref'),
+  rangeIndex: strictObject({
+    step: number().int().positive().default(1),
+    offset: number().int().nonnegative().default(0),
+  })
+    .optional()
+    .describe('Map category index i to range[(i * step + offset) % range.length], including the theme palette'),
   domain: array(CategoryValueSchema)
     .optional()
     .describe('Ordered category list; omit to infer the distinct field values in data-encounter order at lowering'),

@@ -2,11 +2,32 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { translateDrawApiReference } from './draw.en';
-import { createApiReferenceMdx } from './tex';
+import { createStandardApiReferenceMdx } from './standard-schema';
 import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const translations: Readonly<Record<string, string>> = {
+  '非空对象值的展示方式，递归作用于嵌套 data':
+    'Display mode for nonempty object values, applied recursively to nested data',
+  '完整的 List Source，包含 namespace、type 及 items 或 data':
+    'Complete List Source including namespace, type, and either items or data',
+  '输入的浅拷贝；不校验、不补默认值，嵌套对象与输入共享引用':
+    'A shallow copy of the input; no validation or defaults are applied, and nested objects share references with the input',
+  '由 listId、连字符与零基下标组成的单元格 id': 'A cell id composed of listId, a hyphen, and the zero-based index',
+  '启用索引带时的位置、显示起点与文本外观': 'Position, starting number, and text appearance of an enabled index strip',
+  '索引文本的稀疏外观覆盖，不受单格样式影响': 'Sparse index text overrides, unaffected by cell-level styles',
+  '文字或唯一可绘制 child，支持已注册的第三方复合组件':
+    'Text or one drawable child, including registered third-party composites',
+  'data、items 与 ListItem children 三种内容入口互斥；全部省略时生成空列表。dataObjectDisplay 仅用于 data 入口':
+    'The data, items, and ListItem children inputs are mutually exclusive; omitting all three creates an empty list. dataObjectDisplay applies only to data',
+  'text 与 children 二选一；children 必须产生恰好一个图形。id 标识单元格边框区域，style 与 layout 覆盖 List 的对应设置':
+    'Choose either text or children; children must produce exactly one drawable. id identifies the cell border box, while style and layout override the corresponding List settings',
+  'items 与 data 二选一；dataObjectDisplay 仅用于 data 入口。其余字段沿用 IRList，namespace 与 type 由 adapter 补齐':
+    'Choose either items or data; dataObjectDisplay applies only to data. Other fields follow IRList, and the adapter supplies namespace and type',
+  '使用显式单元格或 JSON 数组的 List 输入': 'List input using explicit cells or a JSON array',
+  '持有原始 input 引用的 embed；内容归一与校验在后续 adapter 和编译阶段执行':
+    'An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation',
+  可省略默认值的包络装饰: 'Envelope decoration with optional defaults',
   '非空白 List id': 'Nonblank List id',
   直属单元格的非负整数下标: 'Nonnegative integer index of the direct cell',
   '参数非法时抛出 RetikzStandardError': 'Throws RetikzStandardError for invalid arguments',
@@ -69,11 +90,7 @@ export const writeStandardContainerApiReferences = async (
       {
         suffix: '-react',
         title: { zh: '`@retikz/standard-react`', en: '`@retikz/standard-react`' },
-        symbols: [
-          ...(name === 'List' ? [name] : []),
-          `${name}Props`,
-          ...markers.flatMap(marker => [marker, `${marker}Props`]),
-        ],
+        symbols: [name, `${name}Props`, ...markers.flatMap(marker => [marker, `${marker}Props`])],
       },
       {
         suffix: '-vanilla',
@@ -108,21 +125,25 @@ export const writeStandardContainerApiReferences = async (
               title: owner.title,
               symbols: owner.symbols,
               symbolPairs:
-                name === 'List'
-                  ? owner.suffix === '-react'
-                    ? [
-                        ['List', 'ListProps'],
-                        ['ListItem', 'ListItemProps'],
-                      ]
-                    : owner.suffix === '-vanilla'
-                      ? [['list', 'InputList']]
-                      : undefined
-                  : undefined,
+                owner.suffix === '-react'
+                  ? [[name, `${name}Props`], ...markers.map(marker => [marker, `${marker}Props`] as [string, string])]
+                  : owner.suffix === '-vanilla'
+                    ? [[slug, `Input${name}`]]
+                    : undefined,
+              ...(name === 'List' && owner.suffix === ''
+                ? {
+                    memberTypeLabels: {
+                      IRListIndexOptions: { style: 'IRListIndexStyle' },
+                      IRListIndexStyle: { font: "IRListIndexStyle['font']" },
+                    },
+                    memberValueSets: { IRListIndexOptions: { position: { name: 'ListIndexPosition' } } },
+                  }
+                : {}),
             },
           ],
           translate: translateContainerApiReference,
         };
-        const mdx = await createApiReferenceMdx(config, lang);
+        const mdx = await createStandardApiReferenceMdx(config, lang);
         sections.push(mdx.replace(/^(#{2,4}) /gm, '#$1 '));
       }
       writeFileSync(

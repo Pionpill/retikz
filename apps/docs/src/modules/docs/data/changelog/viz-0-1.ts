@@ -190,6 +190,13 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：逐点自动留白', en: 'Unreleased: point-aware padding' },
+          content: {
+            zh: '所有点图 properties 新增 autoPadding：Bubble 默认 point-aware，其它点图默认 max-radius；逐点策略按实际位置与半径紧凑留白，显式 domainPadding 优先。autoPadding 同时支持 { kind, clearance } 对象形式，可用数值或四边间距对象预留图元外缘净空。逐点策略支持全部内置连续与分类位置尺度、二维极坐标及 role-space 散布。',
+            en: 'All Point recipes expose autoPadding: Bubble defaults to point-aware and other point charts to max-radius. Point-aware uses actual positions and radii for compact padding. The { kind, clearance } form reserves minimum edge clearance with a number or directional spacing object. Explicit domainPadding wins; point-aware supports all built-in continuous and categorical position scales, Polar2D, and role-space placement.',
+          },
+        },
+        {
           label: { zh: '单一 Chart 主链', en: 'One Chart resolution path' },
           content: {
             zh: 'Parser 先用根 `type` 识别 family，再用 `recipe.chartType` 选择精确 recipe；recipe 生成共享部分与内建 semantic mark，Chart marks、独立 `plotExtension` fragment、presentation 和 Theme owner slices 进入同一 renderer-neutral 解析主链。',
@@ -266,6 +273,13 @@ export const vizV01: Release = {
           },
           items: [
             {
+              label: { zh: 'Vanilla 编写节点统一', en: 'Unified Vanilla authoring nodes' },
+              content: {
+                zh: '点图通过 scatterChart、bubbleChart 等返回标准 InputEmbed，可直接组合进 Scene；各图类 adapter 在处理时规范化 Source 和组装依赖。移除旧 createXxxChart 与 ChartAuthoringResult，renderChart 显式接收 adapters；React 和直接 IR 继续使用同一领域主链。',
+                en: 'Point-chart builders such as scatterChart and bubbleChart return standard InputEmbed nodes for Scene composition. Each chart adapter normalizes Source and assembles dependencies during processing. The old createXxxChart and ChartAuthoringResult APIs are removed, and renderChart takes explicit adapters; React and direct IR retain the same domain pipeline.',
+              },
+            },
+            {
               label: {
                 zh: 'BREAKING：Point 图按最大点半径自动留白',
                 en: 'BREAKING: Point charts pad by their largest Point radius',
@@ -292,22 +306,22 @@ export const vizV01: Release = {
             {
               label: { zh: 'Bubble 精确 Source 与 provider', en: 'Exact Bubble Source and provider' },
               content: {
-                zh: '`@retikz/chart/point/bubble` 提供严格 Bubble schema、recipe、semantic mark 与 provider contribution，并复用 Point mapping、facet、scaffold、lowering 与 guide 主链。',
-                en: '`@retikz/chart/point/bubble` provides the strict Bubble schema, recipe, semantic mark, and provider contribution while reusing the Point mapping, facet, scaffold, lowering, and guide pipeline.',
+                zh: '`@retikz/chart/point` 提供严格 Bubble schema、recipe、semantic mark 与 provider contribution，并复用 Point mapping、facet、scaffold、lowering 与 guide 主链。',
+                en: '`@retikz/chart/point` provides the strict Bubble schema, recipe, semantic mark, and provider contribution while reusing the Point mapping, facet, scaffold, lowering, and guide pipeline.',
               },
             },
             {
               label: { zh: 'Regression 精确 Source 与 provider', en: 'Exact Regression Source and provider' },
               content: {
-                zh: '`@retikz/chart/point/regression` 提供严格 Regression schema、Point + Smooth Path semantic group、series scale / legend、facet panel 拟合与 locator qualification。',
-                en: '`@retikz/chart/point/regression` provides the strict Regression schema, Point + Smooth Path semantic group, series scale / legend, facet-panel fitting, and locator qualification.',
+                zh: '`@retikz/chart/point` 提供严格 Regression schema、Point + Smooth Path semantic group、series scale / legend、facet panel 拟合与 locator qualification。',
+                en: '`@retikz/chart/point` provides the strict Regression schema, Point + Smooth Path semantic group, series scale / legend, facet-panel fitting, and locator qualification.',
               },
             },
             {
               label: { zh: 'Strip Chart 精确 Source 与离散散布', en: 'Exact Strip Chart Source and discrete spread' },
               content: {
-                zh: '`@retikz/chart/point/strip` 新增 direct-only x/y exact schema、确定性 jitter shorthand、唯一离散角色校验与 continuous-only grid；React / Vanilla 入口生成同一 Source，并通过 Plot placement 在笛卡尔与极坐标中完成散布和 glyph containment。',
-                en: '`@retikz/chart/point/strip` adds direct-only x/y exact schemas, deterministic jitter shorthand, sole-discrete-role validation, and a continuous-only grid. React and Vanilla entries produce the same Source, while Plot placement handles spread and glyph containment in Cartesian and Polar coordinates.',
+                zh: '`@retikz/chart/point` 新增 direct-only x/y exact schema、确定性 jitter shorthand、唯一离散角色校验与 continuous-only grid；React / Vanilla 入口生成同一 Source，并通过 Plot placement 在笛卡尔与极坐标中完成散布和 glyph containment。',
+                en: '`@retikz/chart/point` adds direct-only x/y exact schemas, deterministic jitter shorthand, sole-discrete-role validation, and a continuous-only grid. React and Vanilla entries produce the same Source, while Plot placement handles spread and glyph containment in Cartesian and Polar coordinates.',
               },
             },
             {
@@ -425,15 +439,15 @@ export const vizV01: Release = {
         {
           label: { zh: 'Bubble plain factory 与 SSR', en: 'Bubble plain factory and SSR' },
           content: {
-            zh: '`normalizeBubbleChart` 与 `createBubbleChart` 从精确 input 生成 `type: "point"`、`recipe.chartType: "bubble"` 的 Source，并安装对应 provider；`renderChart` 继续通过同一次 Core compile 输出 SVG。',
-            en: '`normalizeBubbleChart` and `createBubbleChart` produce a `type: "point"`, `recipe.chartType: "bubble"` Source from exact input and install its provider; `renderChart` continues to emit SVG through the same Core compile.',
+            zh: '`normalizeBubbleChart` 与 `bubbleChart` 从精确 input 生成 `type: "point"`、`recipe.chartType: "bubble"` 的 Source，并安装对应 provider；`renderChart` 继续通过同一次 Core compile 输出 SVG。',
+            en: '`normalizeBubbleChart` and `bubbleChart` produce a `type: "point"`, `recipe.chartType: "bubble"` Source from exact input and install its provider; `renderChart` continues to emit SVG through the same Core compile.',
           },
         },
         {
           label: { zh: 'Regression plain factory 与 SSR', en: 'Regression plain factory and SSR' },
           content: {
-            zh: '`normalizeRegressionChart` 与 `createRegressionChart` 保留精确 Regression encodings、properties 与 marks，安装对应 provider，并与 React / JSON Source 共用 Chart、Data 与 Plot 解析主链。',
-            en: '`normalizeRegressionChart` and `createRegressionChart` preserve exact Regression encodings, properties, and marks, install the matching provider, and share the Chart, Data, and Plot resolution path with React and JSON Source.',
+            zh: '`normalizeRegressionChart` 与 `regressionChart` 保留精确 Regression encodings、properties 与 marks，安装对应 provider，并与 React / JSON Source 共用 Chart、Data 与 Plot 解析主链。',
+            en: '`normalizeRegressionChart` and `regressionChart` preserve exact Regression encodings, properties, and marks, install the matching provider, and share the Chart, Data, and Plot resolution path with React and JSON Source.',
           },
         },
       ],
@@ -482,8 +496,8 @@ export const vizV01: Release = {
         {
           label: { zh: '六种 Smooth 回归方法', en: 'Six Smooth regression methods' },
           content: {
-            zh: '`SmoothMethodKind` 提供 linear、quadratic、polynomial、logarithmic、exponential 与 power；每组使用严格样本、秩、值域与有限预测检查，facet、scale、lineage 和 locator 继续消费同一次 panel-local 结果。',
-            en: '`SmoothMethodKind` provides linear, quadratic, polynomial, logarithmic, exponential, and power fits. Strict per-group sample, rank, domain, and finite-prediction checks feed facet, scale, lineage, and locator from the same panel-local result.',
+            zh: '`BuiltinRegressionMethod` 提供 linear、quadratic、polynomial、logarithmic、exponential 与 power；每组使用严格样本、秩、值域与有限预测检查，facet、scale、lineage 和 locator 继续消费同一次 panel-local 结果。',
+            en: '`BuiltinRegressionMethod` provides linear, quadratic, polynomial, logarithmic, exponential, and power fits. Strict per-group sample, rank, domain, and finite-prediction checks feed facet, scale, lineage, and locator from the same panel-local result.',
           },
         },
       ],

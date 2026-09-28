@@ -18,6 +18,13 @@ const relation = (input: Record<string, unknown> = {}) =>
     ...input,
   });
 
+const realization = Graph.defineRelationKind({
+  kind: 'uml.realization',
+  role: 'dependency',
+  description: 'User-defined realization',
+  directions: { forward: { targetMarker: { shape: 'open' }, dashPattern: [6, 4] } },
+});
+
 describe('Relation data resolution', () => {
   it('defaults association to forward navigation while preserving explicit directions', () => {
     const context = Graph.resolveGraphDefinitionOptions();
@@ -26,10 +33,10 @@ describe('Relation data resolution', () => {
     expect(Graph.resolveRelation(relation({ direction: 'none' }), context).effectiveDirection).toBe('none');
   });
 
-  it('resolves UML realization through the dependency role without endpoint projection', () => {
+  it('resolves an explicitly registered kind through its role without endpoint projection', () => {
     const canonical = Graph.resolveRelation(
       relation({ id: 'realizes', role: 'dependency', kind: 'uml.realization' }),
-      Graph.resolveGraphDefinitionOptions(),
+      Graph.resolveGraphDefinitionOptions({ relationKinds: [realization] }),
     );
 
     expect(canonical).toMatchObject({
@@ -64,17 +71,29 @@ describe('Relation data resolution', () => {
     ).toThrow(/invalid-direction.*reverse.*not allowed/i);
   });
 
-  it('rejects removed kinds and UML kinds under another role', () => {
-    const context = Graph.resolveGraphDefinitionOptions();
+  it.each([
+    'uml.association',
+    'uml.aggregation',
+    'uml.composition',
+    'uml.generalization',
+    'uml.dependency',
+    'uml.realization',
+  ])('rejects unregistered kind %s without falling back to the role', kind => {
+    expect(() => Graph.resolveRelation(relation({ kind }), Graph.resolveGraphDefinitionOptions())).toThrow(
+      /not registered/i,
+    );
+  });
 
+  it('rejects a registered kind under another role or an expanded direction', () => {
+    const context = Graph.resolveGraphDefinitionOptions({ relationKinds: [realization] });
+    expect(() => Graph.resolveRelation(relation({ role: 'generalization', kind: realization.kind }), context)).toThrow(
+      /uml\.realization.*dependency.*generalization/i,
+    );
     expect(() =>
-      Graph.resolveRelation(relation({ id: 'provenance', role: 'dependency', kind: 'provenance.derivation' }), context),
-    ).toThrow(/provenance\.derivation.*not registered/i);
-    expect(() =>
-      Graph.resolveRelation(relation({ id: 'usage', role: 'dependency', kind: 'uml.usage' }), context),
-    ).toThrow(/uml\.usage.*not registered/i);
-    expect(() =>
-      Graph.resolveRelation(relation({ id: 'wrong-role', role: 'generalization', kind: 'uml.realization' }), context),
-    ).toThrow(/uml\.realization.*dependency.*generalization/i);
+      Graph.resolveRelation(relation({ role: 'dependency', kind: realization.kind, direction: 'reverse' }), context),
+    ).toThrow(/reverse.*not allowed/i);
+    expect(() => Graph.resolveGraphDefinitionOptions({ relationKinds: [realization, realization] })).toThrow(
+      /already registered/i,
+    );
   });
 });

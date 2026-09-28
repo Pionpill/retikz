@@ -11,6 +11,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { PreviewDimensionsContext } from '../../src/modules/docs/components/component-preview/context';
 import {
   PreviewDetailTable,
   PreviewEntity,
@@ -25,6 +26,7 @@ import {
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import ThemeInheritance from '../../src/modules/docs/contents/kernel/components/layout/extend/theme-inheritance';
+import ScatterResponsiveDemo from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { useComponentPreviewStore } from '../../src/modules/docs/store';
 
 const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
@@ -38,6 +40,45 @@ afterEach(() => {
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 describe('ComponentPreview global theme', () => {
+  it.each([
+    { mode: ThemeMode.Light, color: 'hsl(210, 70%, 54%)' },
+    { mode: ThemeMode.Dark, color: 'hsl(210, 76%, 64%)' },
+  ])('applies the named $mode theme to the responsive Scatter demo', ({ mode, color }) => {
+    const markup = renderToStaticMarkup(
+      <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode }}>
+        <PreviewDimensionsContext.Provider value={{ width: 720, height: 440 }}>
+          <ScatterResponsiveDemo />
+        </PreviewDimensionsContext.Provider>
+      </PreviewThemeProvider>,
+    );
+    expect(markup).toContain('<svg');
+    expect(markup).toContain(color);
+    expect(markup.match(/<svg/g)).toHaveLength(1);
+    expect(markup).toContain('width="720"');
+    expect(markup).toContain('height="440"');
+  });
+
+  it('updates responsive Chart colors when the preview theme changes', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    for (const style of [PreviewThemeStyle.Default, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Default]) {
+      await act(async () => {
+        root.render(
+          <PreviewThemeProvider theme={resolvePreviewTheme(style, ThemeMode.Light)}>
+            <PreviewDimensionsContext.Provider value={{ width: 720, height: 440 }}>
+              <ScatterResponsiveDemo />
+            </PreviewDimensionsContext.Provider>
+          </PreviewThemeProvider>,
+        );
+        await Promise.resolve();
+      });
+      const color = style === PreviewThemeStyle.Default ? 'hsl(210, 38%, 48%)' : 'hsl(210, 70%, 54%)';
+      expect(container.innerHTML).toContain(color);
+    }
+    act(() => root.unmount());
+  });
+
   it('renders the theme playground baseline with the ambient preview definitions', () => {
     const markup = renderToStaticMarkup(
       <PreviewThemeProvider>

@@ -277,7 +277,7 @@ describe('lowerPlots 笛卡尔折线回归', () => {
     expect(paths.map(path => path.children.filter(step => step.kind === 'line').length)).toEqual([1, 1]);
   });
 
-  it('line_connect_nulls_keeps_previous_skip_and_connect_behavior', () => {
+  it.each([true, {}])('open line connectNulls %j styles only the bridge', connectNulls => {
     const rows = [
       { month: 0, revenue: 10 },
       { month: 1, revenue: 12 },
@@ -285,10 +285,64 @@ describe('lowerPlots 笛卡尔折线回归', () => {
       { month: 3, revenue: 9 },
       { month: 4, revenue: 11 },
     ];
-    const paths = collectPaths(firstLayer(lineSpec({ connectNulls: true }), { sales: rows }, cartOpts));
-    expect(paths).toHaveLength(1);
-    expect(paths[0].children.filter(step => step.kind === 'move')).toHaveLength(1);
-    expect(paths[0].children.filter(step => step.kind === 'line')).toHaveLength(3);
+    const paths = collectPaths(firstLayer(lineSpec({ connectNulls }), { sales: rows }, cartOpts));
+    expect(paths).toHaveLength(3);
+    expect(paths.map(path => path.children.filter(step => step.kind === 'line').length)).toEqual([1, 1, 1]);
+    expect(paths.map(path => path.style?.dashPattern)).toEqual([undefined, [6, 4], undefined]);
+  });
+
+  it('connectNulls overrides bridge stroke without changing normal runs or extrapolating endpoints', () => {
+    const rows = [
+      { month: -1, revenue: null },
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: 12 },
+      { month: 2, revenue: null },
+      { month: 3, revenue: null },
+      { month: 4, revenue: 9 },
+      { month: 5, revenue: 11 },
+      { month: 6, revenue: null },
+    ];
+    const paths = collectPaths(
+      firstLayer(
+        lineSpec({
+          strokeWidth: { kind: 'constant', value: 2 },
+          connectNulls: { stroke: '#ff0000', strokeWidth: 4, strokeOpacity: 0.4, dashPattern: [2, 3] },
+        }),
+        { sales: rows },
+        cartOpts,
+      ),
+    );
+    expect(paths).toHaveLength(3);
+    expect(paths[1].style).toMatchObject({
+      stroke: '#ff0000',
+      strokeWidth: 4,
+      strokeOpacity: 0.4,
+      dashPattern: [2, 3],
+    });
+    expect(paths[0].style?.strokeWidth).toBe(2);
+    expect(paths[2].style?.strokeWidth).toBe(2);
+    expect(paths[0].style?.dashPattern).toBeUndefined();
+    expect(
+      firstLayer(lineSpec({ connectNulls: true }), { sales: [{ month: 0, revenue: null }] }, cartOpts),
+    ).toBeUndefined();
+  });
+
+  it.each([
+    { closed: true },
+    { closure: { kind: 'baseline', baseline: 0 } },
+    { fill: { kind: 'constant', value: '#ff0000' } },
+  ])('closed or filled paths retain boolean behavior and reject bridge style: %j', extra => {
+    const rows = [
+      { month: 0, revenue: 10 },
+      { month: 1, revenue: null },
+      { month: 2, revenue: 12 },
+    ];
+    expect(
+      collectPaths(firstLayer(lineSpec({ ...extra, connectNulls: true }), { sales: rows }, cartOpts)),
+    ).toHaveLength(1);
+    expect(() => firstLayer(lineSpec({ ...extra, connectNulls: {} }), { sales: rows }, cartOpts)).toThrow(
+      'open unfilled path',
+    );
   });
 });
 

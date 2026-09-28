@@ -1,4 +1,4 @@
-import type { IRScopeProps } from '@retikz/core';
+import type { IRNode, IRScopeProps } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
@@ -23,7 +23,10 @@ export type FrameDescriptionInput = ZodInfer<typeof FrameDescriptionSchema>;
 /** 持久化的 Standard Frame composite */
 export type IRFrame = Omit<ZodInput<typeof FrameSchema>, keyof IRScopeProps | 'children' | 'title' | 'description'> &
   IRScopeProps &
-  Pick<ZodInfer<typeof FrameSchema>, 'children' | 'title' | 'description'>;
+  Pick<ZodInfer<typeof FrameSchema>, 'title' | 'description'> & {
+    /** Frame 正文使用 Core Node Source，保留可省略的位置 */
+    children: Array<IRNode>;
+  };
 
 /** 创建 Frame 时允许省略固定 discriminator 与 schema 默认字段的输入 */
 export type FrameInput = Omit<IRFrame, 'namespace' | 'type'>;

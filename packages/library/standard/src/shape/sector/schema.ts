@@ -6,8 +6,8 @@ import { ShapePathSchema, ShapeAnglesSchema, refineShapeAngles, ShapeRadiusAxesS
 
 const properties = {
   ...ShapePathSchema.shape,
-  namespace: literal('standard'),
-  type: literal('sector'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('sector').describe('Composite type for the sector shape.'),
   ...ShapeAnglesSchema.shape,
   label: StepLabelSchema.optional(),
 };
@@ -17,13 +17,15 @@ export const SectorSchema = union([
     ...properties,
     center: TargetSchema.describe('Shape center; coordinate forms depend on the chosen geometry branch.'),
     radius: NonNegativeNumberSchema.describe('Radius in user units; an object specifies the two ellipse axes.'),
-    innerRadius: literal(0).optional(),
+    innerRadius: literal(0).optional().describe('Zero inner radius for the filled-sector branch.'),
   }),
   strictObject({
     ...properties,
     center: TargetSchema.describe('Shape center; coordinate forms depend on the chosen geometry branch.'),
     radius: ShapeRadiusAxesSchema.describe('Radius in user units; an object specifies the two ellipse axes.'),
-    innerRadius: strictObject({ x: literal(0), y: literal(0) }).optional(),
+    innerRadius: strictObject({ x: literal(0), y: literal(0) })
+      .optional()
+      .describe('Zero inner radii for the filled elliptical-sector branch.'),
   }),
   strictObject({
     ...properties,

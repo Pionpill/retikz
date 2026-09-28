@@ -1,6 +1,13 @@
 import type { ChartLayoutProps } from '@retikz/chart-react';
 import { ChartLayout } from '@retikz/chart-react';
-import { ScatterChart } from '@retikz/chart-react/point';
+import {
+  ScatterChart,
+  BubbleChart,
+  ConnectedScatterChart,
+  RangedDotChart,
+  RegressionChart,
+  StripChart,
+} from '@retikz/chart-react/point';
 import type { FlowDiagramLayoutHostProps } from '@retikz/diagram-react/flow';
 import { FlowDiagram } from '@retikz/diagram-react/flow';
 import type { AssertEqual } from '@retikz/foundation';
@@ -11,7 +18,8 @@ import { resolveInputEmbedAdapter } from '@retikz/react';
 import type { ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
-type PlotStandaloneProps = Pick<LayoutProps & LayoutExtensions, 'className' | 'style' | 'renderer' | 'themeStyles'> & PlotLineageProps;
+type PlotStandaloneProps = Pick<LayoutProps & LayoutExtensions, 'className' | 'style' | 'renderer' | 'themeStyles'> &
+  PlotLineageProps;
 
 const PLOT_STANDALONE_PROP_KEYS = [
   'className',
@@ -112,7 +120,12 @@ export const previewEmbedPropsOf = (
 ): Readonly<Record<string, unknown>> => {
   const adapter = resolveInputEmbedAdapter(component);
   if (adapter === Plot.inputEmbedAdapter) return omitPreviewHostProps(props, plotStandalonePropKeys);
-  if (adapter === ScatterChart.inputEmbedAdapter) return preparePreviewChartProps(props).props;
+  if (
+    [ScatterChart, BubbleChart, ConnectedScatterChart, RangedDotChart, RegressionChart, StripChart].some(
+      chart => adapter === chart.inputEmbedAdapter,
+    )
+  )
+    return preparePreviewChartProps(props).props;
   if (adapter === FlowDiagram.inputEmbedAdapter) return omitPreviewHostProps(props, flowHostPropKeys);
   return props;
 };
@@ -123,7 +136,12 @@ export const previewHostDimensionsOf = (
   props: Readonly<Record<string, unknown>>,
 ): PreviewHostDimensions => {
   const adapter = resolveInputEmbedAdapter(component);
-  if (adapter === ScatterChart.inputEmbedAdapter) return preparePreviewChartProps(props).host;
+  if (
+    [ScatterChart, BubbleChart, ConnectedScatterChart, RangedDotChart, RegressionChart, StripChart].some(
+      chart => adapter === chart.inputEmbedAdapter,
+    )
+  )
+    return preparePreviewChartProps(props).host;
   return {
     ...(props.width === undefined ? {} : { width: props.width as LayoutProps['width'] }),
     ...(props.height === undefined ? {} : { height: props.height as LayoutProps['height'] }),

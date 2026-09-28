@@ -1,0 +1,106 @@
+---
+title: 快速开始
+description: 安装 Diagram，通过 React 或 Vanilla 绘制第一张自动排布的请求流程图。
+---
+
+下面用三个步骤和两条关系创建请求处理流程。示例从当前提供的 `FlowDiagram` 入手，无需手工计算节点坐标。
+
+## 安装与使用
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/diagram-react react react-dom" />
+
+在现有 React 应用中渲染 `RequestDiagram`。`FlowDiagram` 是整张图的入口，`FlowEntities` 声明对象，`FlowRelations` 连接对象的 id；两类声明都直接放在根下。
+
+```text
+FlowDiagram
+├── FlowEntities
+└── FlowRelations
+```
+
+```tsx
+import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
+
+export const RequestDiagram = () => (
+  <FlowDiagram presentation={{ title: { text: '请求处理' } }} layout={{ direction: 'right' }}>
+    <FlowEntities
+      items={[
+        { id: 'request', text: '接收请求', role: 'activity' },
+        { id: 'process', text: '处理任务', role: 'activity' },
+        { id: 'result', text: '返回结果', role: 'activity' },
+      ]}
+    />
+    <FlowRelations
+      items={[
+        ['request', 'process'],
+        ['process', 'result'],
+      ]}
+    />
+  </FlowDiagram>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/diagram-vanilla @retikz/vanilla" />
+
+在页面中准备 `<div id="diagram"></div>` 容器，再运行以下代码。`flowDiagram()` 创建图的输入，adapter 让 `mount()` 识别并编译它；根 `children` 列出直接成员，关系通过 id 引用它们。
+
+```ts
+import { createFlowDiagramVanillaAdapters, flowDiagram } from '@retikz/diagram-vanilla/flow';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    flowDiagram({
+      presentation: { title: { text: '请求处理' } },
+      layout: { direction: 'right' },
+      entities: [
+        { id: 'request', text: '接收请求', role: 'activity' },
+        { id: 'process', text: '处理任务', role: 'activity' },
+        { id: 'result', text: '返回结果', role: 'activity' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['request', 'process', 'result'],
+      relations: [
+        { source: 'request', target: 'process' },
+        { source: 'process', target: 'result' },
+      ],
+    }),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input, {
+  adapters: createFlowDiagramVanillaAdapters(),
+});
+```
+
+移除容器前调用 `view.dispose()`，释放挂载资源。
+
+</DocTab>
+</DocTabs>
+
+## 最小结果
+
+两种写法得到相同的三个步骤、两条有向连线与一个标题。`id` 是关系引用的稳定名字，`text` 是显示文本；修改文本不需要同步改关系。`layout.direction` 指定整体从左向右排布，节点位置和连线路径由 Flow 推导。
+
+<ComponentPreview files="request-flow" size="sm" hideCode />
+
+这里的 `activity` 是内置语义角色 `role`，不是 `kind`。`kind` 留给用户定义并注册；绘制这个最小流程无需注册任何 kind。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Flow 基础用法',
+      description: '继续学习分组、固定排列、路由与样式配置',
+      url: '/schematic/diagram/flow/basic',
+    },
+  ]}
+/>

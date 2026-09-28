@@ -1,0 +1,12 @@
+---
+title: API reference
+description: Look up Block components, authoring entries, Source factories, and code entity extension contracts.
+---
+
+Generated from public exports and source comments, this page covers the Block family and CodeBlock extensions in `@retikz/graph-react`, `@retikz/graph-vanilla`, and `@retikz/graph`. Start with [Basic usage](/schematic/graph/block/usage); persistent fields are in [Schema reference](/schematic/graph/block/schema-reference).
+
+React children / icon / trail use ReactNode; Vanilla accepts authoring children; direct IR stores JSON-safe children only. BlockRow content and children are mutually exclusive. Where a composition cannot be expanded, the original declaration is retained; consult IRBlockRow and Schema reference for shared fields.
+
+CodeBlockDefinition and compose are runtime capabilities outside IR. Strict schemas validate domain data before compose returns Block content. See [Custom usage](/schematic/graph/block/custom) for injection.
+
+{/* @include schematic/graph/block/api-reference/generated */}

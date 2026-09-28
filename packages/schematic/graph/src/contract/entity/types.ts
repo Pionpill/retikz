@@ -30,7 +30,10 @@ export type EntityKindDefinition = Readonly<{
   description: string;
 }>;
 
-/** Entity predicate 作者侧的类型安全定义 */
+/**
+ * Entity predicate 作者侧的类型安全定义
+ * @template TSchema 约束 paramsSchema 的 JSON 对象 Schema 类型，决定 predicate 参数的解析契约
+ */
 export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
   /** 全局唯一的 predicate definition name */
   name: string;

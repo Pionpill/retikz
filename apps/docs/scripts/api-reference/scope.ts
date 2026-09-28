@@ -8,7 +8,7 @@ import { createApiReferenceMdx } from './tex';
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 /** 复用对应 Schema 参考的中文字段说明 */
-const scopeSchemaLocalizations = {
+export const scopeSchemaLocalizations = {
   ScopeSchema: {
     descriptions: {
       frame: '位于子图下方的固有包络装饰，不参与布局或命中',
@@ -95,7 +95,6 @@ export const scopeApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> 
       },
     ],
     translate: translateScopeApiReference,
-    schemaPackageName: '@retikz/core',
     schemaLocalizations: {
       ...scopeSchemaLocalizations,
       ScopePropsSchema: {
@@ -119,7 +118,6 @@ export const scopeApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> 
       },
     ],
     translate: translateScopeApiReference,
-    schemaPackageName: '@retikz/core',
     schemaLocalizations: {
       ...scopeSchemaLocalizations,
       ScopePropsSchema: {

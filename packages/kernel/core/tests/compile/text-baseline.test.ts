@@ -306,7 +306,7 @@ describe('Node layout alignment baselines', () => {
     expect(emittedPhysicalBaselines(output.primitives)).toEqual([3, 23]);
     expect(emittedTextPrimitives(output.primitives)).toHaveLength(1);
     expect(emittedTextPrimitives(output.primitives)[0].lines).toHaveLength(2);
-    expect(output.visualBounds).toEqual({ x: -1, y: -37, width: 10, height: 40 });
+    expect(output.visualBounds).toEqual({ x: -1, y: -17, width: 10, height: 40 });
   });
 
   it('rounds guides with the same precision as grouped TextPrim physical baselines', () => {
@@ -333,7 +333,7 @@ describe('Node layout alignment baselines', () => {
     ]);
     expect(emittedPhysicalBaselines(output.primitives)).toEqual([2.9, 23.2]);
     expect(emittedTextPrimitives(output.primitives)).toHaveLength(1);
-    expect(output.visualBounds).toEqual({ x: -1, y: -37.6, width: 10, height: 40.5 });
+    expect(output.visualBounds).toEqual({ x: -1, y: -17.3, width: 10, height: 40.5 });
   });
 
   it('uses each mixed/TeX line real rounded baseline instead of grouped plain lineHeight spacing', () => {

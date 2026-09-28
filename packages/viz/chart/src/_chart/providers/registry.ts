@@ -1,3 +1,4 @@
+import { resolveRegressionRegistry } from '@retikz/data';
 import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
 import { createReadonlyMap } from '@retikz/foundation';
 import { resolveCoordinateRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '@retikz/plot';
@@ -170,6 +171,7 @@ const runtimeDefinitionKeys = [
   'coordinates',
   'transformDefinitions',
   'statisticsReducerDefinitions',
+  'regressionDefinitions',
   'rowSelectorDefinitions',
   'scaleDefinitions',
 ] as const satisfies ReadonlyArray<keyof ChartRuntimeDefinitionOptions>;
@@ -198,6 +200,7 @@ const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): Cha
   try {
     return Object.freeze({
       transforms: createReadonlyMap(resolvePlotTransformRegistry(definitions.transformDefinitions)),
+      regressions: createReadonlyMap(resolveRegressionRegistry(definitions.regressionDefinitions)),
       reducers: createReadonlyMap(resolveStatisticsReducerRegistry(definitions.statisticsReducerDefinitions)),
       selectors: createReadonlyMap(resolveRowSelectorRegistry(definitions.rowSelectorDefinitions)),
       scales: createReadonlyMap(resolveScaleRegistry(definitions.scaleDefinitions)),

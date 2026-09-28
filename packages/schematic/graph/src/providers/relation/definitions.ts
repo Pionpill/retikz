@@ -1,11 +1,10 @@
-import type { RelationKindDefinition, RelationRoleDefinition } from '../../contract';
-import { defineRelationKind, defineRelationRole } from '../../contract';
+import type { RelationRoleDefinition } from '../../contract';
+import { defineRelationRole } from '../../contract';
 import { RelationDirection } from '../../schemas';
-import { RelationKind, RelationRole } from '../../shared';
+import { RelationRole } from '../../shared';
 
 const noMarker = false as const;
 const solid = false as const;
-const dashed = [6, 4];
 
 export const AssociationRelationRoleDefinition = defineRelationRole({
   role: RelationRole.Association,
@@ -113,91 +112,10 @@ export const InfluenceRelationRoleDefinition = defineRelationRole({
   },
 });
 
-export const UmlAggregationRelationKindDefinition = defineRelationKind({
-  kind: RelationKind.UmlAggregation,
-  role: RelationRole.Association,
-  description: '整体端为空心菱形的 UML 聚合关系',
-  defaultDirection: RelationDirection.None,
-  allowedDirections: [RelationDirection.None],
-  directions: {
-    [RelationDirection.None]: {
-      sourceMarker: { shape: 'openDiamond' },
-      targetMarker: noMarker,
-      dashPattern: solid,
-    },
-  },
-});
-
-export const UmlAssociationRelationKindDefinition = defineRelationKind({
-  kind: RelationKind.UmlAssociation,
-  role: RelationRole.Association,
-  description: '以两端无 marker 的实线表示的 UML 一般关联关系',
-  defaultDirection: RelationDirection.None,
-  allowedDirections: [RelationDirection.None],
-  directions: {
-    [RelationDirection.None]: {
-      sourceMarker: noMarker,
-      targetMarker: noMarker,
-      dashPattern: solid,
-    },
-  },
-});
-
-export const UmlCompositionRelationKindDefinition = defineRelationKind({
-  kind: RelationKind.UmlComposition,
-  role: RelationRole.Association,
-  description: '整体端为实心菱形的 UML 组合关系',
-  defaultDirection: RelationDirection.None,
-  allowedDirections: [RelationDirection.None],
-  directions: {
-    [RelationDirection.None]: {
-      sourceMarker: { shape: 'diamond' },
-      targetMarker: noMarker,
-      dashPattern: solid,
-    },
-  },
-});
-
-export const UmlGeneralizationRelationKindDefinition = defineRelationKind({
-  kind: RelationKind.UmlGeneralization,
-  role: RelationRole.Generalization,
-  description: '子类型以空心三角指向父类型的 UML 泛化关系',
-  directions: {
-    [RelationDirection.Forward]: { targetMarker: { shape: 'open' } },
-  },
-});
-
-export const UmlDependencyRelationKindDefinition = defineRelationKind({
-  kind: RelationKind.UmlDependency,
-  role: RelationRole.Dependency,
-  description: '以虚线开放箭头表示的 UML 依赖关系',
-  directions: {
-    [RelationDirection.Forward]: { dashPattern: dashed },
-  },
-});
-
-export const UmlRealizationRelationKindDefinition = defineRelationKind({
-  kind: RelationKind.UmlRealization,
-  role: RelationRole.Dependency,
-  description: '实现端指向规范端的 UML 实现关系',
-  directions: {
-    [RelationDirection.Forward]: { targetMarker: { shape: 'open' }, dashPattern: dashed },
-  },
-});
-
 export const BUILTIN_RELATION_ROLE_DEFINITIONS: ReadonlyArray<RelationRoleDefinition> = Object.freeze([
   AssociationRelationRoleDefinition,
   DependencyRelationRoleDefinition,
   GeneralizationRelationRoleDefinition,
   FlowRelationRoleDefinition,
   InfluenceRelationRoleDefinition,
-]);
-
-export const BUILTIN_RELATION_KIND_DEFINITIONS: ReadonlyArray<RelationKindDefinition> = Object.freeze([
-  UmlAssociationRelationKindDefinition,
-  UmlAggregationRelationKindDefinition,
-  UmlCompositionRelationKindDefinition,
-  UmlGeneralizationRelationKindDefinition,
-  UmlDependencyRelationKindDefinition,
-  UmlRealizationRelationKindDefinition,
 ]);

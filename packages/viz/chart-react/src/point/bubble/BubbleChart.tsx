@@ -1,5 +1,5 @@
-import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
-import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import type { BubbleChartInputEmbedProps } from '@retikz/chart-vanilla/point/bubble';
+import { bubbleChart, BubbleChartInputEmbedAdapter } from '@retikz/chart-vanilla/point/bubble';
 import type { IRBubbleChart } from '@retikz/chart/point/bubble';
 
 import type { TypedChartCommonProps } from '../shared';
@@ -10,11 +10,14 @@ import { collectBubbleChartDeclarations } from './declaration-collection';
 export type BubbleChartProps = TypedChartCommonProps<IRBubbleChart>;
 
 /** Bubble 具体类型的 Chart React 组件 */
-export const BubbleChart = createTypedChartComponent<BubbleChartProps, IRBubbleChart>('BubbleChart', props =>
-  createTypedChartInput<BubbleChartProps, IRBubbleChart, CreateBubbleChartInput>(
-    props,
-    collectBubbleChartDeclarations(props.children),
-    input => createBubbleChart(input),
-    'BubbleEncodings',
-  ),
+export const BubbleChart = createTypedChartComponent<BubbleChartProps, IRBubbleChart, BubbleChartInputEmbedProps>(
+  'BubbleChart',
+  props =>
+    createTypedChartInput<BubbleChartProps, IRBubbleChart, BubbleChartInputEmbedProps>(
+      props,
+      collectBubbleChartDeclarations(props.children),
+      input => bubbleChart(input),
+      'BubbleEncodings',
+    ),
+  BubbleChartInputEmbedAdapter,
 );

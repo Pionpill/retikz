@@ -1,0 +1,300 @@
+---
+title: Basic usage
+description: Declare the container and items, then control size, spacing, and alignment
+---
+
+`FlexLayout` arranges arbitrary graphical children along one main axis. It distributes free space, shrinks or wraps when space is tight, keeps fixed geometry at its real size, and lets text reflow against its allocated width.
+
+## Using this topic
+
+The container's `children` are layout items, each carrying a graphic through `child`. React expresses items with `FlexLayoutItem`; Vanilla and IR use `{ kind: 'flex', child: ... }`. The preview shows space allocation in action; the four integration examples start with two content-sized items to explain the minimal composition.
+
+<ComponentPreview files="/library/layout/flex-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+In React + JSX, direct children of `FlexLayout` use `FlexLayoutItem`. Each item carries one drawable child:
+
+```text
+FlexLayout
+└── FlexLayoutItem
+    └── Node / FlexLayout
+```
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
+
+export const Example = () => (
+  <Layout>
+    <FlexLayout gap={12}>
+      <FlexLayoutItem>
+        <Node text="A" />
+      </FlexLayoutItem>
+      <FlexLayoutItem>
+        <Node text="B" />
+      </FlexLayoutItem>
+    </FlexLayout>
+  </Layout>
+);
+```
+
+`itemKey` may be omitted. Layout creates a container-local effective key internally without writing it back to Source IR. Pass `itemKey` only when identity must remain stable across reordering; it never reads React's reserved `key`. Each `FlexLayoutItem` accepts exactly one drawable child or one explicit `IRChild` through `ir`.
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { FlexLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'flexLayout',
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+export const Example = () => <Layout ir={ir} extensions={{ composites: [FlexLayoutDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { flexLayout, FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+
+const input = scene({
+  children: [
+    flexLayout({
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
+      ],
+    }),
+  ],
+});
+
+console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { FlexLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'flexLayout',
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', text: 'A' } },
+        { kind: 'flex', child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+console.log(renderToSvgString(ir, { compile: { composites: [FlexLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+## Setting direction, size, and spacing
+
+Direction chooses a horizontal or vertical arrangement, size determines the available space, and padding and gaps provide spacing. These are container properties.
+
+| Property          | Available values                                                      | Explanation                                                                                          |
+| ----------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `direction`       | `row`, `row-reverse`, `column`, `column-reverse`                      | Choose a horizontal or vertical main axis; reverse modes change placement, not paint order           |
+| `size.x / size.y` | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | Physical container width and height: size to content, use a fixed value, or fill finite parent space |
+| `padding`         | Non-negative number, or an object with `x` / `y` / per-side values    | Inset the container on each side to form the content box                                             |
+| `gap`             | Non-negative number, or `{ column, row }` with non-negative values    | Fixed spacing between adjacent items, deducted before distributing free space                        |
+
+In the demo, switch direction and size policy, then adjust padding and gaps. `size.x` / `size.y` always mean physical width and height, so a vertical arrangement needs space on the y axis. Start with content sizing on both axes, or fix only x for a specific row width. `fill` requires finite parent space.
+
+<ComponentPreview
+  files="flex-geometry"
+  size="md"
+  controlPanelDefaultSize={50}
+  caption="Switch direction and sizing policies, then change padding and gaps. Dimension controls appear only for fixed axes."
+/>
+
+## Allocating item space
+
+Items start from a base size, then grow or shrink to fit the container. Set these properties on each item.
+
+| Property | Available values                   | Explanation                                                                                            |
+| -------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `basis`  | `content` or a non-negative number | Item main-axis starting size; `content` uses intrinsic measurement                                     |
+| `grow`   | Non-negative number                | Item weight for extra space; `0` disables growth. This is not a final size ratio                       |
+| `shrink` | Non-negative number                | Item shrink weight; `0` disables shrinking. Effective weight also includes the unconstrained base size |
+| `size.x` | `{ kind: "fixed", value }`         | Fixed container width; `value` is non-negative                                                         |
+
+The demo gives all three items the same base size and a minimum allocation of 32. Reduce the base size and adjust the first item’s `grow` to compare extra space; then increase the base size or narrow the container and adjust the second item’s `shrink`. The third item keeps `grow=1` and `shrink=1` as a reference. Fixed geometry does not automatically scale to its slot.
+
+<ComponentPreview
+  files="flex-allocation"
+  size="md"
+  caption="Reduce the basis to observe growth, then increase it or reduce container width to observe shrinkage. Dashed boxes show slots."
+/>
+
+## Aligning the container and items
+
+Alignment determines where free space goes and where items sit on the other axis. An item can override the container default.
+
+| Property         | Available values                                                                 | Explanation                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `justifyContent` | `start`, `center`, `end`, `space-between`, `space-around`, `space-evenly`        | Container property: distribute remaining space on each line’s main axis                         |
+| `alignItems`     | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`           | Container property: default cross-axis alignment; baseline modes require a horizontal main axis |
+| `alignSelf`      | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`; optional | Item property: override `alignItems`, or inherit it when omitted                                |
+
+The demo uses a horizontal arrangement with growth disabled. Change main-axis distribution, switch default cross-axis alignment from center to start, then override the second item. `gap` remains fixed; distribution may have no visible effect if growth has consumed all free space. `stretch` supplies a size constraint but does not guarantee that fixed geometry deforms.
+
+<ComponentPreview
+  files="flex-alignment"
+  size="md"
+  caption="Change main-axis distribution, then compare default alignment with the override for B. Items do not grow, leaving visible free space."
+/>
+
+## Related props
+
+These properties cover this page's integration, sizing, spacing, single-line allocation, and ordinary alignment. See [Extended usage's related props](/library/layout/flex-layout/extended#related-props) for constraints, wrapping, baselines, and clipping options. See [API reference](/library/layout/flex-layout/api-reference) for complete signatures and [Schema reference](/library/layout/flex-layout/schema-reference) for persistent fields and defaults.
+
+<ComponentProps
+  items={[
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        'This page uses `{ kind: "content" }` for content sizing and `{ kind: "fixed", value }` for fixed sizing. x / y are physical width and height. Nested layouts can use `{ kind: "fill" }` to accept finite parent space.',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: 'Insets from the allocation box to the content box',
+      defaultValue: '0',
+    },
+    {
+      name: 'direction',
+      kind: 'property',
+      type: "'row' | 'row-reverse' | 'column' | 'column-reverse'",
+      description: 'Main axis and forward or reverse traversal',
+      defaultValue: "'row'",
+    },
+    {
+      name: 'gap',
+      kind: 'property',
+      type: 'number or { column: number; row: number }',
+      description: 'A number applies to both physical axes; the object sets column and row gaps independently',
+      defaultValue: '0 → { column: 0, row: 0 }',
+    },
+    {
+      name: 'justifyContent',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'",
+      description: 'Main-axis free-space distribution within each line',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description:
+        'This page uses start / center / end / stretch to align to the start, center, end, or pass a cross-axis stretch proposal. Fixed geometry need not stretch. See Extended usage for baselines',
+      defaultValue: "'stretch'",
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'Array<FlexLayoutItemInput>',
+      description: 'Authored items; explicit keys must be unique within this container',
+      defaultValue: '[]',
+    },
+  ]}
+/>
+
+<ComponentProps
+  items={[
+    {
+      name: 'basis',
+      kind: 'property',
+      type: "'content' | number",
+      description: 'Natural main contribution or finite non-negative authored base slot',
+      defaultValue: "'content'",
+    },
+    {
+      name: 'grow',
+      kind: 'property',
+      type: 'number',
+      description: 'Finite non-negative factor for receiving positive free space',
+      defaultValue: '0',
+    },
+    {
+      name: 'shrink',
+      kind: 'property',
+      type: 'number',
+      description: 'Factor multiplied by unclamped basis when reclaiming negative free space',
+      defaultValue: '1',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description:
+        'Use start / center / end / stretch to override cross alignment for this item; omission inherits alignItems. See Extended usage for baselines',
+      defaultValue: 'alignItems',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and clipping',
+      url: '/library/layout/flex-layout/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/flex-layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public functions, types, and props',
+      url: '/library/layout/flex-layout/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/flex-layout/schema-reference',
+    },
+  ]}
+/>

@@ -28,7 +28,7 @@ import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/
 
 `FlowDiagram` 既可直接复用 `Layout` 作为 standalone 宿主，也可作为外层 `Layout` 的 embed。Source 中不写 `position` 或 route；省略运行时配置时使用内置 `layered`，relation 默认采用直线 routing。需要折线时可选择 `orthogonal`；需要明确转折顺序时用 `-|` 或 `|-`。
 
-## 例子
+## 基础用法
 
 ### 基础排布
 
@@ -134,7 +134,7 @@ React 的 `<FlowLayout excludeFromBounds={['formats']}>` 与 Vanilla `layouts` �
 
 完整画布仍包含附属内容与连线；可见 `FlowGroup` 也仍包住全部后代。排除不提供自动避障。Layout artifact 的 `bounds` 是布局占位，不是全部后代的绘制范围或裁切框；自定义 provider 必须原样传递排除配置，并保留 `placeLayout` 返回的全部子项及相对坐标。
 
-### 单折角连线
+### 连线路由
 
 从同一个 A 连到 B，`-|` 先水平再垂直，`|-` 先垂直再水平。它们不受主布局方向或箭头方向影响，也不会为其它节点自动绕行。预览的 React 与 Vanilla 源码使用相同的 `routing` 配置。
 
@@ -146,7 +146,11 @@ React 的 `<FlowLayout excludeFromBounds={['formats']}>` 与 Vanilla `layouts` �
 
 两端对齐时自动退化为直线；中心完全重合时会报路由错误。`cornerRadius: 0` 保留直角，正数使用圆角。平行边可能重叠；需要避开节点时应调整布局，而不是把单折角路由当作避障算法。
 
-### 全局配置
+根和 Group 用独立 `routing` 设置路由意图，Relation 的 `routing` 优先。未指定时取两个 endpoint 最近公共 Group 的有效路由，再取根和布局 Definition 的默认路由；中间的 FlowLayout 不建立路由层。例如根为 straight、Group 为 orthogonal 时，嵌套 Layout 内的关系仍使用 orthogonal。
+
+三种轴对齐模式共享圆角继承：实例 `cornerRadius` 优先，其次祖先有效 routing 的半径，再取 Definition 的 `orthogonalCornerRadius`，内置值为 `8`。切换 `kind` 不丢失继承半径，显式 `0` 禁用圆角。
+
+### 默认值与主题
 
 `flowDefaults` 让 Flow 根为全部同类对象提供统一默认样式。`entity.style` 会作用于每个 Entity，`relation.style` 会作用于每条 Relation；这里的设置不改变 Source 的 id、包含关系、节点布局或连线路径。局部 `style` 仍可在需要时覆盖全局值，但本例只展示全局配置。
 
@@ -156,7 +160,11 @@ React 的 `<FlowLayout excludeFromBounds={['formats']}>` 与 Vanilla `layouts` �
   caption="调整任一分区后，同类对象会一起更新；节点和连线的结构与相对位置保持不变。"
 />
 
-## 技术原理
+`theme: { style, mode }` 选择主题环境；`flowThemeStyles` / `diagramThemeStyles` 注入对应 Definition。`graphRules` 是 Flow 根级的 Graph 条件外观规则，只投影到 Flow 下沉的 Entity 与 Relation，不改变布局、routing 或包含关系。`flowDefaults` 与 `diagramDefaults` 是显式默认值，使用正式 Source 的相同路径。Entity 与 Relation 的 `group` 直接复用 Graph：同一 Flow 根中相同 group 共享从分类色板正序自动取得的颜色，未分组元素保持原有外观。Entity / Relation 外观的覆盖顺序为 Graph Theme、根 `graphRules`、`flowDefaults`、实例字段。
+
+Flow defaults 只包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group 的 Surface 外观与 `caption.title` 格式，以及 Relation 的路径、marker 和标签格式。它不包含内容、identity、children、direction、routing 或 overflow，也不会创建标题、Group 或 marker。空对象与 undefined 不覆盖已有值，0 和 false 保留；Node 字体整体替换，Relation 的 `labelFont` 按字段合并。
+
+## 实现原理
 
 <ComponentAlert
   type="tip"
@@ -172,17 +180,7 @@ React 的 `<FlowLayout excludeFromBounds={['formats']}>` 与 Vanilla `layouts` �
 
 Layout callback 必须同步返回 JSON-safe plain data，并为每个 authored Layout 恰好调用一次 `placeLayout`。Flow 以 `@retikz/layout` 的 Flex/Grid compiler 产生固定 placement，再校验 provider 没有改写 Layout 的相对 bounds；其余 id、尺寸、containment、碰撞、route 与 label coverage 也会在 Graph/Core 渲染前验证。Definition 的 `placementKinds` 必须声明支持的种类；不支持的请求在 callback 前报错。
 
-## 默认值与路由
-
-`theme: { style, mode }` 选择主题环境；`flowThemeStyles` / `diagramThemeStyles` 注入对应 Definition。`graphRules` 是 Flow 根级的 Graph 条件外观规则，只投影到 Flow 下沉的 Entity 与 Relation，不改变布局、routing 或包含关系。`flowDefaults` 与 `diagramDefaults` 是显式默认值，使用正式 Source 的相同路径。Entity 与 Relation 的 `group` 直接复用 Graph：同一 Flow 根中相同 group 共享从分类色板正序自动取得的颜色，未分组元素保持原有外观。Entity / Relation 外观的覆盖顺序为 Graph Theme、根 `graphRules`、`flowDefaults`、实例字段。
-
-Flow defaults 只包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group 的 Surface 外观与 `caption.title` 格式，以及 Relation 的路径、marker 和标签格式。它不包含内容、identity、children、direction、routing 或 overflow，也不会创建标题、Group 或 marker。空对象与 undefined 不覆盖已有值，0 和 false 保留；Node 字体整体替换，Relation 的 `labelFont` 按字段合并。
-
-根和 Group 用独立 `routing` 设置路由意图，Relation 的 `routing` 优先。未指定时取两个 endpoint 最近公共 Group 的有效路由，再取根和布局 Definition 的默认路由；中间的 FlowLayout 不建立路由层。例如根为 straight、Group 为 orthogonal 时，嵌套 Layout 内的关系仍使用 orthogonal。
-
-三种轴对齐模式共享圆角继承：实例 `cornerRadius` 优先，其次祖先有效 routing 的半径，再取 Definition 的 `orthogonalCornerRadius`，内置值为 `8`。切换 `kind` 不丢失继承半径，显式 `0` 禁用圆角。
-
-自定义 Layout Definition 必须在 `capabilities.routingKinds` 声明支持的模式；只要支持任一轴对齐模式，就必须提供 `defaults.routing.orthogonalCornerRadius`。新模式返回从 source bounds 中心到 target bounds 中心的单折角点链；反向折角、额外绕行或偏离中心会以 `FlowLayoutOutputInvalid` 报错。Artifact 保留模式和未裁剪参考点，最终边界裁剪与圆角由 Core 完成。
+自定义 Layout Definition 必须在 `capabilities.routingKinds` 声明支持的模式；只要支持任一轴对齐模式，就必须提供 `defaults.routing.orthogonalCornerRadius`。单折角模式返回从 source bounds 中心到 target bounds 中心的单折角点链；反向折角、额外绕行或偏离中心会以 `FlowLayoutOutputInvalid` 报错。Artifact 保留模式和未裁剪参考点，最终边界裁剪与圆角由 Core 完成。
 
 ## API 参考
 
@@ -217,5 +215,5 @@ Flow defaults 只包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group
 
 ## 相关
 
-- [Diagram Framework](/schematic/diagram/framework)
+- [设计理念](/schematic/diagram/design)
 - [Graph](/schematic/graph)

@@ -1,10 +1,23 @@
 import { BoxSpacingSchema, CssColorSchema } from '@retikz/core';
 import { ShapeNameSchema } from '@retikz/core';
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
-import { MarkNodeLabelListSchema, PlotDomainPaddingKind } from '@retikz/plot';
+import { DomainPaddingClearanceSchema, MarkNodeLabelListSchema, PlotDomainPaddingKind } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
 import type { ZodType } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
+
+const PointAutoPaddingKindSchema = zodEnum(['max-radius', 'point-aware']);
+
+/** Point Chart 自动留白策略及外缘净空 */
+export const PointAutoPaddingSchema = union([
+  PointAutoPaddingKindSchema,
+  strictObject({
+    kind: PointAutoPaddingKindSchema.describe('Automatic padding strategy'),
+    clearance: union([DomainPaddingClearanceSchema, BoxSpacingSchema]).optional(),
+  }),
+]).describe('Automatic padding strategy or strategy with minimum edge clearance; omitted means max-radius');
+
+export type IRPointAutoPadding = ZodInfer<typeof PointAutoPaddingSchema>;
 
 const pointPositionDomainPaddingFields = Object.keys(BoxSpacingSchema.shape);
 

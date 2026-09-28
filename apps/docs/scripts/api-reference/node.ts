@@ -60,6 +60,7 @@ const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'so
   },
   {
     owner: 'core',
+    fullMemberSymbols: ['IRNode'],
     symbols: [
       'IRNode',
       'IRNodeStyle',
@@ -95,7 +96,6 @@ export const nodeApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = nodeEntr
   ],
   translate: translateNodeApiReference,
   schemaLocalizations: nodeSchemas,
-  schemaPackageName: '@retikz/core',
 }));
 
 /** 按真实 package 入口分别解析，再合并为组件参考 */

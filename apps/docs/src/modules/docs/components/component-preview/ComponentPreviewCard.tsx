@@ -1,6 +1,6 @@
 import { FileCode2 } from 'lucide-react';
 import type { FC, ReactNode } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
@@ -8,6 +8,7 @@ import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
 
 import { ComponentPreviewDialog } from './ComponentPreviewDialog';
+import { ComponentPreviewShowcase } from './ComponentPreviewShowcase';
 import { alignClass, sizeClass } from './constants';
 import { PreviewWorkspace } from './control-panel';
 import { mergePreviewControlSlots } from './controls';
@@ -38,6 +39,12 @@ import { buildAskAiPrompt, findPrecedingHeading, resolvePreviewCodeVisible } fro
 export type { ComponentRenderSource } from './types';
 
 export type ComponentPreviewCardProps = {
+  /** 向 demo 提供绘图区实际宽高，默认关闭 */
+  responsive?: boolean;
+  /** 展示布局；默认保留完整调试卡片 */
+  mode?: 'default' | 'showcase';
+  /** 更新受控展示布局 */
+  onModeChange?: (mode: 'default' | 'showcase') => void;
   /** demo 标识，仅用于 Dialog header 显示。 */
   name: string;
   Component: ComponentPreviewDemoComponent;
@@ -45,13 +52,15 @@ export type ComponentPreviewCardProps = {
   lang?: Lang;
   /** 代码区视图集合；缺省时整段代码面板与 Dialog 右栏都不渲染。 */
   source?: ComponentRenderSource;
+  /** 源码面板首次需要完整视图时通知资源宿主 */
+  onSourceRequested?: () => void;
   /** 根据当前控件状态派生显式源码视图 */
   buildSourceViews?: (values: Readonly<PreviewControlValues>) => Omit<ComponentRenderSource, 'react'>;
   /** React 源码视图默认选中的文件名。 */
   defaultSourceFile?: string;
   /** 渲染区垂直对齐，默认 center。 */
   align?: AlignKey;
-  /** 渲染区高度档位，默认 `md`。 */
+  /** 渲染区高度档位，showcase 默认 `xl`，常规模式默认 `md` */
   size?: SizeKey;
   /** 透传给 demo 渲染区父级 div 的 className。 */
   previewClassName?: string;
@@ -93,14 +102,18 @@ export type ComponentPreviewCardProps = {
 /** 演示卡核心。 */
 export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const {
+    responsive = false,
+    mode: initialMode = 'default',
+    onModeChange,
     name,
     Component,
     lang = 'zh',
     source: initialSource,
+    onSourceRequested,
     buildSourceViews,
     defaultSourceFile,
     align = 'center',
-    size = 'md',
+    size = initialMode === 'showcase' ? 'xl' : 'md',
     previewClassName,
     showAskAi = true,
     showTools = true,
@@ -119,11 +132,19 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     onThemeStyleChange,
     caption,
   } = props;
+  const [localMode, setLocalMode] = useState(initialMode);
+  const mode = onModeChange ? initialMode : localMode;
+  const toggleMode = () => {
+    const nextMode = mode === 'showcase' ? 'default' : 'showcase';
+    if (onModeChange) onModeChange(nextMode);
+    else setLocalMode(nextMode);
+  };
   const [localIsCodeVisible, setLocalIsCodeVisible] = useState<boolean | undefined>(undefined);
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [localControlPanelOpen, setLocalControlPanelOpen] = useState<boolean>();
   const [themeMode, setThemeMode] = useState<PreviewThemeMode>(() => useComponentPreviewStore.getState().themeMode);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [previewWidth, setPreviewWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const openAi = useRightPanelStore(s => s.openAi);
   const fillAiDraft = useAiChatStore(s => s.fillDraftAndFocus);
@@ -153,12 +174,15 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: globalRendererMode,
-    rendererModeOverride: sourceState.activeRendererMode,
+    rendererModeOverride: mode === 'default' ? sourceState.activeRendererMode : undefined,
     size,
     dragEnabled: globalDragEnabled,
     expanded: isMaximized,
   });
   const isCodeVisible = resolvePreviewCodeVisible(globalHideCode, localIsCodeVisible);
+  useEffect(() => {
+    if (mode === 'default' && (!codeInitiallyHidden || isCodeVisible || isMaximized)) onSourceRequested?.();
+  }, [mode, codeInitiallyHidden, isCodeVisible, isMaximized, onSourceRequested]);
   const isExpanded = localIsExpanded ?? globalIsExpand;
   const controlPanelOpen = localControlPanelOpen ?? controlPanelDefaultOpen ?? globalControlPanelDefaultOpen;
 
@@ -180,6 +204,11 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const handleShowCode = useCallback(() => setLocalIsCodeVisible(true), []);
   const previewToolSlots = showTools
     ? buildPreviewToolSlots({
+        compactSizes: mode === 'showcase',
+        onToggleMode: toggleMode,
+        width: previewWidth,
+        onWidthChange: setPreviewWidth,
+        lang,
         transform: previewState.transform,
         isTransformed: previewState.isTransformed,
         zoomBy: previewState.zoomBy,
@@ -214,35 +243,63 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
 
   return (
     <div ref={containerRef} className="my-6">
-      <div data-slot="component-preview-frame" data-preview-name={name} className="overflow-hidden rounded-xl border">
-        <PreviewWorkspace
-          definition={resolvedControlDefinition}
-          controlContract={controlContract}
-          controlState={controlState}
-          showContextBar={showContextBar}
-          figureType={figureType}
-          themeMode={themeMode}
-          onThemeModeChange={setThemeMode}
-          controlPanelOpen={controlPanelOpen}
-          controlPanelDefaultSize={controlPanelDefaultSize}
-          controlDensity="compact"
-          onControlPanelOpenChange={setLocalControlPanelOpen}
-          workspaceClassName={sizeClass[previewState.size]}
-          enableThemeSwitch={enableThemeSwitch}
-          themeStyleSelection={themeStyleSelection}
-          onThemeStyleChange={onThemeStyleChange}
-          previewState={previewState}
-          Component={Component}
-          lang={lang}
-          activeRender={sourceState.activeRender}
-          controlSlots={resolvedCardControlSlots}
-          previewClassName={cn(
-            'flex h-full w-full justify-center overflow-hidden p-5 select-none',
-            alignClass[align],
-            previewClassName,
-          )}
-        />
-        {hasCode && (!codeInitiallyHidden || isCodeVisible) ? (
+      <div
+        data-slot="component-preview-frame"
+        data-preview-name={name}
+        className={cn('overflow-hidden', mode !== 'showcase' && 'rounded-xl border')}
+        data-preview-mode={mode}
+      >
+        {mode === 'showcase' ? (
+          <ComponentPreviewShowcase
+            width={previewWidth}
+            onAskAi={showAskAi ? handleAskAi : undefined}
+            Component={Component}
+            responsive={responsive}
+            lang={lang}
+            previewState={previewState}
+            sourceState={sourceState}
+            onSourceRequested={onSourceRequested}
+            definition={resolvedControlDefinition}
+            controlContract={controlContract}
+            tools={mergePreviewControlSlots(controlSlots, previewToolSlots)}
+            themeMode={themeMode}
+            onThemeModeChange={setThemeMode}
+            enableThemeSwitch={enableThemeSwitch}
+            themeStyleSelection={themeStyleSelection}
+            onThemeStyleChange={onThemeStyleChange}
+            className={cn(sizeClass[previewState.size], previewClassName)}
+          />
+        ) : (
+          <PreviewWorkspace
+            definition={resolvedControlDefinition}
+            controlContract={controlContract}
+            controlState={controlState}
+            showContextBar={showContextBar}
+            figureType={figureType}
+            themeMode={themeMode}
+            onThemeModeChange={setThemeMode}
+            controlPanelOpen={controlPanelOpen}
+            controlPanelDefaultSize={controlPanelDefaultSize}
+            controlDensity="compact"
+            onControlPanelOpenChange={setLocalControlPanelOpen}
+            workspaceClassName={sizeClass[previewState.size]}
+            enableThemeSwitch={enableThemeSwitch}
+            themeStyleSelection={themeStyleSelection}
+            onThemeStyleChange={onThemeStyleChange}
+            previewState={previewState}
+            Component={Component}
+            responsive={responsive}
+            lang={lang}
+            activeRender={sourceState.activeRender}
+            controlSlots={resolvedCardControlSlots}
+            previewClassName={cn(
+              'flex h-full w-full justify-center overflow-hidden p-5 select-none',
+              alignClass[align],
+              previewClassName,
+            )}
+          />
+        )}
+        {mode !== 'showcase' && hasCode && (!codeInitiallyHidden || isCodeVisible) ? (
           <InlineSourcePanel
             state={sourceState}
             isCodeVisible={isCodeVisible}
@@ -256,10 +313,13 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
         ) : null}
         {isMaximized ? (
           <ComponentPreviewDialog
+            mode={mode}
             name={name}
             Component={Component}
+            responsive={responsive}
             lang={lang}
             source={source}
+            onSourceRequested={onSourceRequested}
             defaultSourceFile={defaultSourceFile}
             align={align}
             initialSize={size}

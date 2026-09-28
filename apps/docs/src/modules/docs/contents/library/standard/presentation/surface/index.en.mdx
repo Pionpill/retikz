@@ -1,32 +1,112 @@
 ---
 title: Surface
-description: Wrap one arbitrary child with JSON-safe padding, background, border, radius, and overflow, then lower it to ordinary Core Scope and Path output.
+description: Add padding, background, border, and content clipping to one child drawing
 ---
 
-`Surface` is Standard's single-box presentation container. It measures one Core or registered Tier 2 child, adds padding and optional appearance, and keeps the result renderer-neutral. Chart, Table, and other domains can reuse this boundary without rebuilding a canvas shell in adapters or renderers.
+`Surface` adds padding, a background, a border, and rounded corners to one child drawing, with optional overflow clipping. The child can be a Node, a Scope containing multiple primitives, or a registered composite.
 
-## Usage
+## Using this topic
+
+After [installation and first rendering](/library/standard/get-start), import from `/presentation`. All four forms draw the same surface around one node.
+
+<ComponentPreview files="entry" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+Surface requires exactly one drawable child. Wrap multiple primitives in one Scope first.
+
+```text
+Surface
+└─ Node / Scope / Composite (1)
+```
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
 import { Surface } from '@retikz/standard-react/presentation';
+
+export const Example = () => (
+  <Layout>
+    <Surface padding={16} border={{ stroke: 'currentColor' }}>
+      <Node position={[0, 0]} text="A" />
+    </Surface>
+  </Layout>
+);
 ```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
 ```tsx
-<Layout>
-  <Surface padding={16} background={{ fill: '#f8fafc' }} border={{ stroke: '#64748b' }}>
-    <Node position={[0, 0]} text="Content" />
-  </Surface>
-</Layout>
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { SurfaceDefinition } from '@retikz/standard/presentation';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'surface',
+      padding: 16,
+      border: { stroke: 'currentColor' },
+      child: { type: 'node', position: [0, 0], text: 'A' },
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[SurfaceDefinition]} />;
 ```
 
-| Path           | Public entry                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------ |
-| React          | `Surface` from `@retikz/standard-react/presentation`                                                   |
-| Vanilla        | `surface`, `surfaceChild`, and `SurfaceInputEmbedAdapter` from `@retikz/standard-vanilla/presentation` |
-| IR / persisted | `SurfaceSchema`, `createSurface`, and `SurfaceDefinition` from `@retikz/standard/presentation`         |
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-## Examples
+```ts
+import { surface, surfaceChild, SurfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { scene, node, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    surface({
+      padding: 16,
+      border: { stroke: 'currentColor' },
+      child: surfaceChild(node({ position: [0, 0], text: 'A' })),
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [SurfaceInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { SurfaceDefinition } from '@retikz/standard/presentation';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'surface',
+      padding: 16,
+      border: { stroke: 'currentColor' },
+      child: { type: 'node', position: [0, 0], text: 'A' },
+    },
+  ],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [SurfaceDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
 
 ### Basic surface
 
@@ -34,13 +114,27 @@ import { Surface } from '@retikz/standard-react/presentation';
 
 <ComponentPreview files="surface-basic" size="sm" />
 
+Padding and cornerRadius default to 0; background and border are absent by default. Padding participates in space allocation, and appearance follows the complete allocation box. Style and other Scope props affect the whole outer group rather than replacing background or border.
+
+## Extended usage
+
 ### Overflow and rounded clipping
 
 `overflow="visible"` preserves visual overflow; `overflow="clip"` clips only the content layer, not the background or border. The radius drives both the boundary Path and content clip and is clamped to half the shorter side.
 
 <ComponentPreview files="surface-overflow" size="sm" />
 
-## How it works
+## Errors and limitations
+
+Normalization must produce exactly one child. Padding and radius must be nonnegative. If a finite range or exact parent size is smaller than total padding on that axis, Surface fails before probing the child. Direct IR with overflow: 'clip' also requires PathClipDefinition; React and Vanilla adapters contribute it automatically.
+
+## Implementation
+
+<ComponentAlert type="tip">
+
+This section explains internal layout and lowering. Skip to the API reference if you only need to use the component.
+
+</ComponentAlert>
 
 `SurfaceDefinition` translates the parent proposal for the padded content, probes the single child, replays it, and emits a background Path, content Scope, and border Path. The overflow clip belongs only to the content Scope; an authored Core `clip` on Surface still covers the complete outer group.
 
@@ -66,29 +160,29 @@ The authored outer Scope also publishes a qualified handle whose id is `surface`
   ]}
 />
 
-## API Reference
+## API reference
+
+{/* @include library/standard/presentation/surface/generated */}
+
+## Schema reference
 
 ### SurfaceSchema
 
-| Property        | Type                              | Default   | Meaning                                                              |
-| --------------- | --------------------------------- | --------- | -------------------------------------------------------------------- |
-| `child`         | `IRChild`                         | —         | The one Core or registered Tier 2 child                              |
-| `padding?`      | `number \| IRBoxSpacing`          | `0`       | Non-negative padding normalized to top/right/bottom/left             |
-| `overflow?`     | `'visible' \| 'clip'`             | `visible` | Child visual-overflow policy                                         |
-| `background?`   | `{ fill; fillOpacity? }`          | —         | Fill covering the complete allocation box                            |
-| `border?`       | `IRStandardPathStrokeStyle`       | —         | Stroke drawn along the allocation boundary                           |
-| `cornerRadius?` | `number`                          | `0`       | Non-negative radius, effectively capped at half the short side       |
-| Scope props     | `Omit<IRScope, 'type\|children'>` | —         | Core Scope behavior for the complete background/content/border group |
+<ZodSchema name="SurfaceSchema" />
 
-`createSurface` preserves omissions and padding shorthand. `SurfaceSchema.parse()` materializes static defaults: `padding: 0`, `overflow: 'visible'`, and `cornerRadius: 0`. Domain resolution reuses those defaults and expands padding into four sides without rewriting authored configuration. A finite range or exact proposal smaller than axis padding fails synchronously before the child is probed; Surface does not fall back to intrinsic sizing.
+## Further reading
 
-### React and Vanilla
-
-React `SurfaceProps` replaces IR `child` with `children` and requires exactly one resulting IR child. Vanilla uses `surfaceChild(node)` to mark the sole nested child. The same normalization pass collects nested Tier 2 provider contributions, which never enter IR or Scene.
-
-## Related
-
-- [Scope](/kernel/components/scope/usage): the authored outer group emitted by Surface
-- [Tier 2 Composite](/kernel/components/design/composite): Definition and provider-graph mechanics
-- [Provider loading](/library/extension/capability-loading): React, Vanilla, and direct-IR loading
-- [Frame](/library/standard/presentation/frame): the specialized Node grouping and header composite
+<LinkedSections
+  items={[
+    {
+      title: 'Frame',
+      description: 'Add semantic headers to a Node group',
+      url: '/library/standard/presentation/frame',
+    },
+    {
+      title: 'Scope',
+      description: 'Combine multiple primitives into one child',
+      url: '/kernel/components/scope/usage',
+    },
+  ]}
+/>

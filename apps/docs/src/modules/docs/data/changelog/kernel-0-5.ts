@@ -311,6 +311,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Node 默认位置', en: 'Unreleased · Default Node position' },
+          content: {
+            zh: 'Node 的 position 可省略，Core 统一解析为当前局部坐标系的 [0, 0]；React、Vanilla 与 Source IR 使用同一语义，布局子项无需显式填写零坐标。显式定位保持不变，Coordinate 的 position 仍必填。',
+            en: 'Node position is optional and Core resolves it to [0, 0] in the current local coordinate system. React, Vanilla, and Source IR share this behavior, so layout children no longer need explicit zero coordinates. Explicit positioning is unchanged; Coordinate position remains required.',
+          },
+        },
+        {
           label: { zh: '未发布 · 图元身份与别名', en: 'Unreleased · Graphic identities and aliases' },
           content: {
             zh: '空间声明、查询和结果统一使用 id，移除旧 key 字段。Node 与空间句柄新增 aliasIds；多个 id 查询同一份几何或冻结空间记录，不重复创建图元，命名空间、变换、布局重放和原子更新保持一致。',

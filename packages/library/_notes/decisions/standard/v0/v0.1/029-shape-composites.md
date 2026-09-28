@@ -1,6 +1,6 @@
 ---
 description: 将 React 专属形状 Sugar 迁为 Standard 的独立 Tier 2 形状，统一 JSON、Vanilla shape.xxx 与 React 入口，并区分节点形状扩展
-keywords: 形状、shape、Circle、Ellipse、RegularPolygon、Sector、Tier2、Vanilla、lowering
+keywords: 形状、shape、Circle、Ellipse、Polygon、Sector、Tier2、Vanilla、lowering
 ---
 
 # ADR-029：统一 Standard 形状 Tier 2 契约与多端入口
@@ -12,7 +12,7 @@ keywords: 形状、shape、Circle、Ellipse、RegularPolygon、Sector、Tier2、
 
 ## 背景与目标
 
-Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 当前是 Kernel React 的 Path Sugar。几何意图在 JSX 展开时就变成 Path steps，Vanilla 没有对应的具名作者入口，持久化 JSON 也无法保留“画圆”“画星形”等高层语义。参数转换和组合几何因而依附于 React，难以作为统一契约供 LLM、无框架作者和其它绘图组件消费。
+Circle、Ellipse、Rectangle、Polygon、Star、Arc、Sector 当前是 Kernel React 的 Path Sugar。几何意图在 JSX 展开时就变成 Path steps，Vanilla 没有对应的具名作者入口，持久化 JSON 也无法保留“画圆”“画星形”等高层语义。参数转换和组合几何因而依附于 React，难以作为统一契约供 LLM、无框架作者和其它绘图组件消费。
 
 将这七种形状统一为 Standard 的宿主无关 Tier 2 composite。JSON 保存作者的几何意图，Vanilla 与 React 使用相同输入语义，最终通过公开 Core composite 机制展开成普通 Path。Core 仍拥有路径、坐标引用、编译、Scene 与 renderer-neutral 输出；不增加 Core 顶层形状实体。
 
@@ -22,17 +22,17 @@ Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 当前是 Ke
 
 每种形状使用独立的 `namespace: 'standard'` 与 `type`，直接复用 Core 的 `defineComposite`、registry、provider dependency graph 与 compile options。`shape` 是 Vanilla 的静态函数分组，不是新的 IR 判别层、运行时 registry 或动态加载器。
 
-| 形状           | Composite type   | Vanilla 入口                  | React 入口       |
-| -------------- | ---------------- | ----------------------------- | ---------------- |
-| 圆             | `circle`         | `shape.circle(input)`         | `Circle`         |
-| 椭圆           | `ellipse`        | `shape.ellipse(input)`        | `Ellipse`        |
-| 矩形           | `rectangle`      | `shape.rectangle(input)`      | `Rectangle`      |
-| 正多边形       | `regularPolygon` | `shape.regularPolygon(input)` | `RegularPolygon` |
-| 星形           | `star`           | `shape.star(input)`           | `Star`           |
-| 圆弧／椭圆弧   | `arc`            | `shape.arc(input)`            | `Arc`            |
-| 扇形／环形扇区 | `sector`         | `shape.sector(input)`         | `Sector`         |
+| 形状           | Composite type | Vanilla 入口             | React 入口  |
+| -------------- | -------------- | ------------------------ | ----------- |
+| 圆             | `circle`       | `shape.circle(input)`    | `Circle`    |
+| 椭圆           | `ellipse`      | `shape.ellipse(input)`   | `Ellipse`   |
+| 矩形           | `rectangle`    | `shape.rectangle(input)` | `Rectangle` |
+| 正多边形       | `polygon`      | `shape.polygon(input)`   | `Polygon`   |
+| 星形           | `star`         | `shape.star(input)`      | `Star`      |
+| 圆弧／椭圆弧   | `arc`          | `shape.arc(input)`       | `Arc`       |
+| 扇形／环形扇区 | `sector`       | `shape.sector(input)`    | `Sector`    |
 
-使用 `regularPolygon` 明确其正多边形约束，不提供暗示任意顶点输入的 `polygon` 别名。Vanilla 的 `@retikz/standard-vanilla/shape` 子入口只公开 `shape` 下的这些构造方法，不并行导出顶层 `circle()` 等同义入口。React 保持具名组件，由 `@retikz/standard-react/shape` 导出。
+统一使用 `Polygon` / `polygon` 命名正多边形组件；输入仍由中心、边数与半径或边长定义，不接受任意顶点数组。Vanilla 的 `@retikz/standard-vanilla/shape` 子入口只公开 `shape` 下的这些构造方法，不并行导出顶层 `circle()` 等同义入口。React 保持具名组件，由 `@retikz/standard-react/shape` 导出。
 
 新增形状继续定义独立 composite，第三方使用同一 Core 扩展路径；不要求扩充封闭的 Core 形状枚举，也不向 `shape` 对象动态注册属性。
 
@@ -70,15 +70,15 @@ Vanilla 只接受一个领域输入对象，其中可选的 `id` 同时传给 em
 
 每个形状接受以下互斥几何描述，不能混用多套尺寸后靠字段优先级猜测意图。所有形式均可由 JSON、Vanilla 与 React 表达。
 
-| 形状           | 几何描述与默认                                                                                                                                                  |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Circle         | `center + radius`、`center + diameter`、直径端点 `from + to`、包围盒 `corner1 + corner2` 或 `box` 五选一；盒拟合 `fit` 缺省为 `contain`，`cover` 取较长边       |
-| Ellipse        | `center + radius: { x, y }`、`center + diameterX + diameterY`、`corner1 + corner2` 或 `box` 四选一；按盒的两轴拟合                                              |
-| Rectangle      | `corner1 + corner2`、`center + width + height`、`center + side` 或 `corner1 + width + height` 四选一；`cornerRadius` 缺省为零，圆角夹紧沿用 Core rectangle step |
-| RegularPolygon | `center + sides` 加 `radius` 或 `sideLength` 二选一；`sides` 为至少 3 的整数，默认首顶点角为 −90°                                                               |
-| Star           | `center + outerRadius + points` 加 `innerRadius` 或 `innerRatio` 二选一；两者均省略时比例为 0.5，`points` 为至少 2 的整数，默认首外顶点角为 −90°                |
-| Arc            | `center + radius`，半径为数字或 `{ x, y }`；角度必填，`close` 缺省 `open`，还可为 `chord`、`sector`                                                             |
-| Sector         | `center + radius`，角度必填；省略 `innerRadius` 为实心扇形，内半径与外半径同为数字或同为 `{ x, y }` 时表达环形扇区                                              |
+| 形状      | 几何描述与默认                                                                                                                                                  |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Circle    | `center + radius`、`center + diameter`、直径端点 `from + to`、包围盒 `corner1 + corner2` 或 `box` 五选一；盒拟合 `fit` 缺省为 `contain`，`cover` 取较长边       |
+| Ellipse   | `center + radius: { x, y }`、`center + diameterX + diameterY`、`corner1 + corner2` 或 `box` 四选一；按盒的两轴拟合                                              |
+| Rectangle | `corner1 + corner2`、`center + width + height`、`center + side` 或 `corner1 + width + height` 四选一；`cornerRadius` 缺省为零，圆角夹紧沿用 Core rectangle step |
+| Polygon   | `center + sides` 加 `radius` 或 `sideLength` 二选一；`sides` 为至少 3 的整数，默认首顶点角为 −90°                                                               |
+| Star      | `center + outerRadius + points` 加 `innerRadius` 或 `innerRatio` 二选一；两者均省略时比例为 0.5，`points` 为至少 2 的整数，默认首外顶点角为 −90°                |
+| Arc       | `center + radius`，半径为数字或 `{ x, y }`；角度必填，`close` 缺省 `open`，还可为 `chord`、`sector`                                                             |
+| Sector    | `center + radius`，角度必填；省略 `innerRadius` 为实心扇形，内半径与外半径同为数字或同为 `{ x, y }` 时表达环形扇区                                              |
 
 Circle / Ellipse 的 `box` 接受 `{ x, y, width, height }` 或 `{ origin: [x, y], width, height }`。盒及盒对角点形式支持互斥的 `inset` / `outset`；其它形式不接受这两个字段。Circle 的 `fit` 也仅用于盒及盒对角点形式。调整量为有限非负数；调整后盒必须仍有正宽高。
 
@@ -88,7 +88,7 @@ Circle / Ellipse 的 `box` 接受 `{ x, y, width, height }` 或 `{ origin: [x, y
 
 直接交给 Core 解析的坐标保留 `IRTarget`：Circle / Ellipse 的中心半径或直径形式、Rectangle 的双角点形式、Arc 的中心、实心 Sector 的中心。Ellipse 的中心在三端统一开放为 Core Target，不保留旧 React 类型允许而运行时拒绝的差异。
 
-需要 Standard 自行计算坐标的输入限字面笛卡尔坐标：盒、直径端点、带宽高或边长的 Rectangle、RegularPolygon、Star、正内半径的 Sector。其它 Target 使用直接可表达该语义的 Core Path；不得偷偷从 DOM 或 renderer 反查节点位置。Vanilla 的 Target 便利写法通过既有 Vanilla 规范化进入 Core Source Target。
+需要 Standard 自行计算坐标的输入限字面笛卡尔坐标：盒、直径端点、带宽高或边长的 Rectangle、Polygon、Star、正内半径的 Sector。其它 Target 使用直接可表达该语义的 Core Path；不得偷偷从 DOM 或 renderer 反查节点位置。Vanilla 的 Target 便利写法通过既有 Vanilla 规范化进入 Core Source Target。
 
 ### 下层 Path 契约
 
@@ -96,7 +96,7 @@ Circle / Ellipse 的 `box` 接受 `{ x, y, width, height }` 或 `{ origin: [x, y
 
 除此之外复用 Core Path 的公开实例、样式、描边、填充、箭头、marks、动画、圆角、缩放、标签和元数据语义，不以旧 Sugar 的局部字段白名单冻结公共能力。需要明确区分的两个语义保留如下：
 
-- RegularPolygon / Star 的 `rotate` 是绕给定几何中心的首顶点角，缺省 −90°；该值只作用一次，不再作为 Path 包围盒旋转重复应用。其它形状的 `rotate` 沿用 Path 包围盒中心旋转；`scale` 均沿用 Path。
+- Polygon / Star 的 `rotate` 是绕给定几何中心的首顶点角，缺省 −90°；该值只作用一次，不再作为 Path 包围盒旋转重复应用。其它形状的 `rotate` 沿用 Path 包围盒中心旋转；`scale` 均沿用 Path。
 - Arc / Sector 的 `label` 属于圆弧段，Sector 的环形形式只标注外弧；其余形状的 `label` 使用 Path host label。Source 使用 Core JSON-safe label，Vanilla 便利形式由 adapter 转换。
 
 Path 的显式 `id`、`meta`、`zIndex` 直接承接形状实例；不额外生成 Scope 或 Node，不赋予 Path 节点锚点、文字自适应或新的端点寻址能力。父 Scope 的 namespace、变换、样式继承、Theme、裁剪与重复 id 规则继续由 Core 解释。Composite 的 owner provenance 可保留其类型，但不另造一套几何索引或手动覆写用户 meta。

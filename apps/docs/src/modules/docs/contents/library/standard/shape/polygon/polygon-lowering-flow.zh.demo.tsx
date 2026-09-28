@@ -1,0 +1,60 @@
+import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+/** Polygon 从尺寸输入展开为闭合 Path 的局部流程图 */
+const Demo: FC = () => (
+  <Layout>
+    <Node
+      id="radius-input"
+      position={[-105, -80]}
+      text={['center', '+ radius']}
+      cornerRadius={4}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
+    />
+    <Node
+      id="side-input"
+      position={[-105, 0]}
+      text={['center', '+ sideLength']}
+      cornerRadius={4}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
+    />
+    <Node
+      id="angle-input"
+      position={[-105, 80]}
+      cornerRadius={4}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
+    >
+      sides + rotate
+    </Node>
+    <Node
+      id="vertices"
+      position={[85, 0]}
+      text={['正多边形', '顶点环']}
+      cornerRadius={4}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14, weight: 'bold' } }}
+    />
+    <Node
+      id="path"
+      position={[85, 100]}
+      cornerRadius={4}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
+    >
+      闭合 Path
+    </Node>
+
+    <Draw way={['radius-input', 'vertices']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw
+      way={[
+        'side-input',
+        { label: { text: '反算 R', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
+        'vertices',
+      ]}
+      arrow="->"
+      style={{ stroke: 'gray' }}
+    />
+    <Draw way={['angle-input', 'vertices']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['vertices', 'path']} arrow="->" style={{ stroke: 'gray' }} />
+  </Layout>
+);
+
+export default Demo;

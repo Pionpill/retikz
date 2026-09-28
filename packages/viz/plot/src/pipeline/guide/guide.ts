@@ -1657,6 +1657,8 @@ export const LEGEND_RAMP_THICKNESS = 12;
  *   一个条目按 channel 取其中一种视觉量；label 是已格式化的文本（formatter 在 expand 侧据 fieldType 选定）
  */
 export type LegendEntry = {
+  /** 按声明顺序叠加的分类图例符号 */
+  symbols?: Array<{ kind: 'point' | 'line'; paint: NonNullable<NonNullable<IRNode['style']>['fill']> }>;
   /** 条目标签（类别串 / 代表值 / 区间） */
   label: string;
   /** 色块填充色（color / 分箱 swatch） */
@@ -1801,7 +1803,20 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
             ? Math.max(swatchSize, entry.symbolSize)
             : swatchSize;
       const symbolCenter: [number, number] = [cursorX + symbolSide / 2, rowY + symbolSide / 2];
-      if (entry.shape !== undefined) {
+      if (entry.symbols !== undefined) {
+        for (const symbol of entry.symbols) {
+          const glyph =
+            symbol.kind === 'line'
+              ? rectNode(cursorX, symbolCenter[1] - 1, symbolSide, 2)
+              : {
+                  type: 'node' as const,
+                  position: symbolCenter,
+                  shape: 'circle' as const,
+                  layout: { minimumSize: symbolSide / 2 },
+                };
+          children.push({ ...glyph, style: { fill: symbol.paint, stroke: 'none', strokeWidth: 0 } });
+        }
+      } else if (entry.shape !== undefined) {
         // shape 图例：swatch 本身就是编码的 glyph（circle / rectangle / diamond…），不画矩形框
         children.push({
           type: 'node',

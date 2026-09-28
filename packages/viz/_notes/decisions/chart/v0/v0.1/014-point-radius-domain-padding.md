@@ -17,7 +17,7 @@ Chart 拥有具体 chartType、semantic group、Chart mark 继承与 Point 几�
 
 ## 决策：Point chartType 默认使用最大 Point 半径作为 range padding
 
-Scatter、Bubble、Regression、Connected Scatter 与 Ranged Dot 的连续位置 scale，在作者没有显式声明 `domainPadding` 时，默认使用当前 Chart-owned semantic marks 中最大的 Point `size` 半径，并以 Plot `kind: 'range'` 传递
+Scatter、Regression、Connected Scatter 与 Ranged Dot 的连续位置 scale，在作者没有显式声明 `domainPadding` 时，默认使用当前 Chart-owned semantic marks 中最大的 Point `size` 半径，并以 Plot `kind: 'range'` 传递
 
 理由：
 
@@ -64,3 +64,7 @@ Cartesian 接受 `default`、`x`、`y`、`top`、`right`、`bottom` 与 `left`�
 ## 最终结果
 
 五个 Point chartType 已统一从最终 Chart-owned Point marks 推导最大半径，并只为缺少显式配置的 recipe-owned 连续位置 scale 提供 range 默认。Properties、encoding scale operation 与 Plot extension 的所有权优先级保持不变；`plotExtension.marks` 的额外几何留白仍由作者显式配置
+
+## 逐点策略与 Bubble 默认值
+
+[逐点外缘留白](../../../plot/v0/v0.2/012-mark-aware-domain-padding.md) 扩展本决策：Bubble 因实际半径随数据变化而默认使用 `point-aware`；显式 `max-radius` 仍采用本决策的最大半径规则。其它点图默认值不变。显式 domainPadding 及 extension scale 优先级保持。

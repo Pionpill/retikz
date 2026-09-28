@@ -4,11 +4,15 @@
 
 #### List / ListProps
 
-- `List`: <ApiSourceLink label={"List"} path={"packages/library/standard-react/src/container/list/List.tsx"} startLine={39}>Standard List presentation component</ApiSourceLink>
-- `ListProps`: <ApiSourceLink label={"ListProps"} path={"packages/library/standard-react/src/container/list/List.tsx"} startLine={14}>React authoring props for List</ApiSourceLink>
+- `List`: <ApiSourceLink label={"List"} path={"packages/library/standard-react/src/container/list/List.tsx"} startLine={52}>Standard List presentation component</ApiSourceLink>
+- `ListProps`: <ApiSourceLink label={"ListProps"} path={"packages/library/standard-react/src/container/list/List.tsx"} startLine={17}>React authoring props for List</ApiSourceLink>
+
+The data, items, and ListItem children inputs are mutually exclusive; omitting all three creates an empty list. dataObjectDisplay applies only to data
 
 ```ts
-export declare const List: StandardEmbeddableComponent<ListProps>;
+export declare const List: {
+  (props: ListProps, context?: any): ReactNode;
+};
 
 export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
   (
@@ -35,8 +39,46 @@ export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | '
 
 #### ListItem / ListItemProps
 
-- `ListItem`: <ApiSourceLink label={"ListItem"} path={"packages/library/standard-react/src/container/list/ListItem.tsx"} startLine={11}>Direct cell declaration for List; does not produce a standalone drawing</ApiSourceLink>
-- `ListItemProps`: <ApiSourceLink label={"ListItemProps"} path={"packages/library/standard-react/src/container/list/ListItem.tsx"} startLine={8}>Text or drawable input and appearance for a List cell</ApiSourceLink>
+- `ListItem`: <ApiSourceLink label={"ListItem"} path={"packages/library/standard-react/src/container/list/ListItem.tsx"} startLine={14}>Direct cell declaration for List; does not produce a standalone drawing</ApiSourceLink>
+- `ListItemProps`: <ApiSourceLink label={"ListItemProps"} path={"packages/library/standard-react/src/container/list/ListItem.tsx"} startLine={11}>Text or drawable input and appearance for a List cell</ApiSourceLink>
+
+Choose either text or children; children must produce exactly one drawable. id identifies the cell border box, while style and layout override the corresponding List settings
+
+<DocTabs defaultValue="text">
+
+<DocTab value="text" label="Members · Text">
+
+<ApiTable>
+
+| Member      | Type                      | Default | Description                                                                                         |
+| ----------- | ------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `children?` | `never`                   | —       | —                                                                                                   |
+| `id?`       | `string`                  | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?`   | `ListItemProps["layout"]` | —       | —                                                                                                   |
+| `style?`    | `ListItemProps["style"]`  | —       | Sparse visual overrides for a List or Map cell.                                                     |
+| `text`      | `string`                  | —       | —                                                                                                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="drawable" label="Members · Drawable content">
+
+<ApiTable>
+
+| Member     | Type                      | Default | Description                                                                                         |
+| ---------- | ------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `children` | `ReactNode`               | —       | —                                                                                                   |
+| `id?`      | `string`                  | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?`  | `ListItemProps["layout"]` | —       | —                                                                                                   |
+| `style?`   | `ListItemProps["style"]`  | —       | Sparse visual overrides for a List or Map cell.                                                     |
+| `text?`    | `never`                   | —       | —                                                                                                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const ListItem: FC<ListItemProps>;
@@ -44,32 +86,88 @@ export declare const ListItem: FC<ListItemProps>;
 export type ListItemProps = CellMarkerProps<IRListCell['layout']>;
 ```
 
-##### Expanded type
+</DocTab>
 
-```ts
-export type ListItemProps =
-  | {
-      style?: IRListCell['style'];
-      id?: string;
-      layout?: IRListCell['layout'];
-      text: string;
-      children?: never;
-    }
-  | {
-      style?: IRListCell['style'];
-      id?: string;
-      layout?: IRListCell['layout'];
-      text?: never;
-      children: ReactNode;
-    };
-```
+</DocTabs>
 
 ### `@retikz/standard-vanilla`
 
 #### list / InputList
 
-- `list`: <ApiSourceLink label={"list"} path={"packages/library/standard-vanilla/src/container/list.ts"} startLine={45}>Create a List embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
-- `InputList`: <ApiSourceLink label={"InputList"} path={"packages/library/standard-vanilla/src/container/list.ts"} startLine={10}>Vanilla authoring input for List</ApiSourceLink>
+- `list`: <ApiSourceLink label={"list"} path={"packages/library/standard-vanilla/src/container/list.ts"} startLine={52}>Create a List embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
+- `InputList`: <ApiSourceLink label={"InputList"} path={"packages/library/standard-vanilla/src/container/list.ts"} startLine={13}>Vanilla authoring input for List</ApiSourceLink>
+
+Choose either items or data; dataObjectDisplay applies only to data. Other fields follow IRList, and the adapter supplies namespace and type
+
+<DocTabs defaultValue="items">
+
+<DocTab value="items" label="Members · Explicit cells">
+
+<ApiTable>
+
+| Member               | Type                                                                                     | Default      | Description                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`        | `IRList['animations']`                                                                   | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`        | `input<typeof ListSchema>['cellIdMode']`                                                 | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the List id                                              |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `data?`              | `never`                                                                                  | —            | —                                                                                                                                               |
+| `dataObjectDisplay?` | `never`                                                                                  | —            | —                                                                                                                                               |
+| `defaults?`          | `IRList['defaults']`                                                                     | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`             | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`                | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`             | `IRList['index']`                                                                        | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
+| `items`              | `Array<string \| InputCell<IRListCell>>`                                                 | —            | —                                                                                                                                               |
+| `label?`             | `IRList['label']`                                                                        | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`            | `IRList['layout']`                                                                       | —            | List cell allocation and ordering.                                                                                                              |
+| `localNamespace?`    | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`              | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`         | `IRList['placement']`                                                                    | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`             | `IRCell['style']`                                                                        | —            | —                                                                                                                                               |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`        | `IRList['transforms']`                                                                   | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`            | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+| `input` (Parameter)  | `InputList`                                                                              | —            | List input using explicit cells or a JSON array                                                                                                 |
+| Returns              | `InputEmbed<InputList>`                                                                  | —            | An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="data" label="Members · JSON data">
+
+<ApiTable>
+
+| Member               | Type                                                                                     | Default      | Description                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`        | `IRList['animations']`                                                                   | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`        | `input<typeof ListSchema>['cellIdMode']`                                                 | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the List id                                              |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `data`               | `NonNullable<IRList['data']>`                                                            | —            | —                                                                                                                                               |
+| `dataObjectDisplay?` | `IRList['dataObjectDisplay']`                                                            | —            | —                                                                                                                                               |
+| `defaults?`          | `IRList['defaults']`                                                                     | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`             | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`                | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`             | `IRList['index']`                                                                        | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
+| `items?`             | `never`                                                                                  | —            | —                                                                                                                                               |
+| `label?`             | `IRList['label']`                                                                        | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`            | `IRList['layout']`                                                                       | —            | List cell allocation and ordering.                                                                                                              |
+| `localNamespace?`    | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`              | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`         | `IRList['placement']`                                                                    | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`             | `IRCell['style']`                                                                        | —            | —                                                                                                                                               |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`        | `IRList['transforms']`                                                                   | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`            | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+| `input` (Parameter)  | `InputList`                                                                              | —            | List input using explicit cells or a JSON array                                                                                                 |
+| Returns              | `InputEmbed<InputList>`                                                                  | —            | An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const list: (input: InputList) => InputEmbed<InputList>;
@@ -89,13 +187,17 @@ export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | '
   );
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### ListInputEmbedAdapter
 
 <p>
   <ApiSourceLink
     label={'ListInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/container/list.ts'}
-    startLine={17}
+    startLine={20}
   >
     Pass List input and nested content to root-level traversal
   </ApiSourceLink>
@@ -110,7 +212,7 @@ export declare const ListInputEmbedAdapter: InputEmbedAdapter<InputList>;
 #### IRList
 
 <p>
-  <ApiSourceLink label={'IRList'} path={'packages/library/standard/src/container/list/schema/types.ts'} startLine={15}>
+  <ApiSourceLink label={'IRList'} path={'packages/library/standard/src/container/list/schema/types.ts'} startLine={20}>
     Sparse List Source preserving unmerged styles
   </ApiSourceLink>
 </p>
@@ -143,7 +245,7 @@ export type IRList = Omit<
   <ApiSourceLink
     label={'IRListCell'}
     path={'packages/library/standard/src/container/list/schema/types.ts'}
-    startLine={12}
+    startLine={14}
   >
     List cell Source supporting content-based width
   </ApiSourceLink>
@@ -153,12 +255,16 @@ export type IRList = Omit<
 
 <DocTab value="members" label="Members">
 
-| Member    | Type                | Default | Description |
-| --------- | ------------------- | ------- | ----------- |
-| `content` | `string \| IRChild` | —       | —           |
-| `id?`     | `string`            | —       | —           |
-| `layout?` | `…`                 | —       | —           |
-| `style?`  | `…`                 | —       | —           |
+<ApiTable>
+
+| Member    | Type                   | Default | Description                                                                                         |
+| --------- | ---------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `content` | `string \| IRChild`    | —       | Text or one drawable child, including registered third-party composites                             |
+| `id?`     | `string`               | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace. |
+| `layout?` | `IRListCell["layout"]` | —       | Sparse cell dimensions, padding and overflow overrides.                                             |
+| `style?`  | `IRListCell["style"]`  | —       | Sparse visual overrides for a List or Map cell.                                                     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -176,15 +282,29 @@ export type IRListCell = Omit<input<typeof ListCellSchema>, 'content'> & {
 
 #### IRListIndexOptions
 
+<p>
+  <ApiSourceLink
+    label={'IRListIndexOptions'}
+    path={'packages/library/standard/src/container/list/schema/types.ts'}
+    startLine={9}
+  >
+    Position, starting number, and text appearance of an enabled index strip
+  </ApiSourceLink>
+</p>
+
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member      | Type                                                                                                                                                                                                                                                                                                                  | Default | Description |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `position?` | `"before" \| "after"`                                                                                                                                                                                                                                                                                                 | —       | —           |
-| `start?`    | `number`                                                                                                                                                                                                                                                                                                              | —       | —           |
-| `style?`    | `{ color?: string \| undefined; opacity?: number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; textColor?: string \| number \| undefined; }` | —       | —           |
+<ApiTable>
+
+| Member      | Type                                   | Default    | Description                                                               |
+| ----------- | -------------------------------------- | ---------- | ------------------------------------------------------------------------- |
+| `position?` | <ApiValues name="ListIndexPosition" /> | `"before"` | Before means above a row or left of a column; after means below or right. |
+| `start?`    | `number`                               | `0`        | First displayed index; not cell identity.                                 |
+| `style?`    | `IRListIndexStyle`                     | —          | Index text appearance; cell-level styles do not affect indices.           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -200,16 +320,30 @@ export type IRListIndexOptions = input<typeof ListIndexOptionsSchema>;
 
 #### IRListIndexStyle
 
+<p>
+  <ApiSourceLink
+    label={'IRListIndexStyle'}
+    path={'packages/library/standard/src/container/list/schema/types.ts'}
+    startLine={11}
+  >
+    Sparse index text overrides, unaffected by cell-level styles
+  </ApiSourceLink>
+</p>
+
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member       | Type                                                                                                                                                                                  | Default | Description |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `color?`     | `string`                                                                                                                                                                              | —       | —           |
-| `font?`      | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —       | —           |
-| `opacity?`   | `number`                                                                                                                                                                              | —       | —           |
-| `textColor?` | `string \| number`                                                                                                                                                                    | —       | —           |
+<ApiTable>
+
+| Member       | Type                       | Default | Description                                                                                                                                                   |
+| ------------ | -------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `color?`     | `string`                   | —       | Master color for primary geometry. Stroke, fill, labels, and arrows may inherit it unless individually overridden.                                            |
+| `font?`      | `IRListIndexStyle['font']` | —       | Font spec for the inner text label. Missing fields use text defaults.                                                                                         |
+| `opacity?`   | `number`                   | —       | Whole-element opacity applied to primary geometry.                                                                                                            |
+| `textColor?` | `string \| number`         | —       | Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`. |
+
+</ApiTable>
 
 </DocTab>
 
@@ -259,20 +393,35 @@ export declare const ListProvider: CoreDependencyProvider;
 #### createList
 
 <p>
-  <ApiSourceLink label={'createList'} path={'packages/library/standard/src/container/list/factory.ts'} startLine={4}>
+  <ApiSourceLink label={'createList'} path={'packages/library/standard/src/container/list/factory.ts'} startLine={8}>
     Typed factory preserving sparse Source
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature | Description                                                                                                            |
+| ---------- | ------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `input` | `IRList`         | Complete List Source including namespace, type, and either items or data                                               |
+| Returns    | —       | `IRList`         | A shallow copy of the input; no validation or defaults are applied, and nested objects share references with the input |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const createList: (input: IRList) => IRList;
 ```
 
-##### Parameters
+</DocTab>
 
-| Parameter | Type     | Description |
-| --------- | -------- | ----------- |
-| `input`   | `IRList` | —           |
+</DocTabs>
 
 #### getListCellId
 
@@ -280,23 +429,35 @@ export declare const createList: (input: IRList) => IRList;
   <ApiSourceLink
     label={'getListCellId'}
     path={'packages/library/standard/src/container/list/identity.ts'}
-    startLine={11}
+    startLine={12}
   >
     Return the zero-based id of a direct List cell without checking whether it exists
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature | Description                                                      |
+| ---------- | -------- | ---------------- | ---------------------------------------------------------------- |
+| Parameters | `listId` | `string`         | Nonblank List id                                                 |
+|            | `index`  | `number`         | Nonnegative integer index of the direct cell                     |
+| Returns    | —        | `string`         | A cell id composed of listId, a hyphen, and the zero-based index |
+| Throws     | —        | —                | Throws RetikzStandardError for invalid arguments                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const getListCellId: (listId: string, index: number) => string;
 ```
 
-##### Parameters
+</DocTab>
 
-| Parameter | Type     | Description                                  |
-| --------- | -------- | -------------------------------------------- |
-| `listId`  | `string` | Nonblank List id                             |
-| `index`   | `number` | Nonnegative integer index of the direct cell |
-
-##### Throws
-
-- Throws RetikzStandardError for invalid arguments
+</DocTabs>

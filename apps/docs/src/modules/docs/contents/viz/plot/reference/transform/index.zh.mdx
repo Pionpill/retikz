@@ -158,6 +158,9 @@ description: 查询 Plot 的堆叠、分箱、关联、归一化、区间派生�
   }}
 />
 
-### SmoothMethodSchema
+### RegressionMethodSchema
 
-<ZodSchema name="SmoothMethodSchema" description="六种内置回归方法的严格判别联合；polynomial 可配置 2～6 阶。" />
+<ZodSchema
+  name="RegressionMethodSchema"
+  description="开放的拟合方法配置；精确参数由 Data 中注册的方法 Definition 校验。"
+/>

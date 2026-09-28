@@ -1,0 +1,251 @@
+---
+title: Schema 参考
+description: 查询 Block 家族与 CodeBlock 领域数据的公开持久化字段。
+---
+
+本页收录 `@retikz/graph` 的 Block、Header、Section、Row、文字输入与 CodeBlock 专属数据输入。共享 Scope、Surface、Theme 字段保留其所属类型，不重复展开。首次使用见[基础用法](/schematic/graph/block/usage)。
+
+尺寸必须非负；同时设置 width 与 minWidth 时，minWidth 不得大于 width。编译期默认值不自动写回 Source。CodeBlockPropsSchema 不含判别字段与 children，自定义实体通过 safeExtend 增加稳定 namespace / type 和领域字段。
+
+## BlockSchema
+
+<ZodSchema
+  name="BlockSchema"
+  shallow
+  descriptions={{
+    namespace: '命名空间，固定为 graph',
+    type: '当前组件的记录判别字段',
+    frame: '固有包络装饰，不参与布局',
+    style: '后代的级联视觉覆盖',
+    theme: '子树的稀疏主题覆盖',
+    id: '可选引用 id，注册到父命名空间',
+    localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
+    transforms: '局部变换，数组最后一项先作用于局部点',
+    placement: '布局与局部变换后的最终对齐放置',
+    zIndex: '容器整体在同级中的绘制顺序',
+    clip: '局部坐标系中的裁剪区域',
+    boundingShape: '引用 id 的合成包络形状',
+    meta: '透传的 JSON 元信息',
+    animations: '作用于整体的动画轨道，不参与布局或向后代继承',
+    defaults: '后代默认样式及继承屏障',
+    padding: '内容与外框的内边距',
+    background: '外框背景覆盖',
+    border: '外框描边覆盖，整体替换主题值',
+    cornerRadius: '外框圆角',
+    overflow: '内容溢出行为，visible 或 clip',
+    children: '按声明顺序保存的任意绘图子元素',
+    gap: '直接内容项之间的间距，用户单位',
+    graphDefaults: '可见后代 Entity、Relation、Group、Block 的稀疏默认值',
+    graphRules: '可见后代 Entity / Relation 的有序条件规则',
+    width: '含水平 padding 的固定外层总宽度',
+    minWidth: '含水平 padding 的最小外层总宽度，省略时 resolve 使用 240',
+  }}
+/>
+
+## BlockHeaderSchema
+
+<ZodSchema
+  name="BlockHeaderSchema"
+  shallow
+  descriptions={{
+    namespace: '命名空间，固定为 graph',
+    type: '当前组件的记录判别字段',
+    icon: '文字区之前至多一个子元素',
+    title: '必填主标题，字符串或文字对象',
+    description: '可选次要说明',
+    direction: '标题与说明的排列方向，省略使用 vertical',
+    itemGap: '标题与说明的最小物理间距',
+    justifyContent: '文字区主轴剩余空间分配',
+    trail: '文字区之后至多一个子元素',
+  }}
+/>
+
+## BlockSectionSchema
+
+<ZodSchema
+  name="BlockSectionSchema"
+  shallow
+  descriptions={{
+    namespace: '命名空间，固定为 graph',
+    type: '当前组件的记录判别字段',
+    frame: '固有包络装饰，不参与布局',
+    style: '后代的级联视觉覆盖',
+    theme: '子树的稀疏主题覆盖',
+    id: '可选引用 id，注册到父命名空间',
+    localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
+    transforms: '局部变换，数组最后一项先作用于局部点',
+    placement: '布局与局部变换后的最终对齐放置',
+    zIndex: '容器整体在同级中的绘制顺序',
+    clip: '局部坐标系中的裁剪区域',
+    boundingShape: '引用 id 的合成包络形状',
+    meta: '透传的 JSON 元信息',
+    animations: '作用于整体的动画轨道，不参与布局或向后代继承',
+    defaults: '后代默认样式及继承屏障',
+    padding: '内容与外框的内边距',
+    background: '外框背景覆盖',
+    border: '外框描边覆盖，整体替换主题值',
+    cornerRadius: '外框圆角',
+    overflow: '内容溢出行为，visible 或 clip',
+    children: '按声明顺序保存的任意绘图子元素',
+    gap: '直接内容项之间的间距，用户单位',
+    title: '可选分区标题，位于 children 前',
+  }}
+/>
+
+## BlockRowSchema
+
+<ZodSchema
+  name="BlockRowSchema"
+  shallow
+  descriptions={{
+    namespace: '命名空间，固定为 graph',
+    type: '当前组件的记录判别字段',
+    frame: '固有包络装饰，不参与布局',
+    style: '后代的级联视觉覆盖',
+    theme: '子树的稀疏主题覆盖',
+    id: '可选引用 id，注册到父命名空间',
+    localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
+    transforms: '局部变换，数组最后一项先作用于局部点',
+    placement: '布局与局部变换后的最终对齐放置',
+    zIndex: '容器整体在同级中的绘制顺序',
+    clip: '局部坐标系中的裁剪区域',
+    boundingShape: '引用 id 的合成包络形状',
+    meta: '透传的 JSON 元信息',
+    animations: '作用于整体的动画轨道，不参与布局或向后代继承',
+    defaults: '后代默认样式及继承屏障',
+    padding: '内容与外框的内边距',
+    background: '外框背景覆盖',
+    border: '外框描边覆盖，整体替换主题值',
+    cornerRadius: '外框圆角',
+    overflow: '内容溢出行为，visible 或 clip',
+    children: '按声明顺序保存的任意绘图子元素',
+    gap: '直接内容项之间的间距，用户单位',
+    content: '文本项或文本项数组，单项占满，多项等分，与 children 互斥',
+  }}
+/>
+
+## BlockTextSchema
+
+<ZodSchema
+  name="BlockTextSchema"
+  shallow
+  descriptions={{
+    text: '必填文字内容，可为字符串或多行文字',
+    align: '文字对齐方式',
+    lineHeight: '文字行高',
+    maxTextWidth: '换行的最大文字宽度',
+    textColor: '文字颜色覆盖',
+    font: '字体配置',
+    opacity: '文字不透明度',
+  }}
+/>
+
+## CodeBlockPropsSchema
+
+<ZodSchema
+  name="CodeBlockPropsSchema"
+  shallow
+  descriptions={{
+    frame: '固有包络装饰，不参与布局',
+    style: '后代的级联视觉覆盖',
+    theme: '子树的稀疏主题覆盖',
+    id: '可选引用 id，注册到父命名空间',
+    localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
+    transforms: '局部变换，数组最后一项先作用于局部点',
+    placement: '布局与局部变换后的最终对齐放置',
+    zIndex: '容器整体在同级中的绘制顺序',
+    clip: '局部坐标系中的裁剪区域',
+    boundingShape: '引用 id 的合成包络形状',
+    meta: '透传的 JSON 元信息',
+    animations: '作用于整体的动画轨道，不参与布局或向后代继承',
+    defaults: '后代默认样式及继承屏障',
+    padding: '内容与外框的内边距',
+    background: '外框背景覆盖',
+    border: '外框描边覆盖，整体替换主题值',
+    cornerRadius: '外框圆角',
+    overflow: '内容溢出行为，visible 或 clip',
+    gap: '直接内容项之间的间距，用户单位',
+    graphDefaults: '可见后代 Entity、Relation、Group、Block 的稀疏默认值',
+    graphRules: '可见后代 Entity / Relation 的有序条件规则',
+    width: '含水平 padding 的固定外层总宽度',
+    minWidth: '含水平 padding 的最小外层总宽度，省略时 resolve 使用 240',
+    name: '非空代码实体名称',
+    description: '可选实体说明',
+    icon: '省略使用实体默认图标，null 隐藏，child 替换',
+    trail: '省略使用实体默认尾项，null 隐藏，child 替换',
+  }}
+/>
+
+## CodeParameterSchema
+
+<ZodSchema
+  name="CodeParameterSchema"
+  shallow
+  descriptions={{
+    name: '非空参数名称',
+    typeText: '描述性类型表达式',
+    optional: '可选参数标记，省略语义为 false',
+    description: '参数说明',
+  }}
+/>
+
+## CodeSignatureSchema
+
+<ZodSchema
+  name="CodeSignatureSchema"
+  shallow
+  descriptions={{
+    parameters: '有序参数；省略表示未说明，空数组表示无参数',
+    returnType: '返回类型说明，省略表示未说明',
+    description: '签名说明',
+  }}
+/>
+
+## CodePropertySchema
+
+<ZodSchema
+  name="CodePropertySchema"
+  shallow
+  descriptions={{
+    id: '可选成员引用 id，不由名称自动生成',
+    name: '非空属性名称',
+    typeText: '描述性类型表达式',
+    optional: '可选属性标记，省略语义为 false',
+    readonly: '只读标记，省略语义为 false',
+    description: '属性说明',
+  }}
+/>
+
+## CodeMethodSchema
+
+<ZodSchema
+  name="CodeMethodSchema"
+  shallow
+  descriptions={{
+    id: '可选成员引用 id',
+    name: '非空可调用成员名称，重载名称可重复',
+    signature: '必填描述性签名',
+    logic: '可选逻辑说明',
+  }}
+/>
+
+## CodeLogicSchema
+
+<ZodSchema
+  name="CodeLogicSchema"
+  shallow
+  descriptions={{
+    id: '可选逻辑区域 id',
+    title: '可选逻辑标题',
+    body: '描述性逻辑内容，不执行',
+    'body.kind': '逻辑形式：text 文本或 steps 有序步骤',
+    'body.text': '非空逻辑说明文字',
+    'body.steps': '非空有序步骤数组；序号不作为身份',
+  }}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: '自定义用法', description: '定义并校验领域 Source', url: '/schematic/graph/block/custom' }]}
+/>

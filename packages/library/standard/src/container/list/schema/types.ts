@@ -5,11 +5,16 @@ import type { input } from 'zod';
 import type { IRCell } from '../../shared/cell/schema';
 import type { ListCellSchema, ListIndexOptionsSchema, ListIndexStyleSchema, ListSchema } from './schema';
 
+/** 启用索引带时的位置、显示起点与文本外观 */
 export type IRListIndexOptions = input<typeof ListIndexOptionsSchema>;
+/** 索引文本的稀疏外观覆盖，不受单格样式影响 */
 export type IRListIndexStyle = input<typeof ListIndexStyleSchema>;
 
 /** List 专属单格 Source，允许内容宽度模式 */
-export type IRListCell = Omit<input<typeof ListCellSchema>, 'content'> & { content: string | IRChild };
+export type IRListCell = Omit<input<typeof ListCellSchema>, 'content'> & {
+  /** 文字或唯一可绘制 child，支持已注册的第三方复合组件 */
+  content: string | IRChild;
+};
 
 /** 稀疏 List Source，保留尚未合并的样式 */
 export type IRList = Omit<

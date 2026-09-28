@@ -1,104 +1,480 @@
 ---
-title: Ranged Dot
-description: Compare a start and end value from each row with two endpoints and one connector for every category.
-family: scatter-points
-usage: distribution
+title: Ranged dot chart
+description: A ranged dot chart shows two endpoints per category and a connector between them.
 ---
 
-<ShowcaseGallery
-  examples={[
-    {
-      id: 'ranged-dot-minimal',
-      title: 'Basic Usage',
-      description: 'This is the minimal setup with only required options. Switch to IR to inspect the configuration; for simple charts, pass it directly to the `RangedDotChart` root.',
-      preview: {
-        files: ['ranged-dot-minimal', 'ranged-dot-minimal.data.ts'],
-        size: 'xxxl',
-        caption: 'A static snapshot of daily minimum and maximum temperatures in Seattle for 20 consecutive days from Vega Datasets.',
-      },
-    },
-    {
-      id: 'ranged-dot-basic',
-      title: 'Advanced playground: before-and-after values across categories',
-      description: 'Compare start and end for every category while preserving the direction expressed by authored roles.',
-      preview: {
-        files: ['ranged-dot-basic', 'ranged-dot-basic.data.ts'],
-        controls: { name: 'ranged-dot-basic' },
-        controlPanelDefaultOpen: false,
-        size: 'xxxl',
-        caption: 'Adjust endpoint and connector appearance; start and end roles never swap based on numeric order.',
-      },
-    },
-  ]}
->
-Ranged Dot is fixed horizontally: `category` maps to y, while `start` and `end` share one x scale. If both endpoints declare an explicit scale binding, their names must match; one endpoint may declare the operation while the other references it. Use it when the two endpoint values and direction matter more than bar length.
+A ranged dot chart shows two endpoints per category and a connector between them. Use it for before/after change, bounds or paired measurements. Each row supplies a category and both endpoints; field roles never swap simply because values reverse.
 
-## `RangedDotChart`
+## Using this topic
 
-The root `recipe` uses Ranged Dot's exact slots. Component identity supplies the Point family and `chartType: 'ranged-dot'`:
+After [installation and first rendering](/viz/chart/get-start), choose one of the four equivalent inputs below. They share data and configuration.
+
+Minimum and maximum temperatures across 20 consecutive days in Seattle; one row per day.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['ranged-dot-minimal', 'ranged-dot-minimal.data.ts']}
+  hideCode
+  size="xl"
+/>
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+The dedicated children of `RangedDotChart` are listed below. Start with encodings; properties and authored marks are optional.
+
+```text
+RangedDotChart
+├── RangedDotEncodings
+├── RangedDotProperties
+└── RangedDotMark
+```
 
 ```tsx
-<RangedDotChart
-  rows={rows}
-  recipe={{
-    encodings: { category: 'category', start: 'before', end: 'after', color: 'group' },
-    properties: { range: { strokeWidth: 2 } },
+import { RangedDotChart, RangedDotEncodings } from '@retikz/chart-react/point';
+import { rangedDotMinimalData } from './ranged-dot-minimal.data';
+
+export const Example = () => (
+  <RangedDotChart rows={rangedDotMinimalData}>
+    <RangedDotEncodings category="day" start="minimumTemperature" end="maximumTemperature" />
+  </RangedDotChart>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { RangedDotChartSchema, createRangedDotChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { rangedDotMinimalData } from './ranged-dot-minimal.data';
+import { Layout } from '@retikz/react';
+
+const chart = RangedDotChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: {
+    chartType: 'ranged-dot',
+    encodings: { category: 'day', start: 'minimumTemperature', end: 'maximumTemperature' },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createRangedDotChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': rangedDotMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const Example = () => <Layout ir={ir} extensions={definitions} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { rangedDotChart, RangedDotChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { rangedDotMinimalData } from './ranged-dot-minimal.data';
+
+const chart = rangedDotChart({
+  data: rangedDotMinimalData,
+  encodings: { category: 'day', start: 'minimumTemperature', end: 'maximumTemperature' },
+});
+export const svg = renderChart(chart, { adapters: [RangedDotChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { RangedDotChartSchema, createRangedDotChartProviderContribution } from '@retikz/chart/point';
+import { createPlotProviderContribution } from '@retikz/plot';
+import { PathClipProvider } from '@retikz/extension';
+import { rangedDotMinimalData } from './ranged-dot-minimal.data';
+import { compileToScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const chart = RangedDotChartSchema.parse({
+  namespace: 'chart',
+  type: 'point',
+  data: { reference: 'chart.data' },
+  recipe: {
+    chartType: 'ranged-dot',
+    encodings: { category: 'day', start: 'minimumTemperature', end: 'maximumTemperature' },
+  },
+});
+const ir: IRScene = { type: 'scene', version: 1, children: [chart] };
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    createRangedDotChartProviderContribution(),
+    createPlotProviderContribution({ 'chart.data': rangedDotMinimalData }),
+    { roots: [PathClipProvider.key], providers: [PathClipProvider] },
+  ],
+});
+
+export const svg = renderToSvgString(compileToScene(ir, definitions).scene);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Ranged dot encodings
+
+Encodings assign row categories and paired values while preserving start and end roles.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RangedDotEncodings category="country" start="forestArea2000" end="forestArea2022" />
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+encodings: {
+  category: 'country',
+  start: 'forestArea2000',
+  end: 'forestArea2022',
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  encodings: {
+    category: 'country',
+    start: 'forestArea2000',
+    end: 'forestArea2022',
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
+
+Compare forest area as a percentage of land in eighteen countries in 2000 and 2022. Each row is one country; the horizontal span between its two endpoints shows the difference.
+
+- `category`: Use country for the vertical category.
+- `start`: Bind forestArea2000 by default; blue identifies the start.
+- `end`: Bind forestArea2022 by default; orange identifies the end.
+
+With the default mappings, an end to the left indicates a decrease; to the right, an increase. Swapping the fields exchanges the years represented by the two colors while preserving the measured positions and connector span. Rows are sorted by the 2022 value, not by change magnitude.
+
+<ComponentPreview
+  hideCode
+  mode="showcase"
+  responsive
+  files={['ranged-dot-encodings', 'ranged-dot-basic.data.ts']}
+  controls={{ name: 'ranged-dot-encodings' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
+
+For complete properties and constraints, see [API reference: RangedDotEncodings](#rangeddotencodings).
+
+### Ranged dot properties
+
+Properties control shared endpoint appearance, role-specific styles, and connectors.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RangedDotProperties
+  point={{ shape: 'circle', opacity: 1, size: 5 }}
+  startPoint={{ color: '#2563eb' }}
+  endPoint={{ color: '#f97316' }}
+  range={{ stroke: '#94a3b8', strokeWidth: 2 }}
+/>
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+properties: {
+  point: { shape: 'circle', opacity: 1, size: 5 },
+  startPoint: { color: '#2563eb' },
+  endPoint: { color: '#f97316' },
+  range: { stroke: '#94a3b8', strokeWidth: 2 },
+},
+```
+
+</DocTab>
+<DocTab value="direct-ir" label="IR">
+
+```ts
+recipe: {
+  properties: {
+    point: { shape: 'circle', opacity: 1, size: 5 },
+    startPoint: { color: '#2563eb' },
+    endPoint: { color: '#f97316' },
+    range: { stroke: '#94a3b8', strokeWidth: 2 },
+  },
+},
+```
+
+</DocTab>
+</DocTabs>
+
+Keep the forest data unchanged and focus on distinguishing the two years. Endpoint colors identify roles; the connector supplies a visual reference between them.
+
+- `point.size`: Set a shared endpoint radius.
+- `startPoint.color / endPoint.color`: Identify 2000 and 2022 separately.
+- `range.strokeWidth`: Adjust connector width without changing the difference.
+
+Smaller radii help when endpoints are close. Changing endPoint leaves startPoint unchanged, which is useful for emphasizing the latest measurement.
+
+<ComponentPreview
+  hideCode
+  mode="showcase"
+  responsive
+  files={['ranged-dot-basic', 'ranged-dot-basic.data.ts']}
+  controls={{ name: 'ranged-dot-basic' }}
+  controlPanelDefaultOpen={false}
+  size="xl"
+/>
+
+For complete properties and constraints, see [API reference: RangedDotProperties](#rangeddotproperties).
+
+### Ranged dot marks
+
+Marks append or replace a complete group of paired endpoints and connectors.
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+<RangedDotMark
+  override
+  properties={{
+    endPoint: { shape: 'diamond', size: 7 },
+    range: { strokeWidth: 2 },
   }}
 />
 ```
 
-`RangedDotEncodings`, `RangedDotProperties`, and `RangedDotMark` are equivalent JSX sugar for the same recipe slots. Root-only authoring can omit `children`; different slots can mix, while two sources for one slot fail loudly.
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-## Atomic row semantics
+```ts
+marks: [
+  {
+    kind: 'ranged-dot',
+    override: true,
+    properties: {
+      endPoint: { shape: 'diamond', size: 7 },
+      range: { strokeWidth: 2 },
+    },
+  },
+],
+```
 
-One Ranged Dot semantic group emits one projected Relation operation. Plot projects both endpoints together and paints connector, start glyph, then end glyph. If either endpoint is missing, null, or unprojectable, the whole row is skipped without orphan geometry.
+</DocTab>
+<DocTab value="direct-ir" label="IR">
 
-`start > end` never swaps roles. `start === end` retains a zero-length connector and two overlapping glyphs. Empty data is a valid empty result.
+```ts
+recipe: {
+  marks: [
+    {
+      kind: 'ranged-dot',
+      override: true,
+      properties: {
+        endPoint: { shape: 'diamond', size: 7 },
+        range: { strokeWidth: 2 },
+      },
+    },
+  ],
+},
+```
 
-## Style precedence
+</DocTab>
+</DocTabs>
 
-`point` sets common constant appearance, then `startPoint` and `endPoint` override their endpoint. `range` affects only the connector. Optional field-bound `color` drives all three members and one categorical legend; member properties never create separate field scales.
+A replacement mark changes the 2022 endpoint to a larger diamond. Color and shape jointly distinguish years while the start and connector retain inherited settings.
 
-When `color` and member color properties are omitted, the connector and both endpoints use the next default color from Plot's `palette.series` instead of falling back to CSS `currentColor`.
+- `override`: Set true to replace this paired group.
+- `properties.endPoint`: Override the end shape and radius.
+- `properties.range`: Set connector width.
 
-## API Reference
+This is a local appearance override within a whole-group replacement. Endpoints remain paired and subject to the same row validity check.
 
-### `RangedDotEncodingsProps`
+<ComponentPreview
+  hideCode
+  mode="showcase"
+  responsive
+  files={['ranged-dot-marks', 'ranged-dot-basic.data.ts']}
+  size="xl"
+  controls={{ name: 'ranged-dot-marks' }}
+  caption="Adjust the end shape, radius and connector width to compare endpoint roles."
+/>
 
-| Prop             | Type                                                                       | Default | Description                                  |
-| ---------------- | -------------------------------------------------------------------------- | ------- | -------------------------------------------- |
-| `category`       | Point position mapping                                                     | —       | Required category field fixed to y           |
-| `start` / `end`  | Point position mapping                                                     | —       | Required endpoint fields sharing one x scale |
-| `color?`         | Point color mapping                                                        | —       | Shared color and legend for all members      |
-| `row` / `column` | `string`, `IRPlotPartitionDimension`, or `Array<IRPlotPartitionDimension>` | —       | Optional facet dimensions                    |
-| `facet?`         | `IRPlotFacetOptions`                                                       | —       | Facet options; requires row or column        |
+For complete properties and constraints, see [API reference: RangedDotMark](#rangeddotmark).
 
-### `RangedDotPropertiesProps`
+## Extended usage
 
-| Prop             | Type                                                                    | Default                       | Description                                                                               |
-| ---------------- | ----------------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------- |
-| `point?`         | `IRRangedDotPointProperties`                                            | Point                         | Common constant appearance for both endpoints                                             |
-| `startPoint?`    | `IRRangedDotPointProperties`                                            | inherited                     | Start endpoint override                                                                   |
-| `endPoint?`      | `IRRangedDotPointProperties`                                            | inherited                     | End endpoint override                                                                     |
-| `range?`         | `IRRangedDotRangeProperties`                                            | Path                          | Connector color, width, opacity, and style                                                |
-| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | largest endpoint Point radius | Configures continuous x-scale range or explicit ratio padding; categorical y is unchanged |
+### Daylight hours on a circular clock
 
-### `RangedDotMarkProps`
+Place the 24 hours of a day around the circle, with six concentric rings for sunrise and sunset on the 15th of every other month in Tokyo in 2024. Blue endpoints mark sunrise, orange endpoints mark sunset, and connecting arcs show daylight hours. The data comes from the Open-Meteo Historical Weather API in Tokyo local time.
 
-| Prop          | Type                                                  | Default   | Description                                                      |
-| ------------- | ----------------------------------------------------- | --------- | ---------------------------------------------------------------- |
-| `override?`   | `boolean`                                             | `false`   | Replaces the complete ranged-dot group                           |
-| `encodings?`  | `{ category?: string; start?: string; end?: string }` | inherited | Overrides direct fields, never color                             |
-| `properties?` | `RangedDotMarkProps['properties']`                    | inherited | Merges member appearance and rejects recipe-only `domainPadding` |
+The `coordinate` group belongs to the Chart root; the other settings belong to IR `recipe`. React and Vanilla use the corresponding inputs described above.
 
-## Public entries
+| Group        | Property                        | Type             | Description                                                           |
+| ------------ | ------------------------------- | ---------------- | --------------------------------------------------------------------- |
+| `coordinate` | `type / startAngle / endAngle`  | polar settings   | Maps 0–24 hours clockwise around the circle, with 0 at top            |
+|              | `innerRadius / interpolation`   | polar settings   | Leaves a center hole and connects sunrise to sunset around the circle |
+| `encodings`  | `category`                      | field mapping    | Places each month on a concentric ring                                |
+|              | `start / end`                   | fields and scale | Shares a fixed `[0, 24]` angular scale for sunrise and sunset         |
+| `properties` | `startPoint / endPoint / range` | appearance       | Distinguishes time endpoints and draws their connector                |
 
-- `@retikz/chart/point/ranged-dot`: exact schemas, Source types, provider, and locator
-- `@retikz/chart-react/point`: Chart, Encodings, Properties, and Mark declarations
-- `@retikz/chart-vanilla/point/ranged-dot`: normalizer, factory, and typed Input
+Compare the angular spans for January and July to see how daylight hours change. Compare angles rather than pixel arc lengths across rings of different radii.
 
-## Related
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['ranged-dot-daylight', 'ranged-dot-daylight.data.ts']}
+  size="xxl"
+  controls={{ name: 'ranged-dot-daylight' }}
+/>
 
-[Scatter](/viz/chart/points/scatter) · [Connected Scatter](/viz/chart/points/connected-scatter) · [Working with Plot](/viz/chart/model/plot)
+## Errors and limitations
 
-</ShowcaseGallery>
+- category maps to y; start and end share x. These roles are fixed.
+- If either endpoint cannot be projected, the entire row is skipped. Equal endpoints remain coincident.
+- Different explicit endpoint scale names fail. Member appearance does not create independent field scales.
+
+In React, supplying the same configuration field through both the root `recipe` and a child component raises an error.
+
+`point-aware` supports both categorical and continuous axes and protects each endpoint. Fully explicit `domainPadding` bypasses point-aware solving. See [shared point-chart configuration](/viz/chart/points#shared-configuration) for properties and precedence.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains behavior specific to this chart type; skip it if you only need the API."
+/>
+
+### Chart construction
+
+Chart resolves a ranged-dot mark to a Plot `RelationMark`, which carries both positions, the connector, and endpoint appearance. The table lists only the transformations specific to ranged-dot charts.
+
+| Group      | `@retikz/chart`                   | `@retikz/plot`                         | Description                                                                       |
+| ---------- | --------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
+| Encodings  | `category`, `start`, `end`        | `source.project`, `target.project`     | Uses `start` and `end` for the two x values and `category` for their shared y row |
+| Properties | `range`                           | `style`, `path`                        | Applies connector color, width, and path style to the relation path               |
+|            | `point`, `startPoint`, `endPoint` | `endpoints.source`, `endpoints.target` | Merges shared appearance first, then sets each endpoint's shape, size, and color  |
+| Mark       | `IRRangedDotMark`                 | `IRPlotRelationMark`                   | Treats the start, end, and connector as one relation                              |
+
+For each valid row, Plot emits one Core `Path` and two endpoint `Node` elements to draw the connector and dots.
+
+<SourceLinks
+  sources={[
+    { path: 'packages/viz/chart/src/point/ranged-dot/mark.ts', label: 'Relation mark construction' },
+    { path: 'packages/viz/plot/src/providers/mark/features/relation.ts', label: 'Lowering to Path and endpoint Nodes' },
+  ]}
+/>
+
+## API reference
+
+React uses `RangedDotChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `rangedDotChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'ranged-dot'`. React and the Vanilla API supply the chart type automatically.
+
+In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, presentation, and guides, see [Authoring](/viz/chart/model/authoring).
+
+#### RangedDotEncodings
+
+Corresponds to `RangedDotEncodings`, Vanilla `encodings` and IR `recipe.encodings`.
+
+| Channel        | Input form                   | Description                                                       |
+| -------------- | ---------------------------- | ----------------------------------------------------------------- |
+| `category`     | Field name, position mapping | Required; maps to category position on y                          |
+| `start / end`  | Field name, position mapping | Required; share x scale and must use the same explicit scale name |
+| `color`        | Field name, color mapping    | Color shared by both endpoints and their connector                |
+| `row / column` | Field name, facet dimension  | Row or column facets                                              |
+| `facet`        | `IRPlotFacetOptions`         | Configures facets; requires at least one of `row` and `column`    |
+
+Shared mapping parameters are not expanded here; see the [encoding schema](#rangeddotchartencodingsschema) for exact inputs.
+
+#### RangedDotProperties
+
+Corresponds to `RangedDotProperties`, Vanilla `properties` and IR `recipe.properties`.
+
+| Category  | Property        | Type                                                     | Description                                                                                             |
+| --------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Endpoints | `point`         | `IRRangedDotPointProperties`                             | Sets shared appearance for both endpoints                                                               |
+|           | `startPoint`    | `IRRangedDotPointProperties`                             | Overrides start-point appearance                                                                        |
+|           | `endPoint`      | `IRRangedDotPointProperties`                             | Overrides end-point appearance                                                                          |
+| Connector | `range`         | `IRRangedDotRangeProperties`                             | Sets connector appearance                                                                               |
+| Padding   | `autoPadding`   | `'max-radius'`, `'point-aware'`, `object`                | Automatic padding strategy; the object form uses kind for the strategy and clearance for edge clearance |
+|           | `domainPadding` | `number`, `IRBoxSpacing & { kind?: 'range' \| 'ratio' }` | Explicit position-domain padding takes precedence over automatic padding                                |
+
+See the [properties schema](#rangeddotchartpropertiesschema) for the full structure; shared appearance configuration is not expanded here.
+
+#### RangedDotMark
+
+Corresponds to `RangedDotMark`, Vanilla `marks` and IR `recipe.marks`.
+
+| Property     | Type                               | Description                                                             |
+| ------------ | ---------------------------------- | ----------------------------------------------------------------------- |
+| `override`   | `boolean`                          | Replace the full endpoint-and-connector group, otherwise append         |
+| `encodings`  | `RangedDotChartMark['encodings']`  | Override direct fields; inherit color from the recipe                   |
+| `properties` | `RangedDotChartMark['properties']` | Merge member appearance separately; chart padding policies are excluded |
+
+## Schema reference
+
+These schemas are exported from `@retikz/chart/point` and describe persistable JSON IR. Nested root and shared configuration retain their type names. The recipe, encodings, properties, and mark contracts follow below. See the API reference for React and Vanilla authoring.
+
+#### RangedDotChartSchema
+
+<ZodSchema name="RangedDotChartSchema" shallow />
+
+#### RangedDotChartRecipeSchema
+
+<ZodSchema name="RangedDotChartRecipeSchema" shallow />
+
+#### RangedDotChartEncodingsSchema
+
+<ZodSchema name="RangedDotChartEncodingsSchema" shallow />
+
+#### RangedDotChartPropertiesSchema
+
+<ZodSchema name="RangedDotChartPropertiesSchema" shallow />
+
+#### RangedDotChartMarkSchema
+
+`encodings` accepts only optional field-name strings for category, start, end, not the full recipe mapping objects. `properties` follows the meanings and member structure above, excluding `autoPadding` and `domainPadding`. Omitted settings inherit the applicable chart mappings and properties.
+
+<ZodSchema name="RangedDotChartMarkSchema" shallow />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Scatter',
+      description: 'Distribution and categories for two continuous variables',
+      url: '/viz/chart/points/scatter',
+    },
+    { title: 'Authoring', description: 'Compare React, Vanilla and Source IR', url: '/viz/chart/model/authoring' },
+    {
+      title: 'Working with Plot',
+      description: 'Compose capabilities beyond this chart type',
+      url: '/viz/chart/model/plot',
+    },
+  ]}
+/>

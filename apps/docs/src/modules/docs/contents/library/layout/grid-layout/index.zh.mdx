@@ -1,147 +1,86 @@
 ---
-title: 网格布局
-description: 用显式与隐式二维轨道、跨轨道范围和确定性自动放置排布任意子图形。
+title: grid · 网格布局
+description: 用共享行列轨道排列图形，组合固定尺寸、份额分配与跨行跨列
 ---
 
-`GridLayout` 把内容区域划分为物理列轨道和行轨道。轨道可以固定、按最小或自然内容贡献求值、按份额吸收有限剩余空间，或用 `minmax` 组合上下界；子项可以显式指定连续的跨轨道范围，也可以按 `autoFlow` 放入下一处空位。
+`GridLayout` 把内容区域划分成行与列。每一行或列都是一条轨道，同一轨道上的子项共享尺寸与对齐参照。它适合多列信息区、对齐的图形矩阵，以及标题跨列、内容分栏的组合。
 
-## 用法
+你声明轨道尺寸和子项占用范围，布局负责求出行列边界并放置内容。轨道既可以固定宽高，也可以根据内容求值，或按份额分配有限空间；未指定位置的子项可以自动寻找空位。
 
-```tsx
-import { Layout, Node } from '@retikz/react';
-import { GridLayout, LayoutItem } from '@retikz/layout-react';
-```
+## 职责一览
 
-```tsx
-<Layout>
-  <GridLayout
-    columns={[
-      { kind: 'fixed', value: 100 },
-      { kind: 'fraction', factor: 1 },
-    ]}
-    columnGap={8}
-  >
-    <LayoutItem kind="grid">
-      <Node position={[0, 0]} text="标签" />
-    </LayoutItem>
-    <LayoutItem kind="grid">
-      <Node position={[0, 0]} text="42%" />
-    </LayoutItem>
-  </GridLayout>
-</Layout>
-```
+布局以可序列化的 IR 描述容器、子项规则和图形内容。三者分别保存不同的事实：
 
-JSON/IR 路径使用 `createGridLayout()` 与 `GridLayoutDefinition`；Vanilla 使用 `gridLayout()` 与 `GridLayoutInputEmbedAdapter`。完整布局家族可在 `composites` 中传入三个 layout Definition，或使用 `LayoutInputEmbedAdapters` 装载 Vanilla embed
+| IR 层次                         | 描述内容                               | 作用范围                       |
+| ------------------------------- | -------------------------------------- | ------------------------------ |
+| 布局容器                        | 行列轨道、容器尺寸、间距与自动放置方向 | 决定整组内容的空间组织         |
+| 子项配置（`children` 中的条目） | 行列位置、跨度与单项对齐               | 决定单个子图形如何参与布局     |
+| 子图形（条目的 `child`）        | 节点、路径或嵌套图形的内容与几何声明   | 决定实际绘制的内容及其测量依据 |
 
-| 场景        | 公开入口                                                                                           |
-| ----------- | -------------------------------------------------------------------------------------------------- |
-| React       | `GridLayout`、`LayoutItem`（`@retikz/layout-react`）                                               |
-| Vanilla     | `gridLayout`、`GridLayoutInputEmbedAdapter`（`@retikz/layout-vanilla`）                            |
-| 可选检查    | `InspectGridLayout`（`@retikz/layout-react/inspect`）、`inspectGridLayout`（Vanilla）              |
-| IR / 持久化 | `GridLayoutSchema`、`createGridLayout`、`IRGridLayout`、`GridLayoutDefinition`（`@retikz/layout`） |
+容器的 `children` 保存子项配置，每个条目的 `child` 保存子图形 IR。布局规则与图形内容因此可以分别调整：修改子项的分配或放置规则，不必重写图形本身。
 
-## 例子
+React 通过 JSX 组合、Vanilla 通过函数与对象编写这些声明，也可以直接提供 IR。各入口最终表达同一份布局契约；具体写法在基础用法中对照，总览按这份共同契约解释行为。
 
-### 轨道、跨轨道与自动放置
+## 理解轨道与跨列
 
-下面同时使用固定轨道、`1fr`、`2fr`、显式跨轨道范围和未指定坐标的子项。自动放置只按规范的作者声明顺序前进，不实现浏览器式密集回填。
+下面的网格有两行三列：第一列固定为 100，另外两列按 1∶2 的份额分配可用空间。标题占据第一行的全部三列，后面的三个子项自动填入第二行。
 
-<ComponentPreview files="grid-layout-basic" size="md" />
+<ComponentPreview files="entry" hideCode size="sm" />
 
-### 控制面板
+标题跨列时占用一个连续区域，其中包含跨过的列间距；它不会把三列合并成一条新轨道，第二行仍沿用原来的列边界。
 
-切换非密集自动放置方向、份额权重、间距与单元格对齐。固定 `viewBox` 让轨道比例、跨轨道范围和放置位置的变化可以直接比较。
+份额列的计算需要有限的可用宽度。这个示例显式设置容器宽度，先扣除内边距、列间距和固定列，再由份额列分配空间；有内容最小尺寸或其它约束时，不能仅凭份额数字推断最终宽度。
 
-<ComponentPreview
-  files="grid-layout-playground"
-  size="lg"
-  caption="推荐态显示 content 边界、轨道边界与固定 gap；可在“辅助层”中查看 padding、margin、自由空间边界与其它细节。"
-/>
+槽位是网格分给子项的区域，不等于图形边框。示例中的 Node 居中放在槽位内，保持自身内容尺寸；跨三列的标题也不会自动变成铺满三列的矩形。
 
-## 技术原理
+<Comparison target="css" title="与 CSS Grid 的对应关系">
 
-<ComponentAlert
-  type="tip"
-  title="上手阶段可跳过本节"
-  description="只有在排查轨道贡献、自动放置或文字重排高度时，才需要理解求解顺序。"
-/>
+CSS Grid 与 GridLayout 都用行列轨道组织内容。下表对照的是布局 IR：容器声明轨道，`children` 中的条目声明占用范围，React 与 Vanilla 共用这些语义。
 
-GridLayout 使用固定的物理 x→y 求解顺序：
+| CSS Grid                                       | GridLayout IR                        | 对应语义                                                      |
+| ---------------------------------------------- | ------------------------------------ | ------------------------------------------------------------- |
+| `display: grid`                                | `type: 'gridLayout'`                 | 采用网格布局；IR 还需布局包的 `namespace`                     |
+| `grid-template-columns` / `grid-template-rows` | `columns` / `rows`                   | 显式列轨道与行轨道                                            |
+| 固定长度 / `fr` / `minmax()`                   | `fixed` / `fraction` / `minmax` 轨道 | 固定尺寸、份额与上下界策略                                    |
+| `grid-auto-columns` / `grid-auto-rows`         | `implicitColumn` / `implicitRow`     | 自动生成轨道的尺寸策略                                        |
+| `grid-auto-flow`                               | `autoFlow`                           | 按行或按列自动寻找空位，不支持 `dense`                        |
+| `grid-column` / `grid-row`                     | 子项的 `column` / `row`              | 用 `start` 与 `span` 指定起始轨道和跨度                       |
+| `column-gap` / `row-gap`                       | `columnGap` / `rowGap`               | 轨道之间的物理横纵间距                                        |
+| `justify-items` / `align-items`                | `justifyItems` / `alignItems`        | 子项在区域内的默认对齐，可由 `justifySelf` / `alignSelf` 覆盖 |
+| `justify-content` / `align-content`            | `justifyContent` / `alignContent`    | 整组列轨道或行轨道在容器内的空间分布                          |
 
-1. 校验显式放置，按 `autoFlow` 解析未完整指定的子项，并据此物化隐式轨道。
-2. 沿 x 轴测量最小和自然内容贡献，求列尺寸轮廓与有限宽度分配。
-3. 把最终列分配区域传给子图形，再沿 y 轴测量文本重排后的高度并求行尺寸轮廓。
-4. 按 `justifyItems`、`alignItems` 或子项覆盖值放置真实占用，最后回放被选中的测量候选。
+本页列定义可类比为 `grid-template-columns: 100px 1fr 2fr`，标题的 `column: { span: 3 }` 类似 `grid-column: span 3`。这些 CSS 片段帮助理解分配规则，不是 GridLayout 接受的输入语法。
 
-这个物理 x→y 顺序使文本在列宽确定后再决定行高，不需要 DOM 回读或循环猜测。`GridLayoutArtifact` 公开已求解的列与行、隐式轨道标记，以及每个子项最终的跨轨道范围。
+显式位置的编号不同：CSS 正向网格线从 1 开始，GridLayout 的 `start` 从 0 开始。例如 CSS 的 `grid-column: 1 / span 2` 对应 `column: { start: 0, span: 2 }`；不能直接复制 CSS 网格线编号、负索引或命名区域。
 
-<SourceLinks
-  sources={[
-    { label: 'GridLayout 输入契约', path: 'packages/library/layout/src/composites/grid-layout/schema.ts' },
-    { label: '网格自动放置', path: 'packages/library/layout/src/composites/grid-layout/placement.ts' },
-    { label: '网格轨道求解器', path: 'packages/library/layout/src/composites/grid-layout/tracks.ts' },
-    { label: 'GridLayout 编译', path: 'packages/library/layout/src/composites/grid-layout/pipeline.ts' },
+GridLayout 使用绘图坐标单位和结构化轨道配置，不执行 CSS 样式级联或完整的浏览器轨道算法。内容轨道根据子图形的最小或自然尺寸贡献求值；份额轨道需要有限空间。显式区域重叠默认由 `overlap: 'reject'` 拒绝，也不同于 CSS Grid 允许网格项目重叠的行为。实际支持的取值以 API、Schema 参考为准。
+
+</Comparison>
+
+## 选择与边界
+
+| 排列目标                             | 选择                                            |
+| ------------------------------------ | ----------------------------------------------- |
+| 多行多列共享边界，需要跨行或跨列     | `GridLayout`                                    |
+| 沿一个方向排列，按内容顺序伸缩或换行 | [FlexLayout](/library/layout/flex-layout)       |
+| 多个图形共享同一区域，需要叠加与定位 | [OverlayLayout](/library/layout/overlay-layout) |
+
+GridLayout 排列子图形，不主动绘制表格边框或参考网格。需要独立的参考线图形时，使用标准包的 [Grid](/library/standard/presentation/grid)。
+
+从基础用法学习轨道和子项声明；扩展用法进一步组合内容轨道、上下界、隐式轨道与重叠策略。API、Schema 参考用于查询接口和字段，实现原理解释自动放置与轨道求解的过程。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/grid-layout/usage' },
+    { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/grid-layout/extended' },
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/grid-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/grid-layout/api-reference' },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/grid-layout/schema-reference',
+    },
   ]}
 />
-
-## API 参考
-
-### 可选 React 检查组件
-
-| 属性       | 类型                                            | 默认值 | 描述                                                                   |
-| ---------- | ----------------------------------------------- | ------ | ---------------------------------------------------------------------- |
-| `inspect?` | `false` \| `true` \| `GridLayoutInspectOptions` | `true` | `InspectGridLayout` 为当前 occurrence 声明请求；`false` 只取消当前实例 |
-
-基础 `GridLayout` 没有 `inspect` 属性。可选的 `InspectGridLayout` 对象形式可分别控制 `tracks`、`cells`、固定 `gaps`、`distributedSpace` 与 `spans`。完整通用字段和宿主 / Scope 规则见[运行时参考](/library/layout/reference/runtime#布局检查器)。
-
-### `GridLayoutInput`
-
-| 属性              | 类型                                        | 默认值       | 描述                                |
-| ----------------- | ------------------------------------------- | ------------ | ----------------------------------- |
-| `columns`         | `Array<GridTrackInput>`                     | —            | 至少一条显式物理列轨道              |
-| `rows?`           | `Array<GridTrackInput>`                     | `[]`         | 显式行轨道；不足部分由隐式定义补齐  |
-| `implicitColumn?` | `GridTrackInput`                            | 内容自然尺寸 | 自动放置扩展列时使用                |
-| `implicitRow?`    | `GridTrackInput`                            | 内容自然尺寸 | 自动放置扩展行时使用                |
-| `autoFlow?`       | <ApiValues name="GridAutoFlow" />           | `'row'`      | 非密集的确定性自动放置方向          |
-| `overlap?`        | <ApiValues name="GridOverlap" />            | `'reject'`   | 完全显式放置子项的重叠策略          |
-| `columnGap?`      | `number`                                    | `0`          | 物理列间距                          |
-| `rowGap?`         | `number`                                    | `0`          | 物理行间距                          |
-| `justifyItems?`   | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'`  | 默认水平子项对齐                    |
-| `alignItems?`     | <ApiValues name="LayoutAlignment" />        | `'stretch'`  | 默认垂直子项对齐                    |
-| `justifyContent?` | <ApiValues name="LayoutDistribution" />     | `'start'`    | 列组的水平剩余空间分布              |
-| `alignContent?`   | <ApiValues name="LayoutDistribution" />     | `'start'`    | 行组的垂直剩余空间分布              |
-| `size?`           | `LayoutSizeInput`                           | 内容 / 内容  | 容器双轴分配策略                    |
-| `padding?`        | `number` \| `IRBoxSpacing`                  | `0`          | 从分配区域到内容区域的内边距        |
-| `overflow?`       | <ApiValues name="LayoutOverflow" />         | `'visible'`  | 是否在容器分配区域上裁切视觉输出    |
-| `children?`       | `Array<GridLayoutItemInput>`                | `[]`         | 作者声明的子项；显式 `key` 必须唯一 |
-
-### `GridTrackInput`
-
-| 形态       | 关键字段                       | 含义                           |
-| ---------- | ------------------------------ | ------------------------------ |
-| `fixed`    | `{ kind: 'fixed', value }`     | 固定非负尺寸                   |
-| `content`  | `{ kind: 'content', mode }`    | 子图形最小或自然内容贡献       |
-| `fraction` | `{ kind: 'fraction', factor }` | 有限空间中的正份额权重         |
-| `minmax`   | `{ kind: 'minmax', min, max }` | 非份额下界与固定/内容/份额上界 |
-
-### `GridLayoutItemInput`
-
-| 属性           | 类型                                        | 默认值         | 描述                                     |
-| -------------- | ------------------------------------------- | -------------- | ---------------------------------------- |
-| `kind`         | `'grid'`                                    | —              | 网格布局子项判别字段                     |
-| `key?`         | `string`                                    | 内部生成       | 可选稳定身份；省略时按 source index 生成 |
-| `child`        | `IRChild`                                   | —              | 任意可 JSON 序列化的 Core 子图形         |
-| `column?`      | `{ start?: number, span?: number }`         | 自动 / 跨 1 轨 | 列放置范围                               |
-| `row?`         | `{ start?: number, span?: number }`         | 自动 / 跨 1 轨 | 行放置范围                               |
-| `margin?`      | `number` \| `IRBoxSpacing`                  | `0`            | 轨道区域内缩前的子项外边距               |
-| `justifySelf?` | `'start' \| 'center' \| 'end' \| 'stretch'` | 容器值         | 覆盖水平对齐                             |
-| `alignSelf?`   | <ApiValues name="LayoutAlignment" />        | 容器值         | 覆盖垂直对齐                             |
-
-React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
-
-## 相关
-
-- [布局容器](/library/layout)：三种容器的选择与共同产物
-- [API 参考](/library/layout/reference)：输入契约、产物契约与运行时接线
-- [弹性布局](/library/layout/flex-layout)：单主轴分配与换行
-- [叠加布局](/library/layout/overlay-layout)：同一区域内叠放

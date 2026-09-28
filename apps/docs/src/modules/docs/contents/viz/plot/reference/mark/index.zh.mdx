@@ -133,7 +133,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
     order: '连接顺序字段；省略时使用数组顺序。',
     series: '按不同值拆分多条路径的 series 字段。',
     closed: '是否把末点连回起点。',
-    connectNulls: '是否跳过无效投影点并跨空连接。',
+    connectNulls: '是否跨过无效投影点连接；开放无填充路径支持描边对象，仅覆盖缺值连接段，默认虚线。',
     closure: '循环、常量基线或每行堆叠基线的闭合策略。',
     curve: '相邻有序点的连接曲线。',
     interpolation: 'polar2D 相邻位置的连接空间覆盖；省略时继承 coordinate。',

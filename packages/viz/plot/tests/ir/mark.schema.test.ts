@@ -336,6 +336,16 @@ describe('MarkSchema (contract)', () => {
     expect(MarkSchema.parse(m)).toEqual(m);
   });
 
+  it('缺值连接对象补齐默认虚线，拒绝非描边属性和非法值', () => {
+    const mark = { type: 'path', encoding: { x: { field: 'x' }, y: { field: 'y' } } };
+    const parsed = MarkSchema.parse({ ...mark, connectNulls: {} });
+    expect(parsed).toMatchObject({ connectNulls: { dashPattern: [6, 4] } });
+    expect(MarkSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
+    for (const connectNulls of [{ fill: 'red' }, { strokeOpacity: 2 }, { strokeWidth: -1 }, { dashPattern: [] }]) {
+      expect(() => MarkSchema.parse({ ...mark, connectNulls })).toThrow();
+    }
+  });
+
   it('mark_path_closure_cycle_valid', () => {
     const m = { type: 'path', closure: { kind: 'cycle' }, encoding: { x: { field: 'dim' }, y: { field: 'value' } } };
     expect(MarkSchema.parse(m)).toEqual(m);

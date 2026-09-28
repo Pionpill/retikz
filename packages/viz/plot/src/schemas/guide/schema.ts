@@ -705,6 +705,18 @@ export const LegendGuideSchema = object({
   scale: NonBlankStringSchema.optional().describe(
     'Disambiguating scale name when the channel is driven by more than one scale; omit when the channel has a single scale (more than one and omitted is a fail-loud error during lowering)',
   ),
+  symbols: array(
+    strictObject({
+      kind: zodEnum(['point', 'line']).describe('Primitive used in an overlaid categorical legend symbol'),
+      scale: NonBlankStringSchema.optional().describe('Bound color scale with the same ordered domain as the legend'),
+      paint: PaintValueSchema.optional().describe('Explicit symbol paint; overrides scale color'),
+    }).refine(symbol => symbol.paint !== undefined || symbol.scale !== undefined, {
+      message: 'A legend symbol requires paint or scale',
+    }),
+  )
+    .min(1)
+    .optional()
+    .describe('Ordered overlaid symbols for a categorical color legend; each requires a paint or bound scale'),
   layer: PlotLayerSchema.optional().describe('Semantic plot layer override applied to the generated legend scope'),
   title: LegendTitleTextSchema.optional().describe(
     'Legend title text block rendered above the entries; omit for no title',

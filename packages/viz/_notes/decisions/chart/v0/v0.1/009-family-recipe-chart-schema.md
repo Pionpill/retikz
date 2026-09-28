@@ -275,9 +275,9 @@ Core effective Theme 与 Chart Source theme 的选择和级联固定如下：
 
 每个具体 chartType 暴露一个只携带自身 recipe Definition 的 Core dependency provider。相同 family 的 provider 使用同一个 `chart.<family>` composite key；Core 合并当前 Scene 实际贡献的 provider datasets 后，`_chart` 才建立该 family 的 active recipe registry、临时 schema union 与有序主题集合。重复使用同一 Definition 必须幂等，不同 Definition 争用同一 chartType 必须 fail-loud。
 
-`_chart` 的 provider 与 resolver 不导入 Point 或其它具体 family，也不维护默认 builtins。具体 Vanilla factory 只安装对应 chartType provider；具体 React component 复用该 Vanilla factory。因而只使用 Scatter 不要求安装未使用的其它 chartType，同时一个 Scene 内多个 Point chartType 仍可在相同 Core key 下汇合并编译。
+`_chart` 的 provider 与 resolver 不导入 Point 或其它具体 family，也不维护默认 builtins。具体 Vanilla 编写入口返回标准 InputEmbed，对应 adapter 只安装该 chartType provider；具体 React component 复用该 Vanilla adapter。编写与渲染契约见 [ADR-016](./016-vanilla-input-embed.md)。因而只使用 Scatter 不要求安装未使用的其它 chartType，同时一个 Scene 内多个 Point chartType 仍可在相同 Core key 下汇合并编译。
 
-Chart 不再公开 generic `createChart()`、`normalizeChart()`、`<Chart source>`、`ChartRuntimeOptions.familyDefinitions` 或动态 `parseChartSource()`。Vanilla / React 仍共享内部 authoring adapter 与 compile session，但公开入口是 `createScatterChart()`、`<ScatterChart>` 等具体 chartType API。命名主题以 `themeDefinitions` 传入具体 chartType provider；应用层 family / chartType 路由、动态 JSON 调度与 schema catalog 不属于 Chart runtime。
+Chart 不再公开 generic `createChart()`、`normalizeChart()`、`<Chart source>`、`ChartRuntimeOptions.familyDefinitions` 或动态 `parseChartSource()`。Vanilla / React 仍共享内部 authoring adapter 与 compile session，但公开入口是 `scatterChart()`、`<ScatterChart>` 等具体 chartType API。命名主题以 `themeDefinitions` 传入具体 chartType provider；应用层 family / chartType 路由、动态 JSON 调度与 schema catalog 不属于 Chart runtime。
 
 `encodings` 只保存当前 recipe 声明的 field-bound 数据角色，不接受常量；`properties` 只保存当前实例的常量表现或行为，不接受字段绑定。共享原子 schema 只按稳定语义、不变量和真实复用边界提取，每个 `XxxChartEncodingsSchema`、`XxxChartPropertiesSchema` 与 recipe Theme schema 仍保持精确、闭合。源于 Plot 且语义和值域完全一致的原子直接复用 Plot owner。
 

@@ -38,6 +38,7 @@ export type ChartRuntimeDefinitionOptions = Readonly<
     | 'coordinates'
     | 'transformDefinitions'
     | 'statisticsReducerDefinitions'
+    | 'regressionDefinitions'
     | 'rowSelectorDefinitions'
     | 'scaleDefinitions'
   >

@@ -5,6 +5,16 @@ description: 安装 Layout，用 React 或 Vanilla 将两个图形排成一行�
 
 选择与你的项目一致的宿主入口，完成下面的最小例子。所有发布包使用 ES modules；Node.js 环境要求 24 或更高版本。
 
+## 三个发布包
+
+| 包                       | 负责什么                           | 什么时候使用                        |
+| ------------------------ | ---------------------------------- | ----------------------------------- |
+| `@retikz/layout`         | schema、factory、Definition 与求解 | 校验或持久化 IR，直接接入 Core 编译 |
+| `@retikz/layout-react`   | 布局容器的 React DSL               | 在 React `Layout` 中创作            |
+| `@retikz/layout-vanilla` | Input helper 与 InputEmbedAdapter  | 无 React 的浏览器或脚本入口         |
+
+使用 React 创作时，在 `@retikz/react` 的 `Layout` 中组合 `FlexLayout`、`GridLayout` 或 `OverlayLayout`；使用 Vanilla 时，通过 `@retikz/layout-vanilla` 的 helper 与 adapter 接入；读取持久化 JSON 时，则用 `@retikz/layout` 校验完整布局 IR，并把所需 Definition 传给 Core 编译器。
+
 ## React
 
 <PackageManagerInstall packages="@retikz/layout-react @retikz/react react react-dom" />
@@ -14,23 +24,23 @@ description: 安装 Layout，用 React 或 Vanilla 将两个图形排成一行�
 ```tsx
 import type { FC } from 'react';
 import { Layout, Node } from '@retikz/react';
-import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
 
 export const Example: FC = () => (
   <Layout>
     <FlexLayout gap={{ column: 12, row: 0 }}>
-      <LayoutItem kind="flex">
-        <Node shape="circle" position={[0, 0]} layout={{ minimumSize: 32 }} />
-      </LayoutItem>
-      <LayoutItem kind="flex">
-        <Node position={[0, 0]} layout={{ minimumSize: 32 }} />
-      </LayoutItem>
+      <FlexLayoutItem>
+        <Node shape="circle" layout={{ minimumSize: 32 }} />
+      </FlexLayoutItem>
+      <FlexLayoutItem>
+        <Node layout={{ minimumSize: 32 }} />
+      </FlexLayoutItem>
     </FlexLayout>
   </Layout>
 );
 ```
 
-结果是一个圆形和一个矩形沿水平方向排列，间隔 12 个用户单位。每个 `LayoutItem` 包含一个图形；它们虽然都从局部 `[0, 0]` 开始，最终位置由 Flex 容器分配。
+结果是一个圆形和一个矩形沿水平方向排列，间隔 12 个用户单位。每个 `FlexLayoutItem` 包含一个图形；它们虽然都从局部 `[0, 0]` 开始，最终位置由 Flex 容器分配。
 
 将上面的组件保存为 `Example.tsx`，在已有 React 应用入口挂载（HTML 中准备 `<div id="root"></div>`）：
 
@@ -59,11 +69,11 @@ const input = scene({
       children: [
         {
           kind: 'flex',
-          child: node({ id: 'circle', shape: 'circle', position: [0, 0], layout: { minimumSize: 32 } }),
+          child: node({ id: 'circle', shape: 'circle', layout: { minimumSize: 32 } }),
         },
         {
           kind: 'flex',
-          child: node({ id: 'box', position: [0, 0], layout: { minimumSize: 32 } }),
+          child: node({ id: 'box', layout: { minimumSize: 32 } }),
         },
       ],
     }),
@@ -75,9 +85,33 @@ console.log(svg);
 
 `svg` 是可保存为 `.svg` 文件或交给页面宿主展示的完整 SVG 字符串。helper 创建普通输入，`adapters` 让 Vanilla 识别对应的嵌入项并收集其能力依赖；省略 adapter 会使输入无法解析。
 
-`flexLayout` 的第一个参数 `'row'` 是容器标识符，不是方向配置。两端默认方向都是水平行（`direction: 'row'`）。`LayoutItem kind="flex"` 选择 Flex 子项约束，每项包含一个可绘制子图形；`minimumSize: 32` 同时约束最小宽和最小高。未指定 `shape` 的 Node 默认是矩形。
+两端默认方向都是水平行（`direction: 'row'`）。`FlexLayoutItem` 选择 Flex 子项约束，每项包含一个可绘制子图形；`minimumSize: 32` 同时约束最小宽和最小高。未指定 `shape` 的 Node 默认是矩形。
 
-## 接下来
+## 宿主如何识别布局
+
+| 粒度     | 公开入口                                                                                                     | 用途                                              |
+| -------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| 单一定义 | `FlexLayoutDefinition`、`GridLayoutDefinition`、`OverlayLayoutDefinition`                                    | 只向 Core 注册一个布局复合组件                    |
+| React    | `FlexLayout`、`GridLayout`、`OverlayLayout` 及各自的 `FlexLayoutItem`、`GridLayoutItem`、`OverlayLayoutItem` | 从组件树生成规范 IR，并向外层 `<Layout>` 贡献定义 |
+| Vanilla  | `LayoutInputEmbedAdapters`                                                                                   | 让 Scene、挂载与 SSR 入口识别三种布局嵌入项       |
+
+将一个或多个布局 Definition 直接放入 `CompileOptions.composites`。React 与 Vanilla 适配器生成相同的 Layout IR，并贡献所需的 Definition；adapter 便利数组不成为 Core compile preset
+
+### React
+
+`@retikz/layout-react` 的三个容器都是可嵌入 Tier 2 组件。容器直属 children 必须分别是 `FlexLayoutItem`、`GridLayoutItem` 或 `OverlayLayoutItem`；组件身份决定所属布局，不传 `kind`；Fragment 和数组会透明展开，但普通 JSX 节点不能绕过子项语义。
+
+每个布局子项必须在 `children` 与 `ir` 中二选一，并最终生成恰好一个 `IRChild`。可选的 React `itemKey` 会写入规范 JSON 的 `key`；省略时 Source IR 不含 `key`，Layout 在 solver 前按 source index 生成容器局部有效 key。它不读取 React 保留的 `key`。嵌套 Layout 布局可以继续贡献同一布局家族，外部数据集或其它 Tier 2 运行时贡献则应由外层宿主负责。
+
+React 容器本身不启动局部编译，也不测量 DOM。它们把 IR 与 Definition 贡献给外层 `<Layout>`，由宿主统一编译和渲染；需要读取产物时使用外层的产物观察入口。
+
+### Vanilla
+
+`flexLayout()`、`gridLayout()` 与 `overlayLayout()` 返回 `InputEmbed`。Scene、挂载或 SSR 宿主需要传入对应 adapter；完整布局家族使用 `LayoutInputEmbedAdapters`。
+
+每个适配器调用与 React 相同的 `createXxxLayout()` 工厂生成规范 IR，并贡献该布局家族所需的 Definition。Vanilla 因而与直接 Core 编译、React 入口共享同一套 schema、Definition、求解器和产物语义
+
+## 延伸阅读
 
 修改 `gap.column` 调整间距；需要分配剩余空间时，为子项设置 `grow` 并给容器指定尺寸。继续阅读[弹性布局](/library/layout/flex-layout)。二维区域分配用[网格布局](/library/layout/grid-layout)，同区域叠放用[叠加布局](/library/layout/overlay-layout)。
 

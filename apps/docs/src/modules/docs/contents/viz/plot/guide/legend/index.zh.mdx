@@ -94,12 +94,15 @@ PlotLegend 会按 `channel` 和可选 `scale` 找到通道描述与 scale。颜�
   ]}
 />
 
+分类颜色图例可通过 `symbols` 叠加点和线。例如 `symbols={[{ kind: 'line', scale: 'pathColor' }, { kind: 'point', scale: 'pointColor' }]}` 会使用两个已绑定色标的实际颜色。两个色标必须具有相同且顺序一致的分类域。每项也可设置 `paint` 常量，优先于 `scale`；连续和分箱图例不支持此配置。
+
 ## API 参考
 
 | 属性          | 类型                                | 默认值        | 描述                                                                                                                                               |
 | ------------- | ----------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `channel`     | `PlotLegendProps['channel']`        | —             | 要解释的非位置通道；内置为 color / size / opacity / shape，注册的自定义通道同样可用                                                                |
 | `scale?`      | `PlotLegendProps['scale']`          | 唯一 scale    | 同一通道存在多个 scale 时用名称消歧；无法唯一确定时会报错                                                                                          |
+| `symbols?`    | `PlotLegendProps['symbols']`        | —             | 分类图例叠加符号；每项的 kind 为 point / line，paint 或 scale 指定颜色                                                                             |
 | `title?`      | `PlotLegendProps['title']`          | 无            | 图例标题；支持字符串、多行文本和结构化文本                                                                                                         |
 | `position?`   | <ApiValues name="LegendPosition" /> | `'right'`     | 图例所在边；布局会在对应边预留图例带                                                                                                               |
 | `orient?`     | <ApiValues name="LegendOrient" />   | 按 `position` | 条目排布方向；左右默认 vertical，上下默认 horizontal                                                                                               |

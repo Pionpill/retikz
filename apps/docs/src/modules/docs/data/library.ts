@@ -51,8 +51,8 @@ export const librarySection: Array<Section> = [
             difficulty: 'beginner',
           },
           {
-            id: 'regular-polygon',
-            label: 'library.standardRegularPolygon',
+            id: 'polygon',
+            label: 'library.standardPolygon',
             difficulty: 'beginner',
           },
           {
@@ -99,22 +99,22 @@ export const librarySection: Array<Section> = [
           {
             id: 'axes',
             label: 'library.standardAxes',
-            difficulty: 'advanced',
+            difficulty: 'beginner',
           },
           {
             id: 'frame',
             label: 'library.standardFrame',
-            difficulty: 'advanced',
+            difficulty: 'beginner',
           },
           {
             id: 'surface',
             label: 'library.standardSurface',
-            difficulty: 'advanced',
+            difficulty: 'beginner',
           },
           {
             id: 'legend',
             label: 'library.standardLegend',
-            difficulty: 'advanced',
+            difficulty: 'beginner',
           },
         ],
       },
@@ -213,7 +213,6 @@ export const librarySection: Array<Section> = [
     id: 'layout',
     label: 'library.layout',
     navigationDescription: 'library.layoutNavigationDescription',
-    document: true,
     pages: [
       {
         id: 'introduction',
@@ -245,54 +244,62 @@ export const librarySection: Array<Section> = [
         id: 'flex-layout',
         label: 'library.flexLayout',
         sidebarGroup: 'library.components',
-        difficulty: 'advanced',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+        children: [
+          { id: 'usage', label: 'schematic.basicUsage', difficulty: 'beginner' },
+          { id: 'extended', label: 'schematic.extensionUsage', difficulty: 'advanced' },
+          { id: 'mechanism', label: 'schematic.mechanism', difficulty: 'internals' },
+          {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
+          },
+        ],
       },
       {
         id: 'grid-layout',
         label: 'library.gridLayout',
         sidebarGroup: 'library.components',
-        difficulty: 'advanced',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+        children: [
+          { id: 'usage', label: 'schematic.basicUsage', difficulty: 'beginner' },
+          { id: 'extended', label: 'schematic.extensionUsage', difficulty: 'advanced' },
+          { id: 'mechanism', label: 'schematic.mechanism', difficulty: 'internals' },
+          {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
+          },
+        ],
       },
       {
         id: 'overlay-layout',
         label: 'library.overlayLayout',
         sidebarGroup: 'library.components',
-        difficulty: 'advanced',
-      },
-      {
-        id: 'reference',
-        label: 'library.layoutReference',
-        sidebarGroup: 'library.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
         children: [
+          { id: 'usage', label: 'schematic.basicUsage', difficulty: 'beginner' },
+          { id: 'extended', label: 'schematic.extensionUsage', difficulty: 'advanced' },
+          { id: 'mechanism', label: 'schematic.mechanism', difficulty: 'internals' },
           {
-            id: 'contract-input',
-            label: 'library.layoutContractInput',
-            meta: {
-              pageType: 'reference',
-              audience: 'integrator',
-              capability: 'layout.input',
-              sourceOfTruth: 'schema',
-            },
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
           },
           {
-            id: 'contract-artifact',
-            label: 'library.layoutContractArtifact',
-            meta: {
-              pageType: 'reference',
-              audience: 'integrator',
-              capability: 'layout.artifact',
-              sourceOfTruth: 'schema',
-            },
-          },
-          {
-            id: 'runtime',
-            label: 'library.layoutRuntime',
-            meta: {
-              pageType: 'reference',
-              audience: 'integrator',
-              capability: 'layout.runtime',
-              sourceOfTruth: 'runtime',
-            },
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
           },
         ],
       },

@@ -7,11 +7,12 @@ const isPlainRecord = (value: unknown): value is JsonRecord =>
 
 const cloneValue = <T>(value: T): T => structuredClone(value);
 
-const hasDefinedValue = (value: unknown): boolean => {
+const hasDefinedValue = (value: unknown, field?: string): boolean => {
   if (value === undefined) return false;
   if (value === null || typeof value !== 'object') return true;
   if (Array.isArray(value)) return value.length > 0;
-  return Object.values(value).some(field => hasDefinedValue(field));
+  if (field === 'border') return true;
+  return Object.entries(value).some(([key, child]) => hasDefinedValue(child, key));
 };
 
 const discriminatorOf = (value: JsonRecord): string | undefined => {
@@ -26,7 +27,7 @@ const discriminatorOf = (value: JsonRecord): string | undefined => {
  * @description array、scalar、false、null 与不同 discriminator 整体替换；同 discriminator 的 object 逐字段合并。空对象和空 font 不产生覆盖
  */
 const mergeSourceValue = (base: unknown, override: unknown, field: string | undefined = undefined): unknown => {
-  if (override === undefined || !hasDefinedValue(override)) return cloneValue(base);
+  if (override === undefined || !hasDefinedValue(override, field)) return cloneValue(base);
   if (field === 'font') return cloneValue(override);
   if (!isPlainRecord(base) || !isPlainRecord(override)) return cloneValue(override);
 

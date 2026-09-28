@@ -32,8 +32,12 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
   type: literal('frame').describe('Composite type for a bordered semantic group of Core nodes.'),
   ...ScopePropsSchema.shape,
   id: NonBlankStringSchema.optional().describe('Optional stable identity for the compiled outer Scope.'),
-  localNamespace: ScopePropsSchema.shape.localNamespace.default(false),
-  boundingShape: ScopePropsSchema.shape.boundingShape.default('rectangle'),
+  localNamespace: ScopePropsSchema.shape.localNamespace
+    .default(false)
+    .describe('Whether child identities are local to this frame; the frame identity remains in the parent namespace.'),
+  boundingShape: ScopePropsSchema.shape.boundingShape
+    .default('rectangle')
+    .describe('Synthetic reference boundary of the outer frame scope.'),
   border: FrameBorderSchema.default(() => FrameBorderSchema.parse({})).describe(
     'Border Path style and corner radius, separate from the root Scope cascade.',
   ),

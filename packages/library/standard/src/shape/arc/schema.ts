@@ -11,8 +11,8 @@ import {
 /** Arc 的持久化几何契约 */
 export const ArcSchema = strictObject({
   ...ShapePathSchema.shape,
-  namespace: literal('standard'),
-  type: literal('arc'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('arc').describe('Composite type for the arc shape.'),
   center: TargetSchema.describe('Shape center; coordinate forms depend on the chosen geometry branch.'),
   radius: ShapeRadiusSchema.describe('Radius in user units; an object specifies the two ellipse axes.'),
   ...ShapeAnglesSchema.shape,

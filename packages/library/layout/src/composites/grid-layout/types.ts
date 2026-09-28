@@ -44,7 +44,12 @@ export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'chil
 export type GridLayoutItemInput = IRGridLayoutItem;
 
 /** GridLayout 的 canonical JSON IR */
-export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> & { children?: Array<IRGridLayoutItem> };
+export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> & {
+  /** 作者声明的直属子项，省略时按空列表处理
+   * @default []
+   */
+  children?: Array<IRGridLayoutItem>;
+};
 
 /** GridLayout factory 接受的作者输入 */
 export type GridLayoutInput = Omit<IRGridLayout, 'namespace' | 'type'>;

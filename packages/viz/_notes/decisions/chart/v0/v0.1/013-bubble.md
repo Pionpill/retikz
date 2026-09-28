@@ -65,7 +65,7 @@ type IRBubbleMark = {
 具体入口为：
 
 - `@retikz/chart/point/bubble`：Bubble exact schema、Source 类型与 provider contribution
-- `@retikz/chart-vanilla/point/bubble`：`normalizeBubbleChart` 与 `createBubbleChart`
+- `@retikz/chart-vanilla/point/bubble`：`normalizeBubbleChart` 与 `bubbleChart`
 - `@retikz/chart-react/point/bubble`：`BubbleChart`、`BubbleEncodings`、`BubbleProperties` 与 `BubbleMark`
 
 最小 React authoring 为：

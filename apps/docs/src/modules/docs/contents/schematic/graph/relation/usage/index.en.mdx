@@ -1,0 +1,281 @@
+---
+title: Basic usage
+description: Connect named endpoints and choose semantics, direction, labels, and routes.
+---
+
+Relation connects existing objects. Complete [Getting started](/schematic/graph/get-start), then give referenced objects stable ids. Endpoints do not have to be Entities.
+
+## Integration
+
+These four approaches draw the same relation. Vanilla examples require an existing `<div id="diagram"></div>`; call `view.dispose()` on teardown.
+
+<ComponentPreview files="/schematic/graph/relation/relation-minimal" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Entity, Graph, Relation } from '@retikz/graph-react';
+import type { FC } from 'react';
+const Example: FC = () => (
+  <Graph>
+    <Entity id="sender" role="activity" position={[80, 80]}>
+      Send
+    </Entity>
+    <Entity id="receiver" role="activity" position={[320, 80]}>
+      Receive
+    </Entity>
+    <Relation role="flow" source="sender" target="receiver" />
+  </Graph>
+);
+export default Example;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { namespace: 'graph', type: 'entity', id: 'sender', role: 'activity', position: [80, 80], text: 'Send' },
+    { namespace: 'graph', type: 'entity', id: 'receiver', role: 'activity', position: [320, 80], text: 'Receive' },
+    { namespace: 'graph', type: 'relation', role: 'flow', source: { id: 'sender' }, target: { id: 'receiver' } },
+  ],
+};
+const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+export default Example;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { entity, relation, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+const input = scene({
+  children: [
+    entity({ id: 'sender', role: 'activity', position: [80, 80], text: 'Send' }),
+    entity({ id: 'receiver', role: 'activity', position: [320, 80], text: 'Receive' }),
+    relation({ role: 'flow', source: 'sender', target: 'receiver' }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, { adapters: createGraphVanillaAdapters() });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { mount } from '@retikz/vanilla/dom';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { namespace: 'graph', type: 'entity', id: 'sender', role: 'activity', position: [80, 80], text: 'Send' },
+    { namespace: 'graph', type: 'entity', id: 'receiver', role: 'activity', position: [320, 80], text: 'Receive' },
+    { namespace: 'graph', type: 'relation', role: 'flow', source: { id: 'sender' }, target: { id: 'receiver' } },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir, { compile: { composites: createGraphDefinitions() } });
+```
+
+</DocTab>
+</DocTabs>
+
+### Connect endpoints
+
+React and Vanilla accept `source="sender"`, normalized to `{ id: 'sender' }`. IR and `createRelation()` require full objects. Use `source={{ id: 'sender', anchor: 'right' }}` to select an anchor. Targets may be Core Nodes, Coordinates, resolved Scopes, or targets published by higher-level components. Core reports duplicate ids and unresolved references.
+
+Endpoints and direction are stored separately. `reverse` places a marker at the source without exchanging source / target identities. The selected direction must be allowed by the current role and kind.
+
+## Choose relationship semantics
+
+The five built-in roles define broad relationship semantics, the base interpretation of source / target, allowed directions, and marker families. Relation has **no built-in kinds or predicates**; kinds must be registered by the user, and predicate names and params also require a corresponding definition
+
+Relation examples use the default style and support light and dark modes. The controls below expose only the directions, statuses, and precise Relation color supported by each role; use Graph defaults and conditional rules to customize appearance across relations
+
+`kind` represents a user-defined domain classification. Omitting it uses the role defaults. Specifying it requires registration in the current provider assembly; an unregistered kind raises an error. See [Custom](/schematic/graph/relation/custom) for definition and registration
+
+| role             | Default direction | Default path and endpoints             |
+| ---------------- | ----------------- | -------------------------------------- |
+| `association`    | `forward`         | Solid path; filled target `diamond`    |
+| `dependency`     | `forward`         | Solid path; open target `straightBarb` |
+| `generalization` | `forward`         | Solid path; filled target `normal`     |
+| `flow`           | `forward`         | Solid path; target `stealth`           |
+| `influence`      | `forward`         | Solid path; target `circle`            |
+
+### association: general relationships
+
+`association` represents a general relationship between two objects. It defaults to `forward` and uses a filled target `diamond` marker. You may explicitly select `none`, `reverse`, or `both`
+
+- **Default / allowed directions:** `forward` / `none`, `forward`, `reverse`, `both`
+- **Built-in predicates:** none; a domain extension can register a cardinality predicate whose params schema validates source and target multiplicities
+
+<ComponentPreview
+  files="relation-association"
+  size="md"
+  caption="Change direction to place diamonds at the source, target, both endpoints, or neither. Endpoint positions stay fixed."
+/>
+
+### dependency: dependency relationships
+
+`dependency` means source depends on target: source is the dependent and target is the dependency. It is fixed to `forward` and defaults to a solid path with an open, unfilled target `straightBarb` marker
+
+- **Default / allowed directions:** `forward` / `forward` only
+- **Built-in predicates:** none; an extension can declare params such as `{ optional: boolean, reason: string }`, with the predicate definition owning the fields and value ranges
+
+<ComponentPreview
+  files="relation-dependency"
+  size="md"
+  caption="Dependency always points to the target. Change status or color to inspect the path and open-arrow appearance."
+/>
+
+### generalization: type generalization
+
+`generalization` means source is a more specific form of target: source is the subtype and target is the supertype. It is fixed to `forward` and defaults to a solid path with a filled target `normal` arrow
+
+- **Default / allowed directions:** `forward` / `forward` only
+- **Built-in predicates:** none; a type-system extension can use params for a discriminator or constraint, but Graph does not perform type checking
+
+<ComponentPreview
+  files="relation-generalization"
+  size="md"
+  caption="Generalization points to the supertype with a filled arrow. Change status or color to inspect its appearance."
+/>
+
+### flow: movement between objects
+
+`flow` represents transfer, progression, or state movement between objects, activities, or states. Source and target are stable route endpoints; the effective direction decides which endpoint receives a stealth marker
+
+- **Default / allowed directions:** `forward` / `forward`, `reverse`, `both`
+- **Built-in predicates:** none; a workflow extension can declare condition params such as `{ expression: string, priority: number }`. Graph validates and stores them but does not execute the condition
+
+<ComponentPreview
+  files="relation-flow"
+  size="md"
+  caption="Switch flow direction and observe the stealth marker move between endpoints."
+/>
+
+### influence: influence relationships
+
+`influence` means one object affects another without requiring data transfer or an execution dependency. The effective direction places a filled circular `circle` marker at source, target, or both endpoints
+
+- **Default / allowed directions:** `forward` / `forward`, `reverse`, `both`
+- **Built-in predicates:** none; an analytical model can declare params such as `{ weight: number, confidence: number }` and select appearance through Theme rules
+
+<ComponentPreview
+  files="relation-influence"
+  size="md"
+  caption="Switch influence direction and adjust the Relation color."
+/>
+
+### Semantic status
+
+`status` preserves a directly readable Graph state on a Relation. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. `disabled` also draws the arrow body with a `[6, 4]` dash pattern; its marker remains gray and keeps its existing shape. Omitting status means no special marker and does not write `normal`. Status supplies appearance defaults only; it does not alter the role, kind, direction, route, or marker shape
+
+Every Relation role demo exposes a no-status option alongside these four values through its controls. The Relation path and every present source or target marker inherit the same status color. Explicit path, marker, or label appearance has final precedence while retaining Source status. A domain predicate's `params.status` is not mapped here automatically
+
+### Style adjustments
+
+The combined playground switches among all five built-in roles and directly adjusts the source, target, Relation path, and label styles. The role changes the relationship semantics and marker recipe; explicit style fields override the corresponding Theme defaults
+
+<ComponentPreview
+  files="relation-style"
+  size="xl"
+  caption="Switch roles, then independently adjust source and target colors, path stroke color and width, dash, opacity, label text color, and text opacity."
+/>
+
+## Labels and routes
+
+`labels` accepts Core GeometryLabel values. `text` supports newline-separated strings or arrays of text lines. Labels default to the path centerline, an `sm` font, and the relation color. Each label's `textColor`, `font`, and `opacity` override relation-level defaults.
+
+Without `route`, Relation connects source directly to target. An explicit route is a complete sequence of at least two Core Steps in root coordinates. React / Vanilla `way` normalizes to route; React also accepts Step children. These three forms are mutually exclusive. Put relation labels in `labels`, never in a route step's `label`.
+
+```tsx
+<Relation
+  role="flow"
+  source="sender"
+  target="receiver"
+  way={['sender', [200, 140], 'receiver']}
+  labels={[{ text: 'Transmit', position: 0.5 }]}
+/>
+```
+
+The polyline must include its own endpoints and bends. Relation neither adds endpoint segments nor routes around obstacles.
+
+## Errors and limitations
+
+- Unregistered roles, kinds, or predicates, mismatched role / kind, invalid directions, and invalid predicate parameters cause errors. There are no built-in predicates.
+- `style` excludes fill, fillOpacity, and fillRule. Relation does not expose arbitrary Path marks. Use Core Path when you need them.
+- Within Graph, Entity and Relation values with the same `group` share a categorical color. This is distinct from the Group container; standalone Relations do not allocate group colors. Status and group colors supply defaults; explicit appearance and matching author rules take precedence.
+
+## Related props
+
+[API reference](/schematic/graph/relation/api-reference) contains the complete public declarations.
+
+These members cover endpoint references and authoring; component types and schemas define the complete contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'Relation.source / target',
+      kind: 'property',
+      type: 'string | IRNodeTarget',
+      required: true,
+      description:
+        'A string names the target. An object requires `id: string` and optionally accepts `anchor`, `offset: [number, number]`, and `boundary`. IR requires objects.',
+    },
+    {
+      name: 'Relation.role',
+      kind: 'property',
+      type: 'string',
+      required: true,
+      description:
+        'Built-ins are `association`, `dependency`, `generalization`, `flow`, and `influence`, expressing the corresponding relationship semantics.',
+    },
+    {
+      name: 'Relation.direction',
+      kind: 'property',
+      type: "'none' | 'forward' | 'reverse' | 'both'",
+      description:
+        '`none` is undirected, `forward` points to target, `reverse` to source, and `both` in both directions. Role / kind narrows the allowed set.',
+      defaultValue: 'kind.defaultDirection ?? role.defaultDirection',
+    },
+    {
+      name: 'Relation.labels',
+      kind: 'property',
+      type: 'Array<IRGeometryLabel>',
+      description:
+        'Each label contains `text`; use `position`, `side`, `font`, and `textColor` for placement and appearance.',
+    },
+    {
+      name: 'Relation.route',
+      kind: 'property',
+      type: 'Array<IRGraphRelationRouteStep>',
+      description:
+        'At least two Core Steps, each with `type: step` and `kind`; move / line use `to` for a position. step.label is forbidden. Mutually exclusive with way / JSX Step children.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Custom usage',
+      description: 'Define and inject domain relationships',
+      url: '/schematic/graph/relation/custom',
+    },
+    { title: 'Entity basic usage', description: 'Create text nodes to connect', url: '/schematic/graph/entity/usage' },
+  ]}
+/>

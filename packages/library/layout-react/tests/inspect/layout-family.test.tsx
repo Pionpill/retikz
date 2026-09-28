@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { FlexLayout, LayoutItem } from '../../src';
+import { FlexLayout, FlexLayoutItem, GridLayoutItem } from '../../src';
 import { InspectFlexLayout, InspectGridLayout, LayoutInspectLayout, LayoutInspectScope } from '../../src/inspect';
 
 /** 通过 Vanilla processing 处理 React 输入并返回已提交的 Inspect 结果 */
@@ -35,9 +35,9 @@ describe('@retikz/layout-react/inspect', () => {
     const html = renderToStaticMarkup(
       <LayoutInspectLayout runtime={{ mode: 'static' }}>
         <InspectFlexLayout inspect={{ gaps: false }}>
-          <LayoutItem kind="flex" itemKey="leaf">
+          <FlexLayoutItem itemKey="leaf">
             <Node position={[0, 0]} text="leaf" />
-          </LayoutItem>
+          </FlexLayoutItem>
         </InspectFlexLayout>
       </LayoutInspectLayout>,
     );
@@ -49,27 +49,25 @@ describe('@retikz/layout-react/inspect', () => {
     [
       'different family',
       <InspectGridLayout key="nested" columns={[{ kind: 'fixed', value: 20 }]}>
-        <LayoutItem kind="grid" itemKey="leaf">
+        <GridLayoutItem itemKey="leaf">
           <Node position={[0, 0]} text="leaf" />
-        </LayoutItem>
+        </GridLayoutItem>
       </InspectGridLayout>,
       'gridLayout',
     ],
     [
       'same family',
       <InspectFlexLayout key="nested">
-        <LayoutItem kind="flex" itemKey="leaf">
+        <FlexLayoutItem itemKey="leaf">
           <Node position={[0, 0]} text="leaf" />
-        </LayoutItem>
+        </FlexLayoutItem>
       </InspectFlexLayout>,
       'flexLayout',
     ],
   ])('只选择嵌套的 $0 occurrence', (_label, nested, expectedType) => {
     const children = (
       <FlexLayout>
-        <LayoutItem kind="flex" itemKey="nested">
-          {nested}
-        </LayoutItem>
+        <FlexLayoutItem itemKey="nested">{nested}</FlexLayoutItem>
       </FlexLayout>
     );
     const input = createInputScene(children);
@@ -101,15 +99,15 @@ describe('@retikz/layout-react/inspect', () => {
   it('贡献内部 Scope 无法定位时明确拒绝，避免误选择父布局', () => {
     const input = createInputScene(
       <FlexLayout>
-        <LayoutItem kind="flex" itemKey="nested">
+        <FlexLayoutItem itemKey="nested">
           <LayoutInspectScope request={false}>
             <InspectFlexLayout>
-              <LayoutItem kind="flex" itemKey="leaf">
+              <FlexLayoutItem itemKey="leaf">
                 <Node position={[0, 0]} text="leaf" />
-              </LayoutItem>
+              </FlexLayoutItem>
             </InspectFlexLayout>
           </LayoutInspectScope>
-        </LayoutItem>
+        </FlexLayoutItem>
       </FlexLayout>,
     );
 

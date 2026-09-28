@@ -1,3 +1,89 @@
+import {
+  ChartPresentationSchema,
+  ChartDefaultsSchema,
+  ChartLayoutSchema,
+  ChartPlotExtensionSchema,
+} from '@retikz/chart';
+import {
+  ScatterPositionScaleBindingSchema,
+  ScatterColorScaleBindingSchema,
+  BubbleChartSchema,
+  BubbleChartRecipeSchema,
+  BubbleChartEncodingsSchema,
+  BubbleChartPropertiesSchema,
+  BubbleChartMarkSchema,
+  BubblePositionScaleBindingSchema,
+  BubbleColorScaleBindingSchema,
+  BubbleXEncodingSchema,
+  BubbleYEncodingSchema,
+  BubbleColorEncodingSchema,
+  BubbleSizeEncodingSchema,
+  BubbleOpacityEncodingSchema,
+  BubbleShapeEncodingSchema,
+  ConnectedScatterChartSchema,
+  ConnectedScatterChartRecipeSchema,
+  ConnectedScatterChartEncodingsSchema,
+  ConnectedScatterChartPropertiesSchema,
+  ConnectedScatterChartMarkSchema,
+  ConnectedScatterPointPropertiesSchema,
+  ConnectedScatterPathPropertiesSchema,
+  ConnectedScatterMarkEncodingsSchema,
+  RangedDotChartSchema,
+  RangedDotChartRecipeSchema,
+  RangedDotChartEncodingsSchema,
+  RangedDotChartPropertiesSchema,
+  RangedDotChartMarkSchema,
+  RangedDotPointPropertiesSchema,
+  RangedDotRangePropertiesSchema,
+  RangedDotMarkEncodingsSchema,
+  RangedDotCategoryEncodingSchema,
+  RangedDotStartEncodingSchema,
+  RangedDotEndEncodingSchema,
+  RangedDotColorEncodingSchema,
+  RegressionChartSchema,
+  RegressionChartRecipeSchema,
+  RegressionChartEncodingsSchema,
+  RegressionChartPropertiesSchema,
+  RegressionChartMarkSchema,
+  RegressionPointPropertiesSchema,
+  RegressionTrendPropertiesSchema,
+  RegressionExtraMethodSchema,
+  RegressionMarkEncodingsSchema,
+  RegressionSeriesScaleBindingSchema,
+  RegressionXEncodingSchema,
+  RegressionYEncodingSchema,
+  RegressionSeriesEncodingSchema,
+  StripChartSchema,
+  StripChartRecipeSchema,
+  StripChartEncodingsSchema,
+  StripChartPropertiesSchema,
+  StripChartMarkSchema,
+  StripChartJitterSchema,
+  StripChartMarkPropertiesSchema,
+  StripPositionScaleBindingSchema,
+  StripColorScaleBindingSchema,
+  StripXEncodingSchema,
+  StripYEncodingSchema,
+  StripColorEncodingSchema,
+  StripSizeEncodingSchema,
+  StripOpacityEncodingSchema,
+  StripShapeEncodingSchema,
+} from '@retikz/chart/point';
+import {
+  ScatterXEncodingSchema,
+  ScatterYEncodingSchema,
+  ScatterColorEncodingSchema,
+  ScatterSizeEncodingSchema,
+  ScatterOpacityEncodingSchema,
+  ScatterShapeEncodingSchema,
+} from '@retikz/chart/point';
+import {
+  ScatterChartSchema,
+  ScatterChartRecipeSchema,
+  ScatterChartEncodingsSchema,
+  ScatterChartPropertiesSchema,
+  ScatterChartMarkSchema,
+} from '@retikz/chart/point';
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
@@ -29,7 +115,7 @@ import {
   CircleSchema,
   EllipseSchema,
   RectangleSchema,
-  RegularPolygonSchema,
+  PolygonSchema,
   StarSchema,
   ArcSchema,
   SectorSchema,
@@ -38,6 +124,8 @@ import * as IRTable from '@retikz/table';
 import type { core, z } from 'zod';
 
 import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
+import { GridSchemaZhLocalization, GridLineSchemaZhLocalization } from './standard-presentation-localizations';
+import { standardSchemaLocalizations } from './standard-schema-localizations';
 
 /** schema 注册项按语言提供的本地化描述 */
 export type SchemaRegistryLocalization = {
@@ -58,6 +146,305 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
+  ScatterPositionScaleBindingSchema: {
+    schema: ScatterPositionScaleBindingSchema,
+    label: 'ScatterPositionScaleBindingSchema',
+  },
+  ScatterColorScaleBindingSchema: { schema: ScatterColorScaleBindingSchema, label: 'ScatterColorScaleBindingSchema' },
+  BubbleChartSchema: {
+    schema: BubbleChartSchema,
+    label: 'BubbleChartSchema',
+    url: '/viz/chart/points/bubble#bubblechartschema',
+  },
+  BubbleChartRecipeSchema: {
+    schema: BubbleChartRecipeSchema,
+    label: 'BubbleChartRecipeSchema',
+    url: '/viz/chart/points/bubble#bubblechartrecipeschema',
+  },
+  BubbleChartEncodingsSchema: {
+    schema: BubbleChartEncodingsSchema,
+    label: 'BubbleChartEncodingsSchema',
+    url: '/viz/chart/points/bubble#bubblechartencodingsschema',
+  },
+  BubbleChartPropertiesSchema: {
+    schema: BubbleChartPropertiesSchema,
+    label: 'BubbleChartPropertiesSchema',
+    url: '/viz/chart/points/bubble#bubblechartpropertiesschema',
+  },
+  BubbleChartMarkSchema: {
+    schema: BubbleChartMarkSchema,
+    label: 'BubbleChartMarkSchema',
+    url: '/viz/chart/points/bubble#bubblechartmarkschema',
+  },
+  BubblePositionScaleBindingSchema: {
+    schema: BubblePositionScaleBindingSchema,
+    label: 'BubblePositionScaleBindingSchema',
+  },
+  BubbleColorScaleBindingSchema: { schema: BubbleColorScaleBindingSchema, label: 'BubbleColorScaleBindingSchema' },
+  BubbleXEncodingSchema: { schema: BubbleXEncodingSchema, label: 'BubbleXEncodingSchema' },
+  BubbleYEncodingSchema: { schema: BubbleYEncodingSchema, label: 'BubbleYEncodingSchema' },
+  BubbleColorEncodingSchema: { schema: BubbleColorEncodingSchema, label: 'BubbleColorEncodingSchema' },
+  BubbleSizeEncodingSchema: { schema: BubbleSizeEncodingSchema, label: 'BubbleSizeEncodingSchema' },
+  BubbleOpacityEncodingSchema: { schema: BubbleOpacityEncodingSchema, label: 'BubbleOpacityEncodingSchema' },
+  BubbleShapeEncodingSchema: { schema: BubbleShapeEncodingSchema, label: 'BubbleShapeEncodingSchema' },
+  ConnectedScatterChartSchema: {
+    schema: ConnectedScatterChartSchema,
+    label: 'ConnectedScatterChartSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartschema',
+  },
+  ConnectedScatterChartRecipeSchema: {
+    schema: ConnectedScatterChartRecipeSchema,
+    label: 'ConnectedScatterChartRecipeSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartrecipeschema',
+  },
+  ConnectedScatterChartEncodingsSchema: {
+    schema: ConnectedScatterChartEncodingsSchema,
+    label: 'ConnectedScatterChartEncodingsSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartencodingsschema',
+  },
+  'ConnectedScatterChartEncodingsSchema.shape.x': {
+    schema: ConnectedScatterChartEncodingsSchema.shape.x,
+    label: 'ConnectedScatterChartEncodingsSchema.shape.x',
+  },
+  'ConnectedScatterChartEncodingsSchema.shape.y': {
+    schema: ConnectedScatterChartEncodingsSchema.shape.y,
+    label: 'ConnectedScatterChartEncodingsSchema.shape.y',
+  },
+  'ConnectedScatterChartEncodingsSchema.shape.order': {
+    schema: ConnectedScatterChartEncodingsSchema.shape.order,
+    label: 'ConnectedScatterChartEncodingsSchema.shape.order',
+  },
+  'ConnectedScatterChartEncodingsSchema.shape.series': {
+    schema: ConnectedScatterChartEncodingsSchema.shape.series.unwrap(),
+    label: 'ConnectedScatterChartEncodingsSchema.shape.series',
+  },
+  ConnectedScatterChartPropertiesSchema: {
+    schema: ConnectedScatterChartPropertiesSchema,
+    label: 'ConnectedScatterChartPropertiesSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartpropertiesschema',
+  },
+  ConnectedScatterChartMarkSchema: {
+    schema: ConnectedScatterChartMarkSchema,
+    label: 'ConnectedScatterChartMarkSchema',
+    url: '/viz/chart/points/connected-scatter#connectedscatterchartmarkschema',
+  },
+  ConnectedScatterPointPropertiesSchema: {
+    schema: ConnectedScatterPointPropertiesSchema,
+    label: 'ConnectedScatterPointPropertiesSchema',
+  },
+  ConnectedScatterPathPropertiesSchema: {
+    schema: ConnectedScatterPathPropertiesSchema,
+    label: 'ConnectedScatterPathPropertiesSchema',
+  },
+  ConnectedScatterMarkEncodingsSchema: {
+    schema: ConnectedScatterMarkEncodingsSchema,
+    label: 'ConnectedScatterMarkEncodingsSchema',
+  },
+  RangedDotChartSchema: {
+    schema: RangedDotChartSchema,
+    label: 'RangedDotChartSchema',
+    url: '/viz/chart/points/ranged-dot#rangeddotchartschema',
+  },
+  RangedDotChartRecipeSchema: {
+    schema: RangedDotChartRecipeSchema,
+    label: 'RangedDotChartRecipeSchema',
+    url: '/viz/chart/points/ranged-dot#rangeddotchartrecipeschema',
+  },
+  RangedDotChartEncodingsSchema: {
+    schema: RangedDotChartEncodingsSchema,
+    label: 'RangedDotChartEncodingsSchema',
+    url: '/viz/chart/points/ranged-dot#rangeddotchartencodingsschema',
+  },
+  RangedDotChartPropertiesSchema: {
+    schema: RangedDotChartPropertiesSchema,
+    label: 'RangedDotChartPropertiesSchema',
+    url: '/viz/chart/points/ranged-dot#rangeddotchartpropertiesschema',
+  },
+  RangedDotChartMarkSchema: {
+    schema: RangedDotChartMarkSchema,
+    label: 'RangedDotChartMarkSchema',
+    url: '/viz/chart/points/ranged-dot#rangeddotchartmarkschema',
+  },
+  RangedDotPointPropertiesSchema: { schema: RangedDotPointPropertiesSchema, label: 'RangedDotPointPropertiesSchema' },
+  RangedDotRangePropertiesSchema: { schema: RangedDotRangePropertiesSchema, label: 'RangedDotRangePropertiesSchema' },
+  RangedDotMarkEncodingsSchema: { schema: RangedDotMarkEncodingsSchema, label: 'RangedDotMarkEncodingsSchema' },
+  RangedDotCategoryEncodingSchema: {
+    schema: RangedDotCategoryEncodingSchema,
+    label: 'RangedDotCategoryEncodingSchema',
+  },
+  RangedDotStartEncodingSchema: { schema: RangedDotStartEncodingSchema, label: 'RangedDotStartEncodingSchema' },
+  RangedDotEndEncodingSchema: { schema: RangedDotEndEncodingSchema, label: 'RangedDotEndEncodingSchema' },
+  RangedDotColorEncodingSchema: { schema: RangedDotColorEncodingSchema, label: 'RangedDotColorEncodingSchema' },
+  RegressionChartSchema: {
+    schema: RegressionChartSchema,
+    label: 'RegressionChartSchema',
+    url: '/viz/chart/points/regression#regressionchartschema',
+  },
+  RegressionChartRecipeSchema: {
+    schema: RegressionChartRecipeSchema,
+    label: 'RegressionChartRecipeSchema',
+    url: '/viz/chart/points/regression#regressionchartrecipeschema',
+  },
+  RegressionChartEncodingsSchema: {
+    schema: RegressionChartEncodingsSchema,
+    label: 'RegressionChartEncodingsSchema',
+    url: '/viz/chart/points/regression#regressionchartencodingsschema',
+  },
+  RegressionExtraMethodSchema: { schema: RegressionExtraMethodSchema, label: 'RegressionExtraMethodSchema' },
+  RegressionChartPropertiesSchema: {
+    schema: RegressionChartPropertiesSchema,
+    label: 'RegressionChartPropertiesSchema',
+    url: '/viz/chart/points/regression#regressionchartpropertiesschema',
+  },
+  RegressionChartMarkSchema: {
+    schema: RegressionChartMarkSchema,
+    label: 'RegressionChartMarkSchema',
+    url: '/viz/chart/points/regression#regressionchartmarkschema',
+  },
+  RegressionPointPropertiesSchema: {
+    schema: RegressionPointPropertiesSchema,
+    label: 'RegressionPointPropertiesSchema',
+  },
+  RegressionTrendPropertiesSchema: {
+    schema: RegressionTrendPropertiesSchema,
+    label: 'RegressionTrendPropertiesSchema',
+  },
+  RegressionMarkEncodingsSchema: { schema: RegressionMarkEncodingsSchema, label: 'RegressionMarkEncodingsSchema' },
+  RegressionSeriesScaleBindingSchema: {
+    schema: RegressionSeriesScaleBindingSchema,
+    label: 'RegressionSeriesScaleBindingSchema',
+  },
+  RegressionXEncodingSchema: { schema: RegressionXEncodingSchema, label: 'RegressionXEncodingSchema' },
+  RegressionYEncodingSchema: { schema: RegressionYEncodingSchema, label: 'RegressionYEncodingSchema' },
+  RegressionSeriesEncodingSchema: { schema: RegressionSeriesEncodingSchema, label: 'RegressionSeriesEncodingSchema' },
+  StripChartSchema: {
+    schema: StripChartSchema,
+    label: 'StripChartSchema',
+    url: '/viz/chart/points/strip#stripchartschema',
+  },
+  StripChartRecipeSchema: {
+    schema: StripChartRecipeSchema,
+    label: 'StripChartRecipeSchema',
+    url: '/viz/chart/points/strip#stripchartrecipeschema',
+  },
+  StripChartEncodingsSchema: {
+    schema: StripChartEncodingsSchema,
+    label: 'StripChartEncodingsSchema',
+    url: '/viz/chart/points/strip#stripchartencodingsschema',
+  },
+  StripChartPropertiesSchema: {
+    schema: StripChartPropertiesSchema,
+    label: 'StripChartPropertiesSchema',
+    url: '/viz/chart/points/strip#stripchartpropertiesschema',
+  },
+  StripChartMarkSchema: {
+    schema: StripChartMarkSchema,
+    label: 'StripChartMarkSchema',
+    url: '/viz/chart/points/strip#stripchartmarkschema',
+  },
+  StripChartJitterSchema: { schema: StripChartJitterSchema, label: 'StripChartJitterSchema' },
+  StripChartMarkPropertiesSchema: { schema: StripChartMarkPropertiesSchema, label: 'StripChartMarkPropertiesSchema' },
+  StripPositionScaleBindingSchema: {
+    schema: StripPositionScaleBindingSchema,
+    label: 'StripPositionScaleBindingSchema',
+  },
+  StripColorScaleBindingSchema: { schema: StripColorScaleBindingSchema, label: 'StripColorScaleBindingSchema' },
+  StripXEncodingSchema: { schema: StripXEncodingSchema, label: 'StripXEncodingSchema' },
+  StripYEncodingSchema: { schema: StripYEncodingSchema, label: 'StripYEncodingSchema' },
+  StripColorEncodingSchema: { schema: StripColorEncodingSchema, label: 'StripColorEncodingSchema' },
+  StripSizeEncodingSchema: { schema: StripSizeEncodingSchema, label: 'StripSizeEncodingSchema' },
+  StripOpacityEncodingSchema: { schema: StripOpacityEncodingSchema, label: 'StripOpacityEncodingSchema' },
+  StripShapeEncodingSchema: { schema: StripShapeEncodingSchema, label: 'StripShapeEncodingSchema' },
+  PlotPartitionDimensionsSchema: {
+    schema: IRPlot.PlotPartitionDimensionsSchema,
+    label: 'PlotPartitionDimensionsSchema',
+  },
+  SurfaceBackgroundSchema: { schema: ScatterChartSchema.shape.background.unwrap(), label: 'SurfaceBackgroundSchema' },
+  PointRecipeGuidesSchema: { schema: ScatterChartRecipeSchema.shape.guides.unwrap(), label: 'PointRecipeGuidesSchema' },
+  PointMarkEncodingSchema: {
+    schema: ScatterChartMarkSchema.shape.encodings.unwrap(),
+    label: 'PointMarkEncodingSchema',
+  },
+  PointPropertiesSchema: { schema: ScatterChartMarkSchema.shape.properties.unwrap(), label: 'PointPropertiesSchema' },
+  PointMarkEncodingWithoutSizeSchema: {
+    schema: BubbleChartMarkSchema.shape.encodings.unwrap(),
+    label: 'PointMarkEncodingWithoutSizeSchema',
+  },
+  PointPropertiesWithoutSizeSchema: {
+    schema: BubbleChartMarkSchema.shape.properties.unwrap(),
+    label: 'PointPropertiesWithoutSizeSchema',
+  },
+  PointAutoPaddingSchema: {
+    schema: ScatterChartPropertiesSchema.shape.autoPadding.unwrap(),
+    label: 'PointAutoPaddingSchema',
+  },
+  PointPositionDomainPaddingSchema: {
+    schema: ScatterChartPropertiesSchema.shape.domainPadding.unwrap(),
+    label: 'PointPositionDomainPaddingSchema',
+  },
+  ConnectedScatterMarkPropertiesSchema: {
+    schema: ConnectedScatterChartMarkSchema.shape.properties.unwrap(),
+    label: 'ConnectedScatterMarkPropertiesSchema',
+  },
+  RangedDotMarkPropertiesSchema: {
+    schema: RangedDotChartMarkSchema.shape.properties.unwrap(),
+    label: 'RangedDotMarkPropertiesSchema',
+  },
+  RegressionMarkPropertiesSchema: {
+    schema: RegressionChartMarkSchema.shape.properties.unwrap(),
+    label: 'RegressionMarkPropertiesSchema',
+  },
+  'ScatterChartSchema.shape.data': { schema: ScatterChartSchema.shape.data, label: 'ScatterChartSchema.shape.data' },
+  'BubbleChartSchema.shape.data': { schema: BubbleChartSchema.shape.data, label: 'BubbleChartSchema.shape.data' },
+  'ConnectedScatterChartSchema.shape.data': {
+    schema: ConnectedScatterChartSchema.shape.data,
+    label: 'ConnectedScatterChartSchema.shape.data',
+  },
+  'RangedDotChartSchema.shape.data': {
+    schema: RangedDotChartSchema.shape.data,
+    label: 'RangedDotChartSchema.shape.data',
+  },
+  'RegressionChartSchema.shape.data': {
+    schema: RegressionChartSchema.shape.data,
+    label: 'RegressionChartSchema.shape.data',
+  },
+  'StripChartSchema.shape.data': { schema: StripChartSchema.shape.data, label: 'StripChartSchema.shape.data' },
+  ChartPresentationSchema: { schema: ChartPresentationSchema, label: 'ChartPresentationSchema' },
+  ChartDefaultsSchema: { schema: ChartDefaultsSchema, label: 'ChartDefaultsSchema' },
+  ChartLayoutSchema: { schema: ChartLayoutSchema, label: 'ChartLayoutSchema' },
+  ChartPlotExtensionSchema: { schema: ChartPlotExtensionSchema, label: 'ChartPlotExtensionSchema' },
+  ScatterXEncodingSchema: { schema: ScatterXEncodingSchema, label: 'ScatterXEncodingSchema' },
+  ScatterYEncodingSchema: { schema: ScatterYEncodingSchema, label: 'ScatterYEncodingSchema' },
+  ScatterColorEncodingSchema: { schema: ScatterColorEncodingSchema, label: 'ScatterColorEncodingSchema' },
+  ScatterSizeEncodingSchema: { schema: ScatterSizeEncodingSchema, label: 'ScatterSizeEncodingSchema' },
+  ScatterOpacityEncodingSchema: { schema: ScatterOpacityEncodingSchema, label: 'ScatterOpacityEncodingSchema' },
+  ScatterShapeEncodingSchema: { schema: ScatterShapeEncodingSchema, label: 'ScatterShapeEncodingSchema' },
+  PlotFacetOptionsSchema: { schema: IRPlot.PlotFacetOptionsSchema, label: 'PlotFacetOptionsSchema' },
+  ScatterChartSchema: {
+    schema: ScatterChartSchema,
+    label: 'ScatterChartSchema',
+    url: '/viz/chart/points/scatter#scatterchartschema',
+  },
+  ScatterChartRecipeSchema: {
+    schema: ScatterChartRecipeSchema,
+    label: 'ScatterChartRecipeSchema',
+    url: '/viz/chart/points/scatter#scatterchartrecipeschema',
+  },
+  ScatterChartEncodingsSchema: {
+    schema: ScatterChartEncodingsSchema,
+    label: 'ScatterChartEncodingsSchema',
+    url: '/viz/chart/points/scatter#scatterchartencodingsschema',
+  },
+  ScatterChartPropertiesSchema: {
+    schema: ScatterChartPropertiesSchema,
+    label: 'ScatterChartPropertiesSchema',
+    url: '/viz/chart/points/scatter#scatterchartpropertiesschema',
+  },
+  ScatterChartMarkSchema: {
+    schema: ScatterChartMarkSchema,
+    label: 'ScatterChartMarkSchema',
+    url: '/viz/chart/points/scatter#scatterchartmarkschema',
+  },
   AxisScaleSchema: { schema: IR.AxisScaleSchema, label: 'AxisScaleSchema' },
   BoxSizeSchema: { schema: IR.BoxSizeSchema, label: 'BoxSizeSchema' },
   BoxSpacingSchema: { schema: IR.BoxSpacingSchema, label: 'BoxSpacingSchema' },
@@ -595,10 +982,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Rectangle',
     url: '/library/standard/shape/rectangle#rectangleschema',
   },
-  RegularPolygonSchema: {
-    schema: RegularPolygonSchema,
-    label: 'RegularPolygon',
-    url: '/library/standard/shape/regular-polygon#regularpolygonschema',
+  PolygonSchema: {
+    schema: PolygonSchema,
+    label: 'Polygon',
+    url: '/library/standard/shape/polygon#polygonschema',
   },
   StarSchema: { schema: StarSchema, label: 'Star', url: '/library/standard/shape/star#starschema' },
   ArcSchema: { schema: ArcSchema, label: 'Arc', url: '/library/standard/shape/arc-sector#arcschema' },
@@ -657,78 +1044,115 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LayoutInspectBoundsOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
     label: 'LayoutInspectBoundsOptions',
-    url: '/library/layout/reference/runtime#layoutinspectboundsoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   LayoutInspectSpacingOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
     label: 'LayoutInspectSpacingOptions',
-    url: '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   BaseLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
     label: 'BaseLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#baselayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   FlexLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
     label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#flexlayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
   },
   GridLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
     label: 'GridLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#gridlayoutinspectoptionsschema',
+    url: '/library/layout/grid-layout/extended#gridlayoutinspectoptionsschema',
   },
   OverlayLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
     label: 'OverlayLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#overlaylayoutinspectoptionsschema',
+    url: '/library/layout/overlay-layout/extended#overlaylayoutinspectoptionsschema',
   },
 
   FlexLayoutSchema: {
     schema: LayoutIR.FlexLayoutSchema,
     label: 'FlexLayout',
-    url: '/library/layout/reference/contract-input#flexlayoutschema',
+    url: '/library/layout/flex-layout/schema-reference#flexlayoutschema',
   },
   GridLayoutSchema: {
     schema: LayoutIR.GridLayoutSchema,
     label: 'GridLayout',
-    url: '/library/layout/reference/contract-input#gridlayoutschema',
+    url: '/library/layout/grid-layout/schema-reference#gridlayoutschema',
   },
   OverlayLayoutSchema: {
     schema: LayoutIR.OverlayLayoutSchema,
     label: 'OverlayLayout',
-    url: '/library/layout/reference/contract-input#overlaylayoutschema',
+    url: '/library/layout/overlay-layout/schema-reference#overlaylayoutschema',
   },
   LayoutItemSchema: {
     schema: LayoutIR.LayoutItemSchema,
     label: 'LayoutItem',
-    url: '/library/layout/reference/contract-input#layoutitemschema',
+    url: '/library/layout/flex-layout/schema-reference#layoutitemschema',
   },
   LayoutArtifactSchema: {
     schema: LayoutIR.LayoutArtifactSchema,
     label: 'LayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#layoutartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   LayoutSpacingArtifactSchema: {
     schema: LayoutIR.LayoutSpacingArtifactSchema,
     label: 'LayoutSpacingArtifact',
-    url: '/library/layout/reference/contract-artifact#layoutspacingartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   FlexLayoutArtifactSchema: {
     schema: LayoutIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#flexlayoutartifactschema',
+    url: '/library/layout/flex-layout/api-reference#flexlayoutartifact',
   },
   GridLayoutArtifactSchema: {
     schema: LayoutIR.GridLayoutArtifactSchema,
     label: 'GridLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#gridlayoutartifactschema',
+    url: '/library/layout/grid-layout/extended#gridlayoutartifactschema',
   },
   OverlayLayoutArtifactSchema: {
     schema: LayoutIR.OverlayLayoutArtifactSchema,
     label: 'OverlayLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#overlaylayoutartifactschema',
+    url: '/library/layout/overlay-layout/extended#overlaylayoutartifactschema',
+  },
+  FrameSchema: {
+    schema: StandardPresentationIR.FrameSchema,
+    label: 'Frame',
+    url: '/library/standard/presentation/frame#frameschema',
+  },
+  FrameTitleSchema: {
+    schema: StandardPresentationIR.FrameTitleSchema,
+    label: 'FrameTitle',
+    url: '/library/standard/presentation/frame#frametitleschema',
+  },
+  FrameDescriptionSchema: {
+    schema: StandardPresentationIR.FrameDescriptionSchema,
+    label: 'FrameDescription',
+    url: '/library/standard/presentation/frame#framedescriptionschema',
+  },
+  FrameBorderSchema: {
+    schema: StandardPresentationIR.FrameBorderSchema,
+    label: 'FrameBorder',
+    url: '/library/standard/presentation/frame#frameborderschema',
+  },
+  AxesSchema: {
+    schema: StandardPresentationIR.AxesSchema,
+    label: 'Axes',
+    url: '/library/standard/presentation/axes#axesschema',
+  },
+  GridSchema: {
+    schema: StandardPresentationIR.GridSchema,
+    label: 'Grid',
+    url: '/library/standard/presentation/grid#gridschema',
+    localizations: { zh: GridSchemaZhLocalization },
+  },
+  GridLineInputSchema: {
+    schema: StandardPresentationIR.GridLineInputSchema,
+    label: 'GridLineInput',
+    url: '/library/standard/presentation/grid#gridlineinputschema',
+    localizations: { zh: GridLineSchemaZhLocalization },
   },
   LegendSchema: {
     schema: StandardPresentationIR.LegendSchema,
@@ -774,30 +1198,81 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: GraphIR.GraphSchema,
     label: 'Graph',
   },
+  GroupCaptionSchema: { schema: GraphIR.GroupCaptionSchema, label: 'GroupCaption', url: '/schematic/graph/group' },
+  GroupCaptionTextSchema: {
+    schema: GraphIR.GroupCaptionTextSchema,
+    label: 'GroupCaptionText',
+    url: '/schematic/graph/group',
+  },
+  GroupCaptionSideSchema: {
+    schema: GraphIR.GroupCaptionSideSchema,
+    label: 'GroupCaptionSide',
+    url: '/schematic/graph/group',
+  },
+  GroupCaptionDirectionSchema: {
+    schema: GraphIR.GroupCaptionDirectionSchema,
+    label: 'GroupCaptionDirection',
+    url: '/schematic/graph/group',
+  },
   GroupSchema: {
     schema: GraphIR.GroupSchema,
     label: 'Group',
     url: '/schematic/graph/group',
   },
+  BlockTextSchema: {
+    schema: GraphIR.BlockTextSchema,
+    label: 'BlockText',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeBlockPropsSchema: {
+    schema: GraphIR.CodeBlockPropsSchema,
+    label: 'CodeBlockProps',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeParameterSchema: {
+    schema: GraphIR.CodeParameterSchema,
+    label: 'CodeParameter',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeSignatureSchema: {
+    schema: GraphIR.CodeSignatureSchema,
+    label: 'CodeSignature',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodePropertySchema: {
+    schema: GraphIR.CodePropertySchema,
+    label: 'CodeProperty',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeMethodSchema: {
+    schema: GraphIR.CodeMethodSchema,
+    label: 'CodeMethod',
+    url: '/schematic/graph/block/schema-reference',
+  },
+  CodeLogicSchema: {
+    schema: GraphIR.CodeLogicSchema,
+    label: 'CodeLogic',
+    url: '/schematic/graph/block/schema-reference',
+  },
   BlockSchema: {
     schema: GraphIR.BlockSchema,
     label: 'Block',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockHeaderSchema: {
     schema: GraphIR.BlockHeaderSchema,
     label: 'BlockHeader',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockSectionSchema: {
     schema: GraphIR.BlockSectionSchema,
     label: 'BlockSection',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   BlockRowSchema: {
     schema: GraphIR.BlockRowSchema,
     label: 'BlockRow',
-    url: '/schematic/graph/block/basic',
+    url: '/schematic/graph/block/schema-reference',
   },
   EntitySchema: {
     schema: GraphIR.EntitySchema,
@@ -812,6 +1287,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
+    url: '/schematic/graph/relation/schema-reference',
+  },
+  RelationRoleSchema: {
+    schema: GraphIR.RelationRoleSchema,
+    label: 'RelationRole',
+    url: '/schematic/graph/relation/schema-reference#relationroleschema',
+  },
+  RelationKindSchema: {
+    schema: GraphIR.RelationKindSchema,
+    label: 'RelationKind',
+    url: '/schematic/graph/relation/schema-reference#relationkindschema',
+  },
+  RelationDirectionSchema: {
+    schema: GraphIR.RelationDirectionSchema,
+    label: 'RelationDirection',
+    url: '/schematic/graph/relation/schema-reference#relationdirectionschema',
+  },
+  GraphRelationMarkerAppearanceSchema: {
+    schema: GraphIR.GraphRelationMarkerAppearanceSchema,
+    label: 'GraphRelationMarkerAppearance',
+    url: '/schematic/graph/relation/schema-reference#graphrelationmarkerappearanceschema',
   },
   GraphPredicateRefSchema: {
     schema: GraphIR.GraphPredicateRefSchema,
@@ -1310,10 +1806,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'SmoothTransform',
     url: '/viz/plot/reference/transform#smoothtransformschema',
   },
-  SmoothMethodSchema: {
-    schema: IRPlot.SmoothMethodSchema,
-    label: 'SmoothMethod',
-    url: '/viz/plot/reference/transform#smoothmethodschema',
+  RegressionMethodSchema: {
+    schema: DataIR.RegressionMethodSchema,
+    label: 'RegressionMethod',
+    url: '/viz/plot/reference/transform#regressionmethodschema',
   },
   MarkSchema: {
     schema: IRPlot.MarkSchema,
@@ -1730,6 +2226,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PlotAreaDefaults',
     url: '/viz/plot/reference/theme#plotareadefaultsschema',
   },
+  PlotAreaBorderSchema: {
+    schema: IRPlot.PlotAreaBorderSchema,
+    label: 'PlotAreaBorder',
+    url: '/viz/plot/reference/theme#plotareaborderschema',
+  },
   PlotTypographyDefaultsSchema: {
     schema: IRPlot.PlotTypographyDefaultsSchema,
     label: 'PlotTypographyDefaults',
@@ -1776,6 +2277,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/viz/plot/reference/theme#inspection',
   },
 };
+
+for (const [name, localization] of Object.entries(standardSchemaLocalizations)) {
+  if (Object.hasOwn(SCHEMA_REGISTRY, name)) SCHEMA_REGISTRY[name].localizations = { zh: localization };
+}
 
 export function lookupSchema(schema: core.$ZodType): SchemaRegistryEntry | undefined {
   const match = Object.entries(SCHEMA_REGISTRY).find(([, entry]) => entry.schema === schema);

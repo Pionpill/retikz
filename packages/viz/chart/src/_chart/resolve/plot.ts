@@ -263,8 +263,24 @@ export const resolveChartPlot = (
   const spatial = resolveChartPlotSpatial(recipe, encodings, source.coordinate, extension, runtime);
   const mergedGuides = resolveChartPlotGuides(recipe, extension);
   const mergedScales = resolveChartPlotScales(recipe, encodings, extension);
+  const identifiedMarks = new Map<number, IRPlot['marks'][number]>();
+  const identifyMark = (index: number): string => {
+    const previous = identifiedMarks.get(index);
+    if (typeof previous?.id === 'string') return previous.id;
+    const mark = chartMarks[index];
+    let id = typeof mark.id === 'string' ? mark.id : `__chart.mark.${index}`;
+    if (mark.id === undefined) {
+      const occupied = new Set(
+        [...chartMarks, ...(extension?.marks ?? []), ...identifiedMarks.values()].map(item => item.id),
+      );
+      while (occupied.has(id)) id += '.point';
+    }
+    identifiedMarks.set(index, { ...mark, id });
+    return id;
+  };
   const scales =
     definition.resolveScaleDefaults?.({
+      identifyMark,
       source,
       encodings,
       chartMarks,
@@ -281,7 +297,7 @@ export const resolveChartPlot = (
       guides: mergedGuides ?? [],
       runtime,
     }) ?? mergedGuides;
-  const marks = [...chartMarks, ...(extension?.marks ?? [])];
+  const marks = [...chartMarks.map((mark, index) => identifiedMarks.get(index) ?? mark), ...(extension?.marks ?? [])];
   const transforms = [...(extension?.transform ?? []), ...encodings.transform, ...(recipe.scaffold.transform ?? [])];
 
   const candidate = {

@@ -6,6 +6,7 @@ import { ChartFamily, ChartType } from '../constants';
 import {
   createPointChartMarkSchema,
   PointMarkEncodingSchema,
+  PointAutoPaddingSchema,
   PointPositionDomainPaddingSchema,
   PointPropertiesSchema,
   PointRecipeGuidesSchema,
@@ -14,6 +15,7 @@ import { ScatterChartEncodingsSchema } from './encoding-schema';
 
 /** Scatter recipe 的精确 constant properties schema */
 export const ScatterChartPropertiesSchema = PointPropertiesSchema.extend({
+  autoPadding: PointAutoPaddingSchema.optional(),
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 }).describe('Scatter Chart constant properties');
 

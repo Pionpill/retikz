@@ -1,0 +1,104 @@
+---
+title: Implementation
+description: Understand column layout, equal-width rows, addressable shells, and local theme composition.
+---
+
+Read [Basic usage](/schematic/graph/block/usage) first. This page explains how Block arranges arbitrary content while remaining a single connection target, and how Header, Section, and Row arrange their own content.
+
+## A shell surrounds the column layout
+
+Block does not require a fixed set of child components. It wraps each child in a Flex item and passes the items to a column FlexLayout. Standard Surface adds padding, background, and border around the result. Surface retains the Block Scope fields, so the visible shell and published id use the same container boundary.
+
+- Flex item: a layout item for one child occurrence, preserving authored order and using content size by default.
+- Surface: a visible shell measured from its content, carrying transforms, local namespace, and reference identity.
+
+`gap` separates direct children; `padding` separates content from the shell. `width` / `minWidth` include horizontal padding. Resolve uses 240 when minWidth is absent; lowering supplies gap 8 and padding 8. These effective values do not mutate sparse Source.
+
+<SourceLinks
+  sources={[
+    { label: 'Effective minimum width and theme shell', path: 'packages/schematic/graph/src/resolve/block/resolve.ts' },
+    { label: 'Surface and column Flex composition', path: 'packages/schematic/graph/src/pipeline/block/lower.ts' },
+    { label: 'Width proposal and layout result', path: 'packages/schematic/graph/src/pipeline/block/compile.ts' },
+  ]}
+/>
+
+## Header direction affects only its text region
+
+The outer Header always arranges icon, text region, and trail horizontally. `direction` changes the arrangement of title and description inside the text region; it never moves the icon above the title. The text region can grow into remaining width while slots keep their content sizes.
+
+The title defaults to bold base text; description uses xs with opacity 0.7. Explicit text fields in an `IRBlockText` object override these defaults. Generated text is wrapped in a Scope that resets Node defaults, preventing inherited Node shell styles from entering Header text.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Two Header Flex levels and text isolation',
+      path: 'packages/schematic/graph/src/pipeline/block/structure-lower.ts',
+    },
+  ]}
+/>
+
+## Row divides space between direct items
+
+Section places its optional title before children in a column Flex. Row converts `content` into ordinary text Nodes, or takes `children` directly, then creates horizontal Flex items for either form.
+
+Every Row item uses `basis: 0`, `grow: 1`, `shrink: 1`, and `min: 0`. Items share the available width after gaps equally; text length does not determine the ratio. Longer text does not automatically receive a wider column. Supply text constraints when wrapping is needed. Section and Row each create their own Surface, allowing an explicit id to become an independent connection target.
+
+Header, Section, and Row have independent composite definitions. Compilation measures their lowered layout and replays the result; none requires an enclosing Block.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Section and Row layout, text, and shells',
+      path: 'packages/schematic/graph/src/pipeline/block/structure-lower.ts',
+    },
+    {
+      label: 'Independent structure measurement and replay',
+      path: 'packages/schematic/graph/src/pipeline/block/structure-compile.ts',
+    },
+  ]}
+/>
+
+## The current shell and descendant rules resolve separately
+
+The current Block shell starts from the effective Graph Theme baseline. Explicit background, border, and cornerRadius replace their corresponding top-level fields. An explicit border replaces the complete theme border; it does not inherit individual dash or opacity fields.
+
+Block graphDefaults / graphRules establish descendant context: defaults can affect Entity, Relation, Group, and Block; rules match Entity / Relation. They pass through known content boundaries without changing the current Block shell, ordinary Core children, or unknown composites. A local theme does not erase these author rules.
+
+The id enters Scope unchanged; Block adds no parent prefix. Enable localNamespace for isolated naming. Target resolution and boundary diagnostics use the same Core rules.
+
+<SourceLinks
+  sources={[
+    { label: 'Block context and descendant projection', path: 'packages/schematic/graph/src/resolve/graph/resolve.ts' },
+    { label: 'Explicit shell fields take precedence', path: 'packages/schematic/graph/src/pipeline/block/lower.ts' },
+  ]}
+/>
+
+## CodeBlock establishes its theme before composing content
+
+A custom code entity compose callback must read the local theme. Composing content before applying theme would give the callback its parent's theme. The extension first establishes a theme Scope, resolves codeBlockTokens inside it, invokes compose, and places the returned content in one Block root.
+
+<ComponentPreview
+  files="block-compose-flow"
+  size="xs"
+  type="flow"
+  hideCode
+  caption="The theme boundary affects compose input. compose returns content; the shared implementation creates the Block root."
+/>
+
+Domain Source retains facts such as names and logic. Generated Header / Section / Row content is not persisted back to Source. resolveCodeBlockSurface forwards public root fields without duplicating domain fields on Block. A thrown compose error is wrapped in RetikzGraphError with its cause preserved.
+
+<SourceLinks
+  sources={[
+    { label: 'Theme boundary and single Block root', path: 'packages/schematic/graph/src/code/pipeline/definition.ts' },
+    { label: 'Public shell field extraction', path: 'packages/schematic/graph/src/code/resolve/resolve.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', description: 'Explore layout and connections', url: '/schematic/graph/block/usage' },
+    { title: 'Custom usage', description: 'Define domain Source and compose', url: '/schematic/graph/block/custom' },
+  ]}
+/>

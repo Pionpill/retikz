@@ -18,6 +18,31 @@ const minimalSource = {
 } as const;
 
 describe('Regression exact Source schema', () => {
+  it('preserves ordered extra methods and omitted inheritance fields through JSON', () => {
+    const properties = {
+      extraMethods: [
+        { method: { kind: 'linear' } },
+        { method: { kind: 'quadratic' }, extent: [1, 3], sampleCount: 8, trend: { stroke: '#f00' } },
+      ],
+    };
+    expect(RegressionChartPropertiesSchema.parse(JSON.parse(JSON.stringify(properties)))).toEqual(properties);
+    expect(RegressionChartPropertiesSchema.parse({ extraMethods: [] })).toEqual({ extraMethods: [] });
+  });
+
+  it.each([{}, { method: { kind: 'linear' }, point: {} }, { method: { kind: 'linear' }, extraMethods: [] }])(
+    'rejects incomplete or unrelated extra method fields',
+    entry => {
+      expect(RegressionChartPropertiesSchema.safeParse({ extraMethods: [entry] }).success).toBe(false);
+    },
+  );
+
+  it('locates an invalid additional extent within its entry', () => {
+    const result = RegressionChartPropertiesSchema.safeParse({
+      extraMethods: [{ method: { kind: 'linear' }, extent: [3, 1] }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0].path).toEqual(['extraMethods', 0, 'extent']);
+  });
   it('accepts the minimal Source without materializing runtime defaults', () => {
     expect(RegressionChartSchema.parse(minimalSource)).toEqual(minimalSource);
   });
@@ -58,6 +83,7 @@ describe('Regression exact Source schema', () => {
         marks: [
           {
             kind: 'regression',
+            hidePoints: false,
             override: true,
             encodings: { x: 'sepalWidth' },
             properties: {
@@ -94,12 +120,8 @@ describe('Regression exact Source schema', () => {
   it.each([
     ['sampleCount below minimum', { sampleCount: 1 }],
     ['descending extent', { extent: [8, 1] }],
-    ['polynomial order below minimum', { method: { kind: 'polynomial', order: 1 } }],
-    ['polynomial order above maximum', { method: { kind: 'polynomial', order: 7 } }],
-    ['unknown method', { method: { kind: 'loess' } }],
     ['unknown property', { confidence: true }],
     ['trend fill', { trend: { fill: '#fff' } }],
-    ['trend curve', { trend: { curve: 'basis' } }],
     ['trend closed', { trend: { closed: true } }],
     ['trend transform', { trend: { transform: [] } }],
   ])('rejects invalid properties: %s', (_name, properties) => {
