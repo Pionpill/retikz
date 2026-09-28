@@ -77,7 +77,7 @@ recipe 的 `x` 与 `y` 只接受保持逐行观测的 direct field mapping 及�
 
 `domainPadding` 继续控制连续 position role 的 Point-family range / ratio domain 留白。离散 role 不伪造 categorical domain padding；Plot 根据 jitter 与实际 glyph 自动计算等价的 scale boundary clearance，并落实为离散 range inset / outer clearance。该自动净空不需要 Chart 暴露第二个 padding 参数。
 
-React 与 Vanilla 分别提供与其它 Point chartType 对齐的 `StripChart`、owner-scoped declarations、`normalizeStripChart` 与 `createStripChart`；它们只组装同一个精确 Source。
+React 与 Vanilla 分别提供与其它 Point chartType 对齐的 `StripChart`、owner-scoped declarations、`normalizeStripChart` 与 `stripChart`；它们只组装同一个精确 Source。
 
 ## 行为、失败语义与兼容性
 

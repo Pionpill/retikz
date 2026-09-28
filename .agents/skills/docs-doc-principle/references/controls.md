@@ -11,9 +11,9 @@
 3. **不变量**：位置、参考物、连接关系、取景或 JSX 结构中哪些必须固定
 4. **变量**：哪些公开 API 由 controls 改变，变化是否肉眼可辨
 
-基础用法先按 [docs-doc-usage](../../docs-doc-usage/SKILL.md) 展示无 controls 的最小源码示例，再引入交互试验场；不要用 playground 替代首个入门 demo。
+基础用法先按 [docs-doc-usage](../../docs-doc-usage/SKILL.md) 展示无 controls 的最小源码示例，再引入交互试验场；不要用 playground 替代首个入门 demo。 Chart 类型页按 [Chart 专项](../../docs-doc-usage/references/chart.md)：无 controls 的最小示例放在接入方式，基础与扩展用法的功能 demo 均提供 controls。
 
-后续同一任务、主体和结构下的连续参数、闭合集合与通用样式，优先合并为一个 playground。controls 很少也可以使用 panel；不要为了字段少而制造额外静态 demo。不同 JSX 结构、组合关系、职责边界、错误行为或编译机制仍保留独立案例。
+同一功能节内，同一任务、主体和结构下的连续参数、闭合集合与通用样式，优先合并为一个 playground；跨功能节仍须各有就地 demo 与相关 controls。controls 很少也可以使用 panel；不要为了字段少而制造额外静态 demo。不同 JSX 结构、组合关系、职责边界、错误行为或编译机制仍保留独立案例。
 
 ## 面板组织
 
@@ -27,6 +27,7 @@
 - 数据只是不变量或观察背景时，数据 section 设置 `defaultCollapsed: true`；理解绑定、排序或分组必须依赖原始数据时保持展开
 - `table` 滚动视口默认完整展示 5 行正文，header 不计入；更多行继续滚动，渲染行数上限单独控制
 - 用 `visibleWhen` 隐藏当前分支无效的字段；不要让用户操作没有效果的 control
+- controls 只收录与当前 demo 任务强相关、变化可见的属性，不追求 API 覆盖率；通用或低频属性仅在其为演示主题时加入，核验实际图形而非仅检查 Source IR 改变
 - 中文页面的 controls 面板必须提供完整中文文案：title、section、字段 label、option label、preset label 与帮助文字都使用中文；API 名可按需作为补充，但不得充当唯一 label。双语 demo 的这些可见文案与图内文本统一放同级 `<name>.i18n.ts`，controls 只按当前 `Lang` 读取，不维护 `*.en.controls.ts` 等平行翻译文件
 - API、枚举和数据字段的 `value` 保持原值；只本地化用户可见 label，不翻译代码中的标识符
 - label 简短，让用户能直接判断控制目标，不重复括号说明

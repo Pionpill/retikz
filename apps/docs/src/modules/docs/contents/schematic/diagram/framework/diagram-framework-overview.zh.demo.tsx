@@ -1,0 +1,97 @@
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
+import { Layout, Node, Text } from '@retikz/react';
+import { Legend, LegendItem, LegendTitle, Surface } from '@retikz/standard-react/presentation';
+import { LegendContentKind } from '@retikz/standard/presentation';
+import type { FC } from 'react';
+
+/** 展示 Diagram Framework 对 Presentation、绘图核心、图例与外框的统一装配 */
+const Demo: FC = () => (
+  <Layout>
+    <Surface
+      id="diagram-frame"
+      padding={{ x: 28, y: 24 }}
+      border={{ stroke: 'lightgray', strokeWidth: 1.5 }}
+      cornerRadius={8}
+    >
+      <FlexLayout
+        direction="column"
+        gap={{ column: 0, row: 18 }}
+        size={{ x: { kind: 'fixed', value: 540 }, y: { kind: 'fixed', value: 250 } }}
+      >
+        <FlexLayoutItem itemKey="presentation" shrink={0}>
+          <FlexLayout direction="column" gap={{ column: 0, row: 6 }} alignItems="start">
+            <FlexLayoutItem itemKey="title">
+              <Node
+                id="diagram-title"
+                position={[0, 0]}
+                text="系统流程图"
+                style={{ stroke: 'none', font: { size: 18, weight: 'bold' } }}
+              />
+            </FlexLayoutItem>
+            <FlexLayoutItem itemKey="description">
+              <Node
+                id="diagram-description"
+                position={[0, 0]}
+                text="Presentation：标题、说明与显式图例"
+                style={{ stroke: 'none', textColor: 'gray', font: { size: 13 } }}
+              />
+            </FlexLayoutItem>
+          </FlexLayout>
+        </FlexLayoutItem>
+        <FlexLayoutItem itemKey="main" grow={1}>
+          <FlexLayout
+            gap={{ column: 20, row: 0 }}
+            alignItems="center"
+            size={{ x: { kind: 'fixed', value: 540 }, y: { kind: 'fixed', value: 185 } }}
+          >
+            <FlexLayoutItem itemKey="drawing" grow={1}>
+              <Node
+                id="drawing-core"
+                position={[0, 0]}
+                cornerRadius={4}
+                style={{ fill: 'lightgray', fillOpacity: 0.45, stroke: 'gray', strokeWidth: 1.5, dashPattern: [7, 5] }}
+                layout={{ minimumSize: { width: 350, height: 142 }, padding: { x: 18, y: 14 }, lineHeight: 19 }}
+              >
+                <Text font={{ size: 14, weight: 'bold' }}>Drawing Core</Text>
+                <Text font={{ size: 13 }}>由具体 Diagram 类型提供</Text>
+              </Node>
+            </FlexLayoutItem>
+            <FlexLayoutItem itemKey="legend" shrink={0}>
+              <Legend kind={LegendContentKind.Items} gap={{ row: 9, column: 6 }} padding={10} sampleGap={9}>
+                <LegendTitle>
+                  <Node
+                    id="legend-title"
+                    position={[0, 0]}
+                    text="图例"
+                    style={{ stroke: 'none', font: { size: 14, weight: 'bold' } }}
+                  />
+                </LegendTitle>
+                <LegendItem
+                  itemKey="content"
+                  sample={
+                    <Node
+                      id="legend-content-sample"
+                      position={[0, 0]}
+                      cornerRadius={4}
+                      style={{ fill: 'lightgray', stroke: 'gray' }}
+                      layout={{ minimumSize: { width: 22, height: 12 } }}
+                    />
+                  }
+                >
+                  <Node
+                    id="legend-content-label"
+                    position={[0, 0]}
+                    text="领域内容"
+                    style={{ stroke: 'none', font: { size: 13 } }}
+                  />
+                </LegendItem>
+              </Legend>
+            </FlexLayoutItem>
+          </FlexLayout>
+        </FlexLayoutItem>
+      </FlexLayout>
+    </Surface>
+  </Layout>
+);
+
+export default Demo;

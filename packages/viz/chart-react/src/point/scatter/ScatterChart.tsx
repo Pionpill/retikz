@@ -1,5 +1,5 @@
-import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
-import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point/scatter';
+import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point/scatter';
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
 
 import type { TypedChartCommonProps } from '../shared';
@@ -10,11 +10,14 @@ import { collectScatterChartDeclarations } from './declaration-collection';
 export type ScatterChartProps = TypedChartCommonProps<IRScatterChart>;
 
 /** Scatter 具体类型的 Chart React 组件 */
-export const ScatterChart = createTypedChartComponent<ScatterChartProps, IRScatterChart>('ScatterChart', props =>
-  createTypedChartInput<ScatterChartProps, IRScatterChart, CreateScatterChartInput>(
-    props,
-    collectScatterChartDeclarations(props.children),
-    input => createScatterChart(input),
-    'ScatterEncodings',
-  ),
+export const ScatterChart = createTypedChartComponent<ScatterChartProps, IRScatterChart, ScatterChartInputEmbedProps>(
+  'ScatterChart',
+  props =>
+    createTypedChartInput<ScatterChartProps, IRScatterChart, ScatterChartInputEmbedProps>(
+      props,
+      collectScatterChartDeclarations(props.children),
+      input => scatterChart(input),
+      'ScatterEncodings',
+    ),
+  ScatterChartInputEmbedAdapter,
 );

@@ -92,7 +92,6 @@ export const relationApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       memberTypeLabels: owner === 'graph' ? { IRGraphRelation: relationMemberTypeLabels } : undefined,
     },
   ],
-  schemaPackageName: '@retikz/graph',
   schemaLocalizations: {
     GraphRelationMarkerAppearanceSchema: {
       descriptions: {

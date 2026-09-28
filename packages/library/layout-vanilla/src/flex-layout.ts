@@ -25,7 +25,11 @@ export const FlexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout> = {
   },
 };
 
-/** 创建由 Layout 适配器下沉的 Flex 布局嵌入项 */
+/** 创建FlexLayout 嵌入项
+ * @param input 容器与子项输入，保留传入对象引用
+ * @param authoring 交给编译驱动的不透明声明数据；省略时不附加声明
+ * @returns 由布局适配器消费的 InputEmbed，不在创建时求解布局
+ */
 export const flexLayout = (input: InputFlexLayout, authoring?: unknown): InputEmbed<InputFlexLayout> => ({
   type: 'embed',
   kind: FlexLayoutEmbedKind,

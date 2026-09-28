@@ -1,24 +1,30 @@
 import { BubbleChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
+import { usePreviewDimensions } from '@/modules/docs/preview';
+
 import { bubbleMinimalData } from './bubble-minimal.data';
 
-/** 只在根组件传入必要配置与图表说明的 Bubble 基础用法 */
-const Demo: FC = () => (
+/** 只在根组件传入必要数据与字段映射的 Bubble 基础用法 */
+const render = (dimensions?: { width: number; height: number }) => (
   <BubbleChart
+    layout={dimensions}
     rows={bubbleMinimalData}
-    presentation={{
-      title: { text: '震级越高，地震显著性通常越大' },
-      subtitle: { text: '100 条有效记录；横轴为深度（km），纵轴为震级，气泡面积表示显著性' },
-      source: { text: 'Vega Datasets earthquakes.json；访问于 2026-09-01' },
-    }}
     recipe={{ encodings: { x: 'depthKm', y: 'magnitude', size: 'significance' } }}
   />
 );
 
 /** IR 与 Vanilla 预览使用的数据导入 */
 export const previewSource = {
+  deriveIR: false,
+  canonicalRender: () => render(),
   datasetImports: { 'chart.data': { name: 'bubbleMinimalData', from: './bubble-minimal.data' } },
 };
 
+/** 预览尺寸改变时重新布局，源码使用无上下文的配置 */
+const Demo: FC = () => {
+  const dimensions = usePreviewDimensions();
+  const chart = render(dimensions);
+  return chart;
+};
 export default Demo;

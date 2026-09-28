@@ -6,7 +6,10 @@ import { describe, expect, it } from 'vitest';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { defineControlledPreview, definePreviewControls } from '@/modules/docs/preview';
 
-import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
+import {
+  PreviewControlStateContext,
+  PreviewDimensionsContext,
+} from '../../src/modules/docs/components/component-preview/context';
 
 const controls = definePreviewControls({
   presentation: 'panel',
@@ -24,6 +27,20 @@ const contract = {
 } satisfies PreviewControlContract;
 
 describe('controlled preview authoring', () => {
+  it('响应式尺寸只影响实时组件，稳定源码仍使用独立默认尺寸', () => {
+    const preview = defineControlledPreview(contract, (_values, dimensions) => (
+      <span>{dimensions?.width ?? 'default'}</span>
+    ));
+    expect(
+      renderToStaticMarkup(
+        <PreviewDimensionsContext.Provider value={{ width: 360, height: 500 }}>
+          <preview.Component />
+        </PreviewDimensionsContext.Provider>,
+      ),
+    ).toBe('<span>360</span>');
+    expect(renderToStaticMarkup(preview.source.canonicalRender?.())).toBe('<span>default</span>');
+    expect(renderToStaticMarkup(<preview.Component />)).toBe('<span>default</span>');
+  });
   it('提供独立的短作者入口', () => {
     expect(existsSync(new URL('../../src/modules/docs/preview/index.ts', import.meta.url))).toBe(true);
   });

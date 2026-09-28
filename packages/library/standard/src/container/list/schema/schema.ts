@@ -25,7 +25,7 @@ export const ListIndexOptionsSchema = strictObject({
     .default(ListIndexPosition.Before)
     .describe('Before means above a row or left of a column; after means below or right.'),
   start: NonNegativeIntegerSchema.default(0).describe('First displayed index; not cell identity.'),
-  style: ListIndexStyleSchema.optional(),
+  style: ListIndexStyleSchema.optional().describe('Index text appearance; cell-level styles do not affect indices.'),
 }).describe('Index strip placement, numbering, and text appearance.');
 
 /** List 的逐格内容宽度模式，不改变 Map 共享单元格契约 */
@@ -36,7 +36,10 @@ export const ListCellLayoutSchema = CellLayoutSchema.extend({
 });
 
 /** List 单格允许独立内容宽度 */
-export const ListCellSchema = CellSchema.extend({ layout: ListCellLayoutSchema.optional() });
+export const ListCellSchema = CellSchema.extend({
+  layout: ListCellLayoutSchema.optional().describe('Sparse cell dimensions, padding and overflow overrides.'),
+  style: CellStyleSchema.optional().describe('Sparse visual overrides for a List or Map cell.'),
+});
 
 export const ListLayoutSchema = ListCellLayoutSchema.extend({
   direction: zodEnum(ListDirection).default(ListDirection.Row).describe('Single-axis cell order without wrapping.'),
@@ -44,8 +47,8 @@ export const ListLayoutSchema = ListCellLayoutSchema.extend({
 }).describe('List cell allocation and ordering.');
 
 const ListBaseSchema = CompositeBaseSchema.extend({
-  namespace: literal('standard'),
-  type: literal('list'),
+  namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
+  type: literal('list').describe('Composite type for the list presentation.'),
   ...ScopePropsSchema.omit({ style: true }).shape,
   items: array(union([string(), ListCellSchema]))
     .optional()
@@ -69,7 +72,10 @@ const ListBaseSchema = CompositeBaseSchema.extend({
 
 export const ListSchema = union([
   ListBaseSchema.required({ items: true })
-    .extend({ data: never().optional(), dataObjectDisplay: never().optional() })
+    .extend({
+      data: never().optional().describe('Not accepted in this input branch.'),
+      dataObjectDisplay: never().optional().describe('Not accepted in this input branch.'),
+    })
     .superRefine((node, context) => {
       if (node.cellIdMode === ListCellIdMode.Index && node.id === undefined) {
         context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a List id.' });
@@ -106,7 +112,10 @@ export const ListSchema = union([
       });
     }),
   ListBaseSchema.required({ data: true })
-    .extend({ items: never().optional(), dataObjectDisplay: DataObjectDisplaySchema })
+    .extend({
+      items: never().optional().describe('Not accepted in this input branch.'),
+      dataObjectDisplay: DataObjectDisplaySchema,
+    })
     .superRefine((node, context) => {
       if (node.cellIdMode === ListCellIdMode.String)
         context.addIssue({

@@ -78,6 +78,16 @@ export const bubbleBasicControls = definePreviewControls({
           visibleWhen: { controlId: BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled, oneOf: [true] },
         },
         {
+          kind: 'range',
+          id: BUBBLE_BASIC_CONTROL_IDS.pointStrokeWidth,
+          visibleWhen: { controlId: BUBBLE_BASIC_CONTROL_IDS.pointStrokeEnabled, oneOf: [true] },
+          label: 'Stroke width',
+          defaultValue: 1,
+          min: 0,
+          max: 5,
+          step: 0.5,
+        },
+        {
           kind: 'select',
           id: BUBBLE_BASIC_CONTROL_IDS.pointShape,
           label: 'Shape',
@@ -106,6 +116,7 @@ export const bubbleBasicControls = definePreviewControls({
 export const previewControlContract = {
   controls: bubbleBasicControls,
   canonicalValues: {
+    [BUBBLE_BASIC_CONTROL_IDS.pointStrokeWidth]: 1,
     [BUBBLE_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [BUBBLE_BASIC_CONTROL_IDS.colorByContinent]: true,
     [BUBBLE_BASIC_CONTROL_IDS.xScale]: 'log',
@@ -115,6 +126,7 @@ export const previewControlContract = {
     [BUBBLE_BASIC_CONTROL_IDS.pointFillOpacity]: 0.7,
   },
   relatedApis: [
+    'BubbleProperties.strokeWidth',
     'BubbleChart.coordinate',
     'BubbleEncodings.x',
     'BubbleEncodings.y',

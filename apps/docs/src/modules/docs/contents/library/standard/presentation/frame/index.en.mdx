@@ -1,45 +1,107 @@
 ---
 title: Frame
-description: Preserve semantic grouping and Node-like title and description parts in a JSON-safe Frame that lowers to Core Scope, Path, and Node IR.
+description: Group content nodes and arrange optional title and description
 ---
 
-Root cascade fields use `style` and `defaults`. Title, description and body Node visual overrides use `style`, while size and text layout use `layout`. Frame-owned `padding`, `gap` and `border.style` keep their existing container and border semantics.
+`Frame` surrounds a group of Nodes with a border that follows their bounds and arranges optional title and description nodes above it. It preserves the positions of body nodes.
 
-`<Frame>` is Standard's semantic grouping container. It encloses a set of Core Nodes with a default border and `padding`, while preserving an optional title and description as distinct parts in IR. The two parts are horizontal by default and can be switched to a vertical arrangement.
+## Using this topic
 
-Frame owns only the group boundary and header arrangement; it does not rearrange the body. When Node positions or text sizes change, the border follows the final bounds without duplicate rectangle coordinates.
+After [installation and first rendering](/library/standard/get-start), choose a host from `/presentation`. These four forms draw the same titled group.
 
-Frame's root is a Core `Scope`. `border` configures only the inner border Path; Frame Scope styles, `clip`, `transforms`, `placement`, Theme, default channels, metadata, and animations apply to the complete group and its descendants rather than acting as border shortcuts.
+<ComponentPreview files="entry" hideCode />
 
-## Usage
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+FrameTitle and FrameDescription must be direct Frame children, at most one of each. The body requires at least one direct Node. Arrays and Fragments are transparent wrappers.
+
+```text
+Frame
+├─ FrameTitle?
+├─ FrameDescription?
+└─ Node (1..n)
+```
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react/presentation';
+import { Frame, FrameTitle } from '@retikz/standard-react/presentation';
+
+export const Example = () => (
+  <Layout>
+    <Frame>
+      <FrameTitle text="Group" />
+      <Node position={[0, 0]} text="A" />
+    </Frame>
+  </Layout>
+);
 ```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
 ```tsx
-<Layout>
-  <Frame id="contract">
-    <FrameTitle>Extension contract</FrameTitle>
-    <FrameDescription>Builtins and extensions share one Definition</FrameDescription>
-    <Node position={[120, 145]} text="Builtin" />
-    <Node position={[245, 145]} text="Extension" />
-  </Frame>
-</Layout>
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { FrameDefinition } from '@retikz/standard/presentation';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'frame',
+      title: { text: 'Group' },
+      children: [{ type: 'node', position: [0, 0], text: 'A' }],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[FrameDefinition]} />;
 ```
 
-`FrameTitle` and `FrameDescription` are semantic parts consumed directly by `Frame`. They retain Node text, shape, style, font, label, meta, and animation behavior while leaving `position` to Frame; the body accepts at least one direct `Node` child.
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-| Scenario         | Public entry point                                                                                                                     |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| React            | `Frame`, `FrameTitle`, and `FrameDescription` from `@retikz/standard-react/presentation`                                               |
-| Vanilla          | `frame`, `frameTitle`, `frameDescription`, and `FrameInputEmbedAdapter` from `@retikz/standard-vanilla/presentation`                   |
-| IR / persistence | `FrameSchema`, `FrameTitleSchema`, `FrameDescriptionSchema`, `createFrame`, and `FrameDefinition` from `@retikz/standard/presentation` |
+```ts
+import { frame, frameTitle, FrameInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { scene, node, renderToSvgString } from '@retikz/vanilla';
 
-See [Standard](/library/standard) for the package family and its three entry points. This page focuses on Frame composition, styling, and lowering semantics.
+const input = scene({
+  children: [frame({ title: frameTitle({ text: 'Group' }), children: [node({ position: [0, 0], text: 'A' })] })],
+});
+const svg = renderToSvgString(input, { adapters: [FrameInputEmbedAdapter] });
+console.log(svg);
+```
 
-## Examples
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { FrameDefinition } from '@retikz/standard/presentation';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'frame',
+      title: { text: 'Group' },
+      children: [{ type: 'node', position: [0, 0], text: 'A' }],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [FrameDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
 
 ### Basic group
 
@@ -53,7 +115,9 @@ A Frame may enclose only its body or combine a Title and Description. By default
 
 <ComponentPreview files="frame-variants" size="xs" />
 
-### Controls
+## Extended usage
+
+### Adjust header styles and borders
 
 With body positions fixed, use the panel to explore header direction, border padding, and Node-like header styles. You can also edit A / B and toggle the real connection between them. Changing title size, padding, or description opacity makes Frame recompute the boundary from final Node bounds.
 
@@ -63,7 +127,13 @@ With body positions fixed, use the panel to explore header direction, border pad
   caption="A and B remain direct Frame Nodes. The gray connection is a sibling Draw outside Frame and can be toggled independently."
 />
 
-## How it works
+Title and description use Node style, layout, and text semantics, while Frame controls their positions. border.style affects only the border; root style, defaults, clip, transforms, and placement affect the whole Scope. The title defaults to sm/600 text; the description to xs text with 0.7 opacity. Both default to no fill, no stroke, and zero Node padding; explicit values override these defaults.
+
+## Errors and limitations
+
+The body accepts only a nonempty set of direct Core Nodes, not Paths, Scopes, or other composites. Put connecting paths outside Frame as siblings; use [Surface](/library/standard/presentation/surface) to decorate an arbitrary child drawing. Title and description must each be unique and produce valid Node text. Their ids and body ids cannot equal the explicit Frame root id. Padding and gap must be nonnegative.
+
+## Implementation
 
 <ComponentAlert
   type="tip"
@@ -105,71 +175,37 @@ Omitted Frame, Title, and Description ids all remain anonymous; explicit ids pas
   ]}
 />
 
-## API Reference
+## API reference
 
-React, IR, and Vanilla are all validated into `IRFrame` by `FrameSchema`. React declares headers as direct child parts, while IR and Vanilla use JSON-safe `title` and `description` object fields.
+{/* @include library/standard/presentation/frame/generated */}
 
-### React: `FrameProps`
+## Schema reference
 
-| Prop                   | Type                        | Default                                                 | Description                                                                                     |
-| ---------------------- | --------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `id?`                  | `string`                    | —                                                       | Optional stable identity of the outer Scope; omission stays anonymous                           |
-| `border?`              | `FrameProps['border']`      | `{ style: { stroke: 'currentColor', strokeWidth: 1 } }` | Independent configuration for the inner border Path                                             |
-| `border.style?`        | `IRStandardPathBorderStyle` | `{ stroke: 'currentColor', strokeWidth: 1 }`            | Applies only to the border Path and accepts its public Core Path style fields                   |
-| `border.cornerRadius?` | `number`                    | —                                                       | Uniform rectangle-step corner radius; the effective maximum is clamped to half the shorter side |
-| `padding?`             | `number \| IRBoxSpacing`    | `8`                                                     | Border spacing around final bounds; precedence is side > axis > default                         |
-| `gap?`                 | `number`                    | `4`                                                     | Gap between adjacent header parts and between the header and body                               |
-| `headerDirection?`     | `FrameHeaderDirectionValue` | `horizontal`                                            | Horizontal or vertical Title and Description arrangement                                        |
-| `zIndex?`              | `number`                    | —                                                       | Stacking order of the complete Frame Scope                                                      |
-| `children`             | `ReactNode`                 | —                                                       | At most one Title, one Description, and a non-empty direct Node body                            |
+### FrameSchema
 
-Frame also accepts the remaining public Core `ScopeProps`, including cascading graphic style, `localNamespace`, `boundingShape`, `transforms`, `placement`, `clip`, `theme`, `defaults.node`, `defaults.path`, `defaults.label`, `defaults.arrow`, `defaults.reset`, `meta`, and `animations`. These fields apply to the root Scope; they are not aliases for `border.style`. See [Scope](/kernel/components/scope/usage) for the shared contract.
+<ZodSchema name="FrameSchema" />
 
-### React: `FrameTitleProps` / `FrameDescriptionProps`
+### FrameTitleSchema
 
-| Prop                | Type                           | Default                                                                 | Description                                                                                    |
-| ------------------- | ------------------------------ | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `children` / `text` | `ReactNode` / `IRNode['text']` | —                                                                       | Uses Node text conversion and must produce valid Node text                                     |
-| `id?`               | `string`                       | —                                                                       | Optional explicit Node id; omission stays anonymous and cannot equal an explicit Frame root id |
-| `shape?`            | `NodeProps['shape']`           | `rectangle`                                                             | Header Node shape                                                                              |
-| `style.stroke?`     | `IRNodeStyle['stroke']`        | `none`                                                                  | Header stroke                                                                                  |
-| `style.fill?`       | `IRNodeStyle['fill']`          | `none`                                                                  | Header fill                                                                                    |
-| `layout.padding?`   | `IRNodeLayout['padding']`      | `0`                                                                     | Header Node padding                                                                            |
-| `style.font?`       | `IRNodeStyle['font']`          | Title: `{ size: 'sm', weight: 600 }`<br />Description: `{ size: 'xs' }` | Shallow-merges with the default font                                                           |
-| `style.opacity?`    | `number`                       | Title: —<br />Description: `0.7`                                        | Opacity of the complete header Node                                                            |
-| `zIndex?`           | `number`                       | `1`                                                                     | Header stacking order inside Frame                                                             |
+<ZodSchema name="FrameTitleSchema" />
 
-Both also accept public `NodeProps` except `position` and hydration event props, including margin, scale, rotate, label, meta, and animation. Explicit values keep Node semantics and override the defaults above. See [Node](/kernel/components/node/usage) for the complete shared contract.
+### FrameDescriptionSchema
 
-### IR / persistence: `FrameInput`
+<ZodSchema name="FrameDescriptionSchema" />
 
-| Prop               | Type                        | Default                                                 | Description                                                                    |
-| ------------------ | --------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `id?`              | `string`                    | —                                                       | Optional outer Scope identity persisted in `IRFrame`; omission stays anonymous |
-| `border?`          | `FrameInput['border']`      | `{ style: { stroke: 'currentColor', strokeWidth: 1 } }` | Independent configuration for the inner border Path                            |
-| `headerDirection?` | `FrameHeaderDirectionValue` | `horizontal`                                            | Horizontal or vertical header arrangement                                      |
-| `title?`           | `FrameTitleInput`           | —                                                       | JSON-safe Node-like Title without `type` or `position`                         |
-| `description?`     | `FrameDescriptionInput`     | —                                                       | JSON-safe Node-like Description without `type` or `position`                   |
-| `children`         | `Array<IRNode>`             | —                                                       | Non-empty direct Core Node body; other Frame fields match above                |
+### FrameBorderSchema
 
-`FrameHeaderDirection` is the public closed set with `Horizontal: 'horizontal'` and `Vertical: 'vertical'`. `FrameInput` does not accept discriminators. `createFrame(input)` preserves omitted fields and returns `IRFrame` with fixed `namespace: 'standard'` and `type: 'frame'`.
+<ZodSchema name="FrameBorderSchema" />
 
-`FrameSchema.parse()` validates external configuration and materializes static defaults into a snapshot. Compilation resolution reuses the same schema defaults and determines layout from content without rewriting factory input.
+## Further reading
 
-`FrameInput` also accepts the Core `ScopeProps` fields above; they apply to the outer Scope, while `border.style` and `border.cornerRadius` apply only to the border Path.
-
-### Vanilla: `frame()`
-
-| Prop    | Type         | Default | Description                                                                             |
-| ------- | ------------ | ------- | --------------------------------------------------------------------------------------- |
-| `id`    | `string`     | —       | Embed occurrence identity used only by Vanilla traversal, not stored in Frame IR        |
-| `input` | `InputFrame` | —       | Vanilla input with an optional model `id`; only an explicit value enters the root Scope |
-
-`frameTitle(input)` and `frameDescription(input)` validate and return `IRFrameTitle` and `IRFrameDescription` for reuse in the JSON-safe input passed to `frame()`.
-
-## Related
-
-- [Tier 2 Composite](/kernel/components/design/composite): Frame registration and lowering
-- [Scope](/kernel/components/scope/usage): the logical group and bounds emitted by Frame
-- [Path](/kernel/components/path/step): the border emitted by Frame
-- [Node](/kernel/components/node/usage): the Core element reused by Frame headers and body
+<LinkedSections
+  items={[
+    {
+      title: 'Surface',
+      description: 'Decorate an arbitrary child with background, border, and clipping',
+      url: '/library/standard/presentation/surface',
+    },
+    { title: 'Node', description: 'Shared contracts of headers and body nodes', url: '/kernel/components/node/usage' },
+  ]}
+/>

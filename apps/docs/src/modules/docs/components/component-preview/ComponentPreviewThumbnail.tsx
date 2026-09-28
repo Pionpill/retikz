@@ -8,9 +8,11 @@ import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
 import { useDemoLocationContext } from './context';
+import { PreviewThemeBoundary } from './context-bar';
 import { usePreviewDemoModule } from './hooks';
 import { DemoRenderer } from './preview-panel';
 import { resolveDemoKey } from './registry';
+import { usePreviewTheme } from './theme';
 import type { ComponentPreviewFiles } from './types';
 import { normalizeComponentPreviewFiles } from './utils';
 
@@ -38,6 +40,8 @@ export const ComponentPreviewThumbnail: FC<ComponentPreviewThumbnailProps> = pro
   const module = moduleState.status === 'ready' ? moduleState.module : undefined;
   const rendererMode = useComponentPreviewStore(state => state.rendererMode);
   const animationMode = useComponentPreviewStore(state => state.animationMode);
+  const themeMode = useComponentPreviewStore(state => state.themeMode);
+  const theme = usePreviewTheme(undefined, themeMode);
   const Component = useMemo<FC | undefined>(() => {
     const canonicalRender = module?.previewSource?.canonicalRender;
     if (canonicalRender) return () => canonicalRender();
@@ -56,9 +60,11 @@ export const ComponentPreviewThumbnail: FC<ComponentPreviewThumbnailProps> = pro
       )}
     >
       {Component ? (
-        <AnimationModeProvider mode={animationMode}>
-          <DemoRenderer Component={Component} rendererMode={rendererMode} />
-        </AnimationModeProvider>
+        <PreviewThemeBoundary themeMode={themeMode} className="flex h-full w-full items-center justify-center">
+          <AnimationModeProvider mode={animationMode}>
+            <DemoRenderer Component={Component} rendererMode={rendererMode} theme={theme} />
+          </AnimationModeProvider>
+        </PreviewThemeBoundary>
       ) : moduleState.status === 'loading' ? (
         <span
           data-slot="component-preview-thumbnail-loading"

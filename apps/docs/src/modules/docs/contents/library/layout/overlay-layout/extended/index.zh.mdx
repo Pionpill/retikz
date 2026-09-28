@@ -1,0 +1,111 @@
+---
+title: 扩展用法
+description: 组合尺寸约束、放置策略与视觉裁切
+---
+
+在[基础用法](/library/layout/overlay-layout/usage)的容器与子项声明之上，本页组合约束并解释结果。每节固定一组观察对象，只调整当前 API。
+
+## 用局部点与槽位锚点定位
+
+指定目标坐标和子项锚点，可以让子项的某个角或中心准确落到内容区内的一个点。
+
+| 属性                                 | 可用值                 | 解释                                                             |
+| ------------------------------------ | ---------------------- | ---------------------------------------------------------------- |
+| `placement.kind`                     | `positioned`           | 启用局部坐标定位                                                 |
+| `placement.at`                       | `{ x, y }`             | 相对内容区起点的有限坐标                                         |
+| `placement.anchor`                   | `{ x, y }`，各轴为 0–1 | 槽位内的归一化锚点：左上 `(0,0)`、中心 `(0.5,0.5)`、右上 `(1,0)` |
+| `placement.width / placement.height` | 可省略的非负数         | 提供精确槽位宽、高；锚点参照槽位，不参照描边或阴影               |
+
+demo 中先保持目标点不动，切换左、中、右锚点；再改变槽位宽度，观察左边界如何移动。最后调整目标点 x / y，移动整个槽位。定位子项不能使用基线对齐；若容器设置了基线模式，需要在子项上覆盖为边缘对齐。
+
+<ComponentPreview files="overlay-position" size="md" />
+
+## 分别控制尺寸贡献与绘制层级
+
+一个子项是否撑大容器，和它是否绘制在最上面，是两个独立设置。排除尺寸贡献不会隐藏子项。
+
+| 属性                  | 可用值               | 解释                                                         |
+| --------------------- | -------------------- | ------------------------------------------------------------ |
+| `sizeParticipation`   | `include`, `exclude` | 子项是否贡献容器的最小与自然尺寸；排除后仍被测量、放置、绘制 |
+| `zIndex`              | 整数，默认 0         | 子项绘制层级；值越大越晚绘制，相同时保持作者顺序             |
+| `offset.x / offset.y` | 有限数，默认 0       | 对齐完成后移动子项，不参与容器尺寸计算                       |
+
+蓝色节点的层级固定为 `0`，较大的橙色节点是第二项。切换第二项的尺寸参与方式，观察容器虚线边界如何变化；再调整第二项层级：`-1` 时蓝色在上，`1` 时橙色在上，`0` 时后声明的橙色在上。节点内的 `z` 数字表示层级。橙色节点初始偏移为 `(0, 0)`，与蓝色节点对齐在同一起点。调整水平、垂直偏移可以改变重叠区域：正值向右或向下，负值向左或向上。偏移只改变位置，层级只改变遮挡顺序；两者都不会改变容器按内容计算的尺寸。
+
+<ComponentPreview files="overlay-participation" size="md" />
+
+## 区分放置结果与裁切结果
+
+浮层移动到容器外时，可以保留外部内容或将它裁掉。裁切不会移除子项，也不会改变已经求出的放置位置。
+
+| 属性                | 可用值               | 解释                                                     |
+| ------------------- | -------------------- | -------------------------------------------------------- |
+| `overflow`          | `visible`, `clip`    | 保留超出容器的内容，或在容器分配区域裁切；不重新求解布局 |
+| `offset`            | `{ x?, y? }`         | 子项放置后的水平、垂直偏移，各轴默认 0                   |
+| `sizeParticipation` | `include`, `exclude` | 本例固定为 `exclude`，偏移浮层不会撑大容器               |
+
+增加 demo 中浮层的偏移，让它超出容器，再切换 `visible` 与 `clip`。比较辅助槽位和可见边框：槽位描述布局结果，裁切只改变看到的部分，artifact 中仍保留该子项。
+
+<ComponentPreview files="overlay-clipping" size="sm" />
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'placement',
+      kind: 'property',
+      type: 'OverlayPlacementInput',
+      description:
+        '局部点、锚点与精确槽位 `{ kind: "aligned" }` 参照内容区；`{ kind: "positioned", at: { x, y }, anchor?: { x?, y? }, width?, height? }` 将槽位归一化锚点贴到局部目标。',
+      defaultValue: '{ kind: "aligned" }',
+    },
+    {
+      name: 'sizeParticipation',
+      kind: 'property',
+      type: "'include' | 'exclude'",
+      description: '`include` 贡献固有尺寸；`exclude` 仅排除尺寸贡献，仍然测量、放置和绘制',
+      defaultValue: 'include',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      description: '整数层级，值越大越晚绘制；相同时保留作者顺序',
+      defaultValue: '0',
+    },
+    {
+      name: 'offset',
+      kind: 'property',
+      type: '{ x?: number; y?: number }',
+      description: '平移与视觉裁切',
+      defaultValue: '{ x: 0, y: 0 }',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: "'visible' | 'clip'",
+      description: '`visible` 保留超出部分；`clip` 在容器分配区域裁切，不改写求解结果',
+      defaultValue: 'visible',
+    },
+  ]}
+/>
+
+完整签名与字段约束见 [API 参考](/library/layout/overlay-layout/api-reference) · [Schema 参考](/library/layout/overlay-layout/schema-reference)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/overlay-layout/usage' },
+
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/overlay-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/overlay-layout/api-reference' },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+
+]}
+/>

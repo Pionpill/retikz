@@ -103,7 +103,7 @@ const HighlightCodeComponent: FC<HighlightCodeProps> = props => {
       : {
           top: `${(activeRangeStart - lineNumberStart) * 1.5}rem`,
           height: `${(activeRangeEnd - activeRangeStart + 1) * 1.5}rem`,
-          left: shouldShowLineNumbers ? '4rem' : '0.5rem',
+          left: shouldShowLineNumbers ? 'calc(3ch + 1.5rem)' : '0.5rem',
         };
 
   return (
@@ -132,7 +132,10 @@ const HighlightCodeComponent: FC<HighlightCodeProps> = props => {
               className={cn('block min-h-6', LINE_KIND_CLASS[lineKind])}
             >
               {shouldShowLineNumbers ? (
-                <span aria-hidden className="inline-block min-w-14 pr-4 text-right text-muted-foreground select-none">
+                <span
+                  aria-hidden
+                  className="inline-block box-content min-w-[3ch] pr-4 text-right text-muted-foreground select-none"
+                >
                   {lineNumber}
                 </span>
               ) : null}

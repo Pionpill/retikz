@@ -9,6 +9,7 @@ import {
   AxisTickMarkSchema,
   AxisTitlePaddingSchema,
   GuideTextStyleSchema,
+  GuideLineStyleSchema,
   LegendGuideStyleSchema,
 } from '../guide';
 import { ColorSchemeNameSchema } from '../scale';
@@ -78,9 +79,19 @@ export const PlotPaletteDefaultsSchema = strictObject({
   shape: PlotShapePaletteSchema.optional().describe('Default categorical shape palette'),
 }).describe('Sparse Plot Source palette defaults');
 
+/** Plot Source 的绘图区边框线样式 */
+export const PlotAreaBorderSchema = GuideLineStyleSchema.pick({
+  stroke: true,
+  strokeWidth: true,
+  drawOpacity: true,
+}).describe('Plot area border line style');
+
 /** Plot Source 的绘图区视觉默认片段 */
 export const PlotAreaDefaultsSchema = strictObject({
   fill: PaintValueSchema.optional().describe('Plot area background fill'),
+  border: union([literal(false), PlotAreaBorderSchema])
+    .optional()
+    .describe('Plot area outline; false disables an inherited border'),
 }).describe('Sparse Plot Source defaults for the plot area');
 
 /** Plot Source 的全局 guide typography 视觉默认片段 */

@@ -128,7 +128,6 @@ export const blockApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       symbolPairs: pairs.map(([entry, input]) => [entry, input]),
     },
   ],
-  schemaPackageName: '@retikz/graph',
   schemaLocalizations: Object.fromEntries(
     schemaNames.map(name => [
       name,

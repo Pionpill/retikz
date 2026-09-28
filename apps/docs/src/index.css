@@ -164,3 +164,23 @@ mjx-container[jax='SVG'][display='true'] > svg {
 mjx-container[jax='SVG']:not([display='true']) > svg {
   display: inline-block;
 }
+
+/* 滚动锁定时仍用 clip，避免 body 成为 sticky 页头和侧栏的新滚动容器 */
+html body[data-scroll-locked] {
+  overflow: clip !important;
+}
+
+/* Showcase 控件由外层提供底色，输入保留自身的键盘聚焦提示 */
+[data-slot='preview-control-bar'] :is([data-slot='select-trigger'], [data-slot='input'], [data-slot='textarea']) {
+  border: 0;
+  background: transparent;
+  --tw-shadow: 0 0 #0000;
+}
+
+/* 保留工具占位，悬浮、键盘操作及菜单展开时显示；触屏设备始终可操作 */
+@media (hover: hover) and (pointer: fine) {
+  [data-slot='preview-showcase']:not(:hover):not(:focus-within):not(:has([data-state='open'])) .showcase-hover-tools {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

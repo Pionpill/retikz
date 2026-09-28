@@ -17,7 +17,8 @@
 | Surface    | Light 使用纸面式纯色表面；Dark 使用结构等价的深中性表面，不模拟黑纸或彩色 panel                       |
 | Typography | 使用有可靠 fallback 的出版型字体；基础文字与 label 紧凑，axis title 和 legend title 保持清楚层级      |
 | Axis       | 保留明确 axis line 和较短 line tick，优先支持精确读数与窄图幅                                         |
-| Grid       | 使用细、低对比的参考线；能通过 axis 与 tick 读数时不强化 grid                                         |
+| Grid       | 默认不显示网格；显式 Axis grid 配置仍可覆盖主题默认值                                                 |
+| Plot area  | 为有效二维绘图区绘制与默认轴线同色同宽的完整边框，直角坐标为矩形，极坐标为圆形                        |
 | Legend     | title、label、swatch、symbol 和间距紧凑但可辨，无装饰容器                                             |
 | Palette    | categorical / series / sector 消费有效颜色；sequential 优先灰度韧性较好的方案，diverging 保持稳定中点 |
 
@@ -35,6 +36,6 @@
 ## 验收
 
 - axis title、tick label、单位、legend 和连续色带在常规与窄图幅下可精确阅读。
-- marks 的数据墨水强于 grid、axis 和容器，缩放或灰度下仍可辨认。
+- marks 的数据墨水强于 axis 和绘图区边框，缩放或灰度下仍可辨认。
 - Light 与 Dark 保持相同结构和系列索引，没有外部字体或 LaTeX 依赖。
 - 与同数据下的 Neutral、Vibrant、Clean 相比，Academic 更紧凑、严谨并具有出版感。

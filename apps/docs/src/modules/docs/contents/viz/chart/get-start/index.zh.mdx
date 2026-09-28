@@ -1,0 +1,100 @@
+---
+title: 快速开始
+description: 安装 Chart，绘制第一张散点图，并了解数据映射、公共配置与画布嵌入。
+---
+
+在已有的 TypeScript 项目中接入 Chart。下例使用三行数据，不需要先配置 Data 或 Plot；React 与 Vanilla 两种接入方式会得到相同图形。
+
+## 安装与使用
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/chart-react react react-dom" />
+
+在 HTML 中准备 `<div id="chart"></div>`，将代码放入 TSX 入口。已有 React 应用可直接使用 `ScatterChart`，无需再次调用 `createRoot`。
+
+```tsx
+import { ScatterChart } from '@retikz/chart-react/point';
+import { createRoot } from 'react-dom/client';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 5 },
+];
+
+createRoot(document.getElementById('chart')!).render(
+  <ScatterChart
+    rows={rows}
+    layout={{ width: 640, height: 360 }}
+    presentation={{ title: { text: '两个变量的关系' } }}
+    recipe={{ encodings: { x: 'x', y: 'y' }, properties: { size: 8 } }}
+  />,
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/chart-vanilla" />
+
+在 HTML 中准备 `<div id="chart"></div>`，将代码放入 TypeScript 入口。`scatterChart` 创建图形，`renderChart` 输出 SVG，再将结果放入容器。
+
+```ts
+import { renderChart } from '@retikz/chart-vanilla';
+import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+
+const rows = [
+  { x: 1, y: 2 },
+  { x: 2, y: 3 },
+  { x: 3, y: 5 },
+];
+
+const chart = scatterChart({
+  data: rows,
+  layout: { width: 640, height: 360 },
+  title: { text: '两个变量的关系' },
+  encodings: { x: 'x', y: 'y' },
+  properties: { size: 8 },
+});
+
+document.getElementById('chart')!.innerHTML = renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] }).svg;
+```
+
+</DocTab>
+</DocTabs>
+
+## 最小结果
+
+上面的接入代码用三个点验证渲染。下面换成 World Bank 2022 年的 186 个经济体数据：横轴是生育率，纵轴是女性劳动参与率，颜色区分收入组。每个点对应一个经济体，坐标轴和图例由字段映射生成。
+
+示例用 `ChartData`、`ChartLayout`、`ChartTitle` 等公共组件配置数据、尺寸与图形说明。**这些组件仅存在于 React 写法中**；Vanilla 使用配置对象。这里只演示部分组件，各组件的详细说明将在后续独立章节中展开。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['first-chart', '/viz/chart/points/scatter/scatter-fertility-work.data.ts']}
+  size="xxl"
+/>
+
+`fertilityRate`、`femaleLaborParticipation` 和 `incomeGroup` 分别映射到 `x`、`y` 和 `color`。收入组代码 HIC、UMC、LMC、LIC 分别表示高收入、中高收入、中低收入和低收入。接入自己的数据时，替换数据行与字段名即可；具体图形的字段与属性见 [散点图](/viz/chart/points/scatter)。
+
+## React 宿主与嵌入
+
+直接渲染具体 Chart 时会建立唯一一个 `Layout` / Scene host。未提供 `layout` 时，笛卡尔坐标系默认使用 `800 × 500`，极坐标系默认使用 `400 × 500`。根 `layout.width` / `height` 同时配置 Source 与该隐式 host；只提供其中一维时，另一维沿用当前坐标系的默认值。`ChartLayout.width` / `height` 是等价 JSX sugar，并在没有显式 `layout` 时镜像到 Source。
+
+放入已有 `<Layout>` 后，Chart 只贡献 Chart → Plot → Core 的 Scope/composite 并继承外层 effective Theme，不创建第二个 SVG。根 `layout` 仍只配置 Chart Source border-box；embedded `ChartLayout` 也只能声明 `layout`，其 `width` / `height`（包括显式 `undefined`）会 fail-loud。CSS、renderer/runtime、动画和 compile callback 等高级宿主能力统一配置在外层 `<Layout>`。
+
+如果已有符合精确 schema 的 JSON Source，应由应用层根据 `type` 与 `recipe.chartType` 选择具体入口或 compile adapter；Chart 不提供动态加载所有 family 的 generic `<Chart source={...}>`。Vanilla 与 JSON Source API 不受 React declaration 结构影响。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '简介', description: '了解图形选型与模块关系。', url: '/viz/chart/introduction' },
+    { title: '点图', description: '根据数据与阅读任务选择具体图形。', url: '/viz/chart/points' },
+    { title: '图形模型', description: '深入理解图形结构、声明式写法及 Plot 扩展。', url: '/viz/chart/model' },
+    { title: '更新日志', description: '查询已发布版本的真实变化。', url: '/viz/chart/changelog' },
+  ]}
+/>

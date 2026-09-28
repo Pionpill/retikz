@@ -1,4 +1,4 @@
-import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+import { FlexLayout, FlexLayoutItem } from '@retikz/layout-react';
 import { Layout, Node, Text } from '@retikz/react';
 import { Legend, LegendItem, LegendTitle, Surface } from '@retikz/standard-react/presentation';
 import { LegendContentKind } from '@retikz/standard/presentation';
@@ -28,33 +28,33 @@ const DiagramFrameworkOverview: FC<DiagramFrameworkOverviewProps> = props => {
           gap={{ column: 0, row: 18 }}
           size={{ x: { kind: 'fixed', value: 540 }, y: { kind: 'fixed', value: 250 } }}
         >
-          <LayoutItem kind="flex" itemKey="presentation" shrink={0}>
+          <FlexLayoutItem itemKey="presentation" shrink={0}>
             <FlexLayout direction="column" gap={{ column: 0, row: 6 }} alignItems="start">
-              <LayoutItem kind="flex" itemKey="title">
+              <FlexLayoutItem itemKey="title">
                 <Node
                   id="diagram-title"
                   position={[0, 0]}
                   text={t.title}
                   style={{ stroke: 'none', font: { size: 18, weight: 'bold' } }}
                 />
-              </LayoutItem>
-              <LayoutItem kind="flex" itemKey="description">
+              </FlexLayoutItem>
+              <FlexLayoutItem itemKey="description">
                 <Node
                   id="diagram-description"
                   position={[0, 0]}
                   text={t.description}
                   style={{ stroke: 'none', textColor: 'gray', font: { size: 13 } }}
                 />
-              </LayoutItem>
+              </FlexLayoutItem>
             </FlexLayout>
-          </LayoutItem>
-          <LayoutItem kind="flex" itemKey="main" grow={1}>
+          </FlexLayoutItem>
+          <FlexLayoutItem itemKey="main" grow={1}>
             <FlexLayout
               gap={{ column: 20, row: 0 }}
               alignItems="center"
               size={{ x: { kind: 'fixed', value: 540 }, y: { kind: 'fixed', value: 185 } }}
             >
-              <LayoutItem kind="flex" itemKey="drawing" grow={1}>
+              <FlexLayoutItem itemKey="drawing" grow={1}>
                 <Node
                   id="drawing-core"
                   position={[0, 0]}
@@ -65,8 +65,8 @@ const DiagramFrameworkOverview: FC<DiagramFrameworkOverviewProps> = props => {
                   <Text font={{ size: 14, weight: 'bold' }}>{t.drawing}</Text>
                   <Text font={{ size: 13 }}>{t.detail}</Text>
                 </Node>
-              </LayoutItem>
-              <LayoutItem kind="flex" itemKey="legend" shrink={0}>
+              </FlexLayoutItem>
+              <FlexLayoutItem itemKey="legend" shrink={0}>
                 <Legend kind={LegendContentKind.Items} gap={{ row: 9, column: 6 }} padding={10} sampleGap={9}>
                   <LegendTitle>
                     <Node
@@ -96,9 +96,9 @@ const DiagramFrameworkOverview: FC<DiagramFrameworkOverviewProps> = props => {
                     />
                   </LegendItem>
                 </Legend>
-              </LayoutItem>
+              </FlexLayoutItem>
             </FlexLayout>
-          </LayoutItem>
+          </FlexLayoutItem>
         </FlexLayout>
       </Surface>
     </Layout>

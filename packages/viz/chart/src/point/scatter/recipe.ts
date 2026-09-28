@@ -30,7 +30,7 @@ export const ScatterChartEncodingSlots = [
   'facet',
 ] as const;
 
-const scatterPropertySlots = [...pointPropertySlots, 'domainPadding'] as const;
+const scatterPropertySlots = [...pointPropertySlots, 'domainPadding', 'autoPadding'] as const;
 
 /** Scatter Chart 的内建 semantic recipe Definition */
 export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = defineChartRecipe({

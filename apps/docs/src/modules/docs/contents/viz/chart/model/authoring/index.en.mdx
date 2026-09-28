@@ -37,6 +37,8 @@ A concrete React Chart root can provide `data`, `layout`, `coordinate`, `present
 
 `ChartData`, `ChartLayout`, presentation markers, and each chartType's Encodings / Properties / Mark declarations are headless JSX sugar for those same owner slots. Different slots can mix. Supplying the same slot from both the root and a declaration fails loudly instead of overriding or field-merging; an explicit `recipe.marks: []` still counts as an authored marks slot.
 
+Standalone React Charts and Vanilla `renderChart()` use `(0, 0, width, height)` as the full chart viewport when both `layout.width` and `layout.height` are specified, without extra automatic framing padding. React `ChartLayout` follows the same rule; separate output dimensions only change the display size. Internal layout spacing and point clipping prevention remain active. With only one dimension or no dimensions specified, framing remains automatic. Embedded charts follow their outer `Layout` host. For direct IR, set the containing Scene's `viewBox` to the intended viewport.
+
 JSON is an alternate input, not a schema bypass. The application selects the concrete schema from `type` and `recipe.chartType`, and the active provider confirms that the recipe belongs to the root family. Unknown families, recipes, fields, and incompatible marks fail loudly. The parsed Source preserves author intent; recipe-generated coordinates, guides, and Plot marks only exist in later resolution stages.
 
 The coordinate system is a first-class Chart root authoring slot. Vanilla and the React concrete Chart root prop accept a name such as `'polar2D'` or a full operation object. React also keeps `ChartCoordinate` as a declarative alternative, but the two React forms cannot appear together. A string normalizes only to `{ type: 'polar2D' }`, while JSON Source accepts only the root `coordinate` object. Omitting it materializes no default and keeps the recipe spatial scaffold.
@@ -69,13 +71,27 @@ Custom transform, reducer, scale, and similar Definitions enter the Chart provid
 
 ## Three packages, one stage each
 
-The root `@retikz/chart` entry exposes shared Chart Source schemas, constants, and the Theme contract. Each concrete chartType subpath exposes its exact schema and provider contribution. Recipe / mark Definitions and resolvers are package-internal implementation contracts, not third-party extension entry points. Plain types such as `InputScatterChart` and `InputChartCoordinate`, normalizers, and factory functions belong to `@retikz/chart-vanilla`. Typed React Charts fold the root `coordinate` prop, `ChartData`, `ChartLayout`, `ChartCoordinate`, `ChartExtension`, presentation markers, and chartType-private declarations into the same Vanilla Input. Plot declarations are legal only inside `ChartExtension` and continue through the Plot normalizer. Dynamic family / chartType routing belongs to the application layer.
+The root `@retikz/chart` entry exposes shared Chart Source schemas, constants, and the Theme contract. The `@retikz/chart/point` entry exposes the exact schemas and provider contributions for point charts. Recipe / mark Definitions and resolvers are package-internal implementation contracts, not third-party extension entry points. Plain types such as `InputScatterChart` and `InputChartCoordinate`, normalizers, and factory functions belong to `@retikz/chart-vanilla`. Typed React Charts fold the root `coordinate` prop, `ChartData`, `ChartLayout`, `ChartCoordinate`, `ChartExtension`, presentation markers, and chartType-private declarations into the same Vanilla Input. Plot declarations are legal only inside `ChartExtension` and continue through the Plot normalizer. Dynamic family / chartType routing belongs to the application layer.
 
 | Entry          | Root `type` | `recipe.chartType` | Import                      |
 | -------------- | ----------- | ------------------ | --------------------------- |
 | `ScatterChart` | `point`     | `scatter`          | `@retikz/chart-react/point` |
 
-The Vanilla factory `createScatterChart` comes from `@retikz/chart-vanilla/point/scatter`. The concrete subpath loads only its chartType; the family root remains an explicit aggregate entry. It returns an authoring result that preserves runtime theme data while reusing the shared Chart adapter and resolution pipeline for rendering.
+The Vanilla factory `scatterChart` comes from `@retikz/chart-vanilla/point`. Import point-chart factories by name from the family entry without a concrete chartType subpath. It returns a standard `InputEmbed` that can go directly into `scene.children`. `ScatterChartInputEmbedAdapter` normalizes Source and assembles dependencies during scene processing. Runtime data and theme definitions stay in authoring input, outside JSON IR.
+
+To compose components in one scene, use the shared Vanilla renderer and provide the matching adapter:
+
+```ts
+import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import { renderToSvgString, scene } from '@retikz/vanilla';
+
+const chart = scatterChart({ data: rows, encodings: { x: 'x', y: 'y' } });
+const svg = renderToSvgString(scene({ children: [chart] }), {
+  adapters: [ScatterChartInputEmbedAdapter],
+});
+```
+
+For a standalone chart, `renderChart(chart, { adapters: [ScatterChartInputEmbedAdapter] })` returns `{ svg, compileResult }`. Use `normalizeScatterChart` when persisting Source; do not serialize an InputEmbed containing runtime data, theme definitions, or callbacks.
 
 <SourceLinks
   sources={[

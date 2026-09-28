@@ -69,7 +69,6 @@ export const layoutApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig>
       },
     ],
     translate: translateLayoutApiReference,
-    schemaPackageName: '@retikz/core',
     schemaLocalizations: { ...layoutSchemaLocalizations },
   },
   {
@@ -84,7 +83,6 @@ export const layoutApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig>
       },
     ],
     translate: translateLayoutApiReference,
-    schemaPackageName: '@retikz/core',
     schemaLocalizations: { ...layoutSchemaLocalizations },
   },
 ];

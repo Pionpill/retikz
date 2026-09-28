@@ -1,23 +1,79 @@
 ---
-title: 矩形
+title: Rectangle · 矩形
 description: 用 Standard 的形状语义绘制矩形，在 React、Vanilla 和 JSON 之间保持一致
 ---
 
-用 Standard 的 Rectangle 保留形状与尺寸意图，编译时生成一条 Core Path。适合已知几何参数的独立轮廓；需要节点文字占位与连接边界时，使用[节点形状](/library/extension/shape)。
+`Rectangle` 用两个对角、中心与尺寸或一个角与尺寸绘制矩形，适合面板轮廓、边框和圆角背景。
 
 ## 接入方式
 
-形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/extension`。
+[安装与首次渲染](/library/standard/get-start)后，从三个包的 `/shape` 子入口选择宿主。四种写法绘制相同的最小图形；React 与 Vanilla adapter 自动提供所需定义，直接 IR 需要显式注入 Definition。
 
-React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx({ id, ...input })`，显式 id 同时标识 embed 和最终路径；Vanilla 与 React 省略 id 时均不生成持久化图元 id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
+<ComponentPreview files="entry" hideCode />
 
-| 入口    | 公开 API                                                           |
-| ------- | ------------------------------------------------------------------ |
-| React   | `Rectangle` — `@retikz/standard-react/shape`                       |
-| Vanilla | `shape.rectangle` — `@retikz/standard-vanilla/shape`               |
-| JSON    | `RectangleSchema / RectangleDefinition` — `@retikz/standard/shape` |
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-## 用法
+```tsx
+import { Layout } from '@retikz/react';
+import { Rectangle } from '@retikz/standard-react/shape';
+
+export const Example = () => (
+  <Layout>
+    <Rectangle center={[0, 0]} width={80} height={48} cornerRadius={6} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { RectangleDefinition } from '@retikz/standard/shape';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'rectangle', center: [0, 0], width: 80, height: 48, cornerRadius: 6 }],
+};
+export const Example = () => <Layout ir={ir} composites={[RectangleDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { shape, RectangleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({ children: [shape.rectangle({ center: [0, 0], width: 80, height: 48, cornerRadius: 6 })] });
+const svg = renderToSvgString(input, { adapters: [RectangleInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { RectangleDefinition } from '@retikz/standard/shape';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'rectangle', center: [0, 0], width: 80, height: 48, cornerRadius: 6 }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [RectangleDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
 
 `<Rectangle>` 在指定位置画一个矩形，展开成底层 `<Path>`。适合已知两个角、中心尺寸或从一个角向外展开的场景。
 
@@ -44,17 +100,21 @@ import { Rectangle } from '@retikz/standard-react/shape';
 
 <ComponentPreview files="rectangle-playground" size="md" controlPanelDefaultSize={50} />
 
-## 输入约束
+## 错误与限制
 
 只选择一套几何描述；宽高和边长必须为有限非负数。双角点形式接受 Core Target，其余需要计算坐标的形式使用字面坐标。
 
-## 编译过程
+## 实现原理
 
-Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时把形状意图展开为 Path steps，Core 再解析 Target、生成几何并渲染。不会添加 Node 或额外 Scope。除正多边形和星形将 rotate 烘焙进顶点外，其余旋转与缩放使用 Path 规则。
+<ComponentAlert type="tip">
+
+本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。
+
+</ComponentAlert>
 
 ### 矩形的路径展开
 
-`<Rectangle>` 先把四种 props 写法收敛成 `from` / `to` 两个对角。图中上路直接透传 Target（可解析点位，包括坐标与节点 id），下路先在 Standard lowering根据尺寸计算对角：
+`<Rectangle>` 先把四种 props 写法收敛成 `from` / `to` 两个对角。图中上路直接透传 Target（可解析点位，包括坐标与节点 id），下路先在 Standard lowering 根据尺寸计算对角：
 
 <ComponentPreview files="rectangle-lowering-flow" size="lg" hideCode type="illustration" />
 
@@ -77,12 +137,20 @@ Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时�
   ]}
 />
 
+## API 参考
+
+{/* @include library/standard/shape/rectangle/generated */}
+
 ## Schema 参考
 
 ### RectangleSchema
 
 <ZodSchema name="RectangleSchema" />
 
-## API 参考
+## 延伸阅读
 
-{/* @include library/standard/shape/rectangle/generated */}
+<LinkedSections
+  items={[
+    { title: 'shape · 形状', description: '比较不同几何轮廓的输入方式和适用场景', url: '/library/standard/shape' },
+  ]}
+/>

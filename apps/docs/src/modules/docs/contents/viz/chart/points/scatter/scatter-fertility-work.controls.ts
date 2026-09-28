@@ -1,22 +1,14 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { createPointCoordinateControl } from '../point-coordinate-control';
+import { createPointCoordinateSection } from '../point-coordinate-control';
 import { fertilityWorkData, WORLD_BANK_FERTILITY_WORK_YEAR } from './scatter-fertility-work.data';
-import { createScatterPointControls } from './scatter-point-controls';
 
 /** 分类编码 Scatter 的稳定控件 id */
 export const SCATTER_FERTILITY_WORK_CONTROL_IDS = {
   coordinateSystem: 'scatter-fertility-work-coordinate-system',
   colorByCategory: 'scatter-fertility-work-color-by-category',
   shapeByCategory: 'scatter-fertility-work-shape-by-category',
-  pointSize: 'scatter-fertility-work-point-size',
-  pointFillEnabled: 'scatter-fertility-work-point-fill-enabled',
-  pointFill: 'scatter-fertility-work-point-fill',
-  pointStrokeEnabled: 'scatter-fertility-work-point-stroke-enabled',
-  pointStroke: 'scatter-fertility-work-point-stroke',
-  pointShape: 'scatter-fertility-work-point-shape',
-  pointOpacity: 'scatter-fertility-work-point-opacity',
 } as const;
 
 /** 分类编码 Scatter 的中文控制面板 */
@@ -42,17 +34,8 @@ export const scatterFertilityWorkControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: '坐标',
-      controls: [
-        createPointCoordinateControl({
-          id: SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem,
-          label: '坐标系',
-          cartesianLabel: '笛卡尔',
-          polarLabel: '极坐标',
-        }),
-      ],
-    },
+
+    createPointCoordinateSection(SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem, 'zh'),
     {
       label: '编码',
       controls: [
@@ -70,15 +53,6 @@ export const scatterFertilityWorkControls = definePreviewControls({
         },
       ],
     },
-    {
-      label: '散点',
-      controls: createScatterPointControls({
-        ids: SCATTER_FERTILITY_WORK_CONTROL_IDS,
-        size: { label: '大小', defaultValue: 5, min: 3, max: 18, step: 1 },
-        stroke: { toggleLabel: '描边', label: '描边色', defaultValue: 'currentColor' },
-        opacity: { label: '不透明度', defaultValue: 0.65, min: 0.3, max: 1, step: 0.05 },
-      }),
-    },
   ],
 });
 
@@ -89,17 +63,6 @@ export const previewControlContract = {
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory]: true,
     [SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory]: true,
-    [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointSize]: 5,
-    [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointStrokeEnabled]: false,
-    [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointStroke]: 'currentColor',
-    [SCATTER_FERTILITY_WORK_CONTROL_IDS.pointOpacity]: 0.65,
   },
-  relatedApis: [
-    'ScatterChart.coordinate',
-    'ScatterEncodings.color',
-    'ScatterEncodings.shape',
-    'ScatterProperties.size',
-    'ScatterProperties.stroke',
-    'ScatterProperties.opacity',
-  ],
+  relatedApis: ['ScatterChart.coordinate', 'ScatterEncodings.color', 'ScatterEncodings.shape'],
 } satisfies PreviewControlContract;

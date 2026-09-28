@@ -1,0 +1,98 @@
+---
+title: 实现原理
+description: 理解测量、空间求解与最终放置的关系
+---
+
+先阅读[基础用法](/library/layout/flex-layout/usage)。本页解释布局结果为什么成立，使用时不需要调用这些内部步骤。
+
+## 重新测量保持主轴分配不变
+
+以横向布局为例，FlexLayout 先测量每个子项需要多宽，再分配各自的宽度。宽度确定后，文字可能换行，因此还要重新计算高度；这一步不会回头调整已经分好的宽度。
+
+如果某个图形的尺寸固定，放不进分给它的区域，它可能超出边界，但不会因此让整行重新分配宽度。下图用相同的比例展示分配前后的宽度，方便比较。
+
+<ComponentPreview files="allocation-figure" hideCode type="illustration" size="xs" />
+
+图中内容宽 200、gap 为 12、两个 basis 都为 40。剩余 108 按 grow=1:3 分配，得到 67 与 121；虚线始终标记同一容器边界。真实子图形随后才接收这两个 slot，主轴分配与绘制结果因此不能混为一个尺寸。
+
+下面的流程强调冻结点：`exact` 使用已确定的主轴槽位，只把重新测得的高度与基线交给后续放置。它没有返回主轴分配的反馈箭头。
+
+<ComponentPreview files="measurement-flow" hideCode type="flow" size="xs" />
+
+<SourceLinks
+  sources={[{ label: '测量提案与 exact 重测', path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts' }]}
+/>
+
+## 约束如何成为位置
+
+FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` 测量子图形，再在主轴分配区域冻结后使用 `exact` 重新测量。文本可以据此在较窄宽度下增加高度；固定几何也可以让真实占用超出父级分配区域，而不会触发第二轮主轴分配。
+
+每条布局行独立执行有界伸展和收缩：子项命中 `min` 或 `max` 后冻结，剩余空间继续分给未冻结项。最终只回放被选中的测量候选；未选候选不会发布图元、资源、命名空间或产物。
+
+沿用宽 200、gap 12、basis 40 与 grow=1:3 的例子，这次给第二项增加 `max=100`。对照三行几何：第一轮分配被上限截住后，剩余 21 继续交给第一项，而不是让第二项突破上限。
+
+<ComponentPreview files="freeze-figure" hideCode type="illustration" size="xl" />
+
+最终槽位是 88 与 100，连同间距刚好填满 200。收缩走同一有界分配过程，但权重改为 `shrink × 未约束基础尺寸`，触及的是下限；没有可接收余量的项时也会结束，剩余空间或溢出留给后续处理。
+
+<ComponentPreview files="bounded-allocation-flow" hideCode type="flow" size="lg" />
+
+<SourceLinks
+  sources={[
+    { label: '边界冻结与加权重分配', path: 'packages/library/layout/src/composites/internal/distribution.ts' },
+    { label: 'FlexLayout 输入契约', path: 'packages/library/layout/src/composites/flex-layout/schema.ts' },
+    {
+      label: 'FlexLayout 空间提案与放置',
+      path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts',
+    },
+    { label: '弹性布局共享求解引擎', path: 'packages/library/layout/src/composites/internal/flex-engine.ts' },
+    { label: 'FlexLayout React 适配器', path: 'packages/library/layout-react/src/flex-layout/FlexLayout.tsx' },
+  ]}
+/>
+
+## 一次布局事务
+
+布局容器是 Core 的布局感知复合组件。一次编译会按确定顺序完成以下阶段：
+
+1. **解析输入**：Core 按 `namespace` 与 `type` 找到 Definition，由唯一 schema 校验并应用静态默认值；Layout resolver 展开间距简写与上下文语义，不改写作者原始配置。
+2. **测量子图形**：容器通过 `layoutChild` 请求子图形的最小、自然、范围或精确尺寸候选。候选携带父级求值后的 `slotSize`、真实 `allocationBounds`、`visualBounds` 和可用对齐参考线。
+3. **求解容器**：Layout 的纯求解器根据容器规则、可用空间和候选测量结果决定轨道、布局行、分配区域与平移。
+4. **回放最终候选**：每个子图形只回放被选中的候选；未选候选不会发布图元、资源、命名空间或产物。
+5. **发布结果**：Core 把 Layout 返回的值封装为带 occurrence 的复合组件产物，与最终 Scene 一起返回。
+
+下图把候选选择与结果发布分开：测量候选不是已经提交的图形，只有选中分支经过回放，才能进入最终结果。未选候选没有一条通向 Scene 的发布边。
+
+<ComponentPreview files="transaction-flow" hideCode type="flow" size="md" />
+
+固定几何可以拒绝过小的分配区域，因此 `slotSize` 与真实 `allocationBounds` 必须分开观察。容器不会因为拒绝而重新猜测主轴尺寸；可确定的尺寸不足通过溢出状态和可见边界表达，无效或无法求解的配置则直接报错。
+
+嵌套布局仍属于同一次 Core 编译。内层容器作为普通子图形接受外层空间提案，每次复合组件出现（occurrence）分别发布本地 key 空间中的产物，不依赖公开 id 选择实例。
+
+下面以一个外层容器包含两个内层布局为例。边框表示几何包含关系，编号仅用于读图，不是 occurrence 的序列化格式。两个内层布局都可以使用局部 key `item`；读取结果时仍须用各自的 occurrence 区分它们。
+
+<ComponentPreview files="occurrence-figure" hideCode type="illustration" size="lg" />
+
+<SourceLinks
+  sources={[
+    { label: '最终候选回放与布局产物', path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts' },
+    { label: 'Core 复合组件输出边界', path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '声明容器与子项，设置尺寸和对齐', url: '/library/layout/flex-layout/usage' },
+    { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/flex-layout/extended' },
+
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/flex-layout/api-reference' },
+
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/flex-layout/schema-reference',
+    },
+
+]}
+/>

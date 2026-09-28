@@ -30,6 +30,9 @@ export type OverlayLayoutItemInput = IROverlayLayoutItem;
 
 /** OverlayLayout 的 canonical JSON IR */
 export type IROverlayLayout = Omit<ZodInput<typeof OverlayLayoutSchema>, 'children'> & {
+  /** 作者声明的直属子项，省略时按空列表处理
+   * @default []
+   */
   children?: Array<IROverlayLayoutItem>;
 };
 

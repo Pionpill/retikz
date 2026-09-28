@@ -1,11 +1,10 @@
 import type { IRChartPlotExtension, IRChartSource } from '@retikz/chart';
-import type { ChartAuthoringResult, ChartInput } from '@retikz/chart-vanilla';
 import type { InputChartCoordinate } from '@retikz/chart-vanilla';
-import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
 import type { IRScene } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { createElement, useMemo } from 'react';
 
@@ -179,9 +178,9 @@ export const createTypedChartInput = <
 >(
   props: TProps,
   declarations: TypedPointChartDeclarations<TInput>,
-  factory: (input: TInput) => ChartAuthoringResult<TSource>,
+  factory: (input: TInput) => InputEmbed<TInput>,
   encodingsDeclarationName: string,
-): ChartInput<TSource> => {
+): TInput => {
   const {
     id,
     background,
@@ -302,14 +301,19 @@ export const createTypedChartInput = <
     ...(guides === undefined ? {} : { guides }),
     ...(marks === undefined ? {} : { marks }),
   } as TInput;
-  return factory(input).input;
+  return factory(input).props;
 };
 
 /** 创建共享 InputEmbed 生命周期接线的 concrete Chart 组件 */
-export const createTypedChartComponent = <TProps extends TypedChartCommonProps<TSource>, TSource extends IRChartSource>(
+export const createTypedChartComponent = <
+  TProps extends TypedChartCommonProps<TSource>,
+  TSource extends IRChartSource,
+  TInput,
+>(
   displayName: string,
-  createInput: (props: TProps) => ChartInput<TSource>,
-): InputEmbeddableChartComponent<TProps, ChartInput<TSource>, typeof ChartInputEmbedAdapter> => {
+  createInput: (props: TProps) => TInput,
+  adapter: InputEmbedAdapter<TInput>,
+): InputEmbeddableChartComponent<TProps, TInput, InputEmbedAdapter<TInput>> => {
   const Component: FC<TProps> = props => {
     const { children, layout, lowerOptions, themeDefinitions } = props;
     const ambientThemeDefinitions = useChartThemeDefinitions();
@@ -327,10 +331,10 @@ export const createTypedChartComponent = <TProps extends TypedChartCommonProps<T
     const embeddedProps = { ...effectiveProps, children: standalone.children };
     return createElement(Layout, standalone.host, createElement(Component, embeddedProps));
   };
-  const chart = Component as InputEmbeddableChartComponent<TProps, ChartInput<TSource>, typeof ChartInputEmbedAdapter>;
+  const chart = Component as InputEmbeddableChartComponent<TProps, TInput, InputEmbedAdapter<TInput>>;
   chart.displayName = displayName;
   chart.isTier2Embeddable = true;
-  chart.inputEmbedAdapter = ChartInputEmbedAdapter;
+  chart.inputEmbedAdapter = adapter;
   chart.createInputEmbedProps = props => createInput(props as TProps);
   return chart;
 };

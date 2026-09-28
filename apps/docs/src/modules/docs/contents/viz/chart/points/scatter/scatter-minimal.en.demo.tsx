@@ -1,20 +1,22 @@
 import { ScatterChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
+import { usePreviewDimensions } from '@/modules/docs/preview';
+
 import { scatterMinimalData } from './scatter-minimal.data';
 
-/** Scatter basic usage with required configuration and presentation metadata on the root */
-const Demo: FC = () => (
-  <ScatterChart
-    rows={scatterMinimalData}
-    presentation={{
-      title: { text: 'IMDb and Rotten Tomatoes ratings broadly move together' },
-      subtitle: { text: '100 films with both ratings; IMDb on x and Rotten Tomatoes on y' },
-      source: { text: 'Vega Datasets movies.json; accessed 2026-09-01' },
-    }}
-    recipe={{ encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' } }}
-  />
-);
+/** Scatter basic usage with required data and field mappings on the root */
+const Demo: FC = () => {
+  const dimensions = usePreviewDimensions();
+  const chart = (
+    <ScatterChart
+      layout={dimensions}
+      rows={scatterMinimalData}
+      recipe={{ encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' } }}
+    />
+  );
+  return chart;
+};
 
 /** Data import used by the IR and Vanilla previews */
 export const previewSource = {

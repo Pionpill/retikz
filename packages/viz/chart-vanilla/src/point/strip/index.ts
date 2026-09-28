@@ -1,3 +1,3 @@
-export { createStripChart } from './factory';
+export { stripChart, StripChartInputEmbedAdapter } from './factory';
 export { normalizeStripChart } from './normalize';
-export type { CreateStripChartInput, InputStripChart } from './types';
+export type { StripChartInputEmbedProps, InputStripChart } from './types';

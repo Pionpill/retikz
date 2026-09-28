@@ -1,34 +1,79 @@
 ---
-title: 网格
-description: 用 JSON-safe Tier 2 Grid 描述规则参考线、主线和边框，并在已加载时下沉到 Core Path 或 Scope
+title: Grid · 网格
+description: 在指定范围绘制规则格线、周期主线与外框
 ---
 
-`<Grid>` 是 Standard 的可选 Tier 2 组件。它把范围、格线配置和边框样式保留为少量可持久化的 JSON 字段；只有当前图加载了 `GridDefinition`，它才会下沉为 Core `Path` 或带中心平移的 `Scope`
+`Grid` 在指定范围内绘制规则参考线，可分别设置两个方向的间距、周期主线和外框。
 
-## 用法
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，从 `/presentation` 子入口导入。下面四种接入方式绘制相同的图形；直接使用 IR 时显式注册 Definition。
+
+<ComponentPreview files="entry" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
 import { Layout } from '@retikz/react';
 import { Grid } from '@retikz/standard-react/presentation';
+
+export const Example = () => (
+  <Layout>
+    <Grid bounds={{ start: [0, 0], end: [120, 80] }} line={{ spacing: 20 }} />
+  </Layout>
+);
 ```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
 ```tsx
-<Layout>
-  <Grid bounds={{ start: [20, 20], end: [260, 150] }} line={{ spacing: 20, style: { stroke: 'lightgray' } }} />
-</Layout>
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { GridDefinition } from '@retikz/standard/presentation';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'grid', bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } }],
+};
+export const Example = () => <Layout ir={ir} composites={[GridDefinition]} />;
 ```
 
-React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或非 React 场景可从 `@retikz/standard/presentation` 使用 `createGrid`，并在 Core compile options 中显式传入 `GridDefinition`
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-| 场景        | 公开入口                                                                        |
-| ----------- | ------------------------------------------------------------------------------- |
-| React       | `Grid`（`@retikz/standard-react/presentation`）                                 |
-| Vanilla     | `grid`、`GridInputEmbedAdapter`（`@retikz/standard-vanilla/presentation`）      |
-| IR / 持久化 | `GridSchema`、`createGrid`、`GridDefinition`（`@retikz/standard/presentation`） |
+```ts
+import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { scene, renderToSvgString } from '@retikz/vanilla';
 
-包族定位和三种使用入口见 [Standard](/library/standard)；本页只展开 Grid 自身的字段与语义
+const input = scene({ children: [grid({ bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } })] });
+const svg = renderToSvgString(input, { adapters: [GridInputEmbedAdapter] });
+console.log(svg);
+```
 
-## 示例
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { GridDefinition } from '@retikz/standard/presentation';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'grid', bounds: { start: [0, 0], end: [120, 80] }, line: { spacing: 20 } }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [GridDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
 
 ### 基础网格
 
@@ -49,13 +94,15 @@ React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或�
 
 `line.origin` 的坐标系取决于 `bounds` 形式：角点形式使用场景坐标，省略时取排序后的起点；中心形式使用中心局部坐标，省略时取 `[-width / 2, -height / 2]`。中心形式传 `line: { origin: 0 }` 即可让两个方向的格点穿过几何中心。使用方向对象时，可以为两个方向设置不同的数值 origin。中心的 `PolarPosition` 由 Core 解析
 
-### 常见变体
+## 扩展用法
+
+### 分方向配置与突出主线
 
 四个并列场景展示方向独立的格线配置、中心加尺寸、周期主线，以及反向角点与外框的组合效果
 
 <ComponentPreview files="grid-variants" size="sm" />
 
-### 控制面板
+### 调整格距、对齐和边框
 
 使用面板改变角点范围、统一或方向独立的格距、格线对齐、主线和边框。预览采用固定视野，因此参数变化会直接反映为网格的位置、密度或层级变化
 
@@ -65,7 +112,11 @@ React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或�
   caption="调整 bounds、line 格距、line origin、major 和 border，观察这些字段如何共同决定最终网格。"
 />
 
-## 技术原理
+## 错误与限制
+
+`spacing` 必须为正数，`major.every` 必须为正整数；尺寸与外框 padding 不能为负。角点范围允许反向或重合，中心形式只定位笛卡尔网格，不生成极坐标网格。直接 IR 未注册 `GridDefinition` 时会报告 `COMPOSITE_NOT_REGISTERED`。
+
+## 实现原理
 
 <ComponentAlert
   type="tip"
@@ -94,17 +145,27 @@ Grid 的 IR 不直接成为新的渲染图元。角点形式先按两个轴独�
 
 ## API 参考
 
-`GridProps` 是 `GridInput` 的公开别名，Vanilla adapter 也接收同一个 `GridInput`；`createGrid` 只组装稀疏 `IRGrid`。`GridSchema.parse()` 校验外部 JSON 并补齐静态默认值；编译解析复用同一默认值并处理上下文。下表中的 `Position` 与 `PolarPosition` 来自 Core 的位置契约
+{/* @include library/standard/presentation/grid/generated */}
 
-### `GridInput`
+## Schema 参考
 
-| 属性      | 类型                                                                                                                                                                                                                                                                                                                                                                           | 默认值                                                                                        | 说明                                                                                                                                                            |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bounds`  | `GridInput['bounds']`<br />- `{ start: Position; end: Position }`<br />- `{ position: Position \| PolarPosition; width: number; height: number }`                                                                                                                                                                                                                              | —<br />- —<br />- —                                                                           | 网格范围，两种形式互斥<br />- 两个无方向笛卡尔角点，lowering 会按 x、y 独立排序<br />- 几何中心和非负尺寸；PolarPosition 由 Core 解析，表示笛卡尔网格的中心定位 |
-| `line?`   | `GridInput['line']`<br />- `boolean`<br />- `GridLineInput`<br />- `{ vertical: GridLineInput; horizontal: GridLineInput }`<br /><br />`GridLineInput`<br />- `spacing?: number`<br />- `origin?: number`<br />- `includeBoundary?: boolean`<br />- `style?: IRStandardPathStrokeStyle`<br />- `major?: { every: number; offset?: number; style?: IRStandardPathStrokeStyle }` | `true`<br />- 两个方向，格距 `10`<br />- `false` 关闭两个方向<br />- 共享对象同时配置两个方向 | 共享或方向独立的格线配置；使用 pair 形式时，`origin`、`includeBoundary`、`style` 和 `major` 分别作用于对应方向，`major.offset` 默认为 `0`                       |
-| `border?` | `GridInput['border']`<br />- `padding?: number`<br />- `order?:` <ApiValues name="GridBorderOrder" /><br />- `extendLines?: boolean`<br />- `style?: IRStandardPathBorderStyle`                                                                                                                                                                                                | —<br />- `0`<br />- `'front'`<br />- `false`<br />- —                                         | 可选边框配置<br />- 向外扩展的均匀间距<br />- 边框在格线前方或后方输出<br />- 格线是否延长到外扩后的边框<br />- 边框的 Path 描边与填充样式                      |
+### GridSchema
 
-## 相关
+<ZodSchema name="GridSchema" />
 
-- [Tier 2 Composites](/kernel/components/design/composite)：Core 如何注册和下沉高层 IR
-- [Path](/kernel/components/path/step)：Grid 下沉后使用的 Core 路径图元
+### GridLineInputSchema
+
+<ZodSchema name="GridLineInputSchema" />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'presentation · 展示',
+      description: '选择参考线、分组框与图例等呈现组件',
+      url: '/library/standard/presentation',
+    },
+    { title: 'Path', description: '了解下沉后的基础路径能力', url: '/kernel/components/path/step' },
+  ]}
+/>

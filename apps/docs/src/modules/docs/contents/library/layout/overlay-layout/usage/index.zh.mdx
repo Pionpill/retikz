@@ -1,0 +1,248 @@
+---
+title: 基础用法
+description: 声明容器和子项，理解尺寸、间距与对齐
+---
+
+`OverlayLayout` 让多个子图形共享同一区域。对齐子项跟随容器对齐；定位子项用局部 `at` 和 `anchor` 放置徽标、标注框等浮层。`sizeParticipation` 决定子项是否影响容器尺寸，`zIndex` 只决定稳定绘制层级。
+
+## 接入方式
+
+<ComponentPreview files="/library/layout/overlay-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+React + JSX 中，`OverlayLayout` 的直属子元素使用 `OverlayLayoutItem`，每个子项承载一个可绘制内容：
+
+```text
+OverlayLayout
+└── OverlayLayoutItem
+    └── Node / OverlayLayout
+```
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { OverlayLayout, OverlayLayoutItem } from '@retikz/layout-react';
+
+export const Example = () => (
+  <Layout>
+    <OverlayLayout size={{ x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } }}>
+      <OverlayLayoutItem>
+        <Node text="A" />
+      </OverlayLayoutItem>
+      <OverlayLayoutItem offset={{ x: 30, y: 20 }}>
+        <Node text="B" />
+      </OverlayLayoutItem>
+    </OverlayLayout>
+  </Layout>
+);
+```
+
+React 中把可选 `key` 写成 `itemKey`，并用一个可绘制子元素或 `ir` 提供 `child`。省略 `itemKey` 时，自动身份只在内部产物中生成，不写回 Source IR。
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { OverlayLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'overlayLayout',
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+export const Example = () => <Layout ir={ir} extensions={{ composites: [OverlayLayoutDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { overlayLayout, OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+
+const input = scene({
+  children: [
+    overlayLayout({
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', text: 'B' } },
+      ],
+    }),
+  ],
+});
+
+console.log(renderToSvgString(input, { adapters: [OverlayLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { OverlayLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'overlayLayout',
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+console.log(renderToSvgString(ir, { compile: { composites: [OverlayLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+## 确定共享内容区
+
+所有子项共享同一个内容区，互相不会依次消耗空间。容器尺寸和内边距共同确定这个参照区域。
+
+| 属性              | 可用值                                                                | 解释                                                       |
+| ----------------- | --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `size.x / size.y` | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | 容器的物理宽、高：按内容求尺寸、固定尺寸或接收父级有限空间 |
+| `padding`         | 非负数，或按 `x` / `y` / 四边配置的对象                               | 从容器四边留出内边距，剩余部分为内容区                     |
+
+demo 将两个子项放在左上和右下。调整宽、高与内边距，观察两个子项如何跟随同一边界移动。省略尺寸时按内容求尺寸；`fill` 需要父级提供有限空间。这里的固定高度用于展示共享区域，不要求节点具有相同高度。
+
+<ComponentPreview files="overlay-box" size="md" />
+
+## 设置默认对齐与单项覆盖
+
+容器可以统一设置子项的对齐方式，也允许某个子项单独选择。下面只比较水平对齐：蓝色节点始终跟随容器，橙色节点可以在“跟随容器”和“单项覆盖”之间切换。
+
+| 属性           | 可用值                                       | 解释                                         |
+| -------------- | -------------------------------------------- | -------------------------------------------- |
+| `justifyItems` | `start`, `center`, `end`, `stretch`          | 容器的默认水平对齐，影响未设置单项覆盖的节点 |
+| `justifySelf`  | 省略，或 `start`, `center`, `end`, `stretch` | 子项水平对齐；控件选“跟随容器”时省略此属性   |
+
+初始两个节点都跟随容器。先切换“容器水平对齐”，观察两个节点一起左右移动；再将“橙色节点对齐”设为“终点”，此后改变容器对齐只影响蓝色节点。切回“跟随容器”即可恢复共同移动。为避免重叠遮挡，两个子项用固定的 `alignSelf` 分别放在上方和下方；这个纵向位置只用于对照。本例只演示起点、居中和终点三种位置对齐。
+
+<ComponentPreview files="overlay-alignment" size="md" />
+
+## 在对齐结果上追加偏移
+
+偏移是在对齐完成后追加的移动量，适合将角标或浮层稍微移开，不会改变内容区原点。
+
+| 属性                  | 可用值                                                                         | 解释                                                        |
+| --------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `offset.x / offset.y` | 有限数，默认 0                                                                 | 子项放置后的水平、垂直偏移，可正可负；基线对齐时 y 必须为 0 |
+| `alignSelf`           | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`；可省略 | 偏移前的垂直对齐；省略时继承容器                            |
+
+demo 中第一项保持不动。先切换第二项的纵向对齐，再调整 x / y 偏移，观察它从对齐位置移动。若需要将某个角直接放到指定坐标，应使用扩展用法中的 `positioned`，而不是把偏移当成绝对坐标。
+
+<ComponentPreview files="overlay-offset" size="md" />
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        '容器分配尺寸与内容区内缩 每个轴支持 `{ kind: "content", min?, max? }` 内容策略、`{ kind: "fixed", value }` 固定尺寸或 `{ kind: "fill", min?, max? }` 填充父级有限空间。',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: '从容器分配区域向内缩出内容区，支持统一值或各方向覆盖',
+      defaultValue: '0',
+    },
+    {
+      name: 'justifyItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: '默认子项对齐',
+      defaultValue: 'center',
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: '默认子项对齐',
+      defaultValue: 'center',
+    },
+    {
+      name: 'placement',
+      kind: 'property',
+      type: 'OverlayPlacementInput',
+      description:
+        '以共享内容区为参照 `{ kind: "aligned" }` 参照内容区；`{ kind: "positioned", at: { x, y }, anchor?: { x?, y? }, width?, height? }` 将槽位归一化锚点贴到局部目标。',
+      defaultValue: '{ kind: "aligned" }',
+    },
+    {
+      name: 'justifySelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: '覆盖当前子项的水平对齐；`start` / `center` / `end` 定位，`stretch` 提供精确约束',
+      defaultValue: '继承容器',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: '覆盖当前子项的垂直对齐；省略则继承容器',
+      defaultValue: '继承容器',
+    },
+    {
+      name: 'margin',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: '子项参与测量与放置的外边距，支持统一值或各方向覆盖',
+      defaultValue: '0',
+    },
+    {
+      name: 'offset',
+      kind: 'property',
+      type: '{ x?: number; y?: number }',
+      description: '放置完成后追加平移',
+      defaultValue: '{ x: 0, y: 0 }',
+    },
+  ]}
+/>
+
+完整签名与字段约束见 [API 参考](/library/layout/overlay-layout/api-reference) · [Schema 参考](/library/layout/overlay-layout/schema-reference)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/overlay-layout/extended' },
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/overlay-layout/mechanism' },
+    { title: 'API 参考', description: '查询公开函数、类型与属性', url: '/library/layout/overlay-layout/api-reference' },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+  ]}
+/>

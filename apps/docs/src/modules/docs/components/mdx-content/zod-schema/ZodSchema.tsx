@@ -237,7 +237,7 @@ export const ZodSchema: FC<ZodSchemaProps> = props => {
         repr.kind === 'alias' && (
           <div className="my-2">
             <span className="text-sm text-muted-foreground">{t('zodSchema.typePrefix')}</span>
-            <RenderType repr={repr.type} />
+            <RenderType repr={repr.type} name={name} />
           </div>
         )
       )}

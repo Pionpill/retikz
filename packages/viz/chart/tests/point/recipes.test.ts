@@ -80,6 +80,7 @@ const scaleDefaultsContextOf = (
   chartMarks: ReadonlyArray<IRPlotMarkOperation>,
   scales: ReadonlyArray<IRPlotScaleOperation>,
 ): ChartScaleDefaultsResolveContext => ({
+  identifyMark: index => `__chart.mark.${index}`,
   source,
   encodings: {
     encodings: {},
@@ -123,8 +124,8 @@ describe('Point Chart recipe Definitions', () => {
       }),
     ]);
     expect(result.plot.guides).toEqual([
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y', grid: true },
+      { type: 'axis', dimension: 'x', grid: false },
+      { type: 'axis', dimension: 'y' },
     ]);
   });
 
@@ -145,17 +146,35 @@ describe('Point Chart recipe Definitions', () => {
       ...horizontal,
       plotExtension: { guides: [{ type: 'axis', dimension: 'y', grid: true }] },
     });
+    const forcedGrid = StripChartSchema.parse({
+      ...horizontal,
+      recipe: { ...horizontal.recipe, guides: { grid: true } },
+    });
 
     expect(resolveChart(horizontal, StripChartDefinition, stripRuntime).plot.guides).toEqual([
-      { type: 'axis', dimension: 'x', grid: true },
-      { type: 'axis', dimension: 'y' },
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: false },
     ]);
     expect(resolveChart(explicit, StripChartDefinition, stripRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'y', grid: true },
     ]);
+    expect(resolveChart(forcedGrid, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x', grid: true },
+      { type: 'axis', dimension: 'y', grid: false },
+    ]);
   });
 
   it('applies sparse Scatter recipe guide controls to the resolved Plot', () => {
+    const themed = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' } },
+    });
+    const forcedGrid = ScatterChartSchema.parse({
+      ...themed,
+      recipe: { ...themed.recipe, guides: { grid: true } },
+    });
     const hidden = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -177,11 +196,19 @@ describe('Point Chart recipe Definitions', () => {
       },
     });
 
+    expect(resolveChart(themed, ScatterChartDefinition, runtime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y' },
+    ]);
+    expect(resolveChart(forcedGrid, ScatterChartDefinition, runtime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y', grid: true },
+    ]);
     expect(hidden.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
     expect(resolveChart(hidden, ScatterChartDefinition, runtime).plot.guides).toEqual([]);
     expect(resolveChart(noGridOrLegend, ScatterChartDefinition, runtime).plot.guides).toEqual([
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y' },
+      { type: 'axis', dimension: 'x', grid: false },
+      { type: 'axis', dimension: 'y', grid: false },
     ]);
   });
 
@@ -202,8 +229,8 @@ describe('Point Chart recipe Definitions', () => {
 
     expect(source.recipe.guides).toEqual({ grid: false });
     expect(resolveChart(source, StripChartDefinition, stripRuntime).plot.guides).toEqual([
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y' },
+      { type: 'axis', dimension: 'x', grid: false },
+      { type: 'axis', dimension: 'y', grid: false },
     ]);
   });
 
@@ -265,8 +292,8 @@ describe('Point Chart recipe Definitions', () => {
     });
 
     expect(resolveChart(source, StripChartDefinition, customRuntime).plot.guides).toEqual([
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y', grid: true },
+      { type: 'axis', dimension: 'x', grid: false },
+      { type: 'axis', dimension: 'y' },
     ]);
   });
 
@@ -405,12 +432,12 @@ describe('Point Chart recipe Definitions', () => {
       {
         type: 'linear',
         name: '__chart.bubble.scale.x',
-        domainPadding: { kind: 'range', lower: 20, upper: 20 },
+        domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], clearance: 0 },
       },
       {
         type: 'linear',
         name: '__chart.bubble.scale.y',
-        domainPadding: { kind: 'range', lower: 20, upper: 20 },
+        domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], clearance: 0 },
       },
     ]);
     expect(regression.plot.scales.slice(0, 2)).toEqual([
@@ -1055,6 +1082,84 @@ describe('Point Chart recipe Definitions', () => {
     });
   });
 
+  it('Regression adds ordered fits without duplicating observations and inherits sampling and style', () => {
+    const result = resolve(
+      RegressionChartDefinition,
+      { x: 'x', y: 'y' },
+      {
+        sampleCount: 12,
+        extent: [1, 8],
+        trend: { strokeWidth: 3, opacity: 0.6 },
+        extraMethods: [
+          { method: { kind: 'quadratic' } },
+          { method: { kind: 'power' }, sampleCount: 20, extent: [2, 6], trend: { opacity: 0.9 } },
+        ],
+      },
+    );
+    const marks = result.semanticMarks[0].plotMarks;
+    expect(marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
+    expect(marks[2]).toMatchObject({
+      strokeWidth: { value: 3 },
+      opacity: { value: 0.6 },
+      transform: [expect.objectContaining({ method: { kind: 'quadratic' }, sampleCount: 12, extent: [1, 8] })],
+    });
+    expect(marks[3]).toMatchObject({
+      strokeWidth: { value: 3 },
+      opacity: { value: 0.9 },
+      transform: [expect.objectContaining({ method: { kind: 'power' }, sampleCount: 20, extent: [2, 6] })],
+    });
+  });
+
+  it('Regression preserves series fitting while only explicit extra stroke overrides series color', () => {
+    const result = resolve(
+      RegressionChartDefinition,
+      { x: 'x', y: 'y', series: 'species' },
+      {
+        trend: { stroke: '#f00' },
+        extraMethods: [{ method: { kind: 'power' } }, { method: { kind: 'linear' }, trend: { stroke: '#00f' } }],
+      },
+    );
+    const marks = result.semanticMarks[0].plotMarks;
+    for (const mark of marks.slice(1))
+      expect(mark).toMatchObject({ series: 'species', transform: [expect.objectContaining({ groupBy: ['species'] })] });
+    expect(marks[1]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
+    expect(marks[2]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
+    expect(marks[3]).toMatchObject({ stroke: { kind: 'constant', value: '#00f' } });
+  });
+
+  it.each([{ extraMethods: undefined }, { extraMethods: [] }, { extraMethods: [{ method: { kind: 'power' } }] }])(
+    'Regression mark inherits or wholly replaces the extra method array: %j',
+    ({ extraMethods }) => {
+      const source = RegressionChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'regression',
+          encodings: { x: 'x', y: 'y' },
+          properties: { extraMethods: [{ method: { kind: 'quadratic' } }], trend: { strokeWidth: 2 } },
+          marks: [
+            {
+              kind: 'regression',
+              override: true,
+              properties: { ...(extraMethods === undefined ? {} : { extraMethods }), trend: { opacity: 0.8 } },
+            },
+          ],
+        },
+      });
+      const result = resolveChart(source, RegressionChartDefinition, regressionRuntime);
+      expect(result.plot.marks.map(mark => mark.type)).toEqual(
+        extraMethods?.length === 0 ? ['point', 'path'] : ['point', 'path', 'path'],
+      );
+      if (extraMethods?.length !== 0)
+        expect(result.plot.marks[2]).toMatchObject({
+          strokeWidth: { value: 2 },
+          opacity: { value: 0.8 },
+          transform: [expect.objectContaining({ method: extraMethods?.[0].method ?? { kind: 'quadratic' } })],
+        });
+    },
+  );
+
   it('Regression creates one Point plus mark-local Smooth Path semantic group', () => {
     const result = resolve(
       RegressionChartDefinition,
@@ -1518,5 +1623,230 @@ describe('Point Chart marks', () => {
     expect(result.marks[0]).toMatchObject({
       opacity: { kind: 'field', value: 'explicitOpacity' },
     });
+  });
+});
+
+describe('Point autoPadding strategies', () => {
+  it('keeps the existing default and emits mark constraints only when selected', () => {
+    const source = {
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: { chartType: 'scatter', encodings: { x: 'x', y: 'y' }, properties: { size: 10 } },
+    };
+    const original = resolveChart(ScatterChartSchema.parse(source), ScatterChartDefinition, runtime).plot;
+    const explicit = resolveChart(
+      ScatterChartSchema.parse({
+        ...source,
+        recipe: { ...source.recipe, properties: { size: 10, autoPadding: 'max-radius' } },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    ).plot;
+    expect(explicit).toEqual(original);
+    const aware = resolveChart(
+      ScatterChartSchema.parse({
+        ...source,
+        recipe: { ...source.recipe, properties: { autoPadding: 'point-aware', domainPadding: { left: 0 } } },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    ).plot;
+    expect(aware.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ['__chart.mark.0'], lower: 0 } });
+    expect(aware.marks[0].id).toBe('__chart.mark.0');
+  });
+  it('does not identify or scan marks when explicit padding covers every end', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { autoPadding: 'point-aware', domainPadding: 0 },
+      },
+    });
+    const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
+    expect(result.marks[0].id).toBeUndefined();
+    expect(result.scales).toEqual(
+      expect.arrayContaining([expect.objectContaining({ domainPadding: { kind: 'range', lower: 0, upper: 0 } })]),
+    );
+  });
+});
+
+describe('Point recipe autoPadding exposure', () => {
+  it.each([
+    ['scatter', ScatterChartSchema, { x: 'x', y: 'y' }],
+    ['bubble', BubbleChartSchema, { x: 'x', y: 'y', size: 'size' }],
+    ['regression', RegressionChartSchema, { x: 'x', y: 'y' }],
+    ['connected-scatter', ConnectedScatterChartSchema, { x: 'x', y: 'y', order: 'order' }],
+    ['ranged-dot', RangedDotChartSchema, { category: 'category', start: 'start', end: 'end' }],
+    ['strip', StripChartSchema, { x: 'x', y: 'y' }],
+  ])('%s preserves the author strategy through a JSON round trip', (chartType, schema, encodings) => {
+    const source = {
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType,
+        encodings,
+        properties: { autoPadding: { kind: 'point-aware', clearance: { default: 8, top: 20, left: 0 } } },
+      },
+    };
+    const parsed = schema.parse(JSON.parse(JSON.stringify(source)));
+    expect(parsed.recipe.properties?.autoPadding).toEqual({
+      kind: 'point-aware',
+      clearance: { default: 8, top: 20, left: 0 },
+    });
+  });
+});
+
+describe('point-aware final mark selection', () => {
+  it('references appended and replacement marks but excludes extension marks and avoids identity collisions', () => {
+    const source = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y' },
+        properties: { autoPadding: 'point-aware', size: 40 },
+        marks: [
+          { kind: 'scatter', override: true, properties: { size: 2 } },
+          { kind: 'scatter', properties: { size: 3 } },
+        ],
+      },
+      plotExtension: {
+        marks: [
+          {
+            id: '__chart.mark.0',
+            type: 'point',
+            encoding: { x: { field: 'x' }, y: { field: 'y' } },
+            size: { kind: 'constant', value: 90 },
+          },
+        ],
+      },
+    });
+    const result = resolveChart(source, ScatterChartDefinition, runtime).plot;
+    const ids = result.marks.map(mark => mark.id);
+    expect(new Set(ids).size).toBe(3);
+    expect(result.scales[0]).toMatchObject({ domainPadding: { kind: 'mark', marks: ids.slice(0, 2) } });
+    expect(result.marks[0]).toMatchObject({ size: { kind: 'constant', value: 2 } });
+  });
+});
+
+describe('Point autoPadding clearance', () => {
+  const resolvePadding = (autoPadding: unknown, domainPadding?: unknown) =>
+    resolveChart(
+      ScatterChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'scatter',
+          encodings: { x: 'x', y: 'y' },
+          properties: { size: 10, autoPadding, domainPadding },
+        },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    ).plot;
+  it.each(['max-radius', 'point-aware'])('preserves %s shorthand semantics with zero clearance', kind => {
+    expect(resolvePadding({ kind })).toEqual(resolvePadding(kind));
+  });
+  it('adds clearance only to automatic range ends', () => {
+    expect(resolvePadding({ kind: 'max-radius', clearance: 8 }, { left: 0 }).scales[0]).toMatchObject({
+      domainPadding: { kind: 'range', lower: 0, upper: 18 },
+    });
+    expect(resolvePadding({ kind: 'point-aware', clearance: 8 }, { left: 0 }).scales[0]).toMatchObject({
+      domainPadding: { kind: 'mark', lower: 0, clearance: 8 },
+    });
+    expect(resolvePadding({ kind: 'point-aware', clearance: 8 }, 0)).toEqual(resolvePadding('point-aware', 0));
+    expect(resolvePadding({ kind: 'max-radius', clearance: 8 }, { kind: 'ratio', left: 0.1 })).toEqual(
+      resolvePadding('max-radius', { kind: 'ratio', left: 0.1 }),
+    );
+  });
+  it('resolves side, axis, default and explicit zero for both policies', () => {
+    const clearance = { default: 8, x: 12, top: 20, left: 0 };
+    const maximum = resolvePadding({ kind: 'max-radius', clearance });
+    expect(maximum.scales[0]).toMatchObject({ domainPadding: { lower: 10, upper: 22 } });
+    expect(maximum.scales[1]).toMatchObject({ domainPadding: { lower: 18, upper: 30 } });
+    const aware = resolvePadding({ kind: 'point-aware', clearance });
+    expect(aware.scales[0]).toMatchObject({ domainPadding: { clearance: { lower: 0, upper: 12 } } });
+    expect(aware.scales[1]).toMatchObject({ domainPadding: { clearance: { lower: 8, upper: 20 } } });
+    expect(resolvePadding({ kind: 'point-aware', clearance: {} })).toEqual(resolvePadding('point-aware'));
+    expect(resolvePadding({ kind: 'point-aware', clearance: { default: 8 } })).toEqual(
+      resolvePadding({ kind: 'point-aware', clearance: 8 }),
+    );
+  });
+  it('maps visual clearance to reversed position ranges', () => {
+    const plot = resolveChart(
+      ScatterChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'scatter',
+          encodings: {
+            x: { field: 'x', scale: { operation: { type: 'linear', name: 'xScale', range: [100, 0] } } },
+            y: { field: 'y', scale: { operation: { type: 'linear', name: 'yScale', range: [0, 100] } } },
+          },
+          properties: { autoPadding: { kind: 'point-aware', clearance: { left: 2, right: 8, top: 3, bottom: 9 } } },
+        },
+      }),
+      ScatterChartDefinition,
+      runtime,
+    ).plot;
+    expect(plot.scales.find(scale => scale.name === 'xScale')).toMatchObject({
+      domainPadding: { clearance: { lower: 8, upper: 2 } },
+    });
+    expect(plot.scales.find(scale => scale.name === 'yScale')).toMatchObject({
+      domainPadding: { clearance: { lower: 3, upper: 9 } },
+    });
+  });
+  it('rejects missing strategy and invalid clearance at the Source boundary', () => {
+    for (const value of [
+      { clearance: 8 },
+      { kind: 'point-aware', clearance: -1 },
+      { kind: 'point-aware', clearance: Infinity },
+      { kind: 'point-aware', clearance: { left: -1 } },
+    ])
+      expect(() => resolvePadding(value)).toThrow();
+  });
+});
+
+describe('Regression hidden observations', () => {
+  const plotOf = (hidePoints: boolean | undefined, override = true) =>
+    resolveChart(
+      RegressionChartSchema.parse({
+        namespace: 'chart',
+        type: 'point',
+        data: { reference: 'rows' },
+        recipe: {
+          chartType: 'regression',
+          encodings: { x: 'x', y: 'y' },
+          marks: [
+            {
+              kind: 'regression',
+              override,
+              ...(hidePoints === undefined ? {} : { hidePoints }),
+              properties: { extraMethods: [{ method: { kind: 'quadratic' } }] },
+            },
+          ],
+        },
+      }),
+      RegressionChartDefinition,
+      runtime,
+    ).plot;
+  it('keeps observations by default and when explicitly disabled', () => {
+    for (const value of [undefined, false])
+      expect(plotOf(value).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path']);
+  });
+  it('omits only the selected observation mark and preserves every fitting transform', () => {
+    const plot = plotOf(true);
+    expect(plot.marks.map(mark => mark.type)).toEqual(['path', 'path']);
+    for (const mark of plot.marks)
+      expect(mark.transform).toEqual([expect.objectContaining({ kind: 'smooth', x: 'x', y: 'y' })]);
+    expect(plotOf(true, false).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
   });
 });

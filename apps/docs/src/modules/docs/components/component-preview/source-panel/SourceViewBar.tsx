@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib';
 
+import { filenameFromKey } from '../registry';
 import type { ComponentSourceFile, SourceView } from '../types';
 
 const VIEW_META: Record<SourceView, { label: string; text: string; icon: ReactNode }> = {
@@ -89,7 +90,7 @@ const FileMenu: FC<FileMenuProps> = props => {
         title={activeFile.filename}
       >
         <FileKindIcon filename={activeFile.filename} isMain={activeFile.isMain} className="size-3.5 shrink-0" />
-        <span className="truncate">{activeFile.filename}</span>
+        <span className="truncate">{filenameFromKey(activeFile.filename)}</span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
@@ -105,7 +106,7 @@ const FileMenu: FC<FileMenuProps> = props => {
               isMain={file.isMain}
               className="size-3.5 shrink-0 text-muted-foreground"
             />
-            <span className="truncate font-mono text-xs">{file.filename}</span>
+            <span className="truncate font-mono text-xs">{filenameFromKey(file.filename)}</span>
             <Check className={cn('ml-auto size-3.5 shrink-0', index !== activeFileIndex && 'opacity-0')} />
           </DropdownMenuItem>
         ))}

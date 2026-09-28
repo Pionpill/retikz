@@ -1,0 +1,261 @@
+---
+title: Basic usage
+description: Declare the container and items, then control size, spacing, and alignment
+---
+
+`OverlayLayout` lets several graphical children share one region. Aligned items follow container alignment, while positioned items use local `at` and `anchor` values for badges, callouts, and similar overlays. `sizeParticipation` controls container sizing, while `zIndex` controls only stable paint layers.
+
+## Using this topic
+
+<ComponentPreview files="/library/layout/overlay-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+In React + JSX, direct children of `OverlayLayout` use `OverlayLayoutItem`. Each item carries one drawable child:
+
+```text
+OverlayLayout
+└── OverlayLayoutItem
+    └── Node / OverlayLayout
+```
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { OverlayLayout, OverlayLayoutItem } from '@retikz/layout-react';
+
+export const Example = () => (
+  <Layout>
+    <OverlayLayout size={{ x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } }}>
+      <OverlayLayoutItem>
+        <Node text="A" />
+      </OverlayLayoutItem>
+      <OverlayLayoutItem offset={{ x: 30, y: 20 }}>
+        <Node text="B" />
+      </OverlayLayoutItem>
+    </OverlayLayout>
+  </Layout>
+);
+```
+
+In React, write optional `key` as `itemKey` and provide `child` through one drawable child or `ir`. When `itemKey` is omitted, the generated identity exists only in internal artifacts and is not written back to Source IR.
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { OverlayLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'overlayLayout',
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+export const Example = () => <Layout ir={ir} extensions={{ composites: [OverlayLayoutDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { overlayLayout, OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+
+const input = scene({
+  children: [
+    overlayLayout({
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', text: 'B' } },
+      ],
+    }),
+  ],
+});
+
+console.log(renderToSvgString(input, { adapters: [OverlayLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { OverlayLayoutDefinition } from '@retikz/layout';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'overlayLayout',
+      size: { x: { kind: 'fixed', value: 100 }, y: { kind: 'fixed', value: 60 } },
+      children: [
+        { kind: 'overlay', child: { type: 'node', text: 'A' } },
+        { kind: 'overlay', offset: { x: 30, y: 20 }, child: { type: 'node', text: 'B' } },
+      ],
+    },
+  ],
+};
+
+console.log(renderToSvgString(ir, { compile: { composites: [OverlayLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+## Define the shared content box
+
+All items share one content box instead of consuming space in sequence. Container size and padding define that common reference area.
+
+| Property          | Available values                                                      | Explanation                                                                                          |
+| ----------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `size.x / size.y` | `{ kind: "content" }`, `{ kind: "fixed", value }`, `{ kind: "fill" }` | Physical container width and height: size to content, use a fixed value, or fill finite parent space |
+| `padding`         | Non-negative number, or an object with `x` / `y` / per-side values    | Inset the container on each side to form the content box                                             |
+
+The demo places items at the top-left and bottom-right. Adjust width, height, and padding to see both follow the same reference box. Omitted sizes use content sizing; `fill` requires finite parent space. The fixed demo height illustrates the shared area and does not require equal node heights.
+
+<ComponentPreview files="overlay-box" size="md" />
+
+## Set alignment and item overrides
+
+The container provides default alignment, while an item can choose its own. This demo compares horizontal alignment only: the blue node always inherits the container, and the orange node can switch between inheritance and an item override.
+
+| Property       | Available values                             | Explanation                                                                 |
+| -------------- | -------------------------------------------- | --------------------------------------------------------------------------- |
+| `justifyItems` | `start`, `center`, `end`, `stretch`          | Default container horizontal alignment, affecting items without an override |
+| `justifySelf`  | Omit, or `start`, `center`, `end`, `stretch` | Item horizontal alignment; selecting Inherit omits this property            |
+
+Both nodes initially inherit the container. Change Container horizontal alignment to move them together. Set Orange node alignment to End, then change the container alignment again: only the blue node follows it. Select Inherit to restore shared movement. Fixed `alignSelf` values place the items at the top and bottom so they remain distinguishable; this vertical separation is only a comparison aid. This example focuses on start, center, and end positioning.
+
+<ComponentPreview files="overlay-alignment" size="md" />
+
+## Offset an aligned result
+
+An offset moves an item after alignment. It is useful for nudging badges or overlays without changing the content-box origin.
+
+| Property              | Available values                                                                 | Explanation                                                                                    |
+| --------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `offset.x / offset.y` | Finite number, default 0                                                         | Signed horizontal and vertical offsets after placement; y must be 0 for baseline-aligned items |
+| `alignSelf`           | `start`, `center`, `end`, `stretch`, `first-baseline`, `last-baseline`; optional | Vertical alignment before applying the offset; inherits the container when omitted             |
+
+The first demo item stays fixed. Switch the second item’s vertical alignment, then adjust its x / y offsets to move it from that aligned position. To place a particular corner at a specific coordinate, use `positioned` from extended usage instead of treating offsets as absolute coordinates.
+
+<ComponentPreview files="overlay-offset" size="md" />
+
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'size',
+      kind: 'property',
+      type: '{ x?: LayoutAxisSizeInput; y?: LayoutAxisSizeInput }',
+      description:
+        'Container allocation and content insets Each axis accepts `{ kind: "content", min?, max? }`, `{ kind: "fixed", value }`, or `{ kind: "fill", min?, max? }`.',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: 'Inset the content box from the container allocation, uniformly or per edge',
+      defaultValue: '0',
+    },
+    {
+      name: 'justifyItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description: 'Default item alignment',
+      defaultValue: 'center',
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: 'Default item alignment',
+      defaultValue: 'center',
+    },
+    {
+      name: 'placement',
+      kind: 'property',
+      type: 'OverlayPlacementInput',
+      description:
+        'Use the shared content box `{ kind: "aligned" }` uses the content box; `{ kind: "positioned", at: { x, y }, anchor?: { x?, y? }, width?, height? }` pins a normalized slot anchor.',
+      defaultValue: '{ kind: "aligned" }',
+    },
+    {
+      name: 'justifySelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch'",
+      description:
+        'Override horizontal alignment; `start` / `center` / `end` place the item and `stretch` supplies an exact proposal',
+      defaultValue: 'Inherited',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: "'start' | 'center' | 'end' | 'stretch' | 'first-baseline' | 'last-baseline'",
+      description: 'Override vertical alignment; omission inherits the container',
+      defaultValue: 'Inherited',
+    },
+    {
+      name: 'margin',
+      kind: 'property',
+      type: 'number | { default?: number; x?: number; y?: number; top?: number; right?: number; bottom?: number; left?: number }',
+      description: 'Item margin used by measurement and placement, uniformly or per edge',
+      defaultValue: '0',
+    },
+    {
+      name: 'offset',
+      kind: 'property',
+      type: '{ x?: number; y?: number }',
+      description: 'Post-placement translation',
+      defaultValue: '{ x: 0, y: 0 }',
+    },
+  ]}
+/>
+
+Full signatures and constraints: [API reference](/library/layout/overlay-layout/api-reference) · [Schema reference](/library/layout/overlay-layout/schema-reference).
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and clipping',
+      url: '/library/layout/overlay-layout/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/overlay-layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public functions, types, and props',
+      url: '/library/layout/overlay-layout/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/overlay-layout/schema-reference',
+    },
+  ]}
+/>

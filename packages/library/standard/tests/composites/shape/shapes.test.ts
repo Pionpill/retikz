@@ -5,19 +5,19 @@ import { CircleDefinition, CircleSchema, createCircle, lowerCircle } from '../..
 import {
   EllipseSchema,
   RectangleSchema,
-  RegularPolygonSchema,
+  PolygonSchema,
   StarSchema,
   ArcSchema,
   SectorSchema,
   createEllipse,
   createRectangle,
-  createRegularPolygon,
+  createPolygon,
   createStar,
   createArc,
   createSector,
   lowerEllipse,
   lowerRectangle,
-  lowerRegularPolygon,
+  lowerPolygon,
   lowerStar,
   lowerArc,
   lowerSector,
@@ -35,7 +35,7 @@ describe('Standard shape family', () => {
     });
   });
   it('bakes polygon and star orientation exactly once', () => {
-    const polygon = lowerRegularPolygon(createRegularPolygon({ center: [0, 0], radius: 10, sides: 4, rotate: 0 }));
+    const polygon = lowerPolygon(createPolygon({ center: [0, 0], radius: 10, sides: 4, rotate: 0 }));
     expect(polygon).not.toHaveProperty('rotate');
     expect(polygon.children[0]).toMatchObject({ to: [10, 0] });
     expect(polygon.children.at(-1)).toMatchObject({ kind: 'cycle' });
@@ -71,7 +71,7 @@ describe('Standard shape family', () => {
   it.each([
     [EllipseSchema, 'ellipse', { center: [0, 0], radius: { x: -1, y: 2 } }],
     [RectangleSchema, 'rectangle', { center: 'origin', width: 2, height: 3 }],
-    [RegularPolygonSchema, 'regularPolygon', { center: [0, 0], sides: 2.5, radius: 10 }],
+    [PolygonSchema, 'polygon', { center: [0, 0], sides: 2.5, radius: 10 }],
     [StarSchema, 'star', { center: [0, 0], outerRadius: 10, innerRadius: 11, points: 5 }],
     [ArcSchema, 'arc', { center: [0, 0], radius: 10, startAngle: 0 }],
     [

@@ -9,6 +9,8 @@ description: Use when writing Retikz basic usage, named usage topics, extended u
 
 小体量组件合页直接遵循 [页型词典的合页结构](../docs-doc-principle/references/page-contract.md#小体量组件合页)，不叠加普通用法页骨架；按实际内容读取 reference / mechanism skill 的对应规则。
 
+Chart 各图表类型的组件合页再读 [Chart 专项](references/chart.md)；Chart 简介、快速开始和家族总览仍走各自页型。
+
 独立用法页共同阅读 [章节结构](references/structure.md)，然后只选当前模式：
 
 | 页面     | 细节                                                         |

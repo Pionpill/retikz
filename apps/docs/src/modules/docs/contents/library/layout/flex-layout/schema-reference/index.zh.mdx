@@ -1,0 +1,47 @@
+---
+title: Schema 参考
+description: 查询持久化容器输入的字段与约束
+---
+
+下面是持久化输入契约。工厂保留省略字段，parse() 才物化静态默认值。子项写法见[基础用法](/library/layout/flex-layout/usage)，求解结果见[扩展用法](/library/layout/flex-layout/extended)。
+
+## FlexLayoutSchema
+
+<ZodSchema
+  name="FlexLayoutSchema"
+  description="一维伸展、收缩、换行与基线布局的规范输入。"
+  descriptions={{
+    namespace: 'Layout 排版能力的复合组件命名空间。',
+    type: '确定性一维盒布局的复合组件类型。',
+    size: '包含内边距的容器双轴分配尺寸策略。',
+    padding: '从容器分配区域到内容区域的内边距。',
+    overflow: '视觉溢出保持可见或裁切到容器分配区域的策略。',
+    direction: '主轴的物理方向。',
+    wrap: '换行与交叉轴遍历策略。',
+    gap: '数字同时设置两个物理轴的间距；对象分别设置 column 与 row。',
+    justifyContent: '每条布局行内主轴剩余空间的分布方式。',
+    alignItems: '弹性子项默认的交叉轴对齐方式。',
+    alignContent: '多条布局行之间交叉轴剩余空间的分布方式。',
+    children: '按稳定绘制顺序排列、由作者声明的弹性子项。',
+  }}
+/>
+
+## LayoutItem 联合
+
+### LayoutItemSchema
+
+<ZodSchema
+  name="LayoutItemSchema"
+  description="由 kind 判别的 FlexLayoutItem、GridLayoutItem 与 OverlayLayoutItem 闭合联合。"
+/>
+
+所有子项共享以下基础字段；具体容器页记录各自增加的分配字段。
+
+| 字段      | 类型                            | 默认值   | 描述                                                   |
+| --------- | ------------------------------- | -------- | ------------------------------------------------------ |
+| `kind`    | `'flex' \| 'grid' \| 'overlay'` | —        | 选择拥有该子项的布局容器                               |
+| `key?`    | `string`                        | 内部生成 | 可选的容器局部稳定身份；显式值必须唯一                 |
+| `child`   | `IRChild`                       | —        | 参与布局、可 JSON 序列化的 Core 或已注册 Tier 2 子图形 |
+| `margin?` | `number` \| `IRBoxSpacing`      | `0`      | 分配区域外围间距，不进入子图形的空间提案               |
+
+React 中把可选 JSON `key` 写成 `itemKey`，并通过一个可绘制子元素或 `ir` 提供 `child`。省略时，Layout 按 source index 生成确定且唯一的有效 key；自动 key 只存在于内部产物，不写回 Source IR。若插入、删除或重排子项，按位置生成的身份可能变化；需要跨重排保持稳定身份时应显式传入 `key`。React 使用 `FlexLayoutItem`、`GridLayoutItem` 或 `OverlayLayoutItem` 表达对应容器的直属子项，不会单独生成图元；`kind` 由 adapter 按组件身份补充，Vanilla 与 IR 仍显式填写。

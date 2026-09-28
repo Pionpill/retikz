@@ -1,3 +1,3 @@
-export { createBubbleChart } from './factory';
+export { bubbleChart, BubbleChartInputEmbedAdapter } from './factory';
 export { normalizeBubbleChart } from './normalize';
-export type { CreateBubbleChartInput, InputBubbleChart } from './types';
+export type { BubbleChartInputEmbedProps, InputBubbleChart } from './types';

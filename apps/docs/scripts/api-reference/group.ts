@@ -51,7 +51,6 @@ export const groupApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       symbolPairs: pairs.map(([entry, input]) => [entry, input]),
     },
   ],
-  schemaPackageName: '@retikz/graph',
   schemaLocalizations: Object.fromEntries(
     ['GroupSchema', 'GroupCaptionSchema', 'GroupCaptionTextSchema'].map(name => [
       name,

@@ -93,10 +93,21 @@ const rulesOf = (style: ReferenceStyle, mode: ThemeModeValue): ReadonlyArray<IRP
   }
   if (style === PreviewThemeStyle.Clean) {
     return [
-      { select: { dimension: ['x', 'y'] }, axis: { grid: false } },
+      {
+        select: { dimension: 'x' },
+        axis: { grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: false } },
+      },
       {
         select: { dimension: 'y' },
-        axis: { grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true } },
+        axis: {
+          grid: {
+            stroke: 'currentColor',
+            strokeWidth: 1,
+            drawOpacity: 0.15,
+            dashPattern: [4, 4],
+            includeDomain: false,
+          },
+        },
       },
     ];
   }
@@ -110,10 +121,15 @@ const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotDefaults
       ? { kind: 'line' as const, length: 0, line: false as const }
       : { kind: 'line' as const, length: preset.axis.tick, line: { stroke: 'currentColor' } };
   return PlotDefaultsSchema.parse({
-    ...(preset.area[theme.mode] === 'none' ? {} : { plotArea: { fill: preset.area[theme.mode] } }),
+    ...(style === PreviewThemeStyle.Academic
+      ? { plotArea: { border: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 1 } } }
+      : preset.area[theme.mode] === 'none'
+        ? {}
+        : { plotArea: { fill: preset.area[theme.mode] } }),
     typography: { font: { family: preset.fontFamily, size: preset.fontSize } },
     axis: {
       ...(preset.axis.line ? {} : { line: false }),
+      ...(style === PreviewThemeStyle.Academic ? { grid: false } : {}),
       ticks: { mark: tickMark },
       tickLabels: { font: { size: preset.axis.labelSize }, gap: preset.axis.labelGap },
       title: preset.axis.title ? { font: { size: preset.axis.titleSize } } : false,

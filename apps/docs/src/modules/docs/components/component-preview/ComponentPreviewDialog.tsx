@@ -11,7 +11,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import type { CSSProperties, FC } from 'react';
+import type { FC } from 'react';
 import { useState } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -21,12 +21,14 @@ import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
 
+import { ComponentPreviewShowcase } from './ComponentPreviewShowcase';
 import { ToolbarIconButton } from './components';
-import { alignClass } from './constants';
+import { alignClass, DOT_PATTERN_STYLE, sizeClass } from './constants';
 import { PreviewResizeHandle, PreviewWorkspace } from './control-panel';
 import { mergePreviewControlSlots } from './controls';
 import {
   downloadPreviewImage,
+  buildPreviewToolSlots,
   buildPreviewControlsLockSlot,
   PAN_STEP,
   PreviewToolbar,
@@ -53,6 +55,10 @@ import type {
 import { buildAskAiPrompt } from './utils';
 
 export type ComponentPreviewDialogProps = {
+  /** 向 demo 提供绘图区实际宽高，默认关闭 */
+  responsive?: boolean;
+  /** 与卡片一致的展示模式 */
+  mode?: 'default' | 'showcase';
   /** demo 文件名，用于 header 标识与下载文件名。 */
   name: string;
   /** 默认 React demo 组件。 */
@@ -61,6 +67,8 @@ export type ComponentPreviewDialogProps = {
   lang?: Lang;
   /** 不可变源码视图定义；缺省时预览区占满弹窗。 */
   source?: ComponentRenderSource;
+  /** 打开演示模式源码时通知资源宿主 */
+  onSourceRequested?: () => void;
   /** React 源码视图默认选中的文件名。 */
   defaultSourceFile?: string;
   /** 预览内容垂直对齐方式。 */
@@ -104,12 +112,6 @@ export type ComponentPreviewDialogProps = {
   onClose: () => void;
 };
 
-const DOT_PATTERN_STYLE: CSSProperties = {
-  backgroundImage:
-    'radial-gradient(circle, color-mix(in oklab, var(--foreground) 15%, transparent) 1px, transparent 1px)',
-  backgroundSize: '14px 14px',
-};
-
 /** 构建只属于全屏预览区的平移、缩放与拖拽工具。 */
 const buildDialogPreviewToolSlots = (state: ReturnType<typeof usePreviewPanelState>): Array<PreviewControlSlot> => [
   {
@@ -151,10 +153,13 @@ const buildDialogPreviewToolSlots = (state: ReturnType<typeof usePreviewPanelSta
 /** 拥有独立预览与源码 controller 的全屏演示弹窗。 */
 export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => {
   const {
+    responsive = false,
+    mode = 'default',
     name,
     Component,
     lang = 'zh',
     source,
+    onSourceRequested,
     defaultSourceFile,
     align,
     initialSize,
@@ -176,6 +181,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     showAskAi = true,
     onClose,
   } = props;
+  const [previewWidth, setPreviewWidth] = useState(0);
   const [globalDefaults] = useState(() => {
     const { rendererMode, dragEnabled } = useComponentPreviewStore.getState();
     return { rendererMode, dragEnabled };
@@ -184,7 +190,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: globalDefaults.rendererMode,
-    rendererModeOverride: sourceState.activeRendererMode,
+    rendererModeOverride: mode === 'default' ? sourceState.activeRendererMode : undefined,
     size: initialSize,
     dragEnabled: globalDefaults.dragEnabled,
     expanded: true,
@@ -225,6 +231,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       onControlPanelOpenChange={onControlPanelOpenChange}
       previewState={previewState}
       Component={Component}
+      responsive={responsive}
       lang={lang}
       activeRender={sourceState.activeRender}
       controlSlots={resolvedDialogControlSlots}
@@ -246,26 +253,32 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
             {dialogActions?.map(action => (
               <span key={action.id}>{action.render(previewState.runtime)}</span>
             ))}
-            <RendererModeButton
-              rendererMode={previewState.rendererMode}
-              disabled={previewState.rendererModeFixed}
-              onToggle={previewState.toggleRendererMode}
-            />
-            <ToolbarIconButton
-              label="Reset"
-              title="Reset"
-              disabled={!previewState.isTransformed}
-              onClick={previewState.resetTransform}
-            >
-              <RotateCcw className="size-4" />
-            </ToolbarIconButton>
-            <ToolbarIconButton
-              label={downloadLabel}
-              title={downloadLabel}
-              onClick={() => downloadPreviewImage(previewState.renderPaneRef.current, name, previewState.rendererMode)}
-            >
-              <Download className="size-4" />
-            </ToolbarIconButton>
+            {mode === 'default' ? (
+              <>
+                <RendererModeButton
+                  rendererMode={previewState.rendererMode}
+                  disabled={previewState.rendererModeFixed}
+                  onToggle={previewState.toggleRendererMode}
+                />
+                <ToolbarIconButton
+                  label="Reset"
+                  title="Reset"
+                  disabled={!previewState.isTransformed}
+                  onClick={previewState.resetTransform}
+                >
+                  <RotateCcw className="size-4" />
+                </ToolbarIconButton>
+                <ToolbarIconButton
+                  label={downloadLabel}
+                  title={downloadLabel}
+                  onClick={() =>
+                    downloadPreviewImage(previewState.renderPaneRef.current, name, previewState.rendererMode)
+                  }
+                >
+                  <Download className="size-4" />
+                </ToolbarIconButton>
+              </>
+            ) : null}
             <DialogClose asChild>
               <ToolbarIconButton label="Close" title="Close">
                 <X className="size-4" />
@@ -273,7 +286,40 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
             </DialogClose>
           </div>
         </header>
-        {hasCode ? (
+        {mode === 'showcase' ? (
+          <div className="min-h-0 flex-1 overflow-auto p-4">
+            <ComponentPreviewShowcase
+              width={previewWidth}
+              onAskAi={showAskAi ? handleAskAi : undefined}
+              Component={Component}
+              responsive={responsive}
+              lang={lang}
+              previewState={previewState}
+              sourceState={sourceState}
+              onSourceRequested={onSourceRequested}
+              definition={controlDefinition}
+              controlContract={controlContract}
+              tools={mergePreviewControlSlots(
+                controlSlots,
+                buildPreviewToolSlots({
+                  compactSizes: true,
+                  width: previewWidth,
+                  onWidthChange: setPreviewWidth,
+                  lang,
+                  ...previewState,
+                  onSizeChange: previewState.setSize,
+                  name,
+                }),
+              )}
+              themeMode={themeMode}
+              onThemeModeChange={onThemeModeChange}
+              enableThemeSwitch={enableThemeSwitch}
+              themeStyleSelection={themeStyleSelection}
+              onThemeStyleChange={onThemeStyleChange}
+              className={sizeClass[previewState.size]}
+            />
+          </div>
+        ) : hasCode ? (
           <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
             <ResizablePanel defaultSize={60} minSize={30} maxSize={85}>
               {previewPanel}

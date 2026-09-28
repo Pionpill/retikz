@@ -96,7 +96,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ### 缺失值处理
 
-某一行无法投影成有效点时，PathMark 默认在这里断开，并把前后连续数据分别生成 core `Path`。`connectNulls` 可以跨过空值连接；区域填充也遵循同一分段规则，不会默认铺满缺口。
+某一行无法投影成有效点时，PathMark 默认在这里断开，并把前后连续数据分别生成 core `Path`。开放且无填充的路径中，`connectNulls: true` 或 `{}` 仅用默认虚线 `[6, 4]` 连接缺口两侧有效点，正常段保持原样式。对象可覆盖缺值段的 `stroke`、`strokeWidth`、`strokeOpacity`、`dashPattern`、`dashOffset`、`lineCap`、`lineJoin`。连续缺值只生成一个桥接，首尾缺值不外推。闭合、closure 与填充路径仅接受 boolean，保留整体跨空连接的行为。
 
 <ComponentPreview
   files={['line-interruption', 'line-interruption.data.ts']}
@@ -176,7 +176,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 | `color?`         | `PathMarkProps['color']`                                                                                                                  | `series`                                                   | 路径颜色字段；没有显式 `series` 时，分类颜色字段也可拆系列                                                                    |
 | `curve?`         | <ApiValues name="PathCurve" />                                                                                                            | `linear`                                                   | 相邻点的连接方式；polar2D 下 `monotoneX` / `monotoneY` 回退为 `linear`                                                        |
 | `interpolation?` | <ApiValues name="PolarInterpolation" />                                                                                                   | coordinate 默认                                            | polar2D 相邻位置的连接空间；`polar` 先在角度 / 半径空间插值，`chord` 直连投影顶点                                             |
-| `connectNulls?`  | `boolean`                                                                                                                                 | `false`                                                    | 是否跨过无法投影的行继续连接                                                                                                  |
+| `connectNulls?`  | boolean 或描边对象                                                                                                                        | `false`                                                    | 开放无填充路径的缺值段默认虚线桥接，可独立配置；闭合或填充路径仅支持 boolean                                                  |
 | `closed?`        | `boolean`                                                                                                                                 | cartesian2D: `false`<br />polar2D: `true`                  | 是否把最后一个点连回第一个点                                                                                                  |
 | `closure?`       | `IRPlotPathClosure`<br />- `kind: 'cycle' \| 'baseline' \| 'stack'`<br />- `baseline?: number`<br />- `baselineField: PathMarkProps['x']` | —<br />必填<br />0 或离 0 最近的值域边界<br />`stack` 必填 | 构造可填充边界<br />选择首尾闭合、常量基线或逐行基线<br />仅 `baseline` 使用的常量下边界<br />仅 `stack` 使用的逐行下边界字段 |
 | `label?`         | `PathMarkProps['label']`                                                                                                                  | —                                                          | 路径或路径段标签；内容与位置字段由 `PathMarkProps['label']` 的 TypeScript 输入契约定义                                        |

@@ -1,4 +1,4 @@
-import { StripChart } from '@retikz/chart-react/point';
+import { StripChart, StripEncodings, StripProperties } from '@retikz/chart-react/point';
 import { isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -17,6 +17,11 @@ import EnDemo, {
 import ZhDemo, {
   previewSource as zhSource,
 } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.zh.demo';
+import { previewSource as stripDistributionSource } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-distribution';
+import StripEncodingsDemo from '../../src/modules/docs/contents/viz/chart/points/strip/strip-encodings';
+import { createPreviewControlContract } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-encodings.controls';
+import StripMarksDemo from '../../src/modules/docs/contents/viz/chart/points/strip/strip-marks';
+import { createPreviewControlContract as createStripMarksControlContract } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-marks.controls';
 import { stripPalmerPenguinsData } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-palmer-penguins.data';
 import { stripVegaBarleyData } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-vega-barley.data';
 
@@ -35,6 +40,31 @@ const renderDemo = (Demo: typeof ZhDemo, canonicalValues: PreviewControlValues, 
     </PreviewControlStateContext.Provider>,
   );
 
+const renderPolarSample = (scale: 'point' | 'band', role: 'x' | 'y', values: PreviewControlValues) => {
+  const category = {
+    field: 'site',
+    scale: {
+      operation:
+        scale === 'band'
+          ? { type: 'band', name: 'site', paddingInner: 0.1, paddingOuter: 0.05 }
+          : { type: 'point', name: 'site' },
+    },
+  } as const;
+  const value = { field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } } as const;
+  return renderToStaticMarkup(
+    <StripChart rows={stripVegaBarleyData} coordinate={{ type: 'polar2D' }}>
+      <StripEncodings {...(role === 'x' ? { x: category, y: value } : { x: value, y: category })} />
+      <StripProperties
+        jitter={{
+          span: { kind: 'ratio', value: Number(values[STRIP_BASIC_CONTROL_IDS.jitterSpan]) },
+          seed: Number(values[STRIP_BASIC_CONTROL_IDS.seed]),
+        }}
+        size={Number(values[STRIP_BASIC_CONTROL_IDS.pointSize])}
+      />
+    </StripChart>,
+  );
+};
+
 const textVisualCenterOf = (markup: string, text: string): [number, number] => {
   const textElement = markup.match(/<text\b[^>]*>[\s\S]*?<\/text>/g)?.find(element => element.includes(`>${text}<`));
   expect(textElement).toBeDefined();
@@ -52,6 +82,45 @@ const textVisualCenterOf = (markup: string, text: string): [number, number] => {
 };
 
 describe('Strip Chart controls', () => {
+  it('扩展散布示例默认使用极坐标并能完整渲染', () => {
+    const chart = stripDistributionSource.canonicalRender('zh');
+    expect(isValidElement(chart)).toBe(true);
+    if (isValidElement<{ coordinate?: { type: string } }>(chart)) {
+      expect(chart.props.coordinate).toEqual({ type: 'polar2D' });
+    }
+    const markup = renderToStaticMarkup(chart);
+    expect(markup).toContain('<svg');
+    expect(markup).not.toMatch(/NaN|Infinity/);
+  });
+
+  it('条带图元固定替换，仅用形状与大小控件改变图形', () => {
+    const zh = createStripMarksControlContract('zh');
+    const en = createStripMarksControlContract('en');
+    expect(getPreviewControlFields(zh.controls).map(control => control.id)).toEqual(['shape', 'size']);
+    expect(getPreviewControlFields(en.controls).map(control => control.id)).toEqual(['shape', 'size']);
+    expect(zh.canonicalValues).toEqual({ shape: 'diamond', size: 4 });
+    expect(en.canonicalValues).toEqual(zh.canonicalValues);
+
+    const canonical = zh.canonicalValues as PreviewControlValues;
+    const baseline = renderDemo(StripMarksDemo, canonical, canonical);
+    expect(renderDemo(StripMarksDemo, canonical, { ...canonical, shape: 'circle' })).not.toBe(baseline);
+    expect(renderDemo(StripMarksDemo, canonical, { ...canonical, size: 8 })).not.toBe(baseline);
+  });
+
+  it('条带映射中每个可切换控件都改变实际图形', () => {
+    const contract = createPreviewControlContract();
+    const canonical = contract.canonicalValues as PreviewControlValues;
+    const baseline = renderDemo(StripEncodingsDemo, canonical, canonical);
+
+    for (const field of getPreviewControlFields(contract.controls)) {
+      if (field.kind !== 'select') throw new Error(`Unexpected control kind: ${field.kind}`);
+      const alternate = field.options.find(option => option.value !== field.defaultValue)?.value;
+      if (alternate === undefined) throw new Error(`Missing alternate value: ${field.id}`);
+      const changed = renderDemo(StripEncodingsDemo, canonical, { ...canonical, [field.id]: alternate });
+      expect(changed, field.id).not.toBe(baseline);
+    }
+  });
+
   it('基础数据保留 90 条 Palmer Penguins 观测', () => {
     expect(stripPalmerPenguinsData).toHaveLength(90);
     expect(Object.keys(stripPalmerPenguinsData[0] ?? {}).sort()).toEqual(['flipperLengthMm', 'species']);
@@ -84,7 +153,7 @@ describe('Strip Chart controls', () => {
       const markup = renderDemo(Demo, canonical, canonical);
 
       expect(markup.match(/<ellipse/g)).toHaveLength(120);
-      expect(markup).toContain('Vega Datasets');
+      expect(markup).not.toContain('Vega Datasets');
       expect(markup).not.toContain('Palmer Penguins');
       expect(source.datasetImports['chart.data']).toEqual({
         name: 'stripVegaBarleyData',
@@ -93,24 +162,26 @@ describe('Strip Chart controls', () => {
     }
   });
 
-  it('中英文 controls 保持相同结构并覆盖离散角色、scale、坐标、宽度、分布、种子和点尺寸', () => {
-    const expectedIds = Object.values(STRIP_BASIC_CONTROL_IDS);
+  it('中英文属性 controls 保持相同结构并覆盖散布与点外观', () => {
+    const expectedIds = Object.values(STRIP_BASIC_CONTROL_IDS).sort();
     for (const contract of [zhContract, enContract]) {
-      expect(getPreviewControlFields(contract.controls).map(control => control.id)).toEqual(expectedIds);
+      expect(
+        getPreviewControlFields(contract.controls)
+          .map(control => control.id)
+          .sort(),
+      ).toEqual(expectedIds);
       expect(contract.canonicalValues).toEqual({
-        [STRIP_BASIC_CONTROL_IDS.discreteRole]: 'x',
-        [STRIP_BASIC_CONTROL_IDS.discreteScale]: 'point',
         [STRIP_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
         [STRIP_BASIC_CONTROL_IDS.jitterSpan]: 0.3,
         [STRIP_BASIC_CONTROL_IDS.distribution]: 'uniform',
         [STRIP_BASIC_CONTROL_IDS.normalSigma]: 0.5,
         [STRIP_BASIC_CONTROL_IDS.seed]: 0,
         [STRIP_BASIC_CONTROL_IDS.pointSize]: 5,
+        [STRIP_BASIC_CONTROL_IDS.pointOpacity]: 0.75,
       });
       expect(contract.relatedApis).toEqual([
-        'StripEncodings.x',
-        'StripEncodings.y',
         'StripChart.coordinate',
+        'StripProperties.opacity',
         'StripProperties.jitter',
         'StripProperties.size',
       ]);
@@ -152,19 +223,14 @@ describe('Strip Chart controls', () => {
     ] as const) {
       const canonical = contract.canonicalValues as PreviewControlValues;
       const cartesian = renderDemo(Demo, canonical, canonical);
-      const polarAngle = renderDemo(Demo, canonical, {
+      const polarAngle = renderPolarSample('point', 'x', {
         ...canonical,
-        [STRIP_BASIC_CONTROL_IDS.coordinateSystem]: 'polar2D',
-        [STRIP_BASIC_CONTROL_IDS.discreteRole]: 'x',
         [STRIP_BASIC_CONTROL_IDS.jitterSpan]: 1,
         [STRIP_BASIC_CONTROL_IDS.seed]: 17,
         [STRIP_BASIC_CONTROL_IDS.pointSize]: 10,
       });
-      const polarRadius = renderDemo(Demo, canonical, {
+      const polarRadius = renderPolarSample('band', 'y', {
         ...canonical,
-        [STRIP_BASIC_CONTROL_IDS.coordinateSystem]: 'polar2D',
-        [STRIP_BASIC_CONTROL_IDS.discreteRole]: 'y',
-        [STRIP_BASIC_CONTROL_IDS.discreteScale]: 'band',
       });
 
       for (const markup of [cartesian, polarAngle, polarRadius]) {
@@ -176,21 +242,10 @@ describe('Strip Chart controls', () => {
   });
 
   it('极坐标下 Point 与 Band scale 保持相同的类别标签中心', () => {
-    for (const [Demo, contract] of [
-      [ZhDemo, zhContract],
-      [EnDemo, enContract],
-    ] as const) {
+    for (const contract of [zhContract, enContract]) {
       const canonical = contract.canonicalValues as PreviewControlValues;
-      const polarPoint = renderDemo(Demo, canonical, {
-        ...canonical,
-        [STRIP_BASIC_CONTROL_IDS.coordinateSystem]: 'polar2D',
-        [STRIP_BASIC_CONTROL_IDS.discreteScale]: 'point',
-      });
-      const polarBand = renderDemo(Demo, canonical, {
-        ...canonical,
-        [STRIP_BASIC_CONTROL_IDS.coordinateSystem]: 'polar2D',
-        [STRIP_BASIC_CONTROL_IDS.discreteScale]: 'band',
-      });
+      const polarPoint = renderPolarSample('point', 'x', canonical);
+      const polarBand = renderPolarSample('band', 'x', canonical);
       const [pointX, pointY] = textVisualCenterOf(polarPoint, 'Waseca');
       const [bandX, bandY] = textVisualCenterOf(polarBand, 'Waseca');
 

@@ -85,13 +85,13 @@ Adjust the number of predictions and switch between the observed range and expli
 | `x`            | `string`             | —                       | Independent regression field                   |
 | `y`            | `string`             | —                       | Dependent regression field                     |
 | `groupBy?`     | `Array<string>`      | one global group        | Fit trends independently per group             |
-| `method?`      | `IRPlotSmoothMethod` | `linear`                | Smoothing method                               |
+| `method?`      | `IRRegressionMethod` | `linear`                | Smoothing method                               |
 | `sampleCount?` | `number`             | `64`                    | Predicted output rows per group; at least 2    |
 | `extent?`      | `[number, number]`   | finite observed x range | Sampling interval; explicit values extrapolate |
 | `xAs`          | `string`             | —                       | Output field for predicted positions           |
 | `yAs`          | `string`             | —                       | Output field for predicted values              |
 
-`method.kind` uses <ApiValues name="SmoothMethodKind" />. `polynomial` additionally accepts an integer `order` from 2 through 6, defaulting to 3; the other methods have no additional fields.
+Built-in `method.kind` values include <ApiValues name="BuiltinRegressionMethod" />; custom methods in the active registry are also accepted. `polynomial` additionally accepts an integer `order` from 2 through 6, defaulting to 3; the other built-in methods have no additional fields.
 
 | `kind`        | Equation            | Minimum samples and domain                     |
 | ------------- | ------------------- | ---------------------------------------------- |
@@ -153,3 +153,5 @@ The `extent` lower bound must be smaller than its upper bound; logarithmic and p
     },
   ]}
 />
+
+Custom methods use `defineRegression` from `@retikz/data`. Inject them through the Plot React `regressionDefinitions` prop or the same field in Vanilla / IR lowering options; see [Custom fitting](/viz/chart/points/regression#custom-fitting). Built-in and custom methods share the registry. Ordinary Path still defaults to `linear`; set `curve: 'catmullRom'` for an interpolating curve.

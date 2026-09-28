@@ -1,19 +1,21 @@
-import { CHART_NAMESPACE } from '@retikz/chart';
+import type { IRChartSource } from '@retikz/chart';
 import type { CompileResult } from '@retikz/core';
 import type { RenderToStringOptions } from '@retikz/vanilla';
-import { embed, renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
+import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
+import type { InputEmbed } from '@retikz/vanilla';
 
 import { RetikzChartVanillaError } from '../error';
-import type { ChartAuthoringResult } from '../shared/types';
-import { ChartInputEmbedAdapter } from './adapter';
+import type { ChartHostThemeInput } from '../shared';
 
 export type { InputChartCoordinate } from '../normalize/chart';
 export { normalizeChartCoordinate } from '../normalize/chart';
-export type { ChartAuthoringResult, ChartHostThemeInput, ChartInput, InputChartPanel } from '../shared';
-export { ChartInputEmbedAdapter } from './adapter';
+export type { ChartHostThemeInput, InputChartPanel } from '../shared';
 
 /** Chart 服务端渲染选项 */
-export type RenderChartOptions = Omit<RenderToStringOptions, 'adapters' | 'compileDriver'>;
+export type RenderChartOptions = Omit<RenderToStringOptions, 'adapters' | 'compileDriver'> & {
+  /** 当前图表的 Vanilla adapter */
+  adapters: NonNullable<RenderToStringOptions['adapters']>;
+};
 
 /** Chart 单次编译与服务端渲染结果 */
 export type RenderChartResult = Readonly<{
@@ -23,27 +25,34 @@ export type RenderChartResult = Readonly<{
   compileResult: CompileResult;
 }>;
 
-/** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG */
-export const renderChart = (input: ChartAuthoringResult, options: RenderChartOptions = {}): RenderChartResult => {
-  const { compile: compileOptions, ...renderOptions } = options;
+/** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG；完整布局尺寸作为取景范围，输出尺寸只控制显示大小 */
+export const renderChart = (
+  input: InputEmbed<ChartHostThemeInput & { layout?: IRChartSource['layout'] }>,
+  options: RenderChartOptions,
+): RenderChartResult => {
+  const { compile: compileOptions, adapters, ...renderOptions } = options;
   const {
     composites: explicitComposites,
     themeStyles: explicitThemeStyles,
     ...compileOptionsWithoutDefinitions
   } = compileOptions ?? {};
   const themeStyles =
-    input.themeStyles === undefined
+    input.props.themeStyles === undefined
       ? explicitThemeStyles
       : explicitThemeStyles === undefined
-        ? input.themeStyles
-        : [...input.themeStyles, ...explicitThemeStyles];
+        ? input.props.themeStyles
+        : [...input.props.themeStyles, ...explicitThemeStyles];
+  const layout = input.props.layout;
   const result = toSceneResult(
     scene({
-      ...(input.theme === undefined ? {} : { theme: input.theme }),
-      children: [embed({ kind: CHART_NAMESPACE, id: input.source.id ?? CHART_NAMESPACE, props: input.input })],
+      ...(layout?.width !== undefined && layout.height !== undefined
+        ? { viewBox: { x: 0, y: 0, width: layout.width, height: layout.height } }
+        : {}),
+      ...(input.props.theme === undefined ? {} : { theme: input.props.theme }),
+      children: [input],
     }),
     {
-      adapters: [ChartInputEmbedAdapter],
+      adapters,
       compile: {
         ...compileOptionsWithoutDefinitions,
         ...(explicitComposites === undefined ? {} : { composites: explicitComposites }),

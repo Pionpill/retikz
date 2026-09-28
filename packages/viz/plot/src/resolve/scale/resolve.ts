@@ -43,7 +43,7 @@ const parseScaleOperation = (def: AnyScaleDefinition, operation: IRPlotScaleOper
  * 为内置 position scale 计算最终 domain
  * @description 默认值域、单值展开和 domain padding 都在 resolve 层完成；provider definition 只接收已确定的 operation 并构建运行时 scale。自定义 definition 保留原始 operation 与既有 contract
  */
-const resolveBuiltinPositionOperation = (
+export const resolveBuiltinPositionOperation = (
   operation: IRPlotScaleOperation,
   values: Array<unknown>,
   fallbackRange: readonly [number, number],

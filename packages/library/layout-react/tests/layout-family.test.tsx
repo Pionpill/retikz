@@ -10,7 +10,14 @@ import {
   OverlayLayoutDefinition,
   OverlayLayoutProvider,
 } from '@retikz/layout';
-import { FlexLayout, GridLayout, LayoutItem, OverlayLayout } from '@retikz/layout-react';
+import {
+  FlexLayout,
+  GridLayout,
+  FlexLayoutItem,
+  GridLayoutItem,
+  OverlayLayoutItem,
+  OverlayLayout,
+} from '@retikz/layout-react';
 import { createInputScene, Node } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import { normalizeScene } from '@retikz/vanilla';
@@ -44,17 +51,17 @@ describe('Layout React layout family', () => {
   it('converts nested Flex/Grid/Overlay JSX and forwards one ordered Layout contribution', () => {
     const result = normalizeReactInput(
       <FlexLayout direction="row" gap={{ column: 4, row: 8 }}>
-        <LayoutItem kind="flex" itemKey="grid" grow={1}>
+        <FlexLayoutItem itemKey="grid" grow={1}>
           <GridLayout columns={[{ kind: 'fixed', value: 20 }]}>
-            <LayoutItem kind="grid" itemKey="overlay">
+            <GridLayoutItem itemKey="overlay">
               <OverlayLayout>
-                <LayoutItem kind="overlay" itemKey="leaf">
+                <OverlayLayoutItem itemKey="leaf">
                   <Node id="leaf" position={[0, 0]} />
-                </LayoutItem>
+                </OverlayLayoutItem>
               </OverlayLayout>
-            </LayoutItem>
+            </GridLayoutItem>
           </GridLayout>
-        </LayoutItem>
+        </FlexLayoutItem>
       </FlexLayout>,
     );
 
@@ -104,7 +111,7 @@ describe('Layout React layout family', () => {
   it('uses itemKey instead of the reserved React key and accepts explicit IR as the sole child source', () => {
     const result = normalizeReactInput(
       <FlexLayout>
-        <LayoutItem key="react-key" kind="flex" itemKey="ir-key" ir={{ type: 'node', position: [1, 2] }} />
+        <FlexLayoutItem key="react-key" itemKey="ir-key" ir={{ type: 'node', position: [1, 2] }} />
       </FlexLayout>,
     );
 
@@ -117,7 +124,7 @@ describe('Layout React layout family', () => {
   it('keeps an omitted itemKey out of Source IR', () => {
     const result = normalizeReactInput(
       <FlexLayout>
-        <LayoutItem kind="flex" ir={{ type: 'node', position: [1, 2] }} />
+        <FlexLayoutItem ir={{ type: 'node', position: [1, 2] }} />
       </FlexLayout>,
     );
 
@@ -146,40 +153,77 @@ describe('Layout React layout family', () => {
 
   it('fails loudly for standalone, ordinary direct, mismatched and multiple children', () => {
     expect(() =>
-      normalizeReactInput(<LayoutItem kind="flex" itemKey="loose" ir={{ type: 'node', position: [0, 0] }} />),
-    ).toThrow(/direct child of FlexLayout, GridLayout, or OverlayLayout/i);
+      normalizeReactInput(<FlexLayoutItem itemKey="loose" ir={{ type: 'node', position: [0, 0] }} />),
+    ).toThrow(/FlexLayoutItem must be a direct child of FlexLayout/i);
     expect(() =>
       normalizeReactInput(
         <FlexLayout>
           <Node position={[0, 0]} />
         </FlexLayout>,
       ),
-    ).toThrow(/direct children must be LayoutItem/i);
+    ).toThrow(/expects FlexLayoutItem/i);
     expect(() =>
       normalizeReactInput(
         <FlexLayout>
-          <LayoutItem kind="grid" itemKey="wrong" ir={{ type: 'node', position: [0, 0] }} />
+          <GridLayoutItem itemKey="wrong" ir={{ type: 'node', position: [0, 0] }} />
         </FlexLayout>,
       ),
-    ).toThrow(/expects LayoutItem kind "flex"/i);
+    ).toThrow(/expects FlexLayoutItem/i);
     expect(() =>
       normalizeReactInput(
         <FlexLayout>
-          <LayoutItem kind="flex" itemKey="many">
+          <FlexLayoutItem itemKey="many">
             <Node position={[0, 0]} />
             <Node position={[1, 1]} />
-          </LayoutItem>
+          </FlexLayoutItem>
         </FlexLayout>,
       ),
     ).toThrow(/exactly one authoring child/i);
   });
 
+  it('preserves item order through fragments, arrays and empty conditional children', () => {
+    const result = normalizeReactInput(
+      <GridLayout columns={[{ kind: 'fixed', value: 20 }]}>
+        <>
+          {false}
+          <GridLayoutItem itemKey="first" ir={{ type: 'node', id: 'first', position: [0, 0] }} />
+          {[<GridLayoutItem key="second" itemKey="second" ir={{ type: 'node', id: 'second', position: [0, 0] }} />]}
+          {null}
+        </>
+      </GridLayout>,
+    );
+    expect(result.ir.children[0]).toMatchObject({
+      type: 'gridLayout',
+      children: [
+        { kind: 'grid', key: 'first', child: { id: 'first' } },
+        { kind: 'grid', key: 'second', child: { id: 'second' } },
+      ],
+    });
+  });
+
+  it('rejects mismatched items in Grid and Overlay containers', () => {
+    expect(() =>
+      normalizeReactInput(
+        <GridLayout columns={[{ kind: 'fixed', value: 20 }]}>
+          <OverlayLayoutItem ir={{ type: 'node', position: [0, 0] }} />
+        </GridLayout>,
+      ),
+    ).toThrow(/expects GridLayoutItem/i);
+    expect(() =>
+      normalizeReactInput(
+        <OverlayLayout>
+          <FlexLayoutItem ir={{ type: 'node', position: [0, 0] }} />
+        </OverlayLayout>,
+      ),
+    ).toThrow(/expects OverlayLayoutItem/i);
+  });
+
   it('forwards foreign Tier 2 child input through Vanilla', () => {
     const result = normalizeReactInput(
       <FlexLayout>
-        <LayoutItem kind="flex" itemKey="foreign">
+        <FlexLayoutItem itemKey="foreign">
           <Foreign id="foreign" />
-        </LayoutItem>
+        </FlexLayoutItem>
       </FlexLayout>,
     );
 

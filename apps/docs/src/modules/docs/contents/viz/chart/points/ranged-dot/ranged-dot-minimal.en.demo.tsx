@@ -1,17 +1,15 @@
 import { RangedDotChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
+import { usePreviewDimensions } from '@/modules/docs/preview';
+
 import { rangedDotMinimalData } from './ranged-dot-minimal.data';
 
-/** Ranged Dot basic usage with required configuration and presentation metadata on the root */
-const Demo: FC = () => (
+/** Ranged Dot basic usage with required data and field mappings on the root */
+const render = (dimensions?: { width: number; height: number }) => (
   <RangedDotChart
+    layout={dimensions}
     rows={rangedDotMinimalData}
-    presentation={{
-      title: { text: 'The first 20 daily temperature ranges in Seattle' },
-      subtitle: { text: 'One row per day; degrees Celsius on x, with minimum and maximum temperature endpoints' },
-      source: { text: 'Vega Datasets seattle-weather.csv; accessed 2026-09-01' },
-    }}
     recipe={{
       encodings: { category: 'day', start: 'minimumTemperature', end: 'maximumTemperature' },
     }}
@@ -20,7 +18,15 @@ const Demo: FC = () => (
 
 /** Data import used by the IR and Vanilla previews */
 export const previewSource = {
+  deriveIR: false,
+  canonicalRender: () => render(),
   datasetImports: { 'chart.data': { name: 'rangedDotMinimalData', from: './ranged-dot-minimal.data' } },
 };
 
+/** 预览尺寸改变时重新布局，源码使用无上下文的配置 */
+const Demo: FC = () => {
+  const dimensions = usePreviewDimensions();
+  const chart = render(dimensions);
+  return chart;
+};
 export default Demo;

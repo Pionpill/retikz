@@ -89,7 +89,6 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
             : { IRGraphEntity: entityMemberTypeLabels },
     },
   ],
-  schemaPackageName: '@retikz/graph',
   schemaLocalizations: {
     EntitySchema: {
       descriptions: readSchemaDescriptions(

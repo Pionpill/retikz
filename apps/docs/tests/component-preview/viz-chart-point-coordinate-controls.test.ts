@@ -18,10 +18,10 @@ import { previewControlContract as regressionZh } from '../../src/modules/docs/c
 import { previewControlContract as regressionEn } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.en.controls';
 import { previewSource as regressionEnSource } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.en.demo';
 import { previewSource as regressionZhSource } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.zh.demo';
-import { previewControlContract as fertilityZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.controls';
-import { previewControlContract as fertilityEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.controls';
-import { previewSource as fertilityEnSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
-import { previewSource as fertilityZhSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
+import { previewControlContract as scatterZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.controls';
+import { previewControlContract as scatterEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.controls';
+import { previewSource as scatterEnSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
+import { previewSource as scatterZhSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewControlContract as worldCupZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.controls';
 import { previewControlContract as stripZh } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.controls';
 import { previewControlContract as stripEn } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.controls';
@@ -38,6 +38,13 @@ type PointCoordinateScenario = Readonly<{
 }>;
 
 const scenarios: ReadonlyArray<PointCoordinateScenario> = [
+  {
+    coordinateId: 'scatter-fertility-work-coordinate-system',
+    relatedApi: 'ScatterChart.coordinate',
+    zh: scatterZh,
+    en: scatterEn,
+    sources: [scatterZhSource, scatterEnSource],
+  },
   {
     coordinateId: 'bubble-basic-coordinate-system',
     relatedApi: 'BubbleChart.coordinate',
@@ -67,13 +74,6 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     sources: [rangedDotZhSource, rangedDotEnSource],
   },
   {
-    coordinateId: 'scatter-fertility-work-coordinate-system',
-    relatedApi: 'ScatterChart.coordinate',
-    zh: fertilityZh,
-    en: fertilityEn,
-    sources: [fertilityZhSource, fertilityEnSource],
-  },
-  {
     coordinateId: 'strip-basic-coordinate-system',
     relatedApi: 'StripChart.coordinate',
     zh: stripZh,
@@ -91,9 +91,12 @@ const canonicalCoordinateProps = (source: PreviewSourceConfig): Record<string, u
 };
 
 describe('Viz Chart Point family coordinate controls', () => {
-  it('六个通用 Point demos 共享 Cartesian / Polar control，并以 Cartesian 为 canonical', () => {
+  it('双语示例在数据表后提供坐标切换，默认使用笛卡尔坐标', () => {
     for (const scenario of scenarios) {
       for (const contract of [scenario.zh, scenario.en]) {
+        if (contract.controls.presentation !== 'panel') {
+          throw new Error('Point Chart basic preview must use a controls panel');
+        }
         const coordinateControl = getPreviewControlFields(contract.controls).find(
           control => control.id === scenario.coordinateId,
         );
@@ -103,10 +106,42 @@ describe('Viz Chart Point family coordinate controls', () => {
         }
         expect(contract.canonicalValues[scenario.coordinateId]).toBe('cartesian2D');
         expect(contract.relatedApis).toContain(scenario.relatedApi);
+        expect(contract.controls.sections[0]?.controls[0]?.kind).toBe('table');
+        expect(contract.controls.sections[1]?.controls[0]?.id).toBe(scenario.coordinateId);
       }
 
       for (const source of scenario.sources) {
         expect(canonicalCoordinateProps(source)).toMatchObject({ coordinate: { type: 'cartesian2D' } });
+      }
+    }
+  });
+
+  it('其余十二个基础用法 demo 也把坐标系放在数据表后的首个控件', async () => {
+    const contractLoaders = [
+      () => import('../../src/modules/docs/contents/viz/chart/points/scatter/scatter-appearance.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/scatter/scatter-marks.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/bubble/bubble-encodings.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/bubble/bubble-appearance.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/bubble/bubble-marks.controls'),
+      () =>
+        import('../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-encodings.controls'),
+      () =>
+        import('../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-marks.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-encodings.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-marks.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/regression/regression-encodings.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/regression/regression-marks.controls'),
+      () => import('../../src/modules/docs/contents/viz/chart/points/strip/strip-encodings.controls'),
+    ];
+    for (const load of contractLoaders) {
+      const { createPreviewControlContract } = await load();
+      for (const lang of ['zh', 'en'] as const) {
+        const contract = createPreviewControlContract(lang);
+        expect(contract.controls.sections[0]?.controls[0]?.kind).toBe('table');
+        const coordinateControl = contract.controls.sections[1]?.controls[0];
+        expect(coordinateControl).toMatchObject({ kind: 'select', defaultValue: 'cartesian2D' });
+        expect(contract.canonicalValues[coordinateControl.id]).toBe('cartesian2D');
+        expect(contract.relatedApis).toContainEqual(expect.stringMatching(/Chart\.coordinate$/));
       }
     }
   });

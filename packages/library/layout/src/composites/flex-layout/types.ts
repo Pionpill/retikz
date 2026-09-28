@@ -26,7 +26,12 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 export type FlexLayoutItemInput = IRFlexLayoutItem;
 
 /** 持久化的 Layout FlexLayout composite */
-export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> & { children?: Array<IRFlexLayoutItem> };
+export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> & {
+  /** 作者声明的直属子项，省略时按空列表处理
+   * @default []
+   */
+  children?: Array<IRFlexLayoutItem>;
+};
 
 /** 创建 FlexLayout 时允许省略固定 discriminator 与 可选字段的输入 */
 export type FlexLayoutInput = Omit<IRFlexLayout, 'namespace' | 'type'>;

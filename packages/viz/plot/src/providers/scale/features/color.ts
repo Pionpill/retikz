@@ -59,7 +59,10 @@ export const resolveOrdinalScale = (
 ): ((value: string | number) => string) => {
   const domain = def?.domain ?? inferCategoryDomain(values);
   const range = def?.range ?? DEFAULT_PLOT_COLORS;
-  const scale = d3ScaleOrdinal<string | number, string>().domain(domain).range(range);
+  const step = def?.rangeIndex?.step ?? 1;
+  const offset = def?.rangeIndex?.offset ?? 0;
+  const indexedRange = range.map((_color, index) => range[(index * step + offset) % range.length]);
+  const scale = d3ScaleOrdinal<string | number, string>().domain(domain).range(indexedRange);
   return value => scale(value);
 };
 

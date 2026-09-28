@@ -104,6 +104,8 @@ The resolver derives the domain, bin boundaries, and scheme / range for the sele
   ]}
 />
 
+`ordinal.rangeIndex` controls palette indexing: `{ step: 2, offset: 0 }` maps category i to `(2i) % length`; offset 1 selects `(2i + 1) % length`. Step defaults to 1 and must be a positive integer; offset defaults to 0 and must be a nonnegative integer. Indexing applies to an explicit range or the effective theme palette, including odd-length palettes.
+
 ## API Reference
 
 Every color scale in a full spec needs a `name`, which a mark's color field binding references through `scale`. Auto-derivation covers only `ordinal` and `sequential`; other types and explicit domain / scheme / range options belong in `IRPlot.scales`.

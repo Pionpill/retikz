@@ -1,3 +1,4 @@
+import type { AnyRegressionDefinition } from '@retikz/data';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition, AnyTransformDefinition } from '@retikz/data';
 import type { JsonObject, NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
 import type {
@@ -22,6 +23,8 @@ export type ChartEncodingRuntime = Readonly<{
   /** Data / Plot transform Definition注册表 */
   transforms: ReadonlyMap<string, AnyTransformDefinition>;
   /** Data statistics reducer Definition注册表 */
+  /** 当前编译的拟合 registry */
+  regressions: ReadonlyMap<string, AnyRegressionDefinition>;
   reducers: ReadonlyMap<string, AnyStatisticsReducerDefinition>;
   /** Data row selector Definition注册表 */
   selectors: ReadonlyMap<string, AnyRowSelectorDefinition>;
@@ -87,6 +90,9 @@ export type ChartEncodingResolveContext<TSource extends IRChartSource = IRChartS
 
 /** recipe 在最终 Chart semantic marks 已确定后补齐 scale 默认值的窄上下文 */
 export type ChartScaleDefaultsResolveContext = Readonly<{
+  /** 为参与 scale 默认约束的最终 mark 提供稳定 Plot identity */
+  identifyMark: (index: number) => string;
+
   /** 当前 exact schema 已 parse 的 Chart Source */
   source: IRChartSource;
   /** 当前 recipe 的 encoding 解析结果 */

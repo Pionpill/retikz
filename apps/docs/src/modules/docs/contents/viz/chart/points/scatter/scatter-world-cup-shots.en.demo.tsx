@@ -8,37 +8,43 @@ import { SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS } from './scatter-world-cup-shots.c
 import { messiWorldCupShots } from './scatter-world-cup-shots.data';
 import { previewControlContract } from './scatter-world-cup-shots.en.controls';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <ScatterChart
-    plotExtension={{
-      plotDefaults: {
-        plotArea: {
-          fill: {
-            kind: 'image',
-            href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) => {
+  const chart = (
+    <ScatterChart
+      layout={dimensions}
+      plotExtension={{
+        plotDefaults: {
+          plotArea: {
+            fill: {
+              kind: 'image',
+              href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
+            },
           },
         },
-      },
-    }}
-    recipe={{ guides: { axis: false } }}
-  >
-    <ChartData data={messiWorldCupShots} />
-    <ScatterEncodings x="x" y="y" color="outcome" />
-    <ChartTitle>Lionel Messi's 2022 World Cup shot map</ChartTitle>
-    <ChartSubtitle>
-      32 regulation and extra-time shots; StatsBomb 120 × 80 coordinates; lines connect starts to endpoints
-    </ChartSubtitle>
-    <ChartSource>StatsBomb Open Data: competition 43, season 106; excludes two period-five shootout events</ChartSource>
-    <ScatterProperties
-      size={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize]}
-      {...(values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStrokeEnabled]
-        ? { stroke: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStroke] }
-        : {})}
-      shape={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointShape]}
-      opacity={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity]}
-    />
-  </ScatterChart>
-));
+      }}
+      recipe={{ guides: { axis: false } }}
+    >
+      <ChartData data={messiWorldCupShots} />
+      <ScatterEncodings x="x" y="y" color="outcome" />
+      <ChartTitle>Lionel Messi's 2022 World Cup shot map</ChartTitle>
+      <ChartSubtitle>
+        32 regulation and extra-time shots; StatsBomb 120 × 80 coordinates; lines connect starts to endpoints
+      </ChartSubtitle>
+      <ChartSource>
+        StatsBomb Open Data: competition 43, season 106; excludes two period-five shootout events
+      </ChartSource>
+      <ScatterProperties
+        size={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize]}
+        {...(values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStrokeEnabled]
+          ? { stroke: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStroke] }
+          : {})}
+        shape={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointShape]}
+        opacity={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity]}
+      />
+    </ScatterChart>
+  );
+  return chart;
+});
 
 /** Stable source configuration derived from canonical control values */
 export const previewSource = {
