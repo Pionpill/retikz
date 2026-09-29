@@ -184,13 +184,21 @@ For the main color, precedence is: explicit Entity `style.color` > author `graph
 
 Use the playground below to switch role and status or apply a group to the entity. Turn on "Apply group" to let its color override the status color, then "Override theme color" to make the instance color take precedence over both.
 
-<ComponentPreview files="entity-playground" size="md" />
+<ComponentPreview
+  files={['entity-playground', 'entity-playground.preview.tsx']}
+  size="md"
+  defaultSourceFile="entity-playground.preview.tsx"
+/>
 
 ## Style and size
 
 Use `style` for appearance, such as `color`, `fill` and `strokeWidth`. Use `layout` for text layout and sizing, such as `maxTextWidth`, `lineHeight` and `minimumSize`. Adjust the controls below to see changes in fill, stroke, text wrapping and minimum width without changing the role structure.
 
-<ComponentPreview files="entity-style-size" size="lg" />
+<ComponentPreview
+  files={['entity-style-size', 'entity-style-size.preview.tsx']}
+  size="lg"
+  defaultSourceFile="entity-style-size.preview.tsx"
+/>
 
 The role owns `shape`, `boundary`, `cornerRadius` and `padding`; these are not instance override fields. Each `minimumSize` axis takes the larger of the role and instance values. A smaller instance value cannot shrink the role's minimum.
 

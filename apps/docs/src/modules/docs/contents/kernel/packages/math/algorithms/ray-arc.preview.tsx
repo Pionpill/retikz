@@ -1,0 +1,48 @@
+import { intersectRayWithArc, pointAtArcAngle } from '@retikz/math';
+import { Draw, Layout, Path, Step } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
+
+const CENTER: [number, number] = [0, 0];
+
+const RADIUS = 82;
+
+const ORIGIN: [number, number] = [-165, 0];
+
+const DIR: [number, number] = [1, 0];
+
+/** 图形参数 */
+export type RayArcPreviewValues = {
+  startAngle: number;
+  endAngle: number;
+};
+
+/** 绘制示例图形 */
+export const RayArcPreview = (values: RayArcPreviewValues) => {
+  const parameters = intersectRayWithArc({
+    origin: ORIGIN,
+    direction: DIR,
+    center: CENTER,
+    radius: RADIUS,
+    startAngleDeg: values.startAngle,
+    endAngleDeg: values.endAngle,
+  });
+
+  return (
+    <Layout>
+      <Circle center={CENTER} radius={RADIUS} style={{ stroke: 'lightgray', dashPattern: [4, 3], fill: 'none' }} />
+      <Path style={{ stroke: 'darkorange', strokeWidth: 2 }}>
+        <Step kind="move" to={pointAtArcAngle(CENTER, RADIUS, values.startAngle)} />
+        <Step kind="arc" center={CENTER} radius={RADIUS} startAngle={values.startAngle} endAngle={values.endAngle} />
+      </Path>
+      <Draw way={[ORIGIN, [170, 0]]} arrow="->" style={{ stroke: 'dodgerblue', strokeWidth: 2 }} />
+      {parameters.map(parameter => (
+        <Circle
+          key={parameter}
+          center={[ORIGIN[0] + DIR[0] * parameter, ORIGIN[1] + DIR[1] * parameter]}
+          radius={5}
+          style={{ fill: 'darkviolet', stroke: 'none' }}
+        />
+      ))}
+    </Layout>
+  );
+};

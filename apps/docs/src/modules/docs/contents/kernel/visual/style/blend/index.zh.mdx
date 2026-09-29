@@ -104,7 +104,12 @@ multiply 常用于让重叠部分变暗，screen 常用于叠加亮色。下面�
 
 切换模式并观察重叠区域。这里改变的是每个图元的合成方式，不会创建隔离的组图层。
 
-<ComponentPreview files="blend-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['blend-playground', 'blend-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="blend-playground.preview.tsx"
+/>
 
 ## 组件对接
 

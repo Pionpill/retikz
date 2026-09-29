@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { standardSchemaLocalizations } from '../../src/modules/docs/components/mdx-content/zod-schema/standard-schema-localizations';
 import { translateDrawApiReference } from './draw.en';
+import { embedApiReferenceMdx } from './embedded-reference';
 import { translateNodeApiReference } from './node.en';
 import { createStandardApiReferenceMdx } from './standard-schema';
 import type { ApiReferencePackageConfig } from './tex';
@@ -217,7 +218,7 @@ export const writeStandardPresentationApiReferences = async (
             },
           ],
         };
-        sections.push((await createStandardApiReferenceMdx(config, lang)).replace(/^(#{2,4}) /gm, '#$1 '));
+        sections.push(embedApiReferenceMdx(await createStandardApiReferenceMdx(config, lang)));
       }
       writeFileSync(
         path.resolve(directory, `generated.${lang}.mdx`),

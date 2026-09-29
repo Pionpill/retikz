@@ -1,8 +1,5 @@
-import { PathMark, PlotAxis } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
@@ -11,37 +8,16 @@ import {
   LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID,
   previewControlContract,
 } from './line-radar.controls';
-import { team } from './line-radar.data';
+import { LineRadarPreview } from './line-radar.preview';
 
 /** 几何属性：两个极坐标对比闭合路径与不闭合路径。 */
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout>
-    <Plot
-      data={team}
-      width={280}
-      height={280}
-      coordinate={{ type: 'polar2D', interpolation: values[LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID] }}
-      x={10}
-      y={10}
-    >
-      <PathMark x="dim" y="score" order="rank" closed />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-    <Plot
-      data={team}
-      width={280}
-      height={280}
-      coordinate={{ type: 'polar2D', interpolation: values[LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID] }}
-      x={330}
-      y={10}
-    >
-      <PathMark x="dim" y="score" order="rank" closed={values[LINE_RADAR_CLOSED_ID]} />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  LineRadarPreview({
+    leftCoordinateInterpolation: values[LINE_RADAR_LEFT_COORDINATE_INTERPOLATION_ID],
+    rightCoordinateInterpolation: values[LINE_RADAR_RIGHT_COORDINATE_INTERPOLATION_ID],
+    closed: values[LINE_RADAR_CLOSED_ID],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

@@ -1,21 +1,13 @@
-import { ScatterChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { usePreviewDimensions } from '@/modules/docs/preview';
 
-import { scatterMinimalData } from './scatter-minimal.data';
+import { renderScatterMinimalPreview } from './scatter-minimal.preview';
 
 /** Scatter basic usage with required data and field mappings on the root */
 const Demo: FC = () => {
   const dimensions = usePreviewDimensions();
-  const chart = (
-    <ScatterChart
-      layout={dimensions}
-      rows={scatterMinimalData}
-      recipe={{ encodings: { x: 'imdbRating', y: 'rottenTomatoesRating' } }}
-    />
-  );
-  return chart;
+  return renderScatterMinimalPreview(dimensions);
 };
 
 /** Data import used by the IR and Vanilla previews */

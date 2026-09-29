@@ -1,38 +1,17 @@
-import { RegressionChart, RegressionMark } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import type { PreviewDimensions } from '@/modules/docs/components/component-preview/context';
 import { usePreviewControls, usePreviewDimensions } from '@/modules/docs/preview';
 
-import { irisRegressionData } from './regression-basic.data';
 import { createPreviewControlContract } from './regression-marks.controls';
 import type { DemoValues } from './regression-marks.controls';
+import { renderRegressionMarksPreview } from './regression-marks.preview';
 
 const contract = createPreviewControlContract();
 
 /** 在预览尺寸或源码基准尺寸中使用同一图表配置 */
-const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.canonicalValues) => {
-  const bounds = dimensions ?? { width: 720, height: 440 };
-
-  const chart = (
-    <RegressionChart
-      coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
-      rows={irisRegressionData}
-      layout={{ ...bounds, padding: { right: 48 } }}
-
-      recipe={{
-        encodings: { x: 'sepalLengthCm', y: 'petalLengthCm', series: 'species' },
-        properties: { point: { size: values.size, opacity: values.opacity }, trend: { strokeWidth: 2 } },
-      }}
-    >
-      <RegressionMark
-        override
-        properties={{ method: { kind: values.method }, trend: { strokeWidth: values.strokeWidth } }}
-      />
-    </RegressionChart>
-  );
-  return chart;
-};
+const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.canonicalValues) =>
+  renderRegressionMarksPreview(dimensions, values);
 
 /** 源码视图使用相同配置，避免依赖 React 容器上下文 */
 export const previewSource = {

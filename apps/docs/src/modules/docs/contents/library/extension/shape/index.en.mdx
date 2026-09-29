@@ -56,7 +56,11 @@ The overview below places all nine extension shapes in one coordinate system bef
 
 `cross` is a cross marker whose arm widths and four directional heights can be controlled independently. It fits concise glyphs for deletion, disabling, intersections, and asymmetric cross marks.
 
-<ComponentPreview files="cross-example" size="sm" />
+<ComponentPreview
+  files={['cross-example', 'cross-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="cross-example.preview.tsx"
+/>
 
 Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A scalar `width` or `height` applies to every matching value. Object forms resolve each value from the most specific field to the broadest fallback: side, axis, then `default`.
 
@@ -69,7 +73,11 @@ Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A sca
 
 `trapezoid` selects its short side with `shortSide` and controls the taper through the short-to-opposite-side ratio. Content circumscription reserves room for slanted and rounded corners; ratio `1` degenerates to a rectangle.
 
-<ComponentPreview files="trapezoid-example" size="sm" />
+<ComponentPreview
+  files={['trapezoid-example', 'trapezoid-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="trapezoid-example.preview.tsx"
+/>
 
 #### API
 
@@ -85,7 +93,11 @@ Inject `TrapezoidShapeDefinition`; its parameters have type `TrapezoidShapeParam
 
 `parallelogram` controls horizontal offset through a slant direction and angle. The angle is measured between a slanted side and a horizontal edge; `90` degrees degenerates to a rectangle. Use Node rotation for a vertical form.
 
-<ComponentPreview files="parallelogram-example" size="sm" />
+<ComponentPreview
+  files={['parallelogram-example', 'parallelogram-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="parallelogram-example.preview.tsx"
+/>
 
 #### API
 
@@ -101,7 +113,11 @@ Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramSh
 
 `hexagon` is an independently resizable elongated hexagon with horizontal top/bottom edges and one lateral tip on each side. `shoulderDepth` uses a fixed user-unit length, so longer content extends only the middle horizontal edges instead of enlarging the tips. It is not an alias for Core's regular `polygon { sides: 6 }`.
 
-<ComponentPreview files="hexagon-example" size="sm" />
+<ComponentPreview
+  files={['hexagon-example', 'hexagon-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="hexagon-example.preview.tsx"
+/>
 
 #### API
 
@@ -116,7 +132,11 @@ Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
 
 `cylinder` uses one closed outer contour plus one cap-divider arc. `capDepth` reserves content room at both ends; the divider is stroke-only, does not become a second node or connection boundary, and does not cut a hole out of the near cap's fill.
 
-<ComponentPreview files="cylinder-example" size="sm" />
+<ComponentPreview
+  files={['cylinder-example', 'cylinder-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="cylinder-example.preview.tsx"
+/>
 
 #### API
 
@@ -131,7 +151,11 @@ Inject `CylinderShapeDefinition`; its parameters have type `CylinderShapeParams`
 
 `ellipticCapsule` forms one closed outer contour from a top half-ellipse, two straight sides, and a bottom half-ellipse. It shares its cap geometry with `cylinder` but omits the internal cap-divider arc, so the top does not form a complete ellipse. Unlike a capsule made from a Core rounded rectangle, `capDepth` independently controls cap depth and each half-ellipse spans the full cross-section.
 
-<ComponentPreview files="elliptic-capsule-example" size="sm" />
+<ComponentPreview
+  files={['elliptic-capsule-example', 'elliptic-capsule-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="elliptic-capsule-example.preview.tsx"
+/>
 
 #### API
 
@@ -146,7 +170,11 @@ Inject `EllipticCapsuleShapeDefinition`; its parameters have type `EllipticCapsu
 
 `sector` combines inner/outer radii with an angle range to form a pie slice, ring wedge, or open arc. Set `innerRadius` equal to `outerRadius` to get a connectable open arc; `cornerRadius` rounds radial corners only for positive-thickness sectors. It suits angle ranges, ring progress, and sector state nodes.
 
-<ComponentPreview files="sector-example" size="md" />
+<ComponentPreview
+  files={['sector-example', 'sector-example.preview.tsx']}
+  size="md"
+  defaultSourceFile="sector-example.preview.tsx"
+/>
 
 #### API
 
@@ -164,7 +192,11 @@ Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. The
 
 `star` builds a star from point count, inner/outer radii, rotation, and corner radius, and exposes `tip-N` and `notch-N` named anchors. It suits emphasis, ratings, and nodes that need semantic anchors.
 
-<ComponentPreview files="star-example" size="md" />
+<ComponentPreview
+  files={['star-example', 'star-example.preview.tsx']}
+  size="md"
+  defaultSourceFile="star-example.preview.tsx"
+/>
 
 #### API
 
@@ -182,7 +214,11 @@ Use `shape={{ type: 'star', params }}` and inject `StarShapeDefinition`. The `pa
 
 `contour` accepts a closed vertex ring and aligns the Node position to its bounding-box center. `cornerRadius` applies feasible rounding at each corner. This example uses presets instead of editing JSON and shows tag, shield, and notched outlines.
 
-<ComponentPreview files="contour-example" size="md" />
+<ComponentPreview
+  files={['contour-example', 'contour-example.preview.tsx']}
+  size="md"
+  defaultSourceFile="contour-example.preview.tsx"
+/>
 
 #### API
 

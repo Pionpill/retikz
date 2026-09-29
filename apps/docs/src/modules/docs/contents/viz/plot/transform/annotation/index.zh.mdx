@@ -18,13 +18,17 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 切换 `offset`，比较普通累加、归一化、居中与重叠区间。归一化模式使用 0–1，居中模式使用 −60–60，其余模式使用 0–120 的纵轴范围。
 
-<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} size="lg" />
+<ComponentPreview
+  files={['transform-stack', 'transform-stack.preview.tsx', 'transform-stack.i18n.ts', 'transform-stack.data.ts']}
+  size="lg"
+  defaultSourceFile="transform-stack.preview.tsx"
+/>
 
 ### 正负分流
 
 `diverging` 面向同时含正值和负值的数据：正值从 0 向上累加，负值从 0 向下累加。它需要单独的有符号数据示例；这类输入不能交给只定义非负占比的 `normalize`。
 
-<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.data.ts']} size="lg" />
+<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.preview.tsx', 'transform-stack-diverging.i18n.ts', 'transform-stack-diverging.data.ts']} defaultSourceFile="transform-stack-diverging.preview.tsx" size="lg" />
 
 ### API 参考
 
@@ -73,7 +77,16 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 切换 `basis` 和分组范围，对比 0–1 比例、0–100 百分比，以及“每季度归一”与“全局归一”。
 
-<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} size="lg" />
+<ComponentPreview
+  files={[
+    'transform-normalize',
+    'transform-normalize.preview.tsx',
+    'transform-normalize.i18n.ts',
+    'transform-normalize.data.ts',
+  ]}
+  size="lg"
+  defaultSourceFile="transform-normalize.preview.tsx"
+/>
 
 ### API 参考
 

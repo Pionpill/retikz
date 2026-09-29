@@ -54,7 +54,7 @@ const badge = defineShape({
 
 下面的 `ngon` 用同一个定义生成任意正多边形。调整 `sides` 会改变持久化在 `shape.params` 中的边数；调整 Node `scale` 只改变布局尺寸。因为 `sides` 是计数，`scaleParams` 原样返回 params。
 
-<ComponentPreview files="ngon" size="md" />
+<ComponentPreview files={['ngon', 'ngon.preview.tsx']} size="md" defaultSourceFile="ngon.preview.tsx" />
 
 ### 多图元输出
 

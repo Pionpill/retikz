@@ -143,9 +143,14 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
 接着在 `shape`、`circle`、`rectangle`、`ellipse` 四种 boundary 间切换：circle / ellipse 还可比较 `fit: 'tight'` 与 `fit: 'bounds'`，三种规则连接面都可调整 `gap`。再改变来源角度，观察真实连线落点。最后的 `fill`、`stroke`、`strokeWidth` 只提供最小样式反馈；完整的[文本](/kernel/components/node/text)、[Node](/kernel/components/node/usage)与[Shapes](/kernel/components/node/shape) API 继续查对应组件页。
 
 <ComponentPreview
-  files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}
+  files={[
+    'primitive-model-playground',
+    'primitive-model-playground.preview.tsx',
+    'primitive-model-playground-boundary.ts',
+  ]}
   size="lg"
   caption="浅灰 dashed 轮廓是当前规则 boundary，淡灰 dotted 半径只是来源轨道辅助线，灰色实线是真实连接；shape 模式下 boundary 与视觉轮廓重合，因此不重复叠画。"
+  defaultSourceFile="primitive-model-playground.preview.tsx"
 />
 
 <SourceLinks

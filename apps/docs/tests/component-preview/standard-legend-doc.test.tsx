@@ -14,11 +14,11 @@ import {
   legendPlaygroundControls,
   previewControlContract as legendPlaygroundContract,
 } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.controls';
-import { LegendPlaygroundPreview } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.demo';
 import {
   legendPlaygroundEnControls,
   previewControlContract as legendPlaygroundEnContract,
 } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.en.controls';
+import { LegendPlaygroundPreview } from '@/modules/docs/contents/library/standard/presentation/legend/legend-playground.preview';
 import LegendRampEnDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-ramp.en.demo';
 import LegendRampZhDemo from '@/modules/docs/contents/library/standard/presentation/legend/legend-ramp.zh.demo';
 import type { PreviewControlsDefinition } from '@/modules/docs/preview';
@@ -135,13 +135,14 @@ describe('Standard Legend documentation', () => {
       'legend-ramp.zh.demo.tsx',
       'legend-ramp.en.demo.tsx',
       'legend-playground.demo.tsx',
+      'legend-playground.preview.tsx',
     ]) {
       expect(readLegendFile(fileName)).not.toMatch(/\bcontent=\{/);
     }
     expect(readLegendFile('legend-basic.zh.demo.tsx')).toContain('<LegendItem');
     expect(readLegendFile('legend-ramp.zh.demo.tsx')).toContain('<LegendRamp>');
     expect(readLegendFile('legend-ramp.zh.demo.tsx')).toContain('<LegendTick');
-    expect(readLegendFile('legend-playground.demo.tsx')).toContain('<LegendTitle>');
+    expect(readLegendFile('legend-playground.preview.tsx')).toContain('<LegendTitle>');
     expect(changelog).toContain('LegendTitle');
     expect(changelog).toContain('LegendItem');
     expect(changelog).toContain('LegendRamp');
@@ -392,7 +393,7 @@ describe('Standard Legend documentation', () => {
   });
 
   it('switches kind by rendering the matching marker tree and keeps title styles on the title child', () => {
-    const source = readLegendFile('legend-playground.demo.tsx');
+    const source = readLegendFile('legend-playground.preview.tsx');
 
     expect(source).toMatch(
       /values\.kind === LegendContentKind\.Items[\s\S]*<Legend[\s\S]*kind=\{LegendContentKind\.Items\}/,

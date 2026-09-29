@@ -10,7 +10,13 @@ description: 理解标题、副标题、注记、来源与 Plot 如何按固定�
 下面的 playground 使用真实 Point Chart，而不是用框图模拟布局。标题、副标题、Plot、注记和来源都会进入同一个 Surface；打开 Flex 辅助层后，可以看到 canonical 子项的 content、slot、allocation、padding、行区域与 gap。
 
 <ComponentPreview
-  files={['chart-presentation-layout', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  files={[
+    'chart-presentation-layout',
+    'chart-presentation-layout.preview.tsx',
+    'chart-presentation-preview.tsx',
+    'chart-presentation.data.ts',
+  ]}
+  defaultSourceFile="chart-presentation-layout.preview.tsx"
   size="xxl"
   caption="辅助层只读取本次编译的内部 Flex 产物，不进入 Chart Source；关闭后可以单独查看最终内容。"
 />
@@ -31,7 +37,13 @@ React 可以用四种标记提供对应槽位；Vanilla 和 JSON 直接写 `pres
 `title`、`subtitle`、`note` 或 `source` 未提供时，归一过程不会创建对应子项，Plot 与其余展示内容仍按固定顺序排列。下面的四个开关可以独立比较每项存在或缺失时的 canonical 结果。
 
 <ComponentPreview
-  files={['chart-presentation-visibility', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  files={[
+    'chart-presentation-visibility',
+    'chart-presentation-visibility.preview.tsx',
+    'chart-presentation-preview.tsx',
+    'chart-presentation.data.ts',
+  ]}
+  defaultSourceFile="chart-presentation-visibility.preview.tsx"
   size="xxl"
   caption="四个开关控制对应 Chart slot 是否存在，不是通过透明度隐藏已经生成的文字。"
 />

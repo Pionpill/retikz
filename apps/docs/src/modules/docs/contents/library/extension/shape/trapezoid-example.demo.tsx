@@ -1,30 +1,19 @@
-import { TrapezoidShapeDefinition } from '@retikz/extension';
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, trapezoidExampleControls } from './trapezoid-example.controls';
+import { renderTrapezoidExamplePreview } from './trapezoid-example.preview';
 
 export const previewControls = trapezoidExampleControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [TrapezoidShapeDefinition] }}>
-    <Node
-      position={[0, 0]}
-      shape={{
-        type: 'trapezoid',
-        params: {
-          shortSide: values.shortSide,
-          shortSideRatio: values.shortSideRatio,
-          cornerRadius: values.cornerRadius,
-        },
-      }}
-      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
-      layout={{ minimumSize: { width: 130, height: 72 } }}
-    />
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderTrapezoidExamplePreview({
+    shortSide: values.shortSide,
+    shortSideRatio: values.shortSideRatio,
+    cornerRadius: values.cornerRadius,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

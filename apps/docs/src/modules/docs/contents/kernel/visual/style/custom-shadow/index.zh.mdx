@@ -15,7 +15,12 @@ description: 使用对象配置组合阴影预设和显式字段，并通过 con
 
 偏移和模糊只改变主几何周围的投影，不改变节点连接面或 Path 的几何。固定 viewBox 没有预留空间时仍会裁切阴影。
 
-<ComponentPreview files="shadow-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['shadow-playground', 'shadow-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="shadow-playground.preview.tsx"
+/>
 
 ## 延伸阅读
 

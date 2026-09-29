@@ -29,7 +29,12 @@ const distance = point.distance([20, 10], end); // 42.720018726587654
 
 Change the angle and length to see that the vector and its left-hand normal stay perpendicular.
 
-<ComponentPreview files="vector-normal" size="lg" caption="A vector and its left-hand normal" />
+<ComponentPreview
+  files={['vector-normal', 'vector-normal.preview.tsx']}
+  size="lg"
+  caption="A vector and its left-hand normal"
+  defaultSourceFile="vector-normal.preview.tsx"
+/>
 
 ### Algorithm notes
 
@@ -92,9 +97,10 @@ Bounds calculations find the axis-aligned rectangle occupied by a set of geometr
 The demo adds the arc's boundary candidates to the point set, so the dashed rectangle covers the three points and the arc. Change a point coordinate or either arc angle to observe the bounds update in real time.
 
 <ComponentPreview
-  files="bounds-playground"
+  files={['bounds-playground', 'bounds-playground.preview.tsx']}
   size="lg"
   caption="Change a point coordinate or arc angle to see how the points and arc jointly affect the axis-aligned bounds"
+  defaultSourceFile="bounds-playground.preview.tsx"
 />
 
 ### Algorithm notes
@@ -180,9 +186,10 @@ $$
 **Circular and elliptical arcs.** Angles follow SVG coordinates: y points down, `0°` points along +x, `90°` along +y, and positive angles increase clockwise on screen.
 
 <ComponentPreview
-  files="ellipse-arc-playground"
+  files={['ellipse-arc-playground', 'ellipse-arc-playground.preview.tsx']}
   size="md"
   caption="Adjust the radii and angles to compare the shapes and their bounds"
+  defaultSourceFile="ellipse-arc-playground.preview.tsx"
 />
 
 ### Algorithm notes

@@ -1,58 +1,28 @@
-import { ChartData } from '@retikz/chart-react';
-import { RegressionChart, RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point';
-import type { IRRegressionMethod } from '@retikz/data';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { regressionTrendPropertiesOf } from './regression-basic-style';
 import { previewControlContract, REGRESSION_BASIC_CONTROL_IDS } from './regression-basic.controls';
-import { irisRegressionData } from './regression-basic.data';
+import { renderRegressionBasicPreview } from './regression-basic.preview';
 
-type RegressionMethodKind = IRRegressionMethod['kind'];
-
-/** 把控件值映射为完整 Smooth method 判别对象 */
-const methodOf = (kind: RegressionMethodKind, order: number): IRRegressionMethod => {
-  return kind === 'polynomial' ? { kind, order } : { kind };
-};
-
-const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) => {
-  const chart = (
-    <RegressionChart
-      coordinate={
-        values[REGRESSION_BASIC_CONTROL_IDS.coordinateSystem] === 'polar2D'
-          ? { type: 'polar2D' }
-          : { type: 'cartesian2D' }
-      }
-      layout={dimensions ? { ...dimensions, padding: { right: 48 } } : undefined}
-    >
-      <ChartData data={irisRegressionData} />
-      <RegressionEncodings
-        x="sepalLengthCm"
-        y="petalLengthCm"
-        {...(values[REGRESSION_BASIC_CONTROL_IDS.groupBySpecies] ? { series: 'species' } : {})}
-      />
-      <RegressionProperties
-        point={{
-          size: values[REGRESSION_BASIC_CONTROL_IDS.pointSize],
-          opacity: values[REGRESSION_BASIC_CONTROL_IDS.pointOpacity],
-        }}
-
-        method={methodOf(values[REGRESSION_BASIC_CONTROL_IDS.method], values[REGRESSION_BASIC_CONTROL_IDS.order])}
-        sampleCount={values[REGRESSION_BASIC_CONTROL_IDS.sampleCount]}
-
-        trend={regressionTrendPropertiesOf(
-          values[REGRESSION_BASIC_CONTROL_IDS.groupBySpecies],
-          values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeColor],
-          values[REGRESSION_BASIC_CONTROL_IDS.trendLineStyle],
-          values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeWidth],
-          values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity],
-        )}
-      />
-    </RegressionChart>
-  );
-  return chart;
-});
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) =>
+  renderRegressionBasicPreview(
+    {
+      coordinateSystem: values[REGRESSION_BASIC_CONTROL_IDS.coordinateSystem],
+      groupBySpecies: values[REGRESSION_BASIC_CONTROL_IDS.groupBySpecies],
+      pointSize: values[REGRESSION_BASIC_CONTROL_IDS.pointSize],
+      pointOpacity: values[REGRESSION_BASIC_CONTROL_IDS.pointOpacity],
+      method: values[REGRESSION_BASIC_CONTROL_IDS.method],
+      order: values[REGRESSION_BASIC_CONTROL_IDS.order],
+      sampleCount: values[REGRESSION_BASIC_CONTROL_IDS.sampleCount],
+      trendStrokeColor: values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeColor],
+      trendLineStyle: values[REGRESSION_BASIC_CONTROL_IDS.trendLineStyle],
+      trendStrokeWidth: values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeWidth],
+      trendStrokeOpacity: values[REGRESSION_BASIC_CONTROL_IDS.trendStrokeOpacity],
+    },
+    dimensions,
+  ),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = {

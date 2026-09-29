@@ -17,7 +17,12 @@ Vanilla 使用 animation.easings。缓动改变时间进度映射，不增加可
 
 下面的 blur 通道插值模糊半径，在绘制当前图元前写 Canvas context。
 
-<ComponentPreview files="custom-property" size="md" controls={{ animation: true }} />
+<ComponentPreview
+  files={['custom-property', 'custom-property.preview.tsx', 'custom-property.data.ts']}
+  defaultSourceFile="custom-property.preview.tsx"
+  size="md"
+  controls={{ animation: true }}
+/>
 
 ## 支持边界
 

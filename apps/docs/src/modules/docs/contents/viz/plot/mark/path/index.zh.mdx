@@ -43,10 +43,11 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 `x` / `y` 决定路径经过哪些点，`order` 决定连接顺序。示例数据刻意打乱了月份行；切换“连接顺序”可以比较显式排序与数据数组顺序。
 
 <ComponentPreview
-  files={['line-basic', 'line-basic.data.ts']}
+  files={['line-basic', 'line-basic.preview.tsx', 'line-basic.data.ts']}
   controls={{ name: 'line-basic' }}
   size="lg"
   caption="切换坐标系、位置字段和连接顺序，观察同一组有序点如何形成轨迹。"
+  defaultSourceFile="line-basic.preview.tsx"
 />
 
 ### 系列与标签
@@ -54,10 +55,11 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 `series` 会先把数据拆成多组，再让每组独立排序和连接；不写 `series`、只给 `color` 一个分类字段时，也会按颜色字段隐式拆分路径。系列标签直接挂在各自的路径几何上，不需要额外创建文本图层。
 
 <ComponentPreview
-  files={['line-series', 'line-series.data.ts']}
+  files={['line-series', 'line-series.preview.tsx', 'line-series.data.ts']}
   controls={{ name: 'line-series' }}
   size="lg"
   caption="比较单条路径、显式 series 与 color 隐式拆分，并开关每条路径的系列标签。"
+  defaultSourceFile="line-series.preview.tsx"
 />
 
 ### 连接与样式
@@ -65,10 +67,11 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 `curve` 决定相邻点如何连接，描边色、线宽、虚线和透明度只改变路径外观。灰色数据点是固定参照，可以帮助判断曲线是否穿过原始位置；`monotoneX` / `monotoneY` 在 polar2D 下会降级为 `linear`。
 
 <ComponentPreview
-  files={['line-curve', 'line-curve.data.ts']}
+  files={['line-curve', 'line-curve.preview.tsx', 'line-curve.data.ts']}
   controls={{ name: 'line-curve' }}
   size="lg"
   caption="保持数据不变，组合调整连接方式与描边样式，并在极坐标下比较开放与闭合路径。"
+  defaultSourceFile="line-curve.preview.tsx"
 />
 
 ### 极坐标插值
@@ -76,9 +79,10 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 `polar2D` 根据角向比例尺连续性推断 coordinate 默认插值：连续值使用 `polar`，离散值使用 `chord`。此处左右图各自继承自己的 coordinate：左图默认 `chord`，右图默认 `polar`，因此路径和网格始终使用同一连接空间。
 
 <ComponentPreview
-  files={['line-radar', 'line-radar.data.ts']}
+  files={['line-radar', 'line-radar.preview.tsx', 'line-radar.data.ts']}
   size="lg"
   caption="分别切换左右图的坐标插值，观察路径和网格如何一起在圆弧与直线弦之间切换。"
+  defaultSourceFile="line-radar.preview.tsx"
 />
 
 ### 闭合与填充
@@ -86,10 +90,11 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 开放路径只描绘轨迹；`cycle` 让末点回连首点，`baseline` 再把路径返回到固定基线。`closure` 只构造可填充边界，仍需显式设置 `fill` 才能看到区域。
 
 <ComponentPreview
-  files={['line-closure', 'line-closure.data.ts']}
+  files={['line-closure', 'line-closure.preview.tsx', 'line-closure.data.ts']}
   controls={{ name: 'line-closure' }}
   size="lg"
   caption="在两种坐标系中比较开放、首尾闭合和基线闭合，并调整填充与比例尺留白。"
+  defaultSourceFile="line-closure.preview.tsx"
 />
 
 `baseline` 省略时会跟随值轴：0 在 domain 内时使用 0，否则使用离 0 最近的 domain 边界。逐行堆叠下边界则使用 `closure={{ kind: 'stack', baselineField: ... }}`。
@@ -99,10 +104,11 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 某一行无法投影成有效点时，PathMark 默认在这里断开，并把前后连续数据分别生成 core `Path`。开放且无填充的路径中，`connectNulls: true` 或 `{}` 仅用默认虚线 `[6, 4]` 连接缺口两侧有效点，正常段保持原样式。对象可覆盖缺值段的 `stroke`、`strokeWidth`、`strokeOpacity`、`dashPattern`、`dashOffset`、`lineCap`、`lineJoin`。连续缺值只生成一个桥接，首尾缺值不外推。闭合、closure 与填充路径仅接受 boolean，保留整体跨空连接的行为。
 
 <ComponentPreview
-  files={['line-interruption', 'line-interruption.data.ts']}
+  files={['line-interruption', 'line-interruption.preview.tsx', 'line-interruption.data.ts']}
   controls={{ name: 'line-interruption' }}
   size="lg"
   caption="开关跨空值连接和区域填充，观察缺口如何同时影响描边与闭合区域。"
+  defaultSourceFile="line-interruption.preview.tsx"
 />
 
 ## 技术原理

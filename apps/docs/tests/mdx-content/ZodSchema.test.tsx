@@ -49,6 +49,19 @@ afterEach(() => {
 });
 
 describe('ZodSchema deep expansion', () => {
+  it('List 的超长 items 类型只显示所属 Schema 字段路径', () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <ZodSchema name="ListSchema" expandNested />
+      </MemoryRouter>,
+    );
+    const itemsRow = markup.split('<tr').find(row => row.includes('>items<'));
+
+    expect(itemsRow).toContain('ListSchema.items');
+    expect(itemsRow).not.toContain('展开 / 收起类型');
+    expect(markup).not.toContain('aria-label="展开 / 收起类型"');
+  });
+
   it('将带默认值的 Node position 展示为可省略，Coordinate position 仍必填', () => {
     const render = (name: string) =>
       renderToStaticMarkup(

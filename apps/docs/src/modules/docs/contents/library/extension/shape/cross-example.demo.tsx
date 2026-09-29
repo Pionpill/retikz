@@ -1,40 +1,23 @@
-import { CrossShapeDefinition } from '@retikz/extension';
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { crossExampleControls, previewControlContract } from './cross-example.controls';
+import { renderCrossExamplePreview } from './cross-example.preview';
 
 export const previewControls = crossExampleControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -100, y: -80, width: 200, height: 160 }} extensions={{ shapes: [CrossShapeDefinition] }}>
-    <Node
-      position={[0, 0]}
-      shape={{
-        type: 'cross',
-        params: {
-          width: {
-            default: values.horizontalWidth,
-            horizontal: values.horizontalWidth,
-            vertical: values.verticalWidth,
-          },
-          height: {
-            default: values.topHeight,
-            horizontal: values.topHeight,
-            vertical: values.topHeight,
-            top: values.topHeight,
-            right: values.rightHeight,
-            bottom: values.bottomHeight,
-            left: values.leftHeight,
-          },
-        },
-      }}
-      style={{ fill: values.fill, stroke: 'darkorange', strokeWidth: 1.5 }}
-    />
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderCrossExamplePreview({
+    horizontalWidth: values.horizontalWidth,
+    verticalWidth: values.verticalWidth,
+    topHeight: values.topHeight,
+    rightHeight: values.rightHeight,
+    bottomHeight: values.bottomHeight,
+    leftHeight: values.leftHeight,
+    fill: values.fill,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

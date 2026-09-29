@@ -14,7 +14,8 @@ The example compares IMDb and Rotten Tomatoes ratings for 100 films. Each point 
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['scatter-minimal', 'scatter-minimal.data.ts']}
+  files={['scatter-minimal', 'scatter-minimal.preview.tsx', 'scatter-minimal.data.ts']}
+  defaultSourceFile="scatter-minimal.preview.tsx"
   hideCode
   size="xl"
   caption="IMDb on x, Rotten Tomatoes on y; a static snapshot of 100 films from Vega Datasets."
@@ -187,7 +188,8 @@ Color and shape provide two ways to identify income groups. Use the controls bel
   hideCode
   mode="showcase"
   responsive
-  files={['scatter-fertility-work', 'scatter-fertility-work.data.ts']}
+  files={['scatter-fertility-work', 'scatter-fertility-work.preview.tsx', 'scatter-fertility-work.data.ts']}
+  defaultSourceFile="scatter-fertility-work.preview.tsx"
   controls={{ name: 'scatter-fertility-work' }}
   controlPanelDefaultOpen={false}
   size="xl"
@@ -248,7 +250,13 @@ These constants apply to every point and do not encode a third numeric measure. 
   hideCode
   mode="showcase"
   responsive
-  files={['scatter-appearance', 'scatter-fertility-work.data.ts', 'scatter-appearance.i18n.ts']}
+  files={[
+    'scatter-appearance',
+    'scatter-appearance.preview.tsx',
+    'scatter-fertility-work.data.ts',
+    'scatter-appearance.i18n.ts',
+  ]}
+  defaultSourceFile="scatter-appearance.preview.tsx"
   controlPanelDefaultOpen={false}
   size="xl"
   caption="Adjust size, stroke, and opacity to compare the readability of overlapping points."
@@ -324,7 +332,8 @@ Adjust the radius and opacity to compare point footprints and dense regions. In 
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['scatter-marks', 'scatter-minimal.data.ts']}
+  files={['scatter-marks', 'scatter-marks.preview.tsx', 'scatter-minimal.data.ts']}
+  defaultSourceFile="scatter-marks.preview.tsx"
   hideCode
   size="xl"
   controls={{ name: 'scatter-marks' }}
@@ -353,7 +362,8 @@ The example reuses World Bank 2022 economy data and splits `incomeGroup` into HI
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['scatter-facet', 'scatter-fertility-work.data.ts', 'scatter-facet.i18n.ts']}
+  files={['scatter-facet', 'scatter-facet.preview.tsx', 'scatter-fertility-work.data.ts', 'scatter-facet.i18n.ts']}
+  defaultSourceFile="scatter-facet.preview.tsx"
   controls={{ name: 'scatter-facet' }}
   controlPanelDefaultOpen={false}
   size="lg"
@@ -380,7 +390,13 @@ This example uses StatsBomb shot data from the 2022 World Cup. Each point locate
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['scatter-world-cup-shots', 'scatter-world-cup-shots.data.ts']}
+  files={[
+    'scatter-world-cup-shots',
+    'scatter-world-cup-shots.preview.tsx',
+    'scatter-world-cup-shots.data.ts',
+    'scatter-world-cup-shots.i18n.ts',
+  ]}
+  defaultSourceFile="scatter-world-cup-shots.preview.tsx"
   controls={{ name: 'scatter-world-cup-shots' }}
   controlPanelDefaultOpen={false}
   size="xxl"

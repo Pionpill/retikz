@@ -1,8 +1,5 @@
-import { IntervalMark, PlotAxis, PlotScale } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
@@ -12,35 +9,16 @@ import {
   BAR_SERIES_STACK_OFFSET_ID,
   previewControlContract,
 } from './bar-grouped.controls';
-import { sales } from './bar-grouped.data';
+import { BarSeriesPreview } from './bar-series.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const isPolar = values[BAR_SERIES_COORDINATE_ID] === 'polar2D';
-
-  return (
-    <Layout viewBox={{ x: -16, y: -16, width: 432, height: 312 }}>
-      <Plot data={sales} width={400} height={280} coordinate={isPolar ? 'polar2D' : undefined}>
-        <IntervalMark
-          x="quarter"
-          y="revenue"
-          group="product"
-          color="product"
-          arrangement={values[BAR_SERIES_MODE_ID]}
-          stackOffset={values[BAR_SERIES_MODE_ID] === 'stack' ? values[BAR_SERIES_STACK_OFFSET_ID] : undefined}
-        />
-        <PlotScale
-          dimension="x"
-          type="band"
-          paddingInner={values[BAR_SERIES_GAP_ID]}
-          paddingOuter={isPolar ? values[BAR_SERIES_GAP_ID] / 2 : 0.15}
-        />
-        <PlotScale dimension="y" type="linear" domainPadding={0} />
-        <PlotAxis dimension="x" />
-        <PlotAxis dimension="y" grid />
-      </Plot>
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  BarSeriesPreview({
+    coordinate: values[BAR_SERIES_COORDINATE_ID],
+    mode: values[BAR_SERIES_MODE_ID],
+    stackOffset: values[BAR_SERIES_STACK_OFFSET_ID],
+    gap: values[BAR_SERIES_GAP_ID],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

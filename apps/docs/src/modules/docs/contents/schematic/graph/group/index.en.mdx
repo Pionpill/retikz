@@ -25,6 +25,7 @@ Graph
 ```tsx
 import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
 import type { FC } from 'react';
+
 const Example: FC = () => (
   <Graph>
     <Group id="runtime">
@@ -49,6 +50,7 @@ import type { IRScene } from '@retikz/core';
 import { createGraphDefinitions } from '@retikz/graph';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',
@@ -100,6 +102,7 @@ export default Example;
 import { entity, group, relation, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
+
 const input = scene({
   children: [
     group({
@@ -122,6 +125,7 @@ const view = mount(document.getElementById('diagram')!, input, { adapters: creat
 import type { IRScene } from '@retikz/core';
 import { createGraphDefinitions } from '@retikz/graph';
 import { mount } from '@retikz/vanilla/dom';
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',
@@ -175,9 +179,10 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 `caption` is the title and description region inside the shell. It can sit above or below the body and arrange its items horizontally or vertically. Use the controls below to adjust its position, direction, and spacing. The title defaults to `sm` without bold weight; the description defaults to `xs` with reduced opacity
 
 <ComponentPreview
-  files="group-basic"
+  files={['group-basic', 'group-basic.preview.tsx']}
   size="lg"
   caption="Use the controls to change caption position, direction, and spacing while observing the title, description, and arbitrary Graph children inside the shell."
+  defaultSourceFile="group-basic.preview.tsx"
 />
 
 ### label
@@ -185,7 +190,8 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 `labels` are Core Node labels attached around the Group shell. Use the controls to adjust three labels independently. They accept directional positions, boundary fractions, or an omitted position; omission places the label at the lower-left outside the shell without changing the body's layout
 
 <ComponentPreview
-  files="group-label"
+  files={['group-label', 'group-label.preview.tsx']}
+  defaultSourceFile="group-label.preview.tsx"
   size="md"
   caption="Use the controls to adjust three Group label positions and compare Core directional placement."
 />
@@ -195,9 +201,10 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 Group style adjustments focus on the shell background, border, line style, corner radius, and padding. The controls below keep the content and caption fixed while changing only the Group Surface presentation
 
 <ComponentPreview
-  files="group-style"
+  files={['group-style', 'group-style.preview.tsx']}
   size="md"
   caption="Adjust the background, border color and width, border line style, opacity, corner radius, and padding independently."
+  defaultSourceFile="group-style.preview.tsx"
 />
 
 ## Extended usage
@@ -275,23 +282,23 @@ Generated from public exports and comments. Composed inputs retain their declara
 
 These schemas come from the public `@retikz/graph` entry. Layout and theme defaults apply during compilation without mutating sparse Source. Shared Scope / Surface fields retain their owning types.
 
-### GroupSchema
+#### GroupSchema
 
 <ZodSchema name="GroupSchema" shallow />
 
-### GroupCaptionSchema
+#### GroupCaptionSchema
 
 <ZodSchema name="GroupCaptionSchema" shallow />
 
-### GroupCaptionTextSchema
+#### GroupCaptionTextSchema
 
 <ZodSchema name="GroupCaptionTextSchema" shallow />
 
-### GroupCaptionSideSchema
+#### GroupCaptionSideSchema
 
 <ZodSchema name="GroupCaptionSideSchema" shallow />
 
-### GroupCaptionDirectionSchema
+#### GroupCaptionDirectionSchema
 
 <ZodSchema name="GroupCaptionDirectionSchema" shallow />
 

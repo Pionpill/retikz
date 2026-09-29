@@ -1,0 +1,59 @@
+import { Draw, Layout, Node, Path, Step } from '@retikz/react';
+
+const Start: [number, number] = [-90, 0];
+
+const End: [number, number] = [90, 0];
+
+const guideEnd = (origin: [number, number], angle: number, length: number): [number, number] => {
+  const radians = (angle * Math.PI) / 180;
+  return [origin[0] + Math.cos(radians) * length, origin[1] + Math.sin(radians) * length];
+};
+
+/** 图形参数 */
+export type PathOutinLoopPreviewValues = {
+  mode: 'loop' | 'connect';
+  loopLooseness: number;
+  looseness: number;
+  outAngle: number;
+  inAngle: number;
+};
+
+/** 绘制示例图形 */
+export const PathOutinLoopPreview = (values: PathOutinLoopPreviewValues) => {
+  const target = values.mode === 'loop' ? 'S' : 'T';
+  const incomingOrigin = values.mode === 'loop' ? Start : End;
+  const looseness = values.mode === 'loop' ? values.loopLooseness : values.looseness;
+  const guideLength = values.mode === 'loop' ? values.loopLooseness : 60 * values.looseness;
+
+  return (
+    <Layout
+      viewBox={{ x: -180, y: -110, width: 360, height: 220 }}
+      rootScope={{
+        defaults: {
+          node: {
+            style: { stroke: 'gray', dashed: true },
+          },
+        },
+      }}
+    >
+      <Draw
+        way={[Start, guideEnd(Start, values.outAngle, guideLength)]}
+        style={{ stroke: '#94a3b8', dashPattern: [1, 4], lineCap: 'round' }}
+      />
+      <Draw
+        way={[incomingOrigin, guideEnd(incomingOrigin, values.inAngle, guideLength)]}
+        style={{ stroke: '#94a3b8', dashPattern: [1, 4], lineCap: 'round' }}
+      />
+      <Node id="S" position={Start} shape="circle">
+        S
+      </Node>
+      <Node id="T" position={End} shape="circle">
+        T
+      </Node>
+      <Path arrow="->" style={{ stroke: 'currentColor' }}>
+        <Step kind="move" to="S" />
+        <Step kind="bend" to={target} outAngle={values.outAngle} inAngle={values.inAngle} looseness={looseness} />
+      </Path>
+    </Layout>
+  );
+};

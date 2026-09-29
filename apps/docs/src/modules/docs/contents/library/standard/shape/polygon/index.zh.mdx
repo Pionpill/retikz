@@ -94,7 +94,12 @@ import { Polygon } from '@retikz/standard-react/shape';
 
 下面的 playground 同时显示外接圆和第一个顶点方向。调整 `sides`、半径与 `rotate`，观察顶点始终均匀落在参考圆上。
 
-<ComponentPreview files="polygon-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['polygon-playground', 'polygon-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="polygon-playground.preview.tsx"
+/>
 
 ## 错误与限制
 
@@ -139,7 +144,7 @@ import { Polygon } from '@retikz/standard-react/shape';
 
 ## Schema 参考
 
-### PolygonSchema
+#### PolygonSchema
 
 <ZodSchema name="PolygonSchema" />
 

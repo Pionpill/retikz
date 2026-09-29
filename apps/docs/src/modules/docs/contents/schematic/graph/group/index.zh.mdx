@@ -25,6 +25,7 @@ Graph
 ```tsx
 import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
 import type { FC } from 'react';
+
 const Example: FC = () => (
   <Graph>
     <Group id="runtime">
@@ -49,6 +50,7 @@ import type { IRScene } from '@retikz/core';
 import { createGraphDefinitions } from '@retikz/graph';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',
@@ -100,6 +102,7 @@ export default Example;
 import { entity, group, relation, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
+
 const input = scene({
   children: [
     group({
@@ -122,6 +125,7 @@ const view = mount(document.getElementById('diagram')!, input, { adapters: creat
 import type { IRScene } from '@retikz/core';
 import { createGraphDefinitions } from '@retikz/graph';
 import { mount } from '@retikz/vanilla/dom';
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',
@@ -175,9 +179,10 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 `caption` 是外框内部的标题与说明区域，支持放在 body 上方或下方，并可按横向或纵向排列。下方控制面板可以调整位置、排列方向和间距。title 默认使用 `sm` 字号且不加粗，description 默认使用 `xs` 字号与较低透明度
 
 <ComponentPreview
-  files="group-basic"
+  files={['group-basic', 'group-basic.preview.tsx']}
   size="lg"
   caption="通过控制面板切换 caption 位置、排列方向和间距，观察 title、description 与任意 Graph children 如何共同形成外框。"
+  defaultSourceFile="group-basic.preview.tsx"
 />
 
 ### 标签
@@ -185,7 +190,8 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 `labels` 是附着在 Group 外框周围的 Core Node labels。控制面板可以分别调整三个标签的位置；也可以使用方向、边界比例或省略 position。省略时默认位于外框下方左侧，且不改变外框的内容布局
 
 <ComponentPreview
-  files="group-label"
+  files={['group-label', 'group-label.preview.tsx']}
+  defaultSourceFile="group-label.preview.tsx"
   size="md"
   caption="通过控制面板调整三个 Group label 的位置，比较 Core label 的方向定位。"
 />
@@ -195,9 +201,10 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 Group 的样式调整集中在外框的背景、边框、线型、圆角和内边距。下面的 controls 固定内容与 caption，只改变 Group 自身的 Surface 呈现
 
 <ComponentPreview
-  files="group-style"
+  files={['group-style', 'group-style.preview.tsx']}
   size="md"
   caption="分别调整背景、边框颜色与宽度、边框线型、透明度、圆角和内边距。"
+  defaultSourceFile="group-style.preview.tsx"
 />
 
 ## 扩展用法
@@ -267,7 +274,7 @@ Group lowering 会把 caption 与 authored children 组合为 Surface 的唯一�
 
 以下 schema 来自 `@retikz/graph` 公开入口。有效布局与主题默认在编译时应用，不写回稀疏 Source。共享 Scope / Surface 字段不在此重复展开。
 
-### GroupSchema
+#### GroupSchema
 
 <ZodSchema
   name="GroupSchema"
@@ -301,7 +308,7 @@ Group lowering 会把 caption 与 authored children 组合为 Surface 的唯一�
   }}
 />
 
-### GroupCaptionSchema
+#### GroupCaptionSchema
 
 <ZodSchema
   name="GroupCaptionSchema"
@@ -316,7 +323,7 @@ Group lowering 会把 caption 与 authored children 组合为 Surface 的唯一�
   }}
 />
 
-### GroupCaptionTextSchema
+#### GroupCaptionTextSchema
 
 <ZodSchema
   name="GroupCaptionTextSchema"
@@ -332,11 +339,11 @@ Group lowering 会把 caption 与 authored children 组合为 Surface 的唯一�
   }}
 />
 
-### GroupCaptionSideSchema
+#### GroupCaptionSideSchema
 
 <ZodSchema name="GroupCaptionSideSchema" shallow />
 
-### GroupCaptionDirectionSchema
+#### GroupCaptionDirectionSchema
 
 <ZodSchema name="GroupCaptionDirectionSchema" shallow />
 

@@ -25,9 +25,14 @@ This axis-id shortcut only supports `cartesian2D`. Polar angle and radius are no
 Temperature uses the default y-axis, while rainfall uses the right-side `rainfall` axis. Use the data panel to compare their different magnitudes.
 
 <ComponentPreview
-  files={['coordinate-composition-scopes', 'coordinate-composition-scopes.data.ts']}
+  files={[
+    'coordinate-composition-scopes',
+    'coordinate-composition-scopes.preview.tsx',
+    'coordinate-composition-scopes.data.ts',
+  ]}
   size="lg"
   caption="Both lines share the day x-axis; the rainfall layer selects the right y-axis with yAxisId."
+  defaultSourceFile="coordinate-composition-scopes.preview.tsx"
 />
 
 | Goal                   | Configuration                                  | Result                         |
@@ -41,9 +46,14 @@ Temperature uses the default y-axis, while rainfall uses the right-side `rainfal
 The completion line uses elapsed days at the bottom, while the forecast line uses calendar days at the top. Both still share the completion y-axis.
 
 <ComponentPreview
-  files={['coordinate-composition-x-axis', 'coordinate-composition-x-axis.data.ts']}
+  files={[
+    'coordinate-composition-x-axis',
+    'coordinate-composition-x-axis.preview.tsx',
+    'coordinate-composition-x-axis.data.ts',
+  ]}
   size="lg"
   caption="The extra x-axis is calendar; the forecast layer binds to the top date axis with xAxisId."
+  defaultSourceFile="coordinate-composition-x-axis.preview.tsx"
 />
 
 ## Facets
@@ -55,9 +65,14 @@ A facet splits data into panels by field values. Put axes and marks inside `<Plo
 Start with a single row of facets, then switch to a row-column grid. In grid mode, you can keep missing combinations and compare a shared y range with independent panel ranges.
 
 <ComponentPreview
-  files={['coordinate-composition-facet', 'coordinate-composition-facet.data.ts']}
+  files={[
+    'coordinate-composition-facet',
+    'coordinate-composition-facet.preview.tsx',
+    'coordinate-composition-facet.data.ts',
+  ]}
   size="lg"
   caption="The data omits P2 + T2; change the empty-panel policy to hide or keep that panel."
+  defaultSourceFile="coordinate-composition-facet.preview.tsx"
 />
 
 | Goal                            | Configuration                               | Effect                                       |
@@ -75,9 +90,14 @@ By default, combinations without rows are hidden and the same direction shares o
 `row` and `column` can also receive arrays of field configurations. Array order defines the hierarchy from outer to inner, which fits nested dimensions such as region then channel.
 
 <ComponentPreview
-  files={['coordinate-composition-facet-multilevel', 'coordinate-composition-facet-multilevel.data.ts']}
+  files={[
+    'coordinate-composition-facet-multilevel',
+    'coordinate-composition-facet-multilevel.preview.tsx',
+    'coordinate-composition-facet-multilevel.data.ts',
+  ]}
   size="lg"
   caption="Columns group first by region and then channel; rows group first by business and then metric."
+  defaultSourceFile="coordinate-composition-facet-multilevel.preview.tsx"
 />
 
 ## Shared Tracks
@@ -91,9 +111,14 @@ Tracks are authored explicitly. Every `<PlotTrack>` has a stable `id`, a defined
 Three metrics share the trading-day x-axis and draw in separate vertical spaces, which fits operational metrics that must stay time-aligned.
 
 <ComponentPreview
-  files={['coordinate-composition-tracks', 'coordinate-composition-tracks.data.ts']}
+  files={[
+    'coordinate-composition-tracks',
+    'coordinate-composition-tracks.preview.tsx',
+    'coordinate-composition-tracks.data.ts',
+  ]}
   size="lg"
   caption="Trend, drawdown, and signal align to the same day; supporting data starts collapsed to keep the track structure prominent."
+  defaultSourceFile="coordinate-composition-tracks.preview.tsx"
 />
 
 The key declaration is `<PlotScaffold sharedRoles={['x']}>`. Put the shared x-axis in `PlotScaffold`, each local y-axis and mark in its `<PlotTrack>`, and use the band's `start` / `end` values to assign vertical space.
@@ -103,9 +128,14 @@ The key declaration is `<PlotScaffold sharedRoles={['x']}>`. Put the shared x-ax
 Shared tracks also work with `polar2D`. Several radial tracks then share angular categories, while each track occupies a different radius band.
 
 <ComponentPreview
-  files={['coordinate-composition-tracks-polar', 'coordinate-composition-tracks-polar.data.ts']}
+  files={[
+    'coordinate-composition-tracks-polar',
+    'coordinate-composition-tracks-polar.preview.tsx',
+    'coordinate-composition-tracks-polar.data.ts',
+  ]}
   size="lg"
   caption="Journey areas share angular positions; signal, capacity, and outer sectors use separate radial bands."
+  defaultSourceFile="coordinate-composition-tracks-polar.preview.tsx"
 />
 
 The container relationship stays the same after changing coordinates: the shared axis remains in `<PlotScaffold>`, and local marks remain in their `<PlotTrack>`.

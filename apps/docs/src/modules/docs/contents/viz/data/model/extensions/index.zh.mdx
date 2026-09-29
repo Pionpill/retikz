@@ -76,7 +76,7 @@ description: 用具名字段格式与运行时解析器扩展数据接入，同�
 
 以下契约都从 `@retikz/data` 包根导出。
 
-### `FieldFormatDefinition`
+#### `FieldFormatDefinition`
 
 `defineFieldFormat(definition)` 接收并返回同一个 `FieldFormatDefinition`。
 
@@ -86,12 +86,13 @@ description: 用具名字段格式与运行时解析器扩展数据接入，同�
 | `impliedType` | <ApiValues name="DataFieldType" />   | model 未声明 `type` 时采用的字段测量类型        |
 | `parse`       | `(raw: unknown) => ParsedFieldValue` | 把原始值转成规范字符串、有限数值或 `undefined`  |
 
-### `ResolveField` 与 `FieldResolution`
+#### `ResolveField`
 
-| 导出              | 类型                                                                                                                     | 描述                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| `ResolveField`    | `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution \| undefined`                                  | 按逻辑字段返回覆盖；`undefined` 回到标准接入路径           |
-| `FieldResolution` | `FieldResolution`<br />- `type?:` <ApiValues name="DataFieldType" /><br />- `parse?: (raw: unknown) => ParsedFieldValue` | 单字段运行时覆盖<br />- 最终测量类型<br />- 自定义解析函数 |
+`ResolveField` 是 `(field: string, context: Parameters<ResolveField>[1]) => FieldResolution | undefined`，按逻辑字段返回覆盖；`undefined` 回到标准接入路径。
+
+#### `FieldResolution`
+
+`FieldResolution` 是单字段运行时覆盖：`type?` 为最终测量类型 <ApiValues name="DataFieldType" />，`parse?: (raw: unknown) => ParsedFieldValue` 为自定义解析函数。
 
 <SourceLinks
   sources={[

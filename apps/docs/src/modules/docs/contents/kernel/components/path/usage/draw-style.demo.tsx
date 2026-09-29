@@ -1,35 +1,22 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { drawStyleControls, previewControlContract } from './draw-style.controls';
+import { DrawStylePreview } from './draw-style.preview';
 
 export const previewControls = drawStyleControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
-      <Node id="A" position={[0, -50]} style={{ stroke: 'gray', dashed: true }}>
-        a
-      </Node>
-      <Node id="B" position={[360, 50]} style={{ stroke: 'gray', dashed: true }}>
-        b
-      </Node>
-      <Draw
-        way={['A', [120, -50], [120, 50], [240, 50], [240, -50], 'B']}
-        roundedCorners={values.roundedCorners}
-        arrow={values.arrow}
-        style={{
-          stroke: values.stroke,
-          strokeWidth: values.strokeWidth,
-          ...(values.dashed ? { dashPattern: [8, 4] } : {}),
-          dashOffset: values.dashOffset,
-        }}
-      />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  DrawStylePreview({
+    roundedCorners: values.roundedCorners,
+    arrow: values.arrow,
+    stroke: values.stroke,
+    strokeWidth: values.strokeWidth,
+    dashed: values.dashed,
+    dashOffset: values.dashOffset,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

@@ -57,9 +57,10 @@ const svg = renderToSvgString(input, {
 `circle` 使用一个半径形成圆形区域；`ellipse` 分别控制横向和纵向半径。两者适合头像、徽章、聚光区域和圆角内容窗口。
 
 <ComponentPreview
-  files="circle-ellipse-clip"
+  files={['circle-ellipse-clip', 'circle-ellipse-clip.preview.tsx']}
   size="sm"
   caption="虚线矩形是原内容边界；左右区域固定使用 circle 与 ellipse，只改变各自半径。"
+  defaultSourceFile="circle-ellipse-clip.preview.tsx"
 />
 
 | 类型            | 必填字段               | 说明                     |
@@ -73,7 +74,12 @@ const svg = renderToSvgString(input, {
 
 `polygon` 按给定顺序连接至少三个顶点并自动闭合，适合规则或不规则的直边裁剪区域。
 
-<ComponentPreview files="polygon-clip" size="sm" caption="裁剪类型固定为 polygon；三个点控件按顺序直接写入 points。" />
+<ComponentPreview
+  files={['polygon-clip', 'polygon-clip.preview.tsx']}
+  size="sm"
+  caption="裁剪类型固定为 polygon；三个点控件按顺序直接写入 points。"
+  defaultSourceFile="polygon-clip.preview.tsx"
+/>
 
 | 字段     | 类型                      | 说明                                   |
 | -------- | ------------------------- | -------------------------------------- |
@@ -85,7 +91,12 @@ const svg = renderToSvgString(input, {
 
 `path` 直接接收 Core 的结构化路径命令，适合无法用圆、椭圆或多边形表达的曲线和复合轮廓。命令必须形成有效的可填充区域。
 
-<ComponentPreview files="path-clip" size="md" caption="路径命令结构保持不变；控制项只调整命令坐标与 fillRule。" />
+<ComponentPreview
+  files={['path-clip', 'path-clip.preview.tsx']}
+  size="md"
+  caption="路径命令结构保持不变；控制项只调整命令坐标与 fillRule。"
+  defaultSourceFile="path-clip.preview.tsx"
+/>
 
 | 字段        | 类型                       | 说明                         |
 | ----------- | -------------------------- | ---------------------------- |
@@ -99,9 +110,10 @@ const svg = renderToSvgString(input, {
 `compound` 按输入顺序累积多个 child 的路径命令，再用一个 `fillRule` 解释最终区域。它适合把多个轮廓合并为一个裁剪路径，但不是逐 child 的几何交集。
 
 <ComponentPreview
-  files="compound-clip"
+  files={['compound-clip', 'compound-clip.preview.tsx']}
   size="sm"
   caption="children 始终是两个 circle；调整半径、中心间距和 fillRule 可观察组合区域。"
+  defaultSourceFile="compound-clip.preview.tsx"
 />
 
 | 字段        | 类型                       | 说明                                                                 |
