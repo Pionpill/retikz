@@ -129,7 +129,11 @@ Coordinate 的方向与角度 anchor 都退化到中心；它也不提供文字�
 
 用 coordinate 命名一个虚拟中心，让多个节点围绕它定位、多条 path 终止于它。浅色坐标轴固定在世界原点；通过面板调整 hub 的 `position` 与节点的 `distance`，观察 hub 相对原点移动、所有引用一起更新。
 
-<ComponentPreview files="coordinate-as-anchor" size="xl" />
+<ComponentPreview
+  files={['coordinate-as-anchor', 'coordinate-as-anchor.preview.tsx', 'coordinate-as-anchor.i18n.ts']}
+  size="xl"
+  defaultSourceFile="coordinate-as-anchor.preview.tsx"
+/>
 
 上面 4 个节点用 `position={{ of: 'hub', ... }}` 引用同一个 hub；移动 hub 整组节点都跟着移。
 
@@ -137,13 +141,21 @@ Coordinate 的方向与角度 anchor 都退化到中心；它也不提供文字�
 
 流程图里多条 path 可以在一个虚拟点汇合。调整 junction 的 `position`，观察三条 path 始终经过这个没有形状和文字的 Coordinate。
 
-<ComponentPreview files="coordinate-fold-junction" size="md" />
+<ComponentPreview
+  files={['coordinate-fold-junction', 'coordinate-fold-junction.preview.tsx', 'coordinate-fold-junction.i18n.ts']}
+  size="md"
+  defaultSourceFile="coordinate-fold-junction.preview.tsx"
+/>
 
 ### 偏移定位链
 
 Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coordinate 驱动整组节点的相对位置，移动根点其它点全跟着走。浅色坐标轴固定在世界原点；用控件移动根点或调整水平步长，观察整组位移与偏移沿引用链传播：
 
-<ComponentPreview files="coordinate-offset-chain" size="lg" />
+<ComponentPreview
+  files={['coordinate-offset-chain', 'coordinate-offset-chain.preview.tsx']}
+  size="lg"
+  defaultSourceFile="coordinate-offset-chain.preview.tsx"
+/>
 
 ### 比例定位
 
@@ -151,7 +163,11 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 
 端点必须是不依赖路径当前位置就能求出的位置（`AbsoluteTarget`）（笛卡尔 / 极坐标 / 节点引用 `{ id, anchor? }` / `{ of, offset }` / 嵌套 between，**不含** path-relative）。同一形态可用于 `<Coordinate position>` / `<Node position>` / `<Step to>`：
 
-<ComponentPreview files="coordinate-between" size="xs" />
+<ComponentPreview
+  files={['coordinate-between', 'coordinate-between.preview.tsx']}
+  size="xs"
+  defaultSourceFile="coordinate-between.preview.tsx"
+/>
 
 > `fraction` 严格 [0,1]（外插暂不支持）；端点引用未定义节点时，Coordinate / Node 位置解析失败抛错、path `Step.to` 发 warn 跳过——与其它定位形态同口径。
 

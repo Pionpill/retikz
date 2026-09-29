@@ -18,13 +18,17 @@ Use `stack` to generate cumulative intervals for detail rows. Use `normalize` to
 
 Switch `offset` to compare standard accumulation, normalization, centering, and overlapping intervals. Normalize mode uses 0–1, center mode uses −60–60, and the other modes use a 0–120 y-axis.
 
-<ComponentPreview files={['transform-stack', 'transform-stack.data.ts']} size="lg" />
+<ComponentPreview
+  files={['transform-stack', 'transform-stack.preview.tsx', 'transform-stack.i18n.ts', 'transform-stack.data.ts']}
+  size="lg"
+  defaultSourceFile="transform-stack.preview.tsx"
+/>
 
 ### Diverging Values
 
 `diverging` is for data containing both positive and negative values. Positive segments accumulate upward from 0, while negative segments accumulate downward. This signed input must not be passed to `normalize`, whose share contract is non-negative.
 
-<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.data.ts']} size="lg" />
+<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.preview.tsx', 'transform-stack-diverging.i18n.ts', 'transform-stack-diverging.data.ts']} defaultSourceFile="transform-stack-diverging.preview.tsx" size="lg" />
 
 ### API Reference
 
@@ -73,7 +77,16 @@ Each group calculates bounds according to `offset`:
 
 Switch `basis` and grouping scope to compare 0–1 fractions, 0–100 percentages, per-quarter normalization, and global normalization.
 
-<ComponentPreview files={['transform-normalize', 'transform-normalize.data.ts']} size="lg" />
+<ComponentPreview
+  files={[
+    'transform-normalize',
+    'transform-normalize.preview.tsx',
+    'transform-normalize.i18n.ts',
+    'transform-normalize.data.ts',
+  ]}
+  size="lg"
+  defaultSourceFile="transform-normalize.preview.tsx"
+/>
 
 ### API Reference
 

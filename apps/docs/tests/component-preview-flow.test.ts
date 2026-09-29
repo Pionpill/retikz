@@ -11,19 +11,22 @@ import type { PreviewIR } from '../src/modules/docs/components/component-preview
 import { buildPreviewIR, irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
 import IrCentricDemo from '../src/modules/docs/contents/about/blog/core-philosophy/pipeline';
-import {
-  previewSource as FlowBasicPreviewSource,
-  renderFlowBasicPreview,
-} from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.zh.demo';
+import { FlowBasicPreview } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.preview';
+import { previewSource as FlowBasicPreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.zh.demo';
 import { previewControlContract as FlowCompoundControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.controls';
 import { previewControlContract as FlowCompoundEnControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.en.controls';
-import { renderFlowCompoundPreview as renderFlowCompoundEnPreview } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.en.demo';
-import { renderFlowCompoundPreview } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.zh.demo';
+import { FlowCompoundPreview } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.preview';
 import { previewControlContract as FlowThemeControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.controls';
 import { previewControlContract as FlowThemeEnControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.controls';
 import { previewSource as FlowThemeEnPreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.demo';
 import { previewSource as FlowThemePreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.zh.demo';
 import type { PreviewControlContract } from '../src/modules/docs/preview';
+
+const renderFlowBasicPreview = (values: Parameters<typeof FlowBasicPreview>[0]) => FlowBasicPreview(values, 'zh');
+const renderFlowCompoundPreview = (values: Parameters<typeof FlowCompoundPreview>[0]) =>
+  FlowCompoundPreview(values, 'zh');
+const renderFlowCompoundEnPreview = (values: Parameters<typeof FlowCompoundPreview>[0]) =>
+  FlowCompoundPreview(values, 'en');
 
 const source = FlowDiagramSchema.parse({
   namespace: 'diagram',

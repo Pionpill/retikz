@@ -90,7 +90,7 @@ Plot 注册的绘图专属 `kind` 也使用同一个组件，详见[绘图语法
 
 ## API 参考
 
-### PlotTransformProps
+#### PlotTransform / PlotTransformProps
 
 `PlotTransformProps` 等于 `IRPlotTransform`，是按 `kind` 判别的联合类型。选择 `kind` 后，TypeScript 会要求对应操作的其余配置。
 
@@ -98,7 +98,7 @@ Plot 注册的绘图专属 `kind` 也使用同一个组件，详见[绘图语法
 | ------ | ------------------------- | ------ | -------------------------------------------------------------------------- |
 | `kind` | `IRPlotTransform['kind']` | —      | 操作判别字段；其余属性由所选联合分支决定，参数见对应 Data 或 Plot 变换页面 |
 
-### kind 范围
+`PlotTransformProps['kind']` 的取值范围如下：
 
 | 能力归属 | kind                                                                                    | 文档                                       |
 | -------- | --------------------------------------------------------------------------------------- | ------------------------------------------ |
@@ -106,7 +106,7 @@ Plot 注册的绘图专属 `kind` 也使用同一个组件，详见[绘图语法
 | Plot     | `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density`、`smooth` | [绘图语法的变换](/viz/plot/transform)      |
 | 自定义   | 已注册且不与内置名冲突的字符串                                                          | [扩展机制](/viz/data/transform/extensions) |
 
-### 导出
+`PlotTransform` 与 `PlotTransformProps` 从包入口导出：
 
 | 导出                 | 类型                     | 默认值 | 说明                               |
 | -------------------- | ------------------------ | ------ | ---------------------------------- |

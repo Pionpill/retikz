@@ -1,5 +1,3 @@
-import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
@@ -7,57 +5,23 @@ import {
   coordinateCompositionXAxisControls,
   previewControlContract,
 } from './coordinate-composition-x-axis.controls';
-import { releaseRows } from './coordinate-composition-x-axis.data';
+import { CoordinateCompositionXAxisPreview } from './coordinate-composition-x-axis.preview';
 
 /** 注册回退使用的双横轴数据面板 */
 export const previewControls = coordinateCompositionXAxisControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const forecastAxisId =
-    values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastAxis] === 'calendar' ? 'calendar' : undefined;
-  const xGridVisible = values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.xGridVisible];
-  const yGridVisible = values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.yGridVisible];
-
-  return (
-    <Plot data={releaseRows} width={520} height={250}>
-      <PlotAxis dimension="x" grid={xGridVisible} title="T+" />
-      <PlotAxis
-        id="calendar"
-        dimension="x"
-        grid={xGridVisible}
-        placement={{ kind: 'side', side: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.secondaryAxisSide] }}
-        title="D"
-      />
-      <PlotAxis dimension="y" grid={yGridVisible} title="%" />
-      <PathMark
-        x="elapsedDay"
-        y="completed"
-        order="elapsedDay"
-        stroke="darkorange"
-        strokeWidth={values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.completedLineWidth]}
-      />
-      <PathMark
-        x="calendarDay"
-        y="forecast"
-        order="calendarDay"
-        xAxisId={forecastAxisId}
-        stroke="steelblue"
-        strokeWidth={values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastLineWidth]}
-      />
-      {values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastPointsVisible] ? (
-        <PointMark
-          x="calendarDay"
-          y="forecast"
-          xAxisId={forecastAxisId}
-          fill="lightblue"
-          stroke="steelblue"
-          strokeWidth={1}
-          size={values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastPointSize]}
-        />
-      ) : null}
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  CoordinateCompositionXAxisPreview({
+    forecastAxis: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastAxis],
+    xGridVisible: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.xGridVisible],
+    yGridVisible: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.yGridVisible],
+    secondaryAxisSide: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.secondaryAxisSide],
+    completedLineWidth: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.completedLineWidth],
+    forecastLineWidth: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastLineWidth],
+    forecastPointsVisible: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastPointsVisible],
+    forecastPointSize: values[COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS.forecastPointSize],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

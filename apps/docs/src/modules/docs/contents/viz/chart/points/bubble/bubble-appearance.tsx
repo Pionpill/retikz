@@ -1,27 +1,23 @@
-import { BubbleChart, BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './bubble-appearance.controls';
-import { gapminderBubbleData } from './bubble-basic.data';
+import { renderBubbleAppearancePreview } from './bubble-appearance.preview';
 
 const contract = createPreviewControlContract();
-const controlledPreview = defineControlledPreview(contract, (values, dimensions) => (
-  <BubbleChart
-    coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
-    rows={gapminderBubbleData}
-    layout={dimensions}
-  >
-    <BubbleEncodings x="gdpPerCapita" y="lifeExpectancy" size="population" color="continent" />
-    <BubbleProperties
-      fillOpacity={values.fillOpacity}
-      stroke={values.stroke}
-      strokeWidth={values.strokeWidth}
-      shape={values.shape}
-    />
-  </BubbleChart>
-));
+const controlledPreview = defineControlledPreview(contract, (values, dimensions) =>
+  renderBubbleAppearancePreview(
+    {
+      coordinateSystem: values.coordinateSystem,
+      fillOpacity: values.fillOpacity,
+      stroke: values.stroke,
+      strokeWidth: values.strokeWidth,
+      shape: values.shape,
+    },
+    dimensions,
+  ),
+);
 /** 气泡固定映射下的外观演示 */
 const Demo: FC = controlledPreview.Component;
 /** 注册回退使用的控件 */

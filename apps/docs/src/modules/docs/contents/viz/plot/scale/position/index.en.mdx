@@ -29,8 +29,9 @@ A bare number and an object without `kind` use scale-range output units, so x an
 
 <ComponentPreview
   size="lg"
-  files={['scale-continuous', 'scale-continuous.data.ts']}
+  files={['scale-continuous', 'scale-continuous.preview.tsx', 'scale-continuous.data.ts']}
   caption="Switch between positive and zero-crossing data to compare four continuous positional scales. Tune the log base, symlog linear region, and domain padding."
+  defaultSourceFile="scale-continuous.preview.tsx"
 />
 
 | Type                | Suited data                                | Key behavior and options                                                                                |
@@ -47,8 +48,9 @@ The `size` channel also uses `sqrt` so point area tracks magnitude, but that map
 
 <ComponentPreview
   size="lg"
-  files={['scale-radial', 'scale-radial.data.ts']}
+  files={['scale-radial', 'scale-radial.preview.tsx', 'scale-radial.data.ts']}
   caption="Choose a data distribution, then compare linear radius and area-proportional radial mapping side by side; both plots share the same maximum radius."
+  defaultSourceFile="scale-radial.preview.tsx"
 />
 
 ### Non-linear scales and baselines
@@ -79,7 +81,8 @@ A `temporal` field defaults to `time` on positional channels. It remains continu
 
 <ComponentPreview
   size="lg"
-  files={['scale-time', 'scale-time.data.ts']}
+  files={['scale-time', 'scale-time.preview.tsx', 'scale-time.data.ts']}
+  defaultSourceFile="scale-time.preview.tsx"
   caption="The x channel does not declare PlotScale explicitly; the temporal model field derives a time scale and formats quarterly dates at readable time boundaries."
 />
 
@@ -96,8 +99,9 @@ Categorical fields have no continuous numeric order. The default `band` scale gi
 
 <ComponentPreview
   size="lg"
-  files={['scale-band', 'scale-band.data.ts']}
+  files={['scale-band', 'scale-band.preview.tsx', 'scale-band.data.ts']}
   caption="Switch scales: band supplies bandwidth to intervals, while point provides evenly spaced positions for lines and points; the panel only shows padding for the current type."
+  defaultSourceFile="scale-band.preview.tsx"
 />
 
 Both discrete position scales expose a positive `step` for the final range. Point ratio [jitter](/viz/plot/mark/point#position-spread) uses that tick interval as its total-span basis; it does not use a point scale's always-zero `bandwidth` or infer spacing from data-value differences.

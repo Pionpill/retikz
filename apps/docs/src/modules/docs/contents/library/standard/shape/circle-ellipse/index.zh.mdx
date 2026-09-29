@@ -122,7 +122,12 @@ import { Circle, Ellipse } from '@retikz/standard-react/shape';
 
 下面的 playground 把四种输入放进同一张参考框中。切换构造方式、收缩 / 扩张范围，再打开局部弧段，观察输入框、最终椭圆与闭合区域的关系。
 
-<ComponentPreview files="ellipse-playground" size="sm" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['ellipse-playground', 'ellipse-playground.preview.tsx']}
+  size="sm"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="ellipse-playground.preview.tsx"
+/>
 
 ## 错误与限制
 
@@ -165,11 +170,11 @@ import { Circle, Ellipse } from '@retikz/standard-react/shape';
 
 ## Schema 参考
 
-### CircleSchema
+#### CircleSchema
 
 <ZodSchema name="CircleSchema" />
 
-### EllipseSchema
+#### EllipseSchema
 
 <ZodSchema name="EllipseSchema" />
 

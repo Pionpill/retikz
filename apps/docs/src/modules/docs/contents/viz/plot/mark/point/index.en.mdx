@@ -42,10 +42,11 @@ The first four general examples can switch between Cartesian and polar coordinat
 `x` / `y` define the anchor for each row, and PointMark creates one default circular node at every anchor. You can then map a categorical field to color or a numeric field to size to move from plain scatter points to bubbles.
 
 <ComponentPreview
-  files={['point-position', 'point-api.data.ts']}
+  files={['point-position', 'point-position.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-position' }}
   size="lg"
   caption="Switch position, color, and size encodings to compare plain, categorical, and bubble scatter."
+  defaultSourceFile="point-position.preview.tsx"
 />
 
 ### Position Spread
@@ -61,10 +62,11 @@ Ratio jitter on a categorical x axis spreads observations within one tick interv
 This is placement jitter: it changes positions after scale mapping without rewriting rows or fields. The `jitter` Data transform derives a field before scales, so the two mechanisms serve different purposes and are not interchangeable.
 
 <ComponentPreview
-  files={['point-jitter-cartesian', 'point-jitter.data.ts']}
+  files={['point-jitter-cartesian', 'point-jitter-cartesian.preview.tsx', 'point-jitter.data.ts']}
   controls={{ name: 'point-jitter-cartesian' }}
   size="lg"
   caption="Switch the width unit and adjust span and seed while each category center stays fixed."
+  defaultSourceFile="point-jitter-cartesian.preview.tsx"
 />
 
 #### Polar
@@ -72,10 +74,11 @@ This is placement jitter: it changes positions after scale mapping without rewri
 The x role is an angle in polar coordinates. Discrete angles use a tick-step ratio: the default `chord` mode moves jittered points along the straight edge between adjacent polygon vertices. Continuous angles use numeric output units and move along circular arcs. Both modes compose the angle before projecting with each row's y radius, so outer points travel farther on screen instead of receiving a uniform `dx` / `dy`. The demo uses radial `domainPadding` to reserve the spread space and Point radius at the outer edge.
 
 <ComponentPreview
-  files={['point-jitter-polar', 'point-jitter.data.ts']}
+  files={['point-jitter-polar', 'point-jitter-polar.preview.tsx', 'point-jitter.data.ts']}
   controls={{ name: 'point-jitter-polar' }}
   size="lg"
   caption="Switch between discrete categories and continuous numeric angles, then adjust spread width and seed to compare angular jitter in polygon and circular grids."
+  defaultSourceFile="point-jitter-polar.preview.tsx"
 />
 
 ### Style Variations
@@ -83,10 +86,11 @@ The x role is an angle in polar coordinates. Discrete angles use a tick-step rat
 Node styles such as `fill`, `stroke`, and `opacity` change only the scatter appearance, not the projected positions established above. Compare gradients, opacity, dashed strokes, and shadows directly here.
 
 <ComponentPreview
-  files={['point-style', 'point-api.data.ts']}
+  files={['point-style', 'point-style.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-style' }}
   size="lg"
   caption="Keep x / y fixed while combining paint, opacity, stroke, size, and shadow changes."
+  defaultSourceFile="point-style.preview.tsx"
 />
 
 ### Labels and Text Points
@@ -94,10 +98,11 @@ Node styles such as `fill`, `stroke`, and `opacity` change only the scatter appe
 PointMark has two text modes. `label` preserves the scatter glyph and attaches text through `Node.label`; `text` replaces the glyph itself with a borderless text Node, so a scatter layer can contain text only.
 
 <ComponentPreview
-  files={['point-text', 'point-api.data.ts']}
+  files={['point-text', 'point-text.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-text' }}
   size="lg"
   caption="Switch between point labels and text points, then change color, size, and weight across both text forms."
+  defaultSourceFile="point-text.preview.tsx"
 />
 
 ### Node Shapes
@@ -105,10 +110,11 @@ PointMark has two text modes. `label` preserves the scatter glyph and attaches t
 PointMark creates a core Node at every position rather than a fixed circle. `shape` can be a simple name such as circle, rectangle, or diamond, or a full shape reference with `params` for stars, polygons, and registered custom shapes; parameterized shapes can further vary their point or side count.
 
 <ComponentPreview
-  files={['point-node-shape', 'point-api.data.ts']}
+  files={['point-node-shape', 'point-node-shape.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-node-shape' }}
   size="lg"
   caption="Keep data and positions fixed while changing shape, size, rotation, star points, or polygon sides."
+  defaultSourceFile="point-node-shape.preview.tsx"
 />
 
 ## How it works

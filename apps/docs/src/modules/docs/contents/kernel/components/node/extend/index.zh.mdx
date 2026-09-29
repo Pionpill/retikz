@@ -131,7 +131,11 @@ const view = mount(document.getElementById('diagram')!, ir);
 | 引用点偏移 | `{ of, offset }`                | 在参照点上叠加二维偏移       |
 | 两点之间   | `{ between: [a, b], fraction }` | 按比例取两个点之间的位置     |
 
-<ComponentPreview files="node-position" size="lg" />
+<ComponentPreview
+  files={['node-position', 'node-position.preview.tsx']}
+  size="lg"
+  defaultSourceFile="node-position.preview.tsx"
+/>
 
 定位引用的对象必须已完成布局并登记（通常是前面声明的同级对象）；方向定位的默认距离来自 `<Layout nodeDistance>`，`between` 的 `fraction: 0.5` 表示中点。完整输入类型见 [API 参考](/kernel/components/node/api-reference)，需要不可见辅助点时使用 [Coordinate](/kernel/components/node/coordinate)。
 
@@ -140,9 +144,10 @@ const view = mount(document.getElementById('diagram')!, ir);
 Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切换双方标准 anchor，并调整 offset、目标 margin、两端 rotate 与当前 Node scale；非对称 padding 和这些几何参数都会先参与布局。
 
 <ComponentPreview
-  files="node-anchor-position"
+  files={['node-anchor-position', 'node-anchor-position.preview.tsx']}
   size="md"
   caption="浅灰圆点标出 target.anchor + offset；它始终与 q 的 selfAnchor 重合。"
+  defaultSourceFile="node-anchor-position.preview.tsx"
 />
 
 例如，将 `q` 的左侧贴到 `a` 的右侧，并留出 16 个单位。`target.id` 引用前面声明的节点，`offset` 在目标锚点上再加一段偏移。
@@ -164,7 +169,11 @@ Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切
 
 节点的视觉轮廓和连线端点分三层控制：`shape` 选择画出来的形状，`boundary` 选择自动贴边使用的连接面，path 端点的 `anchor` 则指定一个命名连接点。分别修改 A / B，观察同一条边如何落到两端。
 
-<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size="md" />
+<ComponentPreview
+  files={['node-shape-connection', 'node-shape-connection.preview.tsx', 'node-shape-connection-boundary.ts']}
+  size="md"
+  defaultSourceFile="node-shape-connection.preview.tsx"
+/>
 
 `anchor` 省略时，连线朝另一个端点自动贴边；标准命名 anchor（如 `top` / `right`）按 `boundary` 解析。`center` 会直接连到节点中心。形状专属 anchor 仍属于视觉 `shape`，具体名称见对应形状页。
 

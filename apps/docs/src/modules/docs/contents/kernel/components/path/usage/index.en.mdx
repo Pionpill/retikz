@@ -137,21 +137,37 @@ A straight line goes directly from A to B. To turn or curve, add an action betwe
 | Cubic Bezier                     | `kind: 'cubic'`                                          | `['a', { cubic: [[30, -40], [70, -40]] }, 'b']` |
 | Bend shortcut                    | `kind: 'bend'`<br />`bendDirection: 'left'` or `'right'` | `['a', { bend: 'left' }, 'b']`                  |
 
-<ComponentPreview files="draw-orthogonal" size="md" />
+<ComponentPreview
+  files={['draw-orthogonal', 'draw-orthogonal.preview.tsx']}
+  size="md"
+  defaultSourceFile="draw-orthogonal.preview.tsx"
+/>
 
 Curves use control points or a bend direction. Control points steer the curve; the curve does not have to pass through them.
 
-<ComponentPreview files="draw-curve" size="md" />
+<ComponentPreview
+  files={['draw-curve', 'draw-curve.preview.tsx']}
+  size="md"
+  defaultSourceFile="draw-curve.preview.tsx"
+/>
 
 ## Set appearance
 
 Put colors, stroke width, dashes, and fill in `style`. Arrow direction, rounded corners, and `zIndex` stay at the root. Adjust one path in the preview below.
 
-<ComponentPreview files="draw-style" size="lg" />
+<ComponentPreview
+  files={['draw-style', 'draw-style.preview.tsx']}
+  size="lg"
+  defaultSourceFile="draw-style.preview.tsx"
+/>
 
 Closed routes can fill an area, and `zIndex` controls sibling stacking. Compare both in one preview.
 
-<ComponentPreview files="draw-fill-stack" size="lg" />
+<ComponentPreview
+  files={['draw-fill-stack', 'draw-fill-stack.preview.tsx']}
+  size="lg"
+  defaultSourceFile="draw-fill-stack.preview.tsx"
+/>
 
 For a closed Path / Draw, `style.fill` also accepts pattern objects such as `{ kind: 'pattern', shape: 'lines' }` to fill the area with lines, dots, or a grid. See [Patterns](/kernel/visual/style/pattern).
 

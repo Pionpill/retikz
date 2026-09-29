@@ -1,0 +1,43 @@
+import { Draw, Layout, Node } from '@retikz/react';
+
+import { WayCyclePresentationByState } from './way-cycle.data';
+
+/** 图形参数 */
+export type WayCyclePreviewValues = {
+  state: 'open' | 'closed';
+};
+
+/** 绘制示例图形 */
+export const WayCyclePreview = (values: WayCyclePreviewValues) => {
+  const presentation = WayCyclePresentationByState[values.state];
+
+  return (
+    <Layout
+      viewBox={{ x: -170, y: -110, width: 340, height: 220 }}
+      rootScope={{
+        defaults: {
+          node: {
+            style: { stroke: 'gray', dashed: true },
+          },
+        },
+      }}
+    >
+      <Node id="A" position={[-80, 45]}>
+        a
+      </Node>
+      <Node id="B" position={[0, -55]}>
+        b
+      </Node>
+      <Node id="C" position={[80, 45]}>
+        c
+      </Node>
+      {presentation.showClosingGuide && (
+        <Draw way={['C.center', 'A.center']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+      )}
+      <Draw
+        way={presentation.way}
+        style={{ stroke: 'dodgerblue', strokeWidth: 2, fill: presentation.fill, fillOpacity: 0.16 }}
+      />
+    </Layout>
+  );
+};

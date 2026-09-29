@@ -24,9 +24,10 @@ When built-in scales cannot express a domain mapping, special position distribut
 The demo registers both `ease-position` and `brand`: the first redistributes x coordinates with an exponent, while the second maps categorical `tier` values to a brand palette. Drag the exponent to compare position mapping while color mapping stays fixed; switch source files to inspect both definitions, data, and host injection:
 
 <ComponentPreview
-  files={['scale-custom', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
+  files={['scale-custom', 'scale-custom.preview.tsx', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
   size="lg"
   caption="An exponent below 1 spreads middle points to the right; an exponent above 1 gathers them to the left. The tier palette does not change."
+  defaultSourceFile="scale-custom.preview.tsx"
 />
 
 ## Inject into the host

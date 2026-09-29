@@ -1,18 +1,11 @@
-import { RegressionChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { usePreviewDimensions } from '@/modules/docs/preview';
 
-import { regressionMinimalData } from './regression-minimal.data';
+import { renderRegressionMinimalPreview } from './regression-minimal.preview';
 
 /** 只在根组件传入必要数据与字段映射的 Regression 基础用法 */
-const render = (dimensions?: { width: number; height: number }) => (
-  <RegressionChart
-    layout={dimensions}
-    rows={regressionMinimalData}
-    recipe={{ encodings: { x: 'distanceMiles', y: 'delayMinutes' } }}
-  />
-);
+const render = (dimensions?: { width: number; height: number }) => renderRegressionMinimalPreview(dimensions);
 
 /** IR 与 Vanilla 预览使用的数据导入 */
 export const previewSource = {

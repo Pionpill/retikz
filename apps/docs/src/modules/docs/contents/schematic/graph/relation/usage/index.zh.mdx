@@ -17,6 +17,7 @@ Relation 连接已有对象。先完成[快速开始](/schematic/graph/get-start
 ```tsx
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 import type { FC } from 'react';
+
 const Example: FC = () => (
   <Graph>
     <Entity id="sender" role="activity" position={[80, 80]}>
@@ -39,6 +40,7 @@ import type { IRScene } from '@retikz/core';
 import { createGraphDefinitions } from '@retikz/graph';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',
@@ -59,6 +61,7 @@ export default Example;
 import { entity, relation, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
+
 const input = scene({
   children: [
     entity({ id: 'sender', role: 'activity', position: [80, 80], text: '发送' }),
@@ -76,6 +79,7 @@ const view = mount(document.getElementById('diagram')!, input, { adapters: creat
 import type { IRScene } from '@retikz/core';
 import { createGraphDefinitions } from '@retikz/graph';
 import { mount } from '@retikz/vanilla/dom';
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',
@@ -121,9 +125,10 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
 - **内置 predicate：** 无；领域扩展可以注册 cardinality predicate，并用 params schema 校验 source / target 基数
 
 <ComponentPreview
-  files="relation-association"
+  files={['relation-association', 'relation-association.preview.tsx']}
   size="md"
   caption="切换方向，观察菱形出现在 source、target、两端或均不出现；端点位置保持不变。"
+  defaultSourceFile="relation-association.preview.tsx"
 />
 
 ### dependency：依赖关系
@@ -134,9 +139,10 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
 - **内置 predicate：** 无；扩展可以声明 `{ optional: boolean, reason: string }` 等 params，具体字段和值域由 predicate definition 决定
 
 <ComponentPreview
-  files="relation-dependency"
+  files={['relation-dependency', 'relation-dependency.preview.tsx']}
   size="md"
   caption="依赖关系固定指向 target；切换状态或主色，观察路径和开放箭头的外观变化。"
+  defaultSourceFile="relation-dependency.preview.tsx"
 />
 
 ### generalization：泛化关系
@@ -147,9 +153,10 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
 - **内置 predicate：** 无；类型系统扩展可以用 params 表达 discriminator 或约束，但 Graph 不执行类型检查
 
 <ComponentPreview
-  files="relation-generalization"
+  files={['relation-generalization', 'relation-generalization.preview.tsx']}
   size="md"
   caption="泛化关系以实心箭头指向父类型；切换状态或主色，观察路径与箭头的外观变化。"
+  defaultSourceFile="relation-generalization.preview.tsx"
 />
 
 ### flow：对象之间的流动
@@ -160,9 +167,10 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
 - **内置 predicate：** 无；工作流扩展可以声明 `{ expression: string, priority: number }` 等条件 params，Graph 只校验和保存，不执行条件
 
 <ComponentPreview
-  files="relation-flow"
+  files={['relation-flow', 'relation-flow.preview.tsx']}
   size="md"
   caption="切换 flow 的语义方向，并观察 stealth marker 的 endpoint 变化。"
+  defaultSourceFile="relation-flow.preview.tsx"
 />
 
 ### influence：影响关系
@@ -172,7 +180,12 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
 - **默认 / 允许 direction：** `forward` / `forward`、`reverse`、`both`
 - **内置 predicate：** 无；分析模型可以声明 `{ weight: number, confidence: number }` 等 params，并通过 Theme selector 选择 appearance
 
-<ComponentPreview files="relation-influence" size="md" caption="切换 influence 的语义方向，并调整 Relation 主色。" />
+<ComponentPreview
+  files={['relation-influence', 'relation-influence.preview.tsx']}
+  size="md"
+  caption="切换 influence 的语义方向，并调整 Relation 主色。"
+  defaultSourceFile="relation-influence.preview.tsx"
+/>
 
 ### 语义状态
 
@@ -185,9 +198,10 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
 下面的综合示例可以切换全部五个内置 role，并直接调整 source、target、Relation 路径与 label 的样式。role 会改变关系语义和 marker recipe；显式样式字段会覆盖对应的 Theme 默认
 
 <ComponentPreview
-  files="relation-style"
+  files={['relation-style', 'relation-style.preview.tsx']}
   size="xl"
   caption="切换 role，并分别调整 source 与 target 的颜色、路径描边色与宽度、虚线、透明度、label 文本色和文本透明度。"
+  defaultSourceFile="relation-style.preview.tsx"
 />
 
 ## 标签与路径

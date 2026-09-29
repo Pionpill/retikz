@@ -99,7 +99,11 @@ console.log(svg);
 
 `circle` uses one radius; `ellipse` sets horizontal and vertical radii separately. Both are positioned by their center.
 
-<ComponentPreview files="circle-ellipse-clip" size="sm" />
+<ComponentPreview
+  files={['circle-ellipse-clip', 'circle-ellipse-clip.preview.tsx']}
+  size="sm"
+  defaultSourceFile="circle-ellipse-clip.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
@@ -144,7 +148,11 @@ The dashed bounds show the original content. Controls change the radius of the f
 
 `polygon` connects at least three authored vertices in order and closes the region.
 
-<ComponentPreview files="polygon-clip" size="sm" />
+<ComponentPreview
+  files={['polygon-clip', 'polygon-clip.preview.tsx']}
+  size="sm"
+  defaultSourceFile="polygon-clip.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
@@ -174,7 +182,7 @@ The demo fixes `kind` to `polygon`; its three point controls directly change `po
 
 `path` takes structured commands for curves or multiple subpaths. They must form a fillable region.
 
-<ComponentPreview files="path-clip" size="md" />
+<ComponentPreview files={['path-clip', 'path-clip.preview.tsx']} size="md" defaultSourceFile="path-clip.preview.tsx" />
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
@@ -205,7 +213,11 @@ The demo keeps its command structure and starts with `evenodd`; controls change 
 
 `compound` accumulates child paths in input order and applies one `fillRule` to the final region. It combines contours without computing their geometric intersection.
 
-<ComponentPreview files="compound-clip" size="sm" />
+<ComponentPreview
+  files={['compound-clip', 'compound-clip.preview.tsx']}
+  size="sm"
+  defaultSourceFile="compound-clip.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">

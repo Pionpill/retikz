@@ -160,7 +160,13 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 修改同一动画的参数观察时序变化；关闭播放时显示基础状态，并非自动采样最后一帧。
 
-<ComponentPreview files="animation-playground" size="md" controlPanelDefaultSize={50} controls={{ animation: true }} />
+<ComponentPreview
+  files={['animation-playground', 'animation-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  controls={{ animation: true }}
+  defaultSourceFile="animation-playground.preview.tsx"
+/>
 
 ## 相关属性
 

@@ -1,23 +1,20 @@
-import { RegressionChart, RegressionEncodings } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { irisRegressionData } from './regression-basic.data';
 import { createPreviewControlContract } from './regression-encodings.controls';
+import { renderRegressionEncodingsPreview } from './regression-encodings.preview';
 
 const contract = createPreviewControlContract();
-const controlled = defineControlledPreview(contract, (values, dimensions) => {
-  return (
-    <RegressionChart
-      coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
-      rows={irisRegressionData}
-      layout={dimensions}
-    >
-      <RegressionEncodings x="sepalLengthCm" y="petalLengthCm" {...(values.group ? { series: 'species' } : {})} />
-    </RegressionChart>
-  );
-});
+const controlled = defineControlledPreview(contract, (values, dimensions) =>
+  renderRegressionEncodingsPreview(
+    {
+      coordinateSystem: values.coordinateSystem,
+      group: values.group,
+    },
+    dimensions,
+  ),
+);
 /** 映射交互示例 */
 const Demo: FC = controlled.Component;
 /** 预览使用的控件 */

@@ -11,7 +11,14 @@ After [installation and first rendering](/viz/chart/get-start), choose one of th
 
 100 earthquake records: depth on x, magnitude on y, and significance as size.
 
-<ComponentPreview mode="showcase" responsive files={['bubble-minimal', 'bubble-minimal.data.ts']} hideCode size="xl" />
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['bubble-minimal', 'bubble-minimal.preview.tsx', 'bubble-minimal.data.ts']}
+  defaultSourceFile="bubble-minimal.preview.tsx"
+  hideCode
+  size="xl"
+/>
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -170,10 +177,11 @@ Toggle category coloring to see how `color` distinguishes continents. Compare di
   hideCode
   mode="showcase"
   responsive
-  files={['bubble-encodings', 'bubble-basic.data.ts']}
+  files={['bubble-encodings', 'bubble-encodings.preview.tsx', 'bubble-basic.data.ts']}
   controls={{ name: 'bubble-encodings' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="bubble-encodings.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: BubbleEncodings](#bubbleencodings).
@@ -231,7 +239,8 @@ Use the controls below to compare fill and stroke combinations. Use Scatter when
   hideCode
   mode="showcase"
   responsive
-  files={['bubble-appearance', 'bubble-basic.data.ts']}
+  files={['bubble-appearance', 'bubble-appearance.preview.tsx', 'bubble-basic.data.ts']}
+  defaultSourceFile="bubble-appearance.preview.tsx"
   controls={{ name: 'bubble-appearance' }}
   controlPanelDefaultOpen={false}
   size="xl"
@@ -305,7 +314,8 @@ Size remains inherited from the recipe population field. Bubble marks deliberate
   hideCode
   mode="showcase"
   responsive
-  files={['bubble-marks', 'bubble-basic.data.ts']}
+  files={['bubble-marks', 'bubble-marks.preview.tsx', 'bubble-basic.data.ts']}
+  defaultSourceFile="bubble-marks.preview.tsx"
   size="xl"
   controls={{ name: 'bubble-marks' }}
   caption="Adjust fill opacity and outline width to compare occlusion and bubble boundaries."
@@ -333,10 +343,11 @@ Switch the x scale and inspect how horizontal distances change. Equal distances 
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['bubble-basic', 'bubble-basic.data.ts']}
+  files={['bubble-basic', 'bubble-basic.preview.tsx', 'bubble-basic.data.ts']}
   controls={{ name: 'bubble-basic' }}
   controlPanelDefaultOpen={false}
   size="xxl"
+  defaultSourceFile="bubble-basic.preview.tsx"
 />
 
 ### Facet comparison
@@ -357,7 +368,8 @@ Compare panels within the same x interval. The number of bubbles represents coun
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['bubble-facet', 'bubble-basic.data.ts']}
+  files={['bubble-facet', 'bubble-facet.preview.tsx', 'bubble-basic.data.ts', 'bubble-facet.i18n.ts']}
+  defaultSourceFile="bubble-facet.preview.tsx"
   size="xxxl"
   controls={{ name: 'bubble-facet' }}
 />

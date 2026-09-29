@@ -115,7 +115,11 @@ console.log(svg);
 
 `diamond` and `openDiamond` are filled and hollow symmetric diamonds. Both default to 11 × 6; the hollow form is stroke-only.
 
-<ComponentPreview files="diamond-arrows" size="sm" />
+<ComponentPreview
+  files={['diamond-arrows', 'diamond-arrows.preview.tsx']}
+  size="sm"
+  defaultSourceFile="diamond-arrows.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
@@ -246,7 +250,7 @@ Change length, width, and stroke width to inspect the open barb and its path con
 
 `bar` draws an open line perpendicular to the path at its endpoint. It defaults to 8 × 8 and has no fixed domain meaning.
 
-<ComponentPreview files="bar-arrow" size="sm" />
+<ComponentPreview files={['bar-arrow', 'bar-arrow.preview.tsx']} size="sm" defaultSourceFile="bar-arrow.preview.tsx" />
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">
@@ -278,7 +282,11 @@ Length sets the span along the path, width sets the bar span, and line width aff
 
 `crowFoot` draws three open rays from the path contact point and defaults to 8 × 8. Relationship diagrams can use it for multiplicity, but the geometry has no fixed domain meaning.
 
-<ComponentPreview files="crow-foot-arrow" size="sm" />
+<ComponentPreview
+  files={['crow-foot-arrow', 'crow-foot-arrow.preview.tsx']}
+  size="sm"
+  defaultSourceFile="crow-foot-arrow.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API reference">

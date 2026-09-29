@@ -15,7 +15,16 @@ General reducers, selectors, and grouped summaries belong to [Data Transforms](/
 
 Switch between automatic Silverman bandwidth and an explicit value, then adjust `sampleCount`. Fixed coordinate domains make bandwidth and sampling density directly comparable.
 
-<ComponentPreview files={['transform-density', 'transform-density.data.ts']} size="lg" />
+<ComponentPreview
+  files={[
+    'transform-density',
+    'transform-density.preview.tsx',
+    'transform-density.i18n.ts',
+    'transform-density.data.ts',
+  ]}
+  size="lg"
+  defaultSourceFile="transform-density.preview.tsx"
+/>
 
 Bandwidth controls how far each observation spreads along the x-axis. A smaller bandwidth preserves more local peaks and valleys; a larger one blends a wider neighborhood into a smoother curve. `sampleCount` only changes output sampling density, not smoothing strength.
 
@@ -74,7 +83,11 @@ A group with no finite samples throws. Silverman also requires at least two fini
 
 Adjust the number of predictions and switch between the observed range and explicit extrapolation. Hollow points show the predicted rows directly while the coordinate domain stays fixed: `sampleCount` changes their spacing, and `extent` only changes the sampled trend interval.
 
-<ComponentPreview files={['transform-smooth', 'transform-smooth.data.ts']} size="lg" />
+<ComponentPreview
+  files={['transform-smooth', 'transform-smooth.preview.tsx', 'transform-smooth.i18n.ts', 'transform-smooth.data.ts']}
+  size="lg"
+  defaultSourceFile="transform-smooth.preview.tsx"
+/>
 
 ### API Reference
 

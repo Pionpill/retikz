@@ -9,6 +9,7 @@ describe('RenderType', () => {
   it('renders an array type as one code token', () => {
     const markup = renderToStaticMarkup(
       <RenderType
+        name="ExampleSchema.transforms"
         repr={{
           kind: 'array',
           element: { kind: 'ref', name: 'TransformSchema', url: '/kernel/components/scope/schema-reference' },
@@ -33,7 +34,7 @@ describe('RenderType', () => {
       }),
     ]);
 
-    const markup = renderToStaticMarkup(<RenderType repr={walkType(schema)} />);
+    const markup = renderToStaticMarkup(<RenderType repr={walkType(schema)} name="ExampleSchema.mode" />);
 
     expect(markup).toContain('kind:');
     expect(markup).toContain('&quot;sum&quot;');
@@ -48,7 +49,7 @@ describe('RenderType', () => {
       z.record(z.string(), z.union([z.string(), z.number()])),
     );
 
-    const markup = renderToStaticMarkup(<RenderType repr={walkType(schema)} />);
+    const markup = renderToStaticMarkup(<RenderType repr={walkType(schema)} name="ExampleSchema.mode" />);
 
     expect(markup).toContain('kind:');
     expect(markup).toContain('&amp;');

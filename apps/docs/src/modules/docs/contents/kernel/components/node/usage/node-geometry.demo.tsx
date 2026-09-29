@@ -1,37 +1,24 @@
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { nodeGeometryControls, nodeGeometryFrame, previewControlContract } from './node-geometry.controls';
+import { nodeGeometryControls, previewControlContract } from './node-geometry.controls';
+import { NodeGeometryPreview } from './node-geometry.preview';
 
 export const previewControls = nodeGeometryControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout>
-      <Node id="A" position={[-150, 0]} shape="circle" style={{ stroke: 'gray', dashed: true }} layout={{ padding: 6 }}>
-        a
-      </Node>
-      <Node
-        id="Q"
-        position={[...nodeGeometryFrame.subjectPosition]}
-        cornerRadius={values.cornerRadius}
-        scale={values.scale}
-        rotate={values.rotate}
-        style={{ fill: '#f97316', stroke: '#c2410c', textColor: 'white' }}
-        layout={{
-          padding: { x: values.paddingX, y: values.paddingY },
-          margin: values.margin,
-          minimumSize: { width: values.minimumWidth, height: values.minimumHeight },
-        }}
-      >
-        q
-      </Node>
-      <Draw way={['A', 'Q']} arrow="->" zIndex={-1} style={{ stroke: 'gray' }} />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  NodeGeometryPreview({
+    cornerRadius: values.cornerRadius,
+    scale: values.scale,
+    rotate: values.rotate,
+    paddingX: values.paddingX,
+    paddingY: values.paddingY,
+    margin: values.margin,
+    minimumWidth: values.minimumWidth,
+    minimumHeight: values.minimumHeight,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

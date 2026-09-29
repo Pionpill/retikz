@@ -85,9 +85,10 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 Use the demo below to edit TeX source and compare inline / display metrics and font sizes. Start from a complete example, then adjust the source or layout parameters:
 
 <ComponentPreview
-  files="tex-playground"
+  files={['tex-playground', 'tex-playground.preview.tsx']}
   size="md"
   caption="Edit TeX source and switch inline / display mode and font size to compare one formula under different layout parameters."
+  defaultSourceFile="tex-playground.preview.tsx"
 />
 
 For additional syntax such as AMS, command definitions, brackets, cancellation, cases, or color, continue to [MathJax Configuration](/kernel/packages/tex/configuration).

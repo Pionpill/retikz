@@ -112,7 +112,11 @@ console.log(svg);
 
 `cross` 支持独立控制水平臂、垂直臂的宽度，以及上、右、下、左四个方向的高度。它适合删除、禁用、交叉点和不对称十字架等 glyph。
 
-<ComponentPreview files="cross-example" size="sm" />
+<ComponentPreview
+  files={['cross-example', 'cross-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="cross-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -157,7 +161,11 @@ console.log(svg);
 
 `trapezoid` 用 `shortSide` 选择短边，并用短边与相对长边的比例控制收窄程度。内容外接会为斜边和圆角留出空间；比例为 `1` 时退化为矩形。
 
-<ComponentPreview files="trapezoid-example" size="sm" />
+<ComponentPreview
+  files={['trapezoid-example', 'trapezoid-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="trapezoid-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -193,7 +201,11 @@ console.log(svg);
 
 `parallelogram` 通过斜边方向和角度控制水平错位。角度是斜边与水平边的夹角；`90` 度时轮廓退化为矩形，纵向形态可继续使用 Node 旋转。
 
-<ComponentPreview files="parallelogram-example" size="sm" />
+<ComponentPreview
+  files={['parallelogram-example', 'parallelogram-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="parallelogram-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -229,7 +241,11 @@ console.log(svg);
 
 `hexagon` 是可独立调整宽高的长六边形：上下边保持水平，左右各保留一个侧向顶点。`shoulderDepth` 使用固定 user-unit 长度，因此内容变长只延长中间水平边，不会继续放大两侧尖角。它不是 Core 正多边形 `polygon { sides: 6 }` 的别名。
 
-<ComponentPreview files="hexagon-example" size="sm" />
+<ComponentPreview
+  files={['hexagon-example', 'hexagon-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="hexagon-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -263,7 +279,11 @@ console.log(svg);
 
 `cylinder` 用一个闭合外轮廓和一条端盖分隔弧表达圆柱。`capDepth` 会在内容区两端预留空间；分隔弧只参与描边，不会成为第二个节点或连接边界，也不会挖空近端端盖的填充。
 
-<ComponentPreview files="cylinder-example" size="sm" />
+<ComponentPreview
+  files={['cylinder-example', 'cylinder-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="cylinder-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -297,7 +317,11 @@ console.log(svg);
 
 `ellipticCapsule` 由顶部半椭圆、两侧直线和底部半椭圆组成一个闭合外轮廓。它与 `cylinder` 共享端部几何，但不绘制内部端盖分隔弧，因此顶部不会形成一个完整椭圆。与 Core 圆角矩形形成的 capsule 相比，`capDepth` 可以独立控制端部深度，半椭圆始终覆盖整个横截面。
 
-<ComponentPreview files="elliptic-capsule-example" size="sm" />
+<ComponentPreview
+  files={['elliptic-capsule-example', 'elliptic-capsule-example.preview.tsx']}
+  size="sm"
+  defaultSourceFile="elliptic-capsule-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -331,7 +355,11 @@ console.log(svg);
 
 `sector` 用内外半径和角度范围构成实心扇片、环楔或开放弧，`cornerRadius` 可把正厚度 Sector 的径向转角变圆。将 `innerRadius` 与 `outerRadius` 设为相同的正数即可退化为可连接的开放弧；它适合角度范围、环形进度和扇区状态节点。
 
-<ComponentPreview files="sector-example" size="md" />
+<ComponentPreview
+  files={['sector-example', 'sector-example.preview.tsx']}
+  size="md"
+  defaultSourceFile="sector-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -371,7 +399,11 @@ console.log(svg);
 
 `star` 通过尖角数量、内外半径、旋转和圆角生成星形，并提供 `tip-N` 与 `notch-N` 命名 anchor。它适合强调、评分或需要语义锚点的图节点。
 
-<ComponentPreview files="star-example" size="md" />
+<ComponentPreview
+  files={['star-example', 'star-example.preview.tsx']}
+  size="md"
+  defaultSourceFile="star-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -411,7 +443,11 @@ console.log(svg);
 
 `contour` 接受一组闭合顶点环，并会以包围盒中心对齐 Node 位置；`cornerRadius` 对每个转角应用可行的圆角。这里用预设点集避免编辑 JSON，同时展示标签、盾牌和缺口等非标准轮廓。
 
-<ComponentPreview files="contour-example" size="md" />
+<ComponentPreview
+  files={['contour-example', 'contour-example.preview.tsx']}
+  size="md"
+  defaultSourceFile="contour-example.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">

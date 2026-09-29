@@ -115,7 +115,11 @@ console.log(svg);
 
 `diamond` 与 `openDiamond` 分别是实心和空心的对称菱形。默认尺寸均为 11 × 6；空心版本只描边。
 
-<ComponentPreview files="diamond-arrows" size="sm" />
+<ComponentPreview
+  files={['diamond-arrows', 'diamond-arrows.preview.tsx']}
+  size="sm"
+  defaultSourceFile="diamond-arrows.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -246,7 +250,7 @@ console.log(svg);
 
 `bar` 在端点绘制垂直于路径的开放线段，默认尺寸为 8 × 8。名称不预设业务含义。
 
-<ComponentPreview files="bar-arrow" size="sm" />
+<ComponentPreview files={['bar-arrow', 'bar-arrow.preview.tsx']} size="sm" defaultSourceFile="bar-arrow.preview.tsx" />
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -278,7 +282,11 @@ console.log(svg);
 
 `crowFoot` 从路径接触点绘制三条开放射线，默认尺寸为 8 × 8。关系图可赋予其多重性语义，但几何本身不绑定领域含义。
 
-<ComponentPreview files="crow-foot-arrow" size="sm" />
+<ComponentPreview
+  files={['crow-foot-arrow', 'crow-foot-arrow.preview.tsx']}
+  size="sm"
+  defaultSourceFile="crow-foot-arrow.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">

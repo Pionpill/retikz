@@ -46,13 +46,21 @@ All five examples can switch between Cartesian and polar coordinates from the Co
 
 A single constant `x` or `y` produces one reference line across the opposite axis domain. Switch the Reference Axis to compare horizontal and vertical lines, then switch to polar coordinates to see the same configurations become a ring or radial line.
 
-<ComponentPreview files={['rule-threshold', 'rule-threshold.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-threshold', 'rule-threshold.preview.tsx', 'rule-threshold.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-threshold.preview.tsx"
+/>
 
 ### Reference Band
 
 Add an upper bound on the same axis and ReferenceMark turns from a line into a filled band. Under polar coordinates, `y` / `yTo` becomes an annular band while `x` / `xTo` becomes a sector wedge. Bands are usually declared before data marks.
 
-<ComponentPreview files={['rule-band', 'rule-threshold.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-band', 'rule-band.preview.tsx', 'rule-threshold.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-band.preview.tsx"
+/>
 
 `xTo` mirrors `yTo`: with `x` bound, use `xTo` for a vertical band. The upper bound must match the bound axis, otherwise construction or lowering throws.
 
@@ -60,13 +68,21 @@ Add an upper bound on the same axis and ReferenceMark turns from a line into a f
 
 `kind="region"` turns ReferenceMark from a one-axis constraint into a coordinate cell region. In cartesian coordinates it draws a rectangle; under polar coordinates the same `x` / `xTo` / `y` / `yTo` pair becomes an angle interval plus a radius interval, producing an annular sector.
 
-<ComponentPreview files={['rule-region', 'rule-region.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-region', 'rule-region.preview.tsx', 'rule-region.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-region.preview.tsx"
+/>
 
 ### Per-Row References
 
 `y="threshold"` is a field axis value, so each data row produces one reference line. In that form, `color="tier"` is interpreted as a color field and grouped by category.
 
-<ComponentPreview files={['rule-per-datum', 'rule-per-datum.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-per-datum', 'rule-per-datum.preview.tsx', 'rule-per-datum.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-per-datum.preview.tsx"
+/>
 
 In React authoring, the lower `x` / `y` binding decides how a color string is interpreted: a numeric lower bound makes it a constant color, while a field lower bound makes it a color field. Even when a field upper bound or extent makes the reference run per row, `color` remains constant if the lower bound is numeric.
 
@@ -74,7 +90,11 @@ In React authoring, the lower `x` / `y` binding decides how a color string is in
 
 Lines and bands span the full opposite-axis domain by default. Add `extentField` / `extentToField` and each row can read the start and end of that opposite role from two fields, shortening the constraint into a partial line or band. The two props must be set together.
 
-<ComponentPreview files={['rule-extent', 'rule-extent.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-extent', 'rule-extent.preview.tsx', 'rule-extent.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-extent.preview.tsx"
+/>
 
 An extent changes only the coverage along the opposite axis; it does not change the reference-axis value bound by `x` / `y`. Under `polar2D`, that opposite role becomes the corresponding angular or radial span.
 

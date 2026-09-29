@@ -107,9 +107,10 @@ These four side-by-side cases compare direction-specific line settings, center-p
 Use the panel to change corner bounds, uniform or direction-specific spacing, line alignment, major lines, and the border. The preview keeps a fixed view, so each change is visible as a change in position, density, or drawing order.
 
 <ComponentPreview
-  files="grid-playground"
+  files={['grid-playground', 'grid-playground.preview.tsx']}
   size="lg"
   caption="Adjust bounds, line spacing, line origins, major settings, and border to see how the fields determine the final grid."
+  defaultSourceFile="grid-playground.preview.tsx"
 />
 
 ## Errors and limitations
@@ -149,11 +150,11 @@ A handwritten `IRGrid` without a loaded definition is never silently interpreted
 
 ## Schema reference
 
-### GridSchema
+#### GridSchema
 
 <ZodSchema name="GridSchema" />
 
-### GridLineInputSchema
+#### GridLineInputSchema
 
 <ZodSchema name="GridLineInputSchema" />
 

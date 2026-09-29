@@ -17,3 +17,6 @@ export const measurements: Array<Record<string, number>> = [
   { measurement: 14 },
   { measurement: 18 },
 ];
+
+/** 根据分箱数量创建直方图变换 */
+export const intervalHistogramOperationOf = (count: number) => ({ kind: 'bin' as const, field: 'measurement', count });

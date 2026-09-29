@@ -1,50 +1,21 @@
-import { PathClipDefinition } from '@retikz/extension';
-import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { pathClipControls, previewControlContract } from './path-clip.controls';
+import { renderPathClipPreview } from './path-clip.preview';
 
 export const previewControls = pathClipControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -125, y: -100, width: 250, height: 200 }} extensions={{ clips: [PathClipDefinition] }}>
-    <Node
-      position={[0, 0]}
-      shape="rectangle"
-      style={{ fill: 'none', stroke: 'lightgray', strokeWidth: 1, dashPattern: [6, 4] }}
-      layout={{ minimumSize: { width: 220, height: 170 } }}
-    />
-    <Scope
-      clip={{
-        kind: 'path',
-        fillRule: values.fillRule,
-        commands: [
-          { kind: 'move', to: [-82, -values.halfHeight] },
-          { kind: 'line', to: [18, -values.halfHeight] },
-          { kind: 'line', to: [values.tipX, 0] },
-          { kind: 'line', to: [18, values.halfHeight] },
-          { kind: 'line', to: [-82, values.halfHeight] },
-          { kind: 'line', to: [values.notchX, 0] },
-          { kind: 'close' },
-          { kind: 'move', to: [-values.holeSize, 0] },
-          { kind: 'line', to: [0, -values.holeSize] },
-          { kind: 'line', to: [values.holeSize, 0] },
-          { kind: 'line', to: [0, values.holeSize] },
-          { kind: 'close' },
-        ],
-      }}
-    >
-      <Node
-        position={[0, 0]}
-        shape="rectangle"
-        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: '#2563eb', size: 14 } }}
-        layout={{ minimumSize: { width: 220, height: 170 } }}
-      />
-    </Scope>
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderPathClipPreview({
+    fillRule: values.fillRule,
+    halfHeight: values.halfHeight,
+    tipX: values.tipX,
+    notchX: values.notchX,
+    holeSize: values.holeSize,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

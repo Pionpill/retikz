@@ -102,7 +102,12 @@ import { Star } from '@retikz/standard-react/shape';
 
 playground 中两条虚线圆分别是内、外半径。调整星角数量、`innerRatio` 与起始角，可以直接看到凹角深度和整体朝向如何共同塑造轮廓。
 
-<ComponentPreview files="star-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['star-playground', 'star-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="star-playground.preview.tsx"
+/>
 
 ## 错误与限制
 
@@ -130,7 +135,7 @@ Star 在内外半径之间交替生成 `2 × points` 个顶点，再输出一次
 
 ## Schema 参考
 
-### StarSchema
+#### StarSchema
 
 <ZodSchema name="StarSchema" />
 

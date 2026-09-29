@@ -1,13 +1,9 @@
-import type { IRPlot } from '@retikz/plot';
-import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { CUSTOM_MARK_CONTROL_IDS, customMarkControls, previewControlContract } from './mark-custom.controls';
-import { glyphRows } from './mark-custom.data';
-import { diamondMark } from './mark-custom.definition';
+import { MarkCustomPreview } from './mark-custom.preview';
 
 /**
  * 自定义图元：每行投影成一个 diamond glyph。
@@ -18,36 +14,12 @@ import { diamondMark } from './mark-custom.definition';
 /** controls registry 缺失时使用的显式回退 */
 export const previewControls = customMarkControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const spec: IRPlot = {
-    namespace: 'plot',
-    type: 'plot',
-    data: { reference: 'glyphs' },
-    coordinate: { type: 'cartesian2D', x: 'month', y: 'sales' },
-    scales: [
-      { type: 'linear', name: 'month' },
-      { type: 'linear', name: 'sales' },
-    ],
-    marks: [
-      {
-        type: 'diamond',
-        minimumSize: values[CUSTOM_MARK_CONTROL_IDS.size],
-        fill: values[CUSTOM_MARK_CONTROL_IDS.fill],
-        encoding: { x: { field: 'month' }, y: { field: 'sales' } },
-      },
-    ],
-    guides: [
-      { type: 'axis', dimension: 'x' },
-      { type: 'axis', dimension: 'y', grid: true },
-    ],
-  };
-
-  return (
-    <Layout viewBox={{ x: -15, y: -15, width: 450, height: 290 }}>
-      <Plot spec={spec} data={{ glyphs: glyphRows }} width={420} height={260} markDefinitions={[diamondMark]} />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  MarkCustomPreview({
+    size: values[CUSTOM_MARK_CONTROL_IDS.size],
+    fill: values[CUSTOM_MARK_CONTROL_IDS.fill],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

@@ -232,7 +232,7 @@ export const ZodSchema: FC<ZodSchemaProps> = props => {
         <p className="mb-3 text-sm text-muted-foreground">{effectiveDescription ?? repr.description}</p>
       )}
       {rows != null ? (
-        <RenderTable rows={rows} />
+        <RenderTable rows={rows} schemaName={name} />
       ) : (
         repr.kind === 'alias' && (
           <div className="my-2">

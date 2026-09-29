@@ -19,7 +19,11 @@ role 决定轮廓与内边距；kind 和 predicate 不复制形状。外观由 `
 
 示例定义一个 service 角色、service.gateway 子类型和 service.availability predicate。切换可用性会改变颜色，打开“关键服务”会加粗边框。
 
-<ComponentPreview files={['entity-definition', 'entity-definition.data']} size="sm" />
+<ComponentPreview
+  files={['entity-definition', 'entity-definition.preview.tsx', 'entity-definition.data']}
+  size="sm"
+  defaultSourceFile="entity-definition.preview.tsx"
+/>
 
 ## 定义能力
 

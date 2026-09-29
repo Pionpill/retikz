@@ -1,51 +1,23 @@
-import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import {
-  coordinateAsAnchorControls,
-  coordinateAsAnchorFrame,
-  previewControlContract,
-} from './coordinate-as-anchor.controls';
+import { coordinateAsAnchorControls, previewControlContract } from './coordinate-as-anchor.controls';
+import { CoordinateAsAnchorPreview } from './coordinate-as-anchor.preview';
 
 export const previewControls = coordinateAsAnchorControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout>
-      <Draw
-        way={coordinateAsAnchorFrame.xAxis}
-        zIndex={-1}
-        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
-      />
-      <Draw
-        way={coordinateAsAnchorFrame.yAxis}
-        zIndex={-1}
-        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
-      />
-      {/* 命名虚拟中心——画面里看不见，但下面 4 个 of 引用都靠它 */}
-      <Coordinate id="hub" position={[values.positionX, values.positionY]} />
-      <Node id="N" position={{ direction: 'top', of: 'hub', distance: values.verticalDistance }}>
-        北
-      </Node>
-      <Node id="S" position={{ direction: 'bottom', of: 'hub', distance: values.verticalDistance }}>
-        南
-      </Node>
-      <Node id="E" position={{ direction: 'right', of: 'hub', distance: values.horizontalDistance }} shape="circle">
-        东
-      </Node>
-      <Node id="W" position={{ direction: 'left', of: 'hub', distance: values.horizontalDistance }} shape="circle">
-        西
-      </Node>
-      {/* 4 条 path 终止在 hub——视觉上汇于中心点；hub 是 coordinate 不画形状 */}
-      <Draw way={['N', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
-      <Draw way={['S', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
-      <Draw way={['E', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
-      <Draw way={['W', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  CoordinateAsAnchorPreview(
+    {
+      positionX: values.positionX,
+      positionY: values.positionY,
+      verticalDistance: values.verticalDistance,
+      horizontalDistance: values.horizontalDistance,
+    },
+    'zh',
+  ),
+);
 
 export const previewSource = controlledPreview.source;
 

@@ -97,7 +97,11 @@ console.log(svg);
 
 `circle` 用单个半径裁剪；`ellipse` 分别设置横向、纵向半径。两者都以指定中心定位。
 
-<ComponentPreview files="circle-ellipse-clip" size="sm" />
+<ComponentPreview
+  files={['circle-ellipse-clip', 'circle-ellipse-clip.preview.tsx']}
+  size="sm"
+  defaultSourceFile="circle-ellipse-clip.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -154,7 +158,11 @@ console.log(svg);
 
 `polygon` 按给定顺序连接至少三个顶点并闭合，适合直边的规则或不规则区域。
 
-<ComponentPreview files="polygon-clip" size="sm" />
+<ComponentPreview
+  files={['polygon-clip', 'polygon-clip.preview.tsx']}
+  size="sm"
+  defaultSourceFile="polygon-clip.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -187,7 +195,7 @@ console.log(svg);
 
 `path` 接收结构化路径命令，可描述曲线或多个子路径；命令需形成有效的可填充区域。
 
-<ComponentPreview files="path-clip" size="md" />
+<ComponentPreview files={['path-clip', 'path-clip.preview.tsx']} size="md" defaultSourceFile="path-clip.preview.tsx" />
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">
@@ -225,7 +233,11 @@ console.log(svg);
 
 `compound` 按输入顺序累积子区域的路径，再用一个 `fillRule` 解释最终区域。它组合轮廓，不计算子区域之间的几何交集。
 
-<ComponentPreview files="compound-clip" size="sm" />
+<ComponentPreview
+  files={['compound-clip', 'compound-clip.preview.tsx']}
+  size="sm"
+  defaultSourceFile="compound-clip.preview.tsx"
+/>
 
 <DocTabs defaultValue="api">
 <DocTab value="api" label="API 参考">

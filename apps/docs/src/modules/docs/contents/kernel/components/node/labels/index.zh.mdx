@@ -80,13 +80,21 @@ const view = mount(document.getElementById('diagram')!, ir);
 - `font` / `textColor` 优先使用标签显式值，再使用 `Scope.defaults.label`，仍未提供的值从节点继承
 - `opacity` 为 0..1，与节点透明度相乘
 
-<ComponentPreview files="node-label-list" size="sm" />
+<ComponentPreview
+  files={['node-label-list', 'node-label-list.preview.tsx']}
+  size="sm"
+  defaultSourceFile="node-label-list.preview.tsx"
+/>
 
 ## 标签位置
 
 在同一个标签上选择命名方位、数字角度、边界比例或中心；中心标签会隐藏无效的位置字段。
 
-<ComponentPreview files="node-label-position" size="md" />
+<ComponentPreview
+  files={['node-label-position', 'node-label-position.preview.tsx']}
+  size="md"
+  defaultSourceFile="node-label-position.preview.tsx"
+/>
 
 需要同时附加多个标签时，把同一份对象写法放进数组：
 
@@ -110,7 +118,11 @@ import { Node } from '@retikz/react';
 - `fraction` 是边界上的 0..1 比例位置，缺省 `0.5`
 - `placement: 'inside'` 不能和 `pin` 同时使用；需要引线时请保持外侧标签
 
-<ComponentPreview files="node-label-spacing" size="md" />
+<ComponentPreview
+  files={['node-label-spacing', 'node-label-spacing.preview.tsx']}
+  size="md"
+  defaultSourceFile="node-label-spacing.preview.tsx"
+/>
 
 ## 旋转与引线
 
@@ -118,7 +130,11 @@ import { Node } from '@retikz/react';
 
 `label.pin` 给标签加一条**引线**连回节点边界：`pin: true` 是默认细实线（继承标签色）；`pin: { stroke, strokeWidth, dashPattern, dashOffset }` 自定义引线样式；不写 / `false` 则无引线。引线终点是摆放射线与旋转后视觉框的精确交点，没有额外隐藏留白；标签摆放仍只由前述盒几何决定。
 
-<ComponentPreview files="node-label-rotate-pin" size="lg" />
+<ComponentPreview
+  files={['node-label-rotate-pin', 'node-label-rotate-pin.preview.tsx']}
+  size="lg"
+  defaultSourceFile="node-label-rotate-pin.preview.tsx"
+/>
 
 <Comparison target="tikz" title="节点标签写法">
 
@@ -133,7 +149,11 @@ import { Node } from '@retikz/react';
 
 位置固定为右侧外置标签，用面板单独调整文字颜色、字号和透明度。
 
-<ComponentPreview files="node-label-style" size="lg" />
+<ComponentPreview
+  files={['node-label-style', 'node-label-style.preview.tsx']}
+  size="lg"
+  defaultSourceFile="node-label-style.preview.tsx"
+/>
 
 ## 相关属性
 
@@ -157,40 +177,40 @@ import { Node } from '@retikz/react';
 - 命名方位：\`'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left' | 'center'\`。命名方向从节点边界附着；\`'center'\` 固定最终节点矩形中心，并忽略 \`placement\` 与 \`distance\`
 - 角度：\`number\`，按节点中心向该角度的射线附着标签
 - 边界比例：\`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`。附着到指定边，\`fraction\` 缺省为 \`0.5\`，范围为 \`0..1\``,
-  },
-  {
-    name: 'InputNodeLabel.placement',
-    kind: 'property',
-    type: "'outside' | 'inside'",
-    defaultValue: "'outside'",
-    description: '决定标签从附着点向节点外侧或内侧偏移；内侧标签不能使用引线。',
-  },
-  {
-    name: 'InputNodeLabel.distance',
-    kind: 'property',
-    type: 'number',
-    defaultValue: 'CompileOptions.labelDistance（默认 12）',
-    description: '设置节点边界到旋转后标签视觉框的净距，单位为用户坐标。',
-  },
-  {
-    name: 'InputNodeLabel.rotate',
-    kind: 'property',
-    type: "'none' | 'radial' | 'tangent' | number",
-    description: '`none` 不旋转，`radial` 沿附着方向，`tangent`在该方向加 90°；数字指定角度。',
-    defaultValue: "'none'",
-  },
-  {
-    name: 'InputNodeLabel.keepUpright',
-    kind: 'property',
-    type: 'boolean',
-    description: '文字倒置时翻转 180°，不改变标签附着点。',
-    defaultValue: 'false',
-  },
-  {
-    name: 'InputNodeLabel.pin',
-    kind: 'property',
-    type: "IRNodeLabel['pin']",
-    description: `仅外侧标签可用的引线：
+},
+{
+  name: 'InputNodeLabel.placement',
+  kind: 'property',
+  type: "'outside' | 'inside'",
+  defaultValue: "'outside'",
+  description: '决定标签从附着点向节点外侧或内侧偏移；内侧标签不能使用引线。',
+},
+{
+  name: 'InputNodeLabel.distance',
+  kind: 'property',
+  type: 'number',
+  defaultValue: 'CompileOptions.labelDistance（默认 12）',
+  description: '设置节点边界到旋转后标签视觉框的净距，单位为用户坐标。',
+},
+{
+  name: 'InputNodeLabel.rotate',
+  kind: 'property',
+  type: "'none' | 'radial' | 'tangent' | number",
+  description: '`none` 不旋转，`radial` 沿附着方向，`tangent`在该方向加 90°；数字指定角度。',
+  defaultValue: "'none'",
+},
+{
+  name: 'InputNodeLabel.keepUpright',
+  kind: 'property',
+  type: 'boolean',
+  description: '文字倒置时翻转 180°，不改变标签附着点。',
+  defaultValue: 'false',
+},
+{
+  name: 'InputNodeLabel.pin',
+  kind: 'property',
+  type: "IRNodeLabel['pin']",
+  description: `仅外侧标签可用的引线：
 
 - \`true\`：使用默认细实线
 - \`{ stroke?, strokeWidth?, dashPattern?, dashOffset? }\`：自定义引线样式；\`strokeWidth\` 缺省为 \`1\`，\`dashPattern\` 与 \`dashOffset\` 控制虚线`,

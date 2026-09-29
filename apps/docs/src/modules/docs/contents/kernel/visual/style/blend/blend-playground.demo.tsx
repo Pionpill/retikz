@@ -1,38 +1,21 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { blendPlaygroundControls, previewControlContract } from './blend-playground.controls';
+import { BlendPlaygroundPreview } from './blend-playground.preview';
 
 export const previewControls = blendPlaygroundControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const blendMode = values.mode;
-
-  return (
-    <Layout>
-      <Node
-        position={[0, 0]}
-        shape="rectangle"
-        style={{ fill: values.background, stroke: 'none' }}
-        layout={{ minimumSize: { width: 220, height: 160 } }}
-      />
-      <Node
-        position={[-26, 0]}
-        shape="circle"
-        style={{ fill: values.sourceA, stroke: 'none' }}
-        layout={{ minimumSize: 100 }}
-      />
-      <Node
-        position={[26, 0]}
-        shape="circle"
-        style={{ fill: values.sourceB, stroke: 'none', blendMode, opacity: values.opacity }}
-        layout={{ minimumSize: 100 }}
-      />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  BlendPlaygroundPreview({
+    mode: values.mode,
+    background: values.background,
+    sourceA: values.sourceA,
+    sourceB: values.sourceB,
+    opacity: values.opacity,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 
