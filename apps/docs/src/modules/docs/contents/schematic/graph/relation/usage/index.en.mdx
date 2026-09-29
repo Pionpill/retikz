@@ -17,6 +17,7 @@ These four approaches draw the same relation. Vanilla examples require an existi
 ```tsx
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 import type { FC } from 'react';
+
 const Example: FC = () => (
   <Graph>
     <Entity id="sender" role="activity" position={[80, 80]}>
@@ -39,6 +40,7 @@ import type { IRScene } from '@retikz/core';
 import { createGraphDefinitions } from '@retikz/graph';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',
@@ -59,6 +61,7 @@ export default Example;
 import { entity, relation, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
 import { scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
+
 const input = scene({
   children: [
     entity({ id: 'sender', role: 'activity', position: [80, 80], text: 'Send' }),
@@ -76,6 +79,7 @@ const view = mount(document.getElementById('diagram')!, input, { adapters: creat
 import type { IRScene } from '@retikz/core';
 import { createGraphDefinitions } from '@retikz/graph';
 import { mount } from '@retikz/vanilla/dom';
+
 const ir: IRScene = {
   version: 1,
   type: 'scene',

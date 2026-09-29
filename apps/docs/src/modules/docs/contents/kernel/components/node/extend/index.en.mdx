@@ -152,7 +152,6 @@ Node also supports a sixth form that depends on its real measured size: anchor-t
 For example, align the left side of `q` to the right side of `a`, with a 16-unit gap. `target.id` refers to the earlier node; `offset` adds a displacement to its anchor.
 
 ```tsx
-import type { IRScene } from '@retikz/core';
 <Layout>
   <Node id="a" position={[0, 0]}>
     A
@@ -160,7 +159,7 @@ import type { IRScene } from '@retikz/core';
   <Node id="q" position={{ kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [16, 0] }, selfAnchor: 'left' }}>
     Q
   </Node>
-</Layout>;
+</Layout>
 ```
 
 Both `target.anchor` and `selfAnchor` default to `center`. The target must be an already-laid-out Node, Coordinate, or Scope; undefined, later, self, and still-open ancestor Scope references throw immediately.
