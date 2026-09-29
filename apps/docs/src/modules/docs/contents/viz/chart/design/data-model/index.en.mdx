@@ -93,7 +93,11 @@ Chart Source
 | `properties` | Set constant properties and options specific to the type      | Point size and opacity                             |
 | `marks`      | Compose multiple Chart semantic marks within the type's rules | Append a mark or override a default mark by `kind` |
 
-`encodings` answers which field expresses each role. It supports field shorthand, while richer mappings follow the exact contract of their owner. `properties` answers how this type is presented without pretending a constant is a data field. `marks` allows multiple marks in one chart, and some types already consist of several Plot marks. It still follows the current chart type's allowed mark structure and inheritance rules; it is not an unrestricted list of Plot marks.
+`encodings` answers which field expresses each role. It supports field shorthand, while richer mappings follow the exact contract of their owner. `properties` answers how this type is presented without pretending a constant is a data field. Both contribute to the built-in marks for the selected type.
+
+`marks` allows multiple marks in one chart. For each allowed Chart mark, the chart type specifies which values it can inherit from `recipe.encodings` and `recipe.properties`. For example, a scatter mark can reuse the `x` and `y` field mappings and a constant `size`; values declared on that mark affect only the mark itself. For the same visual property, precedence runs from the mark's `encodings`, to its `properties`, to inherited `encodings`, then inherited `properties`. A field without a corresponding inheritance declaration is not automatically passed to the mark.
+
+`recipe.marks` appends marks in order by default. Setting `override: true` replaces the built-in semantic mark group with the same `kind`. One semantic group can itself produce several Plot marks, so `marks` must still follow the current `chartType`'s structure rules.
 
 ## Use Plot extensions last
 
@@ -109,19 +113,14 @@ Chart Source
       url: '/viz/chart/design/encapsulation',
     },
     {
-      title: 'Structure and types',
+      title: 'Core Structure',
       description: 'Look up exact schemas, field owners, and mark rules.',
-      url: '/viz/chart/model/structure',
+      url: '/viz/chart/model/core-structure',
     },
     {
-      title: 'Presentation',
+      title: 'General Structure',
       description: 'Explore text slots and layout behavior.',
-      url: '/viz/chart/model/presentation',
-    },
-    {
-      title: 'Plot integration',
-      description: 'Learn the detailed boundary of plotExtension.',
-      url: '/viz/chart/model/plot',
+      url: '/viz/chart/model/general-structure',
     },
   ]}
 />

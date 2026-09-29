@@ -93,7 +93,11 @@ Chart Source
 | `properties` | 设置该类型的常量属性与专有选项            | 散点大小、透明度                                 |
 | `marks`      | 在类型允许的范围内组合多个 Chart 语义图元 | 在默认图元之外追加图元，或按 `kind` 覆盖默认图元 |
 
-`encodings` 回答“用哪个字段表达什么”；它可使用字段简写，复杂映射则沿用对应能力的精确契约。`properties` 回答“这个类型怎样呈现”，不把固定值冒充数据字段。`marks` 让一张图包含多个图元，部分类型本身也由多个 Plot 图元组成；它仍遵守当前 chartType 允许的 mark 结构与继承规则，并非任意 Plot 图元列表。
+`encodings` 回答“用哪个字段表达什么”；它可使用字段简写，复杂映射则沿用对应能力的精确契约。`properties` 回答“这个类型怎样呈现”，不把固定值冒充数据字段。两者先参与生成该类型的内建图元。
+
+`marks` 让一张图包含多个图元。图形类型会为每种允许的 Chart mark 指定可从 `recipe.encodings` 和 `recipe.properties` 继承哪些值：例如散点 mark 可以沿用 `x`、`y` 的字段映射和 `size` 的常量设置，mark 自己声明的值只调整它自身。对同一个视觉属性，优先级依次是 mark 的 `encodings`、mark 的 `properties`、继承的 `encodings`、继承的 `properties`；没有对应继承声明的字段不会自动传给 mark。
+
+`recipe.marks` 默认按顺序追加图元；设置 `override: true` 时，替换同 `kind` 的内建语义图元组。部分类型的一个语义图元组本身会生成多个 Plot 图元，因此这里的 `marks` 仍须遵守当前 `chartType` 的结构规则。
 
 ## 最后才使用 Plot 扩展
 
@@ -109,11 +113,10 @@ Chart Source
       url: '/viz/chart/design/encapsulation',
     },
     {
-      title: '结构与类型',
+      title: '核心结构',
       description: '查询精确 schema、字段 owner 与 marks 规则。',
-      url: '/viz/chart/model/structure',
+      url: '/viz/chart/model/core-structure',
     },
-    { title: '整图展示', description: '查看 presentation 槽位与布局行为。', url: '/viz/chart/model/presentation' },
-    { title: '与 Plot 协作', description: '了解 plotExtension 的详细边界。', url: '/viz/chart/model/plot' },
+    { title: '通用结构', description: '查看 presentation 槽位与布局行为。', url: '/viz/chart/model/general-structure' },
   ]}
 />

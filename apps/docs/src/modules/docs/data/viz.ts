@@ -302,10 +302,8 @@ export const vizSection: Array<Section> = [
         label: 'viz.chartModel',
         sidebarGroup: 'viz.chartInternals',
         children: [
-          { id: 'structure', label: 'viz.chartModelStructure', difficulty: DocDifficulty.Advanced },
-          { id: 'authoring', label: 'viz.chartModelAuthoring', difficulty: DocDifficulty.Advanced },
-          { id: 'presentation', label: 'viz.chartModelPresentation', difficulty: DocDifficulty.Advanced },
-          { id: 'plot', label: 'viz.chartModelPlot', difficulty: DocDifficulty.Advanced },
+          { id: 'general-structure', label: 'viz.chartModelGeneralStructure', difficulty: DocDifficulty.Advanced },
+          { id: 'core-structure', label: 'viz.chartModelCoreStructure', difficulty: DocDifficulty.Advanced },
         ],
         meta: {
           pageType: 'concept',

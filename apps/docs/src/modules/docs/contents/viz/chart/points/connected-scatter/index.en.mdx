@@ -399,7 +399,7 @@ Chart resolves one connected-scatter mark to an open Plot Path and a Plot Point 
 
 React uses `ConnectedScatterChart` with its `recipe` prop or dedicated child components. The Vanilla API uses `connectedScatterChart` with direct `encodings`, `properties`, and `marks` options. Direct IR places these fields inside `recipe` and sets `recipe.chartType: 'connected-scatter'`. React and the Vanilla API supply the chart type automatically.
 
-In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, presentation, and guides, see [Authoring](/viz/chart/model/authoring).
+In React, each configuration field must be supplied through either root props or a child component, not both. Different fields may use different forms. For shared data, layout, and presentation, see [General Structure](/viz/chart/model/general-structure).
 
 #### ConnectedScatterEncodings
 
@@ -476,11 +476,15 @@ These schemas are exported from `@retikz/chart/point` and describe persistable J
       description: 'Distribution and categories for two continuous variables',
       url: '/viz/chart/points/scatter',
     },
-    { title: 'Authoring', description: 'Compare React, Vanilla and Source IR', url: '/viz/chart/model/authoring' },
     {
-      title: 'Working with Plot',
-      description: 'Compose capabilities beyond this chart type',
-      url: '/viz/chart/model/plot',
+      title: 'General Structure',
+      description: 'Review shared data, layout, and presentation fields',
+      url: '/viz/chart/model/general-structure',
+    },
+    {
+      title: 'Core Structure',
+      description: 'Understand recipe and Plot extension',
+      url: '/viz/chart/model/core-structure',
     },
   ]}
 />

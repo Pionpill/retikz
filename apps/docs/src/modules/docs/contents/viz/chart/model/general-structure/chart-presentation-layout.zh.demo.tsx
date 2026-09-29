@@ -13,8 +13,18 @@ const copy = {
   source: '来源：示例数据',
 };
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <ChartPresentationLayoutPreview copy={copy} inspect={values[CHART_PRESENTATION_CONTROL_IDS.inspect] === true} />
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) => (
+  <ChartPresentationLayoutPreview
+    copy={copy}
+    inspect={values[CHART_PRESENTATION_CONTROL_IDS.inspect] === true}
+    visibility={{
+      title: values[CHART_PRESENTATION_CONTROL_IDS.showTitle] === true,
+      subtitle: values[CHART_PRESENTATION_CONTROL_IDS.showSubtitle] === true,
+      note: values[CHART_PRESENTATION_CONTROL_IDS.showNote] === true,
+      source: values[CHART_PRESENTATION_CONTROL_IDS.showSource] === true,
+    }}
+    dimensions={dimensions}
+  />
 ));
 const canonicalPreview = defineControlledPreview(previewControlContract, () => (
   <ChartPresentationLayoutPreview copy={copy} inspect={false} />

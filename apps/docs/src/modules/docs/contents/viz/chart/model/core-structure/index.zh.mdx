@@ -1,0 +1,85 @@
+---
+title: 核心结构
+description: 理解 recipe 的类型语义、图元组合，以及与 Plot 扩展的边界。
+---
+
+Chart Source 中，与具体绘图结构直接相关的配置集中在 `recipe` 和可选的 `plotExtension`：前者决定图形类型、数据通道、属性与 Chart marks；后者补充底层 Plot 内容，常规绘图应尽量不用。
+
+<ComponentAlert
+  type="tip"
+  title="为什么保留 plotExtension？"
+  description="Chart 仍在开发，Plot 已支持但 recipe 尚未封装的能力可暂由 plotExtension 补充；后续会尽量通过 recipe 的通道、属性和 marks 覆盖常用需求。稳定使用时若仍必须依赖 plotExtension，更适合直接基于 Plot 封装所需图形类型。"
+/>
+
+[通用结构](/viz/chart/model/general-structure)中的 `data`、`coordinate`、`presentation`、`layout`、`background` 和 `chartDefaults` 提供数据、坐标与整图呈现。替换这些字段不会更换 chartType 或 recipe 定义的图元组合，但仍可能改变数据点位置、坐标表现与最终外观。
+
+根级 `type` 只标识图形家族，用于分组和选择家族入口；同组 chartType 可以复用局部逻辑，例如点图的自动边缘留白，但 `type` 本身不决定具体图形的解析。`recipe.chartType` 决定两件事：
+
+- 功能上，选择实际绘制的图形，例如同属 `point` 家族的 scatter 或 bubble
+- 实现上，选择该类型的精确 schema 与 recipe 解析器，决定 `encodings`、`properties` 可写什么，`marks` 如何继承或覆盖这些值，以及默认图元和比例尺如何生成
+
+```ts
+recipe: {
+  chartType: 'scatter',
+  encodings: { x: 'weight', y: 'efficiency', color: 'group' },
+  properties: { opacity: 0.82 },
+  marks: [{ kind: 'scatter', override: true, properties: { size: 5 } }],
+}
+```
+
+## 数据通道：encodings
+
+`recipe.encodings` 将 `data` 中的字段绑定到图形通道。下面以 Scatter 为例：`weight`、`efficiency` 和 `group` 是数据字段，`x`、`y` 和 `color` 是图形通道；`color` 的类别值还会经过比例尺，才成为最终颜色。
+
+<ComponentPreview files="chart-encodings-map" hideCode type="illustration" size="sm" />
+
+```ts
+encodings: { x: 'weight', y: 'efficiency', color: 'group' }
+```
+
+不同 `chartType` 开放的通道不同。通道值除了直接字段名，还可配置字段映射、transform、scale 等；解析后会生成 Plot 使用的字段、变换与比例尺。字段类型、格式及分类顺序属于 `data.model`，不由 Chart 重新定义。如果某个通道既提供字段 encoding，又提供同名常量 property，优先使用 encoding。recipe 只消费该类型实际声明的通道，未被 recipe 或当前叠加图元消费的配置会报错，不会被静默忽略。
+
+## 图形属性：properties
+
+`recipe.properties` 设置不依赖数据字段的常量值和图形类型特有的行为。`recipe.chartType` 选择精确 schema，因此可用属性取决于具体类型：例如 Strip 的 `jitter` 控制点的散布，Regression 的 `method` 控制拟合方法。Point 图之间也共享 `opacity`、`size` 等常用属性。
+
+<ComponentPreview files="chart-properties-map" hideCode type="illustration" size="lg" />
+
+属性由对应类型的解析器转成绘制细节，不需要作者手写底层 Plot 配置。`properties` 适合表达固定样式或类型行为；需要让颜色、大小等随每条数据变化时，应使用同名 `encodings` 通道。
+
+## 叠加图元：marks
+
+`recipe.marks` 在 `chartType` 自动生成的默认图元基础上，按数组顺序加入额外的 Chart 图元。下图以 Scatter 点为基础、叠加 Line 折线来说明组合关系：两者共用 `x`、`y`，点使用 `color`、`size` 与 `opacity`，折线单独设置 `stroke` 与 `strokeWidth`。
+
+<ComponentPreview files="chart-overlay-marks" hideCode type="illustration" size="xxl" />
+
+图中的 Line 仅表示叠加思路，不是当前可直接使用的 Scatter Chart mark：Scatter 的 `recipe.marks` 目前只接受 Scatter。需要实际绘制点线组合时，可使用 [Connected Scatter](/viz/chart/points/connected-scatter)。
+
+每个 mark 使用 `{ kind, override?, encodings?, properties? }`；具体 `chartType` 决定允许哪些 `kind`，以及该 kind 可继承 recipe 的哪些通道和属性。mark 自己的值优先于继承值：显式 property 可以覆盖继承的同名 encoding；同一 mark 若同时显式设置同名 encoding 和 property，则 encoding 优先。继承仅在该 mark 实际写入 `marks` 时生效。
+
+默认 `override: false` 表示叠加。设为 `true` 时，按 kind 原位替换整个默认语义图元组；一个组即使包含多个 Plot 图元，也会整体替换。若没有同 kind 默认组，该 mark 仍会追加，并通过 `onWarn` 报告未找到替换目标。Chart mark 与独立的 `plotExtension.marks` 不同，后者不继承 recipe 的通道或属性。
+
+## Plot 扩展
+
+`plotExtension` 位于 Chart Source 根级，但它的作用需要结合 recipe 理解：recipe 先生成该类型所需的 Plot 内容，作者再用 `plotExtension` 显式补充底层 Plot 片段。自动生成的 Plot 结果不会写回这个字段。
+
+它可提供 Plot 的 `transform`、`scales`、`composition`、`marks`、`guides`、`plotDefaults`、`plotRules` 与 `meta`。其中 `plotExtension.marks` 是独立的 Plot 图元，不继承 `recipe.encodings` 或 `recipe.properties`；它与 Chart marks 消费同一份最终 encoding data view。根级 `coordinate` 与 `plotExtension.composition` 不能同时出现。
+
+常用图形配置优先由 recipe 的通道、属性与 marks 表达；需要完整控制底层图形语法时可直接使用 Plot。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '通用结构',
+      description: '回查 Chart Source 的公共字段与整图展示。',
+      url: '/viz/chart/model/general-structure',
+    },
+    {
+      title: '点图 family',
+      description: '查看六种 Point chartType 的具体配置。',
+      url: '/viz/chart/points',
+    },
+  ]}
+/>

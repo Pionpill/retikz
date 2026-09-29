@@ -6,6 +6,8 @@ import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
+import type { PreviewDimensions } from '@/modules/docs/components/component-preview/context';
+
 import { chartPresentationData } from './chart-presentation.data';
 
 /** Presentation playground 的本地化整图文案 */
@@ -27,19 +29,25 @@ const inspectOptions = {
   spacing: { padding: true, margin: false },
   overflow: true,
   alignmentGuides: false,
-  labels: true,
+  labels: false,
   lines: true,
   gaps: true,
   distributedSpace: false,
 } satisfies FlexLayoutInspectOptions;
 
-const hostProps = {
-  width: 440,
-  height: 360,
-  style: { maxWidth: '100%', height: 'auto' },
-} as const;
+const sourceDimensions = { width: 580, height: 460 } as const;
 
-const presentationViewBox = { x: -10, y: -10, width: 393.4, height: 345.2 } as const;
+/** 让整张 Chart 填满预览区，仅保留常规边距 */
+const chartLayoutOf = (dimensions: PreviewDimensions) => ({
+  width: Math.max(1, dimensions.width - 24),
+  height: Math.max(1, dimensions.height - 24),
+});
+
+const hostPropsOf = (dimensions: PreviewDimensions) => ({
+  width: dimensions.width,
+  height: dimensions.height,
+  style: { width: '100%', height: '100%' },
+});
 
 /** Presentation shorthand 的可见状态 */
 export type ChartPresentationVisibility = Readonly<{
@@ -57,10 +65,14 @@ const visiblePresentation = {
 } satisfies ChartPresentationVisibility;
 
 /** 创建包含真实 Chart presentation 内容的 typed Point Chart authoring */
-const chartOf = (copy: ChartPresentationPreviewCopy, visibility: ChartPresentationVisibility) => (
+const chartOf = (
+  copy: ChartPresentationPreviewCopy,
+  visibility: ChartPresentationVisibility,
+  dimensions: PreviewDimensions,
+) => (
   <ScatterChart>
     <ChartData data={chartPresentationData} />
-    <ChartLayout layout={{ width: 320, height: 180 }} />
+    <ChartLayout layout={chartLayoutOf(dimensions)} />
     <ScatterEncodings x="x" y="y" />
     <ScatterProperties size={8} />
     {visibility.title ? <ChartTitle>{copy.title}</ChartTitle> : null}
@@ -73,40 +85,21 @@ const chartOf = (copy: ChartPresentationPreviewCopy, visibility: ChartPresentati
 export type ChartPresentationLayoutPreviewProps = Readonly<{
   copy: ChartPresentationPreviewCopy;
   inspect: boolean;
+  visibility?: ChartPresentationVisibility;
+  dimensions?: PreviewDimensions;
 }>;
 
 /** 可开启内部 Flex Inspector 的 Presentation 预览 */
 export const ChartPresentationLayoutPreview: FC<ChartPresentationLayoutPreviewProps> = props => {
-  const { copy, inspect } = props;
+  const { copy, inspect, visibility = visiblePresentation, dimensions = sourceDimensions } = props;
   return inspect ? (
-    <LayoutInspectLayout {...hostProps} request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: inspectOptions }}>
-      {chartOf(copy, visiblePresentation)}
+    <LayoutInspectLayout
+      {...hostPropsOf(dimensions)}
+      request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: inspectOptions }}
+    >
+      {chartOf(copy, visibility, dimensions)}
     </LayoutInspectLayout>
   ) : (
-    <Layout {...hostProps}>{chartOf(copy, visiblePresentation)}</Layout>
-  );
-};
-
-export type ChartPresentationVisibilityPreviewProps = Readonly<{
-  copy: ChartPresentationPreviewCopy;
-  showTitle: boolean;
-  showSubtitle: boolean;
-  showNote: boolean;
-  showSource: boolean;
-}>;
-
-/** 切换四个 presentation shorthand 是否存在的预览 */
-export const ChartPresentationVisibilityPreview: FC<ChartPresentationVisibilityPreviewProps> = props => {
-  const { copy, showTitle, showSubtitle, showNote, showSource } = props;
-  const visibility = {
-    title: showTitle,
-    subtitle: showSubtitle,
-    note: showNote,
-    source: showSource,
-  } satisfies ChartPresentationVisibility;
-  return (
-    <Layout {...hostProps} viewBox={presentationViewBox}>
-      {chartOf(copy, visibility)}
-    </Layout>
+    <Layout {...hostPropsOf(dimensions)}>{chartOf(copy, visibility, dimensions)}</Layout>
   );
 };

@@ -37,10 +37,7 @@ const pointChartContentPath = (chart: string, lang: 'zh' | 'en') =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${chart}/index.${lang}.mdx`);
 const pointChartExamplePath = (chart: string, filename: string) =>
   resolve(process.cwd(), `src/modules/docs/contents/viz/chart/points/${chart}/${filename}`);
-const chartModelContentPath = (
-  page: 'index' | 'structure' | 'authoring' | 'presentation' | 'plot',
-  lang: 'zh' | 'en',
-) =>
+const chartModelContentPath = (page: 'index' | 'general-structure' | 'core-structure', lang: 'zh' | 'en') =>
   resolve(
     process.cwd(),
     `src/modules/docs/contents/viz/chart/model/${page === 'index' ? '' : `${page}/`}index.${lang}.mdx`,
@@ -201,8 +198,8 @@ describe('collectShowcasePages', () => {
   it.each(['zh', 'en'] as const)('Scatter %s 保留类型语义并链接共享模型', async lang => {
     const source = readFileSync(scatterContentPath(lang), 'utf8');
     expect(source).not.toContain('@include viz/chart/shared-api');
-    expect(source).toContain('/viz/chart/model/authoring');
-    expect(source).toContain('/viz/chart/model/plot');
+    expect(source).toContain('/viz/chart/model/general-structure');
+    expect(source).toContain('/viz/chart/model/core-structure');
     expect(source).not.toMatch(/IRChartShared|createChartComposites|MarkValueProp|NodeShapeChannelValue/);
 
     const compiled = String(await compile(source, compileOptions));
@@ -450,23 +447,17 @@ describe('collectShowcasePages', () => {
     }
   });
 
-  it.each(['zh', 'en'] as const)('%s 图形模型分组覆盖四个共享主题且保持 MDX 可编译', async lang => {
+  it.each(['zh', 'en'] as const)('%s 图形模型分组覆盖两个共享主题且保持 MDX 可编译', async lang => {
     const sources = {
       index: readFileSync(chartModelContentPath('index', lang), 'utf8'),
-      structure: readFileSync(chartModelContentPath('structure', lang), 'utf8'),
-      authoring: readFileSync(chartModelContentPath('authoring', lang), 'utf8'),
-      presentation: readFileSync(chartModelContentPath('presentation', lang), 'utf8'),
-      plot: readFileSync(chartModelContentPath('plot', lang), 'utf8'),
+      generalStructure: readFileSync(chartModelContentPath('general-structure', lang), 'utf8'),
+      coreStructure: readFileSync(chartModelContentPath('core-structure', lang), 'utf8'),
     };
 
     expect(sources.index).toContain('chart-model-pipeline');
-    expect(sources.structure).toContain('`ScatterChartSchema`');
-    expect(sources.structure).toContain('`@retikz/chart/point`');
-    expect(sources.structure).not.toContain('`ChartRuntimeOptions.familyDefinitions`');
-    expect(sources.authoring).toContain('`normalizeXxxChart`');
-    expect(sources.presentation).toContain('`ChartTitle`');
-    expect(sources.plot).toContain('`themeDefinitions`');
-    expect(sources.plot).toContain('`plotThemeStyles`');
+    expect(sources.generalStructure).toContain('`ChartTitle`');
+    expect(sources.coreStructure).toContain('`recipe.marks`');
+    expect(sources.coreStructure).toContain('`plotExtension`');
     expect(Object.values(sources).join('\n')).not.toMatch(/IRChartShared|createChartComposites/);
 
     for (const source of Object.values(sources)) {
