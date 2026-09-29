@@ -4,17 +4,36 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib';
 
 import { RenderType } from './RenderType';
+import { parseSchemaPath } from './schema-path';
 import type { TableRow } from './types';
 
 type Props = {
   rows: Array<TableRow>;
+  schemaName: string;
 };
 
 const td = 'border-b border-border align-top py-2 pr-4';
 const th = 'py-2 pr-4 text-left font-normal whitespace-nowrap text-muted-foreground';
 
+/** 超长匿名字段用所属 Schema 的字段路径标识来源 */
+const typeNameOf = (schemaName: string, rows: Array<TableRow>, row: TableRow, index: number): string => {
+  if (row.path !== undefined) {
+    const suffix = parseSchemaPath(row.path)
+      .map(segment => (segment.kind === 'field' ? `.${segment.key}` : segment.kind === 'array' ? '[]' : ''))
+      .join('');
+    return `${schemaName}${suffix}`;
+  }
+  const parent = row.isChild
+    ? rows
+        .slice(0, index)
+        .reverse()
+        .find(previous => !previous.isChild)?.name
+    : undefined;
+  return `${schemaName}.${[parent, row.originalName ?? row.name].filter(Boolean).join('.')}`;
+};
+
 /** TableRow 列表 → 表格；嵌套 object 字段已被 ZodSchema 平铺为相邻子行（name=''） */
-export const RenderTable: FC<Props> = ({ rows }) => {
+export const RenderTable: FC<Props> = ({ rows, schemaName }) => {
   const { t } = useTranslation();
   return (
     <div className="my-4 overflow-x-auto">
@@ -40,7 +59,7 @@ export const RenderTable: FC<Props> = ({ rows }) => {
                 ((!r.isChild && rows[i + 1]?.isChild) || (rows[i + 1]?.depth ?? 0) > (r.depth ?? 0)) ? (
                   <span className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">object</span>
                 ) : (
-                  <RenderType repr={r.type} />
+                  <RenderType repr={r.type} name={typeNameOf(schemaName, rows, r, i)} />
                 )}
                 {r.constraints.length > 0 && (
                   <span className="ml-2 text-xs text-muted-foreground">({r.constraints.join(', ')})</span>
