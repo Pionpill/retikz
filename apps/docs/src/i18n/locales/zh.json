@@ -187,6 +187,7 @@
   },
   "library": {
     "components": "组件",
+    "visual": "视觉",
     "introduction": "简介",
     "standardIntroduction": "简介",
     "getStart": "快速开始",

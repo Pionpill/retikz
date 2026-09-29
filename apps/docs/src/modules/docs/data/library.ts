@@ -197,7 +197,8 @@ export const librarySection: Array<Section> = [
       {
         id: 'animation',
         label: 'library.extensionAnimation',
-        sidebarGroup: 'library.components',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.visual',
         meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
       },
     ],

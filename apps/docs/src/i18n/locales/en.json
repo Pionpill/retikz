@@ -187,6 +187,7 @@
   },
   "library": {
     "components": "Components",
+    "visual": "Visuals",
     "introduction": "Introduction",
     "standardIntroduction": "Introduction",
     "getStart": "Quick start",

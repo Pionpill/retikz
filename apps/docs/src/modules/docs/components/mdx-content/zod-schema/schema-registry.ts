@@ -87,7 +87,22 @@ import {
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
-import { CircleClipSchema, EllipseClipSchema, RibbonPathOptionsSchema } from '@retikz/extension';
+import {
+  CircleClipSchema,
+  CompoundClipSchema,
+  ContourShapeDefinition,
+  CrossShapeDefinition,
+  CylinderShapeDefinition,
+  EllipseClipSchema,
+  PathClipSchema,
+  PolygonClipSchema,
+  HexagonShapeDefinition,
+  ParallelogramShapeDefinition,
+  RibbonPathOptionsSchema,
+  SectorShapeDefinition,
+  StarShapeDefinition,
+  TrapezoidShapeDefinition,
+} from '@retikz/extension';
 import {
   JsonObjectSchema,
   JsonValueSchema,
@@ -651,6 +666,18 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: EllipseClipSchema,
     label: 'EllipseClip',
   },
+  PolygonClipSchema: {
+    schema: PolygonClipSchema,
+    label: 'PolygonClip',
+  },
+  PathClipSchema: {
+    schema: PathClipSchema,
+    label: 'PathClip',
+  },
+  CompoundClipSchema: {
+    schema: CompoundClipSchema,
+    label: 'CompoundClip',
+  },
   NodeStyleSchema: {
     schema: IR.NodeStyleSchema,
     label: 'NodeStyleSchema',
@@ -759,6 +786,46 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: RibbonPathOptionsSchema,
     label: 'RibbonPathOptions',
     url: '/library/extension/ribbon',
+  },
+  CrossShapeParamsSchema: {
+    schema: CrossShapeDefinition.paramsSchema,
+    label: 'CrossShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  TrapezoidShapeParamsSchema: {
+    schema: TrapezoidShapeDefinition.paramsSchema,
+    label: 'TrapezoidShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  ParallelogramShapeParamsSchema: {
+    schema: ParallelogramShapeDefinition.paramsSchema,
+    label: 'ParallelogramShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  HexagonShapeParamsSchema: {
+    schema: HexagonShapeDefinition.paramsSchema,
+    label: 'HexagonShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  EllipticCapShapeParamsSchema: {
+    schema: CylinderShapeDefinition.paramsSchema,
+    label: 'EllipticCapShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  SectorShapeParamsSchema: {
+    schema: SectorShapeDefinition.paramsSchema,
+    label: 'SectorShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  StarShapeParamsSchema: {
+    schema: StarShapeDefinition.paramsSchema,
+    label: 'StarShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  ContourShapeParamsSchema: {
+    schema: ContourShapeDefinition.paramsSchema,
+    label: 'ContourShapeParamsSchema',
+    url: '/library/extension/shape',
   },
   PathMarkPlacementSchema: {
     schema: IR.PathMarkPlacementSchema,

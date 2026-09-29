@@ -5,7 +5,7 @@ description: Import optional node shapes on demand from @retikz/extension, then 
 
 Node shape definitions provide crosses, sectors, stars, contours, trapezoids, parallelograms, hexagons, cylinders, and elliptic capsules. Set the node size, fill, and stroke after choosing its outline.
 
-## Usage
+## Using this topic
 
 This page supports two import styles:
 
@@ -14,49 +14,110 @@ This page supports two import styles:
 
 Both styles explicitly assemble capabilities for the current figure. Importing the package does not register shapes globally.
 
-### React usage
+All four entries draw the same cross. React passes the Definition through `Layout.extensions.shapes`; Vanilla passes it through `compile.shapes`. The shape name and JSON parameters belong to the node data, while the Definition is configured for this rendering invocation.
 
-Import the Definitions a figure needs from `@retikz/extension` and pass them to the React `Layout` through `extensions.shapes`. Definitions and parameters are separate: Node stores only a shape name and JSON-safe `params`, and the import does not register shapes globally.
+<ComponentPreview files="entry" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { Layout, Node } from '@retikz/react';
 import { CrossShapeDefinition } from '@retikz/extension';
+import { Layout, Node } from '@retikz/react';
 
-<Layout extensions={{ shapes: [CrossShapeDefinition] }}>
-  <Node position={[0, 0]} shape="cross" layout={{ minimumSize: { width: 80, height: 80 } }}>
-    cross
-  </Node>
-</Layout>;
+export const Example = () => (
+  <Layout extensions={{ shapes: [CrossShapeDefinition] }}>
+    <Node
+      shape="cross"
+      layout={{ minimumSize: { width: 80, height: 80 } }}
+      style={{ fill: '#dbeafe', stroke: '#2563eb' }}
+    />
+  </Layout>
+);
 ```
 
-### Vanilla usage
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-With `@retikz/vanilla`, put the Definition in `compile.shapes`. `input` can be an existing Core IR or Vanilla plain spec; `mount` accepts the same `compile` configuration.
+```tsx
+import type { IRScene } from '@retikz/core';
+import { CrossShapeDefinition } from '@retikz/extension';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'node',
+      shape: 'cross',
+      layout: { minimumSize: { width: 80, height: 80 } },
+      style: { fill: '#dbeafe', stroke: '#2563eb' },
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} extensions={{ shapes: [CrossShapeDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
 import { CrossShapeDefinition } from '@retikz/extension';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
 
-const svg = renderToSvgString(input, {
-  compile: {
-    shapes: [CrossShapeDefinition],
-  },
+const input = scene({
+  children: [
+    node({
+      shape: 'cross',
+      layout: { minimumSize: { width: 80, height: 80 } },
+      style: { fill: '#dbeafe', stroke: '#2563eb' },
+    }),
+  ],
 });
+const svg = renderToSvgString(input, { compile: { shapes: [CrossShapeDefinition] } });
+console.log(svg);
 ```
 
-When an IR shape is neither a Core default nor registered in this invocation's `shapes`, Core fails explicitly at lookup instead of silently substituting a similar shape. `polygon` is a minimal Core built-in; see [Polygon](/kernel/components/node/shape#polygon--diamond).
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
 
-## Examples
+```ts
+import type { IRScene } from '@retikz/core';
+import { CrossShapeDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
 
-The overview below places all nine extension shapes in one coordinate system before each shape exposes its own geometry controls.
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'node',
+      shape: 'cross',
+      layout: { minimumSize: { width: 80, height: 80 } },
+      style: { fill: '#dbeafe', stroke: '#2563eb' },
+    },
+  ],
+};
+const svg = renderToSvgString(ir, { compile: { shapes: [CrossShapeDefinition] } });
+console.log(svg);
+```
 
-<ComponentPreview files="shape-gallery" size="lg" />
+</DocTab>
+</DocTabs>
 
-### Cross
+Compilation fails explicitly when the Definition for the selected shape is not included; it does not substitute a similar shape.
+
+## Cross
 
 `cross` is a cross marker whose arm widths and four directional heights can be controlled independently. It fits concise glyphs for deletion, disabling, intersections, and asymmetric cross marks.
 
 <ComponentPreview files="cross-example" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### CrossShapeParams
 
 Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A scalar `width` or `height` applies to every matching value. Object forms resolve each value from the most specific field to the broadest fallback: side, axis, then `default`.
 
@@ -65,13 +126,26 @@ Use `shape={{ type: 'cross', params }}` and inject `CrossShapeDefinition`. A sca
 | `width?`  | `number \| { default: number; horizontal?: number; vertical?: number }`                                                               | Horizontal and vertical arm widths; scalar applies to both |
 | `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | Four arm heights with axis and default fallbacks           |
 
-### Trapezoid
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### CrossShapeParamsSchema
+
+<ZodSchema name="CrossShapeParamsSchema" expandNested />
+
+</DocTab>
+</DocTabs>
+
+## Trapezoid
 
 `trapezoid` selects its short side with `shortSide` and controls the taper through the short-to-opposite-side ratio. Content circumscription reserves room for slanted and rounded corners; ratio `1` degenerates to a rectangle.
 
 <ComponentPreview files="trapezoid-example" size="sm" />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### TrapezoidShapeParams
 
 Inject `TrapezoidShapeDefinition`; its parameters have type `TrapezoidShapeParams`:
 
@@ -81,13 +155,26 @@ Inject `TrapezoidShapeDefinition`; its parameters have type `TrapezoidShapeParam
 | `shortSideRatio?` | `number`                                 | Short/opposite-side ratio in `(0, 1]`; defaults to `0.72` |
 | `cornerRadius?`   | `number`                                 | Non-negative corner radius; defaults to `0`               |
 
-### Parallelogram
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### TrapezoidShapeParamsSchema
+
+<ZodSchema name="TrapezoidShapeParamsSchema" />
+
+</DocTab>
+</DocTabs>
+
+## Parallelogram
 
 `parallelogram` controls horizontal offset through a slant direction and angle. The angle is measured between a slanted side and a horizontal edge; `90` degrees degenerates to a rectangle. Use Node rotation for a vertical form.
 
 <ComponentPreview files="parallelogram-example" size="sm" />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### ParallelogramShapeParams
 
 Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramShapeParams`:
 
@@ -97,13 +184,26 @@ Inject `ParallelogramShapeDefinition`; its parameters have type `ParallelogramSh
 | `slantAngle?`     | `number`            | Side angle in `(0, 90]`; defaults to `70`      |
 | `cornerRadius?`   | `number`            | Non-negative corner radius; defaults to `0`    |
 
-### Elongated hexagon
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### ParallelogramShapeParamsSchema
+
+<ZodSchema name="ParallelogramShapeParamsSchema" />
+
+</DocTab>
+</DocTabs>
+
+## Elongated hexagon
 
 `hexagon` is an independently resizable elongated hexagon with horizontal top/bottom edges and one lateral tip on each side. `shoulderDepth` uses a fixed user-unit length, so longer content extends only the middle horizontal edges instead of enlarging the tips. It is not an alias for Core's regular `polygon { sides: 6 }`.
 
 <ComponentPreview files="hexagon-example" size="sm" />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### HexagonShapeParams
 
 Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
 
@@ -112,13 +212,26 @@ Inject `HexagonShapeDefinition`; its parameters have type `HexagonShapeParams`:
 | `shoulderDepth?` | `number` | Fixed horizontal depth of each shoulder in non-negative user units; defaults to `12` |
 | `cornerRadius?`  | `number` | Non-negative corner radius; defaults to `0`                                          |
 
-### Cylinder
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### HexagonShapeParamsSchema
+
+<ZodSchema name="HexagonShapeParamsSchema" />
+
+</DocTab>
+</DocTabs>
+
+## Cylinder
 
 `cylinder` uses one closed outer contour plus one cap-divider arc. `capDepth` reserves content room at both ends; the divider is stroke-only, does not become a second node or connection boundary, and does not cut a hole out of the near cap's fill.
 
 <ComponentPreview files="cylinder-example" size="sm" />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### CylinderShapeParams
 
 Inject `CylinderShapeDefinition`; its parameters have type `CylinderShapeParams`:
 
@@ -127,13 +240,26 @@ Inject `CylinderShapeDefinition`; its parameters have type `CylinderShapeParams`
 | `axis?`     | `'vertical' \| 'horizontal'` | Main axis; defaults to `vertical`       |
 | `capDepth?` | `number`                     | Non-negative cap depth; defaults to `8` |
 
-### Elliptic Capsule
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### EllipticCapShapeParamsSchema
+
+<ZodSchema name="EllipticCapShapeParamsSchema" />
+
+</DocTab>
+</DocTabs>
+
+## Elliptic Capsule
 
 `ellipticCapsule` forms one closed outer contour from a top half-ellipse, two straight sides, and a bottom half-ellipse. It shares its cap geometry with `cylinder` but omits the internal cap-divider arc, so the top does not form a complete ellipse. Unlike a capsule made from a Core rounded rectangle, `capDepth` independently controls cap depth and each half-ellipse spans the full cross-section.
 
 <ComponentPreview files="elliptic-capsule-example" size="sm" />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### EllipticCapsuleShapeParams
 
 Inject `EllipticCapsuleShapeDefinition`; its parameters have type `EllipticCapsuleShapeParams`:
 
@@ -142,13 +268,26 @@ Inject `EllipticCapsuleShapeDefinition`; its parameters have type `EllipticCapsu
 | `axis?`     | `'vertical' \| 'horizontal'` | Main axis; defaults to `vertical`       |
 | `capDepth?` | `number`                     | Non-negative cap depth; defaults to `8` |
 
-### Sector
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### EllipticCapShapeParamsSchema
+
+<ZodSchema name="EllipticCapShapeParamsSchema" />
+
+</DocTab>
+</DocTabs>
+
+## Sector
 
 `sector` combines inner/outer radii with an angle range to form a pie slice, ring wedge, or open arc. Set `innerRadius` equal to `outerRadius` to get a connectable open arc; `cornerRadius` rounds radial corners only for positive-thickness sectors. It suits angle ranges, ring progress, and sector state nodes.
 
 <ComponentPreview files="sector-example" size="md" />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### SectorShapeParams
 
 Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. The `params` object has type `SectorShapeParams`:
 
@@ -160,13 +299,26 @@ Use `shape={{ type: 'sector', params }}` and inject `SectorShapeDefinition`. The
 | `endAngle`      | `number` | End angle in degrees                                                     |
 | `cornerRadius?` | `number` | Positive-thickness corner radius; omitted or `0` keeps corners sharp     |
 
-### Star
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### SectorShapeParamsSchema
+
+<ZodSchema name="SectorShapeParamsSchema" />
+
+</DocTab>
+</DocTabs>
+
+## Star
 
 `star` builds a star from point count, inner/outer radii, rotation, and corner radius, and exposes `tip-N` and `notch-N` named anchors. It suits emphasis, ratings, and nodes that need semantic anchors.
 
 <ComponentPreview files="star-example" size="md" />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### StarShapeParams
 
 Use `shape={{ type: 'star', params }}` and inject `StarShapeDefinition`. The `params` object has type `StarShapeParams`:
 
@@ -178,13 +330,26 @@ Use `shape={{ type: 'star', params }}` and inject `StarShapeDefinition`. The `pa
 | `rotate?`       | `number` | Shape self-rotation in degrees                   |
 | `cornerRadius?` | `number` | Per-vertex corner radius                         |
 
-### Custom contours
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### StarShapeParamsSchema
+
+<ZodSchema name="StarShapeParamsSchema" />
+
+</DocTab>
+</DocTabs>
+
+## Custom contours
 
 `contour` accepts a closed vertex ring and aligns the Node position to its bounding-box center. `cornerRadius` applies feasible rounding at each corner. This example uses presets instead of editing JSON and shows tag, shield, and notched outlines.
 
 <ComponentPreview files="contour-example" size="md" />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### ContourShapeParams
 
 Use `shape={{ type: 'contour', params }}` and inject `ContourShapeDefinition`. The `params` object has type `ContourShapeParams`:
 
@@ -193,7 +358,29 @@ Use `shape={{ type: 'contour', params }}` and inject `ContourShapeDefinition`. T
 | `points`        | `Array<[number, number]>` | At least 3 vertices in a closed ring; Node aligns its position to the vertices' bounding-box center |
 | `cornerRadius?` | `number`                  | Per-corner radius; omitted or `0` keeps corners sharp                                               |
 
-## Related
+</DocTab>
+<DocTab value="schema" label="Schema reference">
 
-- [Shapes](/kernel/components/node/shape): Core built-in shapes and node geometry
-- [Extensions](/library/extension/introduction): browse the other optional capabilities
+#### ContourShapeParamsSchema
+
+<ZodSchema name="ContourShapeParamsSchema" />
+
+</DocTab>
+</DocTabs>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'shape · Node shapes',
+      description: 'Learn the shared rules for node outlines and connection boundaries',
+      url: '/kernel/components/node/shape',
+    },
+    {
+      title: 'Extension',
+      description: 'Browse other optional drawing capabilities',
+      url: '/library/extension/introduction',
+    },
+  ]}
+/>

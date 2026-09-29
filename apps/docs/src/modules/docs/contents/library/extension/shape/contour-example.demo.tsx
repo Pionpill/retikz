@@ -39,7 +39,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Node
       position={[0, 0]}
       shape={{ type: 'contour', params: { points: presetPoints[values.preset], cornerRadius: values.cornerRadius } }}
-      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
+      style={{ fill: '#dbeafe', stroke: '#2563eb', strokeWidth: 1.5 }}
     />
   </Layout>
 ));

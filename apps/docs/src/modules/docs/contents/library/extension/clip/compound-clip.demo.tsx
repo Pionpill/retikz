@@ -32,7 +32,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Node
         position={[0, 0]}
         shape="rectangle"
-        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 } }}
+        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: '#2563eb', size: 14 } }}
         layout={{ minimumSize: { width: 300, height: 170 } }}
       />
     </Scope>

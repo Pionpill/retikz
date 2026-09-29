@@ -1,125 +1,242 @@
 ---
-title: Clips
-description: Import optional clips on demand from @retikz/extension, then pass their Definitions through the React or Vanilla compile entry point.
+title: clip · Clips
+description: Assemble circle, ellipse, polygon, path, and compound clips on demand, with an API and Schema reference for each.
 ---
 
-Clip definitions support circles, ellipses, polygons, paths, and compound regions. Enable the definitions for the current drawing, then use their parameters to restrict visible content.
+Clips restrict the visible content inside a Scope. Each region uses a `kind` and JSON parameters; assemble its Definition at the current compile entry point before use.
 
-## Usage
+## Using this topic
 
-This page supports two import styles:
+Import a Definition such as `CircleClipDefinition` from `@retikz/extension`, or use `ExtensionClipDefinitions` for the complete family. Importing does not register clips globally.
 
-- Import an individual Definition such as `CircleClipDefinition` and pass only what the current figure needs to `Layout` or `compile`
-- Use `ExtensionClipDefinitions` to include every Extension Definition from this capability family; use `ExtensionClipProviders` when assembling a provider graph
+<ComponentPreview files="entry" size="sm" hideCode />
 
-Both styles assemble only the current figure. Importing the module never registers clips globally.
+The four forms below clip the same node to a circle. React uses `Layout.extensions.clips`; Vanilla uses `compile.clips`.
 
-### React usage
-
-Import the Definition used by the current figure from `@retikz/extension` and pass it to the React `Layout` through `extensions.clips`. A `Scope` clip stores only its `kind` and JSON-safe parameters.
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { Layout, Node, Scope } from '@retikz/react';
 import { CircleClipDefinition } from '@retikz/extension';
+import { Layout, Node, Scope } from '@retikz/react';
 
-<Layout extensions={{ clips: [CircleClipDefinition] }}>
-  <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 56 }}>
-    <Node position={[0, 0]} layout={{ minimumSize: { width: 160, height: 120 } }} />
-  </Scope>
-</Layout>;
+export const Example = () => (
+  <Layout extensions={{ clips: [CircleClipDefinition] }}>
+    <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 50 }}>
+      <Node layout={{ minimumSize: { width: 160, height: 120 } }} />
+    </Scope>
+  </Layout>
+);
 ```
 
-An Extension Definition applies only to the current `Layout`.
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-### Vanilla usage
+```tsx
+import type { IRScene } from '@retikz/core';
+import { CircleClipDefinition } from '@retikz/extension';
+import { Layout } from '@retikz/react';
 
-With `@retikz/vanilla`, pass the same Definition through `compile.clips`. `input` may be existing Core IR or a Vanilla plain spec; `mount` uses the same `compile` configuration.
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'scope',
+      clip: { kind: 'circle', cx: 0, cy: 0, r: 50 },
+      children: [{ type: 'node', layout: { minimumSize: { width: 160, height: 120 } } }],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} extensions={{ clips: [CircleClipDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
 import { CircleClipDefinition } from '@retikz/extension';
+import { node, renderToSvgString, scene, scope } from '@retikz/vanilla';
 
-const svg = renderToSvgString(input, {
-  compile: {
-    clips: [CircleClipDefinition],
-  },
+const input = scene({
+  children: [
+    scope({ clip: { kind: 'circle', cx: 0, cy: 0, r: 50 } }, [
+      node({ layout: { minimumSize: { width: 160, height: 120 } } }),
+    ]),
+  ],
 });
+const svg = renderToSvgString(input, { compile: { clips: [CircleClipDefinition] } });
+console.log(svg);
 ```
 
-If a clip `kind` is neither a Core default nor registered through the current `clips`, Core reports the missing entry and points to the injection option. It never substitutes a rectangle or another nearby region.
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
 
-## Examples
+```ts
+import type { IRScene } from '@retikz/core';
+import { CircleClipDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
 
-Each example below keeps the current section's clip `kind` fixed. Its controls change only parameters owned by that clip type.
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'scope',
+      clip: { kind: 'circle', cx: 0, cy: 0, r: 50 },
+      children: [{ type: 'node', layout: { minimumSize: { width: 160, height: 120 } } }],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, { compile: { clips: [CircleClipDefinition] } });
+console.log(svg);
+```
 
-### Circles and ellipses
+</DocTab>
+</DocTabs>
 
-`circle` uses one radius, while `ellipse` controls the horizontal and vertical radii independently. They work well for avatars, badges, spotlights, and rounded content windows.
+## Circles and ellipses
 
-<ComponentPreview
-  files="circle-ellipse-clip"
-  size="sm"
-  caption="The dashed rectangles mark the source bounds. The left and right regions stay circle and ellipse while their radii change."
+`circle` uses one radius; `ellipse` sets horizontal and vertical radii separately. Both are positioned by their center.
+
+<ComponentPreview files="circle-ellipse-clip" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### IRCircleClip
+
+Inject `CircleClipDefinition`:
+
+| Field      | Type       | Description                   |
+| ---------- | ---------- | ----------------------------- |
+| `kind`     | `'circle'` | Selects a circular clip       |
+| `cx`, `cy` | `number`   | Center coordinates            |
+| `r`        | `number`   | Positive radius in user units |
+
+#### IREllipseClip
+
+Inject `EllipseClipDefinition`:
+
+| Field      | Type        | Description                            |
+| ---------- | ----------- | -------------------------------------- |
+| `kind`     | `'ellipse'` | Selects an elliptical clip             |
+| `cx`, `cy` | `number`    | Center coordinates                     |
+| `rx`, `ry` | `number`    | Positive horizontal and vertical radii |
+
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### CircleClipSchema
+
+<ZodSchema name="CircleClipSchema" />
+
+#### EllipseClipSchema
+
+<ZodSchema name="EllipseClipSchema" />
+
+</DocTab>
+</DocTabs>
+
+The dashed bounds show the original content. Controls change the radius of the fixed circle on the left and ellipse on the right.
+
+## Polygons
+
+`polygon` connects at least three authored vertices in order and closes the region.
+
+<ComponentPreview files="polygon-clip" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### IRPolygonClip
+
+Inject `PolygonClipDefinition`:
+
+| Field    | Type                      | Description                     |
+| -------- | ------------------------- | ------------------------------- |
+| `kind`   | `'polygon'`               | Selects a polygon clip          |
+| `points` | `Array<[number, number]>` | At least three ordered vertices |
+
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### PolygonClipSchema
+
+<ZodSchema name="PolygonClipSchema" />
+
+</DocTab>
+</DocTabs>
+
+The demo fixes `kind` to `polygon`; its three point controls directly change `points`.
+
+## Paths
+
+`path` takes structured commands for curves or multiple subpaths. They must form a fillable region.
+
+<ComponentPreview files="path-clip" size="md" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### IRPathClip
+
+Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/path/custom-path) for command authoring.
+
+| Field       | Type                     | Description                      |
+| ----------- | ------------------------ | -------------------------------- |
+| `kind`      | `'path'`                 | Selects a path clip              |
+| `commands`  | `Array<PathCommand>`     | At least one structured command  |
+| `fillRule?` | `'nonzero' \| 'evenodd'` | Fill rule; defaults to `nonzero` |
+
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### PathClipSchema
+
+<ZodSchema name="PathClipSchema" />
+
+</DocTab>
+</DocTabs>
+
+The demo keeps its command structure and starts with `evenodd`; controls change coordinates and `fillRule`.
+
+## Compound clips
+
+`compound` accumulates child paths in input order and applies one `fillRule` to the final region. It combines contours without computing their geometric intersection.
+
+<ComponentPreview files="compound-clip" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### IRCompoundClip
+
+Inject `CompoundClipDefinition` and the Definitions of its children. Nest `<Scope clip>` elements when you need geometric intersections.
+
+| Field       | Type                     | Description                               |
+| ----------- | ------------------------ | ----------------------------------------- |
+| `kind`      | `'compound'`             | Selects a compound clip                   |
+| `children`  | `Array<IRClip>`          | At least one child, accumulated in order  |
+| `fillRule?` | `'nonzero' \| 'evenodd'` | Combined fill rule; defaults to `nonzero` |
+
+</DocTab>
+<DocTab value="schema" label="Schema reference">
+
+#### CompoundClipSchema
+
+<ZodSchema name="CompoundClipSchema" />
+
+</DocTab>
+</DocTabs>
+
+Both children remain circles and start with `evenodd` in the demo. Change their radius, distance, and `fillRule` to compare the combined region.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Custom Clips', description: 'Define a new clip kind', url: '/kernel/components/scope/custom' },
+    { title: 'Extension', description: 'Browse other optional capabilities', url: '/library/extension/introduction' },
+  ]}
 />
-
-| Type            | Required fields            | Description                                       |
-| --------------- | -------------------------- | ------------------------------------------------- |
-| `IRCircleClip`  | `cx`, `cy`, and `r`        | Center and a positive radius                      |
-| `IREllipseClip` | `cx`, `cy`, `rx`, and `ry` | Center and positive horizontal and vertical radii |
-
-Inject `CircleClipDefinition` or `EllipseClipDefinition`, respectively.
-
-### Polygons
-
-`polygon` joins at least three vertices in authored order and closes the region automatically. It covers regular and irregular straight-edged clips.
-
-<ComponentPreview
-  files="polygon-clip"
-  size="sm"
-  caption="The clip kind stays polygon; the three point controls write directly to points in order."
-/>
-
-| Field    | Type                      | Description                                          |
-| -------- | ------------------------- | ---------------------------------------------------- |
-| `points` | `Array<[number, number]>` | At least three user-space vertices in authored order |
-
-Inject `PolygonClipDefinition` when using it.
-
-### Paths
-
-`path` accepts Core structured path commands directly. It covers curves and compound outlines that circles, ellipses, and polygons cannot express. The commands must form a valid fillable region.
-
-<ComponentPreview
-  files="path-clip"
-  size="md"
-  caption="The command structure stays fixed. Controls change only command coordinates and fillRule."
-/>
-
-| Field       | Type                       | Description                          |
-| ----------- | -------------------------- | ------------------------------------ |
-| `commands`  | `Array<PathCommand>`       | At least one structured path command |
-| `fillRule?` | `'nonzero'` \| `'evenodd'` | Fill rule; defaults to `nonzero`     |
-
-Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/path/custom-path) for structured command authoring.
-
-### Compound clips
-
-`compound` appends child path commands in input order, then applies one `fillRule` to the final region. It combines outlines into one clip path but does not compute a geometric intersection between children.
-
-<ComponentPreview
-  files="compound-clip"
-  size="sm"
-  caption="The children remain two circles. Change their radius, center distance, and fillRule to inspect the combined region."
-/>
-
-| Field       | Type                       | Description                                                                       |
-| ----------- | -------------------------- | --------------------------------------------------------------------------------- |
-| `children`  | `Array<IRClip>`            | At least one child; every child Definition must also be available through `clips` |
-| `fillRule?` | `'nonzero'` \| `'evenodd'` | Fill rule for the final combined path; defaults to `nonzero`                      |
-
-Inject `CompoundClipDefinition` together with the Definitions used by its children. Use nested `<Scope clip>` elements when you need geometric intersections.
-
-## Related
-
-- [Custom Clips](/kernel/components/scope/custom): define a new clip kind with the complete `ClipDefinition` contract
-- [Extensions](/library/extension/introduction): browse other optional capabilities

@@ -30,7 +30,7 @@ export const crowFootArrowControls = definePreviewControls({
           max: 4,
           step: 0.5,
         },
-        { kind: 'color', id: CrowFootArrowControlId.Color, label: 'Color', defaultValue: '#ea580c' },
+        { kind: 'color', id: CrowFootArrowControlId.Color, label: 'Color', defaultValue: '#2563eb' },
       ],
     },
   ],
@@ -39,6 +39,6 @@ export const crowFootArrowControls = definePreviewControls({
 /** Stable documentation contract for the CrowFoot example */
 export const previewControlContract = {
   controls: crowFootArrowControls,
-  canonicalValues: { length: 12, width: 16, lineWidth: 1.5, color: '#ea580c' },
+  canonicalValues: { length: 12, width: 16, lineWidth: 1.5, color: '#2563eb' },
   relatedApis: ['Layout.arrows', 'Draw.arrowDetail'],
 } satisfies PreviewControlContract;

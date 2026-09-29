@@ -15,7 +15,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     <Node
       position={[0, 0]}
       shape={{ type: 'ellipticCapsule', params: { axis: values.axis, capDepth: values.capDepth } }}
-      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
+      style={{ fill: '#dbeafe', stroke: '#2563eb', strokeWidth: 1.5 }}
       layout={{ minimumSize: { width: 130, height: 90 } }}
     />
   </Layout>

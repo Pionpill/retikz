@@ -1,117 +1,269 @@
 ---
 title: clip · 裁剪
-description: 从 @retikz/extension 按需引入可选裁剪，并分别在 React 与 Vanilla 的编译入口传入 Definition。
+description: 按需装配圆形、椭圆、多边形、路径和组合裁剪，并查阅每种裁剪的 API 与 Schema。
 ---
 
-裁剪定义支持圆形、椭圆、多边形、路径和组合区域。将定义注册到当前图，再用对应的裁剪参数限制内容的显示范围。
+裁剪限制 Scope 内内容的可见区域。每种区域由 `kind` 和 JSON 参数描述，使用前需在当前编译入口装配相应 Definition。
 
-## 用法
+## 接入方式
 
-本页支持两种导入方式：
+从 `@retikz/extension` 按需导入 Definition，例如 `CircleClipDefinition`；也可以使用包含本页全部类型的 `ExtensionClipDefinitions`。导入不会全局注册裁剪。下例把圆形裁剪限制在当前 `Layout` 内。
 
-- 按需导入特定 Definition，例如 `CircleClipDefinition`，只把当前图需要的官方扩展传入 `Layout` 或 `compile`
-- 整体使用官方扩展，例如 `ExtensionClipDefinitions`，一次包含该能力族的全部 Definition；组装 provider graph 时，对应使用 `ExtensionClipProviders`
+<ComponentPreview files="entry" size="sm" hideCode />
 
-两种方式都只是当前图的显式装配，不会因为 import 自动全局注册裁剪。
-
-### React 用法
-
-从 `@retikz/extension` 导入当前图需要的 Definition，传给 React `Layout` 的 `extensions.clips`。`Scope` 的 `clip` 只保存裁剪 `kind` 和 JSON-safe 参数。
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { Layout, Node, Scope } from '@retikz/react';
 import { CircleClipDefinition } from '@retikz/extension';
+import { Layout, Node, Scope } from '@retikz/react';
 
-<Layout extensions={{ clips: [CircleClipDefinition] }}>
-  <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 56 }}>
-    <Node position={[0, 0]} layout={{ minimumSize: { width: 160, height: 120 } }} />
-  </Scope>
-</Layout>;
+export const Example = () => (
+  <Layout extensions={{ clips: [CircleClipDefinition] }}>
+    <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 50 }}>
+      <Node layout={{ minimumSize: { width: 160, height: 120 } }} />
+    </Scope>
+  </Layout>
+);
 ```
 
-Core 的 `rect` 无需额外注入；Extension Definition 只对当前 `Layout` 生效。
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-### Vanilla 用法
+```tsx
+import type { IRScene } from '@retikz/core';
+import { CircleClipDefinition } from '@retikz/extension';
+import { Layout } from '@retikz/react';
 
-在 `@retikz/vanilla` 中，把同一个 Definition 放进 `compile.clips`。`input` 可以是已有的 Core IR 或 Vanilla plain spec；`mount` 使用完全相同的 `compile` 配置。
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'scope',
+      clip: { kind: 'circle', cx: 0, cy: 0, r: 50 },
+      children: [{ type: 'node', layout: { minimumSize: { width: 160, height: 120 } } }],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} extensions={{ clips: [CircleClipDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
 import { CircleClipDefinition } from '@retikz/extension';
+import { node, renderToSvgString, scene, scope } from '@retikz/vanilla';
 
-const svg = renderToSvgString(input, {
-  compile: {
-    clips: [CircleClipDefinition],
-  },
+const input = scene({
+  children: [
+    scope({ clip: { kind: 'circle', cx: 0, cy: 0, r: 50 } }, [
+      node({ layout: { minimumSize: { width: 160, height: 120 } } }),
+    ]),
+  ],
 });
+const svg = renderToSvgString(input, { compile: { clips: [CircleClipDefinition] } });
+console.log(svg);
 ```
 
-若裁剪 `kind` 既不是 Core 默认项，也没有在本次 `clips` 中注册，Core 会明确报错并提示注入入口，不会替换成矩形或其它相近区域。
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
 
-## 例子
+```ts
+import type { IRScene } from '@retikz/core';
+import { CircleClipDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
 
-下面每个例子固定使用当前小节的裁剪 `kind`，控制项只改变该类型自身的参数。
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'scope',
+      clip: { kind: 'circle', cx: 0, cy: 0, r: 50 },
+      children: [{ type: 'node', layout: { minimumSize: { width: 160, height: 120 } } }],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, { compile: { clips: [CircleClipDefinition] } });
+console.log(svg);
+```
 
-### 圆形与椭圆
+</DocTab>
+</DocTabs>
 
-`circle` 使用一个半径形成圆形区域；`ellipse` 分别控制横向和纵向半径。两者适合头像、徽章、聚光区域和圆角内容窗口。
+## 圆形与椭圆
 
-<ComponentPreview
-  files="circle-ellipse-clip"
-  size="sm"
-  caption="虚线矩形是原内容边界；左右区域固定使用 circle 与 ellipse，只改变各自半径。"
+`circle` 用单个半径裁剪；`ellipse` 分别设置横向、纵向半径。两者都以指定中心定位。
+
+<ComponentPreview files="circle-ellipse-clip" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### IRCircleClip
+
+注入 `CircleClipDefinition`：
+
+| 字段       | 类型       | 说明                     |
+| ---------- | ---------- | ------------------------ |
+| `kind`     | `'circle'` | 选择圆形裁剪             |
+| `cx`、`cy` | `number`   | 圆心坐标                 |
+| `r`        | `number`   | 正数半径，单位为用户坐标 |
+
+#### IREllipseClip
+
+注入 `EllipseClipDefinition`：
+
+| 字段       | 类型        | 说明               |
+| ---------- | ----------- | ------------------ |
+| `kind`     | `'ellipse'` | 选择椭圆裁剪       |
+| `cx`、`cy` | `number`    | 椭圆中心坐标       |
+| `rx`、`ry` | `number`    | 正数横向、纵向半径 |
+
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### CircleClipSchema
+
+<ZodSchema
+  name="CircleClipSchema"
+  descriptions={{ kind: '圆形裁剪判别字段', cx: '圆心横坐标', cy: '圆心纵坐标', r: '正数半径，单位为用户坐标' }}
 />
 
-| 类型            | 必填字段               | 说明                     |
-| --------------- | ---------------------- | ------------------------ |
-| `IRCircleClip`  | `cx`、`cy`、`r`        | 圆心与正数半径           |
-| `IREllipseClip` | `cx`、`cy`、`rx`、`ry` | 中心与横向、纵向正数半径 |
+#### EllipseClipSchema
 
-分别注入 `CircleClipDefinition` 或 `EllipseClipDefinition`。
-
-### 多边形
-
-`polygon` 按给定顺序连接至少三个顶点并自动闭合，适合规则或不规则的直边裁剪区域。
-
-<ComponentPreview files="polygon-clip" size="sm" caption="裁剪类型固定为 polygon；三个点控件按顺序直接写入 points。" />
-
-| 字段     | 类型                      | 说明                                   |
-| -------- | ------------------------- | -------------------------------------- |
-| `points` | `Array<[number, number]>` | 至少三个用户坐标系顶点，按给定顺序连接 |
-
-使用时注入 `PolygonClipDefinition`。
-
-### 路径
-
-`path` 直接接收 Core 的结构化路径命令，适合无法用圆、椭圆或多边形表达的曲线和复合轮廓。命令必须形成有效的可填充区域。
-
-<ComponentPreview files="path-clip" size="md" caption="路径命令结构保持不变；控制项只调整命令坐标与 fillRule。" />
-
-| 字段        | 类型                       | 说明                         |
-| ----------- | -------------------------- | ---------------------------- |
-| `commands`  | `Array<PathCommand>`       | 至少一条结构化路径命令       |
-| `fillRule?` | `'nonzero'` \| `'evenodd'` | 填充规则；省略时为 `nonzero` |
-
-使用时注入 `PathClipDefinition`。路径命令的写法参阅 [自定义路径](/kernel/components/path/custom-path)。
-
-### 组合裁剪
-
-`compound` 按输入顺序累积多个 child 的路径命令，再用一个 `fillRule` 解释最终区域。它适合把多个轮廓合并为一个裁剪路径，但不是逐 child 的几何交集。
-
-<ComponentPreview
-  files="compound-clip"
-  size="sm"
-  caption="children 始终是两个 circle；调整半径、中心间距和 fillRule 可观察组合区域。"
+<ZodSchema
+  name="EllipseClipSchema"
+  descriptions={{
+    kind: '椭圆裁剪判别字段',
+    cx: '中心横坐标',
+    cy: '中心纵坐标',
+    rx: '正数横向半径',
+    ry: '正数纵向半径',
+  }}
 />
 
-| 字段        | 类型                       | 说明                                                                 |
-| ----------- | -------------------------- | -------------------------------------------------------------------- |
-| `children`  | `Array<IRClip>`            | 至少一个 child；每个 child 的 Definition 也必须在当前 `clips` 中可用 |
-| `fillRule?` | `'nonzero'` \| `'evenodd'` | 最终组合路径的填充规则；省略时为 `nonzero`                           |
+</DocTab>
+</DocTabs>
 
-使用时注入 `CompoundClipDefinition` 以及实际 child 对应的 Definitions。需要几何交集时，改用嵌套的 `<Scope clip>`。
+演示保留原内容的虚线边界；左右分别固定为圆形和椭圆，控制项只改变半径。
 
-## 相关
+## 多边形
 
-- [自定义裁剪区](/kernel/components/scope/custom)：定义新的裁剪 kind 与完整 `ClipDefinition` 契约
-- [扩展](/library/extension/introduction)：浏览其他可选能力
+`polygon` 按给定顺序连接至少三个顶点并闭合，适合直边的规则或不规则区域。
+
+<ComponentPreview files="polygon-clip" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### IRPolygonClip
+
+注入 `PolygonClipDefinition`：
+
+| 字段     | 类型                      | 说明                     |
+| -------- | ------------------------- | ------------------------ |
+| `kind`   | `'polygon'`               | 选择多边形裁剪           |
+| `points` | `Array<[number, number]>` | 至少三个按顺序连接的顶点 |
+
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### PolygonClipSchema
+
+<ZodSchema
+  name="PolygonClipSchema"
+  descriptions={{ kind: '多边形裁剪判别字段', points: '至少三个二维顶点，按给定顺序连接' }}
+/>
+
+</DocTab>
+</DocTabs>
+
+演示固定 `polygon`，三个点控件直接修改 `points`，可以看到边界随顶点移动。
+
+## 路径
+
+`path` 接收结构化路径命令，可描述曲线或多个子路径；命令需形成有效的可填充区域。
+
+<ComponentPreview files="path-clip" size="md" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### IRPathClip
+
+注入 `PathClipDefinition`。命令格式可在[自定义路径](/kernel/components/path/custom-path)中查阅。
+
+| 字段        | 类型                     | 说明                         |
+| ----------- | ------------------------ | ---------------------------- |
+| `kind`      | `'path'`                 | 选择路径裁剪                 |
+| `commands`  | `Array<PathCommand>`     | 至少一条结构化路径命令       |
+| `fillRule?` | `'nonzero' \| 'evenodd'` | 填充规则；省略时为 `nonzero` |
+
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### PathClipSchema
+
+<ZodSchema
+  name="PathClipSchema"
+  descriptions={{
+    kind: '路径裁剪判别字段',
+    commands: '至少一条结构化路径命令',
+    fillRule: '可选填充规则；省略时为 nonzero',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+演示保持命令结构不变，初始使用 `evenodd`；用控件改变命令坐标与 `fillRule`。
+
+## 组合裁剪
+
+`compound` 按输入顺序累积子区域的路径，再用一个 `fillRule` 解释最终区域。它组合轮廓，不计算子区域之间的几何交集。
+
+<ComponentPreview files="compound-clip" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### IRCompoundClip
+
+注入 `CompoundClipDefinition`，并同时注入每个 child 对应的 Definition。几何交集可通过嵌套多个 `<Scope clip>` 实现。
+
+| 字段        | 类型                     | 说明                                   |
+| ----------- | ------------------------ | -------------------------------------- |
+| `kind`      | `'compound'`             | 选择组合裁剪                           |
+| `children`  | `Array<IRClip>`          | 至少一个子区域，按顺序累积             |
+| `fillRule?` | `'nonzero' \| 'evenodd'` | 组合路径的填充规则；省略时为 `nonzero` |
+
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### CompoundClipSchema
+
+<ZodSchema
+  name="CompoundClipSchema"
+  descriptions={{
+    kind: '组合裁剪判别字段',
+    children: '至少一个子裁剪区域；需装配对应 Definition',
+    fillRule: '组合路径的可选填充规则；省略时为 nonzero',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+演示中的两个 child 始终是圆形，初始使用 `evenodd`；改变半径、中心间距和 `fillRule` 可以对比组合结果。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '自定义裁剪区', description: '定义新的裁剪 kind', url: '/kernel/components/scope/custom' },
+    { title: 'Extension · 拓展包', description: '浏览其他可选能力', url: '/library/extension/introduction' },
+  ]}
+/>
