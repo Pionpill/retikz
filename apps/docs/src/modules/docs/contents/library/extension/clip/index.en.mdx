@@ -57,9 +57,10 @@ Each example below keeps the current section's clip `kind` fixed. Its controls c
 `circle` uses one radius, while `ellipse` controls the horizontal and vertical radii independently. They work well for avatars, badges, spotlights, and rounded content windows.
 
 <ComponentPreview
-  files="circle-ellipse-clip"
+  files={['circle-ellipse-clip', 'circle-ellipse-clip.preview.tsx']}
   size="sm"
   caption="The dashed rectangles mark the source bounds. The left and right regions stay circle and ellipse while their radii change."
+  defaultSourceFile="circle-ellipse-clip.preview.tsx"
 />
 
 | Type            | Required fields            | Description                                       |
@@ -74,9 +75,10 @@ Inject `CircleClipDefinition` or `EllipseClipDefinition`, respectively.
 `polygon` joins at least three vertices in authored order and closes the region automatically. It covers regular and irregular straight-edged clips.
 
 <ComponentPreview
-  files="polygon-clip"
+  files={['polygon-clip', 'polygon-clip.preview.tsx']}
   size="sm"
   caption="The clip kind stays polygon; the three point controls write directly to points in order."
+  defaultSourceFile="polygon-clip.preview.tsx"
 />
 
 | Field    | Type                      | Description                                          |
@@ -90,9 +92,10 @@ Inject `PolygonClipDefinition` when using it.
 `path` accepts Core structured path commands directly. It covers curves and compound outlines that circles, ellipses, and polygons cannot express. The commands must form a valid fillable region.
 
 <ComponentPreview
-  files="path-clip"
+  files={['path-clip', 'path-clip.preview.tsx']}
   size="md"
   caption="The command structure stays fixed. Controls change only command coordinates and fillRule."
+  defaultSourceFile="path-clip.preview.tsx"
 />
 
 | Field       | Type                       | Description                          |
@@ -107,9 +110,10 @@ Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/path/custom-p
 `compound` appends child path commands in input order, then applies one `fillRule` to the final region. It combines outlines into one clip path but does not compute a geometric intersection between children.
 
 <ComponentPreview
-  files="compound-clip"
+  files={['compound-clip', 'compound-clip.preview.tsx']}
   size="sm"
   caption="The children remain two circles. Change their radius, center distance, and fillRule to inspect the combined region."
+  defaultSourceFile="compound-clip.preview.tsx"
 />
 
 | Field       | Type                       | Description                                                                       |

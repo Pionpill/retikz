@@ -1,59 +1,23 @@
-import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, scopeZIndexControls } from './scope-z-index.controls';
+import { ScopeZIndexPreview } from './scope-z-index.preview';
 
 /** controls registry 未刷新时供 ComponentPreview 从 demo 模块直接解析的兜底定义 */
 export const previewControls = scopeZIndexControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout>
-      <Scope transforms={[{ kind: 'translate', x: -22, y: -14 }]} zIndex={values.scopeA}>
-        <Node
-          id="a1"
-          position={[0, 0]}
-          zIndex={values.nodeA1}
-          style={{ fill: 'tomato', stroke: 'darkred', strokeWidth: 1 }}
-          layout={{ minimumSize: 76 }}
-        >
-          A1
-        </Node>
-        <Node
-          id="a2"
-          position={[40, 0]}
-          zIndex={values.nodeA2}
-          style={{ fill: 'gold', stroke: 'darkorange', strokeWidth: 1 }}
-          layout={{ minimumSize: 76 }}
-        >
-          A2
-        </Node>
-      </Scope>
-      <Scope transforms={[{ kind: 'translate', x: 22, y: 26 }]} zIndex={values.scopeB}>
-        <Node
-          id="b1"
-          position={[0, 0]}
-          zIndex={values.nodeB1}
-          style={{ fill: 'dodgerblue', stroke: 'darkblue', strokeWidth: 1 }}
-          layout={{ minimumSize: 76 }}
-        >
-          B1
-        </Node>
-        <Node
-          id="b2"
-          position={[40, 0]}
-          zIndex={values.nodeB2}
-          style={{ fill: 'mediumseagreen', stroke: 'darkgreen', strokeWidth: 1 }}
-          layout={{ minimumSize: 76 }}
-        >
-          B2
-        </Node>
-      </Scope>
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  ScopeZIndexPreview({
+    scopeA: values.scopeA,
+    nodeA1: values.nodeA1,
+    nodeA2: values.nodeA2,
+    scopeB: values.scopeB,
+    nodeB1: values.nodeB1,
+    nodeB2: values.nodeB2,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

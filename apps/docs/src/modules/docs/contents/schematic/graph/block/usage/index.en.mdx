@@ -162,7 +162,8 @@ The Block family provides four common built-in components:
 The playground builds a minimal data structure using only built-in components. The first Section is always present. Its controls can add an extra Row to that Section or add a second Section, then independently adjust spacing between the Block's direct children, items inside each Section, and content items inside each Row. Row uses a horizontal Flex layout: one item fills the available width, two split it 1:1, and three split it 1:1:1. Every item can be a string or an `IRBlockText` object with local text styles. Row content defaults to the `sm` font size. The equal-sharing defaults—`basis: 0`, `grow: 1`, `shrink: 1`, and `min: 0`—apply during lowering and are not written back to Source IR
 
 <ComponentPreview
-  files="block-builtin"
+  files={['block-builtin', 'block-builtin.preview.tsx']}
+  defaultSourceFile="block-builtin.preview.tsx"
   size="lg"
   caption="Add a second Section or extra Row, then tune the Block, Section, and Row gaps independently."
 />
@@ -172,7 +173,8 @@ The playground builds a minimal data structure using only built-in components. T
 Both `BlockHeader.icon` and `BlockHeader.trail` accept an arbitrary child, and a Block body is not limited to Section or Row. This example places custom Core Nodes on both sides of the Header and adds an ordinary Node directly to the body. Its controls change that Node's content, shape, size, transform, and appearance while every state keeps sharing the same compilation path as the built-in structure
 
 <ComponentPreview
-  files="block-custom"
+  files={['block-custom', 'block-custom.preview.tsx']}
+  defaultSourceFile="block-custom.preview.tsx"
   size="xl"
   caption="Adjust the custom body Node while the Header slots stay fixed."
 />
@@ -194,7 +196,8 @@ This example fixes the Block width and content height. The right-hand way ends a
 The Block shell reuses Standard Surface. This playground controls shell padding, background, border, and corner radius, then independently adjusts the color, size, weight, style, and opacity of the `BlockHeader` title, description, and `BlockRow.content`
 
 <ComponentPreview
-  files="block-style"
+  files={['block-style', 'block-style.preview.tsx']}
+  defaultSourceFile="block-style.preview.tsx"
   size="xl"
   caption="Adjust the Block shell, Header text, and local Row content styles."
 />

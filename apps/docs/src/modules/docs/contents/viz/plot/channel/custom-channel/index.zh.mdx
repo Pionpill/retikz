@@ -27,9 +27,10 @@ description: 用 ChannelDefinition 把字段或常量解析为既有 Core 属性
 下面的 `intensity` 通道把字段值映射到 `[0.3, 1]`，也接受直接表示透明度的数值常量。用面板切换字段与常量绑定；definition、数据和宿主注入都可以从源码切换器中查看：
 
 <ComponentPreview
-  files={['custom-channel', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
+  files={['custom-channel', 'custom-channel.preview.tsx', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
   size="lg"
   caption="字段绑定会保留各行 score 的强弱差异；常量绑定会让所有点使用同一透明度。"
+  defaultSourceFile="custom-channel.preview.tsx"
 />
 
 ## 注入宿主

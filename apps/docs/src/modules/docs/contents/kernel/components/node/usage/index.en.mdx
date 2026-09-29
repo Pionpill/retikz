@@ -108,7 +108,11 @@ An omitted `shape` inherits `Scope.defaults.node.shape`, falling back to a recta
 | `circle`                                 | preset resolving to an equally circumscribed ellipse         |
 | `diamond`                                | preset resolving to a four-sided polygon                     |
 
-<ComponentPreview files="node-shape" size="sm" />
+<ComponentPreview
+  files={['node-shape', 'node-shape.preview.tsx']}
+  size="sm"
+  defaultSourceFile="node-shape.preview.tsx"
+/>
 
 For more shapes, import the Extension package from [Extension Shape](/library/extension/shape) and register it through `Layout.extensions.shapes`.
 
@@ -132,7 +136,11 @@ Adjust the same q in the panel to compare text spacing, border size, and rotatio
   description="Both padding and margin merge each side independently: side (top / right / bottom / left) overrides axis (x / y), which overrides default. For example, { default: 8, x: 20, left: 30 } resolves to left 30, right 20, and top and bottom 8."
 />
 
-<ComponentPreview files="node-geometry" size="md" />
+<ComponentPreview
+  files={['node-geometry', 'node-geometry.preview.tsx']}
+  size="md"
+  defaultSourceFile="node-geometry.preview.tsx"
+/>
 
 <Comparison target="tikz" title="Node Geometry Syntax">
 
@@ -160,7 +168,11 @@ A fixed width must accommodate the effective minimum size, padding, and shape ge
 
 Put visual properties in `style`, and size and text layout in `layout`. [Scope](/kernel/components/scope/usage) supplies shared defaults.
 
-<ComponentPreview files="node-styled" size="md" />
+<ComponentPreview
+  files={['node-styled', 'node-styled.preview.tsx']}
+  size="md"
+  defaultSourceFile="node-styled.preview.tsx"
+/>
 
 - **Stacking**: `zIndex` compares siblings only; higher values draw on top and ties preserve declaration order.
 - **Color**: `style.color` is the base color; numeric `fill` and `stroke` values derive colors from it, rather than setting opacity.

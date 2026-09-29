@@ -98,7 +98,12 @@ import { Rectangle } from '@retikz/standard-react/shape';
 
 用 playground 连续调整宽高与圆角半径；灰色尺寸线保持贴着当前边界，便于判断圆角何时开始主导短边。
 
-<ComponentPreview files="rectangle-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['rectangle-playground', 'rectangle-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="rectangle-playground.preview.tsx"
+/>
 
 ## 错误与限制
 

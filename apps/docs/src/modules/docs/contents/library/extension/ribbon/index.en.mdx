@@ -50,19 +50,31 @@ If the requirement is only a stroke, keep the default `stroke` kind. If a relati
 
 Switch among fixed width, endpoint interpolation, stops, and the built-in `bulge` profile while checking fill, outline, and shadow behavior:
 
-<ComponentPreview files="ribbon-geometry" size="md" />
+<ComponentPreview
+  files={['ribbon-geometry', 'ribbon-geometry.preview.tsx']}
+  size="md"
+  defaultSourceFile="ribbon-geometry.preview.tsx"
+/>
 
 ### Label placement
 
 Ribbon reuses the Path host label contract, so a label can follow the centerline and sit inside or outside the band:
 
-<ComponentPreview files="ribbon-label" size="sm" />
+<ComponentPreview
+  files={['ribbon-label', 'ribbon-label.preview.tsx']}
+  defaultSourceFile="ribbon-label.preview.tsx"
+  size="sm"
+/>
 
 ### Endpoints and caps
 
 Configure width, direction, and cap independently at the start and end:
 
-<ComponentPreview files="ribbon-endpoints" size="md" />
+<ComponentPreview
+  files={['ribbon-endpoints', 'ribbon-endpoints.preview.tsx']}
+  size="md"
+  defaultSourceFile="ribbon-endpoints.preview.tsx"
+/>
 
 ### Precomputed boundaries
 

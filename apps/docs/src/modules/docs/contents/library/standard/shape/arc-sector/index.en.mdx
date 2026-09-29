@@ -152,7 +152,12 @@ A filled sector's center is the cursor, so `center` can take a node id (or polar
 
 Arc and Sector share the same elliptical radii and angle model. Once the basic forms above are clear, adjust both in the playground: the left side shows Arc closure, while the right side shows how Sector's inner arc changes ring width.
 
-<ComponentPreview files="arc-sector-playground" size="sm" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['arc-sector-playground', 'arc-sector-playground.preview.tsx']}
+  size="sm"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="arc-sector-playground.preview.tsx"
+/>
 
 ## Errors and limitations
 

@@ -1,30 +1,12 @@
-import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, scaleTimeControls } from './scale-time.controls';
-import { visits } from './scale-time.data';
+import { ScaleTimePreview } from './scale-time.preview';
 
 /** 注册回退使用的时间比例尺数据面板 */
 export const previewControls = scaleTimeControls;
 
-/** temporal model 让 x 位置通道自动派生 time scale */
-const controlledPreview = defineControlledPreview(previewControlContract, () => (
-  <Plot
-    data={visits}
-    model={[
-      { name: 'date', type: 'temporal' },
-      { name: 'value', type: 'continuous' },
-    ]}
-    width={400}
-    height={250}
-  >
-    <PathMark x="date" y="value" order="date" />
-    <PointMark x="date" y="value" />
-    <PlotAxis dimension="x" />
-    <PlotAxis dimension="y" grid />
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, ScaleTimePreview);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

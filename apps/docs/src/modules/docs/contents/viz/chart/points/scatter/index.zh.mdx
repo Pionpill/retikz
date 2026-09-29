@@ -14,7 +14,8 @@ description: 用散点比较两个连续变量，并通过颜色和形状编码�
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['scatter-minimal', 'scatter-minimal.data.ts']}
+  files={['scatter-minimal', 'scatter-minimal.preview.tsx', 'scatter-minimal.data.ts']}
+  defaultSourceFile="scatter-minimal.preview.tsx"
   hideCode
   size="xl"
   caption="横轴为 IMDb 评分，纵轴为烂番茄评分；100 部电影的静态快照来自 Vega Datasets。"
@@ -187,7 +188,8 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['scatter-fertility-work', 'scatter-fertility-work.data.ts']}
+  files={['scatter-fertility-work', 'scatter-fertility-work.preview.tsx', 'scatter-fertility-work.data.ts']}
+  defaultSourceFile="scatter-fertility-work.preview.tsx"
   controls={{ name: 'scatter-fertility-work' }}
   controlPanelDefaultOpen={false}
   size="xl"
@@ -248,7 +250,13 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['scatter-appearance', 'scatter-fertility-work.data.ts', 'scatter-appearance.i18n.ts']}
+  files={[
+    'scatter-appearance',
+    'scatter-appearance.preview.tsx',
+    'scatter-fertility-work.data.ts',
+    'scatter-appearance.i18n.ts',
+  ]}
+  defaultSourceFile="scatter-appearance.preview.tsx"
   controlPanelDefaultOpen={false}
   size="xl"
   caption="调节大小、描边与透明度，比较散点重叠时的可读性。"
@@ -324,7 +332,8 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['scatter-marks', 'scatter-minimal.data.ts']}
+  files={['scatter-marks', 'scatter-marks.preview.tsx', 'scatter-minimal.data.ts']}
+  defaultSourceFile="scatter-marks.preview.tsx"
   hideCode
   size="xl"
   controls={{ name: 'scatter-marks' }}
@@ -353,7 +362,8 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['scatter-facet', 'scatter-fertility-work.data.ts', 'scatter-facet.i18n.ts']}
+  files={['scatter-facet', 'scatter-facet.preview.tsx', 'scatter-fertility-work.data.ts', 'scatter-facet.i18n.ts']}
+  defaultSourceFile="scatter-facet.preview.tsx"
   controls={{ name: 'scatter-facet' }}
   controlPanelDefaultOpen={false}
   size="lg"
@@ -380,7 +390,13 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['scatter-world-cup-shots', 'scatter-world-cup-shots.data.ts']}
+  files={[
+    'scatter-world-cup-shots',
+    'scatter-world-cup-shots.preview.tsx',
+    'scatter-world-cup-shots.data.ts',
+    'scatter-world-cup-shots.i18n.ts',
+  ]}
+  defaultSourceFile="scatter-world-cup-shots.preview.tsx"
   controls={{ name: 'scatter-world-cup-shots' }}
   controlPanelDefaultOpen={false}
   size="xxl"

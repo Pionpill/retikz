@@ -35,9 +35,10 @@ const lowerTex = await createMathJaxLowerTex({ profile: 'base', extensions: ['am
 `MathJaxEngineOptions` 的 `profile` 决定基础配置，`extensions` 则在其后追加公开扩展。此示例固定启用完整的公开扩展集合，因此公式示例只切换公式内容，不再根据示例开关扩展；选择 `math` 会一次启用内置数学扩展集合：
 
 <ComponentPreview
-  files="tex-extensions"
+  files={['tex-extensions', 'tex-extensions.preview.tsx']}
   size="sm"
   caption="公式示例只切换公式内容；预览区展示固定启用的 extensions 集合。"
+  defaultSourceFile="tex-extensions.preview.tsx"
 />
 
 | profile | 内容                  | 适用场景                                |

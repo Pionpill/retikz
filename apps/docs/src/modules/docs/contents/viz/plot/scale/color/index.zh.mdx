@@ -18,8 +18,9 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 
 <ComponentPreview
   size="lg"
-  files={['scale-ordinal', 'scale-ordinal.data.ts']}
+  files={['scale-ordinal', 'scale-ordinal.preview.tsx', 'scale-ordinal.data.ts']}
   caption="切换离散配色并显示或隐藏图例，分别观察颜色映射与图例解释承担的职责。"
+  defaultSourceFile="scale-ordinal.preview.tsx"
 />
 
 `ordinal` 不在类别之间插值。需要稳定的业务颜色时，可在 full spec 中提供显式 `domain` 与同顺序的 `range`；只依赖自动 domain 时，类别顺序来自数据。
@@ -30,8 +31,9 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 
 <ComponentPreview
   size="lg"
-  files={['scale-continuous', 'scale-continuous.data.ts']}
+  files={['scale-continuous', 'scale-continuous.preview.tsx', 'scale-continuous.data.ts']}
   caption="切换 sequential 与 diverging、选择配色并移动中点；同一份 -50 到 50 数据会立即显示映射差异。"
+  defaultSourceFile="scale-continuous.preview.tsx"
 />
 
 两类 scale 都可以使用可序列化的命名 `scheme`。常用 sequential scheme 有 `viridis`、`blues`、`greens`、`magma`；常用 diverging scheme 有 `rdbu`、`brbg`、`spectral`。需要自定义颜色时可用 `range` 覆盖 scheme。
@@ -55,8 +57,9 @@ description: 颜色比例尺把分类、连续和带中点的数据映射成离�
 
 <ComponentPreview
   size="lg"
-  files={['scale-discretization', 'scale-discretization.data.ts']}
+  files={['scale-discretization', 'scale-discretization.preview.tsx', 'scale-discretization.data.ts']}
   caption="切换 quantize、threshold 与 quantile；调整档数、业务阈值和配色，比较同一份偏斜数据如何落入不同色档。"
+  defaultSourceFile="scale-discretization.preview.tsx"
 />
 
 配置时注意：

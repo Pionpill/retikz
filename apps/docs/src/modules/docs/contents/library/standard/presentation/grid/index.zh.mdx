@@ -107,9 +107,10 @@ console.log(svg);
 使用面板改变角点范围、统一或方向独立的格距、格线对齐、主线和边框。预览采用固定视野，因此参数变化会直接反映为网格的位置、密度或层级变化
 
 <ComponentPreview
-  files="grid-playground"
+  files={['grid-playground', 'grid-playground.preview.tsx']}
   size="lg"
   caption="调整 bounds、line 格距、line origin、major 和 border，观察这些字段如何共同决定最终网格。"
+  defaultSourceFile="grid-playground.preview.tsx"
 />
 
 ## 错误与限制

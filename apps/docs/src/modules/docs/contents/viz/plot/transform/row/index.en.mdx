@@ -18,7 +18,16 @@ Use `derive-interval` to add an interval to each input row. Use `jitter` to spre
 
 Switch the interval source to compare explicit `startFrom` / `endFrom` fields with the `from` / `baseline` mode.
 
-<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} size="lg" />
+<ComponentPreview
+  files={[
+    'transform-derive-interval',
+    'transform-derive-interval.preview.tsx',
+    'transform-derive-interval.i18n.ts',
+    'transform-derive-interval.data.ts',
+  ]}
+  size="lg"
+  defaultSourceFile="transform-derive-interval.preview.tsx"
+/>
 
 ### API Reference
 
@@ -67,7 +76,11 @@ Both `derive-interval` and `stack` default to `y0` / `y1`, but their meaning dif
 
 Adjust the maximum offset and random seed. The chart uses a fixed data domain so jitter parameter changes remain directly comparable.
 
-<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} size="lg" />
+<ComponentPreview
+  files={['transform-jitter', 'transform-jitter.preview.tsx', 'transform-jitter.i18n.ts', 'transform-jitter.data.ts']}
+  size="lg"
+  defaultSourceFile="transform-jitter.preview.tsx"
+/>
 
 ### API Reference
 

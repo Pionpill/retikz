@@ -19,7 +19,8 @@ description: 组合触发器、播放句柄、错峰与镜头轨道，并配置�
 事件触发需要可交互宿主；导出的静态 SVG 字符串不会自行运行应用中的事件处理器。visible 的检测由各后端宿主执行：SVG 会考虑滚动容器的裁切，Canvas 按图元与浏览器视口的相交判断，内部滚动时的触发时机可能不同。
 
 <ComponentPreview
-  files="animation-trigger"
+  files={['animation-trigger', 'animation-trigger.preview.tsx', 'animation-trigger.i18n.ts']}
+  defaultSourceFile="animation-trigger.preview.tsx"
   size="lg"
   caption="切换触发方式后场景会重新加载。可见模式请滚动示例内部区域；手动模式使用启动按钮；事件模式点击图元。"
 />

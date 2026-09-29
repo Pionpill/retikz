@@ -1,38 +1,20 @@
-import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { points } from './point-api.data';
-import { POINT_NODE_SHAPE_CONTROL_IDS, pointNodeShapeOf, previewControlContract } from './point-node-shape.controls';
+import { POINT_NODE_SHAPE_CONTROL_IDS, previewControlContract } from './point-node-shape.controls';
+import { PointNodeShapePreview } from './point-node-shape.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot
-    data={points}
-    width={400}
-    height={280}
-    coordinate={values[POINT_NODE_SHAPE_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
-  >
-    <PointMark
-      x="x"
-      y="y"
-      color="region"
-      size={values[POINT_NODE_SHAPE_CONTROL_IDS.size]}
-      rotate={values[POINT_NODE_SHAPE_CONTROL_IDS.rotate]}
-      shape={pointNodeShapeOf({
-        shape: values[POINT_NODE_SHAPE_CONTROL_IDS.shape],
-        size: values[POINT_NODE_SHAPE_CONTROL_IDS.size],
-        starPoints: values[POINT_NODE_SHAPE_CONTROL_IDS.starPoints],
-        polygonSides: values[POINT_NODE_SHAPE_CONTROL_IDS.polygonSides],
-      })}
-      label="label"
-      labelPosition="top"
-      labelDistance={8}
-    />
-    <PlotAxis dimension="x" />
-    <PlotAxis dimension="y" grid />
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  PointNodeShapePreview({
+    coordinate: values[POINT_NODE_SHAPE_CONTROL_IDS.coordinate],
+    size: values[POINT_NODE_SHAPE_CONTROL_IDS.size],
+    rotate: values[POINT_NODE_SHAPE_CONTROL_IDS.rotate],
+    shape: values[POINT_NODE_SHAPE_CONTROL_IDS.shape],
+    starPoints: values[POINT_NODE_SHAPE_CONTROL_IDS.starPoints],
+    polygonSides: values[POINT_NODE_SHAPE_CONTROL_IDS.polygonSides],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

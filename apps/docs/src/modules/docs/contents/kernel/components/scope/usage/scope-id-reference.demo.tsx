@@ -1,48 +1,20 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, scopeIdReferenceControls } from './scope-id-reference.controls';
+import { ScopeIdReferencePreview } from './scope-id-reference.preview';
 
 /** controls registry 未刷新时供 ComponentPreview 从 demo 模块直接解析的兜底定义 */
 export const previewControls = scopeIdReferenceControls;
 
-const RECTANGLE_BOUNDARY = [
-  'cluster.top-left',
-  'cluster.top-right',
-  'cluster.bottom-right',
-  'cluster.bottom-left',
-  'cluster.top-left',
-];
-
-const CIRCLE_BOUNDARY = [...Array.from({ length: 36 }, (_, index) => `cluster.${index * 10}`), 'cluster.0'];
-
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const boundary = values.boundingShape === 'circle' ? CIRCLE_BOUNDARY : RECTANGLE_BOUNDARY;
-  const anchor = values.anchor === 'angle' ? values.angleDegrees : values.anchor;
-
-  return (
-    <Layout>
-      <Node id="source" position={[-150, 0]}>
-        source
-      </Node>
-      <Scope id="cluster" boundingShape={values.boundingShape} transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
-        <Node id="A" position={[-45, -35]}>
-          A
-        </Node>
-        <Node id="B" position={[45, -35]}>
-          B
-        </Node>
-        <Node id="C" position={[0, 45]}>
-          C
-        </Node>
-      </Scope>
-      <Draw way={boundary} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
-      <Draw way={['source', `cluster.${anchor}`]} arrow="->" />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  ScopeIdReferencePreview({
+    boundingShape: values.boundingShape,
+    anchor: values.anchor,
+    angleDegrees: values.angleDegrees,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

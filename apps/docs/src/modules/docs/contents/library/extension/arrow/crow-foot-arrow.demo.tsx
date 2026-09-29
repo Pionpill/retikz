@@ -1,33 +1,19 @@
-import { CrowFootArrowDefinition } from '@retikz/extension';
-import { Draw, Layout } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { crowFootArrowControls, previewControlContract } from './crow-foot-arrow.controls';
+import { renderCrowFootArrowPreview } from './crow-foot-arrow.preview';
 
 export const previewControls = crowFootArrowControls;
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [CrowFootArrowDefinition] }}>
-    <Draw
-      way={[
-        [-120, 0],
-        [120, 0],
-      ]}
-      arrow="->"
-      arrowDetail={{
-        end: {
-          shape: 'crowFoot',
-          length: values.length,
-          width: values.width,
-          lineWidth: values.lineWidth,
-          color: values.color,
-        },
-      }}
-      style={{ stroke: '#64748b', strokeWidth: 2 }}
-    />
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderCrowFootArrowPreview({
+    length: values.length,
+    width: values.width,
+    lineWidth: values.lineWidth,
+    color: values.color,
+  }),
+);
 export const previewSource = controlledPreview.source;
 /** 固定 CrowFoot marker 并调整端点视觉参数 */
 const Demo: FC = controlledPreview.Component;

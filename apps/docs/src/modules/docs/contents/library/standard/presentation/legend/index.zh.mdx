@@ -152,7 +152,8 @@ console.log(svg);
 固定容器分配与 viewBox 后，可以比较内容区域对齐、方向、换行、样本对齐、间距、内边距和溢出策略。`contentAlign` 分别按标题与主体自身的结构宽度，在 Legend 内容框内沿 x 轴对齐；它不是标题内部文字对齐，也不是 Legend 在父容器中的位置。标题输入支持换行，标题对齐只控制多行文字块内各行的位置；单行标题按文字自然宽度参与布局，不会为对齐预留额外空间。`wrap` 只在约束使条目需要额外行或列时改变结构。
 
 <ComponentPreview
-  files="legend-playground"
+  files={['legend-playground', 'legend-playground.preview.tsx']}
+  defaultSourceFile="legend-playground.preview.tsx"
   size="md"
   caption="A–D 的编写顺序与固定容器不变；面板只改变 Legend 的排列和边界策略。"
 />

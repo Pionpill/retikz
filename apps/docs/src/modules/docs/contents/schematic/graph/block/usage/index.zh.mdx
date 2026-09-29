@@ -162,7 +162,8 @@ Block family 提供四个常用的内置组件：
 下面的 playground 只使用内置组件组合最小数据结构。第一个 Section 始终存在；controls 可以为它添加额外 Row，或添加第二个 Section，并分别调整 Block 直接 children、Section 内部 items 与 Row 内容项之间的间距。Row 使用横向 Flex 布局：一个内容项占满可用宽度，两个内容项按 1:1 均分，三个内容项按 1:1:1 均分；每项既可以是字符串，也可以是带局部文字样式的 `IRBlockText` 对象。Row content 默认使用 `sm` 字号；等分所需的 `basis: 0`、`grow: 1`、`shrink: 1` 与 `min: 0` 是 lowering 默认值，不会写回输入 Source IR
 
 <ComponentPreview
-  files="block-builtin"
+  files={['block-builtin', 'block-builtin.preview.tsx']}
+  defaultSourceFile="block-builtin.preview.tsx"
   size="lg"
   caption="添加第二个 Section 或额外 Row，并分别调整 Block、Section 与 Row 的间距。"
 />
@@ -171,7 +172,12 @@ Block family 提供四个常用的内置组件：
 
 `BlockHeader` 的 `icon` 与 `trail` 都接受任意 child，`Block` body 也不限于 Section 或 Row。下面的例子在 Header 两侧放入自定义 Core Node，并在 body 中直接加入一个普通 Node；controls 可以修改这个 Node 的内容、shape、尺寸、变换与外观，所有状态都与内置结构共用同一条编译链路
 
-<ComponentPreview files="block-custom" size="xl" caption="调整自定义 body Node，同时观察 Header slot 保持不变。" />
+<ComponentPreview
+  files={['block-custom', 'block-custom.preview.tsx']}
+  defaultSourceFile="block-custom.preview.tsx"
+  size="xl"
+  caption="调整自定义 body Node，同时观察 Header slot 保持不变。"
+/>
 
 ### 独立区域与连接
 
@@ -189,7 +195,12 @@ Section 与 Row 支持完整的 Core Scope，并可通过显式 `id` 参与 Core
 
 Block 外框复用 Standard Surface。这个 playground 通过 controls 改变 shell 的内边距、背景、边框与圆角，并分别调整 `BlockHeader` title、description 与 `BlockRow.content` 的颜色、字号、字重、字形和透明度
 
-<ComponentPreview files="block-style" size="xl" caption="调整 Block 外框、Header 文字与 Row content 的局部样式。" />
+<ComponentPreview
+  files={['block-style', 'block-style.preview.tsx']}
+  defaultSourceFile="block-style.preview.tsx"
+  size="xl"
+  caption="调整 Block 外框、Header 文字与 Row content 的局部样式。"
+/>
 
 ### 封装代码实体
 

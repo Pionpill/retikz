@@ -125,7 +125,11 @@ By default, the arrow tip stays at the resolved path start / end, and arrows are
 
 One panel combines the `arrow` direction, six Core basic arrows, two optional Extension arrows, color, opacity, and size. Enable “Configure ends separately” to let `start` / `end` override the shared shape and color field by field; disable it to share the top-level values. The panel explicitly injects the Extension Definitions it uses. Omitting `arrowDetail` uses a `stealth` tip that inherits the path color, with length and width both set to 8.
 
-<ComponentPreview files="arrow-appearance" size="lg" />
+<ComponentPreview
+  files={['arrow-appearance', 'arrow-appearance.preview.tsx']}
+  size="lg"
+  defaultSourceFile="arrow-appearance.preview.tsx"
+/>
 
 Core provides six basic arrows by default, including hollow triangle, hollow stealth, and the circle pair. The remaining solid / hollow diamond pair comes from [`@retikz/extension`](/library/extension/arrow); using an Extension name requires injecting its Definition through the current `<Layout extensions={{ arrows }}>` or `CompileOptions.arrows`:
 
@@ -151,9 +155,10 @@ Additional notes:
 The calculation uses the resolved `length × scale`; hollow arrows also account for `lineWidth` and outer-outline compensation. After enlarging, shrinking, or overriding the length, `1` still means that the whole arrow's final visual back is aligned rather than a fixed user-unit offset.
 
 <ComponentPreview
-  files="arrow-endpoint-overlap"
+  files={['arrow-endpoint-overlap', 'arrow-endpoint-overlap.preview.tsx']}
   size="sm"
   caption="Switch among Core built-in arrows and drag the ratio; watch the enlarged stealth barb fully enter the patterned rectangle boundary at 1."
+  defaultSourceFile="arrow-endpoint-overlap.preview.tsx"
 />
 
 The shared top-level `overlap` applies only to endpoints actually created by `arrow`. `start.overlap` / `end.overlap` override it per endpoint, and an explicit `0` is preserved. For example, `arrow="<->" arrowPlacement={{ overlap: 0.5, start: { overlap: 0 } }}` moves only the end halfway inside.

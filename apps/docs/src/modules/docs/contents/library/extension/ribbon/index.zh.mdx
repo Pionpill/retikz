@@ -50,19 +50,31 @@ import { RibbonPathKindDefinition } from '@retikz/extension';
 
 在固定宽度、端点插值、stops 和内置 `bulge` profile 之间切换，同时验证填充、轮廓与阴影：
 
-<ComponentPreview files="ribbon-geometry" size="md" />
+<ComponentPreview
+  files={['ribbon-geometry', 'ribbon-geometry.preview.tsx']}
+  size="md"
+  defaultSourceFile="ribbon-geometry.preview.tsx"
+/>
 
 ### 标签位置
 
 Ribbon 复用 Path host 的标签契约，可沿中心线定位并选择内侧或外侧：
 
-<ComponentPreview files="ribbon-label" size="sm" />
+<ComponentPreview
+  files={['ribbon-label', 'ribbon-label.preview.tsx']}
+  defaultSourceFile="ribbon-label.preview.tsx"
+  size="sm"
+/>
 
 ### 端点与端帽
 
 起点和终点可独立配置宽度、方向与 cap：
 
-<ComponentPreview files="ribbon-endpoints" size="md" />
+<ComponentPreview
+  files={['ribbon-endpoints', 'ribbon-endpoints.preview.tsx']}
+  size="md"
+  defaultSourceFile="ribbon-endpoints.preview.tsx"
+/>
 
 ### 预计算边界
 

@@ -35,7 +35,8 @@ Set `complete` when one batch marker declares the whole category for its current
 The form submission flow starts with user input, passes through a frontend form and backend service, then writes to the database. The frontend form `text` is a Core `TextBlock`: its main text accepts line breaks, while its subtitle is a separately styled text line. The panel also changes alignment, line height, and maximum width for the whole text block; these Entity-level `layout` fields neither apply to individual lines nor change the Flow layout. Optional Entity and Relation `status` values project directly to Graph: Graph Theme owns their appearance, while status does not change layout or routing.
 
 <ComponentPreview
-  files="flow-basic"
+  files={['flow-basic', 'flow-basic.preview.tsx', 'flow-basic.i18n.ts']}
+  defaultSourceFile="flow-basic.preview.tsx"
   size="md"
   caption="Edit the main text and subtitle to observe per-line styling and block-level typography; role changes the semantic shape, while status changes the Graph Theme appearance."
 />
@@ -57,7 +58,8 @@ React nesting is only authoring convenience. The adapter normalizes Groups, Layo
 Set `itemWidth` on a `FlowLayout` when the edges of one step group should align. `"match-largest"` measures the Layout's direct Entities and draws each at the largest natural visible width; a number such as `itemWidth={180}` fixes that width, wrapping long plain text and growing its height. The strategy affects direct Entities only: it does not cross a nested Layout or Group, excludes margin from the comparison, and does not wrap horizontal children onto another row.
 
 <ComponentPreview
-  files="flow-compound"
+  files={['flow-compound', 'flow-compound.preview.tsx', 'flow-compound.i18n.ts']}
+  defaultSourceFile="flow-compound.preview.tsx"
   size="lg"
   caption="Adjust the Group's automatic direction and rank spacing separately from the Layout's fixed direction, gap, and alignment. The camera stays fixed, and only the Group has a shell."
 />
@@ -153,7 +155,8 @@ All three axis-aligned modes share radius inheritance: instance `cornerRadius`, 
 `flowDefaults` supplies one shared default style for each Flow object category at the root. `entity.style` applies to every Entity, while `relation.style` applies to every Relation; neither setting changes Source ids, containment, node layout, or routing. Local `style` can still override a global value when needed, but this example shows global configuration only.
 
 <ComponentPreview
-  files="flow-theme"
+  files={['flow-theme', 'flow-theme.preview.tsx', 'flow-theme.i18n.ts']}
+  defaultSourceFile="flow-theme.preview.tsx"
   size="sm"
   caption="Changing either section updates every object of that category, while the nodes, relations, and their relative positions remain unchanged."
 />

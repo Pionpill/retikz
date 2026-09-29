@@ -30,9 +30,10 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 分类字段使用 ordinal 色阶并生成逐项色块；连续数值使用 sequential 色阶并生成平滑色带；quantize 等离散化 scale 则把连续数值切成区间色块。切换形态后，控件只显示当前图例适用的参数。
 
 <ComponentPreview
-  files={['legend-color-forms', 'legend.data.ts']}
+  files={['legend-color-forms', 'legend-color-forms.preview.tsx', 'legend-color-forms.i18n.ts', 'legend.data.ts']}
   size="lg"
   caption="切换图例形态并调整当前分支参数，观察绑定 scale 如何决定颜色图例结构。"
+  defaultSourceFile="legend-color-forms.preview.tsx"
 />
 
 ### 符号与透明度
@@ -42,9 +43,10 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 `size` 绑定连续字段时会通过平方根 scale 映射半径，图例选取代表值生成渐变符号。`position="bottom"` 可以把图例移到底部。
 
 <ComponentPreview
-  files={['legend-size', 'legend.data.ts']}
+  files={['legend-size', 'legend-size.preview.tsx', 'legend-size.i18n.ts', 'legend.data.ts']}
   size="lg"
   caption="改变位置、排列方向、目标尺寸和适配方式，比较代表符号的布局与实绘大小。"
+  defaultSourceFile="legend-size.preview.tsx"
 />
 
 #### 形状与透明度
@@ -52,9 +54,10 @@ import { PlotLegend, Plot, PointMark } from '@retikz/plot-react';
 `shape` 适合分类字段，`opacity` 适合连续字段。每个 `<PlotLegend>` 只解释一个通道，因此同一张图可以同时放置多个图例。
 
 <ComponentPreview
-  files={['legend-shape-opacity', 'legend.data.ts']}
+  files={['legend-shape-opacity', 'legend-shape-opacity.preview.tsx', 'legend-shape-opacity.i18n.ts', 'legend.data.ts']}
   size="lg"
   caption="分别显隐和移动 shape / opacity 图例，再调整透明度刻度数，观察两个 guide 独立工作。"
+  defaultSourceFile="legend-shape-opacity.preview.tsx"
 />
 
 ## 技术原理

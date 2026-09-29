@@ -96,7 +96,7 @@ The minimal example above establishes the line-level and block-level responsibil
 
 Select “Wrapping a long sentence”, then adjust `maxTextWidth` to compare the line count and node border.
 
-<ComponentPreview files="node-text" size="md" />
+<ComponentPreview files={['node-text', 'node-text.preview.tsx']} size="md" defaultSourceFile="node-text.preview.tsx" />
 
 - `text` accepts a string or a IRLine array; `'\n'` creates hard breaks, while the array form gives each line independent styles
 - `layout.align` controls horizontal alignment within the block and `layout.lineHeight` controls spacing; both are block-level properties
@@ -116,7 +116,11 @@ Select “Wrapping a long sentence”, then adjust `maxTextWidth` to compare the
 
 Three fields: `fill` / `opacity` / `font` — `font` is a nested object so you can override just one sub-field (family / size / weight / style). The first line inherits from Node; the panel controls the second, while unset fields keep inheriting:
 
-<ComponentPreview files="text-attrs" size="md" />
+<ComponentPreview
+  files={['text-attrs', 'text-attrs.preview.tsx', 'text-attrs.i18n.ts']}
+  size="md"
+  defaultSourceFile="text-attrs.preview.tsx"
+/>
 
 ### Mixing with string children
 

@@ -96,7 +96,11 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 `{ label }` annotates the next connection segment without creating a segment itself. The panel supports a line, two fold directions, and a quadratic Bezier: adjust `position`, then `side`, `sloped`, and text color. A fold allocates t evenly across its legs, so 0.5 lands at its corner; a curve samples at its Bezier parameter.
 
-<ComponentPreview files="draw-label" size="lg" />
+<ComponentPreview
+  files={['draw-label', 'draw-label.preview.tsx']}
+  size="lg"
+  defaultSourceFile="draw-label.preview.tsx"
+/>
 
 `position` accepts a number from 0 to 1: 0 is the start and 1 is the end. The keywords `at-start`, `very-near-start`, `near-start`, `midway`, `near-end`, `very-near-end`, and `at-end` map to 0, 0.125, 0.25, 0.5, 0.75, 0.875, and 1. `side` chooses a side of the line; `sloped: true` rotates text with the tangent. To center text on the line, omit `side` and set `sloped: true`. Do not pass `side: 'center'` to the public input.
 
@@ -128,9 +132,16 @@ Whole-path placement uses path length. A Step follows its own action parameter: 
 With the upper-left and lower-right nodes fixed, switch the connection route, `side`, and the label position from 0 to 1 to observe sampling and gaps on the same host Path. “Automatic center” omits `side` and enables only `sloped`, so it still follows the centered-label default gap rule.
 
 <ComponentPreview
-  files={['path-label-route-playground', 'path-label-route-playground.tsx', 'path-label-route-playground.controls.ts']}
+  files={[
+    'path-label-route-playground',
+    'path-label-route-playground.preview.tsx',
+    'path-label-route-playground.i18n.ts',
+    'path-label-route-playground.tsx',
+    'path-label-route-playground.controls.ts',
+  ]}
   size="md"
   caption="Switch the route and label position: automatic center gaps the stroke; the other side values stay continuous by default."
+  defaultSourceFile="path-label-route-playground.preview.tsx"
 />
 
 When `interrupt` is omitted, only that unfilled built-in Stroke + centered combination gets an automatic gap. `interrupt: false` forces a continuous stroke; `interrupt: true` can also gap a non-centered label. The gap extends by `4` user units beyond each side of the label's visual bounds by default; use `gap` to override it, and `gap: 0` for no extra clearance.

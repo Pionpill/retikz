@@ -121,9 +121,10 @@ Relation examples use the default style and support light and dark modes. The co
 - **Built-in predicates:** none; a domain extension can register a cardinality predicate whose params schema validates source and target multiplicities
 
 <ComponentPreview
-  files="relation-association"
+  files={['relation-association', 'relation-association.preview.tsx']}
   size="md"
   caption="Change direction to place diamonds at the source, target, both endpoints, or neither. Endpoint positions stay fixed."
+  defaultSourceFile="relation-association.preview.tsx"
 />
 
 ### dependency: dependency relationships
@@ -134,9 +135,10 @@ Relation examples use the default style and support light and dark modes. The co
 - **Built-in predicates:** none; an extension can declare params such as `{ optional: boolean, reason: string }`, with the predicate definition owning the fields and value ranges
 
 <ComponentPreview
-  files="relation-dependency"
+  files={['relation-dependency', 'relation-dependency.preview.tsx']}
   size="md"
   caption="Dependency always points to the target. Change status or color to inspect the path and open-arrow appearance."
+  defaultSourceFile="relation-dependency.preview.tsx"
 />
 
 ### generalization: type generalization
@@ -147,9 +149,10 @@ Relation examples use the default style and support light and dark modes. The co
 - **Built-in predicates:** none; a type-system extension can use params for a discriminator or constraint, but Graph does not perform type checking
 
 <ComponentPreview
-  files="relation-generalization"
+  files={['relation-generalization', 'relation-generalization.preview.tsx']}
   size="md"
   caption="Generalization points to the supertype with a filled arrow. Change status or color to inspect its appearance."
+  defaultSourceFile="relation-generalization.preview.tsx"
 />
 
 ### flow: movement between objects
@@ -160,9 +163,10 @@ Relation examples use the default style and support light and dark modes. The co
 - **Built-in predicates:** none; a workflow extension can declare condition params such as `{ expression: string, priority: number }`. Graph validates and stores them but does not execute the condition
 
 <ComponentPreview
-  files="relation-flow"
+  files={['relation-flow', 'relation-flow.preview.tsx']}
   size="md"
   caption="Switch flow direction and observe the stealth marker move between endpoints."
+  defaultSourceFile="relation-flow.preview.tsx"
 />
 
 ### influence: influence relationships
@@ -173,9 +177,10 @@ Relation examples use the default style and support light and dark modes. The co
 - **Built-in predicates:** none; an analytical model can declare params such as `{ weight: number, confidence: number }` and select appearance through Theme rules
 
 <ComponentPreview
-  files="relation-influence"
+  files={['relation-influence', 'relation-influence.preview.tsx']}
   size="md"
   caption="Switch influence direction and adjust the Relation color."
+  defaultSourceFile="relation-influence.preview.tsx"
 />
 
 ### Semantic status
@@ -189,9 +194,10 @@ Every Relation role demo exposes a no-status option alongside these four values 
 The combined playground switches among all five built-in roles and directly adjusts the source, target, Relation path, and label styles. The role changes the relationship semantics and marker recipe; explicit style fields override the corresponding Theme defaults
 
 <ComponentPreview
-  files="relation-style"
+  files={['relation-style', 'relation-style.preview.tsx']}
   size="xl"
   caption="Switch roles, then independently adjust source and target colors, path stroke color and width, dash, opacity, label text color, and text opacity."
+  defaultSourceFile="relation-style.preview.tsx"
 />
 
 ## Labels and routes

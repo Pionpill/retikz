@@ -34,9 +34,10 @@ import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 先从同一份数据和同一个 `<PathMark>` 出发。切换 `cartesian2D` / `polar2D` 时，`dimension="x"` 分别解释横向 / 角向位置，`dimension="y"` 分别解释纵向 / 径向位置；`grid` 仍属于生成它的 PlotAxis。
 
 <ComponentPreview
-  files={['axis-coordinate-basics', 'axis-coordinate-basics.data.ts']}
+  files={['axis-coordinate-basics', 'axis-coordinate-basics.preview.tsx', 'axis-coordinate-basics.data.ts']}
   size="lg"
   caption="切换坐标系、轴显隐、网格和目标刻度数，比较 x / y 在两种投影中的职责。"
+  defaultSourceFile="axis-coordinate-basics.preview.tsx"
 />
 
 ### 笛卡尔坐标轴试验场
@@ -46,9 +47,10 @@ import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 切到原点场景时，两条轴通过 `placement.kind="origin"` 穿过另一维的 0。这个摆放不会扩展 domain；`crossing` 控制交点标签，`line.arrow` 与 `ticks.endpoint` 分别控制端点箭头和附近刻度避让。
 
 <ComponentPreview
-  files={['axis-cartesian-playground', 'axis-cartesian-playground.data.ts']}
+  files={['axis-cartesian-playground', 'axis-cartesian-playground.preview.tsx', 'axis-cartesian-playground.data.ts']}
   size="lg"
   caption="切换连续边缘、连续原点和分类标签场景，只调整当前场景有效的 PlotAxis 配置。"
+  defaultSourceFile="axis-cartesian-playground.preview.tsx"
 />
 
 ## 技术原理

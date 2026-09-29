@@ -47,9 +47,10 @@ React DSL 里字符串通常表示字段名：
 在面板中切换 `x` / `y` 字段，并把颜色、大小或形状从字段驱动改成固定值。图形结构保持不变，因此每次操作只展示当前通道绑定带来的差异。
 
 <ComponentPreview
-  files={['channel-binding', 'channel-binding.data.ts']}
+  files={['channel-binding', 'channel-binding.preview.tsx', 'channel-binding.data.ts']}
   size="lg"
   caption="位置通道改变数据在坐标系中的落点；样式通道可以读取字段，也可以使用固定值。"
+  defaultSourceFile="channel-binding.preview.tsx"
 />
 
 同一行数据可以同时绑定到多个通道：`gdp` 与 `life` 决定位置，`region` 决定颜色和形状，`population` 决定点半径，`abbr` 决定文字标注。切成固定值后，数据行不再参与对应样式的计算。

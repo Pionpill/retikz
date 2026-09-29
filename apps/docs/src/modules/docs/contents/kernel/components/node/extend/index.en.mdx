@@ -130,7 +130,11 @@ const view = mount(document.getElementById('diagram')!, ir);
 | Referent offset      | `{ of, offset }`                | Add a two-dimensional offset to a reference     |
 | Between two points   | `{ between: [a, b], fraction }` | Take a proportional position between two points |
 
-<ComponentPreview files="node-position" size="lg" />
+<ComponentPreview
+  files={['node-position', 'node-position.preview.tsx']}
+  size="lg"
+  defaultSourceFile="node-position.preview.tsx"
+/>
 
 Referenced objects must have completed layout and registration (usually earlier siblings). Directional placement inherits its default distance from `<Layout nodeDistance>`, while `fraction: 0.5` is the midpoint for `between`. See the full input union in the [API reference](/kernel/components/node/api-reference), or use [Coordinate](/kernel/components/node/coordinate) for invisible helper points.
 
@@ -139,9 +143,10 @@ Referenced objects must have completed layout and registration (usually earlier 
 Node also supports a sixth form that depends on its real measured size: anchor-to-anchor placement. Use the panel to switch both standard anchors and adjust offset, target margin, both rotations, and the current Node's scale; asymmetric padding and all of those geometry inputs are laid out first.
 
 <ComponentPreview
-  files="node-anchor-position"
+  files={['node-anchor-position', 'node-anchor-position.preview.tsx']}
   size="md"
   caption="The light-gray marker shows target.anchor + offset; it always coincides with q's selfAnchor."
+  defaultSourceFile="node-anchor-position.preview.tsx"
 />
 
 For example, align the left side of `q` to the right side of `a`, with a 16-unit gap. `target.id` refers to the earlier node; `offset` adds a displacement to its anchor.
@@ -164,7 +169,11 @@ Both `target.anchor` and `selfAnchor` default to `center`. The target must be an
 
 A node's visual contour and connection endpoints have three independent controls: `shape` selects what is drawn, `boundary` selects the surface used for automatic clipping, and an endpoint `anchor` selects a named attachment point. Change A and B independently to see how the same edge resolves at both ends.
 
-<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size="md" />
+<ComponentPreview
+  files={['node-shape-connection', 'node-shape-connection.preview.tsx', 'node-shape-connection-boundary.ts']}
+  size="md"
+  defaultSourceFile="node-shape-connection.preview.tsx"
+/>
 
 With no `anchor`, the edge clips automatically toward the opposite endpoint. Standard named anchors such as `top` and `right` resolve against `boundary`; `center` connects directly to the node center. Shape-specific anchors still belong to the visual `shape`; see each shape page for their names.
 

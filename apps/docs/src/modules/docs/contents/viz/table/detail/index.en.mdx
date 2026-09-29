@@ -64,9 +64,15 @@ The example gives body and header Cells separate string content masters, then de
 With data and column order held constant, tracks determine each Cell box and Cell policy determines how content enters that box. Use the Tracks, Note Cells, and Border Graph sections to observe note-column width, text placement, clipping, and the blue shared edge.
 
 <ComponentPreview
-  files={['table-layout-playground', 'table-layout-playground.en.data.ts']}
+  files={[
+    'table-layout-playground',
+    'table-layout-playground.preview.tsx',
+    'table-layout-playground.i18n.ts',
+    'table-layout-playground.en.data.ts',
+  ]}
   size="md"
   caption="Switch between Content first and Fixed compact, then adjust one field at a time. Reset restores the canonical fixed-width, wrapped, clipped, collapse-border state."
+  defaultSourceFile="table-layout-playground.preview.tsx"
 />
 
 `auto` reads intrinsic size, `fixed` uses an explicit size, and `minmax` absorbs content contributions between bounds. `fraction` distributes remaining width only when the parent compile provides an x-axis `exact` proposal or a `range` proposal with a finite `max`. Standalone `DetailTable` `width` / `height` controls output size, not layout proposals.

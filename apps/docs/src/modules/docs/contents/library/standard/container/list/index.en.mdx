@@ -154,9 +154,10 @@ The overall `style` supplies shared appearance; each cell can override individua
 Font fields merge individually. `fillOpacity` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
 
 <ComponentPreview
-  files="list-styles"
+  files={['list-styles', 'list-styles.preview.tsx']}
   size="lg"
   caption="Switch between fixed, shared maximum, and per-cell content widths to compare A, B1, and C. Adjust padding to see how content sizing adds space. Cell B1 overrides color only, not dimensions. The demo starts with fixed dimensions, borders, and backgrounds."
+  defaultSourceFile="list-styles.preview.tsx"
 />
 
 `layout.width` / `height` set cell border-box dimensions, including padding; zero is valid. Omit width or use `'auto'` to give auto-sized cells the largest effective width in the List. Use `'content'` to size each cell to its own natural content width plus padding. Omitted or `'auto'` height still uses the largest cell height. Cell-level values take precedence, so a List using `'content'` can give one cell a fixed width or `'auto'`. `layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
@@ -176,9 +177,10 @@ The index strip is measured from its actual text and separated from cells by `la
 `label` adds text to the whole container. It accepts one object or an array, with position, distance, rotation, and pin options. Labels do not enlarge the layout allocation but do contribute to the final drawing bounds, including on empty containers.
 
 <ComponentPreview
-  files="list-labels"
+  files={['list-labels', 'list-labels.preview.tsx']}
   size="md"
   caption="Keep the list fixed while changing label placement, rotation, and its pin. The pin is enabled for demonstration."
+  defaultSourceFile="list-labels.preview.tsx"
 />
 
 Overall font, text color, and `defaults.label` supply label defaults, overridden by the label itself. Cell styles do not affect container labels, and nested containers created by `data` do not inherit the root label.
@@ -217,7 +219,7 @@ List
 
 `data` accepts a JSON array. Arrays become nested Lists, and nonempty objects become nested Maps by default. Set `dataObjectDisplay="text"` to display object values as compact JSON text instead: `{ "ready": false }` appears as `{"ready":false}`. This option propagates into nested arrays and applies only to `data`, not `items` or JSX composition. The example uses text mode and `layout.width: 'content'` to size both outer and automatically generated nested Lists by each cell's content.
 
-<ComponentPreview files="list-data" size="xs" />
+<ComponentPreview files={['list-data', 'list-data.preview.tsx']} size="xs" defaultSourceFile="list-data.preview.tsx" />
 
 | Data type       | Input example   | Display                                                        |
 | --------------- | --------------- | -------------------------------------------------------------- |

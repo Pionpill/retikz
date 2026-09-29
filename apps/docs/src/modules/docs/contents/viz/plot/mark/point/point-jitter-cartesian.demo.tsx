@@ -1,26 +1,13 @@
-import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { cartesianJitterOperationOf, previewControlContract } from './point-jitter-cartesian.controls';
-import { jitterPoints } from './point-jitter.data';
+import { previewControlContract } from './point-jitter-cartesian.controls';
+import { PointJitterCartesianPreview } from './point-jitter-cartesian.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={jitterPoints} width={400} height={280}>
-    <PointMark
-      x="group"
-      y="value"
-      size={6}
-      color={{ kind: 'constant', value: '#2563eb' }}
-      placement={{ adjustments: [cartesianJitterOperationOf(values)] }}
-    />
-    <PlotScale dimension="x" type="point" />
-    <PlotScale dimension="y" type="linear" domainPadding={{ upper: 6 }} />
-    <PlotAxis dimension="x" />
-    <PlotAxis dimension="y" grid />
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  PointJitterCartesianPreview(values),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

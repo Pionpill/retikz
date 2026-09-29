@@ -42,10 +42,11 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 `x` / `y` 决定每行数据的锚点，PointMark 再在每个锚点生成一个默认圆点。可以继续把分类字段映射为颜色，或把数值字段映射为尺寸，从普通散点切换成气泡。
 
 <ComponentPreview
-  files={['point-position', 'point-api.data.ts']}
+  files={['point-position', 'point-position.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-position' }}
   size="lg"
   caption="切换位置、颜色与尺寸编码，对比普通散点、分类散点和气泡。"
+  defaultSourceFile="point-position.preview.tsx"
 />
 
 ### 位置散布
@@ -61,10 +62,11 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 这里的 jitter 是 placement 阶段的位置调整：它不改写数据行或字段值。Data transform 中的 `jitter` 会在比例尺之前派生字段，两者用途不同，不能互换。
 
 <ComponentPreview
-  files={['point-jitter-cartesian', 'point-jitter.data.ts']}
+  files={['point-jitter-cartesian', 'point-jitter-cartesian.preview.tsx', 'point-jitter.data.ts']}
   controls={{ name: 'point-jitter-cartesian' }}
   size="lg"
   caption="切换宽度单位并调整 span 与 seed；每个分类中心保持不变。"
+  defaultSourceFile="point-jitter-cartesian.preview.tsx"
 />
 
 #### 极坐标
@@ -72,10 +74,11 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 极坐标中的 x role 是角度。离散角度使用刻度间距比例：默认 `chord` 模式让抖动点沿相邻多边形顶点之间的直线边移动；连续角度使用数值输出单位并沿圆弧移动。两种模式都先合成角度，再按每条数据的 y 半径投影，所以外圈的屏幕位移更长，而不是统一的 `dx` / `dy`。示例通过径向 `domainPadding` 为散布空间和 Point 半径预留外侧距离。
 
 <ComponentPreview
-  files={['point-jitter-polar', 'point-jitter.data.ts']}
+  files={['point-jitter-polar', 'point-jitter-polar.preview.tsx', 'point-jitter.data.ts']}
   controls={{ name: 'point-jitter-polar' }}
   size="lg"
   caption="切换离散分类与连续数值角度，再调整散布宽度与随机种子，观察多边形和圆形网格中的角度散布。"
+  defaultSourceFile="point-jitter-polar.preview.tsx"
 />
 
 ### 样式变换
@@ -83,10 +86,11 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 `fill` / `stroke` / `opacity` 等 Node 样式只改变散点的视觉外观，不改变上一例建立的投影位置。这里可以直接比较渐变、透明度、虚线描边与阴影。
 
 <ComponentPreview
-  files={['point-style', 'point-api.data.ts']}
+  files={['point-style', 'point-style.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-style' }}
   size="lg"
   caption="保持 x / y 不变，组合调整颜色填充、透明度、描边、尺寸和阴影。"
+  defaultSourceFile="point-style.preview.tsx"
 />
 
 ### 文本标签
@@ -94,10 +98,11 @@ PointMark 是底层点 mark：它只负责把每行数据投影成一个坐标�
 PointMark 有两种文字用法：`label` 保留散点图形，再把文字挂到对应的 `Node.label`；`text` 则把散点本身替换成无边框文本 Node，因此散点也可以只有文字内容。
 
 <ComponentPreview
-  files={['point-text', 'point-api.data.ts']}
+  files={['point-text', 'point-text.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-text' }}
   size="lg"
   caption="切换“点标签”和“文本点”，再调整颜色、字号和字重观察两种文字形态。"
+  defaultSourceFile="point-text.preview.tsx"
 />
 
 ### 节点形态
@@ -105,10 +110,11 @@ PointMark 有两种文字用法：`label` 保留散点图形，再把文字挂�
 PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape` 既可以是圆、矩形、菱形等简单形状名，也可以是带 `params` 的星形、多边形或已注册的自定义形状引用；参数化形状还能继续调整角数或边数。
 
 <ComponentPreview
-  files={['point-node-shape', 'point-api.data.ts']}
+  files={['point-node-shape', 'point-node-shape.preview.tsx', 'point-api.data.ts']}
   controls={{ name: 'point-node-shape' }}
   size="lg"
   caption="保持数据和位置不变，切换形状并调整尺寸、旋转、星形角数或多边形边数。"
+  defaultSourceFile="point-node-shape.preview.tsx"
 />
 
 ## 技术原理

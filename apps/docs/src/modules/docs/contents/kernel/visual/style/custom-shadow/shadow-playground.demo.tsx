@@ -1,35 +1,21 @@
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, shadowPlaygroundControls } from './shadow-playground.controls';
+import { ShadowPlaygroundPreview } from './shadow-playground.preview';
 
 export const previewControls = shadowPlaygroundControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout viewBox={{ x: -140, y: -115, width: 280, height: 230 }}>
-      <Node
-        position={[0, 0]}
-        shape="rectangle"
-        style={{
-          fill: 'white',
-          shadow: {
-            offsetX: values.offsetX,
-            offsetY: values.offsetY,
-            blur: values.blur,
-            color: values.color,
-            opacity: values.opacity,
-          },
-        }}
-        layout={{ padding: { x: 34, y: 22 } }}
-      >
-        shadow
-      </Node>
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  ShadowPlaygroundPreview({
+    offsetX: values.offsetX,
+    offsetY: values.offsetY,
+    blur: values.blur,
+    color: values.color,
+    opacity: values.opacity,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

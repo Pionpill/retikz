@@ -122,9 +122,10 @@ A Frame may enclose only its body or combine a Title and Description. By default
 With body positions fixed, use the panel to explore header direction, border padding, and Node-like header styles. You can also edit A / B and toggle the real connection between them. Changing title size, padding, or description opacity makes Frame recompute the boundary from final Node bounds.
 
 <ComponentPreview
-  files="frame-playground"
+  files={['frame-playground', 'frame-playground.preview.tsx']}
   size="md"
   caption="A and B remain direct Frame Nodes. The gray connection is a sibling Draw outside Frame and can be toggled independently."
+  defaultSourceFile="frame-playground.preview.tsx"
 />
 
 Title and description use Node style, layout, and text semantics, while Frame controls their positions. border.style affects only the border; root style, defaults, clip, transforms, and placement affect the whole Scope. The title defaults to sm/600 text; the description to xs text with 0.7 opacity. Both default to no fill, no stroke, and zero Node padding; explicit values override these defaults.

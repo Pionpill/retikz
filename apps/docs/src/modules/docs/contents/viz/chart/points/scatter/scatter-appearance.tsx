@@ -1,27 +1,21 @@
-import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './scatter-appearance.controls';
-import { fertilityWorkData } from './scatter-fertility-work.data';
+import { renderScatterAppearancePreview } from './scatter-appearance.preview';
 
 const contract = createPreviewControlContract();
-const controlledPreview = defineControlledPreview(contract, (values, dimensions) => (
-  <ScatterChart
-    coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
-    rows={fertilityWorkData}
-    layout={dimensions}
-  >
-    <ScatterEncodings x="fertilityRate" y="femaleLaborParticipation" color="incomeGroup" shape="incomeGroup" />
-    <ScatterProperties
-      size={values.size}
-      opacity={values.opacity}
-      stroke={values.stroke}
-      strokeWidth={values.strokeWidth}
-    />
-  </ScatterChart>
-));
+const controlledPreview = defineControlledPreview(contract, (values, dimensions) =>
+  renderScatterAppearancePreview({
+    layout: dimensions,
+    coordinateSystem: values.coordinateSystem === 'polar2D' ? 'polar2D' : 'cartesian2D',
+    size: values.size,
+    opacity: values.opacity,
+    stroke: values.stroke,
+    strokeWidth: values.strokeWidth,
+  }),
+);
 
 /** 固定字段映射后的外观演示 */
 const ScatterAppearance: FC = controlledPreview.Component;

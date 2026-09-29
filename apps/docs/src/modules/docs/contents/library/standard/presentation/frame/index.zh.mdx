@@ -122,9 +122,10 @@ Frame 可以只围合内容区，也可以组合 Title 与 Description。两者�
 固定内容区位置后，可集中探索标题区方向、边框内边距和类 Node 标题样式，也可以编辑 A / B 内容并开关它们之间的真实连接。改变标题字号、内边距或说明透明度时，Frame 会重新按最终 Node 边界围合内容。
 
 <ComponentPreview
-  files="frame-playground"
+  files={['frame-playground', 'frame-playground.preview.tsx']}
   size="md"
   caption="A / B 始终是 Frame 的直接 Node；灰色连接线是 Frame 外部的 sibling Draw，可独立开关。"
+  defaultSourceFile="frame-playground.preview.tsx"
 />
 
 标题与说明沿用 Node 的 `style`、`layout` 和文字语义，但位置由 Frame 排布。`border.style` 只控制边框；根级 `style`、`defaults`、`clip`、`transforms` 与 `placement` 作用于整个 Scope。标题默认字体为 sm/600，说明为 xs 且透明度 0.7；两者默认无填充、无描边、Node padding 为 0，显式值可以覆盖。

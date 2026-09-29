@@ -61,7 +61,11 @@ const svg = renderToSvgString(input, {
 
 `diamond` 与 `openDiamond` 默认使用 `11 × 6` 的整数尺寸，名义面积为 66，分别提供实心与空心端点。轮廓会占满基准高度；实心版本使用 arrow fill，空心版本只使用描边。
 
-<ComponentPreview files="diamond-arrows" size="sm" />
+<ComponentPreview
+  files={['diamond-arrows', 'diamond-arrows.preview.tsx']}
+  size="sm"
+  defaultSourceFile="diamond-arrows.preview.tsx"
+/>
 
 ### 风筝形箭头
 
@@ -83,7 +87,7 @@ const svg = renderToSvgString(input, {
 
 `bar` 默认使用 Core 的 `8 × 8` fallback，在 authored endpoint 处绘制一条垂直于路径切线的开放线段。它继承路径描边，但名称本身不规定“禁止”“抑制”等领域含义；消费方可以按自己的语义使用。
 
-<ComponentPreview files="bar-arrow" size="sm" />
+<ComponentPreview files={['bar-arrow', 'bar-arrow.preview.tsx']} size="sm" defaultSourceFile="bar-arrow.preview.tsx" />
 
 路径本体会越过 marker 接触边半个自身描边宽度，再由 marker 覆盖接头，因此不会留下抗锯齿缝或穿出阻断线。`length` 控制 marker 沿路径方向的尺寸，`width` 控制竖线跨度，`lineWidth` 控制 marker 自身描边。
 
@@ -91,7 +95,11 @@ const svg = renderToSvgString(input, {
 
 `crowFoot` 默认使用 Core 的 `8 × 8` fallback，从路径接触点显式绘制三条开放射线。它可以被关系图用于多重性，也可以承载其它分叉语义；Extension 只定义通用几何，不绑定 cardinality。
 
-<ComponentPreview files="crow-foot-arrow" size="sm" />
+<ComponentPreview
+  files={['crow-foot-arrow', 'crow-foot-arrow.preview.tsx']}
+  size="sm"
+  defaultSourceFile="crow-foot-arrow.preview.tsx"
+/>
 
 三条射线都属于 marker，主路径会收缩到汇合处。`length`、`width`、`lineWidth`、`color` 与 `opacity` 继续使用 Core 的 `arrowDetail` 契约，start、end、反向路径和双端 marker 共享同一放置算法。
 

@@ -94,7 +94,12 @@ import { Polygon } from '@retikz/standard-react/shape';
 
 The playground shows both the circumcircle and the first-vertex direction. Adjust `sides`, radius, and `rotate` to see every vertex remain evenly distributed on the reference circle.
 
-<ComponentPreview files="polygon-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['polygon-playground', 'polygon-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="polygon-playground.preview.tsx"
+/>
 
 ## Errors and limitations
 

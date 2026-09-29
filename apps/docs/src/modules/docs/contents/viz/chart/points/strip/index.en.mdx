@@ -14,9 +14,10 @@ After [installation and first rendering](/viz/chart/get-start), choose one of th
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-minimal', 'strip-palmer-penguins.data.ts']}
+  files={['strip-minimal', 'strip-minimal.preview.tsx', 'strip-palmer-penguins.data.ts']}
   hideCode
   size="xl"
+  defaultSourceFile="strip-minimal.preview.tsx"
 />
 
 <DocTabs defaultValue="react-jsx">
@@ -192,11 +193,12 @@ Switch the discrete axis to exchange the category and yield directions. Point ma
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-encodings', 'strip-vega-barley.data.ts']}
+  files={['strip-encodings', 'strip-encodings.preview.tsx', 'strip-vega-barley.data.ts']}
   hideCode
   controls={{ name: 'strip-encodings' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="strip-encodings.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: StripEncodings](#stripencodings).
@@ -255,11 +257,12 @@ Keep seed fixed when comparing distributions. Wider jitter does not mean higher 
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-basic', 'strip-vega-barley.data.ts']}
+  files={['strip-basic', 'strip-basic.preview.tsx', 'strip-vega-barley.data.ts']}
   hideCode
   controls={{ name: 'strip-basic' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="strip-basic.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: StripProperties](#stripproperties).
@@ -329,11 +332,12 @@ The mark inherits coordinate roles and cannot introduce a local scale. Changing 
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-marks', 'strip-vega-barley.data.ts']}
+  files={['strip-marks', 'strip-marks.preview.tsx', 'strip-vega-barley.data.ts']}
   hideCode
   size="xl"
   controls={{ name: 'strip-marks' }}
   caption="Adjust mark shape and radius to inspect point positions under normal jitter."
+  defaultSourceFile="strip-marks.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: StripMark](#stripmark).
@@ -359,9 +363,10 @@ Compare inner and outer points with the same angular offset: arc length equals r
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-distribution', 'strip-vega-barley.data.ts']}
+  files={['strip-distribution', 'strip-distribution.preview.tsx', 'strip-vega-barley.data.ts']}
   size="xxl"
   controls={{ name: 'strip-distribution' }}
+  defaultSourceFile="strip-distribution.preview.tsx"
 />
 
 ## Errors and limitations
@@ -404,10 +409,11 @@ Strip inspects the resolved scales to identify one discrete category axis and on
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-placement-figure', 'strip-placement-figure.data.ts']}
+  files={['strip-placement-figure', 'strip-placement-figure.preview.tsx', 'strip-placement-figure.data.ts']}
   hideCode
   type="illustration"
   size="xxl"
+  defaultSourceFile="strip-placement-figure.preview.tsx"
 />
 
 After jitter, points still lie at values 1, 2 and 3; only category-direction positions change.

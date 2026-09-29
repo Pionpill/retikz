@@ -1,12 +1,11 @@
 import type { IRNodeLabel } from '@retikz/core';
-import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
 import { GroupLabelControlId, groupLabelControls, createPreviewControlContract } from './group-label.controls';
-import { groupLabelI18n } from './group-label.i18n';
+import { GroupLabelPreview } from './group-label.preview';
 
 export const previewControls = groupLabelControls;
 
@@ -28,29 +27,10 @@ const createPreview = (lang: Lang) =>
     const primaryPosition = positionOf(values[GroupLabelControlId.PrimaryPosition]) ?? 'top-left';
     const secondaryPosition = positionOf(values[GroupLabelControlId.SecondaryPosition]) ?? 'bottom-right';
     const defaultPositionValue = values[GroupLabelControlId.DefaultPosition];
-    const defaultLabelPosition =
-      defaultPositionValue === 'default' ? {} : { position: positionOf(defaultPositionValue) ?? 'bottom-left' };
+    const defaultPosition =
+      defaultPositionValue === 'default' ? undefined : (positionOf(defaultPositionValue) ?? 'bottom-left');
 
-    return (
-      <Graph viewBox={{ x: -52, y: -63, width: 360, height: 190 }}>
-        <Group
-          id="boundary"
-          labels={[
-            { text: groupLabelI18n[lang].primary, position: primaryPosition },
-            { text: groupLabelI18n[lang].secondary, position: secondaryPosition },
-            { text: groupLabelI18n[lang].defaultLabel, ...defaultLabelPosition },
-          ]}
-        >
-          <Entity id="input" role="resource" position={[90, 105]} style={{ textColor: 'currentColor' }}>
-            {groupLabelI18n[lang].input}
-          </Entity>
-          <Entity id="output" role="resource" position={[270, 105]} style={{ textColor: 'currentColor' }}>
-            {groupLabelI18n[lang].output}
-          </Entity>
-          <Relation role="flow" source={{ id: 'input' }} target={{ id: 'output' }} />
-        </Group>
-      </Graph>
-    );
+    return GroupLabelPreview({ primaryPosition, secondaryPosition, defaultPosition }, lang);
   });
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };

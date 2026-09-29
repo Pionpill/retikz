@@ -98,7 +98,12 @@ import { Rectangle } from '@retikz/standard-react/shape';
 
 Use the playground to vary width, height, and corner radius continuously. The gray dimension lines stay attached to the current boundary, making it clear when rounding starts to dominate the short side.
 
-<ComponentPreview files="rectangle-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['rectangle-playground', 'rectangle-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="rectangle-playground.preview.tsx"
+/>
 
 ## Errors and limitations
 

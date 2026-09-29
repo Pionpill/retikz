@@ -43,9 +43,15 @@ scaleBinding: {
 下面的「桥」坐标系把 x 轴拱成抛物线，y 仍竖直。拖动拱高可以直接观察 operation 参数怎样改变投影；definition 使用闭合 schema，数据与宿主注入可以从源码切换器中查看：
 
 <ComponentPreview
-  files={['coordinate-custom-bridge', 'coordinate-custom-bridge.definition.ts', 'coordinate-custom-bridge.data.ts']}
+  files={[
+    'coordinate-custom-bridge',
+    'coordinate-custom-bridge.preview.tsx',
+    'coordinate-custom-bridge.definition.ts',
+    'coordinate-custom-bridge.data.ts',
+  ]}
   size="lg"
   caption="拱高为 0 时退化为直角坐标投影；增大拱高会增加随 x 位置变化的竖直偏移，x 屏幕坐标与 y 比例尺保持不变。"
+  defaultSourceFile="coordinate-custom-bridge.preview.tsx"
 />
 
 ## 注入宿主

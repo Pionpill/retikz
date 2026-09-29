@@ -1,29 +1,25 @@
-import { Entity, Graph } from '@retikz/graph-react';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
 import { createPreviewControlContract, previewControlContract } from './entity-style-size.controls';
-import { entityStyleSizeI18n } from './entity-style-size.i18n';
+import { EntityStyleSizePreview } from './entity-style-size.preview';
 
 const createPreview = (lang: Lang) =>
-  defineControlledPreview(createPreviewControlContract(lang), values => (
-    <Graph viewBox={{ x: 0, y: 0, width: 440, height: 200 }}>
-      <Entity
-        role="activity"
-        position={[220, 100]}
-        style={{ color: values.color, fill: values.fill, strokeWidth: values.strokeWidth }}
-        layout={{
-          maxTextWidth: values.maxTextWidth,
-          lineHeight: values.lineHeight,
-          minimumSize: { width: values.minimumWidth },
-        }}
-      >
-        {entityStyleSizeI18n[lang].text}
-      </Entity>
-    </Graph>
-  ));
+  defineControlledPreview(createPreviewControlContract(lang), values =>
+    EntityStyleSizePreview(
+      {
+        color: values.color,
+        fill: values.fill,
+        strokeWidth: values.strokeWidth,
+        maxTextWidth: values.maxTextWidth,
+        lineHeight: values.lineHeight,
+        minimumWidth: values.minimumWidth,
+      },
+      lang,
+    ),
+  );
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
 export const previewControls = previewControlContract.controls;

@@ -38,9 +38,10 @@ Imagine a shape with its own orientation inside a larger canvas. The canvas has 
 In the diagram, the dashed lines are the fixed world axes, while the orange shape and orange axes belong to the same local coordinate system. Adjust the shape center, rotation, and local point in the control panel to see the same local point produce different world coordinates.
 
 <ComponentPreview
-  files="coordinate-spaces"
+  files={['coordinate-spaces', 'coordinate-spaces.preview.tsx']}
   size="lg"
   caption="Adjust the shape center, rotation, and local point to see the world point move"
+  defaultSourceFile="coordinate-spaces.preview.tsx"
 />
 
 The demo control accepts degrees (°) and converts them with `degrees * Math.PI / 180` before calling the API. The API `rotate` value always uses radians.

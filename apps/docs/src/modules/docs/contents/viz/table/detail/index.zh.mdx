@@ -64,9 +64,15 @@ Table 会先解析每个 Cell 的最终计划：host `theme.mode` 建立 Table o
 固定数据和列顺序后，轨道决定 Cell box，Cell 策略再决定内容如何进入 box。操作面板中的“轨道”“备注 Cell”和“Border Graph”，观察备注列宽、文字位置、裁剪范围与蓝色共享边如何变化。
 
 <ComponentPreview
-  files={['table-layout-playground', 'table-layout-playground.zh.data.ts']}
+  files={[
+    'table-layout-playground',
+    'table-layout-playground.preview.tsx',
+    'table-layout-playground.i18n.ts',
+    'table-layout-playground.zh.data.ts',
+  ]}
   size="md"
   caption="先切换“内容优先 / 固定紧凑”场景，再调整单个字段；点击“重置”会回到固定列宽、换行、裁剪和合并共享边的标准状态。"
+  defaultSourceFile="table-layout-playground.preview.tsx"
 />
 
 `auto` 读取内容自然尺寸，`fixed` 使用明确尺寸，`minmax` 在上下界之间吸收内容贡献。`fraction` 只有在父级 compile 给出 x 轴 `exact` proposal 或带有限 `max` 的 `range` proposal 时才分配剩余宽度；standalone `DetailTable` 的 `width` / `height` 只控制输出尺寸，不是布局 proposal。
