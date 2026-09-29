@@ -121,9 +121,10 @@ Explicit values use `{ kind: 'values', values: [-40, -20, 20, 40] }`. Values mus
 The panel covers the origin, each axis's extent and grid, baselines, arrows, ticks, tick labels, axis labels, and the origin label. x/y grid and tick offsets can be adjusted independently while the preview viewport stays fixed.
 
 <ComponentPreview
-  files="axes-playground"
+  files={['axes-playground', 'axes-playground.preview.tsx']}
   size="md"
   caption="Adjust x/y extents, grids, tick distribution, and tick sides independently to see one Axes IR lower to Core primitives."
+  defaultSourceFile="axes-playground.preview.tsx"
 />
 
 ## Errors and limitations
@@ -169,7 +170,7 @@ A hand-written `IRAxes` without its definition is not interpreted silently. Core
 
 ## Schema reference
 
-### AxesSchema
+#### AxesSchema
 
 <ZodSchema name="AxesSchema" />
 

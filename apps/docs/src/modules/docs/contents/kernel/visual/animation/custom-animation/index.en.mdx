@@ -17,7 +17,12 @@ Import AnimationPropertyDefinition from `@retikz/render/animation` and provide i
 
 The blur channel interpolates a radius and updates the Canvas context before the current primitive is drawn.
 
-<ComponentPreview files="custom-property" size="md" controls={{ animation: true }} />
+<ComponentPreview
+  files={['custom-property', 'custom-property.preview.tsx', 'custom-property.data.ts']}
+  defaultSourceFile="custom-property.preview.tsx"
+  size="md"
+  controls={{ animation: true }}
+/>
 
 ## Support boundary
 

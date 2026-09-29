@@ -50,10 +50,11 @@ Under Cartesian coordinates, `direction="horizontal"` swaps the category and val
 The same playground also exposes gap, corner radius, opacity, stroke, labels, and shadow. These controls decorate the resulting core `Node` without changing the interval source.
 
 <ComponentPreview
-  files={['bar-position', 'bar-basic.data.ts']}
+  files={['bar-position', 'bar-position.preview.tsx', 'bar-basic.data.ts']}
   controls={{ name: 'bar-basic' }}
   size="lg"
   caption="Switch coordinates to project the same x / y intervals as rectangular or radial bars."
+  defaultSourceFile="bar-position.preview.tsx"
 />
 
 ### Series Arrangement
@@ -63,10 +64,11 @@ The same playground also exposes gap, corner radius, opacity, stroke, labels, an
 Switching coordinates changes only the projection direction; dodge, stack, and normalized-stack relationships stay intact. `stackOffset` appears only for a regular stack and offers zero, normalized, diverging, centered, and overlapping baselines.
 
 <ComponentPreview
-  files={['bar-series', 'bar-grouped.data.ts']}
+  files={['bar-series', 'bar-series.preview.tsx', 'bar-grouped.data.ts']}
   controls={{ name: 'bar-grouped' }}
   size="lg"
   caption="Compare the same series arrangement as rectangular and radial bars."
+  defaultSourceFile="bar-series.preview.tsx"
 />
 
 ### Continuous Intervals
@@ -76,9 +78,15 @@ Switching coordinates changes only the projection direction; dodge, stack, and n
 Under polar coordinates, the continuous x interval becomes a continuous angular interval while y remains the radial length. Switch the interval source in the controls; bin count appears only for the histogram branch, and horizontal / vertical padding still applies to the corresponding continuous scales.
 
 <ComponentPreview
-  files={['interval-histogram', 'interval-histogram.data.ts', 'bar-variable-width.data.ts']}
+  files={[
+    'interval-histogram',
+    'interval-histogram.preview.tsx',
+    'interval-histogram.data.ts',
+    'bar-variable-width.data.ts',
+  ]}
   size="lg"
   caption="Compare extent and proportional modes, then switch coordinates to map continuous intervals onto the angular role."
+  defaultSourceFile="interval-histogram.preview.tsx"
 />
 
 ### 2D Cells
@@ -88,9 +96,10 @@ Under polar coordinates, the continuous x interval becomes a continuous angular 
 The same two-dimensional intervals form a rectangular grid under Cartesian coordinates and annular cells under polar coordinates. Disabling color mapping changes only the fill, not the cell boundaries.
 
 <ComponentPreview
-  files={['rect-bounds', 'rect-heatmap.data.ts']}
+  files={['rect-bounds', 'rect-bounds.preview.tsx', 'rect-heatmap.data.ts']}
   size="lg"
   caption="Switch coordinates to project band × band cells as a rectangular or annular grid."
+  defaultSourceFile="rect-bounds.preview.tsx"
 />
 
 ### Pie and Donut
@@ -100,9 +109,10 @@ The same two-dimensional intervals form a rectangular grid under Cartesian coord
 This shortcut is valid only in polar coordinates, so it does not expose an invalid coordinate switch. `padAngle` creates a real angular gap, while `pull` offsets a sector along its midline. The Pie, Donut, and Exploded presets below share one scene.
 
 <ComponentPreview
-  files={['interval-sector', 'interval-sector.data.ts']}
+  files={['interval-sector', 'interval-sector.preview.tsx', 'interval-sector.data.ts']}
   size="lg"
   caption="angle stays in polar coordinates; adjust inner radius to move between pie and donut forms."
+  defaultSourceFile="interval-sector.preview.tsx"
 />
 
 ## How it works

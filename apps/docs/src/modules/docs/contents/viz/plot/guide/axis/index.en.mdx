@@ -34,9 +34,10 @@ import { PlotAxis, PathMark, Plot } from '@retikz/plot-react';
 Start with the same data and the same `<PathMark>`. When switching between `cartesian2D` and `polar2D`, `dimension="x"` explains horizontal or angular position, while `dimension="y"` explains vertical or radial position. A `grid` still belongs to the PlotAxis that creates it.
 
 <ComponentPreview
-  files={['axis-coordinate-basics', 'axis-coordinate-basics.data.ts']}
+  files={['axis-coordinate-basics', 'axis-coordinate-basics.preview.tsx', 'axis-coordinate-basics.data.ts']}
   size="lg"
   caption="Switch the coordinate system, axis visibility, grid, and target tick count to compare x / y roles across both projections."
+  defaultSourceFile="axis-coordinate-basics.preview.tsx"
 />
 
 ### Cartesian PlotAxis playground
@@ -46,9 +47,10 @@ After the basic roles are clear, tune the complete configuration in a Cartesian 
 In the origin scene, both axes use `placement.kind="origin"` to cross the other dimension at 0. Placement does not expand the domain; `crossing` controls the intersection label, while `line.arrow` and `ticks.endpoint` control endpoint arrows and nearby tick avoidance.
 
 <ComponentPreview
-  files={['axis-cartesian-playground', 'axis-cartesian-playground.data.ts']}
+  files={['axis-cartesian-playground', 'axis-cartesian-playground.preview.tsx', 'axis-cartesian-playground.data.ts']}
   size="lg"
   caption="Switch among continuous-edge, continuous-origin, and categorical-label scenes, then tune only the active PlotAxis controls."
+  defaultSourceFile="axis-cartesian-playground.preview.tsx"
 />
 
 ## How it works
@@ -113,6 +115,8 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
 
 ## API Reference
 
+#### PlotAxisProps
+
 | Prop          | Type                          | Default       | Description                                                                                                                                    |
 | ------------- | ----------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dimension`   | `PlotAxisProps['dimension']`  | —             | Dimension to explain: Cartesian / polar use x / y; it must belong to the current coordinate system                                             |
@@ -127,7 +131,7 @@ Axes sit above marks by default, while grids stay below them. `layer={{ zIndex }
 | `layer?`      | `PlotAxisProps['layer']`      | axis layer    | Override the semantic layer of the axis scope without changing the grid's background layer                                                     |
 | `id?`         | `PlotAxisProps['id']`         | —             | Optional guide handle used to identify the axis and its derived grid consistently                                                              |
 
-### Key object fields
+The nested `PlotAxisProps` fields are:
 
 | Object field         | Type                                                | Default                     | Purpose                                                                                                                |
 | -------------------- | --------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |

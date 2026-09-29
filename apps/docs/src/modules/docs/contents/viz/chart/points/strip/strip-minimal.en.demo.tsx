@@ -1,26 +1,11 @@
-import { StripChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { usePreviewDimensions } from '@/modules/docs/preview';
 
-import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
+import { renderStripMinimalPreview } from './strip-minimal.preview';
 
 /** Strip Chart basic usage with one discrete and one continuous position scale */
-const render = (dimensions?: { width: number; height: number }) => (
-  <StripChart
-    layout={dimensions}
-    rows={stripPalmerPenguinsData}
-    recipe={{
-      encodings: {
-        x: { field: 'species', scale: { operation: { type: 'point', name: 'species' } } },
-        y: {
-          field: 'flipperLengthMm',
-          scale: { operation: { type: 'linear', name: 'flipperLength' } },
-        },
-      },
-    }}
-  />
-);
+const render = (dimensions?: { width: number; height: number }) => renderStripMinimalPreview(dimensions);
 
 /** Data import used by the IR and Vanilla previews */
 export const previewSource = {

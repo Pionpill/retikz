@@ -1,23 +1,14 @@
-import { Plot, PlotAxis, PlotScale, PlotTransform, PointMark } from '@retikz/plot-react';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { jitterControls, jitterOperationOf, previewControlContract } from './transform-jitter.controls';
-import { samples } from './transform-jitter.data';
+import { jitterControls, previewControlContract } from './transform-jitter.controls';
+import { TransformJitterPreview } from './transform-jitter.preview';
 
 /** 注册回退使用的抖动控件 */
 export const previewControls = jitterControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={samples} width={420} height={260}>
-    <PlotTransform {...jitterOperationOf(values)} />
-    <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
-    <PlotScale dimension="y" type="linear" domain={[10, 32]} />
-    <PointMark x="dose" y="response" />
-    <PlotAxis dimension="x" title="抖动后" />
-    <PlotAxis dimension="y" title="响应" grid />
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  TransformJitterPreview(values, 'zh'),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

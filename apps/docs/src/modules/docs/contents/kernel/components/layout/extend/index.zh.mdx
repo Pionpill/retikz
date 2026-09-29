@@ -9,7 +9,11 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 `theme` 为后代 Composite（复合组件）选择主题；它不会自动设置普通 Node / Path 的颜色。普通图元使用自身的 `style`，全图图元默认值使用 `rootScope`。在面板中切换主题风格与明暗模式，观察同一卡片的颜色变化；卡片的位置和尺寸保持不变。
 
-<ComponentPreview files={['theme-inheritance', 'theme-card.ts']} size="sm" />
+<ComponentPreview
+  files={['theme-inheritance', 'theme-inheritance.preview.tsx', 'theme-card.ts']}
+  size="sm"
+  defaultSourceFile="theme-inheritance.preview.tsx"
+/>
 
 `theme` 的显式字段覆盖已有 IR 的根主题；未声明字段保留原值。完整继承规则见[主题](/kernel/components/design/theme)。
 

@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { translateDrawApiReference } from './draw.en';
+import { embedApiReferenceMdx } from './embedded-reference';
 import { createStandardApiReferenceMdx } from './standard-schema';
 import type { ApiReferencePackageConfig } from './tex';
 
@@ -144,7 +145,7 @@ export const writeStandardContainerApiReferences = async (
           translate: translateContainerApiReference,
         };
         const mdx = await createStandardApiReferenceMdx(config, lang);
-        sections.push(mdx.replace(/^(#{2,4}) /gm, '#$1 '));
+        sections.push(embedApiReferenceMdx(mdx));
       }
       writeFileSync(
         path.resolve(directory, `generated.${lang}.mdx`),

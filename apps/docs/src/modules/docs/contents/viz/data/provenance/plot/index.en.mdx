@@ -37,7 +37,8 @@ Lowered provenance can change the ids and metadata carried by generated primitiv
 Author the chart with the normal `<Plot>` entry. Pass `lineage` when the host needs the artifact and receive it through `onLineage`. The panel can enable root sorting and mark-local Top-N independently. The chart shows the transformed rows, while `transformSteps` lists both scopes with their input and output row counts:
 
 <ComponentPreview
-  files={['plot-lineage', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}
+  files={['plot-lineage', 'plot-lineage.preview.tsx', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}
+  defaultSourceFile="plot-lineage.preview.tsx"
   size="lg"
   caption="Sort and Top-N change the plotted rows; recording switches change only side-channel lineage fields. root and mark[0] identify the two transform scopes."
 />

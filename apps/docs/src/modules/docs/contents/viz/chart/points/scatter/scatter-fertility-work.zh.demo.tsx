@@ -1,34 +1,19 @@
-import { ChartData } from '@retikz/chart-react';
-import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, SCATTER_FERTILITY_WORK_CONTROL_IDS } from './scatter-fertility-work.controls';
-import { fertilityWorkData } from './scatter-fertility-work.data';
+import { renderScatterFertilityWorkPreview } from './scatter-fertility-work.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) => {
-  const chart = (
-    <ScatterChart
-      coordinate={
-        values[SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem] === 'polar2D'
-          ? { type: 'polar2D' }
-          : { type: 'cartesian2D' }
-      }
-      layout={dimensions}
-    >
-      <ChartData data={fertilityWorkData} />
-      <ScatterEncodings
-        x="fertilityRate"
-        y="femaleLaborParticipation"
-        {...(values[SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory] ? { color: 'incomeGroup' } : {})}
-        {...(values[SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory] ? { shape: 'incomeGroup' } : {})}
-      />
-      <ScatterProperties size={5} opacity={0.65} />
-    </ScatterChart>
-  );
-  return chart;
-});
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) =>
+  renderScatterFertilityWorkPreview({
+    layout: dimensions,
+    coordinateSystem:
+      values[SCATTER_FERTILITY_WORK_CONTROL_IDS.coordinateSystem] === 'polar2D' ? 'polar2D' : 'cartesian2D',
+    colorByCategory: values[SCATTER_FERTILITY_WORK_CONTROL_IDS.colorByCategory],
+    shapeByCategory: values[SCATTER_FERTILITY_WORK_CONTROL_IDS.shapeByCategory],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = {

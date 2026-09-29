@@ -24,9 +24,10 @@ description: 用 ScaleDefinition 扩展值到坐标或颜色的映射，并通�
 下面的 demo 同时注册 `ease-position` 和 `brand`：前者让 x 坐标按指数重新分布，后者把分类 `tier` 映射到品牌色板。拖动指数可以比较位置映射，颜色映射保持不变；两种 definition、数据和宿主注入都可以从源码切换器中查看：
 
 <ComponentPreview
-  files={['scale-custom', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
+  files={['scale-custom', 'scale-custom.preview.tsx', 'scale-custom.definition.ts', 'scale-custom.data.ts']}
   size="lg"
   caption="指数小于 1 时中间点向右展开，指数大于 1 时向左聚拢；tier 品牌色不随该参数变化。"
+  defaultSourceFile="scale-custom.preview.tsx"
 />
 
 ## 注入宿主

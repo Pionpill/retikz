@@ -1,39 +1,22 @@
-import { BubbleChart, BubbleMark } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import type { PreviewDimensions } from '@/modules/docs/components/component-preview/context';
 import { usePreviewControls, usePreviewDimensions } from '@/modules/docs/preview';
 
-import { gapminderBubbleData } from './bubble-basic.data';
 import { createPreviewControlContract } from './bubble-marks.controls';
 import type { DemoValues } from './bubble-marks.controls';
+import { renderBubbleMarksPreview } from './bubble-marks.preview';
 
 const contract = createPreviewControlContract();
 
 /** 在预览尺寸或源码基准尺寸中使用同一图表配置 */
 const render = (dimensions?: PreviewDimensions, values: DemoValues = contract.canonicalValues) => {
-  const bounds = dimensions ?? { width: 720, height: 440 };
-
-  const chart = (
-    <BubbleChart
-      coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}
-      rows={gapminderBubbleData}
-      layout={{ ...bounds, padding: { right: 48 } }}
-
-      recipe={{
-        encodings: {
-          x: 'gdpPerCapita',
-          y: 'lifeExpectancy',
-          size: 'population',
-          color: 'continent',
-        },
-        properties: { fillOpacity: 0.55 },
-      }}
-    >
-      <BubbleMark override properties={{ fillOpacity: values.fillOpacity, strokeWidth: values.strokeWidth }} />
-    </BubbleChart>
-  );
-  return chart;
+  return renderBubbleMarksPreview({
+    dimensions,
+    coordinateSystem: values.coordinateSystem === 'polar2D' ? 'polar2D' : 'cartesian2D',
+    fillOpacity: values.fillOpacity,
+    strokeWidth: values.strokeWidth,
+  });
 };
 
 /** 源码视图使用相同配置，避免依赖 React 容器上下文 */

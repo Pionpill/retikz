@@ -1,38 +1,16 @@
-import { StripChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
 import type { PreviewDimensions } from '@/modules/docs/components/component-preview/context';
 import { usePreviewDimensions } from '@/modules/docs/preview';
 
-import { stripPlacementFigureData } from './strip-placement-figure.data';
-import { stripPlacementFigureI18n } from './strip-placement-figure.i18n';
+import { renderStripPlacementFigurePreview } from './strip-placement-figure.preview';
 
 /** 示例的语言参数 */
 export type StripPlacementFigureProps = { lang?: Lang };
 
 /** 在预览尺寸或源码基准尺寸中使用同一图表配置 */
-const render = (lang: Lang, dimensions?: PreviewDimensions) => {
-  const text = stripPlacementFigureI18n[lang];
-  const bounds = dimensions ?? { width: 720, height: 440 };
-
-  const chart = (
-    <StripChart
-      rows={stripPlacementFigureData}
-      layout={bounds}
-      presentation={{ title: { text: text.title }, subtitle: { text: text.subtitle } }}
-
-      recipe={{
-        encodings: {
-          x: { field: 'group', scale: { operation: { type: 'point', name: 'group' } } },
-          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
-        },
-        properties: { size: 7, opacity: 0.6, jitter: { span: { kind: 'ratio', value: 0.5 }, seed: 7 } },
-      }}
-    />
-  );
-  return chart;
-};
+const render = (lang: Lang, dimensions?: PreviewDimensions) => renderStripPlacementFigurePreview(lang, dimensions);
 
 /** 源码视图使用相同配置，避免依赖 React 容器上下文 */
 export const previewSource = {

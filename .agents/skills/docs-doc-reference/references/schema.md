@@ -44,7 +44,7 @@ apps/docs/src/modules/docs/components/mdx-content/zod-schema/schema-registry.ts
 
 1. 确认 schema 从所属包根入口公开导出
 2. 在 registry 注册 schema、label 与真实 URL/anchor
-3. 在合适页面添加 H2/H3 和 `<ZodSchema>`；zh 补齐字段与嵌套点路径，en 只传 name
+3. 独立参考页按页面层级添加标题；嵌入非独立参考页时，以 H2 标出“Schema 参考”，以 Schema 原名作 H4 标题并添加 `<ZodSchema>`，不增加 H3；zh 补齐字段与嵌套点路径，en 只传 name
 4. 独立页面同步 data 与 i18n
 5. 运行 docs `tsc --noEmit`、完整性脚本，并在浏览器确认没有 `Unknown schema` 或中文描述缺失 warning
 

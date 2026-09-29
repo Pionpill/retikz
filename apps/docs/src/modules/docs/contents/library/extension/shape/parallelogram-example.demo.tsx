@@ -1,32 +1,18 @@
-import { ParallelogramShapeDefinition } from '@retikz/extension';
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { parallelogramExampleControls, previewControlContract } from './parallelogram-example.controls';
+import { renderParallelogramExamplePreview } from './parallelogram-example.preview';
 
 export const previewControls = parallelogramExampleControls;
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    viewBox={{ x: -120, y: -80, width: 240, height: 160 }}
-    extensions={{ shapes: [ParallelogramShapeDefinition] }}
-  >
-    <Node
-      position={[0, 0]}
-      shape={{
-        type: 'parallelogram',
-        params: {
-          slantDirection: values.slantDirection,
-          slantAngle: values.slantAngle,
-          cornerRadius: values.cornerRadius,
-        },
-      }}
-      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
-      layout={{ minimumSize: { width: 130, height: 72 } }}
-    />
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderParallelogramExamplePreview({
+    slantDirection: values.slantDirection,
+    slantAngle: values.slantAngle,
+    cornerRadius: values.cornerRadius,
+  }),
+);
 export const previewSource = controlledPreview.source;
 /** 固定 Parallelogram 并调整其专有几何参数 */
 const Demo: FC = controlledPreview.Component;

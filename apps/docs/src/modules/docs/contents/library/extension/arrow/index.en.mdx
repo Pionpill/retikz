@@ -61,7 +61,11 @@ The overview keeps path length and style fixed while comparing the nine Extensio
 
 `diamond` and `openDiamond` default to integer dimensions of `11 × 6`, with a nominal area of 66, and provide filled and hollow endpoints. Their contours fill the base height; the solid form uses arrow fill, while the open form is stroke-only.
 
-<ComponentPreview files="diamond-arrows" size="sm" />
+<ComponentPreview
+  files={['diamond-arrows', 'diamond-arrows.preview.tsx']}
+  size="sm"
+  defaultSourceFile="diamond-arrows.preview.tsx"
+/>
 
 ### Kite arrows
 
@@ -83,7 +87,7 @@ Use `StraightBarbArrowDefinition` for direct Definition assembly and `StraightBa
 
 `bar` uses Core's `8 × 8` fallback by default and draws an open line perpendicular to the path tangent at the authored endpoint. It inherits the path stroke, but its name does not impose domain meanings such as “blocked” or “inhibited”; consumers assign those meanings.
 
-<ComponentPreview files="bar-arrow" size="sm" />
+<ComponentPreview files={['bar-arrow', 'bar-arrow.preview.tsx']} size="sm" defaultSourceFile="bar-arrow.preview.tsx" />
 
 The path body overlaps the marker contact edge by half of its own stroke width, then the marker paints over the joint. This avoids antialiasing seams without letting the line pass through the bar. `length` controls marker size along the path, `width` controls the bar span, and `lineWidth` controls the marker stroke.
 
@@ -91,7 +95,11 @@ The path body overlaps the marker contact edge by half of its own stroke width, 
 
 `crowFoot` uses Core's `8 × 8` fallback by default and draws three open rays from the path contact point. Relationship diagrams may use it for multiplicity, but Extension defines only reusable geometry and does not bind it to cardinality.
 
-<ComponentPreview files="crow-foot-arrow" size="sm" />
+<ComponentPreview
+  files={['crow-foot-arrow', 'crow-foot-arrow.preview.tsx']}
+  size="sm"
+  defaultSourceFile="crow-foot-arrow.preview.tsx"
+/>
 
 All three rays belong to the marker, and the path body shrinks to the junction. `length`, `width`, `lineWidth`, `color`, and `opacity` continue to use Core's `arrowDetail` contract; start, end, reversed routes, and double endpoints share the same placement algorithm.
 

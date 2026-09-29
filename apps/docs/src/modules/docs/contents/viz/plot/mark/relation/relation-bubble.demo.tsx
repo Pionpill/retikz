@@ -1,4 +1,3 @@
-import { Plot, PlotAxis, PointMark, RelationMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -7,52 +6,20 @@ import {
   previewControlContract,
   RELATION_BUBBLE_CONTROL_IDS,
   relationBubbleControls,
-  relationBubbleOperation,
 } from './relation-bubble.controls';
-import { bubbleNodes } from './relation-bubble.data';
+import { RelationBubblePreview } from './relation-bubble.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const labelSide = values[RELATION_BUBBLE_CONTROL_IDS.labelSide];
-
-  return (
-    <Plot data={bubbleNodes} width={620} height={320}>
-      <PointMark
-        x="x"
-        y="y"
-        size="value"
-        color="segment"
-        anchorId={{ prefix: 'bubble', field: 'id' }}
-        label="label"
-        labelPosition={values[RELATION_BUBBLE_CONTROL_IDS.nodeLabelPosition]}
-        labelTextColor="currentColor"
-        fillOpacity={values[RELATION_BUBBLE_CONTROL_IDS.nodeOpacity]}
-        stroke="#0f172a"
-        strokeWidth={0.8}
-      />
-      <RelationMark
-        transform={[relationBubbleOperation]}
-        source={{ anchorId: { prefix: 'bubble', field: 'sourceId' }, boundary: true }}
-        target={{ anchorId: { prefix: 'bubble', field: 'targetId' }, boundary: true }}
-        style={{
-          color: { kind: 'constant', value: values[RELATION_BUBBLE_CONTROL_IDS.color] },
-          strokeWidth: { kind: 'constant', value: values[RELATION_BUBBLE_CONTROL_IDS.strokeWidth] },
-        }}
-        path={{
-          label: {
-            text: { field: 'relLabel' },
-            position: values[RELATION_BUBBLE_CONTROL_IDS.labelPosition],
-            ...(labelSide === 'center' ? { placement: 'inside' as const } : { side: labelSide }),
-            sloped: values[RELATION_BUBBLE_CONTROL_IDS.labelSloped],
-            textColor: 'currentColor',
-          },
-          options: { marks: [{ pos: 1, mark: { kind: 'arrow' } }], roundedCorners: 8 },
-        }}
-      />
-      <PlotAxis dimension="x" grid />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  RelationBubblePreview({
+    labelSide: values[RELATION_BUBBLE_CONTROL_IDS.labelSide],
+    nodeLabelPosition: values[RELATION_BUBBLE_CONTROL_IDS.nodeLabelPosition],
+    nodeOpacity: values[RELATION_BUBBLE_CONTROL_IDS.nodeOpacity],
+    color: values[RELATION_BUBBLE_CONTROL_IDS.color],
+    strokeWidth: values[RELATION_BUBBLE_CONTROL_IDS.strokeWidth],
+    labelPosition: values[RELATION_BUBBLE_CONTROL_IDS.labelPosition],
+    labelSloped: values[RELATION_BUBBLE_CONTROL_IDS.labelSloped],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

@@ -152,7 +152,7 @@ describe('Viz Data Plot lineage controls', () => {
 
   it('keeps the chart and lineage summary side by side with the summary using the full preview height', () => {
     const source = readFileSync(
-      resolve('src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.demo.tsx'),
+      resolve('src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.preview.tsx'),
       'utf8',
     );
 
@@ -174,7 +174,10 @@ describe('Viz Data Plot lineage controls', () => {
         resolve(`src/modules/docs/contents/viz/data/provenance/plot/index.${locale}.mdx`),
         'utf8',
       );
-      expect(source).toContain("files={['plot-lineage', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}");
+      expect(source).toContain(
+        "files={['plot-lineage', 'plot-lineage.preview.tsx', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}",
+      );
+      expect(source).toContain('defaultSourceFile="plot-lineage.preview.tsx"');
       expect(source).toContain('size="lg"');
       expect(source).not.toContain("import { useCallback, useState } from 'react';");
     }

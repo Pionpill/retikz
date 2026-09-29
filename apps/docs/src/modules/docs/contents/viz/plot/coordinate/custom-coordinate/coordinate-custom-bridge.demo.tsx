@@ -1,8 +1,5 @@
-import { PlotAxis, PointMark } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
@@ -10,28 +7,17 @@ import {
   customCoordinateControls,
   previewControlContract,
 } from './coordinate-custom-bridge.controls';
-import { grid } from './coordinate-custom-bridge.data';
-import { bridgeCoordinate } from './coordinate-custom-bridge.definition';
+import { CoordinateCustomBridgePreview } from './coordinate-custom-bridge.preview';
 
 /** controls registry 缺失时使用的显式回退 */
 export const previewControls = customCoordinateControls;
 
 /** 使用 bridgeCoordinate 投影规则 (x,y) 网格：固定相机下，点随 x 位置产生竖直拱形偏移 */
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -30, y: -80, width: 480, height: 340 }}>
-    <Plot
-      data={grid}
-      width={420}
-      height={220}
-      coordinate={{ type: 'bridge', archHeight: values[CUSTOM_COORDINATE_CONTROL_IDS.archHeight] }}
-      coordinates={[bridgeCoordinate]}
-    >
-      <PointMark x="x" y="y" />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" />
-    </Plot>
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  CoordinateCustomBridgePreview({
+    archHeight: values[CUSTOM_COORDINATE_CONTROL_IDS.archHeight],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

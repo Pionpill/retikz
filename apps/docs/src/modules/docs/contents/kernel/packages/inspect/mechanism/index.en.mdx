@@ -156,9 +156,10 @@ For batch Path selection, a scene target matches every final Path with the reque
 The playground places two curves in separate subtrees. Change target, control points, and labels, then enable the right barrier to see how local requests resolve against Core final occurrences:
 
 <ComponentPreview
-  files="inspect-selection"
+  files={['inspect-selection', 'inspect-selection.preview.tsx']}
   size="md"
   caption="A and B are ordinary independent paths. After the right barrier is enabled, B cannot reopen inspection with its local request."
+  defaultSourceFile="inspect-selection.preview.tsx"
 />
 
 One site may request several Inspectors. Sparse options for one Inspector merge from scene to subtree to current occurrence; ordinary `false` disables one Inspector only at the current site, while a barrier prevents descendants from reopening any Inspector.

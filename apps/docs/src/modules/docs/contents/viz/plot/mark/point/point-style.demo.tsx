@@ -1,35 +1,15 @@
-import type { IRPaint } from '@retikz/core';
-import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { points } from './point-api.data';
 import { POINT_STYLE_CONTROL_IDS, previewControlContract } from './point-style.controls';
+import { PointStylePreview } from './point-style.preview';
 
-const gradientFill: IRPaint = {
-  kind: 'linearGradient',
-  angle: 90,
-  stops: [
-    { offset: 0, color: '#38bdf8' },
-    { offset: 1, color: '#0f172a' },
-  ],
-};
-
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const usesFieldColor = values[POINT_STYLE_CONTROL_IDS.paintMode] === 'field';
-  const fill =
-    values[POINT_STYLE_CONTROL_IDS.paintMode] === 'gradient'
-      ? gradientFill
-      : values[POINT_STYLE_CONTROL_IDS.paintMode] === 'solid'
-        ? { kind: 'constant' as const, value: values[POINT_STYLE_CONTROL_IDS.fill] }
-        : undefined;
-  const pointProps = {
-    x: 'x',
-    y: 'y',
-    color: usesFieldColor ? 'region' : undefined,
-    fill,
-    stroke: { kind: 'constant' as const, value: values[POINT_STYLE_CONTROL_IDS.stroke] },
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  PointStylePreview({
+    paintMode: values[POINT_STYLE_CONTROL_IDS.paintMode],
+    fill: values[POINT_STYLE_CONTROL_IDS.fill],
+    stroke: values[POINT_STYLE_CONTROL_IDS.stroke],
     strokeWidth: values[POINT_STYLE_CONTROL_IDS.strokeWidth],
     fillOpacity: values[POINT_STYLE_CONTROL_IDS.fillOpacity],
     strokeOpacity: values[POINT_STYLE_CONTROL_IDS.strokeOpacity],
@@ -37,21 +17,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     size: values[POINT_STYLE_CONTROL_IDS.size],
     dashed: values[POINT_STYLE_CONTROL_IDS.dashed],
     shadow: values[POINT_STYLE_CONTROL_IDS.shadow],
-  };
-
-  return (
-    <Plot
-      data={points}
-      width={400}
-      height={280}
-      coordinate={values[POINT_STYLE_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
-    >
-      <PointMark {...pointProps} />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-  );
-});
+    coordinate: values[POINT_STYLE_CONTROL_IDS.coordinate],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

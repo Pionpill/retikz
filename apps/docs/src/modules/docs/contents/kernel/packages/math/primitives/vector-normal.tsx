@@ -1,62 +1,18 @@
-import { vector2 } from '@retikz/math';
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, vectorNormalControls } from './vector-normal.controls';
+import { VectorNormalPreview } from './vector-normal.preview';
 
 export const previewControls = vectorNormalControls;
 
-const Origin: [number, number] = [0, 0];
-
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const unit = vector2.fromAngleDegrees(values.angle);
-  const vector = vector2.scale(unit, values.length);
-  const normal = vector2.normal(vector);
-  const vectorEnd = vector2.add(Origin, vector);
-  const normalEnd = vector2.add(Origin, normal);
-  const vectorLabel = vector2.add(vector2.scale(vector, 0.62), vector2.scale(vector2.normalize(normal), -16));
-  const normalLabel = vector2.add(vector2.scale(normal, 0.62), vector2.scale(vector2.normalize(vector), 26));
-
-  return (
-    <Layout>
-      <Draw
-        way={[
-          [-160, 0],
-          [160, 0],
-        ]}
-        style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
-      />
-      <Draw
-        way={[
-          [0, -135],
-          [0, 135],
-        ]}
-        style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
-      />
-
-      <Draw way={[Origin, vectorEnd]} arrow="->" style={{ stroke: 'darkorange', strokeWidth: 2 }} />
-      <Draw way={[Origin, normalEnd]} arrow="->" style={{ stroke: 'dodgerblue', strokeWidth: 2 }} />
-
-      <Node
-        position={Origin}
-        shape="circle"
-        style={{ fill: 'currentColor', stroke: 'none' }}
-        layout={{ minimumSize: 7, padding: 0 }}
-      />
-      <Node position={vectorLabel} style={{ stroke: 'none', textColor: 'darkorange' }}>
-        v
-      </Node>
-      <Node position={normalLabel} style={{ stroke: 'none', textColor: 'dodgerblue' }}>
-        normal(v)
-      </Node>
-      <Node position={[0, 125]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
-        dot(v, normal(v)) = 0
-      </Node>
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  VectorNormalPreview({
+    angle: values.angle,
+    length: values.length,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

@@ -18,7 +18,16 @@ description: 派生与抖动保持输入行数不变，只按单行字段补出�
 
 切换区间来源，对比 `startFrom` / `endFrom` 的双字段模式与 `from` / `baseline` 的单字段模式。
 
-<ComponentPreview files={['transform-derive-interval', 'transform-derive-interval.data.ts']} size="lg" />
+<ComponentPreview
+  files={[
+    'transform-derive-interval',
+    'transform-derive-interval.preview.tsx',
+    'transform-derive-interval.i18n.ts',
+    'transform-derive-interval.data.ts',
+  ]}
+  size="lg"
+  defaultSourceFile="transform-derive-interval.preview.tsx"
+/>
 
 ### API 参考
 
@@ -67,7 +76,11 @@ description: 派生与抖动保持输入行数不变，只按单行字段补出�
 
 调整最大偏移与随机种子。图表使用固定数据域，便于直接观察抖动参数带来的位置变化。
 
-<ComponentPreview files={['transform-jitter', 'transform-jitter.data.ts']} size="lg" />
+<ComponentPreview
+  files={['transform-jitter', 'transform-jitter.preview.tsx', 'transform-jitter.i18n.ts', 'transform-jitter.data.ts']}
+  size="lg"
+  defaultSourceFile="transform-jitter.preview.tsx"
+/>
 
 ### API 参考
 

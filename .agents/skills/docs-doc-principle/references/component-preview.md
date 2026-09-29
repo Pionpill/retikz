@@ -10,7 +10,8 @@
 - `<name>.demo.tsx` 与 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx` 仅为既有 demo 的兼容结构，不为新图创建；解析顺序为单文件图、单文件旧 demo、当前语言旧 demo
 - `files` 数组第一项是主 demo，其余是源码附属文件；只有需要 `diffFrom` 时使用对象形式
 - `hideCode` 显式传 `true` 时隐藏源码，传 `false` 时显示源码；未传时，带 controls 的预览默认隐藏源码并由左下角代码按钮展开，其他预览默认显示源码。叙述图使用 `hideCode`，并显式设置 `type="flow"` 或 `type="illustration"`，使读者可打开对应的图示说明。使用 `FlowDiagram`、`FlowLayout`、`FlowEntities` 或 `FlowRelations` 的叙述图为 `flow`，其它叙述图为 `illustration`；可复制组件用法保留默认源码视图且不设置 `type`
-- demo 只保留解释非显然行为的必要注释，源码视图中的注释使用英文；不按 hideCode 状态禁止有维护价值的内部注释
+- demo 只保留解释非显然行为的必要注释，源码视图中的注释使用中文；不按 hideCode 状态禁止有维护价值的内部注释
+- 可打开源码的 demo 若入口包含 controls、尺寸测量或源码派生逻辑，将实际渲染的图形 JSX 提取到同级 `<name>.preview.tsx`，入口复用该实现；`files` 列出主源码并以 `defaultSourceFile` 默认选中它，`hideCode` 只控制初始折叠
 - 新增或调整 size、面板宽度时必须读 [尺寸测量](preview-sizing.md) 并按真实页面观测决定；窄屏另查可读性
 
 ## React、IR 与 Vanilla

@@ -1,79 +1,14 @@
-import type { IRPlot, IRPlotLegendGuide, IRPlotScale } from '@retikz/plot';
-import { Plot } from '@retikz/plot-react';
-
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { legendColorFormsControls, previewControlContract } from './legend-color-forms.en.controls';
-import { cities } from './legend.data';
+import { LegendColorFormsPreview } from './legend-color-forms.preview';
 
 /** 注册回退使用的颜色图例形态控件 */
 export const previewControls = legendColorFormsControls;
 
-type LegendColorFormsValues = PreviewControlValuesFor<typeof legendColorFormsControls>;
-
-/** 根据当前形态构造颜色比例尺 */
-const buildColorScale = (values: LegendColorFormsValues): IRPlotScale => {
-  if (values.form === 'swatch') {
-    return { type: 'ordinal', name: 'legendColor' };
-  }
-  if (values.form === 'binned') {
-    return {
-      type: 'quantize',
-      name: 'legendColor',
-      domain: [0, 600],
-      count: values.binCount,
-      scheme: values.scheme,
-    };
-  }
-  return {
-    type: 'sequential',
-    name: 'legendColor',
-    domain: [0, 600],
-    scheme: 'magma',
-  };
-};
-
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const form = values.form;
-  const legend: IRPlotLegendGuide = {
-    type: 'legend',
-    channel: 'color',
-    scale: 'legendColor',
-    title: form === 'swatch' ? 'Region' : form === 'ramp' ? 'Population' : 'Population range',
-    position: values.position,
-    ...(form === 'swatch' && values.orient !== 'auto' ? { orient: values.orient } : {}),
-    ...(form === 'ramp' ? { ticks: { count: values.tickCount } } : {}),
-    tickLabels: values.showLabels ? (form === 'ramp' ? { format: values.format } : {}) : false,
-    ...(form === 'swatch'
-      ? { style: { swatchSize: values.swatchSize } }
-      : form === 'ramp'
-        ? { style: { rampLength: values.rampLength, rampThickness: values.rampThickness } }
-        : {}),
-  };
-  const spec: IRPlot = {
-    namespace: 'plot',
-    type: 'plot',
-    data: { reference: 'd' },
-    scales: [{ type: 'linear', name: 'x' }, { type: 'linear', name: 'y' }, buildColorScale(values)],
-    coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    marks: [
-      {
-        type: 'point',
-        color: {
-          kind: 'field',
-          value: form === 'swatch' ? 'region' : 'pop',
-          scale: 'legendColor',
-        },
-        size: { kind: 'constant', value: 6 },
-        encoding: { x: { field: 'lng' }, y: { field: 'lat' } },
-      },
-    ],
-    guides: [{ type: 'axis', dimension: 'x' }, { type: 'axis', dimension: 'y', grid: true }, legend],
-  };
-
-  return <Plot spec={spec} data={{ d: cities }} width={380} height={260} />;
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  LegendColorFormsPreview(values, 'en'),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

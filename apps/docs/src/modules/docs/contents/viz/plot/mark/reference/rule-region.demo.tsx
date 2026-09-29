@@ -1,37 +1,20 @@
-import { Plot, PlotAxis, PointMark, ReferenceMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, RULE_REGION_CONTROL_IDS } from './rule-region.controls';
-import { regionSamples } from './rule-region.data';
+import { RuleRegionPreview } from './rule-region.preview';
 
 /** 参考区域：同一组 x / y 上下界在笛卡尔与极坐标下投影为矩形或环扇区 */
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot
-    data={regionSamples}
-    model={[
-      { name: 'x', type: 'continuous' },
-      { name: 'y', type: 'continuous' },
-    ]}
-    width={400}
-    height={280}
-    coordinate={values[RULE_REGION_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
-  >
-    <ReferenceMark
-      kind="region"
-      x={values[RULE_REGION_CONTROL_IDS.xStart]}
-      xTo={values[RULE_REGION_CONTROL_IDS.xEnd]}
-      y={values[RULE_REGION_CONTROL_IDS.yStart]}
-      yTo={values[RULE_REGION_CONTROL_IDS.yEnd]}
-      color="#bfdbfe"
-      fillOpacity={0.55}
-    />
-    <PointMark x="x" y="y" />
-    <PlotAxis dimension="x" />
-    <PlotAxis dimension="y" grid />
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  RuleRegionPreview({
+    coordinate: values[RULE_REGION_CONTROL_IDS.coordinate],
+    xStart: values[RULE_REGION_CONTROL_IDS.xStart],
+    xEnd: values[RULE_REGION_CONTROL_IDS.xEnd],
+    yStart: values[RULE_REGION_CONTROL_IDS.yStart],
+    yEnd: values[RULE_REGION_CONTROL_IDS.yEnd],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

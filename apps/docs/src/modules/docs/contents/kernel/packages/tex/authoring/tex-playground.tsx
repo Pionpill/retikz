@@ -1,37 +1,15 @@
-import type { LowerTex } from '@retikz/core';
-import { Layout, Node } from '@retikz/react';
+import { Layout } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
 import type { FC } from 'react';
 
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview, usePreviewControls } from '@/modules/docs/preview';
 
 import { previewControlContract, texPlaygroundControls } from './tex-playground.controls';
+import { TexPlaygroundPreview } from './tex-playground.preview';
 
 export const previewControls = texPlaygroundControls;
 
-type TexPlaygroundValues = PreviewControlValuesFor<typeof texPlaygroundControls>;
-
-/** 使用给定 controls 值构造 TeX playground */
-const renderTexPlayground = (values: TexPlaygroundValues, lowerTex?: LowerTex) => {
-  const delimiters = values.displayMode === 'display' ? '$$' : '$';
-  const content = `${delimiters}${values.source}${delimiters}`;
-
-  return (
-    <Layout lowerTex={lowerTex}>
-      <Node
-        id="formula"
-        position={[0, 0]}
-        style={{ stroke: 'none', font: { size: values.fontSize } }}
-        layout={{ padding: 0 }}
-      >
-        {content}
-      </Node>
-    </Layout>
-  );
-};
-
-const controlledPreview = defineControlledPreview(previewControlContract, values => renderTexPlayground(values));
+const controlledPreview = defineControlledPreview(previewControlContract, values => TexPlaygroundPreview(values));
 
 export const previewSource = controlledPreview.source;
 
@@ -43,7 +21,7 @@ const Demo: FC = () => {
   const values = usePreviewControls(texPlaygroundControls);
   const lowerTexState = useLowerTex({ profile: 'math' });
   return lowerTexState.status === 'ready'
-    ? renderTexPlayground(values, lowerTexState.lowerTex)
+    ? TexPlaygroundPreview(values, lowerTexState.lowerTex)
     : renderTexPlaygroundLoading();
 };
 

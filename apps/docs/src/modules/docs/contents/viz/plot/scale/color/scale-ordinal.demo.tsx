@@ -1,32 +1,17 @@
-import { PathMark, Plot, PlotAxis, PlotLegend } from '@retikz/plot-react';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, scaleOrdinalControls } from './scale-ordinal.controls';
-import { climate } from './scale-ordinal.data';
+import { ScaleOrdinalPreview } from './scale-ordinal.preview';
 
 /** 注册回退使用的 ordinal 颜色比例尺 controls */
 export const previewControls = scaleOrdinalControls;
 
-const palettes = {
-  default: ['#2563eb', '#f97316'],
-  cool: ['#0891b2', '#7c3aed'],
-  warm: ['#dc2626', '#eab308'],
-} as const;
-
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot
-    data={climate}
-    plotDefaults={{ palette: { categorical: [...palettes[values.palette]] } }}
-    width={400}
-    height={250}
-  >
-    <PathMark x="month" y="temp" color="city" order="month" />
-    <PlotAxis dimension="x" />
-    <PlotAxis dimension="y" grid />
-    {values.showLegend ? <PlotLegend channel="color" /> : null}
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  ScaleOrdinalPreview({
+    palette: values.palette,
+    showLegend: values.showLegend,
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

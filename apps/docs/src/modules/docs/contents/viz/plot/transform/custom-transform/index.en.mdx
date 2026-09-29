@@ -29,9 +29,10 @@ The Definition passed to `defineTransform` processes rows only. It does not know
 The panel changes only the operation's `initialValue`. Switch source files to inspect the data, Definition, and Plot injection:
 
 <ComponentPreview
-  files={['waterfall', 'waterfall.definition.ts', 'waterfall.data.ts']}
+  files={['waterfall', 'waterfall.preview.tsx', 'waterfall.definition.ts', 'waterfall.data.ts']}
   size="lg"
   caption="The initial value changes only where cumulative intervals start. A fixed y domain and viewBox prevent camera scaling while bars move. Green means an increase; red means a decrease."
+  defaultSourceFile="waterfall.preview.tsx"
 />
 
 ## Inject the Host

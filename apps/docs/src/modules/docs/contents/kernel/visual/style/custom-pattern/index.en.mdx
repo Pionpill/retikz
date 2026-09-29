@@ -17,7 +17,12 @@ React uses `extensions={{ patterns: [cross] }}`. Vanilla supplies `compile: { pa
 
 Returning a geometry iterable keeps context.size as the period. Return `{ tileSize, motif }` when final period differs from base spacing; tileSize must be finite and positive. Use context.round for consistent precision.
 
-<ComponentPreview files="custom-pattern-size" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['custom-pattern-size', 'custom-pattern-size.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="custom-pattern-size.preview.tsx"
+/>
 
 ## Errors and limitations
 

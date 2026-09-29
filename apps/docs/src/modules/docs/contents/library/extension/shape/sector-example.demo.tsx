@@ -1,22 +1,13 @@
-import { SectorShapeDefinition } from '@retikz/extension';
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, sectorExampleControls } from './sector-example.controls';
+import { renderSectorExamplePreview } from './sector-example.preview';
 
 export const previewControls = sectorExampleControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} extensions={{ shapes: [SectorShapeDefinition] }}>
-    <Node
-      position={[0, 0]}
-      shape={{ type: 'sector', params: values }}
-      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
-    />
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values => renderSectorExamplePreview(values));
 
 export const previewSource = controlledPreview.source;
 

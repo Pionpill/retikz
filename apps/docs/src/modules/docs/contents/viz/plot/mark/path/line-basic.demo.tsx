@@ -1,32 +1,20 @@
-import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { LINE_BASIC_CONTROL_IDS, previewControlContract } from './line-basic.controls';
-import { revenue } from './line-basic.data';
+import { LineBasicPreview } from './line-basic.preview';
 
 /** 使用同一组位置通道切换笛卡尔与极坐标投影 */
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const coordinate = values[LINE_BASIC_CONTROL_IDS.coordinate];
-  const xField = values[LINE_BASIC_CONTROL_IDS.xField];
-  const yField = values[LINE_BASIC_CONTROL_IDS.yField];
-  const x = xField === 'coordinate' ? (coordinate === 'polar2D' ? 'period' : 'month') : xField;
-  const order = values[LINE_BASIC_CONTROL_IDS.orderSource] === 'field' ? 'month' : undefined;
-
-  return (
-    <Plot data={revenue} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
-      <PathMark
-        x={x}
-        y={yField}
-        order={order}
-        closed={coordinate === 'polar2D' && values[LINE_BASIC_CONTROL_IDS.closed]}
-      />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  LineBasicPreview({
+    coordinate: values[LINE_BASIC_CONTROL_IDS.coordinate],
+    xField: values[LINE_BASIC_CONTROL_IDS.xField],
+    yField: values[LINE_BASIC_CONTROL_IDS.yField],
+    orderSource: values[LINE_BASIC_CONTROL_IDS.orderSource],
+    closed: values[LINE_BASIC_CONTROL_IDS.closed],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;
