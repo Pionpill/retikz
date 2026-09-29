@@ -940,9 +940,9 @@ describe('RelationMark and anchorId lowering', () => {
         { kind: 'cubic', control1: [100, 100], control2: [100, 0], to: [200, 0] },
       ],
       kindOptions: {
-        start: { width: 12, direction: 0 },
-        end: { width: 8, direction: 0 },
-        interpolation: 'smooth',
+        width: { kind: 'taper', start: 12, end: 8, interpolation: 'smooth' },
+        start: { direction: 90 },
+        end: { direction: 90 },
         align: 'center',
       },
       style: { fill: '#38bdf8', fillOpacity: 0.55, stroke: 'none' },

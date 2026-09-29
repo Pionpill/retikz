@@ -1,7 +1,16 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type { IRGeometryLabel, IRLine, IRMathRun, IRPathBase, IRPosition, IRStep, IRTextRun } from '../../schemas';
+import type {
+  IRBoundaryLabel,
+  IRGeometryLabel,
+  IRLine,
+  IRMathRun,
+  IRPathBase,
+  IRPosition,
+  IRStep,
+  IRTextRun,
+} from '../../schemas';
 import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../scene';
 import type { StrokePathOwnerOutput } from './owner-output';
@@ -98,6 +107,18 @@ export type PathKindLabelInput = Readonly<{
   samples: ReadonlyArray<Readonly<{ point: IRPosition; tangent: IRPosition; boundaryOffset?: number }>>;
 }>;
 
+/** 由宿主几何确定边界基点的标签请求 */
+export type PathKindBoundaryLabelInput = Readonly<{
+  /** Kernel 共享标签配置 */
+  label: IRBoundaryLabel;
+  /** 宿主局部坐标中的边界支撑点 */
+  point: IRPosition;
+  /** 单位外向向量 */
+  outward: IRPosition;
+  /** 相对宿主的字段路径，用于失败诊断 */
+  sourcePath: string;
+}>;
+
 /**
  * path kind 编译上下文
  * @description 自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑
@@ -117,6 +138,13 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
   emitStroke: EmitStroke;
   /** 编译共享宿主标签，并支持 kind 提供边界偏移 */
   emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
+  /** 通过 Kernel 共享布局编译已定位的边界标签 */
+  emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
+  /**
+   * 包装自定义几何的完整输出，汇总宿主标签边界并应用 Path rotate / scale 与元数据
+   * @description 在全部标签发射后调用一次并直接返回；emitStroke 的结果已包装，不应再次调用
+   */
+  wrapOutput: (output: PathKindCompileResult) => PathKindCompileResult;
   /** 已解析的 renderer-neutral 宿主外观 */
   appearance: ResolvedPathKindAppearance;
   /** 与本次 compile 一致的取整函数 */

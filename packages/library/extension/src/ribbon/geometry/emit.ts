@@ -1,32 +1,20 @@
 import type { IRGeometryLabel, PathCommand, PathKindCompileResult, PathKindLabel, ScenePrimitive } from '@retikz/core';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
+import type { RibbonCapDefinition } from '../cap-types';
 import type { RibbonWidthProfileDefinition } from '../profile-types';
 import { resolveRibbonOptions, resolveRibbonWidth } from '../resolve';
 import type { IRRibbonPath } from '../types';
 import {
   commandsToSegmentInputs,
-  directionToTangent,
-  normalizeVector,
+  directionToSectionAxis,
   sampleAtDistance,
   segmentInputsToSegments,
-  segmentsFromCommands,
 } from './centerline';
-import {
-  analyticOutlineCommands,
-  boundaryOutlineCommands,
-  outlineCommands,
-  ribbonCrossSection,
-  styledPrimitiveFromOutline,
-} from './outline';
+import { endpointLabelInput } from './endpoint-label';
+import { boundaryOutlineCommands, outlineCommands, ribbonCrossSection, styledPrimitiveFromOutline } from './outline';
 import type { RibbonEmitOptions, RibbonLike, RibbonSegment } from './types';
-import { DEFAULT_RIBBON_SAMPLES } from './types';
-import {
-  assertSampleCount,
-  centerlineWidthFunction,
-  centerlineWidthRequiresSampling,
-  resolveSampleCount,
-} from './width';
+import { widthFunction, resolveSampleCount } from './width';
 
 /** ribbon path emit 所需的 Extension 编排上下文 */
 export type EmitRibbonPrimitiveContext = RibbonEmitOptions;
@@ -66,8 +54,8 @@ const materializedSamples = (
   totalLength: number,
   labels: ReadonlyArray<PathKindLabel>,
   widthAt: (offset: number) => number,
-  endpointTangents: { start: [number, number]; end: [number, number] },
-  align: RibbonLike['align'],
+  endpointAxes: { start?: [number, number]; end?: [number, number] },
+  align: 'center' | 'left' | 'right',
   round: (value: number) => number,
 ): Array<Readonly<{ point: [number, number]; tangent: [number, number]; boundaryOffset?: number }>> =>
   labels.map(label => {
@@ -77,11 +65,26 @@ const materializedSamples = (
       sample,
       offset,
       widthAt,
-      endpointTangents,
+      endpointAxes,
       align,
       round,
     });
-    return { point: section.center, tangent: section.tangent, boundaryOffset: section.width / 2 };
+    return {
+      point: section.center,
+      tangent: sample.tangent,
+      boundaryOffset:
+        label.side === 'bottom'
+          ? align === 'left'
+            ? 0
+            : align === 'right'
+              ? section.width
+              : section.width / 2
+          : align === 'right'
+            ? 0
+            : align === 'left'
+              ? section.width
+              : section.width / 2,
+    };
   });
 
 const resultOf = (
@@ -109,6 +112,7 @@ export const emitRibbonPrimitive = (
   path: IRRibbonPath,
   context: EmitRibbonPrimitiveContext,
   profileRegistry: ReadonlyMap<string, RibbonWidthProfileDefinition>,
+  capRegistry: ReadonlyMap<string, RibbonCapDefinition>,
 ): PathKindCompileResult | null => {
   const options = resolveRibbonOptions(path.kindOptions);
   const ribbon: RibbonLike = { ...path, ...options };
@@ -121,31 +125,9 @@ export const emitRibbonPrimitive = (
         details: { mode: ribbon.mode },
       });
     }
-    if (ribbon.upper === undefined || ribbon.lower === undefined) {
-      throw new RetikzExtensionError({
-        code: RetikzExtensionErrorCode.PipelineInvariant,
-        message: 'Boundary ribbon requires `upper` and `lower` steps.',
-        details: { mode: ribbon.mode, upper: ribbon.upper !== undefined, lower: ribbon.lower !== undefined },
-      });
-    }
-    const upper = segmentsFromCommands({
-      commands: context.materializePath({ children: ribbon.upper }).commands,
-      source: 'upper boundary',
-    });
-    const lower = segmentsFromCommands({
-      commands: context.materializePath({ children: ribbon.lower }).commands,
-      source: 'lower boundary',
-    });
-    const samples = assertSampleCount(
-      resolveSampleCount(ribbon.sampling, Math.max(upper.totalLength, lower.totalLength)) ?? DEFAULT_RIBBON_SAMPLES,
-    );
     const outline = boundaryOutlineCommands({
-      upper: upper.segments,
-      upperLength: upper.totalLength,
-      lower: lower.segments,
-      lowerLength: lower.totalLength,
-      sampleCount: samples,
-      round: context.round,
+      upper: context.materializePath({ children: ribbon.upper }).commands,
+      lower: context.materializePath({ children: ribbon.lower }).commands,
     });
     return resultOf(ribbon, outline, context);
   }
@@ -168,69 +150,31 @@ export const emitRibbonPrimitive = (
       details: { totalLength: rawTotalLength },
     });
   }
-  const startPoint = sampleAtDistance(rawSegments, rawTotalLength, 0).point;
-  const endPoint = sampleAtDistance(rawSegments, rawTotalLength, rawTotalLength).point;
-  const connectionTangent = normalizeVector([endPoint[0] - startPoint[0], endPoint[1] - startPoint[1]], 'connection');
-  const endpointTangents = {
-    start: directionToTangent(ribbon.start.direction, connectionTangent, 'start'),
-    end: directionToTangent(ribbon.end.direction, connectionTangent, 'end'),
+  const endpointAxes = {
+    start: ribbon.start.direction === 'auto' ? undefined : directionToSectionAxis(ribbon.start.direction, 'start'),
+    end: ribbon.end.direction === 'auto' ? undefined : directionToSectionAxis(ribbon.end.direction, 'end'),
   };
-  const segments = segmentInputsToSegments(segmentInputs, {
-    start: ribbon.start.direction === undefined ? undefined : endpointTangents.start,
-    end: ribbon.end.direction === undefined ? undefined : endpointTangents.end,
-  });
-  const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
-  if (!Number.isFinite(totalLength) || totalLength <= 0) {
-    throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.GeometryInvalid,
-      message: 'Ribbon centerline has zero length; at least one nonzero segment is required.',
-      details: { totalLength },
-    });
-  }
+  const segments = rawSegments;
+  const totalLength = rawTotalLength;
   const widthResolution = resolveRibbonWidth(ribbon.width, profileRegistry, 'path.kindOptions.width');
-  const widthAt = centerlineWidthFunction(ribbon, widthResolution, totalLength);
+  const widthAt = widthFunction(widthResolution, totalLength);
   const sampleCount = resolveSampleCount(ribbon.sampling, totalLength);
-  const resolvedSampleCount =
-    sampleCount ?? (centerlineWidthRequiresSampling(widthResolution) ? DEFAULT_RIBBON_SAMPLES : undefined);
-  const outline =
-    resolvedSampleCount === undefined
-      ? (analyticOutlineCommands({
-          inputs: segmentInputs,
-          segments,
-          totalLength,
-          widthAt,
-          endpointTangents,
-          endpointTangentOverrides: {
-            start: ribbon.start.direction === undefined ? undefined : endpointTangents.start,
-            end: ribbon.end.direction === undefined ? undefined : endpointTangents.end,
-          },
-          align: ribbon.align,
-          startEndpointCap: ribbon.start.cap,
-          endEndpointCap: ribbon.end.cap,
-          round: context.round,
-        }) ??
-        outlineCommands({
-          segments,
-          totalLength,
-          sampleCount: DEFAULT_RIBBON_SAMPLES,
-          widthAt,
-          endpointTangents,
-          align: ribbon.align,
-          startEndpointCap: ribbon.start.cap,
-          endEndpointCap: ribbon.end.cap,
-          round: context.round,
-        }))
-      : outlineCommands({
-          segments,
-          totalLength,
-          sampleCount: assertSampleCount(resolvedSampleCount),
-          widthAt,
-          endpointTangents,
-          align: ribbon.align,
-          startEndpointCap: ribbon.start.cap,
-          endEndpointCap: ribbon.end.cap,
-          round: context.round,
-        });
+  const stops = ribbon.width.kind === 'stops' ? ribbon.width.stops : [];
+  const outline = outlineCommands({
+    segments,
+    totalLength,
+    sampleCount,
+    widthAt,
+    endpointAxes,
+    align: ribbon.align,
+    startEndpointCap: ribbon.start.cap,
+    endEndpointCap: ribbon.end.cap,
+    capRegistry,
+    featureOffsets: stops.map(stop => stop.offset),
+    jumpOffsets:
+      ribbon.width.kind === 'stops' && ribbon.width.interpolation === 'step' ? stops.map(stop => stop.offset) : [],
+    round: context.round,
+  });
 
   const labels = labelsOf(path);
   const samples = materializedSamples(
@@ -238,9 +182,14 @@ export const emitRibbonPrimitive = (
     totalLength,
     labels,
     widthAt,
-    endpointTangents,
+    endpointAxes,
     ribbon.align,
     context.round,
   );
-  return resultOf(ribbon, outline, context, labels, samples);
+  const result = resultOf(ribbon, outline, context, labels, samples);
+  const endpointLabels = context.emitBoundaryLabels([
+    ...endpointLabelInput('start', ribbon.start, outline.start),
+    ...endpointLabelInput('end', ribbon.end, outline.end),
+  ]);
+  return { ...result, primitives: [...result.primitives, ...endpointLabels] };
 };

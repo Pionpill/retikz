@@ -1,56 +1,22 @@
 import type { IRPosition, PathCommand } from '@retikz/core';
-import { isFinitePoint } from '@retikz/math';
 
-import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../../errors';
-import { sampleAtDistance } from '../centerline';
-import type { RibbonSegment } from '../types';
+import { segmentsFromCommands } from '../centerline';
+import { commandBoundsPoints, reverseCommands } from '../commands';
 
-export type BoundaryOutlineCommandsInput = {
-  upper: ReadonlyArray<RibbonSegment>;
-  upperLength: number;
-  lower: ReadonlyArray<RibbonSegment>;
-  lowerLength: number;
-  sampleCount: number;
-  round: (n: number) => number;
-};
-
-/**
- * boundary 模式 ribbon 轮廓
- * @description upper / lower 已各自解析成中心线段；这里按同一归一化 offset 采样两条边界，再拼成闭合 path
- */
+/** 保留作者两侧曲线，反转下边界并用直线封口 */
 export const boundaryOutlineCommands = ({
   upper,
-  upperLength,
   lower,
-  lowerLength,
-  sampleCount,
-  round,
-}: BoundaryOutlineCommandsInput): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
-  const upperPoints: Array<IRPosition> = [];
-  const lowerPoints: Array<IRPosition> = [];
-  for (let i = 0; i < sampleCount; i += 1) {
-    const offset = i / (sampleCount - 1);
-    const upperPoint = sampleAtDistance(upper, upperLength, offset * upperLength).point;
-    const lowerPoint = sampleAtDistance(lower, lowerLength, offset * lowerLength).point;
-    const u: IRPosition = [round(upperPoint[0]), round(upperPoint[1])];
-    const l: IRPosition = [round(lowerPoint[0]), round(lowerPoint[1])];
-    if (!isFinitePoint(u) || !isFinitePoint(l)) {
-      throw new RetikzExtensionError({
-        code: RetikzExtensionErrorCode.GeometryInvalid,
-        message: 'Ribbon boundary sampling produced a non-finite coordinate.',
-        details: { lower: l, offset, upper: u },
-      });
-    }
-    upperPoints.push(u);
-    lowerPoints.push(l);
-  }
-  const commands: Array<PathCommand> = [{ kind: 'move', to: upperPoints[0] }];
-  for (let i = 1; i < upperPoints.length; i += 1) {
-    commands.push({ kind: 'line', to: upperPoints[i] });
-  }
-  for (let i = lowerPoints.length - 1; i >= 0; i -= 1) {
-    commands.push({ kind: 'line', to: lowerPoints[i] });
-  }
-  commands.push({ kind: 'close' });
-  return { commands, points: [...upperPoints, ...lowerPoints] };
+}: {
+  upper: ReadonlyArray<PathCommand>;
+  lower: ReadonlyArray<PathCommand>;
+}): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
+  segmentsFromCommands({ commands: upper, source: 'upper boundary' });
+  segmentsFromCommands({ commands: lower, source: 'lower boundary' });
+  const reversed = reverseCommands(lower);
+  const first = reversed[0];
+  const commands: Array<PathCommand> = [...upper];
+  if (first.kind === 'move') commands.push({ kind: 'line', to: first.to });
+  commands.push(...reversed.slice(1), { kind: 'close' });
+  return { commands, points: commandBoundsPoints(commands) };
 };

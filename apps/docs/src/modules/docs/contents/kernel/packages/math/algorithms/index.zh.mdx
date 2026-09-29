@@ -246,20 +246,20 @@ $$
     {
       label: '曲线长度的折线近似',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 281,
-      endLine: 297,
+      startLine: 294,
+      endLine: 316,
     },
     {
       label: '距离到参数的二分反解',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 423,
-      endLine: 447,
+      startLine: 506,
+      endLine: 531,
     },
     {
       label: '保形曲线切片',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 341,
-      endLine: 398,
+      startLine: 354,
+      endLine: 411,
     },
   ]}
 />
@@ -276,6 +276,40 @@ $$
 | `curve.slice`               | 时间 O(1)，空间 O(1)   | 取得参数区间内、保持原种类的子曲线                                                         |
 
 绘制语义仍属于 Core：Core 会把最终 `PathCommand` 映射为这些数学段，再决定标签、断口、dash、箭头和命中。若要控制标签是否自动断线，请使用 [路径标签与描边断口](/kernel/components/path/label) 的 `interrupt`，不要把 Math API 当作绘图或标签接口。
+
+## 曲线投影极值
+
+`curve.projectedRange(segment, axis)` 计算曲线段在给定方向上的投影范围，可用于确定曲线的定向边界或支撑线。`segment` 接受直线、二次 / 三次贝塞尔、圆弧和椭圆弧五种 `CurveSegment`；`axis` 是二维向量，返回值 `{ min, max }` 是以坐标原点为参照的点积范围，不是曲线上的两个点，也不是弧长：
+
+蓝色曲线为计算对象，灰色点线显示控制折线，灰色虚线显示两条支撑线。切换直线、二次 / 三次贝塞尔、圆弧或椭圆弧，再调整左侧指示的投影角度，观察支撑线始终包住整条曲线。贝塞尔类型可调整控制点；三次贝塞尔仅调整 C1，C2 固定为 `[-12, 15]`。顶部显示原始数学单位下的 `min / max`。默认控制点 X=20，而曲线最右侧为 10。
+
+<ComponentPreview
+  files={['curve-projection', 'curve-projection.preview.tsx']}
+  defaultSourceFile="curve-projection.preview.tsx"
+  size="md"
+/>
+
+### 算法解析
+
+$$
+q(t)=p(t)\cdot axis,\qquad min=\min_{t\in[0,1]}q(t),\quad max=\max_{t\in[0,1]}q(t)
+$$
+
+计算会比较两个端点与区间内部的极值候选。二次 / 三次贝塞尔通过求投影多项式的导数零点得到候选参数；圆弧与旋转椭圆弧求三角函数的极值角，并只保留有向扫描区间内的角度。它不依赖 `sampleCount`，也不直接拿控制点范围代替曲线范围；单段时间和空间复杂度均为 O(1)，具有普通浮点运算误差。
+
+例如二次贝塞尔的起点为 `[0, 0]`、控制点为 `[20, 10]`、终点为 `[0, 20]`，沿 `[1, 0]` 的投影范围是 `{ min: 0, max: 10 }`：最右位置在曲线内部，控制点的 x=20 不属于曲线范围。`axis` 不会自动单位化，改用 `[2, 0]` 会得到 `{ min: 0, max: 20 }`；零向量返回 `{ min: 0, max: 0 }`。需要把投影值解释为沿轴距离时，先传入单位向量。
+
+<SourceLinks
+  sources={[
+    { label: '曲线投影的内部极值', path: 'packages/kernel/math/src/algorithms/curve.ts', startLine: 414, endLine: 476 },
+  ]}
+/>
+
+### 调用速查
+
+| API                    | 复杂度               | 作用                                                                    |
+| ---------------------- | -------------------- | ----------------------------------------------------------------------- |
+| `curve.projectedRange` | 时间 O(1)，空间 O(1) | 完整曲线段沿 `axis` 的点积范围 `{ min, max }`，包含内部极值；不依赖采样 |
 
 ## 过点曲线
 
