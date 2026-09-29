@@ -80,13 +80,21 @@ const view = mount(document.getElementById('diagram')!, ir);
 - `font` / `textColor` use explicit label values first, then `Scope.defaults.label`, and finally inherit missing values from the node
 - `opacity` is 0..1 and multiplies the node opacity
 
-<ComponentPreview files="node-label-list" size="sm" />
+<ComponentPreview
+  files={['node-label-list', 'node-label-list.preview.tsx']}
+  size="sm"
+  defaultSourceFile="node-label-list.preview.tsx"
+/>
 
 ## Label position
 
 Choose a named direction, numeric angle, boundary fraction, or the center on one label. Center labels hide ineffective position fields.
 
-<ComponentPreview files="node-label-position" size="md" />
+<ComponentPreview
+  files={['node-label-position', 'node-label-position.preview.tsx']}
+  size="md"
+  defaultSourceFile="node-label-position.preview.tsx"
+/>
 
 To attach multiple labels, place the same object form in an array:
 
@@ -110,7 +118,11 @@ import { Node } from '@retikz/react';
 - `fraction` is the 0..1 proportional position on that side and defaults to `0.5`
 - `placement: 'inside'` cannot be combined with `pin`; keep labels outside when a leader line is needed
 
-<ComponentPreview files="node-label-spacing" size="md" />
+<ComponentPreview
+  files={['node-label-spacing', 'node-label-spacing.preview.tsx']}
+  size="md"
+  defaultSourceFile="node-label-spacing.preview.tsx"
+/>
 
 ## Rotation and leader lines
 
@@ -118,7 +130,11 @@ import { Node } from '@retikz/react';
 
 `label.pin` adds a **leader line** from the node border to the label: `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern, dashOffset }` customizes it; omitted / `false` = no leader. Its endpoint is the exact intersection of the placement ray and the rotated visual box, with no hidden padding; the preceding box geometry still owns label placement.
 
-<ComponentPreview files="node-label-rotate-pin" size="lg" />
+<ComponentPreview
+  files={['node-label-rotate-pin', 'node-label-rotate-pin.preview.tsx']}
+  size="lg"
+  defaultSourceFile="node-label-rotate-pin.preview.tsx"
+/>
 
 <Comparison target="tikz" title="Node Label Syntax">
 
@@ -133,7 +149,11 @@ import { Node } from '@retikz/react';
 
 The position stays fixed at the right outside of the node while the panel controls color, font size, and opacity.
 
-<ComponentPreview files="node-label-style" size="lg" />
+<ComponentPreview
+  files={['node-label-style', 'node-label-style.preview.tsx']}
+  size="lg"
+  defaultSourceFile="node-label-style.preview.tsx"
+/>
 
 ## Related props
 
@@ -158,41 +178,41 @@ These members control label attachment, placement, and visual style. See the [AP
 - Named direction: \`'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left' | 'center'\`. A named direction attaches from the node border; \`'center'\` fixes the final node-rectangle center and ignores \`placement\` and \`distance\`
 - Angle: \`number\`, attaching along the ray from the node center at that angle
 - Boundary fraction: \`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`. It attaches to one edge; \`fraction\` defaults to \`0.5\` and ranges from \`0..1\``,
-  },
-  {
-    name: 'InputNodeLabel.placement',
-    kind: 'property',
-    type: "'outside' | 'inside'",
-    defaultValue: "'outside'",
-    description: 'Offsets the label outward or inward from its attachment; inside labels cannot use a leader line.',
-  },
-  {
-    name: 'InputNodeLabel.distance',
-    kind: 'property',
-    type: 'number',
-    defaultValue: 'CompileOptions.labelDistance (12 by default)',
-    description: 'Sets the user-unit gap from the node border to the rotated label visual box.',
-  },
-  {
-    name: 'InputNodeLabel.rotate',
-    kind: 'property',
-    type: "'none' | 'radial' | 'tangent' | number",
-    description:
-      '`none`leaves the text unrotated;`radial`follows the attachment direction;`tangent`adds 90°. A number sets an explicit angle.',
-    defaultValue: "'none'",
-  },
-  {
-    name: 'InputNodeLabel.keepUpright',
-    kind: 'property',
-    type: 'boolean',
-    description: 'Flips upside-down text by 180° without changing its attachment point.',
-    defaultValue: 'false',
-  },
-  {
-    name: 'InputNodeLabel.pin',
-    kind: 'property',
-    type: "IRNodeLabel['pin']",
-    description: `Leader line for outside labels only:
+},
+{
+  name: 'InputNodeLabel.placement',
+  kind: 'property',
+  type: "'outside' | 'inside'",
+  defaultValue: "'outside'",
+  description: 'Offsets the label outward or inward from its attachment; inside labels cannot use a leader line.',
+},
+{
+  name: 'InputNodeLabel.distance',
+  kind: 'property',
+  type: 'number',
+  defaultValue: 'CompileOptions.labelDistance (12 by default)',
+  description: 'Sets the user-unit gap from the node border to the rotated label visual box.',
+},
+{
+  name: 'InputNodeLabel.rotate',
+  kind: 'property',
+  type: "'none' | 'radial' | 'tangent' | number",
+  description:
+    '`none`leaves the text unrotated;`radial`follows the attachment direction;`tangent`adds 90°. A number sets an explicit angle.',
+  defaultValue: "'none'",
+},
+{
+  name: 'InputNodeLabel.keepUpright',
+  kind: 'property',
+  type: 'boolean',
+  description: 'Flips upside-down text by 180° without changing its attachment point.',
+  defaultValue: 'false',
+},
+{
+  name: 'InputNodeLabel.pin',
+  kind: 'property',
+  type: "IRNodeLabel['pin']",
+  description: `Leader line for outside labels only:
 
 - \`true\`: uses the default thin solid line
 - \`{ stroke?, strokeWidth?, dashPattern?, dashOffset? }\`: customizes the leader line; \`strokeWidth\` defaults to \`1\`, while \`dashPattern\` and \`dashOffset\` control dashes`,

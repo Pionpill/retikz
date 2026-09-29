@@ -73,9 +73,10 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 目标 Node 的视觉 shape 是椭圆，默认 boundary 是矩形。先保持 `anchor="auto"`，拖动来源角度：端点会持续朝来源方向命中目标 boundary。再锁定 `top` / `right` 或数字角度，来源继续移动而目标端点保持不变。`boundary` 选项只覆盖这条边的目标端点；切回“继承矩形”不会修改目标 Node 自己的默认设置。
 
 <ComponentPreview
-  files="primitive-relations-playground"
+  files={['primitive-relations-playground', 'primitive-relations-playground.preview.tsx']}
   size="md"
   caption="淡灰 dotted 半径只是来源轨道辅助线；灰色 dashed 轮廓表示当前非 shape 连接面，选择“视觉形状”时连线直接落到蓝色椭圆。"
+  defaultSourceFile="primitive-relations-playground.preview.tsx"
 />
 
 <SourceLinks

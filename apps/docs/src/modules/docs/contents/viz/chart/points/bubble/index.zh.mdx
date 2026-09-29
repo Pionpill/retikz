@@ -11,7 +11,14 @@ description: 气泡图在两个位置变量之外，用气泡大小表达第三�
 
 100 条地震记录，横轴为深度、纵轴为震级，大小表示显著性。
 
-<ComponentPreview mode="showcase" responsive files={['bubble-minimal', 'bubble-minimal.data.ts']} hideCode size="xl" />
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['bubble-minimal', 'bubble-minimal.preview.tsx', 'bubble-minimal.data.ts']}
+  defaultSourceFile="bubble-minimal.preview.tsx"
+  hideCode
+  size="xl"
+/>
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -170,10 +177,11 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['bubble-encodings', 'bubble-basic.data.ts']}
+  files={['bubble-encodings', 'bubble-encodings.preview.tsx', 'bubble-basic.data.ts']}
   controls={{ name: 'bubble-encodings' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="bubble-encodings.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：BubbleEncodings](#bubbleencodings)。
@@ -231,7 +239,8 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['bubble-appearance', 'bubble-basic.data.ts']}
+  files={['bubble-appearance', 'bubble-appearance.preview.tsx', 'bubble-basic.data.ts']}
+  defaultSourceFile="bubble-appearance.preview.tsx"
   controls={{ name: 'bubble-appearance' }}
   controlPanelDefaultOpen={false}
   size="xl"
@@ -305,7 +314,8 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['bubble-marks', 'bubble-basic.data.ts']}
+  files={['bubble-marks', 'bubble-marks.preview.tsx', 'bubble-basic.data.ts']}
+  defaultSourceFile="bubble-marks.preview.tsx"
   size="xl"
   controls={{ name: 'bubble-marks' }}
   caption="调整填充不透明度与轮廓线宽，观察气泡的遮挡和边界。"
@@ -333,10 +343,11 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['bubble-basic', 'bubble-basic.data.ts']}
+  files={['bubble-basic', 'bubble-basic.preview.tsx', 'bubble-basic.data.ts']}
   controls={{ name: 'bubble-basic' }}
   controlPanelDefaultOpen={false}
   size="xxl"
+  defaultSourceFile="bubble-basic.preview.tsx"
 />
 
 ### 分面比较
@@ -357,7 +368,8 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['bubble-facet', 'bubble-basic.data.ts']}
+  files={['bubble-facet', 'bubble-facet.preview.tsx', 'bubble-basic.data.ts', 'bubble-facet.i18n.ts']}
+  defaultSourceFile="bubble-facet.preview.tsx"
   size="xxxl"
   controls={{ name: 'bubble-facet' }}
 />

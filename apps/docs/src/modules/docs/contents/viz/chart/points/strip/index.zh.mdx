@@ -14,9 +14,10 @@ description: 条带图按类别组织观测，并在类别中心附近散布点�
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-minimal', 'strip-palmer-penguins.data.ts']}
+  files={['strip-minimal', 'strip-minimal.preview.tsx', 'strip-palmer-penguins.data.ts']}
   hideCode
   size="xl"
+  defaultSourceFile="strip-minimal.preview.tsx"
 />
 
 <DocTabs defaultValue="react-jsx">
@@ -192,11 +193,12 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-encodings', 'strip-vega-barley.data.ts']}
+  files={['strip-encodings', 'strip-encodings.preview.tsx', 'strip-vega-barley.data.ts']}
   hideCode
   controls={{ name: 'strip-encodings' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="strip-encodings.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：StripEncodings](#stripencodings)。
@@ -255,11 +257,12 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-basic', 'strip-vega-barley.data.ts']}
+  files={['strip-basic', 'strip-basic.preview.tsx', 'strip-vega-barley.data.ts']}
   hideCode
   controls={{ name: 'strip-basic' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="strip-basic.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：StripProperties](#stripproperties)。
@@ -329,11 +332,12 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-marks', 'strip-vega-barley.data.ts']}
+  files={['strip-marks', 'strip-marks.preview.tsx', 'strip-vega-barley.data.ts']}
   hideCode
   size="xl"
   controls={{ name: 'strip-marks' }}
   caption="调整菱形等图元形状与半径，观察正态散布中的点位。"
+  defaultSourceFile="strip-marks.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：StripMark](#stripmark)。
@@ -359,9 +363,10 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-distribution', 'strip-vega-barley.data.ts']}
+  files={['strip-distribution', 'strip-distribution.preview.tsx', 'strip-vega-barley.data.ts']}
   size="xxl"
   controls={{ name: 'strip-distribution' }}
+  defaultSourceFile="strip-distribution.preview.tsx"
 />
 
 ## 错误与限制
@@ -398,10 +403,11 @@ Strip 根据最终尺度判断哪一轴是离散类别、哪一轴是连续数�
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['strip-placement-figure', 'strip-placement-figure.data.ts']}
+  files={['strip-placement-figure', 'strip-placement-figure.preview.tsx', 'strip-placement-figure.data.ts']}
   hideCode
   type="illustration"
   size="xxl"
+  defaultSourceFile="strip-placement-figure.preview.tsx"
 />
 
 散布后点仍落在数值 1、2、3 上，只有类别方向发生偏移。

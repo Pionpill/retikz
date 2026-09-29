@@ -1,58 +1,19 @@
-import type { Position } from '@retikz/math';
-import { convexHull, polygon } from '@retikz/math';
-import { Draw, Layout } from '@retikz/react';
-import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { polygonContainmentControls, previewControlContract } from './polygon-containment.controls';
+import { PolygonContainmentPreview } from './polygon-containment.preview';
 
 export const previewControls = polygonContainmentControls;
-
-type PolygonValues = PreviewControlValuesFor<typeof polygonContainmentControls>;
-
-const PolygonSets: Record<PolygonValues['shape'], Array<Position>> = {
-  concave: [
-    [-140, -55],
-    [-48, -88],
-    [-5, -25],
-    [78, -70],
-    [142, 5],
-    [72, 82],
-    [-35, 58],
-    [-122, 88],
-  ],
-  convex: [
-    [-140, -55],
-    [-48, -88],
-    [78, -70],
-    [142, 5],
-    [72, 82],
-    [-122, 88],
-  ],
-};
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const vertices = PolygonSets[values.shape];
-  const hull = convexHull(vertices);
-  const testPoints: Array<Position> = [values.testPointA, values.testPointB, values.testPointC];
-
-  return (
-    <Layout>
-      <Draw way={[...vertices, vertices[0]]} style={{ stroke: 'lightgray', strokeWidth: 2 }} />
-      <Draw way={[...hull, hull[0]]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
-      {testPoints.map((point, index) => (
-        <Circle
-          key={`test-point-${index}`}
-          center={point}
-          radius={6}
-          style={{ fill: polygon.containsPoint(vertices, point) ? 'seagreen' : 'crimson', stroke: 'none' }}
-        />
-      ))}
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  PolygonContainmentPreview({
+    shape: values.shape,
+    testPointA: values.testPointA,
+    testPointB: values.testPointB,
+    testPointC: values.testPointC,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

@@ -1,31 +1,13 @@
-import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import {
-  previewControlContract,
-  stackDivergingControls,
-  stackDivergingOperation,
-} from './transform-stack-diverging.controls';
-import { signedProductChange } from './transform-stack-diverging.data';
+import { previewControlContract, stackDivergingControls } from './transform-stack-diverging.controls';
+import { TransformStackDivergingPreview } from './transform-stack-diverging.preview';
 
-/** 注册回退使用的正负分流堆叠控件 */
+/** 注册 controls 自动发现的回退导出 */
 export const previewControls = stackDivergingControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, () => (
-  <Plot data={signedProductChange} width={420} height={260}>
-    <PlotTransform {...stackDivergingOperation} />
-    <PlotScale dimension="y" type="linear" domain={[-45, 70]} />
-    <IntervalMark x="quarter" color="product" bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }} />
-    <PlotAxis dimension="x" title="季度" />
-    <PlotAxis dimension="y" title="变化" grid />
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, () => TransformStackDivergingPreview('zh'));
 
-/** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;
-
-/** 展示正值向上、负值向下分别累积的 diverging stack */
 const Preview = controlledPreview.Component;
-
 export default Preview;

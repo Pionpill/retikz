@@ -160,7 +160,13 @@ One track describes one property. Keyframe at values range from 0 to 1 in nondec
 
 Change parameters to observe timing. Disabling playback displays the base state rather than automatically sampling the final frame.
 
-<ComponentPreview files="animation-playground" size="md" controlPanelDefaultSize={50} controls={{ animation: true }} />
+<ComponentPreview
+  files={['animation-playground', 'animation-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  controls={{ animation: true }}
+  defaultSourceFile="animation-playground.preview.tsx"
+/>
 
 ## Related props
 

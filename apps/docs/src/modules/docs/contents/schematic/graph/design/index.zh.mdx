@@ -38,7 +38,11 @@ Entity 与 Relation 都不提供内置 kind 目录。业务名称必须先定义
 
 下面保持两个对象的身份、文字和位置不变。改变 Entity 的 role，观察右侧形状；改变 Relation 的 role，观察线型和箭头；切换加粗描边时，语义与位置保持不变。
 
-<ComponentPreview files="semantic-roles" size="md" />
+<ComponentPreview
+  files={['semantic-roles', 'semantic-roles.preview.tsx']}
+  size="md"
+  defaultSourceFile="semantic-roles.preview.tsx"
+/>
 
 这不是把语义简单换成颜色。Entity role 提供节点结构；Relation role 提供关系方向与端点约定，注册的 Relation kind 还可以细化方向样式。kind 本身不是任意形状名称，实例 style 也不会把活动变成网关。需要领域分类时扩展定义，需要统一外观时使用主题或规则。
 

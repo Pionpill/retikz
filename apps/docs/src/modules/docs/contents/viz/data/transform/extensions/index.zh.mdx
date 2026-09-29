@@ -115,7 +115,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 以下定义与定义函数都从 `@retikz/data` 包根导出。
 
-### `TransformDefinition`
+#### `TransformDefinition`
 
 | 字段            | 类型                                                                                                 | 描述                                                 |
 | --------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
@@ -128,15 +128,19 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 使用 `defineTransform(definition)` 保留这些字段之间的泛型关联。
 
-### 输出与调度契约
+#### `DataTransformOutputDescriptor`
 
-| 类型                            | 关键字段                               | 职责                                                        |
-| ------------------------------- | -------------------------------------- | ----------------------------------------------------------- |
-| `DataTransformOutputDescriptor` | `field`、`type`                        | 给输出字段固定类型，或用 `{ from }` 复用现有字段类型        |
-| `DataTransformOutputModel`      | `preserve.outputs` \| `replace.fields` | 保留并增补当前字段图，或用完整字段清单替换当前字段图        |
-| `DataTransformSchedule`         | `phase`、`bindingClass`、`fieldEffect` | 让宿主在闭合阶段顺序中判断该 Definition 能否绑定到字段 slot |
+`field` 与 `type` 给输出字段固定类型，或用 `{ from }` 复用现有字段类型。
 
-### `StatisticsReducerDefinition`
+#### `DataTransformOutputModel`
+
+`preserve.outputs` 保留并增补当前字段图；`replace.fields` 用完整字段清单替换当前字段图。
+
+#### `DataTransformSchedule`
+
+`phase`、`bindingClass` 与 `fieldEffect` 让宿主在闭合阶段顺序中判断 Definition 能否绑定到字段 slot。
+
+#### `StatisticsReducerDefinition`
 
 | 字段            | 类型                                                                                                 | 描述                                                                     |
 | --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -148,7 +152,7 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 使用 `defineStatisticsReducer(definition)` 定义 reducer。
 
-### `RowSelectorDefinition`
+#### `RowSelectorDefinition`
 
 | 字段           | 类型                                                                               | 描述                          |
 | -------------- | ---------------------------------------------------------------------------------- | ----------------------------- |

@@ -100,13 +100,21 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 Node 的文字、标签和引脚是独立输出，不随形状投影。调整下方控件时，只有蓝色矩形主形状的偏移、模糊、颜色和不透明度改变，顶部标签保持清晰。
 
-<ComponentPreview files="shadow-node" size="lg" />
+<ComponentPreview
+  files={['shadow-node', 'shadow-node.preview.tsx']}
+  size="lg"
+  defaultSourceFile="shadow-node.preview.tsx"
+/>
 
 ### Path 与箭头的效果边界
 
 Path 的路径和箭头属于同一主几何，因此共享一份投影；路径标签保持独立。下方示例复用同一组控件，便于对照 Node 与 Path 的作用边界。
 
-<ComponentPreview files="shadow-path" size="lg" />
+<ComponentPreview
+  files={['shadow-path', 'shadow-path.preview.tsx']}
+  size="lg"
+  defaultSourceFile="shadow-path.preview.tsx"
+/>
 
 ## 相关属性
 

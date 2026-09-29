@@ -475,8 +475,7 @@
     "type": "Type",
     "required": "Required",
     "description": "Description",
-    "typePrefix": "Type:",
-    "toggleType": "Expand / collapse type"
+    "typePrefix": "Type:"
   },
   "examplePrompt": {
     "expandDetail": "Details",

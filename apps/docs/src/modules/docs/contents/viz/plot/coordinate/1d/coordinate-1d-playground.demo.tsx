@@ -1,6 +1,3 @@
-import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
-import type { InputPlotCoordinate } from '@retikz/plot-vanilla';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
@@ -8,56 +5,28 @@ import {
   coordinate1DPlaygroundControls,
   previewControlContract,
 } from './coordinate-1d-playground.controls';
-import { oneDimensionalEvents } from './coordinate-1d-playground.data';
+import { Coordinate1dPlaygroundPreview } from './coordinate-1d-playground.preview';
 
 /** 注册回退使用的一维坐标系控件 */
 export const previewControls = coordinate1DPlaygroundControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const coordinate: InputPlotCoordinate =
-    values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.coordinate] === 'cartesian1D'
-      ? {
-          type: 'cartesian1D',
-          orientation: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.orientation],
-        }
-      : {
-          type: 'polar1D',
-          radius: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.radius],
-          startAngle: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.startAngle],
-          endAngle:
-            values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.startAngle] +
-            values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.sweepAngle],
-        };
-
-  return (
-    <Plot data={oneDimensionalEvents} coordinate={coordinate} width={270} height={270}>
-      <PlotScale dimension="x" type="linear" domain={[0, 24]} />
-      <PointMark
-        x="hour"
-        size={values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointSize]}
-        fill={{
-          kind: 'constant',
-          value: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointFill],
-        }}
-        stroke={{
-          kind: 'constant',
-          value: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointStroke],
-        }}
-        strokeWidth={values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointStrokeWidth]}
-        opacity={values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointOpacity]}
-      />
-      {values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.axisVisible] ? (
-        <PlotAxis
-          dimension="x"
-          line={{
-            stroke: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.axisStroke],
-            strokeWidth: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.axisStrokeWidth],
-          }}
-        />
-      ) : null}
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  Coordinate1dPlaygroundPreview({
+    coordinate: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.coordinate],
+    orientation: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.orientation],
+    radius: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.radius],
+    startAngle: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.startAngle],
+    sweepAngle: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.sweepAngle],
+    pointSize: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointSize],
+    pointFill: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointFill],
+    pointStroke: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointStroke],
+    pointStrokeWidth: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointStrokeWidth],
+    pointOpacity: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.pointOpacity],
+    axisVisible: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.axisVisible],
+    axisStroke: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.axisStroke],
+    axisStrokeWidth: values[COORDINATE_1D_PLAYGROUND_CONTROL_IDS.axisStrokeWidth],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

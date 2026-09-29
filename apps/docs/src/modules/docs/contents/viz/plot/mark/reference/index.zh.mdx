@@ -46,13 +46,21 @@ ReferenceMark 是底层参考 mark：它负责把一个固定轴值解释成 lin
 
 单个 `x` 或 `y` 常量会生成一条跨满对侧轴域的参考线。切换“参考轴”可以比较水平线与竖直线；再切到极坐标，同一配置分别变成参考环与径向线。
 
-<ComponentPreview files={['rule-threshold', 'rule-threshold.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-threshold', 'rule-threshold.preview.tsx', 'rule-threshold.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-threshold.preview.tsx"
+/>
 
 ### 参考带
 
 给同轴上界后，ReferenceMark 从线变成填充带。`y` / `yTo` 在极坐标中形成环带，`x` / `xTo` 则形成扇形楔；带通常先声明，再叠加数据图元。
 
-<ComponentPreview files={['rule-band', 'rule-threshold.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-band', 'rule-band.preview.tsx', 'rule-threshold.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-band.preview.tsx"
+/>
 
 `xTo` 与 `yTo` 对称：绑 `x` 时用 `xTo` 得到竖直带。上界必须匹配绑定轴，否则会在构造或 lowering 阶段报错。
 
@@ -60,13 +68,21 @@ ReferenceMark 是底层参考 mark：它负责把一个固定轴值解释成 lin
 
 `kind="region"` 让 ReferenceMark 从单轴约束变成坐标 cell 区域。笛卡尔坐标下它围出矩形区域；极坐标下同一份 `x` / `xTo` / `y` / `yTo` 会被解释成角度区间 + 半径区间，围出环扇区。
 
-<ComponentPreview files={['rule-region', 'rule-region.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-region', 'rule-region.preview.tsx', 'rule-region.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-region.preview.tsx"
+/>
 
 ### 逐行参考
 
 `y="threshold"` 是字段轴值，表示每行数据各生成一条参考线。此时 `color="tier"` 会被当作颜色字段，按类别分组上色。
 
-<ComponentPreview files={['rule-per-datum', 'rule-per-datum.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-per-datum', 'rule-per-datum.preview.tsx', 'rule-per-datum.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-per-datum.preview.tsx"
+/>
 
 在 React 写法中，`color` 的字符串语义由下界 `x` / `y` 决定：下界是数字时按常量颜色处理，下界是字段时按颜色字段处理。即使字段上界或 extent 让 reference 逐行生成，只要下界仍是数字，`color` 仍是常量颜色。
 
@@ -74,7 +90,11 @@ ReferenceMark 是底层参考 mark：它负责把一个固定轴值解释成 lin
 
 默认 line / band 跨满对侧轴域。设置 `extentField` / `extentToField` 后，每行可以从两个字段读取对侧 role 的起止值，把参考约束截成局部线段或局部带；两者必须成对出现。
 
-<ComponentPreview files={['rule-extent', 'rule-extent.data.ts']} size="lg" />
+<ComponentPreview
+  files={['rule-extent', 'rule-extent.preview.tsx', 'rule-extent.data.ts']}
+  size="lg"
+  defaultSourceFile="rule-extent.preview.tsx"
+/>
 
 extent 只改变参考在对侧轴上的覆盖范围，不改变 `x` / `y` 绑定的参考轴值。在 `polar2D` 下，对侧 role 会相应解释为角度跨度或半径跨度。
 

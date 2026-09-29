@@ -14,9 +14,10 @@ description: 二维坐标系把 x 与 y 位置通道投影到笛卡尔或极坐�
 - 面使用 `<IntervalMark>` 占据分类带宽，并从 `y = 0` 的 x 轴基线向上延伸。
 
 <ComponentPreview
-  files={['coordinate-cartesian', 'coordinate-2d.data.ts']}
+  files={['coordinate-cartesian', 'coordinate-cartesian.preview.tsx', 'coordinate-2d.data.ts']}
   size="lg"
   caption="切换点、线、面后，再调整四边留白和 y 网格，观察同一组 x / y 绑定如何适应绘图区。"
+  defaultSourceFile="coordinate-cartesian.preview.tsx"
 />
 
 ## 极坐标二维坐标系
@@ -32,9 +33,10 @@ description: 二维坐标系把 x 与 y 位置通道投影到笛卡尔或极坐�
 试验场可以分别控制 coordinate 与当前图元的插值模式，也可以调整 `innerRadius`、起始角度和扫过角度。扫过角度是面板中的教学参数，实际传给 coordinate 的 `endAngle` 等于 `startAngle + sweepAngle`。
 
 <ComponentPreview
-  files={['coordinate-polar', 'coordinate-2d.data.ts']}
+  files={['coordinate-polar', 'coordinate-polar.preview.tsx', 'coordinate-2d.data.ts']}
   size="lg"
   caption="比较自动推断、coordinate 显式模式与单个图元覆盖；PointMark 下图元插值会隐藏，因为点没有相邻边界。"
+  defaultSourceFile="coordinate-polar.preview.tsx"
 />
 
 <Comparison target="tikz" title="TikZ 对照">

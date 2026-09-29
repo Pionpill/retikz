@@ -1,35 +1,19 @@
-import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { CUSTOM_CHANNEL_CONTROL_IDS, customChannelControls, previewControlContract } from './custom-channel.controls';
-import { customChannelPoints } from './custom-channel.data';
-import { intensityChannel } from './custom-channel.definition';
+import { CustomChannelPreview } from './custom-channel.preview';
 
 /** controls registry 缺失时使用的显式回退 */
 export const previewControls = customChannelControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={customChannelPoints} channelDefinitions={[intensityChannel]} width={440} height={220}>
-    <PointMark
-      x="x"
-      y="y"
-      size={8}
-      fill="#2563eb"
-      stroke="#1d4ed8"
-      channels={{
-        intensity:
-          values[CUSTOM_CHANNEL_CONTROL_IDS.bindingMode] === 'field'
-            ? 'score'
-            : values[CUSTOM_CHANNEL_CONTROL_IDS.constantIntensity],
-      }}
-    />
-    <PlotAxis dimension="x" />
-    <PlotAxis dimension="y" grid />
-    {values[CUSTOM_CHANNEL_CONTROL_IDS.bindingMode] === 'field' ? <PlotLegend channel="intensity" /> : null}
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  CustomChannelPreview({
+    bindingMode: values[CUSTOM_CHANNEL_CONTROL_IDS.bindingMode],
+    constantIntensity: values[CUSTOM_CHANNEL_CONTROL_IDS.constantIntensity],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

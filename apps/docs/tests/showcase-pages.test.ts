@@ -349,23 +349,32 @@ describe('collectShowcasePages', () => {
     },
   ] as const;
 
-  it.each(minimalPointExamples)('$chart 接入示例保持指定数据量、root-only、无 presentation 且无 controls', example => {
-    expect(example.data).toHaveLength(example.rowCount);
-    expect(Object.keys(example.data[0] ?? {}).sort()).toEqual([...example.fields].sort());
+  it.each(minimalPointExamples)(
+    '$chart 接入示例源码保持指定数据量、root-only、无 presentation 且无 controls',
+    example => {
+      expect(example.data).toHaveLength(example.rowCount);
+      expect(Object.keys(example.data[0] ?? {}).sort()).toEqual([...example.fields].sort());
 
-    for (const lang of ['zh', 'en'] as const) {
-      const demo = readRequiredFile(pointChartExamplePath(example.chart, `${example.id}.${lang}.demo.tsx`));
-      expect(demo).toContain(`<${example.root}`);
-      expect(demo).toContain('rows={');
-      expect(demo).not.toContain('presentation={{');
-      expect(demo).toContain('recipe={{');
-      expect(demo).toContain('datasetImports');
-      expect(demo).not.toContain('defineControlledPreview');
-      expect(demo).not.toContain('previewControls');
-      expect(demo).not.toContain('Encodings ');
-      expect(demo).not.toContain('Properties ');
-    }
-  });
+      for (const lang of ['zh', 'en'] as const) {
+        const demo = readRequiredFile(pointChartExamplePath(example.chart, `${example.id}.${lang}.demo.tsx`));
+        const previewPath = pointChartExamplePath(example.chart, `${example.id}.preview.tsx`);
+        const visibleSource = existsSync(previewPath) ? readRequiredFile(previewPath) : demo;
+        expect(visibleSource).toContain(`<${example.root}`);
+        expect(visibleSource).toContain('rows={');
+        expect(visibleSource).not.toContain('presentation={{');
+        expect(visibleSource).toContain('recipe={{');
+        expect(demo).toContain('datasetImports');
+        expect(demo).not.toContain('defineControlledPreview');
+        expect(demo).not.toContain('previewControls');
+        expect(visibleSource).not.toContain('Encodings ');
+        expect(visibleSource).not.toContain('Properties ');
+        if (existsSync(previewPath))
+          expect(readFileSync(pointChartContentPath(example.chart, lang), 'utf8')).toContain(
+            `defaultSourceFile="${example.id}.preview.tsx"`,
+          );
+      }
+    },
+  );
 
   it.each(minimalPointExamples.filter(example => example.chart !== 'scatter'))(
     '$chart 双语页以无 controls 的接入示例作为首例',

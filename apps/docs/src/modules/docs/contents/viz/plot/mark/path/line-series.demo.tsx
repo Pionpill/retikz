@@ -1,38 +1,19 @@
-import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { LINE_SERIES_CONTROL_IDS, previewControlContract } from './line-series.controls';
-import { climate } from './line-series.data';
+import { LineSeriesPreview } from './line-series.preview';
 
 /** 比较显式 series 与分类 color 触发的隐式路径拆分 */
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const coordinate = values[LINE_SERIES_CONTROL_IDS.coordinate];
-  const grouping = values[LINE_SERIES_CONTROL_IDS.grouping];
-  const x = coordinate === 'polar2D' ? 'quarter' : 'month';
-  const grouped = grouping !== 'none';
-
-  return (
-    <Plot data={climate} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>
-      <PathMark
-        x={x}
-        y="score"
-        order="month"
-        series={grouping === 'series' ? 'city' : undefined}
-        color={grouping === 'color' ? 'city' : undefined}
-        label={
-          grouped && values[LINE_SERIES_CONTROL_IDS.showLabels]
-            ? { content: { field: 'city' }, position: 'near-end', side: 'top', distance: 6 }
-            : undefined
-        }
-        closed={coordinate === 'polar2D' && values[LINE_SERIES_CONTROL_IDS.closed]}
-      />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  LineSeriesPreview({
+    coordinate: values[LINE_SERIES_CONTROL_IDS.coordinate],
+    grouping: values[LINE_SERIES_CONTROL_IDS.grouping],
+    showLabels: values[LINE_SERIES_CONTROL_IDS.showLabels],
+    closed: values[LINE_SERIES_CONTROL_IDS.closed],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

@@ -1,8 +1,5 @@
 import type { FC } from 'react';
-import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib';
 
 import { ApiValues, API_VALUE_REGISTRY } from '../api-values';
@@ -18,8 +15,8 @@ const unionMembers = (repr: TypeRepr): Array<TypeRepr> =>
 export type RenderTypeProps = {
   repr: TypeRepr;
   className?: string;
-  /** 顶层收起时保留 Schema 的公开名称 */
-  name?: string;
+  /** 超长类型使用的 Schema 名或字段来源名 */
+  name: string;
   /** 嵌套在复合类型中时复用外层代码样式 */
   plain?: boolean;
 };
@@ -27,37 +24,14 @@ export type RenderTypeProps = {
 /** TypeRepr → 类型声明；具名类型保留原名，公开枚举提供值提示 */
 export const RenderType: FC<RenderTypeProps> = props => {
   const { repr, name, className } = props;
-  const { t } = useTranslation();
   const text = schemaTypeText(repr);
   if (text.length <= MAX_SCHEMA_TYPE_CHARACTERS) return <RenderTypeContent {...props} />;
-  const summary = name ?? `${text.slice(0, MAX_SCHEMA_TYPE_CHARACTERS - 1)}…`;
-  return (
-    <Collapsible asChild>
-      <span className={cn('inline-block max-w-full align-top', className)} data-schema-type-collapsed>
-        <span className={cn(code, 'break-words')}>{summary}</span>
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-1 h-auto py-0.5 text-xs"
-            aria-label={t('zodSchema.toggleType')}
-          >
-            {t('zodSchema.toggleType')}
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent asChild>
-          <span className="mt-2 block border-l pl-3">
-            <RenderTypeContent {...props} />
-          </span>
-        </CollapsibleContent>
-      </span>
-    </Collapsible>
-  );
+  return <span className={cn(code, 'inline-block max-w-full break-words align-top', className)}>{name}</span>;
 };
 
 /** 渲染当前层；子类型仍独立遵守默认展开上限 */
 const RenderTypeContent: FC<RenderTypeProps> = props => {
-  const { repr, className, plain = false } = props;
+  const { repr, name, className, plain = false } = props;
   const codeClassName = plain ? undefined : code;
 
   switch (repr.kind) {
@@ -94,7 +68,7 @@ const RenderTypeContent: FC<RenderTypeProps> = props => {
       return (
         <span className={cn(codeClassName, 'inline-block max-w-full', className)}>
           {(repr.element.kind === 'union' || repr.element.kind === 'enum') && '('}
-          <RenderType repr={repr.element} plain />
+          <RenderType repr={repr.element} name={`${name}[]`} plain />
           {(repr.element.kind === 'union' || repr.element.kind === 'enum') && ')'}
           []
           {repr.constraints.length > 0 && (
@@ -110,7 +84,7 @@ const RenderTypeContent: FC<RenderTypeProps> = props => {
           {repr.elements.map((e, i) => (
             <span key={i}>
               {i > 0 && ', '}
-              <RenderType repr={e} plain />
+              <RenderType repr={e} name={`${name}[${i}]`} plain />
             </span>
           ))}
           ]
@@ -118,12 +92,12 @@ const RenderTypeContent: FC<RenderTypeProps> = props => {
       );
 
     case 'default':
-      return <RenderType repr={repr.inner} className={className} plain={plain} />;
+      return <RenderType repr={repr.inner} name={name} className={className} plain={plain} />;
 
     case 'nullable':
       return (
         <span className={cn('inline-flex items-baseline gap-1', className)}>
-          <RenderType repr={repr.inner} plain={plain} />
+          <RenderType repr={repr.inner} name={name} plain={plain} />
           <span className="text-muted-foreground">|</span>
           <span className={codeClassName}>null</span>
         </span>
@@ -133,9 +107,9 @@ const RenderTypeContent: FC<RenderTypeProps> = props => {
       return (
         <span className={cn('inline-flex items-baseline gap-1', codeClassName, className)}>
           <span>Record&lt;</span>
-          <RenderType repr={repr.key} plain />
+          <RenderType repr={repr.key} name={`${name}.key`} plain />
           <span>,</span>
-          <RenderType repr={repr.value} plain />
+          <RenderType repr={repr.value} name={`${name}.value`} plain />
           <span>&gt;</span>
         </span>
       );
@@ -147,7 +121,7 @@ const RenderTypeContent: FC<RenderTypeProps> = props => {
             <span key={i} className="grid grid-cols-[1ch_minmax(0,1fr)] items-start gap-x-1 [&+span]:mt-1">
               <span className="text-muted-foreground">{'| '}</span>
               <span className="min-w-0">
-                <RenderType repr={m} plain={plain} />
+                <RenderType repr={m} name={name} plain={plain} />
               </span>
             </span>
           ))}
@@ -161,7 +135,7 @@ const RenderTypeContent: FC<RenderTypeProps> = props => {
             <span key={index} className="grid grid-cols-[1ch_minmax(0,1fr)] items-start gap-x-1 [&+span]:mt-1">
               <span className="text-muted-foreground">{index === 0 ? '' : '& '}</span>
               <span className="min-w-0">
-                <RenderType repr={member} plain={plain} />
+                <RenderType repr={member} name={name} plain={plain} />
               </span>
             </span>
           ))}
@@ -181,7 +155,7 @@ const RenderTypeContent: FC<RenderTypeProps> = props => {
                 {field.name}
                 {field.optional ? '?' : ''}:{' '}
               </span>
-              <RenderType repr={field.type} plain />
+              <RenderType repr={field.type} name={`${name}.${field.name}`} plain />
               {field.constraints.length > 0 && (
                 <span className="text-xs text-muted-foreground">({field.constraints.join(', ')})</span>
               )}

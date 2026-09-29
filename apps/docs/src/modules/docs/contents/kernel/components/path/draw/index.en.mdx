@@ -152,13 +152,17 @@ Switch among four fold directions and watch the blue path pass through one or tw
 
 </Comparison>
 
-<ComponentPreview files="way-fold" size="sm" />
+<ComponentPreview files={['way-fold', 'way-fold.preview.tsx']} size="sm" defaultSourceFile="way-fold.preview.tsx" />
 
 ## Closure
 
 Switch the path state to see “Closed path” replace the dotted gap with the solid return edge from `DrawWay.Cycle` and create a fillable region.
 
-<ComponentPreview files={['way-cycle', 'way-cycle.data.ts']} size="sm" />
+<ComponentPreview
+  files={['way-cycle', 'way-cycle.preview.tsx', 'way-cycle.data.ts']}
+  size="sm"
+  defaultSourceFile="way-cycle.preview.tsx"
+/>
 
 ## Relative coordinates
 
@@ -168,7 +172,11 @@ Both paths first move right by `[60, 0]`, then use the control-panel offset `[x,
 - **Orange `++`**: The first segment moves the cursor to the hollow dot. The second segment continues from that dot, so its endpoint is “start + `[60, 0]` + `[x, y]`”.
 - The gray dotted right-angle guides show the base for the second calculation: the upper one starts at the `+` box, and the lower one starts at the orange hollow dot. Solid dots are the final endpoints.
 
-<ComponentPreview files={['way-relative', 'way-relative.data.ts']} size="sm" />
+<ComponentPreview
+  files={['way-relative', 'way-relative.preview.tsx', 'way-relative.data.ts']}
+  size="sm"
+  defaultSourceFile="way-relative.preview.tsx"
+/>
 
 ## Related props
 

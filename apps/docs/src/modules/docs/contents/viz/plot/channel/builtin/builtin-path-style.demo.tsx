@@ -1,45 +1,24 @@
-import { DataFieldType } from '@retikz/data';
-import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { builtinPathStyleControls, previewControlContract } from './builtin-path-style.controls';
-import { pathStyleRows } from './builtin-path-style.data';
+import { BuiltinPathStylePreview } from './builtin-path-style.preview';
 
 /** 注册回退使用的路径样式 controls */
 export const previewControls = builtinPathStyleControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const dashPattern = values.dashMode === 'dashed' ? [7, 4] : values.dashMode === 'dotted' ? [1, 4] : undefined;
-
-  return (
-    <Plot
-      data={pathStyleRows}
-      model={[
-        { name: 'step', type: DataFieldType.Continuous },
-        { name: 'value', type: DataFieldType.Continuous },
-      ]}
-      width={440}
-      height={280}
-    >
-      <PathMark
-        x="step"
-        y="value"
-        order="step"
-        stroke={{ kind: 'constant', value: values.stroke }}
-        strokeWidth={values.strokeWidth}
-        opacity={values.opacity}
-        dashPattern={dashPattern}
-        lineCap={values.lineCap}
-        lineJoin={values.lineJoin}
-        roundedCorners={values.roundedCorners}
-      />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  BuiltinPathStylePreview({
+    dashMode: values.dashMode,
+    stroke: values.stroke,
+    strokeWidth: values.strokeWidth,
+    opacity: values.opacity,
+    lineCap: values.lineCap,
+    lineJoin: values.lineJoin,
+    roundedCorners: values.roundedCorners,
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

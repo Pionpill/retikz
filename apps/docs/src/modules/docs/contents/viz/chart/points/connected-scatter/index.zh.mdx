@@ -14,9 +14,10 @@ description: 连接散点图用点表达观测，再按明确的顺序连接成�
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['connected-scatter-minimal', 'connected-scatter-minimal.data.ts']}
+  files={['connected-scatter-minimal', 'connected-scatter-minimal.preview.tsx', 'connected-scatter-minimal.data.ts']}
   hideCode
   size="xl"
+  defaultSourceFile="connected-scatter-minimal.preview.tsx"
 />
 
 <DocTabs defaultValue="react-jsx">
@@ -175,10 +176,11 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['connected-scatter-encodings', 'connected-scatter-basic.data.ts']}
+  files={['connected-scatter-encodings', 'connected-scatter-encodings.preview.tsx', 'connected-scatter-basic.data.ts']}
   controls={{ name: 'connected-scatter-encodings' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="connected-scatter-encodings.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：ConnectedScatterEncodings](#connectedscatterencodings)。
@@ -188,10 +190,15 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['connected-scatter-order-figure', 'connected-scatter-order-figure.data.ts']}
+  files={[
+    'connected-scatter-order-figure',
+    'connected-scatter-order-figure.preview.tsx',
+    'connected-scatter-order-figure.data.ts',
+  ]}
   hideCode
   type="illustration"
   size="lg"
+  defaultSourceFile="connected-scatter-order-figure.preview.tsx"
 />
 
 ### 连接散点属性
@@ -251,10 +258,11 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['connected-scatter-basic', 'connected-scatter-basic.data.ts']}
+  files={['connected-scatter-basic', 'connected-scatter-basic.preview.tsx', 'connected-scatter-basic.data.ts']}
   controls={{ name: 'connected-scatter-basic' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="connected-scatter-basic.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：ConnectedScatterProperties](#connectedscatterproperties)。
@@ -325,10 +333,11 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['connected-scatter-marks', 'connected-scatter-basic.data.ts']}
+  files={['connected-scatter-marks', 'connected-scatter-marks.preview.tsx', 'connected-scatter-basic.data.ts']}
   size="xl"
   controls={{ name: 'connected-scatter-marks' }}
   caption="调整观测点与路径样式，观察国家轨迹的连续性。"
+  defaultSourceFile="connected-scatter-marks.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：ConnectedScatterMark](#connectedscattermark)。
@@ -353,9 +362,10 @@ recipe: {
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['connected-scatter-gaps', 'connected-scatter-basic.data.ts']}
+  files={['connected-scatter-gaps', 'connected-scatter-gaps.preview.tsx', 'connected-scatter-basic.data.ts']}
   size="xxl"
   controls={{ name: 'connected-scatter-gaps' }}
+  defaultSourceFile="connected-scatter-gaps.preview.tsx"
 />
 
 ## 错误与限制

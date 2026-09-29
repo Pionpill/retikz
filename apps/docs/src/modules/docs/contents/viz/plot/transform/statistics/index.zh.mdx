@@ -15,7 +15,16 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 
 切换 Silverman 自动带宽和显式带宽，并调整 `sampleCount`。固定坐标域让曲线宽窄和采样稠密度可以直接比较。
 
-<ComponentPreview files={['transform-density', 'transform-density.data.ts']} size="lg" />
+<ComponentPreview
+  files={[
+    'transform-density',
+    'transform-density.preview.tsx',
+    'transform-density.i18n.ts',
+    'transform-density.data.ts',
+  ]}
+  size="lg"
+  defaultSourceFile="transform-density.preview.tsx"
+/>
 
 带宽决定每个样本在横轴上影响多远：较小带宽保留更多局部峰谷，曲线更起伏；较大带宽混合更宽的邻域，曲线更平滑。`sampleCount` 只改变输出曲线的采样密度，不改变平滑强度。
 
@@ -74,7 +83,11 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 
 调整预测点数，并切换观测范围与显式外推范围。空心点逐行显示预测采样，坐标域保持不变；因此 `sampleCount` 改变点的疏密，`extent` 只改变趋势线的采样区间。
 
-<ComponentPreview files={['transform-smooth', 'transform-smooth.data.ts']} size="lg" />
+<ComponentPreview
+  files={['transform-smooth', 'transform-smooth.preview.tsx', 'transform-smooth.i18n.ts', 'transform-smooth.data.ts']}
+  size="lg"
+  defaultSourceFile="transform-smooth.preview.tsx"
+/>
 
 ### API 参考
 

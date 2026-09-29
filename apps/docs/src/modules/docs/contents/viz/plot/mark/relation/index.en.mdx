@@ -51,13 +51,21 @@ RelationMark is the low-level relationship path mark. It does not reinvent arrow
 
 Each scatter row declares both `id` and `target`. Because the relationship already exists in the raw rows, RelationMark only resolves both ends with the `anchorId` rule and creates point-to-point paths; switch routing to compare line, bend, and orthogonal connections on the same relationships.
 
-<ComponentPreview files={['relation-scatter', 'relation-scatter.data.ts']} size="lg" />
+<ComponentPreview
+  files={['relation-scatter', 'relation-scatter.preview.tsx', 'relation-scatter.data.ts']}
+  size="lg"
+  defaultSourceFile="relation-scatter.preview.tsx"
+/>
 
 #### Sankey Ribbon
 
 Sankey relations use the same `source` and `target` refs, but set `kind="ribbon"` and provide `ribbon.width`. Fill and opacity remain in the shared `style` contract used by both path and ribbon relations.
 
-<ComponentPreview files={['relation-sankey', 'relation-sankey.data.ts']} size="lg" />
+<ComponentPreview
+  files={['relation-sankey', 'relation-sankey.preview.tsx', 'relation-sankey.data.ts']}
+  size="lg"
+  defaultSourceFile="relation-sankey.preview.tsx"
+/>
 
 ### Relationships Derived from Host Data
 
@@ -65,19 +73,31 @@ Sankey relations use the same `source` and `target` refs, but set `kind="ribbon"
 
 The bubble layer generates reusable ids with `anchorId`. RelationMark's local `relate` then selects the bubbles with the largest `value` and highest `y`, derives both ids and the path label, and uses `boundary` to stop the graphConnector at the bubble outlines.
 
-<ComponentPreview files={['relation-bubble', 'relation-bubble.data.ts']} size="lg" />
+<ComponentPreview
+  files={['relation-bubble', 'relation-bubble.preview.tsx', 'relation-bubble.data.ts']}
+  size="lg"
+  defaultSourceFile="relation-bubble.preview.tsx"
+/>
 
 #### Path Extremes
 
 PathMark registers every vertex as a reusable coordinate, and RelationMark's local `relate` selects the minimum and maximum from the same rows. Switch the control to see how the selected field changes both ends; bend routing draws the resulting relationship as a curve.
 
-<ComponentPreview files={['relation-path-extremes', 'relation-path-extremes.data.ts']} size="lg" />
+<ComponentPreview
+  files={['relation-path-extremes', 'relation-path-extremes.preview.tsx', 'relation-path-extremes.data.ts']}
+  size="lg"
+  defaultSourceFile="relation-path-extremes.preview.tsx"
+/>
 
 #### Interval Relation
 
 Two RelationMark layers derive decrease and increase relationships from the before / after interval rows, then connect bar tops with orthogonal routes. “Height offset” changes only the derived waypoint height and leaves both endpoints fixed; the remaining controls compare line styles and widths, relation-label placement, and interval-label position and color.
 
-<ComponentPreview files={['relation-interval', 'relation-interval.data.ts']} size="lg" />
+<ComponentPreview
+  files={['relation-interval', 'relation-interval.preview.tsx', 'relation-interval.data.ts']}
+  size="lg"
+  defaultSourceFile="relation-interval.preview.tsx"
+/>
 
 ## How it works
 

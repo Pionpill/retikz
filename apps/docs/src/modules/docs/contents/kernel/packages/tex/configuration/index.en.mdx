@@ -35,9 +35,10 @@ const lowerTex = await createMathJaxLowerTex({ profile: 'base', extensions: ['am
 `MathJaxEngineOptions.profile` chooses the base configuration, while `extensions` appends public extensions after it. This demo always enables the complete public extension set, so formula examples only change the formula content instead of toggling extensions. `math` enables the built-in math extension set at once:
 
 <ComponentPreview
-  files="tex-extensions"
+  files={['tex-extensions', 'tex-extensions.preview.tsx']}
   size="sm"
   caption="Formula examples only change the content; the preview shows the fixed enabled extensions set."
+  defaultSourceFile="tex-extensions.preview.tsx"
 />
 
 | Profile | Contents                    | Use it for                                          |

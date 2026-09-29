@@ -96,7 +96,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 选择“长句折行”预设，再调整 `maxTextWidth`，比较折行数量和节点边框的变化。
 
-<ComponentPreview files="node-text" size="md" />
+<ComponentPreview files={['node-text', 'node-text.preview.tsx']} size="md" defaultSourceFile="node-text.preview.tsx" />
 
 - `text` 接字符串或 IRLine 数组；字符串里的 `'\n'` 是硬换行，数组则让每行拥有独立样式
 - `layout.align` 控制多行块内的水平对齐，`layout.lineHeight` 控制行距；两者都是块级属性
@@ -116,7 +116,11 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 `fill` / `opacity` / `font` 三大类——`font` 是嵌套对象，可以只覆盖其中一个子字段（family / size / weight / style）。第一行继承 Node，第二行由面板控制，未设置的字段继续继承：
 
-<ComponentPreview files="text-attrs" size="md" />
+<ComponentPreview
+  files={['text-attrs', 'text-attrs.preview.tsx', 'text-attrs.i18n.ts']}
+  size="md"
+  defaultSourceFile="text-attrs.preview.tsx"
+/>
 
 ### 与字符串 children 混排
 

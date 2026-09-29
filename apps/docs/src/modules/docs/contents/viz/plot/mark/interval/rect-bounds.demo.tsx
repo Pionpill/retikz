@@ -1,8 +1,5 @@
-import { IntervalMark, PlotAxis, PlotScale } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 
-import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
@@ -11,38 +8,15 @@ import {
   RECT_BOUNDS_MODE_ID,
   RECT_BOUNDS_SHOW_COLOR_ID,
 } from './rect-bounds.controls';
-import { matrix } from './rect-heatmap.data';
+import { RectBoundsPreview } from './rect-bounds.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -16, y: -16, width: 412, height: 312 }}>
-    <Plot
-      data={matrix}
-      model={[
-        { name: 'row', type: 'categorical' },
-        { name: 'col', type: 'categorical' },
-        { name: 'value', type: 'continuous' },
-      ]}
-      width={380}
-      height={280}
-      coordinate={values[RECT_BOUNDS_COORDINATE_ID] === 'polar2D' ? 'polar2D' : undefined}
-    >
-      <IntervalMark
-        x="col"
-        y="row"
-        color={values[RECT_BOUNDS_SHOW_COLOR_ID] ? 'value' : undefined}
-        fill={values[RECT_BOUNDS_SHOW_COLOR_ID] ? undefined : '#60a5fa'}
-        bounds={{
-          x: { kind: 'band' },
-          y: values[RECT_BOUNDS_MODE_ID] === 'band' ? { kind: 'band' } : { kind: 'full' },
-        }}
-      />
-      <PlotScale dimension="x" type="band" paddingOuter={0.15} />
-      <PlotScale dimension="y" type="band" paddingOuter={0} />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" />
-    </Plot>
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  RectBoundsPreview({
+    coordinate: values[RECT_BOUNDS_COORDINATE_ID],
+    showColor: values[RECT_BOUNDS_SHOW_COLOR_ID],
+    mode: values[RECT_BOUNDS_MODE_ID],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

@@ -38,7 +38,11 @@ Neither Entity nor Relation provides a built-in catalog of kinds. Define and reg
 
 The example keeps both objects' identities, text, and positions fixed. Change the Entity role to inspect the shape on the right; change the Relation role to inspect its line and arrow; toggle the thicker outline while preserving semantics and position.
 
-<ComponentPreview files="semantic-roles" size="md" />
+<ComponentPreview
+  files={['semantic-roles', 'semantic-roles.preview.tsx']}
+  size="md"
+  defaultSourceFile="semantic-roles.preview.tsx"
+/>
 
 Semantics are more than colors. Entity roles provide node structure; Relation roles provide direction and endpoint conventions, and registered Relation kinds can refine directional styles. A kind is not an arbitrary shape name, and an instance style does not turn an activity into a gateway. Extend definitions for domain categories; use themes or rules for consistent appearance.
 

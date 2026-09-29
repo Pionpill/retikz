@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 import type { ReactNode } from 'react';
@@ -250,16 +247,8 @@ describe('Viz Chart scatter controls', () => {
     );
     expect(worldCupZh.relatedApis).not.toContain('ScatterChart.coordinate');
 
-    for (const locale of ['zh', 'en']) {
-      const source = readFileSync(
-        resolve(`src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.${locale}.demo.tsx`),
-        'utf8',
-      );
-      expect(source).not.toContain('isPolar');
-      expect(source).not.toContain("type: 'polar2D'");
-      expect(source).not.toContain('<ChartExtension');
-      expect(source).toContain('Football_pitch_metric_tr.svg');
-    }
+    for (const source of [worldCupZhPreviewSource, worldCupEnPreviewSource])
+      expect(canonicalScatterProps(source)).not.toHaveProperty('coordinate');
   });
 
   it('基础用法 demo 不包含图内 presentation 内容', () => {

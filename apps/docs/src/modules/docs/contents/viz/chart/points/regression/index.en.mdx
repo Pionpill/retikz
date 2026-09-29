@@ -14,9 +14,10 @@ After [installation and first rendering](/viz/chart/get-start), choose one of th
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['regression-minimal', 'regression-minimal.data.ts']}
+  files={['regression-minimal', 'regression-minimal.preview.tsx', 'regression-minimal.data.ts']}
   hideCode
   size="xl"
+  defaultSourceFile="regression-minimal.preview.tsx"
 />
 
 <DocTabs defaultValue="react-jsx">
@@ -172,10 +173,11 @@ Toggle grouping to compare pooled and within-species trends. A pooled associatio
   hideCode
   mode="showcase"
   responsive
-  files={['regression-encodings', 'regression-basic.data.ts']}
+  files={['regression-encodings', 'regression-encodings.preview.tsx', 'regression-basic.data.ts']}
   controls={{ name: 'regression-encodings' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="regression-encodings.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: RegressionEncodings](#regressionencodings).
@@ -237,10 +239,11 @@ Increasing sampleCount does not raise model order or fix insufficient observatio
   hideCode
   mode="showcase"
   responsive
-  files={['regression-basic', 'regression-basic.data.ts']}
+  files={['regression-basic', 'regression-basic.preview.tsx', 'regression-basic.data.ts']}
   controls={{ name: 'regression-basic' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="regression-basic.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: RegressionProperties](#regressionproperties).
@@ -311,10 +314,11 @@ RegressionMark inherits series and cannot introduce a different grouping rule.
   hideCode
   mode="showcase"
   responsive
-  files={['regression-marks', 'regression-basic.data.ts']}
+  files={['regression-marks', 'regression-marks.preview.tsx', 'regression-basic.data.ts']}
   size="xl"
   controls={{ name: 'regression-marks' }}
   caption="Switch fitting methods and adjust trend width to compare the same observations."
+  defaultSourceFile="regression-marks.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: RegressionMark](#regressionmark).
@@ -339,9 +343,10 @@ Each line fits only its panel’s observations. Shared scales do not imply share
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['regression-facet', 'regression-basic.data.ts']}
+  files={['regression-facet', 'regression-facet.preview.tsx', 'regression-basic.data.ts']}
   size="xxxl"
   controls={{ name: 'regression-facet' }}
+  defaultSourceFile="regression-facet.preview.tsx"
 />
 
 ### Fitting method comparison
@@ -364,9 +369,10 @@ Differences reveal the impact of model assumptions. This comparison supplies no 
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['regression-compare', 'regression-basic.data.ts']}
+  files={['regression-compare', 'regression-compare.preview.tsx', 'regression-basic.data.ts']}
   size="xxl"
   controls={{ name: 'regression-compare' }}
+  defaultSourceFile="regression-compare.preview.tsx"
 />
 
 ## Errors and limitations
@@ -540,7 +546,13 @@ The demo below runs this algorithm. Points show observations and the orange line
   responsive
   mode="showcase"
   controlPanelDefaultOpen={false}
-  files={['regression-custom', 'regression-custom-fit.ts', 'regression-custom.data.ts']}
+  files={[
+    'regression-custom',
+    'regression-custom.preview.tsx',
+    'regression-custom-fit.ts',
+    'regression-custom.data.ts',
+  ]}
+  defaultSourceFile="regression-custom.preview.tsx"
   size="xl"
 />
 

@@ -43,9 +43,15 @@ The hook exists only in the runtime Definition and never enters JSON IR. Chart a
 The bridge coordinate below arches the x-axis into a parabola while y stays vertical. Drag the arch-height control to see how an operation parameter changes projection; its definition uses a closed schema, and the source switcher exposes the data and host injection:
 
 <ComponentPreview
-  files={['coordinate-custom-bridge', 'coordinate-custom-bridge.definition.ts', 'coordinate-custom-bridge.data.ts']}
+  files={[
+    'coordinate-custom-bridge',
+    'coordinate-custom-bridge.preview.tsx',
+    'coordinate-custom-bridge.definition.ts',
+    'coordinate-custom-bridge.data.ts',
+  ]}
   size="lg"
   caption="An arch height of 0 degenerates to a Cartesian projection; increasing it adds a vertical offset that varies with x, while screen x coordinates and the y scale stay fixed."
+  defaultSourceFile="coordinate-custom-bridge.preview.tsx"
 />
 
 ## Inject into the host

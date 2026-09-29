@@ -1,0 +1,141 @@
+import { Layout, Node } from '@retikz/react';
+import { Legend, LegendItem, LegendRamp, LegendTick, LegendTitle } from '@retikz/standard-react/presentation';
+import { LegendContentKind } from '@retikz/standard/presentation';
+
+const LEGEND_WIDTH = 300;
+
+/** 图形参数 */
+export type LegendPlaygroundValues = {
+  title: string;
+  kind: 'items' | 'ramp';
+  titleFontSize: number;
+  titleFontWeight: 'bold' | 'normal';
+  titleFontStyle: 'normal' | 'italic';
+  titleAlign: 'start' | 'middle' | 'end';
+  contentAlign: 'start' | 'end' | 'center';
+  direction: 'horizontal' | 'vertical';
+  wrap: 'wrap' | 'nowrap';
+  sampleAlign: 'start' | 'end' | 'center';
+  titleGap: number;
+  gapColumn: number;
+  gapRow: number;
+  sampleGap: number;
+  padding: number;
+  overflow: 'visible' | 'clip';
+};
+
+const sample = (id: string, color: string, height: number) => (
+  <Node
+    id={id}
+    position={[0, 0]}
+    text=""
+    cornerRadius={4}
+    style={{ stroke: color, fill: color, fillOpacity: 0.14 }}
+    layout={{ minimumSize: { width: 28, height }, padding: 0 }}
+  />
+);
+
+const label = (id: string, text: string) => <Node id={id} position={[0, 0]} text={text} style={{ stroke: 'none' }} />;
+
+const title = (values: LegendPlaygroundValues) =>
+  values.title === '' ? null : (
+    <LegendTitle>
+      <Node
+        id="legend-title"
+        position={[0, 0]}
+        text={values.title}
+        style={{
+          font: {
+            size: values.titleFontSize,
+            weight: values.titleFontWeight,
+            style: values.titleFontStyle,
+          },
+          stroke: 'none',
+          fill: 'none',
+        }}
+        layout={{ align: values.titleAlign, padding: 0 }}
+      />
+    </LegendTitle>
+  );
+
+const rampSample = (direction: 'vertical' | 'horizontal') => (
+  <Node
+    id="ramp-sample"
+    position={[0, 0]}
+    text=""
+    style={{
+      stroke: 'lightgray',
+      fill: {
+        kind: 'linearGradient',
+        angle: direction === 'horizontal' ? 0 : 90,
+        stops: [
+          { offset: 0, color: 'dodgerblue' },
+          { offset: 0.5, color: 'gold' },
+          { offset: 1, color: 'orangered' },
+        ],
+      },
+    }}
+    layout={{
+      minimumSize: direction === 'horizontal' ? { width: 160, height: 16 } : { width: 16, height: 120 },
+      padding: 0,
+    }}
+  />
+);
+
+/** 使用控制值构造可测试的 Legend playground React authoring */
+export const LegendPlaygroundPreview = (values: LegendPlaygroundValues) => (
+  <Layout viewBox={{ x: -50, y: -20, width: 400, height: 245 }}>
+    {values.kind === LegendContentKind.Items ? (
+      <Legend
+        kind={LegendContentKind.Items}
+        size={{ x: { kind: 'fixed', value: LEGEND_WIDTH }, y: { kind: 'fixed', value: 175 } }}
+        padding={values.padding}
+        titleGap={values.titleGap}
+        contentAlign={values.contentAlign}
+        overflow={values.overflow}
+        direction={values.direction}
+        wrap={values.wrap}
+        sampleAlign={values.sampleAlign}
+        gap={{ row: values.gapRow, column: values.gapColumn }}
+        sampleGap={values.sampleGap}
+      >
+        {title(values)}
+        <LegendItem itemKey="a" sample={sample('sample-a', 'dodgerblue', 20)}>
+          {label('label-a', 'A')}
+        </LegendItem>
+        <LegendItem itemKey="b" sample={sample('sample-b', 'darkorange', 32)}>
+          {label('label-b', 'B')}
+        </LegendItem>
+        <LegendItem itemKey="c" sample={sample('sample-c', 'darkviolet', 24)}>
+          {label('label-c', 'C')}
+        </LegendItem>
+        <LegendItem itemKey="d" sample={sample('sample-d', 'green', 28)}>
+          {label('label-d', 'D')}
+        </LegendItem>
+      </Legend>
+    ) : (
+      <Legend
+        kind={LegendContentKind.Ramp}
+        size={{ x: { kind: 'fixed', value: LEGEND_WIDTH }, y: { kind: 'fixed', value: 175 } }}
+        padding={values.padding}
+        titleGap={values.titleGap}
+        contentAlign={values.contentAlign}
+        overflow={values.overflow}
+        direction={values.direction}
+        sampleGap={values.sampleGap}
+      >
+        {title(values)}
+        <LegendRamp>{rampSample(values.direction)}</LegendRamp>
+        <LegendTick tickKey="start" offset={0}>
+          {label('tick-start', '0')}
+        </LegendTick>
+        <LegendTick tickKey="middle" offset={0.5}>
+          {label('tick-middle', '50')}
+        </LegendTick>
+        <LegendTick tickKey="end" offset={1}>
+          {label('tick-end', '100')}
+        </LegendTick>
+      </Legend>
+    )}
+  </Layout>
+);

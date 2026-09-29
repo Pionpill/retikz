@@ -90,7 +90,7 @@ When an explicit `stack` has the same signature as an automatic `stack`, the aut
 
 ## API Reference
 
-### PlotTransformProps
+#### PlotTransform / PlotTransformProps
 
 `PlotTransformProps` equals `IRPlotTransform`, a union discriminated by `kind`. After choosing a `kind`, TypeScript requires the configuration of that operation branch.
 
@@ -98,7 +98,7 @@ When an explicit `stack` has the same signature as an automatic `stack`, the aut
 | ------ | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `kind` | `IRPlotTransform['kind']` | —       | Operation discriminator; remaining props come from the selected union branch and are documented on the matching Data/Plot page |
 
-### kind coverage
+The `PlotTransformProps['kind']` values are:
 
 | Owner  | kinds                                                                                   | Documentation                                          |
 | ------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
@@ -106,7 +106,7 @@ When an explicit `stack` has the same signature as an automatic `stack`, the aut
 | Plot   | `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitter`, `density`, `smooth` | [Plot Grammar transforms](/viz/plot/transform)         |
 | Custom | A registered string that does not collide with a built-in name                          | [Extension Mechanisms](/viz/data/transform/extensions) |
 
-### Exports
+`PlotTransform` and `PlotTransformProps` are exported from the package entry:
 
 | export               | type                     | default | description                                              |
 | -------------------- | ------------------------ | ------- | -------------------------------------------------------- |
