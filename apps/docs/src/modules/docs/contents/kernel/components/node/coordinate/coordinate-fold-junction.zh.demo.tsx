@@ -1,31 +1,21 @@
-import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { coordinateFoldJunctionControls, previewControlContract } from './coordinate-fold-junction.controls';
+import { CoordinateFoldJunctionPreview } from './coordinate-fold-junction.preview';
 
 export const previewControls = coordinateFoldJunctionControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout>
-      <Node id="A" position={[-120, -55]}>
-        A
-      </Node>
-      <Node id="B" position={[-120, 55]}>
-        B
-      </Node>
-      <Coordinate id="junction" position={[values.junctionX, values.junctionY]} />
-      <Node id="out" position={[120, 0]} shape="diamond">
-        汇合后
-      </Node>
-      {/* 两条线先各自走到 junction，再合并到 out */}
-      <Draw way={['A', 'junction', 'out']} arrow="->" style={{ stroke: 'gray' }} />
-      <Draw way={['B', 'junction']} style={{ stroke: 'gray' }} />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  CoordinateFoldJunctionPreview(
+    {
+      junctionX: values.junctionX,
+      junctionY: values.junctionY,
+    },
+    'zh',
+  ),
+);
 
 export const previewSource = controlledPreview.source;
 

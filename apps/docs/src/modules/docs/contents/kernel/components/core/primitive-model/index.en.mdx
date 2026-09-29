@@ -143,9 +143,14 @@ First edit the content and add a line break, then switch among rectangle, circle
 Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `ellipse`. Circle and ellipse also let you compare `fit: 'tight'` with `fit: 'bounds'`, while all three regular connection surfaces accept `gap`. Then adjust the source angle and observe the real graphConnector endpoint. The final `fill`, `stroke`, and `strokeWidth` fields provide only minimal appearance feedback; use the [Text](/kernel/components/node/text), [Node](/kernel/components/node/usage), and [Shapes](/kernel/components/node/shape) pages for the complete APIs.
 
 <ComponentPreview
-  files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}
+  files={[
+    'primitive-model-playground',
+    'primitive-model-playground.preview.tsx',
+    'primitive-model-playground-boundary.ts',
+  ]}
   size="lg"
   caption="The light-gray dashed contour is the current regular boundary, the dotted radius is only an orbit guide, and the gray solid line is the real graphConnector. In shape mode, boundary coincides with the visual outline, so it is not drawn twice."
+  defaultSourceFile="primitive-model-playground.preview.tsx"
 />
 
 <SourceLinks

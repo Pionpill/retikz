@@ -184,13 +184,21 @@ Entity 提供 `kind` 字段，但不提供内置 kind 值；这个字段预留�
 
 下方试验场可以切换角色与状态，也可以为实体应用分组。开启“应用分组”后，分组对应的颜色会覆盖状态色；再开启“覆盖主题主色”，实例颜色会优先于两者。
 
-<ComponentPreview files="entity-playground" size="md" />
+<ComponentPreview
+  files={['entity-playground', 'entity-playground.preview.tsx']}
+  size="md"
+  defaultSourceFile="entity-playground.preview.tsx"
+/>
 
 ## 样式与尺寸
 
 `style` 负责外观，例如 `color`、`fill` 和 `strokeWidth`；`layout` 负责文字排布和尺寸，例如 `maxTextWidth`、`lineHeight` 和 `minimumSize`。调整下方控件，可以观察填充、描边、文字换行和最小宽度的变化，而不改变 role 的结构。
 
-<ComponentPreview files="entity-style-size" size="lg" />
+<ComponentPreview
+  files={['entity-style-size', 'entity-style-size.preview.tsx']}
+  size="lg"
+  defaultSourceFile="entity-style-size.preview.tsx"
+/>
 
 `shape`、`boundary`、`cornerRadius` 与 `padding` 由 role 独占，不是 Entity 实例覆盖字段。`minimumSize` 按宽高分别与 role 的最小值取较大者；写更小的值不能强行缩小 role。
 

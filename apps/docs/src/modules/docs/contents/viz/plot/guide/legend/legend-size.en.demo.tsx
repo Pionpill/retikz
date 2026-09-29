@@ -1,36 +1,22 @@
-import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { legendSizeControls, previewControlContract } from './legend-size.en.controls';
-import { cities } from './legend.data';
+import { LegendSizePreview } from './legend-size.preview';
 
 /** 注册回退使用的尺寸图例控件 */
 export const previewControls = legendSizeControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot
-    data={cities}
-    model={[
-      { name: 'lng', type: 'continuous' },
-      { name: 'lat', type: 'continuous' },
-      { name: 'pop', type: 'continuous' },
-    ]}
-    width={360}
-    height={260}
-  >
-    <PointMark x="lng" y="lat" size="pop" />
-    <PlotLegend
-      channel="size"
-      position={values.position}
-      orient={values.orient === 'auto' ? undefined : values.orient}
-      title="Population"
-      style={{ symbolSize: values.symbolSize, symbolFit: values.symbolFit }}
-    />
-    <PlotAxis dimension="x" />
-    <PlotAxis dimension="y" grid />
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  LegendSizePreview(
+    {
+      position: values.position,
+      orient: values.orient,
+      symbolSize: values.symbolSize,
+      symbolFit: values.symbolFit,
+    },
+    'en',
+  ),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

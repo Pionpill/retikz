@@ -152,7 +152,12 @@ import { Arc, Sector } from '@retikz/standard-react/shape';
 
 Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法后，可以用 playground 同时调整两者：左侧观察 Arc 的开放 / 闭合方式，右侧观察 Sector 的内弧如何改变环宽。
 
-<ComponentPreview files="arc-sector-playground" size="sm" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['arc-sector-playground', 'arc-sector-playground.preview.tsx']}
+  size="sm"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="arc-sector-playground.preview.tsx"
+/>
 
 ## 错误与限制
 
@@ -217,11 +222,11 @@ Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法�
 
 ## Schema 参考
 
-### ArcSchema
+#### ArcSchema
 
 <ZodSchema name="ArcSchema" />
 
-### SectorSchema
+#### SectorSchema
 
 <ZodSchema name="SectorSchema" />
 

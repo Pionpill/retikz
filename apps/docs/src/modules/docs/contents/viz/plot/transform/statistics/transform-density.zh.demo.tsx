@@ -1,32 +1,14 @@
-import { PathMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { densityControls, densityOperationOf, previewControlContract } from './transform-density.controls';
-import { measurements } from './transform-density.data';
+import { densityControls, previewControlContract } from './transform-density.controls';
+import { TransformDensityPreview } from './transform-density.preview';
 
 /** 注册回退使用的密度控件 */
 export const previewControls = densityControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={measurements} width={440} height={260}>
-    <PlotTransform {...densityOperationOf(values)} />
-    <PlotScale dimension="x" type="linear" domain={[1, 10]} />
-    <PlotScale dimension="y" type="linear" domain={[0, 0.7]} />
-    <PathMark
-      x="densityX"
-      y="density"
-      series="group"
-      color="group"
-      order="densityX"
-      closure={{ kind: 'baseline', baseline: 0 }}
-      fill="dodgerblue"
-      strokeWidth={2.2}
-    />
-    <PlotAxis dimension="x" title="测量值" />
-    <PlotAxis dimension="y" title="密度" grid />
-  </Plot>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  TransformDensityPreview(values, 'zh'),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

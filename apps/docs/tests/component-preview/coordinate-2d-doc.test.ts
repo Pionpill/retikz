@@ -11,20 +11,20 @@ import {
   coordinateCartesianControls,
   previewControlContract as cartesianContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.controls';
-import { renderCoordinateCartesian } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.demo';
 import {
   coordinateCartesianControls as englishCoordinateCartesianControls,
   previewControlContract as englishCartesianContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.en.controls';
+import { renderCoordinateCartesian } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-cartesian.preview';
 import {
   coordinatePolarControls,
   previewControlContract as polarContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.controls';
-import { renderCoordinatePolar } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.demo';
 import {
   coordinatePolarControls as englishCoordinatePolarControls,
   previewControlContract as englishPolarContract,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.en.controls';
+import { renderCoordinatePolar } from '../../src/modules/docs/contents/viz/plot/coordinate/2d/coordinate-polar.preview';
 import { bridgeCoordinate } from '../../src/modules/docs/contents/viz/plot/coordinate/custom-coordinate/coordinate-custom-bridge.definition';
 
 type PreviewRender<TValues extends object> = (values: TValues) => ReactNode;

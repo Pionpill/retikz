@@ -7,36 +7,38 @@ import { schemaTypeText } from '../../src/modules/docs/components/mdx-content/zo
 import type { TypeRepr } from '../../src/modules/docs/components/mdx-content/zod-schema/types';
 import { walk } from '../../src/modules/docs/components/mdx-content/zod-schema/walker';
 
-it('300 字符仍展示完整类型，301 字符默认收起并保留展开入口', () => {
+it('300 字符展示完整类型，301 字符仅展示名称', () => {
   const short: TypeRepr = { kind: 'literal', value: 'a'.repeat(298) };
   const long: TypeRepr = { kind: 'literal', value: 'a'.repeat(299) };
   expect(schemaTypeText(short)).toHaveLength(300);
-  expect(renderToStaticMarkup(<RenderType repr={short} />)).not.toContain('aria-expanded');
-  const html = renderToStaticMarkup(<RenderType repr={long} />);
-  expect(html).toContain('aria-expanded="false"');
-  expect(html).toContain('…');
+  expect(renderToStaticMarkup(<RenderType repr={short} name="ExampleSchema.value" />)).toContain('a'.repeat(298));
+  const html = renderToStaticMarkup(<RenderType repr={long} name="ExampleSchema.value" />);
+  expect(html).toContain('ExampleSchema.value');
+  expect(html).not.toContain('aria-expanded');
+  expect(html).not.toContain('展开 / 收起类型');
   expect(html).not.toContain('a'.repeat(299));
 });
 
-it('标准包所有 Schema 顶层及对象字段的超长类型均默认收起', () => {
-  const collapsed: Array<string> = [];
+it('各包 Schema 顶层及对象字段的超长类型仅显示名称', () => {
+  const summarized = new Set<string>();
+  const packages = new Set<string>();
   for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
-    if (!entry.url?.startsWith('/library/standard/')) continue;
     const representation = walk(entry.schema);
     const types =
       representation.kind === 'alias'
         ? [{ name, type: representation.type }]
         : representation.fields.map(field => ({ name: `${name}.${field.name}`, type: field.type }));
     for (const item of types) {
-      const html = renderToStaticMarkup(<RenderType repr={item.type} name={item.name} />);
       if (schemaTypeText(item.type).length > 300) {
-        collapsed.push(item.name);
-        expect(html, item.name).toContain('aria-expanded="false"');
+        const html = renderToStaticMarkup(<RenderType repr={item.type} name={item.name} />);
+        summarized.add(item.name);
+        if (entry.url !== undefined) packages.add(entry.url.split('/')[1] ?? 'unknown');
         expect(html, item.name).toContain(item.name);
-        expect(html, item.name).not.toContain('data-state="open"');
-      } else expect(html, item.name).not.toContain('data-schema-type-collapsed');
+        expect(html, item.name).not.toContain('aria-expanded');
+      }
     }
   }
-  expect(collapsed).toContain('RectangleSchema');
-  expect(collapsed).toContain('CircleSchema');
+  expect(summarized.has('RectangleSchema')).toBe(true);
+  expect(summarized.has('CircleSchema')).toBe(true);
+  expect(packages).toEqual(new Set(['kernel', 'library', 'schematic', 'viz']));
 });

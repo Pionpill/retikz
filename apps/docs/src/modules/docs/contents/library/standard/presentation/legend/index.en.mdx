@@ -152,7 +152,8 @@ Style the real Node inside LegendTitle to configure title typography and text al
 With a fixed container allocation and viewBox, compare content-block alignment, direction, wrapping, sample alignment, gaps, padding, and overflow. `contentAlign` aligns the title and body independently by their own structural widths along the Legend content box x axis. It is neither title text alignment nor the Legend position in its parent container. The title input accepts line breaks, and title alignment only positions lines inside a multiline text block; a single-line title uses its natural text width without reserving extra alignment space. `wrap` changes structure only when constraints require an additional row or column.
 
 <ComponentPreview
-  files="legend-playground"
+  files={['legend-playground', 'legend-playground.preview.tsx']}
+  defaultSourceFile="legend-playground.preview.tsx"
   size="md"
   caption="The authored A–D order and fixed container stay unchanged; the panel changes only Legend arrangement and bounds policies."
 />
@@ -269,7 +270,7 @@ The Core composite artifact envelope separately records occurrence, namespace, a
 
 ## Schema reference
 
-### LegendSchema
+#### LegendSchema
 
 <ZodSchema name="LegendSchema" expandNested />
 

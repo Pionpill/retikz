@@ -1,43 +1,13 @@
-import type { WayDSL } from '@retikz/core';
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { drawLabelControls, previewControlContract } from './draw-label.controls';
+import { DrawLabelPreview } from './draw-label.preview';
 
 export const previewControls = drawLabelControls;
 
-type DrawLabelValues = PreviewControlValuesFor<typeof drawLabelControls>;
-
-/** 把标注面板值转换为 Draw way */
-const wayOf = (values: DrawLabelValues): WayDSL => {
-  const label = {
-    text: `t = ${values.position.toFixed(2)}`,
-    position: values.position,
-    side: values.side,
-    sloped: values.sloped,
-    textColor: values.textColor,
-  } as const;
-  if (values.segmentKind === 'line') return ['A', { label }, 'B'];
-  if (values.segmentKind === 'curve') return ['A', { label }, { curve: [180, -110] }, 'B'];
-  return ['A', { label }, values.segmentKind, 'B'];
-};
-
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
-      <Node id="A" position={[0, -60]} style={{ stroke: 'gray', dashed: true }}>
-        a
-      </Node>
-      <Node id="B" position={[360, 60]} style={{ stroke: 'gray', dashed: true }}>
-        b
-      </Node>
-      <Draw way={wayOf(values)} arrow="->" />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values => DrawLabelPreview(values));
 
 export const previewSource = controlledPreview.source;
 

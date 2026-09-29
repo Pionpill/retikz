@@ -139,9 +139,10 @@ request 可以声明在场景、authored 子树或对象上；其 `options: true
 下面的试验场把两条曲线放在独立子树中。切换目标、控制点和标签，再开启右侧屏障，观察局部 request 如何在 Core 的最终实例上解析：
 
 <ComponentPreview
-  files="inspect-selection"
+  files={['inspect-selection', 'inspect-selection.preview.tsx']}
   size="md"
   caption="A、B 是两条独立的普通路径；右侧屏障开启后，B 的局部 request 也不能重新开启检查。"
+  defaultSourceFile="inspect-selection.preview.tsx"
 />
 
 同一位置可以请求多个不同 Inspector。同一 Inspector 的稀疏 options 从整图到子树再到当前实例合并；普通 `false` 只关闭当前位置的一个 Inspector，barrier 则阻止后代重新开启任何 Inspector。

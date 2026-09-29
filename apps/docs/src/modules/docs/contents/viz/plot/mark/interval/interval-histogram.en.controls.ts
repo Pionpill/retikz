@@ -3,8 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { laborCosts } from './bar-variable-width.data';
-import { intervalHistogramOperationOf } from './interval-histogram.controls';
-import { measurements } from './interval-histogram.data';
+import { intervalHistogramOperationOf, measurements } from './interval-histogram.data';
 
 /** Stable control ids for continuous interval modes */
 export const INTERVAL_CONTINUOUS_MODE_ID = 'interval-continuous-mode';
@@ -33,7 +32,8 @@ export const intervalHistogramControls = definePreviewControls({
           views: createPlotTransformTableViews(
             { source: 'Source', result: 'Binned' },
             measurements,
-            intervalHistogramOperationOf,
+            (values: { [INTERVAL_HISTOGRAM_COUNT_ID]: number }) =>
+              intervalHistogramOperationOf(values[INTERVAL_HISTOGRAM_COUNT_ID]),
           ),
           visibleWhen: { controlId: INTERVAL_CONTINUOUS_MODE_ID, oneOf: ['histogram'] },
         },

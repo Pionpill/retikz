@@ -10,7 +10,13 @@ Chart-wide presentation explains what a graphic says, what scope it covers, wher
 This playground uses a real Point Chart instead of simulating layout with boxes. Title, subtitle, Plot, note, and source all enter one Surface. Enable the Flex overlay to inspect the content, slot, allocation, padding, line region, and gaps of the canonical children.
 
 <ComponentPreview
-  files={['chart-presentation-layout', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  files={[
+    'chart-presentation-layout',
+    'chart-presentation-layout.preview.tsx',
+    'chart-presentation-preview.tsx',
+    'chart-presentation.data.ts',
+  ]}
+  defaultSourceFile="chart-presentation-layout.preview.tsx"
   size="xxl"
   caption="The overlay only reads the internal Flex artifact from this compile and never enters Chart Source. Turn it off to inspect the final content alone."
 />
@@ -31,7 +37,13 @@ React can provide the slots with the four markers; Vanilla and JSON use the `pre
 When `title`, `subtitle`, `note`, or `source` is absent, normalization creates no matching item. Plot and the remaining presentation content still use the fixed order. Use the four switches below to compare the canonical result with each item present or absent.
 
 <ComponentPreview
-  files={['chart-presentation-visibility', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  files={[
+    'chart-presentation-visibility',
+    'chart-presentation-visibility.preview.tsx',
+    'chart-presentation-preview.tsx',
+    'chart-presentation.data.ts',
+  ]}
+  defaultSourceFile="chart-presentation-visibility.preview.tsx"
   size="xxl"
   caption="The four switches control whether each Chart slot exists; they do not hide generated text with opacity."
 />

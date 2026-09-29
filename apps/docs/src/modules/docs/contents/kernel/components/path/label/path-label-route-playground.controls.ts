@@ -2,7 +2,7 @@ import type { Lang } from '@/i18n';
 import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { pathLabelRoutePlaygroundControlsI18n } from './path-label-route-playground.i18n';
+import { pathLabelRoutePlaygroundI18n } from './path-label-route-playground.i18n';
 
 /** Path 标签路线 playground 使用的稳定字段 id */
 export const PathLabelRoutePlaygroundControlId = {
@@ -13,7 +13,7 @@ export const PathLabelRoutePlaygroundControlId = {
 
 /** Path 标签路线与位置的中文属性面板 */
 const createControls = (lang: Lang) => {
-  const i18n = pathLabelRoutePlaygroundControlsI18n[lang];
+  const i18n = pathLabelRoutePlaygroundI18n[lang];
   return definePreviewControls({
     presentation: 'panel',
     title: i18n.pathLabel,

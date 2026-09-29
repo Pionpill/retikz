@@ -73,9 +73,10 @@ The light-gray dashed outline is the cluster's combined bounds. Group connection
 The target Node uses an ellipse as its visual shape and a rectangle as its default boundary. Keep `anchor="auto"` and move the source angle: the endpoint continually intersects the target boundary toward the source. Then lock `top`, `right`, or a numeric angle; the source keeps moving while the target endpoint stays fixed. The `boundary` control overrides only this edge's target endpoint. Returning to “Inherit rectangle” leaves the target Node's own default untouched.
 
 <ComponentPreview
-  files="primitive-relations-playground"
+  files={['primitive-relations-playground', 'primitive-relations-playground.preview.tsx']}
   size="md"
   caption="The light-gray dotted radius is only an orbit guide. The gray dashed outline is the active non-shape boundary; choose “Visual shape” to attach directly to the blue ellipse."
+  defaultSourceFile="primitive-relations-playground.preview.tsx"
 />
 
 <SourceLinks

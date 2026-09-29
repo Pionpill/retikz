@@ -1,39 +1,11 @@
-import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import {
-  POINT_JITTER_POLAR_CONTROL_IDS,
-  polarJitterOperationOf,
-  previewControlContract,
-} from './point-jitter-polar.controls';
-import { polarJitterPoints } from './point-jitter.data';
+import { previewControlContract } from './point-jitter-polar.controls';
+import { PointJitterPolarPreview } from './point-jitter-polar.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const continuous = values[POINT_JITTER_POLAR_CONTROL_IDS.scale] === 'continuous';
-  return (
-    <Plot data={polarJitterPoints} width={360} height={360} coordinate={{ type: 'polar2D' }}>
-      <PointMark
-        x={continuous ? 'angle' : 'group'}
-        y="value"
-        size={5}
-        color={{ kind: 'constant', value: '#7c3aed' }}
-        placement={{
-          adjustments: [polarJitterOperationOf(values)],
-        }}
-      />
-      {continuous ? (
-        <PlotScale dimension="x" type="linear" domain={[0, 360]} />
-      ) : (
-        <PlotScale dimension="x" type="point" />
-      )}
-      <PlotScale dimension="y" type="linear" domainPadding={{ upper: continuous ? 5 : 28 }} />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values => PointJitterPolarPreview(values));
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

@@ -9,7 +9,11 @@ Start with [Basic usage](/kernel/components/layout/usage). Use the options below
 
 `theme` selects the theme for descendant Composites (compound components); it does not automatically style ordinary Node / Path primitives. Use each primitive's `style` and `rootScope` for figure-wide defaults. Switch the theme style and color mode in the panel to observe color changes on the same card; its position and dimensions stay fixed.
 
-<ComponentPreview files={['theme-inheritance', 'theme-card.ts']} size="sm" />
+<ComponentPreview
+  files={['theme-inheritance', 'theme-inheritance.preview.tsx', 'theme-card.ts']}
+  size="sm"
+  defaultSourceFile="theme-inheritance.preview.tsx"
+/>
 
 Explicit `theme` fields override the root theme in existing IR; omitted fields keep their values. See [Theme](/kernel/components/design/theme) for inheritance rules.
 

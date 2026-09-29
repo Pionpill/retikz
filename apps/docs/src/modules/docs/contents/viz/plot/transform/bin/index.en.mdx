@@ -15,7 +15,16 @@ General grouped summaries, representative-row selection, and boxplot statistics 
 
 Switch among the mutually exclusive `count`, `step`, and `thresholds` strategies. The demo fixes `extent` to `[0, 20]` and uses a bimodal sample with a sparse tail, so edge changes do not also change the viewport and the strategy differences remain visible.
 
-<ComponentPreview files={['transform-histogram', 'transform-histogram.data.ts']} size="lg" />
+<ComponentPreview
+  files={[
+    'transform-histogram',
+    'transform-histogram.preview.tsx',
+    'transform-histogram.i18n.ts',
+    'transform-histogram.data.ts',
+  ]}
+  size="lg"
+  defaultSourceFile="transform-histogram.preview.tsx"
+/>
 
 `IntervalMark` reads `x0` / `x1` for bin edges and draws adjacent intervals at their true width on a continuous x-axis. `y` reads the default `binCount`.
 

@@ -161,7 +161,11 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 下面三个 Node 和三条 Path（通过 Draw 声明）都没有局部样式。调整 `rootScope.style` 的描边与不透明度，观察所有图元一起变化；`rootScope.defaults.node` 的填充和内边距只作用于节点。示例的蓝色、线宽与内边距为演示设置，不是库的默认值。
 
-<ComponentPreview files="layout-defaults" size="md" />
+<ComponentPreview
+  files={['layout-defaults', 'layout-defaults.preview.tsx']}
+  size="md"
+  defaultSourceFile="layout-defaults.preview.tsx"
+/>
 
 ## 补充说明
 

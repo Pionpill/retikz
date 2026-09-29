@@ -1,58 +1,35 @@
-import { Draw, Layout, Node } from '@retikz/react';
-import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { framePlaygroundControls, previewControlContract } from './frame-playground.controls';
+import { renderFramePlaygroundPreview } from './frame-playground.preview';
 
 export const previewControls = framePlaygroundControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const borderLineStyle =
-    values.borderLineStyle === 'dashed'
-      ? { dashPattern: [6, 4] }
-      : values.borderLineStyle === 'dotted'
-        ? { dashPattern: [1, 4], lineCap: 'round' as const }
-        : {};
-  const borderStyle = {
-    stroke: values.borderStroke,
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderFramePlaygroundPreview({
+    borderLineStyle: values.borderLineStyle,
+    borderStroke: values.borderStroke,
     strokeWidth: values.strokeWidth,
     strokeOpacity: values.strokeOpacity,
-    fill: 'dodgerblue',
     fillOpacity: values.fillOpacity,
-    ...borderLineStyle,
-  };
-
-  return (
-    <Layout viewBox={{ x: 0, y: 0, width: 420, height: 260 }}>
-      <Frame
-        id="frame-playground"
-        padding={{ x: values.paddingX, y: values.paddingY }}
-        gap={values.gap}
-        headerDirection={values.headerDirection}
-        border={{ style: borderStyle, cornerRadius: values.borderCornerRadius }}
-      >
-        <FrameTitle
-          style={{
-            fill: 'dodgerblue',
-            fillOpacity: values.titleFillOpacity,
-            font: { size: values.titleFontSize, weight: values.titleFontWeight },
-          }}
-          layout={{ padding: values.titlePadding }}
-        >
-          FrameTitle
-        </FrameTitle>
-        <FrameDescription style={{ font: { size: values.descriptionFontSize }, opacity: values.descriptionOpacity }}>
-          FrameDescription
-        </FrameDescription>
-        <Node id="A" position={[130, 165]} text={values.nodeAText} />
-        <Node id="B" position={[290, 165]} text={values.nodeBText} />
-      </Frame>
-      {values.connected ? <Draw way={['A', 'B']} style={{ stroke: 'gray' }} /> : null}
-    </Layout>
-  );
-});
+    paddingX: values.paddingX,
+    paddingY: values.paddingY,
+    gap: values.gap,
+    headerDirection: values.headerDirection,
+    borderCornerRadius: values.borderCornerRadius,
+    titleFillOpacity: values.titleFillOpacity,
+    titleFontSize: values.titleFontSize,
+    titleFontWeight: values.titleFontWeight,
+    titlePadding: values.titlePadding,
+    descriptionFontSize: values.descriptionFontSize,
+    descriptionOpacity: values.descriptionOpacity,
+    nodeAText: values.nodeAText,
+    nodeBText: values.nodeBText,
+    connected: values.connected,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

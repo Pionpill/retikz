@@ -100,13 +100,21 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 Node text, labels, and pins are separate outputs and do not receive the shape shadow. Adjust the controls below to change only the blue rectangle's offset, blur, colour, and opacity; its top label remains crisp.
 
-<ComponentPreview files="shadow-node" size="lg" />
+<ComponentPreview
+  files={['shadow-node', 'shadow-node.preview.tsx']}
+  size="lg"
+  defaultSourceFile="shadow-node.preview.tsx"
+/>
 
 ### Shared Path and arrow boundary
 
 A Path and its arrow belong to the same primary geometry, so they share one projection; the path label remains independent. This demo uses the same control values to compare the effect boundary with Node.
 
-<ComponentPreview files="shadow-path" size="lg" />
+<ComponentPreview
+  files={['shadow-path', 'shadow-path.preview.tsx']}
+  size="lg"
+  defaultSourceFile="shadow-path.preview.tsx"
+/>
 
 ## Related props
 

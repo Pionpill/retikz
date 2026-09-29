@@ -37,7 +37,8 @@ Plot 中有两类名字相近但用途不同的来源能力：
 仍然按普通 `<Plot>` 声明图表。宿主需要链路时传入 `lineage`，并通过 `onLineage` 接收运行结果。面板可分别启用根级排序与图元局部前 N 名选择；图表显示变换结果，`transformSteps` 同时列出两层操作及其输入、输出行数：
 
 <ComponentPreview
-  files={['plot-lineage', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}
+  files={['plot-lineage', 'plot-lineage.preview.tsx', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}
+  defaultSourceFile="plot-lineage.preview.tsx"
   size="lg"
   caption="排序和前 N 名选择会改变绘图数据；记录范围开关只改变旁路链路字段。摘要中的 root 与 mark[0] 对应两层变换。"
 />

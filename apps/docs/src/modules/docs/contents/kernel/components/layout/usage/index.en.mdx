@@ -165,7 +165,11 @@ Whole-figure defaults are defined by a root [Scope](/kernel/components/scope/usa
 
 The three Nodes and three Paths (declared with Draw) have no local styles. Change the stroke and opacity in `rootScope.style` to update every primitive; fill and padding in `rootScope.defaults.node` affect only the nodes. The blue color, stroke width and padding are chosen for this demo, not library defaults.
 
-<ComponentPreview files="layout-defaults" size="md" />
+<ComponentPreview
+  files={['layout-defaults', 'layout-defaults.preview.tsx']}
+  size="md"
+  defaultSourceFile="layout-defaults.preview.tsx"
+/>
 
 ## Additional notes
 

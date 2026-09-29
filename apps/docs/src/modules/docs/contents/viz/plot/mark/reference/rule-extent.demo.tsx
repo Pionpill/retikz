@@ -1,44 +1,17 @@
-import { Plot, PlotAxis, PlotLegend, PlotScale, PointMark, ReferenceMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, RULE_EXTENT_COORDINATE_ID, RULE_EXTENT_INSET_ID } from './rule-extent.controls';
-import { referenceSpans } from './rule-extent.data';
+import { RuleExtentPreview } from './rule-extent.preview';
 
 /** 用逐行字段限制参考线在对侧轴上的起止范围 */
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const inset = values[RULE_EXTENT_INSET_ID];
-  const data = referenceSpans.map(row => ({
-    ...row,
-    spanStart: Number(row.spanStart) + inset,
-    spanEnd: Number(row.spanEnd) - inset,
-  }));
-
-  return (
-    <Plot
-      data={data}
-      model={[
-        { name: 'tier', type: 'categorical' },
-        { name: 'threshold', type: 'continuous' },
-        { name: 'spanStart', type: 'continuous' },
-        { name: 'spanEnd', type: 'continuous' },
-      ]}
-      width={400}
-      height={280}
-      coordinate={values[RULE_EXTENT_COORDINATE_ID] === 'polar2D' ? 'polar2D' : undefined}
-    >
-      <PlotScale dimension="x" type="linear" domain={[0, 120]} />
-      <PlotScale dimension="y" type="linear" domain={[15, 95]} />
-      <ReferenceMark y="threshold" extentField="spanStart" extentToField="spanEnd" color="tier" strokeWidth={2} />
-      <PointMark x="spanStart" y="threshold" color="tier" minimumSize={6} />
-      <PointMark x="spanEnd" y="threshold" color="tier" minimumSize={6} />
-      <PlotAxis dimension="x" grid />
-      <PlotAxis dimension="y" />
-      <PlotLegend channel="color" />
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  RuleExtentPreview({
+    inset: values[RULE_EXTENT_INSET_ID],
+    coordinate: values[RULE_EXTENT_COORDINATE_ID],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

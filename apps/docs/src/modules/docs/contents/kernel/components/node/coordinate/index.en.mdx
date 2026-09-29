@@ -129,7 +129,11 @@ A Coordinate's directional and angular anchors all collapse to its center, and i
 
 Name a virtual center, then position multiple nodes around it and terminate multiple paths at it. The light axes stay fixed at the world origin; adjust the hub `position` and node `distance` to move hub against that reference and update every dependent object together.
 
-<ComponentPreview files="coordinate-as-anchor" size="xl" />
+<ComponentPreview
+  files={['coordinate-as-anchor', 'coordinate-as-anchor.preview.tsx', 'coordinate-as-anchor.i18n.ts']}
+  size="xl"
+  defaultSourceFile="coordinate-as-anchor.preview.tsx"
+/>
 
 The four nodes above all use `position={{ of: 'hub', ... }}` to reference the same hub; moving hub moves the whole arrangement.
 
@@ -137,13 +141,21 @@ The four nodes above all use `position={{ of: 'hub', ... }}` to reference the sa
 
 In flow charts, multiple paths can converge at a virtual point. Adjust the junction `position` and observe how all three paths keep passing through this Coordinate with no shape or text.
 
-<ComponentPreview files="coordinate-fold-junction" size="md" />
+<ComponentPreview
+  files={['coordinate-fold-junction', 'coordinate-fold-junction.preview.tsx', 'coordinate-fold-junction.i18n.ts']}
+  size="md"
+  defaultSourceFile="coordinate-fold-junction.preview.tsx"
+/>
 
 ### Offset positioning chain
 
 Use `{ of, offset }` to derive one coordinate from another — drive the whole group from a single root, and moving the root drags everything along. The light axes stay fixed at the world origin; move the root or adjust the horizontal step to compare the group against that reference and watch the offset propagate through the chain:
 
-<ComponentPreview files="coordinate-offset-chain" size="lg" />
+<ComponentPreview
+  files={['coordinate-offset-chain', 'coordinate-offset-chain.preview.tsx']}
+  size="lg"
+  defaultSourceFile="coordinate-offset-chain.preview.tsx"
+/>
 
 ### Proportional positioning
 
@@ -151,7 +163,11 @@ Use `{ of, offset }` to derive one coordinate from another — drive the whole g
 
 Each endpoint must resolve without using the current path position (`AbsoluteTarget`) (Cartesian / polar / node reference `{ id, anchor? }` / `{ of, offset }` / nested between — **excluding** path-relative). The same shape works in `<Coordinate position>` / `<Node position>` / `<Step to>`:
 
-<ComponentPreview files="coordinate-between" size="xs" />
+<ComponentPreview
+  files={['coordinate-between', 'coordinate-between.preview.tsx']}
+  size="xs"
+  defaultSourceFile="coordinate-between.preview.tsx"
+/>
 
 > `fraction` is strict [0,1] (extrapolation not yet supported); when an endpoint references an undefined node, Coordinate / Node position resolution throws while a path `Step.to` warns and skips — the same as other positioning forms.
 

@@ -96,7 +96,11 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 `{ label }` 修饰下一段产生的 `step.label`，不自己产生路径段。面板支持直线、两种折角与二次贝塞尔：拖动 `position`，再调整 `side`、`sloped` 与文字颜色。折角会把 t 平均分配给各腿，因此 `0.5` 固定落在拐角；曲线则按贝塞尔参数取点。
 
-<ComponentPreview files="draw-label" size="lg" />
+<ComponentPreview
+  files={['draw-label', 'draw-label.preview.tsx']}
+  size="lg"
+  defaultSourceFile="draw-label.preview.tsx"
+/>
 
 `position` 可以直接写 0–1 数值：0 为起点、1 为终点；也可使用 `at-start`、`very-near-start`、`near-start`、`midway`、`near-end`、`very-near-end`、`at-end`，分别对应 0、0.125、0.25、0.5、0.75、0.875、1。`side` 选择文字位于线的哪一侧；`sloped: true` 让文字沿切线旋转。想让文字居中压在线上时，省略 `side` 并设置 `sloped: true`，不要向公开输入传入 `side: 'center'`。
 
@@ -128,9 +132,16 @@ Path 则直接把同一个对象传给目标 `<Step>` 的 `label`：
 固定左上、右下两个节点后，切换连接路线、`side` 与 0–1 的标签位置，观察同一条宿主 Path 上的采样与断口。选择“自动居中”时不传 `side`、只启用 `sloped`，因此仍走居中标签的默认断线规则。
 
 <ComponentPreview
-  files={['path-label-route-playground', 'path-label-route-playground.tsx', 'path-label-route-playground.controls.ts']}
+  files={[
+    'path-label-route-playground',
+    'path-label-route-playground.preview.tsx',
+    'path-label-route-playground.i18n.ts',
+    'path-label-route-playground.tsx',
+    'path-label-route-playground.controls.ts',
+  ]}
   size="md"
   caption="切换路线与标签位置；自动居中会断线，其它 side 默认保持连续。"
+  defaultSourceFile="path-label-route-playground.preview.tsx"
 />
 
 省略 `interrupt` 时，只有这个无填充内置 Stroke + 居中的组合自动断线。`interrupt: false` 强制保留连续描边；`interrupt: true` 则可让非居中标签也断线。断口默认从标签视觉边界向两侧各额外留出 `4` user units；用 `gap` 覆盖该值，`gap: 0` 表示不加额外留白。

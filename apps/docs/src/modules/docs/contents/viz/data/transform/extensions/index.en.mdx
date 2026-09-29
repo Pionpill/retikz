@@ -115,7 +115,7 @@ A Definition should implement only data-row and statistical semantics. Color, ma
 
 The following Definitions and helpers are exported from the `@retikz/data` package root.
 
-### `TransformDefinition`
+#### `TransformDefinition`
 
 | Field           | Type                                                                                                 | Description                                                                 |
 | --------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -128,15 +128,19 @@ The following Definitions and helpers are exported from the `@retikz/data` packa
 
 Use `defineTransform(definition)` to preserve the generic relationship among these fields.
 
-### Output And Scheduling Contracts
+#### `DataTransformOutputDescriptor`
 
-| Type                            | Key fields                             | Responsibility                                                         |
-| ------------------------------- | -------------------------------------- | ---------------------------------------------------------------------- |
-| `DataTransformOutputDescriptor` | `field`, `type`                        | Assigns a fixed output type or reuses an existing type with `{ from }` |
-| `DataTransformOutputModel`      | `preserve.outputs` \| `replace.fields` | Extends the current field graph or replaces it with a complete list    |
-| `DataTransformSchedule`         | `phase`, `bindingClass`, `fieldEffect` | Lets a host decide whether the Definition can bind to a field slot     |
+`field` and `type` assign a fixed output type or reuse an existing type with `{ from }`.
 
-### `StatisticsReducerDefinition`
+#### `DataTransformOutputModel`
+
+`preserve.outputs` extends the current field graph; `replace.fields` replaces it with a complete field list.
+
+#### `DataTransformSchedule`
+
+`phase`, `bindingClass`, and `fieldEffect` let a host decide whether the Definition can bind to a field slot in the closed phase order.
+
+#### `StatisticsReducerDefinition`
 
 | Field           | Type                                                                                                 | Description                                                                                                      |
 | --------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -148,7 +152,7 @@ Use `defineTransform(definition)` to preserve the generic relationship among the
 
 Use `defineStatisticsReducer(definition)` to define a reducer.
 
-### `RowSelectorDefinition`
+#### `RowSelectorDefinition`
 
 | Field          | Type                                                                               | Description                                        |
 | -------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------- |

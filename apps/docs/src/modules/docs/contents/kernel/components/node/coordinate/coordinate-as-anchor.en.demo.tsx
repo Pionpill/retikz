@@ -1,48 +1,23 @@
-import { Coordinate, Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { coordinateAsAnchorFrame } from './coordinate-as-anchor.controls';
 import { coordinateAsAnchorControls, previewControlContract } from './coordinate-as-anchor.en.controls';
+import { CoordinateAsAnchorPreview } from './coordinate-as-anchor.preview';
 
 export const previewControls = coordinateAsAnchorControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout>
-      <Draw
-        way={coordinateAsAnchorFrame.xAxis}
-        zIndex={-1}
-        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
-      />
-      <Draw
-        way={coordinateAsAnchorFrame.yAxis}
-        zIndex={-1}
-        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
-      />
-      {/* Named virtual center — invisible, but the four `of` references all rely on it */}
-      <Coordinate id="hub" position={[values.positionX, values.positionY]} />
-      <Node id="N" position={{ direction: 'top', of: 'hub', distance: values.verticalDistance }}>
-        North
-      </Node>
-      <Node id="S" position={{ direction: 'bottom', of: 'hub', distance: values.verticalDistance }}>
-        South
-      </Node>
-      <Node id="E" position={{ direction: 'right', of: 'hub', distance: values.horizontalDistance }} shape="circle">
-        East
-      </Node>
-      <Node id="W" position={{ direction: 'left', of: 'hub', distance: values.horizontalDistance }} shape="circle">
-        West
-      </Node>
-      {/* Four paths converge at hub — visually meeting at a center point with no drawn shape */}
-      <Draw way={['N', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
-      <Draw way={['S', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
-      <Draw way={['E', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
-      <Draw way={['W', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  CoordinateAsAnchorPreview(
+    {
+      positionX: values.positionX,
+      positionY: values.positionY,
+      verticalDistance: values.verticalDistance,
+      horizontalDistance: values.horizontalDistance,
+    },
+    'en',
+  ),
+);
 
 export const previewSource = controlledPreview.source;
 

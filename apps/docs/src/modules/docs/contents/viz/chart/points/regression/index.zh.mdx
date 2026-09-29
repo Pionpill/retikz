@@ -14,9 +14,10 @@ description: 回归图在原始观测点上叠加拟合趋势，用来概括两�
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['regression-minimal', 'regression-minimal.data.ts']}
+  files={['regression-minimal', 'regression-minimal.preview.tsx', 'regression-minimal.data.ts']}
   hideCode
   size="xl"
+  defaultSourceFile="regression-minimal.preview.tsx"
 />
 
 <DocTabs defaultValue="react-jsx">
@@ -172,10 +173,11 @@ Iris 数据包含 150 条鸢尾花观测。横轴为萼片长度，纵轴为花�
   hideCode
   mode="showcase"
   responsive
-  files={['regression-encodings', 'regression-basic.data.ts']}
+  files={['regression-encodings', 'regression-encodings.preview.tsx', 'regression-basic.data.ts']}
   controls={{ name: 'regression-encodings' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="regression-encodings.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：RegressionEncodings](#regressionencodings)。
@@ -237,10 +239,11 @@ recipe: {
   hideCode
   mode="showcase"
   responsive
-  files={['regression-basic', 'regression-basic.data.ts']}
+  files={['regression-basic', 'regression-basic.preview.tsx', 'regression-basic.data.ts']}
   controls={{ name: 'regression-basic' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="regression-basic.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：RegressionProperties](#regressionproperties)。
@@ -311,10 +314,11 @@ RegressionMark 始终继承 series，不能在同一个图元里改成另一套�
   hideCode
   mode="showcase"
   responsive
-  files={['regression-marks', 'regression-basic.data.ts']}
+  files={['regression-marks', 'regression-marks.preview.tsx', 'regression-basic.data.ts']}
   size="xl"
   controls={{ name: 'regression-marks' }}
   caption="切换拟合方法并调整趋势线宽，比较同一组观测点的趋势。"
+  defaultSourceFile="regression-marks.preview.tsx"
 />
 
 完整属性与约束见 [API 参考：RegressionMark](#regressionmark)。
@@ -339,9 +343,10 @@ RegressionMark 始终继承 series，不能在同一个图元里改成另一套�
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['regression-facet', 'regression-basic.data.ts']}
+  files={['regression-facet', 'regression-facet.preview.tsx', 'regression-basic.data.ts']}
   size="xxxl"
   controls={{ name: 'regression-facet' }}
+  defaultSourceFile="regression-facet.preview.tsx"
 />
 
 ### 拟合方法比较
@@ -364,9 +369,10 @@ RegressionMark 始终继承 series，不能在同一个图元里改成另一套�
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['regression-compare', 'regression-basic.data.ts']}
+  files={['regression-compare', 'regression-compare.preview.tsx', 'regression-basic.data.ts']}
   size="xxl"
   controls={{ name: 'regression-compare' }}
+  defaultSourceFile="regression-compare.preview.tsx"
 />
 
 ## 错误与限制
@@ -534,7 +540,13 @@ export const rows = [
   responsive
   mode="showcase"
   controlPanelDefaultOpen={false}
-  files={['regression-custom', 'regression-custom-fit.ts', 'regression-custom.data.ts']}
+  files={[
+    'regression-custom',
+    'regression-custom.preview.tsx',
+    'regression-custom-fit.ts',
+    'regression-custom.data.ts',
+  ]}
+  defaultSourceFile="regression-custom.preview.tsx"
   size="xl"
 />
 

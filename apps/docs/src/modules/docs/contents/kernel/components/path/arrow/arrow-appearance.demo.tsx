@@ -1,47 +1,28 @@
-import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/extension';
-import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { arrowAppearanceControls, previewControlContract } from './arrow-appearance.controls';
+import { ArrowAppearancePreview } from './arrow-appearance.preview';
 
 export const previewControls = arrowAppearanceControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout
-      viewBox={{ x: -40, y: -100, width: 440, height: 200 }}
-      extensions={{ arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition] }}
-    >
-      <Node id="A" position={[40, 0]} style={{ stroke: 'gray', dashed: true }}>
-        a
-      </Node>
-      <Node id="B" position={[320, 0]} style={{ stroke: 'gray', dashed: true }}>
-        b
-      </Node>
-      <Draw
-        way={['A', 'B']}
-        arrow={values.direction}
-        arrowDetail={{
-          shape: values.shape,
-          color: values.color,
-          scale: values.scale,
-          length: values.length,
-          width: values.width,
-          opacity: values.opacity,
-          ...(values.separateEnds
-            ? {
-                start: { shape: values.startShape, color: values.startColor },
-                end: { shape: values.endShape, color: values.endColor },
-              }
-            : {}),
-        }}
-        style={{ stroke: 'gray', strokeWidth: 2 }}
-      />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  ArrowAppearancePreview({
+    direction: values.direction,
+    shape: values.shape,
+    color: values.color,
+    scale: values.scale,
+    length: values.length,
+    width: values.width,
+    opacity: values.opacity,
+    separateEnds: values.separateEnds,
+    startShape: values.startShape,
+    startColor: values.startColor,
+    endShape: values.endShape,
+    endColor: values.endColor,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

@@ -27,9 +27,10 @@ Use `defineScopeChannel`, `defineNodeChannel`, `definePathChannel`, or the gener
 The `intensity` channel below maps field values into `[0.3, 1]` and also accepts a numeric constant that directly represents opacity. Use the panel to switch between field and constant bindings; switch source files to inspect the definition, data, and host injection:
 
 <ComponentPreview
-  files={['custom-channel', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
+  files={['custom-channel', 'custom-channel.preview.tsx', 'custom-channel.definition.ts', 'custom-channel.data.ts']}
   size="lg"
   caption="A field binding preserves per-row score differences; a constant binding gives every point the same opacity."
+  defaultSourceFile="custom-channel.preview.tsx"
 />
 
 ## Inject into the host

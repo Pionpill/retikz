@@ -1,49 +1,24 @@
-import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { points } from './point-api.data';
 import { POINT_TEXT_CONTROL_IDS, previewControlContract } from './point-text.controls';
+import { PointTextPreview } from './point-text.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const textColor = values[POINT_TEXT_CONTROL_IDS.textColor];
-  const font = {
-    size: values[POINT_TEXT_CONTROL_IDS.fontSize],
-    weight: values[POINT_TEXT_CONTROL_IDS.fontBold] ? ('bold' as const) : ('normal' as const),
-  };
-  const textProps =
-    values[POINT_TEXT_CONTROL_IDS.mode] === 'label'
-      ? {
-          color: 'region',
-          label: 'label',
-          labelPosition: values[POINT_TEXT_CONTROL_IDS.labelPosition],
-          labelDistance: values[POINT_TEXT_CONTROL_IDS.labelDistance],
-          labelPin: values[POINT_TEXT_CONTROL_IDS.labelPin],
-          labelTextColor: textColor,
-          labelFont: font,
-        }
-      : {
-          text: 'label',
-          textColor,
-          font,
-          dx: values[POINT_TEXT_CONTROL_IDS.dx],
-          dy: values[POINT_TEXT_CONTROL_IDS.dy],
-        };
-
-  return (
-    <Plot
-      data={points}
-      width={400}
-      height={280}
-      coordinate={values[POINT_TEXT_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
-    >
-      <PointMark x="x" y="y" {...textProps} />
-      <PlotAxis dimension="x" />
-      <PlotAxis dimension="y" grid />
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  PointTextPreview({
+    textColor: values[POINT_TEXT_CONTROL_IDS.textColor],
+    fontSize: values[POINT_TEXT_CONTROL_IDS.fontSize],
+    fontBold: values[POINT_TEXT_CONTROL_IDS.fontBold],
+    mode: values[POINT_TEXT_CONTROL_IDS.mode],
+    labelPosition: values[POINT_TEXT_CONTROL_IDS.labelPosition],
+    labelDistance: values[POINT_TEXT_CONTROL_IDS.labelDistance],
+    labelPin: values[POINT_TEXT_CONTROL_IDS.labelPin],
+    dx: values[POINT_TEXT_CONTROL_IDS.dx],
+    dy: values[POINT_TEXT_CONTROL_IDS.dy],
+    coordinate: values[POINT_TEXT_CONTROL_IDS.coordinate],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

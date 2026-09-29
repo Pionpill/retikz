@@ -1,79 +1,47 @@
-import { Layout } from '@retikz/react';
-import { Grid } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { gridPlaygroundControls, previewControlContract } from './grid-playground.controls';
+import { renderGridPlaygroundPreview } from './grid-playground.preview';
 
 export const previewControls = gridPlaygroundControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const bounds = {
-    start: values.boundsStart,
-    end: values.boundsEnd,
-  };
-  const lineStyle = {
-    stroke: values.lineStroke,
-    strokeWidth: values.lineStrokeWidth,
-    strokeOpacity: values.lineOpacity,
-    ...(values.lineDashed ? { dashPattern: [6, 4] } : {}),
-  };
-  const major = values.majorEnabled
-    ? {
-        every: values.majorEvery,
-        offset: values.majorOffset,
-        style: {
-          stroke: values.majorStroke,
-          strokeWidth: values.majorStrokeWidth,
-          strokeOpacity: values.majorOpacity,
-          ...(values.majorDashed ? { dashPattern: [6, 4] } : {}),
-        },
-      }
-    : undefined;
-  const border = values.borderEnabled
-    ? {
-        padding: values.borderPadding,
-        order: values.borderOrder,
-        extendLines: values.borderExtendLines,
-        style: {
-          stroke: values.borderStroke,
-          strokeWidth: values.borderStrokeWidth,
-          strokeOpacity: values.borderOpacity,
-          fill: values.borderFill,
-          fillOpacity: values.borderFillOpacity,
-          ...(values.borderDashed ? { dashPattern: [6, 4] } : {}),
-        },
-      }
-    : undefined;
-  const line = {
-    vertical: {
-      spacing: values.spacingMode === 'uniform' ? values.spacing : values.spacingX,
-      ...(values.originEnabled ? { origin: values.originX } : {}),
-      includeBoundary: values.includeBoundary,
-      style: lineStyle,
-      ...(major === undefined ? {} : { major }),
-    },
-    horizontal: {
-      spacing: values.spacingMode === 'uniform' ? values.spacing : values.spacingY,
-      ...(values.originEnabled ? { origin: values.originY } : {}),
-      includeBoundary: values.includeBoundary,
-      style: lineStyle,
-      ...(major === undefined ? {} : { major }),
-    },
-  };
-  const gridInput = {
-    bounds,
-    line,
-    ...(border === undefined ? {} : { border }),
-  };
-
-  return (
-    <Layout viewBox={{ x: 0, y: 0, width: 400, height: 280 }}>
-      <Grid {...gridInput} />
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderGridPlaygroundPreview({
+    boundsStart: values.boundsStart,
+    boundsEnd: values.boundsEnd,
+    lineStroke: values.lineStroke,
+    lineStrokeWidth: values.lineStrokeWidth,
+    lineOpacity: values.lineOpacity,
+    lineDashed: values.lineDashed,
+    majorEnabled: values.majorEnabled,
+    majorEvery: values.majorEvery,
+    majorOffset: values.majorOffset,
+    majorStroke: values.majorStroke,
+    majorStrokeWidth: values.majorStrokeWidth,
+    majorOpacity: values.majorOpacity,
+    majorDashed: values.majorDashed,
+    borderEnabled: values.borderEnabled,
+    borderPadding: values.borderPadding,
+    borderOrder: values.borderOrder,
+    borderExtendLines: values.borderExtendLines,
+    borderStroke: values.borderStroke,
+    borderStrokeWidth: values.borderStrokeWidth,
+    borderOpacity: values.borderOpacity,
+    borderFill: values.borderFill,
+    borderFillOpacity: values.borderFillOpacity,
+    borderDashed: values.borderDashed,
+    spacingMode: values.spacingMode,
+    spacing: values.spacing,
+    spacingX: values.spacingX,
+    originEnabled: values.originEnabled,
+    originX: values.originX,
+    includeBoundary: values.includeBoundary,
+    spacingY: values.spacingY,
+    originY: values.originY,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 
