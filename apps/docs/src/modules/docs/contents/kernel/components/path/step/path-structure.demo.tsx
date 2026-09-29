@@ -1,41 +1,18 @@
-import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { pathStructureControls, previewControlContract } from './path-structure.controls';
+import { PathStructurePreview } from './path-structure.preview';
 
 export const previewControls = pathStructureControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  return (
-    <Layout viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
-      <Path
-        style={{
-          stroke: values.structure === 'fill' ? values.fill : 'currentColor',
-          strokeWidth: 2,
-          ...(values.structure === 'fill' ? { fill: values.fill } : {}),
-          fillOpacity: 0.35,
-        }}
-      >
-        <Step kind="move" to={[-160, -55]} />
-        {values.structure === 'subpaths' ? (
-          <>
-            <Step to={[-35, 45]} />
-            <Step kind="move" to={[35, -45]} />
-            <Step to={[160, 55]} />
-          </>
-        ) : (
-          <>
-            <Step to={[0, 55]} />
-            <Step to={[160, -55]} />
-            {values.structure === 'fill' && <Step kind="cycle" />}
-          </>
-        )}
-      </Path>
-    </Layout>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  PathStructurePreview({
+    structure: values.structure,
+    fill: values.fill,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

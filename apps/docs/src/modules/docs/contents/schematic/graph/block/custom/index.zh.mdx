@@ -49,6 +49,7 @@ adapter 构造普通 Source 对象，React 的 `key` 等宿主属性不进入持
 ```tsx
 import { Layout } from '@retikz/react';
 import type { FC } from 'react';
+
 const source: ServiceSource = {
   namespace: 'example',
   type: 'serviceBlock',
@@ -69,6 +70,7 @@ const Example: FC = () => (
 ```ts
 import { scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
+
 const source: ServiceSource = {
   namespace: 'example',
   type: 'serviceBlock',

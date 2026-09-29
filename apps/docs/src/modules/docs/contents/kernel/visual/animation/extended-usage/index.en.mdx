@@ -19,7 +19,8 @@ After declaring tracks in [basic usage](/kernel/visual/animation/usage), control
 Event triggers need an interactive host. An exported static SVG string cannot execute your application event handlers by itself. Visibility detection belongs to each backend host: SVG accounts for scroll-container clipping, while Canvas checks intersection with the browser viewport. Activation timing can therefore differ during nested scrolling.
 
 <ComponentPreview
-  files="animation-trigger"
+  files={['animation-trigger', 'animation-trigger.preview.tsx', 'animation-trigger.i18n.ts']}
+  defaultSourceFile="animation-trigger.preview.tsx"
   size="lg"
   caption="Changing the trigger reloads the scene. Scroll inside the visible example, use the button for manual mode, or click the element in event mode."
 />

@@ -1,18 +1,11 @@
-import { ConnectedScatterChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { usePreviewDimensions } from '@/modules/docs/preview';
 
-import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
+import { renderConnectedScatterMinimalPreview } from './connected-scatter-minimal.preview';
 
 /** Connected Scatter basic usage with required data and field mappings on the root */
-const render = (dimensions?: { width: number; height: number }) => (
-  <ConnectedScatterChart
-    layout={dimensions}
-    rows={connectedScatterMinimalData}
-    recipe={{ encodings: { x: 'month', y: 'unemploymentRate', order: 'month' } }}
-  />
-);
+const render = (dimensions?: { width: number; height: number }) => renderConnectedScatterMinimalPreview(dimensions);
 
 /** Data import used by the IR and Vanilla previews */
 export const previewSource = {

@@ -10,9 +10,10 @@ description: 一维坐标系把一个位置字段放到直线或圆周上，适�
 在控件面板中切换直线与圆周。使用圆周时，还可以调整外半径和角度区间。
 
 <ComponentPreview
-  files={['coordinate-1d-playground', 'coordinate-1d-playground.data.ts']}
+  files={['coordinate-1d-playground', 'coordinate-1d-playground.preview.tsx', 'coordinate-1d-playground.data.ts']}
   size="lg"
   caption="两种形态使用同一组事件时刻和固定的 0–24 小时 domain。方形画布保持不变，便于直接比较直线与圆周的空间排列。"
+  defaultSourceFile="coordinate-1d-playground.preview.tsx"
 />
 
 ## 映射之后继续组合
@@ -22,9 +23,10 @@ description: 一维坐标系把一个位置字段放到直线或圆周上，适�
 在同一个 Plot 内，`PointMark` 先用 `thingX` 把单个位置字段映射为 core Node，再用局部 `summarize` 将重复的目标字段折叠成 3 个下层 Node。`anchorId` 为这些映射结果提供稳定 id，`RelationMark` 因而能让每 4 个来源 Node 引用同一个目标 Node。映射后的结果还可以继续参与汇聚连线、标注等二次操作。
 
 <ComponentPreview
-  files={['coordinate-1d-composition', 'coordinate-1d-composition.zh.data.ts']}
+  files={['coordinate-1d-composition', 'coordinate-1d-composition.preview.tsx', 'coordinate-1d-composition.zh.data.ts']}
   size="lg"
   caption="横轴只负责一维定位；12 个来源 Node 在投影后按稳定 id 分成 3 组，每组 4 条连接线汇聚到同一个目标 Node。"
+  defaultSourceFile="coordinate-1d-composition.preview.tsx"
 />
 
 ## 选择与配置

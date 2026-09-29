@@ -3,7 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { laborCosts } from './bar-variable-width.data';
-import { measurements } from './interval-histogram.data';
+import { intervalHistogramOperationOf, measurements } from './interval-histogram.data';
 
 /** 连续区间 playground 的稳定控件 id */
 export const INTERVAL_CONTINUOUS_MODE_ID = 'interval-continuous-mode';
@@ -15,13 +15,6 @@ export const INTERVAL_CONTINUOUS_HORIZONTAL_PADDING_ID = 'interval-continuous-ho
 
 /** 连续区间上下留白的稳定控件 id */
 export const INTERVAL_CONTINUOUS_VERTICAL_PADDING_ID = 'interval-continuous-vertical-padding';
-
-/** 根据实时控件值创建直方图分箱 operation */
-export const intervalHistogramOperationOf = (values: { [INTERVAL_HISTOGRAM_COUNT_ID]: number }) => ({
-  kind: 'bin',
-  field: 'measurement',
-  count: values[INTERVAL_HISTOGRAM_COUNT_ID],
-});
 
 /** 连续区间与可变宽度的中文属性面板 */
 export const intervalHistogramControls = definePreviewControls({
@@ -39,7 +32,8 @@ export const intervalHistogramControls = definePreviewControls({
           views: createPlotTransformTableViews(
             { source: '原始', result: '分箱后' },
             measurements,
-            intervalHistogramOperationOf,
+            (values: { [INTERVAL_HISTOGRAM_COUNT_ID]: number }) =>
+              intervalHistogramOperationOf(values[INTERVAL_HISTOGRAM_COUNT_ID]),
           ),
           visibleWhen: { controlId: INTERVAL_CONTINUOUS_MODE_ID, oneOf: ['histogram'] },
         },

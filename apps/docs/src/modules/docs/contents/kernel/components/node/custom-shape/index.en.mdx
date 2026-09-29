@@ -54,7 +54,7 @@ To generate multiple variants from one registry name, put data in `{ type, param
 
 The `ngon` example uses one definition for any regular polygon. Adjusting `sides` changes the count persisted in `shape.params`, while Node `scale` changes layout size only. Because `sides` is a count rather than a length, `scaleParams` returns the params unchanged.
 
-<ComponentPreview files="ngon" size="md" />
+<ComponentPreview files={['ngon', 'ngon.preview.tsx']} size="md" defaultSourceFile="ngon.preview.tsx" />
 
 ### Multiple primitives
 

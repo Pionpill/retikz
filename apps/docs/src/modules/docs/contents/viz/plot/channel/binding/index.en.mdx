@@ -47,9 +47,10 @@ Strings on position props still mean fields directly. Strings in the custom `cha
 Use the panel to switch the `x` / `y` fields and change color, size, or shape from field-driven values to constants. The chart structure stays fixed, so each action isolates the effect of the selected binding.
 
 <ComponentPreview
-  files={['channel-binding', 'channel-binding.data.ts']}
+  files={['channel-binding', 'channel-binding.preview.tsx', 'channel-binding.data.ts']}
   size="lg"
   caption="Position channels move data through the coordinate system; style channels can read fields or use fixed values."
+  defaultSourceFile="channel-binding.preview.tsx"
 />
 
 One row can bind to several channels at once: `gdp` and `life` determine position, `region` determines color and shape, `population` determines point radius, and `abbr` supplies labels. When a style switches to a constant, that data field no longer participates in the corresponding visual calculation.

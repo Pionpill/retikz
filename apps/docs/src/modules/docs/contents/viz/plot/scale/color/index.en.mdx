@@ -18,8 +18,9 @@ Bind `color` to a categorical field and `<Plot>` derives `ordinal`, assigning on
 
 <ComponentPreview
   size="lg"
-  files={['scale-ordinal', 'scale-ordinal.data.ts']}
+  files={['scale-ordinal', 'scale-ordinal.preview.tsx', 'scale-ordinal.data.ts']}
   caption="Switch discrete palettes and show or hide the legend to inspect the separate responsibilities of color mapping and legend explanation."
+  defaultSourceFile="scale-ordinal.preview.tsx"
 />
 
 `ordinal` does not interpolate between categories. For stable domain colors, provide an explicit `domain` and same-order `range` in the full spec. With an inferred domain, category order comes from the data.
@@ -30,8 +31,9 @@ Bind `color` to a categorical field and `<Plot>` derives `ordinal`, assigning on
 
 <ComponentPreview
   size="lg"
-  files={['scale-continuous', 'scale-continuous.data.ts']}
+  files={['scale-continuous', 'scale-continuous.preview.tsx', 'scale-continuous.data.ts']}
   caption="Switch between sequential and diverging, choose a scheme, and move the midpoint. The same -50 to 50 values reveal the mapping difference immediately."
+  defaultSourceFile="scale-continuous.preview.tsx"
 />
 
 Both scale types accept serializable named schemes. Common sequential schemes include `viridis`, `blues`, `greens`, and `magma`; common diverging schemes include `rdbu`, `brbg`, and `spectral`. Use `range` when custom colors should replace the scheme.
@@ -55,8 +57,9 @@ A discretization scale still consumes continuous data, but returns only a finite
 
 <ComponentPreview
   size="lg"
-  files={['scale-discretization', 'scale-discretization.data.ts']}
+  files={['scale-discretization', 'scale-discretization.preview.tsx', 'scale-discretization.data.ts']}
   caption="Switch among quantize, threshold, and quantile. Tune the bin count, business thresholds, and palette to compare how the same skewed data falls into different color bins."
+  defaultSourceFile="scale-discretization.preview.tsx"
 />
 
 Configuration constraints:

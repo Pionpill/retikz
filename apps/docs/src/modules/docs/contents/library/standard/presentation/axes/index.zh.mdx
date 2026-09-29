@@ -121,9 +121,10 @@ console.log(svg);
 面板覆盖 Axes 的坐标原点、两条轴各自的范围和网格、轴线、箭头、刻度、刻度文字、轴名和原点文字，并可分别调整 x/y 网格与刻度的偏移。预览视野保持固定。
 
 <ComponentPreview
-  files="axes-playground"
+  files={['axes-playground', 'axes-playground.preview.tsx']}
   size="md"
   caption="分别调整 x/y 的范围、网格、刻度分布与伸出侧，观察同一 Axes IR 如何下沉为 Core 图元。"
+  defaultSourceFile="axes-playground.preview.tsx"
 />
 
 ## 错误与限制
@@ -169,7 +170,7 @@ Axes 的 `x.grid` 与 `y.grid` 只生成裁切在各自轴范围内的普通格�
 
 ## Schema 参考
 
-### AxesSchema
+#### AxesSchema
 
 <ZodSchema name="AxesSchema" />
 

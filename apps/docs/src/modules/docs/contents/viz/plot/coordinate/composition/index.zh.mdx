@@ -25,9 +25,14 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 温度使用默认纵轴，降雨量使用右侧的 `rainfall` 纵轴。数据面板可以用来对照两个指标的量级。
 
 <ComponentPreview
-  files={['coordinate-composition-scopes', 'coordinate-composition-scopes.data.ts']}
+  files={[
+    'coordinate-composition-scopes',
+    'coordinate-composition-scopes.preview.tsx',
+    'coordinate-composition-scopes.data.ts',
+  ]}
   size="lg"
   caption="两条线共享 day 横轴；降雨图层用 yAxisId 选择右侧纵轴。"
+  defaultSourceFile="coordinate-composition-scopes.preview.tsx"
 />
 
 | 要做什么     | 写法                                           | 结果                   |
@@ -41,9 +46,14 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 完成线使用底部的经过天数，预测线使用顶部的日历日期。两条线仍共享完成度纵轴。
 
 <ComponentPreview
-  files={['coordinate-composition-x-axis', 'coordinate-composition-x-axis.data.ts']}
+  files={[
+    'coordinate-composition-x-axis',
+    'coordinate-composition-x-axis.preview.tsx',
+    'coordinate-composition-x-axis.data.ts',
+  ]}
   size="lg"
   caption="额外横轴 id 为 calendar；预测图层通过 xAxisId 绑定到顶部日期轴。"
+  defaultSourceFile="coordinate-composition-x-axis.preview.tsx"
 />
 
 ## 分面
@@ -55,9 +65,14 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 先尝试单行分面，再切换为行列网格。网格模式下可以保留缺失组合，并比较统一纵轴范围与各面板独立范围。
 
 <ComponentPreview
-  files={['coordinate-composition-facet', 'coordinate-composition-facet.data.ts']}
+  files={[
+    'coordinate-composition-facet',
+    'coordinate-composition-facet.preview.tsx',
+    'coordinate-composition-facet.data.ts',
+  ]}
   size="lg"
   caption="数据中没有 P2 + T2 组合；切换空组合策略可以观察该面板是隐藏还是保留。"
+  defaultSourceFile="coordinate-composition-facet.preview.tsx"
 />
 
 | 目标               | 配置                                        | 说明                           |
@@ -75,9 +90,14 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 `row` 和 `column` 也可以接收字段配置数组。数组顺序决定从外到内的分组层级，适合“地区 → 渠道”这类嵌套维度。
 
 <ComponentPreview
-  files={['coordinate-composition-facet-multilevel', 'coordinate-composition-facet-multilevel.data.ts']}
+  files={[
+    'coordinate-composition-facet-multilevel',
+    'coordinate-composition-facet-multilevel.preview.tsx',
+    'coordinate-composition-facet-multilevel.data.ts',
+  ]}
   size="lg"
   caption="列先按地区、再按渠道分组；行先按业务、再按指标分组。"
+  defaultSourceFile="coordinate-composition-facet-multilevel.preview.tsx"
 />
 
 ## 共享轨道
@@ -91,9 +111,14 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 三个指标共享交易日横轴，各自在独立纵向空间中绘制，适合时间对齐的运行指标。
 
 <ComponentPreview
-  files={['coordinate-composition-tracks', 'coordinate-composition-tracks.data.ts']}
+  files={[
+    'coordinate-composition-tracks',
+    'coordinate-composition-tracks.preview.tsx',
+    'coordinate-composition-tracks.data.ts',
+  ]}
   size="lg"
   caption="趋势、回撤和信号沿同一交易日对齐；背景数据默认收起，避免遮挡轨道结构。"
+  defaultSourceFile="coordinate-composition-tracks.preview.tsx"
 />
 
 关键写法是 `<PlotScaffold sharedRoles={['x']}>`。共享横轴写在 `PlotScaffold` 中，每条局部纵轴和 mark 写在对应的 `<PlotTrack>` 中；每条轨道占据的起止比例由 `band.start` / `band.end` 决定。
@@ -103,9 +128,14 @@ description: 坐标组合在一张 Plot 中组织双轴、数据分面与共享�
 共享轨道也能使用 `polar2D`。此时多条径向轨道共享角度分类，每条轨道占据不同半径区间。
 
 <ComponentPreview
-  files={['coordinate-composition-tracks-polar', 'coordinate-composition-tracks-polar.data.ts']}
+  files={[
+    'coordinate-composition-tracks-polar',
+    'coordinate-composition-tracks-polar.preview.tsx',
+    'coordinate-composition-tracks-polar.data.ts',
+  ]}
   size="lg"
   caption="各业务环节共享角度位置；信号、容量和外环扇区分别使用不同半径带。"
+  defaultSourceFile="coordinate-composition-tracks-polar.preview.tsx"
 />
 
 坐标形态变化后，容器关系不变：共享轴仍放在 `<PlotScaffold>`，局部图形仍放在对应 `<PlotTrack>`。

@@ -17,7 +17,12 @@ React 使用 `extensions={{ patterns: [cross] }}`；Vanilla 在 mount / renderTo
 
 返回几何 iterable 时周期等于 context.size。若基础间距与最终重复周期不同，返回 `{ tileSize, motif }`；tileSize 必须是有限正数。可用 context.round 保持精度一致。
 
-<ComponentPreview files="custom-pattern-size" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['custom-pattern-size', 'custom-pattern-size.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="custom-pattern-size.preview.tsx"
+/>
 
 ## 错误与限制
 

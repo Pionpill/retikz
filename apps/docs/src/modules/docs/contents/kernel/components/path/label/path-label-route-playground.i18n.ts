@@ -1,6 +1,8 @@
 /** 预览控件双语文案 */
-export const pathLabelRoutePlaygroundControlsI18n = {
+export const pathLabelRoutePlaygroundI18n = {
   zh: {
+    source: '起点',
+    target: '终点',
     pathLabel: '路径标签',
     connectionRoute: '连接路线',
     route: '路线',
@@ -20,6 +22,8 @@ export const pathLabelRoutePlaygroundControlsI18n = {
     position: '位置',
   },
   en: {
+    source: 'source',
+    target: 'target',
     pathLabel: 'Path label',
     connectionRoute: 'Connection route',
     route: 'Route',

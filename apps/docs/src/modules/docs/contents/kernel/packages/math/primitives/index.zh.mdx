@@ -29,7 +29,12 @@ const distance = point.distance([20, 10], end); // 42.720018726587654
 
 拖动角度和长度可以观察向量与左手法向量始终正交。
 
-<ComponentPreview files="vector-normal" size="lg" caption="向量与左手法向量" />
+<ComponentPreview
+  files={['vector-normal', 'vector-normal.preview.tsx']}
+  size="lg"
+  caption="向量与左手法向量"
+  defaultSourceFile="vector-normal.preview.tsx"
+/>
 
 ### 算法解析
 
@@ -92,9 +97,10 @@ $$
 本 demo 同时把圆弧的边界候选点并入点集，因此虚线矩形会覆盖三个点和圆弧。调整点坐标或圆弧起始、终止角度，可以观察 bounds 实时变化。
 
 <ComponentPreview
-  files="bounds-playground"
+  files={['bounds-playground', 'bounds-playground.preview.tsx']}
   size="lg"
   caption="修改点坐标或圆弧角度，观察点集与圆弧共同影响轴对齐边界"
+  defaultSourceFile="bounds-playground.preview.tsx"
 />
 
 ### 算法解析
@@ -179,7 +185,12 @@ $$
 
 **圆弧与椭圆弧。** 角度遵循 SVG 坐标：y 轴向下，`0°` 指向 +x，`90°` 指向 +y；正角度在屏幕上顺时针增加。
 
-<ComponentPreview files="ellipse-arc-playground" size="md" caption="调整半轴、半径和角度，观察椭圆、圆弧及其边界" />
+<ComponentPreview
+  files={['ellipse-arc-playground', 'ellipse-arc-playground.preview.tsx']}
+  size="md"
+  caption="调整半轴、半径和角度，观察椭圆、圆弧及其边界"
+  defaultSourceFile="ellipse-arc-playground.preview.tsx"
+/>
 
 ### 算法解析
 

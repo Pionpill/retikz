@@ -29,9 +29,10 @@ description: 用 Data 的 TransformDefinition 定义瀑布累计操作，并通�
 下面的面板只改变 operation 的 `initialValue`。数据、Definition 和 Plot 注入可以从源码切换器中查看：
 
 <ComponentPreview
-  files={['waterfall', 'waterfall.definition.ts', 'waterfall.data.ts']}
+  files={['waterfall', 'waterfall.preview.tsx', 'waterfall.definition.ts', 'waterfall.data.ts']}
   size="lg"
   caption="初始值只改变累计区间的起点；固定 y 域和 viewBox 让柱体移动不会带动相机缩放。绿色表示增加，红色表示减少。"
+  defaultSourceFile="waterfall.preview.tsx"
 />
 
 ## 注入宿主

@@ -203,7 +203,7 @@ describe('Viz Data model controls', () => {
 
   it('pins the Plot provenance bar examples to the value-axis baseline', () => {
     const demoSource = readFileSync(
-      resolve('src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.demo.tsx'),
+      resolve('src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.preview.tsx'),
       'utf8',
     );
 

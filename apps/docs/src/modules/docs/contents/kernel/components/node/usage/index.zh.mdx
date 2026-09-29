@@ -108,7 +108,11 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
 | `circle`                                 | 预设，解析为等比例外接的 ellipse        |
 | `diamond`                                | 预设，解析为四边形 polygon              |
 
-<ComponentPreview files="node-shape" size="sm" />
+<ComponentPreview
+  files={['node-shape', 'node-shape.preview.tsx']}
+  size="sm"
+  defaultSourceFile="node-shape.preview.tsx"
+/>
 
 更多形状由 Extension 拓展包提供，按[Extension Shape](/library/extension/shape)的入口导入并通过 `Layout.extensions.shapes` 注册。
 
@@ -132,7 +136,11 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
   description="padding 和 margin 都按每一侧合并：side（top / right / bottom / left）优先于 axis（x / y），axis 再优先于 default。例如 { default: 8, x: 20, left: 30 } 会得到 left 为 30、right 为 20、top 和 bottom 为 8。"
 />
 
-<ComponentPreview files="node-geometry" size="md" />
+<ComponentPreview
+  files={['node-geometry', 'node-geometry.preview.tsx']}
+  size="md"
+  defaultSourceFile="node-geometry.preview.tsx"
+/>
 
 <Comparison target="tikz" title="Node 几何写法">
 
@@ -160,7 +168,11 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
 
 视觉属性集中写在 `style`，尺寸和文本排布集中写在 `layout`；共享默认值由 [Scope](/kernel/components/scope/usage) 管理。
 
-<ComponentPreview files="node-styled" size="md" />
+<ComponentPreview
+  files={['node-styled', 'node-styled.preview.tsx']}
+  size="md"
+  defaultSourceFile="node-styled.preview.tsx"
+/>
 
 - **层级**：`zIndex` 只比较同层元素，数值较大者在上，同值保留声明顺序。
 - **颜色**：`style.color` 是主色；`fill`、`stroke` 的数值表示由主色派生的权重，不是透明度。

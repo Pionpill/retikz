@@ -1,45 +1,22 @@
-import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS } from './scatter-world-cup-shots.controls';
-import { messiWorldCupShots } from './scatter-world-cup-shots.data';
+import { renderScatterWorldCupShotsPreview } from './scatter-world-cup-shots.preview';
 
-const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) => {
-  const chart = (
-    <ScatterChart
-      layout={dimensions}
-      plotExtension={{
-        plotDefaults: {
-          plotArea: {
-            fill: {
-              kind: 'image',
-              href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
-            },
-          },
-        },
-      }}
-      recipe={{ guides: { axis: false } }}
-    >
-      <ChartData data={messiWorldCupShots} />
-      <ScatterEncodings x="x" y="y" color="outcome" />
-      <ChartTitle>Lionel Messi 的 2022 世界杯射门空间分布</ChartTitle>
-      <ChartSubtitle>32 次常规时间与加时赛射门；StatsBomb 120 × 80 坐标；圆点为起点，细线指向射门终点</ChartSubtitle>
-      <ChartSource>StatsBomb Open Data：competition 43、season 106；排除 period 5 的 2 次点球大战事件</ChartSource>
-      <ScatterProperties
-        size={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize]}
-        {...(values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStrokeEnabled]
-          ? { stroke: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStroke] }
-          : {})}
-        shape={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointShape]}
-        opacity={values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity]}
-      />
-    </ScatterChart>
-  );
-  return chart;
-});
+const controlledPreview = defineControlledPreview(previewControlContract, (values, dimensions) =>
+  renderScatterWorldCupShotsPreview({
+    lang: 'zh',
+    layout: dimensions,
+    pointSize: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointSize],
+    pointStroke: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStrokeEnabled]
+      ? values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointStroke]
+      : undefined,
+    pointShape: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointShape],
+    pointOpacity: values[SCATTER_WORLD_CUP_SHOTS_CONTROL_IDS.pointOpacity],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = {

@@ -154,9 +154,10 @@ import { List, ListItem } from '@retikz/standard-react/container';
 字体按字段合并；`fillOpacity` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
 
 <ComponentPreview
-  files="list-styles"
+  files={['list-styles', 'list-styles.preview.tsx']}
   size="lg"
   caption="切换固定、统一最大宽度与各格内容宽度，比较 A、B1、C 的单格尺寸；调整内边距可观察内容宽度模式如何留白。B1 格只覆盖颜色，不覆盖尺寸。示例初始使用固定宽高、边框和背景。"
+  defaultSourceFile="list-styles.preview.tsx"
 />
 
 `layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零。宽度省略或设为 `'auto'` 时，所有自适应单格采用全组最大有效宽度；设为 `'content'` 时，每格按自身内容的自然宽度加内边距定宽。高度省略或设为 `'auto'` 时仍按全组最大高度。单格同名字段优先，因此可以在整体使用 `'content'`，再为某格指定固定宽度或 `'auto'`。`layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
@@ -176,9 +177,10 @@ import { List, ListItem } from '@retikz/standard-react/container';
 `label` 为整个容器添加文字，支持单个对象或数组，可设置位置、距离、旋转和引线。标签不撑大布局尺寸，但计入最终绘制范围；空容器也能显示标签。
 
 <ComponentPreview
-  files="list-labels"
+  files={['list-labels', 'list-labels.preview.tsx']}
   size="md"
   caption="保持列表不变，观察标签的位置、旋转和引线。示例默认开启引线。"
+  defaultSourceFile="list-labels.preview.tsx"
 />
 
 整体字体、文字颜色及 `defaults.label` 可作为标签默认，标签自身设置优先；单格样式不影响容器标签，`data` 中的嵌套容器也不继承根标签。
@@ -216,7 +218,7 @@ List
 
 `data` 接受 JSON 数组。数组递归画成 List；非空对象默认递归画成 Map。若只想显示对象原文，设置 `dataObjectDisplay="text"`，对象值会显示为紧凑的 JSON 文本，例如 `{ "ready": false }` 显示为 `{"ready":false}`。该选项传递到嵌套数组，仅用于 `data`，不适用于 `items` 或 JSX 组合。下例使用文本模式，并用 `layout.width: 'content'` 让外层与自动生成的内层 List 都按各格内容定宽。
 
-<ComponentPreview files="list-data" size="xs" />
+<ComponentPreview files={['list-data', 'list-data.preview.tsx']} size="xs" defaultSourceFile="list-data.preview.tsx" />
 
 | 数据类型 | 输入示例        | 展示方式                                                    |
 | -------- | --------------- | ----------------------------------------------------------- |
@@ -340,7 +342,7 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 
 `ListSchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'list'`；items 与 data 二选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
 
-### ListSchema
+#### ListSchema
 
 <ZodSchema name="ListSchema" description="一维内容的单元格展示，支持显式单元格或 JSON 数组" expandNested />
 

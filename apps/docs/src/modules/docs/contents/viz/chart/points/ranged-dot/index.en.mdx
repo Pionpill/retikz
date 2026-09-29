@@ -14,9 +14,10 @@ Minimum and maximum temperatures across 20 consecutive days in Seattle; one row 
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['ranged-dot-minimal', 'ranged-dot-minimal.data.ts']}
+  files={['ranged-dot-minimal', 'ranged-dot-minimal.preview.tsx', 'ranged-dot-minimal.data.ts']}
   hideCode
   size="xl"
+  defaultSourceFile="ranged-dot-minimal.preview.tsx"
 />
 
 <DocTabs defaultValue="react-jsx">
@@ -179,10 +180,11 @@ With the default mappings, an end to the left indicates a decrease; to the right
   hideCode
   mode="showcase"
   responsive
-  files={['ranged-dot-encodings', 'ranged-dot-basic.data.ts']}
+  files={['ranged-dot-encodings', 'ranged-dot-encodings.preview.tsx', 'ranged-dot-basic.data.ts']}
   controls={{ name: 'ranged-dot-encodings' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="ranged-dot-encodings.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: RangedDotEncodings](#rangeddotencodings).
@@ -244,10 +246,11 @@ Smaller radii help when endpoints are close. Changing endPoint leaves startPoint
   hideCode
   mode="showcase"
   responsive
-  files={['ranged-dot-basic', 'ranged-dot-basic.data.ts']}
+  files={['ranged-dot-basic', 'ranged-dot-basic.preview.tsx', 'ranged-dot-basic.data.ts']}
   controls={{ name: 'ranged-dot-basic' }}
   controlPanelDefaultOpen={false}
   size="xl"
+  defaultSourceFile="ranged-dot-basic.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: RangedDotProperties](#rangeddotproperties).
@@ -318,10 +321,11 @@ This is a local appearance override within a whole-group replacement. Endpoints 
   hideCode
   mode="showcase"
   responsive
-  files={['ranged-dot-marks', 'ranged-dot-basic.data.ts']}
+  files={['ranged-dot-marks', 'ranged-dot-marks.preview.tsx', 'ranged-dot-basic.data.ts']}
   size="xl"
   controls={{ name: 'ranged-dot-marks' }}
   caption="Adjust the end shape, radius and connector width to compare endpoint roles."
+  defaultSourceFile="ranged-dot-marks.preview.tsx"
 />
 
 For complete properties and constraints, see [API reference: RangedDotMark](#rangeddotmark).
@@ -347,7 +351,8 @@ Compare the angular spans for January and July to see how daylight hours change.
 <ComponentPreview
   mode="showcase"
   responsive
-  files={['ranged-dot-daylight', 'ranged-dot-daylight.data.ts']}
+  files={['ranged-dot-daylight', 'ranged-dot-daylight.preview.tsx', 'ranged-dot-daylight.data.ts']}
+  defaultSourceFile="ranged-dot-daylight.preview.tsx"
   size="xxl"
   controls={{ name: 'ranged-dot-daylight' }}
 />

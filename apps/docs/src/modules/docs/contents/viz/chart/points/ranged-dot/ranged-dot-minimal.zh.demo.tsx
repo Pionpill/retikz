@@ -1,20 +1,11 @@
-import { RangedDotChart } from '@retikz/chart-react/point';
 import type { FC } from 'react';
 
 import { usePreviewDimensions } from '@/modules/docs/preview';
 
-import { rangedDotMinimalData } from './ranged-dot-minimal.data';
+import { renderRangedDotMinimalPreview } from './ranged-dot-minimal.preview';
 
 /** 只在根组件传入必要数据与字段映射的 Ranged Dot 基础用法 */
-const render = (dimensions?: { width: number; height: number }) => (
-  <RangedDotChart
-    layout={dimensions}
-    rows={rangedDotMinimalData}
-    recipe={{
-      encodings: { category: 'day', start: 'minimumTemperature', end: 'maximumTemperature' },
-    }}
-  />
-);
+const render = (dimensions?: { width: number; height: number }) => renderRangedDotMinimalPreview(dimensions);
 
 /** IR 与 Vanilla 预览使用的数据导入 */
 export const previewSource = {

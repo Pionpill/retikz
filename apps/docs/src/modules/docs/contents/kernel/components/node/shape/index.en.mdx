@@ -91,7 +91,11 @@ import { Node } from '@retikz/react';
 
 The playground fixes the target rectangle at the origin. Adjust `cornerRadius` to compare sharp and rounded boundaries, then move the source with the orbit angle and distance; automatic clipping lands on the real boundary, while named and numeric anchors provide stable explicit positions.
 
-<ComponentPreview files="rectangle-node-connection-playground" size="sm" />
+<ComponentPreview
+  files={['rectangle-node-connection-playground', 'rectangle-node-connection-playground.preview.tsx']}
+  size="sm"
+  defaultSourceFile="rectangle-node-connection-playground.preview.tsx"
+/>
 
 Round corners with the top-level `cornerRadius`, or with `shape={{ type:'rectangle', params:{ cornerRadius } }}` (params win when both are present). See [Node geometry](/kernel/components/node/usage) for shared sizing, boundary, and anchor behavior.
 
@@ -116,7 +120,11 @@ import { Node } from '@retikz/react';
 
 Switch between `circle` and `ellipse` in the playground: the former is the isotropic `circumscribe:'equal'` preset, while the latter defaults to circumscribing "text + padding" by scaling each axis by √2. Adjust the orbit angle and distance to move the source; keep automatic clipping or choose a named or numeric anchor to compare endpoint placement on both boundaries.
 
-<ComponentPreview files="circle-ellipse-node-connection-playground" size="sm" />
+<ComponentPreview
+  files={['circle-ellipse-node-connection-playground', 'circle-ellipse-node-connection-playground.preview.tsx']}
+  size="sm"
+  defaultSourceFile="circle-ellipse-node-connection-playground.preview.tsx"
+/>
 
 The center and 8 directional anchors (`center` / `top` …) still apply. See [Node](/kernel/components/node/usage) for shared props such as `position` / `fill` / `padding` / `label`.
 
@@ -143,7 +151,11 @@ import { Node } from '@retikz/react';
 
 The playground compares a hexagon with the `diamond` preset in one scene; the string `diamond` remains a regular diamond, while the object form accepts `aspectRatio` to control its width-to-height ratio. Select the hexagon to adjust `cornerRadius`, then move the source with the orbit angle and distance to see automatic clipping follow sharp or rounded contours and compare it with named or numeric anchors.
 
-<ComponentPreview files="polygon-node-connection-playground" size="sm" />
+<ComponentPreview
+  files={['polygon-node-connection-playground', 'polygon-node-connection-playground.preview.tsx']}
+  size="sm"
+  defaultSourceFile="polygon-node-connection-playground.preview.tsx"
+/>
 
 See [Node geometry](/kernel/components/node/usage) for shared sizing, boundary, and anchor behavior.
 

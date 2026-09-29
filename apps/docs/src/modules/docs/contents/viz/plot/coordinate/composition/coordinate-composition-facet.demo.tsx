@@ -1,5 +1,3 @@
-import { PathMark, Plot, PlotAxis, PlotFacet, PointMark } from '@retikz/plot-react';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {
@@ -7,49 +5,24 @@ import {
   coordinateCompositionFacetControls,
   previewControlContract,
 } from './coordinate-composition-facet.controls';
-import { accountRows } from './coordinate-composition-facet.data';
+import { CoordinateCompositionFacetPreview } from './coordinate-composition-facet.preview';
 
 /** 注册回退使用的分面布局控件 */
 export const previewControls = coordinateCompositionFacetControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const isGrid = values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.layout] === 'grid';
-
-  return (
-    <Plot data={accountRows} width={660} height={330}>
-      <PlotFacet
-        id="accounts"
-        row={isGrid ? { field: 'tier', order: ['T1', 'T2'] } : undefined}
-        column={{ field: 'product', order: ['P1', 'P2', 'P3'] }}
-        empty={isGrid ? values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.empty] : 'drop'}
-        header={{
-          row: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.headers],
-          column: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.headers],
-        }}
-        resolve={{ scale: { y: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.scale] } }}
-        spacing={{ panelGap: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.panelGap] }}
-      >
-        <PlotAxis dimension="x" grid={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.xGridVisible]} />
-        <PlotAxis dimension="y" grid={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.yGridVisible]} />
-        <PathMark
-          x="month"
-          y="accounts"
-          order="month"
-          stroke="steelblue"
-          strokeWidth={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.lineWidth]}
-        />
-        <PointMark
-          x="month"
-          y="accounts"
-          fill="lightblue"
-          stroke="steelblue"
-          strokeWidth={1}
-          size={values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.pointSize]}
-        />
-      </PlotFacet>
-    </Plot>
-  );
-});
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  CoordinateCompositionFacetPreview({
+    layout: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.layout],
+    empty: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.empty],
+    headers: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.headers],
+    scale: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.scale],
+    panelGap: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.panelGap],
+    xGridVisible: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.xGridVisible],
+    yGridVisible: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.yGridVisible],
+    lineWidth: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.lineWidth],
+    pointSize: values[COORDINATE_COMPOSITION_FACET_CONTROL_IDS.pointSize],
+  }),
+);
 
 /** canonical 状态派生的稳定源码配置 */
 export const previewSource = controlledPreview.source;

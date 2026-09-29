@@ -1,38 +1,21 @@
-import type { IRAnimationOrigin, IRAnimationTrack } from '@retikz/core';
-import { scaleIn } from '@retikz/core';
-import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { animationPlaygroundControls, previewControlContract } from './animation-playground.controls';
+import { AnimationPlaygroundPreview } from './animation-playground.preview';
 
 export const previewControls = animationPlaygroundControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => {
-  const animation = scaleIn({
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  AnimationPlaygroundPreview({
     from: values.from,
     duration: values.duration,
     delay: values.delay,
-    easing: values.easing as IRAnimationTrack['easing'],
-    origin: values.origin as IRAnimationOrigin,
-  });
-  const replayKey = `${values.from}-${values.duration}-${values.delay}-${values.easing}-${values.origin}`;
-
-  return (
-    <Layout key={replayKey} viewBox={{ x: -110, y: -75, width: 220, height: 150 }}>
-      <Node
-        position={[0, 0]}
-        shape="rectangle"
-        animations={[animation]}
-        style={{ fill: '#f97316', textColor: 'white' }}
-        layout={{ padding: { x: 28, y: 18 } }}
-      >
-        scaleIn
-      </Node>
-    </Layout>
-  );
-});
+    easing: values.easing,
+    origin: values.origin,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

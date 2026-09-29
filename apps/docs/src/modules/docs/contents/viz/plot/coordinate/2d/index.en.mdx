@@ -14,9 +14,10 @@ Cartesian coordinates map `x` horizontally and `y` vertically, making them suita
 - Areas use `<IntervalMark>` to occupy each category band and extend upward from the `y = 0` x-axis baseline.
 
 <ComponentPreview
-  files={['coordinate-cartesian', 'coordinate-2d.data.ts']}
+  files={['coordinate-cartesian', 'coordinate-cartesian.preview.tsx', 'coordinate-2d.data.ts']}
   size="lg"
   caption="After switching point, line, and area marks, adjust all four margins and the y grid to see how the same x / y bindings adapt to the plot area."
+  defaultSourceFile="coordinate-cartesian.preview.tsx"
 />
 
 ## Polar 2D Coordinates
@@ -32,9 +33,10 @@ Polar coordinates map `x` to angular positions around the center and `y` to radi
 The playground controls coordinate and mark interpolation separately, along with `innerRadius`, the start angle, and the sweep angle. Sweep angle is a teaching parameter in the panel; the coordinate receives `endAngle = startAngle + sweepAngle`.
 
 <ComponentPreview
-  files={['coordinate-polar', 'coordinate-2d.data.ts']}
+  files={['coordinate-polar', 'coordinate-polar.preview.tsx', 'coordinate-2d.data.ts']}
   size="lg"
   caption="Compare automatic inference, an explicit coordinate mode, and a local mark override. Mark interpolation hides for PointMark because a point has no adjacent boundary."
+  defaultSourceFile="coordinate-polar.preview.tsx"
 />
 
 <Comparison target="tikz" title="TikZ Comparison">

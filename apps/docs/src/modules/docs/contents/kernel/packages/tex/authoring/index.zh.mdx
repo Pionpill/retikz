@@ -85,9 +85,10 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 下面的 demo 允许你直接编辑 TeX 源码，并比较 inline / display 度量与字号。可以先选择一个完整示例，再继续修改源码或排版参数：
 
 <ComponentPreview
-  files="tex-playground"
+  files={['tex-playground', 'tex-playground.preview.tsx']}
   size="md"
   caption="编辑 TeX 源码，切换 inline / display 与字号，比较同一公式在不同排版参数下的结果。"
+  defaultSourceFile="tex-playground.preview.tsx"
 />
 
 需要 AMS、命令定义、括号、消去、分情况或颜色等额外语法时，继续阅读 [MathJax 配置](/kernel/packages/tex/configuration)。

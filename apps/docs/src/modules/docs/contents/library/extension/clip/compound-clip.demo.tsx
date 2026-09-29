@@ -1,43 +1,19 @@
-import { CircleClipDefinition, CompoundClipDefinition } from '@retikz/extension';
-import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { compoundClipControls, previewControlContract } from './compound-clip.controls';
+import { renderCompoundClipPreview } from './compound-clip.preview';
 
 export const previewControls = compoundClipControls;
 
-const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    viewBox={{ x: -165, y: -100, width: 330, height: 200 }}
-    extensions={{ clips: [CompoundClipDefinition, CircleClipDefinition] }}
-  >
-    <Node
-      position={[0, 0]}
-      shape="rectangle"
-      style={{ fill: 'none', stroke: 'lightgray', strokeWidth: 1, dashPattern: [6, 4] }}
-      layout={{ minimumSize: { width: 300, height: 170 } }}
-    />
-    <Scope
-      clip={{
-        kind: 'compound',
-        fillRule: values.fillRule,
-        children: [
-          { kind: 'circle', cx: -values.offset / 2, cy: 0, r: values.radius },
-          { kind: 'circle', cx: values.offset / 2, cy: 0, r: values.radius },
-        ],
-      }}
-    >
-      <Node
-        position={[0, 0]}
-        shape="rectangle"
-        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 } }}
-        layout={{ minimumSize: { width: 300, height: 170 } }}
-      />
-    </Scope>
-  </Layout>
-));
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderCompoundClipPreview({
+    fillRule: values.fillRule,
+    offset: values.offset,
+    radius: values.radius,
+  }),
+);
 
 export const previewSource = controlledPreview.source;
 

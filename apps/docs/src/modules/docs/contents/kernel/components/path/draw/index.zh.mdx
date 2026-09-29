@@ -152,13 +152,17 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 </Comparison>
 
-<ComponentPreview files="way-fold" size="sm" />
+<ComponentPreview files={['way-fold', 'way-fold.preview.tsx']} size="sm" defaultSourceFile="way-fold.preview.tsx" />
 
 ## 闭合
 
 切换路径状态，观察“闭合路径”如何用 `DrawWay.Cycle` 的实线回边取代 dotted 缺口，并形成可填充区域。
 
-<ComponentPreview files={['way-cycle', 'way-cycle.data.ts']} size="sm" />
+<ComponentPreview
+  files={['way-cycle', 'way-cycle.preview.tsx', 'way-cycle.data.ts']}
+  size="sm"
+  defaultSourceFile="way-cycle.preview.tsx"
+/>
 
 ## 相对坐标
 
@@ -168,7 +172,11 @@ const view = mount(document.getElementById('diagram')!, ir);
 - **橙色 `++`**：第一段结束后，游标移到空心圆。因此第二段从空心圆继续计算，终点是“起点 + `[60, 0]` + `[x, y]`”
 - 灰色 dotted 直角辅助线标出第二段的计算基准：上方从 `+` 方框开始，下方从橙色空心圆开始；实心圆是各自的最终终点
 
-<ComponentPreview files={['way-relative', 'way-relative.data.ts']} size="sm" />
+<ComponentPreview
+  files={['way-relative', 'way-relative.preview.tsx', 'way-relative.data.ts']}
+  size="sm"
+  defaultSourceFile="way-relative.preview.tsx"
+/>
 
 ## 相关属性
 

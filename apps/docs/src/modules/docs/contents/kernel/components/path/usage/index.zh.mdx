@@ -137,21 +137,37 @@ const view = mount(document.getElementById('diagram')!, ir);
 | 三次贝塞尔       | `kind: 'cubic'`                                          | `['a', { cubic: [[30, -40], [70, -40]] }, 'b']` |
 | 弯曲简写         | `kind: 'bend'`<br />`bendDirection: 'left'` 或 `'right'` | `['a', { bend: 'left' }, 'b']`                  |
 
-<ComponentPreview files="draw-orthogonal" size="md" />
+<ComponentPreview
+  files={['draw-orthogonal', 'draw-orthogonal.preview.tsx']}
+  size="md"
+  defaultSourceFile="draw-orthogonal.preview.tsx"
+/>
 
 曲线通过控制点或弯曲方向改变形状；控制点拉动曲线的方向，并不是曲线必须经过的位置。
 
-<ComponentPreview files="draw-curve" size="md" />
+<ComponentPreview
+  files={['draw-curve', 'draw-curve.preview.tsx']}
+  size="md"
+  defaultSourceFile="draw-curve.preview.tsx"
+/>
 
 ## 设置外观
 
 颜色、线宽、虚线与填充写在 `style`；箭头方向、圆角与 `zIndex` 写在根层。下面集中调整同一条线的外观。
 
-<ComponentPreview files="draw-style" size="lg" />
+<ComponentPreview
+  files={['draw-style', 'draw-style.preview.tsx']}
+  size="lg"
+  defaultSourceFile="draw-style.preview.tsx"
+/>
 
 闭合路线还可填充区域，`zIndex` 控制同层覆盖次序；下面在同一面板比较两者。
 
-<ComponentPreview files="draw-fill-stack" size="lg" />
+<ComponentPreview
+  files={['draw-fill-stack', 'draw-fill-stack.preview.tsx']}
+  size="lg"
+  defaultSourceFile="draw-fill-stack.preview.tsx"
+/>
 
 闭合 Path / Draw 的 `style.fill` 也可接收 `{ kind: 'pattern', shape: 'lines' }` 等图案对象，用线条、圆点或网格填充区域，详见[图案](/kernel/visual/style/pattern)。
 

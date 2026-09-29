@@ -102,7 +102,12 @@ import { Star } from '@retikz/standard-react/shape';
 
 The two dashed circles in the playground are the inner and outer radii. Adjust the point count, `innerRatio`, and start angle to see how notch depth and orientation shape the contour together.
 
-<ComponentPreview files="star-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['star-playground', 'star-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="star-playground.preview.tsx"
+/>
 
 ## Errors and limitations
 
@@ -130,7 +135,7 @@ Star alternates inner and outer radii to produce `2 × points` vertices, then em
 
 ## Schema reference
 
-### StarSchema
+#### StarSchema
 
 <ZodSchema name="StarSchema" />
 

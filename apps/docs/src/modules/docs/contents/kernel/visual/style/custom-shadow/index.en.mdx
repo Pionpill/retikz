@@ -15,7 +15,12 @@ The left example modifies the colour and opacity of `md`; the right example supp
 
 Offset and blur only affect the projection around primary geometry. They do not change node connection boundaries or Path geometry, and a fixed viewBox can still clip the result.
 
-<ComponentPreview files="shadow-playground" size="md" controlPanelDefaultSize={50} />
+<ComponentPreview
+  files={['shadow-playground', 'shadow-playground.preview.tsx']}
+  size="md"
+  controlPanelDefaultSize={50}
+  defaultSourceFile="shadow-playground.preview.tsx"
+/>
 
 ## Further reading
 
