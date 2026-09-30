@@ -412,14 +412,6 @@ const horizontalRibbonSteps = (source: IRTarget, target: IRTarget): Array<IRStep
   ];
 };
 
-const horizontalRibbonEndpointDirection = (source: IRTarget, target: IRTarget): number | undefined => {
-  const sourcePosition = positionOf(source);
-  const targetPosition = positionOf(target);
-  if (sourcePosition === undefined || targetPosition === undefined || sourcePosition[0] === targetPosition[0])
-    return undefined;
-  return 90;
-};
-
 const bendRoute = (
   routing: Extract<IRPlotRelationRouting, { kind: typeof RelationRoutingKind.Bend }>,
   targets: Array<IRTarget>,
@@ -615,7 +607,6 @@ export const lowerRelation = (
       if (width === undefined) continue;
       const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
       const { interpolation, ...ribbonOptions } = mark.ribbon?.options ?? {};
-      const direction = horizontalRibbonEndpointDirection(source.target, target.target);
       const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
       const ribbon: IRPath = applyPathChannelDeliveries(
         {
@@ -635,7 +626,6 @@ export const lowerRelation = (
                     end: endWidth,
                     ...(interpolation === undefined ? {} : { interpolation }),
                   },
-            ...(direction !== undefined ? { start: { direction }, end: { direction } } : {}),
           },
           children: horizontalRibbonSteps(source.target, target.target),
         },

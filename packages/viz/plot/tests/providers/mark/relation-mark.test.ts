@@ -932,6 +932,8 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const [ribbon] = collectRibbons(markLayer(root, 0));
+    expect(ribbon.kindOptions).not.toHaveProperty('start.direction');
+    expect(ribbon.kindOptions).not.toHaveProperty('end.direction');
     expect(ribbon).toMatchObject({
       type: 'path',
       kind: 'ribbon',
@@ -941,8 +943,6 @@ describe('RelationMark and anchorId lowering', () => {
       ],
       kindOptions: {
         width: { kind: 'taper', start: 12, end: 8, interpolation: 'smooth' },
-        start: { direction: 90 },
-        end: { direction: 90 },
         align: 'center',
       },
       style: { fill: '#38bdf8', fillOpacity: 0.55, stroke: 'none' },
