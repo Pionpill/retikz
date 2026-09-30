@@ -5,8 +5,8 @@
 ### RibbonCapContext
 
 <p>
-  <ApiSourceLink label={'RibbonCapContext'} path={'packages/library/extension/src/ribbon/cap-types.ts'} startLine={7}>
-    端帽消费的端面局部坐标基底
+  <ApiSourceLink label={'RibbonCapContext'} path={'packages/library/extension/src/ribbon/cap-types.ts'} startLine={10}>
+    端帽构造时收到的端面位置、方向与已解析参数
   </ApiSourceLink>
 </p>
 
@@ -16,15 +16,15 @@
 
 <ApiTable>
 
-| 成员                   | 类型                              | 默认值 | 说明                             |
-| ---------------------- | --------------------------------- | ------ | -------------------------------- |
-| `TParams` (泛型)       | `extends JsonObject = JsonObject` | —      | —                                |
-| `readonly center`      | `IRPosition`                      | —      | 端面中点                         |
-| `readonly endpoint`    | `'start' \| 'end'`                | —      | 所属端点                         |
-| `readonly outward`     | `Vector2`                         | —      | 垂直端面并背离流带内部的单位向量 |
-| `readonly params`      | `TParams`                         | —      | 经 schema 解析的端帽参数         |
-| `readonly sectionAxis` | `Vector2`                         | —      | 从右侧指向左侧的单位轴           |
-| `readonly width`       | `number`                          | —      | 端面弦长                         |
+| 成员                   | 类型                              | 默认值 | 说明                                               |
+| ---------------------- | --------------------------------- | ------ | -------------------------------------------------- |
+| `TParams` (泛型)       | `extends JsonObject = JsonObject` | —      | 端帽参数的 JSON 对象类型，默认 JsonObject          |
+| `readonly center`      | `IRPosition`                      | —      | Path 局部坐标中的端面中点，位于 extension 位移之前 |
+| `readonly endpoint`    | `'start' \| 'end'`                | —      | 所属端点                                           |
+| `readonly outward`     | `Vector2`                         | —      | 垂直端面并背离流带内部的单位向量                   |
+| `readonly params`      | `TParams`                         | —      | 经 schema 解析的端帽参数                           |
+| `readonly sectionAxis` | `Vector2`                         | —      | 从右侧指向左侧的单位轴                             |
+| `readonly width`       | `number`                          | —      | 端面左右接点间的非负距离，单位为 user units        |
 
 </ApiTable>
 
@@ -53,9 +53,9 @@ export type RibbonCapContext<TParams extends JsonObject = JsonObject> = Readonly
   <ApiSourceLink
     label={'RibbonCapDefinition'}
     path={'packages/library/extension/src/ribbon/cap-types.ts'}
-    startLine={31}
+    startLine={40}
   >
-    内置和第三方端帽共同实现的能力
+    内置与自定义端帽共用的参数解析和几何构造契约
   </ApiSourceLink>
 </p>
 
@@ -65,12 +65,12 @@ export type RibbonCapContext<TParams extends JsonObject = JsonObject> = Readonly
 
 <ApiTable>
 
-| 成员                    | 类型                                                        | 默认值 | 说明                           |
-| ----------------------- | ----------------------------------------------------------- | ------ | ------------------------------ |
-| `TParams` (泛型)        | `extends JsonObject = JsonObject`                           | —      | —                              |
-| `readonly name`         | `string`                                                    | —      | 端帽注册名                     |
-| `readonly paramsSchema` | `ZodType<TParams>`                                          | —      | JSON 参数解析契约              |
-| `readonly resolve`      | `(context: RibbonCapContext<TParams>) => RibbonCapGeometry` | —      | 构造从一侧接点通往另一侧的端帽 |
+| 成员                    | 类型                                                        | 默认值 | 说明                                                                                                     |
+| ----------------------- | ----------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------- |
+| `TParams` (泛型)        | `extends JsonObject = JsonObject`                           | —      | 端帽参数的 JSON 对象类型，关联 paramsSchema 与 resolve，默认 JsonObject                                  |
+| `readonly name`         | `string`                                                    | —      | 非空且非全空白的端帽注册名，由 start.cap.name 或 end.cap.name 引用                                       |
+| `readonly paramsSchema` | `ZodType<TParams>`                                          | —      | 构造前解析 cap.params 的 JSON 参数 schema；省略 cap.params 时解析 &#123;&#125;，可由 schema 提供默认字段 |
+| `readonly resolve`      | `(context: RibbonCapContext<TParams>) => RibbonCapGeometry` | —      | 使用已解析参数构造连接两侧接点的开放路径；坐标、接点顺序与位移须符合 RibbonCapGeometry                   |
 
 </ApiTable>
 
@@ -93,8 +93,8 @@ export type RibbonCapDefinition<TParams extends JsonObject = JsonObject> = Reado
 ### RibbonCapGeometry
 
 <p>
-  <ApiSourceLink label={'RibbonCapGeometry'} path={'packages/library/extension/src/ribbon/cap-types.ts'} startLine={23}>
-    端帽开放路径及其接点延伸
+  <ApiSourceLink label={'RibbonCapGeometry'} path={'packages/library/extension/src/ribbon/cap-types.ts'} startLine={26}>
+    连接流带两侧的端帽开放路径，以及对两侧接点的位移
   </ApiSourceLink>
 </p>
 
@@ -104,10 +104,10 @@ export type RibbonCapDefinition<TParams extends JsonObject = JsonObject> = Reado
 
 <ApiTable>
 
-| 成员                 | 类型                         | 默认值 | 说明                            |
-| -------------------- | ---------------------------- | ------ | ------------------------------- |
-| `readonly commands`  | `ReadonlyArray<PathCommand>` | —      | Path 局部坐标中的单条开放命令链 |
-| `readonly extension` | `number`                     | —      | 沿 outward 的有符号接点位移     |
+| 成员                 | 类型                         | 默认值 | 说明                                                                                                                                                                                         |
+| -------------------- | ---------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly commands`  | `ReadonlyArray<PathCommand>` | —      | Path 局部坐标中的单条连续开放命令链，以 move 开始，后续不得含 move 或 close<br />接点先沿 outward 移动 extension；start 从右接点走向左接点，end 从左接点走向右接点，首尾必须匹配移动后的接点 |
+| `readonly extension` | `number`                     | —      | 两侧接点沿 outward 同步移动的有限有符号距离，单位为 user units；无位移时显式返回 0                                                                                                           |
 
 </ApiTable>
 
@@ -132,9 +132,9 @@ export type RibbonCapGeometry = Readonly<{
   <ApiSourceLink
     label={'RibbonWidthProfileContext'}
     path={'packages/library/extension/src/ribbon/profile-types.ts'}
-    startLine={5}
+    startLine={8}
   >
-    ribbon width profile 采样上下文
+    宽度函数在一次中心线采样中收到的位置、长度与参数
   </ApiSourceLink>
 </p>
 
@@ -144,12 +144,12 @@ export type RibbonCapGeometry = Readonly<{
 
 <ApiTable>
 
-| 成员             | 类型                              | 默认值 | 说明                                        |
-| ---------------- | --------------------------------- | ------ | ------------------------------------------- |
-| `TParams` (泛型) | `extends JsonObject = JsonObject` | —      | —                                           |
-| `length`         | `number`                          | —      | 中心线近似总长度（user units）              |
-| `offset`         | `number`                          | —      | 沿中心线的归一化位置，范围 [0, 1]           |
-| `params`         | `TParams`                         | —      | 经过可选 paramsSchema 校验后的 profile 参数 |
+| 成员             | 类型                              | 默认值 | 说明                                                                                         |
+| ---------------- | --------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| `TParams` (泛型) | `extends JsonObject = JsonObject` | —      | 宽度函数参数的 JSON 对象类型，默认 JsonObject                                                |
+| `length`         | `number`                          | —      | 中心线近似总长度（user units）                                                               |
+| `offset`         | `number`                          | —      | 沿中心线的归一化位置，范围 [0, 1]                                                            |
+| `params`         | `TParams`                         | —      | 经 paramsSchema 或 JSON 对象校验解析的宽度函数参数；省略 width.params 时从 &#123;&#125; 解析 |
 
 </ApiTable>
 
@@ -175,9 +175,9 @@ export type RibbonWidthProfileContext<TParams extends JsonObject = JsonObject> =
   <ApiSourceLink
     label={'RibbonWidthProfileDefinitionInput'}
     path={'packages/library/extension/src/ribbon/profile-types.ts'}
-    startLine={15}
+    startLine={21}
   >
-    ribbon width profile definition 的作者侧输入形态
+    自定义宽度函数的注册输入，通过 name 在 Ribbon width 中引用
   </ApiSourceLink>
 </p>
 
@@ -187,12 +187,12 @@ export type RibbonWidthProfileContext<TParams extends JsonObject = JsonObject> =
 
 <ApiTable>
 
-| 成员             | 类型                                                  | 默认值          | 说明                                                                |
-| ---------------- | ----------------------------------------------------- | --------------- | ------------------------------------------------------------------- |
-| `TParams` (泛型) | `extends JsonObject = JsonObject`                     | —               | —                                                                   |
-| `name`           | `string`                                              | —               | 注册表 key，由 IR `width: { kind: "profile", name }` 引用           |
-| `paramsSchema?`  | `ZodType<TParams>`                                    | `不校验 params` | 可选的 JSON-safe params schema；compile 在采样前解析 `width.params` |
-| `widthAt`        | `(ctx: RibbonWidthProfileContext<TParams>) => number` | —               | 返回指定归一化位置处的非负 ribbon 宽度（user units）                |
+| 成员             | 类型                                                  | 默认值      | 说明                                                                                          |
+| ---------------- | ----------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------- |
+| `TParams` (泛型) | `extends JsonObject = JsonObject`                     | —           | 宽度函数参数的 JSON 对象类型，关联 paramsSchema 与 widthAt，默认 JsonObject                   |
+| `name`           | `string`                                              | —           | 注册表 key，由 IR `width: { kind: "profile", name }` 引用                                     |
+| `paramsSchema?`  | `ZodType<TParams>`                                    | `undefined` | 在采样前解析 width.params 的 JSON 参数 schema；省略时仅校验 JSON 对象结构，不做自定义参数校验 |
+| `widthAt`        | `(ctx: RibbonWidthProfileContext<TParams>) => number` | —           | 在采样位置计算完整流带宽度，单位为 user units；返回值必须有限且非负，可被多次调用             |
 
 </ApiTable>
 
@@ -218,11 +218,13 @@ export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonO
   <ApiSourceLink
     label={'RibbonPathKindDefinition'}
     path={'packages/library/extension/src/ribbon/definition.ts'}
-    startLine={42}
+    startLine={45}
   >
-    官方 Ribbon Path Kind definition，默认只注册 bulge profile
+    使用内置 bulge 宽度函数与 butt、square、round、arc 端帽的 Ribbon Path kind
   </ApiSourceLink>
 </p>
+
+需要在当前图的 pathKinds 中显式装配，不自动注册
 
 ```ts
 export const RibbonPathKindDefinition = createDefinition([], []);
@@ -234,9 +236,9 @@ export const RibbonPathKindDefinition = createDefinition([], []);
   <ApiSourceLink
     label={'createRibbonPathKindDefinition'}
     path={'packages/library/extension/src/ribbon/definition.ts'}
-    startLine={45}
+    startLine={53}
   >
-    创建带调用方 profiles 的唯一 Ribbon Path Kind definition
+    创建包含内置与自定义宽度函数、端帽的 Ribbon Path kind
   </ApiSourceLink>
 </p>
 
@@ -246,10 +248,11 @@ export const RibbonPathKindDefinition = createDefinition([], []);
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称       | 类型 / 签名                                                                                                                             | 说明 |
-| ------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| 参数   | `options?` | `Readonly<{`<br />`profiles?: ReadonlyArray<RibbonWidthProfileDefinition>;`<br />`caps?: ReadonlyArray<RibbonCapDefinition>;`<br />`}>` | —    |
-| 返回值 | —          | `PathKindDefinition<IRRibbonPath>`                                                                                                      | —    |
+| 类别   | 名称       | 类型 / 签名                                                                                                                             | 说明                                                                               |
+| ------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 参数   | `options?` | `Readonly<{`<br />`profiles?: ReadonlyArray<RibbonWidthProfileDefinition>;`<br />`caps?: ReadonlyArray<RibbonCapDefinition>;`<br />`}>` | 扩展注册项，默认 &#123;&#125;；profiles 与 caps 默认 []，仍保留全部内置定义        |
+| 返回值 | —          | `PathKindDefinition<IRRibbonPath>`                                                                                                      | 名称为 ribbon 的 Path kind，供当前图的 pathKinds 显式装配                          |
+| 错误   | —          | —                                                                                                                                       | RetikzExtensionError：注册名为空或全空白、不同宽度函数定义同名，或端帽注册名重复时 |
 
 </ApiTable>
 
@@ -276,11 +279,13 @@ export declare const createRibbonPathKindDefinition: (
   <ApiSourceLink
     label={'createRibbonProviderContribution'}
     path={'packages/library/extension/src/ribbon/provider.ts'}
-    startLine={23}
+    startLine={29}
   >
-    用同一 maker 装配端帽和宽度 profile 的 provider contribution
+    创建供 Core 依赖解析器装配 Ribbon Path kind 的贡献项
   </ApiSourceLink>
 </p>
+
+包含 ribbon 根依赖与内置定义，调用方可追加宽度函数和端帽；不自动注入编译器
 
 <DocTabs defaultValue="members">
 
@@ -288,10 +293,11 @@ export declare const createRibbonPathKindDefinition: (
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称       | 类型 / 签名                                                                                                                             | 说明 |
-| ------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| 参数   | `options?` | `Readonly<{`<br />`profiles?: ReadonlyArray<RibbonWidthProfileDefinition>;`<br />`caps?: ReadonlyArray<RibbonCapDefinition>;`<br />`}>` | —    |
-| 返回值 | —          | `CoreProviderContribution`                                                                                                              | —    |
+| 类别   | 名称       | 类型 / 签名                                                                                                                             | 说明                                                                                  |
+| ------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 参数   | `options?` | `Readonly<{`<br />`profiles?: ReadonlyArray<RibbonWidthProfileDefinition>;`<br />`caps?: ReadonlyArray<RibbonCapDefinition>;`<br />`}>` | 扩展注册项，默认 &#123;&#125;；profiles 与 caps 默认 []，仍保留全部内置定义           |
+| 返回值 | —          | `CoreProviderContribution`                                                                                                              | 包含 ribbon 根依赖及对应 provider 的贡献项，交给 resolveCoreProviderDependencies 装配 |
+| 错误   | —          | —                                                                                                                                       | RetikzExtensionError：注册名为空或全空白、不同宽度函数定义同名，或端帽注册名重复时    |
 
 </ApiTable>
 
@@ -315,8 +321,8 @@ export declare const createRibbonProviderContribution: (
 ### defineRibbonCap
 
 <p>
-  <ApiSourceLink label={'defineRibbonCap'} path={'packages/library/extension/src/ribbon/cap-define.ts'} startLine={8}>
-    定义端帽，集中处理参数泛型擦除边界
+  <ApiSourceLink label={'defineRibbonCap'} path={'packages/library/extension/src/ribbon/cap-define.ts'} startLine={14}>
+    定义可注册的 Ribbon 端帽并校验名称
   </ApiSourceLink>
 </p>
 
@@ -326,11 +332,12 @@ export declare const createRibbonProviderContribution: (
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称         | 类型 / 签名                    | 说明 |
-| ------ | ------------ | ------------------------------ | ---- |
-| 泛型   | `TParams`    | `extends JsonObject`           | —    |
-| 参数   | `definition` | `RibbonCapDefinition<TParams>` | —    |
-| 返回值 | —            | `RibbonCapDefinition`          | —    |
+| 类别   | 名称         | 类型 / 签名                    | 说明                                                                           |
+| ------ | ------------ | ------------------------------ | ------------------------------------------------------------------------------ |
+| 泛型   | `TParams`    | `extends JsonObject`           | 端帽参数的 JSON 对象类型，关联参数解析结果与 resolve 上下文                    |
+| 参数   | `definition` | `RibbonCapDefinition<TParams>` | 端帽名称、参数 schema 与几何构造回调；此处只校验名称，不执行参数解析或构造回调 |
+| 返回值 | —            | `RibbonCapDefinition`          | 原 definition 对象，参数泛型被擦除以便统一装入端帽注册表                       |
+| 错误   | —            | —                              | RetikzExtensionError：name 为空串或全空白字符串时                              |
 
 </ApiTable>
 
@@ -354,9 +361,9 @@ export declare const defineRibbonCap: <TParams extends JsonObject>(
   <ApiSourceLink
     label={'defineRibbonWidthProfile'}
     path={'packages/library/extension/src/ribbon/profile-define.ts'}
-    startLine={12}
+    startLine={14}
   >
-    定义 ribbon width profile 注册项并校验名称
+    定义可注册的 Ribbon 宽度函数并校验名称
   </ApiSourceLink>
 </p>
 
@@ -366,16 +373,14 @@ export declare const defineRibbonCap: <TParams extends JsonObject>(
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称         | 类型 / 签名                                  | 说明                           |
-| ------ | ------------ | -------------------------------------------- | ------------------------------ |
-| 泛型   | `TParams`    | `extends JsonObject = JsonObject`            | —                              |
-| 参数   | `definition` | `RibbonWidthProfileDefinitionInput<TParams>` | —                              |
-| 返回值 | —            | `RibbonWidthProfileDefinition`               | —                              |
-| 错误   | —            | —                                            | 当 name 为空串或全空白字符串时 |
+| 类别   | 名称         | 类型 / 签名                                  | 说明                                                                           |
+| ------ | ------------ | -------------------------------------------- | ------------------------------------------------------------------------------ |
+| 泛型   | `TParams`    | `extends JsonObject = JsonObject`            | 宽度函数参数的 JSON 对象类型，关联可选参数解析结果与 widthAt 上下文            |
+| 参数   | `definition` | `RibbonWidthProfileDefinitionInput<TParams>` | 宽度函数名称、可选参数 schema 与采样回调；此处只校验名称，不执行参数解析或采样 |
+| 返回值 | —            | `RibbonWidthProfileDefinition`               | 原 definition 对象，参数泛型被擦除以便统一装入宽度函数注册表                   |
+| 错误   | —            | —                                            | RetikzExtensionError：name 为空串或全空白字符串时                              |
 
 </ApiTable>
-
-> **备注：** 集中封装参数泛型擦除边界
 
 </DocTab>
 

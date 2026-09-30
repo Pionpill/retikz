@@ -5,8 +5,8 @@
 ### RibbonCapContext
 
 <p>
-  <ApiSourceLink label={'RibbonCapContext'} path={'packages/library/extension/src/ribbon/cap-types.ts'} startLine={7}>
-    Endpoint-local frame consumed by a cap
+  <ApiSourceLink label={'RibbonCapContext'} path={'packages/library/extension/src/ribbon/cap-types.ts'} startLine={10}>
+    Section position, orientation, and parsed parameters received during cap construction
   </ApiSourceLink>
 </p>
 
@@ -16,15 +16,15 @@
 
 <ApiTable>
 
-| Member                     | Type                              | Default | Description                                            |
-| -------------------------- | --------------------------------- | ------- | ------------------------------------------------------ |
-| `TParams` (Type parameter) | `extends JsonObject = JsonObject` | —       | —                                                      |
-| `readonly center`          | `IRPosition`                      | —       | Section midpoint                                       |
-| `readonly endpoint`        | `'start' \| 'end'`                | —       | Endpoint owning the cap                                |
-| `readonly outward`         | `Vector2`                         | —       | Unit vector normal to the section and pointing outward |
-| `readonly params`          | `TParams`                         | —       | Cap parameters parsed by the schema                    |
-| `readonly sectionAxis`     | `Vector2`                         | —       | Unit section axis from right to left                   |
-| `readonly width`           | `number`                          | —       | Section chord length                                   |
+| Member                     | Type                              | Default | Description                                                                   |
+| -------------------------- | --------------------------------- | ------- | ----------------------------------------------------------------------------- |
+| `TParams` (Type parameter) | `extends JsonObject = JsonObject` | —       | JSON object type for cap parameters, defaulting to JsonObject                 |
+| `readonly center`          | `IRPosition`                      | —       | Section midpoint in Path-local coordinates, before the extension displacement |
+| `readonly endpoint`        | `'start' \| 'end'`                | —       | Endpoint owning the cap                                                       |
+| `readonly outward`         | `Vector2`                         | —       | Unit vector normal to the section and pointing outward                        |
+| `readonly params`          | `TParams`                         | —       | Cap parameters parsed by the schema                                           |
+| `readonly sectionAxis`     | `Vector2`                         | —       | Unit section axis from right to left                                          |
+| `readonly width`           | `number`                          | —       | Non-negative distance between the section side attachments in user units      |
 
 </ApiTable>
 
@@ -53,9 +53,9 @@ export type RibbonCapContext<TParams extends JsonObject = JsonObject> = Readonly
   <ApiSourceLink
     label={'RibbonCapDefinition'}
     path={'packages/library/extension/src/ribbon/cap-types.ts'}
-    startLine={31}
+    startLine={40}
   >
-    Shared contract for built-in and custom caps
+    Shared parameter parsing and geometry contract for built-in and custom caps
   </ApiSourceLink>
 </p>
 
@@ -65,12 +65,12 @@ export type RibbonCapContext<TParams extends JsonObject = JsonObject> = Readonly
 
 <ApiTable>
 
-| Member                     | Type                                                        | Default | Description                                     |
-| -------------------------- | ----------------------------------------------------------- | ------- | ----------------------------------------------- |
-| `TParams` (Type parameter) | `extends JsonObject = JsonObject`                           | —       | —                                               |
-| `readonly name`            | `string`                                                    | —       | Registered cap name                             |
-| `readonly paramsSchema`    | `ZodType<TParams>`                                          | —       | JSON parameter schema                           |
-| `readonly resolve`         | `(context: RibbonCapContext<TParams>) => RibbonCapGeometry` | —       | Build a cap connecting its two side attachments |
+| Member                     | Type                                                        | Default | Description                                                                                                                                            |
+| -------------------------- | ----------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `TParams` (Type parameter) | `extends JsonObject = JsonObject`                           | —       | JSON object type for cap parameters, relating paramsSchema to resolve and defaulting to JsonObject                                                     |
+| `readonly name`            | `string`                                                    | —       | Nonempty registered cap name containing non-whitespace characters, referenced by start.cap.name or end.cap.name                                        |
+| `readonly paramsSchema`    | `ZodType<TParams>`                                          | —       | JSON parameter schema used before geometry construction; omitted cap.params is parsed from &#123;&#125;, and the schema may supply default fields      |
+| `readonly resolve`         | `(context: RibbonCapContext<TParams>) => RibbonCapGeometry` | —       | Build an open path joining both side attachments from parsed parameters; coordinates, attachment order, and displacement must follow RibbonCapGeometry |
 
 </ApiTable>
 
@@ -93,8 +93,8 @@ export type RibbonCapDefinition<TParams extends JsonObject = JsonObject> = Reado
 ### RibbonCapGeometry
 
 <p>
-  <ApiSourceLink label={'RibbonCapGeometry'} path={'packages/library/extension/src/ribbon/cap-types.ts'} startLine={23}>
-    Open cap path and attachment extension
+  <ApiSourceLink label={'RibbonCapGeometry'} path={'packages/library/extension/src/ribbon/cap-types.ts'} startLine={26}>
+    Open cap path joining both ribbon sides and displacement of their attachments
   </ApiSourceLink>
 </p>
 
@@ -104,10 +104,10 @@ export type RibbonCapDefinition<TParams extends JsonObject = JsonObject> = Reado
 
 <ApiTable>
 
-| Member               | Type                         | Default | Description                                         |
-| -------------------- | ---------------------------- | ------- | --------------------------------------------------- |
-| `readonly commands`  | `ReadonlyArray<PathCommand>` | —       | Single open command chain in Path-local coordinates |
-| `readonly extension` | `number`                     | —       | Signed attachment displacement along outward        |
+| Member               | Type                         | Default | Description                                                                                                                                                                                                                                                                                 |
+| -------------------- | ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly commands`  | `ReadonlyArray<PathCommand>` | —       | Single continuous open command chain in Path-local coordinates, starting with move and containing no later move or close<br />Attachments are shifted by extension along outward; start runs from right to left and end from left to right, with endpoints matching the shifted attachments |
+| `readonly extension` | `number`                     | —       | Finite signed distance moving both attachments along outward in user units; explicitly return 0 for no displacement                                                                                                                                                                         |
 
 </ApiTable>
 
@@ -132,9 +132,9 @@ export type RibbonCapGeometry = Readonly<{
   <ApiSourceLink
     label={'RibbonWidthProfileContext'}
     path={'packages/library/extension/src/ribbon/profile-types.ts'}
-    startLine={5}
+    startLine={8}
   >
-    Ribbon width profile sampling context
+    Position, length, and parameters received by a width profile for a centerline sample
   </ApiSourceLink>
 </p>
 
@@ -144,12 +144,12 @@ export type RibbonCapGeometry = Readonly<{
 
 <ApiTable>
 
-| Member                     | Type                              | Default | Description                                               |
-| -------------------------- | --------------------------------- | ------- | --------------------------------------------------------- |
-| `TParams` (Type parameter) | `extends JsonObject = JsonObject` | —       | —                                                         |
-| `length`                   | `number`                          | —       | Approximate centerline length in user units               |
-| `offset`                   | `number`                          | —       | Normalized position along the centerline in [0, 1]        |
-| `params`                   | `TParams`                         | —       | Profile parameters validated by the optional paramsSchema |
+| Member                     | Type                              | Default | Description                                                                                                                 |
+| -------------------------- | --------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `TParams` (Type parameter) | `extends JsonObject = JsonObject` | —       | JSON object type for width profile parameters, defaulting to JsonObject                                                     |
+| `length`                   | `number`                          | —       | Approximate centerline length in user units                                                                                 |
+| `offset`                   | `number`                          | —       | Normalized position along the centerline in [0, 1]                                                                          |
+| `params`                   | `TParams`                         | —       | Width profile parameters parsed by paramsSchema or JSON object validation; omitted width.params is parsed from &#123;&#125; |
 
 </ApiTable>
 
@@ -175,9 +175,9 @@ export type RibbonWidthProfileContext<TParams extends JsonObject = JsonObject> =
   <ApiSourceLink
     label={'RibbonWidthProfileDefinitionInput'}
     path={'packages/library/extension/src/ribbon/profile-types.ts'}
-    startLine={15}
+    startLine={21}
   >
-    Authoring input for a ribbon width profile definition
+    Registration input for a custom width profile, referenced by name in Ribbon width
   </ApiSourceLink>
 </p>
 
@@ -187,12 +187,12 @@ export type RibbonWidthProfileContext<TParams extends JsonObject = JsonObject> =
 
 <ApiTable>
 
-| Member                     | Type                                                  | Default                        | Description                                                                            |
-| -------------------------- | ----------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------- |
-| `TParams` (Type parameter) | `extends JsonObject = JsonObject`                     | —                              | —                                                                                      |
-| `name`                     | `string`                                              | —                              | Registry key referenced by IR `width: { kind: "profile", name }`                       |
-| `paramsSchema?`            | `ZodType<TParams>`                                    | `Parameters are not validated` | Optional JSON-safe parameter schema; compilation parses `width.params` before sampling |
-| `widthAt`                  | `(ctx: RibbonWidthProfileContext<TParams>) => number` | —                              | Return the non-negative ribbon width at the given normalized position in user units    |
+| Member                     | Type                                                  | Default     | Description                                                                                                                                            |
+| -------------------------- | ----------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `TParams` (Type parameter) | `extends JsonObject = JsonObject`                     | —           | JSON object type for width profile parameters, relating paramsSchema to widthAt and defaulting to JsonObject                                           |
+| `name`                     | `string`                                              | —           | Registry key referenced by IR `width: { kind: "profile", name }`                                                                                       |
+| `paramsSchema?`            | `ZodType<TParams>`                                    | `undefined` | JSON parameter schema parsing width.params before sampling; when omitted, only JSON object structure is validated, without custom parameter validation |
+| `widthAt`                  | `(ctx: RibbonWidthProfileContext<TParams>) => number` | —           | Compute the full ribbon width at a sample position in user units; the result must be finite and non-negative, and the callback may run multiple times  |
 
 </ApiTable>
 
@@ -218,11 +218,13 @@ export type RibbonWidthProfileDefinitionInput<TParams extends JsonObject = JsonO
   <ApiSourceLink
     label={'RibbonPathKindDefinition'}
     path={'packages/library/extension/src/ribbon/definition.ts'}
-    startLine={42}
+    startLine={45}
   >
-    Official Ribbon Path kind definition; registers only the built-in bulge profile by default
+    Ribbon Path kind with the built-in bulge width profile and butt, square, round, and arc caps
   </ApiSourceLink>
 </p>
+
+Must be explicitly supplied through pathKinds for the current drawing; not automatically registered
 
 ```ts
 export const RibbonPathKindDefinition = createDefinition([], []);
@@ -234,9 +236,9 @@ export const RibbonPathKindDefinition = createDefinition([], []);
   <ApiSourceLink
     label={'createRibbonPathKindDefinition'}
     path={'packages/library/extension/src/ribbon/definition.ts'}
-    startLine={45}
+    startLine={53}
   >
-    Create the single Ribbon Path kind definition with caller-provided profiles
+    Create a Ribbon Path kind containing built-in and custom width profiles and caps
   </ApiSourceLink>
 </p>
 
@@ -246,10 +248,11 @@ export const RibbonPathKindDefinition = createDefinition([], []);
 
 <ApiTable variant="parameters">
 
-| Category   | Name       | Type / signature                                                                                                                        | Description |
-| ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Parameters | `options?` | `Readonly<{`<br />`profiles?: ReadonlyArray<RibbonWidthProfileDefinition>;`<br />`caps?: ReadonlyArray<RibbonCapDefinition>;`<br />`}>` | —           |
-| Returns    | —          | `PathKindDefinition<IRRibbonPath>`                                                                                                      | —           |
+| Category   | Name       | Type / signature                                                                                                                        | Description                                                                                                                                 |
+| ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options?` | `Readonly<{`<br />`profiles?: ReadonlyArray<RibbonWidthProfileDefinition>;`<br />`caps?: ReadonlyArray<RibbonCapDefinition>;`<br />`}>` | Extension registrations, defaulting to &#123;&#125;; profiles and caps default to [], while all built-in definitions remain available       |
+| Returns    | —          | `PathKindDefinition<IRRibbonPath>`                                                                                                      | Path kind named ribbon, to be explicitly supplied through pathKinds for the current drawing                                                 |
+| Throws     | —          | —                                                                                                                                       | RetikzExtensionError when a registered name is empty or whitespace-only, different width profiles share a name, or cap names are duplicated |
 
 </ApiTable>
 
@@ -276,11 +279,13 @@ export declare const createRibbonPathKindDefinition: (
   <ApiSourceLink
     label={'createRibbonProviderContribution'}
     path={'packages/library/extension/src/ribbon/provider.ts'}
-    startLine={23}
+    startLine={29}
   >
-    Create a provider contribution assembling caps and width profiles through one maker
+    Create a contribution for the Core dependency resolver to assemble the Ribbon Path kind
   </ApiSourceLink>
 </p>
+
+Includes the ribbon root dependency and built-in definitions, with optional custom width profiles and caps; does not automatically inject them into the compiler
 
 <DocTabs defaultValue="members">
 
@@ -288,10 +293,11 @@ export declare const createRibbonPathKindDefinition: (
 
 <ApiTable variant="parameters">
 
-| Category   | Name       | Type / signature                                                                                                                        | Description |
-| ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Parameters | `options?` | `Readonly<{`<br />`profiles?: ReadonlyArray<RibbonWidthProfileDefinition>;`<br />`caps?: ReadonlyArray<RibbonCapDefinition>;`<br />`}>` | —           |
-| Returns    | —          | `CoreProviderContribution`                                                                                                              | —           |
+| Category   | Name       | Type / signature                                                                                                                        | Description                                                                                                                                 |
+| ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options?` | `Readonly<{`<br />`profiles?: ReadonlyArray<RibbonWidthProfileDefinition>;`<br />`caps?: ReadonlyArray<RibbonCapDefinition>;`<br />`}>` | Extension registrations, defaulting to &#123;&#125;; profiles and caps default to [], while all built-in definitions remain available       |
+| Returns    | —          | `CoreProviderContribution`                                                                                                              | Contribution containing the ribbon root dependency and its provider, assembled by resolveCoreProviderDependencies                           |
+| Throws     | —          | —                                                                                                                                       | RetikzExtensionError when a registered name is empty or whitespace-only, different width profiles share a name, or cap names are duplicated |
 
 </ApiTable>
 
@@ -315,8 +321,8 @@ export declare const createRibbonProviderContribution: (
 ### defineRibbonCap
 
 <p>
-  <ApiSourceLink label={'defineRibbonCap'} path={'packages/library/extension/src/ribbon/cap-define.ts'} startLine={8}>
-    Define a cap and centralize generic parameter erasure
+  <ApiSourceLink label={'defineRibbonCap'} path={'packages/library/extension/src/ribbon/cap-define.ts'} startLine={14}>
+    Define a registrable Ribbon cap and validate its name
   </ApiSourceLink>
 </p>
 
@@ -326,11 +332,12 @@ export declare const createRibbonProviderContribution: (
 
 <ApiTable variant="parameters">
 
-| Category        | Name         | Type / signature               | Description |
-| --------------- | ------------ | ------------------------------ | ----------- |
-| Type parameters | `TParams`    | `extends JsonObject`           | —           |
-| Parameters      | `definition` | `RibbonCapDefinition<TParams>` | —           |
-| Returns         | —            | `RibbonCapDefinition`          | —           |
+| Category        | Name         | Type / signature               | Description                                                                                                                             |
+| --------------- | ------------ | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TParams`    | `extends JsonObject`           | JSON object type for cap parameters, relating parsed parameters to the resolve context                                                  |
+| Parameters      | `definition` | `RibbonCapDefinition<TParams>` | Cap name, parameter schema, and geometry callback; only the name is validated here, without parsing parameters or invoking the callback |
+| Returns         | —            | `RibbonCapDefinition`          | The original definition object, with its parameter generic erased for storage in the cap registry                                       |
+| Throws          | —            | —                              | RetikzExtensionError when name is empty or whitespace-only                                                                              |
 
 </ApiTable>
 
@@ -354,9 +361,9 @@ export declare const defineRibbonCap: <TParams extends JsonObject>(
   <ApiSourceLink
     label={'defineRibbonWidthProfile'}
     path={'packages/library/extension/src/ribbon/profile-define.ts'}
-    startLine={12}
+    startLine={14}
   >
-    Define a ribbon width profile registration and validate its name
+    Define a registrable Ribbon width profile and validate its name
   </ApiSourceLink>
 </p>
 
@@ -366,16 +373,14 @@ export declare const defineRibbonCap: <TParams extends JsonObject>(
 
 <ApiTable variant="parameters">
 
-| Category        | Name         | Type / signature                             | Description                                    |
-| --------------- | ------------ | -------------------------------------------- | ---------------------------------------------- |
-| Type parameters | `TParams`    | `extends JsonObject = JsonObject`            | —                                              |
-| Parameters      | `definition` | `RibbonWidthProfileDefinitionInput<TParams>` | —                                              |
-| Returns         | —            | `RibbonWidthProfileDefinition`               | —                                              |
-| Throws          | —            | —                                            | When name is empty or contains only whitespace |
+| Category        | Name         | Type / signature                             | Description                                                                                                                                   |
+| --------------- | ------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TParams`    | `extends JsonObject = JsonObject`            | JSON object type for width profile parameters, relating optional parameter parsing to the widthAt context                                     |
+| Parameters      | `definition` | `RibbonWidthProfileDefinitionInput<TParams>` | Width profile name, optional parameter schema, and sampling callback; only the name is validated here, without parsing parameters or sampling |
+| Returns         | —            | `RibbonWidthProfileDefinition`               | The original definition object, with its parameter generic erased for storage in the width profile registry                                   |
+| Throws          | —            | —                                            | RetikzExtensionError when name is empty or whitespace-only                                                                                    |
 
 </ApiTable>
-
-> **Notes:** Encapsulates the parameter generic erasure boundary
 
 </DocTab>
 
