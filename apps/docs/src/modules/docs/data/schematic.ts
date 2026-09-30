@@ -23,7 +23,7 @@ export const schematicSection: Array<Section> = [
       {
         id: 'design',
         label: 'schematic.design',
-        difficulty: DocDifficulty.Advanced,
+        difficulty: DocDifficulty.Beginner,
         meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
       },
       {
@@ -173,7 +173,7 @@ export const schematicSection: Array<Section> = [
       {
         id: 'design',
         label: 'schematic.design',
-        difficulty: DocDifficulty.Advanced,
+        difficulty: DocDifficulty.Beginner,
         meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
       },
       {
