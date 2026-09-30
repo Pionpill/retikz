@@ -10,7 +10,6 @@ export const nodeLabelListControls = definePreviewControls({
   title: '添加标签',
   sections: [
     {
-      label: '标签数量',
       controls: [
         {
           kind: 'select',

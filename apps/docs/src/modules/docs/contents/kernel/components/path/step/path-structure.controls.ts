@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.pathStructure,
     sections: [
       {
-        label: i18n.structure,
         controls: [
           {
             kind: 'select',

@@ -16,7 +16,6 @@ export const sectorExampleControls = definePreviewControls({
   title: 'Sector',
   sections: [
     {
-      label: '环楔几何',
       controls: [
         {
           kind: 'range',

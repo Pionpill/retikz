@@ -4,12 +4,12 @@ import {
   RegressionChartInputEmbedAdapter,
   ScatterChartInputEmbedAdapter,
 } from '@retikz/chart-vanilla/point';
-import type { BubbleChartInputEmbedProps } from '@retikz/chart-vanilla/point/bubble';
-import { bubbleChart } from '@retikz/chart-vanilla/point/bubble';
-import type { RegressionChartInputEmbedProps } from '@retikz/chart-vanilla/point/regression';
-import { regressionChart } from '@retikz/chart-vanilla/point/regression';
-import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point/scatter';
-import { scatterChart } from '@retikz/chart-vanilla/point/scatter';
+import type { BubbleChartInputEmbedProps } from '@retikz/chart-vanilla/point';
+import { bubbleChart } from '@retikz/chart-vanilla/point';
+import type { RegressionChartInputEmbedProps } from '@retikz/chart-vanilla/point';
+import { regressionChart } from '@retikz/chart-vanilla/point';
+import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point';
+import { scatterChart } from '@retikz/chart-vanilla/point';
 import { defineRegression } from '@retikz/data';
 import { PointMark } from '@retikz/plot-react';
 import { normalizeScene, scene } from '@retikz/vanilla';

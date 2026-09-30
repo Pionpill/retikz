@@ -62,11 +62,11 @@ type IRBubbleMark = {
 
 `IRBubbleChartProperties` 复用 Point 常量属性，但排除 `size`，并在 recipe 顶层接受 [ADR-014](./014-point-radius-domain-padding.md) 统一的 Point `domainPadding` spacing contract。`IRBubbleMark` 的显式 encodings 与 properties 同时排除 `size` 与 `domainPadding`；mark 可以继承 recipe 的必需尺寸映射，却不能改写、删除或替换该角色。Bubble 的内建 semantic group 使用唯一 `kind: 'bubble'`，并确定性生成一个 Plot Point mark。
 
-具体入口为：
+具体能力从 Point 家族入口按名称导入：
 
-- `@retikz/chart/point/bubble`：Bubble exact schema、Source 类型与 provider contribution
-- `@retikz/chart-vanilla/point/bubble`：`normalizeBubbleChart` 与 `bubbleChart`
-- `@retikz/chart-react/point/bubble`：`BubbleChart`、`BubbleEncodings`、`BubbleProperties` 与 `BubbleMark`
+- `@retikz/chart/point`：Bubble exact schema、Source 类型与 provider contribution
+- `@retikz/chart-vanilla/point`：`normalizeBubbleChart` 与 `bubbleChart`
+- `@retikz/chart-react/point`：`BubbleChart`、`BubbleEncodings`、`BubbleProperties` 与 `BubbleMark`
 
 最小 React authoring 为：
 

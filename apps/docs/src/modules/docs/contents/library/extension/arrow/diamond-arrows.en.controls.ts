@@ -9,7 +9,6 @@ export const diamondArrowsControls = definePreviewControls({
   title: 'Diamond arrows',
   sections: [
     {
-      label: 'Endpoint style',
       controls: [
         { kind: 'color', id: DiamondArrowsControlId.Color, label: 'Color', defaultValue: '#2563eb' },
         {

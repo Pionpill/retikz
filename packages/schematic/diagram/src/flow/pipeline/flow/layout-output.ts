@@ -258,7 +258,7 @@ const validatePlacementInput = (
       input.layout,
       expected.placement.kind === 'linear'
         ? ['kind', 'id', 'direction', 'gap', 'align']
-        : ['kind', 'id', 'rowGap', 'columnGap', 'reserveLabelSpace', 'placements'],
+        : ['kind', 'id', 'gap', 'reserveLabelSpace', 'placements'],
       ['excludeFromBounds'],
     ) ||
     !Array.isArray(input.elements)
@@ -285,8 +285,10 @@ const validatePlacementInput = (
       ? actual.direction === placement.direction && actual.gap === placement.gap && actual.align === placement.align
       : actual.kind === 'grid' &&
         placement.kind === 'grid' &&
-        actual.rowGap === placement.rowGap &&
-        actual.columnGap === placement.columnGap &&
+        isPlainRecord(actual.gap) &&
+        hasExactKeys(actual.gap, ['row', 'column']) &&
+        actual.gap.row === placement.gap.row &&
+        actual.gap.column === placement.gap.column &&
         hasMatchingGridPlacements(actual.placements, placement.placements);
   if (!matches)
     invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [

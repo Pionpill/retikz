@@ -1,0 +1,24 @@
+---
+title: API reference
+description: Look up Flow React, Vanilla, and Definition public entries.
+---
+
+Look up Flow authoring components, Vanilla input, and runtime Definitions by public entry. See the [Schema reference](/schematic/diagram/flow/schema-reference) for serializable fields and constraints, or [Basic usage](/schematic/diagram/flow/usage) for a first diagram.
+
+Runtime Definitions are separate from persistable Source. The signatures and descriptions below are generated from public exports, JSDoc, and Schemas.
+
+For Source fields, the default column only shows values materialized by Schema parsing; runtime options show defaults documented in JSDoc. `—` means there is no such default or the column does not apply. Inheritance, content-dependent values, and layout fallbacks are explained in the field descriptions.
+
+{/* @include schematic/diagram/flow/api-reference/generated */}
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Schema reference',
+      description: 'Look up Flow Source fields and constraints',
+      url: '/schematic/diagram/flow/schema-reference',
+    },
+  ]}
+/>

@@ -16,6 +16,8 @@
 
 当前 Flow Source 支持 Entity、Group、Layout 与 Relation：三类 element 在平级 catalog 中声明，根、Group 与 Layout 的 `children` 是唯一包含事实源。Group 始终自动布局并下沉为可见 Graph Group，可作为 Relation endpoint；Layout 必填 `kind`，以 `linear` 顺序排列或 `grid` 共享行列中心，复用 Layout 的 Flex/Grid，不绘制、没有 Graph identity 且不能作为 endpoint。Graph Block 在其结构与连接契约稳定并出现真实 Flow 消费者后再通过独立设计引入；当前不预留 Block schema、Theme token、adapter、artifact 或兼容入口
 
+Flow Group 直接复用 Graph Group Schema 的呈现与上下文字段，只替换 Flow 的 identity/children，排除 transforms、placement、localNamespace，并增加 rank/layout/routing。caption、labels 与 Scope 字段不建平行契约；测量和物化使用同一 Graph 包含树投影。
+
 ## 源码组织与导出
 
 - `src/_diagram/` 承载所有具体图类型共享的 Diagram vocabulary、schema、contract、provider、resolve、pipeline 与区域装配能力；具体图类型不得复制这些公共机制

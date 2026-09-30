@@ -9,7 +9,6 @@ export const crowFootArrowControls = definePreviewControls({
   title: 'CrowFoot endpoint',
   sections: [
     {
-      label: 'Endpoint parameters',
       controls: [
         {
           kind: 'range',

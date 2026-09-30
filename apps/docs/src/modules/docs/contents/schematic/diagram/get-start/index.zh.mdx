@@ -93,6 +93,8 @@ const view = mount(document.getElementById('diagram')!, input, {
 
 这里的 `activity` 是内置语义角色 `role`，不是 `kind`。`kind` 留给用户定义并注册；绘制这个最小流程无需注册任何 kind。
 
+**备注：** Diagram 默认复用 Graph 的基础图式能力。后续 Diagram 文档默认读者已了解 Graph 的基本概念与用法；如尚未接触 Graph，请先阅读 [Graph 快速开始](/schematic/graph/get-start)。
+
 ## 延伸阅读
 
 <LinkedSections
@@ -100,7 +102,7 @@ const view = mount(document.getElementById('diagram')!, input, {
     {
       title: 'Flow 基础用法',
       description: '继续学习分组、固定排列、路由与样式配置',
-      url: '/schematic/diagram/flow/basic',
+      url: '/schematic/diagram/flow/usage',
     },
   ]}
 />

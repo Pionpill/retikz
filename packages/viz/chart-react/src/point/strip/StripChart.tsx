@@ -1,6 +1,6 @@
-import type { StripChartInputEmbedProps } from '@retikz/chart-vanilla/point/strip';
-import { stripChart, StripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point/strip';
-import type { IRStripChart } from '@retikz/chart/point/strip';
+import type { StripChartInputEmbedProps } from '@retikz/chart-vanilla/point';
+import { stripChart, StripChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import type { IRStripChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
 import { createTypedChartComponent, createTypedChartInput } from '../shared';

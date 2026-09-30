@@ -24,8 +24,6 @@ export const createCoordinateDataControls = (options: {
     title: options.copy.title,
     sections: [
       {
-        label: options.copy.sectionLabel,
-        ...(options.defaultCollapsed ? { defaultCollapsed: true } : {}),
         controls: [
           {
             kind: 'table',

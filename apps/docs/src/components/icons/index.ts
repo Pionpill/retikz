@@ -1,4 +1,5 @@
 export * from './ChatGpt';
+export * from './chart';
 export * from './Claude';
 export * from './DeepSeek';
 export * from './GitHub';

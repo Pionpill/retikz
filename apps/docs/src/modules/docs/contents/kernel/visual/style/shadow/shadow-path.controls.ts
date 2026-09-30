@@ -11,7 +11,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     title: text.title,
     sections: [
       {
-        label: text.section,
         controls: [
           { kind: 'switch', id: 'enabled', label: text.enabled, defaultValue: true },
           { kind: 'range', id: 'offsetX', label: text.offsetX, defaultValue: 8, min: -20, max: 20 },

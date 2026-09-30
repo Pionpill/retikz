@@ -22,7 +22,7 @@ Flow 已将 Entity 与 Relation 的 `role`、`kind`、`status` 投影为 Graph r
 
 Flow 继续复用 Graph 的 `IRGraphRule`、selector、kind / role / predicate registry、规则校验和 author-layer 投影。Diagram 不建立 `flowRules`、Flow 专属 selector、颜色 token、kind definition 或平行规则 resolver。`graphRules` 不改变 Flow catalog、containment、rank、layout、routing、endpoint 或 artifact 契约。
 
-Flow Group 不在本决策中获得局部 `graphRules`。根级上下文已满足当前按 kind 统一表达整张自动布局流程图的需求；后续只有出现独立的局部规则消费者时，才单独决定 Group scope。
+Group 局部 `graphRules` 与 `graphDefaults` 由 [014](./014-flow-group-graph-surface.md) 开放并复用 Graph 的后代上下文语义；本决策继续定义 Flow 根级规则入口和优先级。
 
 ## 基础数据结构与公开契约
 

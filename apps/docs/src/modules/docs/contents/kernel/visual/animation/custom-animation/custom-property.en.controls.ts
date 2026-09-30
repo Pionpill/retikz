@@ -9,7 +9,6 @@ export const customPropertyControls = definePreviewControls({
   title: 'Tune the blur animation',
   sections: [
     {
-      label: 'Track parameters',
       controls: [
         {
           kind: 'range',

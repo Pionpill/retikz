@@ -5,16 +5,11 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPreviewIR, previewEmbedPropsOf } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import { previewControlContract as presentationLayoutZhContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-layout.controls';
-import { previewControlContract as presentationLayoutEnContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-layout.en.controls';
-import {
-  ChartPresentationLayoutPreview,
-  ChartPresentationVisibilityPreview,
-} from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-preview';
-import { previewControlContract as presentationVisibilityZhContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.controls';
-import { previewControlContract as presentationVisibilityEnContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.en.controls';
-import { previewSource as presentationVisibilityZhSource } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.zh.demo';
-import { CHART_PRESENTATION_CONTROL_IDS } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation.constants';
+import { previewControlContract as presentationLayoutZhContract } from '../../src/modules/docs/contents/viz/chart/model/general-structure/chart-presentation-layout.controls';
+import { previewControlContract as presentationLayoutEnContract } from '../../src/modules/docs/contents/viz/chart/model/general-structure/chart-presentation-layout.en.controls';
+import { previewSource as presentationLayoutZhSource } from '../../src/modules/docs/contents/viz/chart/model/general-structure/chart-presentation-layout.zh.demo';
+import { ChartPresentationLayoutPreview } from '../../src/modules/docs/contents/viz/chart/model/general-structure/chart-presentation-preview';
+import { CHART_PRESENTATION_CONTROL_IDS } from '../../src/modules/docs/contents/viz/chart/model/general-structure/chart-presentation.constants';
 import { previewSource as fertilityWorkEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
 import { previewSource as fertilityWorkZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
@@ -51,11 +46,8 @@ describe('Chart-native Scatter presentation', () => {
     );
     expect(presentationLayoutZhContract.canonicalValues).toEqual(presentationLayoutEnContract.canonicalValues);
     expect('stateOnlyIds' in presentationLayoutZhContract).toBe(false);
-    expect(controlIdsOf(presentationVisibilityZhContract.controls.sections)).toEqual(
-      controlIdsOf(presentationVisibilityEnContract.controls.sections),
-    );
-    expect(presentationVisibilityZhContract.canonicalValues).toEqual(presentationVisibilityEnContract.canonicalValues);
-    expect(presentationVisibilityZhContract.canonicalValues).toEqual({
+    expect(presentationLayoutZhContract.canonicalValues).toEqual({
+      [CHART_PRESENTATION_CONTROL_IDS.inspect]: true,
       [CHART_PRESENTATION_CONTROL_IDS.showTitle]: true,
       [CHART_PRESENTATION_CONTROL_IDS.showSubtitle]: true,
       [CHART_PRESENTATION_CONTROL_IDS.showNote]: true,
@@ -64,7 +56,7 @@ describe('Chart-native Scatter presentation', () => {
   });
 
   it('derives concise Chart Source with every presentation slot from the canonical state', () => {
-    const preview = buildPreviewIR(() => presentationVisibilityZhSource.canonicalRender?.() ?? null);
+    const preview = buildPreviewIR(() => presentationLayoutZhSource.canonicalRender?.() ?? null);
 
     expect(preview.ir.children).toEqual([
       expect.objectContaining({
@@ -97,38 +89,30 @@ describe('Chart-native Scatter presentation', () => {
     expect(preview.ir.viewBox).toBeUndefined();
   });
 
-  it('uses stable framing for the presentation visibility playground', () => {
+  it('expands the Chart with the showcase viewport', () => {
     const preview = buildPreviewIR(() =>
-      createElement(ChartPresentationVisibilityPreview, {
-        copy: {
-          title: 'Title',
-          subtitle: 'Subtitle',
-          note: 'Note',
-          source: 'Source',
-        },
-        showTitle: false,
-        showSubtitle: true,
-        showNote: true,
-        showSource: true,
+      createElement(ChartPresentationLayoutPreview, {
+        copy: { title: 'Title', subtitle: 'Subtitle', note: 'Note', source: 'Source' },
+        inspect: false,
+        dimensions: { width: 800, height: 408 },
       }),
     );
 
-    expect(preview.ir.viewBox).toEqual({ x: -10, y: -10, width: 393.4, height: 345.2 });
+    expect(preview.ir.viewBox).toBeUndefined();
+    expect(preview.ir.children[0]).toMatchObject({ layout: { width: 776, height: 384 } });
   });
 
   it('keeps Plot and omits presentation when every shorthand is disabled', () => {
     const preview = buildPreviewIR(() =>
-      createElement(ChartPresentationVisibilityPreview, {
+      createElement(ChartPresentationLayoutPreview, {
         copy: {
           title: 'Title',
           subtitle: 'Subtitle',
           note: 'Note',
           source: 'Source',
         },
-        showTitle: false,
-        showSubtitle: false,
-        showNote: false,
-        showSource: false,
+        inspect: false,
+        visibility: { title: false, subtitle: false, note: false, source: false },
       }),
     );
 

@@ -23,6 +23,8 @@ Graph 是 Schematic 的通用关系与呈现基础。长期拥有：
 - 与 Core lower target 同名同义的位置、路径、尺寸、内容及 NodeTarget endpoint，不建立 Graph-owned geometry、presentation 或 reference 投影
 - 可独立放入任意 Core 内容树的 Group / Block / Entity / Relation 图式呈现能力
 
+Flow Group 的呈现与作者上下文直接复用 Graph Group；只替换 Flow 的 identity/children 并排除 transforms、placement、localNamespace，以保持自动布局和全局 endpoint 语义。其余 Scope、caption、labels、Surface 与 Graph defaults/rules 使用下层原生契约；Entity/Relation 仍按各自 Flow Source 投影。
+
 Graph 不拥有成员数据库或全局 GraphModel root。`IRGraph`、`IRGroup`、`IRBlock`、`IREntity` 与 `IRRelation` 是独立 Source composite：Group 组合可见包含边界与任意 Core children，Block 组合非递归 Header / Section / Row / Cell 与局部可寻址结构，Entity / Relation 分别组合自身语义和 Core Node / Path lower-facing 字段；Graph 只组合完整 Core `IRChild` 并提供局部上下文。身份、namespace frame、重复 id 与引用解析继续由 Core 统一负责
 
 当前 v0.1 已由 ADR-07～10 完成以下长期组合边界：
@@ -141,7 +143,7 @@ Core Node / Path / Scope
 
 Graph Data 由独立 Group / Entity / Relation record、对应 Core lower target 的实例字段与各类图自己的 JSON-safe 扩展组成。Group resolve 保留包含层级和可见边界，Entity / Relation resolve 负责领域 Definition、Theme、metadata 与补全后不变量；Graph Theme 只按 role、kind、predicate 与 direction 等真实语义匹配 Entity / Relation，实例 appearance 字段保持最高优先级。Relation endpoint、namespace 可见性、重复 id 与 unresolved reference 交由 Core NodeTarget / namespace 编译统一处理。Graph resolve 只确定局部 Graph context 并保留有序 children，不收集成员或建立引用索引，也不计算、合并或标记 geometry 来源
 
-Diagram 的 frame intent 与具体 drawing core intent 分开 resolve。Frame 只确定完整图示的区域排列、外框、padding、section gap 与专属 appearance；Flow drawing core 用平级 Entity / Group / Layout catalog、根与各 scope 的 `children` 引用、根 relations、rank、flowDefaults、单项 style / layout 与 routing 等窄字段表达高层 Source。catalog 已表达声明类别，不重复保存 element discriminator；relation 由根集合和数组顺序确定，不重复保存 discriminator 或 id。Flow resolve 校验唯一 owner 后按 `children` 重建递归 Canonical scope；Group 始终下沉为可见 Graph Group 并可作为 endpoint，独立 Layout 复用 Flex compiler 完成无外壳固定排列且不能作为 endpoint。Core `theme.style` 通过同名 Flow Theme Definition 生成与 Source 同构的稀疏片段；flowDefaults 高于生成片段，实例配置最高；direction 与 routing 仅由 provider 和正式 Source 确定。Layout 与 Flow layout Definition 结合 Kernel 提供的测量和几何能力计算节点位置、分组边界、边线路径与标签位置，再由 Flow 形成 render-ready Graph records、renderer-neutral artifact 与 spatial handles，不反向要求 Graph 建立 geometry result contract
+Diagram 的 frame intent 与具体 drawing core intent 分开 resolve。Frame 只确定完整图示的区域排列、外框、padding、section gap 与专属 appearance；Flow drawing core 用平级 Entity / Group / Layout catalog、根与各 scope 的 `children` 引用、根 relations、rank、flowDefaults、单项 style / layout 与 routing 表达高层 Source；Entity / Relation 使用窄投影，Group 复用 Graph 呈现与上下文字段。catalog 已表达声明类别，不重复保存 element discriminator；relation 由根集合和数组顺序确定，不重复保存 discriminator 或 id。Flow resolve 校验唯一 owner 后按 `children` 重建递归 Canonical scope；Group 始终下沉为可见 Graph Group 并可作为 endpoint，独立 Layout 复用 Flex compiler 完成无外壳固定排列且不能作为 endpoint。Core `theme.style` 通过同名 Flow Theme Definition 生成与 Source 同构的稀疏片段；flowDefaults 高于生成片段，实例配置最高；direction 与 routing 仅由 provider 和正式 Source 确定。Layout 与 Flow layout Definition 结合 Kernel 提供的测量和几何能力计算节点位置、分组边界、边线路径与标签位置，再由 Flow 形成 render-ready Graph records、renderer-neutral artifact 与 spatial handles，不反向要求 Graph 建立 geometry result contract
 
 Diagram 是面向 Graph 关系结构的自动图示上层能力，不是所有领域数据模型的总 owner。`flow`、`tree`、`layered`、`force` 等布局可以作为 Diagram kind、provider 或 preset；Gantt 等领域可以复用 Graph / Diagram 的适用能力，但仍拥有自己的领域数据与 resolve。只有经过真实复用验证的无领域算法或约束才下沉到 Layout、Math 或其它通用 owner
 

@@ -1,27 +1,40 @@
 ---
-title: Flow Diagram
-description: 用扁平、可序列化的逻辑关系描述站点流程，再由可替换的布局 Definition 推导节点位置、分组边界与连线路径。
+title: Flow · 逻辑图
+description: 用实体、分组和关系描述流程，由 Flow 自动排布并生成可渲染的逻辑图。
 ---
 
-Flow Diagram 面向站点架构、数据流和业务流程等逻辑图。Source 把 Entity、可见 Group 与无外壳 Layout 分别放在平级 catalog 中，由根和各容器的 `children` id 列表表达包含与顺序；它只保存根级关系与稀疏配置，不保存可由布局推导的位置或路径。
+Flow 适合表达站点架构、数据流和业务流程。先声明有哪些 Entity、哪些 Relation 连接它们；需要可见边界时加入 Group，需要固定行列顺序时加入 Layout。Flow 根据这些声明计算位置和连线路径，无须在 Source 中手写坐标。
 
-Graph 继续拥有 Entity、Group 与 Relation 的绘制语义；Flow 负责把它们测量后交给布局 Definition，并把结果装配成同一个 Scene、artifact 与空间索引。Graph Block 的结构与连接契约尚未稳定，因此当前不属于 Flow Source。
+Graph 负责 Entity、Group 与 Relation 的外观和绘制语义；Flow 将它们组织成完整图示。React 与 Vanilla 使用同一份可序列化的 Flow Source。
+
+下图是用 Flow 绘制的 Kernel 架构示例：输入汇入 IR，经编译得到 Scene，再由 renderer 输出 SVG 或 Canvas。图中的 Entity 表示各环节，Group 标出 Core 边界，Layout 排列输入与输出，Relation 连接主数据流与可选辅助能力。
+
+<ComponentPreview files="/kernel/components/design/principles/principles-packages" hideCode type="flow" size="md" />
 
 ## 职责一览
 
-| 主题     | 职责                                                  | 何时使用                 |
-| -------- | ----------------------------------------------------- | ------------------------ |
-| 基础用法 | JSX / 平级 JSON Source、Group、Layout、自动布局与结果 | 绘制普通站点逻辑图       |
-| 设计理念 | 标题、说明、图例、Frame 与完整输出边界                | 需要理解 Flow 外层装配时 |
+| 章节           | 解决什么问题                              | 何时阅读                 |
+| -------------- | ----------------------------------------- | ------------------------ |
+| 基础用法       | 声明实体、关系，选择路由并得到逻辑图      | 首次使用 Flow            |
+| 扩展用法       | 组织结构、统一外观                        | 需要控制图示的布局或表达 |
+| 实现原理与参考 | 理解执行阶段，查询公开 API 和 Source 字段 | 扩展、排查或精确查阅契约 |
+
+## 选择阅读路径
+
+从[基础用法](/schematic/diagram/flow/usage)开始，学习实体、关系与连线路由。“扩展用法”继续讲结构与排布、外观与默认值。
 
 ## 章节内容
 
 <LinkedSections
   items={[
+    { title: '基础用法', description: '声明实体与关系，选择连线路由', url: '/schematic/diagram/flow/usage' },
+    { title: '扩展用法', description: '组合结构与共享外观配置', url: '/schematic/diagram/flow/extended' },
+    { title: '实现原理', description: '追踪测量、布局、物化与结果校验', url: '/schematic/diagram/flow/mechanism' },
+    { title: 'API 参考', description: '查询公开组件、函数与类型', url: '/schematic/diagram/flow/api-reference' },
     {
-      title: '基础用法',
-      description: '从最小 Flow 到独立 Layout、可见 Group、跨作用域关系、Theme 和 artifact',
-      url: '/schematic/diagram/flow/basic',
+      title: 'Schema 参考',
+      description: '查询 Flow Source 的持久化字段',
+      url: '/schematic/diagram/flow/schema-reference',
     },
   ]}
 />

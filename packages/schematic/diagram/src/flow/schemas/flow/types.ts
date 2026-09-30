@@ -3,7 +3,7 @@ import type { infer as ZodInfer } from 'zod';
 import type {
   FlowDefaultsEntitySchema,
   FlowDefaultsGroupCaptionSchema,
-  FlowDefaultsGroupCaptionTitleSchema,
+  FlowDefaultsGroupCaptionTextSchema,
   FlowDefaultsGroupSchema,
   FlowDefaultsLayoutSchema,
   FlowDefaultsRelationSchema,
@@ -12,8 +12,6 @@ import type {
   FlowEntityLayoutSchema,
   FlowEntitySchema,
   FlowEntityStyleSchema,
-  FlowGroupCaptionSchema,
-  FlowGroupCaptionTitleSchema,
   FlowGroupSchema,
   FlowLayoutIntentSchema,
   FlowLayoutSchema,
@@ -34,12 +32,6 @@ export type IRFlowEntityStyle = ZodInfer<typeof FlowEntityStyleSchema>;
 /** 单个 Flow Entity 的尺寸、边距与文本布局覆盖 */
 export type IRFlowEntityLayout = ZodInfer<typeof FlowEntityLayoutSchema>;
 
-/** Flow Group 标题文本及其样式覆盖 */
-export type IRFlowGroupCaptionTitle = ZodInfer<typeof FlowGroupCaptionTitleSchema>;
-
-/** Flow Group caption */
-export type IRFlowGroupCaption = ZodInfer<typeof FlowGroupCaptionSchema>;
-
 /** 单个 Flow Relation 的路径样式覆盖 */
 export type IRFlowRelationStyle = ZodInfer<typeof FlowRelationStyleSchema>;
 
@@ -49,8 +41,8 @@ export type IRFlowDefaultsLayout = ZodInfer<typeof FlowDefaultsLayoutSchema>;
 /** Flow defaults 的 Entity 片段 */
 export type IRFlowDefaultsEntity = ZodInfer<typeof FlowDefaultsEntitySchema>;
 
-/** Flow defaults 的 Group caption title 片段 */
-export type IRFlowDefaultsGroupCaptionTitle = ZodInfer<typeof FlowDefaultsGroupCaptionTitleSchema>;
+/** Flow defaults 的 Group caption 文本格式片段 */
+export type IRFlowDefaultsGroupCaptionText = ZodInfer<typeof FlowDefaultsGroupCaptionTextSchema>;
 
 /** Flow defaults 的 Group caption 片段 */
 export type IRFlowDefaultsGroupCaption = ZodInfer<typeof FlowDefaultsGroupCaptionSchema>;

@@ -33,6 +33,8 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 alpha.1
 - Graph、Group、Block、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成。Block、Section 与 Row 的显式 id 发布到当前 Core namespace，不自动添加 Block 前缀
 - Diagram 用窄 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用表达包含，并保存显式 relations、布局意图、显式 defaults、正式实例配置与单项 style / layout；resolve 重建递归 Canonical tree 后确定性下沉 Graph records。Group 始终是可见 Graph 边界，独立 Layout 只建立固定排列 scope；Flow style 只能投影 Graph element 已开放字段，不得复制或绕过 Graph role、Theme、identity、屏蔽字段与 canonical lowering 契约
 
+Flow Group 直接复用 Graph Group Schema 的呈现与上下文字段，只替换 Flow 的 identity/children，排除 transforms、placement、localNamespace，并增加 rank/layout/routing。caption、labels 与 Scope 字段不建平行契约；测量和物化使用同一 Graph 包含树投影。
+
 ## 当前状态
 
 Graph ADR 按 v0 / v0.1 保存独立设计记录；状态不代替实现或发布证明。现行契约包含独立 Graph、Group、Block family、Entity 与 Relation Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；`graphDefaults` 为可见后代 Entity / Relation / Group / Block 提供默认，`graphRules` 只匹配 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。

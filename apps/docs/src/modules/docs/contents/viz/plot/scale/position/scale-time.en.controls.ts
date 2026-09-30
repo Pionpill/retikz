@@ -9,7 +9,6 @@ export const scaleTimeControls = definePreviewControls({
   title: 'Automatic time-scale derivation',
   sections: [
     {
-      label: 'Temporal field and data',
       controls: [
         {
           kind: 'table',

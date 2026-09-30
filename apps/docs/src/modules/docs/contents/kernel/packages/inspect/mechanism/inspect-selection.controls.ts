@@ -22,7 +22,6 @@ export const inspectSelectionControls = definePreviewControls({
   title: '检查范围',
   sections: [
     {
-      label: '选择',
       controls: [
         {
           kind: 'select',

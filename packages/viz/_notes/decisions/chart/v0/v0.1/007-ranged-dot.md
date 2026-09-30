@@ -56,11 +56,11 @@ Chart 生成一个 Plot Relation：source 和 target 各投影 x / y，`endpoint
 
 `point` 是两个端点的共同常量样式；`startPoint` 与 `endPoint` 在其后分别覆盖对应端点。`range` 只配置 connector 的常量线条表现。`color` 字段映射使用同一个 ordinal scale同时驱动 connector 和两个端点，并默认生成分类图例；成员级 properties 只能给出常量颜色，不建立独立数据尺度。
 
-具体入口为：
+具体能力从 Point 家族入口按名称导入：
 
-- `@retikz/chart/point/ranged-dot`
-- `@retikz/chart-vanilla/point/ranged-dot`
-- `@retikz/chart-react/point/ranged-dot`
+- `@retikz/chart/point`
+- `@retikz/chart-vanilla/point`
+- `@retikz/chart-react/point`
 
 React 最小 authoring 为：
 

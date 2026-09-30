@@ -1,0 +1,206 @@
+---
+title: Extended usage
+description: Combine Flow grouping and fixed layouts, and share appearance settings and defaults.
+---
+
+This page builds on [Basic usage](/schematic/diagram/flow/usage) through two tasks: organize elements and share appearance. See [Basic usage](/schematic/diagram/flow/usage#connections-and-routing) for connections and routing.
+
+## Structure and layout
+
+`FlowLayout` fixes the arrangement of direct children. `FlowGroup` draws a named semantic boundary and automatically lays out the steps inside it. Examine each one before combining them in one diagram.
+
+### Fixed placement
+
+`FlowLayout` is a container without a visible shell. `kind="linear"` places direct children in declaration order along one direction; `kind="grid"` aligns them in explicit rows and columns. A Layout draws no border or title and cannot be a Relation endpoint.
+
+| Property            | Values                                                  | Purpose                                                                 |
+| ------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `kind`              | `"linear"`, `"grid"`                                    | Selects one-dimensional placement or row and column alignment           |
+| `direction`         | `up`, `right`, `down`, `left`                           | Places direct children in order along this direction in Linear          |
+| `gap`               | Nonnegative number; Grid also accepts `{ row, column }` | Sets adjacent spacing in Linear or row and column track gaps in Grid    |
+| `itemWidth`         | `"match-largest"` or a positive number; optional        | Matches the largest natural width or fixes the width of direct Entities |
+| `placements`        | Matrix or mapping from child id to row and column       | Assigns a cell to each direct child in Grid                             |
+| `reserveLabelSpace` | Boolean; `true` by default                              | Expands Grid gaps for Relation labels                                   |
+| `excludeFromBounds` | `Array<string>`; exclude none by default                | Omits direct children from the footprint reported to the parent         |
+
+The example contains only Input, Check, and Output. Switch between left and right and change the gap to see that Layout preserves their declared order. There is no Relation between them: fixed placement does not depend on a connection. `direction` also supports up and down.
+
+<ComponentPreview
+  files="flow-linear"
+  size="sm"
+  caption="Change placement direction and element gap; the three entities keep their declared order without a Layout frame."
+/>
+
+Set `itemWidth` when the edges of a step group should align. `"match-largest"` measures the Layout's direct Entities and draws each at the largest natural visible width; a number such as `itemWidth={180}` fixes that width, wrapping long plain text and growing its height. It does not cross a nested Layout or Group, excludes margin from the comparison, and does not wrap horizontal children onto another row.
+
+<ComponentPreview
+  files={['flow-item-width', 'flow-item-width.preview.tsx']}
+  defaultSourceFile="flow-item-width.preview.tsx"
+  size="md"
+  caption="Switch between vertical and horizontal placement and natural, matched, or fixed widths to see two step edges align and long text wrap."
+/>
+
+Use Grid when nodes in different rows must align in pairs. The recommended `placements` form is a matrix: the outer index is the zero-based row, the inner index is the column, each cell contains a direct child id, and `null` leaves a cell empty. An id-keyed `{ childId: { row, column } }` mapping is also supported. React and Vanilla use the same `placements`; Vanilla `children` controls only containment and paint order. Every direct child needs one cell; overlaps, spans, and references to descendants in other containers are invalid. Empty tracks create no placeholder elements. Columns share center x, rows share center y, and nodes retain their measured sizes.
+
+The example has four Entities in two rows and two columns. Change the row and column gaps and label reservation to see their centers stay aligned and the label expand the column gap. The preview source shows the `placements` configuration.
+
+<ComponentPreview
+  files="flow-grid"
+  size="md"
+  caption="Change row and column gaps and label reservation; watch the node centers and the space occupied by the edge label."
+/>
+
+For Grid, a numeric `gap` sets both row and column gaps. To set them separately, provide a complete `{ row, column }` object; both fields are required. Linear accepts only a numeric `gap`. When Grid `gap` is omitted, both axes inherit an explicitly authored `nodeGap`; otherwise their built-in defaults are `32` and `48`, respectively. Explicit `0` is valid. `reserveLabelSpace` is enabled by default: a labeled horizontal Relation adds its measured width to column gaps, while a vertical label adds its height to row gaps. Labels on the same axis use the largest dimension; disable the option to use the configured gaps exactly. Labels may be strings (`\n` is a hard break) or TextBlock line arrays, both measured as complete blocks. Asymmetric margins reserve space symmetrically without shifting node centers. Grid does not rotate with flow direction or guarantee global collision avoidance for diagonal, orthogonal, or cross-node routes. The [TeX cache diagram](/kernel/packages/tex/mechanism#caching-failures-and-retries) demonstrates this layout.
+
+Linear defaults to `gap=48` for left and right, and `gap=32` for up and down. Fixed spacing comes from the local explicit value, an ancestor's explicit `nodeGap` (or Linear `gap`), then the Definition's physical-axis default. An ancestor's explicit `0` is inherited, while a materialized parent default is not treated as authored. Custom Layout Definitions supply finite nonnegative `defaults.placementGap: { horizontal, vertical }`, independently of the root and Group automatic-layout defaults `nodeGap=48` and `rankGap=48`.
+
+Set `excludeFromBounds` on a Layout when attached nodes should still draw but must not shift their primary node's alignment in an outer layout. In the example, Canvas and SVG share a column center, while PNG and JPEG remain vertically arranged in their own layout and connect to Canvas independently. Toggle exclusion of `formats` to see it remain arranged while the footprint reported by `canvas-output` to its parent changes.
+
+<ComponentPreview
+  files="flow-bounds"
+  size="md"
+  caption="The gray dashed frame encloses the footprint canvas-output reports to its parent. Toggle exclusion of formats: PNG and JPEG remain visible while the frame changes with the footprint."
+/>
+
+React `<FlowLayout excludeFromBounds={['formats']}>` and `{ excludeFromBounds: ['formats'] }` in Vanilla `layouts` express the same configuration; compare them in the preview source. Only direct child ids of this Layout are allowed. Omission or an empty array preserves existing behavior; duplicate ids, descendants, ids from another container, and excluding every child fail. The list is not inherited by nested layouts.
+
+Exclusion changes only the footprint and alignment basis reported to the parent. It does not hide nodes or make them absolutely positioned. Local order, gaps, margins, Grid tracks, and label reservation remain active. An attached item between two primary items can still change their distance; use a dedicated Layout as in the example to isolate that effect. The complete canvas still contains attached nodes and relations, and visible Groups still enclose all descendants. Exclusion does not provide obstacle avoidance. A Layout artifact's `bounds` describes its layout footprint, not its complete drawing extent or clip. Custom providers must forward the exclusion configuration and preserve every child and relative coordinate returned by `placeLayout`.
+
+### Visible group
+
+`FlowGroup` expresses a semantic boundary and directly reuses the presentation and context properties of [Graph Group](/schematic/graph/group). Its shell can contain both a title and a description, with additional labels on the boundary. Its `children` are laid out automatically. A Group can be a Relation endpoint and can set local routing.
+
+| Property                                                          | Values                                         | Purpose                                                    |
+| ----------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| `caption.title`                                                   | `{ text, ...text formatting }`                 | Group title; `text` accepts TextBlock                      |
+| `caption.description`                                             | `{ text, ...text formatting }`                 | Group description, also usable without a title             |
+| `caption.side`                                                    | `top`, `bottom`; default `top`                 | Places the caption above or below the content              |
+| `caption.direction`                                               | `horizontal`, `vertical`; default `horizontal` | Arranges the title and description                         |
+| `caption.itemGap` / `bodyGap`                                     | Nonnegative number; default `4`                | Space between text items and between caption and content   |
+| `labels`                                                          | Optional nonempty label array                  | Boundary labels with Graph positioning and text formatting |
+| `padding` / `background` / `border` / `cornerRadius` / `overflow` | Corresponding Graph Group properties           | Shell spacing, fill, border, corners, and content overflow |
+| `graphDefaults` / `graphRules`                                    | Graph defaults and rules                       | Default appearance for Graph descendants inside the Group  |
+| `layout.direction`                                                | `up`, `right`, `down`, `left`                  | Sets the automatic layout direction inside the Group       |
+| `layout.nodeGap`                                                  | Nonnegative number                             | Changes the gap between peers in one rank                  |
+| `layout.rankGap`                                                  | Nonnegative number                             | Changes the gap between adjacent ranks                     |
+
+The example puts Request, Validate, and Authorize inside Service entry. Request connects to both Validate and Authorize. This example uses `direction: "vertical"` to stack the title and description. Toggle the title, description, and boundary labels independently, then adjust the internal layout to see the shell follow its content.
+
+<ComponentPreview
+  files={['flow-group', 'flow-group.preview.tsx']}
+  defaultSourceFile="flow-group.preview.tsx"
+  size="md"
+  caption="Toggle the title, description, and boundary labels. Hiding all text keeps the visible Group shell and its three entities."
+/>
+
+Titles and descriptions contribute to Group size; boundary labels take no layout space. Other styling and context properties follow Graph Group. Flow Group does not support `transforms`, `placement`, or `localNamespace`.
+
+### Grouped placement
+
+Groups and Layouts can both contain children and nest each other. A Grid can align steps inside a Group while the Group itself keeps automatic layout. Their visible results and placement responsibilities differ.
+
+| Difference        | `FlowGroup`                                                               | `FlowLayout`                                                               |
+| ----------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Primary role      | Express a named, styled semantic group                                    | Place direct children in a fixed arrangement                               |
+| Visible result    | Materialize a Graph Group with a shell and optional title                 | Add no border, background, or title                                        |
+| Internal layout   | `layout` controls automatic direction, peer gap, and rank gap             | `kind="linear"` for one axis, or `kind="grid"` for shared rows and columns |
+| Relation endpoint | Allowed                                                                   | Not allowed; connect an Entity or Group inside it                          |
+| Source catalog    | Stored in `groups`; `children` preserves direct members and sibling order | Stored in `layouts`; `children` preserves fixed order                      |
+
+The combined example places a visible Group above a shell-free Layout; an outer Layout fixes their vertical order. A Relation from the Group shell to the queue demonstrates a Group endpoint. Change each container's controls to compare automatic layout with fixed placement.
+
+<ComponentPreview
+  files="flow-compound"
+  size="lg"
+  caption="Adjust the Group's automatic layout and the Layout's fixed placement separately. The camera stays fixed, and only the Group has a shell."
+/>
+
+React nesting is authoring convenience. The adapter normalizes Groups, Layouts, and Entities into flat catalogs, with each owner's `children` as the sole containment fact.
+
+## Appearance and defaults
+
+Flow, Graph, and Diagram appearance settings change visible styles without changing graph structure.
+
+### Defaults and themes
+
+`flowDefaults` supplies one shared default style for each Flow object category at the root. `entity.style` applies to every Entity, while `relation.style` applies to every Relation; neither setting changes Source ids, containment, node layout, or routing. Local `style` can still override a global value when needed, but this example shows global configuration only.
+
+<ComponentPreview
+  files="flow-theme"
+  size="md"
+  caption="Changing either section updates every object of that category, while the nodes, relations, and their relative positions remain unchanged."
+/>
+
+`theme: { style, mode }` selects the theme environment; `flowThemeStyles` / `diagramThemeStyles` inject matching Definitions. Flow-level `graphRules` set conditional appearance for materialized Entities and Relations. The same field on Group adds local rules for its descendants without changing routing or containment. Explicit `flowDefaults` and `diagramDefaults` use the same paths as formal Source. Entity and Relation `group` directly reuse Graph: equal groups in one Flow root share an automatic color taken from the head of the categorical palette, while ungrouped elements keep their existing appearance. Entity and Relation appearance precedence is Graph Theme, defaults and rules from the owning Graph context, `flowDefaults`, then instance fields.
+
+Flow defaults contain `layout.nodeGap/rankGap`, `entity.style/layout`, Group Surface appearance and caption arrangement and formatting, and Relation path, marker, and label formatting. Defaults for `caption.title` and `caption.description` apply only to authored text items and never create content. They exclude identity, children, automatic layout direction, routing, and overflow, and never create Groups or markers. Empty objects and undefined do not override values; 0 and false remain meaningful. Node fonts replace as a whole; Relation `labelFont` merges by field.
+
+## Related props
+
+These are the members used to combine the features on this page. See the [API reference](/schematic/diagram/flow/api-reference) and [Schema reference](/schematic/diagram/flow/schema-reference) for complete contracts.
+
+<ComponentProps
+  items={[
+    {
+      name: 'FlowGroup.caption',
+      kind: 'property',
+      type: '{ title?: IRGroupCaptionText; description?: IRGroupCaptionText; side?: "top" | "bottom"; direction?: "horizontal" | "vertical"; itemGap?: number; bodyGap?: number }',
+      description:
+        'Reuses the Graph Group caption. Each text item has required text: IRTextBlock and optional formatting. Provide title or description; omit caption to hide both.',
+    },
+    {
+      name: 'FlowGroup.labels',
+      kind: 'property',
+      type: 'Array<IRNodeLabel>',
+      description:
+        'Nonempty Graph Group boundary labels. Each item provides text: IRTextBlock and optional position and distance. Omit the array to hide labels; they do not increase Flow layout allocation.',
+    },
+    {
+      name: 'FlowGroup.layout',
+      kind: 'property',
+      type: '{ direction?: "up" | "right" | "down" | "left"; nodeGap?: number; rankGap?: number }',
+      description: 'Controls automatic direction, peer gap, and rank gap inside a visible Group.',
+    },
+    {
+      name: 'FlowLayout.kind',
+      kind: 'property',
+      type: '"linear" | "grid"',
+      required: true,
+      description:
+        'Selects one-dimensional placement or physical row and column alignment for direct children; neither Layout has a visible shell.',
+    },
+    {
+      name: 'FlowLayout.placements',
+      kind: 'property',
+      type: 'Array<Array<string | null>> | Record<string, { row: number; column: number }>',
+      description:
+        'Required for Grid. Matrix indices or zero-based row and column values place each direct child in exactly one cell.',
+    },
+    {
+      name: 'FlowLayout.excludeFromBounds',
+      kind: 'property',
+      type: 'Array<string>',
+      description:
+        'Names direct children of this Layout only. Excluded children still draw but do not enlarge the footprint reported to the parent.',
+    },
+    {
+      name: 'FlowDiagram.flowDefaults',
+      kind: 'property',
+      type: "InputFlowDiagram['flowDefaults']",
+      description:
+        'Sets sparse defaults; instance fields take precedence. This page uses:\n- `entity.style`: `{ color?: string; fillOpacity?: number; strokeWidth?: number }` to change every Entity’s color, fill opacity, and stroke width\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; strokeOpacity?: number }` to change every Relation’s stroke color, width, and opacity\nOther fragments include `layout` and `group`; see the Schema reference for all fields.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Schema reference',
+      description: 'Look up Group, Layout, Relation, and default fields',
+      url: '/schematic/diagram/flow/schema-reference',
+    },
+  ]}
+/>

@@ -75,7 +75,7 @@ describe('Flow defaults and formal Source fragments', () => {
             {
               kind: 'grid',
               id: 'grid',
-              rowGap: gap === undefined ? undefined : 0,
+              gap: gap === undefined ? undefined : { row: 0, column: gap },
               children: ['a', 'b'],
               placements: [['a', 'b']],
             },
@@ -91,7 +91,7 @@ describe('Flow defaults and formal Source fragments', () => {
       if (group.kind !== 'group') throw new Error('Expected Group');
       const grid = group.elements[0];
       if (grid.kind !== 'layout') throw new Error('Expected Grid');
-      expect(grid.placement).toMatchObject({ rowGap: gap === undefined ? 24 : 0, columnGap: gap ?? 60 });
+      expect(grid.placement).toMatchObject({ gap: { row: gap === undefined ? 24 : 0, column: gap ?? 60 } });
     },
   );
 
@@ -160,7 +160,7 @@ describe('Flow defaults and formal Source fragments', () => {
     if (outer.kind !== 'layout') throw new Error('Expected Layout');
     const grid = outer.elements[0];
     if (grid.kind !== 'layout') throw new Error('Expected Grid');
-    expect(grid.placement).toMatchObject({ rowGap: nodeGap ?? 32, columnGap: nodeGap ?? 48 });
+    expect(grid.placement).toMatchObject({ gap: { row: nodeGap ?? 32, column: nodeGap ?? 48 } });
   });
 
   it('keeps Flow private entities outside ancestor Graph defaults and rules', () => {

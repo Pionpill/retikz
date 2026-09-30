@@ -1,0 +1,123 @@
+---
+title: Basic usage
+description: Describe entities and relations in a minimal Flow Source to render an automatically arranged logic diagram.
+---
+
+Flow represents steps as entities and their connections as relations. Runtime layout computes positions. Start with the minimal result, then add groups, routing, or shared styles as needed.
+
+## Using this topic
+
+In React, declare a Flow with `FlowDiagram` and its children. In Vanilla, construct the Source with `flowDiagram()`. Existing JSON IR requires the Flow provider in its host. See [Diagram quick start](/schematic/diagram/get-start) for basic host setup.
+
+<ComponentPreview files="flow-minimal" size="sm" hideCode />
+
+## Basic layout
+
+A Flow Source contains the members below. React components declare them; the runtime computes positions and connection paths from entities, containers, and relations.
+
+| Element          | React member                    | Source member      | Purpose                                                                               |
+| ---------------- | ------------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
+| Flow diagram     | `FlowDiagram`                   | Entire Flow Source | Collects diagram elements and triggers automatic layout and connections               |
+| Entity           | `FlowEntity`, `FlowEntities`    | `entities`         | Represents a step or node, with optional text, role, and status                       |
+| Relation         | `FlowRelation`, `FlowRelations` | `relations`        | Declared at the Flow root; connects entity or group ids through `source` and `target` |
+| Semantic group   | `FlowGroup`                     | `groups`           | Draws a visible boundary around members and sets local layout and routing             |
+| Layout container | `FlowLayout`                    | `layouts`          | Fixes members in a linear or grid arrangement without drawing a frame                 |
+
+The form submission flow starts with user input, passes through a frontend form and backend service, then writes to the database. The frontend form `text` is a Core `TextBlock`: its main text accepts line breaks, while its subtitle is a separately styled text line. The panel also changes alignment, line height, and maximum width for the whole text block; these Entity-level `layout` fields neither apply to individual lines nor change the Flow layout. Optional Entity and Relation `status` values project directly to Graph: Graph Theme owns their appearance, while status does not change layout or routing.
+
+<ComponentPreview
+  files="flow-basic"
+  size="md"
+  caption="Edit the main text and subtitle to observe per-line styling and block-level typography; role changes the semantic shape, while status changes the Graph Theme appearance."
+/>
+
+## Connections and routing
+
+A Relation routing setting changes its path without defining a new layout.
+
+| `routing.kind` | Behavior                                      | Rounding                |
+| -------------- | --------------------------------------------- | ----------------------- |
+| `straight`     | Straight line; built-in default               | No `cornerRadius`       |
+| `orthogonal`   | Orthogonal polyline based on layout direction | Optional `cornerRadius` |
+| `-\|`          | Horizontal then vertical from source          | Optional `cornerRadius` |
+| `\|-`          | Vertical then horizontal from source          | Optional `cornerRadius` |
+
+Switch between four `routing.kind` values for fixed endpoints A and B to compare a straight line, an orthogonal path, and two single-elbow paths. `-|` goes horizontally then vertically; `|-` goes vertically then horizontally. Neither the primary layout direction nor arrow direction changes this order, and neither mode routes around other nodes. The preview's React and Vanilla source use the same `routing` configuration.
+
+<ComponentPreview
+  files={['flow-routing', 'flow-routing.preview.tsx']}
+  defaultSourceFile="flow-routing.preview.tsx"
+  size="sm"
+  caption="Switch routing modes for the same endpoints; adjust the corner radius for the non-straight paths."
+/>
+
+Aligned endpoints produce a straight line; coincident centers report a routing error. Set `cornerRadius: 0` for a sharp corner or a positive value for rounding. Parallel edges can overlap; adjust the layout when needed, rather than treating single-elbow routing as an obstacle-avoidance algorithm.
+
+Root and Group `routing` declare routing separately from layout; Relation `routing` takes precedence. Otherwise, routing follows the nearest common Group of the endpoints, then the root and layout Definition defaults. FlowLayout does not establish a routing layer: orthogonal routing on a Group remains effective inside its nested Layout even when the root uses straight routing.
+
+All three axis-aligned modes share radius inheritance: instance `cornerRadius`, then the ancestor's effective routing radius, then the Definition's `orthogonalCornerRadius`, which is `8` for the built-in layout. Changing `kind` preserves an inherited radius; explicit `0` disables rounding.
+
+## Related props
+
+This list contains the members used here to declare steps and connections. See the [API reference](/schematic/diagram/flow/api-reference) for complete types.
+
+<ComponentProps
+  items={[
+    {
+      name: 'FlowEntities.items',
+      kind: 'property',
+      type: 'ReadonlyArray<string | InputFlowEntity>',
+      required: true,
+      description:
+        'Declares entities in order. A string is both id and text; an object needs id and nonempty text and may set role, status, style, or layout.',
+    },
+    {
+      name: 'FlowEntities.complete',
+      kind: 'property',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: 'When true, this marker is the only complete Entity list for its current owner.',
+    },
+    {
+      name: 'FlowRelations.items',
+      kind: 'property',
+      type: 'ReadonlyArray<readonly [string, string] | InputFlowRelation>',
+      required: true,
+      description:
+        'Declares relations in order. A tuple supplies source and target; an object can add label, routing, role, or status.',
+    },
+    {
+      name: 'FlowRelations.complete',
+      kind: 'property',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: 'When true, the Flow root cannot contain another Relation marker.',
+    },
+    {
+      name: 'FlowEntity.layout',
+      kind: 'property',
+      type: 'InputFlowEntityLayout',
+      description:
+        'This page uses align, lineHeight, and maxTextWidth to format the whole text block without changing placement between Flow nodes.',
+    },
+    {
+      name: 'FlowRelation.routing',
+      kind: 'property',
+      type: '{ kind: "straight" } | { kind: "orthogonal" | "-|" | "|-"; cornerRadius?: number }',
+      description:
+        'A Relation override takes precedence. straight is a direct line; the other modes are axis aligned and can inherit a corner radius.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Combine structure and shared appearance',
+      url: '/schematic/diagram/flow/extended',
+    },
+  ]}
+/>

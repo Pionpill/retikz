@@ -27,7 +27,6 @@ export const extensionStatisticsControls = definePreviewControls({
   title: '统计扩展输入',
   sections: [
     {
-      label: '输入数据',
       controls: [
         {
           kind: 'table',

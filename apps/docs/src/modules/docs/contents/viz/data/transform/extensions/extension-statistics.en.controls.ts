@@ -27,7 +27,6 @@ export const extensionStatisticsControls = definePreviewControls({
   title: 'Statistics Extension Input',
   sections: [
     {
-      label: 'Input Data',
       controls: [
         {
           kind: 'table',

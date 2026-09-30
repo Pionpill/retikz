@@ -14,8 +14,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       title: text.title,
       sections: [
         {
-          label: text.data,
-          defaultCollapsed: true,
           controls: [
             {
               kind: 'table',

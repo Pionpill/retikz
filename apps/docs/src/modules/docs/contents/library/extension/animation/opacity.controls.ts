@@ -12,7 +12,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     title: label.title,
     sections: [
       {
-        label: label.section,
         controls: [
           {
             id: 'effect',

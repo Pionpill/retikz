@@ -10,7 +10,6 @@ export const ellipticCapsuleExampleControls = definePreviewControls({
   title: '半椭圆端胶囊形',
   sections: [
     {
-      label: '端部参数',
       controls: [
         {
           kind: 'select',

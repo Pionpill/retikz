@@ -1,6 +1,6 @@
 ---
 title: 图形模型
-description: 先理解为什么从 Chart 开始，再沿结构、编写、整图展示与 Plot 协作深入图形模型。
+description: 先理解为什么从 Chart 开始，再沿通用结构与核心结构深入图形模型。
 ---
 
 Plot 是底层图形语法：它描述数据如何通过图元、通道、比例尺、坐标和辅助元素被绘制，但也意味着使用者需要自己组合这些语法部件。如果目标是先表达一种完整图形，直接从 Plot 开始往往需要理解较多底层配置。
@@ -21,7 +21,7 @@ Chart 建立在 Plot 之上，解决的是“我想先使用一种图形类型�
 
 ## 解析原理
 
-<ComponentPreview files="chart-model-pipeline" hideCode size="xs" />
+<ComponentPreview files="chart-model-pipeline" hideCode type="flow" size="sm" />
 
 这张图可以先按“Source → recipe → Plot → Surface”来理解：
 
@@ -38,38 +38,26 @@ Chart 建立在 Plot 之上，解决的是“我想先使用一种图形类型�
 
 ## 职责一览
 
-| 主题         | 负责什么                                          | 何时查阅                             |
-| ------------ | ------------------------------------------------- | ------------------------------------ |
-| 结构与类型   | 解释 family、chartType、精确 schema 与字段 owner  | 读写 JSON、选择 schema 或找边界      |
-| 编写与解析   | 串起 React、Vanilla、parser、recipe 与 `resolve`  | 排查入口差异或理解 Source 主链       |
-| 整图展示     | 组织 title、subtitle、Plot、note 与 source        | 控制固定槽位、文本样式或布局         |
-| 与 Plot 协作 | 区分 Chart marks、独立 Plot fragment 与主题 owner | 添加 Plot 图元、guide 或 composition |
+| 主题     | 负责什么                                   | 何时查阅                            |
+| -------- | ------------------------------------------ | ----------------------------------- |
+| 通用结构 | Chart Source 的公共根字段与整图展示        | 读写 JSON、配置数据或控制布局与文本 |
+| 核心结构 | family、chartType、recipe 图元与 Plot 扩展 | 选择类型、组合图元或使用 Plot 扩展  |
 
-四个主题共享同一个边界：Chart 决定“这是什么图形、怎样形成完整整图”，Plot 决定“数据怎样通过图形语法被绘制”。类型目录和 `/point` 入口只组织源码与导入面，不新增运行时层级。
+两个主题共享同一个边界：Chart 决定“这是什么图形、怎样形成完整整图”，Plot 决定“数据怎样通过图形语法被绘制”。类型目录和 `/point` 入口只组织源码与导入面，不新增运行时层级。
 
 ## 章节内容
 
 <LinkedSections
   items={[
     {
-      title: '结构与类型',
-      description: '理解 family、chartType、精确 schema 与 mark。',
-      url: '/viz/chart/model/structure',
+      title: '通用结构',
+      description: '查阅 Chart Source 公共字段与 presentation 槽位。',
+      url: '/viz/chart/model/general-structure',
     },
     {
-      title: '编写与解析',
-      description: '理解 React、Vanilla 与 JSON 如何进入同一主链。',
-      url: '/viz/chart/model/authoring',
-    },
-    {
-      title: '整图展示',
-      description: '理解固定 presentation slots 与 Surface 布局。',
-      url: '/viz/chart/model/presentation',
-    },
-    {
-      title: '与 Plot 协作',
-      description: '理解 Chart marks、Plot fragment 与 Theme owner。',
-      url: '/viz/chart/model/plot',
+      title: '核心结构',
+      description: '理解 family、chartType、recipe 图元与 Plot 扩展。',
+      url: '/viz/chart/model/core-structure',
     },
   ]}
 />

@@ -90,11 +90,13 @@ Graph 提供“图中有什么、对象如何关联以及如何显式呈现”�
 Diagram -> Graph
 ```
 
-Diagram 用自己的高层 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用组织唯一 containment，并保存显式 relations、rank、flowDefaults、单项 style / layout、spacing 与 routing intent。resolve 校验引用与 owner 后重建递归 Canonical tree，再确定性生成 Graph semantic records。当前 Flow style 只投影 Entity / Relation / Group 已公开字段，不复制 Graph namespace、通用 NodeTarget、position、route、完整 lower-facing surface 或 Graph 特意屏蔽的 role-owned 结构。Group 始终下沉为可见 Graph Group并保留 endpoint identity；独立 Layout 复用 Layout Flex compiler 形成无外壳固定排列、artifact 与 inspection handle，不产生 Graph identity。Graph Block 及其 Section / Row endpoint 投影延期到 Block 契约稳定后的独立 Diagram 设计，当前 Flow 不预留字段或兼容入口。Entity / Group / Layout 保留 authored identity，Flow relation 由根 `relations` 集合和数组顺序确定，不重复保存 discriminator 或 id。Diagram resolve 确定 Graph 投影、Theme 生成片段到显式 defaults 再到实例配置的级联、布局默认、约束与 provider；Diagram layout 结合 Kernel 的 measurement / geometry capability 计算节点位置、分组边界、边线路径和标签位置，并按 element id 与 relation Source 顺序产出 renderer-neutral artifact
+Diagram 用自己的高层 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用组织唯一 containment，并保存显式 relations、rank、flowDefaults、单项 style / layout、spacing 与 routing intent。resolve 校验引用与 owner 后重建递归 Canonical tree，再确定性生成 Graph semantic records。当前 Flow Entity / Relation style 只投影已公开字段，不复制 Graph namespace、通用 NodeTarget、position、route、完整 lower-facing surface 或 Graph 特意屏蔽的 role-owned 结构。Group 始终下沉为可见 Graph Group并保留 endpoint identity；独立 Layout 复用 Layout Flex compiler 形成无外壳固定排列、artifact 与 inspection handle，不产生 Graph identity。Graph Block 及其 Section / Row endpoint 投影延期到 Block 契约稳定后的独立 Diagram 设计，当前 Flow 不预留字段或兼容入口。Entity / Group / Layout 保留 authored identity，Flow relation 由根 `relations` 集合和数组顺序确定，不重复保存 discriminator 或 id。Diagram resolve 确定 Graph 投影、Theme 生成片段到显式 defaults 再到实例配置的级联、布局默认、约束与 provider；Diagram layout 结合 Kernel 的 measurement / geometry capability 计算节点位置、分组边界、边线路径和标签位置，并按 element id 与 relation Source 顺序产出 renderer-neutral artifact
 
 Graph 不保存 Diagram Source、layout provider、算法内部状态、geometry result、endpoint 所属索引或来源标记。Diagram 的 Flow element 是一次窄高层投影，不重新定义 Graph role、Theme、Core identity / namespace 或 canonical lowering；当前也不投影尚未稳定的 Block family。它如何调度计算并把最终位置、路径或尺寸交付给 Graph 或其它下游，由 Diagram ADR 明确，不得把裁决协议反向加入 Graph
 
 `@retikz/diagram` 是实际的自动图示能力包，不是 Schematic 聚合入口。`flow`、`tree`、`layered`、`force` 等布局可以作为 Diagram kind、provider 或 preset；Gantt 等领域可以复用 Graph / Diagram 的适用能力，但仍拥有自己的领域 Data 与 Resolve。无领域算法只有经过真实复用验证后才下沉到 Layout、Math 或其它通用 owner
+
+Flow Group 的呈现与作者上下文直接复用 Graph Group；只替换 Flow 的 identity/children 并排除 transforms、placement、localNamespace，以保持自动布局和全局 endpoint 语义。其余 Scope、caption、labels、Surface 与 Graph defaults/rules 使用下层原生契约；Entity/Relation 仍按各自 Flow Source 投影。
 
 ## 7. Layout / Standard / Core 复用边界
 

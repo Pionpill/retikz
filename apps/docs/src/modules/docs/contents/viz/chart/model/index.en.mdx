@@ -1,6 +1,6 @@
 ---
 title: Chart Model
-description: Learn why Chart is the approachable starting point before tracing its structure, authoring, presentation, and Plot integration.
+description: Learn why Chart is the approachable starting point before tracing general and core structure.
 ---
 
 Plot is the lower-level graphics grammar: it describes how data is drawn through marks, channels, scales, coordinates, and guides, but it also means authors must assemble those pieces themselves. When the goal is to express a complete graphic first, starting directly with Plot requires more low-level configuration.
@@ -21,7 +21,7 @@ Chart therefore serves human authoring, JSON persistence, and LLM generation at 
 
 ## Resolution pipeline
 
-<ComponentPreview files="chart-model-pipeline" hideCode size="xs" />
+<ComponentPreview files="chart-model-pipeline" hideCode type="flow" size="sm" />
 
 Read the diagram as “Source → recipe → Plot → Surface”:
 
@@ -38,38 +38,26 @@ Read the diagram as “Source → recipe → Plot → Surface”:
 
 ## Responsibilities
 
-| Topic                  | Responsibility                                              | Read it when                                            |
-| ---------------------- | ----------------------------------------------------------- | ------------------------------------------------------- |
-| Structure & Types      | Explains families, chartTypes, exact schemas, and ownership | Reading JSON, selecting a schema, or finding boundaries |
-| Authoring & Resolution | Connects React, Vanilla, parser, recipes, and `resolve`     | Comparing entry points or tracing Source                |
-| Presentation           | Organizes title, subtitle, Plot, note, and source           | Controlling fixed slots, text style, or layout          |
-| Plot Integration       | Separates Chart marks, Plot fragments, and Theme owners     | Adding Plot marks, guides, or composition               |
+| Topic             | Responsibility                                              | Read it when                                        |
+| ----------------- | ----------------------------------------------------------- | --------------------------------------------------- |
+| General Structure | Shared Chart Source root fields and chart-wide presentation | Reading JSON or configuring data, layout, and text  |
+| Core Structure    | Families, chartTypes, recipe marks, and Plot extension      | Selecting types, composing marks, or extending Plot |
 
-All four topics share one boundary: Chart decides what graphic is being authored and how it becomes a complete chart, while Plot decides how data is drawn through the graphics grammar. Type folders and `/point` entries organize source and imports; they do not add another runtime layer.
+Both topics share one boundary: Chart decides what graphic is being authored and how it becomes a complete chart, while Plot decides how data is drawn through the graphics grammar. Type folders and `/point` entries organize source and imports; they do not add another runtime layer.
 
-## Pages
+## Contents
 
 <LinkedSections
   items={[
     {
-      title: 'Structure & Types',
-      description: 'Understand families, chartTypes, exact schemas, and marks.',
-      url: '/viz/chart/model/structure',
+      title: 'General Structure',
+      description: 'Review shared Chart Source fields and presentation slots.',
+      url: '/viz/chart/model/general-structure',
     },
     {
-      title: 'Authoring & Resolution',
-      description: 'See how React, Vanilla, and JSON enter one pipeline.',
-      url: '/viz/chart/model/authoring',
-    },
-    {
-      title: 'Presentation',
-      description: 'Understand fixed presentation slots and Surface layout.',
-      url: '/viz/chart/model/presentation',
-    },
-    {
-      title: 'Plot Integration',
-      description: 'Separate Chart marks, Plot fragments, and Theme owners.',
-      url: '/viz/chart/model/plot',
+      title: 'Core Structure',
+      description: 'Understand families, chartTypes, recipe marks, and Plot extension.',
+      url: '/viz/chart/model/core-structure',
     },
   ]}
 />

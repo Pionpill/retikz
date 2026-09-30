@@ -75,7 +75,7 @@ export const defineRelationRoleControlContract = <const TCopy extends RelationRo
   const controls = definePreviewControls({
     presentation: 'panel',
     title: copy.title,
-    sections: [{ label: copy.sectionLabel, controls: roleControls }],
+    sections: [{ controls: roleControls }],
   });
 
   return {

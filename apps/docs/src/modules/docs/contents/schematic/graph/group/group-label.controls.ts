@@ -29,7 +29,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     title: groupLabelI18n[lang].controls[8],
     sections: [
       {
-        label: groupLabelI18n[lang].controls[9],
         controls: [
           {
             kind: 'select',

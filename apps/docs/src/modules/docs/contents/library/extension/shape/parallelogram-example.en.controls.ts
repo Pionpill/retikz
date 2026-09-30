@@ -9,7 +9,6 @@ export const parallelogramExampleControls = definePreviewControls({
   title: 'Parallelogram',
   sections: [
     {
-      label: 'Slant parameters',
       controls: [
         {
           kind: 'select',

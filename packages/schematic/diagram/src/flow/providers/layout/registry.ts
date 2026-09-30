@@ -9,7 +9,15 @@ import { LayeredFlowLayoutDefinition } from './layered';
 
 /** Flow Layout registry 的运行时注入与默认选择 */
 export type FlowLayoutRegistryOptions = Readonly<{
+  /**
+   * 追加到内置布局目录的自定义定义；名称不能与不同定义重复
+   * @default []
+   */
   flowLayouts?: ReadonlyArray<FlowLayoutDefinition>;
+  /**
+   * 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局
+   * @default LayeredFlowLayoutDefinition.name
+   */
   defaultFlowLayout?: string;
 }>;
 
@@ -174,7 +182,12 @@ export const resolveFlowLayoutRegistry = (options: FlowLayoutRegistryOptions = {
   return { layouts, defaultLayout };
 };
 
-/** 从同一次真实 registry 投影稳定的 JSON-safe catalog */
+/**
+ * 从同一次真实 registry 投影稳定的 JSON-safe catalog
+ * @param options 自定义布局与默认布局选择；省略时列出内置布局并选择 layered
+ * @returns 按内置、自定义顺序排列的布局目录，标记当前默认项并省略布局回调
+ * @throws RetikzDiagramError 布局定义无效、名称冲突或默认布局未注册时抛出
+ */
 export const getFlowLayoutCatalog = (
   options: FlowLayoutRegistryOptions = {},
 ): ReadonlyArray<FlowLayoutCatalogEntry> => {

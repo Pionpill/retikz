@@ -12,7 +12,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     title: text.title,
     sections: [
       {
-        label: text.title,
         controls: [
           { kind: 'range', id: 'base', label: text.base, defaultValue: 10, min: 2, max: 28, step: 2 },
           { kind: 'range', id: 'peak', label: text.peak, defaultValue: 42, min: 12, max: 80, step: 2 },

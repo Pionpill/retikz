@@ -1,4 +1,4 @@
-import type { IRStripChartEncodings } from '@retikz/chart/point/strip';
+import type { IRStripChartEncodings } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** Strip 字段映射声明属性 */

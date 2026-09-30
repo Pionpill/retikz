@@ -1,4 +1,4 @@
-import type { IRConnectedScatterChartProperties } from '@retikz/chart/point/connected-scatter';
+import type { IRConnectedScatterChartProperties } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** ConnectedScatterProperties React 属性 */
