@@ -1,4 +1,4 @@
-import { createRegressionChartProviderContribution } from '@retikz/chart/point/regression';
+import { createRegressionChartProviderContribution } from '@retikz/chart/point';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';

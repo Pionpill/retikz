@@ -1,4 +1,4 @@
-import type { IRStripChart } from '@retikz/chart/point/strip';
+import type { IRStripChart } from '@retikz/chart/point';
 
 import { chartSourceOf } from '../shared';
 import type { InputStripChart } from './types';

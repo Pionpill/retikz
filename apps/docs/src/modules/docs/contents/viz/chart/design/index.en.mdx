@@ -1,0 +1,33 @@
+---
+title: Design Philosophy
+description: Learn why Chart wraps Plot by chart type and how its simplified data model preserves drawing capabilities.
+---
+
+Plot lets you compose marks, mappings, scales, and coordinates precisely. For a familiar chart, however, the same structure often has to be declared again. Chart packages those common combinations as concrete chart types, so you can say what to draw first and adjust the details when needed.
+
+## Start with a chart type
+
+Each chart type has its own required fields and default composition. Scatter needs horizontal and vertical position mappings; bubble also needs a size mapping. Chart fills in the Plot configuration needed for marks, scales, and guides according to the selected type. Plot still handles the actual data mappings and drawing. See [Chart encapsulation](/viz/chart/design/encapsulation) for this boundary.
+
+## Preserve author intent
+
+Chart Source stores the data, chart type, field mappings, and options the author explicitly chose, rather than a complete generated Plot. `recipe` describes the concrete chart; shared fields describe chart-wide data, dimensions, coordinates, and explanation. This keeps common charts concise while leaving Plot capabilities available when needed. See [Data model](/viz/chart/design/data-model) for the roles of these fields.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Chart encapsulation',
+      description: 'Understand how chart types share drawing responsibilities with Plot.',
+      url: '/viz/chart/design/encapsulation',
+    },
+    {
+      title: 'Data model',
+      description: 'See how shared fields and recipe simplify a chart declaration.',
+      url: '/viz/chart/design/data-model',
+    },
+  ]}
+/>
+
+For exact schemas, authoring entries, and resolution details, continue to the [Chart model](/viz/chart/model).

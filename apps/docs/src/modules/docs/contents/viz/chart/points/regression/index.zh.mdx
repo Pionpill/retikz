@@ -592,7 +592,7 @@ const chart = regressionChart({
 
 React 使用 `RegressionChart`，可通过 `recipe` 属性或专属子组件提供配置。Vanilla API 使用 `regressionChart`，直接提供 `encodings`、`properties`、`marks`；直接 IR 将这些配置放在 `recipe` 中，并设置 `recipe.chartType: 'regression'`。React 与 Vanilla API 会补齐图形类型。
 
-React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局、标题与指南配置见 [编写与解析](/viz/chart/model/authoring)。
+React 中，同一项配置不能同时通过根属性与子组件声明；不同配置项可以混用两种写法。公共数据、布局与标题配置见 [通用结构](/viz/chart/model/general-structure)。
 
 #### RegressionEncodings
 
@@ -750,7 +750,7 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
 <LinkedSections
   items={[
     { title: '散点图', description: '两个连续变量的分布与分类', url: '/viz/chart/points/scatter' },
-    { title: '编写与解析', description: '对照 React、Vanilla 与 Source IR', url: '/viz/chart/model/authoring' },
-    { title: '与 Plot 协作', description: '组合超出当前类型边界的能力', url: '/viz/chart/model/plot' },
+    { title: '通用结构', description: '查看公共数据、布局与展示字段', url: '/viz/chart/model/general-structure' },
+    { title: '核心结构', description: '了解 recipe 与 Plot 扩展', url: '/viz/chart/model/core-structure' },
   ]}
 />

@@ -1,0 +1,122 @@
+---
+title: 数据模型
+description: 认识 Chart Source 的公共字段与 recipe，理解简化配置如何生成 Plot 图形语法。
+---
+
+Plot 用图元、通道、比例尺、坐标和辅助元素精确描述数据怎样变成图形。Chart 面向已经选定的图形类型，把这套较严格的图形语法收敛成“公共配置 + 类型 recipe”：作者提供数据和少量与该类型相关的选项，recipe 再形成所需的 Plot 配置。
+
+## 一份 Source 的两个层次
+
+下面以散点图展示 Chart Source 的结构。默认的“主要配置”只保留常用字段；切换到“详细配置”可查看公共字段和 `recipe` 的更多层级。`?` 表示可选，`......` 表示还有其它字段，详细配置中行尾的 `#` 是阅读注释。具体类型可用的通道和属性仍由其精确 schema 限定。详细配置中的 `data.reference` 指向调用方提供的数据集，`x`、`y` 是该数据集中的字段名。这是结构示意，不是可直接复制的配置。
+
+<DocTabs defaultValue="primary">
+<DocTab value="primary" label="主要配置">
+
+```tree
+Chart Source
+├── namespace: 'chart'
+├── type: 'point'
+├── presentation?
+├── data
+├── layout?
+└── recipe
+    ├── chartType: 'scatter'
+    ├── encodings
+    └── properties?
+```
+
+</DocTab>
+<DocTab value="detailed" label="详细配置">
+
+```tree
+Chart Source
+├── namespace: 'chart'                     # 能力域
+├── type: 'point'
+├── id?
+├── background?
+├── presentation?
+│   ├── title?
+│   ├── subtitle?
+│   └── ......
+├── chartDefaults?
+├── data                                   # 共享数据入口
+│   ├── reference: 'rows'
+│   └── model?
+├── layout?
+│   ├── width?
+│   ├── height?
+│   └── ......
+├── coordinate?
+├── recipe                                 # 具体图形类型
+│   ├── chartType: 'scatter'
+│   ├── encodings
+│   │   ├── x: 'weight'
+│   │   ├── y: 'efficiency'
+│   │   └── ......
+│   ├── properties?
+│   │   ├── size?
+│   │   ├── opacity?
+│   │   └── ......
+│   ├── guides?
+│   │   ├── axis?
+│   │   ├── grid?
+│   │   └── legend?
+│   └── marks?
+└── plotExtension?                         # 可选 Plot 片段
+    ├── transform?
+    ├── scales?
+    └── ......
+```
+
+</DocTab>
+</DocTabs>
+
+`namespace: 'chart'` 声明这是 Chart Source；根 `type` 是 Retikz 的类型判别字段，在这里表示 `point` 等图形家族。两者帮助入口选择正确的契约。真正的图形类型由 `recipe.chartType` 指定，例如 `scatter`。可选 `id` 标识这张图；这些字段不承担绘图通道的角色。
+
+## 公共字段描述整张图
+
+`data` 指定图表使用的数据引用，也可携带数据模型；字段类型等数据语义属于 Data，不由每个图形类型重新定义。所有 recipe 都从这份数据出发，具体字段怎样进入图形由 `recipe.encodings` 决定。
+
+`layout` 管整张 Chart 的外部尺寸和区域间距。`width`、`height` 决定外部边界，`padding`、`gap` 调整已有展示区域与 Plot 内容之间的留白；它们不是 Plot 内部坐标域或图元位置。
+
+`coordinate` 可选择 Plot 的坐标配置。通常由图形类型提供适合它的默认坐标；需要改变坐标形式时，在根部显式指定兼容的坐标配置。字段到坐标轴的映射仍在 recipe 中，`coordinate` 本身不代替 `encodings`。
+
+`presentation` 提供 `title`、`subtitle`、`note`、`source` 四个快捷文本槽位。Chart 基于 Standard Surface 与 Layout，按标题、副标题、Plot、注记、来源的固定顺序组织已有内容；这些文本说明整张图，不是 Plot 的轴标签或数据标注。可选 `background` 指定整图背景；`chartDefaults` 提供 Chart 自身的背景、布局和文本默认值。
+
+## recipe 承担类型语义
+
+`recipe` 是简化模型的核心。`chartType` 选择具体类型，其余字段由该类型的精确 schema 约束；不同类型需要的字段和可用属性可以不同。
+
+| recipe 字段  | 职责                                      | 例子                                             |
+| ------------ | ----------------------------------------- | ------------------------------------------------ |
+| `encodings`  | 将数据字段绑定到该类型支持的通道          | 散点图的 `x`、`y`、`color`                       |
+| `properties` | 设置该类型的常量属性与专有选项            | 散点大小、透明度                                 |
+| `marks`      | 在类型允许的范围内组合多个 Chart 语义图元 | 在默认图元之外追加图元，或按 `kind` 覆盖默认图元 |
+
+`encodings` 回答“用哪个字段表达什么”；它可使用字段简写，复杂映射则沿用对应能力的精确契约。`properties` 回答“这个类型怎样呈现”，不把固定值冒充数据字段。两者先参与生成该类型的内建图元。
+
+`marks` 让一张图包含多个图元。图形类型会为每种允许的 Chart mark 指定可从 `recipe.encodings` 和 `recipe.properties` 继承哪些值：例如散点 mark 可以沿用 `x`、`y` 的字段映射和 `size` 的常量设置，mark 自己声明的值只调整它自身。对同一个视觉属性，优先级依次是 mark 的 `encodings`、mark 的 `properties`、继承的 `encodings`、继承的 `properties`；没有对应继承声明的字段不会自动传给 mark。
+
+`recipe.marks` 默认按顺序追加图元；设置 `override: true` 时，替换同 `kind` 的内建语义图元组。部分类型的一个语义图元组本身会生成多个 Plot 图元，因此这里的 `marks` 仍须遵守当前 `chartType` 的结构规则。
+
+## 最后才使用 Plot 扩展
+
+`plotExtension` 接受作者显式提供的 Plot 片段，用于快捷配置尚未覆盖的变换、比例尺、图元或辅助元素。它不保存 recipe 自动生成的 Plot，也不让 Chart 接管这些底层语法。Chart 的设计目标是让常见类型主要靠 `recipe` 与公共字段完成，使 `plotExtension` 尽可能少用；需要全面控制绘图语法时，可直接从 Plot 开始。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '图形封装',
+      description: '理解类型级 recipe 与 Plot 的职责分工。',
+      url: '/viz/chart/design/encapsulation',
+    },
+    {
+      title: '核心结构',
+      description: '查询精确 schema、字段 owner 与 marks 规则。',
+      url: '/viz/chart/model/core-structure',
+    },
+    { title: '通用结构', description: '查看 presentation 槽位与布局行为。', url: '/viz/chart/model/general-structure' },
+  ]}
+/>

@@ -1,55 +1,55 @@
-import { Draw, Layout, Node } from '@retikz/react';
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
-/** Chart 从 Source 经 recipe 进入 Plot 与 Surface */
-const Demo: FC = () => (
-  <Layout width={760} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node
-      id="authoring"
-      position={[-300, 0]}
-      cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
-    >
-      React / Vanilla
-    </Node>
-    <Node
-      id="source"
-      position={[-150, 0]}
-      cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
-    >
-      Exact Chart Source
-    </Node>
-    <Node
-      id="bound"
-      position={[0, 0]}
-      cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
-    >
-      Parse + recipe
-    </Node>
-    <Node
-      id="base"
-      position={[150, 0]}
-      cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
-    >
-      Chart marks
-    </Node>
-    <Node
-      id="output"
-      position={[305, 0]}
-      cornerRadius={4}
-      style={{ stroke: 'seagreen', fill: 'seagreen', fillOpacity: 0.08 }}
-    >
-      Plot + Surface
-    </Node>
+import type { Lang } from '@/i18n';
+import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
-    <Draw way={['authoring', 'source']} arrow="->" />
-    <Draw way={['source', 'bound']} arrow="->" />
-    <Draw way={['bound', 'base']} arrow="->" />
-    <Draw way={['base', 'output']} arrow="->" />
-  </Layout>
-);
+import { chartModelPipelineI18n } from './chart-model-pipeline.i18n';
+
+/** 图形模型解析主链的图示属性 */
+export type ChartModelPipelineProps = Readonly<{ lang?: Lang }>;
+
+/** 展示 Chart 从编写入口经 Source 和 recipe 进入 Plot 与 Surface 的主流程 */
+const Demo: FC<ChartModelPipelineProps> = props => {
+  const { lang = 'zh' } = props;
+  const i18n = chartModelPipelineI18n[lang];
+
+  return (
+    <PreviewFlowDiagram
+      {...logicFigureGraphProps()}
+      layout={{ direction: 'right' }}
+      style={{ maxWidth: '100%', height: 'auto' }}
+    >
+      <FlowLayout id="pipeline" kind="linear" direction="right" align="center">
+        <FlowLayout id="authoring" kind="linear" direction="down" align="center" itemWidth="match-largest">
+          <FlowEntities
+            items={[
+              { id: 'react', text: '@retikz/chart-react', role: 'participant' },
+              { id: 'vanilla', text: '@retikz/chart-vanilla', role: 'participant' },
+            ]}
+          />
+        </FlowLayout>
+        <FlowEntities
+          items={[
+            { id: 'source', text: i18n.source, role: 'resource', kind: LogicFigureEntityKind.ImportantData },
+            { id: 'resolve', text: i18n.resolve, role: 'activity', kind: LogicFigureEntityKind.Important },
+            { id: 'marks', text: i18n.marks, role: 'resource' },
+            { id: 'output', text: i18n.output, role: 'activity' },
+          ]}
+        />
+      </FlowLayout>
+      <FlowRelations
+        items={[
+          { source: 'react', target: 'source' },
+          { source: 'vanilla', target: 'source' },
+          { source: 'source', target: 'resolve' },
+          { source: 'resolve', target: 'marks' },
+          { source: 'marks', target: 'output' },
+        ]}
+      />
+    </PreviewFlowDiagram>
+  );
+};
 
 export default Demo;

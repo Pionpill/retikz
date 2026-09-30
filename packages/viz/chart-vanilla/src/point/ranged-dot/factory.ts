@@ -1,4 +1,4 @@
-import { createRangedDotChartProviderContribution } from '@retikz/chart/point/ranged-dot';
+import { createRangedDotChartProviderContribution } from '@retikz/chart/point';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';

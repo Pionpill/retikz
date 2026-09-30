@@ -1,6 +1,6 @@
-import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point/scatter';
-import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point/scatter';
-import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point';
+import { scatterChart, ScatterChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import type { IRScatterChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
 import { createTypedChartComponent, createTypedChartInput } from '../shared';

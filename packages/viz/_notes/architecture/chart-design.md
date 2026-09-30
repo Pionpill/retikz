@@ -328,7 +328,7 @@ src/
   relation/  Relation family 横向闭包
 ```
 
-依赖方向固定为 `point -> _chart`，具体 chartType provider 通过 `_chart/providers` 创建当前 family 的 contribution。`_chart/providers` 不导入具体 family；它只消费 provider contribution，在 Core 合并后建立临时 registry、schema union 与 composite Definition。`point` 等一级 family 只依赖 `_chart` 的 contract 与 schema factory，family 之间不得互相 deep import。应用层可按需导入具体 chartType subpath 并自行决定如何组合多个 provider，不由 Chart 建立全局组合根。
+依赖方向固定为 `point -> _chart`，具体 chartType provider 通过 `_chart/providers` 创建当前 family 的 contribution。`_chart/providers` 不导入具体 family；它只消费 provider contribution，在 Core 合并后建立临时 registry、schema union 与 composite Definition。`point` 等一级 family 只依赖 `_chart` 的 contract 与 schema factory，family 之间不得互相 deep import。应用层从 `@retikz/chart/point` 按名称导入具体 chartType 的精确 schema 与 provider contribution，并自行决定如何组合多个 provider；Chart 不建立全局组合根。
 
 每个具体 chartType 的 recipe、mark、schema、Theme fallback、scaffold、provider、tests 与 adapter typed sugar 应形成可单独理解的闭包。新增 family 正常只增加自己的一级目录与具体 chartType 入口、adapter / docs 入口和测试，不修改通用 Source resolve；新增 chartType 只在自己的目录内增加 Definition、schema 与 provider。
 

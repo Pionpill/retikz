@@ -1,6 +1,6 @@
-import type { RegressionChartInputEmbedProps } from '@retikz/chart-vanilla/point/regression';
-import { regressionChart, RegressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point/regression';
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
+import type { RegressionChartInputEmbedProps } from '@retikz/chart-vanilla/point';
+import { regressionChart, RegressionChartInputEmbedAdapter } from '@retikz/chart-vanilla/point';
+import type { IRRegressionChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
 import { createTypedChartComponent, createTypedChartInput } from '../shared';
