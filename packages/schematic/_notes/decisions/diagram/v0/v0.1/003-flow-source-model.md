@@ -38,16 +38,16 @@ Relation 只在根声明，以 source / target 引用任意层级的 Entity 或 
 
 ## Element 与 Relation 的语义投影
 
-| 记录     | 正式内容与配置                                                                                                        |
-| -------- | --------------------------------------------------------------------------------------------------------------------- |
-| Entity   | id、非空白 Core TextBlock text；可选 role、kind、status、颜色 group、rank、style、layout                              |
-| Group    | id、children、rank、自动 layout、routing；caption.title 与 Graph 同名 Surface 字段                                    |
-| Layout   | id、children、rank、必填 linear / grid kind；固定排列字段、excludeFromBounds、itemWidth                               |
-| Relation | source、target；可选 TextBlock label、role、kind、status、group、direction、Path style、marker / label 外观和 routing |
+| 记录     | 正式内容与配置                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Entity   | id、非空白 Core TextBlock text；可选 role、kind、status、颜色 group、rank、style、layout                                 |
+| Group    | id、children、rank、自动 layout、routing；复用 Graph Group 呈现与上下文，边界见 [014](./014-flow-group-graph-surface.md) |
+| Layout   | id、children、rank、必填 linear / grid kind；固定排列字段、excludeFromBounds、itemWidth                                  |
+| Relation | source、target；可选 TextBlock label、role、kind、status、group、direction、Path style、marker / label 外观和 routing    |
 
 Entity 缺省 role 为 Graph concept；Relation 缺省 role 为 Graph flow，direction 由选中的 Graph role / kind 决定。status 与颜色 group 直接复用 Graph 契约，既不改变 containment，也不决定 rank 或 routing。颜色 group 不等于可见 Group 包含关系。
 
-Entity.style 复用 Graph 允许的视觉字段与 font；Entity.layout 包含 align、lineHeight、maxTextWidth、width、minimumSize、margin。Group 使用 caption.title 和 padding/background/border/cornerRadius/overflow，不使用旧 label/style 总包。Relation.style 只保存 Path style，sourceMarker、targetMarker、labelTextForeground、labelFont、labelOpacity 位于 Relation 根；路由单独使用 routing。
+Entity.style 复用 Graph 允许的视觉字段与 font；Entity.layout 包含 align、lineHeight、maxTextWidth、width、minimumSize、margin。Group 按 [014](./014-flow-group-graph-surface.md) 复用 Graph Group 的完整 caption、labels、Surface 与适用 Scope 字段；其 style 是原生 Core Scope style。Relation.style 只保存 Path style，sourceMarker、targetMarker、labelTextForeground、labelFont、labelOpacity 位于 Relation 根；路由单独使用 routing。
 
 Flow 不允许 Entity position、shape、padding、boundary、任意 Core children，或 Relation NodeTarget、anchor、offset、手写 route、marker recipe。角色结构、文字测量和绘制仍由 Graph / Core 决定。Graph Block 尚不进入 Flow catalog。
 

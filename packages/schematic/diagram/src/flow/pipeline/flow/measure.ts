@@ -25,7 +25,7 @@ const measureEntity = (
 ): FlowLayoutElementInput => {
   const child = { ...graph, position: [0, 0] as const };
   const probe = requiredLayoutProbe(context, { child, occurrence: 0 }, intrinsicLayoutProposal('natural'));
-  const margin = resolveBoxSpacing(element.layout.margin, 0);
+  const margin = resolveBoxSpacing(graph.layout?.margin, 0);
   state.elementMeasurements.set(element.id, { element, graph, probe, margin });
   return {
     kind: 'leaf',

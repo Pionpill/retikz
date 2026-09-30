@@ -4,6 +4,7 @@ import { writeBlockApiReferenceMdx } from './api-reference/block';
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
 import { writeExtensionAnimationApiReference } from './api-reference/extension-animation';
+import { writeFlowApiReferenceMdx } from './api-reference/flow';
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
 import { writeGroupApiReferenceMdx } from './api-reference/group';
 import { writeInspectApiReferenceMdx } from './api-reference/inspect';
@@ -77,4 +78,7 @@ await writeScopeApiReferenceMdx(
 await writeLayoutComponentApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/layout'));
 await writeRelationApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/relation/api-reference/_includes'),
+);
+await writeFlowApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/schematic/diagram/flow/api-reference/_includes'),
 );

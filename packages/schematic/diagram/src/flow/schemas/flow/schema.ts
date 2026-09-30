@@ -112,20 +112,6 @@ export const FlowEntityLayoutSchema = FlowEntityLayoutFieldsSchema.refine(
   requireOverrides('Flow Entity layout'),
 ).describe('Non-empty size, collision-margin, and text-layout overrides for one Flow Entity.');
 
-export const FlowGroupCaptionTitleSchema = strictObject({
-  text: NonBlankStringSchema.describe('Non-empty Group caption title text.'),
-  align: GroupCaptionTextSchema.shape.align,
-  lineHeight: GroupCaptionTextSchema.shape.lineHeight,
-  maxTextWidth: GroupCaptionTextSchema.shape.maxTextWidth,
-  textColor: GroupCaptionTextSchema.shape.textColor,
-  font: GroupCaptionTextSchema.shape.font,
-  opacity: GroupCaptionTextSchema.shape.opacity,
-}).describe('Flow Group caption title with optional Graph-compatible text formatting.');
-
-export const FlowGroupCaptionSchema = strictObject({
-  title: FlowGroupCaptionTitleSchema,
-}).describe('Flow Group caption containing a visible title.');
-
 export const FlowRelationStyleSchema = strictObject({
   ...RelationSchema.shape.style.unwrap().shape,
 })
@@ -141,12 +127,17 @@ export const FlowDefaultsEntitySchema = strictObject({
   layout: FlowEntityLayoutFieldsSchema.optional().describe('Sparse Flow Entity layout defaults.'),
 }).describe('Sparse Flow Entity defaults using the formal Flow Entity style and layout paths.');
 
-export const FlowDefaultsGroupCaptionTitleSchema = FlowGroupCaptionTitleSchema.omit({ text: true }).describe(
-  'Sparse Flow Group caption title defaults without content.',
+export const FlowDefaultsGroupCaptionTextSchema = GroupCaptionTextSchema.omit({ text: true }).describe(
+  'Sparse Graph Group caption text formatting defaults without content.',
 );
 
 export const FlowDefaultsGroupCaptionSchema = strictObject({
-  title: FlowDefaultsGroupCaptionTitleSchema.optional().describe('Optional Group caption title defaults.'),
+  side: GroupSchema.shape.caption.unwrap().shape.side,
+  direction: GroupSchema.shape.caption.unwrap().shape.direction,
+  itemGap: GroupSchema.shape.caption.unwrap().shape.itemGap,
+  bodyGap: GroupSchema.shape.caption.unwrap().shape.bodyGap,
+  title: FlowDefaultsGroupCaptionTextSchema.optional().describe('Optional Group caption title defaults.'),
+  description: FlowDefaultsGroupCaptionTextSchema.optional().describe('Optional Group caption description defaults.'),
 }).describe('Sparse Flow Group caption defaults without content.');
 
 export const FlowDefaultsGroupSchema = strictObject({
@@ -154,7 +145,7 @@ export const FlowDefaultsGroupSchema = strictObject({
   background: GroupSchema.shape.background.describe('Default Group Surface background.'),
   border: GroupSchema.shape.border.describe('Default Group Surface border.'),
   cornerRadius: GroupSchema.shape.cornerRadius.describe('Default Group Surface corner radius.'),
-  caption: FlowDefaultsGroupCaptionSchema.optional().describe('Optional Group caption title defaults.'),
+  caption: FlowDefaultsGroupCaptionSchema.optional().describe('Optional Group caption arrangement and text defaults.'),
 }).describe('Sparse Flow Group defaults without overflow or layout strategy.');
 
 export const FlowDefaultsRelationSchema = strictObject({
@@ -198,18 +189,22 @@ export const FlowEntitySchema = strictObject({
 }).describe('LLM-friendly Flow Entity projected to one Graph Entity.');
 
 export const FlowGroupSchema = strictObject({
-  id: NonBlankStringSchema.describe('Flow-wide authored Group identity.'),
+  ...GroupSchema.omit({
+    namespace: true,
+    type: true,
+    children: true,
+    transforms: true,
+    placement: true,
+    localNamespace: true,
+  }).shape,
+  id: GroupSchema.shape.id.unwrap().describe('Flow-wide authored Group identity.'),
   rank: NonNegativeIntegerSchema.optional().describe('Optional rank constraint within the nearest Flow scope.'),
   layout: FlowLayoutIntentSchema.optional().describe('Layout overrides for this Group contents.'),
   routing: FlowRoutingSchema.optional().describe('Routing default for Relations in this Group scope.'),
-  caption: FlowGroupCaptionSchema.optional().describe('Optional Group caption title.'),
-  padding: GroupSchema.shape.padding.describe('Group Surface padding override.'),
-  background: GroupSchema.shape.background.describe('Group Surface background override.'),
-  border: GroupSchema.shape.border.describe('Group Surface border override.'),
-  cornerRadius: GroupSchema.shape.cornerRadius.describe('Group Surface corner radius override.'),
-  overflow: GroupSchema.shape.overflow.describe('Group content overflow policy.'),
   children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
-}).describe('Visible Flow Group projected to one Graph Group shell.');
+}).describe(
+  'Graph Group surface with Flow identity, reference children and automatic layout; excludes transforms, placement and localNamespace.',
+);
 
 const FlowLayoutBaseSchema = strictObject({
   id: NonBlankStringSchema.describe('Flow-wide authored Layout identity.'),
@@ -257,8 +252,16 @@ const FlowGridPlacementsSchema = FlowGridPlacementMatrixSchema.or(
 const FlowGridLayoutSchema = strictObject({
   kind: literal(FlowPlacementKind.Grid).describe('Shared row and column placement discriminator.'),
   ...FlowLayoutBaseSchema.shape,
-  rowGap: NonNegativeNumberSchema.optional().describe('Minimum row track gap. Omission uses inherited nodeGap.'),
-  columnGap: NonNegativeNumberSchema.optional().describe('Minimum column track gap. Omission uses inherited nodeGap.'),
+  gap: NonNegativeNumberSchema.or(
+    strictObject({
+      row: NonNegativeNumberSchema.describe('Minimum row track gap.'),
+      column: NonNegativeNumberSchema.describe('Minimum column track gap.'),
+    }),
+  )
+    .optional()
+    .describe(
+      'Grid track gaps. A number applies to both axes; omission uses inherited nodeGap or physical-axis defaults.',
+    ),
   reserveLabelSpace: zodBoolean()
     .optional()
     .describe('Whether measured relation labels expand their matching Grid track gap. Omission enables reservation.'),

@@ -18,8 +18,7 @@ export const InspectSelectionTree: FC<InspectSelectionTreeProps> = props => {
       <FlowLayout
         kind="grid"
         id="tree"
-        rowGap={40}
-        columnGap={24}
+        gap={{ row: 40, column: 24 }}
         placements={[
           [null, 'scene', null],
           ['inherit', 'disable', 'barrier'],

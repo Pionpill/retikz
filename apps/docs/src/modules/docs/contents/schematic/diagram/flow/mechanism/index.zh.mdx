@@ -1,0 +1,146 @@
+---
+title: 实现原理
+description: 追踪一次 Flow Source 从语义解析、测量、布局到 Scene 和 artifact 的转换。
+---
+
+本页以已读[基础用法](/schematic/diagram/flow/usage)为前提，追踪一次 Flow 编译。输入是一份可序列化的 Source 和当前宿主的 Definition / Theme；输出是可渲染的 Diagram Scene、`FlowDiagramArtifact` 与空间句柄。任一阶段失败会终止这次编译，不交付部分几何。
+
+## 整体流程
+
+| 阶段       | 输入                                        | 交给下一阶段的结果                                 |
+| ---------- | ------------------------------------------- | -------------------------------------------------- |
+| 解析       | Source、Definition、Theme                   | 有效的 Entity、Group、Layout 和 Relation 语义      |
+| 测量       | 已解析语义、Graph 外观                      | 元素尺寸、作用域、关系标签尺寸和 `FlowLayoutInput` |
+| 布局与校验 | `FlowLayoutInput`、选中的 Layout Definition | 已验证且脱离回调对象的 bounds 与 route             |
+| 物化与装配 | 同一份已验证几何                            | Graph 图元与 `FlowDiagramArtifact`                 |
+
+Source 中只有声明和引用；测量产生布局输入，Definition 返回的几何经校验后才进入物化和结果装配。下图展示这条主线，后续各节沿同一组“接收 → 校验”元素说明数据如何变化。
+
+<ComponentPreview files="flow-stages" hideCode type="flow" size="xs" />
+
+<ComponentAlert
+  type="tip"
+  title="阅读范围"
+  description={
+    <>
+      本文仅阐述 Flow 自身的处理逻辑，复用的布局、Group 等能力不再展开。布局计算见{' '}
+      <a href="/library/layout/flex-layout/mechanism">FlexLayout</a> 与{' '}
+      <a href="/library/layout/grid-layout/mechanism">GridLayout</a> 的实现原理，分组语义见{' '}
+      <a href="/schematic/graph/group">Group 文档</a>。
+    </>
+  }
+/>
+
+## 语义解析建立唯一包含关系
+
+Flow 的输入是声明式的：描述图中有哪些内容、内容之间如何连接、哪些元素属于同一容器，以及希望如何布局即可。下面把“接收 → 校验”两个实体放进线性 Layout，再由一个可见 Group 包含它。代码树展示 Source 的字段与条目；其中的 `children` 保存 id 引用，不是嵌套的实体对象。
+
+```text
+Flow Source
+├── namespace: "diagram", type: "flow"
+├── entities
+│   ├── { id: "receive", text: "接收", role: "activity" }
+│   └── { id: "verify", text: "校验", role: "activity" }
+├── groups
+│   └── { id: "pipeline", children: ["steps"] }
+├── layouts
+│   └── { id: "steps", kind: "linear", direction: "right",
+│         children: ["receive", "verify"] }
+├── children: ["pipeline"]
+└── relations
+    └── { source: "receive", target: "verify" }
+```
+
+这几个字段各有明确职责：
+
+- `entities`：实体目录，声明文字、角色等内容；每个实体只需声明一次。
+- `groups`：可见分组目录；每项通过 `children` 引用直接成员，可设置外框、说明与局部自动布局。
+- `layouts`：固定排布目录；每项通过 `children` 引用直接成员，`kind` 等配置指定线性或网格排列。
+- 根 `children`：图的直接成员与同级顺序。目录中的声明顺序不替代包含关系。
+- `relations`：根级关系目录，通过 `source`、`target` 引用实体或 Group，不决定谁包含谁。
+
+这种分工有两个目的：
+
+1. 人工和 LLM 都围绕内容、关系、包含与布局声明输入，职责明确，不必手算坐标或编写绘制步骤。
+2. 将声明与解析逻辑隔离。作者仍需用 id 表达包含关系，但不必构造内部嵌套树或重复嵌入实体对象；查找引用、校验结构和建立递归对象树由实现负责。React 的组件嵌套也会先归一为这份平级 Source。
+
+解析器先按 id 登记三类目录，再检查 `children` 引用是否存在、每项是否恰好有一个父级，以及是否有自包含、包含循环或未被包含的条目。校验通过后，从根 `children` 开始递归查找成员，把 id 引用转换为内部 `elements` 数组：`pipeline` 包含 `steps`，`steps` 包含两个 Entity。关系端点单独校验，关系仍保存在根级有序列表中；Graph Definition 与 Theme 同时确定后续测量所需的语义与外观。
+
+下图对照同一份输入的包含字段、解析后的嵌套结构与最终图形。前两块是字段摘录，Source 中的键表示字段路径，省略文字、样式等不影响包含关系的字段；数组中的记录仍表示同一批元素。
+
+<ComponentPreview files="flow-source-tree" hideCode type="illustration" size="xxxl" />
+
+嵌套树建立后还没有最终坐标。接下来的测量与布局将为这棵树确定尺寸、位置与关系路径，再转为可绘制的 Graph。
+
+<SourceLinks
+  sources={[
+    { label: 'Flow Source 结构', path: 'packages/schematic/diagram/src/flow/schemas/flow/schema.ts' },
+    { label: 'Flow Source 解析', path: 'packages/schematic/diagram/src/flow/resolve/flow/resolve.ts' },
+    { label: '内部嵌套结构', path: 'packages/schematic/diagram/src/flow/resolve/flow/types.ts' },
+    { label: '嵌套结构物化', path: 'packages/schematic/diagram/src/flow/pipeline/flow/materialize.ts' },
+  ]}
+/>
+
+## 测量把图元变为布局输入
+
+Flow 会先测出布局需要的信息：每个图元有多大、周围要留多少空隙、分组内部要留多少空间，以及连线上的文字会占多少空间，再把这些信息和布局、连线配置一起交给布局阶段。
+
+这些信息保存在 `FlowLayoutInput` 中。布局阶段拿到后，只需安排图元的位置和连线的走向，不用再测一遍。例如“校验”的文字变长时，Flow 会先算出它需要的宽度，布局时就能给它留出足够的空间。
+
+下面的示意图展示了图元大小、分组内边距和连线文字的测量结果，以及这些信息如何成为布局输入。
+
+<ComponentPreview files="flow-measurement" hideCode type="illustration" size="xl" />
+
+此时输入中有 `size`，还没有最终位置；图中位置仅用于展示测量对象。Group 的内边距与 Relation 的 `labelSize` 也参与后续布局；图中仅展开一个 leaf，省略其它输入字段。
+
+<SourceLinks
+  sources={[{ label: '元素与标签测量', path: 'packages/schematic/diagram/src/flow/pipeline/flow/measure.ts' }]}
+/>
+
+## 布局确定位置和连线
+
+布局阶段拿到前面测好的信息后，由布局回调安排每个图元的位置，并决定连线怎么走。它返回每个图元的位置和大小（`bounds`），以及组成连线的一串点。如果连线上有文字，还可以为文字预留空间。
+
+对于输入中指定的固定 Layout，回调先通过 `context.placeLayout` 算出内部排列，再把它放进整张图。每个固定 Layout 只计算一次，整体移动时保留内部图元的相对位置。
+
+Flow 会检查布局结果是否完整、实体的大小是否与测量结果一致、分组能否容纳内容，以及图元、连线和文字之间是否出现不允许的重叠。检查通过后，才会用这些位置和连线继续绘图。
+
+下面的示意图展示了一个固定排列如何放进整张图：两个图元一起移动，大小和间距保持不变。
+
+<ComponentPreview files="flow-layout-geometry" hideCode type="illustration" size="xl" />
+
+图中的点线标出 Layout 的范围；Layout 只负责排列，不会绘制外框。连线由布局回调另外安排。
+
+<SourceLinks
+  sources={[
+    { label: '固定排列计算', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-placement.ts' },
+    { label: '回调输出校验', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-output.ts' },
+  ]}
+/>
+
+## 按布局绘图并保存结果
+
+位置和连线确定后，Flow 会把它们交给 Graph 来生成图形：实体绘制成节点，Group 绘制成分组，Layout 用 Scope 保留排列和层级。连线也按布局结果绘制，原来的包含关系保持不变。
+
+同时，Flow 会把图元的位置、大小和连线上的点保存在 `FlowDiagramArtifact` 中，供调用方查询。这个结果记录布局信息，文字和样式仍来自输入声明。
+
+下面的示意图展示了同一份布局结果的两种用途：交给 Graph 绘图，保存到 artifact 中供查询。
+
+<ComponentPreview files="flow-materialization" hideCode type="illustration" size="xl" />
+
+图中以“接收”为例，把记录的位置、大小和绘制出的节点放在一起，方便对照。
+
+<SourceLinks
+  sources={[
+    { label: 'Graph 图元生成', path: 'packages/schematic/diagram/src/flow/pipeline/flow/materialize.ts' },
+    { label: 'Artifact 生成', path: 'packages/schematic/diagram/src/flow/pipeline/flow/artifact.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'API 参考', description: '查看布局输入、输出和结果的类型', url: '/schematic/diagram/flow/api-reference' },
+  ]}
+/>

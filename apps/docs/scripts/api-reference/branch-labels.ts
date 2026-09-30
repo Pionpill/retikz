@@ -12,6 +12,10 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/diagram-react#FlowLayoutProps': [
+    { value: 'linear', field: 'kind', type: '"linear"', label: { zh: '线性排列', en: 'Linear placement' } },
+    { value: 'grid', field: 'kind', type: '"grid"', label: { zh: '网格排列', en: 'Grid placement' } },
+  ],
   '@retikz/layout-react#FlexLayoutItemProps': [
     { value: 'jsx', field: 'ir', type: 'never', label: { zh: 'JSX 子元素', en: 'JSX child' } },
     { value: 'ir', field: 'children', type: 'never', label: { zh: 'IR 子图形', en: 'IR child' } },
