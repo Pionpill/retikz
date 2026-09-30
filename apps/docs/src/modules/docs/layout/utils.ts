@@ -1,7 +1,14 @@
 import type { TFunction } from 'i18next';
-import type { LucideIcon } from 'lucide-react';
-import { ChartScatter } from 'lucide-react';
+import type { ComponentType } from 'react';
 
+import {
+  BubbleChartIcon,
+  ConnectedScatterChartIcon,
+  RangedDotChartIcon,
+  RegressionChartIcon,
+  ScatterChartIcon,
+  StripChartIcon,
+} from '@/components/icons/chart';
 import type { DocNavigationAreaId, DocSidebarIcon, Page, Section, SubPage } from '@/modules/docs/data';
 
 import type { SidebarCategoryData, SidebarModuleData, SidebarSubModuleData } from './sidebar';
@@ -16,9 +23,14 @@ const SCHEMATIC_CHANGELOG_SECTIONS = new Set(['graph', 'diagram']);
 /** Library 内拥有独立更新日志的分区 */
 const LIBRARY_CHANGELOG_SECTIONS = new Set(['standard', 'extension', 'layout']);
 
-/** 文档数据中的稳定图标 id 到 Lucide 组件的唯一映射 */
-const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, LucideIcon> = {
-  'chart-scatter': ChartScatter,
+/** 文档数据中的稳定图标 id 到图标组件的唯一映射 */
+const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, ComponentType<{ className?: string }>> = {
+  'chart-scatter': ScatterChartIcon,
+  'chart-bubble': BubbleChartIcon,
+  'chart-regression': RegressionChartIcon,
+  'chart-connected-scatter': ConnectedScatterChartIcon,
+  'chart-ranged-dot': RangedDotChartIcon,
+  'chart-strip': StripChartIcon,
 };
 
 /** 是否为数据驱动渲染的 changelog 页面 */
@@ -119,6 +131,7 @@ const mapSidebarChildren = (t: TFunction, children?: Array<SubPage>): Array<Side
   children?.map(child => ({
     value: child.id,
     label: t(child.label),
+    ...(child.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[child.icon] }),
     ...(child.difficulty === undefined ? {} : { difficulty: child.difficulty }),
     children: mapSidebarChildren(t, child.children),
   }));

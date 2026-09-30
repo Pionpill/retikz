@@ -1,0 +1,162 @@
+---
+title: General Structure
+description: Start with the Chart root structure, then explore data, presentation, layout, style, and coordinates.
+---
+
+The root fields of Chart Source describe the complete graphic. They identify its family and configure data, presentation, layout, style, and coordinates. A `recipe` selects the concrete chart type.
+
+## Chart root structure
+
+This Point-family Scatter Source preserves authored input. Plot marks, scales, and guides generated during resolution are not written back into it.
+
+```ts
+{
+  namespace: 'chart',
+  type: 'point',
+  id: 'weight-efficiency',
+  data: { reference: 'rows' },
+  layout: { width: 640, height: 360 },
+  recipe: {
+    chartType: 'scatter',
+    encodings: { x: 'weight', y: 'efficiency' },
+  },
+}
+```
+
+| Root field  | Purpose                                                                          |
+| ----------- | -------------------------------------------------------------------------------- |
+| `namespace` | Fixed `chart` discriminator for the Chart capability                             |
+| `type`      | Family such as `point`; selects an exact schema together with `recipe.chartType` |
+| `id`        | Optional identity for this Chart within larger drawing content                   |
+
+The remaining root fields group by responsibility: `data`, `presentation`, `layout`, `background`, `chartDefaults`, and `coordinate`. See [Core Structure](/viz/chart/model/core-structure) for the type-specific `recipe` and lower-level `plotExtension`.
+
+## Data entry
+
+Every chart type reads fields from the shared dataset referenced by `data`. The data values stay outside Source.
+
+| Field          | Subfield    | Purpose                                                  |
+| -------------- | ----------- | -------------------------------------------------------- |
+| `data`         | `reference` | Required; refer to a dataset supplied by the caller      |
+|                | `model`     | Optional; declare the dataset's field model              |
+| `data.model[]` | `name`      | Required; identify a field name or nested field path     |
+|                | `type`      | Optional; declare the field type, or infer it from data  |
+|                | `format`    | Optional; specify how field values are parsed            |
+|                | `order`     | Optional; set category order, or use order of appearance |
+
+`data.model` declares the logical fields and types consumed by Chart. At runtime, `fieldMap` maps those logical fields to raw dataset fields. The two datasets below use `x/y` and `a/b`, yet both provide continuous `x/y` to the same Chart.
+
+<ComponentPreview files="chart-data-model-bridge" size="lg" hideCode type="illustration" />
+
+In each middle map, the left column is the logical field declared by `model`; the right column shows the raw field selected by `fieldMap` and the type or format declared by `model`. Dataset B stores `b` as the string `"5"`; the `numberString` format parses it into a continuous number. When switching datasets, replace the data binding and its `fieldMap`; `recipe.encodings` still consumes `x/y`. For details, see the [Data module's Data Model](/viz/data/model) and [Data Intake](/viz/data/model/intake).
+
+## Chart presentation
+
+Root `presentation` uses four slots to describe the whole Chart, separate from Plot axes, legends, and data annotations.
+
+| Subfield   | Purpose                                               |
+| ---------- | ----------------------------------------------------- |
+| `title`    | Optional; chart subject or main conclusion            |
+| `subtitle` | Optional; scope, time, sample, or unit                |
+| `note`     | Optional; reading constraints or methodology          |
+| `source`   | Optional; data provenance and processing that matters |
+
+Each supplied slot requires `text` and may also set `style` and `layout`.
+
+### Fixed slots and order
+
+React uses `ChartTitle`, `ChartSubtitle`, `ChartNote`, and `ChartSource` for the slots; Vanilla and JSON write `presentation` directly. React markers must be direct Chart children, may use `Fragment` groups, and cannot be duplicated; declaration order does not change the fixed layout. Resolution orders the supplied items as `title → subtitle → plot → note → source`, omitting slots that were not supplied. Use the switches below to compare slot visibility and enable Inspect to observe the layout.
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['chart-presentation-layout', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  size="xl"
+  caption="The presentation switches determine which slots exist; the Flex overlay only reads this compile result and can be turned off to see the final content alone."
+/>
+
+### Authoring and resolution
+
+Authoring exposes only the four slot values; it does not need a separate `position` field. Resolution inserts the Plot placeholder at its fixed position and produces the Surface / Flex content in canonical order.
+
+<ComponentPreview files="chart-presentation-resolution" size="md" hideCode type="illustration" />
+
+The left side excerpts each slot's `text` from Source and deliberately scrambles the declaration order. The right side shows the resolved Flex items in `Surface.child`. Chart inserts the Plot placeholder; it is not part of Source `presentation`.
+
+For now, Chart presentation slots support text only.
+
+During resolution, Chart uses a Standard `Surface` as the chart-wide container and Flex ordering for presentation text and the single Plot placeholder. Chart theme tokens style the slots, while Plot continues to own its own axes, legends, and annotations.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Normalize the four presentation slots',
+      path: 'packages/viz/chart-vanilla/src/normalize/chart/presentation.ts',
+      startLine: 5,
+      endLine: 24,
+    },
+    {
+      label: 'Normalize React markers into slots',
+      path: 'packages/viz/chart-react/src/shared/presentation.ts',
+      startLine: 8,
+      endLine: 126,
+    },
+    {
+      label: 'Resolve fixed order into Flex content',
+      path: 'packages/viz/chart/src/_chart/resolve/presentation.ts',
+      startLine: 63,
+      endLine: 128,
+    },
+  ]}
+/>
+
+## Layout and style
+
+`layout` allocates the outer Chart Surface, not the internal Plot area. Without authored dimensions, Cartesian coordinates default to `800 × 500` and Polar coordinates to `400 × 500`; authored width and height override those defaults separately. Titles and notes take their own space, while the Plot fills the area left after these regions, padding, and gaps.
+
+| Field           | Subfield       | Purpose                                                       |
+| --------------- | -------------- | ------------------------------------------------------------- |
+| `layout`        | `width`        | Optional; outer width of the Chart Surface                    |
+|                 | `height`       | Optional; outer height of the Chart Surface                   |
+|                 | `padding`      | Optional; padding around presentation and Plot content        |
+|                 | `gap`          | Optional; spacing between existing regions and Plot           |
+| `background`    | `fill`         | Required when `background` is supplied; explicit Surface fill |
+|                 | `fillOpacity`  | Optional; opacity of the background fill                      |
+| `chartDefaults` | `background`   | Optional; default background, overridden by an explicit value |
+|                 | `layout`       | Optional; defaults for `padding` and `gap`                    |
+|                 | `presentation` | Optional; `style` and `layout` defaults for existing slots    |
+
+Both root `background` and `chartDefaults.background` are optional; when both are omitted, the Chart theme supplies the background. `chartDefaults.layout` only accepts `padding` and `gap`, not outer dimensions. `chartDefaults.presentation` only supplies `style` and `layout` for existing slots; it does not create text. Visual properties of a concrete chart type remain in `recipe.properties`.
+
+## Coordinate configuration
+
+Root `coordinate` can explicitly select a Plot coordinate configuration with the following subfields. A chartType normally supplies a suitable default.
+
+| Subfield        | Purpose                                                                                   |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| `type`          | Required when `coordinate` is supplied; select a built-in or registered custom coordinate |
+| `x`             | Optional; positional scale name in Cartesian coordinates                                  |
+| `y`             | Optional; vertical scale name in two-dimensional Cartesian space                          |
+| `angle`         | Optional; angular scale name in polar coordinates                                         |
+| `radius`        | Optional; radial scale name in polar 2D, or radius fraction in polar 1D                   |
+| `startAngle`    | Optional; starting angle in polar coordinates                                             |
+| `endAngle`      | Optional; ending angle in polar coordinates                                               |
+| `innerRadius`   | Optional; inner-radius fraction in polar 2D                                               |
+| `orientation`   | Optional; horizontal or vertical orientation in Cartesian 1D                              |
+| `interpolation` | Optional; connection interpolation in polar 2D                                            |
+
+Built-in `type` values are `cartesian2D`, `polar2D`, `cartesian1D`, and `polar1D`. Apart from `type`, available subfields depend on the coordinate type; a custom coordinate's fields come from its Definition. `coordinate` does not replace field mappings in `recipe.encodings`.
+
+`coordinate` can combine with facet encodings but cannot coexist with `plotExtension.composition`. For Plot composition, see [Plot extension in Core Structure](/viz/chart/model/core-structure).
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Core Structure',
+      description: 'Understand recipe semantics, mark composition, and Plot extension.',
+      url: '/viz/chart/model/core-structure',
+    },
+  ]}
+/>

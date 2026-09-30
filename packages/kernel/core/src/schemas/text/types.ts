@@ -1,6 +1,7 @@
-import type { infer as ZodInfer } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type {
+  BoundaryLabelSchema,
   LabelTextContentSchema,
   LabelVisualStyleSchema,
   LineSchema,
@@ -28,3 +29,5 @@ export type IRLine = ZodInfer<typeof LineSchema>;
 
 /** 文本块 IR 类型（单字符串或多行 IRLine 数组） */
 export type IRTextBlock = ZodInfer<typeof TextBlockSchema>;
+
+export type IRBoundaryLabel = ZodInput<typeof BoundaryLabelSchema>;

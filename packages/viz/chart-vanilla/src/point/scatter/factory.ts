@@ -1,4 +1,4 @@
-import { createScatterChartProviderContribution } from '@retikz/chart/point/scatter';
+import { createScatterChartProviderContribution } from '@retikz/chart/point';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';

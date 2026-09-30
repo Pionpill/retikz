@@ -1,0 +1,52 @@
+---
+title: Design Philosophy
+description: Understand how Layout arranges content by the space it occupies and reduces manual position maintenance.
+---
+
+When arranging several Kernel Nodes directly, authors usually set `position` for each one. That works well for one or two independent objects. But if a label grows, entries are added, or a container narrows, the coordinates of later objects also need updating. Layout describes the arrangement with a container so positions can be recalculated from the content.
+
+## Declare an arrangement instead of placing each object
+
+In Layout, authors put primitives or nested layouts into layout items, then declare spacing, alignment, or size constraints. Each item is a piece of content to arrange and still uses its own local coordinates; the container determines where the whole item ends up in the drawing. A Node inside a layout can omit `position` and starts at local `[0, 0]` by default.
+
+| Place primitives directly                     | Use a Layout container                                  |
+| --------------------------------------------- | ------------------------------------------------------- |
+| Maintain `position` for every Node            | Declare item order, spacing, and constraints            |
+| Adjust later coordinates when content changes | Reallocate space and positions from measured sizes      |
+| Best for known independent positions          | Best when several pieces of content have an arrangement |
+
+Layout answers “how should this content sit together?” without changing what a Node or Path means.
+
+## Let content size influence the arrangement
+
+Layout reuses Kernel's measurement capability to obtain the width and height occupied by each piece of content, then arranges items according to available space and their constraints. If a label grows longer, later entries can move with it. The author maintains the label and container spacing instead of recalculating every `position`.
+
+| Container     | Arrangement                            | Common uses                   |
+| ------------- | -------------------------------------- | ----------------------------- |
+| FlexLayout    | Arrange and distribute along one axis  | Label strips, legend entries  |
+| GridLayout    | Place content in row and column tracks | Panels, matrices              |
+| OverlayLayout | Align and stack in the same area       | Badges, annotations, overlays |
+
+Each container can hold ordinary primitives or another layout container, so you can arrange the overall regions and then their inner content.
+
+## What Layout is responsible for
+
+Layout positions content from its size and the author's arrangement constraints. It does not decide what the primitives represent or automatically lay out a whole flowchart from node relationships. Use a Node's `position` when a location is fixed; use an appropriate diagram capability for relationship-driven automatic layout.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Flex layout', description: 'Arrange and distribute along one axis', url: '/library/layout/flex-layout' },
+    {
+      title: 'Grid layout',
+      description: 'Organize content with row and column tracks',
+      url: '/library/layout/grid-layout',
+    },
+    {
+      title: 'Overlay layout',
+      description: 'Align and stack content in one area',
+      url: '/library/layout/overlay-layout',
+    },
+  ]}
+/>

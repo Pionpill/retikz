@@ -52,8 +52,14 @@ export type ShowcaseMetadata = {
   order: number;
 };
 
-/** 侧栏一级页面条目可声明的 Lucide 图标标识 */
-export type DocSidebarIcon = 'chart-scatter';
+/** 文档侧栏图标标识 */
+export type DocSidebarIcon =
+  | 'chart-scatter'
+  | 'chart-bubble'
+  | 'chart-regression'
+  | 'chart-connected-scatter'
+  | 'chart-ranged-dot'
+  | 'chart-strip';
 
 /** 机器 manifest 使用的完整页面元数据。 */
 export type DocPageMetadata = {
@@ -80,6 +86,8 @@ type SubPageBase = {
   id: string;
   /** i18n 完整 key，调用方直接 t(label) */
   label: I18nKey;
+  /** 侧栏中显示在页面标题左侧的图标 */
+  icon?: DocSidebarIcon;
   /** 生成机器文档时应用的显式元数据覆盖。 */
   meta?: DocPageMetadataOverride;
   /** 标题右侧的自定义元素（外链、徽章、操作按钮等），可选 */
@@ -91,10 +99,8 @@ export type SubPage =
   | (SubPageBase & { difficulty?: DocDifficultyValue; children?: never })
   | (SubPageBase & { difficulty?: never; children: Array<SubPage> });
 
-/** 一级页：可为 Showcase 等特殊入口声明侧栏图标 */
+/** 一级页 */
 export type Page = SubPage & {
-  /** 一级页面 label 左侧的 Lucide 图标 */
-  icon?: DocSidebarIcon;
   /** 同一 section 内用于侧栏视觉分组的标题 */
   sidebarGroup?: I18nKey;
 };

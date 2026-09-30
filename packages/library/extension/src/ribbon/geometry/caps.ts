@@ -1,133 +1,102 @@
-import type { IRPosition, PolarPosition } from '@retikz/core';
-import { isPositionTuple, polar } from '@retikz/core';
+import type { IRPosition, PathCommand } from '@retikz/core';
+import { point, vector2 } from '@retikz/math';
 import type { Vector2 } from '@retikz/math';
-import { point } from '@retikz/math';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
-import type { IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../types';
+import type { RibbonCapDefinition } from '../cap-types';
+import type { IRRibbonCap } from '../types';
+import { commandBoundsPoints, commandEndpoint } from './commands';
+import type { RibbonCrossSection } from './types';
 
-const ARC_CAP_POINT_COUNT = 8;
-
-export type RoundedArcPointsInput = {
+/** 已解析端帽与侧边接点 */
+export type RibbonEndpointGeometry = {
+  /** 原始端面中心 */
   center: IRPosition;
-  from: IRPosition;
-  to: IRPosition;
-  outwardDirection: Vector2;
-  round: (n: number) => number;
+  /** 端面外向单位轴 */
+  outward: Vector2;
+  left: IRPosition;
+  right: IRPosition;
+  commands: Array<PathCommand>;
 };
 
-/**
- * 生成 round cap 的离散圆弧点
- * @description 在左右边界点之间选择朝 outwardDirection 外凸的那段圆弧，避免圆头反向穿过 ribbon 内部
- */
-export const roundedArcPoints = ({
-  center,
-  from,
-  to,
-  outwardDirection,
-  round,
-}: RoundedArcPointsInput): Array<IRPosition> => {
-  const start = Math.atan2(from[1] - center[1], from[0] - center[0]);
-  const end = Math.atan2(to[1] - center[1], to[0] - center[0]);
-  let delta = end - start;
-  if (delta > Math.PI) delta -= Math.PI * 2;
-  if (delta < -Math.PI) delta += Math.PI * 2;
-  const alternateDelta = delta > 0 ? delta - Math.PI * 2 : delta + Math.PI * 2;
-  const midpointDot = (candidateDelta: number): number => {
-    const angle = start + candidateDelta / 2;
-    return Math.cos(angle) * outwardDirection[0] + Math.sin(angle) * outwardDirection[1];
-  };
-  if (midpointDot(alternateDelta) > midpointDot(delta)) {
-    delta = alternateDelta;
-  }
-  const radius = point.distance(center, from);
-  const points: Array<IRPosition> = [];
-  for (let i = 1; i <= ARC_CAP_POINT_COUNT; i += 1) {
-    const angle = start + (delta * i) / ARC_CAP_POINT_COUNT;
-    points.push([round(center[0] + Math.cos(angle) * radius), round(center[1] + Math.sin(angle) * radius)]);
-  }
-  return points;
-};
-
-/** 判定是否为显式圆弧端帽配置 */
-export const isArcCap = (cap: IRRibbonCap): cap is IRRibbonArcCap => typeof cap === 'object';
-
-type AssertArcCapRadiusInput = {
-  actual: number;
-  expected: number;
+/** 通过统一 Definition 解析端帽，并校验闭合接点 */
+export const resolveEndpointCap = (input: {
   endpoint: 'start' | 'end';
-  side: 'first' | 'second';
-};
-
-/** 校验显式 arc cap 的圆心和半径能同时经过端面两侧点 */
-export const assertArcCapRadius = ({ actual, expected, endpoint, side }: AssertArcCapRadiusInput): void => {
-  const tolerance = Math.max(0.01, Math.abs(expected) * 1e-4);
-  if (Math.abs(actual - expected) > tolerance) {
+  section: RibbonCrossSection;
+  cap: IRRibbonCap;
+  registry: ReadonlyMap<string, RibbonCapDefinition>;
+  round: (value: number) => number;
+}): RibbonEndpointGeometry => {
+  const { endpoint, section, cap, registry, round } = input;
+  const definition = registry.get(cap.name);
+  if (definition === undefined)
     throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.GeometryInvalid,
-      message: `Ribbon ${endpoint} arc cap radius must reach the ${side} side point; expected ${String(expected)}, got ${String(actual)}.`,
-      details: { actual, endpoint, expected, side },
+      code: RetikzExtensionErrorCode.ResolutionInvalid,
+      message: `Unknown Ribbon cap '${cap.name}' at ${endpoint}.cap.`,
+      details: { endpoint, name: cap.name },
     });
-  }
-};
-
-export type ArcCapPointsInput = {
-  cap: IRRibbonArcCap;
-  from: IRPosition;
-  to: IRPosition;
-  endpoint: 'start' | 'end';
-  round: (n: number) => number;
-};
-
-const pointOfCapCenter = (center: IRPosition | PolarPosition): IRPosition => {
-  if (isPositionTuple(center)) return center;
+  const center: IRPosition = [(section.left[0] + section.right[0]) / 2, (section.left[1] + section.right[1]) / 2];
+  const sectionAxis = section.axis;
+  let outward: Vector2 = vector2.normal(sectionAxis);
+  const dot = outward[0] * section.tangent[0] + outward[1] * section.tangent[1];
+  if ((endpoint === 'start' && dot > 0) || (endpoint === 'end' && dot < 0)) outward = [-outward[0], -outward[1]];
   try {
-    return polar.toPosition(center);
+    const params = definition.paramsSchema.parse(cap.params ?? {});
+    const geometry = definition.resolve({ endpoint, center, sectionAxis, outward, width: section.width, params });
+    if (!Number.isFinite(geometry.extension))
+      throw new RetikzExtensionError({
+        code: RetikzExtensionErrorCode.GeometryInvalid,
+        message: 'Ribbon cap extension must be finite.',
+        details: {},
+      });
+    const shift = (position: IRPosition): IRPosition => [
+      round(position[0] + outward[0] * geometry.extension),
+      round(position[1] + outward[1] * geometry.extension),
+    ];
+    const left = shift(section.left);
+    const right = shift(section.right);
+    const commands = [...geometry.commands];
+    const first = commands[0];
+    const last = commands.at(-1);
+    const expectedFrom = endpoint === 'end' ? left : right;
+    const expectedTo = endpoint === 'end' ? right : left;
+    const same = (a: IRPosition, b: IRPosition): boolean => round(a[0]) === round(b[0]) && round(a[1]) === round(b[1]);
+    const lastPoint = last === undefined ? undefined : commandEndpoint(last);
+    if (
+      commands.length === 0 ||
+      first.kind !== 'move' ||
+      lastPoint === undefined ||
+      !same(first.to, expectedFrom) ||
+      !same(lastPoint, expectedTo) ||
+      commands.slice(1).some(command => command.kind === 'move' || command.kind === 'close')
+    ) {
+      throw new RetikzExtensionError({
+        code: RetikzExtensionErrorCode.GeometryInvalid,
+        message: 'Ribbon cap must be a single open chain joining its side points.',
+        details: {},
+      });
+    }
+    commandBoundsPoints(commands);
+    let cursor = first.to;
+    for (const command of commands.slice(1)) {
+      if (command.kind === 'arc' || command.kind === 'ellipseArc') {
+        const start = commandEndpoint({ ...command, endAngle: command.startAngle });
+        if (start === undefined || point.distance(start, cursor) > 0.01)
+          throw new RetikzExtensionError({
+            code: RetikzExtensionErrorCode.GeometryInvalid,
+            message: 'Ribbon cap arc is disconnected.',
+            details: {},
+          });
+      }
+      cursor = commandEndpoint(command) ?? cursor;
+    }
+    return { center, outward, left, right, commands };
   } catch (cause) {
     throw new RetikzExtensionError({
       code: RetikzExtensionErrorCode.GeometryInvalid,
-      message: 'Ribbon arc cap center must use a Cartesian position or a PolarPosition without a node origin.',
-      details: { center },
+      message: `Ribbon ${endpoint} cap '${cap.name}' failed at ${endpoint}.cap: ${cause instanceof Error ? cause.message : String(cause)}`,
+      details: { endpoint, name: cap.name, path: `${endpoint}.cap` },
       cause,
     });
   }
-};
-
-/**
- * 解析显式 arc cap 并生成离散圆弧点
- * @description cap.center 可引用节点 / 坐标；半径必须与端面两侧点一致，否则端帽无法闭合
- */
-export const arcCapPoints = ({ cap, from, to, endpoint, round }: ArcCapPointsInput): Array<IRPosition> => {
-  const resolvedCenter = pointOfCapCenter(cap.center);
-  const center: IRPosition = [round(resolvedCenter[0]), round(resolvedCenter[1])];
-  assertArcCapRadius({ actual: point.distance(center, from), expected: cap.radius, endpoint, side: 'first' });
-  assertArcCapRadius({ actual: point.distance(center, to), expected: cap.radius, endpoint, side: 'second' });
-
-  const start = Math.atan2(from[1] - center[1], from[0] - center[0]);
-  const end = Math.atan2(to[1] - center[1], to[0] - center[0]);
-  let delta = end - start;
-  if (delta > Math.PI) delta -= Math.PI * 2;
-  if (delta < -Math.PI) delta += Math.PI * 2;
-  if (cap.sweep === 'long') {
-    delta = delta > 0 ? delta - Math.PI * 2 : delta + Math.PI * 2;
-  }
-
-  const points: Array<IRPosition> = [];
-  for (let i = 1; i <= ARC_CAP_POINT_COUNT; i += 1) {
-    const angle = start + (delta * i) / ARC_CAP_POINT_COUNT;
-    points.push([round(center[0] + Math.cos(angle) * cap.radius), round(center[1] + Math.sin(angle) * cap.radius)]);
-  }
-  return points;
-};
-
-/** 端面两侧点的中点 */
-export const midpoint = (a: IRPosition, b: IRPosition, round: (n: number) => number): IRPosition => [
-  round((a[0] + b[0]) / 2),
-  round((a[1] + b[1]) / 2),
-];
-
-/** square cap 沿切线方向外扩的距离；center 对齐只需半宽，left/right 对齐需整宽 */
-export const capExtension = (width: number, align: RibbonAlignmentValue): number => {
-  if (align === 'center') return width / 2;
-  return width;
 };

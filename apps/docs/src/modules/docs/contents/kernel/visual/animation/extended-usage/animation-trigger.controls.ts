@@ -12,7 +12,6 @@ export const createAnimationTriggerControls = (lang: Lang) => {
     title: text.title,
     sections: [
       {
-        label: text.section,
         controls: [
           {
             kind: 'select',

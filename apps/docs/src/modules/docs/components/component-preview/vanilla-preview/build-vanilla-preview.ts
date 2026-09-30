@@ -243,13 +243,18 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
     children: preview.ir.children.map(convertCoreChild),
   });
-  return {
-    code: irToVanillaCode(preview.sourceIr),
-    svg: renderToSvgString(input, {
-      output: outputSize(preview),
-      ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
-    }),
-  };
+  const svg = renderToSvgString(input, {
+    output: outputSize(preview),
+    ...(preview.pathKinds === undefined && options.measureText === undefined
+      ? {}
+      : { compile: { pathKinds: preview.pathKinds, measureText: options.measureText } }),
+  });
+  try {
+    return { code: irToVanillaCode(preview.sourceIr, { pathKinds: preview.pathKinds }), svg };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { ...diagnostic(message), svg };
+  }
 };
 
 type StandardKind =

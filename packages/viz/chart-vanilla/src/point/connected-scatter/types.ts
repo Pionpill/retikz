@@ -1,4 +1,4 @@
-import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import type { IRConnectedScatterChart } from '@retikz/chart/point';
 
 import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 

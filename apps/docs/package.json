@@ -12,6 +12,7 @@
     "dev": "vite",
     "generate:layout-api-reference": "tsx scripts/generate-layout-api-reference.ts",
     "generate:api-reference": "tsx scripts/generate-api-references.ts && oxfmt src/modules/docs/contents/**/_includes/generated.*.mdx",
+    "generate:ribbon-api-reference": "tsx scripts/generate-ribbon-api-reference.ts && oxfmt --threads 3 src/modules/docs/contents/library/extension/ribbon/api-reference/_includes/generated.zh.mdx src/modules/docs/contents/library/extension/ribbon/api-reference/_includes/generated.en.mdx",
     "generate:node-schema": "tsx scripts/generate-node-schema-reference.ts && oxfmt src/modules/docs/contents/kernel/components/node/schema-reference",
     "build": "tsc -b && vite build",
     "lint": "oxlint .",

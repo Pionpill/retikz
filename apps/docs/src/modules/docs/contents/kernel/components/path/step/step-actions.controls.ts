@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.stepBasicActions,
     sections: [
       {
-        label: i18n.action,
         controls: [
           {
             kind: 'select',

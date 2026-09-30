@@ -13,7 +13,6 @@ export const coordinateFoldJunctionControls = definePreviewControls({
   title: '路径汇聚',
   sections: [
     {
-      label: '汇聚点位置',
       controls: [
         {
           kind: 'range',

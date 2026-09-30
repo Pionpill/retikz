@@ -7,9 +7,7 @@ import { quarterlyRows } from './extension-resolver.data';
 export const extensionResolverControls = definePreviewControls({
   presentation: 'panel',
   title: 'Runtime resolution',
-  sections: [
-    { label: 'Input data', controls: [{ kind: 'table', id: 'rows', label: 'Quarterly data', rows: quarterlyRows }] },
-  ],
+  sections: [{ controls: [{ kind: 'table', id: 'rows', label: 'Quarterly data', rows: quarterlyRows }] }],
 });
 
 /** Stable documentation contract for runtime field resolution */

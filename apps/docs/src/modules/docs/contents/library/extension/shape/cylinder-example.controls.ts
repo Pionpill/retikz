@@ -10,7 +10,6 @@ export const cylinderExampleControls = definePreviewControls({
   title: '圆柱形',
   sections: [
     {
-      label: '端盖参数',
       controls: [
         {
           kind: 'select',

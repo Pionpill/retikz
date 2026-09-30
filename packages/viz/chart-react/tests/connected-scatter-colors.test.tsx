@@ -1,7 +1,7 @@
 import {
   ConnectedScatterChartInputEmbedAdapter,
   connectedScatterChart,
-} from '@retikz/chart-vanilla/point/connected-scatter';
+} from '@retikz/chart-vanilla/point';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 

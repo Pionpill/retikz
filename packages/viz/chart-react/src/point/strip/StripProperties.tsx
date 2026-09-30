@@ -1,4 +1,4 @@
-import type { IRStripChartProperties } from '@retikz/chart/point/strip';
+import type { IRStripChartProperties } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** Strip 常量属性声明属性 */

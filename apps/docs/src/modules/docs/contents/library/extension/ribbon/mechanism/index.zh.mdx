@@ -1,0 +1,291 @@
+---
+title: 实现原理
+description: Ribbon 从 Path kind 解析到 Scene 轮廓的编译路径
+---
+
+本页从已装配的 Path kind Definition 出发，追踪一次 Ribbon 编译如何得到普通 Scene Path。阅读前先了解[基础用法](/library/extension/ribbon/usage)。
+
+## 编译流程
+
+下图从左到右展示共享 Path host 服务与 Ribbon 两种模式的分工；蓝色节点由 Extension 编排：
+
+<ComponentPreview files="ribbon-compile-flow" hideCode type="flow" size="sm" />
+
+两种模式都复用 Core `materializePath`：`centerline` 物化 `children` 后生成轮廓，并借助 Core 编译标签；`boundary` 物化 `upper` / `lower` 后直接闭合原有边界。两条分支最终汇入共享变换与输出，renderer 无需识别 Ribbon 专属字段。
+
+一次编译中的职责边界如下：
+
+1. Core 读取开放的 Path host，按 `kind` 查找当前图装配的 definition，并用该 definition 的完整 schema 解析 subject
+2. Extension Ribbon definition 解析 `kindOptions`，调用 Core `materializePath` 得到已经完成 target、anchor、generator 和 step lowering 的 commands
+3. Extension 根据 width、sampling、alignment、cap 和 profile 生成闭合轮廓，并通过 Core `emitHostLabels` 编译中心线标签，通过 `emitBoundaryLabels` 编译端点标签
+4. Extension 调用 Core `wrapOutput` 统一处理包含标签的 Path rotate / scale；Core 统一包裹 Scope、transform、bounds、provenance 与 diagnostics；renderer 只消费普通 Scene Path
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Ribbon definition 与 profile 注入',
+      path: 'packages/library/extension/src/ribbon/definition.ts',
+      startLine: 14,
+      endLine: 39,
+    },
+    {
+      label: 'Ribbon provider contribution',
+      path: 'packages/library/extension/src/ribbon/provider.ts',
+      startLine: 5,
+      endLine: 40,
+    },
+    {
+      label: 'Core Path kind 的通用 host 服务',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 110,
+      endLine: 153,
+    },
+    {
+      label: 'Core Path kind lookup 与 subject schema 解析',
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 26,
+      endLine: 41,
+    },
+    {
+      label: 'Core 物化路径与宿主标签编排',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 551,
+      endLine: 616,
+    },
+    {
+      label: 'Ribbon 轮廓与标签输出',
+      path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
+      startLine: 107,
+      endLine: 195,
+    },
+  ]}
+/>
+
+## centerline：采样后生成两侧曲线
+
+`centerline` 的输入是一条开放中心线和宽度规则。中心线决定流向，宽度决定沿途每个横截面的大小；最终绘制的是由两侧边界和端帽围成的闭合轮廓。
+
+下图使用同一条三次贝塞尔中心线，固定宽度 24、采样数 7。灰色虚点线表示中心线与教学辅助，蓝色和橙色始终对应左右边界：
+
+<ComponentPreview files="ribbon-centerline-geometry" hideCode type="illustration" size="md" />
+
+从左到右，先沿中心线取得采样点，再沿各点法线向两侧偏移 12，最后分别用过点曲线连接两列边界点，并在两端封口。末图的填充区域由真实 Ribbon 绘制，点与辅助线是叠加的教学参照。
+
+### 按弧长取样并保留特征位置
+
+物化后的直线、贝塞尔曲线和圆弧先转换为可求位置与单位切线的曲线段。实现计算各段长度并累计得到总长 $L$；归一化位置 `offset` 表示沿整条路径走过的长度比例。例如 `offset = 0.5` 位于半程，而非每段曲线各自的参数中点。直线与圆弧使用解析长度，贝塞尔曲线与椭圆弧使用数值近似；距离到曲线参数的反解也复用 Math 的长度模型。
+
+基础采样数 $N$ 由 `sampling` 决定：
+
+- `fixed` 直接使用 `samples`，默认 64
+- `adaptive` 根据总长和目标间距 `tolerance` 计算，受 `maxSamples` 限制：
+
+$$
+N = \max\left(2,\min\left(\mathrm{maxSamples},\left\lceil\frac{L}{\mathrm{tolerance}}\right\rceil+1\right)\right)
+$$
+
+基础采样位置为 $i/(N-1)$，包含首尾。`adaptive` 调整的是整条路径的基础采样数，不会按局部曲率递归细分，也不提供轮廓误差上界。
+
+随后合入所有原路径的段连接位置和宽度 `stops`，排序并去重。因此 `samples` / `maxSamples` 限制基础采样数，加入特征位置后的横截面数量可以更多；短段、转角或宽度变化节点不会因均匀采样而被跳过。
+
+<SourceLinks
+  sources={[
+    {
+      label: '曲线段长度与距离反解',
+      path: 'packages/library/extension/src/ribbon/geometry/centerline.ts',
+      startLine: 195,
+      endLine: 233,
+    },
+    {
+      label: '基础采样数计算',
+      path: 'packages/library/extension/src/ribbon/geometry/width.ts',
+      startLine: 90,
+      endLine: 97,
+    },
+    {
+      label: '合入段连接点和宽度 stops',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
+      startLine: 53,
+      endLine: 73,
+    },
+  ]}
+/>
+
+### 从横截面连接成过点曲线
+
+每个采样位置取得中心点、切线与宽度。默认沿切线法线向两侧偏移：`align="center"` 各分配半宽，`left` 或 `right` 把全部宽度分配到一侧。显式端点 `direction` 仅替换首尾横截面的轴线。这样得到左右各一列边界点。
+
+两侧各自连接，规则如下：
+
+1. 在切线不连续的段接点，以及 `step` 宽度的跳变位置拆成独立片段。同一个接点分别使用前后切线和宽度，保留拐角或台阶；中心线在接点完全反向时直接报错
+2. 每片段去掉相邻重复点；只有两个点时用直线，三个及以上点用向心 Catmull–Rom 过点插值，再转换为三次贝塞尔命令。曲线穿过边界采样点，不把中心线的控制柄直接平移到两侧
+3. 片段之间用直线接合，形成 bevel 转角或宽度台阶；不跨越这些位置做平滑插值
+4. 按“左边界正向 → 终点端帽 → 右边界反向 → 起点端帽 → close”拼成一条闭合 Path。端帽若带延伸量，先更新两侧的首尾接点再生成侧边曲线
+
+因此，采样后的侧边通常是过点曲线；两点片段和显式分段处使用直线。提高采样数会增加轮廓的几何细节，但两侧仍是对偏移采样点的插值，并非原中心线的精确等距曲线。
+
+<SourceLinks
+  sources={[
+    {
+      label: '宽度分配与端面轴线',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/cross-section.ts',
+      startLine: 22,
+      endLine: 69,
+    },
+    {
+      label: '侧边过点插值',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
+      startLine: 31,
+      endLine: 42,
+    },
+    {
+      label: '分段取样、端帽与闭合顺序',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
+      startLine: 74,
+      endLine: 119,
+    },
+  ]}
+/>
+
+### 多节点宽度独立控制沿途粗细
+
+宽度不必从起点到终点单调或线性变化。`width.kind="stops"` 可以在任意弧长比例设置宽度节点，例如起点 24、中点 72、终点 36，形成先变宽再变窄的轮廓。这里的中点是中心线长度的 50%，三处数值都是流带的完整宽度；居中对齐时向两侧各偏移一半。
+
+本例特意使用直线中心线，让侧边的弯曲只来自宽度变化。默认采用 `smooth`；为了方便观察采样点，demo 将基础采样数设为 16。宽度节点的位置固定为 0、0.5、1，其中 0.5 会额外加入采样，因此实际有 17 个横截面：
+
+<ComponentPreview
+  files={['ribbon-nonlinear-width', 'ribbon-nonlinear-width.preview.tsx']}
+  defaultSourceFile="ribbon-nonlinear-width.preview.tsx"
+  size="md"
+  caption="分别调整三处宽度；橙色点标出中心线采样点和对应的两侧边界点，虚点线标出节点横截面；w 表示该处完整宽度。"
+/>
+
+宽度计算先找到采样位置两侧的相邻节点，再在该区间内求值。`linear` 在每个区间线性插值，整条路径仍可先增后减；`smooth` 用局部比例 $u$ 的 $3u^2-2u^3$ 平滑插值。中段宽度独立于首尾，因此改变它不会重写起点或终点宽度。
+
+宽度插值与侧边连接是两步：前者决定每个横截面有多宽，后者用 Catmull–Rom 连接偏移后的边界点。宽度 `stops` 会额外加入采样位置，所以节点本身始终参与轮廓构造；节点之间的形状仍由采样密度与侧边插值共同决定。需要更复杂的宽度函数时，可使用[自定义宽度 profile](/library/extension/ribbon/custom)。
+
+<SourceLinks
+  sources={[
+    { label: '宽度节点排序', path: 'packages/library/extension/src/ribbon/resolve.ts', startLine: 16, endLine: 24 },
+    {
+      label: '分段线性与平滑宽度求值',
+      path: 'packages/library/extension/src/ribbon/geometry/width.ts',
+      startLine: 4,
+      endLine: 61,
+    },
+    {
+      label: '宽度节点加入采样位置',
+      path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
+      startLine: 161,
+      endLine: 176,
+    },
+  ]}
+/>
+
+## boundary：保留两侧曲线并封口
+
+`boundary` 的输入已经是两条开放边界，`upper` 和 `lower` 都应按流带起点到终点的方向提供。宽度和弯曲形状由这两条路径直接决定；此模式没有中心线宽度函数、横截面采样或侧边 Catmull–Rom 重建，也不使用 `sampling`、`align` 和端帽配置。
+
+下图保持两侧曲线的位置与形状不变，蓝色表示 `upper`，橙色表示 `lower`；曲线上的箭头表示遍历方向：
+
+<ComponentPreview files="ribbon-boundary-geometry" hideCode type="illustration" size="md" />
+
+中图只反转下边界的遍历方向；末图从上边界出发，经右端直线转入下边界，反向返回后经左端直线闭合。端部箭头标出封口顺序，填充区域由真实 boundary Ribbon 绘制。
+
+两条 Step 序列分别物化为 Path 命令，并检查单条开放路径与非零总长。校验时仍会计算曲线长度，但不会用长度采样结果重建边界。闭合过程为：
+
+1. 保留 `upper` 的全部命令，从上边界起点走到终点
+2. 用直线连接上边界终点与下边界终点
+3. 反向遍历 `lower` 回到下边界起点：三次贝塞尔交换两个控制柄，二次贝塞尔保留控制点，圆弧交换起止角，因此曲线形状保持不变
+4. 用 `close` 直线连回上边界起点
+
+最终只有两端封口是新建直线，两侧仍是输入的直线、贝塞尔或弧线。实现不会重新配对两侧中间位置，也不会修正两侧交叉；输入路径的方向与几何关系由作者保证。两种模式的区别在于轮廓来源：`centerline` 从中心线与宽度推导轮廓，`boundary` 直接组装已有轮廓。
+
+<SourceLinks
+  sources={[
+    {
+      label: '上下边界物化入口',
+      path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
+      startLine: 121,
+      endLine: 134,
+    },
+    {
+      label: '保留边界并直线封口',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/boundary.ts',
+      startLine: 7,
+      endLine: 22,
+    },
+    {
+      label: '保留曲线几何的命令反转',
+      path: 'packages/library/extension/src/ribbon/geometry/commands.ts',
+      startLine: 46,
+      endLine: 69,
+    },
+  ]}
+/>
+
+## 端帽与标签依附最终几何
+
+`centerline` 的端帽由统一 Definition 生成连接两侧接点的开放命令链。内置与自定义端帽共享注册、参数校验和失败诊断。中心线标签的 `sloped` 使用当地切线；端点标签使用最终端帽的外向支撑线定位，旋转由 Kernel 的 `rotate` 控制。支撑范围通过 Math 的曲线投影极值计算，包含曲线内部极值；bounds 同时包含轮廓、端帽和文字布局框。
+
+端面默认取端点切线的法线；显式 `start.direction` / `end.direction` 只覆盖端点横截面轴线，不重写中心线。端帽和端帽标签消费最终端面基底；中心线标签的旋转仍由原中心线切线决定。
+
+下例固定中心线和文字旋转。M 是中心线标签，A / B 是端帽标签；切换端帽形状或宽度时，观察灰色支撑线与端点标签的位置一起变化：
+
+弧形选项默认使用 90° 短弧，可用“圆弧角度（°）”在 30°–180° 之间调整弧度；180° 时成为半圆。demo 根据角度与宽度推导 `cap.params.center` 和 `radius`，始终经过两侧接点；角度不是额外的 Ribbon API 字段。
+
+<ComponentPreview
+  files={['ribbon-label-support', 'ribbon-label-support.preview.tsx']}
+  defaultSourceFile="ribbon-label-support.preview.tsx"
+  size="md"
+  caption="灰色虚线是端帽外向支撑线，橙点是标签定位基点，箭头表示外向方向；h 是支撑线相对原始端面中心的外向距离。标签间距从支撑线量到文字布局框。"
+/>
+
+定位分两步。首先，沿端面外向单位向量 $n$，取最终端帽各曲线段的最大投影 $\max(p\cdot n)$。减去端面中心 $c$ 的投影得到 $h$，标签基点为 $q=c+hn$。半圆端帽的最大投影在弧线内部，因此不能只检查两侧接点。投影极值的具体算法和交互演示见 Math 的[曲线投影极值](/kernel/packages/math/algorithms#曲线投影极值)；它直接求曲线极值，不依赖本页的流带采样数。
+
+随后，Core 根据文字旋转计算布局框沿 $n$ 的半投影长度 $e$。本例为居中对齐的外侧标签，文字框中心位于 $q+n(\text{distance}+e)$，因此 `distance` 表示支撑线与文字框之间的间距，而非到文字中心的距离。Math 提供投影计算，标签的内外放置、旋转与对齐仍由 Core 负责；改变端帽不会移动 M。
+
+<SourceLinks
+  sources={[
+    {
+      label: '端帽接点与开放命令链校验',
+      path: 'packages/library/extension/src/ribbon/geometry/caps.ts',
+      startLine: 23,
+      endLine: 102,
+    },
+    {
+      label: '端帽投影极值与标签基点',
+      path: 'packages/library/extension/src/ribbon/geometry/endpoint-label.ts',
+      startLine: 10,
+      endLine: 38,
+    },
+    {
+      label: '旋转文字框的投影与偏移',
+      path: 'packages/kernel/core/src/compile/text/boundary-label-geometry.ts',
+      startLine: 26,
+      endLine: 67,
+    },
+    {
+      label: '标签采样与最终输出',
+      path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
+      startLine: 179,
+      endLine: 195,
+    },
+  ]}
+/>
+
+## 错误与限制
+
+- 未注册 `ribbon` definition 时，Core 会在 Path kind lookup 阶段报告未知 kind；Extension 不会偷偷自动注入
+- 同名 Path kind 或同名但不同 identity 的 profile 在 registry / provider graph 组装时失败，不按顺序覆盖
+- `centerline` 需要顶层 `children`，并且必须提供带 `kind` 的 `width` 分支对象
+- `boundary` 需要 `upper` 与 `lower` 两条合法开放 step 序列，且禁止顶层 `children` 与中心线宽度字段
+- `boundary` 当前不支持 Path `label`；标签定位依赖 centerline 的采样位置与边界偏移
+- 中心线只通过 `sampling` 控制采样；未知 profile、非法 `params`、负数或非有限 `widthAt` 结果都会带路径位置 fail-loud
+- 多 move、close、零长度整体路径或无效 arc cap 不会静默生成空图元
+
+## 延伸阅读
+
+- [Path](/kernel/components/path/step)：Core Path host、共享样式与 Step 语义
+- [复合组件实现原理](/kernel/components/composite/mechanism)：了解通用的 Definition 依赖装配
+- [Extension 拓展包](/library/extension/introduction)：浏览其它可选 Extension 能力

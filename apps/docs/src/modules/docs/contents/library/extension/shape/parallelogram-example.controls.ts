@@ -14,7 +14,6 @@ export const parallelogramExampleControls = definePreviewControls({
   title: '平行四边形',
   sections: [
     {
-      label: '倾斜参数',
       controls: [
         {
           kind: 'select',

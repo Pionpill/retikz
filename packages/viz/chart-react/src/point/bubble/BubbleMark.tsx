@@ -1,4 +1,4 @@
-import type { IRBubbleChart } from '@retikz/chart/point/bubble';
+import type { IRBubbleChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 import type { ChartMarkOf } from '../shared';

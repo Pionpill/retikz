@@ -1,26 +1,18 @@
 import { PathBaseSchema } from '@retikz/core';
-import { literal } from 'zod';
+import { literal, never, union } from 'zod';
 
-import { RibbonPathOptionsSchema } from './schema';
+import { BoundaryRibbonPathOptionsSchema, CenterlineRibbonPathOptionsSchema } from './schema';
 
-/** Extension Ribbon kind 的完整 Path options schema */
-export const RibbonPathSchema = PathBaseSchema.extend({
-  kind: literal('ribbon'),
-  kindOptions: RibbonPathOptionsSchema,
-})
-  .superRefine((path, ctx) => {
-    if (path.kindOptions.mode === 'boundary') {
-      if (path.children !== undefined) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['children'],
-          message: 'Boundary ribbon paths use kindOptions.upper and kindOptions.lower, not top-level children.',
-        });
-      }
-      return;
-    }
-    if (path.children === undefined) {
-      ctx.addIssue({ code: 'custom', path: ['children'], message: 'Centerline ribbon paths require children.' });
-    }
-  })
-  .describe('Complete source subject schema for the Extension ribbon path kind.');
+/** Extension Ribbon 完整 Path，按构造模式约束中心线 children */
+export const RibbonPathSchema = union([
+  PathBaseSchema.extend({
+    kind: literal('ribbon'),
+    kindOptions: CenterlineRibbonPathOptionsSchema,
+    children: PathBaseSchema.shape.children.unwrap(),
+  }),
+  PathBaseSchema.extend({
+    kind: literal('ribbon'),
+    kindOptions: BoundaryRibbonPathOptionsSchema,
+    children: never().optional(),
+  }),
+]).describe('Complete ribbon subject: centerline requires children; boundary forbids children.');

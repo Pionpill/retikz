@@ -12,7 +12,6 @@ export const coordinateBetweenControls = definePreviewControls({
   title: '比例定位',
   sections: [
     {
-      label: '两点之间',
       controls: [
         {
           kind: 'range',

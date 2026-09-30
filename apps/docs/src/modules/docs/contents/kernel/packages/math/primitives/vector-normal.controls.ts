@@ -17,7 +17,6 @@ export const createVectorNormalControls = (i18n: typeof vectorNormalI18n.zh) =>
     title: i18n.label1,
     sections: [
       {
-        label: i18n.label2,
         controls: [
           {
             kind: 'range',

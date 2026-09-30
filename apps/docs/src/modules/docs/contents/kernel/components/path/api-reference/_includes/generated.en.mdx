@@ -1085,13 +1085,57 @@ export type PathGeneratorGenerateContext = {
 
 </DocTabs>
 
+### PathKindBoundaryLabelInput
+
+<p>
+  <ApiSourceLink
+    label={'PathKindBoundaryLabelInput'}
+    path={'packages/kernel/core/src/contract/path-kind/types.ts'}
+    startLine={111}
+  >
+    Label request with its boundary anchor determined by host geometry
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                | Type              | Default | Description                                                   |
+| --------------------- | ----------------- | ------- | ------------------------------------------------------------- |
+| `readonly label`      | `IRBoundaryLabel` | —       | Shared Kernel label configuration                             |
+| `readonly outward`    | `IRPosition`      | —       | Outward unit vector                                           |
+| `readonly point`      | `IRPosition`      | —       | Boundary support point in host-local coordinates              |
+| `readonly sourcePath` | `string`          | —       | Field path relative to the host, used for failure diagnostics |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type PathKindBoundaryLabelInput = Readonly<{
+  label: IRBoundaryLabel;
+  point: IRPosition;
+  outward: IRPosition;
+  sourcePath: string;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### PathKindCompileContext
 
 <p>
   <ApiSourceLink
     label={'PathKindCompileContext'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={107}
+    startLine={128}
   >
     Path-kind compilation context
   </ApiSourceLink>
@@ -1105,17 +1149,19 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 
 <ApiTable>
 
-| Member                          | Type                                                                                          | Default | Description                                                                                                                    |
-| ------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `TPath` (Type parameter)        | `extends IRPathBase = IRPathBase`                                                             | —       | Path type parsed by the current path definition schema; determines the structure of the path field and defaults to IRPathBase  |
-| `TOwnerOutput` (Type parameter) | `extends JsonValue = never`                                                                   | —       | Type of the JSON output published through ownerOutput.publish; defaults to never, indicating that no owner output is published |
-| `appearance`                    | `ResolvedPathKindAppearance`                                                                  | —       | Resolved renderer-neutral host appearance                                                                                      |
-| `emitHostLabels`                | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —       | Compile shared host labels with optional boundary offsets supplied by the kind                                                 |
-| `emitStroke`                    | `EmitStroke`                                                                                  | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                                                        |
-| `materializePath`               | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —       | Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry                                   |
-| `ownerOutput`                   | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —       | Publisher for the final output owned by the current Path kind                                                                  |
-| `path`                          | `TPath`                                                                                       | —       | Path subject parsed through this definition's complete schema                                                                  |
-| `round`                         | `(value: number) => number`                                                                   | —       | Rounding function shared with the current compilation                                                                          |
+| Member                          | Type                                                                                          | Default | Description                                                                                                                                                                                                                                                   |
+| ------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TPath` (Type parameter)        | `extends IRPathBase = IRPathBase`                                                             | —       | Path type parsed by the current path definition schema; determines the structure of the path field and defaults to IRPathBase                                                                                                                                 |
+| `TOwnerOutput` (Type parameter) | `extends JsonValue = never`                                                                   | —       | Type of the JSON output published through ownerOutput.publish; defaults to never, indicating that no owner output is published                                                                                                                                |
+| `appearance`                    | `ResolvedPathKindAppearance`                                                                  | —       | Resolved renderer-neutral host appearance                                                                                                                                                                                                                     |
+| `emitBoundaryLabels`            | `(input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>`         | —       | Compiles positioned boundary labels through shared Kernel layout                                                                                                                                                                                              |
+| `emitHostLabels`                | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —       | Compile shared host labels with optional boundary offsets supplied by the kind                                                                                                                                                                                |
+| `emitStroke`                    | `EmitStroke`                                                                                  | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                                                                                                                                                                                       |
+| `materializePath`               | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —       | Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry                                                                                                                                                                  |
+| `ownerOutput`                   | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —       | Publisher for the final output owned by the current Path kind                                                                                                                                                                                                 |
+| `path`                          | `TPath`                                                                                       | —       | Path subject parsed through this definition's complete schema                                                                                                                                                                                                 |
+| `round`                         | `(value: number) => number`                                                                   | —       | Rounding function shared with the current compilation                                                                                                                                                                                                         |
+| `wrapOutput`                    | `(output: PathKindCompileResult) => PathKindCompileResult`                                    | —       | Wraps complete custom geometry output, includes host-label bounds, and applies Path rotate / scale and metadata<br />Call once after emitting all labels and return the result directly; emitStroke results are already wrapped and must not be wrapped again |
 
 </ApiTable>
 
@@ -1134,6 +1180,8 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
   ) => MaterializedPath;
   emitStroke: EmitStroke;
   emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
+  emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
+  wrapOutput: (output: PathKindCompileResult) => PathKindCompileResult;
   appearance: ResolvedPathKindAppearance;
   round: (value: number) => number;
 };
@@ -1149,7 +1197,7 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
   <ApiSourceLink
     label={'PathKindCompileResult'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={14}
+    startLine={23}
   >
     Path-kind compilation result
   </ApiSourceLink>
@@ -1191,7 +1239,7 @@ export type PathKindCompileResult = {
   <ApiSourceLink
     label={'PathKindDefinition'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={139}
+    startLine={167}
   >
     Contract for registering path kind parsing, compilation, and optional owner output
   </ApiSourceLink>

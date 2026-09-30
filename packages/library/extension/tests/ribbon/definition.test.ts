@@ -19,7 +19,7 @@ describe('Extension Ribbon definition', () => {
     const scene = compile({
       type: 'path',
       kind: 'ribbon',
-      kindOptions: { width: 4, samples: 2 },
+      kindOptions: { width: { kind: 'fixed', value: 4 }, sampling: { kind: 'fixed', samples: 2 } },
       children: line,
       style: { color: 'crimson', stroke: 'black' },
     });
@@ -33,7 +33,7 @@ describe('Extension Ribbon definition', () => {
     const scene = compile({
       type: 'path',
       kind: 'ribbon',
-      kindOptions: { width: 4, samples: 2 },
+      kindOptions: { width: { kind: 'fixed', value: 4 }, sampling: { kind: 'fixed', samples: 2 } },
       marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'missing' } }],
       children: line,
     });

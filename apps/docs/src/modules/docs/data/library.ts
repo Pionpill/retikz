@@ -19,6 +19,12 @@ export const librarySection: Array<Section> = [
         difficulty: 'beginner',
       },
       {
+        id: 'design',
+        label: 'library.design',
+        difficulty: 'beginner',
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
         id: 'changelog',
         label: 'library.changelog',
         children: [
@@ -129,6 +135,12 @@ export const librarySection: Array<Section> = [
       { id: 'introduction', label: 'library.introduction', difficulty: 'beginner' },
       { id: 'get-start', label: 'library.getStart', difficulty: 'beginner' },
       {
+        id: 'design',
+        label: 'library.design',
+        difficulty: 'beginner',
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
         id: 'changelog',
         label: 'library.changelog',
         children: [{ id: 'v0-1', label: 'library.changelogV01' }],
@@ -144,7 +156,7 @@ export const librarySection: Array<Section> = [
           capability: 'extension.shape',
           sourceOfTruth: 'runtime',
         },
-        sidebarGroup: 'library.extensionCapabilities',
+        sidebarGroup: 'library.components',
       },
       {
         id: 'arrow',
@@ -156,7 +168,7 @@ export const librarySection: Array<Section> = [
           capability: 'extension.arrow',
           sourceOfTruth: 'runtime',
         },
-        sidebarGroup: 'library.extensionCapabilities',
+        sidebarGroup: 'library.components',
       },
       {
         id: 'clip',
@@ -168,44 +180,51 @@ export const librarySection: Array<Section> = [
           capability: 'extension.clip',
           sourceOfTruth: 'runtime',
         },
-        sidebarGroup: 'library.extensionCapabilities',
+        sidebarGroup: 'library.components',
       },
       {
         id: 'ribbon',
         label: 'library.extensionRibbon',
-        difficulty: 'advanced',
+        sidebarGroup: 'library.components',
         meta: {
-          pageType: 'extension',
-          audience: 'extension-author',
+          pageType: 'group',
+          audience: 'user',
           capability: 'extension.ribbon',
-          sourceOfTruth: 'runtime',
+          sourceOfTruth: 'docs',
         },
-        sidebarGroup: 'library.extensionCapabilities',
-      },
-      {
-        id: 'capability-loading',
-        label: 'library.extensionCapabilityLoading',
-        difficulty: 'internals',
-        meta: {
-          pageType: 'extension',
-          audience: 'extension-author',
-          capability: 'extension.capability-loading',
-          sourceOfTruth: 'runtime',
-        },
-        sidebarGroup: 'library.extensionCapabilities',
+        children: [
+          { id: 'usage', label: 'library.extensionRibbonBasicUsage', difficulty: 'beginner' },
+          { id: 'extended', label: 'library.extensionRibbonExtendedUsage', difficulty: 'beginner' },
+          {
+            id: 'custom',
+            label: 'library.extensionRibbonCustomUsage',
+            difficulty: 'advanced',
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'extension.ribbon.width-profile',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          { id: 'mechanism', label: 'schematic.mechanism', difficulty: 'internals' },
+          {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
+          },
+        ],
       },
       {
         id: 'animation',
-        label: 'library.standardAnimation',
-        sidebarGroup: 'library.extensionCapabilities',
+        label: 'library.extensionAnimation',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.visual',
         meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
-        children: [
-          {
-            id: 'api-reference',
-            label: 'kernel.visualApiReference',
-            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
-          },
-        ],
       },
     ],
   },
@@ -223,6 +242,12 @@ export const librarySection: Array<Section> = [
         id: 'get-start',
         label: 'library.getStart',
         difficulty: 'beginner',
+      },
+      {
+        id: 'design',
+        label: 'library.design',
+        difficulty: 'beginner',
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
       },
       {
         id: 'changelog',

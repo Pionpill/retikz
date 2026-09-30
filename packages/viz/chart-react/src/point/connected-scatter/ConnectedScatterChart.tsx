@@ -1,9 +1,9 @@
-import type { ConnectedScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point/connected-scatter';
+import type { ConnectedScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point';
 import {
   connectedScatterChart,
   ConnectedScatterChartInputEmbedAdapter,
-} from '@retikz/chart-vanilla/point/connected-scatter';
-import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+} from '@retikz/chart-vanilla/point';
+import type { IRConnectedScatterChart } from '@retikz/chart/point';
 
 import type { TypedChartCommonProps } from '../shared';
 import { createTypedChartComponent, createTypedChartInput } from '../shared';

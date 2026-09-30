@@ -108,6 +108,7 @@ const publishablePackageExpectations = {
       '@retikz/plot': 'workspace:^',
       '@retikz/plot-react': 'workspace:^',
       '@retikz/react': 'workspace:^',
+      '@retikz/vanilla': 'workspace:^',
     },
   },
   vanilla: {
@@ -129,6 +130,16 @@ const publishablePackageExpectations = {
 } as const;
 
 describe('published Chart release-group boundaries', () => {
+  it.each([
+    ['Chart', publishablePackageExpectations.chart],
+    ['React', publishablePackageExpectations.react],
+    ['Vanilla', publishablePackageExpectations.vanilla],
+  ])('publishes only the root and Point family entries for %s', async (_name, expectation) => {
+    const manifest = await readManifest(expectation.manifest);
+    expect(Object.keys(manifest.exports ?? {})).toEqual(['.', './point']);
+    expect(Object.keys(manifest.publishConfig?.exports ?? {})).toEqual(['.', './point']);
+  });
+
   it('publishes the core package with the exact Chart group dependency map', async () => {
     const manifest = await readManifest('../package.json');
 
@@ -141,15 +152,6 @@ describe('published Chart release-group boundaries', () => {
     expect(manifest.exports).toEqual({
       '.': { types: './src/index.ts', default: './src/index.ts' },
       './point': { types: './src/point/index.ts', default: './src/point/index.ts' },
-      './point/bubble': { types: './src/point/bubble/index.ts', default: './src/point/bubble/index.ts' },
-      './point/connected-scatter': {
-        types: './src/point/connected-scatter/index.ts',
-        default: './src/point/connected-scatter/index.ts',
-      },
-      './point/ranged-dot': { types: './src/point/ranged-dot/index.ts', default: './src/point/ranged-dot/index.ts' },
-      './point/regression': { types: './src/point/regression/index.ts', default: './src/point/regression/index.ts' },
-      './point/scatter': { types: './src/point/scatter/index.ts', default: './src/point/scatter/index.ts' },
-      './point/strip': { types: './src/point/strip/index.ts', default: './src/point/strip/index.ts' },
     });
     expect(manifest.publishConfig?.exports).toEqual({
       '.': {
@@ -161,36 +163,6 @@ describe('published Chart release-group boundaries', () => {
         types: './dist/types/point/index.d.ts',
         import: './dist/point/index.js',
         default: './dist/point/index.js',
-      },
-      './point/bubble': {
-        types: './dist/types/point/bubble/index.d.ts',
-        import: './dist/point/bubble/index.js',
-        default: './dist/point/bubble/index.js',
-      },
-      './point/connected-scatter': {
-        types: './dist/types/point/connected-scatter/index.d.ts',
-        import: './dist/point/connected-scatter/index.js',
-        default: './dist/point/connected-scatter/index.js',
-      },
-      './point/ranged-dot': {
-        types: './dist/types/point/ranged-dot/index.d.ts',
-        import: './dist/point/ranged-dot/index.js',
-        default: './dist/point/ranged-dot/index.js',
-      },
-      './point/regression': {
-        types: './dist/types/point/regression/index.d.ts',
-        import: './dist/point/regression/index.js',
-        default: './dist/point/regression/index.js',
-      },
-      './point/scatter': {
-        types: './dist/types/point/scatter/index.d.ts',
-        import: './dist/point/scatter/index.js',
-        default: './dist/point/scatter/index.js',
-      },
-      './point/strip': {
-        types: './dist/types/point/strip/index.d.ts',
-        import: './dist/point/strip/index.js',
-        default: './dist/point/strip/index.js',
       },
     });
   });
@@ -223,21 +195,5 @@ describe('published Chart release-group boundaries', () => {
       import: distPath,
       default: distPath,
     });
-  });
-
-  it.each([
-    ['React', publishablePackageExpectations.react, 'ts'],
-    ['Vanilla', publishablePackageExpectations.vanilla, 'ts'],
-  ])('publishes concrete %s chartType source entries', async (_name, expectation, extension) => {
-    const manifest = await readManifest(expectation.manifest);
-    for (const chartType of ['bubble', 'connected-scatter', 'ranged-dot', 'regression', 'scatter']) {
-      const sourcePath = `./src/point/${chartType}/index.${extension}`;
-      expect(manifest.exports?.[`./point/${chartType}`]).toEqual({ types: sourcePath, default: sourcePath });
-      expect(manifest.publishConfig?.exports?.[`./point/${chartType}`]).toEqual({
-        types: `./dist/types/point/${chartType}/index.d.ts`,
-        import: `./dist/point/${chartType}/index.js`,
-        default: `./dist/point/${chartType}/index.js`,
-      });
-    }
   });
 });

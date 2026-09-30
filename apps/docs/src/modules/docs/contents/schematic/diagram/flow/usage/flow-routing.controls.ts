@@ -12,7 +12,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     title: copy.title,
     sections: [
       {
-        label: copy.section,
         controls: [
           { kind: 'select', id: 'kind', label: copy.kind, defaultValue: '-|', options: copy.kindOptions },
           {

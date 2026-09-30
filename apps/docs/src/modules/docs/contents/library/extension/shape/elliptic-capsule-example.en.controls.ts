@@ -9,7 +9,6 @@ export const ellipticCapsuleExampleControls = definePreviewControls({
   title: 'Elliptic Capsule',
   sections: [
     {
-      label: 'Cap parameters',
       controls: [
         {
           kind: 'select',

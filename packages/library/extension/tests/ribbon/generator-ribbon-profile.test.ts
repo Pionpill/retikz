@@ -69,13 +69,13 @@ describe('builtin path generator and Extension Ribbon width profile', () => {
     ).scene;
     const prim = firstPathPrim(compiled.primitives);
 
-    expect(prim.commands).toEqual([
+    expect(prim.commands).toMatchObject([
       { kind: 'move', to: [0, 2] },
-      { kind: 'line', to: [5, 6] },
-      { kind: 'line', to: [10, 2] },
+      { kind: 'cubic', to: [5, 6] },
+      { kind: 'cubic', to: [10, 2] },
       { kind: 'line', to: [10, -2] },
-      { kind: 'line', to: [5, -6] },
-      { kind: 'line', to: [0, -2] },
+      { kind: 'cubic', to: [5, -6] },
+      { kind: 'cubic', to: [0, -2] },
       { kind: 'close' },
     ]);
   });
@@ -118,8 +118,8 @@ describe('builtin path generator and Extension Ribbon width profile', () => {
         ).scene.primitives,
       ).commands;
 
-    expect(commandsFor(6, 6)[1]).toEqual({ kind: 'line', to: [5, 3] });
-    expect(commandsFor(12, 4)[1]).toEqual({ kind: 'line', to: [5, 2] });
+    expect(commandsFor(6, 6)[1]).toMatchObject({ kind: 'cubic', to: [5, 3] });
+    expect(commandsFor(12, 4)[1]).toMatchObject({ kind: 'cubic', to: [5, 2] });
   });
 
   it('bulge_rejects_negative_base_or_peak', () => {

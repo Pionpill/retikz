@@ -8,7 +8,6 @@ export const nodeLabelStyleControls = definePreviewControls({
   title: 'Label style',
   sections: [
     {
-      label: 'Text',
       controls: [
         { kind: 'color', id: NodeLabelStyleControlId.TextColor, label: 'Text color', defaultValue: '#2563eb' },
         {

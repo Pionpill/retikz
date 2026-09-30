@@ -411,8 +411,74 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
   return sliced;
 };
 
+/** 曲线在给定向量上的标量投影范围，包含内部极值 */
+const projectedCurveRange = (segment: CurveSegment, axis: Vector2): { min: number; max: number } => {
+  const dot = (p: Position): number => p[0] * axis[0] + p[1] * axis[1];
+  const parameters = [0, 1];
+  const add = (t: number): void => {
+    if (t > 0 && t < 1) parameters.push(t);
+  };
+  if (segment.kind === 'quadraticBezier') {
+    const a = dot(segment.from),
+      b = dot(segment.control),
+      c = dot(segment.to);
+    const denominator = a - 2 * b + c;
+    if (denominator !== 0) add((a - b) / denominator);
+  } else if (segment.kind === 'cubicBezier') {
+    const p0 = dot(segment.from),
+      p1 = dot(segment.control1),
+      p2 = dot(segment.control2),
+      p3 = dot(segment.to);
+    const a = -p0 + 3 * p1 - 3 * p2 + p3;
+    const b = 2 * (p0 - 2 * p1 + p2);
+    const c = p1 - p0;
+    const scale = Math.max(Math.abs(a), Math.abs(b), Math.abs(c));
+    if (scale > 0) {
+      const aa = a / scale,
+        bb = b / scale,
+        cc = c / scale;
+      if (Math.abs(aa) < 1e-12) {
+        if (bb !== 0) add(-cc / bb);
+      } else {
+        const discriminant = bb * bb - 4 * aa * cc;
+        if (discriminant >= 0) {
+          const root = Math.sqrt(discriminant);
+          const q = -0.5 * (bb + (bb >= 0 ? root : -root));
+          if (q === 0) add(-bb / (2 * aa));
+          else {
+            add(q / aa);
+            add(cc / q);
+          }
+        }
+      }
+    }
+  } else if (segment.kind === 'arc' || segment.kind === 'ellipseArc') {
+    const sweep = normalizedArcSweep(segment);
+    const length = sweep.endAngleDeg - sweep.startAngleDeg;
+    if (length !== 0) {
+      const rotation = segment.kind === 'ellipseArc' ? ((segment.rotationDeg ?? 0) * Math.PI) / 180 : 0;
+      const rx = segment.kind === 'arc' ? segment.radius : segment.radiusX;
+      const ry = segment.kind === 'arc' ? segment.radius : segment.radiusY;
+      const x = rx * (axis[0] * Math.cos(rotation) + axis[1] * Math.sin(rotation));
+      const y = ry * (-axis[0] * Math.sin(rotation) + axis[1] * Math.cos(rotation));
+      const extreme = (Math.atan2(y, x) * 180) / Math.PI;
+      const low = Math.min(sweep.startAngleDeg, sweep.endAngleDeg);
+      const high = Math.max(sweep.startAngleDeg, sweep.endAngleDeg);
+      for (const angle of [extreme, extreme + 180]) {
+        const first = Math.ceil((low - angle) / 360);
+        const last = Math.floor((high - angle) / 360);
+        for (let turn = first; turn <= last; turn++) add((angle + turn * 360 - sweep.startAngleDeg) / length);
+      }
+    }
+  }
+  const values = parameters.map(t => dot(sampleCurveSegmentAt(segment, t).point));
+  return { min: Math.min(...values), max: Math.max(...values) };
+};
+
 /** 可参数化曲线的纯几何运算 */
 export const curve = {
+  /** 曲线沿给定向量的精确投影极值；向量无需单位化，复杂度 O(1) */
+  projectedRange: projectedCurveRange,
   /** centripetal Catmull-Rom（α=0.5）穿过 knots → 三次贝塞尔段链 */
   catmullRomToCubic,
   /**

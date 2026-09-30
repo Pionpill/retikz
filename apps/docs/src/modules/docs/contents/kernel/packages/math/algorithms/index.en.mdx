@@ -246,20 +246,20 @@ A cached `totalLength` must use the same `sampleCount`; otherwise total distance
     {
       label: 'Polyline length approximation',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 281,
-      endLine: 297,
+      startLine: 294,
+      endLine: 316,
     },
     {
       label: 'Bisection from distance to parameter',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 423,
-      endLine: 447,
+      startLine: 506,
+      endLine: 531,
     },
     {
       label: 'Shape-preserving curve slicing',
       path: 'packages/kernel/math/src/algorithms/curve.ts',
-      startLine: 341,
-      endLine: 398,
+      startLine: 354,
+      endLine: 411,
     },
   ]}
 />
@@ -276,6 +276,45 @@ A cached `totalLength` must use the same `sampleCount`; otherwise total distance
 | `curve.slice`               | Time O(1), space O(1)   | Take a parameter-range subcurve without changing its curve kind                                                        |
 
 Drawing semantics remain in Core: it maps final `PathCommand`s into these mathematical segments, then decides labels, gaps, dashes, arrows, and hit testing. To control automatic label gaps, use `interrupt` on [Path labels and stroke gaps](/kernel/components/path/label); Math is not a drawing or label API.
+
+## Curve projection extrema
+
+`curve.projectedRange(segment, axis)` computes a directional range for a curve, useful for directional bounds or support lines. It accepts five `CurveSegment` kinds: lines, quadratic and cubic Béziers, circular arcs, and elliptical arcs. `axis` is a two-dimensional vector. The returned `{ min, max }` contains dot-product extrema relative to the coordinate origin, rather than two points on the curve or an arc length:
+
+The blue curve is the input; gray dotted lines show its control polygon, and gray dashed lines show the two support lines. Switch between lines, quadratic/cubic Béziers, circular arcs, and elliptical arcs, then adjust the projection direction indicated on the left. The support lines continue to enclose the whole curve. Bézier modes expose control-point coordinates; cubic mode adjusts C1 while C2 stays at `[-12, 15]`. The top readout shows min / max in the original math units. Initially the control X is 20, while the rightmost curve coordinate is 10.
+
+<ComponentPreview
+  files={['curve-projection', 'curve-projection.preview.tsx']}
+  defaultSourceFile="curve-projection.preview.tsx"
+  size="md"
+/>
+
+### Algorithm notes
+
+$$
+q(t)=p(t)\cdot axis,\qquad min=\min_{t\in[0,1]}q(t),\quad max=\max_{t\in[0,1]}q(t)
+$$
+
+The calculation compares both endpoints with interior extrema. Quadratic and cubic Béziers solve for zeros of the projected polynomial derivative. Circular and rotated elliptical arcs find trigonometric extrema and retain only angles within the directed sweep. The result does not depend on `sampleCount` or substitute the control-point range for the curve range. Time and space are both O(1) per segment, subject to ordinary floating-point error.
+
+For example, a quadratic Bézier from `[0, 0]` through control point `[20, 10]` to `[0, 20]` projects onto `[1, 0]` as `{ min: 0, max: 10 }`. Its rightmost point is inside the curve; the control point at x=20 is outside the curve range. `axis` is not normalized automatically: `[2, 0]` gives `{ min: 0, max: 20 }`, while a zero vector gives `{ min: 0, max: 0 }`. Supply a unit vector when interpreting projection values as distances along the axis.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Interior extrema of curve projections',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 414,
+      endLine: 476,
+    },
+  ]}
+/>
+
+### Call summary
+
+| API                    | Complexity            | Purpose                                                                                    |
+| ---------------------- | --------------------- | ------------------------------------------------------------------------------------------ |
+| `curve.projectedRange` | Time O(1), space O(1) | Dot-product range `{ min, max }` along `axis`, including interior extrema without sampling |
 
 ## Curves through points
 

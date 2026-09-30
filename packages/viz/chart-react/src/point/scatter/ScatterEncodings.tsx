@@ -1,4 +1,4 @@
-import type { IRScatterChartEncodings } from '@retikz/chart/point/scatter';
+import type { IRScatterChartEncodings } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** Scatter 字段映射声明属性 */

@@ -1,4 +1,4 @@
-import type { IRRegressionChartEncodings } from '@retikz/chart/point/regression';
+import type { IRRegressionChartEncodings } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** Regression 字段映射声明属性 */

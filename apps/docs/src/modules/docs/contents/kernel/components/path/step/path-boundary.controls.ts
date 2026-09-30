@@ -24,7 +24,6 @@ const createControls = (lang: Lang) => {
     title: i18n.endpointSurface,
     sections: [
       {
-        label: i18n.endpoint,
         controls: [
           {
             kind: 'select',

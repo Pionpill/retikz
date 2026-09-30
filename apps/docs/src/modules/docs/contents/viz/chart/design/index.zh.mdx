@@ -1,0 +1,29 @@
+---
+title: 设计理念
+description: 理解 Chart 为什么按图形类型封装 Plot，以及简化数据模型如何保留绘图能力。
+---
+
+使用 Plot 可以精确组合图元、映射、比例尺与坐标，但绘制一张常见图表时，往往需要反复声明相同的结构。Chart 把这些常见组合整理成具体图形类型，让作者先说明“要画什么”，再按需调整细节。
+
+## 从图形类型开始
+
+每个图形类型有自己的字段要求和默认组合。例如散点图需要横纵位置映射，气泡图还需要大小映射。Chart 根据所选类型补齐图元、比例尺和辅助元素所需的 Plot 配置；实际的数据映射与绘制仍使用 Plot。理解这一层封装的边界，见[图形封装](/viz/chart/design/encapsulation)。
+
+## 保留作者意图
+
+Chart Source 保存数据、图形类型、字段映射和作者明确指定的选项，而不保存生成后的完整 Plot。`recipe` 集中描述具体图形，公共字段负责整图数据、尺寸、坐标和说明。这样既能用较少配置表达常见图形，也能在需要时使用 Plot 的底层能力。字段之间的职责见[数据模型](/viz/chart/design/data-model)。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    {
+      title: '图形封装',
+      description: '理解 Chart 类型与 Plot 绘图能力的分工。',
+      url: '/viz/chart/design/encapsulation',
+    },
+    { title: '数据模型', description: '理解公共字段与 recipe 怎样简化图形声明。', url: '/viz/chart/design/data-model' },
+  ]}
+/>
+
+需要查看精确 schema、编写入口与解析细节时，继续阅读[图形模型](/viz/chart/model)。

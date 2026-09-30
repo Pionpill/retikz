@@ -1,65 +1,119 @@
 ---
-title: Arrows
-description: Import Diamond, Kite, Square, Straight Barb, bar, and crow-foot endpoints on demand from @retikz/extension, then pass their Definitions through the React or Vanilla compile entry point.
+title: arrow · Arrows
+description: Assemble diamond, kite, square, straight-barb, bar, and crow-foot endpoints on demand, with an API reference for each.
 ---
 
-Arrow definitions add diamond, kite, square, straight-barb, bar, and crow-foot markers to path endpoints. Choose filled or open styles to express the connection.
+These arrow Definitions add six optional geometries to path endpoints. After choosing filled, hollow, or open-line shapes, use path `arrowDetail` to adjust size and color.
 
-## Usage
+## Using this topic
 
-This page supports two import styles:
+Import Definitions such as `DiamondArrowDefinition` on demand from `@retikz/extension`, or use `ExtensionArrowDefinitions` for the full family. Imports do not register endpoints globally. React uses `Layout.extensions.arrows`; Vanilla uses `compile.arrows`.
 
-- Import specific Definitions on demand, such as `DiamondArrowDefinition`, and pass only the official extensions used by the figure to `Layout` or `compile`
-- Use the complete official extension set through `ExtensionArrowDefinitions`, which includes every Extension Definition from this capability family; use `ExtensionArrowProviders` when assembling a provider graph
+<ComponentPreview files="entry" size="xs" hideCode />
 
-Both styles explicitly assemble capabilities for the current figure. Importing the package does not register arrows globally.
-
-### React usage
-
-Import the Definitions a figure uses from `@retikz/extension` and pass them to the React `Layout` through `extensions.arrows`. Imports do not register arrows globally; definitions apply only to the current drawing.
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
+import { DiamondArrowDefinition } from '@retikz/extension';
 import { Draw, Layout } from '@retikz/react';
-import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/extension';
 
-<Layout extensions={{ arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition] }}>
-  <Draw
-    way={[
-      [0, 0],
-      [160, 0],
-    ]}
-    arrow="->"
-    arrowDetail={{ end: { shape: 'openDiamond' } }}
-  />
-</Layout>;
+export const Example = () => (
+  <Layout extensions={{ arrows: [DiamondArrowDefinition] }}>
+    <Draw
+      way={[
+        [0, 0],
+        [160, 0],
+      ]}
+      arrow="->"
+      arrowDetail={{ end: { shape: 'diamond' } }}
+    />
+  </Layout>
+);
 ```
 
-### Vanilla usage
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-With `@retikz/vanilla`, put the same Definition in `compile.arrows`. `input` can be an existing Core IR or Vanilla plain spec; `mount` accepts the same `compile` configuration.
+```tsx
+import type { IRScene } from '@retikz/core';
+import { DiamondArrowDefinition } from '@retikz/extension';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'path',
+      arrow: '->',
+      arrowDetail: { end: { shape: 'diamond' } },
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [160, 0] },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} extensions={{ arrows: [DiamondArrowDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
-import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/extension';
+import { DiamondArrowDefinition } from '@retikz/extension';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
-const svg = renderToSvgString(input, {
-  compile: {
-    arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition],
-  },
+const input = scene({
+  children: [
+    path({
+      way: [
+        [0, 0],
+        [160, 0],
+      ],
+      arrow: '->',
+      arrowDetail: { end: { shape: 'diamond' } },
+    }),
+  ],
 });
+const svg = renderToSvgString(input, { compile: { arrows: [DiamondArrowDefinition] } });
+console.log(svg);
 ```
 
-Path IR stores only an arrow name and JSON-safe configuration. If the name has no built-in or injected Definition, Core fails explicitly at lookup and lists the available entries instead of substituting a default arrow.
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
 
-## Examples
+```ts
+import type { IRScene } from '@retikz/core';
+import { DiamondArrowDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
 
-The overview keeps path length and style fixed while comparing the nine Extension endpoint markers in two columns.
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'path',
+      arrow: '->',
+      arrowDetail: { end: { shape: 'diamond' } },
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [160, 0] },
+      ],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, { compile: { arrows: [DiamondArrowDefinition] } });
+console.log(svg);
+```
 
-<ComponentPreview files="arrow-gallery" size="sm" />
+</DocTab>
+</DocTabs>
 
-### Diamond arrows
+## Diamond arrows
 
-`diamond` and `openDiamond` default to integer dimensions of `11 × 6`, with a nominal area of 66, and provide filled and hollow endpoints. Their contours fill the base height; the solid form uses arrow fill, while the open form is stroke-only.
+`diamond` and `openDiamond` are filled and hollow symmetric diamonds. Both default to 11 × 6; the hollow form is stroke-only.
 
 <ComponentPreview
   files={['diamond-arrows', 'diamond-arrows.preview.tsx']}
@@ -67,33 +121,166 @@ The overview keeps path length and style fixed while comparing the nine Extensio
   defaultSourceFile="diamond-arrows.preview.tsx"
 />
 
-### Kite arrows
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
 
-`kite` and `openKite` also default to `11 × 6`. Their shoulders sit at one quarter of the base length, producing an asymmetric contour stretched toward the tip. They share Diamond's solid/open paint rules but are not symmetric diamonds; inject `KiteArrowDefinition` or `OpenKiteArrowDefinition` on demand.
+#### DiamondArrowDefinition / OpenDiamondArrowDefinition
 
-### Square arrows
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
 
-`square` and `openSquare` both default to `8 × 8`, while explicit `length` and `width` can still stretch them independently. The open form moves its contour inside the marker bounds before stroking instead of reusing the solid outer edge; their Definitions are `SquareArrowDefinition` and `OpenSquareArrowDefinition`.
+| Definition                   | `shape`       | Default length × width |
+| ---------------------------- | ------------- | ---------------------- |
+| `DiamondArrowDefinition`     | `diamond`     | 11 × 6                 |
+| `OpenDiamondArrowDefinition` | `openDiamond` | 11 × 6                 |
 
-All three families reuse Core's marker host, start/end placement, path shrink, and `arrowDetail` visual parameters. Explicit `length` and `width` only stretch the frozen default local contours.
+#### IRArrowEndDetail
 
-### Straight Barb arrow
+| Field        | Type               | Description                                                       |
+| ------------ | ------------------ | ----------------------------------------------------------------- |
+| `shape`      | `string`           | One of the endpoint names above                                   |
+| `length?`    | `number`           | Nonnegative length along the path                                 |
+| `width?`     | `number`           | Nonnegative width across the path                                 |
+| `color?`     | `string \| number` | Marker color; inherits the path stroke when omitted               |
+| `lineWidth?` | `number`           | Stroke width for hollow or open contours; ignored by solid shapes |
 
-`straightBarb` uses Core's `8 × 8` fallback by default and draws a `>` contour as one continuous open polyline. The path body contacts the arrow tip, while the marker remains unclosed and unfilled; stroke color and width continue to inherit the Core marker context.
+</DocTab>
+</DocTabs>
 
-Use `StraightBarbArrowDefinition` for direct Definition assembly and `StraightBarbArrowProvider` when building a provider graph. Extension defines reusable geometry only and does not bind it to dependency, flow, or another domain relationship.
+Change color, scale, and hollow stroke width to compare their paint.
 
-### Bar endpoint
+## Kite arrows
 
-`bar` uses Core's `8 × 8` fallback by default and draws an open line perpendicular to the path tangent at the authored endpoint. It inherits the path stroke, but its name does not impose domain meanings such as “blocked” or “inhibited”; consumers assign those meanings.
+`kite` and `openKite` put their shoulders toward the path, leaving a longer tip than a symmetric diamond. Both default to 11 × 6.
+
+<ComponentPreview files="kite-arrows" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### KiteArrowDefinition / OpenKiteArrowDefinition
+
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+
+| Definition                | `shape`    | Default length × width |
+| ------------------------- | ---------- | ---------------------- |
+| `KiteArrowDefinition`     | `kite`     | 11 × 6                 |
+| `OpenKiteArrowDefinition` | `openKite` | 11 × 6                 |
+
+#### IRArrowEndDetail
+
+| Field        | Type               | Description                                                       |
+| ------------ | ------------------ | ----------------------------------------------------------------- |
+| `shape`      | `string`           | One of the endpoint names above                                   |
+| `length?`    | `number`           | Nonnegative length along the path                                 |
+| `width?`     | `number`           | Nonnegative width across the path                                 |
+| `color?`     | `string \| number` | Marker color; inherits the path stroke when omitted               |
+| `lineWidth?` | `number`           | Stroke width for hollow or open contours; ignored by solid shapes |
+
+</DocTab>
+</DocTabs>
+
+Change length and width to see both filled and hollow contours stretch.
+
+## Square arrows
+
+`square` and `openSquare` default to 8 × 8. The hollow contour is inset before stroking so a heavy stroke stays within marker bounds.
+
+<ComponentPreview files="square-arrows" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### SquareArrowDefinition / OpenSquareArrowDefinition
+
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+
+| Definition                  | `shape`      | Default length × width |
+| --------------------------- | ------------ | ---------------------- |
+| `SquareArrowDefinition`     | `square`     | 8 × 8                  |
+| `OpenSquareArrowDefinition` | `openSquare` | 8 × 8                  |
+
+#### IRArrowEndDetail
+
+| Field        | Type               | Description                                                       |
+| ------------ | ------------------ | ----------------------------------------------------------------- |
+| `shape`      | `string`           | One of the endpoint names above                                   |
+| `length?`    | `number`           | Nonnegative length along the path                                 |
+| `width?`     | `number`           | Nonnegative width across the path                                 |
+| `color?`     | `string \| number` | Marker color; inherits the path stroke when omitted               |
+| `lineWidth?` | `number`           | Stroke width for hollow or open contours; ignored by solid shapes |
+
+</DocTab>
+</DocTabs>
+
+Adjust length, width, and hollow stroke to compare the two square endpoints.
+
+## Straight-barb arrow
+
+`straightBarb` is an open `>` polyline. It is neither closed nor filled and defaults to 8 × 8.
+
+<ComponentPreview files="straight-barb-arrow" size="sm" />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### StraightBarbArrowDefinition
+
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+
+| Definition                    | `shape`        | Default length × width |
+| ----------------------------- | -------------- | ---------------------- |
+| `StraightBarbArrowDefinition` | `straightBarb` | 8 × 8                  |
+
+#### IRArrowEndDetail
+
+| Field        | Type               | Description                                                       |
+| ------------ | ------------------ | ----------------------------------------------------------------- |
+| `shape`      | `string`           | One of the endpoint names above                                   |
+| `length?`    | `number`           | Nonnegative length along the path                                 |
+| `width?`     | `number`           | Nonnegative width across the path                                 |
+| `color?`     | `string \| number` | Marker color; inherits the path stroke when omitted               |
+| `lineWidth?` | `number`           | Stroke width for hollow or open contours; ignored by solid shapes |
+
+</DocTab>
+</DocTabs>
+
+Change length, width, and stroke width to inspect the open barb and its path contact.
+
+## Bar endpoint
+
+`bar` draws an open line perpendicular to the path at its endpoint. It defaults to 8 × 8 and has no fixed domain meaning.
 
 <ComponentPreview files={['bar-arrow', 'bar-arrow.preview.tsx']} size="sm" defaultSourceFile="bar-arrow.preview.tsx" />
 
-The path body overlaps the marker contact edge by half of its own stroke width, then the marker paints over the joint. This avoids antialiasing seams without letting the line pass through the bar. `length` controls marker size along the path, `width` controls the bar span, and `lineWidth` controls the marker stroke.
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
 
-### Crow-foot endpoint
+#### BarArrowDefinition
 
-`crowFoot` uses Core's `8 × 8` fallback by default and draws three open rays from the path contact point. Relationship diagrams may use it for multiplicity, but Extension defines only reusable geometry and does not bind it to cardinality.
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+
+| Definition           | `shape` | Default length × width |
+| -------------------- | ------- | ---------------------- |
+| `BarArrowDefinition` | `bar`   | 8 × 8                  |
+
+#### IRArrowEndDetail
+
+| Field        | Type               | Description                                                       |
+| ------------ | ------------------ | ----------------------------------------------------------------- |
+| `shape`      | `string`           | One of the endpoint names above                                   |
+| `length?`    | `number`           | Nonnegative length along the path                                 |
+| `width?`     | `number`           | Nonnegative width across the path                                 |
+| `color?`     | `string \| number` | Marker color; inherits the path stroke when omitted               |
+| `lineWidth?` | `number`           | Stroke width for hollow or open contours; ignored by solid shapes |
+
+</DocTab>
+</DocTabs>
+
+Length sets the span along the path, width sets the bar span, and line width affects only the marker.
+
+## Crow-foot endpoint
+
+`crowFoot` draws three open rays from the path contact point and defaults to 8 × 8. Relationship diagrams can use it for multiplicity, but the geometry has no fixed domain meaning.
 
 <ComponentPreview
   files={['crow-foot-arrow', 'crow-foot-arrow.preview.tsx']}
@@ -101,9 +288,37 @@ The path body overlaps the marker contact edge by half of its own stroke width, 
   defaultSourceFile="crow-foot-arrow.preview.tsx"
 />
 
-All three rays belong to the marker, and the path body shrinks to the junction. `length`, `width`, `lineWidth`, `color`, and `opacity` continue to use Core's `arrowDetail` contract; start, end, reversed routes, and double endpoints share the same placement algorithm.
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
 
-## Related
+#### CrowFootArrowDefinition
 
-- [Capability Loading](/library/extension/capability-loading): boundary between direct injection and the provider graph
-- [Extensions](/library/extension/introduction): browse the other optional capabilities
+Pass these Definitions to `Layout.extensions.arrows` or `compile.arrows` and select an endpoint with `arrowDetail.end.shape`:
+
+| Definition                | `shape`    | Default length × width |
+| ------------------------- | ---------- | ---------------------- |
+| `CrowFootArrowDefinition` | `crowFoot` | 8 × 8                  |
+
+#### IRArrowEndDetail
+
+| Field        | Type               | Description                                                       |
+| ------------ | ------------------ | ----------------------------------------------------------------- |
+| `shape`      | `string`           | One of the endpoint names above                                   |
+| `length?`    | `number`           | Nonnegative length along the path                                 |
+| `width?`     | `number`           | Nonnegative width across the path                                 |
+| `color?`     | `string \| number` | Marker color; inherits the path stroke when omitted               |
+| `lineWidth?` | `number`           | Stroke width for hollow or open contours; ignored by solid shapes |
+
+</DocTab>
+</DocTabs>
+
+Change marker size, color, and stroke to inspect where the three rays meet the path.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Custom Arrows', description: 'Define an endpoint geometry', url: '/kernel/components/path/custom-arrow' },
+    { title: 'Extension', description: 'Browse other optional capabilities', url: '/library/extension/introduction' },
+  ]}
+/>

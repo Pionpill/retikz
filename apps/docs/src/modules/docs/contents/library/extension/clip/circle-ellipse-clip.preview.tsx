@@ -5,7 +5,7 @@ const clippedContent = (centerX: number) => (
   <Node
     position={[centerX, 0]}
     shape="rectangle"
-    style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 } }}
+    style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: '#2563eb', size: 14 } }}
     layout={{ minimumSize: { width: 170, height: 150 } }}
   />
 );

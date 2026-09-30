@@ -1,0 +1,170 @@
+---
+title: Schema 参考
+description: 查询 Ribbon Path、宽度、端点与采样输入的字段约束
+---
+
+以下 Schema 从 `@retikz/extension` 的公开入口导出。`RibbonPathSchema` 校验完整 Path，`RibbonPathOptionsSchema` 校验 `kindOptions`；共享 Path 字段的详细含义见 [Path Schema 参考](/kernel/components/path/schema-reference)。
+
+## RibbonPathSchema
+
+<ZodSchema
+  shallow
+  name="RibbonPathSchema"
+  description="Ribbon 的完整 Path 输入；根据 mode 约束中心线与边界字段。"
+  descriptions={{
+    type: 'Path 图元判别字段。',
+    kind: '固定为 ribbon，选择当前图装配的 Ribbon Path kind。',
+    kindOptions: 'Ribbon 构造模式、宽度、端点、采样与边界配置。',
+    children: 'centerline 模式的开放中心线 Step；boundary 模式禁止顶层 children。',
+    style: 'Path 共享外观覆盖，包括填充与描边。',
+    id: '可选稳定标识，可供其它图元引用。',
+    meta: '原样透传的 JSON provenance 元数据。',
+    animations: '声明式动画轨道。',
+    zIndex: '同层图元的显式栈序。',
+    rotate: '绕包围盒中心旋转的角度。',
+    scale: '绕包围盒中心缩放的比例。',
+    roundedCorners: '几何圆角半径。',
+    label: 'Path 共享几何标签；当前仅 centerline 模式支持。',
+    marks: '沿路径放置的方向标记。',
+  }}
+/>
+
+## RibbonPathOptionsSchema
+
+<ZodSchema
+  shallow
+  name="RibbonPathOptionsSchema"
+  description="Ribbon 专属配置；centerline 与 boundary 模式使用互斥字段。"
+  descriptions={{
+    mode: '构造模式；省略时使用 centerline。',
+    sampling: '中心线采样策略，默认 64 个基础样本。',
+    width: '由 kind 区分的四种宽度规则，必须选择一种。',
+    start: '起点端面方向、端帽与标签。',
+    end: '终点端面方向、端帽与标签。',
+    align: '生成带状轮廓时，中心线位于哪一侧。',
+    upper: 'boundary 模式的开放上边界 Step 序列。',
+    lower: 'boundary 模式的开放下边界 Step 序列。',
+  }}
+/>
+
+`centerline` 必须提供带 `kind` 的 `width` 对象。`boundary` 必须提供 `upper` 与 `lower`，且不能使用中心线宽度字段。
+
+## CenterlineRibbonPathOptionsSchema
+
+<ZodSchema
+  shallow
+  name="CenterlineRibbonPathOptionsSchema"
+  description="中心线模式：width 必填；端点可配置 direction、cap 与 label，mode 可省略。"
+/>
+
+## BoundaryRibbonPathOptionsSchema
+
+<ZodSchema
+  shallow
+  name="BoundaryRibbonPathOptionsSchema"
+  description="边界模式：mode、upper、lower 必填，不接受中心线专属字段。"
+/>
+
+## RibbonWidthSchema
+
+<ZodSchema
+  shallow
+  name="RibbonWidthSchema"
+  description="按 kind 区分 fixed、taper、stops、profile；严格分支禁止混用字段。"
+/>
+
+## FixedRibbonWidthSchema
+
+<ZodSchema shallow name="FixedRibbonWidthSchema" description="kind 为 fixed；value 是必填的非负固定宽度。" />
+
+## TaperRibbonWidthSchema
+
+<ZodSchema
+  shallow
+  name="TaperRibbonWidthSchema"
+  description="kind 为 taper；start、end 均必填且非负，interpolation 默认 linear，也可使用 smooth。"
+/>
+
+## RibbonEndpointSchema
+
+<ZodSchema
+  shallow
+  name="RibbonEndpointSchema"
+  description="流带单侧端点的独立端面方向、端帽与标签；方向默认 auto，跟随中心线端点切线的法线。"
+  descriptions={{
+    direction: '端面轴线：auto、角度、非零向量或极坐标；不改变中心线走向。',
+    cap: '该端点闭合轮廓时使用的端帽。',
+    label: 'Kernel 边界标签，基于最终端帽轮廓定位。',
+  }}
+/>
+
+## StopsRibbonWidthSchema
+
+<ZodSchema
+  shallow
+  name="StopsRibbonWidthSchema"
+  description="由多个位置和宽度停靠点构成的宽度曲线。"
+  descriptions={{
+    kind: '固定为 stops。',
+    stops: '至少两个宽度停靠点；编译时按归一化位置排序。',
+    interpolation: '相邻停靠点之间的插值曲线。',
+  }}
+/>
+
+## ProfileRibbonWidthSchema
+
+<ZodSchema
+  shallow
+  name="ProfileRibbonWidthSchema"
+  description="引用已注册的宽度 profile 和 JSON 参数。"
+  descriptions={{
+    kind: '固定为 profile。',
+    name: '当前图装配的内置或自定义 profile 名称。',
+    params: '可选的 JSON-safe profile 参数。',
+  }}
+/>
+
+## RibbonArcCapSchema
+
+<ZodSchema
+  shallow
+  name="RibbonArcCapSchema"
+  description="使用显式圆弧闭合端点的端帽。"
+  descriptions={{
+    center: '端帽局部圆心 [x, y]；x 向外，y 向左侧。',
+    radius: '正数半径；两侧端点必须落在该圆上。',
+    sweep: '连接两侧端点的圆弧方向；省略时取短弧。',
+  }}
+/>
+
+## RibbonFixedSamplingSchema
+
+<ZodSchema
+  shallow
+  name="RibbonFixedSamplingSchema"
+  description="使用固定数量的横截面样本。"
+  descriptions={{ kind: '固定为 fixed。', samples: '横截面样本数，整数 2–512。' }}
+/>
+
+## RibbonAdaptiveSamplingSchema
+
+<ZodSchema
+  shallow
+  name="RibbonAdaptiveSamplingSchema"
+  description="根据路径长度和容差选择样本数量。"
+  descriptions={{
+    kind: '固定为 adaptive。',
+    tolerance: '目标线段近似长度，单位为用户单位。',
+    maxSamples: '可选的样本数量上限，整数 2–512。',
+  }}
+/>
+
+端点的 `label` 直接使用 Kernel [BoundaryLabelSchema](/kernel/components/node/schema-reference#boundarylabelschema)，与 `cap` 并列；无需 Ribbon 专属标签 Schema。
+
+## RibbonDirectionSchema
+
+<ZodSchema
+  shallow
+  name="RibbonDirectionSchema"
+  description="独立端面轴线：角度、非零向量或极坐标；auto 默认值定义在 RibbonEndpointSchema.direction 中。"
+/>

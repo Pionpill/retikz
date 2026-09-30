@@ -31,8 +31,5 @@ export const styledPrimitiveFromOutline = (
     primitive.strokeLinecap = appearance.strokeLinecap;
     primitive.strokeLinejoin = appearance.strokeLinejoin;
   }
-  if (ribbon.id !== undefined) primitive.id = ribbon.id;
-  if (ribbon.meta !== undefined) primitive.meta = ribbon.meta;
-  if (ribbon.animations !== undefined) primitive.animations = ribbon.animations;
   return primitive;
 };

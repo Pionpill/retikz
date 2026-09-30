@@ -1,0 +1,262 @@
+---
+title: Custom usage
+description: Define a Ribbon width profile and inject it into a drawing
+---
+
+A custom width profile links JSON-safe parameters to a runtime width sampler. Inject the resulting Definition into the current drawing. Read [Basic usage](/library/extension/ribbon/usage) first for the common centerline setup.
+
+## When to customize
+
+Use [Basic usage](/library/extension/ribbon/usage) when fixed widths, endpoint interpolation, stops, or the built-in `bulge` suffice. Define a new profile only when the domain needs its own width function. Input still stores only the profile name and JSON parameters; the function and Definition remain at runtime.
+
+## Minimal runnable result
+
+The `pulse` profile reaches its peak at the center. Change its base and peak widths to see one definition produce outlines from different JSON parameters.
+
+<ComponentPreview
+  files={['ribbon-custom-profile', 'ribbon-custom-profile.preview.tsx']}
+  defaultSourceFile="ribbon-custom-profile.preview.tsx"
+  size="sm"
+  caption="Change the JSON base and peak parameters to see one profile function generate the outline."
+/>
+
+## Define the capability
+
+For a domain-specific width curve, call `defineRibbonWidthProfile`, then call `createRibbonPathKindDefinition` to create the one Ribbon Definition containing that profile. The custom Definition follows the same `RibbonPathSchema`, profile registry, and geometry path as the built-in Definition.
+
+Save this shared definition as `pulse-profile.ts` so each API example can reuse it:
+
+```ts
+import { createRibbonPathKindDefinition, defineRibbonWidthProfile } from '@retikz/extension';
+import { z } from 'zod';
+
+export const pulseProfile = defineRibbonWidthProfile({
+  name: 'pulse',
+  paramsSchema: z.strictObject({
+    base: z.number().nonnegative(),
+    peak: z.number().nonnegative(),
+  }),
+  widthAt: ({ offset, params }) => params.base + (params.peak - params.base) * Math.sin(Math.PI * offset),
+});
+
+export const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseProfile] });
+```
+
+`params` must remain JSON-safe and is validated by the profile's `paramsSchema` before sampling. `widthAt` must return a finite, non-negative width in user units.
+
+## Inject and use
+
+### Direct injection into the drawing
+
+These examples reuse the `pulseRibbonDefinition` above to draw the same pulse ribbon. Assemble the Definition at the rendering or compilation entry, then reference its profile through `width.name`; importing it alone does not register it.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+Pass the Definition through `Layout.extensions.pathKinds` and describe the centerline with Path and Step:
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+
+import { pulseRibbonDefinition } from './pulse-profile';
+
+export const Example = () => (
+  <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ pathKinds: [pulseRibbonDefinition] }}>
+    <Path
+      kind="ribbon"
+      kindOptions={{
+        width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
+        sampling: { kind: 'fixed', samples: 41 },
+      }}
+      style={{ fill: '#60a5fa', stroke: '#1d4ed8' }}
+    >
+      <Step kind="move" to={[-180, 20]} />
+      <Step kind="curve" control={[0, -90]} to={[180, 20]} />
+    </Path>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Build input with `scene` / `path` and assemble the same Definition through `compile.pathKinds` in `renderToSvgString`:
+
+```ts
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
+
+import { pulseRibbonDefinition } from './pulse-profile';
+
+const input = scene({
+  viewBox: { x: -260, y: -130, width: 520, height: 260 },
+  children: [
+    path({
+      kind: 'ribbon',
+      kindOptions: {
+        width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
+        sampling: { kind: 'fixed', samples: 41 },
+      },
+      style: { fill: '#60a5fa', stroke: '#1d4ed8' },
+      children: [
+        { type: 'step', kind: 'move', to: [-180, 20] },
+        { type: 'step', kind: 'curve', control: [0, -90], to: [180, 20] },
+      ],
+    }),
+  ],
+});
+
+export const svg = renderToSvgString(input, { compile: { pathKinds: [pulseRibbonDefinition] } });
+```
+
+</DocTab>
+<DocTab value="ir" label="IR">
+
+Define the shared IR data first, then choose React or Vanilla to render it. The last two steps are alternatives; use either one.
+
+<DocSteps>
+<DocStep title="Define the IR data">
+
+Save this data as `ribbon-ir.ts`. IR stores only the profile name and JSON parameters, without functions or Definitions:
+
+```ts
+import type { IRScene } from '@retikz/core';
+
+export const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  viewBox: { x: -260, y: -130, width: 520, height: 260 },
+  children: [
+    {
+      type: 'path',
+      kind: 'ribbon',
+      kindOptions: {
+        width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
+        sampling: { kind: 'fixed', samples: 41 },
+      },
+      style: { fill: '#60a5fa', stroke: '#1d4ed8' },
+      children: [
+        { type: 'step', kind: 'move', to: [-180, 20] },
+        { type: 'step', kind: 'curve', control: [0, -90], to: [180, 20] },
+      ],
+    },
+  ],
+};
+```
+
+</DocStep>
+<DocStep title="Render with React (optional)">
+
+To consume this IR with React, inject the runtime Definition into Layout:
+
+```tsx
+import { Layout } from '@retikz/react';
+
+import { pulseRibbonDefinition } from './pulse-profile';
+import { ir } from './ribbon-ir';
+
+export const Example = () => <Layout ir={ir} extensions={{ pathKinds: [pulseRibbonDefinition] }} />;
+```
+
+</DocStep>
+<DocStep title="Render with Vanilla (optional)">
+
+To consume the same IR with Vanilla, inject the runtime Definition through the rendering options:
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+
+import { pulseRibbonDefinition } from './pulse-profile';
+import { ir } from './ribbon-ir';
+
+export const svg = renderToSvgString(ir, { compile: { pathKinds: [pulseRibbonDefinition] } });
+```
+
+</DocStep>
+</DocSteps>
+</DocTab>
+</DocTabs>
+
+### Assemble a provider graph
+
+When an adapter or toolchain must collect runtime datasets before compilation, use `createRibbonProviderContribution`. It merges the built-in `bulge` profile and caller profiles into one `pathKind/ribbon` provider, then hands that contribution to Core's generic resolver:
+
+```ts
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { createRibbonProviderContribution } from '@retikz/extension';
+
+import { pulseProfile } from './pulse-profile';
+import { ir } from './ribbon-ir';
+
+const compileOptions = resolveCoreProviderDependencies({
+  contributions: [createRibbonProviderContribution({ profiles: [pulseProfile] })],
+});
+
+const result = compileToScene(ir, compileOptions);
+```
+
+The provider only assembles Definitions and runtime profile datasets into ordinary Core compile options. It does not change the `Path` IR shape or create a second Ribbon lookup. Direct `pathKinds` injection and the provider graph share the same `createRibbonPathKindDefinition` construction path, schema, and compile implementation.
+
+## Errors and limitations
+
+- A profile `name` cannot be empty. Profiles with the same name but different identities conflict during assembly instead of overriding one another
+- When present, `paramsSchema` validates JSON parameters before width sampling. Unknown profiles, invalid parameters, and negative or non-finite `widthAt` results fail compilation
+- Assemble only one `ribbon` Path kind Definition in a drawing; do not pass both the official and custom Definitions
+
+## Custom caps
+
+Define a parameter schema and `resolve` with `defineRibbonCap`, inject it through `createRibbonPathKindDefinition({ caps })`, and reference its name from `start.cap` or `end.cap`. The callback receives the section midpoint, outward direction, section axis, and width. Commands use Path-local coordinates and must join the prescribed attachments: left to right at the end and right to left at the start. The host closes the outline.
+
+This pointed cap uses the final section frame, following the centerline normal by default or an independent `start.direction` / `end.direction` override. JSON parameters control its depth. Chord diagrams can use the built-in arc cap directly.
+
+<ComponentPreview
+  files={['ribbon-custom-cap', 'ribbon-custom-cap.preview.tsx']}
+  defaultSourceFile="ribbon-custom-cap.preview.tsx"
+  size="md"
+/>
+
+## Related props
+
+These are the members needed to define, inject, and reference a profile. See the [API reference](/library/extension/ribbon/api-reference) for full signatures.
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineRibbonWidthProfile',
+      kind: 'function',
+      type: '<TParams extends JsonObject>(definition: RibbonWidthProfileDefinitionInput<TParams>) => RibbonWidthProfileDefinition',
+      description:
+        'Validate the profile name and create a runtime definition; `definition` supplies `name`, optional `paramsSchema`, and a `widthAt` function returning non-negative widths',
+    },
+    {
+      name: 'createRibbonPathKindDefinition',
+      kind: 'function',
+      type: '(options?: { profiles?: ReadonlyArray<RibbonWidthProfileDefinition>; caps?: ReadonlyArray<RibbonCapDefinition> }) => PathKindDefinition<IRRibbonPath>',
+      description: 'Combine custom profiles and the built-in bulge in one ribbon Definition',
+    },
+    {
+      name: 'Layout.extensions.pathKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<PathKindDefinition>',
+      description:
+        'Explicitly inject the one Ribbon Definition for the current drawing; importing a module does not register it',
+    },
+    {
+      name: 'compile.pathKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<AnyPathKindDefinition>',
+      description:
+        'Runtime Definitions in Vanilla rendering options; assemble them here when renderToSvgString consumes Vanilla input or IR',
+    },
+    {
+      name: 'Path.kindOptions.width',
+      kind: 'property',
+      type: "{ kind: 'profile'; name: string; params?: JsonObject }",
+      description: 'Reference an assembled profile by `name` and pass serializable `params`',
+    },
+  ]}
+/>
+
+## Further reading
+
+- [Basic usage](/library/extension/ribbon/usage)
+- [API reference](/library/extension/ribbon/api-reference)
