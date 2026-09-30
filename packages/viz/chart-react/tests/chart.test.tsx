@@ -1,11 +1,11 @@
 import type { IRChartSource } from '@retikz/chart';
-import { normalizeBubbleChart } from '@retikz/chart-vanilla/point/bubble';
-import { normalizeConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
-import { normalizeRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
-import { normalizeRegressionChart } from '@retikz/chart-vanilla/point/regression';
-import { normalizeScatterChart } from '@retikz/chart-vanilla/point/scatter';
-import { normalizeStripChart } from '@retikz/chart-vanilla/point/strip';
-import { ScatterChartSchema } from '@retikz/chart/point/scatter';
+import { normalizeBubbleChart } from '@retikz/chart-vanilla/point';
+import { normalizeConnectedScatterChart } from '@retikz/chart-vanilla/point';
+import { normalizeRangedDotChart } from '@retikz/chart-vanilla/point';
+import { normalizeRegressionChart } from '@retikz/chart-vanilla/point';
+import { normalizeScatterChart } from '@retikz/chart-vanilla/point';
+import { normalizeStripChart } from '@retikz/chart-vanilla/point';
+import { ScatterChartSchema } from '@retikz/chart/point';
 import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
 import type { InputEmbedAdapter } from '@retikz/vanilla';

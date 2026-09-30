@@ -31,8 +31,7 @@ const ScopeReferenceEnvelope: FC<ScopeReferenceEnvelopeProps> = props => {
           ['layouts', 'envelope', 'resolved'],
           ['placeholder', 'check', 'preserve'],
         ]}
-        rowGap={32}
-        columnGap={42}
+        gap={{ row: 32, column: 42 }}
       >
         <FlowEntities
           items={[

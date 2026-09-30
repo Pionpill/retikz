@@ -1,0 +1,106 @@
+---
+title: Schema reference
+description: Ribbon Path, width, endpoint, and sampling input fields and constraints
+---
+
+These schemas are public exports from `@retikz/extension`. `RibbonPathSchema` validates a complete Path and `RibbonPathOptionsSchema` validates `kindOptions`. See the [Path schema reference](/kernel/components/path/schema-reference) for shared Path fields.
+
+## RibbonPathSchema
+
+<ZodSchema
+  shallow
+  name="RibbonPathSchema"
+  description="Complete Ribbon Path input; mode determines the centerline or boundary constraints."
+/>
+
+## RibbonPathOptionsSchema
+
+<ZodSchema
+  shallow
+  name="RibbonPathOptionsSchema"
+  description="Ribbon-specific configuration with mutually exclusive centerline and boundary fields."
+/>
+
+`centerline` requires a `width` object discriminated by `kind`. `boundary` requires `upper` and `lower` and excludes centerline width fields.
+
+## CenterlineRibbonPathOptionsSchema
+
+<ZodSchema
+  shallow
+  name="CenterlineRibbonPathOptionsSchema"
+  description="Centerline mode: width is required; endpoints can set direction, cap, and label. Mode may be omitted."
+/>
+
+## BoundaryRibbonPathOptionsSchema
+
+<ZodSchema
+  shallow
+  name="BoundaryRibbonPathOptionsSchema"
+  description="Boundary mode requires mode, upper, and lower and rejects centerline-only fields."
+/>
+
+## RibbonWidthSchema
+
+<ZodSchema
+  shallow
+  name="RibbonWidthSchema"
+  description="Discriminated union of fixed, taper, stops, and profile. Strict branches reject mixed fields."
+/>
+
+## FixedRibbonWidthSchema
+
+<ZodSchema
+  shallow
+  name="FixedRibbonWidthSchema"
+  description="kind is fixed; value is the required nonnegative constant width."
+/>
+
+## TaperRibbonWidthSchema
+
+<ZodSchema
+  shallow
+  name="TaperRibbonWidthSchema"
+  description="kind is taper; start and end are required nonnegative widths. Interpolation defaults to linear and also supports smooth."
+/>
+
+## RibbonEndpointSchema
+
+<ZodSchema
+  shallow
+  name="RibbonEndpointSchema"
+  description="One ribbon endpoint: optional section direction, cap, and boundary label; direction defaults to auto."
+/>
+
+## StopsRibbonWidthSchema
+
+<ZodSchema shallow name="StopsRibbonWidthSchema" description="A width curve defined by position and width stops." />
+
+## ProfileRibbonWidthSchema
+
+<ZodSchema
+  shallow
+  name="ProfileRibbonWidthSchema"
+  description="A registered width profile reference with JSON parameters."
+/>
+
+## RibbonArcCapSchema
+
+<ZodSchema shallow name="RibbonArcCapSchema" description="An explicit circular arc cap closing an endpoint." />
+
+## RibbonFixedSamplingSchema
+
+<ZodSchema shallow name="RibbonFixedSamplingSchema" description="A fixed number of cross-section samples." />
+
+## RibbonAdaptiveSamplingSchema
+
+<ZodSchema shallow name="RibbonAdaptiveSamplingSchema" description="Choose samples from path length and tolerance." />
+
+Endpoint `label` directly uses Kernel [BoundaryLabelSchema](/kernel/components/node/schema-reference#boundarylabelschema), alongside `cap`. There is no Ribbon-specific label schema.
+
+## RibbonDirectionSchema
+
+<ZodSchema
+  shallow
+  name="RibbonDirectionSchema"
+  description="Independent section axis: angle, nonzero vector, or polar coordinates; the auto default belongs to RibbonEndpointSchema.direction."
+/>

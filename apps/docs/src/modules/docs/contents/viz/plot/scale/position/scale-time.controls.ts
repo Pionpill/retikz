@@ -9,7 +9,6 @@ export const scaleTimeControls = definePreviewControls({
   title: '时间比例尺自动派生',
   sections: [
     {
-      label: '时间字段与数据',
       controls: [
         {
           kind: 'table',

@@ -80,7 +80,7 @@ const completeFlow = {
 } as const;
 
 describe('Flow Source schema', () => {
-  it('preserves root Graph rules while rejecting Flow Group-local rules', () => {
+  it('preserves root and Group-local Graph rules', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
@@ -101,7 +101,7 @@ describe('Flow Source schema', () => {
         groups: [{ id: 'group', graphRules: source.graphRules, children: ['entity'] }],
         children: ['group'],
       }).success,
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('round-trips a Flow Relation group and rejects non-string groups', () => {

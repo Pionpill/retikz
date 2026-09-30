@@ -61,7 +61,7 @@ describe('layout utils', () => {
     expect(navigation.next).toBeNull();
   });
 
-  it('将 Showcase 图标放在一级页面条目而非分组标题', () => {
+  it('Point 图表分组复用散点图图标，六个子文档各有图标', () => {
     const t = ((key: string) => key) as TFunction;
     const categories = buildSidebarCategories(t, 'viz', vizSection);
     const chart = categories.find(category => category.value === 'chart');
@@ -76,6 +76,9 @@ describe('layout utils', () => {
       'ranged-dot',
       'strip',
     ]);
+    expect(points?.children?.every(child => child.Icon !== undefined)).toBe(true);
+    expect(new Set(points?.children?.map(child => child.Icon)).size).toBe(6);
+    expect(points?.children?.find(child => child.value === 'scatter')?.Icon).toBe(points?.Icon);
   });
 
   it('Plot 末尾注册 API 参考与更新日志路由', () => {
@@ -108,7 +111,7 @@ describe('layout utils', () => {
     expect(paths.some(path => path.startsWith('/viz/releases/'))).toBe(false);
   });
 
-  it('在 Chart 下并列组织点图 Showcase 与共享图形模型', () => {
+  it('在 Chart 下并列组织点图组件与共享图形模型', () => {
     expect(vizSection.map(section => section.id).filter(Boolean)).toEqual(['data', 'chart', 'table', 'plot']);
 
     const chart = vizSection.find(section => section.id === 'chart');
@@ -125,55 +128,35 @@ describe('layout utils', () => {
       .filter(path => path.startsWith('/viz/chart/') && !path.includes('/changelog/'));
 
     expect(points?.meta).toMatchObject({ pageType: 'group', capability: 'chart.points' });
-    expect(scatter?.meta).toMatchObject({
-      pageType: 'concept',
-      layout: 'showcase',
-      capability: 'showcase.scatter',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'scatter-minimal', order: 10 },
-    });
-    expect(bubble?.meta).toMatchObject({
-      pageType: 'concept',
-      layout: 'showcase',
-      capability: 'showcase.bubble',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'bubble-minimal', order: 20 },
-    });
-    expect(regression?.meta).toMatchObject({
-      pageType: 'concept',
-      layout: 'showcase',
-      capability: 'showcase.regression',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'regression-minimal', order: 30 },
-    });
-    expect(connectedScatter?.meta).toMatchObject({
-      pageType: 'concept',
-      layout: 'showcase',
-      capability: 'showcase.connected-scatter',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'connected-scatter-minimal', order: 40 },
-    });
-    expect(rangedDot?.meta).toMatchObject({
-      pageType: 'concept',
-      layout: 'showcase',
-      capability: 'showcase.ranged-dot',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'ranged-dot-minimal', order: 50 },
-    });
-    expect(strip?.meta).toMatchObject({
-      pageType: 'concept',
-      layout: 'showcase',
-      capability: 'showcase.strip',
-      showcase: { family: 'scatter-points', role: 'primary', preview: 'strip-minimal', order: 60 },
-    });
+    for (const [id, page] of [
+      ['scatter', scatter],
+      ['bubble', bubble],
+      ['regression', regression],
+      ['connected-scatter', connectedScatter],
+      ['ranged-dot', rangedDot],
+      ['strip', strip],
+    ] as const) {
+      expect(page?.meta).toMatchObject({
+        pageType: 'component',
+        layout: 'article',
+        capability: `chart.${id}`,
+      });
+    }
     expect(model?.meta).toMatchObject({ pageType: 'concept', capability: 'chart.model' });
-    expect(model?.children?.map(page => page.id)).toEqual(['structure', 'authoring', 'presentation', 'plot']);
+    expect(model?.children?.map(page => page.id)).toEqual(['general-structure', 'core-structure']);
     expect(chartPaths).toEqual([
+      '/viz/chart/introduction',
+      '/viz/chart/get-start',
+      '/viz/chart/design/encapsulation',
+      '/viz/chart/design/data-model',
       '/viz/chart/points/scatter',
       '/viz/chart/points/bubble',
       '/viz/chart/points/regression',
       '/viz/chart/points/connected-scatter',
       '/viz/chart/points/ranged-dot',
       '/viz/chart/points/strip',
-      '/viz/chart/model/structure',
-      '/viz/chart/model/authoring',
-      '/viz/chart/model/presentation',
-      '/viz/chart/model/plot',
+      '/viz/chart/model/general-structure',
+      '/viz/chart/model/core-structure',
     ]);
     expect(chartPaths).not.toContain('/viz/chart/scatter');
   });

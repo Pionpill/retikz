@@ -23,7 +23,7 @@ import {
   ShadowPreset,
   ShapeValueSchema,
 } from '@retikz/core';
-import { RibbonPathOptionsSchema } from '@retikz/extension';
+import { CenterlineRibbonPathOptionsSchema, TaperRibbonWidthSchema } from '@retikz/extension';
 import {
   JsonValueSchema,
   NonBlankStringSchema,
@@ -968,21 +968,10 @@ export const RelationPathGeometrySchema = strictObject({
   .describe('Path geometry configuration for RelationMark');
 
 export const RelationRibbonSpecificOptionsSchema = strictObject({
-  interpolation: RibbonPathOptionsSchema.shape.interpolation,
-  align: RibbonPathOptionsSchema.shape.align,
-  samples: RibbonPathOptionsSchema.shape.samples,
-  sampling: RibbonPathOptionsSchema.shape.sampling,
-})
-  .superRefine((options, ctx) => {
-    if (options.samples !== undefined && options.sampling !== undefined) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['sampling'],
-        message: 'Use either `samples` or `sampling`, not both.',
-      });
-    }
-  })
-  .describe('Core Path kind=ribbon options used only by ribbon relations');
+  interpolation: TaperRibbonWidthSchema.shape.interpolation.unwrap().optional(),
+  align: CenterlineRibbonPathOptionsSchema.shape.align.unwrap().optional(),
+  sampling: CenterlineRibbonPathOptionsSchema.shape.sampling.unwrap().optional(),
+}).describe('Extension Ribbon options used only by ribbon relations');
 
 export const RelationRibbonOptionsSchema = strictObject({
   width: PointNonnegativeNumberStyleSchema.describe(

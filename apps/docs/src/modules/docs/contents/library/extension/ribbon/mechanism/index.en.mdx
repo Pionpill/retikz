@@ -1,0 +1,291 @@
+---
+title: Implementation
+description: How Ribbon compiles a Path kind into a Scene outline
+---
+
+This page traces how an assembled Path kind Definition compiles Ribbon into an ordinary Scene Path. Read [Basic usage](/library/extension/ribbon/usage) first.
+
+## Compile flow
+
+The diagram reads from left to right and separates shared Path host services from Ribbon's two modes. Blue nodes are orchestrated by Extension:
+
+<ComponentPreview files="ribbon-compile-flow" hideCode type="flow" size="sm" />
+
+Both modes reuse Core `materializePath`: `centerline` materializes `children`, builds the outline, and uses Core to compile labels; `boundary` materializes `upper` / `lower` and closes the authored sides directly. Both branches converge on shared transforms and output; renderers do not interpret Ribbon-specific fields.
+
+The responsibilities in one compile are:
+
+1. Core reads the open Path host, looks up the Definition for `kind`, and parses the subject with that Definition's complete schema
+2. The Extension Ribbon Definition resolves `kindOptions`, calls Core `materializePath` for commands after target, anchor, generator, and Step lowering
+3. Extension applies width, sampling, alignment, caps, and profiles, then asks Core `emitHostLabels` to compile centerline labels and `emitBoundaryLabels` to compile endpoint labels
+4. Extension calls Core `wrapOutput` to apply Path rotate / scale to the outline and labels; Core wraps Scope, transforms, bounds, provenance, and diagnostics; renderers consume an ordinary Scene Path
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Ribbon Definition and profile injection',
+      path: 'packages/library/extension/src/ribbon/definition.ts',
+      startLine: 14,
+      endLine: 39,
+    },
+    {
+      label: 'Ribbon provider contribution',
+      path: 'packages/library/extension/src/ribbon/provider.ts',
+      startLine: 5,
+      endLine: 40,
+    },
+    {
+      label: 'Core host-neutral Path kind services',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 110,
+      endLine: 153,
+    },
+    {
+      label: 'Core Path kind lookup and subject-schema parsing',
+      path: 'packages/kernel/core/src/resolve/path/provider.ts',
+      startLine: 26,
+      endLine: 41,
+    },
+    {
+      label: 'Core path materialization and host-label orchestration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 551,
+      endLine: 616,
+    },
+    {
+      label: 'Ribbon outline and label output',
+      path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
+      startLine: 107,
+      endLine: 195,
+    },
+  ]}
+/>
+
+## centerline: sample and construct both sides
+
+`centerline` takes one open centerline and a width rule. The centerline determines the flow direction, while width determines the size of each cross-section along it. The rendered result is a closed outline bounded by two sides and endpoint caps.
+
+The diagram uses the same cubic Bézier centerline with a fixed width of 24 and 7 samples. Gray dotted lines mark the centerline and teaching guides; blue and orange consistently identify the left and right sides:
+
+<ComponentPreview files="ribbon-centerline-geometry" hideCode type="illustration" size="md" />
+
+From left to right, sample the centerline, offset each point by 12 along its normal in both directions, then interpolate each sequence of side points and close both ends. A real Ribbon draws the final filled region; points and guides are overlaid for explanation.
+
+### Sample by arc length and retain feature positions
+
+Materialized lines, Bézier curves, and arcs become curve segments that provide positions and unit tangents. The implementation calculates each segment's length and accumulates the total length $L$. The normalized `offset` is the fraction of distance traveled along the entire path. For example, `offset = 0.5` is halfway along its length, rather than each segment's parameter midpoint. Lines and circular arcs use analytic lengths; Bézier curves and elliptical arcs use numerical approximations. Distance-to-parameter inversion reuses the same Math length model.
+
+`sampling` determines the base sample count $N$:
+
+- `fixed` uses `samples` directly, with a default of 64
+- `adaptive` uses the total length and target spacing `tolerance`, bounded by `maxSamples`:
+
+$$
+N = \max\left(2,\min\left(\mathrm{maxSamples},\left\lceil\frac{L}{\mathrm{tolerance}}\right\rceil+1\right)\right)
+$$
+
+Base sample positions are $i/(N-1)$, including both endpoints. `adaptive` adjusts the base count for the whole path; it does not recursively subdivide by local curvature or guarantee an outline error bound.
+
+All original segment joints and width `stops` are then added, sorted, and deduplicated. Thus `samples` / `maxSamples` bound the base count, while feature positions can increase the final cross-section count. Short segments, corners, and width stops are retained even when uniform sampling would miss them.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Segment lengths and distance inversion',
+      path: 'packages/library/extension/src/ribbon/geometry/centerline.ts',
+      startLine: 195,
+      endLine: 233,
+    },
+    {
+      label: 'Base sample count',
+      path: 'packages/library/extension/src/ribbon/geometry/width.ts',
+      startLine: 90,
+      endLine: 97,
+    },
+    {
+      label: 'Retain segment joints and width stops',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
+      startLine: 53,
+      endLine: 73,
+    },
+  ]}
+/>
+
+### Connect cross-sections with interpolating curves
+
+Each sample provides a center point, tangent, and width. By default, side points are offset along the tangent normal: `align="center"` allocates half the width to each side, while `left` or `right` allocates all width to one side. Explicit endpoint `direction` replaces only the first or last cross-section axis. This produces one sequence of boundary points per side.
+
+Each side is connected independently:
+
+1. Split into separate chunks at segment joints with discontinuous tangents and at `step` width jumps. Sample incoming and outgoing tangents and widths separately at the same joint, retaining the corner or width step. A complete centerline reversal at a joint raises an error
+2. Remove adjacent duplicate points in each chunk. Two points produce a line; three or more use centripetal Catmull–Rom interpolation converted to cubic Bézier commands. The curve passes through the boundary samples, rather than shifting the centerline's control handles to each side
+3. Join chunks with straight lines to form bevel corners or width steps; interpolation does not smooth across these breaks
+4. Assemble “left side forward → end cap → right side reversed → start cap → close” into one closed Path. If a cap has an extension, update the side endpoints before constructing the side curves
+
+Sampled sides therefore usually use interpolating curves, with lines for two-point chunks and explicit breaks. More samples add geometric detail, but the sides remain interpolations of offset samples rather than exact offset curves of the original centerline.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Width allocation and section axes',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/cross-section.ts',
+      startLine: 22,
+      endLine: 69,
+    },
+    {
+      label: 'Side interpolation',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
+      startLine: 31,
+      endLine: 42,
+    },
+    {
+      label: 'Chunk sampling, caps, and closure order',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/sampled.ts',
+      startLine: 74,
+      endLine: 119,
+    },
+  ]}
+/>
+
+### Multiple width stops control thickness independently
+
+Width need not vary monotonically or linearly from start to end. `width.kind="stops"` places width nodes at arbitrary arc-length fractions. For example, widths of 24 at the start, 72 halfway, and 36 at the end produce an outline that widens and then narrows. Halfway means 50% of the centerline's length, and each value is the full ribbon width; centered alignment offsets each side by half that value.
+
+This example deliberately uses a straight centerline, so side curvature comes only from width changes. It starts with `smooth` interpolation; the demo uses 16 base samples to make the sample points easier to observe. Stops are fixed at 0, 0.5, and 1. The stop at 0.5 adds one sample, giving 17 cross-sections in total:
+
+<ComponentPreview
+  files={['ribbon-nonlinear-width', 'ribbon-nonlinear-width.preview.tsx']}
+  defaultSourceFile="ribbon-nonlinear-width.preview.tsx"
+  size="md"
+  caption="Adjust each width independently. Orange dots mark centerline samples and their corresponding side points, and dotted guides mark stop cross-sections; w is the full width at each stop."
+/>
+
+Width evaluation locates the adjacent stops around each sample and interpolates within that interval. `linear` interpolates linearly per interval, while the whole path can still widen and narrow. `smooth` applies $3u^2-2u^3$ to the local fraction $u$. The middle width is independent of the endpoints, so changing it does not rewrite either endpoint width.
+
+Width interpolation and side connection are separate steps: the former determines each cross-section's width, while the latter connects the offset boundary points with Catmull–Rom curves. Width `stops` are added to the sample positions, so each node participates in outline construction. Between nodes, the shape still depends on sampling density and side interpolation. For more complex width functions, use a [custom width profile](/library/extension/ribbon/custom).
+
+<SourceLinks
+  sources={[
+    { label: 'Sort width stops', path: 'packages/library/extension/src/ribbon/resolve.ts', startLine: 16, endLine: 24 },
+    {
+      label: 'Piecewise linear and smooth width evaluation',
+      path: 'packages/library/extension/src/ribbon/geometry/width.ts',
+      startLine: 4,
+      endLine: 61,
+    },
+    {
+      label: 'Add width stops to sample positions',
+      path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
+      startLine: 161,
+      endLine: 176,
+    },
+  ]}
+/>
+
+## boundary: preserve both sides and close the ends
+
+`boundary` already supplies two open sides. Both `upper` and `lower` should run from the ribbon's start to its end. These paths directly determine the width and curvature. This mode has no centerline width function, cross-section sampling, or Catmull–Rom side reconstruction, and does not use `sampling`, `align`, or cap options.
+
+The diagram preserves both curves' positions and shapes. Blue is `upper`, orange is `lower`, and arrows on the curves indicate traversal direction:
+
+<ComponentPreview files="ribbon-boundary-geometry" hideCode type="illustration" size="md" />
+
+The middle panel only reverses traversal of the lower side. The final panel follows the upper side, crosses the right end with a line, returns along the lower side, and closes the left end with another line. Endpoint arrows show the closure order; a real boundary Ribbon draws the filled region.
+
+The two Step sequences are materialized independently into Path commands and checked for a single open path and nonzero total length. Validation still calculates curve lengths, but those calculations do not reconstruct either boundary. Closure proceeds as follows:
+
+1. Keep all `upper` commands, traversing from its start to its end
+2. Add a straight line from the upper endpoint to the lower endpoint
+3. Traverse `lower` in reverse back to its start: swap cubic Bézier control handles, retain quadratic control points, and swap arc start and end angles, preserving the curve geometry
+4. Add `close`, which draws a straight line back to the upper start point
+
+Only the two end closures are new lines; the sides remain the supplied lines, Bézier curves, or arcs. The implementation does not rematch intermediate positions or repair crossings; the author supplies the path directions and geometric relationship. The modes differ in the source of their outline: `centerline` derives it from a centerline and width, while `boundary` assembles an existing outline directly.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Materialize upper and lower sides',
+      path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
+      startLine: 121,
+      endLine: 134,
+    },
+    {
+      label: 'Preserve sides and close with lines',
+      path: 'packages/library/extension/src/ribbon/geometry/outline/boundary.ts',
+      startLine: 7,
+      endLine: 22,
+    },
+    {
+      label: 'Reverse commands while preserving geometry',
+      path: 'packages/library/extension/src/ribbon/geometry/commands.ts',
+      startLine: 46,
+      endLine: 69,
+    },
+  ]}
+/>
+
+## Caps and labels follow the final geometry
+
+In `centerline` mode, cap Definitions produce open command chains connecting the side endpoints. Built-in and custom caps share registration, parameter validation, and diagnostics. The centerline label uses its local tangent for `sloped`. Endpoint labels attach to the final cap support line and use Kernel `rotate` for orientation. Math curve projection extrema include interior extrema. Bounds include the outline, caps, and text layout boxes.
+
+Endpoint sections default to tangent normals. Explicit `start.direction` / `end.direction` override only the endpoint section axes without rewriting the centerline. Caps and cap labels consume the final section frame; centerline label rotation still uses the original tangent.
+
+This example fixes the centerline and text rotation. M is a centerline label; A / B are cap labels. Change the cap shape or width to see the gray support lines and endpoint labels move together:
+
+The Arc option starts with a 90° short arc. Use “Arc angle (°)” to adjust its sweep from 30° to 180°; at 180° it becomes a semicircle. The demo derives `cap.params.center` and `radius` from the angle and width, keeping both side endpoints connected. The angle is a demo control, rather than an additional Ribbon API field.
+
+<ComponentPreview
+  files={['ribbon-label-support', 'ribbon-label-support.preview.tsx']}
+  defaultSourceFile="ribbon-label-support.preview.tsx"
+  size="md"
+  caption="Gray dashed lines are outward cap support lines, orange dots are label placement base points, and arrows show the outward direction. h is the outward distance from the original section center to the support line. The label gap is measured from the support line to the text layout box."
+/>
+
+Placement has two steps. First, along the section's outward unit vector $n$, find the maximum projection $\max(p\cdot n)$ across all final cap segments. Subtract the projection of the section center $c$ to obtain $h$; the label base point is $q=c+hn$. A round cap reaches its maximum inside the arc, so checking only the two side endpoints is insufficient. See Math's [Curve projection extrema](/kernel/packages/math/algorithms#curve-projection-extrema) for the specific algorithm and interactive example. It computes curve extrema directly, independently of the ribbon sample count.
+
+Core then uses the text rotation to compute the layout box's projected half-extent $e$ along $n$. For the centered outside labels in this example, the box center is $q+n(\text{distance}+e)$. Thus `distance` is the gap between the support line and text box, rather than the distance to the text center. Math supplies the projection calculation; Core still handles inside/outside placement, rotation, and alignment. Changing the cap does not move M.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Cap endpoints and open-chain validation',
+      path: 'packages/library/extension/src/ribbon/geometry/caps.ts',
+      startLine: 23,
+      endLine: 102,
+    },
+    {
+      label: 'Cap projection extrema and label base points',
+      path: 'packages/library/extension/src/ribbon/geometry/endpoint-label.ts',
+      startLine: 10,
+      endLine: 38,
+    },
+    {
+      label: 'Rotated text-box projection and offset',
+      path: 'packages/kernel/core/src/compile/text/boundary-label-geometry.ts',
+      startLine: 26,
+      endLine: 67,
+    },
+    {
+      label: 'Label sampling and final output',
+      path: 'packages/library/extension/src/ribbon/geometry/emit.ts',
+      startLine: 179,
+      endLine: 195,
+    },
+  ]}
+/>
+
+## Errors and limitations
+
+- Without a registered `ribbon` Definition, Core reports an unknown-kind error during Path kind lookup; Extension does not inject one silently
+- Duplicate Path kind names or duplicate profile names with different identities fail during registry or provider-graph assembly instead of being overwritten by order
+- `centerline` requires top-level `children`, plus a `width` object discriminated by `kind`
+- `boundary` requires two valid open Step sequences in `upper` and `lower`, and rejects top-level `children` and centerline width fields
+- `boundary` currently rejects Path `label`; label placement depends on centerline samples and boundary offsets
+- Centerline sampling is configured through `sampling`; unknown profiles, invalid `params`, and negative or non-finite `widthAt` results fail with the path location
+- Multiple moves, close commands, zero-length whole paths, or invalid arc caps never silently produce an empty primitive
+
+## Further reading
+
+- [Path](/kernel/components/path/step): Core Path host, shared styles, and Step semantics
+- [Composite implementation](/kernel/components/composite/mechanism): understand shared Definition dependency assembly
+- [Extension](/library/extension/introduction): browse the other optional Extension capabilities

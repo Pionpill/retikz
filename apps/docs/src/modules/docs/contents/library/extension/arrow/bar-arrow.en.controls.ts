@@ -9,7 +9,6 @@ export const barArrowControls = definePreviewControls({
   title: 'Bar endpoint',
   sections: [
     {
-      label: 'Endpoint parameters',
       controls: [
         { kind: 'range', id: BarArrowControlId.Length, label: 'Length', defaultValue: 10, min: 4, max: 20, step: 1 },
         { kind: 'range', id: BarArrowControlId.Width, label: 'Width', defaultValue: 14, min: 6, max: 24, step: 1 },
@@ -22,7 +21,7 @@ export const barArrowControls = definePreviewControls({
           max: 4,
           step: 0.5,
         },
-        { kind: 'color', id: BarArrowControlId.Color, label: 'Color', defaultValue: '#ea580c' },
+        { kind: 'color', id: BarArrowControlId.Color, label: 'Color', defaultValue: '#2563eb' },
       ],
     },
   ],
@@ -31,6 +30,6 @@ export const barArrowControls = definePreviewControls({
 /** Stable documentation contract for the Bar example */
 export const previewControlContract = {
   controls: barArrowControls,
-  canonicalValues: { length: 10, width: 14, lineWidth: 1.5, color: '#ea580c' },
+  canonicalValues: { length: 10, width: 14, lineWidth: 1.5, color: '#2563eb' },
   relatedApis: ['Layout.arrows', 'Draw.arrowDetail'],
 } satisfies PreviewControlContract;

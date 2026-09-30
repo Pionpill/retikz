@@ -9,7 +9,6 @@ export const trapezoidExampleControls = definePreviewControls({
   title: 'Trapezoid',
   sections: [
     {
-      label: 'Contour parameters',
       controls: [
         {
           kind: 'select',

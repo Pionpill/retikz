@@ -1,116 +1,134 @@
 import type { IRPosition, PathCommand } from '@retikz/core';
 import type { Vector2 } from '@retikz/math';
+import { curve, point } from '@retikz/math';
 
+import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../../errors';
+import type { RibbonCapDefinition } from '../../cap-types';
 import type { IRRibbonCap, RibbonAlignmentValue } from '../../types';
-import { arcCapPoints, capExtension, isArcCap, midpoint, roundedArcPoints } from '../caps';
+import type { RibbonEndpointGeometry } from '../caps';
+import { resolveEndpointCap } from '../caps';
 import { sampleAtDistance } from '../centerline';
-import type { RibbonSegment } from '../types';
+import { commandBoundsPoints, reverseCommands } from '../commands';
+import type { RibbonCrossSection, RibbonSegment } from '../types';
 import { ribbonCrossSection } from './cross-section';
 
+/** 采样边界构造输入 */
 export type OutlineCommandsInput = {
   segments: ReadonlyArray<RibbonSegment>;
   totalLength: number;
   sampleCount: number;
   widthAt: (offset: number) => number;
-  endpointTangents: { start: Vector2; end: Vector2 };
+  endpointAxes: { start?: Vector2; end?: Vector2 };
   align: RibbonAlignmentValue;
   startEndpointCap: IRRibbonCap;
   endEndpointCap: IRRibbonCap;
+  capRegistry: ReadonlyMap<string, RibbonCapDefinition>;
+  featureOffsets: ReadonlyArray<number>;
+  jumpOffsets: ReadonlyArray<number>;
   round: (n: number) => number;
 };
 
-/**
- * 采样型 centerline ribbon 轮廓
- * @description 沿中心线取 sampleCount 个横截面，左侧顺序连线、右侧逆序连线，再按端帽配置闭合
- */
-export const outlineCommands = ({
-  segments,
-  totalLength,
-  sampleCount,
-  widthAt,
-  endpointTangents,
-  align,
-  startEndpointCap,
-  endEndpointCap,
-  round,
-}: OutlineCommandsInput): { commands: Array<PathCommand>; points: Array<IRPosition> } => {
-  const left: Array<IRPosition> = [];
-  const right: Array<IRPosition> = [];
-  const centers: Array<IRPosition> = [];
-  const tangents: Array<Vector2> = [];
-  const widths: Array<number> = [];
-  for (let i = 0; i < sampleCount; i += 1) {
-    const offset = sampleCount === 1 ? 0 : i / (sampleCount - 1);
-    const sample = sampleAtDistance(segments, totalLength, offset * totalLength);
-    const section = ribbonCrossSection({ sample, offset, widthAt, endpointTangents, align, round });
-    left.push(section.left);
-    right.push(section.right);
-    centers.push(section.center);
-    tangents.push(section.tangent);
-    widths.push(section.width);
+/** 独立侧边过点曲线，不跨越显式分段平滑 */
+const sideCommands = (chunks: ReadonlyArray<ReadonlyArray<IRPosition>>): Array<PathCommand> => {
+  const commands: Array<PathCommand> = [];
+  for (const chunk of chunks) {
+    const knots = chunk.filter((position, index) => index === 0 || point.distance(position, chunk[index - 1]) > 1e-10);
+    if (knots.length === 0) continue;
+    commands.push({ kind: commands.length === 0 ? 'move' : 'line', to: knots[0] });
+    if (knots.length === 2) commands.push({ kind: 'line', to: knots[1] });
+    else for (const segment of curve.catmullRomToCubic(knots, 1)) commands.push({ kind: 'cubic', ...segment });
   }
+  return commands;
+};
 
-  if (startEndpointCap === 'square') {
-    const ext = capExtension(widths[0], align);
-    left[0] = [round(left[0][0] - tangents[0][0] * ext), round(left[0][1] - tangents[0][1] * ext)];
-    right[0] = [round(right[0][0] - tangents[0][0] * ext), round(right[0][1] - tangents[0][1] * ext)];
+/** 统一弧长采样、特征点分段和端帽闭合 */
+export const outlineCommands = (
+  input: OutlineCommandsInput,
+): {
+  commands: Array<PathCommand>;
+  points: Array<IRPosition>;
+  start: RibbonEndpointGeometry;
+  end: RibbonEndpointGeometry;
+} => {
+  const { segments, totalLength, sampleCount, widthAt, endpointAxes, align, round } = input;
+  const offsets = new Set<number>([0, 1, ...input.featureOffsets]);
+  for (let index = 0; index < sampleCount; index++) offsets.add(index / (sampleCount - 1));
+  const breaks = new Set<number>([0, 1, ...input.jumpOffsets]);
+  let lengthBefore = 0;
+  for (let index = 0; index < segments.length - 1; index++) {
+    lengthBefore += segments[index].length;
+    const offset = lengthBefore / totalLength;
+    offsets.add(offset);
+    const incoming = segments[index].sampleAt(1).tangent;
+    const outgoing = segments[index + 1].sampleAt(0).tangent;
+    const dot = incoming[0] * outgoing[0] + incoming[1] * outgoing[1];
+    if (dot < -1 + 1e-8)
+      throw new RetikzExtensionError({
+        code: RetikzExtensionErrorCode.GeometryInvalid,
+        message: 'Ribbon centerline reverses at a section.',
+        details: { offset },
+      });
+    if (dot < 1 - 1e-8) breaks.add(offset);
   }
-  if (endEndpointCap === 'square') {
-    const last = sampleCount - 1;
-    const ext = capExtension(widths[last], align);
-    left[last] = [round(left[last][0] + tangents[last][0] * ext), round(left[last][1] + tangents[last][1] * ext)];
-    right[last] = [round(right[last][0] + tangents[last][0] * ext), round(right[last][1] + tangents[last][1] * ext)];
+  const boundaries = [...breaks].sort((a, b) => a - b);
+  const chunks: Array<Array<RibbonCrossSection>> = [];
+  for (let index = 1; index < boundaries.length; index++) {
+    const from = boundaries[index - 1];
+    const to = boundaries[index];
+    const local = [...offsets, from, to].filter(offset => offset >= from && offset <= to);
+    const sorted = [...new Set(local)].sort((a, b) => a - b);
+    chunks.push(
+      sorted.map(offset => {
+        const side = offset === from && from > 0 ? 1 : offset === to && to < 1 ? -1 : 0;
+        const near = Math.max(0, Math.min(1, offset + side * 1e-9));
+        const sample = sampleAtDistance(segments, totalLength, near * totalLength);
+        sample.point = sampleAtDistance(segments, totalLength, offset * totalLength).point;
+        return ribbonCrossSection({ sample, offset, widthAt: () => widthAt(near), endpointAxes, align, round });
+      }),
+    );
   }
-
-  const commands: Array<PathCommand> = [{ kind: 'move', to: left[0] }];
-  for (let i = 1; i < left.length; i += 1) commands.push({ kind: 'line', to: left[i] });
-  if (isArcCap(endEndpointCap)) {
-    const last = sampleCount - 1;
-    for (const point of arcCapPoints({
-      cap: endEndpointCap,
-      from: left[last],
-      to: right[last],
-      endpoint: 'end',
-      round,
-    })) {
-      commands.push({ kind: 'line', to: point });
-    }
-  } else if (endEndpointCap === 'round') {
-    const last = sampleCount - 1;
-    for (const point of roundedArcPoints({
-      center: midpoint(left[last], right[last], round),
-      from: left[last],
-      to: right[last],
-      outwardDirection: tangents[last],
-      round,
-    })) {
-      commands.push({ kind: 'line', to: point });
-    }
-  } else {
-    commands.push({ kind: 'line', to: right[right.length - 1] });
-  }
-  for (let i = right.length - 2; i >= 0; i -= 1) commands.push({ kind: 'line', to: right[i] });
-  if (isArcCap(startEndpointCap)) {
-    for (const point of arcCapPoints({
-      cap: startEndpointCap,
-      from: right[0],
-      to: left[0],
-      endpoint: 'start',
-      round,
-    })) {
-      commands.push({ kind: 'line', to: point });
-    }
-  } else if (startEndpointCap === 'round') {
-    for (const point of roundedArcPoints({
-      center: midpoint(left[0], right[0], round),
-      from: right[0],
-      to: left[0],
-      outwardDirection: [-tangents[0][0], -tangents[0][1]],
-      round,
-    })) {
-      commands.push({ kind: 'line', to: point });
-    }
-  }
-  commands.push({ kind: 'close' });
-  return { commands, points: [...left, ...right] };
+  const first = chunks[0][0];
+  const lastChunk = chunks[chunks.length - 1];
+  const last = lastChunk[lastChunk.length - 1];
+  const start = resolveEndpointCap({
+    endpoint: 'start',
+    section: first,
+    cap: input.startEndpointCap,
+    registry: input.capRegistry,
+    round,
+  });
+  const end = resolveEndpointCap({
+    endpoint: 'end',
+    section: last,
+    cap: input.endEndpointCap,
+    registry: input.capRegistry,
+    round,
+  });
+  first.left = start.left;
+  first.right = start.right;
+  last.left = end.left;
+  last.right = end.right;
+  const left = sideCommands(chunks.map(chunk => chunk.map(section => section.left)));
+  const right = reverseCommands(sideCommands(chunks.map(chunk => chunk.map(section => section.right))));
+  const commands: Array<PathCommand> = [
+    ...left,
+    ...end.commands.slice(1),
+    ...right.slice(1),
+    ...(start.commands.length === 2 && start.commands[1].kind === 'line' ? [] : start.commands.slice(1)),
+    { kind: 'close' },
+  ];
+  const rounded = commands.map(command => {
+    const position = (value: IRPosition): IRPosition => [round(value[0]), round(value[1])];
+    if (command.kind === 'move' || command.kind === 'line') return { ...command, to: position(command.to) };
+    if (command.kind === 'quad') return { ...command, to: position(command.to), control: position(command.control) };
+    if (command.kind === 'cubic')
+      return {
+        ...command,
+        to: position(command.to),
+        control1: position(command.control1),
+        control2: position(command.control2),
+      };
+    return command;
+  });
+  return { commands: rounded, points: commandBoundsPoints(rounded), start, end };
 };

@@ -1,4 +1,4 @@
-import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { IRScatterChart } from '@retikz/chart/point';
 
 import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
 import type { InputScatterChart } from './types';

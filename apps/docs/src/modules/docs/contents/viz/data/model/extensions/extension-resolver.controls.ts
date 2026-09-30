@@ -7,7 +7,7 @@ import { quarterlyRows } from './extension-resolver.data';
 export const extensionResolverControls = definePreviewControls({
   presentation: 'panel',
   title: '运行时解析',
-  sections: [{ label: '输入数据', controls: [{ kind: 'table', id: 'rows', label: '季度数据', rows: quarterlyRows }] }],
+  sections: [{ controls: [{ kind: 'table', id: 'rows', label: '季度数据', rows: quarterlyRows }] }],
 });
 
 /** 运行时字段解析示例的稳定文档契约 */

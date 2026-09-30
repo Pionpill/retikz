@@ -9,7 +9,6 @@ export const scopeLocalNamespaceBasicEnControls = definePreviewControls({
   title: 'Scope namespace',
   sections: [
     {
-      label: 'Inner node',
       controls: [
         {
           kind: 'select',

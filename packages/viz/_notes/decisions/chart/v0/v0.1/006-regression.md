@@ -96,11 +96,11 @@ type IRPlotSmoothMethod =
 
 方法语义固定为：linear 对 `y = a + bx` 做普通最小二乘；quadratic 对 `y = a + bx + cx²` 做普通最小二乘；polynomial 对 `y = c₀ + c₁x + … + cₙxⁿ` 做普通最小二乘，其中 `n = order`；logarithmic 对 `y = a + b ln(x)` 做普通最小二乘；exponential 先对 `ln(y) = α + bx` 做普通最小二乘，再以 `a = exp(α)` 得到 `y = a exp(bx)`；power 先对 `ln(y) = α + b ln(x)` 做普通最小二乘，再得到 `y = a xᵇ`。Stage 1 不做权重、robust fitting 或非线性最小二乘，也不对系数或预测值做展示性舍入。
 
-具体入口为：
+具体能力从 Point 家族入口按名称导入：
 
-- `@retikz/chart/point/regression`：Regression exact Source 与 provider contribution
-- `@retikz/chart-vanilla/point/regression`：`normalizeRegressionChart` 与 `regressionChart`
-- `@retikz/chart-react/point/regression`：`RegressionChart`、`RegressionEncodings`、`RegressionProperties` 与 `RegressionMark`
+- `@retikz/chart/point`：Regression exact Source 与 provider contribution
+- `@retikz/chart-vanilla/point`：`normalizeRegressionChart` 与 `regressionChart`
+- `@retikz/chart-react/point`：`RegressionChart`、`RegressionEncodings`、`RegressionProperties` 与 `RegressionMark`
 
 JSON、Vanilla 与 React 最终生成同一个 `IRRegressionChart`。`RegressionMark` 默认追加一组新的 Point、主趋势与额外趋势 Path；`override: true` 原位替换内建 `regression` semantic group，两种情况都保留不可移除的 mark-local Smooth；观测 Point 可由 mark 自身的 hidePoints 关闭。
 

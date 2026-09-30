@@ -11,7 +11,6 @@ export const transformComponentControls = definePreviewControls({
   title: '变换输入',
   sections: [
     {
-      label: '输入数据',
       controls: [
         {
           kind: 'table',

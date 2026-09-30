@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.pathMarks,
     sections: [
       {
-        label: i18n.position,
         controls: [
           { kind: 'range', id: 'firstPosition', label: i18n.markA, defaultValue: 0.25, min: 0, max: 1, step: 0.05 },
           { kind: 'range', id: 'secondPosition', label: i18n.markB, defaultValue: 0.75, min: 0, max: 1, step: 0.05 },

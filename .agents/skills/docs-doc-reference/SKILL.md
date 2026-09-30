@@ -14,6 +14,8 @@ description: Use when writing or reviewing Retikz public JSDoc, generated API re
 | Schema 收录、registry、字段翻译    | [Schema](references/schema.md)   |
 | 新建/调整参考页面                  | [页面结构](references/page.md)   |
 
+API 参考不收录 Schema 成员、定义、摘要或校验字段表；这些内容只放 Schema 参考。公开 API 签名中必要的 Schema 类型引用保留原名，不展开。
+
 独立 API / Schema 参考页不设阅读难度；嵌入的参考小节沿用所属页面的难度。API / Schema 参考不加相关属性。完整 API 用既有脚本生成，不手改 generated include；Schema 先核对当前生成脚本与注册器，不假定自动化已支持所有 owner。不得为参考页新增公开导出或平行 schema。
 
 脚本生成后，LLM 必须主动审阅产物的契约完整性与可读性，判断是否需要补充类型展开、字段说明、分组或展示调整。将发现的问题、依据与优化建议交由用户判断，获批后修改真源或生成逻辑并重新生成、验证。长任务中记录建议，不为待批准的优化中断已授权流程，最终交付时集中提出；已授权范围内的必要修复与验证继续执行。

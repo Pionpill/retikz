@@ -24,13 +24,14 @@ import { ShapeValueSchema } from '../shape';
 import { StrokeDashOffsetSchema, StrokeDashPatternSchema } from '../stroke';
 import { ContextualColorSchema, GraphicStyleSchema } from '../style';
 import {
+  BoundaryLabelSchema,
   createLabelVisualStyleShape,
   LabelTextContentSchema,
   LineHeightSchema,
   TextAlignSchema,
   TextBlockSchema,
 } from '../text';
-import { NodeLabelPlacement, NodeLabelPosition, NodeLabelRotateMode } from './constants';
+import { NodeLabelPlacement, NodeLabelPosition } from './constants';
 
 export const NodeLabelBoundaryPositionSchema = object({
   boundary: zodEnum(Side).describe('Canonical box-like node boundary side used as the label attachment line.'),
@@ -93,30 +94,33 @@ export const NodeLabelSchema = object({
     font: 'Label font overrides. Missing fields inherit from the parent node font.',
   }),
   text: LabelTextContentSchema,
-  align: TextAlignSchema.optional().describe(
-    'Attachment tangent alignment for the label visual box: start, middle, or end. Defaults to middle.',
-  ),
+  align: BoundaryLabelSchema.shape.align
+    .unwrap()
+    .optional()
+    .describe('Attachment tangent alignment: start, middle, or end. Defaults to middle.'),
   position: union([zodEnum(NodeLabelPosition), AngleDegreesSchema, NodeLabelBoundaryPositionSchema])
     .optional()
     .describe(
       'Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.',
     ),
-  placement: zodEnum(NodeLabelPlacement)
+  placement: BoundaryLabelSchema.shape.placement
+    .unwrap()
     .optional()
-    .describe('Whether the label is offset outside or inside the selected attachment point. Default `outside`.'),
-  distance: NonNegativeNumberSchema.optional().describe(
-    'Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.',
-  ),
-  rotate: union([zodEnum(NodeLabelRotateMode), AngleDegreesSchema])
-    .optional()
-    .describe(
-      'Label self-rotation: none, radial along the position direction, tangent to it, or an explicit angle in degrees. Boundary-fraction positions use the selected side outward normal.',
-    ),
-  keepUpright: boolean()
+    .describe('Outside or inside the attachment point. Default outside.'),
+  distance: BoundaryLabelSchema.shape.distance
+    .unwrap()
     .optional()
     .describe(
-      'When true, flips the rotated label 180 deg if it would otherwise read upside-down (more than 90 deg from upright). Default false (strict geometric angle).',
+      'Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.',
     ),
+  rotate: BoundaryLabelSchema.shape.rotate
+    .unwrap()
+    .optional()
+    .describe('Label self-rotation: none, radial, tangent, or an explicit angle in degrees.'),
+  keepUpright: BoundaryLabelSchema.shape.keepUpright
+    .unwrap()
+    .optional()
+    .describe('Flip upside-down labels when true. Default false.'),
   pin: union([boolean(), NodeLabelPinSchema])
     .optional()
     .describe('Outside-label leader line. Use true for defaults or an object for style overrides.'),

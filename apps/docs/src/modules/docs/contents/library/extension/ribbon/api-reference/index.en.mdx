@@ -1,0 +1,30 @@
+---
+title: API reference
+description: React and Vanilla entry points and Ribbon Definition extension contracts
+---
+
+This local Ribbon API reference is generated from the public `@retikz/extension` package entry. Start with [Basic usage](/library/extension/ribbon/usage); see the [Schema reference](/library/extension/ribbon/schema-reference) for persistent fields.
+
+In centerline mode, `kindOptions.start.direction` / `end.direction` independently specify the section axes. They default to `auto` and accept angles, nonzero vectors, or polar coordinates. They do not reroute the centerline; caps and cap labels consume the final sections. See [Endpoints and caps](/library/extension/ribbon/extended#endpoints-and-caps) for the interactive example.
+
+## `@retikz/react`
+
+Ribbon uses the shared Core `Path` component with `kind="ribbon"` and `kindOptions`; it has no separate `Ribbon` component. The owning API references maintain the complete shared signatures.
+
+| Entry    | Use with Ribbon                                                                                               | Reference                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `Layout` | Inject `RibbonPathKindDefinition` or a custom Ribbon Definition through `extensions.pathKinds`                | [Layout API](/kernel/components/layout/api-reference) |
+| `Path`   | Set `kind="ribbon"` and configure widths and caps through `kindOptions`; use shared `label` and `style` props | [Path API](/kernel/components/path/api-reference)     |
+| `Step`   | Describe the open centerline as children of `Path`                                                            | [Path steps](/kernel/components/path/step)            |
+
+## `@retikz/vanilla`
+
+Vanilla builds the same input with shared `path()`; there is no separate `ribbon()` function. Inject the Definition explicitly when compiling or rendering. See [Basic usage](/library/extension/ribbon/usage) for all four complete entry examples.
+
+| Entry                 | Use with Ribbon                                                                         | Reference                                             |
+| --------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `path()`              | Set `kind: 'ribbon'`, `kindOptions`, and centerline `children`                          | [Path API](/kernel/components/path/api-reference)     |
+| `scene()`             | Place the Ribbon Path in a scene                                                        | [Layout API](/kernel/components/layout/api-reference) |
+| `renderToSvgString()` | Inject the Definition through `compile.pathKinds` and render the scene as an SVG string | [SVG usage example](/library/extension/ribbon/usage)  |
+
+{/* @include library/extension/ribbon/api-reference/generated */}

@@ -1,0 +1,24 @@
+---
+title: API 参考
+description: 查询 Flow 的 React、Vanilla 和 Definition 公开入口。
+---
+
+本页按公开入口查询 Flow 的编写组件、Vanilla 输入与运行时 Definition。可序列化字段及校验约束见 [Schema 参考](/schematic/diagram/flow/schema-reference)；首次使用见[基础用法](/schematic/diagram/flow/usage)。
+
+运行时 Definition 不属于持久化 Source。下面的签名与说明从公开导出、JSDoc 和 Schema 生成。
+
+Source 字段的默认值列只展示 Schema 解析时写入的默认值；运行时选项展示 JSDoc 标注的默认值。`—` 表示没有此类默认值或该项不适用。继承、按内容计算和布局补全的行为见字段说明。
+
+{/* @include schematic/diagram/flow/api-reference/generated */}
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Schema 参考',
+      description: '查询 Flow Source 的字段和约束',
+      url: '/schematic/diagram/flow/schema-reference',
+    },
+  ]}
+/>

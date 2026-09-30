@@ -7,7 +7,7 @@ import { wanRows } from './extension-format.data';
 export const extensionFormatControls = definePreviewControls({
   presentation: 'panel',
   title: '具名格式',
-  sections: [{ label: '输入数据', controls: [{ kind: 'table', id: 'rows', label: '万元字符串', rows: wanRows }] }],
+  sections: [{ controls: [{ kind: 'table', id: 'rows', label: '万元字符串', rows: wanRows }] }],
 });
 
 /** 自定义格式示例的稳定文档契约 */

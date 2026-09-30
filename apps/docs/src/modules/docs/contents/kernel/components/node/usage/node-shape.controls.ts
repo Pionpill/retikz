@@ -17,7 +17,6 @@ export const createNodeShapeControls = (i18n: typeof nodeShapeI18n.zh) =>
     title: i18n.title,
     sections: [
       {
-        label: i18n.section,
         controls: [
           {
             kind: 'select',

@@ -1,4 +1,4 @@
-import type { IRBubbleChart } from '@retikz/chart/point/bubble';
+import type { IRBubbleChart } from '@retikz/chart/point';
 
 import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
 import type { InputBubbleChart } from './types';

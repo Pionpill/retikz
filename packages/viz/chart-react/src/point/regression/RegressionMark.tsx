@@ -1,4 +1,4 @@
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
+import type { IRRegressionChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 import type { ChartMarkOf } from '../shared';

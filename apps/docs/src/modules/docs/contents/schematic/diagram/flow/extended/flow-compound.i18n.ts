@@ -1,0 +1,51 @@
+/** flow-compound 图示与面板的双语文案 */
+export const flowCompoundI18n = {
+  zh: {
+    controls: {
+      title: '分组排布',
+      groupSection: '可见 Group',
+      groupDirectionLabel: '自动布局方向',
+      directionOptions: [
+        { value: 'up', label: '向上' },
+        { value: 'right', label: '向右' },
+        { value: 'down', label: '向下' },
+        { value: 'left', label: '向左' },
+      ],
+      groupNodeGapLabel: '同层间距',
+      groupRankGapLabel: '层级间距',
+      layoutSection: '无外壳 Layout',
+      layoutDirectionLabel: '固定排列方向',
+      layoutGapLabel: '元素间距',
+    },
+    service: '服务入口',
+    request: '请求',
+    validate: '校验',
+    authorize: '授权',
+    queue: '队列',
+    database: '数据库',
+  },
+  en: {
+    controls: {
+      title: 'Grouped layout',
+      groupSection: 'Visible Group',
+      groupDirectionLabel: 'Automatic layout direction',
+      directionOptions: [
+        { value: 'up', label: 'Up' },
+        { value: 'right', label: 'Right' },
+        { value: 'down', label: 'Down' },
+        { value: 'left', label: 'Left' },
+      ],
+      groupNodeGapLabel: 'Peer gap',
+      groupRankGapLabel: 'Rank gap',
+      layoutSection: 'Shell-free Layout',
+      layoutDirectionLabel: 'Fixed placement direction',
+      layoutGapLabel: 'Element gap',
+    },
+    service: 'Service entry',
+    request: 'Request',
+    validate: 'Validate',
+    authorize: 'Authorize',
+    queue: 'Queue',
+    database: 'Database',
+  },
+} as const;

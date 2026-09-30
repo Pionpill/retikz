@@ -1,0 +1,162 @@
+---
+title: 通用结构
+description: 从图形根结构出发，理解 Chart 的数据、展示、布局样式与坐标配置。
+---
+
+Chart Source 的根级字段描述整张图。先识别它属于哪个图形家族，再分别配置数据、展示内容、布局样式和坐标；具体图形类型由 `recipe` 决定。
+
+## 图形根结构
+
+下面是一份 Point family 的 Scatter Source。它保存作者输入，不保存解析后生成的 Plot 图元、比例尺或辅助元素。
+
+```ts
+{
+  namespace: 'chart',
+  type: 'point',
+  id: 'weight-efficiency',
+  data: { reference: 'rows' },
+  layout: { width: 640, height: 360 },
+  recipe: {
+    chartType: 'scatter',
+    encodings: { x: 'weight', y: 'efficiency' },
+  },
+}
+```
+
+| 根字段      | 作用                                                              |
+| ----------- | ----------------------------------------------------------------- |
+| `namespace` | 固定为 `chart`，声明这份 Source 属于 Chart 能力域                 |
+| `type`      | 图形家族，例如 `point`；与 `recipe.chartType` 一起选择精确 schema |
+| `id`        | 可选的整图标识，用于在更大的绘图内容中识别这张 Chart              |
+
+其余根字段按职责分为 `data`、`presentation`、`layout`、`background`、`chartDefaults` 和 `coordinate`。具体类型的 `recipe` 与底层 `plotExtension` 见[核心结构](/viz/chart/model/core-structure)。
+
+## 数据入口
+
+所有图形类型都从 `data` 指向的共享数据集读取字段，数据值保留在 Source 之外。
+
+| 字段           | 子字段      | 作用                                         |
+| -------------- | ----------- | -------------------------------------------- |
+| `data`         | `reference` | 必填；引用调用方提供的数据集                 |
+|                | `model`     | 可选；声明数据集的字段模型                   |
+| `data.model[]` | `name`      | 必填；标识字段名或嵌套字段路径               |
+|                | `type`      | 可选；声明字段类型，省略时从数据推断         |
+|                | `format`    | 可选；指定字段值的解析格式                   |
+|                | `order`     | 可选；指定分类顺序，省略时按数据出现顺序排列 |
+
+`data.model` 声明 Chart 消费的逻辑字段及类型，运行时 `fieldMap` 把逻辑字段对应到数据源的原始字段。下图两份数据分别使用 `x/y` 与 `a/b`，但都向同一个 Chart 提供连续型的 `x/y`。
+
+<ComponentPreview files="chart-data-model-bridge" size="lg" hideCode type="illustration" />
+
+中间每项的左侧是 `model` 声明的逻辑字段，右侧是 `fieldMap` 指向的原始字段及 `model` 声明的类型或格式。B 的 `b` 是字符串 `"5"`，经 `numberString` 格式解析为连续型数值。切换数据源时替换数据绑定及对应的 `fieldMap`，`recipe.encodings` 仍消费 `x/y`。详细逻辑见[数据模块的数据模型](/viz/data/model)与[数据接入](/viz/data/model/intake)。
+
+## 图形展示
+
+根级 `presentation` 用以下四个槽位说明整张图，不包含 Plot 的轴、图例和数据标注。
+
+| 子字段     | 作用                                   |
+| ---------- | -------------------------------------- |
+| `title`    | 可选；图形主题或主要结论               |
+| `subtitle` | 可选；范围、时间、样本或单位等背景信息 |
+| `note`     | 可选；读图限制或口径说明               |
+| `source`   | 可选；数据来源及影响理解的处理说明     |
+
+每个已提供的槽位都需要 `text`，还可用 `style` 和 `layout` 调整文本。
+
+### 固定槽位与顺序
+
+React 用 `ChartTitle`、`ChartSubtitle`、`ChartNote`、`ChartSource` 提供槽位，Vanilla 和 JSON 直接写 `presentation`。React 标记须是 Chart 的直接子节点，可用 `Fragment` 分组、不可重复；声明顺序不改变固定布局。解析时按 `title → subtitle → plot → note → source` 排列已有内容，未提供的槽位不会生成。下面通过展示开关比较各槽位的显隐，并开启 Inspect 观察布局。
+
+<ComponentPreview
+  mode="showcase"
+  responsive
+  files={['chart-presentation-layout', 'chart-presentation-preview.tsx', 'chart-presentation.data.ts']}
+  size="xl"
+  caption="展示开关决定槽位是否生成；Flex 辅助层只读取本次编译结果，关闭后可单独查看最终内容。"
+/>
+
+### 编写态与解析结果
+
+编写态只提供四个槽位的内容，不需要额外的 `position` 字段。解析阶段按固定顺序插入 Plot 占位，并生成对应的 Surface / Flex 内容。
+
+<ComponentPreview files="chart-presentation-resolution" size="md" hideCode type="illustration" />
+
+左侧仅摘录 Source 中各槽位的 `text`，并故意打乱声明顺序；右侧展示解析后 `Surface.child` 中的 Flex 子项。Plot 占位由 Chart 插入，不属于 Source 的 `presentation`。
+
+目前，Chart 的展示槽位仅支持文本。
+
+解析阶段，Chart 使用 Standard `Surface` 作为整图容器，并通过 Flex 顺序放置展示文本和唯一的 Plot 占位。Chart 主题提供各槽位的默认文本样式，Plot 仍负责自己的轴、图例和标注。
+
+<SourceLinks
+  sources={[
+    {
+      label: '归一四个 presentation 槽位',
+      path: 'packages/viz/chart-vanilla/src/normalize/chart/presentation.ts',
+      startLine: 5,
+      endLine: 24,
+    },
+    {
+      label: 'React 展示标记收敛为槽位',
+      path: 'packages/viz/chart-react/src/shared/presentation.ts',
+      startLine: 8,
+      endLine: 126,
+    },
+    {
+      label: '固定顺序解析为 Flex 内容',
+      path: 'packages/viz/chart/src/_chart/resolve/presentation.ts',
+      startLine: 63,
+      endLine: 128,
+    },
+  ]}
+/>
+
+## 布局与样式
+
+`layout` 分配整张 Chart Surface 的外部尺寸，而非 Plot 内部绘图区。未指定尺寸时，笛卡尔坐标系默认使用 `800 × 500`，极坐标系默认使用 `400 × 500`；显式宽高逐字段覆盖默认值。标题、注记等展示文本占据自己的区域，Plot 填满扣除这些区域、内边距和间距后的剩余空间。
+
+| 字段            | 子字段         | 作用                                              |
+| --------------- | -------------- | ------------------------------------------------- |
+| `layout`        | `width`        | 可选；整图 Surface 的外部宽度                     |
+|                 | `height`       | 可选；整图 Surface 的外部高度                     |
+|                 | `padding`      | 可选；展示区域与 Plot 内容周围的内边距            |
+|                 | `gap`          | 可选；已有展示区域与 Plot 内容之间的间距          |
+| `background`    | `fill`         | 提供 `background` 时必填；整图 Surface 的显式填充 |
+|                 | `fillOpacity`  | 可选；背景填充的不透明度                          |
+| `chartDefaults` | `background`   | 可选；整图背景的默认值，可被显式背景覆盖          |
+|                 | `layout`       | 可选；`padding` 与 `gap` 的默认值                 |
+|                 | `presentation` | 可选；已有展示槽位的 `style` 与 `layout` 默认值   |
+
+根级 `background` 与 `chartDefaults.background` 都可省略；两者都省略时使用 Chart 主题背景。`chartDefaults.layout` 只接受 `padding`、`gap`，不设置外部宽高；`chartDefaults.presentation` 只为已有槽位设置 `style`、`layout`，不会创建新文本。具体图形类型的视觉属性仍由 `recipe.properties` 控制。
+
+## 坐标配置
+
+根级 `coordinate` 可显式选择 Plot 坐标配置，包含以下子字段；通常由具体 chartType 提供适合该图形的默认坐标。
+
+| 子字段          | 作用                                                         |
+| --------------- | ------------------------------------------------------------ |
+| `type`          | 提供 `coordinate` 时必填；选择内置或已注册的自定义坐标       |
+| `x`             | 可选；直角坐标的位置比例尺名称                               |
+| `y`             | 可选；二维直角坐标的纵向比例尺名称                           |
+| `angle`         | 可选；极坐标的角向比例尺名称                                 |
+| `radius`        | 可选；二维极坐标的径向比例尺名称，或一维极坐标的圆周半径比例 |
+| `startAngle`    | 可选；极坐标的起始角度                                       |
+| `endAngle`      | 可选；极坐标的结束角度                                       |
+| `innerRadius`   | 可选；二维极坐标的内半径比例                                 |
+| `orientation`   | 可选；一维直角坐标的水平或垂直方向                           |
+| `interpolation` | 可选；二维极坐标的连接插值方式                               |
+
+内置 `type` 包括 `cartesian2D`、`polar2D`、`cartesian1D` 和 `polar1D`。除 `type` 外，可用的子字段取决于坐标类型；自定义坐标的字段由其 Definition 决定。`coordinate` 不代替 `recipe.encodings` 的字段映射。
+
+`coordinate` 可以与 facet encoding 组合，但不能与 `plotExtension.composition` 同时写入。需要配置 Plot composition 时，参见[核心结构的 Plot 扩展](/viz/chart/model/core-structure)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '核心结构',
+      description: '理解 recipe 的类型语义、图元组合与 Plot 扩展。',
+      url: '/viz/chart/model/core-structure',
+    },
+  ]}
+/>

@@ -45,9 +45,9 @@ Group 的 shell minimum、caption 和 content insets 继续参与其自身测量
 
 ### 标签留白与连线
 
-Grid 行列位置不由 Relation 推断，Relation 不重排 children。`rowGap` 和 `columnGap` 是相邻轨道间距，不是节点中心距；轨道尺寸由内容和 margin 决定。
+Grid 行列位置不由 Relation 推断，Relation 不重排 children。`gap` 的行列分量是相邻轨道间距，不是节点中心距；轨道尺寸由内容和 margin 决定。
 
-Grid 默认使用 Core 真实测量的 relation label 整块视觉盒宽高自动扩张间距：横向关系把标签宽度加到 `columnGap`，纵向关系把标签高度加到 `rowGap`；跨行列关系在两个轴上分别预留空间。同轴关系取最大标签尺寸，并把该尺寸加到每个同轴间隙，因此同轴其它间隙也会一起增大，且结果与 relation 遍历顺序无关。`reserveLabelSpace` 省略时为 `true`；设为 `false` 后严格使用作者配置的行列间距，不为标签预留空间。
+Grid 默认使用 Core 真实测量的 relation label 整块视觉盒宽高自动扩张间距：横向关系把标签宽度加到 `gap.column`，纵向关系把标签高度加到 `gap.row`；跨行列关系在两个轴上分别预留空间。同轴关系取最大标签尺寸，并把该尺寸加到每个同轴间隙，因此同轴其它间隙也会一起增大，且结果与 relation 遍历顺序无关。`reserveLabelSpace` 省略时为 `true`；设为 `false` 后严格使用作者配置的行列间距，不为标签预留空间。
 
 固定 placement context 从同一次 Flow measurement 消费标签约束，内置与自定义 provider 共用此边界，不额外暴露派生间距或复制标签尺寸。连接后代时以所属 direct child 的整体 bounds 参与空间分配，不穿透内部排列。Linear 保留已有标签 margin 行为；两种 Layout 的标签显示与路由继续沿用 Graph/Core 和所选 provider 的既有语义。Core 标签断口 gap 与 Grid 轨道留白是不同语义，不相互覆盖。
 
@@ -74,8 +74,7 @@ type IRFlowLayout =
       kind: 'grid';
       id: string;
       rank?: number;
-      rowGap?: number;
-      columnGap?: number;
+      gap?: number | Readonly<{ row: number; column: number }>;
       reserveLabelSpace?: boolean;
       placements:
         | ReadonlyArray<ReadonlyArray<string | null>>
@@ -84,9 +83,9 @@ type IRFlowLayout =
     }>;
 ```
 
-Linear 保留一维排列语义：`direction` 必填，`align` 缺省为 `center`，`gap` 缺省优先使用作者设置的有效 `nodeGap`，否则按物理轴使用 Definition 的 placementGap。Grid 的 `rowGap`、`columnGap` 独立优先继承作者设置的有效 `nodeGap`，否则分别使用 Definition 的 vertical/horizontal placementGap（内置 32/48），`reserveLabelSpace` 缺省为 `true`；显式 `0` 仍为有效间距，开启 label 预留时可被对应标签尺寸扩张。两者均为有限非负数，不把 `rankGap` 解释成网格行距。
+Linear 保留一维排列语义：`direction` 必填，`align` 缺省为 `center`，`gap` 只接受数字，缺省优先使用作者设置的有效 `nodeGap`，否则按物理轴使用 Definition 的 placementGap。Grid 的 `gap` 可为数字或完整的 `{ row, column }`：数字同时应用于两个轴，对象必须同时给出两个有限非负分量。省略时两轴优先继承作者设置的有效 `nodeGap`，否则分别使用 Definition 的 vertical/horizontal placementGap（内置 32/48）。`reserveLabelSpace` 缺省为 `true`；显式 `0` 仍为有效间距，开启 label 预留时可被对应标签尺寸扩张。不把 `rankGap` 解释成网格行距。
 
-Grid 不接受 Linear 的 `direction`、`gap` 或 `align`；Linear 不接受 Grid 字段。`rank` 在两种变体中都只约束整个 Layout 在外层自动布局中的层级，不影响内部单元格位置。
+Grid 不接受 Linear 的 `direction` 或 `align`；Linear 不接受 Grid 的对象形式 `gap`、`reserveLabelSpace` 或 `placements`。`rank` 在两种变体中都只约束整个 Layout 在外层自动布局中的层级，不影响内部单元格位置。
 
 缓存图可以表达为一个 Grid Layout：
 
@@ -110,7 +109,7 @@ Direct IR、Vanilla `InputFlowLayout` 与 React `FlowLayout` 表达同一判别�
 
 `FlowLayoutExecutionContext.placeLayout` 保持同步和单次调用契约，其输入以 placement kind 区分有效 Linear / Grid 配置，并携带已测量 child 尺寸、margin 和 Grid 位置。内置与自定义 Definition 使用同一执行边界；Grid placement 复用 Layout Grid，Linear placement 继续复用 Layout Flex。
 
-`FlowLayoutPlacementInput.layout` 使用 `kind` 判别：Linear 配置保留 `id / direction / gap / align`，Grid 配置为 `id / rowGap / columnGap / reserveLabelSpace / placements`，其中默认值已补全。`elements` 保留原有有序 `id / size / margin`，不新增标签输入契约；输出仍是 Layout 与各 child 的 bounds，不暴露 Grid solver 中间状态。
+`FlowLayoutPlacementInput.layout` 使用 `kind` 判别：Linear 配置保留 `id / direction / gap / align`，Grid 配置为 `id / gap: { row, column } / reserveLabelSpace / placements`，其中默认值已补全。`elements` 保留原有有序 `id / size / margin`，不新增标签输入契约；输出仍是 Layout 与各 child 的 bounds，不暴露 Grid solver 中间状态。
 
 每个 authored Layout 必须恰好调用一次 `placeLayout`。provider 可以平移整个 Layout，但最终 Layout bounds 和各 direct child 的相对 bounds 必须与该次 placement 一致，不能在结果阶段独立吸附节点破坏已确定排列。具体行列尺寸、空间预留与位置均为派生结果，不回写 Source。
 

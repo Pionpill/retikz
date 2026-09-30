@@ -14,7 +14,6 @@ export const nodeZIndexControls = definePreviewControls({
   title: '栈序',
   sections: [
     {
-      label: 'zIndex',
       controls: [
         {
           kind: 'range',

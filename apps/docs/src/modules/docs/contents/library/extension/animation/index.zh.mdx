@@ -1,67 +1,220 @@
 ---
-title: 动画预设
-description: 用生长、脉冲、旋转、闪烁和摆动预设生成 Core 动画轨道，直接交给已有组件播放。
+title: animation · 动画预设
+description: 用生长、脉冲、旋转、闪烁和摆动工厂生成可直接播放的动画轨道，并查阅各预设参数。
 ---
 
-Extension 提供可选的动画效果。它们都是纯函数：输入参数，返回关键帧数据，不创建播放器，也不需要注册。
+动画预设是纯函数：输入参数，返回 JSON 动画轨道。它们不创建播放器，也不需要注册；把结果放进 Node、Path 或 Scope 的 `animations` 即可播放。
 
 ## 接入方式
 
-在已有 Retikz 项目中安装 `@retikz/extension`，从包根导入效果工厂。React、Vanilla 与直接 IR 使用同一个工厂，将结果放入目标的 animations 数组；不需要额外 adapter。
+从 `@retikz/extension` 导入所需工厂。React、Vanilla 和直接 IR 共用同一轨道数据。下面的脉冲示例从包根导入 `pulse`。
 
-```ts
-import { fadeIn, loop } from '@retikz/core';
-import { pulse, wiggle } from '@retikz/extension';
+<ComponentPreview files="entry" size="sm" hideCode />
 
-const entrance = fadeIn();
-const emphasis = pulse({ peak: 1.15 });
-const repeatedWiggle = loop(wiggle({ angle: 8 }), { iterations: 2 });
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { pulse } from '@retikz/extension';
+import { Layout, Node } from '@retikz/react';
+
+export const Example = () => (
+  <Layout>
+    <Node layout={{ minimumSize: { width: 72, height: 52 } }} animations={[pulse({ peak: 1.25 })]} />
+  </Layout>
+);
 ```
 
-## 选择动画效果
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-| 效果   | 属性变化                              | 默认行为                   |
-| ------ | ------------------------------------- | -------------------------- |
-| grow   | scale 0 → 1                           | 400ms，缩放入场            |
-| growUp | scaleY 0 → 1                          | 500ms，从底部支点长出      |
-| pulse  | scale 1 → peak → 1                    | 1000ms，peak=1.1，无限循环 |
-| spin   | rotate 0 → 360                        | 1000ms，匀速无限循环       |
-| flash  | opacity 1 → dim → 1                   | 300ms，dim=0，默认 2 次    |
-| blink  | opacity 1 → dim → 1                   | 800ms，dim=0，默认无限循环 |
-| wiggle | rotate 0 → angle → −angle → angle → 0 | 400ms，angle=5°，默认 3 次 |
+```tsx
+import type { IRScene } from '@retikz/core';
+import { pulse } from '@retikz/extension';
+import { Layout } from '@retikz/react';
 
-下面各图元使用默认效果。生长与有限次数动画结束后可点击重播；旋转使用矩形，便于看清朝向变化。
-
-<ComponentPreview files="animation-presets" size="lg" controls={{ animation: true }} />
-
-grow 等价于 `scaleIn({ from: 0 })`。pulse、spin 的无限循环可用 Core 的 loop 包装为有限次数；stagger 可让多个效果错峰开始。
-
-## 参数与播放保持同一契约
-
-所有效果接受 duration、delay、easing、trigger；grow、growUp、pulse、spin、wiggle 还支持 origin。flash / blink 提供 dim 与 iterations，wiggle 提供 angle 与 iterations，pulse 提供 peak。专属参数详见 [API 参考](/library/extension/animation/api-reference)。
-
-工厂不会读取目标的当前样式，也不会改变布局或连接关系。Node、Path 与 Scope 的动画目标范围见[组件对接](/kernel/visual/animation/integration)。触发、截帧与减少动态效果策略继续遵循[扩展用法](/kernel/visual/animation/extended-usage)。
-
-导出的轨道只包含普通 JSON 数据，不保存预设名称。保存后的 IR 可以直接播放，无需在播放端再次导入 Extension。原先从 Standard 导入这些效果的代码需改为从 Extension 导入；旧入口不再转导出。
-
-## 相关属性
-
-<ComponentProps
-  items={[
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
     {
-      name: 'animations',
-      kind: 'property',
-      type: 'Array<IRAnimationTrack>',
-      description: '把效果工厂生成的轨道交给 Node、Path 或 Scope。',
+      type: 'node',
+      layout: { minimumSize: { width: 72, height: 52 } },
+      animations: [pulse({ peak: 1.25 })],
     },
-  ]}
-/>
+  ],
+};
+export const Example = () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { pulse } from '@retikz/extension';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    node({
+      layout: { minimumSize: { width: 72, height: 52 } },
+      animations: [pulse({ peak: 1.25 })],
+    }),
+  ],
+});
+const svg = renderToSvgString(input);
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { pulse } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'node',
+      layout: { minimumSize: { width: 72, height: 52 } },
+      animations: [pulse({ peak: 1.25 })],
+    },
+  ],
+};
+const svg = renderToSvgString(ir);
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 生长入场
+
+`grow` 从 0 倍整体放大到原尺寸；`growUp` 只放大纵向，默认以底边中点为支点，适合柱状图从基线长出。
+
+<ComponentPreview files="growth" size="sm" controls={{ animation: true }} />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### `Omit<ScaleInOptions, 'from'>`
+
+`grow(options)` 生成一条可直接放入 `animations` 的动画轨道。
+
+#### GrowUpOptions
+
+`growUp(options)` 生成一条可直接放入 `animations` 的动画轨道。
+
+| 字段        | 类型                | 说明                                         |
+| ----------- | ------------------- | -------------------------------------------- |
+| `duration?` | `number`            | 单次时长；grow 默认 400ms，growUp 默认 500ms |
+| `origin?`   | `IRAnimationOrigin` | 缩放支点；growUp 默认为 bottom               |
+
+所有预设也支持 `delay?`、`easing?`、`trigger?`，分别控制首次延迟、缓动与触发方式。
+
+</DocTab>
+</DocTabs>
+
+演示将两种效果的时长设为 500ms、支点设为底边；这些是控件初始值，不是 `grow` 的 API 默认值。切换效果并改变时长与支点，可对比整体放大和沿底边长出。
+
+## 持续强调
+
+`pulse` 在原尺寸与峰值之间往返缩放；`spin` 匀速旋转一周。两者默认无限循环。
+
+<ComponentPreview files="continuous" size="sm" controls={{ animation: true }} />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### PulseOptions
+
+`pulse(options)` 生成一条可直接放入 `animations` 的动画轨道。
+
+#### SpinOptions
+
+`spin(options)` 生成一条可直接放入 `animations` 的动画轨道。
+
+| 字段        | 类型                | 说明                              |
+| ----------- | ------------------- | --------------------------------- |
+| `duration?` | `number`            | 每轮时长，默认 1000ms             |
+| `peak?`     | `number`            | 仅 pulse 使用，峰值缩放，默认 1.1 |
+| `origin?`   | `IRAnimationOrigin` | 可选变换支点，默认几何中心        |
+
+所有预设也支持 `delay?`、`easing?`、`trigger?`，分别控制首次延迟、缓动与触发方式。
+
+</DocTab>
+</DocTabs>
+
+演示把脉冲峰值设为 1.3；切换脉冲与旋转、改变单轮时长，峰值控件只在脉冲下出现。
+
+## 透明度闪烁
+
+`flash` 与 `blink` 都在完整显示和最低透明度之间往返。前者默认播放两次，后者默认无限循环。
+
+<ComponentPreview files="opacity" size="sm" controls={{ animation: true }} />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### FlashOptions
+
+`flash(options)` 生成一条可直接放入 `animations` 的动画轨道。
+
+#### BlinkOptions
+
+`blink(options)` 生成一条可直接放入 `animations` 的动画轨道。
+
+| 字段          | 类型                   | 说明                                         |
+| ------------- | ---------------------- | -------------------------------------------- |
+| `duration?`   | `number`               | 单轮时长；flash 默认 300ms，blink 默认 800ms |
+| `dim?`        | `number`               | 最低透明度，默认 0                           |
+| `iterations?` | `number \| 'infinite'` | 播放次数；flash 默认 2，blink 默认无限       |
+
+所有预设也支持 `delay?`、`easing?`、`trigger?`，分别控制首次延迟、缓动与触发方式。
+
+</DocTab>
+</DocTabs>
+
+演示将两种效果的单轮时长都设为 500ms。改变最低透明度，对比有限闪动与持续闪烁；有限效果可用预览中的重播按钮再次查看。
+
+## 摆动强调
+
+`wiggle` 在正负角度间往返旋转，并回到初始朝向。它默认播放三次，适合短时提示。
+
+<ComponentPreview files="wiggle" size="sm" controls={{ animation: true }} />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### WiggleOptions
+
+`wiggle(options)` 生成一条可直接放入 `animations` 的动画轨道。
+
+| 字段          | 类型                   | 说明                       |
+| ------------- | ---------------------- | -------------------------- |
+| `angle?`      | `number`               | 单侧最大角度，默认 5°      |
+| `duration?`   | `number`               | 单轮时长，默认 400ms       |
+| `iterations?` | `number \| 'infinite'` | 播放次数，默认 3           |
+| `origin?`     | `IRAnimationOrigin`    | 可选旋转支点，默认几何中心 |
+
+所有预设也支持 `delay?`、`easing?`、`trigger?`，分别控制首次延迟、缓动与触发方式。
+
+</DocTab>
+</DocTabs>
+
+演示以 12°、500ms 开始，区别于预设的 5°、400ms 默认值。拖动角度和时长可观察摆动幅度与速度；结束后节点回到原朝向。
+
+预设不会读取目标的当前样式，也不改变布局或连接关系。生成后的 IR 只保存动画轨道，不保存预设名；播放端无需再次导入 Extension。
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
-    { title: 'API 参考', url: '/library/extension/animation/api-reference' },
-    { title: 'Kernel 基础动画', url: '/kernel/visual/animation/usage' },
+    { title: '动画基础用法', description: '了解轨道播放与组件接入', url: '/kernel/visual/animation/usage' },
+    { title: '动画扩展用法', description: '触发、截帧和减少动态效果', url: '/kernel/visual/animation/extended-usage' },
   ]}
 />

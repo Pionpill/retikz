@@ -10,6 +10,7 @@ export const RibbonAlignment = {
 } as const;
 
 export const RibbonCap = {
+  Arc: 'arc',
   Butt: 'butt',
   Round: 'round',
   Square: 'square',

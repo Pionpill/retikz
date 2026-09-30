@@ -9,6 +9,35 @@ import { describe, expect, it } from 'vitest';
 
 import * as FlowReact from '../src/flow';
 
+it('preserves Graph Group captions, labels and local context through React and Vanilla equally', () => {
+  const group = {
+    id: 'service',
+    caption: { description: { text: ['Service', 'Runtime boundary'] }, side: 'bottom' as const },
+    labels: [{ text: 'Internal', position: 'bottom' as const }],
+    graphDefaults: { entity: { style: { font: { size: 18 } } } },
+    graphRules: [{ type: 'entity' as const, selector: { role: 'concept' }, style: { textColor: 'red' } }],
+    meta: { owner: 'service' },
+    style: { opacity: 0.8 },
+    zIndex: 2,
+  };
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowGroup {...group}>
+        <FlowReact.FlowEntity id="request" text="Request" />
+      </FlowReact.FlowGroup>
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  const vanilla = normalizeFlowDiagram({
+    entities: [{ id: 'request', text: 'Request' }],
+    groups: [{ ...group, children: ['request'] }],
+    layouts: [],
+    children: ['service'],
+  });
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
+  expect(vanilla.groups[0]).toEqual({ ...group, children: ['request'] });
+});
+
 it('preserves local Layout exclusion through React and Vanilla equally', () => {
   const input = createInputScene(
     <FlowReact.FlowDiagram>
@@ -159,8 +188,7 @@ describe('@retikz/diagram-react/flow', () => {
       const grid = {
         kind: 'grid' as const,
         id: 'grid',
-        rowGap: 0,
-        columnGap: 24,
+        gap: { row: 0, column: 24 },
         placements,
       };
       const entities = [

@@ -195,7 +195,7 @@ const resolvePathPaint = (
 const resolveLabelRunColor = (
   run: IRTextRun | IRMathRun,
   masterColor: string | undefined,
-  context: PathResolveContext,
+  context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
 ): ResolvedInlineSourceRun => {
   const { fill, ...source } = run;
@@ -217,7 +217,7 @@ const resolveLabelRunColor = (
 const resolveGeometryLabelTextLine = (
   text: IRLine,
   masterColor: string | undefined,
-  context: PathResolveContext,
+  context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
 ): ResolvedTextLine => {
   if (typeof text === 'string') return text;
@@ -241,7 +241,7 @@ const resolveGeometryLabelTextLine = (
 const resolveGeometryLabelText = (
   text: IRGeometryLabel['text'],
   masterColor: string | undefined,
-  context: PathResolveContext,
+  context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
 ): ResolvedLabelTextBlock =>
   Array.isArray(text)
@@ -249,10 +249,10 @@ const resolveGeometryLabelText = (
     : resolveGeometryLabelTextLine(text, masterColor, context, fieldPath);
 
 /** 确定一个 geometry label 的文字主色与 run 颜色 */
-const resolveGeometryLabelColors = (
+export const resolveGeometryLabelColors = (
   label: IRGeometryLabel,
   masterColor: string | undefined,
-  context: PathResolveContext,
+  context: Pick<PathResolveContext, 'mode'>,
   fieldPath: string,
 ): ResolvedGeometryLabel => {
   const { textColor, text, ...source } = label;

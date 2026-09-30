@@ -10,9 +10,11 @@ import type {
   IRScene,
   IRScope,
   IRStep,
+  AnyPathKindDefinition,
 } from '@retikz/core';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
+import { RibbonPathKindDefinition } from '@retikz/extension';
 import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
 import {
   BlockHeaderSchema,
@@ -122,6 +124,8 @@ type Ctx = {
 export type IrToVanillaCodeOptions = Readonly<{
   /** 当前 ComponentPreview 选中的 Core Theme selector */
   theme?: IRScene['theme'];
+  /** 当前图显式装配的 Path kind Definition */
+  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
 }>;
 
 type WayFrag = { text: string; comment?: boolean };
@@ -844,6 +848,13 @@ const HELPER_ORDER: ReadonlyArray<string> = ['scene', 'node', 'path', 'coordinat
 
 /** 从纯 IR 生成不含运行时 authoring sidecar 的 Vanilla 示例代码 */
 export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {}): string => {
+  const unsupportedPathKind = options.pathKinds?.find(definition => definition !== RibbonPathKindDefinition);
+  if (unsupportedPathKind !== undefined) {
+    throw new Error(
+      `Cannot generate Vanilla source for Path kind "${unsupportedPathKind.name}" without its Definition source.`,
+    );
+  }
+  const usesRibbon = options.pathKinds?.includes(RibbonPathKindDefinition) ?? false;
   const ctx: Ctx = {
     used: new Set(['scene']),
     usesDrawWay: false,
@@ -886,6 +897,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     ...(hasStandaloneGraphMembers ? ['resolveCoreProviderDependencies'] : []),
   ];
   if (coreImports.length > 0) imports.push(`import { ${coreImports.join(', ')} } from '@retikz/core';`);
+  if (usesRibbon) imports.push("import { RibbonPathKindDefinition } from '@retikz/extension';");
   const definitions = collectPreviewDefinitions(
     ir.children,
     new Set(ctx.standardCounts.keys()),
@@ -962,6 +974,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     ? `\nconst definitions = resolveCoreProviderDependencies({ contributions: [{ roots: [GraphProviderKey], providers: createGraphProviders({ entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds, graphThemeStyles: PreviewThemeDefinitionBundle.graph }) }], definitions: { composites: [${definitionNames.join(', ')}] } });\n`
     : '';
   const compileEntries = [
+    ...(usesRibbon ? ['pathKinds: [RibbonPathKindDefinition]'] : []),
     ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
     ...(hasStandaloneGraphMembers
       ? ['...definitions']

@@ -1,0 +1,41 @@
+import type { Lang } from '@/i18n';
+
+/** 端帽标签演示文案 */
+export const ribbonCapLabelI18n: Record<Lang, Record<string, string>> = {
+  zh: {
+    title: '端帽标签',
+    cap: '端帽形状',
+    round: '圆形',
+    square: '方形',
+    arc: '圆弧',
+    rotate: '文字旋转',
+    none: '不旋转',
+    radial: '朝外',
+    tangent: '沿端面',
+    angle: '指定角度',
+    textAngle: '文字角度',
+    placement: '放置位置',
+    outside: '外侧',
+    inside: '内侧',
+    distance: '标签间距',
+    keepUpright: '保持正向',
+  },
+  en: {
+    title: 'Cap labels',
+    cap: 'Cap shape',
+    round: 'Round',
+    square: 'Square',
+    arc: 'Arc',
+    rotate: 'Text rotation',
+    none: 'None',
+    radial: 'Outward',
+    tangent: 'Along section',
+    angle: 'Custom angle',
+    textAngle: 'Text angle',
+    placement: 'Placement',
+    outside: 'Outside',
+    inside: 'Inside',
+    distance: 'Label distance',
+    keepUpright: 'Keep upright',
+  },
+};

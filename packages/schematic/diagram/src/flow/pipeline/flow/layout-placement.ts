@@ -140,8 +140,8 @@ export const createFlowLayoutExecutionContext = (
             kind: 'content' as const,
             mode: 'natural' as const,
           })),
-          rowGap: layout.rowGap,
-          columnGap: layout.columnGap,
+          rowGap: layout.gap.row,
+          columnGap: layout.gap.column,
           justifyItems: LayoutAlignment.Center,
           alignItems: LayoutAlignment.Center,
           children: input.elements.map(element => {
@@ -160,8 +160,8 @@ export const createFlowLayoutExecutionContext = (
         });
         const compileContext = { ...context, proposal: intrinsicLayoutProposal('natural') };
         // 所有 relation 基于同一输入取最大标签尺寸，避免遍历顺序影响结果
-        let rowGap = layout.rowGap;
-        let columnGap = layout.columnGap;
+        let rowGap = layout.gap.row;
+        let columnGap = layout.gap.column;
         const ownerById = new Map<string, string>();
         const visit = (elements: ReadonlyArray<FlowLayoutElementInput>, owner?: string): void => {
           for (const element of elements) {
@@ -181,10 +181,10 @@ export const createFlowLayoutExecutionContext = (
           const columns = Math.abs(sourceCell.column - targetCell.column);
           const rows = Math.abs(sourceCell.row - targetCell.row);
           if (columns > 0) {
-            columnGap = Math.max(columnGap, layout.columnGap + relation.labelSize.width);
+            columnGap = Math.max(columnGap, layout.gap.column + relation.labelSize.width);
           }
           if (rows > 0) {
-            rowGap = Math.max(rowGap, layout.rowGap + relation.labelSize.height);
+            rowGap = Math.max(rowGap, layout.gap.row + relation.labelSize.height);
           }
         }
         const artifact = compileGridLayout({ ...grid, rowGap, columnGap }, compileContext).artifact;

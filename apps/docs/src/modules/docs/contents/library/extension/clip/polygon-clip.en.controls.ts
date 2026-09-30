@@ -9,7 +9,6 @@ export const polygonClipControls = definePreviewControls({
   title: 'Polygon clip',
   sections: [
     {
-      label: 'Vertex coordinates',
       controls: [
         {
           kind: 'point',

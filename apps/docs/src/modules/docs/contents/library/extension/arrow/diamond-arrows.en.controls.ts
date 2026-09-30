@@ -9,9 +9,8 @@ export const diamondArrowsControls = definePreviewControls({
   title: 'Diamond arrows',
   sections: [
     {
-      label: 'Endpoint style',
       controls: [
-        { kind: 'color', id: DiamondArrowsControlId.Color, label: 'Color', defaultValue: '#ea580c' },
+        { kind: 'color', id: DiamondArrowsControlId.Color, label: 'Color', defaultValue: '#2563eb' },
         {
           kind: 'range',
           id: DiamondArrowsControlId.Scale,
@@ -38,6 +37,6 @@ export const diamondArrowsControls = definePreviewControls({
 /** 菱形箭头的稳定文档契约 */
 export const previewControlContract = {
   controls: diamondArrowsControls,
-  canonicalValues: { color: '#ea580c', scale: 1, lineWidth: 1.5 },
+  canonicalValues: { color: '#2563eb', scale: 1, lineWidth: 1.5 },
   relatedApis: ['Layout.arrows', 'Draw.arrowDetail'],
 } satisfies PreviewControlContract;

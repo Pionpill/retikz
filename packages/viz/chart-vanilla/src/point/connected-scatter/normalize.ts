@@ -1,4 +1,4 @@
-import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import type { IRConnectedScatterChart } from '@retikz/chart/point';
 
 import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
 import type { InputConnectedScatterChart } from './types';

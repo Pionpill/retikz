@@ -11,7 +11,6 @@ export const transformComponentControls = definePreviewControls({
   title: 'Transform Input',
   sections: [
     {
-      label: 'Input Data',
       controls: [
         {
           kind: 'table',

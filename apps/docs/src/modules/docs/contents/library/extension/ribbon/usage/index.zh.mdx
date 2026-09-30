@@ -1,0 +1,284 @@
+---
+title: 基础用法
+description: 从中心线绘制流带并调整宽度、中心线标签与外观
+---
+
+从开放中心线开始，Ribbon 会沿路径生成可填充轮廓。本页介绍宽度、中心线标签和外观；独立端面方向、端帽及端点标签见[扩展用法](/library/extension/ribbon/extended)。
+
+Ribbon 复用 Path 的路径指令、样式、中心线标签与变换，通用属性见 [Path 文档](/kernel/components/path)。本页的“相关属性”仅列 Ribbon 专属配置。
+
+## 接入方式
+
+当连接需要沿路径改变厚度或放置内部标签时，显式装配 `RibbonPathKindDefinition`，再为 Path 设置 `kind="ribbon"`。下图使用一条开放中心线与起终点宽度。导入 Definition 不会全局注册。
+
+<ComponentPreview files="ribbon-basic" hideCode size="xs" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+`Layout` 注入 Definition；`Path` 的直属 `Step` 形成中心线：
+
+```text
+Layout
+└── Path
+    ├── Step (move)
+    └── Step (line)
+```
+
+```tsx
+import type { IRRibbonPathOptions } from '@retikz/extension';
+import { RibbonPathKindDefinition } from '@retikz/extension';
+import { Layout, Path, Step } from '@retikz/react';
+
+export const Example = () => (
+  <Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
+    <Path
+      kind="ribbon"
+      kindOptions={{ width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions}
+      style={{ fill: '#60a5fa' }}
+    >
+      <Step kind="move" to={[-120, 0]} />
+      <Step to={[120, 0]} />
+    </Path>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import type { IRRibbonPathOptions } from '@retikz/extension';
+import { RibbonPathKindDefinition } from '@retikz/extension';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'path',
+      kind: 'ribbon',
+      kindOptions: { width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions,
+      children: [
+        { type: 'step', kind: 'move', to: [-120, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+      style: { fill: '#60a5fa' },
+    },
+  ],
+};
+
+export const Example = () => <Layout ir={ir} extensions={{ pathKinds: [RibbonPathKindDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import type { IRRibbonPathOptions } from '@retikz/extension';
+import { RibbonPathKindDefinition } from '@retikz/extension';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    path({
+      kind: 'ribbon',
+      kindOptions: { width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions,
+      children: [
+        { type: 'step', kind: 'move', to: [-120, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+      style: { fill: '#60a5fa' },
+    }),
+  ],
+});
+
+console.log(renderToSvgString(input, { compile: { pathKinds: [RibbonPathKindDefinition] } }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import type { IRRibbonPathOptions } from '@retikz/extension';
+import { RibbonPathKindDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'path',
+      kind: 'ribbon',
+      kindOptions: { width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions,
+      children: [
+        { type: 'step', kind: 'move', to: [-120, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+      style: { fill: '#60a5fa' },
+    },
+  ],
+};
+
+console.log(renderToSvgString(ir, { compile: { pathKinds: [RibbonPathKindDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+`kindOptions` 是 Ribbon 专属 JSON-safe 数据；`fill`、`stroke`、`label`、透明度和变换仍属于共享 Path host。
+
+## 宽度与采样
+
+宽度规则决定流带沿中心线的厚度变化。中心线模式必须从下表四种宽度写法中选择一种；不同分支的字段不能混用。宽度与采样字段均位于 `kindOptions`。
+
+| 宽度方式 | 配置属性              | 约束与含义                                                                        |
+| -------- | --------------------- | --------------------------------------------------------------------------------- |
+| 固定宽度 | `width.kind`          | 固定为 `fixed`                                                                    |
+|          | `width.value`         | 非负固定宽度                                                                      |
+| 起止宽度 | `width.kind`          | 固定为 `taper`                                                                    |
+|          | `width.start`         | 起点非负宽度，必填                                                                |
+|          | `width.end`           | 终点非负宽度，必填                                                                |
+|          | `width.interpolation` | `linear` 或 `smooth`（smoothstep），默认 `linear`                                 |
+| 宽度节点 | `width.kind`          | 固定为 `stops`，选择节点宽度模型                                                  |
+|          | `width.stops`         | 至少两个 `{ offset, value }` 节点；`offset` 为 0–1 的弧长比例，`value` 为非负宽度 |
+|          | `width.interpolation` | 节点间插值，可选 `linear`、`smooth`、`step`；默认 `linear`，`step` 保留跳变       |
+| 宽度函数 | `width.kind`          | 固定为 `profile`，选择已注册的宽度函数                                            |
+|          | `width.name`          | 已注册 profile 的名称，本例为 `bulge`                                             |
+|          | `width.params`        | 对应 profile 的 JSON 参数，具体字段由该 profile 定义                              |
+|          | `width.params.base`   | `bulge` 的两端基础宽度，非负数                                                    |
+|          | `width.params.peak`   | `bulge` 的中点宽度，非负数                                                        |
+
+四种宽度方式统一通过 `width.kind` 选择；各分支只接受自己的字段。端点的 `cap` 可与任一种宽度方式组合。
+
+下面是四种 `kindOptions.width` 的完整写法，每次选择其中一种：
+
+```ts
+import type { IRRibbonWidth } from '@retikz/extension';
+
+const fixed = { kind: 'fixed', value: 24 } satisfies IRRibbonWidth;
+const taper = { kind: 'taper', start: 16, end: 44, interpolation: 'smooth' } satisfies IRRibbonWidth;
+const stops = {
+  kind: 'stops',
+  stops: [
+    { offset: 0, value: 16 },
+    { offset: 0.5, value: 10 },
+    { offset: 1, value: 44 },
+  ],
+  interpolation: 'linear',
+} satisfies IRRibbonWidth;
+const profile = { kind: 'profile', name: 'bulge', params: { base: 16, peak: 58 } } satisfies IRRibbonWidth;
+```
+
+以下配置可用于上述任一种宽度方式：
+
+| 采样方式   | 配置属性              | 约束与含义                                                       |
+| ---------- | --------------------- | ---------------------------------------------------------------- |
+| 固定采样   | `sampling.kind`       | 固定为 `fixed`；不能使用 adaptive 的字段                         |
+|            | `sampling.samples`    | 基础样本数，整数 2–512；省略整个 `sampling` 时使用 64 个基础样本 |
+| 自适应采样 | `sampling.kind`       | 固定为 `adaptive`；不能设置 `samples`                            |
+|            | `sampling.tolerance`  | 正数，表示目标段长，用于按路径长度估算样本数，不是曲线误差上界   |
+|            | `sampling.maxSamples` | 可选基础样本数上限，整数 2–512，默认 512；必要特征点另行保留     |
+
+在 demo 中切换 `fixed`、`taper`、`stops` 和 `profile`，比较固定宽度、首尾渐变、中段收窄和中部鼓起。`fixed` 只显示“宽度”，不显示端点或插值控件。`bulge` 使用“起点宽度”作为两端共用的基础宽度，因此该模式不显示“终点宽度”。demo 固定采样数：前三种模式为 64（`fixed` 使用默认值），`bulge` 为 33，不提供采样控件。
+
+<ComponentPreview
+  files={['ribbon-geometry', 'ribbon-geometry.preview.tsx']}
+  size="md"
+  defaultSourceFile="ribbon-geometry.preview.tsx"
+/>
+
+## 标签位置
+
+标签通过 `Path.label` 配置，沿中心线的累计弧长定位。放在内部时居中于中心线，放在外侧时从对应边界向外偏移；沿路径旋转使用标签所在位置的中心线切线。
+
+Ribbon 复用 Kernel 的 [Path 几何标签](/kernel/components/path/label)，不是独立的标签 API。共享文字、字体和外观字段按该契约配置；Ribbon 提供中心线采样与带宽偏移。当前 Path 几何标签仅支持 `sloped` 控制切线旋转，没有任意角度的 `label.rotate`；该字段属于 Node 标签。`interrupt` / `gap` 用于支持断口的描边宿主，不适用于 Ribbon。
+
+| 属性              | 可用值                                          | 解释                                                                       |
+| ----------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| `label.text`      | 文本、行数组或富文本内容                        | 标签内容，复用 Kernel 文本块契约                                           |
+| `label.position`  | 0–1，或 `at-start`, `midway`, `at-end` 等位置词 | 指定中心线上的位置；数值是累计弧长比例，默认居中                           |
+| `label.placement` | `inside`、`outside`                             | 内部或外部放置；省略时按外部方式偏移，内部居中可用 `inside` 并省略 `side`  |
+| `label.side`      | `top`、`bottom`、`left`、`right`、`center`      | 相对标签锚点的方位；关闭 `sloped` 时沿画布坐标偏移，开启时随中心线切线旋转 |
+| `label.distance`  | 数值                                            | 外侧标签与流带边界的间距；默认 4                                           |
+| `label.sloped`    | `true`, `false`                                 | 是否沿中心线局部切线旋转，不受端面方向影响                                 |
+| `label.textColor` | 颜色值或 `currentColor`                         | 示例继承当前文字颜色，便于在流带内外阅读                                   |
+| `label.font`      | 字体配置对象                                    | 复用 Kernel 字体配置，例如 `size`、`family`、`weight`、`style`             |
+| `label.opacity`   | 0–1                                             | 标签透明度，与宿主透明度相乘                                               |
+
+在 demo 中拖动“位置”，观察标签沿曲线移动；切换到“外侧”后选择上、下、左或右侧，比较标签相对边界的位置。关闭“沿路径旋转”，再与开启时比较文字方向。中心线和宽度保持固定，便于单独观察标签变化。
+
+<ComponentPreview
+  files={['ribbon-label', 'ribbon-label.preview.tsx']}
+  defaultSourceFile="ribbon-label.preview.tsx"
+  size="md"
+/>
+
+`left` / `right` 改变的是当前位置的标签偏移方向，不会把标签移到流带首尾；首尾位置用 `label.position` 的 `0` / `1` 指定。左右偏移不保证标签完全位于带状轮廓外。
+
+## 样式外观
+
+流带沿用 Path 的填充、描边和阴影。样式属性可以组合使用，不影响中心线和宽度计算；以下字段均位于 `Path.style`。
+
+`fill` 和 `stroke` 除纯色外也支持渐变对象。渐变使用至少两个 `{ offset, color, opacity? }` 色标，`offset` 为 0–1。线性渐变（`linearGradient`）通过 `angle` 调整方向；径向渐变（`radialGradient`）通过 `center` 和 `radius` 控制扩散；锥形渐变（`conicGradient`）绕 `center` 按角度变化，`angle` 指定起始角度。径向与锥形的 `center` 使用图形包围盒坐标，`[0.5, 0.5]` 表示中心；径向 `radius` 同样使用包围盒单位。渐变分布在流带的图形范围内，不沿中心线弧长自动弯曲。
+
+| 分组 | 属性             | 可用值与解释                              |
+| ---- | ---------------- | ----------------------------------------- |
+| 填充 | `fill`           | 颜色值或渐变对象，设置流带内部填充        |
+|      | `fillOpacity`    | 0–1，控制填充透明度，不改变描边透明度     |
+| 描边 | `stroke`         | 颜色值或渐变对象，设置闭合轮廓描边        |
+|      | `strokeWidth`    | 非负数；本例设为 0 时隐藏描边             |
+| 阴影 | `shadow.offsetX` | 水平偏移量，本例为 0                      |
+|      | `shadow.offsetY` | 垂直偏移量，本例为 8                      |
+|      | `shadow.blur`    | 模糊量，本例为 10                         |
+|      | `shadow.color`   | 阴影颜色，本例为 `rgba(15, 23, 42, 0.35)` |
+
+阴影字段放在同一个 `shadow` 对象中；省略该对象时不添加阴影。
+
+在 demo 中切换纯色、线性、径向和锥形填充。渐变使用起始色与结束色两个色标；调整渐变角度或径向半径，观察颜色分布，再比较填充透明度、描边与阴影。本例固定中心线、首尾宽度和取景，径向与锥形的中心固定为 `[0.5, 0.5]`；阴影开关使用固定偏移、模糊和颜色。描边控件演示纯色，渐变描边使用与填充相同的对象写法。
+
+<ComponentPreview
+  files={['ribbon-appearance', 'ribbon-appearance.preview.tsx']}
+  defaultSourceFile="ribbon-appearance.preview.tsx"
+  size="md"
+/>
+
+## 相关属性
+
+这里只列出 Ribbon 的路径类型、宽度与采样配置；完整输入见 [Schema 参考](/library/extension/ribbon/schema-reference)，Definition 签名见 [API 参考](/library/extension/ribbon/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'Path.kind',
+      kind: 'property',
+      type: "'ribbon'",
+      description: '选择已在当前图装配的 Ribbon Path kind',
+    },
+    {
+      name: 'Path.kindOptions.width',
+      kind: 'property',
+      type: "{ kind: 'fixed'; value: number } | { kind: 'taper'; start: number; end: number; interpolation?: 'linear' | 'smooth' } | { kind: 'stops'; stops: Array<{ offset: number; value: number }>; interpolation?: 'linear' | 'smooth' | 'step' } | { kind: 'profile'; name: string; params?: JsonObject }",
+      description:
+        '各分支只接受自己的字段，宽度值非负：\n\n- `fixed`：`value` 指定固定宽度。\n- `taper`：`start` / `end` 指定首尾宽度；`interpolation` 可选 `linear`（默认，线性）或 `smooth`（平滑过渡）。\n- `stops`：至少两个 `{ offset, value }` 节点，offset 为 0–1 弧长位置；`interpolation` 可选 `linear`（默认）、`smooth` 或 `step`（保留跳变）。\n- `profile`：`name` 选择已注册的宽度函数，`params` 是可选的 JSON 参数对象',
+      required: true,
+    },
+    {
+      name: 'Path.kindOptions.sampling',
+      kind: 'property',
+      type: "{ kind: 'fixed'; samples: number } | { kind: 'adaptive'; tolerance: number; maxSamples?: number }",
+      description:
+        '必要特征点另行保留，两种采样方式不能混用字段：\n\n- `fixed`：`samples` 为 2–512 的整数。\n- `adaptive`：正数 `tolerance` 表示目标段长，按路径长度估算样本数；可选 `maxSamples` 为 2–512 的整数，默认 512',
+      defaultValue: "{ kind: 'fixed', samples: 64 }",
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+- [扩展用法](/library/extension/ribbon/extended)
+- [Schema 参考](/library/extension/ribbon/schema-reference)

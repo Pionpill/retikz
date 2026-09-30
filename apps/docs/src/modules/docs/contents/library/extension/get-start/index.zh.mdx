@@ -69,6 +69,8 @@ console.log(svg);
 
 两种入口都得到一个蓝色十字形。`shape: 'cross'` 选择形状，`CrossShapeDefinition` 提供该形状的绘制规则；两者需要配套使用。
 
+同一张图可以按类别装入多个 Definition：React 使用 `Layout.extensions`，Vanilla 使用 `compile`。需要整组官方定义时，可使用各能力页列出的 `ExtensionShapeDefinitions`、`ExtensionArrowDefinitions` 或 `ExtensionClipDefinitions`。
+
 ## 延伸阅读
 
-[节点形状](/library/extension/shape)展示其它轮廓；[能力装载](/library/extension/capability-loading)说明如何组合多个定义或使用完整集合。
+[节点形状](/library/extension/shape)展示其它轮廓与装配方式。

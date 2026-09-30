@@ -139,3 +139,9 @@ Node.position 可省略，Core 解析时使用局部原点 [0, 0]；直接 schem
   description="节点或路径端点使用的连接面引用；字符串名称或带 JSON 参数的引用"
   descriptions={{}}
 />
+
+## BoundaryLabelSchema
+
+Kernel 共享的边界标签契约。Node 复用其中的旋转、放置和对齐字段，同时保留自己的位置、引线、单行内容及默认值；Ribbon 端点直接使用此 Schema。
+
+<ZodSchema shallow name="BoundaryLabelSchema" />

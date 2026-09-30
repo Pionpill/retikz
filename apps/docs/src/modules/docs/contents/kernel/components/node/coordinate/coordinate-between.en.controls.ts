@@ -9,7 +9,6 @@ export const coordinateBetweenControls = definePreviewControls({
   title: 'Partway positioning',
   sections: [
     {
-      label: 'between',
       controls: [
         {
           kind: 'range',

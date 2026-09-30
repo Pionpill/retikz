@@ -1,4 +1,4 @@
-import type { IRBubbleChart } from '@retikz/chart/point/bubble';
+import type { IRBubbleChart } from '@retikz/chart/point';
 
 import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 

@@ -1,6 +1,6 @@
 import type { IRPosition, PathCommand } from '@retikz/core';
 import { isPositionTuple, polar } from '@retikz/core';
-import type { CurveSegmentSample, Vector2 } from '@retikz/math';
+import type { CurveSegment, CurveSegmentSample, Vector2 } from '@retikz/math';
 import { curve, point, vector2 } from '@retikz/math';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
@@ -31,47 +31,11 @@ export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
   return normalized;
 };
 
-/** 把端点切线翻到与参考切线同侧，避免首尾横截面左右侧反转 */
-export const alignTangentNormal = (tangent: Vector2, reference: Vector2): Vector2 => {
-  const normal = vector2.normal(tangent);
-  const referenceNormal = vector2.normal(reference);
-  return normal[0] * referenceNormal[0] + normal[1] * referenceNormal[1] < 0 ? [-tangent[0], -tangent[1]] : tangent;
-};
-
-const smoothstep = (t: number): number => t * t * (3 - 2 * t);
-
 /**
- * 在端点指定方向和中心线采样切线之间平滑过渡
- * @description 只用于首尾一小段，避免用户指定 start/end direction 时横截面突然旋转
+ * 把 ribbon 端点 direction 解析为端面单位轴
+ * @description 支持角度、显式向量和无字符串 origin 的 PolarPosition
  */
-export type BlendTangentInput = {
-  endpointTangent: Vector2;
-  sampleTangent: Vector2;
-  t: number;
-  source: string;
-};
-
-export const blendTangent = ({ endpointTangent, sampleTangent, t, source }: BlendTangentInput): Vector2 => {
-  const u = smoothstep(Math.max(0, Math.min(1, t)));
-  return normalizeVector(
-    [
-      endpointTangent[0] + (sampleTangent[0] - endpointTangent[0]) * u,
-      endpointTangent[1] + (sampleTangent[1] - endpointTangent[1]) * u,
-    ],
-    source,
-  );
-};
-
-/**
- * 把 ribbon 端点 direction 解析为单位切线
- * @description 支持角度、显式向量和无字符串 origin 的 PolarPosition；未配置时沿用整条连接线方向
- */
-export const directionToTangent = (
-  direction: IRRibbonDirection | undefined,
-  fallback: Vector2,
-  source: string,
-): Vector2 => {
-  if (direction === undefined) return fallback;
+export const directionToSectionAxis = (direction: IRRibbonDirection, source: string): Vector2 => {
   if (typeof direction === 'number') {
     return vector2.fromAngleDegrees(direction);
   }
@@ -100,12 +64,6 @@ export const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): num
     prev = curr;
   }
   return total;
-};
-
-/** 控制柄长度兜底：退化控制点用兜底长度，避免端点方向覆盖时生成零柄 */
-export const controlHandleLength = (anchor: IRPosition, control: IRPosition, fallback: number): number => {
-  const handle = point.distance(anchor, control);
-  return handle > 0 ? handle : fallback;
 };
 
 /**
@@ -233,105 +191,28 @@ export const commandsToSegmentInputs = (
   return inputs;
 };
 
-type SegmentToSamplerInput = {
-  input: RibbonSegmentInput;
-  index: number;
-  count: number;
-  endpointTangents?: { start?: Vector2; end?: Vector2 };
+/** 将已物化命令投影为 Math 曲线，不改写作者控制柄 */
+export const segmentInputToCurve = (input: RibbonSegmentInput): CurveSegment => {
+  if (input.kind === 'line') return input;
+  if (input.kind === 'quad') return { ...input, kind: 'quadraticBezier' };
+  if (input.kind === 'cubic') return { ...input, kind: 'cubicBezier' };
+  return { ...input, startAngleDeg: input.startAngle, endAngleDeg: input.endAngle };
 };
 
-const segmentToSampler = ({
-  input,
-  index,
-  count,
-  endpointTangents = {},
-}: SegmentToSamplerInput): ((t: number) => CurveSegmentSample) => {
-  const isFirst = index === 0;
-  const isLast = index === count - 1;
-  if (input.kind === 'line') {
-    return (t: number): CurveSegmentSample => curve.sampleAt({ kind: 'line', from: input.from, to: input.to }, t);
-  }
-  if (input.kind === 'quad') {
-    if ((isFirst && endpointTangents.start) || (isLast && endpointTangents.end)) {
-      const fallback = point.distance(input.from, input.to) / 3;
-      const control1Length = (controlHandleLength(input.from, input.control, fallback) * 2) / 3;
-      const control2Length = (controlHandleLength(input.to, input.control, fallback) * 2) / 3;
-      const control1 =
-        isFirst && endpointTangents.start
-          ? point.along(input.from, endpointTangents.start, control1Length)
-          : ([
-              input.from[0] + ((input.control[0] - input.from[0]) * 2) / 3,
-              input.from[1] + ((input.control[1] - input.from[1]) * 2) / 3,
-            ] satisfies IRPosition);
-      const control2 =
-        isLast && endpointTangents.end
-          ? point.against(input.to, endpointTangents.end, control2Length)
-          : ([
-              input.to[0] + ((input.control[0] - input.to[0]) * 2) / 3,
-              input.to[1] + ((input.control[1] - input.to[1]) * 2) / 3,
-            ] satisfies IRPosition);
-      return (t: number): CurveSegmentSample =>
-        curve.sampleAt({ kind: 'cubicBezier', from: input.from, control1, control2, to: input.to }, t);
-    }
-    return (t: number): CurveSegmentSample =>
-      curve.sampleAt({ kind: 'quadraticBezier', from: input.from, control: input.control, to: input.to }, t);
-  }
-  if (input.kind === 'cubic') {
-    const fallback = point.distance(input.from, input.to) / 3;
-    const control1 =
-      isFirst && endpointTangents.start
-        ? point.along(input.from, endpointTangents.start, controlHandleLength(input.from, input.control1, fallback))
-        : input.control1;
-    const control2 =
-      isLast && endpointTangents.end
-        ? point.against(input.to, endpointTangents.end, controlHandleLength(input.to, input.control2, fallback))
-        : input.control2;
-    return (t: number): CurveSegmentSample =>
-      curve.sampleAt({ kind: 'cubicBezier', from: input.from, control1, control2, to: input.to }, t);
-  }
-  if (input.kind === 'arc') {
-    return (t: number): CurveSegmentSample =>
-      curve.sampleAt(
-        {
-          kind: 'arc',
-          center: input.center,
-          radius: input.radius,
-          startAngleDeg: input.startAngle,
-          endAngleDeg: input.endAngle,
-        },
-        t,
-      );
-  }
-  return (t: number): CurveSegmentSample =>
-    curve.sampleAt(
-      {
-        kind: 'ellipseArc',
-        center: input.center,
-        radiusX: input.radiusX,
-        radiusY: input.radiusY,
-        startAngleDeg: input.startAngle,
-        endAngleDeg: input.endAngle,
-      },
-      t,
-    );
-};
-
-/**
- * RibbonSegmentInput → 可采样中心线段
- * @description start/end direction 覆盖会重算首尾 Bezier 控制柄，使轮廓端面切线与用户指定方向一致
- */
-export const segmentInputsToSegments = (
-  inputs: ReadonlyArray<RibbonSegmentInput>,
-  endpointTangents: { start?: Vector2; end?: Vector2 } = {},
-): Array<RibbonSegment> => {
-  const segments: Array<RibbonSegment> = [];
-  for (let index = 0; index < inputs.length; index += 1) {
-    const sampleAt = segmentToSampler({ input: inputs[index], index, count: inputs.length, endpointTangents });
-    const length = estimateLength(sampleAt);
-    if (length > 0) segments.push({ sampleAt, length });
-  }
-  return segments;
-};
+/** 建立共享弧长采样模型 */
+export const segmentInputsToSegments = (inputs: ReadonlyArray<RibbonSegmentInput>): Array<RibbonSegment> =>
+  inputs
+    .map(input => {
+      const geometry = segmentInputToCurve(input);
+      const length = curve.approximateLength(geometry);
+      return {
+        sampleAt: (t: number) => curve.sampleAt(geometry, t),
+        sampleAtDistance: (distance: number) =>
+          curve.sampleAt(geometry, curve.parameterAtDistance(geometry, distance, { totalLength: length })),
+        length,
+      };
+    })
+    .filter(segment => segment.length > 0);
 
 /** 按累计弧长在整条中心线上取样；target 会落到对应 segment 的局部 t */
 export const sampleAtDistance = (
@@ -343,8 +224,7 @@ export const sampleAtDistance = (
   for (const segment of segments) {
     const end = acc + segment.length;
     if (target <= end || segment === segments[segments.length - 1]) {
-      const t = segment.length === 0 ? 0 : (target - acc) / segment.length;
-      return segment.sampleAt(Math.max(0, Math.min(1, t)));
+      return segment.sampleAtDistance(target - acc);
     }
     acc = end;
   }
@@ -354,7 +234,6 @@ export const sampleAtDistance = (
 export type SegmentsFromCommandsInput = {
   commands: ReadonlyArray<PathCommand>;
   source: string;
-  endpointTangents?: { start?: Vector2; end?: Vector2 };
 };
 
 /**
@@ -364,10 +243,9 @@ export type SegmentsFromCommandsInput = {
 export const segmentsFromCommands = ({
   commands,
   source,
-  endpointTangents = {},
 }: SegmentsFromCommandsInput): { segments: Array<RibbonSegment>; totalLength: number } => {
   const inputs = commandsToSegmentInputs(commands, source);
-  const segments = segmentInputsToSegments(inputs, endpointTangents);
+  const segments = segmentInputsToSegments(inputs);
   const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
   if (!Number.isFinite(totalLength) || totalLength <= 0) {
     throw new RetikzExtensionError({

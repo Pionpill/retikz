@@ -23,7 +23,6 @@ const createControls = (lang: Lang) => {
     title: i18n.endpointOverlap,
     sections: [
       {
-        label: i18n.arrowPlacement,
         controls: [
           {
             kind: 'select',

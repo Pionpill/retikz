@@ -1,4 +1,4 @@
-import type { IRBubbleChartProperties } from '@retikz/chart/point/bubble';
+import type { IRBubbleChartProperties } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 /** Bubble 常量属性声明 */

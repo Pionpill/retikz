@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.stepTargetPositioning,
     sections: [
       {
-        label: i18n.targetForm,
         controls: [
           {
             kind: 'select',

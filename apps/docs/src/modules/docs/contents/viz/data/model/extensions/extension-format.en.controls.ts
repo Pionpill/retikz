@@ -7,9 +7,7 @@ import { wanRows } from './extension-format.data';
 export const extensionFormatControls = definePreviewControls({
   presentation: 'panel',
   title: 'Named format',
-  sections: [
-    { label: 'Input data', controls: [{ kind: 'table', id: 'rows', label: 'Ten-thousand strings', rows: wanRows }] },
-  ],
+  sections: [{ controls: [{ kind: 'table', id: 'rows', label: 'Ten-thousand strings', rows: wanRows }] }],
 });
 
 /** Stable documentation contract for the custom format example */

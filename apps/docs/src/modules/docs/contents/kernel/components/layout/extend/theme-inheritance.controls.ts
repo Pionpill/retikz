@@ -13,7 +13,6 @@ export const createPreviewControlContract = (lang: Lang) => {
       title: i18n.title,
       sections: [
         {
-          label: i18n.title,
           controls: [
             {
               kind: 'select',

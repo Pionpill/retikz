@@ -12,7 +12,6 @@ import type {
 import { FoldStepVia } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
-import type { IRRibbonPathOptions } from '@retikz/extension';
 
 import type {
   CoordinateFrame,
@@ -413,14 +412,6 @@ const horizontalRibbonSteps = (source: IRTarget, target: IRTarget): Array<IRStep
   ];
 };
 
-const horizontalRibbonEndpointDirection = (source: IRTarget, target: IRTarget): number | undefined => {
-  const sourcePosition = positionOf(source);
-  const targetPosition = positionOf(target);
-  if (sourcePosition === undefined || targetPosition === undefined || sourcePosition[0] === targetPosition[0])
-    return undefined;
-  return targetPosition[0] >= sourcePosition[0] ? 0 : 180;
-};
-
 const bendRoute = (
   routing: Extract<IRPlotRelationRouting, { kind: typeof RelationRoutingKind.Bend }>,
   targets: Array<IRTarget>,
@@ -615,8 +606,7 @@ export const lowerRelation = (
       const width = resolveMarkValue<number>(mark.ribbon?.width, row);
       if (width === undefined) continue;
       const endWidth = resolveMarkValue<number>(mark.ribbon?.endWidth, row);
-      const ribbonOptions = (mark.ribbon?.options ?? {}) as Partial<IRRibbonPathOptions>;
-      const direction = horizontalRibbonEndpointDirection(source.target, target.target);
+      const { interpolation, ...ribbonOptions } = mark.ribbon?.options ?? {};
       const label = resolveGeometryMarkLabels(mark.label, row, labelOf);
       const ribbon: IRPath = applyPathChannelDeliveries(
         {
@@ -627,15 +617,15 @@ export const lowerRelation = (
           ...(label !== undefined ? { label } : {}),
           kindOptions: {
             ...ribbonOptions,
-            ...(endWidth === undefined
-              ? {
-                  width,
-                  ...(direction !== undefined ? { start: { direction }, end: { direction } } : {}),
-                }
-              : {
-                  start: { width, ...(direction !== undefined ? { direction } : {}) },
-                  end: { width: endWidth, ...(direction !== undefined ? { direction } : {}) },
-                }),
+            width:
+              endWidth === undefined
+                ? { kind: 'fixed', value: width }
+                : {
+                    kind: 'taper',
+                    start: width,
+                    end: endWidth,
+                    ...(interpolation === undefined ? {} : { interpolation }),
+                  },
           },
           children: horizontalRibbonSteps(source.target, target.target),
         },

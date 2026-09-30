@@ -1,5 +1,6 @@
-import { createHighlighter } from 'shiki';
-import type { ThemedToken } from 'shiki/types';
+import { bundledLanguages, bundledThemes, createOnigurumaEngine } from 'shiki';
+import { createHighlighterCore } from 'shiki/core';
+import type { LanguageRegistration, ThemedToken } from 'shiki/types';
 
 export type HighlightTheme = 'light' | 'dark';
 
@@ -12,7 +13,15 @@ export type TokenizeHighlightCodeInput = {
   theme: HighlightTheme;
 };
 
-type HighlightLanguage = 'typescript' | 'tsx' | 'json' | 'bash' | 'text';
+type HighlightLanguage = 'typescript' | 'tsx' | 'json' | 'bash' | 'tree' | 'text';
+
+/** 只为树状结构中的行尾说明着色，其余字符保持纯文本 */
+const TreeLanguage = {
+  name: 'tree',
+  scopeName: 'source.retikz-tree',
+  patterns: [{ name: 'comment.line.number-sign.retikz-tree', match: '(?<= {2})#.*$' }],
+  repository: {},
+} satisfies LanguageRegistration;
 
 const LANGUAGE_ALIASES: Readonly<Record<string, HighlightLanguage>> = {
   ts: 'typescript',
@@ -22,6 +31,7 @@ const LANGUAGE_ALIASES: Readonly<Record<string, HighlightLanguage>> = {
   bash: 'bash',
   shell: 'bash',
   sh: 'bash',
+  tree: 'tree',
   text: 'text',
   plaintext: 'text',
   txt: 'text',
@@ -32,9 +42,16 @@ const THEME_NAMES = {
   dark: 'dark-plus',
 } as const;
 
-const highlighterPromise = createHighlighter({
-  langs: ['typescript', 'tsx', 'json', 'bash'],
-  themes: [THEME_NAMES.light, THEME_NAMES.dark],
+const highlighterPromise = createHighlighterCore({
+  langs: [
+    bundledLanguages.typescript,
+    bundledLanguages.tsx,
+    bundledLanguages.json,
+    bundledLanguages.bash,
+    TreeLanguage,
+  ],
+  themes: [bundledThemes[THEME_NAMES.light], bundledThemes[THEME_NAMES.dark]],
+  engine: createOnigurumaEngine(import('shiki/wasm')),
 });
 
 /** 将外部语言名收敛到站点已加载的 Shiki grammar */

@@ -16,7 +16,6 @@ export const starExampleControls = definePreviewControls({
   title: 'Star',
   sections: [
     {
-      label: '星形几何',
       controls: [
         {
           kind: 'range',

@@ -3,6 +3,7 @@ import type {
   IRStep,
   PathCommand,
   PathKindLabelInput,
+  PathKindBoundaryLabelInput,
   ResolvedPathKindAppearance,
   ScenePrimitive,
 } from '@retikz/core';
@@ -13,12 +14,10 @@ import type { CanonicalRibbonOptions, IRRibbonPath } from '../types';
 /** ribbon 编译期归一化后的输入 */
 export type RibbonLike = Omit<IRRibbonPath, 'kindOptions'> & CanonicalRibbonOptions;
 
-/** 动态宽度 / boundary ribbon 的采样点数量 */
-export const DEFAULT_RIBBON_SAMPLES = 64;
-
 /** 可按 t∈[0,1] 采样的中心线段 */
 export type RibbonSegment = {
   sampleAt: (t: number) => CurveSegmentSample;
+  sampleAtDistance: (distance: number) => CurveSegmentSample;
   length: number;
 };
 
@@ -51,24 +50,13 @@ export type RibbonSegmentInput =
       to: IRPosition;
     };
 
-/** 可直接构造左右 offset 曲线的解析型线段 */
-export type RibbonAnalyticSegment =
-  | { kind: 'line'; from: IRPosition; to: IRPosition }
-  | { kind: 'quad'; from: IRPosition; control: IRPosition; to: IRPosition }
-  | {
-      kind: 'cubic';
-      from: IRPosition;
-      control1: IRPosition;
-      control2: IRPosition;
-      to: IRPosition;
-    };
-
 /** ribbon 在某个归一化 offset 上的横截面 */
 export type RibbonCrossSection = {
   center: IRPosition;
   left: IRPosition;
   right: IRPosition;
   tangent: Vector2;
+  axis: Vector2;
   width: number;
 };
 
@@ -88,4 +76,6 @@ export type RibbonEmitOptions = Readonly<{
   materializePath: RibbonMaterializePath;
   /** 当前路径的宿主标签服务 */
   emitHostLabels: (input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>;
+  /** Kernel 共享边界标签服务 */
+  emitBoundaryLabels: (input: ReadonlyArray<PathKindBoundaryLabelInput>) => ReadonlyArray<ScenePrimitive>;
 }>;

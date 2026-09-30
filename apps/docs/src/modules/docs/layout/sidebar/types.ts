@@ -4,7 +4,7 @@ import type { DocDifficultyValue } from '@/modules/docs/data';
 
 /**
  * 侧栏视图契约
- * @description 三级层次：Category（分组）→ Module（一级，可带 Icon）→ SubModule（二级及以下，递归 children）
+ * @description 三级层次：Category（分组）→ Module（一级）→ SubModule（二级及以下，递归 children）；菜单项均可带 Icon
  */
 
 /** 二级及以下菜单项（递归节点） */
@@ -13,6 +13,8 @@ export type SidebarSubModuleData = {
   value: string;
   /** 显示文字（已通过 t()） */
   label: string;
+  /** 显示图标，可选 */
+  Icon?: ComponentType<{ className?: string }>;
   /** 叶子文档的可选阅读难度 */
   difficulty?: DocDifficultyValue;
   /** 子项；存在则当前节点渲染为可展开分组，否则为叶子 */
@@ -21,8 +23,6 @@ export type SidebarSubModuleData = {
 
 /** 一级菜单项 */
 export type SidebarModuleData = SidebarSubModuleData & {
-  /** 显示图标，可选 */
-  Icon?: ComponentType<{ className?: string }>;
   /** 同一栏目内的侧栏视觉分组标题（已通过 t()） */
   sidebarGroup?: string;
 };

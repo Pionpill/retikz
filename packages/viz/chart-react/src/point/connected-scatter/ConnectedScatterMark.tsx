@@ -1,4 +1,4 @@
-import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import type { IRConnectedScatterChart } from '@retikz/chart/point';
 import type { FC } from 'react';
 
 import type { ChartMarkOf } from '../shared';

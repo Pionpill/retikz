@@ -11,7 +11,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     title: text.title,
     sections: [
       {
-        label: text.title,
         controls: [
           { id: 'width', kind: 'range', min: 200, max: 500, step: 1, defaultValue: 350, label: text.width },
           { id: 'slots', kind: 'switch', defaultValue: true, label: text.slots },
