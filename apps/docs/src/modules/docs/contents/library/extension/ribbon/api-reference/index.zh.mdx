@@ -1,0 +1,30 @@
+---
+title: API 参考
+description: 查询 Ribbon 的 React、Vanilla 接入与 Definition 扩展契约
+---
+
+本页从 `@retikz/extension` 包根公开入口生成 Ribbon 局部 API 参考。先阅读[基础用法](/library/extension/ribbon/usage)；持久化字段见 [Schema 参考](/library/extension/ribbon/schema-reference)。
+
+中心线模式可通过 `kindOptions.start.direction` / `end.direction` 独立指定端面轴线；默认 `auto`，支持角度、非零向量和极坐标。它不改变中心线走向，端帽与端帽标签消费最终端面。操作示例见[端点与端帽](/library/extension/ribbon/extended#端点与端帽)。
+
+## `@retikz/react`
+
+Ribbon 复用 Core 的 `Path` 组件，通过 `kind="ribbon"` 与 `kindOptions` 配置流带，没有独立的 `Ribbon` 组件。共享组件的完整签名由各自的 API 参考维护。
+
+| 入口     | Ribbon 中的用途                                                                          | 参考入口                                              |
+| -------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `Layout` | 在 `extensions.pathKinds` 中注入 `RibbonPathKindDefinition` 或自定义 Ribbon Definition   | [Layout API](/kernel/components/layout/api-reference) |
+| `Path`   | 设置 `kind="ribbon"`，通过 `kindOptions` 传入宽度与端帽；`label` 和 `style` 使用共享属性 | [Path API](/kernel/components/path/api-reference)     |
+| `Step`   | 作为 `Path` 子组件描述开放中心线                                                         | [Path 步骤](/kernel/components/path/step)             |
+
+## `@retikz/vanilla`
+
+Vanilla 使用共享的 `path()` 构造相同输入，没有独立的 `ribbon()` 函数。Definition 在编译或渲染调用时显式注入；四种完整接入示例见[基础用法](/library/extension/ribbon/usage#接入方式)。
+
+| 入口                  | Ribbon 中的用途                                                   | 参考入口                                                 |
+| --------------------- | ----------------------------------------------------------------- | -------------------------------------------------------- |
+| `path()`              | 设置 `kind: 'ribbon'`、`kindOptions` 和中心线 `children`          | [Path API](/kernel/components/path/api-reference)        |
+| `scene()`             | 将流带 Path 放入场景                                              | [Layout API](/kernel/components/layout/api-reference)    |
+| `renderToSvgString()` | 在 `compile.pathKinds` 中注入 Definition，将场景渲染为 SVG 字符串 | [SVG 接入示例](/library/extension/ribbon/usage#接入方式) |
+
+{/* @include library/extension/ribbon/api-reference/generated */}

@@ -1,5 +1,17 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '包装自定义几何的完整输出，汇总宿主标签边界并应用 Path rotate / scale 与元数据':
+    'Wraps complete custom geometry output, includes host-label bounds, and applies Path rotate / scale and metadata',
+  '在全部标签发射后调用一次并直接返回；emitStroke 的结果已包装，不应再次调用':
+    'Call once after emitting all labels and return the result directly; emitStroke results are already wrapped and must not be wrapped again',
+
+  '通过 Kernel 共享布局编译已定位的边界标签': 'Compiles positioned boundary labels through shared Kernel layout',
+  由宿主几何确定边界基点的标签请求: 'Label request with its boundary anchor determined by host geometry',
+  'Kernel 共享标签配置': 'Shared Kernel label configuration',
+  宿主局部坐标中的边界支撑点: 'Boundary support point in host-local coordinates',
+  单位外向向量: 'Outward unit vector',
+  '相对宿主的字段路径，用于失败诊断': 'Field path relative to the host, used for failure diagnostics',
+
   '箭头名称、尺寸及几何生成函数组成的定义': 'Definition containing the arrow name, dimensions, and geometry emitter',
   '原定义对象，不复制或修改输入': 'The original definition object, without copying or modifying the input',
   '路径生成器名称、参数 schema 及命令生成函数组成的定义':

@@ -226,6 +226,9 @@
     "extensionArrow": "arrow · 箭头",
     "extensionClip": "clip · 裁剪",
     "extensionRibbon": "ribbon · 流带",
+    "extensionRibbonBasicUsage": "基础用法",
+    "extensionRibbonExtendedUsage": "扩展用法",
+    "extensionRibbonCustomUsage": "自定义用法",
     "extensionAnimation": "animation · 动画预设",
     "extension": "Extension · 拓展包",
     "extensionNavigationDescription": "按需使用节点形状、箭头、裁剪与流带"

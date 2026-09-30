@@ -106,7 +106,7 @@ const resultOf = (
 
 /**
  * IR ribbon path → Extension Path kind compile result
- * @description boundary 模式把 upper/lower 两条 path 采样成闭合轮廓；centerline 模式复用 Core materializePath 的已结算 commands，再按宽度函数生成左右边界
+ * @description boundary 模式保留 upper/lower 两条曲线并闭合轮廓；centerline 模式复用 Core materializePath 的已结算 commands，再按宽度函数生成左右边界
  */
 export const emitRibbonPrimitive = (
   path: IRRibbonPath,

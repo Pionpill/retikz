@@ -65,7 +65,7 @@ Schema 是唯一契约真源；各分支对应 `IRFixedRibbonWidth`、`IRTaperRi
 { kind: 'profile', name: 'bulge', params: { base: 16, peak: 44 } }
 ```
 
-`start` / `end` 端点配置只拥有 `direction` 与 `cap`。删除端点的 `width` 及顶层 `interpolation`，也不接受数值 `width` 简写。渐变统一写入 `width: { kind: 'taper', start, end, interpolation? }`。宽度模式的选择、必填项与分支局部字段因此可以被类型提示与机器可读结构直接发现。
+`start` / `end` 端点配置拥有 `direction`、`cap` 与可选端帽 `label`。删除端点的 `width` 及顶层 `interpolation`，也不接受数值 `width` 简写。渐变统一写入 `width: { kind: 'taper', start, end, interpolation? }`。宽度模式的选择、必填项与分支局部字段因此可以被类型提示与机器可读结构直接发现。
 
 宽度 `smooth` 使用三次 smoothstep：`u = t²(3 − 2t)`，宽度为 `from + (to − from)u`。taper 的 t 是整条中心线弧长比例，stops 的 t 是相邻节点区间内的弧长比例；每个区间两端宽度变化率为零。这与连接空间侧边采样点的 Math Catmull–Rom 是两个独立步骤，选择 `linear` 也仍使用相同的侧边连接算法。
 

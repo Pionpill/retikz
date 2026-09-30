@@ -226,6 +226,9 @@
     "extensionArrow": "Arrows",
     "extensionClip": "Clips",
     "extensionRibbon": "Ribbon",
+    "extensionRibbonBasicUsage": "Basic usage",
+    "extensionRibbonExtendedUsage": "Extended usage",
+    "extensionRibbonCustomUsage": "Custom usage",
     "extensionAnimation": "Animation presets",
     "extension": "Extension",
     "extensionNavigationDescription": "Add optional node shapes, arrows, clips and ribbons"

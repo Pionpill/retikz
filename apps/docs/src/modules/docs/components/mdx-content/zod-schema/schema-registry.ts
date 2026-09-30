@@ -84,6 +84,7 @@ import {
   ScatterChartPropertiesSchema,
   ScatterChartMarkSchema,
 } from '@retikz/chart/point';
+import { BoundaryLabelSchema } from '@retikz/core';
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
@@ -98,7 +99,20 @@ import {
   PolygonClipSchema,
   HexagonShapeDefinition,
   ParallelogramShapeDefinition,
+  FixedRibbonWidthSchema,
+  TaperRibbonWidthSchema,
+  RibbonWidthSchema,
+  CenterlineRibbonPathOptionsSchema,
+  BoundaryRibbonPathOptionsSchema,
+  RibbonAdaptiveSamplingSchema,
+  RibbonArcCapSchema,
+  RibbonEndpointSchema,
+  RibbonDirectionSchema,
+  RibbonFixedSamplingSchema,
   RibbonPathOptionsSchema,
+  RibbonPathSchema,
+  ProfileRibbonWidthSchema,
+  StopsRibbonWidthSchema,
   SectorShapeDefinition,
   StarShapeDefinition,
   TrapezoidShapeDefinition,
@@ -782,10 +796,79 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.DrawableInstanceSchema,
     label: 'DrawableInstance',
   },
+  RibbonPathSchema: {
+    schema: RibbonPathSchema,
+    label: 'RibbonPath',
+    url: '/library/extension/ribbon/schema-reference#ribbonpathschema',
+  },
+  FixedRibbonWidthSchema: {
+    schema: FixedRibbonWidthSchema,
+    label: 'FixedRibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#fixedribbonwidthschema',
+  },
+  TaperRibbonWidthSchema: {
+    schema: TaperRibbonWidthSchema,
+    label: 'TaperRibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#taperribbonwidthschema',
+  },
+  RibbonWidthSchema: {
+    schema: RibbonWidthSchema,
+    label: 'RibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#ribbonwidthschema',
+  },
+  CenterlineRibbonPathOptionsSchema: {
+    schema: CenterlineRibbonPathOptionsSchema,
+    label: 'CenterlineRibbonPathOptions',
+    url: '/library/extension/ribbon/schema-reference#centerlineribbonpathoptionsschema',
+  },
+  BoundaryRibbonPathOptionsSchema: {
+    schema: BoundaryRibbonPathOptionsSchema,
+    label: 'BoundaryRibbonPathOptions',
+    url: '/library/extension/ribbon/schema-reference#boundaryribbonpathoptionsschema',
+  },
   RibbonPathOptionsSchema: {
     schema: RibbonPathOptionsSchema,
     label: 'RibbonPathOptions',
-    url: '/library/extension/ribbon',
+    url: '/library/extension/ribbon/schema-reference#ribbonpathoptionsschema',
+  },
+  BoundaryLabelSchema: {
+    schema: BoundaryLabelSchema,
+    label: 'BoundaryLabel',
+    url: '/kernel/components/node/schema-reference#boundarylabelschema',
+  },
+  RibbonDirectionSchema: {
+    schema: RibbonDirectionSchema,
+    label: 'RibbonDirection',
+  },
+  RibbonEndpointSchema: {
+    schema: RibbonEndpointSchema,
+    label: 'RibbonEndpoint',
+    url: '/library/extension/ribbon/schema-reference#ribbonendpointschema',
+  },
+  StopsRibbonWidthSchema: {
+    schema: StopsRibbonWidthSchema,
+    label: 'StopsRibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#stopsribbonwidthschema',
+  },
+  ProfileRibbonWidthSchema: {
+    schema: ProfileRibbonWidthSchema,
+    label: 'ProfileRibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#profileribbonwidthschema',
+  },
+  RibbonArcCapSchema: {
+    schema: RibbonArcCapSchema,
+    label: 'RibbonArcCap',
+    url: '/library/extension/ribbon/schema-reference#ribbonarccapschema',
+  },
+  RibbonFixedSamplingSchema: {
+    schema: RibbonFixedSamplingSchema,
+    label: 'RibbonFixedSampling',
+    url: '/library/extension/ribbon/schema-reference#ribbonfixedsamplingschema',
+  },
+  RibbonAdaptiveSamplingSchema: {
+    schema: RibbonAdaptiveSamplingSchema,
+    label: 'RibbonAdaptiveSampling',
+    url: '/library/extension/ribbon/schema-reference#ribbonadaptivesamplingschema',
   },
   CrossShapeParamsSchema: {
     schema: CrossShapeDefinition.paramsSchema,

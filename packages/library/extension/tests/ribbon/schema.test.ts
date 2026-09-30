@@ -81,6 +81,18 @@ describe('Ribbon discriminated width inputs', () => {
     expect(RibbonPathOptionsSchema.safeParse({ width, interpolation: 'smooth' }).success).toBe(false);
     expect(RibbonPathOptionsSchema.safeParse({}).success).toBe(false);
   });
+  it('materializes automatic direction and retains explicit directions through JSON', () => {
+    const width = { kind: 'fixed', value: 12 };
+    expect(RibbonPathOptionsSchema.parse({ width })).toMatchObject({
+      start: { direction: 'auto', cap: { name: 'butt' } },
+      end: { direction: 'auto', cap: { name: 'butt' } },
+    });
+    for (const direction of [90, [0, 1], { angle: 90, radius: 1 }]) {
+      const input = { width, start: { direction }, end: { direction } };
+      expect(RibbonPathOptionsSchema.parse(JSON.parse(JSON.stringify(input)))).toMatchObject(input);
+    }
+    expect(RibbonPathOptionsSchema.safeParse({ width, start: { direction: [0, 0] } }).success).toBe(false);
+  });
   it('requires boundary paths and rejects centerline-only fields in boundary mode', () => {
     const upper = [
       { type: 'step', kind: 'move', to: [0, 0] },

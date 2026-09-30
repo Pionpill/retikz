@@ -1,0 +1,284 @@
+---
+title: Basic usage
+description: Draw ribbons from centerlines and adjust widths, centerline labels, and appearance
+---
+
+Start with an open centerline. Ribbon builds a fillable outline along it. This page covers widths, centerline labels, and appearance. See [Extended usage](/library/extension/ribbon/extended) for independent section directions, caps, and endpoint labels.
+
+Ribbon reuses Path commands, styles, centerline labels, and transforms. See the [Path documentation](/kernel/components/path) for shared properties; Related props on this page lists only Ribbon-specific options.
+
+## Using this topic
+
+Use Ribbon for connections that need changing thickness or inside labels. Explicitly assemble `RibbonPathKindDefinition`, then set `kind="ribbon"` on Path. This result uses one open centerline and endpoint widths. Importing a Definition does not register it globally.
+
+<ComponentPreview files="ribbon-basic" hideCode size="xs" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+`Layout` injects the Definition. Direct `Step` children of `Path` form the centerline:
+
+```text
+Layout
+└── Path
+    ├── Step (move)
+    └── Step (line)
+```
+
+```tsx
+import type { IRRibbonPathOptions } from '@retikz/extension';
+import { RibbonPathKindDefinition } from '@retikz/extension';
+import { Layout, Path, Step } from '@retikz/react';
+
+export const Example = () => (
+  <Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
+    <Path
+      kind="ribbon"
+      kindOptions={{ width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions}
+      style={{ fill: '#60a5fa' }}
+    >
+      <Step kind="move" to={[-120, 0]} />
+      <Step to={[120, 0]} />
+    </Path>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import type { IRRibbonPathOptions } from '@retikz/extension';
+import { RibbonPathKindDefinition } from '@retikz/extension';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'path',
+      kind: 'ribbon',
+      kindOptions: { width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions,
+      children: [
+        { type: 'step', kind: 'move', to: [-120, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+      style: { fill: '#60a5fa' },
+    },
+  ],
+};
+
+export const Example = () => <Layout ir={ir} extensions={{ pathKinds: [RibbonPathKindDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import type { IRRibbonPathOptions } from '@retikz/extension';
+import { RibbonPathKindDefinition } from '@retikz/extension';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    path({
+      kind: 'ribbon',
+      kindOptions: { width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions,
+      children: [
+        { type: 'step', kind: 'move', to: [-120, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+      style: { fill: '#60a5fa' },
+    }),
+  ],
+});
+
+console.log(renderToSvgString(input, { compile: { pathKinds: [RibbonPathKindDefinition] } }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import type { IRRibbonPathOptions } from '@retikz/extension';
+import { RibbonPathKindDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'path',
+      kind: 'ribbon',
+      kindOptions: { width: { kind: 'taper', start: 32, end: 12 } } satisfies IRRibbonPathOptions,
+      children: [
+        { type: 'step', kind: 'move', to: [-120, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+      style: { fill: '#60a5fa' },
+    },
+  ],
+};
+
+console.log(renderToSvgString(ir, { compile: { pathKinds: [RibbonPathKindDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+`kindOptions` contains Ribbon-specific JSON-safe data. `fill`, `stroke`, `label`, opacity, and transforms remain shared Path host fields.
+
+## Width and sampling
+
+Width rules control thickness along the centerline. Centerline mode requires exactly one of the four width forms below; fields from different branches cannot be mixed. Width and sampling fields belong to `kindOptions`.
+
+| Width form     | Property              | Constraints and meaning                                                                                                    |
+| -------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Fixed width    | `width.kind`          | Always `fixed`                                                                                                             |
+|                | `width.value`         | Nonnegative constant width                                                                                                 |
+| Endpoint taper | `width.kind`          | Always `taper`                                                                                                             |
+|                | `width.start`         | Required nonnegative start width                                                                                           |
+|                | `width.end`           | Required nonnegative end width                                                                                             |
+|                | `width.interpolation` | `linear` or `smooth` (smoothstep); defaults to `linear`                                                                    |
+| Width stops    | `width.kind`          | Set to `stops` to select the width-stop model                                                                              |
+|                | `width.stops`         | At least two `{ offset, value }` knots; `offset` is an arc-length fraction from 0 to 1, and `value` is a nonnegative width |
+|                | `width.interpolation` | Interpolation between knots: `linear`, `smooth`, or `step`; defaults to `linear`. `step` preserves jumps                   |
+| Width profile  | `width.kind`          | Set to `profile` to select a registered width function                                                                     |
+|                | `width.name`          | Registered profile name; this example uses `bulge`                                                                         |
+|                | `width.params`        | JSON parameters defined by the selected profile                                                                            |
+|                | `width.params.base`   | Nonnegative width at both ends for `bulge`                                                                                 |
+|                | `width.params.peak`   | Nonnegative midpoint width for `bulge`                                                                                     |
+
+Select one width branch with `width.kind`; each branch accepts only its own fields. Endpoint `cap` works with every width branch.
+
+Use one of these four complete values for `kindOptions.width`:
+
+```ts
+import type { IRRibbonWidth } from '@retikz/extension';
+
+const fixed = { kind: 'fixed', value: 24 } satisfies IRRibbonWidth;
+const taper = { kind: 'taper', start: 16, end: 44, interpolation: 'smooth' } satisfies IRRibbonWidth;
+const stops = {
+  kind: 'stops',
+  stops: [
+    { offset: 0, value: 16 },
+    { offset: 0.5, value: 10 },
+    { offset: 1, value: 44 },
+  ],
+  interpolation: 'linear',
+} satisfies IRRibbonWidth;
+const profile = { kind: 'profile', name: 'bulge', params: { base: 16, peak: 58 } } satisfies IRRibbonWidth;
+```
+
+The following options apply to any of these width forms:
+
+| Sampling strategy | Property              | Constraints and meaning                                                                                                   |
+| ----------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Fixed             | `sampling.kind`       | Set to `fixed`; adaptive fields are not accepted                                                                          |
+|                   | `sampling.samples`    | Base sample count, an integer from 2 to 512; omitting the entire `sampling` object uses 64                                |
+| Adaptive          | `sampling.kind`       | Set to `adaptive`; `samples` is not accepted                                                                              |
+|                   | `sampling.tolerance`  | Positive target segment length used to estimate sample count; not a curve error bound                                     |
+|                   | `sampling.maxSamples` | Optional base sample limit, an integer from 2 to 512, defaulting to 512; required feature points are preserved separately |
+
+Switch between `fixed`, `taper`, `stops`, and `profile` to compare constant width, endpoint taper, a narrow middle, and a bulge. Fixed mode exposes only Width, with no endpoint or interpolation controls. Bulge uses Start width as the shared base width and hides End width. The first three modes use 64 base samples (the default for fixed); bulge uses 33. Sampling is not exposed as a control.
+
+<ComponentPreview
+  files={['ribbon-geometry', 'ribbon-geometry.preview.tsx']}
+  size="md"
+  defaultSourceFile="ribbon-geometry.preview.tsx"
+/>
+
+## Label placement
+
+Configure labels through `Path.label`. Positions follow accumulated arc length along the centerline. Inside labels sit on the centerline; outside labels are offset from the corresponding boundary. Sloped labels follow the local centerline tangent.
+
+Ribbon reuses the Kernel [Path geometry label](/kernel/components/path/label), including its text, font, and appearance fields. Ribbon supplies centerline samples and band-width offsets. Path geometry labels currently support tangent rotation through `sloped`, but not an arbitrary `label.rotate` angle; that field belongs to Node labels. `interrupt` / `gap` apply to compatible stroke hosts, not Ribbon.
+
+| Property          | Values                                                  | Explanation                                                                                                                |
+| ----------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `label.text`      | Text, line arrays, or rich text                         | Label content using the Kernel text-block contract                                                                         |
+| `label.position`  | 0–1, or keywords such as `at-start`, `midway`, `at-end` | Position along the centerline; numbers are arc-length fractions. Defaults to the midpoint                                  |
+| `label.placement` | `inside`, `outside`                                     | Inside or outside placement; omission uses outside offset behavior. Use inside without side for a centered label           |
+| `label.side`      | `top`, `bottom`, `left`, `right`, `center`              | Side relative to the label anchor; uses canvas axes without `sloped`, and rotates with the centerline tangent when enabled |
+| `label.distance`  | Number                                                  | Gap between an outside label and the ribbon boundary; defaults to 4                                                        |
+| `label.sloped`    | `true`, `false`                                         | Rotate along the local centerline tangent, independently of the endpoint section direction                                 |
+| `label.textColor` | Color or `currentColor`                                 | The demo inherits the current text color for readability inside and outside the band                                       |
+| `label.font`      | Font configuration                                      | Shared Kernel font settings, including `size`, `family`, `weight`, and `style`                                             |
+| `label.opacity`   | 0–1                                                     | Label opacity, multiplied by host opacity                                                                                  |
+
+Drag “Position” to move the label along the curve. Select outside placement, then change its side to compare offsets from the boundary. Toggle rotation to compare horizontal text with text following the local tangent. The centerline and widths remain fixed so that label changes are easy to compare.
+
+<ComponentPreview
+  files={['ribbon-label', 'ribbon-label.preview.tsx']}
+  defaultSourceFile="ribbon-label.preview.tsx"
+  size="md"
+/>
+
+`left` / `right` change the offset at the current label position; use `label.position: 0` / `1` to select the start or end. Left/right offsets do not guarantee that the label lies entirely outside the ribbon outline.
+
+## Styling
+
+Ribbon uses shared Path fill, stroke, and shadow styles. These properties can be combined without changing the centerline or width calculation. All fields below belong to `Path.style`.
+
+Both `fill` and `stroke` accept gradient objects as well as solid colors. A gradient requires at least two `{ offset, color, opacity? }` stops, with offset from 0 to 1. A linear gradient (`linearGradient`) uses `angle` for its direction; a radial gradient (`radialGradient`) uses `center` and `radius` for its spread; a conic gradient (`conicGradient`) changes color around `center`, with `angle` setting the start angle. Radial and conic centers use object-bounding-box coordinates, where `[0.5, 0.5]` is the center; radial radius uses the same bounding-box units. The gradient is distributed over the ribbon geometry and does not automatically bend along centerline arc length.
+
+| Group  | Property         | Values and meaning                                        |
+| ------ | ---------------- | --------------------------------------------------------- |
+| Fill   | `fill`           | Interior solid color or gradient                          |
+|        | `fillOpacity`    | 0–1; changes fill opacity independently of stroke opacity |
+| Stroke | `stroke`         | Closed outline solid color or gradient                    |
+|        | `strokeWidth`    | Nonnegative width; 0 hides the stroke in this example     |
+| Shadow | `shadow.offsetX` | Horizontal offset; 0 in this example                      |
+|        | `shadow.offsetY` | Vertical offset; 8 in this example                        |
+|        | `shadow.blur`    | Blur amount; 10 in this example                           |
+|        | `shadow.color`   | Shadow color; `rgba(15, 23, 42, 0.35)` in this example    |
+
+Shadow fields belong to one `shadow` object; omit that object to disable the shadow.
+
+Switch among solid, linear, radial, and conic fills. Gradients use two stops, set by the start and end colors. Adjust the gradient angle or radial radius to compare color distribution, then compare fill opacity, stroke, and shadow. The centerline, endpoint widths, and view stay fixed; radial and conic centers stay at `[0.5, 0.5]`, and the shadow toggle uses fixed offsets, blur, and color. The stroke control demonstrates a solid color; gradient strokes use the same object form as fills.
+
+<ComponentPreview
+  files={['ribbon-appearance', 'ribbon-appearance.preview.tsx']}
+  defaultSourceFile="ribbon-appearance.preview.tsx"
+  size="md"
+/>
+
+## Related props
+
+These are the Ribbon path kind, width, and sampling options used on this page. See the [Schema reference](/library/extension/ribbon/schema-reference) for complete inputs and the [API reference](/library/extension/ribbon/api-reference) for Definition signatures.
+
+<ComponentProps
+  items={[
+    {
+      name: 'Path.kind',
+      kind: 'property',
+      type: "'ribbon'",
+      description: 'Select the Ribbon Path kind assembled for this diagram',
+    },
+    {
+      name: 'Path.kindOptions.width',
+      kind: 'property',
+      type: "{ kind: 'fixed'; value: number } | { kind: 'taper'; start: number; end: number; interpolation?: 'linear' | 'smooth' } | { kind: 'stops'; stops: Array<{ offset: number; value: number }>; interpolation?: 'linear' | 'smooth' | 'step' } | { kind: 'profile'; name: string; params?: JsonObject }",
+      description:
+        'Each branch accepts only its own fields; widths are nonnegative:\n\n- `fixed`: `value` sets a constant width.\n- `taper`: `start` / `end` set endpoint widths; optional `interpolation` is `linear` (default) or `smooth` (smooth transition).\n- `stops`: at least two `{ offset, value }` entries, with offset from 0 to 1 along arc length; optional `interpolation` is `linear` (default), `smooth`, or `step` (preserves jumps).\n- `profile`: `name` selects a registered width function; `params` is an optional JSON parameter object',
+      required: true,
+    },
+    {
+      name: 'Path.kindOptions.sampling',
+      kind: 'property',
+      type: "{ kind: 'fixed'; samples: number } | { kind: 'adaptive'; tolerance: number; maxSamples?: number }",
+      description:
+        'Required feature points are preserved separately; the two sampling strategies cannot mix fields:\n\n- `fixed`: `samples` is an integer from 2 to 512.\n- `adaptive`: positive `tolerance` is the target segment length used to estimate a count from path length; optional `maxSamples` is an integer from 2 to 512, defaulting to 512',
+      defaultValue: "{ kind: 'fixed', samples: 64 }",
+    },
+  ]}
+/>
+
+## Further reading
+
+- [Extended usage](/library/extension/ribbon/extended)
+- [Schema reference](/library/extension/ribbon/schema-reference)

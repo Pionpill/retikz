@@ -11,6 +11,7 @@ import { writeLayoutComponentApiReferences } from './api-reference/layout-compon
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
+import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
 import { writeStandardContainerApiReferences } from './api-reference/standard-containers';
 import { writeStandardPresentationApiReferences } from './api-reference/standard-presentation';
@@ -73,4 +74,7 @@ await writeScopeApiReferenceMdx(
 await writeLayoutComponentApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/layout'));
 await writeRelationApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/relation/api-reference/_includes'),
+);
+await writeRibbonApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/library/extension/ribbon/api-reference/_includes'),
 );

@@ -26,6 +26,7 @@ import type {
   RibbonWidthStopSchema,
 } from './schema';
 
+/** 端面轴线的作者输入：角度、非零向量或无命名 origin 的极坐标 */
 export type IRRibbonDirection = number | Vector2 | PolarPosition;
 
 export type IRRibbonWidthStop = ZodInfer<typeof RibbonWidthStopSchema>;

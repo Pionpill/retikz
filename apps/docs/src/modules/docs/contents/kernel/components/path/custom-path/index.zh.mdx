@@ -198,3 +198,9 @@ const view = mount(document.getElementById('diagram')!, input, {
     },
   ]}
 />
+
+## 自行生成几何时的输出包装
+
+通过 `materializePath` 获取局部几何并自行生成 Scene 图元时，在全部 `emitHostLabels` / `emitBoundaryLabels` 调用之后，用 `context.wrapOutput({ primitives, boundsPoints })` 包装完整输出并直接返回。Core 会把宿主标签的布局边界加入 `boundsPoints`，以完整边界的中心应用 Path `rotate` / `scale`，并处理宿主 `id`、`meta` 和动画。
+
+`emitStroke` 返回的结果已经完成这些包装，直接使用它的结果，不再次调用 `wrapOutput`。自定义图元的 `boundsPoints` 必须与图元使用同一局部坐标系；调用包装后不要继续添加未变换的图元或边界点。

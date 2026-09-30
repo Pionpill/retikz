@@ -185,14 +185,39 @@ export const librarySection: Array<Section> = [
       {
         id: 'ribbon',
         label: 'library.extensionRibbon',
-        difficulty: 'advanced',
-        meta: {
-          pageType: 'extension',
-          audience: 'extension-author',
-          capability: 'extension.ribbon',
-          sourceOfTruth: 'runtime',
-        },
         sidebarGroup: 'library.components',
+        meta: {
+          pageType: 'group',
+          audience: 'user',
+          capability: 'extension.ribbon',
+          sourceOfTruth: 'docs',
+        },
+        children: [
+          { id: 'usage', label: 'library.extensionRibbonBasicUsage', difficulty: 'beginner' },
+          { id: 'extended', label: 'library.extensionRibbonExtendedUsage', difficulty: 'beginner' },
+          {
+            id: 'custom',
+            label: 'library.extensionRibbonCustomUsage',
+            difficulty: 'advanced',
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'extension.ribbon.width-profile',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          { id: 'mechanism', label: 'schematic.mechanism', difficulty: 'internals' },
+          {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
+          },
+        ],
       },
       {
         id: 'animation',
