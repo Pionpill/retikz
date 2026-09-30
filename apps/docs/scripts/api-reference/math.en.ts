@@ -1,5 +1,10 @@
 /** @retikz/math 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  '曲线在给定向量上的标量投影范围，包含内部极值':
+    'Scalar projection range of a curve along a vector, including interior extrema',
+  '曲线沿给定向量的精确投影极值；向量无需单位化，复杂度 O(1)':
+    'Exact curve projection extrema along a vector; the vector need not be normalized. Complexity: O(1)',
+
   返回椭圆中心的新坐标元组: 'Returns the ellipse center as a new coordinate tuple',
   待包围矩形盒的半宽与半高: 'Half-width and half-height of the box to enclose',
   "半轴策略；默认 'proportional'": "Semiaxis strategy; defaults to 'proportional'",

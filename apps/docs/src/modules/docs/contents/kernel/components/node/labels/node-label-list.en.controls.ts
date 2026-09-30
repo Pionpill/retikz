@@ -8,7 +8,6 @@ export const nodeLabelListControls = definePreviewControls({
   title: 'Add labels',
   sections: [
     {
-      label: 'Number of labels',
       controls: [
         {
           kind: 'select',

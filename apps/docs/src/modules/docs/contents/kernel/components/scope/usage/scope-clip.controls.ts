@@ -12,7 +12,6 @@ export const scopeClipControls = definePreviewControls({
   title: 'Scope clip',
   sections: [
     {
-      label: '输出边界',
       controls: [
         {
           kind: 'select',

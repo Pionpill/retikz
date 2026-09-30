@@ -14,7 +14,6 @@ export const polygonClipControls = definePreviewControls({
   title: '多边形裁剪',
   sections: [
     {
-      label: '顶点坐标',
       controls: [
         {
           kind: 'point',

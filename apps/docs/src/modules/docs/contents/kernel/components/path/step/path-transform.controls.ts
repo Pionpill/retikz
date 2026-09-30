@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.pathTransform,
     sections: [
       {
-        label: i18n.transform,
         controls: [
           { kind: 'range', id: 'rotate', label: i18n.rotate, defaultValue: 40, min: -180, max: 180, step: 5 },
           {

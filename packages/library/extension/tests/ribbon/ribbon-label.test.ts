@@ -1,8 +1,8 @@
 import type { GroupPrim, IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive, TextPrim } from '@retikz/core';
 import { compileToScene as compileCoreToScene, StepLabelSchema } from '@retikz/core';
+import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { IRRibbonPathOptions } from '../../src/ribbon';
 import { RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
 
 const ASCENT_FACTOR = 0.8;
@@ -14,68 +14,33 @@ const scene = (children: IRScene['children']): IRScene => ({
   children,
 });
 
-type RibbonInput = Partial<Omit<IRPathBase, 'kind' | 'kindOptions' | 'type'>> &
-  IRRibbonPathOptions & {
-    kind?: IRRibbonPathOptions['mode'];
-    type?: 'path' | 'ribbon';
-    kindOptions?: IRRibbonPathOptions;
-    ribbon?: IRRibbonPathOptions;
-  };
-
 const defaultRibbonChildren: Array<IRStep> = [
   { type: 'step', kind: 'move', to: [0, 0] },
   { type: 'step', kind: 'line', to: [100, 0] },
 ];
 
 const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase => {
-  const raw = input as RibbonInput;
-  const {
-    type: inputType,
-    kind,
-    kindOptions: nestedKindOptions,
-    ribbon: nestedRibbon,
-    width,
-    start,
-    end,
-    interpolation,
-    align,
-    samples,
-    sampling,
-    upper,
-    lower,
-    children,
-    ...pathProps
-  } = raw;
-  void inputType;
-  const options: IRRibbonPathOptions = { ...(nestedKindOptions ?? nestedRibbon ?? {}) };
-  const mode = kind === 'boundary' || kind === 'centerline' ? kind : options.mode;
-  if (mode !== undefined) options.mode = mode;
-  if (width !== undefined) options.width = width;
-  if (start !== undefined) options.start = start;
-  if (end !== undefined) options.end = end;
-  if (interpolation !== undefined) options.interpolation = interpolation;
-  if (align !== undefined) options.align = align;
-  if (samples !== undefined) options.samples = samples;
-  if (sampling !== undefined) options.sampling = sampling;
-  if (upper !== undefined) options.upper = upper;
-  if (lower !== undefined) options.lower = lower;
-
-  const path: IRPathBase = {
+  const { kind, width, start, end, align, sampling, upper, lower, children, ...pathProps } = input;
+  const kindOptions = Object.fromEntries(
+    Object.entries({ mode: kind, width, start, end, align, sampling, upper, lower }).filter(
+      ([, value]) => value !== undefined,
+    ),
+  );
+  return {
     type: 'path',
     kind: 'ribbon',
     ...pathProps,
-    kindOptions: options,
-  };
-  if (options.mode !== 'boundary') path.children = children ?? defaultRibbonChildren;
-  return path;
+    kindOptions,
+    ...(kind === 'boundary' ? {} : { children: children ?? defaultRibbonChildren }),
+  } as IRPathBase;
 };
 
 const RibbonSchema = RibbonPathSchema;
 
 const ribbon = (overrides: Record<string, unknown> = {}): IRPathBase =>
   normalizeRibbonInput({
-    ...(overrides.kind === 'boundary' ? {} : { width: 10 }),
-    samples: 2,
+    ...(overrides.kind === 'boundary' ? {} : { width: { kind: 'fixed', value: 10 } }),
+    ...(overrides.kind === 'boundary' ? {} : { sampling: { kind: 'fixed', samples: 2 } }),
     children: defaultRibbonChildren,
     ...overrides,
   });
@@ -227,6 +192,18 @@ describe('Ribbon label compile', () => {
     expect(visualBottom(textOf(compiled.primitives, 'far')!)).toBeCloseTo(-15, 2);
   });
 
+  it.each([
+    { align: 'left', top: -14 },
+    { align: 'right', top: -4 },
+  ])('外侧标签跟随 $align 对齐的实际边界', ({ align, top }) => {
+    const compiled = compileToScene(scene([ribbon({ align, label: { text: 'outside', side: 'top' } })]), {
+      padding: 0,
+    }).scene;
+    const label = textOf(compiled.primitives, 'outside');
+    if (label === undefined) throw new Error('Expected outside label');
+    expect(visualBottom(label)).toBeCloseTo(top, 2);
+  });
+
   it('placement=inside 且未显式 side 时居中落在 ribbon 内部', () => {
     const compiled = compileToScene(
       scene([
@@ -256,6 +233,44 @@ describe('Ribbon label compile', () => {
 
     const group = slopedGroupOf(compiled.primitives, 'flow');
     expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate', degrees: 90 });
+  });
+
+  it('近起点的 sloped 标签沿中心线局部切线旋转', () => {
+    const compiled = compileToScene(
+      scene([
+        ribbon({
+          sampling: { kind: 'fixed', samples: 32 },
+          children: [
+            { type: 'step', kind: 'move', to: [-210, -48] },
+            {
+              type: 'step',
+              kind: 'cubic',
+              control1: [-80, -100],
+              control2: [80, 38],
+              to: [210, 16],
+            },
+          ],
+          label: { text: '128', position: 0.05, side: 'bottom', sloped: true },
+        }),
+      ]),
+      { padding: 0 },
+    ).scene;
+
+    const group = slopedGroupOf(compiled.primitives, '128');
+    expect(group?.transforms?.[0]).toMatchObject({ kind: 'rotate' });
+    const geometry = {
+      kind: 'cubicBezier' as const,
+      from: [-210, -48] as [number, number],
+      control1: [-80, -100] as [number, number],
+      control2: [80, 38] as [number, number],
+      to: [210, 16] as [number, number],
+    };
+    const tangent = curve.sampleAt(
+      geometry,
+      curve.parameterAtDistance(geometry, curve.approximateLength(geometry) * 0.05),
+    ).tangent;
+    const expected = Math.round(((Math.atan2(tangent[1], tangent[0]) * 180) / Math.PI) * 100) / 100;
+    expect(group?.transforms?.[0]).toHaveProperty('degrees', expected);
   });
 
   it('sloped=true 仍保持无偏移 rotate 行为', () => {

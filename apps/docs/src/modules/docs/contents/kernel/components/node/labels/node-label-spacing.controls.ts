@@ -12,7 +12,6 @@ export const nodeLabelSpacingControls = definePreviewControls({
   title: '间距与内外侧',
   sections: [
     {
-      label: '摆放',
       controls: [
         {
           kind: 'select',

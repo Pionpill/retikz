@@ -32,7 +32,7 @@ describe('expand pipeline stable surface', () => {
       provider => provider.key.capability === 'pathKind' && provider.key.name === 'ribbon',
     );
     expect(ribbonProvider).toBeDefined();
-    expect(ribbonProvider?.datasets.bulge).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
+    expect(ribbonProvider?.datasets['profile:bulge']).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
 
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
     const ribbonDefinitions = definitions.pathKinds?.filter(definition => definition.name === 'ribbon') ?? [];
@@ -46,7 +46,10 @@ describe('expand pipeline stable surface', () => {
         {
           type: 'path',
           kind: 'ribbon',
-          kindOptions: { width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: 8 } }, samples: 3 },
+          kindOptions: {
+            width: { kind: 'profile', name: 'bulge', params: { base: 4, peak: 8 } },
+            sampling: { kind: 'fixed', samples: 3 },
+          },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [40, 0] },

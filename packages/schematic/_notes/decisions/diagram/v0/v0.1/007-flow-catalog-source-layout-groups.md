@@ -33,7 +33,7 @@ Flow Source 已采用平级 catalog 与 owner-side `children`：Entity、Group �
 
 ### Group 只表示可见语义边界
 
-`IRFlowGroup` 不再有 `kind`。它始终投影为 Graph Group，按 ADR-008 配置 `caption.title`、Surface 同名字段、`rank`、自身直接 children 的自动 `layout` 与独立 `routing`，并可作为 Relation endpoint。
+`IRFlowGroup` 不再有 `kind`。它始终投影为 Graph Group，按 [014](./014-flow-group-graph-surface.md) 复用 Graph Group 的呈现与上下文，保留 `rank`、自身直接 children 的自动 `layout` 与独立 `routing`，并可作为 Relation endpoint。
 
 Group 的 `layout` 是 Flow layout provider 的局部意图：provider 可以依据 Relation、rank 和 direction 自动排列其直接 children。Group 继续拥有真实 shell minimum、content insets、Graph identity、artifact 与 `role: 'group'` 的 spatial handle。
 
@@ -41,7 +41,7 @@ Group 的 `layout` 是 Flow layout provider 的局部意图：provider 可以依
 
 `IRFlowLayout` 使用必填 `kind: 'linear' | 'grid'` 闭合联合，完整字段与行列语义由 [Flow Grid 二维对齐布局](./010-flow-grid-layout.md) 定义。两种布局共享 `id`、`rank` 和 `children`。
 
-Linear 的 `direction` 必填，`gap` 省略时继承作者有效 `nodeGap`，否则取 Definition 物理轴默认，`align` 省略时为 `center`。Grid 的 `placements` 推荐以二维矩阵指定直接 children 的单元格，`null` 保留空格，也支持 `{ childId: { row, column } }` 映射；两种结构均保持两轴居中，行列间距独立继承作者有效 `nodeGap`，否则分别取 Definition vertical/horizontal 默认。`rank` 只约束整个 Layout 在外层自动布局中的位置。
+Linear 的 `direction` 必填，`gap` 只接受数字；省略时继承作者有效 `nodeGap`，否则取 Definition 物理轴默认，`align` 省略时为 `center`。Grid 的 `placements` 推荐以二维矩阵指定直接 children 的单元格，`null` 保留空格，也支持 `{ childId: { row, column } }` 映射；两种结构均保持两轴居中。Grid 的数字 `gap` 同时设置行列间距，对象形式必须包含 `row` 和 `column`；省略时两轴继承作者有效 `nodeGap`，否则分别取 Definition vertical/horizontal 默认。`rank` 只约束整个 Layout 在外层自动布局中的位置。
 
 Layout 无 label、style、shell、Graph identity 或 endpoint 能力，可以和 Group 相互嵌套。Linear 按 children 顺序排列；Grid 的 children 只决定包含与绘制顺序，placements 决定空间位置。Layout 内 Relation 不产生 rank edge，也不重排 children；所有 Relation 都在完整 bounds 产生后统一 routing。
 

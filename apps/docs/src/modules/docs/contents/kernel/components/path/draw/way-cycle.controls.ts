@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.closure,
     sections: [
       {
-        label: i18n.path,
         controls: [
           {
             kind: 'select',

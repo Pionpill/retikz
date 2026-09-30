@@ -9,7 +9,6 @@ export const coordinateFoldJunctionControls = definePreviewControls({
   title: 'Path convergence',
   sections: [
     {
-      label: 'position',
       controls: [
         {
           kind: 'range',

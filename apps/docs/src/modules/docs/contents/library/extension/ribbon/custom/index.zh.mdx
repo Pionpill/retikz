@@ -1,0 +1,260 @@
+---
+title: 自定义用法
+description: 定义 Ribbon 宽度 profile 并注入当前图
+---
+
+自定义 width profile 将 JSON-safe 参数与运行时宽度采样函数关联，再把生成的 Definition 注入当前图。先阅读[基础用法](/library/extension/ribbon/usage)，确认中心线 Ribbon 的常用写法。
+
+## 适用边界
+
+内置固定宽度、端点插值、stops 与 `bulge` 已足够时，直接使用[基础用法](/library/extension/ribbon/usage)。只有业务需要自己的宽度函数时，才定义新的 profile。输入仍保存 profile 名称和 JSON 参数；函数与 Definition 仅存在于运行时。
+
+## 最小可运行结果
+
+下面的 `pulse` profile 在中心处达到峰值。调整基础与峰值宽度，观察一套定义如何用不同 JSON 参数生成轮廓。
+
+<ComponentPreview
+  files={['ribbon-custom-profile', 'ribbon-custom-profile.preview.tsx']}
+  defaultSourceFile="ribbon-custom-profile.preview.tsx"
+  size="sm"
+  caption="调整 JSON 参数中的基础与峰值宽度，观察同一 profile 函数生成的轮廓。"
+/>
+
+## 定义能力
+
+需要业务宽度曲线时，用 `defineRibbonWidthProfile` 创建一个 profile，再用 `createRibbonPathKindDefinition` 创建包含该 profile 的唯一 Ribbon definition。自定义 definition 必须和内置 definition 走同一 `RibbonPathSchema`、profile registry 与几何编译路径。
+
+将以下共享定义保存为 `pulse-profile.ts`，供不同 API 的消费示例复用：
+
+```ts
+import { createRibbonPathKindDefinition, defineRibbonWidthProfile } from '@retikz/extension';
+import { z } from 'zod';
+
+export const pulseProfile = defineRibbonWidthProfile({
+  name: 'pulse',
+  paramsSchema: z.strictObject({
+    base: z.number().nonnegative(),
+    peak: z.number().nonnegative(),
+  }),
+  widthAt: ({ offset, params }) => params.base + (params.peak - params.base) * Math.sin(Math.PI * offset),
+});
+
+export const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseProfile] });
+```
+
+`params` 必须保持 JSON-safe，并由 profile 的 `paramsSchema` 在采样前校验。`widthAt` 只能返回有限的非负 user-unit 宽度。
+
+## 注入与使用
+
+### 直接注入当前图
+
+以下写法复用上方的 `pulseRibbonDefinition`，绘制同一条 `pulse` 流带。Definition 在渲染或编译入口装配，路径通过 `width.name` 引用它的 profile；仅 import 不会自动注册。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+将 Definition 传入 `Layout.extensions.pathKinds`，用 Path 与 Step 描述中心线：
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+
+import { pulseRibbonDefinition } from './pulse-profile';
+
+export const Example = () => (
+  <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} extensions={{ pathKinds: [pulseRibbonDefinition] }}>
+    <Path
+      kind="ribbon"
+      kindOptions={{
+        width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
+        sampling: { kind: 'fixed', samples: 41 },
+      }}
+      style={{ fill: '#60a5fa', stroke: '#1d4ed8' }}
+    >
+      <Step kind="move" to={[-180, 20]} />
+      <Step kind="curve" control={[0, -90]} to={[180, 20]} />
+    </Path>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+用 `scene` / `path` 构造输入，在 `renderToSvgString` 的 `compile.pathKinds` 中装配同一 Definition：
+
+```ts
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
+
+import { pulseRibbonDefinition } from './pulse-profile';
+
+const input = scene({
+  viewBox: { x: -260, y: -130, width: 520, height: 260 },
+  children: [
+    path({
+      kind: 'ribbon',
+      kindOptions: {
+        width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
+        sampling: { kind: 'fixed', samples: 41 },
+      },
+      style: { fill: '#60a5fa', stroke: '#1d4ed8' },
+      children: [
+        { type: 'step', kind: 'move', to: [-180, 20] },
+        { type: 'step', kind: 'curve', control: [0, -90], to: [180, 20] },
+      ],
+    }),
+  ],
+});
+
+export const svg = renderToSvgString(input, { compile: { pathKinds: [pulseRibbonDefinition] } });
+```
+
+</DocTab>
+<DocTab value="ir" label="IR">
+
+先定义共同的 IR 数据，再按宿主选择 React 或 Vanilla 渲染；后两步是替代方案，任选其一。
+
+<DocSteps>
+<DocStep title="定义 IR 数据">
+
+将以下数据保存为 `ribbon-ir.ts`。IR 只保存 profile 名称与 JSON 参数，不保存函数或 Definition：
+
+```ts
+import type { IRScene } from '@retikz/core';
+
+export const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  viewBox: { x: -260, y: -130, width: 520, height: 260 },
+  children: [
+    {
+      type: 'path',
+      kind: 'ribbon',
+      kindOptions: {
+        width: { kind: 'profile', name: 'pulse', params: { base: 10, peak: 42 } },
+        sampling: { kind: 'fixed', samples: 41 },
+      },
+      style: { fill: '#60a5fa', stroke: '#1d4ed8' },
+      children: [
+        { type: 'step', kind: 'move', to: [-180, 20] },
+        { type: 'step', kind: 'curve', control: [0, -90], to: [180, 20] },
+      ],
+    },
+  ],
+};
+```
+
+</DocStep>
+<DocStep title="用 React 渲染（可选）">
+
+React 消费这份 IR 时，在 Layout 上注入运行时 Definition：
+
+```tsx
+import { Layout } from '@retikz/react';
+
+import { pulseRibbonDefinition } from './pulse-profile';
+import { ir } from './ribbon-ir';
+
+export const Example = () => <Layout ir={ir} extensions={{ pathKinds: [pulseRibbonDefinition] }} />;
+```
+
+</DocStep>
+<DocStep title="用 Vanilla 渲染（可选）">
+
+Vanilla 消费同一份 IR 时，在渲染选项中注入运行时 Definition：
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+
+import { pulseRibbonDefinition } from './pulse-profile';
+import { ir } from './ribbon-ir';
+
+export const svg = renderToSvgString(ir, { compile: { pathKinds: [pulseRibbonDefinition] } });
+```
+
+</DocStep>
+</DocSteps>
+</DocTab>
+</DocTabs>
+
+### 组装 provider graph
+
+需要由 adapter 或工具链在编译前汇总 runtime datasets 时，使用 `createRibbonProviderContribution`。它把官方 `bulge` 和调用方 profiles 合并到同一个 `pathKind/ribbon` provider，再交给 Core 的通用 resolver：
+
+```ts
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { createRibbonProviderContribution } from '@retikz/extension';
+
+import { pulseProfile } from './pulse-profile';
+import { ir } from './ribbon-ir';
+
+const compileOptions = resolveCoreProviderDependencies({
+  contributions: [createRibbonProviderContribution({ profiles: [pulseProfile] })],
+});
+
+const result = compileToScene(ir, compileOptions);
+```
+
+Provider 只负责把 Definition 和 runtime profile dataset 装配成普通 Core compile options；它不改变 `Path` 的 IR 结构，也不建立第二套 Ribbon lookup。直接 `pathKinds` 注入与 provider graph 共享同一套 `createRibbonPathKindDefinition` 构造路径、schema 和 compile 实现。
+
+## 错误与限制
+
+- profile 的 `name` 不能为空；同名但不同 identity 的 profile 在装配时会报冲突，不会按顺序覆盖
+- `paramsSchema` 若存在，会在宽度采样前校验 JSON 参数；未知 profile、非法参数及非有限或负数的 `widthAt` 结果都会使编译失败
+- 同一图只装配一个 `ribbon` Path kind Definition；不要同时传官方 Definition 与自定义 Definition
+
+## 自定义端帽
+
+用 `defineRibbonCap` 定义参数 schema 和 `resolve`，再通过 `createRibbonPathKindDefinition({ caps })` 注入，最后在 `start.cap` 或 `end.cap` 中按 name 引用。回调接收端面中点、向外方向、端面轴和宽度；命令位于 Path 局部坐标，首尾接点必须闭合。end 从左到右，start 从右到左，宿主负责最终 close。
+
+下面的尖端端帽根据最终端面基底绘制，默认跟随中心线法线，也可用 `start.direction` / `end.direction` 独立指定；深度由 JSON 参数控制。弦图圆弧可以直接使用内置 arc，无需另写端帽。
+
+<ComponentPreview
+  files={['ribbon-custom-cap', 'ribbon-custom-cap.preview.tsx']}
+  defaultSourceFile="ribbon-custom-cap.preview.tsx"
+  size="md"
+/>
+
+## 相关属性
+
+这里只列出定义、注入与引用所需的成员；完整签名见 [API 参考](/library/extension/ribbon/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineRibbonWidthProfile',
+      kind: 'function',
+      type: '<TParams extends JsonObject>(definition: RibbonWidthProfileDefinitionInput<TParams>) => RibbonWidthProfileDefinition',
+      description:
+        '校验 profile 名称并创建运行时定义；`definition` 提供 `name`、可选的 `paramsSchema` 和返回非负宽度的 `widthAt`',
+    },
+    {
+      name: 'createRibbonPathKindDefinition',
+      kind: 'function',
+      type: '(options?: { profiles?: ReadonlyArray<RibbonWidthProfileDefinition>; caps?: ReadonlyArray<RibbonCapDefinition> }) => PathKindDefinition<IRRibbonPath>',
+      description: '把自定义 profiles 与内置 bulge 合入同一个 ribbon Definition',
+    },
+    {
+      name: 'Layout.extensions.pathKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<PathKindDefinition>',
+      description: '在当前图显式注入唯一的 Ribbon Definition；导入模块本身不会注册',
+    },
+    {
+      name: 'compile.pathKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<AnyPathKindDefinition>',
+      description: 'Vanilla 渲染选项中的运行时 Definition 数组；renderToSvgString 消费 Vanilla 输入或 IR 时均在此装配',
+    },
+    {
+      name: 'Path.kindOptions.width',
+      kind: 'property',
+      type: "{ kind: 'profile'; name: string; params?: JsonObject }",
+      description: '通过 `name` 引用已装配的 profile，并传入可序列化的 `params`',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+- [基础用法](/library/extension/ribbon/usage)
+- [API 参考](/library/extension/ribbon/api-reference)

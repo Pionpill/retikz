@@ -29,7 +29,7 @@ export const RelationSankeyPreview = (values: RelationSankeyPreviewValues) => (
         }}
         ribbon={{
           width: { kind: 'field', value: 'width' },
-          options: { samples: values.samples, align: 'center' },
+          options: { sampling: { kind: 'fixed', samples: values.samples }, align: 'center' },
         }}
       />
       <IntervalMark

@@ -198,3 +198,9 @@ These are the members most often used to define, inject, and reference a custom 
     },
   ]}
 />
+
+## Wrapping custom geometry output
+
+When using `materializePath` to build Scene primitives yourself, call `context.wrapOutput({ primitives, boundsPoints })` after all `emitHostLabels` / `emitBoundaryLabels` calls and return that result directly. Core includes host-label layout bounds, applies Path `rotate` / `scale` around the complete bounds center, and handles the host `id`, `meta`, and animations.
+
+`emitStroke` already wraps its output; use its result without calling `wrapOutput` again. Custom primitive bounds must use the same local coordinates as the primitives. Do not append untransformed primitives or bounds after wrapping.

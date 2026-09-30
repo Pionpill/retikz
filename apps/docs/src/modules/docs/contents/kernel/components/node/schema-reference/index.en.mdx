@@ -40,3 +40,9 @@ Node.position is optional and resolves to the local origin [0, 0] in Core; direc
 ## BoundarySchema
 
 <ZodSchema name="BoundarySchema" />
+
+## BoundaryLabelSchema
+
+The shared Kernel boundary-label contract. Node reuses its rotation, placement, and alignment fields while retaining its own position, leader, single-line content, and defaults. Ribbon endpoints use this schema directly.
+
+<ZodSchema shallow name="BoundaryLabelSchema" />

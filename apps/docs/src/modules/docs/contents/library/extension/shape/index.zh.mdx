@@ -1,11 +1,11 @@
 ---
-title: 节点形状
+title: shape · 节点形状
 description: 从 @retikz/extension 按需引入可选节点形状，并分别在 React 与 Vanilla 的编译入口传入 Definition。
 ---
 
 节点形状定义提供十字形、扇形、星形、自定义轮廓、梯形、平行四边形、六边形、圆柱与半椭圆胶囊。选择轮廓后，仍可设置节点的尺寸、填充和描边。
 
-## 用法
+## 接入方式
 
 本页支持两种导入方式：
 
@@ -14,45 +14,101 @@ description: 从 @retikz/extension 按需引入可选节点形状，并分别在
 
 两种方式都只是当前图的显式装配，不会因为 import 自动全局注册形状。
 
-### React 用法
+下面四种写法都绘制同一个十字形。React 将 Definition 传入 `Layout.extensions.shapes`；Vanilla 将它传入 `compile.shapes`。`shape` 名称和 JSON 参数属于节点数据，Definition 属于本次绘制的能力装配。
 
-从 `@retikz/extension` 导入当前图需要的 Definition，传给 React `Layout` 的 `extensions.shapes`。Definition 与参数分离：Node 只保存 `shape` 名称和 JSON-safe `params`，导入模块不会全局注册形状。
+<ComponentPreview files="entry" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
-import { Layout, Node } from '@retikz/react';
 import { CrossShapeDefinition } from '@retikz/extension';
+import { Layout, Node } from '@retikz/react';
 
-<Layout extensions={{ shapes: [CrossShapeDefinition] }}>
-  <Node position={[0, 0]} shape="cross" layout={{ minimumSize: { width: 80, height: 80 } }}>
-    十字形
-  </Node>
-</Layout>;
+export const Example = () => (
+  <Layout extensions={{ shapes: [CrossShapeDefinition] }}>
+    <Node
+      shape="cross"
+      layout={{ minimumSize: { width: 80, height: 80 } }}
+      style={{ fill: '#dbeafe', stroke: '#2563eb' }}
+    />
+  </Layout>
+);
 ```
 
-### Vanilla 用法
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-在 `@retikz/vanilla` 中，把 Definition 放进 `compile.shapes`。`input` 可以是已有的 Core IR 或 Vanilla plain spec；`mount` 使用完全相同的 `compile` 配置。
+```tsx
+import type { IRScene } from '@retikz/core';
+import { CrossShapeDefinition } from '@retikz/extension';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'node',
+      shape: 'cross',
+      layout: { minimumSize: { width: 80, height: 80 } },
+      style: { fill: '#dbeafe', stroke: '#2563eb' },
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} extensions={{ shapes: [CrossShapeDefinition] }} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { renderToSvgString } from '@retikz/vanilla';
 import { CrossShapeDefinition } from '@retikz/extension';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
 
-const svg = renderToSvgString(input, {
-  compile: {
-    shapes: [CrossShapeDefinition],
-  },
+const input = scene({
+  children: [
+    node({
+      shape: 'cross',
+      layout: { minimumSize: { width: 80, height: 80 } },
+      style: { fill: '#dbeafe', stroke: '#2563eb' },
+    }),
+  ],
 });
+const svg = renderToSvgString(input, { compile: { shapes: [CrossShapeDefinition] } });
+console.log(svg);
 ```
 
-当 IR 形状既不是 Core 默认项，也没有在本次 `shapes` 中注册时，Core 会在 lookup 时明确失败，不会以相近形状静默替代。`polygon` 是 Core 最小内置形状，详见 [Polygon](/kernel/components/node/shape#polygon--diamond)。
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
 
-## 例子
+```ts
+import type { IRScene } from '@retikz/core';
+import { CrossShapeDefinition } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
 
-下面先并列九个扩展形状，便于比较基本外观，再进入各自的几何参数。
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'node',
+      shape: 'cross',
+      layout: { minimumSize: { width: 80, height: 80 } },
+      style: { fill: '#dbeafe', stroke: '#2563eb' },
+    },
+  ],
+};
+const svg = renderToSvgString(ir, { compile: { shapes: [CrossShapeDefinition] } });
+console.log(svg);
+```
 
-<ComponentPreview files="shape-gallery" size="md" />
+</DocTab>
+</DocTabs>
 
-### 十字形
+没有装入所选形状的 Definition 时，编译会明确报错，不会以相近形状代替。
+
+## 十字形
 
 `cross` 支持独立控制水平臂、垂直臂的宽度，以及上、右、下、左四个方向的高度。它适合删除、禁用、交叉点和不对称十字架等 glyph。
 
@@ -62,6 +118,11 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="cross-example.preview.tsx"
 />
 
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### CrossShapeParams
+
 使用 `shape={{ type: 'cross', params }}` 并注入 `CrossShapeDefinition`。`width` 或 `height` 可以直接使用数字，也可以使用对象；对象字段按“方向 > 轴向 > default”解析，即 `top/right/bottom/left` 优先于 `horizontal/vertical`，再回退到 `default`。
 
 | 字段      | 类型                                                                                                                                  | 说明                                       |
@@ -69,7 +130,34 @@ const svg = renderToSvgString(input, {
 | `width?`  | `number \| { default: number; horizontal?: number; vertical?: number }`                                                               | 水平臂与垂直臂宽度；数字同时应用于两个轴向 |
 | `height?` | `number \| { default: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }` | 四个方向高度，并支持轴向和 default 回退    |
 
-### 梯形
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### CrossShapeParamsSchema
+
+<ZodSchema
+  name="CrossShapeParamsSchema"
+  descriptions={{
+    '/field/"width"': '水平臂与垂直臂的宽度；可写正数或轴向配置',
+    '/field/"width"/union/1/field/"default"': '宽度的默认正数，单位为用户坐标',
+    '/field/"width"/union/1/field/"horizontal"': '水平臂宽度覆盖值，单位为用户坐标',
+    '/field/"width"/union/1/field/"vertical"': '垂直臂宽度覆盖值，单位为用户坐标',
+    '/field/"height"': '四个方向的延伸长度；可写正数或方向配置',
+    '/field/"height"/union/1/field/"default"': '高度的默认正数，单位为用户坐标',
+    '/field/"height"/union/1/field/"horizontal"': '水平方向高度覆盖值，单位为用户坐标',
+    '/field/"height"/union/1/field/"vertical"': '垂直方向高度覆盖值，单位为用户坐标',
+    '/field/"height"/union/1/field/"top"': '上方高度覆盖值，单位为用户坐标',
+    '/field/"height"/union/1/field/"right"': '右方高度覆盖值，单位为用户坐标',
+    '/field/"height"/union/1/field/"bottom"': '下方高度覆盖值，单位为用户坐标',
+    '/field/"height"/union/1/field/"left"': '左方高度覆盖值，单位为用户坐标',
+  }}
+  expandNested
+/>
+
+</DocTab>
+</DocTabs>
+
+## 梯形
 
 `trapezoid` 用 `shortSide` 选择短边，并用短边与相对长边的比例控制收窄程度。内容外接会为斜边和圆角留出空间；比例为 `1` 时退化为矩形。
 
@@ -79,7 +167,10 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="trapezoid-example.preview.tsx"
 />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### TrapezoidShapeParams
 
 节点注入 `TrapezoidShapeDefinition`，参数类型为 `TrapezoidShapeParams`：
 
@@ -89,7 +180,24 @@ const svg = renderToSvgString(input, {
 | `shortSideRatio?` | `number`                                 | 短边与相对长边之比，范围 `(0, 1]`；默认 `0.72` |
 | `cornerRadius?`   | `number`                                 | 非负圆角半径；默认为 `0`                       |
 
-### 平行四边形
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### TrapezoidShapeParamsSchema
+
+<ZodSchema
+  name="TrapezoidShapeParamsSchema"
+  descriptions={{
+    shortSide: '短边所在方向；省略时为 top',
+    shortSideRatio: '短边与相对长边的比例，范围 (0, 1]；省略时为 0.72',
+    cornerRadius: '非负圆角半径，单位为用户坐标；省略时为 0',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+## 平行四边形
 
 `parallelogram` 通过斜边方向和角度控制水平错位。角度是斜边与水平边的夹角；`90` 度时轮廓退化为矩形，纵向形态可继续使用 Node 旋转。
 
@@ -99,7 +207,10 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="parallelogram-example.preview.tsx"
 />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### ParallelogramShapeParams
 
 节点注入 `ParallelogramShapeDefinition`，参数类型为 `ParallelogramShapeParams`：
 
@@ -109,7 +220,24 @@ const svg = renderToSvgString(input, {
 | `slantAngle?`     | `number`            | 斜边角度，范围 `(0, 90]`；默认为 `70` |
 | `cornerRadius?`   | `number`            | 非负圆角半径；默认为 `0`              |
 
-### 长六边形
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### ParallelogramShapeParamsSchema
+
+<ZodSchema
+  name="ParallelogramShapeParamsSchema"
+  descriptions={{
+    slantDirection: '顶边错位方向；省略时为 right',
+    slantAngle: '斜边与水平边的夹角，范围 (0, 90] 度；省略时为 70',
+    cornerRadius: '非负圆角半径，单位为用户坐标；省略时为 0',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+## 长六边形
 
 `hexagon` 是可独立调整宽高的长六边形：上下边保持水平，左右各保留一个侧向顶点。`shoulderDepth` 使用固定 user-unit 长度，因此内容变长只延长中间水平边，不会继续放大两侧尖角。它不是 Core 正多边形 `polygon { sides: 6 }` 的别名。
 
@@ -119,7 +247,10 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="hexagon-example.preview.tsx"
 />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### HexagonShapeParams
 
 节点注入 `HexagonShapeDefinition`，参数类型为 `HexagonShapeParams`：
 
@@ -128,7 +259,23 @@ const svg = renderToSvgString(input, {
 | `shoulderDepth?` | `number` | 单侧水平肩深，使用非负 user-unit；默认为 `12` |
 | `cornerRadius?`  | `number` | 非负圆角半径；默认为 `0`                      |
 
-### 圆柱形
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### HexagonShapeParamsSchema
+
+<ZodSchema
+  name="HexagonShapeParamsSchema"
+  descriptions={{
+    shoulderDepth: '单侧水平肩深，非负用户坐标；省略时为 12',
+    cornerRadius: '非负圆角半径，单位为用户坐标；省略时为 0',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+## 圆柱形
 
 `cylinder` 用一个闭合外轮廓和一条端盖分隔弧表达圆柱。`capDepth` 会在内容区两端预留空间；分隔弧只参与描边，不会成为第二个节点或连接边界，也不会挖空近端端盖的填充。
 
@@ -138,7 +285,10 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="cylinder-example.preview.tsx"
 />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### CylinderShapeParams
 
 节点注入 `CylinderShapeDefinition`，参数类型为 `CylinderShapeParams`：
 
@@ -147,7 +297,23 @@ const svg = renderToSvgString(input, {
 | `axis?`     | `'vertical' \| 'horizontal'` | 主轴方向；默认为 `vertical` |
 | `capDepth?` | `number`                     | 非负端盖深度；默认为 `8`    |
 
-### 半椭圆端胶囊形
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### EllipticCapShapeParamsSchema
+
+<ZodSchema
+  name="EllipticCapShapeParamsSchema"
+  descriptions={{
+    axis: '半椭圆端盖的主轴方向；省略时为 vertical',
+    capDepth: '每端的非负端盖深度，单位为用户坐标；省略时为 8',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+## 半椭圆端胶囊形
 
 `ellipticCapsule` 由顶部半椭圆、两侧直线和底部半椭圆组成一个闭合外轮廓。它与 `cylinder` 共享端部几何，但不绘制内部端盖分隔弧，因此顶部不会形成一个完整椭圆。与 Core 圆角矩形形成的 capsule 相比，`capDepth` 可以独立控制端部深度，半椭圆始终覆盖整个横截面。
 
@@ -157,7 +323,10 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="elliptic-capsule-example.preview.tsx"
 />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### EllipticCapsuleShapeParams
 
 节点注入 `EllipticCapsuleShapeDefinition`，参数类型为 `EllipticCapsuleShapeParams`：
 
@@ -166,7 +335,23 @@ const svg = renderToSvgString(input, {
 | `axis?`     | `'vertical' \| 'horizontal'` | 主轴方向；默认为 `vertical` |
 | `capDepth?` | `number`                     | 非负端部深度；默认为 `8`    |
 
-### 扇形
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### EllipticCapShapeParamsSchema
+
+<ZodSchema
+  name="EllipticCapShapeParamsSchema"
+  descriptions={{
+    axis: '半椭圆端部的主轴方向；省略时为 vertical',
+    capDepth: '每端的非负端部深度，单位为用户坐标；省略时为 8',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+## 扇形
 
 `sector` 用内外半径和角度范围构成实心扇片、环楔或开放弧，`cornerRadius` 可把正厚度 Sector 的径向转角变圆。将 `innerRadius` 与 `outerRadius` 设为相同的正数即可退化为可连接的开放弧；它适合角度范围、环形进度和扇区状态节点。
 
@@ -176,7 +361,10 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="sector-example.preview.tsx"
 />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### SectorShapeParams
 
 节点使用 `shape={{ type: 'sector', params }}`，并注入 `SectorShapeDefinition`。`params` 类型为 `SectorShapeParams`：
 
@@ -188,7 +376,26 @@ const svg = renderToSvgString(input, {
 | `endAngle`      | `number` | 结束角度，单位为度                                     |
 | `cornerRadius?` | `number` | 正厚度 Sector 的转角圆角半径；省略或为 `0` 时保持尖角  |
 
-### 星形
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### SectorShapeParamsSchema
+
+<ZodSchema
+  name="SectorShapeParamsSchema"
+  descriptions={{
+    innerRadius: '非负内半径；0 为实心扇片，与外半径相等时为开放弧',
+    outerRadius: '正数外半径，不得小于内半径',
+    startAngle: '起始角度，单位为度；屏幕坐标中 0 度指向右，90 度指向下',
+    endAngle: '结束角度，单位为度；从起始角沿屏幕顺时针方向扫过',
+    cornerRadius: '正厚度扇形的非负圆角半径；省略或为 0 时保持尖角',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+## 星形
 
 `star` 通过尖角数量、内外半径、旋转和圆角生成星形，并提供 `tip-N` 与 `notch-N` 命名 anchor。它适合强调、评分或需要语义锚点的图节点。
 
@@ -198,7 +405,10 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="star-example.preview.tsx"
 />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### StarShapeParams
 
 节点使用 `shape={{ type: 'star', params }}`，并注入 `StarShapeDefinition`。`params` 类型为 `StarShapeParams`：
 
@@ -210,7 +420,26 @@ const svg = renderToSvgString(input, {
 | `rotate?`       | `number` | 形状自身旋转角度，单位为度         |
 | `cornerRadius?` | `number` | 每个顶点的圆角半径                 |
 
-### 任意轮廓
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
+
+#### StarShapeParamsSchema
+
+<ZodSchema
+  name="StarShapeParamsSchema"
+  descriptions={{
+    points: '星形尖角数量，整数，范围 3–1024',
+    innerRadius: '正数内半径，单位为用户坐标',
+    outerRadius: '正数外半径，必须大于内半径',
+    rotate: '首个外顶点的旋转角度，单位为度',
+    cornerRadius: '每个顶点的非负圆角半径，单位为用户坐标',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+## 任意轮廓
 
 `contour` 接受一组闭合顶点环，并会以包围盒中心对齐 Node 位置；`cornerRadius` 对每个转角应用可行的圆角。这里用预设点集避免编辑 JSON，同时展示标签、盾牌和缺口等非标准轮廓。
 
@@ -220,7 +449,10 @@ const svg = renderToSvgString(input, {
   defaultSourceFile="contour-example.preview.tsx"
 />
 
-#### API
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API 参考">
+
+#### ContourShapeParams
 
 节点使用 `shape={{ type: 'contour', params }}`，并注入 `ContourShapeDefinition`。`params` 类型为 `ContourShapeParams`：
 
@@ -229,8 +461,31 @@ const svg = renderToSvgString(input, {
 | `points`        | `Array<[number, number]>` | 至少 3 个顶点，按给定顺序组成闭合顶点环；Node 会按顶点包围盒中心对齐位置 |
 | `cornerRadius?` | `number`                  | 每个转角的圆角半径；省略或为 `0` 时保持尖角                              |
 
-## 相关
+</DocTab>
+<DocTab value="schema" label="Schema 参考">
 
-- [能力装载](/library/extension/capability-loading)：直接注入与 provider graph 的边界
-- [形状](/kernel/components/node/shape)：Core 内置形状与节点几何
-- [扩展](/library/extension/introduction)：浏览其他可选能力
+#### ContourShapeParamsSchema
+
+<ZodSchema
+  name="ContourShapeParamsSchema"
+  descriptions={{
+    points: '按顺序组成闭合轮廓的二维顶点，至少三个',
+    cornerRadius: '每个转角的非负圆角半径；省略或为 0 时保持尖角',
+  }}
+/>
+
+</DocTab>
+</DocTabs>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'shape · 节点形状',
+      description: '了解节点形状与连接边界的共同规则',
+      url: '/kernel/components/node/shape',
+    },
+    { title: 'Extension · 拓展包', description: '浏览其他可选绘图能力', url: '/library/extension/introduction' },
+  ]}
+/>

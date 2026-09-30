@@ -2076,7 +2076,11 @@ export const createApiReferenceMdx = async (
                         ? {
                             ...parameter,
                             name: `${source.dotDotDotToken ? '...' : ''}${source.name.getText()}${source.questionToken || source.initializer ? '?' : ''}`,
-                            type: source.type?.getText() ?? parameter.type,
+                            type: source.type
+                              ? ts
+                                  .createPrinter({ removeComments: true })
+                                  .printNode(ts.EmitHint.Unspecified, source.type, source.getSourceFile())
+                              : parameter.type,
                           }
                         : parameter;
                     });

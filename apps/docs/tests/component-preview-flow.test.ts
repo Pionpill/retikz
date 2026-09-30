@@ -11,22 +11,19 @@ import type { PreviewIR } from '../src/modules/docs/components/component-preview
 import { buildPreviewIR, irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
 import IrCentricDemo from '../src/modules/docs/contents/about/blog/core-philosophy/pipeline';
-import { FlowBasicPreview } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.preview';
-import { previewSource as FlowBasicPreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.zh.demo';
-import { previewControlContract as FlowCompoundControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.controls';
-import { previewControlContract as FlowCompoundEnControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.en.controls';
-import { FlowCompoundPreview } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.preview';
-import { previewControlContract as FlowThemeControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.controls';
-import { previewControlContract as FlowThemeEnControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.controls';
-import { previewSource as FlowThemeEnPreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.demo';
-import { previewSource as FlowThemePreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.zh.demo';
+import { renderFlowCompoundPreview } from '../src/modules/docs/contents/schematic/diagram/flow/extended/flow-compound';
+import { createPreviewControlContract as createCompoundContract } from '../src/modules/docs/contents/schematic/diagram/flow/extended/flow-compound.controls';
+import {
+  previewSource as FlowThemePreviewSource,
+  renderFlowThemePreview,
+} from '../src/modules/docs/contents/schematic/diagram/flow/extended/flow-theme';
+import { createPreviewControlContract as createThemeContract } from '../src/modules/docs/contents/schematic/diagram/flow/extended/flow-theme.controls';
+import {
+  previewSource as FlowBasicPreviewSource,
+  renderFlowBasicPreview,
+} from '../src/modules/docs/contents/schematic/diagram/flow/usage/flow-basic';
+import { createPreviewControlContract as createBasicContract } from '../src/modules/docs/contents/schematic/diagram/flow/usage/flow-basic.controls';
 import type { PreviewControlContract } from '../src/modules/docs/preview';
-
-const renderFlowBasicPreview = (values: Parameters<typeof FlowBasicPreview>[0]) => FlowBasicPreview(values, 'zh');
-const renderFlowCompoundPreview = (values: Parameters<typeof FlowCompoundPreview>[0]) =>
-  FlowCompoundPreview(values, 'zh');
-const renderFlowCompoundEnPreview = (values: Parameters<typeof FlowCompoundPreview>[0]) =>
-  FlowCompoundPreview(values, 'en');
 
 const source = FlowDiagramSchema.parse({
   namespace: 'diagram',
@@ -42,15 +39,9 @@ const source = FlowDiagramSchema.parse({
 });
 
 const scene: IRScene = { type: 'scene', version: 1, children: [source] };
-const flowBasicControlModules: Partial<Record<string, { previewControlContract: PreviewControlContract }>> =
-  import.meta.glob<{ previewControlContract: PreviewControlContract }>(
-    '../src/modules/docs/contents/schematic/diagram/flow/basic/*.controls.ts',
-    { eager: true },
-  );
-
 const FlowBasicCanonicalDemo: FC = () => FlowBasicPreviewSource.canonicalRender?.() ?? null;
 const FlowThemeCanonicalDemo: FC = () => FlowThemePreviewSource.canonicalRender?.() ?? null;
-const FlowThemeEnCanonicalDemo: FC = () => FlowThemeEnPreviewSource.canonicalRender?.() ?? null;
+const FlowThemeEnCanonicalDemo: FC = () => renderFlowThemePreview(createThemeContract('en').canonicalValues, 'en');
 
 describe('Flow Diagram ComponentPreview', () => {
   it('keeps the highest-level Flow Source in executable Vanilla code', () => {
@@ -150,16 +141,8 @@ describe('Flow Diagram ComponentPreview', () => {
   });
 
   it('uses bilingual controls to change the frontend form role, status, rich text, block typography, and Relation status in real Flow Source', () => {
-    const chinese =
-      flowBasicControlModules['../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.controls.ts']
-        ?.previewControlContract;
-    const english =
-      flowBasicControlModules['../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.en.controls.ts']
-        ?.previewControlContract;
-
-    expect(chinese).toBeDefined();
-    expect(english).toBeDefined();
-    if (chinese === undefined || english === undefined) return;
+    const chinese = createBasicContract('zh');
+    const english = createBasicContract('en');
 
     expect(
       getPreviewControlFields(chinese.controls).map(field => ({
@@ -278,7 +261,7 @@ describe('Flow Diagram ComponentPreview', () => {
       relationRole: 'dependency',
       relationStatus: 'warning',
     };
-    const preview = buildPreviewIR(() => renderFlowBasicPreview(values));
+    const preview = buildPreviewIR(() => renderFlowBasicPreview(values, 'zh'));
     const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
 
     expect(flow.entities).toEqual([
@@ -308,22 +291,25 @@ describe('Flow Diagram ComponentPreview', () => {
 
     const withoutSubtitle = FlowDiagramSchema.parse(
       buildPreviewIR(() =>
-        renderFlowBasicPreview({
-          ...values,
-          formText: '前端表单',
-          formSubtitle: '   ',
-          formStatus: 'none',
-          relationRole: 'flow',
-          relationStatus: 'none',
-        }),
+        renderFlowBasicPreview(
+          {
+            ...values,
+            formText: '前端表单',
+            formSubtitle: '   ',
+            formStatus: 'none',
+            relationRole: 'flow',
+            relationStatus: 'none',
+          },
+          'zh',
+        ),
       ).sourceIr.children[0],
     );
     expect(withoutSubtitle.entities[1]).toMatchObject({ text: ['前端表单'] });
   });
 
   it('uses bilingual controls to apply global Entity and Relation styles through Flow theme', () => {
-    const chinese = FlowThemeControlContract;
-    const english = FlowThemeEnControlContract;
+    const chinese = createThemeContract('zh');
+    const english = createThemeContract('en');
 
     const fieldsOf = (contract: PreviewControlContract) =>
       getPreviewControlFields(contract.controls).map(field => ({
@@ -383,8 +369,8 @@ describe('Flow Diagram ComponentPreview', () => {
   });
 
   it('uses bilingual controls to change visible Group layout intent and shell-free Layout placement', () => {
-    const chinese = FlowCompoundControlContract;
-    const english = FlowCompoundEnControlContract;
+    const chinese = createCompoundContract('zh');
+    const english = createCompoundContract('en');
 
     const fieldsOf = (contract: PreviewControlContract) =>
       getPreviewControlFields(contract.controls).map(field => ({
@@ -443,15 +429,6 @@ describe('Flow Diagram ComponentPreview', () => {
         step: 4,
         options: undefined,
       },
-      {
-        kind: 'select',
-        id: 'layoutAlign',
-        defaultValue: 'center',
-        min: undefined,
-        max: undefined,
-        step: undefined,
-        options: ['start', 'center', 'end'],
-      },
     ]);
     expect(fieldsOf(english)).toEqual(fieldsOf(chinese));
     expect(chinese.canonicalValues).toEqual({
@@ -460,7 +437,6 @@ describe('Flow Diagram ComponentPreview', () => {
       groupRankGap: 36,
       layoutDirection: 'right',
       layoutGap: 24,
-      layoutAlign: 'center',
     });
     expect(english.canonicalValues).toEqual(chinese.canonicalValues);
     expect(english.relatedApis).toEqual(chinese.relatedApis);
@@ -471,13 +447,12 @@ describe('Flow Diagram ComponentPreview', () => {
       groupRankGap: 48,
       layoutDirection: 'down',
       layoutGap: 28,
-      layoutAlign: 'end',
     };
     const chineseFlow = FlowDiagramSchema.parse(
-      buildPreviewIR(() => renderFlowCompoundPreview(values)).sourceIr.children[0],
+      buildPreviewIR(() => renderFlowCompoundPreview(values, 'zh')).sourceIr.children[0],
     );
     const englishFlow = FlowDiagramSchema.parse(
-      buildPreviewIR(() => renderFlowCompoundEnPreview(values)).sourceIr.children[0],
+      buildPreviewIR(() => renderFlowCompoundPreview(values, 'en')).sourceIr.children[0],
     );
 
     for (const flow of [chineseFlow, englishFlow]) {
@@ -487,7 +462,6 @@ describe('Flow Diagram ComponentPreview', () => {
       expect(flow.layouts.find(layout => layout.id === 'storage')).toMatchObject({
         direction: 'down',
         gap: 28,
-        align: 'end',
       });
     }
   });

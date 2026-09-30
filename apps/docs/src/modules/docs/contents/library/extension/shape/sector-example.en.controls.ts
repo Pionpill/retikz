@@ -9,7 +9,6 @@ export const sectorExampleControls = definePreviewControls({
   title: 'Sector',
   sections: [
     {
-      label: 'Ring wedge geometry',
       controls: [
         {
           kind: 'range',

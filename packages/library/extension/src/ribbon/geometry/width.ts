@@ -1,7 +1,6 @@
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
 import type { RibbonWidthResolution } from '../resolve';
 import type { CanonicalRibbonSampling } from '../types';
-import type { RibbonLike } from './types';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 
@@ -33,13 +32,13 @@ export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => 
 
 /**
  * 把 IRRibbonWidth 解析为 offset∈[0,1] → width 的函数
- * @description number 走常量宽度；stops 先按 offset 排序再插值；profile 查运行时注册表并校验 params JSON-safe
+ * @description fixed 取常量；taper 插值首尾宽度；stops 消费已排序节点；profile 消费已解析的 Definition 与参数
  */
 export const widthFunction = (resolution: RibbonWidthResolution, totalLength: number): ((offset: number) => number) => {
   const { width } = resolution;
-  if (typeof width === 'number') {
-    return () => assertFiniteWidth(width, 'number');
-  }
+  if (width.kind === 'fixed') return () => width.value;
+  if (width.kind === 'taper')
+    return offset => interpolate({ from: width.start, to: width.end, t: offset, mode: width.interpolation });
 
   if (width.kind === 'stops') {
     const stops = width.stops;
@@ -89,68 +88,10 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
 };
 
 /**
- * 解析 centerline ribbon 的宽度函数
- * @description 顶层 width 优先；未给 width 时用 start.width/end.width 做端点 taper
- */
-export const centerlineWidthFunction = (
-  ribbon: RibbonLike,
-  widthResolution: RibbonWidthResolution | undefined,
-  totalLength: number,
-): ((offset: number) => number) => {
-  if (ribbon.width !== undefined) {
-    if (widthResolution === undefined) {
-      throw new RetikzExtensionError({
-        code: RetikzExtensionErrorCode.ResolutionInvalid,
-        message: 'Ribbon width has no resolving-phase provider binding.',
-        details: { width: ribbon.width },
-      });
-    }
-    return widthFunction(widthResolution, totalLength);
-  }
-  const startWidth = ribbon.start.width;
-  const endWidth = ribbon.end.width;
-  if (startWidth === undefined || endWidth === undefined) {
-    throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.AuthoringInvalid,
-      message: 'Centerline ribbon requires either top-level `width` or both `start.width` and `end.width`.',
-      details: { hasEndWidth: endWidth !== undefined, hasStartWidth: startWidth !== undefined },
-    });
-  }
-  const mode = ribbon.interpolation;
-  return offset =>
-    assertFiniteWidth(
-      interpolate({ from: startWidth, to: endWidth, t: offset, mode }),
-      `endpoint width taper at offset ${offset}`,
-    );
-};
-
-/** 动态 width（stops/profile）会让解析型 offset 不再可靠，需要走采样轮廓 */
-export const centerlineWidthRequiresSampling = (widthResolution: RibbonWidthResolution | undefined): boolean =>
-  widthResolution?.requiresSampling ?? false;
-
-/**
  * 解析 ribbon 采样数
- * @description samples 是旧快捷入口；sampling 是新对象入口，二者互斥。adaptive 按总长 / tolerance 估算并受 maxSamples 限制
+ * @description sampling 是唯一采样入口。adaptive 按总长 / tolerance 估算并受 maxSamples 限制
  */
-export const resolveSampleCount = (
-  sampling: CanonicalRibbonSampling | undefined,
-  totalLength: number,
-): number | undefined => {
-  if (sampling?.kind === 'fixed') return sampling.samples;
-  if (sampling?.kind === 'adaptive') {
-    return Math.max(2, Math.min(sampling.maxSamples, Math.ceil(totalLength / sampling.tolerance) + 1));
-  }
-  return undefined;
-};
-
-/** 校验采样点数量，避免过少无法形成轮廓或过多造成异常开销 */
-export const assertSampleCount = (samples: number): number => {
-  if (!Number.isInteger(samples) || samples < 2 || samples > 512) {
-    throw new RetikzExtensionError({
-      code: RetikzExtensionErrorCode.AuthoringInvalid,
-      message: `Ribbon samples must be an integer in [2, 512]; got ${String(samples)}.`,
-      details: { samples },
-    });
-  }
-  return samples;
+export const resolveSampleCount = (sampling: CanonicalRibbonSampling, totalLength: number): number => {
+  if (sampling.kind === 'fixed') return sampling.samples;
+  return Math.max(2, Math.min(sampling.maxSamples, Math.ceil(totalLength / sampling.tolerance) + 1));
 };

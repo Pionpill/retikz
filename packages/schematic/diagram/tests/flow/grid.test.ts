@@ -95,7 +95,7 @@ describe('Flow Grid', () => {
   });
 
   it('adds each Grid axis label dimension to the configured track gap by default', () => {
-    const configured = { ...layout, rowGap: 32, columnGap: 32 };
+    const configured = { ...layout, gap: 32 };
     const baseline = compile(configured);
     const horizontal = compile(configured, 'right', 17, {}, [{ source: 'a', target: 'b', label: 'xy' }]);
     const vertical = compile(configured, 'right', 17, {}, [{ source: 'a', target: 'c', label: 'xy' }]);
@@ -104,7 +104,7 @@ describe('Flow Grid', () => {
   });
 
   it('uses configured Grid gaps without label reservation when disabled', () => {
-    const configured = { ...layout, rowGap: 32, columnGap: 32, reserveLabelSpace: false };
+    const configured = { ...layout, gap: 32, reserveLabelSpace: false };
     const baseline = compile(configured);
     const labeled = compile(configured, 'right', 17, {}, [
       { source: 'a', target: 'b', label: 'long label' },
@@ -195,8 +195,7 @@ describe('Flow Grid', () => {
               layout: {
                 kind: 'grid',
                 id: 'grid',
-                rowGap: 17,
-                columnGap: 17,
+                gap: { row: 17, column: 17 },
                 reserveLabelSpace: true,
                 placements: [[null, 'b'], ['c', 'd'], [], [null, null, null, 'a']],
               },
@@ -222,8 +221,29 @@ describe('Flow Grid', () => {
     expect(() => compile(layout, 'right', 17, { flowLayouts: [shifted], defaultFlowLayout: shifted.name })).toThrow();
   });
   it('round-trips Grid placement rows without deriving containment or sorting children', () => {
-    const source = FlowLayoutSchema.parse(layout);
+    const source = FlowLayoutSchema.parse({ ...layout, gap: { row: 12, column: 24 } });
     expect(FlowLayoutSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+  });
+
+  it('uses a numeric Grid gap for both axes and accepts a complete axis object', () => {
+    const numeric = compile({ ...layout, gap: 24 }, 'right', 0);
+    const axes = compile({ ...layout, gap: { row: 24, column: 24 } }, 'right', 0);
+    expect(numeric.children).toEqual(axes.children);
+    expect(compile({ ...layout, gap: { row: 0, column: 24 } }, 'right', 0).grid.bounds.height).toBeLessThan(
+      numeric.grid.bounds.height,
+    );
+  });
+
+  it('rejects an object gap for Linear at the Source schema boundary', () => {
+    expect(
+      FlowLayoutSchema.safeParse({
+        kind: 'linear',
+        id: 'linear',
+        direction: 'right',
+        gap: { row: 12, column: 24 },
+        children: ['a', 'b'],
+      }).success,
+    ).toBe(false);
   });
 
   it('accepts object-mapped placements with the same Grid geometry as a matrix', () => {
@@ -242,6 +262,12 @@ describe('Flow Grid', () => {
   it.each([
     { ...layout, kind: undefined },
     { ...layout, direction: 'right' },
+    { ...layout, gap: { row: 12 } },
+    { ...layout, gap: { column: 12 } },
+    { ...layout, gap: { row: -1, column: 12 } },
+    { ...layout, gap: { row: 12, column: 12, extra: 1 } },
+    { ...layout, rowGap: 12 },
+    { ...layout, columnGap: 12 },
     { ...layout, placements: { a: { row: 0, column: 0 } } },
     { ...layout, placements: { ...objectPlacements, a: { row: -1, column: 0 } } },
     { ...layout, placements: { ...objectPlacements, a: { row: 0.5, column: 0 } } },
@@ -320,8 +346,8 @@ describe('Flow Grid', () => {
 
   it('uses nodeGap independently for both axes and respects explicit zero', () => {
     const implicit = compile().grid.bounds;
-    const explicit = compile({ ...layout, rowGap: 17, columnGap: 17 }).grid.bounds;
-    const zero = compile({ ...layout, rowGap: 0, columnGap: 0 }).grid.bounds;
+    const explicit = compile({ ...layout, gap: 17 }).grid.bounds;
+    const zero = compile({ ...layout, gap: 0 }).grid.bounds;
     expect(implicit).toEqual(explicit);
     expect(explicit.width - zero.width).toBeCloseTo(17, 8);
     expect(explicit.height - zero.height).toBeCloseTo(17, 8);

@@ -9,7 +9,6 @@ export const crossExampleControls = definePreviewControls({
   title: 'Cross',
   sections: [
     {
-      label: 'Appearance',
       controls: [
         {
           kind: 'range',
@@ -65,7 +64,7 @@ export const crossExampleControls = definePreviewControls({
           max: 72,
           step: 2,
         },
-        { kind: 'color', id: CrossExampleControlId.Fill, label: 'Fill', defaultValue: '#ffedd5' },
+        { kind: 'color', id: CrossExampleControlId.Fill, label: 'Fill', defaultValue: '#dbeafe' },
       ],
     },
   ],
@@ -81,7 +80,7 @@ export const previewControlContract = {
     rightHeight: 48,
     bottomHeight: 48,
     leftHeight: 48,
-    fill: '#ffedd5',
+    fill: '#dbeafe',
   },
   relatedApis: ['Layout.shapes', 'Node.shape'],
 } satisfies PreviewControlContract;

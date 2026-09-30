@@ -69,6 +69,8 @@ console.log(svg);
 
 Both entries produce a blue cross. `shape: 'cross'` selects the shape, while `CrossShapeDefinition` supplies its drawing rules; use them together.
 
+You can load multiple Definitions by capability in one drawing: React uses `Layout.extensions`, while Vanilla uses `compile`. To enable a complete official family, use `ExtensionShapeDefinitions`, `ExtensionArrowDefinitions`, or `ExtensionClipDefinitions` as described on the respective capability pages.
+
 ## Further reading
 
-[Node shapes](/library/extension/shape) shows the other outlines. [Capability loading](/library/extension/capability-loading) explains how to combine definitions or use complete collections.
+[Node shapes](/library/extension/shape) shows other outlines and how to load them.

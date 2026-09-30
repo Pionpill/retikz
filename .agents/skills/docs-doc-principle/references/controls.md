@@ -17,14 +17,15 @@
 
 ## 面板组织
 
-- demo 为展示效果覆盖 API 默认值时，在正文或 caption 明示；主体参数与辅助显示参数按职责分组
+- demo 为展示效果覆盖 API 默认值时，在正文或 caption 明示
 - 默认使用 `presentation: 'panel'`；面板便于后续继续扩展字段
-- 按能力所有者、职责层级或视觉对象分 section，不按字段类型机械分组
+- 只有两个及以上职责分组时才写分组；单组 controls 平铺展示，使用无 `label`、无 `defaultCollapsed` 的 section，保留全部控件与顺序
+- 多组时按能力所有者、职责层级或视觉对象分 section，不按字段类型机械分组
 - 双节点、多层对象分别分组，如“节点 A / 节点 B”“主体 / 标签 / 阴影”
 - controls 包含只读 `table` 数据时，数据 section 默认作为首个 section，先展示输入再操作绑定、变换或样式
-- Plot demo 使用行数据绘图时，默认在 controls 首个 section 展示只读 `table`；没有可写字段时也使用仅含数据表的 panel。叙述图或无需数据即可理解的固定示意除外
+- Plot demo 使用行数据绘图时，默认先展示只读 `table`；没有可写字段时也使用仅含数据表的平铺 panel。叙述图或无需数据即可理解的固定示意除外
 - Plot demo 的行数据放在同级 `*.data.ts`，由 demo 与 controls 共用，并在 `<ComponentPreview files>` 中列出
-- 数据只是不变量或观察背景时，数据 section 设置 `defaultCollapsed: true`；理解绑定、排序或分组必须依赖原始数据时保持展开
+- 多组面板中，数据只是不变量或观察背景时，数据 section 设置 `defaultCollapsed: true`；理解绑定、排序或分组必须依赖原始数据时保持展开
 - `table` 滚动视口默认完整展示 5 行正文，header 不计入；更多行继续滚动，渲染行数上限单独控制
 - 用 `visibleWhen` 隐藏当前分支无效的字段；不要让用户操作没有效果的 control
 - controls 只收录与当前 demo 任务强相关、变化可见的属性，不追求 API 覆盖率；通用或低频属性仅在其为演示主题时加入，核验实际图形而非仅检查 Source IR 改变

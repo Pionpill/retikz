@@ -48,7 +48,11 @@ export const FlowDiagramInputEmbedAdapter: InputEmbedAdapter<FlowDiagramInputEmb
   }),
 };
 
-/** 创建 Flow Diagram Source root 的 authoring embed 节点 */
+/**
+ * 创建 Flow Diagram Source root 的 authoring embed 节点
+ * @param input Flow 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider
+ * @returns 保留 input 对象引用的 embed 节点，不在此处执行布局
+ */
 export const flowDiagram = (input: FlowDiagramInputEmbedProps): InputEmbed<FlowDiagramInputEmbedProps> => ({
   type: 'embed',
   kind: FlowDiagramEmbedKind,

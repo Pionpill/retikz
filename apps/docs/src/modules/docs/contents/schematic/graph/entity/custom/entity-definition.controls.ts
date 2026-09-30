@@ -11,7 +11,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     title: copy.title,
     sections: [
       {
-        label: copy.title,
         controls: [
           {
             kind: 'select',

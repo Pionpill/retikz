@@ -10,7 +10,6 @@ export const hexagonExampleControls = definePreviewControls({
   title: '长六边形',
   sections: [
     {
-      label: '肩部参数',
       controls: [
         {
           kind: 'range',

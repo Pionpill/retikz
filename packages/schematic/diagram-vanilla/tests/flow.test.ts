@@ -1,9 +1,48 @@
 import * as DiagramFlow from '@retikz/diagram/flow';
 import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-import { processToStaticInputResult } from '@retikz/vanilla';
+import { createProcessingController, processToStaticInputResult } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import * as FlowVanilla from '../src/flow';
+
+it('removes and restores Group captions and labels during retained updates', () => {
+  const source = (visible: boolean) => ({
+    children: [
+      FlowVanilla.flowDiagram({
+        entities: [{ id: 'item', text: 'Item' }],
+        layouts: [],
+        children: ['group'],
+        groups: [
+          {
+            id: 'group',
+            children: ['item'],
+            ...(visible
+              ? {
+                  caption: { description: { text: 'Description' } },
+                  labels: [{ text: 'Boundary', position: 'bottom' as const }],
+                }
+              : {}),
+          },
+        ],
+      }),
+    ],
+  });
+  const controller = createProcessingController(source(true), {
+    adapters: FlowVanilla.createFlowDiagramVanillaAdapters(),
+  });
+  try {
+    const initial = controller.read();
+    controller.update(source(false));
+    const hidden = controller.read();
+    expect(JSON.stringify(hidden.scene)).not.toContain('Description');
+    expect(JSON.stringify(hidden.scene)).not.toContain('Boundary');
+    expect(JSON.stringify(hidden.scene)).toContain('Item');
+    controller.update(source(true));
+    expect(controller.read().scene).toEqual(initial.scene);
+  } finally {
+    controller.dispose();
+  }
+});
 
 it('preserves local Layout exclusion through Vanilla authoring', () => {
   const input: FlowVanilla.InputFlowDiagram = {

@@ -31,8 +31,6 @@ export const createMarkDataControls = (options: {
     title: options.title,
     sections: [
       {
-        label: options.sectionLabel,
-        ...(options.defaultCollapsed ? { defaultCollapsed: true } : {}),
         controls: options.tables.map(table => ({
           kind: 'table' as const,
           id: table.id,

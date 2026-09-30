@@ -19,6 +19,7 @@ import type {
   PathKindCompileContext,
   PathKindCompileResult,
   PathKindLabelInput,
+  PathKindBoundaryLabelInput,
   PathPrim,
   ResolvedPathKindAppearance,
   ScenePrimitive,
@@ -47,6 +48,9 @@ import {
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
   resolveTheme,
+  resolveGeometryLabel,
+  resolveGeometryLabelColors,
+  resolveEffectiveLabelDefault,
 } from '../../resolve';
 import {
   createCompositeContractError,
@@ -91,7 +95,7 @@ import {
   projectNodeOwnerOutput,
 } from '../node';
 import { emitPathPrimitive } from '../path';
-import { emitLabelPrimitive } from '../path';
+import { emitBoundaryLabelPrimitive, emitLabelPrimitive, wrapPathPrimitiveOutput } from '../path';
 import {
   createCompileInvariantError,
   createLayoutChildFailure,
@@ -554,11 +558,35 @@ export const compileChildrenToPrimitives = (
           measureText: runtime.context.measureText,
           round: runtime.context.round,
           rootFontSize: runtime.context.rootFontSize,
-          hostOpacity: path.style?.opacity,
+          hostOpacity: resolution.path.opacity,
           placement: { boundaryOffset: sample.boundaryOffset },
         });
         hostLabelBoundsPoints.push(...emittedLabel.boundsPoints);
         return [emittedLabel.primitive];
+      });
+    const emitBoundaryLabels = (input: ReadonlyArray<PathKindBoundaryLabelInput>): ReadonlyArray<ScenePrimitive> =>
+      input.map(request => {
+        const labelDefault = resolveEffectiveLabelDefault(pendingPath.styleStack);
+        const styled = resolveGeometryLabelColors(
+          resolveGeometryLabel(request.label, labelDefault, resolution.path.color),
+          labelDefault.color ?? resolution.path.color,
+          { mode: pendingPath.theme.mode },
+          `${irPath}.${request.sourcePath}`,
+        );
+        const emitted = emitBoundaryLabelPrimitive(request, styled, {
+          measureText: runtime.context.measureText,
+          round: runtime.context.round,
+          rootFontSize: runtime.context.rootFontSize,
+          hostOpacity: resolution.path.opacity,
+          tex: {
+            lowerTex: runtime.context.lowerTex,
+            gatingOn: runtime.context.lowerTex !== undefined,
+            warn: (code, message) => targetWarn(code, message, { irPath: `${irPath}.${request.sourcePath}` }),
+          },
+        });
+        hostLabelBoundsPoints.push(...emitted.boundsPoints);
+        if (path.meta !== undefined) emitted.primitive.meta = path.meta;
+        return emitted.primitive;
       });
     const compilePathKind = definition.compile as unknown as (context: PathKindCompileContext) => unknown;
     const produced = compilePathKind({
@@ -567,6 +595,19 @@ export const compileChildrenToPrimitives = (
       materializePath,
       emitStroke,
       emitHostLabels,
+      emitBoundaryLabels,
+      wrapOutput: output => {
+        const boundsPoints = [...output.boundsPoints, ...hostLabelBoundsPoints];
+        const primitive = output.primitives.at(0);
+        if (primitive === undefined) return { ...output, boundsPoints };
+        return wrapPathPrimitiveOutput({
+          path: resolution.path,
+          primitive,
+          bodyPrims: output.primitives,
+          boundsPoints,
+          round: runtime.context.round,
+        });
+      },
       appearance,
       round: runtime.context.round,
     });
@@ -598,10 +639,7 @@ export const compileChildrenToPrimitives = (
         styleStack: [...pendingPath.styleStack],
       });
     }
-    return {
-      ...validated.result,
-      boundsPoints: [...validated.result.boundsPoints, ...hostLabelBoundsPoints],
-    };
+    return validated.result;
   };
 
   /** 把 allocation contribution 绑定到最近的显式 composite allocation boundary */

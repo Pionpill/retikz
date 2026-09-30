@@ -14,7 +14,6 @@ export const trapezoidExampleControls = definePreviewControls({
   title: '梯形',
   sections: [
     {
-      label: '轮廓参数',
       controls: [
         {
           kind: 'select',

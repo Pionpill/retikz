@@ -20,8 +20,7 @@ const TextContrastFlow: FC<TextContrastFlowProps> = props => {
       <FlowLayout
         id="text-contrast-flow"
         kind="grid"
-        columnGap={24}
-        rowGap={30}
+        gap={{ row: 30, column: 24 }}
         placements={[
           ['n0', 'n1', 'n2'],
           [null, null, 'n3'],

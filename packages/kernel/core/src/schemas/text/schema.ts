@@ -1,7 +1,8 @@
-import { PositiveNumberSchema } from '@retikz/foundation';
-import { array, boolean, enum as zodEnum, object, string, union } from 'zod';
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { array, boolean, enum as zodEnum, object, strictObject, string, union } from 'zod';
 
 import { FontSchema } from '../font';
+import { AngleDegreesSchema } from '../scalar';
 import { ContextualColorSchema, OpacitySchema } from '../style';
 import { NodeTextAlign } from './constants';
 
@@ -87,3 +88,16 @@ export const LineSchema = union([string(), StyledLineSchema, MixedLineSchema]).d
 export const TextBlockSchema = union([string(), array(LineSchema).min(1)]).describe(
   'Text block: a single string for one line, or a non-empty array of line specs (string for default, object for per-line overrides, `{ runs }` for mixed text+math).',
 );
+
+/** 宿主已提供边界锚点时的共享标签配置 */
+export const BoundaryLabelSchema = strictObject({
+  ...createLabelVisualStyleShape(),
+  text: TextBlockSchema,
+  align: TextAlignSchema.default('middle').describe('Alignment along the attachment tangent.'),
+  placement: zodEnum(['outside', 'inside']).default('outside').describe('Side of the boundary support line.'),
+  distance: NonNegativeNumberSchema.default(4).describe('Gap from the support line to the rotated label box.'),
+  rotate: union([zodEnum(['none', 'radial', 'tangent']), AngleDegreesSchema])
+    .default('none')
+    .describe('Text rotation: none, outward radial, radial plus 90 degrees, or an explicit angle.'),
+  keepUpright: boolean().default(false).describe('Flip upside-down text in host-local coordinates.'),
+}).describe('Shared label attached to a host-provided boundary frame.');

@@ -7,7 +7,7 @@ import type { FlowThemeStyleDefinition } from '../../contract';
 import type {
   IRFlowDefaults,
   IRFlowDefaultsGroup,
-  IRFlowDefaultsGroupCaptionTitle,
+  IRFlowDefaultsGroupCaptionText,
   IRFlowLayoutIntent,
 } from '../../schemas';
 import { FlowDefaultsSchema } from '../../schemas';
@@ -38,11 +38,11 @@ const mergeGraphFlowDefaults = (
   };
 };
 
-/** 合并一个 Flow Group caption title；字体字段在每层整体替换 */
-const mergeGroupCaptionTitle = (
-  base: IRFlowDefaultsGroupCaptionTitle | undefined,
-  override: IRFlowDefaultsGroupCaptionTitle | undefined,
-): IRFlowDefaultsGroupCaptionTitle | undefined => {
+/** 合并一个 Group caption 文本格式片段；字体字段在每层整体替换 */
+const mergeGroupCaptionText = (
+  base: IRFlowDefaultsGroupCaptionText | undefined,
+  override: IRFlowDefaultsGroupCaptionText | undefined,
+): IRFlowDefaultsGroupCaptionText | undefined => {
   const merged = mergeFields(base, override);
   if (merged === undefined) return undefined;
   const { font: _font, ...fields } = merged;
@@ -65,8 +65,18 @@ const mergeGroupDefaults = (
   const { caption: baseCaption, ...baseSurface } = base ?? {};
   const { caption: overrideCaption, ...overrideSurface } = override ?? {};
   const surface = mergeFields(baseSurface, overrideSurface);
-  const title = mergeGroupCaptionTitle(baseCaption?.title, overrideCaption?.title);
-  const caption = title === undefined ? undefined : { title };
+  const { title: baseTitle, description: baseDescription, ...baseArrangement } = baseCaption ?? {};
+  const { title: overrideTitle, description: overrideDescription, ...overrideArrangement } = overrideCaption ?? {};
+  const title = mergeGroupCaptionText(baseTitle, overrideTitle);
+  const description = mergeGroupCaptionText(baseDescription, overrideDescription);
+  const caption =
+    baseCaption === undefined && overrideCaption === undefined
+      ? undefined
+      : {
+          ...mergeFields(baseArrangement, overrideArrangement),
+          ...(title === undefined ? {} : { title }),
+          ...(description === undefined ? {} : { description }),
+        };
   return {
     ...(surface === undefined ? {} : surface),
     ...(caption === undefined ? {} : { caption }),

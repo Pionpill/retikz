@@ -9,7 +9,6 @@ export const starExampleControls = definePreviewControls({
   title: 'Star',
   sections: [
     {
-      label: 'Star geometry',
       controls: [
         {
           kind: 'range',

@@ -29,7 +29,6 @@ export const createTexPlaygroundControls = (i18n: typeof texPlaygroundI18n.zh) =
     title: i18n.label1,
     sections: [
       {
-        label: i18n.label2,
         controls: [
           {
             kind: 'text',

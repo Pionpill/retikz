@@ -18,6 +18,10 @@
 
 ## 双宿主与示例
 
-共同 Definition 放在 Tab 外，React / Vanilla 注入与使用按 DocTabs 契约切换；无宿主差异则共用真实 TypeScript 示例。带 controls 时读 [controls](../../docs-doc-principle/references/controls.md)，保持 Definition 与注入源码可复制；注册冲突和不同结构用静态案例表达。
+共同 Definition 在 Tab 外用独立 TypeScript 代码展示，不混入宿主消费代码。下方注入与使用按 DocTabs 契约展示实际支持的 React、Vanilla 与 IR 入口；IR 示例须同时说明可序列化数据与运行时 Definition 的装配位置，不能只给 React 消费。无宿主差异则共用真实 TypeScript 示例。
+
+复杂 IR 示例在页签内用 DocSteps 分开说明数据定义与宿主消费，消费步骤包含运行时 Definition 装配和实际渲染。不同宿主是替代方案时，标明“可选”并说明任选其一，不暗示必须依次执行。
+
+带 controls 时读 [controls](../../docs-doc-principle/references/controls.md)，保持 Definition 与注入源码可复制；注册冲突和不同结构用静态案例表达。
 
 翻译、源码视图、文件结构及验证复用 docs-doc-principle。只描述当前公开能力与真实错误，不因文档需求扩大代码契约。

@@ -73,6 +73,8 @@ describe('Path kind full-subject contract', () => {
           typeof context.materializePath === 'function' &&
           typeof context.emitStroke === 'function' &&
           typeof context.emitHostLabels === 'function' &&
+          typeof context.emitBoundaryLabels === 'function' &&
+          typeof context.wrapOutput === 'function' &&
           typeof context.round === 'function' &&
           context.path.style?.color === 'red' &&
           context.appearance.color === 'red' &&

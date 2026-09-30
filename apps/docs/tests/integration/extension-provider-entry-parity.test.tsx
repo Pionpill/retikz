@@ -36,7 +36,11 @@ const source: IRScene = {
     {
       type: 'path',
       kind: 'ribbon',
-      kindOptions: { width: 12 },
+      kindOptions: {
+        width: { kind: 'fixed', value: 12 },
+        start: { label: { text: 'Source endpoint' } },
+        end: { label: { text: 'Target endpoint', rotate: 'tangent' } },
+      },
       children: [
         { type: 'step', kind: 'move', to: [-60, 40] },
         { type: 'step', kind: 'line', to: [60, 40] },
@@ -80,6 +84,8 @@ describe('Extension root entry integration', () => {
     expect(vanilla.compileResult?.scene).toEqual(direct.scene);
     expect(vanilla.compileResult?.artifacts).toEqual(direct.artifacts);
     expect(svg).toContain('optional shape');
+    expect(svg).toContain('Source endpoint');
+    expect(svg).toContain('Target endpoint');
     expect(svg).toContain('<clipPath');
     expect(svg).toContain('<marker');
     expect(direct.scene.primitives.filter(primitive => primitive.type === 'path').length).toBeGreaterThan(1);
@@ -92,6 +98,8 @@ describe('Extension root entry integration', () => {
 
     expect(markup).toContain('<svg');
     expect(markup).toContain('optional shape');
+    expect(markup).toContain('Source endpoint');
+    expect(markup).toContain('Target endpoint');
     expect(markup).toContain('<clipPath');
     expect(markup).toContain('<marker');
   });

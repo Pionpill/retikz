@@ -9,7 +9,6 @@ export const inspectSelectionControls = definePreviewControls({
   title: 'Inspection scope',
   sections: [
     {
-      label: 'Selection',
       controls: [
         {
           kind: 'select',

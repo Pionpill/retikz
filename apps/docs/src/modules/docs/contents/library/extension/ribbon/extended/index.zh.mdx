@@ -1,0 +1,181 @@
+---
+title: 扩展用法
+description: 配置流带端帽与端点标签，或使用预计算边界
+---
+
+在[基础用法](/library/extension/ribbon/usage)的中心线流带上，可以分别配置首尾端帽和附着于端帽的标签。若数据已提供两侧边界，也可以改用 `boundary` 模式直接闭合曲线。端帽与端点标签属于中心线模式，预计算边界模式不接受这些配置。
+
+Ribbon 复用 Path 的路径指令、样式、中心线标签与变换，通用属性见 [Path 文档](/kernel/components/path)。本页的“相关属性”仅列 Ribbon 专属配置。
+
+## 端点与端帽
+
+首尾截口默认取中心线端点切线的法线。也可以分别设置 `start.direction` 和 `end.direction`，独立指定端面轴线；端帽按最终端面基底连接两侧接点，外向方向在起点背离前进方向、在终点朝向前进方向。起点和终点可分别设置端帽。`Path.label` 沿中心线切线；侧边与端帽连接处不强制平滑。下表字段均位于 `kindOptions`。
+
+| 分组     | 属性                | 可用值与解释                                                                                 |
+| -------- | ------------------- | -------------------------------------------------------------------------------------------- |
+| 端面方向 | `start.direction`   | `auto`、角度、非零向量或极坐标；起点截口轴线，默认 `auto`                                    |
+|          | `end.direction`     | 终点截口轴线，默认 `auto`，可独立设置                                                        |
+| 宽度对齐 | `align`             | `center`、`left`、`right`；宽度分配在两侧或单侧，默认 `center`，左右按中心线前进方向判断     |
+| 端帽     | `start.cap`         | 起点端帽引用 `{ name, params? }`，默认 `{ name: 'butt' }`                                    |
+|          | `end.cap`           | 终点端帽引用，默认 `{ name: 'butt' }`，可独立设置                                            |
+|          | `cap.name`          | `butt` 为平直封口，`square` 延伸半宽，`round` 为外凸半圆，`arc` 为显式圆弧；也可用已注册名称 |
+|          | `cap.params`        | 端帽的 JSON 参数，具体字段由对应 Definition 定义                                             |
+| 圆弧参数 | `cap.params.center` | 局部圆心 `[x, y]`：x 向流带外侧，y 沿端面向左侧                                              |
+|          | `cap.params.radius` | 正半径；圆弧必须经过截口的两个接点                                                           |
+|          | `cap.params.sweep`  | `short` 或 `long`，分别选择短弧或长弧，默认 `short`                                          |
+
+表中的 `cap.name`、`cap.params` 分别嵌套在 `start.cap` 或 `end.cap` 下。
+
+`direction` 表示截口轴线，支持角度（度）、非零向量 `[x, y]` 或极坐标 `{ angle, radius, origin? }`；默认 `auto`。`90` 表示竖直截口，适合水平桑基流带；它不改变中心线走向，端帽及端帽标签跟随最终端面，中心线 `Path.label` 仍沿原路径定位与旋转。极坐标不能引用节点 origin，解析后的向量不能为零，端面轴线不能平行于该端中心线切线。
+
+下方 demo 默认使用三次贝塞尔曲线。在“起点端面”和“终点端面”中分别选择“指定角度”，对应的 `Step.control1` / `Step.control2` 会随角度转动，使该端切线垂直于端面，整条中心线及流带轮廓随之变化。自动模式保留该端默认控制点；两端都设为 90° 时，中心线变为水平直线，截口竖直。
+
+切换“路径形状”为“直线”后，首尾位置及中心线走向保持固定，角度只改变端面与端帽。曲线联动由 demo 同时调整控制点实现，`direction` 本身不会自动改写中心线。角度控件使用 45°–135°，避开直线模式下端面与切线平行的退化情况；公开 API 不限于这个演示范围。
+
+在 demo 中切换“对齐方式”，比较宽度分配到两侧或单侧的效果。端帽形状和宽度同时应用于首尾两端。选择“圆弧”后，可调整 30°–270° 的圆弧角度，默认 120°；小于 180° 为短弧，180° 与 `round` 一样呈现外凸半圆，大于 180° 为长弧。
+
+“圆弧角度”是 demo 的圆心角控件，会根据宽度换算 `center`、`radius` 和 `sweep`；端帽参数没有独立圆心角字段，圆弧角度控件也不会改变端面朝向；端面朝向由 `direction` 单独控制。宽度作为弦长，因此圆心与半径必须一起调整，保证圆弧经过截口的两个接点。用于弦图时，端点应是弦中点、宽度应是弦长。
+
+<ComponentPreview
+  files={['ribbon-endpoints', 'ribbon-endpoints.preview.tsx']}
+  size="xl"
+  defaultSourceFile="ribbon-endpoints.preview.tsx"
+/>
+
+## 端帽标签
+
+端点的 `start.label` / `end.label` 与 `cap` 并列，使用共享的边界标签配置。它们根据最终端帽曲线定位，与[基础用法](/library/extension/ribbon/usage)中的中心线 `Path.label` 独立；适合显示弦图连接两端的文字。表示整个扇区的名称仍应放在扇区宿主上。
+
+| 分组     | 属性                | 可用值与解释                                                      |
+| -------- | ------------------- | ----------------------------------------------------------------- |
+| 标签内容 | `start.label`       | 起点标签；省略时不显示                                            |
+|          | `end.label`         | 终点标签；省略时不显示                                            |
+| 共享属性 | `label.text`        | 必填文本块，支持多行与富文本                                      |
+|          | `label.placement`   | `outside` / `inside`，默认 `outside`                              |
+|          | `label.distance`    | 非负数，默认 4；旋转后文字框与端帽外向支撑线的间隔                |
+|          | `label.rotate`      | `none`（默认）、`radial`（朝外）、`tangent`（平行端面）或数值角度 |
+|          | `label.keepUpright` | 默认 false；true 时在宿主局部坐标系翻转倒置文字                   |
+|          | `label.align`       | `start` / `middle` / `end`，默认 `middle`；沿端面切向对齐         |
+|          | `label.font`        | 字体配置，例如 `size`、`family`、`weight`、`style`                |
+|          | `label.textColor`   | 文字颜色，支持 `currentColor`                                     |
+|          | `label.opacity`     | 0–1，与宿主透明度相乘                                             |
+
+此表的 `label.*` 位于 `start.label` 或 `end.label`，不是 `Path.label`。端点身份已确定位置，因此不接受 `position`、`side` 或 `sloped`。`inside` 不保证文字完整落在流带内，外侧定位也不执行图元之间的碰撞避让。
+
+在 demo 中切换端帽，观察标签始终附着于最终端帽；再调整放置位置、间距与文字旋转。A/B 分别标记起点和终点。示例使用 `tangent` 与 `keepUpright: true`，切换到指定角度可单独比较文字朝向。
+
+<ComponentPreview
+  files={['ribbon-cap-label', 'ribbon-cap-label.preview.tsx']}
+  size="md"
+  defaultSourceFile="ribbon-cap-label.preview.tsx"
+/>
+
+Path 的 `rotate` / `scale` 会围绕包含标签的完整布局边界中心变换整条流带，轮廓、中心线标签和端点标签一起变化。`keepUpright` 仅在宿主局部坐标中计算，后续 Path 或 Scope 变换不会重新翻转文字。
+
+## 预计算边界
+
+当上下边界已经由数据或其它几何过程算出时，设置 `kindOptions.mode: 'boundary'`，并用 `kindOptions.upper` 和 `kindOptions.lower` 提供两侧曲线。此模式不读取顶层 `children`。
+
+两侧都用开放 Step 序列，从各自的 `move` 开始。示例固定上边界，只调整下边界的纵向偏移，原有曲线保持不变。填充和描边仍由 Path 的共享 `style` 控制。
+
+<ComponentPreview
+  files={['ribbon-boundary', 'ribbon-boundary.preview.tsx']}
+  defaultSourceFile="ribbon-boundary.preview.tsx"
+  size="sm"
+  caption="调整下边界偏移观察带宽变化；保留作者提供的边界曲线。"
+/>
+
+## 约束
+
+`boundary` 不读取顶层 `children`，也不能与中心线的宽度规则混用；当前不支持 Path `label`。两条边界必须是合法的开放 Step 序列。
+
+`boundary` 保留原始曲线，不接受 sampling、start/end 或端帽标签配置。
+
+## 相关属性
+
+这里只列出 Ribbon 的端点配置与边界模式字段；端帽及端点标签仅用于中心线模式，upper/lower 仅用于 boundary 模式。完整输入见 [Schema 参考](/library/extension/ribbon/schema-reference)，Definition 签名见 [API 参考](/library/extension/ribbon/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'Path.kindOptions.mode',
+      kind: 'property',
+      type: "'centerline' | 'boundary'",
+      description:
+        '`centerline` 从 children 和 width 构造轮廓，支持端帽及端点标签；`boundary` 直接使用 upper/lower，不接受中心线配置',
+      defaultValue: "'centerline'",
+    },
+    {
+      name: 'Path.kindOptions.start.direction',
+      kind: 'property',
+      type: "'auto' | number | [number, number] | PolarPosition",
+      description:
+        '中心线模式的起点端面轴线；auto 取该端切线的法线，数值为角度（90° 为竖直截口），向量必须非零；极坐标不能引用节点 origin。只改变端面、端帽及端帽标签，不改变中心线；不能与端点切线平行',
+      defaultValue: "'auto'",
+    },
+    {
+      name: 'Path.kindOptions.end.direction',
+      kind: 'property',
+      type: "'auto' | number | [number, number] | PolarPosition",
+      description:
+        '中心线模式的终点端面轴线；auto 取该端切线的法线，数值为角度（90° 为竖直截口），向量必须非零；极坐标不能引用节点 origin。只改变端面、端帽及端帽标签，不改变中心线；不能与端点切线平行',
+      defaultValue: "'auto'",
+    },
+    {
+      name: 'Path.kindOptions.align',
+      kind: 'property',
+      type: "'center' | 'left' | 'right'",
+      description: '仅用于中心线模式；center 向两侧分配半宽，left/right 向对应单侧分配全部宽度，左右沿路径前进方向定义',
+      defaultValue: "'center'",
+    },
+    {
+      name: 'Path.kindOptions.start.cap',
+      kind: 'property',
+      type: '{ name: string; params?: JsonObject }',
+      description:
+        '中心线模式的起点端帽；butt 平直封口，square 延伸半宽，round 外凸半圆，arc 使用 params 指定局部圆心、半径和 sweep，也支持已注册名称',
+      defaultValue: "{ name: 'butt' }",
+    },
+    {
+      name: 'Path.kindOptions.end.cap',
+      kind: 'property',
+      type: '{ name: string; params?: JsonObject }',
+      description:
+        '中心线模式的终点端帽；butt 平直封口，square 延伸半宽，round 外凸半圆，arc 使用 params 指定局部圆心、半径和 sweep，也支持已注册名称',
+      defaultValue: "{ name: 'butt' }",
+    },
+    {
+      name: 'Path.kindOptions.start.label',
+      kind: 'property',
+      type: "{ text: string | Array<IRLine>; align?: 'start' | 'middle' | 'end'; placement?: 'outside' | 'inside'; distance?: number; rotate?: 'none' | 'radial' | 'tangent' | number; keepUpright?: boolean; font?: IRBoundaryLabel['font']; textColor?: IRBoundaryLabel['textColor']; opacity?: number }",
+      description:
+        '中心线模式的起点端帽标签；text 支持单行、多行和富文本。placement 为 outside/inside，distance 默认 4；rotate 为 none/radial/tangent 或角度，默认 none；align 默认 middle，keepUpright 默认 false。省略时不显示标签',
+    },
+    {
+      name: 'Path.kindOptions.end.label',
+      kind: 'property',
+      type: "{ text: string | Array<IRLine>; align?: 'start' | 'middle' | 'end'; placement?: 'outside' | 'inside'; distance?: number; rotate?: 'none' | 'radial' | 'tangent' | number; keepUpright?: boolean; font?: IRBoundaryLabel['font']; textColor?: IRBoundaryLabel['textColor']; opacity?: number }",
+      description:
+        '中心线模式的终点端帽标签；text 支持单行、多行和富文本。placement 为 outside/inside，distance 默认 4；rotate 为 none/radial/tangent 或角度，默认 none；align 默认 middle，keepUpright 默认 false。省略时不显示标签',
+    },
+    {
+      name: 'Path.kindOptions.upper',
+      kind: 'property',
+      type: 'Array<IRStep>',
+      description:
+        'boundary 模式必需的上边界：至少两个公开 Step IR，首项为 move；后续步骤描述开放曲线，与另一侧共同闭合轮廓',
+    },
+    {
+      name: 'Path.kindOptions.lower',
+      kind: 'property',
+      type: 'Array<IRStep>',
+      description:
+        'boundary 模式必需的下边界：至少两个公开 Step IR，首项为 move；后续步骤描述开放曲线，与另一侧共同闭合轮廓',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+- [基础用法](/library/extension/ribbon/usage)
+- [Schema 参考](/library/extension/ribbon/schema-reference)

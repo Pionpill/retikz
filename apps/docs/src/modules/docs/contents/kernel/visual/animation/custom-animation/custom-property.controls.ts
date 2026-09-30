@@ -13,7 +13,6 @@ export const customPropertyControls = definePreviewControls({
   title: '调整 blur 动画',
   sections: [
     {
-      label: '轨道参数',
       controls: [
         {
           kind: 'range',

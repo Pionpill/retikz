@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.roundedPolyline,
     sections: [
       {
-        label: i18n.geometryAndStroke,
         controls: [
           {
             kind: 'range',

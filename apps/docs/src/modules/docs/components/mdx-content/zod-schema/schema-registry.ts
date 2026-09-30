@@ -84,10 +84,39 @@ import {
   ScatterChartPropertiesSchema,
   ScatterChartMarkSchema,
 } from '@retikz/chart/point';
+import { BoundaryLabelSchema } from '@retikz/core';
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
-import { CircleClipSchema, EllipseClipSchema, RibbonPathOptionsSchema } from '@retikz/extension';
+import {
+  CircleClipSchema,
+  CompoundClipSchema,
+  ContourShapeDefinition,
+  CrossShapeDefinition,
+  CylinderShapeDefinition,
+  EllipseClipSchema,
+  PathClipSchema,
+  PolygonClipSchema,
+  HexagonShapeDefinition,
+  ParallelogramShapeDefinition,
+  FixedRibbonWidthSchema,
+  TaperRibbonWidthSchema,
+  RibbonWidthSchema,
+  CenterlineRibbonPathOptionsSchema,
+  BoundaryRibbonPathOptionsSchema,
+  RibbonAdaptiveSamplingSchema,
+  RibbonArcCapSchema,
+  RibbonEndpointSchema,
+  RibbonDirectionSchema,
+  RibbonFixedSamplingSchema,
+  RibbonPathOptionsSchema,
+  RibbonPathSchema,
+  ProfileRibbonWidthSchema,
+  StopsRibbonWidthSchema,
+  SectorShapeDefinition,
+  StarShapeDefinition,
+  TrapezoidShapeDefinition,
+} from '@retikz/extension';
 import {
   JsonObjectSchema,
   JsonValueSchema,
@@ -651,6 +680,18 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: EllipseClipSchema,
     label: 'EllipseClip',
   },
+  PolygonClipSchema: {
+    schema: PolygonClipSchema,
+    label: 'PolygonClip',
+  },
+  PathClipSchema: {
+    schema: PathClipSchema,
+    label: 'PathClip',
+  },
+  CompoundClipSchema: {
+    schema: CompoundClipSchema,
+    label: 'CompoundClip',
+  },
   NodeStyleSchema: {
     schema: IR.NodeStyleSchema,
     label: 'NodeStyleSchema',
@@ -755,10 +796,119 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.DrawableInstanceSchema,
     label: 'DrawableInstance',
   },
+  RibbonPathSchema: {
+    schema: RibbonPathSchema,
+    label: 'RibbonPath',
+    url: '/library/extension/ribbon/schema-reference#ribbonpathschema',
+  },
+  FixedRibbonWidthSchema: {
+    schema: FixedRibbonWidthSchema,
+    label: 'FixedRibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#fixedribbonwidthschema',
+  },
+  TaperRibbonWidthSchema: {
+    schema: TaperRibbonWidthSchema,
+    label: 'TaperRibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#taperribbonwidthschema',
+  },
+  RibbonWidthSchema: {
+    schema: RibbonWidthSchema,
+    label: 'RibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#ribbonwidthschema',
+  },
+  CenterlineRibbonPathOptionsSchema: {
+    schema: CenterlineRibbonPathOptionsSchema,
+    label: 'CenterlineRibbonPathOptions',
+    url: '/library/extension/ribbon/schema-reference#centerlineribbonpathoptionsschema',
+  },
+  BoundaryRibbonPathOptionsSchema: {
+    schema: BoundaryRibbonPathOptionsSchema,
+    label: 'BoundaryRibbonPathOptions',
+    url: '/library/extension/ribbon/schema-reference#boundaryribbonpathoptionsschema',
+  },
   RibbonPathOptionsSchema: {
     schema: RibbonPathOptionsSchema,
     label: 'RibbonPathOptions',
-    url: '/library/extension/ribbon',
+    url: '/library/extension/ribbon/schema-reference#ribbonpathoptionsschema',
+  },
+  BoundaryLabelSchema: {
+    schema: BoundaryLabelSchema,
+    label: 'BoundaryLabel',
+    url: '/kernel/components/node/schema-reference#boundarylabelschema',
+  },
+  RibbonDirectionSchema: {
+    schema: RibbonDirectionSchema,
+    label: 'RibbonDirection',
+  },
+  RibbonEndpointSchema: {
+    schema: RibbonEndpointSchema,
+    label: 'RibbonEndpoint',
+    url: '/library/extension/ribbon/schema-reference#ribbonendpointschema',
+  },
+  StopsRibbonWidthSchema: {
+    schema: StopsRibbonWidthSchema,
+    label: 'StopsRibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#stopsribbonwidthschema',
+  },
+  ProfileRibbonWidthSchema: {
+    schema: ProfileRibbonWidthSchema,
+    label: 'ProfileRibbonWidth',
+    url: '/library/extension/ribbon/schema-reference#profileribbonwidthschema',
+  },
+  RibbonArcCapSchema: {
+    schema: RibbonArcCapSchema,
+    label: 'RibbonArcCap',
+    url: '/library/extension/ribbon/schema-reference#ribbonarccapschema',
+  },
+  RibbonFixedSamplingSchema: {
+    schema: RibbonFixedSamplingSchema,
+    label: 'RibbonFixedSampling',
+    url: '/library/extension/ribbon/schema-reference#ribbonfixedsamplingschema',
+  },
+  RibbonAdaptiveSamplingSchema: {
+    schema: RibbonAdaptiveSamplingSchema,
+    label: 'RibbonAdaptiveSampling',
+    url: '/library/extension/ribbon/schema-reference#ribbonadaptivesamplingschema',
+  },
+  CrossShapeParamsSchema: {
+    schema: CrossShapeDefinition.paramsSchema,
+    label: 'CrossShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  TrapezoidShapeParamsSchema: {
+    schema: TrapezoidShapeDefinition.paramsSchema,
+    label: 'TrapezoidShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  ParallelogramShapeParamsSchema: {
+    schema: ParallelogramShapeDefinition.paramsSchema,
+    label: 'ParallelogramShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  HexagonShapeParamsSchema: {
+    schema: HexagonShapeDefinition.paramsSchema,
+    label: 'HexagonShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  EllipticCapShapeParamsSchema: {
+    schema: CylinderShapeDefinition.paramsSchema,
+    label: 'EllipticCapShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  SectorShapeParamsSchema: {
+    schema: SectorShapeDefinition.paramsSchema,
+    label: 'SectorShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  StarShapeParamsSchema: {
+    schema: StarShapeDefinition.paramsSchema,
+    label: 'StarShapeParamsSchema',
+    url: '/library/extension/shape',
+  },
+  ContourShapeParamsSchema: {
+    schema: ContourShapeDefinition.paramsSchema,
+    label: 'ContourShapeParamsSchema',
+    url: '/library/extension/shape',
   },
   PathMarkPlacementSchema: {
     schema: IR.PathMarkPlacementSchema,
@@ -1181,17 +1331,42 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   FlowDiagramSchema: {
     schema: DiagramIR.FlowDiagramSchema,
     label: 'FlowDiagram',
-    url: '/schematic/diagram/flow/basic#flow-source',
+    url: '/schematic/diagram/flow/schema-reference#flowdiagramschema',
+  },
+  FlowEntitySchema: {
+    schema: DiagramIR.FlowEntitySchema,
+    label: 'FlowEntity',
+    url: '/schematic/diagram/flow/schema-reference#flowentityschema',
+  },
+  FlowGroupSchema: {
+    schema: DiagramIR.FlowGroupSchema,
+    label: 'FlowGroup',
+    url: '/schematic/diagram/flow/schema-reference#flowgroupschema',
   },
   FlowLayoutSchema: {
     schema: DiagramIR.FlowLayoutSchema,
     label: 'FlowLayout',
-    url: '/schematic/diagram/flow/basic#flow-source',
+    url: '/schematic/diagram/flow/schema-reference#flowlayoutschema',
+  },
+  FlowRelationSchema: {
+    schema: DiagramIR.FlowRelationSchema,
+    label: 'FlowRelation',
+    url: '/schematic/diagram/flow/schema-reference#flowrelationschema',
+  },
+  FlowRoutingSchema: {
+    schema: DiagramIR.FlowRoutingSchema,
+    label: 'FlowRouting',
+    url: '/schematic/diagram/flow/schema-reference#flowroutingschema',
+  },
+  FlowDefaultsSchema: {
+    schema: DiagramIR.FlowDefaultsSchema,
+    label: 'FlowDefaults',
+    url: '/schematic/diagram/flow/schema-reference#flowdefaultsschema',
   },
   FlowDiagramArtifactSchema: {
     schema: DiagramIR.FlowDiagramArtifactSchema,
     label: 'FlowDiagramArtifact',
-    url: '/schematic/diagram/flow/basic#flowdiagramartifact',
+    url: '/schematic/diagram/flow/api-reference#flowdiagramartifact',
   },
 
   GraphSchema: {

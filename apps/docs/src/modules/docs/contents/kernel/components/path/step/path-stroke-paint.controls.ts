@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.gradientStroke,
     sections: [
       {
-        label: i18n.gradient,
         controls: [
           {
             kind: 'select',
