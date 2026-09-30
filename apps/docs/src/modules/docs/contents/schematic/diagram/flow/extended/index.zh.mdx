@@ -1,0 +1,203 @@
+---
+title: 扩展用法
+description: 组合 Flow 的分组与固定布局，并统一图示的外观与默认值。
+---
+
+本页在[基础用法](/schematic/diagram/flow/usage)之上，按两个常见任务组合已有能力：组织元素与统一外观。连线与路由见[基础用法](/schematic/diagram/flow/usage#连线与路由)。
+
+## 结构与排布
+
+`FlowLayout` 固定排列直接子项，`FlowGroup` 划定可命名的可见边界并自动排布内部步骤。先分别观察两者，再把它们组合到一张图中。
+
+### 固定排列
+
+`FlowLayout` 是无外壳的排布容器。`kind="linear"` 按声明顺序沿一个方向放置直接子项，`kind="grid"` 则按指定行列对齐。Layout 本身不绘制边框或标题，也不能作为 Relation 端点。
+
+| 属性                | 可用值                                | 职能                                      |
+| ------------------- | ------------------------------------- | ----------------------------------------- |
+| `kind`              | `"linear"`、`"grid"`                  | 选择一维排列或行列对齐                    |
+| `direction`         | `up`、`right`、`down`、`left`         | Linear 中直接子项依次放置的方向           |
+| `gap`               | 非负数；Grid 还可用 `{ row, column }` | Linear 的相邻间距；Grid 的行列轨道间距    |
+| `itemWidth`         | `"match-largest"` 或正数，可省略      | 为直接 Entity 匹配最大自然宽度或指定宽度  |
+| `placements`        | 二维数组或子项 id 到行列的映射        | Grid 中每个直接子项所在的单元格           |
+| `reserveLabelSpace` | 布尔值，默认 `true`                   | Grid 是否为 Relation 标签扩张行列间距     |
+| `excludeFromBounds` | `Array<string>`，默认不排除           | Linear、Grid 向父级报告占位时排除直接子项 |
+
+示例只包含“输入、校验、输出”三个实体。切换左右方向与间距，观察顺序始终由 Layout 保持；它们之间没有 Relation，固定排列不依赖连线。上下方向也可通过 `direction` 使用。
+
+<ComponentPreview
+  files="flow-linear"
+  size="sm"
+  caption="切换排列方向并调整元素间距；三个实体始终按声明顺序排列，周围没有 Layout 外框。"
+/>
+
+需要对齐步骤的边缘时，可设置 `itemWidth`。`"match-largest"` 先测量当前 Layout 的直接 Entity，再将它们绘制为其中最大的自然可见宽度；传入数值（例如 `itemWidth={180}`）则固定该宽度，长的普通文本会自动换行并增加高度。它不穿透嵌套 Layout 或 Group；margin 不参与宽度比较，也不提供横向子项换行。
+
+<ComponentPreview
+  files={['flow-item-width', 'flow-item-width.preview.tsx']}
+  defaultSourceFile="flow-item-width.preview.tsx"
+  size="md"
+  caption="切换横纵排列与自然、匹配最大或固定宽度，观察两个步骤的边缘如何对齐，以及较窄宽度下的文字换行。"
+/>
+
+不同排的节点需要两两对齐时，改用 Grid。推荐将 `placements` 写成二维数组：外层下标是从 0 开始的行，内层下标是列，单元格填直接子项 id，`null` 留空；也可用子项 id 到 `{ row, column }` 的映射。React 和 Vanilla 使用相同的 `placements`；Vanilla 的 `children` 只负责包含与绘制顺序。每个直接子项都必须占一个单元格，不能重叠、跨格或引用其它容器的后代；空行列不生成占位元素。同列共享中心 x，同排共享中心 y，节点保留真实尺寸。
+
+示例中的四个实体占两行两列，请切换行、列间距和标签预留，观察节点中心保持对齐、标签如何扩张列间距。预览源码展示具体的 `placements` 写法。
+
+<ComponentPreview
+  files="flow-grid"
+  size="md"
+  caption="调整行、列间距与标签预留，观察四个节点的行列中心和连接标签所占空间。"
+/>
+
+Grid 的 `gap` 为数字时同时设置行、列间距；需要分别设置时传入完整的 `{ row, column }`，两项都必填。Linear 的 `gap` 只接受数字。省略 Grid 的 `gap` 时，行列优先继承显式 `nodeGap`，否则内置默认分别为 `32`、`48`；显式 `0` 有效。`reserveLabelSpace` 默认开启：横向 Relation 的标签宽度扩张列间距，纵向标签高度扩张行间距，同轴多个标签取最大尺寸；关闭后严格使用配置间距。标签支持字符串（`\n` 硬换行）或 TextBlock 行数组，均按完整块测量。非对称 margin 对称预留空间，不推偏节点中心；Grid 不随流程方向旋转，也不保证斜线、折线或跨越中间节点的全局避碰。[TeX 缓存图](/kernel/packages/tex/mechanism#缓存失败与重试)展示了这种排布。
+
+Linear 左右方向默认 `gap=48`，上下方向默认 `gap=32`。固定间距依次取本层显式值、祖先显式 `nodeGap`（或 Linear 的 `gap`）、Definition 的物理轴默认值；祖先显式 `0` 也参与继承，父级补出的默认值则不算显式值。自定义 Layout Definition 需提供有限非负的 `defaults.placementGap: { horizontal, vertical }`；它与根图示和 Group 自动布局默认的 `nodeGap=48`、`rankGap=48` 分开。
+
+附属节点需要正常绘制，却不应推偏上层对齐时，可在 Layout 上设置 `excludeFromBounds`。示例中 Canvas 与 SVG 保持同列居中；PNG、JPEG 仍在自己的子布局中上下排列，并分别连接 Canvas。切换是否排除 `formats`，观察它仍正常排列，而 `canvas-output` 向父级报告的占位边界发生变化。
+
+<ComponentPreview
+  files="flow-bounds"
+  size="md"
+  caption="灰色虚线框围出 canvas-output 向父级报告的占位范围。切换是否排除 formats：PNG、JPEG 始终绘制，框随占位范围变化。"
+/>
+
+React 的 `<FlowLayout excludeFromBounds={['formats']}>` 与 Vanilla `layouts` 中的 `{ excludeFromBounds: ['formats'] }` 表达相同配置，预览源码可切换查看。只允许引用当前 Layout 的直接子项 id；缺省或空数组保持原行为，重复 id、后代、其它容器的 id 或排除全部子项都会报错。名单不向子布局继承。
+
+排除只改变 Layout 对父级贡献的尺寸与对齐基准，不隐藏节点，也不将节点改为绝对定位。局部顺序、间距、margin、Grid 轨道和标签预留仍生效；附属项夹在两个主体之间仍可能改变它们的距离，需要隔离时可像示例一样使用独立的 Layout。完整画布仍包含附属节点与连线，可见 Group 仍包住全部后代。排除不提供自动避障；Layout artifact 的 `bounds` 是布局占位，不是完整绘制范围或裁切框。自定义 provider 必须传递排除配置，保留 `placeLayout` 返回的全部子项及相对坐标。
+
+### 可见分组
+
+`FlowGroup` 表达有业务含义的语义边界，直接复用 [Graph Group](/schematic/graph/group) 的呈现与上下文属性。外框内可以同时显示标题和描述，边界上还可以放置标签。它通过 `children` 包含成员，内部使用自动布局；Group 可以作为 Relation 端点，路由可由 Group 局部指定。
+
+| 属性                                                              | 可用值                                      | 职能                                   |
+| ----------------------------------------------------------------- | ------------------------------------------- | -------------------------------------- |
+| `caption.title`                                                   | `{ text, ...文字格式 }`                     | 分组标题；`text` 支持 TextBlock        |
+| `caption.description`                                             | `{ text, ...文字格式 }`                     | 分组说明，可独立于标题显示             |
+| `caption.side`                                                    | `top`、`bottom`，默认 `top`                 | 说明区位于内容上方或下方               |
+| `caption.direction`                                               | `horizontal`、`vertical`，默认 `horizontal` | 标题和描述的排列方向                   |
+| `caption.itemGap` / `bodyGap`                                     | 非负数，默认 `4`                            | 两个文本项之间、说明区与内容之间的间距 |
+| `labels`                                                          | 非空标签数组，可省略                        | 边界标签；复用 Graph 的位置与文字格式  |
+| `padding` / `background` / `border` / `cornerRadius` / `overflow` | Graph Group 同名属性                        | 外壳留白、填充、边框、圆角和内容溢出   |
+| `graphDefaults` / `graphRules`                                    | Graph 的默认片段与规则                      | 设置分组内 Graph 后代的默认外观        |
+| `layout.direction`                                                | `up`、`right`、`down`、`left`               | 指定 Group 内自动布局的方向            |
+| `layout.nodeGap`                                                  | 非负数                                      | 调整同一层级中并列实体的间距           |
+| `layout.rankGap`                                                  | 非负数                                      | 调整相邻层级的间距                     |
+
+示例把“请求、校验、授权”放在“服务入口”中，由请求分别连向校验与授权。标题与描述在本例中使用 `direction: "vertical"` 纵向排列；用开关分别显示或隐藏标题、描述和边界标签，再调整内部排布，观察外壳如何随内容变化。
+
+<ComponentPreview
+  files={['flow-group', 'flow-group.preview.tsx']}
+  defaultSourceFile="flow-group.preview.tsx"
+  size="md"
+  caption="开关控制标题、描述与边界标签；隐藏全部文字后，Group 的可见外壳与三个实体仍保留。"
+/>
+
+标题与描述参与 Group 尺寸计算，边界标签不占布局空间。其他样式与上下文属性沿用 Graph Group；Flow Group 不支持 `transforms`、`placement` 和 `localNamespace`。
+
+### 分组排布
+
+Group 和 Layout 都能包含子元素，也能相互嵌套，例如在 Group 内用 Grid 对齐步骤，而 Group 自身仍自动排布。二者的可见结果和排布职责不同。
+
+| 差别           | `FlowGroup`                                      | `FlowLayout`                                      |
+| -------------- | ------------------------------------------------ | ------------------------------------------------- |
+| 主要职责       | 表达可命名、可设置样式的语义分组                 | 固定排列直接子项                                  |
+| 可见结果       | 带边框、背景和可选标题的 Graph Group             | 不生成边框、背景或标题                            |
+| 内部排布       | `layout` 提供自动方向、同层间距与层级间距        | `kind="linear"` 一维排列或 `kind="grid"` 行列对齐 |
+| Relation 端点  | 可以作为端点                                     | 不能作为端点，只能连接其中的 Entity 或 Group      |
+| Source catalog | 存入 `groups`，`children` 保留直接成员与同级顺序 | 存入 `layouts`，`children` 保留固定顺序           |
+
+组合示例上半部分是可见 Group，下半部分是无外壳 Layout；外层 Layout 固定两部分的上下顺序。从 Group 外壳连到队列的关系还展示了 Group 端点。分别调整两个容器的 controls，比较自动布局与固定排列的变化。
+
+<ComponentPreview
+  files="flow-compound"
+  size="lg"
+  caption="分别调整 Group 的自动排布和 Layout 的固定排列；镜头保持固定，边框只属于 Group。"
+/>
+
+React 中的嵌套只是编写便利；adapter 会将 Group、Layout 和 Entity 归一到平级 catalog，并以各 owner 的 `children` 作为唯一包含事实。
+
+## 外观与默认值
+
+Flow、Graph 与 Diagram 的外观配置可以改变可见样式，而不改动图的结构。
+
+### 默认值与主题
+
+`flowDefaults` 让 Flow 根为全部同类对象提供统一默认样式。`entity.style` 会作用于每个 Entity，`relation.style` 会作用于每条 Relation；这里的设置不改变 Source 的 id、包含关系、节点布局或连线路径。局部 `style` 仍可在需要时覆盖全局值，但本例只展示全局配置。
+
+<ComponentPreview
+  files="flow-theme"
+  size="md"
+  caption="调整任一分区后，同类对象会一起更新；节点和连线的结构与相对位置保持不变。"
+/>
+
+`theme: { style, mode }` 选择主题环境；`flowThemeStyles` / `diagramThemeStyles` 注入对应 Definition。Flow 根级的 `graphRules` 为下沉的 Entity 与 Relation 设置条件外观；Group 的同名字段可为其后代追加局部规则，不改变 routing 或包含关系。`flowDefaults` 与 `diagramDefaults` 是显式默认值，使用正式 Source 的相同路径。Entity 与 Relation 的 `group` 直接复用 Graph：同一 Flow 根中相同 group 共享从分类色板正序自动取得的颜色，未分组元素保持原有外观。Entity / Relation 外观的覆盖顺序为 Graph Theme、所属 Graph 上下文的默认值与规则、`flowDefaults`、实例字段。
+
+Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group 的 Surface 外观与 caption 排列和文字格式，以及 Relation 的路径、marker 和标签格式。`caption.title` 和 `caption.description` 的默认格式只应用于已声明的文本项，不会创建内容。它不包含 identity、children、自动布局 direction、routing 或 overflow，也不会创建 Group 或 marker。空对象与 undefined 不覆盖已有值，0 和 false 保留；Node 字体整体替换，Relation 的 `labelFont` 按字段合并。
+
+## 相关属性
+
+这里列出本页组合时常用的成员；完整签名与约束见 [API 参考](/schematic/diagram/flow/api-reference) 和 [Schema 参考](/schematic/diagram/flow/schema-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'FlowGroup.caption',
+      kind: 'property',
+      type: '{ title?: IRGroupCaptionText; description?: IRGroupCaptionText; side?: "top" | "bottom"; direction?: "horizontal" | "vertical"; itemGap?: number; bodyGap?: number }',
+      description:
+        '复用 Graph Group 的说明区；每个文本项包含必填 text: IRTextBlock 和可选文字格式。title 与 description 至少提供一项，全部隐藏时省略 caption。',
+    },
+    {
+      name: 'FlowGroup.labels',
+      kind: 'property',
+      type: 'Array<IRNodeLabel>',
+      description:
+        '复用 Graph Group 的边界标签；每项包含 text: IRTextBlock，以及可选 position 和 distance。数组非空，省略时隐藏，不增加 Flow 布局占位。',
+    },
+    {
+      name: 'FlowGroup.layout',
+      kind: 'property',
+      type: '{ direction?: "up" | "right" | "down" | "left"; nodeGap?: number; rankGap?: number }',
+      description: '控制可见 Group 内的自动布局方向、同层间距与层级间距。',
+    },
+    {
+      name: 'FlowLayout.kind',
+      kind: 'property',
+      type: '"linear" | "grid"',
+      required: true,
+      description: '选择直接子项的一维排列或物理行列对齐；两种 Layout 都没有可见外壳。',
+    },
+    {
+      name: 'FlowLayout.placements',
+      kind: 'property',
+      type: 'Array<Array<string | null>> | Record<string, { row: number; column: number }>',
+      description: 'Grid 必填。二维数组按行列下标放置直接子项；映射使用从 0 开始的行列号，每个直接子项必须恰好占一格。',
+    },
+    {
+      name: 'FlowLayout.excludeFromBounds',
+      kind: 'property',
+      type: 'Array<string>',
+      description: '只引用本 Layout 的直接子项 id；被排除项仍绘制，但不扩大向父级报告的占位边界。',
+    },
+    {
+      name: 'FlowDiagram.flowDefaults',
+      kind: 'property',
+      type: "InputFlowDiagram['flowDefaults']",
+      description:
+        '集中配置稀疏默认值，实例字段优先。本页的外观示例使用：\n- `entity.style`: `{ color?: string; fillOpacity?: number; strokeWidth?: number }`，改变所有 Entity 的颜色、填充透明度和描边宽度\n- `relation.style`: `{ stroke?: string; strokeWidth?: number; strokeOpacity?: number }`，改变所有 Relation 的描边颜色、宽度和透明度\n还可设置 `layout`、`group` 等片段；完整字段见 Schema 参考。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Schema 参考',
+      description: '查询 Group、Layout、Relation 与默认值字段',
+      url: '/schematic/diagram/flow/schema-reference',
+    },
+  ]}
+/>

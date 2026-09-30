@@ -1,0 +1,156 @@
+---
+title: Implementation
+description: Trace one Flow Source through semantic resolution, measurement, layout, Scene assembly, and artifact creation.
+---
+
+This page assumes [Basic usage](/schematic/diagram/flow/usage) and follows one Flow compilation. Input is a serializable Source plus the host's Definitions and Theme. Output is a renderable Diagram Scene, a `FlowDiagramArtifact`, and spatial handles. A failure in any stage stops this compilation without delivering partial geometry.
+
+## Overall flow
+
+| Stage                    | Input                                            | Output passed onward                                               |
+| ------------------------ | ------------------------------------------------ | ------------------------------------------------------------------ |
+| Resolve                  | Source, Definitions, Theme                       | Effective Entity, Group, Layout, and Relation semantics            |
+| Measure                  | Resolved semantics and Graph appearance          | Element sizes, scopes, relation-label sizes, and `FlowLayoutInput` |
+| Layout and validate      | `FlowLayoutInput` and selected Layout Definition | Validated bounds and routes detached from callback objects         |
+| Materialize and assemble | The same validated geometry                      | Graph primitives and `FlowDiagramArtifact`                         |
+
+Source contains declarations and references; measurement produces layout input, and the Definition's geometry passes validation before materialization and result assembly. The figure below shows this path, and the following sections trace a “receive → verify” example as its data changes.
+
+<ComponentPreview files="flow-stages" hideCode type="flow" size="xs" />
+
+<ComponentAlert
+  type="tip"
+  title="Reading scope"
+  description={
+    <>
+      This page explains Flow's own processing logic. Reused capabilities such as layout and Group are covered in their
+      respective documentation: see the implementation pages for{' '}
+      <a href="/library/layout/flex-layout/mechanism">FlexLayout</a> and{' '}
+      <a href="/library/layout/grid-layout/mechanism">GridLayout</a>, and the{' '}
+      <a href="/schematic/graph/group">Group documentation</a> for grouping semantics.
+    </>
+  }
+/>
+
+## Semantic resolution establishes containment
+
+Flow input is declarative: describe what the diagram contains, how elements connect, which container owns each element, and how they should be laid out. The compact “receive → verify” example places two Entities in a linear Layout inside a visible Group. This code tree shows Source fields and entries. Each `children` list stores id references rather than nested Entity objects.
+
+```text
+Flow Source
+├── namespace: "diagram", type: "flow"
+├── entities
+│   ├── { id: "receive", text: "Receive", role: "activity" }
+│   └── { id: "verify", text: "Verify", role: "activity" }
+├── groups
+│   └── { id: "pipeline", children: ["steps"] }
+├── layouts
+│   └── { id: "steps", kind: "linear", direction: "right",
+│         children: ["receive", "verify"] }
+├── children: ["pipeline"]
+└── relations
+    └── { source: "receive", target: "verify" }
+```
+
+Each field has a distinct responsibility:
+
+- `entities`: the Entity catalog, declaring text, role, and other content. Each Entity is declared once.
+- `groups`: the visible Group catalog. Each entry references direct members through `children` and may configure its shell, caption, and local automatic layout.
+- `layouts`: the fixed-placement catalog. Each entry references direct members through `children`; `kind` and related settings select linear or grid placement.
+- Root `children`: the diagram's direct members and sibling order. Catalog declaration order does not replace containment references.
+- `relations`: the root relation catalog. `source` and `target` reference Entities or Groups without establishing containment.
+
+This separation serves two purposes:
+
+1. Humans and LLMs declare content, connections, containment, and layout with clear responsibilities, without calculating coordinates or writing drawing steps.
+2. Declaration stays separate from resolution. Authors still express containment through ids, but do not construct the internal nested tree or repeat Entity objects inside containers. The implementation looks up references, validates structure, and builds recursive objects. React component nesting also normalizes to this flat Source first.
+
+The resolver registers all three catalogs by id, then checks that `children` references exist, every entry has exactly one parent, and no entry contains itself, forms a containment cycle, or remains uncontained. It then walks root `children` recursively and replaces id references with internal `elements` arrays: `pipeline` contains `steps`, and `steps` contains the two Entities. Relation endpoints are validated separately; relations remain in an ordered root list. Graph Definitions and Theme resolve the semantics and appearance needed by measurement.
+
+The figure compares containment fields, the resolved nested structure, and the final drawing for the same input. The first two blocks are field excerpts; Source keys denote field paths. Text, style, and other fields unrelated to containment are omitted. Their array records represent the same elements throughout.
+
+<ComponentPreview files="flow-source-tree" hideCode type="illustration" size="xxxl" />
+
+The nested tree has no final coordinates yet. Measurement and layout determine its sizes, positions, and relation routes before it becomes a drawable Graph.
+
+<SourceLinks
+  sources={[
+    { label: 'Flow Source structure', path: 'packages/schematic/diagram/src/flow/schemas/flow/schema.ts' },
+    { label: 'Flow Source resolution', path: 'packages/schematic/diagram/src/flow/resolve/flow/resolve.ts' },
+    { label: 'Internal nested structure', path: 'packages/schematic/diagram/src/flow/resolve/flow/types.ts' },
+    {
+      label: 'Nested structure materialization',
+      path: 'packages/schematic/diagram/src/flow/pipeline/flow/materialize.ts',
+    },
+  ]}
+/>
+
+## Measurement turns drawing objects into layout input
+
+Flow first measures what layout needs: how large each drawing object is, how much space to leave around it and inside groups, and how much room the text on each connection needs. It then passes this information, along with layout and connection settings, to the layout stage.
+
+This information is stored in `FlowLayoutInput`. The layout stage can then arrange objects and route connections without measuring them again. For example, if the text in “verify” becomes longer, Flow calculates the width it needs first, so layout can leave enough room for it.
+
+The diagram below shows the measured object sizes, spacing inside groups, and connection text, and how this information becomes layout input.
+
+<ComponentPreview files="flow-measurement" hideCode type="illustration" size="xl" />
+
+The input now has `size`, but no final position; positions in the figure only arrange measurement targets. Group insets and Relation `labelSize` also contribute to layout; only one leaf is expanded, with other input fields omitted.
+
+<SourceLinks
+  sources={[
+    { label: 'Element and label measurement', path: 'packages/schematic/diagram/src/flow/pipeline/flow/measure.ts' },
+  ]}
+/>
+
+## Layout determines positions and connections
+
+Using the measurements from the previous stage, the layout callback places each object and decides where connections go. It returns each object's position and size (`bounds`), plus a sequence of points for each connection. It can also reserve room for text on a connection.
+
+For each fixed Layout specified in the input, the callback first uses `context.placeLayout` to calculate its internal arrangement, then places it in the whole diagram. Each fixed Layout is calculated once; moving it as a whole preserves the relative positions of its objects.
+
+Flow checks that the result is complete, Entity sizes match their measurements, groups contain their contents, and objects, connections, and text have no disallowed overlaps. Once these checks pass, the positions and connections can be used to draw the diagram.
+
+The diagram below shows how a fixed arrangement fits into the whole diagram: both objects move together while keeping their sizes and spacing.
+
+<ComponentPreview files="flow-layout-geometry" hideCode type="illustration" size="xl" />
+
+The dotted lines mark the Layout's extent. Layout arranges objects without drawing a border; the layout callback routes connections separately.
+
+<SourceLinks
+  sources={[
+    { label: 'Fixed placement', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-placement.ts' },
+    { label: 'Callback output validation', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-output.ts' },
+  ]}
+/>
+
+## Draw from the layout and save the results
+
+Once positions and connections are determined, Flow passes them to Graph to build the drawing: Entities become nodes, Groups become visible groups, and Layouts use Scopes to preserve their arrangement and hierarchy. Connections follow the layout results, and containment stays the same.
+
+Flow also stores object positions, sizes, and connection points in `FlowDiagramArtifact` for callers to query. This result records layout information; text and styles still come from the input declarations.
+
+The diagram below shows two uses of the same layout result: Graph uses it to draw, and the artifact stores it for queries.
+
+<ComponentPreview files="flow-materialization" hideCode type="illustration" size="xl" />
+
+Using “Receive” as an example, the figure puts its recorded position and size beside the drawn node for comparison.
+
+<SourceLinks
+  sources={[
+    { label: 'Graph primitive creation', path: 'packages/schematic/diagram/src/flow/pipeline/flow/materialize.ts' },
+    { label: 'Artifact creation', path: 'packages/schematic/diagram/src/flow/pipeline/flow/artifact.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Look up layout input, output, and result types',
+      url: '/schematic/diagram/flow/api-reference',
+    },
+  ]}
+/>

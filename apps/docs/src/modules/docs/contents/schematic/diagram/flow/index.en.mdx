@@ -1,28 +1,56 @@
 ---
 title: Flow Diagram
-description: Describe site logic as flat, serializable relations, then let a replaceable layout Definition derive positions, group bounds, and routes.
+description: Describe a process with entities, groups, and relations; Flow arranges them into a renderable logic diagram.
 ---
 
-Flow Diagram targets site architecture, data flow, and business-process diagrams. Source declares Entities, visible Groups, and shell-free Layouts in separate flat catalogs, while root and container `children` id lists carry containment and order. It keeps root relations and sparse configuration but omits positions and routes that layout can derive.
+Flow is suited to site architecture, data flows, and business processes. Declare the Entities and the Relations connecting them. Add a Group for a visible boundary or a Layout for a fixed row or column arrangement. Flow computes positions and routes, so the Source does not need authored coordinates.
 
-Graph still owns the drawing semantics of Entity, Group, and Relation. Flow measures them, invokes a layout Definition, then assembles one Scene, artifact, and spatial index. Graph Block structure and connection contracts are not stable yet, so Block is not currently part of Flow Source.
+Graph owns the appearance and drawing semantics of Entities, Groups, and Relations. Flow organizes them into a complete diagram. React and Vanilla share the same serializable Flow Source.
 
-## Responsibilities
+The Kernel architecture figure below is drawn with Flow: inputs converge on IR, compilation produces a Scene, and a renderer outputs SVG or Canvas. Its Entities represent the stages, a Group marks the Core boundary, Layout arranges the inputs and outputs, and Relations connect the main data flow and optional supporting capabilities.
 
-| Topic             | Responsibility                                                      | Reach for it when                    |
-| ----------------- | ------------------------------------------------------------------- | ------------------------------------ |
-| Basic usage       | JSX / flat JSON Source, Group, Layout, automatic layout, and result | Drawing ordinary site logic diagrams |
-| Design philosophy | Title, description, Legend, Frame, and complete output              | Understanding assembly around Flow   |
+<ComponentPreview files="/kernel/components/design/principles/principles-packages" hideCode type="flow" size="md" />
 
-## Chapters
+## Responsibilities at a glance
+
+| Chapter                       | What it covers                                     | Read it when                                 |
+| ----------------------------- | -------------------------------------------------- | -------------------------------------------- |
+| Basic usage                   | Declare entities and relations, and choose routes  | Starting with Flow                           |
+| Extended usage                | Organize structure and share appearance            | Controlling a diagram's layout or expression |
+| Implementation and references | Trace execution and look up APIs and Source fields | Extending, diagnosing, or checking contracts |
+
+## Choose a reading path
+
+Start with [Basic usage](/schematic/diagram/flow/usage) to learn entities, relations, and connection routing. Extended usage continues with structure and layout, and appearance and defaults.
+
+## Contents
 
 <LinkedSections
   items={[
     {
-      title: 'Basic Usage',
-      description:
-        'From a minimal Flow to independent Layouts, visible Groups, cross-scope relations, Theme, and artifact',
-      url: '/schematic/diagram/flow/basic',
+      title: 'Basic usage',
+      description: 'Declare entities and relations, and choose connection routes',
+      url: '/schematic/diagram/flow/usage',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Combine structure and shared appearance',
+      url: '/schematic/diagram/flow/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Trace measurement, layout, materialization, and validation',
+      url: '/schematic/diagram/flow/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public components, functions, and types',
+      url: '/schematic/diagram/flow/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent Flow Source fields',
+      url: '/schematic/diagram/flow/schema-reference',
     },
   ]}
 />

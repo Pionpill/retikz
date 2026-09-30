@@ -46,7 +46,7 @@ Flow Entity.style 保留现有 Graph 允许的直接视觉字段和 font；align
 
 Flow Relation.style 只承载当前 Graph-compatible Path style。sourceMarker、targetMarker、labelTextForeground、labelFont、labelOpacity 移至 Relation 同名根字段，沿用 Graph 公开值契约。label 仍是可选非空文本，routing 与这些表现字段分离；不改变 Relation 的有序、无 identity Source。
 
-Flow Group 删除原来的 style 总包，采用 Graph 同名根字段 padding/background/border/cornerRadius/overflow；保留 layout 作为 Group 内容的 direction/nodeGap/rankGap。原 label 字符串及 style.label 合并成 `caption.title`：text 保持非空字符串，textColor/font/opacity/align/lineHeight/maxTextWidth 复用 Graph caption title 对应字段。本次不扩展 description、side、direction 等未有 Flow 消费需求的 caption 能力。
+Flow Group 采用 Graph 同名根字段 padding/background/border/cornerRadius/overflow，保留 layout 作为 Group 内容的 direction/nodeGap/rankGap。[014](./014-flow-group-graph-surface.md) 将其扩展为直接复用 Graph Group 的呈现与上下文：caption 支持 title、description、side、direction 和间距，文本完整复用 Graph TextBlock；style 仅表示原生 Core Scope style，不恢复旧外观总包。
 
 以上迁移保留一个正式输入；不保留原字符串 label、平铺字体入口、style.layout 混装或自动兼容转换。
 
@@ -69,10 +69,10 @@ Flow Group 删除原来的 style 总包，采用 Graph 同名根字段 padding/b
 | -------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | layout   | nodeGap、rankGap                                                                                            | Root / Group 的同名 layout 字段，作为自动 scope 间距默认 |
 | entity   | style、layout 的上述 Flow Entity 字段                                                                       | Flow Entity；保持 Graph 限制                             |
-| group    | padding、background、border、cornerRadius；caption.title 中除 text 外的字段                                 | Flow Group 同名根字段与 caption title                    |
+| group    | padding、background、border、cornerRadius；caption 排列参数与 title、description 中除 text 外的字段         | Flow Group 同名根字段与 Graph caption                    |
 | relation | Graph Theme 允许的 relation.style；sourceMarker、targetMarker、labelTextForeground、labelFont、labelOpacity | Flow Relation 同名字段                                   |
 
-Defaults 与 Theme 生成片段都不接受 direction、routing、overflow、rank、catalog、children、role、kind、status、关系端点或内容；Relation 显式 Source 的 dashPattern 不自动成为可主题化字段。Flow defaults 不为 Layout catalog 新增样式或排列策略目标。Defaults 中的间距只是表现默认；scope 的正式 layout 与显式 Layout.gap 按各自契约裁决。
+Defaults 与 Theme 生成片段都不接受自动布局 direction、routing、overflow、rank、catalog、children、role、kind、status、关系端点或内容；caption 的 direction 仅排列已声明的说明文字。Relation 显式 Source 的 dashPattern 不自动成为可主题化字段。Flow defaults 不为 Layout catalog 新增样式或排列策略目标。Defaults 中的间距只是表现默认；scope 的正式 layout 与显式 Layout.gap 按各自契约裁决。
 
 DiagramThemeStyleDefinition.resolve 与 FlowThemeStyleDefinition.resolve 分别直接返回与 diagramDefaults、flowDefaults 同形的稀疏默认对象；本 owner 当前不需要条件规则，因此不引入无消费者的规则容器或额外 defaults 包装。两者继续是已有 Theme 生成 contract，不合成全仓 registry。Graph appearance reference defaults 只在 Graph definition 维护；Flow definitions 仅提供 Flow 专属或确有宿主意图的默认，不复制 Graph preset 数值表。
 

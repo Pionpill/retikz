@@ -24,24 +24,27 @@ const unwrap = (schema: z.ZodType): z.ZodType => {
   return schema;
 };
 
-const descriptions = new WeakMap<z.ZodObject, Record<string, string>>();
-
 /** 按 canonical selector 访问真实分支，避免将不同分支的说明混为一份 */
-const addDescription = (input: z.ZodType, segments: ReadonlyArray<SchemaPathSegment>, text: string): void => {
+const addDescription = (
+  descriptions: WeakMap<z.ZodObject, Record<string, string>>,
+  input: z.ZodType,
+  segments: ReadonlyArray<SchemaPathSegment>,
+  text: string,
+): void => {
   const schema = unwrap(input);
   if (segments.length === 0) return;
   const [segment, ...rest] = segments;
   if (schema instanceof z.ZodUnion) {
     if (segment.kind === 'union') {
-      addDescription(schema.options[segment.index] as z.ZodType, rest, text);
+      addDescription(descriptions, schema.options[segment.index] as z.ZodType, rest, text);
     } else if (segment.kind === 'case') {
       for (const option of schema.options) {
         const object = unwrap(option as z.ZodType);
         if (object instanceof z.ZodObject && object.shape[segment.discriminator]?.safeParse(segment.value).success)
-          addDescription(object, rest, text);
+          addDescription(descriptions, object, rest, text);
       }
     } else {
-      for (const option of schema.options) addDescription(option as z.ZodType, segments, text);
+      for (const option of schema.options) addDescription(descriptions, option as z.ZodType, segments, text);
     }
   } else if (schema instanceof z.ZodObject && segment.kind === 'field') {
     const child = schema.shape[segment.key];
@@ -50,9 +53,9 @@ const addDescription = (input: z.ZodType, segments: ReadonlyArray<SchemaPathSegm
       const fields = descriptions.get(schema) ?? {};
       fields[segment.key] = text;
       descriptions.set(schema, fields);
-    } else addDescription(child, rest, text);
+    } else addDescription(descriptions, child, rest, text);
   } else if (schema instanceof z.ZodArray && segment.kind === 'array') {
-    addDescription(schema.element as z.ZodType, rest, text);
+    addDescription(descriptions, schema.element as z.ZodType, rest, text);
   }
 };
 
@@ -71,23 +74,33 @@ const registry = {
     }),
   ),
 };
-for (const entry of Object.values(registry)) {
-  const localization = entry.localizations?.zh;
-  if (!localization) continue;
-  for (const [key, text] of Object.entries(localization.descriptions)) {
-    if (!text) continue;
-    const segments = key.startsWith('/')
-      ? parseSchemaPath(key)
-      : key.split('.').map(field => ({ kind: 'field' as const, key: field }));
-    addDescription(entry.schema, segments, text);
+/** 为一组真实 Schema 建立独立的分支说明查询，后列出的词典覆盖同对象字段 */
+export const createSchemaLocalizationResolver = (
+  entries: ReadonlyArray<{
+    schema: z.ZodType;
+    localizations?: { zh?: { descriptions: Readonly<Partial<Record<string, string>>> } };
+  }>,
+) => {
+  const descriptions = new WeakMap<z.ZodObject, Record<string, string>>();
+  for (const entry of entries) {
+    const localization = entry.localizations?.zh;
+    if (!localization) continue;
+    for (const [key, text] of Object.entries(localization.descriptions)) {
+      if (!text) continue;
+      const segments = key.startsWith('/')
+        ? parseSchemaPath(key)
+        : key.split('.').map(field => ({ kind: 'field' as const, key: field }));
+      addDescription(descriptions, entry.schema, segments, text);
+    }
   }
-}
+  return (schema: z.ZodObject) => {
+    const fields = descriptions.get(schema);
+    return fields ? { descriptions: fields } : undefined;
+  };
+};
 
 /** 查询已按真实对象分支收录的中文字段说明 */
-export const resolveStandardSchemaLocalization = (schema: z.ZodObject) => {
-  const fields = descriptions.get(schema);
-  return fields ? { descriptions: fields } : undefined;
-};
+export const resolveStandardSchemaLocalization = createSchemaLocalizationResolver(Object.values(registry));
 
 /** Standard 的全部入口强制开启投影；缺少对象词典或字段翻译由生成器阻止生成 */
 export const createStandardApiReferenceMdx = (

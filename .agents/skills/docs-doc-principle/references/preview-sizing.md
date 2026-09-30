@@ -2,6 +2,8 @@
 
 用于新增或调整 ComponentPreview 的 size、control 面板宽度、取景或裁切。先在约 1440px viewport、约 800px 正文的真实页面运行 `apps/docs/scripts/check-figure-size.mjs`（包命令 `check:figure-size`）。当前脚本只接受 `--url` 和可选的 `--figure` / `--browser`，不支持 `--help`；按实际参数直接运行，例如 `pnpm --filter @retikz/docs run check:figure-size -- --url http://localhost:7101/<route> --figure <demo>`，不编造参数或用源码 width/height 替代实测。
 
+若目标 demo 因懒加载未被脚本采样，或缺少 zh/en 任一语言的样本，分别切换语言并滚动至目标使其挂载，再用浏览器测量图形 bounds、viewBox、workspace 与 controls 空间及裁切。记录脚本采样缺口，不把缺失样本当作尺寸结论。
+
 ## 脚本计算顺序
 
 1. 测量图形 bounds，选择能完整容纳图形高度 + 40px 的最小 size，作为图形基准档位。

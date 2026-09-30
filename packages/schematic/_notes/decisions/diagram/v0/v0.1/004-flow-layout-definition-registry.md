@@ -147,8 +147,7 @@ type EffectiveFlowPlacement =
     }>
   | Readonly<{
       kind: 'grid';
-      rowGap: number;
-      columnGap: number;
+      gap: Readonly<{ row: number; column: number }>;
       reserveLabelSpace: boolean;
       excludeFromBounds?: ReadonlyArray<string>;
       placements:

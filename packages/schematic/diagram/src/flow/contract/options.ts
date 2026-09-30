@@ -8,10 +8,19 @@ import type { FlowThemeStyleDefinition } from './theme';
 export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
   GraphDefinitionOptions &
   Readonly<{
-    /** 与 Core Theme style 同名的 Flow Theme definitions */
+    /**
+     * 与 Core Theme style 同名的 Flow Theme definitions；使用命名主题时需提供匹配定义
+     * @default []
+     */
     flowThemeStyles?: ReadonlyArray<FlowThemeStyleDefinition>;
-    /** 自定义 Flow Layout definitions */
+    /**
+     * 追加到内置布局目录的自定义定义；名称不能与不同定义重复
+     * @default []
+     */
     flowLayouts?: ReadonlyArray<FlowLayoutDefinition>;
-    /** 当前 assembly 选中的 Flow Layout definition 名称 */
+    /**
+     * 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局
+     * @default LayeredFlowLayoutDefinition.name
+     */
     defaultFlowLayout?: string;
   }>;

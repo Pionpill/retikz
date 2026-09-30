@@ -27,8 +27,16 @@ export const resolveEffectiveFlowPlacement = (
       }
     : {
         kind: source.kind,
-        rowGap: source.rowGap ?? layout.nodeGap ?? definition.defaults.placementGap.vertical,
-        columnGap: source.columnGap ?? layout.nodeGap ?? definition.defaults.placementGap.horizontal,
+        gap: {
+          row:
+            (typeof source.gap === 'number' ? source.gap : source.gap?.row) ??
+            layout.nodeGap ??
+            definition.defaults.placementGap.vertical,
+          column:
+            (typeof source.gap === 'number' ? source.gap : source.gap?.column) ??
+            layout.nodeGap ??
+            definition.defaults.placementGap.horizontal,
+        },
         reserveLabelSpace: source.reserveLabelSpace ?? true,
         placements: source.placements,
         ...(source.excludeFromBounds === undefined ? {} : { excludeFromBounds: source.excludeFromBounds }),

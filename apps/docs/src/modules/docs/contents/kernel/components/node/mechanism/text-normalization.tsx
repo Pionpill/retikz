@@ -20,8 +20,7 @@ const TextNormalization: FC<TextNormalizationProps> = props => {
       <FlowLayout
         id="text-normalization"
         kind="grid"
-        columnGap={24}
-        rowGap={30}
+        gap={{ row: 30, column: 24 }}
         placements={[['n0', 'n1', 'n2', 'n3']]}
       >
         <FlowEntities items={labels.map((text, index) => ({ id: `n${index}`, text, role: 'activity' }))} />

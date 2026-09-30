@@ -1331,17 +1331,42 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   FlowDiagramSchema: {
     schema: DiagramIR.FlowDiagramSchema,
     label: 'FlowDiagram',
-    url: '/schematic/diagram/flow/basic#flow-source',
+    url: '/schematic/diagram/flow/schema-reference#flowdiagramschema',
+  },
+  FlowEntitySchema: {
+    schema: DiagramIR.FlowEntitySchema,
+    label: 'FlowEntity',
+    url: '/schematic/diagram/flow/schema-reference#flowentityschema',
+  },
+  FlowGroupSchema: {
+    schema: DiagramIR.FlowGroupSchema,
+    label: 'FlowGroup',
+    url: '/schematic/diagram/flow/schema-reference#flowgroupschema',
   },
   FlowLayoutSchema: {
     schema: DiagramIR.FlowLayoutSchema,
     label: 'FlowLayout',
-    url: '/schematic/diagram/flow/basic#flow-source',
+    url: '/schematic/diagram/flow/schema-reference#flowlayoutschema',
+  },
+  FlowRelationSchema: {
+    schema: DiagramIR.FlowRelationSchema,
+    label: 'FlowRelation',
+    url: '/schematic/diagram/flow/schema-reference#flowrelationschema',
+  },
+  FlowRoutingSchema: {
+    schema: DiagramIR.FlowRoutingSchema,
+    label: 'FlowRouting',
+    url: '/schematic/diagram/flow/schema-reference#flowroutingschema',
+  },
+  FlowDefaultsSchema: {
+    schema: DiagramIR.FlowDefaultsSchema,
+    label: 'FlowDefaults',
+    url: '/schematic/diagram/flow/schema-reference#flowdefaultsschema',
   },
   FlowDiagramArtifactSchema: {
     schema: DiagramIR.FlowDiagramArtifactSchema,
     label: 'FlowDiagramArtifact',
-    url: '/schematic/diagram/flow/basic#flowdiagramartifact',
+    url: '/schematic/diagram/flow/api-reference#flowdiagramartifact',
   },
 
   GraphSchema: {

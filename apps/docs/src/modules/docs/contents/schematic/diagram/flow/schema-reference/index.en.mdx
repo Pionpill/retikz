@@ -1,0 +1,50 @@
+---
+title: Schema reference
+description: Look up serializable Flow Diagram Source fields for entities, groups, layouts, relations, and defaults.
+---
+
+This page displays public Flow Source schemas from `@retikz/diagram/flow`. They describe input an author can save and pass between systems. Runtime Layout Definitions are covered by the [API reference](/schematic/diagram/flow/api-reference) and are not stored in Source. Start with [Basic usage](/schematic/diagram/flow/usage) to author a diagram.
+
+Source omits positions and routes derived by layout. Runtime Definition defaults do not write back to the original Source. Defaults materialized by a direct schema parse are part of that parsed result.
+
+## FlowDiagramSchema
+
+<ZodSchema name="FlowDiagramSchema" shallow />
+
+## FlowEntitySchema
+
+<ZodSchema name="FlowEntitySchema" shallow />
+
+## FlowGroupSchema
+
+<ZodSchema name="FlowGroupSchema" shallow />
+
+## FlowLayoutSchema
+
+`linear` arranges direct children along one direction. `grid` places them in physical rows and columns. Neither creates a visible shell or acts as a Relation endpoint.
+
+<ZodSchema name="FlowLayoutSchema" expandNested />
+
+## FlowRelationSchema
+
+<ZodSchema name="FlowRelationSchema" shallow />
+
+## FlowRoutingSchema
+
+<ZodSchema name="FlowRoutingSchema" expandNested />
+
+## FlowDefaultsSchema
+
+<ZodSchema name="FlowDefaultsSchema" shallow />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Look up React, Vanilla, Definition, and compile result types',
+      url: '/schematic/diagram/flow/api-reference',
+    },
+  ]}
+/>
