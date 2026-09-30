@@ -228,9 +228,10 @@ describe('convertIRToReactNode', () => {
           type: 'path',
           kind: 'ribbon',
           kindOptions: {
-            start: { width: 8, direction: 0 },
-            end: { width: 2, direction: [1, 0] },
-            samples: true,
+            width: { kind: 'taper', start: 8, end: 2 },
+            start: { direction: 90 },
+            end: { direction: [0, 1] },
+            sampling: { kind: 'fixed', samples: 64 },
           },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },

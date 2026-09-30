@@ -3,7 +3,6 @@ import path from 'node:path';
 import { writeBlockApiReferenceMdx } from './api-reference/block';
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
-import { writeExtensionAnimationApiReference } from './api-reference/extension-animation';
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
 import { writeGroupApiReferenceMdx } from './api-reference/group';
 import { writeInspectApiReferenceMdx } from './api-reference/inspect';
@@ -12,6 +11,7 @@ import { writeLayoutComponentApiReferences } from './api-reference/layout-compon
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
+import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
 import { writeStandardContainerApiReferences } from './api-reference/standard-containers';
 import { writeStandardPresentationApiReferences } from './api-reference/standard-presentation';
@@ -32,9 +32,6 @@ await writeStandardContainerApiReferences(
 );
 await writeEntityApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/entity/api-reference/_includes'),
-);
-await writeExtensionAnimationApiReference(
-  path.resolve(docsRoot, 'src/modules/docs/contents/library/extension/animation/api-reference/_includes'),
 );
 await writeStyleApiReference(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/visual/style/api-reference/_includes'),
@@ -77,4 +74,7 @@ await writeScopeApiReferenceMdx(
 await writeLayoutComponentApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/layout'));
 await writeRelationApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/relation/api-reference/_includes'),
+);
+await writeRibbonApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/library/extension/ribbon/api-reference/_includes'),
 );

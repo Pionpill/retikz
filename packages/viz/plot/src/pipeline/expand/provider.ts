@@ -3,7 +3,6 @@ import type { ExternalDatasets } from '@retikz/data';
 import {
   ContourShapeProvider,
   SectorShapeProvider,
-  BUILTIN_RIBBON_WIDTH_PROFILES,
   createRibbonProviderContribution,
 } from '@retikz/extension';
 
@@ -131,7 +130,7 @@ export const createPlotProviderContribution = (
   lowerOptions: LowerPlotsOptions = {},
 ): CoreProviderContribution => {
   const plotProvider = createPlotProvider(datasets, lowerOptions);
-  const ribbonContribution = createRibbonProviderContribution(BUILTIN_RIBBON_WIDTH_PROFILES);
+  const ribbonContribution = createRibbonProviderContribution();
   return Object.freeze({
     roots: Object.freeze([PlotProviderKey, ...ribbonContribution.roots]),
     providers: Object.freeze([

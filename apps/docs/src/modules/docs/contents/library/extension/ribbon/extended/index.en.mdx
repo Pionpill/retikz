@@ -1,0 +1,182 @@
+---
+title: Extended usage
+description: Configure ribbon caps and endpoint labels, or use precomputed boundaries
+---
+
+Build on the centerline ribbons in [Basic usage](/library/extension/ribbon/usage) to configure each endpoint cap and attach labels to the caps. When data supplies both boundaries, switch to `boundary` mode to close the curves directly. Caps and endpoint labels belong to centerline mode; precomputed-boundary mode rejects these options.
+
+Ribbon reuses Path commands, styles, centerline labels, and transforms. See the [Path documentation](/kernel/components/path) for shared properties; Related props on this page lists only Ribbon-specific options.
+
+## Endpoints and caps
+
+Each endpoint section defaults to the normal of the centerline endpoint tangent. Set `start.direction` and `end.direction` independently to override the section axis. Caps connect the two attachments using the final section frame; the outward normal faces backward at the start and forward at the end. Configure the two caps independently. `Path.label` follows the centerline tangent. Side-to-cap joins are not forced to be smooth. All fields below belong to `kindOptions`.
+
+| Group             | Property            | Values and meaning                                                                                                                                                          |
+| ----------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Section direction | `start.direction`   | `auto`, angle, nonzero vector, or polar coordinates; start section axis, default `auto`                                                                                     |
+|                   | `end.direction`     | End section axis, default `auto`, configured independently                                                                                                                  |
+| Width alignment   | `align`             | `center`, `left`, or `right`; distributes width on both sides or one side, defaulting to `center`. Sides follow the forward path direction                                  |
+| Caps              | `start.cap`         | Start cap reference `{ name, params? }`; defaults to `{ name: 'butt' }`                                                                                                     |
+|                   | `end.cap`           | Independent end cap reference; defaults to `{ name: 'butt' }`                                                                                                               |
+|                   | `cap.name`          | `butt` closes directly, `square` extends by half the width, `round` adds an outward semicircle, and `arc` uses an explicit circular arc; registered names are also accepted |
+|                   | `cap.params`        | JSON parameters defined by the selected cap Definition                                                                                                                      |
+| Arc parameters    | `cap.params.center` | Local circle center `[x, y]`: x points outward and y toward the left side of the section                                                                                    |
+|                   | `cap.params.radius` | Positive radius; the circle must reach both section attachments                                                                                                             |
+|                   | `cap.params.sweep`  | `short` or `long` selects the arc sweep; defaults to `short`                                                                                                                |
+
+The `cap.name` and `cap.params` rows describe fields nested in either `start.cap` or `end.cap`.
+
+`direction` specifies the section axis as an angle in degrees, a nonzero vector `[x, y]`, or polar coordinates `{ angle, radius, origin? }`; it defaults to `auto`. `90` gives a vertical section, useful for horizontal Sankey ribbons. It does not reroute the centerline. Caps and cap labels follow the final section frame, while `Path.label` keeps its original centerline position and rotation. Polar coordinates cannot reference a node origin, the resolved vector must be nonzero, and the section axis cannot be parallel to the endpoint tangent.
+
+The demo starts with a cubic Bézier curve. Choose “Custom angle” independently in “Start section” and “End section” to rotate the corresponding `Step.control1` / `Step.control2` handle. This keeps each endpoint tangent perpendicular to its section and reshapes the entire centerline and ribbon outline. Auto mode preserves that endpoint's default control point. Setting both angles to 90° makes the centerline horizontal with vertical sections.
+
+Choose “Straight line” under “Path shape” to keep the endpoint positions and centerline direction fixed; angles then affect only the sections and caps. The demo links the curve by updating its control points alongside `direction`; `direction` alone does not rewrite the centerline. The angle controls use 45°–135° to avoid sections parallel to the tangent in straight-line mode; the public API is not limited to this demo range.
+
+Change Alignment to compare width on both sides or one side. Cap shape and width apply to both endpoints. Choose Arc to adjust its angle from 30° to 270°, defaulting to 120°. Below 180° it is a short arc, at 180° it matches the outward semicircle of `round`, and above 180° it is a long arc.
+
+Arc angle is a demo control for the central angle; it derives `center`, `radius`, and `sweep` from the width. The cap parameters have no separate central-angle field. This control does not change the section direction, which is controlled separately by `direction`. Width is the chord length, so center and radius must change together to keep the arc attached to both section sides. For chord diagrams, the endpoint is the chord midpoint and width is the chord length.
+
+<ComponentPreview
+  files={['ribbon-endpoints', 'ribbon-endpoints.preview.tsx']}
+  size="xl"
+  defaultSourceFile="ribbon-endpoints.preview.tsx"
+/>
+
+## Cap labels
+
+`start.label` / `end.label` sit alongside `cap` and use the shared boundary-label options. They follow the final cap boundary independently of the centerline `Path.label` in [Basic usage](/library/extension/ribbon/usage), making them suitable for chord connection endpoints. Sector names still belong to the sector host.
+
+| Group         | Property            | Values and meaning                                                                        |
+| ------------- | ------------------- | ----------------------------------------------------------------------------------------- |
+| Content       | `start.label`       | Optional start label                                                                      |
+|               | `end.label`         | Optional end label                                                                        |
+| Shared fields | `label.text`        | Required text block; multiline and rich text supported                                    |
+|               | `label.placement`   | `outside` / `inside`; default `outside`                                                   |
+|               | `label.distance`    | Nonnegative; default 4. Gap between the rotated text box and the cap outward support line |
+|               | `label.rotate`      | `none` (default), `radial` (outward), `tangent` (parallel to the section), or an angle    |
+|               | `label.keepUpright` | Default false; true flips upside-down text in host-local coordinates                      |
+|               | `label.align`       | `start` / `middle` / `end`; default `middle`, along the section tangent                   |
+|               | `label.font`        | Font settings, including `size`, `family`, `weight`, and `style`                          |
+|               | `label.textColor`   | Text color, including `currentColor`                                                      |
+|               | `label.opacity`     | 0–1, multiplied by host opacity                                                           |
+
+Here `label.*` belongs to `start.label` or `end.label`, not `Path.label`. Endpoints already determine the attachment, so `position`, `side`, and `sloped` are not accepted. Inside placement does not guarantee containment, and outside placement does not avoid collisions with other objects.
+
+Change the cap to see the labels follow the final cap boundary. Then adjust placement, distance, and text rotation. A/B mark the start and end. This example uses `tangent` and `keepUpright: true`; choose a custom angle to compare the text orientation independently.
+
+<ComponentPreview
+  files={['ribbon-cap-label', 'ribbon-cap-label.preview.tsx']}
+  size="md"
+  defaultSourceFile="ribbon-cap-label.preview.tsx"
+/>
+
+Path `rotate` / `scale` transforms the whole ribbon around the complete layout bounds center, including its labels. The outline, centerline labels, and endpoint labels transform together. `keepUpright` is evaluated in host-local coordinates; subsequent Path or Scope transforms do not flip text again.
+
+## Precomputed boundaries
+
+When data or another geometry process supplies both sides, set `kindOptions.mode: 'boundary'` and provide the curves through `kindOptions.upper` and `kindOptions.lower`. This mode does not read top-level `children`.
+
+Each side is an open Step sequence starting with its own `move`. The example keeps the upper boundary fixed while shifting the lower boundary vertically; the authored curves remain unchanged. Fill and stroke still use the shared Path `style`.
+
+<ComponentPreview
+  files={['ribbon-boundary', 'ribbon-boundary.preview.tsx']}
+  defaultSourceFile="ribbon-boundary.preview.tsx"
+  size="sm"
+  caption="Move the lower boundary to change band width; the authored boundary curves are preserved."
+/>
+
+## Constraints
+
+`boundary` does not read top-level `children` and cannot be combined with centerline width rules. It currently rejects Path `label`. Both boundaries must be valid open Step sequences.
+
+`boundary` preserves the original curves and does not accept sampling, start/end, or endpoint-label options.
+
+## Related props
+
+These are the Ribbon endpoint options and boundary-mode fields used on this page. Caps and endpoint labels require centerline mode; upper/lower require boundary mode. See the [Schema reference](/library/extension/ribbon/schema-reference) for complete inputs and the [API reference](/library/extension/ribbon/api-reference) for Definition signatures.
+
+<ComponentProps
+  items={[
+    {
+      name: 'Path.kindOptions.mode',
+      kind: 'property',
+      type: "'centerline' | 'boundary'",
+      description:
+        '`centerline` builds an outline from children and width and supports caps and endpoint labels; `boundary` uses upper/lower directly and rejects centerline options',
+      defaultValue: "'centerline'",
+    },
+    {
+      name: 'Path.kindOptions.start.direction',
+      kind: 'property',
+      type: "'auto' | number | [number, number] | PolarPosition",
+      description:
+        'The start section axis in centerline mode; auto uses the endpoint tangent normal. Numbers are degrees (90° gives a vertical section); vectors must be nonzero, and polar coordinates cannot reference a node origin. Changes the section, cap, and cap label without rerouting the centerline; must not be parallel to the endpoint tangent',
+      defaultValue: "'auto'",
+    },
+    {
+      name: 'Path.kindOptions.end.direction',
+      kind: 'property',
+      type: "'auto' | number | [number, number] | PolarPosition",
+      description:
+        'The end section axis in centerline mode; auto uses the endpoint tangent normal. Numbers are degrees (90° gives a vertical section); vectors must be nonzero, and polar coordinates cannot reference a node origin. Changes the section, cap, and cap label without rerouting the centerline; must not be parallel to the endpoint tangent',
+      defaultValue: "'auto'",
+    },
+    {
+      name: 'Path.kindOptions.align',
+      kind: 'property',
+      type: "'center' | 'left' | 'right'",
+      description:
+        'Centerline mode only: center distributes half the width to each side; left/right put all width on the chosen side, relative to forward path direction',
+      defaultValue: "'center'",
+    },
+    {
+      name: 'Path.kindOptions.start.cap',
+      kind: 'property',
+      type: '{ name: string; params?: JsonObject }',
+      description:
+        'The start cap in centerline mode: butt closes directly, square extends by half the width, round adds an outward semicircle, and arc uses params for its local center, radius, and sweep. Registered names are also supported',
+      defaultValue: "{ name: 'butt' }",
+    },
+    {
+      name: 'Path.kindOptions.end.cap',
+      kind: 'property',
+      type: '{ name: string; params?: JsonObject }',
+      description:
+        'The end cap in centerline mode: butt closes directly, square extends by half the width, round adds an outward semicircle, and arc uses params for its local center, radius, and sweep. Registered names are also supported',
+      defaultValue: "{ name: 'butt' }",
+    },
+    {
+      name: 'Path.kindOptions.start.label',
+      kind: 'property',
+      type: "{ text: string | Array<IRLine>; align?: 'start' | 'middle' | 'end'; placement?: 'outside' | 'inside'; distance?: number; rotate?: 'none' | 'radial' | 'tangent' | number; keepUpright?: boolean; font?: IRBoundaryLabel['font']; textColor?: IRBoundaryLabel['textColor']; opacity?: number }",
+      description:
+        'The start cap label in centerline mode; text supports plain, multiline, and rich text. placement is outside/inside and distance defaults to 4; rotate is none/radial/tangent or an angle, defaulting to none. align defaults to middle and keepUpright to false. Omission hides the label',
+    },
+    {
+      name: 'Path.kindOptions.end.label',
+      kind: 'property',
+      type: "{ text: string | Array<IRLine>; align?: 'start' | 'middle' | 'end'; placement?: 'outside' | 'inside'; distance?: number; rotate?: 'none' | 'radial' | 'tangent' | number; keepUpright?: boolean; font?: IRBoundaryLabel['font']; textColor?: IRBoundaryLabel['textColor']; opacity?: number }",
+      description:
+        'The end cap label in centerline mode; text supports plain, multiline, and rich text. placement is outside/inside and distance defaults to 4; rotate is none/radial/tangent or an angle, defaulting to none. align defaults to middle and keepUpright to false. Omission hides the label',
+    },
+    {
+      name: 'Path.kindOptions.upper',
+      kind: 'property',
+      type: 'Array<IRStep>',
+      description:
+        'The upper boundary required in boundary mode: at least two public Step IR entries, starting with move; following steps describe an open curve closed together with the other side',
+    },
+    {
+      name: 'Path.kindOptions.lower',
+      kind: 'property',
+      type: 'Array<IRStep>',
+      description:
+        'The lower boundary required in boundary mode: at least two public Step IR entries, starting with move; following steps describe an open curve closed together with the other side',
+    },
+  ]}
+/>
+
+## Further reading
+
+- [Basic usage](/library/extension/ribbon/usage)
+- [Schema reference](/library/extension/ribbon/schema-reference)

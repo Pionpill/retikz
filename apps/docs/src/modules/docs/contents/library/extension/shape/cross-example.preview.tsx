@@ -36,7 +36,7 @@ export const renderCrossExamplePreview = (values: CrossExamplePreviewValues) => 
           },
         },
       }}
-      style={{ fill: values.fill, stroke: 'darkorange', strokeWidth: 1.5 }}
+      style={{ fill: values.fill, stroke: '#2563eb', strokeWidth: 1.5 }}
     />
   </Layout>
 );

@@ -338,3 +338,54 @@ describe('Path kind registry', () => {
     );
   });
 });
+
+describe('Path kind output wrapping', () => {
+  it('wraps custom geometry and shared labels in one host transform', () => {
+    const custom = definePathKind({
+      name: 'boundary-label-host',
+      schema: customPathSchema('boundary-label-host'),
+      compile: context => {
+        const geometry = context.materializePath();
+        const labels = context.emitBoundaryLabels([
+          { label: { text: 'target' }, point: [100, 0], outward: [1, 0], sourcePath: 'kindOptions.label' },
+        ]);
+        return context.wrapOutput({
+          primitives: [{ type: 'path', commands: [...geometry.commands] }, ...labels],
+          boundsPoints: [...geometry.boundsPoints],
+        });
+      },
+    });
+    const output = compileToScene(
+      scene([
+        {
+          type: 'path',
+          kind: 'boundary-label-host',
+          children: steps,
+          rotate: 90,
+          id: 'host',
+          meta: { source: 'custom' },
+        },
+      ]),
+      { pathKinds: [custom], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
+    ).scene;
+    expect(output.layout.x).toBeCloseTo(62);
+    expect(output.layout.y).toBeCloseTo(-72);
+    expect(output.layout.width).toBeCloseTo(20);
+    expect(output.layout.height).toBeCloseTo(144);
+    expect(output.primitives[0]).toMatchObject({ type: 'group', id: 'host', meta: { source: 'custom' } });
+  });
+  it('does not wrap a delegated stroke result twice', () => {
+    const custom = definePathKind({
+      name: 'delegated',
+      schema: customPathSchema('delegated'),
+      compile: context => context.emitStroke(),
+    });
+    const input = { type: 'path' as const, children: steps, rotate: 90, scale: { x: 2, y: 3 } };
+    const builtin = compileToScene(scene([input]), { padding: 0 }).scene;
+    const delegated = compileToScene(scene([{ ...input, kind: 'delegated' }]), {
+      padding: 0,
+      pathKinds: [custom],
+    }).scene;
+    expect(delegated).toEqual(builtin);
+  });
+});

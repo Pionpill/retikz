@@ -21,7 +21,7 @@ export const renderPolygonClipPreview = (values: PolygonClipPreviewValues) => (
       <Node
         position={[100, 100]}
         shape="rectangle"
-        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 } }}
+        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: '#2563eb', size: 14 } }}
         layout={{ minimumSize: { width: 192, height: 180 } }}
       />
     </Scope>

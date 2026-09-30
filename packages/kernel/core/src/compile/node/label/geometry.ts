@@ -4,7 +4,8 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalNodeLabelBoundaryPosition } from '../../../resolve';
 import { AnchorUnitVectorByAnchor } from '../../../shared';
-import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from '../../../shared/geometry';
+import { DEG_TO_RAD } from '../../../shared/geometry';
+import { placeBoundaryLabelBox, resolveBoundaryLabelRotation } from '../../text';
 import { anchorOf, angleBoundaryOf } from '../anchors';
 import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout } from '../types';
 
@@ -65,15 +66,6 @@ const labelTangentVector = (position: MeasuredNodeLabel['position']): Position =
   return [-radial[1], radial[0]];
 };
 
-const labelPlacementSign = (label: MeasuredNodeLabel): number => (label.placement === 'inside' ? -1 : 1);
-
-/** 取得沿附着切线的视觉盒对齐偏移方向 */
-const labelAlignmentSign = (align: MeasuredNodeLabel['align']): number => {
-  if (align === 'start') return 1;
-  if (align === 'end') return -1;
-  return 0;
-};
-
 /** label 在 node 边界上的附着点 */
 export const labelBorderPoint = (layout: NodeLayout, label: Pick<MeasuredNodeLabel, 'position'>): Position => {
   if (label.position === 'center') return [layout.rect.x, layout.rect.y];
@@ -132,37 +124,7 @@ export const labelBoxEdgeToward = ({
 export const resolveLabelRotateDeg = (
   label: Pick<MeasuredNodeLabel, 'position' | 'rotate' | 'keepUpright'>,
 ): number => {
-  const mode = label.rotate;
-  if (mode === undefined || mode === 'none') return 0;
-  let deg: number;
-  if (typeof mode === 'number') {
-    deg = mode;
-  } else {
-    const vector = labelPlacementVector(label.position);
-    const radial = Math.atan2(vector[1], vector[0]) * RAD_TO_DEG;
-    deg = mode === 'tangent' ? radial + 90 : radial;
-  }
-  if (label.keepUpright) {
-    const norm = normalizeDegrees(deg);
-    if (norm > 90 && norm < 270) deg += 180;
-  }
-  return deg;
-};
-
-/** label 视觉盒沿给定放置方向的投影半径 */
-const labelProjectedHalfExtent = (
-  vector: Position,
-  measuredWidth: number,
-  measuredHeight: number,
-  rotateDeg: number,
-): number => {
-  const rad = rotateDeg * DEG_TO_RAD;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  return (
-    Math.abs(vector[0] * cos + vector[1] * sin) * (measuredWidth / 2) +
-    Math.abs(vector[0] * -sin + vector[1] * cos) * (measuredHeight / 2)
-  );
+  return resolveBoundaryLabelRotation(label.rotate, label.keepUpright, labelPlacementVector(label.position));
 };
 
 /** 把已测量 label 解析为相对最终 Node rect 的局部几何 */
@@ -172,20 +134,25 @@ export const resolveNodeLabelGeometry = (layout: NodeLayout, label: MeasuredNode
     return { ...label, rotateDeg, centerOffset: [0, 0] };
   }
 
-  const border = labelBorderPoint(layout, label);
-  const vector = labelPlacementVector(label.position);
-  const extent = labelProjectedHalfExtent(vector, label.measuredWidth, label.measuredHeight, rotateDeg);
-  const offset = labelPlacementSign(label) * (label.distance + extent);
-  const tangent = labelTangentVector(label.position);
-  const tangentExtent = labelProjectedHalfExtent(tangent, label.measuredWidth, label.measuredHeight, rotateDeg);
-  const alignmentOffset = labelAlignmentSign(label.align) * tangentExtent;
+  const placed = placeBoundaryLabelBox({
+    label: {
+      text: label.text,
+      rotate: label.rotate,
+      keepUpright: label.keepUpright,
+      placement: label.placement,
+      align: label.align,
+    },
+    point: labelBorderPoint(layout, label),
+    outward: labelPlacementVector(label.position),
+    tangent: labelTangentVector(label.position),
+    width: label.measuredWidth,
+    height: label.measuredHeight,
+    distance: label.distance,
+  });
   return {
     ...label,
-    rotateDeg,
-    centerOffset: [
-      border[0] - layout.rect.x + vector[0] * offset + tangent[0] * alignmentOffset,
-      border[1] - layout.rect.y + vector[1] * offset + tangent[1] * alignmentOffset,
-    ],
+    rotateDeg: placed.rotateDeg,
+    centerOffset: [placed.center[0] - layout.rect.x, placed.center[1] - layout.rect.y],
   };
 };
 

@@ -1,7 +1,7 @@
-import type { IRStep, PolarPosition } from '@retikz/core';
+import type { PolarPosition } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { Vector2 } from '@retikz/math';
-import type { infer as ZodInfer } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type {
   RibbonAlignment,
@@ -13,6 +13,10 @@ import type {
 } from './constants';
 import type { RibbonPathSchema as CompleteRibbonPathSchema } from './path-schema';
 import type {
+  FixedRibbonWidthSchema,
+  TaperRibbonWidthSchema,
+  StopsRibbonWidthSchema,
+  ProfileRibbonWidthSchema,
   RibbonArcCapSchema,
   RibbonCapSchema,
   RibbonEndpointSchema,
@@ -22,21 +26,26 @@ import type {
   RibbonWidthStopSchema,
 } from './schema';
 
+/** 端面轴线的作者输入：角度、非零向量或无命名 origin 的极坐标 */
 export type IRRibbonDirection = number | Vector2 | PolarPosition;
 
 export type IRRibbonWidthStop = ZodInfer<typeof RibbonWidthStopSchema>;
 
-export type IRRibbonWidth = ZodInfer<typeof RibbonWidthSchema>;
+export type IRFixedRibbonWidth = ZodInput<typeof FixedRibbonWidthSchema>;
+export type IRTaperRibbonWidth = ZodInput<typeof TaperRibbonWidthSchema>;
+export type IRStopsRibbonWidth = ZodInput<typeof StopsRibbonWidthSchema>;
+export type IRProfileRibbonWidth = ZodInput<typeof ProfileRibbonWidthSchema>;
+export type IRRibbonWidth = ZodInput<typeof RibbonWidthSchema>;
 
 export type IRRibbonArcCap = ZodInfer<typeof RibbonArcCapSchema>;
 
 export type IRRibbonCap = ZodInfer<typeof RibbonCapSchema>;
 
-export type IRRibbonEndpoint = ZodInfer<typeof RibbonEndpointSchema>;
+export type IRRibbonEndpoint = ZodInput<typeof RibbonEndpointSchema>;
 
-export type IRRibbonSampling = ZodInfer<typeof RibbonSamplingSchema>;
+export type IRRibbonSampling = ZodInput<typeof RibbonSamplingSchema>;
 
-export type IRRibbonPathOptions = ZodInfer<typeof RibbonPathOptionsSchema>;
+export type IRRibbonPathOptions = ZodInput<typeof RibbonPathOptionsSchema>;
 
 export type RibbonModeValue = ValueOf<typeof RibbonMode>;
 
@@ -55,37 +64,11 @@ export type RibbonTaperInterpolationValue = ValueOf<typeof RibbonTaperInterpolat
 /** Extension Ribbon 完整 Path subject */
 export type IRRibbonPath = ZodInfer<typeof CompleteRibbonPathSchema>;
 
-/** 已补齐 Ribbon 默认值的端点属性 */
-export type CanonicalRibbonEndpoint = Omit<IRRibbonEndpoint, 'cap'> & {
-  cap: NonNullable<IRRibbonEndpoint['cap']>;
-};
-
-/** 已补齐停靠点插值默认值的宽度规则 */
-export type CanonicalRibbonWidth =
-  | Exclude<IRRibbonWidth, { kind: 'stops' }>
-  | (Omit<Extract<IRRibbonWidth, { kind: 'stops' }>, 'interpolation'> & {
-      interpolation: NonNullable<Extract<IRRibbonWidth, { kind: 'stops' }>['interpolation']>;
-    });
-
-/** 已补齐 adaptive 采样上限的采样策略 */
-export type CanonicalRibbonSampling =
-  | Exclude<IRRibbonSampling, { kind: 'adaptive' }>
-  | (Omit<Extract<IRRibbonSampling, { kind: 'adaptive' }>, 'maxSamples'> & {
-      maxSamples: number;
-    });
-
-/** Ribbon compile 消费的完整 options */
-export type CanonicalRibbonOptions = Omit<
-  IRRibbonPathOptions,
-  'mode' | 'align' | 'interpolation' | 'start' | 'end' | 'sampling' | 'samples' | 'width' | 'upper' | 'lower'
-> & {
-  mode: RibbonModeValue;
-  align: RibbonAlignmentValue;
-  interpolation: RibbonTaperInterpolationValue;
-  start: CanonicalRibbonEndpoint;
-  end: CanonicalRibbonEndpoint;
-  width?: CanonicalRibbonWidth;
-  sampling?: CanonicalRibbonSampling;
-  upper?: Array<IRStep>;
-  lower?: Array<IRStep>;
-};
+/** 已物化端点默认值 */
+export type CanonicalRibbonEndpoint = ZodInfer<typeof RibbonEndpointSchema>;
+/** 已物化宽度默认值 */
+export type CanonicalRibbonWidth = ZodInfer<typeof RibbonWidthSchema>;
+/** 已物化采样默认值 */
+export type CanonicalRibbonSampling = ZodInfer<typeof RibbonSamplingSchema>;
+/** 按模式区分的编译消费形态 */
+export type CanonicalRibbonOptions = ZodInfer<typeof RibbonPathOptionsSchema>;

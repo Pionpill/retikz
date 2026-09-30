@@ -11,6 +11,8 @@ description: Use when writing Retikz basic usage, named usage topics, extended u
 
 Chart 各图表类型的组件合页再读 [Chart 专项](references/chart.md)；Chart 简介、快速开始和家族总览仍走各自页型。
 
+Extension 内多个并列组件或预设共用一页时，改读 [拓展包组件专项](references/extension.md)；快速开始、设计理念和自定义能力仍按各自页型写作。
+
 独立用法页共同阅读 [章节结构](references/structure.md)，然后只选当前模式：
 
 | 页面     | 细节                                                         |

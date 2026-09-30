@@ -1,67 +1,228 @@
 ---
-title: Animation presets
-description: Generate Core tracks for growth, pulses, rotation, blinking, and wiggling, then play them on existing components.
+title: animation · Animation presets
+description: Generate ready-to-play tracks with growth, pulse, spin, flash, blink, and wiggle factories, with options for each preset.
 ---
 
-Extension offers optional animation effects. Each factory converts options into keyframe data without creating a player or requiring registration.
+Animation presets are pure functions: options go in, JSON animation tracks come out. They create no player and need no registration. Put the result in a Node, Path, or Scope `animations` array.
 
-## Using presets
+## Using this topic
 
-Install `@retikz/extension` in an existing Retikz project and import factories from its root. React, Vanilla, and direct IR share these factories: place their results in the target's animations array. No extra adapter is needed.
+Import the needed factory from `@retikz/extension`. React, Vanilla, and direct IR use the same track data. The minimal example imports `pulse` from the package root.
 
-```ts
-import { fadeIn, loop } from '@retikz/core';
-import { pulse, wiggle } from '@retikz/extension';
+<ComponentPreview files="entry" size="sm" hideCode />
 
-const entrance = fadeIn();
-const emphasis = pulse({ peak: 1.15 });
-const repeatedWiggle = loop(wiggle({ angle: 8 }), { iterations: 2 });
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { pulse } from '@retikz/extension';
+import { Layout, Node } from '@retikz/react';
+
+export const Example = () => (
+  <Layout>
+    <Node layout={{ minimumSize: { width: 72, height: 52 } }} animations={[pulse({ peak: 1.25 })]} />
+  </Layout>
+);
 ```
 
-## Choose an effect
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
-| Effect | Property change                       | Defaults                      |
-| ------ | ------------------------------------- | ----------------------------- |
-| grow   | scale 0 → 1                           | 400ms entrance                |
-| growUp | scaleY 0 → 1                          | 500ms, bottom origin          |
-| pulse  | scale 1 → peak → 1                    | 1000ms, peak=1.1, infinite    |
-| spin   | rotate 0 → 360                        | 1000ms, linear, infinite      |
-| flash  | opacity 1 → dim → 1                   | 300ms, dim=0, 2 iterations    |
-| blink  | opacity 1 → dim → 1                   | 800ms, dim=0, infinite        |
-| wiggle | rotate 0 → angle → −angle → angle → 0 | 400ms, angle=5°, 3 iterations |
+```tsx
+import type { IRScene } from '@retikz/core';
+import { pulse } from '@retikz/extension';
+import { Layout } from '@retikz/react';
 
-Each element below uses the default effect. Replay to observe growth and finite effects again. Rotation uses a rectangle so its orientation remains visible.
-
-<ComponentPreview files="animation-presets" size="lg" controls={{ animation: true }} />
-
-grow is equivalent to `scaleIn({ from: 0 }).` Wrap pulse or spin with Core loop to select a finite iteration count; stagger offsets the start of multiple effects.
-
-## Parameters share the existing playback contract
-
-Every factory accepts duration, delay, easing, and trigger. grow, growUp, pulse, spin, and wiggle also accept origin. flash / blink provide dim and iterations; wiggle provides angle and iterations; pulse provides peak. See the [API reference](/library/extension/animation/api-reference).
-
-Factories do not read the target's current style or change layout and connections. See [component integration](/kernel/visual/animation/integration) for Node, Path, and Scope targets, and [extended usage](/kernel/visual/animation/extended-usage) for triggers, snapshots, and reduced-motion policy.
-
-Generated tracks contain ordinary JSON rather than preset names. Saved IR can play without importing Extension again. Existing Standard imports of these effects must move to Extension; the old entry no longer re-exports them.
-
-## Related props
-
-<ComponentProps
-  items={[
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
     {
-      name: 'animations',
-      kind: 'property',
-      type: 'Array<IRAnimationTrack>',
-      description: 'Pass generated effect tracks to Node, Path, or Scope.',
+      type: 'node',
+      layout: { minimumSize: { width: 72, height: 52 } },
+      animations: [pulse({ peak: 1.25 })],
     },
-  ]}
-/>
+  ],
+};
+export const Example = () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { pulse } from '@retikz/extension';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    node({
+      layout: { minimumSize: { width: 72, height: 52 } },
+      animations: [pulse({ peak: 1.25 })],
+    }),
+  ],
+});
+const svg = renderToSvgString(input);
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { pulse } from '@retikz/extension';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      type: 'node',
+      layout: { minimumSize: { width: 72, height: 52 } },
+      animations: [pulse({ peak: 1.25 })],
+    },
+  ],
+};
+const svg = renderToSvgString(ir);
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Growth entrance
+
+`grow` scales the entire element from zero to full size. `growUp` scales only vertically and defaults to the bottom-center origin, suitable for bars growing from a baseline.
+
+<ComponentPreview files="growth" size="sm" controls={{ animation: true }} />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### `Omit<ScaleInOptions, 'from'>`
+
+`grow(options)` returns a track for the target `animations` array.
+
+#### GrowUpOptions
+
+`growUp(options)` returns a track for the target `animations` array.
+
+| Field       | Type                | Description                                       |
+| ----------- | ------------------- | ------------------------------------------------- |
+| `duration?` | `number`            | Duration; grow defaults to 400ms, growUp to 500ms |
+| `origin?`   | `IRAnimationOrigin` | Scale origin; growUp defaults to bottom           |
+
+All presets also accept `delay?`, `easing?`, and `trigger?` for initial delay, easing, and trigger.
+
+</DocTab>
+</DocTabs>
+
+The demo starts both effects at 500ms with a bottom origin; these control values are not the `grow` API defaults. Switch the effect, duration, and origin to compare uniform and bottom-anchored growth.
+
+## Continuous emphasis
+
+`pulse` scales between full size and a peak, while `spin` rotates a full turn at constant speed. Both repeat indefinitely by default.
+
+<ComponentPreview files="continuous" size="sm" controls={{ animation: true }} />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### PulseOptions
+
+`pulse(options)` returns a track for the target `animations` array.
+
+#### SpinOptions
+
+`spin(options)` returns a track for the target `animations` array.
+
+| Field       | Type                | Description                                                   |
+| ----------- | ------------------- | ------------------------------------------------------------- |
+| `duration?` | `number`            | Per-cycle duration, default 1000ms                            |
+| `peak?`     | `number`            | Pulse peak scale, default 1.1                                 |
+| `origin?`   | `IRAnimationOrigin` | Optional transform origin, defaulting to the geometric center |
+
+All presets also accept `delay?`, `easing?`, and `trigger?` for initial delay, easing, and trigger.
+
+</DocTab>
+</DocTabs>
+
+The demo sets the pulse peak to 1.3. Switch between pulse and spin and change cycle duration; the peak control appears only for pulse.
+
+## Opacity flashing
+
+Both `flash` and `blink` move between full opacity and a minimum. Flash runs twice by default; blink loops indefinitely.
+
+<ComponentPreview files="opacity" size="sm" controls={{ animation: true }} />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### FlashOptions
+
+`flash(options)` returns a track for the target `animations` array.
+
+#### BlinkOptions
+
+`blink(options)` returns a track for the target `animations` array.
+
+| Field         | Type                   | Description                                             |
+| ------------- | ---------------------- | ------------------------------------------------------- |
+| `duration?`   | `number`               | Cycle duration; flash defaults to 300ms, blink to 800ms |
+| `dim?`        | `number`               | Minimum opacity, default 0                              |
+| `iterations?` | `number \| 'infinite'` | Iteration count; flash defaults to 2, blink to infinite |
+
+All presets also accept `delay?`, `easing?`, and `trigger?` for initial delay, easing, and trigger.
+
+</DocTab>
+</DocTabs>
+
+The demo sets both effects to a 500ms cycle. Change the minimum opacity and compare finite flashing with continuous blinking. Replay the finite effect in the preview.
+
+## Wiggle emphasis
+
+`wiggle` rotates back and forth between positive and negative angles, then returns to its original orientation. It runs three times by default.
+
+<ComponentPreview files="wiggle" size="sm" controls={{ animation: true }} />
+
+<DocTabs defaultValue="api">
+<DocTab value="api" label="API reference">
+
+#### WiggleOptions
+
+`wiggle(options)` returns a track for the target `animations` array.
+
+| Field         | Type                   | Description                                                  |
+| ------------- | ---------------------- | ------------------------------------------------------------ |
+| `angle?`      | `number`               | Maximum angle on either side, default 5°                     |
+| `duration?`   | `number`               | Cycle duration, default 400ms                                |
+| `iterations?` | `number \| 'infinite'` | Iteration count, default 3                                   |
+| `origin?`     | `IRAnimationOrigin`    | Optional rotation origin, defaulting to the geometric center |
+
+All presets also accept `delay?`, `easing?`, and `trigger?` for initial delay, easing, and trigger.
+
+</DocTab>
+</DocTabs>
+
+The demo starts at 12° and 500ms, rather than the preset defaults of 5° and 400ms. Adjust angle and duration to compare amplitude and speed; the node returns to its original orientation.
+
+Presets do not read the target's current style or change layout or connections. Generated IR stores tracks rather than preset names, so playback does not need another Extension import.
 
 ## Further reading
 
 <LinkedSections
   items={[
-    { title: 'API reference', url: '/library/extension/animation/api-reference' },
-    { title: 'Kernel basic animation', url: '/kernel/visual/animation/usage' },
+    {
+      title: 'Animation basics',
+      description: 'Track playback and component integration',
+      url: '/kernel/visual/animation/usage',
+    },
+    {
+      title: 'Extended animation',
+      description: 'Triggers, snapshots, and reduced motion',
+      url: '/kernel/visual/animation/extended-usage',
+    },
   ]}
 />

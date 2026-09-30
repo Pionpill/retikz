@@ -1217,7 +1217,7 @@ export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilo
 ### curve
 
 <p>
-  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={415}>
+  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={479}>
     可参数化曲线的纯几何运算
   </ApiSourceLink>
 </p>
@@ -1233,6 +1233,7 @@ export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilo
 | `approximateLength`   | `(segment: CurveSegment, options?: CurveApproximationOptions) => number`                         | 用确定的等参数 polyline 近似曲线长度<br />line 与圆弧使用解析长度；Bezier 与椭圆弧按 `sampleCount` 采样                                                                                                                                                                                                                                                                                                                                             |
 | `catmullRomToCubic`   | `(knots: Array<Vector2>, tension: number) => Array<CubicSegment>`                                | centripetal Catmull-Rom（α=0.5）穿过 knots → 三次贝塞尔段链<br />输入不足 2 个 knot 时返回空数组；每段终点严格命中下一个 knot                                                                                                                                                                                                                                                                                                                       |
 | `parameterAtDistance` | `(segment: CurveSegment, distance: number, options?: CurveParameterAtDistanceOptions) => number` | 将沿曲线的距离反解为参数位置<br />使用与 `approximateLength` 相同的离散长度模型；传入 `totalLength` 时必须与相同 sample count 对应。当中点的近似长度与目标距离相差不超过默认几何容差时提前返回<br />`segment`: 用于距离反解的曲线段<br />`distance`: 沿曲线的距离，会限制到 0 至完整曲线长度<br />`options?`: 反解配置；默认 &#123;&#125;，采用字段各自的默认值<br />返回值: 0..1 范围内的曲线参数；完整长度非有限或不大于 DEFAULT_EPSILON 时返回 0 |
+| `projectedRange`      | `(segment: CurveSegment, axis: Vector2) => { max: number; min: number }`                         | 曲线在给定向量上的标量投影范围，包含内部极值                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `sampleAt`            | `(segment: CurveSegment, parameter: number) => CurveSegmentSample`                               | 在曲线参数位置采样点和行进方向切线<br />参数会 clamp 到 `[0, 1]`；零导数回退为确定的 `[1, 0]` 切线                                                                                                                                                                                                                                                                                                                                                  |
 | `slice`               | `(segment: CurveSegment, fromParameter: number, toParameter: number) => CurveSegment`            | 取曲线参数区间的保形子段<br />参数先 clamp 并升序排列；Bezier 使用 De Casteljau，圆弧和椭圆弧保留有向角扫描                                                                                                                                                                                                                                                                                                                                         |
 
@@ -1247,6 +1248,7 @@ export declare const curve: {
   approximateLength: (segment: CurveSegment, options?: CurveApproximationOptions) => number;
   catmullRomToCubic: (knots: Array<Vector2>, tension: number) => Array<CubicSegment>;
   parameterAtDistance: (segment: CurveSegment, distance: number, options?: CurveParameterAtDistanceOptions) => number;
+  projectedRange: (segment: CurveSegment, axis: Vector2) => { max: number; min: number };
   sampleAt: (segment: CurveSegment, parameter: number) => CurveSegmentSample;
   slice: (segment: CurveSegment, fromParameter: number, toParameter: number) => CurveSegment;
 };
