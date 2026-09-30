@@ -9,7 +9,6 @@ export const hexagonExampleControls = definePreviewControls({
   title: 'Elongated hexagon',
   sections: [
     {
-      label: 'Shoulder parameters',
       controls: [
         {
           kind: 'range',

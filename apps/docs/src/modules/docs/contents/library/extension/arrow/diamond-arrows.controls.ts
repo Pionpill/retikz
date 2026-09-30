@@ -14,7 +14,6 @@ export const diamondArrowsControls = definePreviewControls({
   title: '菱形箭头',
   sections: [
     {
-      label: '端点样式',
       controls: [
         { kind: 'color', id: DiamondArrowsControlId.Color, label: '颜色', defaultValue: '#2563eb' },
         {

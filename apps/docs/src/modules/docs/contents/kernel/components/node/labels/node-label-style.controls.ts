@@ -12,7 +12,6 @@ export const nodeLabelStyleControls = definePreviewControls({
   title: '标签样式',
   sections: [
     {
-      label: '文字',
       controls: [
         { kind: 'color', id: NodeLabelStyleControlId.TextColor, label: '文字颜色', defaultValue: '#2563eb' },
         {

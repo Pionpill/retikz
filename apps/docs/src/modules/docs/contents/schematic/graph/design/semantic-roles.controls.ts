@@ -12,7 +12,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     title: t.title,
     sections: [
       {
-        label: t.title,
         controls: [
           {
             kind: 'select',

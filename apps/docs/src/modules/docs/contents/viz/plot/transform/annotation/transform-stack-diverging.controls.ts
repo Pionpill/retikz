@@ -19,7 +19,6 @@ export const stackDivergingControls = definePreviewControls({
   title: '正负分流堆叠',
   sections: [
     {
-      label: '数据',
       controls: [
         {
           kind: 'table',

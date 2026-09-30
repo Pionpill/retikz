@@ -9,7 +9,6 @@ export const scaleRadialControls = definePreviewControls({
   title: '径向面积对照',
   sections: [
     {
-      label: '对比数据',
       controls: [
         {
           kind: 'select',

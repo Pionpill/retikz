@@ -9,7 +9,6 @@ export const cylinderExampleControls = definePreviewControls({
   title: 'Cylinder',
   sections: [
     {
-      label: 'Cap parameters',
       controls: [
         {
           kind: 'select',

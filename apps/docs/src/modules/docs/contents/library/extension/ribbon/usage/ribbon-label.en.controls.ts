@@ -7,7 +7,6 @@ export const ribbonLabelControls = definePreviewControls({
   title: 'Ribbon label',
   sections: [
     {
-      label: 'Label',
       controls: [
         { kind: 'range', id: 'position', label: 'Position', defaultValue: 0.5, min: 0, max: 1, step: 0.05 },
         {

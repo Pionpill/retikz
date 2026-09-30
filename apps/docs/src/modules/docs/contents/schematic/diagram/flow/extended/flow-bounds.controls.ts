@@ -12,7 +12,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     title: copy.controlsTitle,
     sections: [
       {
-        label: copy.controlsSection,
         controls: [
           {
             kind: 'switch',

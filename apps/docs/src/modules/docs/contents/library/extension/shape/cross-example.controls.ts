@@ -18,7 +18,6 @@ export const crossExampleControls = definePreviewControls({
   title: 'Cross',
   sections: [
     {
-      label: '外观',
       controls: [
         {
           kind: 'range',

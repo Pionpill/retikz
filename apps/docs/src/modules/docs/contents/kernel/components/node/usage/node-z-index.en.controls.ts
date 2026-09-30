@@ -9,7 +9,6 @@ export const nodeZIndexControls = definePreviewControls({
   title: 'Stacking order',
   sections: [
     {
-      label: 'zIndex',
       controls: [
         {
           kind: 'range',

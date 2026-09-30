@@ -7,7 +7,6 @@ export const ribbonLabelControls = definePreviewControls({
   title: 'Ribbon 标注',
   sections: [
     {
-      label: '标注',
       controls: [
         { kind: 'range', id: 'position', label: '位置', defaultValue: 0.5, min: 0, max: 1, step: 0.05 },
         {

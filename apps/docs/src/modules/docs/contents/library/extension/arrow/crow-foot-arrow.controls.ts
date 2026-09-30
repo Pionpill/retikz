@@ -15,7 +15,6 @@ export const crowFootArrowControls = definePreviewControls({
   title: 'CrowFoot 端点',
   sections: [
     {
-      label: '端点参数',
       controls: [
         { kind: 'range', id: CrowFootArrowControlId.Length, label: '长度', defaultValue: 12, min: 4, max: 24, step: 1 },
         { kind: 'range', id: CrowFootArrowControlId.Width, label: '宽度', defaultValue: 16, min: 6, max: 28, step: 1 },

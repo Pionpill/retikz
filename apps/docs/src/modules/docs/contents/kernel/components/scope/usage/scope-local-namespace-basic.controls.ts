@@ -13,7 +13,6 @@ export const scopeLocalNamespaceBasicControls = definePreviewControls({
   title: 'Scope namespace',
   sections: [
     {
-      label: '内部节点',
       controls: [
         {
           kind: 'select',

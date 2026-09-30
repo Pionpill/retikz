@@ -8,7 +8,6 @@ export const nodeLabelSpacingControls = definePreviewControls({
   title: 'Spacing and placement',
   sections: [
     {
-      label: 'Placement',
       controls: [
         {
           kind: 'select',

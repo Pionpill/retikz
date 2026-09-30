@@ -9,7 +9,6 @@ export const scaleRadialControls = definePreviewControls({
   title: 'Radial area comparison',
   sections: [
     {
-      label: 'Comparison data',
       controls: [
         {
           kind: 'select',

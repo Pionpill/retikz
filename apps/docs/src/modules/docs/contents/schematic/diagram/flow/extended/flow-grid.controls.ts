@@ -12,7 +12,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     title: copy.title,
     sections: [
       {
-        label: copy.section,
         controls: [
           { kind: 'range', id: 'row', label: copy.rowGap, defaultValue: 32, min: 0, max: 80, step: 8 },
           { kind: 'range', id: 'column', label: copy.columnGap, defaultValue: 48, min: 0, max: 96, step: 8 },

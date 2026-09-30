@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.stacking,
     sections: [
       {
-        label: i18n.overlap,
         controls: [{ kind: 'range', id: 'zIndex', label: i18n.blueZIndex, defaultValue: 1, min: -1, max: 2, step: 1 }],
       },
     ],

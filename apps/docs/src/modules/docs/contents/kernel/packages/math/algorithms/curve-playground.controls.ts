@@ -18,7 +18,6 @@ export const createCurvePlaygroundControls = (i18n: typeof curvePlaygroundI18n.z
     title: i18n.label1,
     sections: [
       {
-        label: i18n.label2,
         controls: [
           {
             kind: 'select',

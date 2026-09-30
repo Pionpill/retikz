@@ -14,7 +14,6 @@ export const nodeLabelPositionControls = definePreviewControls({
   title: 'Label position',
   sections: [
     {
-      label: 'Attachment',
       controls: [
         {
           kind: 'select',

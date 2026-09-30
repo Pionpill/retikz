@@ -9,7 +9,6 @@ export const barArrowControls = definePreviewControls({
   title: 'Bar endpoint',
   sections: [
     {
-      label: 'Endpoint parameters',
       controls: [
         { kind: 'range', id: BarArrowControlId.Length, label: 'Length', defaultValue: 10, min: 4, max: 20, step: 1 },
         { kind: 'range', id: BarArrowControlId.Width, label: 'Width', defaultValue: 14, min: 6, max: 24, step: 1 },

@@ -20,7 +20,6 @@ export const nodeLabelPositionControls = definePreviewControls({
   title: '标签位置',
   sections: [
     {
-      label: '附着位置',
       controls: [
         {
           kind: 'select',

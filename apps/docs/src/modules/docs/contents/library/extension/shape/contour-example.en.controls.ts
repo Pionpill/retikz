@@ -9,7 +9,6 @@ export const contourExampleControls = definePreviewControls({
   title: 'Contour',
   sections: [
     {
-      label: 'Outline',
       controls: [
         {
           kind: 'select',

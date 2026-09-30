@@ -12,7 +12,6 @@ const createControls = (lang: Lang) => {
     title: i18n.relativeCoordinates,
     sections: [
       {
-        label: i18n.offset,
         controls: [
           {
             kind: 'point',

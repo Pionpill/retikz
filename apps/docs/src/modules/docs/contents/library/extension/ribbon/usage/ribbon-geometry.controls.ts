@@ -7,7 +7,6 @@ export const ribbonGeometryControls = definePreviewControls({
   title: 'Ribbon 宽度',
   sections: [
     {
-      label: '宽度模型',
       controls: [
         {
           kind: 'select',

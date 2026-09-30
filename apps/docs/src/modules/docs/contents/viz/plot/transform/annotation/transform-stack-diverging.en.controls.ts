@@ -11,7 +11,6 @@ export const stackDivergingControls = definePreviewControls({
   title: 'Diverging stack',
   sections: [
     {
-      label: 'Data',
       controls: [
         {
           kind: 'table',
