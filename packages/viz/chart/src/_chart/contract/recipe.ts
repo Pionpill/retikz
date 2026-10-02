@@ -1,5 +1,10 @@
-import type { AnyRegressionDefinition } from '@retikz/data';
-import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition, AnyTransformDefinition } from '@retikz/data';
+import type {
+  AnyRegressionDefinition,
+  AnyRowSelectorDefinition,
+  AnyStatisticsReducerDefinition,
+  AnyTransformDefinition,
+  IRDataTransform,
+} from '@retikz/data';
 import type { JsonObject, NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
 import type {
   AnyCoordinateDefinition,
@@ -11,13 +16,11 @@ import type {
   IRPlotMarkOperation,
   IRPlotPartitionDimension,
   IRPlotScaleOperation,
-  IRPlotTransform,
 } from '@retikz/plot';
 import type { ZodType } from 'zod';
 
 import type { IRChartSource } from '../schemas';
 import type { ChartMarkBinding } from './mark';
-
 /** encoding resolve使用的owner Definition注册表 */
 export type ChartEncodingRuntime = Readonly<{
   /** Data / Plot transform Definition注册表 */
@@ -65,7 +68,7 @@ export type ChartEncodingResolution = Readonly<{
   /** semantic与authored Chart mark消费的direct field投影 */
   encodings: JsonObject;
   /** 按闭合phase与ordered slots排列的派生operation */
-  transform: ReadonlyArray<IRPlotTransform>;
+  transform: ReadonlyArray<IRDataTransform>;
   /** encoding唯一声明的named scale operation */
   scales: ReadonlyArray<IRPlotScaleOperation>;
   /** plotExtension 中由 encoding 引用后经 owner Definition 解析的 scale operation */
@@ -126,7 +129,7 @@ export type ChartGuideDefaultsResolveContext = Readonly<{
 /** Recipe schema 解析后的语义 scaffold */
 export type ChartRecipeScaffold = Readonly<{
   /** Recipe 生成并传入 Plot 的数据变换序列 */
-  transform?: ReadonlyArray<IRPlotTransform>;
+  transform?: ReadonlyArray<IRDataTransform>;
   /** Recipe 生成的 Plot scale 及其可覆盖策略 */
   scales: ReadonlyArray<
     Readonly<{

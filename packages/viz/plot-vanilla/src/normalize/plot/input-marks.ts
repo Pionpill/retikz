@@ -15,7 +15,7 @@ import type {
   NodeTextAlignValue,
   ShadowPresetValue,
 } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
+import type { ExternalRow, IRDataTransform } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 import type {
   IRPlotAnchorId,
@@ -57,13 +57,11 @@ import type {
   IRPlotRelationStepLabel,
   IRPlotShadowStyle,
   IRPlotTargetRef,
-  IRPlotTransform,
   PathCurveValue,
   PolarInterpolationValue,
   RelationGeometryKindValue,
+  MarkValueKind,
 } from '@retikz/plot';
-import type { MarkValueKind } from '@retikz/plot';
-
 /** 数据字段名或字段路径；例如 `month` / `user.age`，用于 Plot authoring 输入 */
 export type InputPlotFieldName = string;
 
@@ -103,7 +101,7 @@ export type InputPlotExtensionChannel = InputPlotFieldName | JsonValue | IRPlotC
 /** 所有 mark 共享的局部数据变换与语义图层属性 */
 export type InputPlotMarkTransform = {
   /** 只作用于当前 mark 数据视图的变换链 */
-  transform?: Array<IRPlotTransform>;
+  transform?: Array<IRDataTransform>;
   /** 语义图层覆盖；控制该 mark 外层 scope 在 plot 内的 zIndex */
   layer?: IRPlotLayer;
 };

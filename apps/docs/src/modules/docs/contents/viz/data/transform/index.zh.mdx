@@ -32,7 +32,7 @@ description: 数据变换按顺序改写规范化行，并把排序、汇总、�
 | 统计子算子 | 规约器（reducer）、行选择器（selector）与分位区间组合 | 要计算统计字段、选择极值或组织箱线图数据时 |
 | 扩展机制   | 自定义变换、规约器与行选择器定义                      | 内置操作无法表达新的数据处理语义时         |
 
-Plot 自己注册的 `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density` 和 `smooth` 仍在[绘图语法的变换](/viz/plot/transform)中说明。自定义变换、规约器或行选择器的注册方式集中放在[扩展机制](/viz/data/transform/extensions)，运行链路事件则见[Data 来源追溯](/viz/data/provenance/data)。
+Data 统一提供十二种内置变换；堆叠、分桶、区间、关联、扰动与统计采样的绘图组合示例见[绘图语法的变换](/viz/plot/transform)，完整字段契约见 [Data 参考](/viz/data/reference/contract#datatransformschema)。自定义变换、规约器或行选择器的注册方式集中放在[扩展机制](/viz/data/transform/extensions)，运行链路事件则见[Data 来源追溯](/viz/data/provenance/data)。
 
 ## 章节内容
 
@@ -45,7 +45,7 @@ Plot 自己注册的 `stack`、`bin`、`normalize`、`derive-interval`、`relate
     },
     {
       title: '变换操作',
-      description: '查询四种 Data 内置操作的语义、参数和示例。',
+      description: '查询 Data 内置操作与输入输出关系，并组合常用数据处理步骤。',
       url: '/viz/data/transform/operations',
     },
     {

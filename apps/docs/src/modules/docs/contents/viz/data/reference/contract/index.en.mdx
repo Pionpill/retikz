@@ -39,6 +39,54 @@ Built-in transforms share a `kind` discriminator and execute in declaration orde
 
 <ZodSchema name="AnnotateTransformSchema" />
 
+### StackTransformSchema
+
+<ZodSchema name="StackTransformSchema" />
+
+### BinTransformSchema
+
+<ZodSchema name="BinTransformSchema" />
+
+### RelateTransformSchema
+
+<ZodSchema name="RelateTransformSchema" />
+
+#### EndpointProjectionSchema
+
+<ZodSchema name="EndpointProjectionSchema" />
+
+#### PairMeasureOperationSchema
+
+<ZodSchema name="PairMeasureOperationSchema" />
+
+### NormalizeTransformSchema
+
+<ZodSchema name="NormalizeTransformSchema" />
+
+### DeriveIntervalTransformSchema
+
+<ZodSchema name="DeriveIntervalTransformSchema" />
+
+### JitterTransformSchema
+
+<ZodSchema name="JitterTransformSchema" />
+
+### DensityTransformSchema
+
+<ZodSchema name="DensityTransformSchema" />
+
+#### DensityBandwidthSchema
+
+<ZodSchema name="DensityBandwidthSchema" />
+
+### SmoothTransformSchema
+
+<ZodSchema name="SmoothTransformSchema" />
+
+#### RegressionMethodSchema
+
+<ZodSchema name="RegressionMethodSchema" />
+
 ## ReducerMetricsSchema
 
 <ZodSchema name="ReducerMetricsSchema" />
@@ -88,20 +136,14 @@ Annotate excludes `outside-quantile-band`. For `top` / `bottom`, `n` is fixed to
     {
       label: 'Shared transform schemas',
       path: 'packages/viz/data/src/schemas/transform/schema.ts',
-      startLine: 11,
-      endLine: 120,
     },
     {
       label: 'Reducer operation schemas',
       path: 'packages/viz/data/src/schemas/transform/reducer.ts',
-      startLine: 9,
-      endLine: 180,
     },
     {
       label: 'Row selector operation schemas',
       path: 'packages/viz/data/src/schemas/transform/selector.ts',
-      startLine: 13,
-      endLine: 114,
     },
   ]}
 />

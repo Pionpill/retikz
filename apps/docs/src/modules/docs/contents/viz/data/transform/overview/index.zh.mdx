@@ -45,7 +45,7 @@ import { Plot, PlotTransform } from '@retikz/plot-react';
 | `dataTransforms={[...]}` | 程序化生成变换操作数组       | 当前 Plot 的共享数据管线，排在组件之前 |
 | 图元局部 `transform`     | 只为某个图元建立局部数据视图 | 该图元，不改写其它图元的输入           |
 
-Plot 注册的绘图专属 `kind` 也使用同一个组件，详见[绘图语法的变换](/viz/plot/transform)。Data 自带的四种 `kind` 见[变换操作](/viz/data/transform/operations)。
+十二种内置 `kind` 都由 Data 定义和执行，并使用同一个组件。完整契约见 [Data 参考](/viz/data/reference/contract#datatransformschema)，绘图组合示例见[绘图语法的变换](/viz/plot/transform)。
 
 ## 技术原理
 
@@ -55,7 +55,7 @@ Plot 注册的绘图专属 `kind` 也使用同一个组件，详见[绘图语法
   description="需要排查组件为什么不渲染、多个入口先后顺序或自动变换去重时再回来读。"
 />
 
-`PlotTransform` 的函数体直接返回 `null`。`Plot` 在构建绘图规范（spec）时同步遍历子元素（children），识别 `PlotTransform` 元素并把它的属性（props）原样收集为 `IRPlotTransform`；因此它是配置载体，不是可见图层，也没有子元素。
+`PlotTransform` 的函数体直接返回 `null`。`Plot` 在构建绘图规范（spec）时同步遍历子元素（children），识别 `PlotTransform` 元素并把它的属性（props）原样收集为 `IRDataTransform`；因此它是配置载体，不是可见图层，也没有子元素。
 
 共享管线按下面的顺序装配：
 
@@ -70,20 +70,14 @@ Plot 注册的绘图专属 `kind` 也使用同一个组件，详见[绘图语法
     {
       label: 'PlotTransformProps 与空渲染组件',
       path: 'packages/viz/plot-react/src/components/transform.tsx',
-      startLine: 1,
-      endLine: 7,
     },
     {
       label: '从 Plot children 收集 PlotTransform props',
       path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts',
-      startLine: 667,
-      endLine: 668,
     },
     {
       label: '显式与自动操作的装配顺序',
       path: 'packages/viz/plot-vanilla/src/normalize/plot/topology.ts',
-      startLine: 9,
-      endLine: 35,
     },
   ]}
 />
@@ -92,26 +86,26 @@ Plot 注册的绘图专属 `kind` 也使用同一个组件，详见[绘图语法
 
 #### PlotTransform / PlotTransformProps
 
-`PlotTransformProps` 等于 `IRPlotTransform`，是按 `kind` 判别的联合类型。选择 `kind` 后，TypeScript 会要求对应操作的其余配置。
+`PlotTransformProps` 等于 `IRDataTransform`，是按 `kind` 判别的联合类型。选择 `kind` 后，TypeScript 会要求对应操作的其余配置。
 
 | 属性   | 类型                      | 默认值 | 说明                                                                       |
 | ------ | ------------------------- | ------ | -------------------------------------------------------------------------- |
-| `kind` | `IRPlotTransform['kind']` | —      | 操作判别字段；其余属性由所选联合分支决定，参数见对应 Data 或 Plot 变换页面 |
+| `kind` | `IRDataTransform['kind']` | —      | 操作判别字段；其余属性由所选联合分支决定，参数见对应 Data 或 Plot 变换页面 |
 
 `PlotTransformProps['kind']` 的取值范围如下：
 
 | 能力归属 | kind                                                                                    | 文档                                       |
 | -------- | --------------------------------------------------------------------------------------- | ------------------------------------------ |
 | Data     | `sort`、`summarize`、`select`、`annotate`                                               | [变换操作](/viz/data/transform/operations) |
-| Plot     | `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density`、`smooth` | [绘图语法的变换](/viz/plot/transform)      |
+| Data     | `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density`、`smooth` | [绘图语法的变换](/viz/plot/transform)      |
 | 自定义   | 已注册且不与内置名冲突的字符串                                                          | [扩展机制](/viz/data/transform/extensions) |
 
 `PlotTransform` 与 `PlotTransformProps` 从包入口导出：
 
-| 导出                 | 类型                     | 默认值 | 说明                               |
-| -------------------- | ------------------------ | ------ | ---------------------------------- |
-| `PlotTransform`      | `FC<PlotTransformProps>` | —      | 声明一个变换操作，返回 `null`      |
-| `PlotTransformProps` | `IRPlotTransform`        | —      | 组件属性与 Plot 变换 IR 的类型别名 |
+| 导出                 | 类型                     | 默认值 | 说明                          |
+| -------------------- | ------------------------ | ------ | ----------------------------- |
+| `PlotTransform`      | `FC<PlotTransformProps>` | —      | 声明一个变换操作，返回 `null` |
+| `PlotTransformProps` | `IRDataTransform`        | —      | 组件属性引用 Data 变换 IR     |
 
 ## 相关
 

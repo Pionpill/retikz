@@ -1,8 +1,7 @@
-import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
 import type { AssertEqual } from '@retikz/foundation';
 import type {
   IRPlot,
-  IRPlotTransform,
   LowerPlotsOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
@@ -23,7 +22,6 @@ import { useEffect, useMemo, useRef } from 'react';
 import { RetikzPlotReactError } from './error';
 import { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';
 import { usePlotThemeStyles } from './theme-context';
-
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 
@@ -99,7 +97,7 @@ export type PlotDslProps = PlotCommonProps &
     /** Plot composition 输入 */
     composition?: IRPlot['composition'];
     /** 组合 DSL 前插入的 Plot data transforms */
-    dataTransforms?: Array<IRPlotTransform>;
+    dataTransforms?: Array<IRDataTransform>;
     /** 由 mark 组件收集的 transform shortcut 定义 */
     markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   };

@@ -1,14 +1,16 @@
+import {
+  BinTransformSchema,
+  ExternalTransformSchema,
+  JitterTransformSchema,
+  NormalizeTransformSchema,
+} from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import {
   BandScaleSchema,
-  BinTransformSchema,
   CustomScaleSchema,
   DivergingColorScaleSchema,
-  ExternalPlotTransformSchema,
-  JitterTransformSchema,
   LinearScaleSchema,
   LogScaleSchema,
-  NormalizeTransformSchema,
   OrdinalScaleSchema,
   PlotPartitionDimensionsSchema,
   PointScaleSchema,
@@ -31,7 +33,6 @@ import {
   createChartDirectMappingSchema,
   createChartScaleBindingSchema,
 } from '../../_chart/schemas/encoding';
-
 /** Point 位置通道允许使用的尺度 operation */
 export const PointPositionScaleOperationSchema = union([
   LinearScaleSchema,
@@ -104,7 +105,7 @@ export const createPointPositionEncodingSchema = (role: 'x' | 'y', chartType: st
     createChartDerivedMappingSchema(BinTransformSchema, PointPositionScaleBindingSchema),
     createChartDerivedMappingSchema(NormalizeTransformSchema, PointPositionScaleBindingSchema),
     createPointJitterMappingSchema(role, chartType),
-    createChartDerivedMappingSchema(ExternalPlotTransformSchema, PointPositionScaleBindingSchema),
+    createChartDerivedMappingSchema(ExternalTransformSchema, PointPositionScaleBindingSchema),
   ]).describe(`${chartType} ${role} field mapping`);
 
 /** Point 颜色字段映射 */
@@ -120,7 +121,7 @@ export const PointSizeEncodingSchema = union([
   createChartDirectMappingSchema(PointSizeScaleBindingSchema),
   createChartAggregateMappingSchema(PointSizeScaleBindingSchema),
   createChartDerivedMappingSchema(NormalizeTransformSchema, PointSizeScaleBindingSchema),
-  createChartDerivedMappingSchema(ExternalPlotTransformSchema, PointSizeScaleBindingSchema),
+  createChartDerivedMappingSchema(ExternalTransformSchema, PointSizeScaleBindingSchema),
 ]).describe('Point size field mapping');
 
 /** Point 透明度字段映射 */
@@ -129,7 +130,7 @@ export const PointOpacityEncodingSchema = union([
   createChartDirectMappingSchema(PointOpacityScaleBindingSchema),
   createChartAggregateMappingSchema(PointOpacityScaleBindingSchema),
   createChartDerivedMappingSchema(NormalizeTransformSchema, PointOpacityScaleBindingSchema),
-  createChartDerivedMappingSchema(ExternalPlotTransformSchema, PointOpacityScaleBindingSchema),
+  createChartDerivedMappingSchema(ExternalTransformSchema, PointOpacityScaleBindingSchema),
 ]).describe('Point opacity field mapping');
 
 /** Point 形状字段映射 */

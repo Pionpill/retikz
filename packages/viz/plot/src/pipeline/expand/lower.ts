@@ -14,9 +14,14 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
-import type { DataLineageOptions, DataLineageRun, DataView, ExternalDatasets } from '@retikz/data';
-import { applyTransformsToDataView, applyTransformsToDataViewWithLineage, tagSourceIndex } from '@retikz/data';
-import { assertAllValuesValid, validateBoundData } from '@retikz/data';
+import type { DataLineageOptions, DataLineageRun, DataView, ExternalDatasets, IRDataTransform } from '@retikz/data';
+import {
+  applyTransformsToDataView,
+  applyTransformsToDataViewWithLineage,
+  tagSourceIndex,
+  assertAllValuesValid,
+  validateBoundData,
+} from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 
 import type {
@@ -28,8 +33,13 @@ import type {
 } from '../../contract';
 import { PositionScaleContinuity, rootMeta, slug } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { isPolarCoordinateFrame, resolveCoordinateRegistry } from '../../providers';
-import { lowerMark, makeColorSchemeResolver, resolveChannelRegistry } from '../../providers';
+import {
+  isPolarCoordinateFrame,
+  resolveCoordinateRegistry,
+  lowerMark,
+  makeColorSchemeResolver,
+  resolveChannelRegistry,
+} from '../../providers';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import { resolveMarkChannels } from '../../resolve/channel';
 import type {
@@ -68,8 +78,13 @@ import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../
 import { resolveCoordinateFrame } from '../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import { resolveMarkOperation } from '../../resolve/mark';
-import { createMarkPaddingContext, markDomainPaddingOf } from '../../resolve/scale';
-import { orderedCategoryDomain, resolveChannelScale, resolvePositionScaleContinuity } from '../../resolve/scale';
+import {
+  createMarkPaddingContext,
+  markDomainPaddingOf,
+  orderedCategoryDomain,
+  resolveChannelScale,
+  resolvePositionScaleContinuity,
+} from '../../resolve/scale';
 import {
   resolveAxisGuideTokens,
   resolvePlotAxisGuideTheme,
@@ -83,7 +98,6 @@ import type {
   IRPlotCoordinateOperation,
   IRPlotGuide,
   IRPlotMarkOperation,
-  IRPlotTransform,
 } from '../../schemas';
 import {
   AxisGridApplyTo,
@@ -104,7 +118,6 @@ import { applyMarkTransforms, prepareRows } from './data';
 import { resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveLegendBands } from './legend';
 import type { LowerPlotsOptions, MarkDataView } from './types';
-
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
   frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;
@@ -380,7 +393,7 @@ export const lowerPlotWithDataArtifact = (
   } = compositionResolution;
   /** 在一个明确DataView scope内执行一次mark-local transform并保留可选lineage */
   const resolveMarkTransform = (mark: IRPlotMarkOperation, markIndex: number, inputDataView: DataView) => {
-    const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
+    const transform = (mark as { transform?: Array<IRDataTransform> }).transform;
     if (lineageOptions === undefined || transform === undefined) {
       return {
         markDataView: {

@@ -5,6 +5,7 @@ import type {
   ExternalDatasets,
   ExternalRow,
   TransformContext,
+  IRDataTransform,
 } from '@retikz/data';
 import {
   applyFieldResolver,
@@ -18,20 +19,15 @@ import {
   resolveRowSelectorRegistry,
   resolveRegressionRegistry,
   resolveStatisticsReducerRegistry,
+  resolveTransformRegistry,
 } from '@retikz/data';
 
 import type { AnyMarkDefinition, AnyPositionAdjustmentDefinition, AnyScaleDefinition } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import {
-  resolveMarkRegistry,
-  resolvePlotTransformRegistry,
-  resolvePositionAdjustmentRegistry,
-  resolveScaleRegistry,
-} from '../../providers';
-import type { IRPlot, IRPlotMarkOperation, IRPlotTransform } from '../../schemas';
+import { resolveMarkRegistry, resolvePositionAdjustmentRegistry, resolveScaleRegistry } from '../../providers';
+import type { IRPlot, IRPlotMarkOperation } from '../../schemas';
 import { collectSourceFields } from '../source-fields';
 import type { LowerPlotsOptions } from './types';
-
 /** 对单个mark应用局部transform，返回该mark实际消费的完整DataView */
 export const applyMarkTransforms = (
   mark: IRPlotMarkOperation,
@@ -39,7 +35,7 @@ export const applyMarkTransforms = (
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
 ): DataView => {
-  const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
+  const transform = (mark as { transform?: Array<IRDataTransform> }).transform;
   if (transform === undefined) return dataView;
   return applyTransformsToDataView(dataView, transform, transformRegistry, transformContext);
 };
@@ -96,7 +92,7 @@ export const prepareRows = (
   positionAdjustmentRegistry: Map<string, AnyPositionAdjustmentDefinition>;
 } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const transformRegistry = resolvePlotTransformRegistry(options.transformDefinitions);
+  const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
   const transformContext: TransformContext = {
     ...DEFAULT_TRANSFORM_CONTEXT,
     regressionRegistry: resolveRegressionRegistry(options.regressionDefinitions),

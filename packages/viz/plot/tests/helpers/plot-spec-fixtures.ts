@@ -1,5 +1,4 @@
-import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlotTransform } from '@retikz/plot';
+import type { ExternalDatasets, IRDataTransform } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
 
 type CartesianScaleNames = {
@@ -245,7 +244,7 @@ export const boxplotData: ExternalDatasets = {
   ],
 };
 
-export const boxplotSummary: IRPlotTransform = {
+export const boxplotSummary: IRDataTransform = {
   kind: 'summarize',
   groupBy: ['group', 'boxX', 'boxX0', 'boxX1'],
   metrics: [
@@ -266,7 +265,7 @@ export const boxplotSummary: IRPlotTransform = {
   ],
 };
 
-export const boxplotOutside: IRPlotTransform = {
+export const boxplotOutside: IRDataTransform = {
   kind: 'select',
   groupBy: ['group'],
   selector: {

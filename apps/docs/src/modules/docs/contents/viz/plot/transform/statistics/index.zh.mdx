@@ -30,13 +30,13 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 
 ### API 参考
 
-`IRPlotDensityTransform` 的 `kind` 固定为 `'density'`。
+`IRDataDensityTransform` 的 `kind` 固定为 `'density'`。
 
 | prop           | 类型                     | 默认值       | 说明                         |
 | -------------- | ------------------------ | ------------ | ---------------------------- |
 | `field`        | `string`                 | —            | 一维连续输入字段             |
 | `groupBy?`     | `Array<string>`          | 全局单组     | 按组分别估计密度             |
-| `bandwidth?`   | `IRPlotDensityBandwidth` | `silverman`  | KDE 带宽策略                 |
+| `bandwidth?`   | `IRDataDensityBandwidth` | `silverman`  | KDE 带宽策略                 |
 | `sampleCount?` | `number`                 | `64`         | 每组输出的采样行数，至少为 2 |
 | `extent?`      | `[number, number]`       | 观测范围外扩 | 采样区间                     |
 | `xAs`          | `string`                 | —            | 密度采样位置输出字段         |
@@ -62,15 +62,11 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
   sources={[
     {
       label: 'density 的 schema 与字段约束',
-      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
-      startLine: 255,
-      endLine: 323,
+      path: 'packages/viz/data/src/schemas/transform/schema.ts',
     },
     {
       label: '带宽、采样域与 KDE 输出',
-      path: 'packages/viz/plot/src/providers/transform/density.ts',
-      startLine: 30,
-      endLine: 106,
+      path: 'packages/viz/data/src/providers/transform/density.ts',
     },
   ]}
 />
@@ -91,7 +87,7 @@ description: 用 density 和 smooth 把原始样本转换成可由 PathMark 绘�
 
 ### API 参考
 
-`IRPlotSmoothTransform` 的 `kind` 固定为 `'smooth'`。
+`IRDataSmoothTransform` 的 `kind` 固定为 `'smooth'`。
 
 | prop           | 类型                 | 默认值          | 说明                             |
 | -------------- | -------------------- | --------------- | -------------------------------- |
@@ -139,15 +135,11 @@ quadratic 与 polynomial 使用归一化 x basis 和带 scaled partial pivot 的
   sources={[
     {
       label: 'smooth 的 schema 与字段约束',
-      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
-      startLine: 277,
-      endLine: 320,
+      path: 'packages/viz/data/src/schemas/transform/schema.ts',
     },
     {
       label: 'OLS 拟合、采样域与预测输出',
-      path: 'packages/viz/plot/src/providers/transform/smooth.ts',
-      startLine: 18,
-      endLine: 87,
+      path: 'packages/viz/data/src/providers/transform/smooth.ts',
     },
   ]}
 />

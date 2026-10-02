@@ -1,5 +1,6 @@
 import { compileToScene } from '@retikz/core';
-import type { IRPlot, IRPlotRelateTransform, IRPlotRelationRouting } from '@retikz/plot';
+import type { IRDataRelateTransform } from '@retikz/data';
+import type { IRPlot, IRPlotRelationRouting } from '@retikz/plot';
 import { lowerPlots, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
@@ -264,7 +265,7 @@ describe('buildPlotIR 装配', () => {
   });
 
   it('relation mark forwards mark-scoped transform and routing strategy', () => {
-    const transform: Array<IRPlotRelateTransform> = [
+    const transform: Array<IRDataRelateTransform> = [
       {
         kind: 'relate',
         source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },

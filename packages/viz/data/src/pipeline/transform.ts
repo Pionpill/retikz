@@ -148,8 +148,8 @@ export const collectTransformFields = (
 };
 
 /**
- * 按声明顺序折叠应用 transform。
- * @description data 内置 transform 包含 sort / summarize / select / annotate；宿主可通过 registry 注入更多 transform
+ * 按声明顺序折叠应用 transform
+ * @description 默认 registry 包含全部内置数据变换；自定义变换通过同一 registry 注册和执行
  */
 export const applyTransforms = (
   rows: Array<ExternalRow>,

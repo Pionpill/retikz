@@ -45,13 +45,17 @@ describe('data transform runtime', () => {
     expect(resolveTransformRegistry([custom]).get('custom-derive')?.schedule).toEqual(custom.schedule);
   });
 
-  it('keeps shared sort output stable and leaves host-only transforms to host registries', () => {
+  it('executes stable sorting and cumulative intervals through the default data registry', () => {
     const sorted = applyTransforms([{ m: 3 }, { m: 1 }, { m: 2 }], [{ kind: 'sort', field: 'm' }]);
 
     expect(sorted.map(row => row.m)).toEqual([1, 2, 3]);
-    expect(() => applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }])).toThrow(
-      /not registered/,
-    );
+    const stacked = applyTransforms(SALES, [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }]);
+    expect(stacked.map(row => [row.y0, row.y1])).toEqual([
+      [0, 3],
+      [3, 8],
+      [0, 2],
+      [2, 6],
+    ]);
   });
 
   it('executes custom transform through the same registry', () => {

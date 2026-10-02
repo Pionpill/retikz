@@ -1,17 +1,16 @@
-import type { IRPlotDensityTransform } from '@retikz/plot';
+import type { IRDataDensityTransform } from '@retikz/data';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { measurements } from './transform-density.data';
-
 /** 根据实时控件值创建密度估计 operation */
 export const densityOperationOf = (values: {
   bandwidthMode: 'silverman' | 'value';
   bandwidth: number;
   sampleCount: number;
-}): IRPlotDensityTransform => ({
+}): IRDataDensityTransform => ({
   kind: 'density',
   field: 'value',
   groupBy: ['group'],
@@ -93,5 +92,5 @@ export const previewControlContract = {
     { id: 'narrow', label: '窄带宽', values: { bandwidthMode: 'value', bandwidth: 0.35, sampleCount: 72 } },
     { id: 'wide', label: '宽带宽', values: { bandwidthMode: 'value', bandwidth: 1.2, sampleCount: 48 } },
   ],
-  relatedApis: ['IRPlotDensityTransform.bandwidth', 'IRPlotDensityTransform.sampleCount'],
+  relatedApis: ['IRDataDensityTransform.bandwidth', 'IRDataDensityTransform.sampleCount'],
 } satisfies PreviewControlContract;

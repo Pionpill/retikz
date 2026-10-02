@@ -1,4 +1,8 @@
-import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
+import { NonBlankStringSchema } from '@retikz/foundation';
+import { describe, expect, it } from 'vitest';
+import { literal, number, object } from 'zod';
+
+import type { AnyTransformDefinition, ExternalRow, TransformContext } from '../../src';
 import {
   applyTransforms as applyDataTransforms,
   DEFAULT_TRANSFORM_CONTEXT,
@@ -6,20 +10,18 @@ import {
   defineStatisticsReducer,
   resolveRowSelectorRegistry,
   resolveStatisticsReducerRegistry,
-} from '@retikz/data';
-import { readSourceIndex, readSourceIndices, tagSourceIndex } from '@retikz/data';
-import { NonBlankStringSchema } from '@retikz/foundation';
-import { describe, expect, it } from 'vitest';
-import { literal, number, object } from 'zod';
+  readSourceIndex,
+  readSourceIndices,
+  tagSourceIndex,
+  resolveTransformRegistry,
+} from '../../src';
 
-import { resolvePlotTransformRegistry } from '../../../src/providers';
-
-const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
+const TRANSFORM_REGISTRY = resolveTransformRegistry();
 
 const applyTransforms = (
   rows: Array<ExternalRow>,
   operations?: Parameters<typeof applyDataTransforms>[1],
-  registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
+  registry: ReadonlyMap<string, AnyTransformDefinition> = TRANSFORM_REGISTRY,
   context?: TransformContext,
 ): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
 

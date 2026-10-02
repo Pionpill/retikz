@@ -1,18 +1,17 @@
-import type { IRPlotBinTransform } from '@retikz/plot';
+import type { IRDataBinTransform } from '@retikz/data';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { measurements } from './transform-histogram.data';
-
 /** 根据实时控件值创建分箱 operation */
 export const histogramOperationOf = (values: {
   strategy: 'count' | 'step' | 'thresholds';
   count: number;
   step: number;
   thresholdPreset: 'regular' | 'focused';
-}): IRPlotBinTransform => {
+}): IRDataBinTransform => {
   const thresholds = values.thresholdPreset === 'focused' ? [3, 5, 7, 10, 14] : [4, 8, 12, 16];
   if (values.strategy === 'count') {
     return { kind: 'bin', field: 'measurement', count: values.count, extent: [0, 20], nice: false };
@@ -108,5 +107,5 @@ export const previewControlContract = {
       values: { strategy: 'thresholds', count: 8, step: 4, thresholdPreset: 'focused' },
     },
   ],
-  relatedApis: ['IRPlotBinTransform.count', 'IRPlotBinTransform.step', 'IRPlotBinTransform.thresholds'],
+  relatedApis: ['IRDataBinTransform.count', 'IRDataBinTransform.step', 'IRDataBinTransform.thresholds'],
 } satisfies PreviewControlContract;

@@ -1,4 +1,4 @@
-import type { DataSourceIdentity, ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { DataSourceIdentity, ExternalDatasets, ExternalRow, IRDataTransform } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 
@@ -17,13 +17,12 @@ import type {
 } from '../contract';
 import { RetikzPlotError } from '../error';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
-import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation, IRPlotTransform } from '../schemas';
+import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation } from '../schemas';
 import { CoordinateArrangementKind } from '../schemas';
 import type { LowerPlotsOptions } from './expand';
 import type { PlotDataArtifact } from './expand/lower';
 import { lowerPlotWithDataArtifact } from './expand/lower';
 import { buildPlotLocatorFromDataArtifact } from './locator';
-
 /** lowerPlotWithLineage 选项 */
 export type PlotLineageLowerOptions = LowerPlotsOptions & {
   /** plot lineage 开关；false 时关闭可选摘要，只返回最小结构 */
@@ -87,7 +86,7 @@ const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encodin
 };
 
 /** 取 operation kind 列表 */
-const operationKindsOf = (operations: Array<IRPlotTransform> | undefined): Array<string> =>
+const operationKindsOf = (operations: Array<IRDataTransform> | undefined): Array<string> =>
   operations?.map(operation => operation.kind) ?? [];
 
 /** 按字段白名单裁剪 mark rows */
@@ -224,7 +223,7 @@ const buildPlotLineage = (
       : hostMetadataOf(lineageOptions.hostMetadata, options.hostLineageMetadata);
 
   spec.marks.forEach((mark, markIndex) => {
-    const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
+    const transform = (mark as { transform?: Array<IRDataTransform> }).transform;
     markData.push({ markIndex, events: markLineages[markIndex]?.events ?? [] });
 
     const markLineage: PlotMarkLineage = {

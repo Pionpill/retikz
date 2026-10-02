@@ -15,6 +15,13 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：BREAKING 数据变换统一归属', en: 'Unreleased: BREAKING unified data transforms' },
+          content: {
+            zh: 'stack、bin、normalize、derive-interval、relate、jitter、density 与 smooth 的 schema、类型和实现迁入 @retikz/data 根入口，与既有四种操作共用默认 registry；从 DataTransform 和 IRDataXxxTransform 导入，不再使用 Plot 的具体变换导出或组合 registry。PlotTransform 作者组件、配置字段、默认值与声明顺序保持现状。',
+            en: 'The schemas, types, and implementations of stack, bin, normalize, derive-interval, relate, jitter, density, and smooth move to the @retikz/data package root and share the default registry with its four existing operations. Import DataTransform and IRDataXxxTransform from Data instead of Plot-specific exports or its combined registry. The PlotTransform authoring component, configuration fields, defaults, and declaration order are preserved.',
+          },
+        },
+        {
           label: { zh: '单一 Source 校验边界', en: 'Single Source validation boundary' },
           content: {
             zh: 'transform、reducer 与 selector 的开放配置由各自 Source schema 通过 JSON catchall 校验；registry dispatch 后只运行命中的 Definition schema，不再在前后重复执行通用 JSON object 检查。',

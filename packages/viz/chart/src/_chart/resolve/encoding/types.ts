@@ -3,9 +3,8 @@ import type {
   DataTransformFieldEffectValue,
   DataTransformOutputDescriptor,
   DataTransformPhaseValue,
+  IRDataTransform,
 } from '@retikz/data';
-import type { IRPlotTransform } from '@retikz/plot';
-
 /** Chart encoding mapping 允许消费的 transform capability */
 export type ChartTransformCapability = Readonly<{
   phase: DataTransformPhaseValue;
@@ -43,7 +42,7 @@ export type TransformOperationRecord = Readonly<{
   slot: string;
   slotIndex: number;
   phase: DataTransformPhaseValue;
-  operation: IRPlotTransform;
+  operation: IRDataTransform;
   fieldEffect: DataTransformFieldEffectValue;
   inputs: ReadonlyArray<string>;
   outputs: ReadonlyArray<DataTransformOutputDescriptor>;

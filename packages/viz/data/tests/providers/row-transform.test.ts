@@ -1,18 +1,22 @@
-import type { AnyTransformDefinition, DataView, ExternalRow, TransformContext } from '@retikz/data';
-import { applyTransforms as applyDataTransforms, applyTransformsToDataView, DataFieldType } from '@retikz/data';
-import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import { resolvePlotTransformRegistry } from '../../../src/providers';
-import type { IRPlotTransform } from '../../../src/schemas';
+import type { AnyTransformDefinition, DataView, ExternalRow, TransformContext, IRDataTransform } from '../../src';
+import {
+  applyTransforms as applyDataTransforms,
+  applyTransformsToDataView,
+  DataFieldType,
+  readSourceIndices,
+  tagSourceIndex,
+  resolveTransformRegistry,
+} from '../../src';
 
-const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
+const TRANSFORM_REGISTRY = resolveTransformRegistry();
 
 const applyTransforms = (
   rows: Array<ExternalRow>,
-  operations?: Array<IRPlotTransform>,
-  registry: ReadonlyMap<string, AnyTransformDefinition> = PLOT_TRANSFORM_REGISTRY,
+  operations?: Array<IRDataTransform>,
+  registry: ReadonlyMap<string, AnyTransformDefinition> = TRANSFORM_REGISTRY,
   context?: TransformContext,
 ): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
 
@@ -24,7 +28,7 @@ const SALES: Array<ExternalRow> = [
 ];
 
 describe('applyTransforms (contract)', () => {
-  it('propagates built-in plot output types through the shared DataView pipeline', () => {
+  it('propagates built-in output types through the shared DataView pipeline', () => {
     const baseView: DataView = {
       rows: SALES,
       fieldTypes: new Map([
@@ -37,7 +41,7 @@ describe('applyTransforms (contract)', () => {
     const stacked = applyTransformsToDataView(
       baseView,
       [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
-      PLOT_TRANSFORM_REGISTRY,
+      TRANSFORM_REGISTRY,
     );
     expect(stacked.fieldTypes).toEqual(
       new Map([
@@ -50,7 +54,7 @@ describe('applyTransforms (contract)', () => {
     );
     expect(stacked.fieldTypeEvidence).toEqual(new Set(['month', 'product', 'revenue', 'y0', 'y1']));
 
-    const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', field: 'revenue' }], PLOT_TRANSFORM_REGISTRY);
+    const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', field: 'revenue' }], TRANSFORM_REGISTRY);
     expect(binned.fieldTypes).toEqual(
       new Map([
         ['revenue', DataFieldType.Continuous],

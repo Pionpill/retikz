@@ -1,3 +1,5 @@
+import type { IRDataTransform } from '@retikz/data';
+import { DataTransform } from '@retikz/data';
 import type {
   IRPlotIntervalBounds,
   IRPlotPointFillStyle,
@@ -7,9 +9,8 @@ import type {
   IRPlotPointSizeStyle,
   IRPlotPointZIndexStyle,
   IRPlotTextChannel,
-  IRPlotTransform,
 } from '@retikz/plot';
-import { IntervalBoundKind, PlotGuide, PlotMark, PlotTransform } from '@retikz/plot';
+import { IntervalBoundKind, PlotGuide, PlotMark } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
 import type {
@@ -379,7 +380,7 @@ export const applyDeclaration = (
         );
       }
       into.shortcutTransforms.push({
-        kind: PlotTransform.Stack,
+        kind: DataTransform.Stack,
         y: angle,
         ...(series !== undefined ? { groupBy: series } : {}),
       });
@@ -516,7 +517,7 @@ export const applyDeclaration = (
         );
       }
       into.shortcutTransforms.push({
-        kind: PlotTransform.Normalize,
+        kind: DataTransform.Normalize,
         field: valueField,
         groupBy: [categoryField],
         basis: 'percent',
@@ -524,7 +525,7 @@ export const applyDeclaration = (
     }
     if ((arrangement === 'stack' || arrangement === 'normalize-stack') && arrangementGroup !== undefined) {
       into.shortcutTransforms.push({
-        kind: PlotTransform.Stack,
+        kind: DataTransform.Stack,
         x: categoryField,
         y: valueField,
         groupBy: arrangementGroup,
@@ -665,6 +666,6 @@ export const applyDeclaration = (
     into.scales.push(child.props as InputPlotScale);
   } else if (declaration.kind === 'transform') {
     // 通用 <PlotTransform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
-    into.transforms.push(child.props as IRPlotTransform);
+    into.transforms.push(child.props as IRDataTransform);
   }
 };

@@ -1,10 +1,6 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import {
-  ContourShapeProvider,
-  SectorShapeProvider,
-  createRibbonProviderContribution,
-} from '@retikz/extension';
+import { ContourShapeProvider, SectorShapeProvider, createRibbonProviderContribution } from '@retikz/extension';
 
 import { RetikzPlotError } from '../../error';
 import { PLOT_NAMESPACE } from '../../schemas';

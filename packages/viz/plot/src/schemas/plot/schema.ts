@@ -1,5 +1,5 @@
 import { CompositeBaseSchema } from '@retikz/core';
-import { DataReferenceSchema } from '@retikz/data';
+import { DataReferenceSchema, TransformSchema } from '@retikz/data';
 import {
   JsonObjectSchema,
   NonBlankStringSchema,
@@ -15,7 +15,6 @@ import { BoxPaddingSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
 import { PlotAxisRulesSchema, PlotDefaultsSchema } from '../theme';
-import { TransformSchema } from '../transform';
 import {
   CompositionAxisResolve,
   CompositionGridResolve,

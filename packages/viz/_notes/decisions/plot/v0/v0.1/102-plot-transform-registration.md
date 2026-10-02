@@ -5,7 +5,8 @@ keywords: 'plot、plot-only、transform、stack、normalize、density、resolveP
 
 # ADR-102：plot 自行注册 plot-only transform
 
-- 状态：Accepted
+- 状态：Superseded
+- 替代：[Data v0.2 ADR-001：统一数据变换所有权](../../../data/v0/v0.2/001-shared-transforms.md)
 - 决策日期：2026-07-06
 - 完成日期：2026-07-07
 - 关联：[plot v0.1-beta.1 roadmap](./roadmap.md) · [data ADR-002](../../../data/v0/v0.1/002-shared-provider-boundary.md) · [ADR-101：适配 @retikz/data 数据层](./101-data-package-adapter.md) · [plot-design.md §3.3 Transform / §8 lowering](../../../../architecture/plot-design.md)

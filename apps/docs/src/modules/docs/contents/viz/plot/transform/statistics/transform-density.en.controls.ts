@@ -77,5 +77,5 @@ export const previewControlContract = {
     { id: 'narrow', label: 'Narrow bandwidth', values: { bandwidthMode: 'value', bandwidth: 0.35, sampleCount: 72 } },
     { id: 'wide', label: 'Wide bandwidth', values: { bandwidthMode: 'value', bandwidth: 1.2, sampleCount: 48 } },
   ],
-  relatedApis: ['IRPlotDensityTransform.bandwidth', 'IRPlotDensityTransform.sampleCount'],
+  relatedApis: ['IRDataDensityTransform.bandwidth', 'IRDataDensityTransform.sampleCount'],
 } satisfies PreviewControlContract;

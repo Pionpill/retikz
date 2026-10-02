@@ -1,7 +1,11 @@
-import { resolveRegressionRegistry } from '@retikz/data';
-import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
+import {
+  resolveRegressionRegistry,
+  resolveRowSelectorRegistry,
+  resolveStatisticsReducerRegistry,
+  resolveTransformRegistry,
+} from '@retikz/data';
 import { createReadonlyMap } from '@retikz/foundation';
-import { resolveCoordinateRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '@retikz/plot';
+import { resolveCoordinateRegistry, resolveScaleRegistry } from '@retikz/plot';
 import type { ZodType } from 'zod';
 import { union, ZodLiteral, ZodObject } from 'zod';
 
@@ -199,7 +203,7 @@ const sharedRuntimeDefinitionsOf = (
 const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): ChartEncodingRuntime => {
   try {
     return Object.freeze({
-      transforms: createReadonlyMap(resolvePlotTransformRegistry(definitions.transformDefinitions)),
+      transforms: createReadonlyMap(resolveTransformRegistry(definitions.transformDefinitions)),
       regressions: createReadonlyMap(resolveRegressionRegistry(definitions.regressionDefinitions)),
       reducers: createReadonlyMap(resolveStatisticsReducerRegistry(definitions.statisticsReducerDefinitions)),
       selectors: createReadonlyMap(resolveRowSelectorRegistry(definitions.rowSelectorDefinitions)),

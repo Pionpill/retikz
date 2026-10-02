@@ -1,11 +1,10 @@
 import type { IRChild, IRPath } from '@retikz/core';
-import { defineRegression, DEFAULT_TRANSFORM_CONTEXT, resolveRegressionRegistry } from '@retikz/data';
+import { defineRegression, DEFAULT_TRANSFORM_CONTEXT, resolveRegressionRegistry, applySmooth } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import { PlotSchema } from '../../../src';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import { applySmooth } from '../../../src/providers';
 
 const definition = defineRegression({
   schema: strictObject({ kind: literal('degree-fit'), degree: number().default(1) }),

@@ -4,6 +4,7 @@ import type {
   DataTransformPhaseValue,
   IRDataReducerOperation,
   TransformContext,
+  IRDataTransform,
 } from '@retikz/data';
 import {
   DataTransform,
@@ -13,7 +14,6 @@ import {
   DEFAULT_TRANSFORM_CONTEXT,
 } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotTransform } from '@retikz/plot';
 
 import { RetikzChartError } from '../../../error';
 import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
@@ -102,7 +102,7 @@ const parseDerivedMapping = (
   value: JsonObject,
   slotIndex: number,
 ): Readonly<{ record: TransformOperationRecord; descriptor: DataTransformOutputDescriptor }> => {
-  const operation = objectValueOf(value.transform) as IRPlotTransform | undefined;
+  const operation = objectValueOf(value.transform) as IRDataTransform | undefined;
   const output = value.output;
   const path = mappingPathOf(consumer.slot);
   if (operation === undefined || typeof operation.kind !== 'string' || typeof output !== 'string') {
@@ -216,7 +216,7 @@ const assertUniqueOperations = (records: ReadonlyArray<TransformOperationRecord>
 
 const extensionTransformOutputs = (
   context: ChartEncodingResolveContext,
-  operation: IRPlotTransform,
+  operation: IRDataTransform,
 ): ReadonlyArray<string> => {
   const definition = context.runtime.transforms.get(operation.kind);
   if (definition === undefined) return [];

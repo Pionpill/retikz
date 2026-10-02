@@ -31,7 +31,7 @@ Switch the interval source to compare explicit `startFrom` / `endFrom` fields wi
 
 ### API Reference
 
-`IRPlotDeriveIntervalTransform` fixes `kind` to `'derive-interval'`. Both input modes share the same output-field configuration.
+`IRDataDeriveIntervalTransform` fixes `kind` to `'derive-interval'`. Both input modes share the same output-field configuration.
 
 | prop          | type     | default | description                                           |
 | ------------- | -------- | ------- | ----------------------------------------------------- |
@@ -61,9 +61,7 @@ Both `derive-interval` and `stack` default to `y0` / `y1`, but their meaning dif
   sources={[
     {
       label: 'derive-interval mode selection and error',
-      path: 'packages/viz/plot/src/providers/transform/row.ts',
-      startLine: 154,
-      endLine: 177,
+      path: 'packages/viz/data/src/providers/transform/row.ts',
     },
   ]}
 />
@@ -84,7 +82,7 @@ Adjust the maximum offset and random seed. The chart uses a fixed data domain so
 
 ### API Reference
 
-`IRPlotJitterTransform` fixes `kind` to `'jitter'`.
+`IRDataJitterTransform` fixes `kind` to `'jitter'`.
 
 | prop      | type                            | default | description                           |
 | --------- | ------------------------------- | ------- | ------------------------------------- |
@@ -112,9 +110,7 @@ The offset is applied before Scale, so `amount` is measured in data units rather
   sources={[
     {
       label: 'Deterministic data-space jitter',
-      path: 'packages/viz/plot/src/providers/transform/row.ts',
-      startLine: 179,
-      endLine: 217,
+      path: 'packages/viz/data/src/providers/transform/row.ts',
     },
   ]}
 />

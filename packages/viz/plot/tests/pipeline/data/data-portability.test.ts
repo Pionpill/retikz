@@ -1,7 +1,15 @@
 import { compileToScene } from '@retikz/core';
-import { applyTransforms, coerceValue, defineTransform, normalizeRows, resolveFieldPath } from '@retikz/data';
-import { DataFieldType } from '@retikz/data';
-import { readSourceIndex, tagSourceIndex } from '@retikz/data';
+import {
+  applyTransforms,
+  coerceValue,
+  defineTransform,
+  normalizeRows,
+  resolveFieldPath,
+  DataFieldType,
+  readSourceIndex,
+  tagSourceIndex,
+  resolveTransformRegistry,
+} from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
@@ -9,10 +17,8 @@ import { literal, object } from 'zod';
 import { createPlotLocator } from '../../../src/pipeline';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
-import { resolvePlotTransformRegistry } from '../../../src/providers';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
-
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
@@ -171,7 +177,7 @@ describe('coerce-before-transform 关键回归', () => {
       ],
       new Map([['v', DataFieldType.Continuous]]),
     );
-    const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }], resolvePlotTransformRegistry());
+    const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }], resolveTransformRegistry());
     expect(stacked[1]).toMatchObject({ y0: 3, y1: 8 });
   });
 });

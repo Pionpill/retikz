@@ -1,11 +1,11 @@
-import type { IRPlotTransform } from '@retikz/plot';
+import type { IRDataTransform } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../../src/components/marks';
 
 describe('buildPlotIR mark-local transform', () => {
-  const markTransform: Array<IRPlotTransform> = [{ kind: 'sort', field: 'score', order: 'descending' }];
+  const markTransform: Array<IRDataTransform> = [{ kind: 'sort', field: 'score', order: 'descending' }];
 
   it('point_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(<PointMark x="x" y="score" transform={markTransform} />, '__plot');
@@ -28,7 +28,7 @@ describe('buildPlotIR mark-local transform', () => {
   });
 
   it('mark_transform_shortcut_definitions_append_plot_transforms_without_consuming_mark_local_transform', () => {
-    const shortcutTransform: IRPlotTransform = { kind: 'jitter', axis: 'x', xField: 'x', amount: 0.2, seed: 9 };
+    const shortcutTransform: IRDataTransform = { kind: 'jitter', axis: 'x', xField: 'x', amount: 0.2, seed: 9 };
     const spec = buildPlotIR(<PointMark x="x" y="score" transform={markTransform} />, '__plot', {
       markTransformShortcuts: [
         {

@@ -1,10 +1,11 @@
-import type { ExternalRow, TransformContext } from '@retikz/data';
-import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import { RetikzPlotError } from '../../error';
-import type { IRPlotDensityTransform } from '../../schemas';
+import type { TransformContext } from '../../contract';
+import { RetikzDataError } from '../../error';
+import type { IRDataDensityTransform } from '../../schemas';
 import { DensityBandwidthKind } from '../../schemas';
+import type { ExternalRow } from '../../shared';
+import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from './shared';
 
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;
 const DENSITY_EXTENT_BANDWIDTH_FACTOR = 3;
@@ -30,8 +31,8 @@ const quantileOfSorted = (sorted: Array<number>, p: number): number => {
 
 const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
   if (sortedValues.length < 2) {
-    throw new RetikzPlotError(
-      'lowerPlots: density transform with Silverman bandwidth requires at least two finite samples; pass an explicit bandwidth for single-value groups',
+    throw new RetikzDataError(
+      'data: density transform with Silverman bandwidth requires at least two finite samples; pass an explicit bandwidth for single-value groups',
     );
   }
   const stdDev = standardDeviationOf(sortedValues);
@@ -39,20 +40,20 @@ const silvermanBandwidthOf = (sortedValues: Array<number>): number => {
   const robustScale = iqr > 0 ? Math.min(stdDev, iqr / 1.34) : stdDev;
   const bandwidth = 0.9 * robustScale * sortedValues.length ** (-1 / 5);
   if (!isFiniteNumber(bandwidth) || bandwidth <= 0) {
-    throw new RetikzPlotError(
-      'lowerPlots: density transform could not compute a positive Silverman bandwidth; values may be identical, pass an explicit bandwidth',
+    throw new RetikzDataError(
+      'data: density transform could not compute a positive Silverman bandwidth; values may be identical, pass an explicit bandwidth',
     );
   }
   return bandwidth;
 };
 
-const bandwidthOf = (operation: IRPlotDensityTransform, sortedValues: Array<number>): number => {
+const bandwidthOf = (operation: IRDataDensityTransform, sortedValues: Array<number>): number => {
   if (operation.bandwidth?.kind === DensityBandwidthKind.Value) return operation.bandwidth.value;
   return silvermanBandwidthOf(sortedValues);
 };
 
 const sampleExtentOf = (
-  operation: IRPlotDensityTransform,
+  operation: IRDataDensityTransform,
   sortedValues: Array<number>,
   bandwidth: number,
 ): [number, number] => {
@@ -70,13 +71,13 @@ const densityAt = (x: number, values: ReadonlyArray<number>, bandwidth: number):
 };
 
 /** 返回 density transform 读取的源字段 */
-export const densityInputFields = (operation: IRPlotDensityTransform): Array<string> => [
+export const densityInputFields = (operation: IRDataDensityTransform): Array<string> => [
   operation.field,
   ...(operation.groupBy ?? []),
 ];
 
 /** 返回 density transform 写出的派生字段 */
-export const densityOutputFields = (operation: IRPlotDensityTransform): Array<string> => [
+export const densityOutputFields = (operation: IRDataDensityTransform): Array<string> => [
   operation.xAs,
   operation.densityAs,
 ];
@@ -84,13 +85,13 @@ export const densityOutputFields = (operation: IRPlotDensityTransform): Array<st
 /** density：一维 Gaussian KDE 采样，每组输出 sampleCount 行 */
 export const applyDensity = (
   rows: Array<ExternalRow>,
-  operation: IRPlotDensityTransform,
+  operation: IRDataDensityTransform,
   context: TransformContext,
 ): Array<ExternalRow> =>
   groupRowsByFields(rows, operation.groupBy).flatMap(group => {
     const sortedValues = finiteFieldValuesOf(group.rows, operation.field).sort((a, b) => a - b);
     if (sortedValues.length === 0) {
-      throw new RetikzPlotError(`lowerPlots: density transform field "${operation.field}" has no finite values`);
+      throw new RetikzDataError(`data: density transform field "${operation.field}" has no finite values`);
     }
     const bandwidth = bandwidthOf(operation, sortedValues);
     const extent = sampleExtentOf(operation, sortedValues, bandwidth);
