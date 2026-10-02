@@ -217,37 +217,6 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 - 固定单格尺寸可以小于内容，但父级分配若容纳不下整组单元格与间隙，会编译失败。父级给出多余空间时，单元格仍从起点排布，不拉伸填满。
 - 这是数据结构的绘制组件，不负责数据处理、任意矩阵或合并单元格。
 
-## 实现原理
-
-<ComponentAlert type="tip" title="选读" description="本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。" />
-
-### 尺寸如何确定
-
-`resolveMap` 先合并整体、键值角色与单格设置，再补默认值；文字转为无背景、无边框、零内边距的文本节点。`compileMap` 对每格内容按自然尺寸测量一次，分别求键列和值列的最大宽度，并按每行两格的较大高度推进。固定格保留自己的宽高，所以轨道对齐不意味着每个边框都被拉伸。
-
-<SourceLinks
-  sources={[
-    { label: '设置合并与默认值', path: 'packages/library/standard/src/container/map/resolve/resolve.ts', startLine: 1 },
-    { label: '测量与排布', path: 'packages/library/standard/src/container/map/pipeline.ts', startLine: 1 },
-  ]}
-/>
-
-### 为什么引用和标签不改变单元格尺寸
-
-排布完成后，`compileCells` 复用测量结果，将内容居中，并分别输出背景、内容裁切层和边框。单元格 id 由不可见的矩形节点承载，使用分配给该格的尺寸，因此不受内容视觉溢出影响。另行发布的 `container` 和 `cell:<id>` 空间 handle 供 inspection 使用，不替代命名引用。
-
-容器标签由另一个不可见矩形承载，矩形大小取容器的布局分配范围。标签在单元格排布完成后附着，不反向参与单格测量；它只扩展最终可见范围。标签宿主不继承单元格角色样式，也不使用 `defaults.node`。
-
-<SourceLinks
-  sources={[
-    {
-      label: '内容复用、引用矩形与标签宿主',
-      path: 'packages/library/standard/src/container/shared/cell-layout.ts',
-      startLine: 1,
-    },
-  ]}
-/>
-
 ## API 参考
 
 以下为当前组件的 React、Vanilla 和 IR 公开入口局部参考，签名与说明由源码生成。共享样式和持久化字段见后面的 Schema；不在这里复制整包公共契约。

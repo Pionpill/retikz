@@ -218,49 +218,6 @@ Automatic cells default to `overflow: 'visible'`; fixing either axis changes the
 - A fixed cell may be smaller than its content, but compilation fails if the parent allocation cannot fit all cells and gaps. Extra parent space remains at the end rather than stretching cells.
 - These components draw data structures; they do not process data or implement arbitrary matrices or merged cells.
 
-## Implementation
-
-<ComponentAlert
-  type="tip"
-  title="Optional reading"
-  description="This section explains internal implementation. If you only need to use the component, skip ahead to the API reference."
-/>
-
-### How dimensions are determined
-
-`resolveMap` merges overall, role, and cell settings before applying defaults. Text becomes a node with no background, border, or padding. `compileMap` measures each content once at its natural size, computes separate key/value column maxima, and advances by the larger height in each row. Fixed cells keep their own dimensions, so aligned tracks do not imply stretched borders.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Settings and defaults',
-      path: 'packages/library/standard/src/container/map/resolve/resolve.ts',
-      startLine: 1,
-    },
-    {
-      label: 'Measurement and placement',
-      path: 'packages/library/standard/src/container/map/pipeline.ts',
-      startLine: 1,
-    },
-  ]}
-/>
-
-### Why references and labels do not resize cells
-
-After placement, `compileCells` reuses the measured results to center content and emit the background, clipped content layer, and border separately. An invisible rectangular node carries each cell id using its allocated size, so content overflow does not affect the reference. Separate `container` and `cell:<id>` spatial handles support inspection rather than replacing named references.
-
-Another invisible rectangle hosts container labels using the container allocation. Labels attach after cell placement and do not feed back into cell measurement; they only extend visible bounds. The label host does not inherit cell role styling or use `defaults.node`.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Content replay, reference rectangles, and label host',
-      path: 'packages/library/standard/src/container/shared/cell-layout.ts',
-      startLine: 1,
-    },
-  ]}
-/>
-
 ## API reference
 
 This local reference covers the component’s public React, Vanilla, and IR entries, generated from source signatures and comments. See the Schema section for persistent fields; shared package contracts are not duplicated here.
