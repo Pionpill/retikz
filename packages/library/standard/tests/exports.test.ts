@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import * as standardExports from '../src';
 import { RetikzStandardError } from '../src';
-import * as containerExports from '../src/container';
+import * as collectionExports from '../src/collection';
 import * as presentationExports from '../src/presentation';
 import {
   AxesDefinition,
@@ -26,7 +26,7 @@ describe('@retikz/standard family exports', () => {
       namespace: 'standard',
       type: 'grid',
     });
-    expect(containerExports).not.toHaveProperty('GridDefinition');
+    expect(collectionExports).not.toHaveProperty('GridDefinition');
     expect(standardExports).toHaveProperty('RetikzStandardError', RetikzStandardError);
     expect(standardExports).not.toHaveProperty('GridDefinition');
   });

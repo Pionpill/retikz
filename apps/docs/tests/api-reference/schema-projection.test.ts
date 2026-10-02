@@ -25,7 +25,7 @@ import type { SurfaceInput, AxesInput, GridInput, GridLineInput } from '@retikz/
 import type { IRArc, PolygonSchema } from '@retikz/standard/shape';
 import type { ArcProps } from '@retikz/standard-react/shape';
 import type { InputArc } from '@retikz/standard-vanilla/shape';
-import type { IRList, IRListCell } from '@retikz/standard/container';
+import type { IRList, IRListCell } from '@retikz/standard/collection';
 import type { input as ZodInput } from 'zod';
 type PolygonSource = ZodInput<typeof PolygonSchema>;
 export type ArcFields = Pick<IRArc, 'close' | 'startAngle'>;
@@ -62,8 +62,8 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
             '@retikz/standard/presentation': [
               path.join(repositoryRoot, 'packages/library/standard/src/presentation/index.ts'),
             ],
-            '@retikz/standard/container': [
-              path.join(repositoryRoot, 'packages/library/standard/src/container/index.ts'),
+            '@retikz/standard/collection': [
+              path.join(repositoryRoot, 'packages/library/standard/src/collection/index.ts'),
             ],
             '@retikz/standard-react/shape': [
               path.join(repositoryRoot, 'packages/library/standard-react/src/shape/index.ts'),
