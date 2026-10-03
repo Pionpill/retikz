@@ -36,19 +36,29 @@ const flatten = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   items.flatMap(item => (item.type === 'group' ? flatten(item.children) : [item]));
 
 describe('Flow bend routing', () => {
-  it('excludes distant boxes without treating envelope overlap as curve contact or losing edge contact', () => {
+  it.each([1, 100])('在 %s 倍尺度下排除曲线内侧空白并保留相切接触', scale => {
     const route = {
       kind: 'bend' as const,
       points: [
         [0, 0],
-        [200, 0],
+        [200 * scale, 0],
       ] as const,
       bendDirection: 'left' as const,
       bendAngle: 60,
     };
     const relation = routingInput().relations[0];
     const score = (bounds: { x: number; y: number; width: number; height: number }) =>
-      scoreFlowBendNodes(route, relation, [{ id: 'obstacle', bounds }])[0];
+      scoreFlowBendNodes(route, relation, [
+        {
+          id: 'obstacle',
+          bounds: {
+            x: bounds.x * scale,
+            y: bounds.y * scale,
+            width: bounds.width * scale,
+            height: bounds.height * scale,
+          },
+        },
+      ])[0];
     expect(score({ x: 90, y: 100, width: 20, height: 20 })).toBe(0);
     expect(score({ x: 90, y: -10, width: 20, height: 5 })).toBe(0);
     // 盒中心在曲线包围盒之外，但上边缘仍与曲线相切

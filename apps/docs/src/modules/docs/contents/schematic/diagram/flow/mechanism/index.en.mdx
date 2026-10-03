@@ -166,7 +166,7 @@ Refinement does not straighten the curve. Each step bisects the current paramete
 
 1. **The AABB is separate from the obstacle box:** discard the interval without further subdivision.
 2. **The AABB lies entirely inside the obstacle box:** retain the interval.
-3. **The boxes still overlap without containment:** bisect again. At depth `12`, or when both AABB dimensions are at most `0.25` user units, conservatively retain any unresolved interval.
+3. **The boxes still overlap without containment:** bisect again. At depth `8`, or when both AABB dimensions are at most `0.25` user units, conservatively retain any unresolved interval.
 
 The next figure expands the curve check used in the first two stages, showing the whole curve, halves, and depth 3. Orange dashed boxes still overlap an obstacle; gray dotted boxes can be discarded. Execution only refines overlapping branches; all boxes at each illustrated depth are shown for comparison.
 
