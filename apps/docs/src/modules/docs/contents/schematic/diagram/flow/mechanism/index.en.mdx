@@ -109,7 +109,7 @@ Using the measurements from the previous stage, the layout callback places each 
 
 For each fixed Layout specified in the input, the callback first uses `context.placeLayout` to calculate its internal arrangement, then places it in the whole diagram. Each fixed Layout is calculated once; moving it as a whole preserves the relative positions of its objects.
 
-Flow checks that the result is complete, Entity sizes match their measurements, groups contain their contents, and objects, connections, and text satisfy the output contract. Contract errors stop compilation; a bend crossing a node keeps its route and emits a warning, as explained below.
+Flow checks that the result is complete, Entity sizes match their measurements, groups contain their contents, and objects, connections, and text satisfy the output contract. Contract errors stop compilation; a bend crossing a node keeps its route and emits a warning, as explained in [Automatic avoidance for bend curves](#automatic-avoidance-for-bend-curves).
 
 The diagram below shows how a fixed arrangement fits into the whole diagram: both objects move together while keeping their sizes and spacing.
 
@@ -124,9 +124,13 @@ The dotted lines mark the Layout's extent. Layout arranges objects without drawi
   ]}
 />
 
-### bend uses bounded candidates to avoid nodes and labels
+## Automatic avoidance for bend curves
 
-The built-in layered layout places nodes before selecting bend routes. With no authored or inherited angle, it compares `30° / 45° / 60°`; with no direction, it compares both sides, giving at most six candidates. An explicit or inherited side limits selection to that side; an explicit or inherited angle fixes the angle. When both are fixed, or tangent parameters are used, the author's configuration is used directly.
+The built-in layered layout places nodes before selecting from a bounded set of bend routes. Automatic avoidance prioritizes node conflicts, then labels; it neither moves nodes nor guarantees a globally collision-free result.
+
+### Bounded candidates are ranked by priority
+
+With no authored or inherited angle, it compares `30° / 45° / 60°`; with no direction, it compares both sides, giving at most six candidates. An explicit or inherited side limits selection to that side; an explicit or inherited angle fixes the angle. When both are fixed, or tangent parameters are used, the author's configuration is used directly.
 
 Candidates are selected in the following priority order, moving to the next criterion only on a tie:
 
@@ -141,24 +145,64 @@ The figure keeps both endpoints fixed and overlays six reference candidates. The
 
 <ComponentPreview files="flow-bend-candidates" hideCode type="illustration" size="lg" />
 
+<SourceLinks
+  sources={[
+    {
+      label: 'Candidate generation and ordered scoring',
+      path: 'packages/schematic/diagram/src/flow/providers/layout/layered/routing.ts',
+    },
+  ]}
+/>
+
+### Recursive subdivision excludes empty space around the curve
+
+The check has three stages: **whole-curve AABB filtering → subcurve AABB checks → ordered candidate comparison**. An AABB is an axis-aligned bounding box. The same obstacles appear in each panel: the left `60°` curve excludes C in the broad phase; subdivision retains contact near A and excludes the empty space at B. Applying the same check to all six candidates selects right `30°` in this example without labels. Scores are compared in priority order, not combined into a weighted sum.
+
+<ComponentPreview files="flow-bend-screening" hideCode type="illustration" size="lg" />
+
+Node checks first compute an AABB from the whole curve's true x and y extrema, once per candidate, to exclude separate obstacle boxes. The test uses the entire obstacle box, not its center; edge contact and contact within numerical tolerance are retained. Remaining nodes undergo subcurve checks rather than checks of only the midpoint or control points. The broad phase still traverses obstacle boxes across all levels of the same Flow; no spatial index is built.
+
+Refinement does not straighten the curve. Each step bisects the current parameter interval, preserves both exact subcurves, and computes each AABB from its x and y extrema:
+
+1. **The AABB is separate from the obstacle box:** discard the interval without further subdivision.
+2. **The AABB lies entirely inside the obstacle box:** retain the interval.
+3. **The boxes still overlap without containment:** bisect again. At depth `12`, or when both AABB dimensions are at most `0.25` user units, conservatively retain any unresolved interval.
+
+The next figure expands the curve check used in the first two stages, showing the whole curve, halves, and depth 3. Orange dashed boxes still overlap an obstacle; gray dotted boxes can be discarded. Execution only refines overlapping branches; all boxes at each illustrated depth are shown for comparison.
+
+<ComponentPreview files="flow-bend-subdivision" hideCode type="illustration" size="lg" />
+
+Subdivision excludes large empty regions inside the bend, but empty corners of terminal boxes can still cause conservative false positives. This is **parameter bisection, not equal-arc-length sampling or a final line-segment intersection test**. Adjacent retained intervals are merged, legal endpoint departure and arrival are exempted, and the score counts conflicting nodes followed by the total parameter span `Σ(t_end − t_start)`. That span is not physical intersection length. Nodes still use rectangular obstacle boxes rather than shape contours.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Recursive subdivision and contact intervals',
+      path: 'packages/schematic/diagram/src/flow/shared/geometry/bend.ts',
+    },
+    {
+      label: 'Obstacle boxes and node scoring',
+      path: 'packages/schematic/diagram/src/flow/providers/layout/geometry.ts',
+    },
+  ]}
+/>
+
+### Sequential processing and conflict warnings
+
+Leaf margins contribute to obstacle boxes. Relevant ancestor Group shells are not solid obstacles. Endpoint nodes exempt only continuous legal departure and arrival; re-entering after departure still counts as a conflict.
+
+Relations are processed in Source order. Label comparisons include previously selected automatic routes and all non-automatic routes, excluding automatic routes still awaiting selection. The result is repeatable, but does not jointly optimize all relations.
+
+A unique best node candidate is returned directly. When labels need comparison, the first zero-conflict candidate in smaller-angle, left-side preference order ends the search. Unlabeled parallel relations may choose identical routes.
+
 Edge overlaps and crossings are neither checked nor scored for two main reasons:
 
 1. **High computational cost:** each candidate curve would need comparison against other paths, with multiple segment-intersection checks after curve subdivision. This cost becomes more pronounced as the number of elements and connections grows, so it is excluded from automatic route selection.
 2. **Crossings are common:** intersecting connections are normal in flowcharts, and an intersection does not necessarily obscure a node or label. Detecting and scoring crossings solely to reduce their number does not justify the additional cost here; automatic avoidance prioritizes node and label readability.
 
-Unlabeled parallel relations may consequently choose identical routes. A unique best node candidate is returned directly. When labels need comparison, the first zero-conflict candidate in preference order ends the search without changing the node-first, label-second result.
-
-Relations are processed in Source order. Label comparisons include previously selected automatic routes and all non-automatic routes, excluding automatic routes still awaiting selection. The result is repeatable, but does not jointly optimize all relations.
-
-Node checks first compute one bounding rectangle per candidate curve using Math's curve extrema. Nodes whose obstacle boxes do not intersect that rectangle are excluded. The test uses the entire obstacle box, not its center; edge contact and contact within numerical tolerance are retained. Rectangle overlap only calls for further checking and is not itself a conflict.
-
-Remaining nodes undergo continuous curve checks with a conservative geometric approximation, rather than checks of only the midpoint or control points. Leaf margins contribute to obstacle boxes. Relevant ancestor Group shells are not solid obstacles. Endpoints exempt only continuous legal departure and arrival; re-entering after departure still counts as a conflict. Rectangle filtering still traverses obstacle boxes across all levels of the same Flow, but computes the candidate rectangle once and keeps distant nodes out of further curve checks. No spatial index is built.
-
-The flow below follows automatic route selection. Rectangle filtering and continuous checks run separately for each allowed candidate. Labels are compared only when the best node scores tie.
+The following flow follows each relation: filter, refine and score every allowed candidate, then compare labels only when the best node scores tie.
 
 <ComponentPreview files="flow-bend-routing" hideCode type="flow" size="md" />
-
-Rectangle filtering reduces the objects checked while preserving node priority, secondary label scoring, and tie preferences. A unique best node candidate is delivered directly.
 
 Search stays within the allowed candidates without moving nodes or searching for arbitrary control points. If all candidates are obstructed, the best-scoring route is still selected. A shared post-layout check also covers explicitly configured bends and custom providers. Node crossings emit a `FlowBendObstacleConflict` warning at the relation's Source path while preserving the drawing, without switching route kinds.
 
@@ -167,10 +211,6 @@ Search stays within the allowed candidates without moving nodes or searching for
     {
       label: 'Candidate generation and ordered scoring',
       path: 'packages/schematic/diagram/src/flow/providers/layout/layered/routing.ts',
-    },
-    {
-      label: 'Obstacle boxes and node scoring',
-      path: 'packages/schematic/diagram/src/flow/providers/layout/geometry.ts',
     },
     { label: 'Post-layout conflict warnings', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
   ]}
