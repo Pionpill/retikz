@@ -21,15 +21,15 @@ const adapterManifests = [
 
 describe('Standard package exports', () => {
   it('exposes the three Standard component families', () => {
-    const entries = ['.', './shape', './presentation', './container'];
+    const entries = ['.', './shape', './presentation', './collection'];
     expect(Object.keys(standardManifest.exports)).toEqual(entries);
     expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(entries);
   });
 
   it('exposes the same family subpaths through both adapters', () => {
     for (const manifest of adapterManifests) {
-      expect(Object.keys(manifest.exports)).toEqual(['.', './shape', './presentation', './container']);
-      expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './shape', './presentation', './container']);
+      expect(Object.keys(manifest.exports)).toEqual(['.', './shape', './presentation', './collection']);
+      expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './shape', './presentation', './collection']);
     }
   });
 });

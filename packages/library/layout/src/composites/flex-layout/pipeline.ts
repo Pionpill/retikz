@@ -132,10 +132,10 @@ const rectAxis = (rect: LayoutRect, axis: PhysicalAxis): Readonly<{ start: numbe
 /** 执行一次必需的 child probe，并在失败时保留 Core occurrence 提升错误 */
 const requiredProbe = (
   context: LayoutCompositeCompileContext,
-  child: CanonicalFlexLayoutItem['child'],
+  sourceIndex: number,
   proposal: LayoutProposal,
 ): LayoutChildResult => {
-  const probe = context.layoutChild(child, proposal);
+  const probe = context.layoutChild(context.sourceChild(['children', sourceIndex, 'child']), proposal);
   if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
   return probe.result;
 };
@@ -332,18 +332,14 @@ export const compileFlexLayout = (
     const crossBasis = basisCrossProposal(finiteCrossLimit, stretchedCrossSize);
     const minimumResult = requiredProbe(
       context,
-      authored.child,
+      sourceIndex,
       physicalProposal(axes.main, intrinsicProposal('minimum'), crossBasis),
     );
     const childMinimum = slotSizeOn(minimumResult, axes.main);
     const flexBaseSlot =
       authored.basis === 'content'
         ? slotSizeOn(
-            requiredProbe(
-              context,
-              authored.child,
-              physicalProposal(axes.main, intrinsicProposal('natural'), crossBasis),
-            ),
+            requiredProbe(context, sourceIndex, physicalProposal(axes.main, intrinsicProposal('natural'), crossBasis)),
             axes.main,
           )
         : authored.basis;
@@ -432,7 +428,7 @@ export const compileFlexLayout = (
   const crossResults = measured.map((item, sourceIndex) =>
     requiredProbe(
       context,
-      item.authored.child,
+      item.sourceIndex,
       physicalProposal(
         axes.main,
         exactProposal(mainSlotBySource[sourceIndex]),
@@ -547,7 +543,7 @@ export const compileFlexLayout = (
         const itemCrossSlot = Math.max(0, line.finalCrossSize - crossMargins.start - crossMargins.end);
         finalResult = requiredProbe(
           context,
-          item.authored.child,
+          item.sourceIndex,
           physicalProposal(axes.main, exactProposal(mainSlot), exactProposal(itemCrossSlot)),
         );
       }

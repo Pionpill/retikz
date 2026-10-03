@@ -1,16 +1,19 @@
 ﻿import type { DataFieldTypeValue } from '../schemas';
 import type { ExternalRow } from '../shared';
+import type { DataTransformModel } from './execution';
 
 /** 逻辑字段名到字段测量类型的运行时映射；由 data.model、自动推断和 resolver 合成，不进入 IR */
 export type DataFieldTypeMap = Map<string, DataFieldTypeValue>;
 
-/** 一次数据处理阶段解析完成的行、字段类型与类型证据 */
+/** 一次数据处理阶段的完整逻辑模型与规范行；类型投影由模型派生 */
 export type DataView = Readonly<{
   /** 当前阶段实际输出的行 */
   rows: Array<ExternalRow>;
-  /** 当前阶段字段名到测量类型的映射 */
+  /** 唯一字段事实源；未定类型字段仍存在，分类顺序随作用域保留 */
+  model: DataTransformModel;
+  /** 从 model 派生的测量类型映射；修改此投影不改变模型 */
   fieldTypes: DataFieldTypeMap;
-  /** 已由model、resolver、有效观测或Definition descriptor证明类型的字段 */
+  /** 从 model 中已证明类型的字段派生 */
   fieldTypeEvidence: ReadonlySet<string>;
 }>;
 

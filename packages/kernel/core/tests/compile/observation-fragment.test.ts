@@ -21,6 +21,47 @@ const observableComposite = core.defineComposite({
 });
 
 describe('Core isolated observation fragments', () => {
+  it('compiles generated nested fragments without inheriting primary Source bindings', () => {
+    const prepared = core.defineComposite({
+      namespace: 'test',
+      type: 'fragment-input',
+      schema: core.CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('fragment-input') }),
+      expand: (_node, context) => ({
+        children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput ?? 'unbound') }],
+      }),
+    });
+    const source = scene([{ namespace: 'test', type: 'fragment-input' }]);
+    const compositeInputs = core.createCompositeInputBindings(source, [
+      { path: ['children', 0], input: 'primary-secret' },
+    ]);
+    const fragments: Array<string> = [];
+    const observer: CompileObserverDefinition = {
+      key: 'fragment-input',
+      createSession: () => ({
+        select: site => site.owner.kind === 'node',
+        observe: (_observation, context) => {
+          fragments.push(
+            JSON.stringify(
+              context.compileFragment({
+                type: 'scope',
+                children: [
+                  { namespace: 'test', type: 'fragment-input' },
+                  { type: 'scope', children: [{ type: 'node', position: [30, 0], text: 'auxiliary' }] },
+                ],
+              }).scene,
+            ),
+          );
+        },
+        complete: () => null,
+      }),
+    };
+    const result = core.observeCompileToScene(source, { composites: [prepared], compositeInputs }, [observer]);
+    expect(JSON.stringify(result.primary.scene)).toContain('primary-secret');
+    expect(fragments).toHaveLength(1);
+    expect(fragments[0]).toContain('unbound');
+    expect(fragments[0]).toContain('auxiliary');
+    expect(fragments[0]).not.toContain('primary-secret');
+  });
   it('inherits compile context while isolating resources, artifacts, and observers', () => {
     let selectionCalls = 0;
     const observer: CompileObserverDefinition = {

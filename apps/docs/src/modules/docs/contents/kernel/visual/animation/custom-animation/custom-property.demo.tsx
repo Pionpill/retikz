@@ -2,6 +2,7 @@ import { createInputScene, Node } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { FC } from 'react';
 
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 import { usePreviewControls } from '@/modules/docs/preview';
 
@@ -26,7 +27,9 @@ const previewInput = createInputScene(
   </Node>,
 );
 
-export const previewIR = normalizeScene(previewInput.scene, { adapters: previewInput.adapters }).ir;
+export const previewIR = normalizeScene(previewInput.scene, {
+  adapters: synchronousInputAdaptersOf(previewInput.adapters),
+}).ir;
 
 const Demo: FC = () => {
   const values = usePreviewControls(customPropertyControls);

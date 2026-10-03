@@ -10,6 +10,8 @@ import { isValidElement } from 'react';
 import { ModuleKind, transpileModule } from 'typescript';
 import { describe, expect, it } from 'vitest';
 
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
+
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import {
   availableSourceViews,
@@ -171,7 +173,7 @@ describe('Inspect demo source views', () => {
         };
         expect(
           vanilla.renderToSvgString(input, {
-            adapters: original.adapters,
+            adapters: synchronousInputAdaptersOf(original.adapters),
             compile: {
               clips: root.props.extensions?.clips,
               themeStyles: theme.PreviewThemeDefinitionBundle.core,

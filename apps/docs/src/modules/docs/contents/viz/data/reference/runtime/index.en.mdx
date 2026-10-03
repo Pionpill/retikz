@@ -9,32 +9,31 @@ Follow the solid row-processing path: host data is resolved and normalized befor
 
 <ComponentPreview files="data-runtime-flow" hideCode size="lg" />
 
-JSON-safe contracts therefore determine which configuration can be stored, while Definitions and registries determine how that configuration executes. Processed rows can carry opt-in Symbol provenance; lineage is returned as a separate run or sent to an event sink.
+JSON-safe contracts determine which configuration can be stored. Definitions describe semantics; Implementations and the executor determine computation. Processed rows can carry opt-in Symbol provenance; lineage is returned as a separate run or sent to an event sink.
 
-## Runtime stages
+## Separate semantics and computation
 
-| Stage              | Primary public entry points                                                                                           | Result                                                             |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Define extensions  | `defineFieldFormat`, `defineTransform`, `defineStatisticsReducer`, `defineRowSelector`                                | Definitions with registry keys or schemas and pure implementations |
-| Resolve registries | `resolveFormatRegistry`, `resolveTransformRegistry`, `resolveStatisticsReducerRegistry`, `resolveRowSelectorRegistry` | A `Map` merging built-in and custom Definitions                    |
-| Prepare fields     | `resolveFieldTypes`, `applyFieldResolver`, `collectFormatFields`, `normalizeRows`                                     | Field types, parsers, and canonical rows                           |
-| Run transforms     | `collectTransformFields`, `applyTransforms`, `applyTransformsWithLineage`                                             | Transformed rows and optional `DataLineageRun`                     |
-| Track provenance   | `tagSourceIndex`, `withGroupProvenance`, `createDataLineageRecorder`                                                  | Symbol provenance and structured lineage events                    |
+| Contract   | Semantic Definition                             | Computing Implementation |
+| ---------- | ----------------------------------------------- | ------------------------ |
+| transform  | schema, input fields, outputModel, dependencies | apply                    |
+| reducer    | schema, input fields, outputs                   | reduce                   |
+| selector   | schema, input fields                            | select                   |
+| regression | schema                                          | fit                      |
 
-The host collects the fields it consumes, chooses the dataset, and passes custom Definitions to the resolvers. Data validates operations against schemas, rejects registry-key conflicts, executes pure functions in order, and returns the result to the host.
+Semantic factories such as `defineTransform` and their `define*Implementation` factories register separately. An implementation must reference the exact registered Definition; matching kind strings alone are insufficient. Built-ins follow the same contract. FieldFormatDefinition retains its source parser.
 
-## Definitions and registries
+Semantic registries merge built-in and custom Definitions, rejecting duplicate keys and built-in overrides. Open JSON operation schemas store parameters; dispatch parses each operation once with the exact Definition schema. `resolveDataTransforms(declarations, inputModel, options?)` resolves fields and complete output models in order without reading rows or computing results.
 
-| Contract                      | Registry key          | Implementation responsibility                            |
-| ----------------------------- | --------------------- | -------------------------------------------------------- |
-| `FieldFormatDefinition`       | `name`                | Declare an implied type and parse raw values             |
-| `TransformDefinition`         | schema `kind` literal | Declare input/output fields and transform rows into rows |
-| `StatisticsReducerDefinition` | schema `kind` literal | Reduce a row group to an output-field fragment           |
-| `RowSelectorDefinition`       | schema `kind` literal | Select original rows and optional ranks from a row group |
+## Async execution
 
-Each resolver starts from built-in Definitions and merges a caller-provided array. A custom key cannot replace a built-in key or appear twice. A format validates its `name` and directly uses its parser. The public Source schemas for transforms, reducers, and selectors validate open configuration through JSON catchalls, then registry dispatch runs only the matched exact Definition schema. No generic JSON-object validation wraps that exact schema. An unknown transform, reducer, or selector `kind` fails loudly and names the corresponding injection point.
+`createDataTransformExecutor(options?)` holds local implementations, named externalProviders, default dataExecution and optional materializeSource. Priority is executor < host root < declaration; mode and external name inherit independently.
 
-Inspect the built-in collections through `BUILTIN_FORMATS`, `BUILTIN_TRANSFORMS`, `BUILTIN_STATISTICS_REDUCERS`, and `BUILTIN_ROW_SELECTORS`. See [Data Model Extensions](/viz/data/model/extensions) and [Data Transform Extensions](/viz/data/transform/extensions) for complete custom-definition flows.
+1. `executor.prepare(descriptor, resolution, options?)` preflights the whole plan; descriptors carry models and necessary source handles rather than fabricated rows
+2. On ready, `bind(actualInput)` binds a real source or result
+3. Call `execute()` once for a `DataTransformResult` or Promise; success, failure and cancellation all consume the instance
+4. `ingestDataTransformResult` checks rows, the complete model and the semantic plan; empty output retains fields and category order, and extra payload fields never become model fields automatically
+
+`executeDataTransforms` provides a single-call entry for this sequence. Both provider resolve and stage execute may return Promises. Hybrid chooses local computation only for explicit unsupported preflight; query exceptions, computation failures, invalid output and cancellation never trigger recomputation. See [Extensions](/viz/data/transform/extensions) for modes and a working example.
 
 ## Field preparation
 
@@ -51,7 +50,7 @@ Inspect the built-in collections through `BUILTIN_FORMATS`, `BUILTIN_TRANSFORMS`
 
 ## Transforms and lineage
 
-`applyTransforms(rows, operations?, registry?, context?)` executes operations in declaration order and returns rows only. `applyTransformsWithLineage(rows, operations?, options?)` first tags input rows with Symbol provenance that JSON serialization ignores, then returns:
+`applyTransforms(rows, operations?, options?)` executes operations in declaration order and returns rows only; options carry the registry, separate synchronous implementations and context. Use the executor for Promise or external computation. `applyTransformsWithLineage(rows, operations?, options?)` first tags input rows with Symbol provenance that JSON serialization ignores, then returns:
 
 | Field     | Type                 | Meaning                                                                                        |
 | --------- | -------------------- | ---------------------------------------------------------------------------------------------- |
@@ -83,8 +82,6 @@ Inspect the built-in collections through `BUILTIN_FORMATS`, `BUILTIN_TRANSFORMS`
     {
       label: 'Transform registry merge',
       path: 'packages/viz/data/src/providers/transform/definitions.ts',
-      startLine: 92,
-      endLine: 104,
     },
     {
       label: 'Statistics and selector registry merge',

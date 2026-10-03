@@ -1,5 +1,6 @@
 import type {
   CompileObservationOwner,
+  CompositeInputBinding,
   CoreProviderContribution,
   IRChild,
   IRTheme,
@@ -23,6 +24,8 @@ export type InputEmbedAuthoringSite = Readonly<{
 
 /** 嵌入 adapter 在同次 Scene 归一化中处理的子项结果 */
 export type NormalizedInputEmbedChildren = Readonly<{
+  /** 相对 children 数组的实例输入；父 adapter 按实际输出字段转交 */
+  runtimeInputs?: ReadonlyArray<CompositeInputBinding>;
   /** 已归一为 Core Source IR 的子节点 */
   children: ReadonlyArray<IRChild>;
   /** 子节点按声明顺序产生的 Composite dependency contribution */
@@ -87,6 +90,8 @@ export type InputEmbedContext = {
 
 /** Tier 2 adapter 对 Source IR 与 Composite resolver 的贡献 */
 export type InputEmbedContribution = {
+  /** 相对 node 的实例运行时输入，不进入 Source IR */
+  runtimeInputs?: ReadonlyArray<CompositeInputBinding>;
   /** 放入 Core Source IR 的 child */
   node: IRChild;
   /** 交由 Vanilla processing 统一消费的 Composite dependency contribution */
@@ -96,12 +101,53 @@ export type InputEmbedContribution = {
 };
 
 /** Tier 2 作者输入到 Core contribution 的适配器 */
-export type InputEmbedAdapter<TProps = unknown> = {
+export type InputEmbedPreparation = Readonly<{
+  /** 单次执行，完成领域计算并产生同步贡献 */
+  execute: () => InputEmbedContribution | Promise<InputEmbedContribution>;
+}>;
+
+/** 嵌套作者输入的独立执行权 */
+export type InputEmbedChildrenPreparation = Readonly<{
+  /** 按作者顺序消费已准备的子项 */
+  execute: () => NormalizedInputEmbedChildren | Promise<NormalizedInputEmbedChildren>;
+}>;
+
+/** 共享 processing 提供的作者位置、主题与失效信号 */
+export type InputEmbedPreparationContext = Readonly<Omit<InputEmbedContext, 'normalizeChildren'>> &
+  Readonly<{
+    /** 当前请求取消或被替代时终止 */
+    signal: AbortSignal;
+    /** 只在准备期间登记作者子项，不在执行时发现新依赖 */
+    prepareChildren: (children: ReadonlyArray<InputChild>) => Promise<InputEmbedChildrenPreparation>;
+  }>;
+
+/** 同步入口只接受具有明确 lower 能力的 adapter */
+export type SynchronousInputEmbedAdapter<TProps = unknown> = {
   /** `InputEmbed.kind` 的匹配键 */
   kind: string;
   /** 将领域输入静态下沉为 Core contribution */
   lower: (props: TProps, context: InputEmbedContext) => InputEmbedContribution;
+  /** 异步作者入口的能力准备，不执行领域计算 */
+  prepare?: (
+    props: TProps,
+    context: InputEmbedPreparationContext,
+  ) => InputEmbedPreparation | Promise<InputEmbedPreparation>;
 };
+
+/** 同一 kind 的同步与异步作者能力 */
+export type InputEmbedAdapter<TProps = unknown> =
+  | SynchronousInputEmbedAdapter<TProps>
+  | Readonly<{
+      /** 作者输入匹配键 */
+      kind: string;
+      /** 全树能力准备 */
+      prepare: (
+        props: TProps,
+        context: InputEmbedPreparationContext,
+      ) => InputEmbedPreparation | Promise<InputEmbedPreparation>;
+      /** 仅异步 adapter 不具有同步入口 */
+      lower?: never;
+    }>;
 
 /** 擦除领域属性泛型后的异构 adapter */
 export type AnyInputEmbedAdapter = InputEmbedAdapter<never>;

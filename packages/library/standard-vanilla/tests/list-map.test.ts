@@ -3,7 +3,7 @@ import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { StandardInputEmbedAdapters } from '../src';
-import { list, map } from '../src/container';
+import { list, map } from '../src/collection';
 
 describe('List / Map provider assembly', () => {
   it('keeps object text display in List and Map data inputs', () => {

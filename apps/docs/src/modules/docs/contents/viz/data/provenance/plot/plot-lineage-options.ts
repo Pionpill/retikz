@@ -1,4 +1,5 @@
-import type { IRPlotTransform, PlotLineageOptions, PlotLineageRun } from '@retikz/plot';
+import type { IRDataTransform } from '@retikz/data';
+import type { PlotLineageOptions, PlotLineageRun } from '@retikz/plot';
 
 type ControlledPlotLineageOptions = Required<
   Pick<PlotLineageOptions, 'markIdentity' | 'markEncoding' | 'scaleMappings' | 'layoutContext'>
@@ -18,9 +19,9 @@ type ControlledPlotTransformOptions = {
 /** controls 对应的 root 与 mark-local transform */
 export type PlotLineageTransforms = {
   /** Plot 根级 transform */
-  root: Array<IRPlotTransform>;
+  root: Array<IRDataTransform>;
   /** 单个 mark 的局部 transform */
-  mark: Array<IRPlotTransform>;
+  mark: Array<IRDataTransform>;
 };
 
 /** 单个 transform step 的紧凑摘要 */

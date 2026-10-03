@@ -1,7 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { CompileResult } from '@retikz/core';
-import type { RenderToStringOptions } from '@retikz/vanilla';
-import { renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
+import type { RenderToStringOptions, AsyncProcessingOptions } from '@retikz/vanilla';
+import { renderToSvgString, scene, toSceneResult, processToStaticInputResultAsync } from '@retikz/vanilla';
 import type { InputEmbed } from '@retikz/vanilla';
 
 import { RetikzChartVanillaError } from '../error';
@@ -25,44 +25,54 @@ export type RenderChartResult = Readonly<{
   compileResult: CompileResult;
 }>;
 
-/** 通过一次 Core 编译将 Chart 编写结果渲染为 SVG；完整布局尺寸作为取景范围，输出尺寸只控制显示大小 */
-export const renderChart = (
-  input: InputEmbed<ChartHostThemeInput & { layout?: IRChartSource['layout'] }>,
-  options: RenderChartOptions,
-): RenderChartResult => {
-  const { compile: compileOptions, adapters, ...renderOptions } = options;
-  const {
-    composites: explicitComposites,
-    themeStyles: explicitThemeStyles,
-    ...compileOptionsWithoutDefinitions
-  } = compileOptions ?? {};
+/** Chart 异步服务端渲染选项 */
+export type RenderChartAsyncOptions = Omit<RenderChartOptions, 'adapters'> & {
+  /** 当前图表支持prepare的adapter */
+  adapters: NonNullable<AsyncProcessingOptions['adapters']>;
+  /** 本次请求取消信号 */
+  signal?: AbortSignal;
+};
+
+type ChartRenderInput = InputEmbed<ChartHostThemeInput & { layout?: IRChartSource['layout'] }>;
+
+/** 两种入口共用相同的Scene与Core配置，异步生命周期由Vanilla负责 */
+const chartRenderRequest = (input: ChartRenderInput, compile: RenderChartOptions['compile']) => {
   const themeStyles =
     input.props.themeStyles === undefined
-      ? explicitThemeStyles
-      : explicitThemeStyles === undefined
+      ? compile?.themeStyles
+      : compile?.themeStyles === undefined
         ? input.props.themeStyles
-        : [...input.props.themeStyles, ...explicitThemeStyles];
+        : [...input.props.themeStyles, ...compile.themeStyles];
   const layout = input.props.layout;
-  const result = toSceneResult(
-    scene({
+  return {
+    source: scene({
       ...(layout?.width !== undefined && layout.height !== undefined
         ? { viewBox: { x: 0, y: 0, width: layout.width, height: layout.height } }
         : {}),
       ...(input.props.theme === undefined ? {} : { theme: input.props.theme }),
       children: [input],
     }),
-    {
-      adapters,
-      compile: {
-        ...compileOptionsWithoutDefinitions,
-        ...(explicitComposites === undefined ? {} : { composites: explicitComposites }),
-        ...(themeStyles === undefined ? {} : { themeStyles }),
-      },
-    },
-  );
-  if (result.compileResult === undefined) {
-    throw new RetikzChartVanillaError('chart vanilla: InputScene processing must produce a Core compile result');
-  }
-  const svg = renderToSvgString(result.scene, renderOptions);
-  return { svg, compileResult: result.compileResult };
+    compile: { ...compile, ...(themeStyles === undefined ? {} : { themeStyles }) },
+  };
+};
+
+/** 通过一次同步Core编译渲染Chart */
+export const renderChart = (input: ChartRenderInput, options: RenderChartOptions): RenderChartResult => {
+  const { compile, adapters, ...renderOptions } = options;
+  const request = chartRenderRequest(input, compile);
+  const result = toSceneResult(request.source, { adapters, compile: request.compile });
+  if (result.compileResult === undefined)
+    throw new RetikzChartVanillaError('Chart processing must produce a Core compile result');
+  return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
+};
+
+/** 准备完整作者树后通过同一Core编译渲染Chart，支持Promise计算 */
+export const renderChartAsync = async (
+  input: ChartRenderInput,
+  options: RenderChartAsyncOptions,
+): Promise<RenderChartResult> => {
+  const { compile, adapters, signal, ...renderOptions } = options;
+  const request = chartRenderRequest(input, compile);
+  const result = await processToStaticInputResultAsync(request.source, { adapters, signal, compile: request.compile });
+  return { svg: renderToSvgString(result.scene, renderOptions), compileResult: result.compileResult };
 };

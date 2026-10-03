@@ -8,4 +8,3 @@ export * from './plot';
 export * from './position-adjustment';
 export * from './scale';
 export * from './theme';
-export * from './transform';

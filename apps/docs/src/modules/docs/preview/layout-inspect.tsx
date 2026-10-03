@@ -7,6 +7,7 @@ import { renderToSvgString } from '@retikz/vanilla';
 import type { ReactElement } from 'react';
 
 import type { Lang } from '@/i18n';
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 import type {
   PreviewSourceConfig,
@@ -37,7 +38,7 @@ export const createLayoutInspectPreviewSource = (
         ...(theme === undefined ? {} : { theme }),
       },
       {
-        adapters: authoring.adapters,
+        adapters: synchronousInputAdaptersOf(authoring.adapters),
         compile: {
           measureText: browserMeasurer,
           themeStyles: PreviewThemeDefinitionBundle.core,

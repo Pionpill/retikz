@@ -5,6 +5,14 @@ description: 从图形根结构出发，理解 Chart 的数据、展示、布局
 
 Chart Source 的根级字段描述整张图。先识别它属于哪个图形家族，再分别配置数据、展示内容、布局样式和坐标；具体图形类型由 `recipe` 决定。
 
+## 数据变换与运行入口
+
+所有 Chart 根支持 `transform: Array<IRDataTransformDeclaration>` 与 `dataExecution`；每条声明使用 `{ operation, dataExecution? }`。派生 encoding 同样将操作写入 operation，并可指定该阶段的执行配置。阶段顺序为根变换、派生 encoding，再到 recipe / 图元局部变换。执行优先级为声明 > Chart 根 > 执行器默认值 > builtin。
+
+React 六类 Chart 接收 dataBindings、dataTransformExecutor 和 signal；原始 rows 与 dataBindings 互斥，Data Definition/Implementation 通过 lowerOptions 分别注入。独立客户端自动异步准备；嵌入外层 Layout 时开启 runtime.preparation 为 async。
+
+Vanilla 图表工厂接收相同运行时输入。异步 SSR 使用 `renderChartAsync(input, { adapters: [当前图表Adapter], signal })`，返回 Promise 的 `{ svg, compileResult }`；同步 renderChart 与 React SSR 只接受本地同步计算。数据绑定和三模式说明见 [Data 扩展机制](/viz/data/transform/extensions)。
+
 ## 图形根结构
 
 下面是一份 Point family 的 Scatter Source。它保存作者输入，不保存解析后生成的 Plot 图元、比例尺或辅助元素。

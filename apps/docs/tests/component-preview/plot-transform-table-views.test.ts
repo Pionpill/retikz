@@ -8,7 +8,10 @@ import {
   waterfallOperationOf,
 } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.controls';
 import { waterfallRows } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.data';
-import { waterfallTransform } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.definition';
+import {
+  waterfallTransform,
+  waterfallTransformImplementation,
+} from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.definition';
 
 describe('Plot transform table views', () => {
   it('使用完整 Plot registry 执行内置 transform', () => {
@@ -35,7 +38,7 @@ describe('Plot transform table views', () => {
       { source: 'Source', result: 'Waterfall' },
       waterfallRows,
       waterfallOperationOf,
-      { transformDefinitions: [waterfallTransform] },
+      { transformDefinitions: [waterfallTransform], transformImplementations: [waterfallTransformImplementation] },
     );
     const resultRows = views[1].rows;
 

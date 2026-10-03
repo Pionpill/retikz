@@ -13,6 +13,7 @@ import type {
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
 } from './constants';
+import type { CompositeBoundChild, CompositeRuntimeInputContext } from './input';
 
 /** 单轴 layout proposal 的判别值 */
 export type LayoutAxisProposalKindValue = ValueOf<typeof LayoutAxisProposalKind>;
@@ -150,55 +151,57 @@ export type CompositeReplayWrapper = Readonly<{
 }>;
 
 /** layout-aware composite 可见的受限编译上下文 */
-export type LayoutCompositeCompileContext = Readonly<{
-  /** 当前 composite 位置完整、只读的有效 Theme */
-  theme: ResolvedTheme;
-  /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
-  proposal: LayoutProposal;
-  /**
-   * 从当前 composite Source occurrence 发出非致命编译 warning
-   * @param code 开放的机器可读 warning code
-   * @param message 面向调用方的英文消息
-   * @param subPath 相对当前 composite Source occurrence 的可选 jq-like 路径
-   */
-  warn: (code: string, message: string, subPath?: string) => void;
-  /** 在完整 compile 环境中 probe 任意 child */
-  layoutChild: (child: IRChild, proposal: LayoutProposal) => LayoutChildProbe;
-  /**
-   * 把当前 callback 的一次布局结果转为 one-use output child
-   * @param result 当前 callback 的 resolved probe result
-   * @param wrapper replay 提交时应用的数值变换与裁剪外壳
-   */
-  replay: (result: LayoutChildResult, wrapper?: CompositeReplayWrapper) => CompositeCompileChild;
-  /**
-   * 提升当前 callback 创建的 child probe failure
-   * @param failure 当前 callback 的 failed probe failure
-   */
-  raise: (failure: LayoutChildFailure) => never;
-  /**
-   * 创建递归 runtime Scope output child
-   * @description props 沿普通 Scope orchestration 消费；replay child 仍只通过 replay wrapper 接收布局提交变换与裁剪
-   * @param props 完整 authored Scope props
-   * @param children 普通 IR child 或当前 callback 创建的 opaque child
-   * @param spatialHandles 附着到该 Scope 局部坐标并在最终可达 output tree 中发布的空间声明
-   */
-  scope: (
-    props: CompositeCompileScopeProps,
-    children: ReadonlyArray<IRChild | CompositeCompileChild>,
-    spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>,
-  ) => CompositeCompileChild;
-}>;
+export type LayoutCompositeCompileContext = CompositeRuntimeInputContext &
+  Readonly<{
+    /** 当前 composite 位置完整、只读的有效 Theme */
+    theme: ResolvedTheme;
+    /** 当前 composite occurrence 从父级收到的完整双轴 proposal */
+    proposal: LayoutProposal;
+    /**
+     * 从当前 composite Source occurrence 发出非致命编译 warning
+     * @param code 开放的机器可读 warning code
+     * @param message 面向调用方的英文消息
+     * @param subPath 相对当前 composite Source occurrence 的可选 jq-like 路径
+     */
+    warn: (code: string, message: string, subPath?: string) => void;
+    /** 在完整 compile 环境中 probe 任意 child */
+    layoutChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal) => LayoutChildProbe;
+    /**
+     * 把当前 callback 的一次布局结果转为 one-use output child
+     * @param result 当前 callback 的 resolved probe result
+     * @param wrapper replay 提交时应用的数值变换与裁剪外壳
+     */
+    replay: (result: LayoutChildResult, wrapper?: CompositeReplayWrapper) => CompositeCompileChild;
+    /**
+     * 提升当前 callback 创建的 child probe failure
+     * @param failure 当前 callback 的 failed probe failure
+     */
+    raise: (failure: LayoutChildFailure) => never;
+    /**
+     * 创建递归 runtime Scope output child
+     * @description props 沿普通 Scope orchestration 消费；replay child 仍只通过 replay wrapper 接收布局提交变换与裁剪
+     * @param props 完整 authored Scope props
+     * @param children 普通 IR child 或当前 callback 创建的 opaque child
+     * @param spatialHandles 附着到该 Scope 局部坐标并在最终可达 output tree 中发布的空间声明
+     */
+    scope: (
+      props: CompositeCompileScopeProps,
+      children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>,
+      spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>,
+    ) => CompositeCompileChild;
+  }>;
 
 /** 无布局 Composite 展开时可见的只读编译上下文 */
-export type CompositeExpandContext = Readonly<{
-  /** 当前 composite 位置完整、只读的有效 Theme */
-  theme: ResolvedTheme;
-}>;
+export type CompositeExpandContext = CompositeRuntimeInputContext &
+  Readonly<{
+    /** 当前 composite 位置完整、只读的有效 Theme */
+    theme: ResolvedTheme;
+  }>;
 
 /** 无布局 Composite 的结构化展开结果 */
 export type CompositeExpandResult = Readonly<{
   /** 继续进入 Core traversal 的普通 IR children */
-  children: ReadonlyArray<IRChild>;
+  children: ReadonlyArray<IRChild | CompositeBoundChild>;
   /** 当前 composite allocation coordinate 中声明的局部空间区域 */
   spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
 }>;
@@ -206,7 +209,7 @@ export type CompositeExpandResult = Readonly<{
 /** layout-aware composite 的最终输出 */
 export type LayoutCompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
   /** 普通 child 继续编译，opaque child 在当前 callback 的 runtime output tree 中解析 */
-  children: ReadonlyArray<IRChild | CompositeCompileChild>;
+  children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
   /** composite 对父布局声明的 container allocation box；省略时由最终 children 合并 */
   allocationBounds?: Readonly<BoundsRect>;
   /** composite 在自身局部 allocation coordinate 中显式声明、由 Core 校验并分离的 guides */

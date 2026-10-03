@@ -3,3 +3,4 @@ export type { ChartFacetLocatorOptions, ChartLocatorOptions } from './contract/l
 export type { ChartThemeDefinition, ChartThemeResolution } from './contract/theme';
 export { defineChartTheme } from './contract/theme';
 export * from './schemas';
+export { prepareChartData } from './providers';

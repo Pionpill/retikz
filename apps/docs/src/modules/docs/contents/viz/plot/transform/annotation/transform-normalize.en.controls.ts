@@ -69,5 +69,5 @@ export const previewControlContract = {
     { id: 'quarter-percent', label: 'Quarterly percent', values: { basis: 'percent', grouping: 'quarter' } },
     { id: 'global-fraction', label: 'Global fraction', values: { basis: 'fraction', grouping: 'global' } },
   ],
-  relatedApis: ['IRPlotNormalizeTransform.basis', 'IRPlotNormalizeTransform.groupBy'],
+  relatedApis: ['IRDataNormalizeTransform.basis', 'IRDataNormalizeTransform.groupBy'],
 } satisfies PreviewControlContract;

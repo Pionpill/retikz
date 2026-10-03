@@ -1,4 +1,4 @@
-import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { BlockInputEmbedAdapter } from './block';
 import { BlockHeaderInputEmbedAdapter } from './block-header';
@@ -10,7 +10,9 @@ import { GroupInputEmbedAdapter } from './group';
 import { RelationInputEmbedAdapter } from './relation';
 
 /** 擦除 Graph Vanilla adapter 的具体 props 类型 */
-const eraseAdapter = <TProps>(adapter: InputEmbedAdapter<TProps>): InputEmbedAdapter<unknown> => ({
+const eraseAdapter = <TProps>(
+  adapter: SynchronousInputEmbedAdapter<TProps>,
+): SynchronousInputEmbedAdapter<unknown> => ({
   kind: adapter.kind,
   lower: (props, context) => adapter.lower(props as TProps, context),
 });
@@ -19,7 +21,7 @@ const eraseAdapter = <TProps>(adapter: InputEmbedAdapter<TProps>): InputEmbedAda
  * 创建可一次性传给 Vanilla normalize 的 Graph adapter 集合
  * @returns 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组
  */
-export const createGraphVanillaAdapters = (): Array<InputEmbedAdapter<unknown>> => [
+export const createGraphVanillaAdapters = (): Array<SynchronousInputEmbedAdapter<unknown>> => [
   eraseAdapter(GraphInputEmbedAdapter),
   eraseAdapter(GroupInputEmbedAdapter),
   eraseAdapter(BlockInputEmbedAdapter),

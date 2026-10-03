@@ -220,3 +220,84 @@ export const createDataLineageRecorder = (options: DataLineageOptions = {}): Dat
     },
   };
 };
+
+/** 接入阶段新事件，统一裁剪采样和来源摘要，再按请求消费 sink */
+export const importDataLineageEvents = (
+  events: ReadonlyArray<DataLineageEvent>,
+  options: DataLineageOptions,
+  operationIndex?: number,
+): Array<DataLineageEvent> => {
+  const resolved = normalizeLineageOptions(options);
+  const retained: Array<DataLineageEvent> = [];
+  const identity = (value?: DataSourceIdentity): DataSourceIdentity | undefined => {
+    if (value === undefined || resolved.sourceIdentity === false) return undefined;
+    const full = resolved.sourceIdentity.mode === 'full';
+    const indices = full ? [...value.indices] : value.indices.slice(0, resolved.sourceIdentity.maxIndices);
+    return {
+      mode: resolved.sourceIdentity.mode,
+      count: value.count,
+      indices,
+      truncated: value.truncated || indices.length < value.count,
+    };
+  };
+  for (const event of events) {
+    if (
+      (event.kind === 'transformStep' && !resolved.transformSteps) ||
+      (event.kind === 'fieldFlow' && !resolved.fieldFlow) ||
+      (event.kind === 'reducerOperation' && !resolved.reducerOperations) ||
+      (event.kind === 'selectorOperation' && !resolved.selectorOperations) ||
+      (event.kind === 'rowSample' && resolved.rowSamples === false)
+    )
+      continue;
+    let safe: DataLineageEvent;
+    switch (event.kind) {
+      case 'source':
+        safe = { ...event, sourceIdentity: identity(event.sourceIdentity) };
+        break;
+      case 'transformStep':
+        safe = {
+          ...event,
+          operationIndex: operationIndex ?? event.operationIndex,
+          inputSourceIdentity: identity(event.inputSourceIdentity),
+          outputSourceIdentity: identity(event.outputSourceIdentity),
+        };
+        break;
+      case 'fieldFlow':
+        safe = { ...event, operationIndex: operationIndex ?? event.operationIndex };
+        break;
+      case 'rowSample': {
+        if (resolved.rowSamples === false) continue;
+        safe = {
+          ...event,
+          operationIndex: operationIndex ?? event.operationIndex,
+          rows: sampleRows(event.rows, resolved.rowSamples),
+        };
+        break;
+      }
+      case 'reducerOperation':
+        safe = {
+          ...event,
+          sourceIdentity: identity(event.sourceIdentity),
+          detailRows:
+            resolved.calculationDetails === false || event.detailRows === undefined
+              ? undefined
+              : sampleRows(event.detailRows, resolved.calculationDetails),
+        };
+        break;
+      case 'selectorOperation':
+        safe = {
+          ...event,
+          sourceIdentity: identity(event.sourceIdentity),
+          selectedSourceIdentity: identity(event.selectedSourceIdentity),
+          detailRows:
+            resolved.calculationDetails === false || event.detailRows === undefined
+              ? undefined
+              : sampleRows(event.detailRows, resolved.calculationDetails),
+        };
+        break;
+    }
+    resolved.sink?.(safe);
+    if (resolved.retainEvents) retained.push(safe);
+  }
+  return retained;
+};

@@ -1,5 +1,6 @@
 import type { ChartThemeDefinition } from '@retikz/chart';
 import type { InputChartPanel } from '@retikz/chart-vanilla';
+import type { DataInputBindings, DataTransformExecutor, ExternalRow } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 import type { FC } from 'react';
 
@@ -20,8 +21,22 @@ export type ChartThemeDefinitionsProps = Readonly<{
   lowerOptions?: LowerPlotsOptions;
 }>;
 
+/** Chart runtime 数据入口二选一；数据声明组件可提供缺省rows */
+export type ChartDataRuntimeProps<TNative = never> = (
+  | { rows?: Array<ExternalRow>; dataBindings?: never }
+  | { dataBindings: DataInputBindings<TNative>; rows?: never }
+) & {
+  /** Data执行器与函数默认值 */
+  dataTransformExecutor?: DataTransformExecutor<TNative>;
+  /** 本次准备取消信号 */
+  signal?: AbortSignal;
+};
+
 /** 可嵌入 Chart React component 的静态 Vanilla Input 契约 */
-export type InputEmbeddableChartComponent<TProps, TInput, TAdapter> = FC<TProps> & {
+export type InputEmbeddableChartComponent<TProps, TInput, TAdapter> = (<TNative = never>(
+  props: Omit<TProps, 'rows' | 'dataBindings' | 'dataTransformExecutor' | 'signal'> & ChartDataRuntimeProps<TNative>,
+) => ReturnType<FC<TProps>>) & {
+  displayName?: string;
   isTier2Embeddable: true;
   inputEmbedAdapter: TAdapter;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;

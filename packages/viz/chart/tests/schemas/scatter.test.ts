@@ -42,7 +42,7 @@ describe('Scatter Chart exact Source schema', () => {
             scale: { operation: { type: 'ordinal', name: 'groupColorScale' } },
           },
           size: {
-            transform: { kind: 'normalize', field: 'weight', as: 'weightShare' },
+            transform: { operation: { kind: 'normalize', field: 'weight', as: 'weightShare' } },
             output: 'weightShare',
             scale: { operation: { type: 'sqrt', name: 'weightSizeScale' } },
           },
@@ -157,7 +157,7 @@ describe('Scatter Chart exact Source schema', () => {
     expect(
       ScatterChartEncodingsSchema.safeParse({
         x: {
-          transform: { kind: 'custom.shift', field: 'amount', as: 'shiftedAmount' },
+          transform: { operation: { kind: 'custom.shift', field: 'amount', as: 'shiftedAmount' } },
           output: 'shiftedAmount',
           scale: { operation: { type: 'custom.position', name: 'shiftedScale' } },
         },
@@ -170,7 +170,7 @@ describe('Scatter Chart exact Source schema', () => {
     ).toBe(true);
 
     for (const encodings of [
-      { x: { transform: { kind: 'stack', y: 'amount' }, output: 'y1' }, y: 'margin' },
+      { x: { transform: { operation: { kind: 'stack', y: 'amount' } }, output: 'y1' }, y: 'margin' },
       { x: 'amount', y: 'margin', size: { field: 'weight', scale: { operation: { type: 'linear', name: 's' } } } },
       { x: 'amount', y: 'margin', opacity: { field: 'weight', scale: { operation: { type: 'sqrt', name: 'o' } } } },
       { x: 'amount', y: { aggregate: { kind: 'mean' } } },
@@ -182,15 +182,18 @@ describe('Scatter Chart exact Source schema', () => {
   it('restricts encoding jitter to the mapped position role', () => {
     expect(
       ScatterChartEncodingsSchema.safeParse({
-        x: { transform: { kind: 'jitter', axis: 'x', xField: 'amount' }, output: 'amount' },
-        y: { transform: { kind: 'jitter', axis: 'y', yField: 'margin' }, output: 'margin' },
+        x: { transform: { operation: { kind: 'jitter', axis: 'x', xField: 'amount' } }, output: 'amount' },
+        y: { transform: { operation: { kind: 'jitter', axis: 'y', yField: 'margin' } }, output: 'margin' },
       }).success,
     ).toBe(true);
 
     for (const x of [
-      { transform: { kind: 'jitter', axis: 'both', xField: 'amount', yField: 'margin' }, output: 'amount' },
-      { transform: { kind: 'jitter', axis: 'y', yField: 'margin' }, output: 'margin' },
-      { transform: { kind: 'jitter', axis: 'x', xField: 'amount' }, output: 'other' },
+      {
+        transform: { operation: { kind: 'jitter', axis: 'both', xField: 'amount', yField: 'margin' } },
+        output: 'amount',
+      },
+      { transform: { operation: { kind: 'jitter', axis: 'y', yField: 'margin' } }, output: 'margin' },
+      { transform: { operation: { kind: 'jitter', axis: 'x', xField: 'amount' } }, output: 'other' },
     ]) {
       expect(ScatterChartEncodingsSchema.safeParse({ x, y: 'margin' }).success).toBe(false);
     }

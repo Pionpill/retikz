@@ -1,5 +1,5 @@
 import * as coreSchemas from '@retikz/core';
-import { MapSchema } from '@retikz/standard/container';
+import { MapSchema } from '@retikz/standard/collection';
 import { z } from 'zod';
 
 import { parseSchemaPath } from '../../src/modules/docs/components/mdx-content/zod-schema/schema-path';

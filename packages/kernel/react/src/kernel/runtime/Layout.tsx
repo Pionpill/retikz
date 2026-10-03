@@ -30,6 +30,9 @@ import type {
   ProcessingResult,
   ProcessingSource,
   VanillaCompileDriver,
+  AsyncProcessingController,
+  AsyncProcessingOptions,
+  AnyInputEmbedAdapter,
 } from '@retikz/vanilla';
 import { createProcessingController, prepareStaticProcessing } from '@retikz/vanilla';
 import type { CSSProperties, FC, ReactNode, Ref } from 'react';
@@ -42,6 +45,7 @@ import { browserMeasurer } from '../../render/text';
 import { pickScopeStyle, wrapRootScope } from '../adapter';
 import { createInputScene } from '../adapter/input-scene';
 import { useAnimationMode } from './animation-context';
+import { AsyncLayoutContent } from './AsyncLayoutContent';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
 import type { LayoutRuntimeOptions } from './runtime-options';
@@ -57,6 +61,37 @@ const styleFontFamily = (style: CSSProperties | undefined): string | undefined =
 /** 同一条诊断消息进程内只告警一次 */
 const warnedMessages = new Set<string>();
 let nextProcessingControllerKey = 0;
+
+/** React 为同步 SSR 与客户端选择同一作者输入的消费入口 */
+const subscribeClientRendering = (): (() => void) => () => undefined;
+const clientRenderingSnapshot = (): boolean => true;
+const serverRenderingSnapshot = (): boolean => false;
+
+/** 按当前入口一次收窄 adapter 能力，不调用领域回调来探测 Promise */
+const inputAdapterOptions = (adapters: ReadonlyArray<AnyInputEmbedAdapter> | undefined, prepareAsync: boolean) => {
+  if (adapters === undefined) return {};
+  if (prepareAsync)
+    return {
+      adapters: adapters.map(adapter => {
+        if (adapter.prepare === undefined)
+          throw new RetikzReactError(
+            RetikzReactErrorCode.Kernel,
+            `Layout async adapter '${adapter.kind}' requires prepare`,
+          );
+        return { ...adapter, prepare: adapter.prepare };
+      }),
+    };
+  return {
+    adapters: adapters.map(adapter => {
+      if (adapter.lower === undefined)
+        throw new RetikzReactError(
+          RetikzReactErrorCode.Kernel,
+          `Layout synchronous adapter '${adapter.kind}' requires lower`,
+        );
+      return { ...adapter, lower: adapter.lower };
+    }),
+  };
+};
 
 const warnOnce = (message: string): void => {
   if (warnedMessages.has(message)) return;
@@ -88,7 +123,7 @@ const isRuntimeDiagnostic = (diagnostic: unknown): diagnostic is RuntimeDiagnost
 
 /** 逐条隔离通知 Runtime 结构化诊断，避免回调异常影响已提交 processing result */
 const deliverProcessingDiagnostics = (
-  controller: ProcessingController,
+  controller: Pick<ProcessingController | AsyncProcessingController, 'diagnostics'>,
   callback: ((diagnostic: RuntimeDiagnostic) => void) | undefined,
 ): void => {
   for (const diagnostic of controller.diagnostics()) {
@@ -393,6 +428,12 @@ export const Layout: FC<LayoutProps> = props => {
   const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles } =
     extensions ?? {};
   const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
+  const isClientRendering = useSyncExternalStore(
+    subscribeClientRendering,
+    clientRenderingSnapshot,
+    serverRenderingSnapshot,
+  );
+  const prepareAsync = resolvedRuntime.preparation === 'async' && isClientRendering;
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
   const stableClips = canonicalizeDefinitionArray(clips);
@@ -453,10 +494,11 @@ export const Layout: FC<LayoutProps> = props => {
     () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
     [artifacts?.nodeLayouts],
   );
-  const processingOptions = useMemo<ProcessingOptions>(
+  const processingOptions = useMemo<ProcessingOptions | AsyncProcessingOptions>(
     () => ({
       compileDriver,
-      ...(stableInputAdapters === undefined ? {} : { adapters: stableInputAdapters }),
+      ...inputAdapterOptions(stableInputAdapters, prepareAsync),
+      ...(prepareAsync ? { signal: resolvedRuntime.signal } : {}),
       ...(resolvedRuntime.updateStrategy === undefined ? {} : { updateStrategy: resolvedRuntime.updateStrategy }),
       compile: {
         measureText,
@@ -477,6 +519,8 @@ export const Layout: FC<LayoutProps> = props => {
     }),
     [
       compileDriver,
+      prepareAsync,
+      resolvedRuntime.signal,
       stableInputAdapters,
       resolvedRuntime.updateStrategy,
       measureText,
@@ -523,13 +567,31 @@ export const Layout: FC<LayoutProps> = props => {
     onCompileResult,
   };
   const hostKey = `${resolvedRuntime.mode}:${renderer}:${resolvedIdPrefix}`;
+  if (prepareAsync)
+    return (
+      <AsyncLayoutContent
+        key={processingControllerIdentity.key}
+        source={source}
+        options={processingOptions as AsyncProcessingOptions}
+        mode={resolvedRuntime.mode ?? LayoutRuntimeMode.Retained}
+        hostKey={hostKey}
+        hostProps={hostProps}
+        onDiagnostic={resolvedRuntime.onDiagnostic}
+        deliverDiagnostics={deliverProcessingDiagnostics}
+      />
+    );
   return resolvedRuntime.mode === LayoutRuntimeMode.Static ? (
-    <StaticLayoutContent source={source} options={processingOptions} hostKey={hostKey} hostProps={hostProps} />
+    <StaticLayoutContent
+      source={source}
+      options={processingOptions as ProcessingOptions}
+      hostKey={hostKey}
+      hostProps={hostProps}
+    />
   ) : (
     <RetainedLayoutContent
       key={processingControllerIdentity.key}
       source={source}
-      options={processingOptions}
+      options={processingOptions as ProcessingOptions}
       onDiagnostic={resolvedRuntime.onDiagnostic}
       hostKey={hostKey}
       hostProps={hostProps}

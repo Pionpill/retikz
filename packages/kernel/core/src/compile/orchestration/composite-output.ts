@@ -2,12 +2,14 @@ import { ZodError } from 'zod';
 
 import type {
   CompositeCompileChild,
+  CompositeBoundChild,
   CompositeCompileScopeProps,
   CompositeExpandResult,
   CompositeReplayWrapper,
   Transform,
 } from '../../contract';
 import { validateSpatialHandleDeclarations } from '../../contract';
+import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
 import { ScopePropsSchema } from '../../schemas';
@@ -74,7 +76,13 @@ export const snapshotCompositeLayoutChild = (owner: string, value: unknown, inde
   snapshotCompositeCallbackChild(owner, value, `layoutChild input at probe ${index}`);
 
 /** 校验、脱离并冻结 Expand Composite 的结构化返回值 */
-export const validateExpandCompositeOutput = (owner: string, produced: unknown): CompositeExpandResult =>
+export const validateExpandCompositeOutput = (
+  owner: string,
+  produced: unknown,
+  snapshotChild: (value: unknown, index: number) => IRChild | CompositeBoundChild = (value, index) =>
+    snapshotCompositeOutputChild(owner, value, index),
+  resolveChild: (child: IRChild | CompositeBoundChild) => IRChild = child => child as IRChild,
+): CompositeExpandResult =>
   withProviderOutputValidationBoundary(owner, () => {
     if (produced === null || typeof produced !== 'object' || Array.isArray(produced)) {
       throw createCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
@@ -87,12 +95,10 @@ export const validateExpandCompositeOutput = (owner: string, produced: unknown):
     if (!Array.isArray(raw.children)) {
       throw createCompositeContractError(`${owner} returned an invalid expand result; children must be an array.`);
     }
-    const children = Object.freeze(
-      raw.children.map((value, index) => snapshotCompositeOutputChild(owner, value, index)),
-    );
+    const children = Object.freeze(raw.children.map(snapshotChild));
     const spatialHandles =
       raw.spatialHandles === undefined ? undefined : validateCompositeSpatialHandles(owner, raw.spatialHandles);
-    if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children)) {
+    if ((spatialHandles?.length ?? 0) > 0 && containsGeneratedSpatialScope(children.map(resolveChild))) {
       throw createCompositeContractError(
         `${owner} cannot declare result-level spatial handles while its generated output contains a Scope with placement or transforms; use layout-aware Scope attachment.`,
       );
@@ -257,7 +263,7 @@ export const createCompositeScopeChild = (
               `${owner.label} received an output child that does not belong to this composite callback.`,
             );
           }
-          return child as CompositeCompileChild;
+          return child as CompositeCompileChild | CompositeBoundChild;
         }
       }
       return snapshotCompositeOutputChild(owner.label, child, index);
@@ -274,3 +280,15 @@ export const createCompositeScopeChild = (
     session.outputChildren.set(handle, { owner, child, used: false });
     return handle;
   });
+
+/** 创建携带准确 Source 子树输入的 callback-local 子项 */
+export const createCompositeBoundChild = (
+  session: CompositeCompileSession,
+  owner: CompositeCompileOwner,
+  scope: CompositeRuntimeInputScope,
+): CompositeBoundChild => {
+  const child = snapshotCompositeLayoutChild(owner.label, scope.source, 0);
+  const handle = Object.freeze({}) as CompositeBoundChild;
+  session.outputChildren.set(handle, { owner, child: { kind: 'bound', child, runtimeInputs: scope }, used: false });
+  return handle;
+};

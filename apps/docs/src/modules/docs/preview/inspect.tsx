@@ -9,6 +9,7 @@ import type { FC, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
 import type { Lang } from '@/i18n';
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 import type {
   PreviewControlsDefinition,
@@ -55,7 +56,7 @@ export const createBuiltinInspectPreviewSource = (
       key === 'authoring' ? createInspectionVanillaAuthoring(value) : value,
     );
     const svg = renderToSvgString(restoredInput, {
-      adapters: authoring.adapters,
+      adapters: synchronousInputAdaptersOf(authoring.adapters),
       compile: {
         clips: props.extensions?.clips,
         themeStyles: PreviewThemeDefinitionBundle.core,

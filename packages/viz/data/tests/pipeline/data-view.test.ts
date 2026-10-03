@@ -3,16 +3,23 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { DataView } from '../../src';
-import { applyTransformsToDataView, DataFieldType, defineTransform, resolveTransformRegistry } from '../../src';
+import {
+  defineTransformImplementation,
+  createDataView,
+  applyTransformsToDataView,
+  DataFieldType,
+  defineTransform,
+  resolveTransformRegistry,
+} from '../../src';
 
-const sourceView = (): DataView => ({
-  rows: [{ source: 2, stale: 'old' }],
-  fieldTypes: new Map([
-    ['source', DataFieldType.Continuous],
-    ['stale', DataFieldType.Categorical],
-  ]),
-  fieldTypeEvidence: new Set(['source', 'stale']),
-});
+const sourceView = (): DataView =>
+  createDataView(
+    [{ source: 2, stale: 'old' }],
+    [
+      { name: 'source', type: DataFieldType.Continuous },
+      { name: 'stale', type: DataFieldType.Categorical },
+    ],
+  );
 
 describe('resolved data view transforms', () => {
   it('preserves input field evidence and adds descriptor-derived output evidence', () => {
@@ -23,19 +30,20 @@ describe('resolved data view transforms', () => {
         as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
-      outputFields: operation => [operation.as],
       outputModel: operation => ({
         kind: 'preserve',
         outputs: [{ field: operation.as, type: { from: operation.field } }],
       }),
+    });
+    const copyFieldImplementation = defineTransformImplementation({
+      definition: copyField,
       apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
     });
 
-    const result = applyTransformsToDataView(
-      sourceView(),
-      [{ kind: 'copy-field', field: 'source', as: 'copy' }],
-      resolveTransformRegistry([copyField]),
-    );
+    const result = applyTransformsToDataView(sourceView(), [{ kind: 'copy-field', field: 'source', as: 'copy' }], {
+      registry: resolveTransformRegistry([copyField]),
+      transformImplementations: [copyFieldImplementation],
+    });
 
     expect(result.rows).toEqual([{ source: 2, stale: 'old', copy: 2 }]);
     expect([...result.fieldTypes]).toEqual([
@@ -49,19 +57,20 @@ describe('resolved data view transforms', () => {
   it('rebuilds replace output maps without retaining stale input evidence', () => {
     const replaceRows = defineTransform({
       schema: strictObject({ kind: literal('replace-rows'), as: NonBlankStringSchema }),
-      outputFields: operation => [operation.as],
       outputModel: operation => ({
         kind: 'replace',
         fields: [{ field: operation.as, type: DataFieldType.Continuous }],
       }),
+    });
+    const replaceRowsImplementation = defineTransformImplementation({
+      definition: replaceRows,
       apply: (_rows, operation) => [{ [operation.as]: 7 }],
     });
 
-    const result = applyTransformsToDataView(
-      sourceView(),
-      [{ kind: 'replace-rows', as: 'value' }],
-      resolveTransformRegistry([replaceRows]),
-    );
+    const result = applyTransformsToDataView(sourceView(), [{ kind: 'replace-rows', as: 'value' }], {
+      registry: resolveTransformRegistry([replaceRows]),
+      transformImplementations: [replaceRowsImplementation],
+    });
 
     expect(result.rows).toEqual([{ value: 7 }]);
     expect([...result.fieldTypes]).toEqual([['value', DataFieldType.Continuous]]);
@@ -72,11 +81,13 @@ describe('resolved data view transforms', () => {
     let applyCalls = 0;
     const invalidOutput = defineTransform({
       schema: strictObject({ kind: literal('invalid-output'), as: NonBlankStringSchema }),
-      outputFields: operation => [operation.as],
       outputModel: operation => ({
         kind: 'preserve',
         outputs: [{ field: operation.as, type: { from: 'missing' } }],
       }),
+    });
+    const invalidOutputImplementation = defineTransformImplementation({
+      definition: invalidOutput,
       apply: (rows, operation) => {
         applyCalls += 1;
         return rows.map(row => ({ ...row, [operation.as]: 1 }));
@@ -84,45 +95,48 @@ describe('resolved data view transforms', () => {
     });
 
     expect(() =>
-      applyTransformsToDataView(
-        sourceView(),
-        [{ kind: 'invalid-output', as: 'value' }],
-        resolveTransformRegistry([invalidOutput]),
-      ),
-    ).toThrow('data: transform output descriptor references unknown field "missing"');
+      applyTransformsToDataView(sourceView(), [{ kind: 'invalid-output', as: 'value' }], {
+        registry: resolveTransformRegistry([invalidOutput]),
+        transformImplementations: [invalidOutputImplementation],
+      }),
+    ).toThrow('data: output references unknown field "missing"');
     expect(applyCalls).toBe(0);
   });
 
-  it('clears stale type evidence when an operation has no output model', () => {
+  it('replaces stale evidence and observes scalar types for explicitly untyped output fields', () => {
     const untypedReplace = defineTransform({
       schema: strictObject({ kind: literal('untyped-replace') }),
-      outputFields: () => ['derived'],
+      outputModel: () => ({
+        kind: 'replace',
+        fields: [{ field: 'derived' }],
+      }),
+    });
+    const untypedReplaceImplementation = defineTransformImplementation({
+      definition: untypedReplace,
       apply: () => [{ derived: 1 }],
     });
 
-    const result = applyTransformsToDataView(
-      sourceView(),
-      [{ kind: 'untyped-replace' }],
-      resolveTransformRegistry([untypedReplace]),
-    );
+    const result = applyTransformsToDataView(sourceView(), [{ kind: 'untyped-replace' }], {
+      registry: resolveTransformRegistry([untypedReplace]),
+      transformImplementations: [untypedReplaceImplementation],
+    });
 
     expect(result.rows).toEqual([{ derived: 1 }]);
-    expect([...result.fieldTypes]).toEqual([]);
-    expect([...result.fieldTypeEvidence]).toEqual([]);
+    expect([...result.fieldTypes]).toEqual([['derived', 'continuous']]);
+    expect([...result.fieldTypeEvidence]).toEqual(['derived']);
   });
 
   it('rebuilds summarize fields from group keys and reducer descriptors', () => {
-    const view: DataView = {
-      rows: [
+    const view = createDataView(
+      [
         { month: 'Jan', revenue: 2 },
         { month: 'Jan', revenue: 3 },
       ],
-      fieldTypes: new Map([
-        ['month', DataFieldType.Categorical],
-        ['revenue', DataFieldType.Continuous],
-      ]),
-      fieldTypeEvidence: new Set(['month', 'revenue']),
-    };
+      [
+        { name: 'month', type: DataFieldType.Categorical },
+        { name: 'revenue', type: DataFieldType.Continuous },
+      ],
+    );
 
     const result = applyTransformsToDataView(view, [
       {

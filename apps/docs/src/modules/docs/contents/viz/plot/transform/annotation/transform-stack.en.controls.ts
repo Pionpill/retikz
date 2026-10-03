@@ -55,5 +55,5 @@ export const previewControlContract = {
     { id: 'normalize', label: 'Normalized stack', values: { offset: 'normalize' } },
     { id: 'center', label: 'Centered stack', values: { offset: 'center' } },
   ],
-  relatedApis: ['IRPlotStackTransform.offset'],
+  relatedApis: ['IRDataStackTransform.offset'],
 } satisfies PreviewControlContract;

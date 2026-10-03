@@ -20,6 +20,8 @@ import { createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
+
 import { buildPreviewSource } from '../../src/modules/docs/components/component-preview/source-panel';
 import {
   buildPreviewIR,
@@ -269,7 +271,7 @@ describe('buildPreviewSource', () => {
     const input = createInputScene(
       createElement(chart.type as FC<Record<string, unknown>>, previewEmbedPropsOf(chart.type, chart.props)),
     );
-    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    const normalized = normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
 
     expect(normalized).not.toHaveProperty('sourceIr');
     expect(buildPreviewIR(ChartDemo).sourceIr.children[0]).toMatchObject({ namespace: 'chart', type: 'point' });

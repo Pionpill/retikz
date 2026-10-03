@@ -187,7 +187,7 @@ Using a marker outside `Legend`, mixing a marker with the wrong form, or violati
 
 The Core composite registry consumes `LegendDefinition`. It first runs minimum and natural probes for the title, samples, and labels to obtain structural profiles. Once the content width is known, the title is probed again with an x-axis range and a natural y axis; samples and labels receive exact probes for their final slots. Compilation replays only selected results, so discarded probes publish no primitives, resources, or artifacts.
 
-<ComponentPreview files="legend-pipeline" hideCode size="xs" />
+<ComponentPreview files="legend-pipeline" hideCode type="flow" size="md" />
 
 `LegendDefinition` returns ordinary Core IR children and a parallel `LegendArtifact` from the same compile call. Core then compiles those children into the Scene while the artifact remains a separate output. SVG and Canvas renderers do not know `standard.legend` and have no Legend-specific branch.
 

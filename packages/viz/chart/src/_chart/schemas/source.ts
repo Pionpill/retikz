@@ -42,6 +42,7 @@ const ChartSourceShellSchema = strictObject({
   presentation: ChartPresentationSchema.optional(),
   chartDefaults: ChartDefaultsSchema.optional(),
   data: PlotSchema.shape.data.describe('Unique external dataset reference'),
+  dataExecution: PlotSchema.shape.dataExecution,
   layout: ChartLayoutSchema.optional(),
   coordinate: PlotSchema.shape.coordinate,
   recipe: ChartRecipeShellSchema,
@@ -57,6 +58,7 @@ type ChartSourceShape<TFamily extends string, TRecipe extends ZodType> = {
   presentation: ZodOptional<typeof ChartPresentationSchema>;
   chartDefaults: ZodOptional<typeof ChartDefaultsSchema>;
   data: typeof PlotSchema.shape.data;
+  dataExecution: typeof PlotSchema.shape.dataExecution;
   layout: ZodOptional<typeof ChartLayoutSchema>;
   coordinate: typeof PlotSchema.shape.coordinate;
   recipe: TRecipe;
@@ -76,6 +78,7 @@ export const createChartSourceSchema = <TFamily extends string, TRecipe extends 
     presentation: ChartPresentationSchema.optional(),
     chartDefaults: ChartDefaultsSchema.optional(),
     data: PlotSchema.shape.data.describe('Unique external dataset reference'),
+    dataExecution: PlotSchema.shape.dataExecution,
     layout: ChartLayoutSchema.optional(),
     coordinate: PlotSchema.shape.coordinate,
     recipe,

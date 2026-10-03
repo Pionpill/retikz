@@ -124,7 +124,7 @@ export const previewControlContract = {
   },
   relatedApis: [
     'Plot.coordinate',
-    'PlotTransform.bin',
+    'DataTransform.bin',
     'IntervalMark.x0',
     'IntervalMark.x1',
     'IntervalMark.width',

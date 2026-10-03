@@ -64,7 +64,7 @@ const pieSpec = (pull?: unknown, extraMark: Record<string, unknown> = {}, innerR
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'share' },
-    transform: [{ kind: 'stack', y: 'value' }],
+    transform: [{ operation: { kind: 'stack', y: 'value' } }],
     coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', innerRadius },
     scales: [
       { type: 'linear', name: 'angle', domainPadding: 0 },

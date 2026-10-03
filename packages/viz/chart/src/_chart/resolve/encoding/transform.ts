@@ -3,17 +3,12 @@ import type {
   DataTransformOutputModel,
   DataTransformPhaseValue,
   IRDataReducerOperation,
-  TransformContext,
+  TransformSemanticContext,
+  IRDataTransform,
+  IRDataTransformDeclaration,
 } from '@retikz/data';
-import {
-  DataTransform,
-  DataTransformBindingClass,
-  DataTransformFieldEffect,
-  DataTransformPhase,
-  DEFAULT_TRANSFORM_CONTEXT,
-} from '@retikz/data';
+import { DataTransform, DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotTransform } from '@retikz/plot';
 
 import { RetikzChartError } from '../../../error';
 import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
@@ -39,7 +34,12 @@ const producedFieldsOfOutputModel = (model: DataTransformOutputModel): Array<str
   return model.kind === 'preserve'
     ? descriptors.map(descriptor => descriptor.field)
     : descriptors
-        .filter(descriptor => typeof descriptor.type === 'string' || descriptor.type.from !== descriptor.field)
+        .filter(
+          descriptor =>
+            descriptor.type === undefined ||
+            typeof descriptor.type === 'string' ||
+            descriptor.type.from !== descriptor.field,
+        )
         .map(descriptor => descriptor.field);
 };
 
@@ -73,7 +73,7 @@ const parseAggregateMapping = (
   }
   try {
     const parsed = definition.schema.parse(operation) as never;
-    const descriptors = definition.outputs?.(parsed) ?? [];
+    const descriptors = definition.outputs(parsed);
     if (descriptors.length !== 1) {
       throw invalidEncoding(`Chart aggregate reducer "${operation.kind}" must declare exactly one scalar output`, path);
     }
@@ -89,8 +89,8 @@ const parseAggregateMapping = (
   }
 };
 
-const transformContextOf = (context: ChartEncodingResolveContext): TransformContext => ({
-  ...DEFAULT_TRANSFORM_CONTEXT,
+const transformContextOf = (context: ChartEncodingResolveContext): TransformSemanticContext => ({
+  model: context.source.data.model ?? [],
   statisticsReducerRegistry: context.runtime.reducers,
   regressionRegistry: context.runtime.regressions,
   rowSelectorRegistry: context.runtime.selectors,
@@ -102,7 +102,8 @@ const parseDerivedMapping = (
   value: JsonObject,
   slotIndex: number,
 ): Readonly<{ record: TransformOperationRecord; descriptor: DataTransformOutputDescriptor }> => {
-  const operation = objectValueOf(value.transform) as IRPlotTransform | undefined;
+  const declaration = objectValueOf(value.transform) as IRDataTransformDeclaration | undefined;
+  const operation = declaration?.operation;
   const output = value.output;
   const path = mappingPathOf(consumer.slot);
   if (operation === undefined || typeof operation.kind !== 'string' || typeof output !== 'string') {
@@ -138,13 +139,7 @@ const parseDerivedMapping = (
   try {
     const parsed = definition.schema.parse(operation) as never;
     const transformContext = transformContextOf(context);
-    const model = definition.outputModel?.(parsed, transformContext);
-    if (model === undefined) {
-      throw invalidEncoding(`Chart transform "${operation.kind}" must declare a complete output model`, [
-        ...path,
-        'transform',
-      ]);
-    }
+    const model = definition.outputModel(parsed, transformContext);
     const expectedEffect =
       model.kind === 'preserve' ? DataTransformFieldEffect.Preserve : DataTransformFieldEffect.Replace;
     if (schedule.fieldEffect !== expectedEffect) {
@@ -154,8 +149,7 @@ const parseDerivedMapping = (
       );
     }
     const descriptors = outputDescriptorsOf(model);
-    const outputFields = definition.outputFields?.(parsed, transformContext);
-    const producedFields = outputFields ?? producedFieldsOfOutputModel(model);
+    const producedFields = producedFieldsOfOutputModel(model);
     const matches = descriptors.filter(descriptor => descriptor.field === output);
     if (matches.length !== 1) {
       throw invalidEncoding(
@@ -171,6 +165,7 @@ const parseDerivedMapping = (
         slotIndex,
         phase: schedule.phase,
         operation: parsed,
+        ...(declaration?.dataExecution === undefined ? {} : { dataExecution: declaration.dataExecution }),
         fieldEffect: schedule.fieldEffect,
         inputs: definition.inputFields?.(parsed, transformContext) ?? [],
         outputs: descriptors,
@@ -216,17 +211,15 @@ const assertUniqueOperations = (records: ReadonlyArray<TransformOperationRecord>
 
 const extensionTransformOutputs = (
   context: ChartEncodingResolveContext,
-  operation: IRPlotTransform,
+  operation: IRDataTransform,
 ): ReadonlyArray<string> => {
   const definition = context.runtime.transforms.get(operation.kind);
   if (definition === undefined) return [];
   const parsed = definition.schema.safeParse(operation);
   if (!parsed.success) return [];
   const transformContext = transformContextOf(context);
-  const model = definition.outputModel?.(parsed.data as never, transformContext);
-  return model === undefined
-    ? (definition.outputFields?.(parsed.data as never, transformContext) ?? [])
-    : producedFieldsOfOutputModel(model);
+  const model = definition.outputModel(parsed.data as never, transformContext);
+  return producedFieldsOfOutputModel(model);
 };
 
 const assertExtensionTransformConflicts = (
@@ -235,9 +228,9 @@ const assertExtensionTransformConflicts = (
 ): void => {
   const extensionTransforms = context.source.plotExtension?.transform ?? [];
   if (extensionTransforms.length === 0) return;
-  const extensionOperations = new Set(extensionTransforms.map(operation => canonicalJson(operation)));
+  const extensionOperations = new Set(extensionTransforms.map(declaration => canonicalJson(declaration.operation)));
   const extensionOutputs = new Set(
-    extensionTransforms.flatMap(operation => extensionTransformOutputs(context, operation)),
+    extensionTransforms.flatMap(declaration => extensionTransformOutputs(context, declaration.operation)),
   );
   for (const record of records) {
     const path = [...mappingPathOf(record.slot), 'transform'];

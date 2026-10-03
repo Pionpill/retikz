@@ -1,22 +1,25 @@
-import type { IRPlotStackTransform, IRPlotTransform } from '@retikz/plot';
-import { PlotTransform } from '@retikz/plot';
+import type { IRDataStackTransform, IRDataTransform, IRDataTransformDeclaration } from '@retikz/data';
+import { DataTransform } from '@retikz/data';
 
 import type { NormalizationState, PlotAuthoringContext } from './contracts';
 import { buildShortcutTransforms } from './scale-coordinate';
 
 type Collected = NormalizationState;
 
-const isStackTransform = (transform: IRPlotTransform): transform is IRPlotStackTransform =>
-  transform.kind === PlotTransform.Stack;
+const isStackTransform = (transform: IRDataTransform): transform is IRDataStackTransform =>
+  transform.kind === DataTransform.Stack;
 
 /** 归并根 transforms、声明 transforms 与 mark shortcut transforms */
-export const assembledTransformsOf = (collected: Collected, context: PlotAuthoringContext): Array<IRPlotTransform> => {
-  const explicitTransforms: Array<IRPlotTransform> = [...(context.dataTransforms ?? []), ...collected.transforms];
+export const assembledTransformsOf = (
+  collected: Collected,
+  context: PlotAuthoringContext,
+): Array<IRDataTransformDeclaration> => {
+  const explicitTransforms = [...(context.dataTransforms ?? []), ...collected.transforms];
   const shortcutTransforms = [
     ...collected.shortcutTransforms,
     ...buildShortcutTransforms(collected.marks, context.markTransformShortcuts),
   ];
-  const stackSignature = (transform: IRPlotStackTransform): string =>
+  const stackSignature = (transform: IRDataStackTransform): string =>
     JSON.stringify([
       transform.x ?? null,
       transform.y,
@@ -25,11 +28,16 @@ export const assembledTransformsOf = (collected: Collected, context: PlotAuthori
       transform.startField ?? null,
       transform.endField ?? null,
     ]);
-  const explicitStackSignatures = new Set(explicitTransforms.filter(isStackTransform).map(stackSignature));
+  const explicitStackSignatures = new Set(
+    explicitTransforms
+      .map(declaration => declaration.operation)
+      .filter(isStackTransform)
+      .map(stackSignature),
+  );
   return [
     ...explicitTransforms,
-    ...shortcutTransforms.filter(
-      transform => !isStackTransform(transform) || !explicitStackSignatures.has(stackSignature(transform)),
-    ),
+    ...shortcutTransforms
+      .filter(transform => !isStackTransform(transform) || !explicitStackSignatures.has(stackSignature(transform)))
+      .map(operation => ({ operation })),
   ];
 };

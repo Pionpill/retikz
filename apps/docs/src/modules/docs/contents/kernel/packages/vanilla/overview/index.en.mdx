@@ -7,6 +7,14 @@ description: Organize graphics as framework-neutral InputScene data, normalize a
 
 The package root has no browser-DOM dependency, so it works in SSR, build scripts, and other frameworks. Browser SVG and Canvas mounting live at `@retikz/vanilla/dom`. IR, schemas, geometry, and compile rules belong to `@retikz/core`; backend output belongs to `@retikz/render`.
 
+## Async authoring preparation
+
+`prepareProcessingInputAsync` traverses the complete author tree and calls adapter.prepare for non-computing preflight, then runs preparation.execute and normalizes the contributions. Nested inputs register through context.prepareChildren; children cannot execute during preparation. Synchronous adapters provide lower; asynchronous adapters must provide prepare, without probing support by invoking lower.
+
+Use `processToStaticInputResultAsync(input, options?)` for one-shot compilation, or `prepareStaticProcessingAsync` for explicit commit/discard. Interactive hosts use `createProcessingControllerAsync` and await committed/discarded update outcomes. Signals and newer requests invalidate stale results; failure preserves committed output. Core compilation and renderers remain synchronous; Promises live at the authoring preparation boundary.
+
+Contributions bind prepared runtimeInputs to actual Source positions outside JSON IR. Composite children use opaque child transport rather than guessing instances from ids, dataset names or object references. Domain hosts already connect this boundary; applications normally use their async entry points.
+
 ## Install and use
 
 ```bash

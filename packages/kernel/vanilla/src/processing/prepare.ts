@@ -1,6 +1,7 @@
 import type { AnyCompositeDefinition, CompileOptions } from '@retikz/core';
 import {
   DEFAULT_RESOLVED_THEME,
+  createCompositeInputBindings,
   resolveCoreProviderDependencies,
   resolveTheme,
   resolveThemeStyleRegistry,
@@ -13,7 +14,10 @@ import type {
   InputScene,
 } from '../normalize';
 import { createEmptyInputRuntimeMetaSnapshot, isInputScene, normalizeScene } from '../normalize';
+import { createInputSceneTraversal } from '../normalize/scene';
+import { assertPreparationActive, prepareAuthoringContributions } from './authoring';
 import type { PreparedProcessingInput, ProcessingOptions, ProcessingSource } from './types';
+import type { AsyncProcessingOptions } from './types';
 
 const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
 
@@ -71,7 +75,15 @@ export const prepareProcessingInput = (
     });
     return Object.freeze({
       source: normalized.ir,
-      coreOptions: resolveCoreOptions(options.compile, normalized.contributions),
+      coreOptions: resolveCoreOptions(
+        {
+          ...options.compile,
+          ...(normalized.runtimeInputs === undefined
+            ? {}
+            : { compositeInputs: createCompositeInputBindings(normalized.ir, normalized.runtimeInputs) }),
+        },
+        normalized.contributions,
+      ),
       authoringSites: normalized.authoringSites,
       runtimeMeta: normalized.runtimeMeta,
     });
@@ -81,5 +93,37 @@ export const prepareProcessingInput = (
     coreOptions: Object.freeze({ ...(options.compile ?? {}) }),
     authoringSites: EMPTY_AUTHORING_SITES,
     runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),
+  });
+};
+
+/** 等待完整作者贡献后进入同一同步 normalizer 与 provider graph resolver */
+export const prepareProcessingInputAsync = async (
+  source: ProcessingSource,
+  options: AsyncProcessingOptions,
+  signal: AbortSignal,
+): Promise<PreparedProcessingInput> => {
+  assertPreparationActive(signal);
+  if (!isInputScene(source)) return prepareProcessingInput(source, { ...options, adapters: undefined });
+  const traversal = createInputSceneTraversal(source, {
+    embedThemeContext: createInputEmbedThemeContextResolver(source, options.compile),
+  });
+  const execute = await prepareAuthoringContributions(traversal.sites, options.adapters ?? [], signal);
+  assertPreparationActive(signal);
+  const contributions = await execute();
+  assertPreparationActive(signal);
+  const normalized = traversal.normalize(contributions);
+  return Object.freeze({
+    source: normalized.ir,
+    coreOptions: resolveCoreOptions(
+      {
+        ...options.compile,
+        ...(normalized.runtimeInputs === undefined
+          ? {}
+          : { compositeInputs: createCompositeInputBindings(normalized.ir, normalized.runtimeInputs) }),
+      },
+      normalized.contributions,
+    ),
+    authoringSites: normalized.authoringSites,
+    runtimeMeta: normalized.runtimeMeta,
   });
 };

@@ -3,6 +3,12 @@ import { describe, expect, it } from 'vitest';
 import * as plot from '../src';
 
 describe('@retikz/plot public surface', () => {
+  it('keeps data transform definitions in their owning package', () => {
+    expect(plot).not.toHaveProperty('TransformSchema');
+    expect(plot).not.toHaveProperty('StackTransformSchema');
+    expect(plot).not.toHaveProperty('PlotTransform');
+    expect(plot).not.toHaveProperty('resolvePlotTransformRegistry');
+  });
   it('exports the facet configuration schema and composition resolver from the package root', () => {
     const publicSurface = plot as Record<string, unknown>;
 

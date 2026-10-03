@@ -1,6 +1,7 @@
-import { DataScalarReducerOperationSchema } from '@retikz/data';
+import { DataScalarReducerOperationSchema, DataTransformDeclarationSchema } from '@retikz/data';
+import type { IRDataTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import type { IRPlotScaleOperation, IRPlotTransform } from '@retikz/plot';
+import type { IRPlotScaleOperation } from '@retikz/plot';
 import type { ZodType } from 'zod';
 import { strictObject, union } from 'zod';
 
@@ -28,12 +29,15 @@ export const createChartAggregateMappingSchema = <TScale = never>(scaleSchema?: 
     ...(scaleSchema === undefined ? {} : { scale: scaleSchema.optional() }),
   }).describe('Aggregate Chart field mapping');
 
-export const createChartDerivedMappingSchema = <TTransform extends IRPlotTransform, TScale>(
+export const createChartDerivedMappingSchema = <TTransform extends IRDataTransform, TScale>(
   transformSchema: ZodType<TTransform>,
   scaleSchema: ZodType<TScale>,
 ) =>
   strictObject({
-    transform: transformSchema.describe('Field-producing transform operation'),
+    transform: strictObject({
+      operation: transformSchema.describe('Field-producing transform operation'),
+      dataExecution: DataTransformDeclarationSchema.shape.dataExecution,
+    }).describe('Field-producing transform declaration'),
     output: NonBlankStringSchema.describe('Transform output field bound to this encoding slot'),
     scale: scaleSchema.optional(),
   }).describe('Derived Chart field mapping');

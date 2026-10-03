@@ -74,8 +74,8 @@ export const librarySection: Array<Section> = [
         ],
       },
       {
-        id: 'container',
-        label: 'library.standardContainers',
+        id: 'collection',
+        label: 'library.standardCollections',
         sidebarGroup: 'library.components',
         meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
         children: [

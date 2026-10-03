@@ -9,6 +9,7 @@ import {
   RelativeTargetSchema,
   SceneSchema,
 } from '@retikz/core';
+import { TransformSchema } from '@retikz/data';
 import {
   BlockHeaderSchema,
   BlockRowSchema,
@@ -28,7 +29,6 @@ import {
   PlotSchema,
   PlotThemeResolutionSchema,
   ScaleSchema,
-  TransformSchema,
 } from '@retikz/plot';
 import { LegendArtifactSchema, LegendSchema, SurfaceSchema } from '@retikz/standard/presentation';
 import { TableSchema } from '@retikz/table';
@@ -38,7 +38,7 @@ import { z } from 'zod';
 import { lookupSchema, SCHEMA_REGISTRY } from '@/modules/docs/components';
 
 describe('SCHEMA_REGISTRY', () => {
-  it('contains the documented Kernel, Table, and Plot schema surfaces', () => {
+  it('contains the documented Kernel, Data, Table, and Plot schema surfaces', () => {
     expect(SCHEMA_REGISTRY).toMatchObject({
       SceneSchema: { schema: SceneSchema },
       ContextualColorSchema: {
@@ -48,7 +48,7 @@ describe('SCHEMA_REGISTRY', () => {
       TableSchema: { schema: TableSchema },
       PlotSchema: { schema: PlotSchema },
       EncodingSchema: { schema: EncodingSchema },
-      PlotTransformSchema: { schema: TransformSchema },
+      DataTransformSchema: { schema: TransformSchema },
       MarkSchema: { schema: MarkSchema },
       ScaleSchema: { schema: ScaleSchema },
       PlotCoordinateSchema: { schema: PlotCoordinateSchema },
@@ -113,7 +113,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(enSource).toContain('<ZodSchema name="LayoutInspectSpacingOptionsSchema" />');
   });
 
-  it.each(['table', 'plot'] as const)(
+  it.each(['data', 'table', 'plot'] as const)(
     'keeps every Viz %s contract registry URL on a documented English heading',
     moduleId => {
       const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>

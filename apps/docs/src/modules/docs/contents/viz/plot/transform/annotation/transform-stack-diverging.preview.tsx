@@ -11,7 +11,7 @@ export const TransformStackDivergingPreview = (lang: Lang) => {
   const i18n = transformStackDivergingI18n[lang];
   return (
     <Plot data={signedProductChange} width={420} height={260}>
-      <PlotTransform {...stackDivergingOperation} />
+      <PlotTransform operation={{ ...stackDivergingOperation }} />
       <PlotScale dimension="y" type="linear" domain={[-45, 70]} />
       <IntervalMark x="quarter" color="product" bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }} />
       <PlotAxis dimension="x" title={i18n.quarter} />

@@ -310,7 +310,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: '__plot' },
-      transform: [{ kind: 'stack', y: 'value' }],
+      transform: [{ operation: { kind: 'stack', y: 'value' } }],
       scales: [
         { type: 'linear', name: '__angle' },
         { type: 'linear', name: '__radius' },

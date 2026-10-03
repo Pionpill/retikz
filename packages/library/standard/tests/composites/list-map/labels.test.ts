@@ -3,8 +3,8 @@ import { compileToScene } from '@retikz/core';
 import { PathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { ListDefinition, ListSchema, MapDefinition, MapSchema } from '../../../src/container';
-import type { IRList, IRMap } from '../../../src/container';
+import { ListDefinition, ListSchema, MapDefinition, MapSchema } from '../../../src/collection';
+import type { IRList, IRMap } from '../../../src/collection';
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));

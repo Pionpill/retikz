@@ -195,7 +195,7 @@ export const ModuleLandingPage: FC<ModuleLandingPageProps> = props => {
                     <article
                       key={demo.id}
                       data-slot="module-landing-demo"
-                      className="h-full [&>div]:!my-0 [&>div]:h-full [&>div>div]:h-full [&>div>div]:shadow-sm [&_[data-slot=preview-workspace]]:!h-full"
+                      className="h-full min-h-0 min-w-0 [&>[data-preview-viewport]]:h-full [&>[data-preview-viewport]>div]:my-0! [&>[data-preview-viewport]>div]:h-full [&_[data-slot=component-preview-frame]]:h-full [&_[data-slot=component-preview-frame]]:shadow-sm [&_[data-slot=preview-workspace]]:h-full!"
                       style={style}
                     >
                       <DemoLocationContext.Provider value={demo.location}>

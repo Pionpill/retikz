@@ -19,7 +19,7 @@ export const TransformHistogramPreview = (values: TransformHistogramPreviewValue
   const i18n = transformHistogramI18n[lang];
   return (
     <Plot data={measurements} width={420} height={260}>
-      <PlotTransform {...histogramOperationOf(values)} />
+      <PlotTransform operation={{ ...histogramOperationOf(values) }} />
       <PlotScale dimension="x" type="linear" domain={[0, 20]} />
       <PlotScale dimension="y" type="linear" domain={[0, 25]} />
       <IntervalMark x0="binStart" x1="binEnd" y="binCount" />

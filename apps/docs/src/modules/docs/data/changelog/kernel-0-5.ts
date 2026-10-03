@@ -319,6 +319,13 @@ export const kernelV05: Release = {
         },
 
         {
+          label: { zh: '待发布：复合组件实例运行输入', en: 'Unreleased: composite instance runtime inputs' },
+          content: {
+            zh: '按真实 Source 位置绑定 runtimeInput，作者 child 和生成 child 显式转交 opaque 绑定；probe/replay/direct lowering 和 retained 事务复用同一运行输入，保持 Core 同步且领域中立。',
+            en: 'Bind runtimeInput to actual Source positions and transport opaque bindings explicitly for authored and generated children. Probes, replay, direct lowering and retained transactions reuse the same runtime input while Core remains synchronous and domain-neutral.',
+          },
+        },
+        {
           label: { zh: '未发布 · Node 默认位置', en: 'Unreleased · Default Node position' },
           content: {
             zh: 'Node 的 position 可省略，Core 统一解析为当前局部坐标系的 [0, 0]；React、Vanilla 与 Source IR 使用同一语义，布局子项无需显式填写零坐标。显式定位保持不变，Coordinate 的 position 仍必填。',
@@ -792,6 +799,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '待发布：Layout 异步准备桥接', en: 'Unreleased: Layout async preparation bridge' },
+          content: {
+            zh: 'runtime.preparation 支持 sync/async，缺省 sync；async 复用 Vanilla controller，不创建领域私有请求状态机。React 同步 SSR 保持同步；异步 SSR 使用 Vanilla 入口。',
+            en: 'runtime.preparation supports sync/async and defaults to sync. Async mode reuses the Vanilla controller without domain-private request state machines. React synchronous SSR remains synchronous; async SSR uses Vanilla entry points.',
+          },
+        },
+        {
           label: { zh: '等价 authoring', en: 'Equivalent authoring' },
           content: {
             zh: '`NodeProps.position`、`ScopeProps.placement` / transform `pivot`、`<Step kind="axis-line">` 与 `<Draw>` 的 `horizontalTo` / `verticalTo`、`-|-` / `|-|` 均生成 Core 定义的同一 IR。',
@@ -892,6 +906,13 @@ export const kernelV05: Release = {
         en: 'TypeScript integration supports ongoing updates or full static rendering; successful updates replace the drawing and compile artifacts together.',
       },
       highlights: [
+        {
+          label: { zh: '待发布：共享异步作者准备', en: 'Unreleased: shared async authoring preparation' },
+          content: {
+            zh: 'adapter.prepare 先预检完整作者树，再执行并编译；共享 static commit/discard 与 async controller 负责取消、过期结果隔离及原子发布。同步 lower 与异步 prepare 契约明确区分。',
+            en: 'adapter.prepare preflights the complete author tree before execution and compilation. Shared static commit/discard and async controllers own cancellation, stale-result isolation and atomic publication. Synchronous lower and async prepare have explicit contracts.',
+          },
+        },
         {
           label: { zh: 'View 与 Scene 同步持有 artifacts', en: 'Views retain artifacts with the Scene' },
           content: {

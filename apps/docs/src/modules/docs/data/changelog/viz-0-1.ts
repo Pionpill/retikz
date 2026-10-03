@@ -190,6 +190,16 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: {
+            zh: '待发布：异步数据准备与执行策略',
+            en: 'Unreleased: async data preparation and execution policies',
+          },
+          content: {
+            zh: '根及单条声明支持稀疏 dataExecution，声明优先于根，根优先于执行器默认值。React 独立客户端自动准备，嵌入时使用外层 Layout async preparation；Vanilla 提供 renderChartAsync。rows/result/source、执行器与 signal 留在运行时；准备结果在布局测量和同次产物中复用。',
+            en: 'Sparse dataExecution is supported at roots and declarations: declaration > root > executor defaults. Standalone React clients prepare automatically; embedded clients use outer Layout async preparation. Vanilla exposes renderChartAsync. Runtime rows/result/source bindings, executors and signals stay outside IR; prepared results are reused by layout measurement and same-run artifacts.',
+          },
+        },
+        {
           label: { zh: '待发布：逐点自动留白', en: 'Unreleased: point-aware padding' },
           content: {
             zh: '所有点图 properties 新增 autoPadding：Bubble 默认 point-aware，其它点图默认 max-radius；逐点策略按实际位置与半径紧凑留白，显式 domainPadding 优先。autoPadding 同时支持 { kind, clearance } 对象形式，可用数值或四边间距对象预留图元外缘净空。逐点策略支持全部内置连续与分类位置尺度、二维极坐标及 role-space 散布。',
@@ -1268,6 +1278,16 @@ export const vizV01: Release = {
         en: 'The renderer-agnostic static-table core: JSON-safe TableIRs describe structure, Cells, constrained tracks, and borders, producing Scene and a typed manifest in one Core compile.',
       },
       highlights: [
+        {
+          label: {
+            zh: '待发布：异步数据准备与执行策略',
+            en: 'Unreleased: async data preparation and execution policies',
+          },
+          content: {
+            zh: '根及单条声明支持稀疏 dataExecution，声明优先于根，根优先于执行器默认值。React 独立客户端自动准备，嵌入时使用外层 Layout async preparation；Vanilla 提供 renderTableAsync。rows/result/source、执行器与 signal 留在运行时；准备结果在布局测量和同次产物中复用。',
+            en: 'Sparse dataExecution is supported at roots and declarations: declaration > root > executor defaults. Standalone React clients prepare automatically; embedded clients use outer Layout async preparation. Vanilla exposes renderTableAsync. Runtime rows/result/source bindings, executors and signals stay outside IR; prepared results are reused by layout measurement and same-run artifacts.',
+          },
+        },
         {
           label: { zh: '统一 IRTable 与语义模型', en: 'Unified IRTable and semantic model' },
           content: {

@@ -1,5 +1,5 @@
 import type { IRScene } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
+import type { ExternalDatasets, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { IRTable, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
 import type { RenderToStringOptions } from '@retikz/vanilla';
 
@@ -37,4 +37,27 @@ export type RenderTableArtifactResult = Readonly<{
 export type RenderTable = {
   (spec: IRTable, options: RenderTableArtifactOptions): RenderTableArtifactResult;
   (spec: IRTable, options?: RenderTableOptions): string;
+};
+
+/** 异步Table运行时选项，数据句柄不进入IR */
+export type RenderTableAsyncCommonOptions<TSource = never> = RenderTableCommonOptions &
+  Readonly<{
+    /** 与data互斥的原始行、规范结果或原生源绑定 */
+    dataBindings?: DataInputBindings<TSource>;
+    /** 本次请求的数据执行器 */
+    dataTransformExecutor?: DataTransformExecutor<TSource>;
+    /** 请求取消信号 */
+    signal?: AbortSignal;
+  }>;
+
+/** 异步Table保留同步入口的string/artifact返回选择 */
+export type RenderTableAsync = {
+  <TSource = never>(
+    spec: IRTable,
+    options: RenderTableAsyncCommonOptions<TSource> & { artifacts: true },
+  ): Promise<RenderTableArtifactResult>;
+  <TSource = never>(
+    spec: IRTable,
+    options?: RenderTableAsyncCommonOptions<TSource> & { artifacts?: false },
+  ): Promise<string>;
 };

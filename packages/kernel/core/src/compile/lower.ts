@@ -11,6 +11,7 @@ import type { LoweredIRScene, LowerIRToKernelOptions } from './types';
  */
 export const lowerIRToKernel = (ir: IRScene, options: LowerIRToKernelOptions = {}): LoweredIRScene =>
   lowerComposites(ir, resolveCompositeRegistry(options.composites), {
+    compositeInputs: options.compositeInputs,
     themeStyles: resolveThemeStyleRegistry(options.themeStyles),
     maxDepth: options.maxCompositeDepth,
     onWarn: () => undefined,

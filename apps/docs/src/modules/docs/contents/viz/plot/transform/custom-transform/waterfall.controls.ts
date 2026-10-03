@@ -3,7 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { waterfallRows } from './waterfall.data';
-import { waterfallTransform } from './waterfall.definition';
+import { waterfallTransform, waterfallTransformImplementation } from './waterfall.definition';
 
 /** 自定义瀑布变换 playground 的稳定控件 id */
 export const CUSTOM_TRANSFORM_CONTROL_IDS = {
@@ -34,7 +34,10 @@ export const waterfallControls = definePreviewControls({
             { source: '原始', result: '瀑布变换后' },
             waterfallRows,
             waterfallOperationOf,
-            { transformDefinitions: [waterfallTransform] },
+            {
+              transformDefinitions: [waterfallTransform],
+              transformImplementations: [waterfallTransformImplementation],
+            },
           ),
           columns: [{ key: 'period' }, { key: 'delta' }, { key: 'from' }, { key: 'to' }, { key: 'direction' }],
         },

@@ -6,16 +6,50 @@ import type {
   DataTransformOutputDescriptor,
   RowSelection,
   TransformContext,
+  AnyStatisticsReducerImplementation,
+  AnyRowSelectorImplementation,
+  AnySynchronousStatisticsReducerImplementation,
+  AnySynchronousRowSelectorImplementation,
+  DataTransformDependency,
 } from '../../contract';
 import { extractStatisticOperation } from '../../contract';
 import { RetikzDataError } from '../../error';
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../schemas';
 import type { ExternalRow } from '../../shared';
-import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
-import { BUILTIN_ROW_SELECTORS } from './selectors';
+import { resolveImplementationRegistry } from '../shared';
+import { BUILTIN_STATISTICS_REDUCERS, BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS } from './reducers';
+import { BUILTIN_ROW_SELECTORS, BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS } from './selectors';
 
 export { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 export { BUILTIN_ROW_SELECTORS } from './selectors';
+export { BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS } from './reducers';
+export { BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS } from './selectors';
+
+/** 注册独立统计计算，不以 kind 猜测语义等价 */
+export const resolveStatisticsReducerImplementationRegistry = <
+  TImplementation extends AnyStatisticsReducerImplementation = AnySynchronousStatisticsReducerImplementation,
+>(
+  definitions: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
+  custom: ReadonlyArray<TImplementation> = [],
+): Map<string, TImplementation | AnySynchronousStatisticsReducerImplementation> =>
+  resolveImplementationRegistry(
+    definitions,
+    [...BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS, ...custom],
+    extractStatisticOperation,
+  );
+
+/** 注册独立选择计算 */
+export const resolveRowSelectorImplementationRegistry = <
+  TImplementation extends AnyRowSelectorImplementation = AnySynchronousRowSelectorImplementation,
+>(
+  definitions: ReadonlyMap<string, AnyRowSelectorDefinition> = resolveRowSelectorRegistry(),
+  custom: ReadonlyArray<TImplementation> = [],
+): Map<string, TImplementation | AnySynchronousRowSelectorImplementation> =>
+  resolveImplementationRegistry(
+    definitions,
+    [...BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS, ...custom],
+    extractStatisticOperation,
+  );
 
 /** 默认 statistics reducer registry 的私有稳定索引 */
 const BUILTIN_STATISTICS_REDUCER_REGISTRY = createReadonlyMap(
@@ -89,6 +123,24 @@ const selectorDefinitionOf = (
   return definition;
 };
 
+/** 解析精确 reducer 依赖，不执行统计计算 */
+export const resolveReducerDependency = (
+  operation: IRDataReducerOperation,
+  registry: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
+): DataTransformDependency => {
+  const definition = reducerDefinitionOf(operation, registry);
+  return { type: 'reducer', operation: definition.schema.parse(operation) as IRDataReducerOperation, definition };
+};
+
+/** 解析精确 selector 依赖，不执行选行 */
+export const resolveSelectorDependency = (
+  operation: IRDataSelectorOperation,
+  registry: ReadonlyMap<string, AnyRowSelectorDefinition> = resolveRowSelectorRegistry(),
+): DataTransformDependency => {
+  const definition = selectorDefinitionOf(operation, registry);
+  return { type: 'selector', operation: definition.schema.parse(operation) as IRDataSelectorOperation, definition };
+};
+
 /** 收集 reducer 会读取的源字段 */
 export const reducerInputFields = (
   operation: IRDataReducerOperation,
@@ -105,8 +157,7 @@ export const reducerOutputFields = (
 ): Array<string> => {
   const definition = reducerDefinitionOf(operation, registry);
   const parsed = parseReducerOperation(definition, operation);
-  const descriptors = definition.outputs?.(parsed);
-  return descriptors?.map(descriptor => descriptor.field) ?? definition.outputFields?.(parsed) ?? [];
+  return definition.outputs(parsed).map(descriptor => descriptor.field);
 };
 
 /** 解析reducer Definition声明的已类型化scalar输出 */
@@ -115,7 +166,7 @@ export const reducerOutputDescriptors = (
   registry: ReadonlyMap<string, AnyStatisticsReducerDefinition> = resolveStatisticsReducerRegistry(),
 ): Array<DataTransformOutputDescriptor> => {
   const definition = reducerDefinitionOf(operation, registry);
-  return definition.outputs?.(parseReducerOperation(definition, operation)) ?? [];
+  return definition.outputs(parseReducerOperation(definition, operation));
 };
 
 /** 对一组 rows 执行 reducer operation，并允许 context 注入自定义 reducer registry */
@@ -127,9 +178,19 @@ export const applyReducerOperation = (
   const registry = context.statisticsReducerRegistry ?? resolveStatisticsReducerRegistry();
   const definition = reducerDefinitionOf(operation, registry);
   const parsed = parseReducerOperation(definition, operation);
-  const out = definition.reduce(rows, parsed, context);
-  const descriptors = definition.outputs?.(parsed);
-  const outputFields = descriptors?.map(descriptor => descriptor.field) ?? definition.outputFields?.(parsed) ?? [];
+  const implementation = (
+    context.statisticsReducerImplementationRegistry ??
+    resolveStatisticsReducerImplementationRegistry<AnySynchronousStatisticsReducerImplementation>(registry)
+  ).get(operation.kind);
+  if (implementation === undefined)
+    throw new RetikzDataError(`data: reducer "${operation.kind}" has no local implementation`);
+  let out: ExternalRow;
+  try {
+    out = implementation.reduce(rows, parsed, context);
+  } catch (cause) {
+    throw new RetikzDataError(`data: reducer "${operation.kind}" failed`, { cause });
+  }
+  const outputFields = definition.outputs(parsed).map(descriptor => descriptor.field);
   context.lineage?.recordReducerOperation({
     operation,
     rows,
@@ -157,7 +218,18 @@ export const applySelectorOperation = (
   const registry = context.rowSelectorRegistry ?? resolveRowSelectorRegistry();
   const definition = selectorDefinitionOf(operation, registry);
   const parsed = parseSelectorOperation(definition, operation);
-  const out = definition.select(rows, parsed);
+  const implementation = (
+    context.rowSelectorImplementationRegistry ??
+    resolveRowSelectorImplementationRegistry<AnySynchronousRowSelectorImplementation>(registry)
+  ).get(operation.kind);
+  if (implementation === undefined)
+    throw new RetikzDataError(`data: selector "${operation.kind}" has no local implementation`);
+  let out: Array<RowSelection>;
+  try {
+    out = implementation.select(rows, parsed);
+  } catch (cause) {
+    throw new RetikzDataError(`data: selector "${operation.kind}" failed`, { cause });
+  }
   context.lineage?.recordSelectorOperation({
     operation,
     rows,

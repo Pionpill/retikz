@@ -5,6 +5,7 @@ import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { parseRetikzJsx } from '@/lib/jsx-to-ir';
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 /** 测试便捷：解析成功返回 element，失败抛 — 让用例的 expect 自然定位失败原因 */
 const parseOk = (source: string): ReactElement => {
@@ -31,7 +32,7 @@ const typeName = (element: ReactElement): string | undefined => {
 /** 将 JSX child 通过唯一的 React-to-Vanilla Input 路径归一为 Source IR */
 const normalizeReactChildren = (children: ReactNode) => {
   const input = createInputScene(children);
-  return normalizeScene(input.scene, { adapters: input.adapters });
+  return normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
 };
 
 describe('parseRetikzJsx — happy path', () => {

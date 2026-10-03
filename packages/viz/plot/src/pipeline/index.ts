@@ -1,4 +1,5 @@
 export { lowerPlots } from './expand/lower';
+export { preparePlotData } from './expand/preparation';
 export { createPlotProvider, createPlotProviderContribution, PlotProviderKey } from './expand/provider';
 export type { LowerPlotsOptions } from './expand/types';
 export type { PlotLineageLowerOptions } from './lineage';

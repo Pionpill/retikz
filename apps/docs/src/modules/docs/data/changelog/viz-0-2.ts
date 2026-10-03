@@ -15,6 +15,23 @@ export const vizV02: Release = {
       },
       highlights: [
         {
+          label: {
+            zh: '待发布：BREAKING 变换语义与计算分离',
+            en: 'Unreleased: BREAKING transform semantics and computation split',
+          },
+          content: {
+            zh: 'Definition 只声明 schema、字段模型与统计依赖；计算移入独立 Implementation。Data 根入口提供 executor、builtin/external/hybrid、Promise、取消与完整结果模型接入。宿主声明改为 { operation, dataExecution? }；不保留旧组合 Definition 或裸 operation 宿主写法。',
+            en: 'Definitions declare schemas, field models and statistical dependencies; separate Implementations compute results. The Data root exposes executors, builtin/external/hybrid modes, Promises, cancellation and complete result-model ingress. Host declarations use { operation, dataExecution? }; combined Definitions and bare host operations are removed.',
+          },
+        },
+        {
+          label: { zh: '待发布：BREAKING 数据变换统一归属', en: 'Unreleased: BREAKING unified data transforms' },
+          content: {
+            zh: 'stack、bin、normalize、derive-interval、relate、jitter、density 与 smooth 的 schema、类型和实现迁入 @retikz/data 根入口，与既有四种操作共用默认 registry；从 DataTransform 和 IRDataXxxTransform 导入，不再使用 Plot 的具体变换导出或组合 registry。PlotTransform 作者组件保留；宿主声明使用 operation 包装，执行策略独立配置，操作默认值与声明顺序保持不变。',
+            en: 'The schemas, types, and implementations of stack, bin, normalize, derive-interval, relate, jitter, density, and smooth move to the @retikz/data package root and share the default registry with its four existing operations. Import DataTransform and IRDataXxxTransform from Data instead of Plot-specific exports or its combined registry. The PlotTransform authoring component remains; host declarations wrap operation parameters and configure execution separately, preserving operation defaults and declaration order.',
+          },
+        },
+        {
           label: { zh: '单一 Source 校验边界', en: 'Single Source validation boundary' },
           content: {
             zh: 'transform、reducer 与 selector 的开放配置由各自 Source schema 通过 JSON catchall 校验；registry dispatch 后只运行命中的 Definition schema，不再在前后重复执行通用 JSON object 检查。',
@@ -54,6 +71,16 @@ export const vizV02: Release = {
         en: 'Plot v0.2 delivers an owner-local Theme token contract: Plot owns its tokens, presets, resolution, mapping, and inspection while consuming the resolved Core Theme.',
       },
       highlights: [
+        {
+          label: {
+            zh: '待发布：异步数据准备与执行策略',
+            en: 'Unreleased: async data preparation and execution policies',
+          },
+          content: {
+            zh: '根及单条声明支持稀疏 dataExecution，声明优先于根，根优先于执行器默认值。React 独立客户端自动准备，嵌入时使用外层 Layout async preparation；Vanilla 提供 renderPlotAsync。rows/result/source、执行器与 signal 留在运行时；准备结果在布局测量和同次产物中复用。',
+            en: 'Sparse dataExecution is supported at roots and declarations: declaration > root > executor defaults. Standalone React clients prepare automatically; embedded clients use outer Layout async preparation. Vanilla exposes renderPlotAsync. Runtime rows/result/source bindings, executors and signals stay outside IR; prepared results are reused by layout measurement and same-run artifacts.',
+          },
+        },
         {
           label: { zh: '待发布：逐点自动留白', en: 'Unreleased: point-aware padding' },
           content: {

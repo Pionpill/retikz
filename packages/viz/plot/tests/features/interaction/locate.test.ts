@@ -1,4 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
+import { defineTransformImplementation } from '@retikz/data';
 import { defineTransform } from '@retikz/data';
 import { SOURCE_INDEX } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -28,7 +29,10 @@ const doubleDefinition = defineTransform({
     as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+});
+const doubleDefinitionImplementation = defineTransformImplementation({
+  definition: doubleDefinition,
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
@@ -44,7 +48,16 @@ const groupSumDefinition = defineTransform({
     as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.groupBy, operation.field],
-  outputFields: operation => [operation.as],
+  outputModel: operation => ({
+    kind: 'replace',
+    fields: [
+      { field: operation.groupBy, type: { from: operation.groupBy } },
+      { field: operation.as, type: 'continuous' },
+    ],
+  }),
+});
+const groupSumDefinitionImplementation = defineTransformImplementation({
+  definition: groupSumDefinition,
   apply: (rows, operation, context) => {
     const groups = new Map<string, Array<Record<string, unknown>>>();
     for (const row of rows) {
@@ -142,7 +155,7 @@ const pieSpec = (over: { id?: string } = {}): IRPlot =>
     type: 'plot',
     ...(over.id ? { id: over.id } : {}),
     data: { reference: 'd' },
-    transform: [{ kind: 'stack', y: 'v' }],
+    transform: [{ operation: { kind: 'stack', y: 'v' } }],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
     scales: [
       { type: 'linear', name: 'a' },
@@ -280,13 +293,15 @@ describe('datum locator — happy path', () => {
           order: 'trendX',
           transform: [
             {
-              kind: 'smooth',
-              x: 'x',
-              y: 'y',
-              groupBy: ['series'],
-              sampleCount: 2,
-              xAs: 'trendX',
-              yAs: 'trendY',
+              operation: {
+                kind: 'smooth',
+                x: 'x',
+                y: 'y',
+                groupBy: ['series'],
+                sampleCount: 2,
+                xAs: 'trendX',
+                yAs: 'trendY',
+              },
             },
           ],
           encoding: {
@@ -545,7 +560,7 @@ describe('datum locator — bug hunter regressions', () => {
       type: 'plot',
       id: 'sales',
       data: { reference: 'sales' },
-      transform: [{ kind: 'sort', field: 'revenue', order: 'descending' }],
+      transform: [{ operation: { kind: 'sort', field: 'revenue', order: 'descending' } }],
       scales: [
         { type: 'band', name: 'xMonth' },
         { type: 'linear', name: 'yRevenue' },
@@ -596,7 +611,7 @@ describe('datum locator transform registry parity', () => {
       type: 'plot',
       id: 'custom',
       data: { reference: 'd' },
-      transform: [{ kind: 'double', field: 'x', as: 'x2' }],
+      transform: [{ operation: { kind: 'double', field: 'x', as: 'x2' } }],
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -610,7 +625,11 @@ describe('datum locator transform registry parity', () => {
         { x: 3, y: 4 },
       ],
     };
-    const options: LowerPlotsOptions = { ...opts, transformDefinitions: [doubleDefinition] };
+    const options: LowerPlotsOptions = {
+      ...opts,
+      transformDefinitions: [doubleDefinition],
+      transformImplementations: [doubleDefinitionImplementation],
+    };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
     const locator = createPlotLocator(spec, datasets, options);
     expect(nodes).toHaveLength(2);
@@ -633,7 +652,7 @@ describe('datum locator transform registry parity', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ kind: 'sort', field: 'revenue', order: 'descending' }],
+          transform: [{ operation: { kind: 'sort', field: 'revenue', order: 'descending' } }],
           encoding: { x: { field: 'month' }, y: { field: 'revenue' } },
         },
       ],
@@ -661,7 +680,7 @@ describe('datum locator transform registry parity', () => {
       type: 'plot',
       id: 'grouped',
       data: { reference: 'd' },
-      transform: [{ kind: 'group-sum', groupBy: 'group', field: 'value', as: 'total' }],
+      transform: [{ operation: { kind: 'group-sum', groupBy: 'group', field: 'value', as: 'total' } }],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -676,7 +695,11 @@ describe('datum locator transform registry parity', () => {
         { group: 'B', value: 5 },
       ],
     };
-    const locator = createPlotLocator(spec, datasets, { ...opts, transformDefinitions: [groupSumDefinition] });
+    const locator = createPlotLocator(spec, datasets, {
+      ...opts,
+      transformDefinitions: [groupSumDefinition],
+      transformImplementations: [groupSumDefinitionImplementation],
+    });
     expect((locator.datum(0)!.meta as { sourceIndices?: Array<number> }).sourceIndices).toEqual([0, 1]);
     expect((locator.datum(1)!.meta as { sourceIndices?: Array<number> }).sourceIndices).toEqual([2]);
   });
@@ -721,7 +744,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
       type: 'plot',
       id: 'stk',
       data: { reference: 'd' },
-      transform: [{ kind: 'stack', x: 'cat', y: 'v', groupBy: 'g' }],
+      transform: [{ operation: { kind: 'stack', x: 'cat', y: 'v', groupBy: 'g' } }],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },

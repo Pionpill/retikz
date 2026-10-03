@@ -15,7 +15,7 @@ import { Plot, PlotTransform } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={rows}>
-  <PlotTransform kind="sort" field="date" order="ascending" />
+  <PlotTransform operation={{ kind: 'sort', field: 'date', order: 'ascending' }} />
   {/* marks */}
 </Plot>
 ```
@@ -45,7 +45,7 @@ All three forms belong to the Plot application layer, but their scope differs.
 | `dataTransforms={[...]}` | Programmatically generated operation arrays | Shared pipeline, before component declarations   |
 | mark-local `transform`   | A local data view for one mark              | That mark only; other mark inputs stay unchanged |
 
-Plot-registered drawing kinds use the same component; see [Plot Grammar transforms](/viz/plot/transform). The four Data built-ins live under [Transform Operations](/viz/data/transform/operations).
+Data defines and executes all twelve built-in kinds through the same component. See [Data Contract](/viz/data/reference/contract#datatransformschema) for complete contracts and [Plot transforms](/viz/plot/transform) for composition examples.
 
 ## How it works
 
@@ -55,7 +55,7 @@ Plot-registered drawing kinds use the same component; see [Plot Grammar transfor
   description="Revisit this section when debugging why the component renders nothing, how multiple entry points are ordered, or how automatic transforms are deduplicated."
 />
 
-The `PlotTransform` function returns `null`. While building the plot spec, `Plot` synchronously walks its children, recognizes `PlotTransform` elements, and collects their props as `IRPlotTransform` values. It is therefore a configuration carrier rather than a visible layer, and it accepts no children.
+The `PlotTransform` function returns `null`. While building the plot spec, `Plot` synchronously walks its children, recognizes `PlotTransform` elements, and collects their props as `IRDataTransformDeclaration` values. It is therefore a configuration carrier rather than a visible layer, and it accepts no children.
 
 The shared pipeline is assembled in this order:
 
@@ -70,20 +70,14 @@ When an explicit `stack` has the same signature as an automatic `stack`, the aut
     {
       label: 'PlotTransformProps and the null-rendering component',
       path: 'packages/viz/plot-react/src/components/transform.tsx',
-      startLine: 1,
-      endLine: 7,
     },
     {
       label: 'Collecting PlotTransform props from Plot children',
       path: 'packages/viz/plot-vanilla/src/normalize/plot/member-normalizer.ts',
-      startLine: 667,
-      endLine: 668,
     },
     {
       label: 'Assembly order for explicit and automatic operations',
       path: 'packages/viz/plot-vanilla/src/normalize/plot/topology.ts',
-      startLine: 9,
-      endLine: 35,
     },
   ]}
 />
@@ -92,26 +86,16 @@ When an explicit `stack` has the same signature as an automatic `stack`, the aut
 
 #### PlotTransform / PlotTransformProps
 
-`PlotTransformProps` equals `IRPlotTransform`, a union discriminated by `kind`. After choosing a `kind`, TypeScript requires the configuration of that operation branch.
+`PlotTransformProps` uses `IRDataTransformDeclaration`. Required `operation` is discriminated by `kind`; optional `dataExecution` chooses computation for this stage.
 
-| prop   | type                      | default | description                                                                                                                    |
-| ------ | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `kind` | `IRPlotTransform['kind']` | —       | Operation discriminator; remaining props come from the selected union branch and are documented on the matching Data/Plot page |
+| Prop            | Type              | Meaning                                                                                     |
+| --------------- | ----------------- | ------------------------------------------------------------------------------------------- |
+| `operation`     | `IRDataTransform` | Operation parameters; see [Data Contract](/viz/data/reference/contract#datatransformschema) |
+| `dataExecution` | `IRDataExecution` | Sparse `mode` and `external` name, inherited independently                                  |
 
-The `PlotTransformProps['kind']` values are:
+The component, `dataTransforms`, and mark-local `transform` all use `{ operation, dataExecution? }` rather than bare operations. Built-in and custom operations share this declaration.
 
-| Owner  | kinds                                                                                   | Documentation                                          |
-| ------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| Data   | `sort`, `summarize`, `select`, `annotate`                                               | [Transform Operations](/viz/data/transform/operations) |
-| Plot   | `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitter`, `density`, `smooth` | [Plot Grammar transforms](/viz/plot/transform)         |
-| Custom | A registered string that does not collide with a built-in name                          | [Extension Mechanisms](/viz/data/transform/extensions) |
-
-`PlotTransform` and `PlotTransformProps` are exported from the package entry:
-
-| export               | type                     | default | description                                              |
-| -------------------- | ------------------------ | ------- | -------------------------------------------------------- |
-| `PlotTransform`      | `FC<PlotTransformProps>` | —       | Declares one operation and returns `null`                |
-| `PlotTransformProps` | `IRPlotTransform`        | —       | Type alias between component props and Plot transform IR |
+Executor defaults < Plot root `dataExecution` < declaration `dataExecution`, with priority increasing to the right. The final default is `builtin`; `external` requires support for every stage; `hybrid` selects local computation only when external preflight explicitly reports unsupported. See [Extension Mechanisms](/viz/data/transform/extensions) for provider registration and Promise host integration.
 
 ## Related
 

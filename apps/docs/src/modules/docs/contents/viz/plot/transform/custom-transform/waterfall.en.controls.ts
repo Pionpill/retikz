@@ -4,7 +4,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { waterfallOperationOf } from './waterfall.controls';
 import { waterfallRows } from './waterfall.data';
-import { waterfallTransform } from './waterfall.definition';
+import { waterfallTransform, waterfallTransformImplementation } from './waterfall.definition';
 
 /** Stable control ids for the custom waterfall-transform playground */
 export const CUSTOM_TRANSFORM_CONTROL_IDS = {
@@ -28,7 +28,10 @@ export const waterfallControls = definePreviewControls({
             { source: 'Source', result: 'Waterfall result' },
             waterfallRows,
             waterfallOperationOf,
-            { transformDefinitions: [waterfallTransform] },
+            {
+              transformDefinitions: [waterfallTransform],
+              transformImplementations: [waterfallTransformImplementation],
+            },
           ),
           columns: [{ key: 'period' }, { key: 'delta' }, { key: 'from' }, { key: 'to' }, { key: 'direction' }],
         },

@@ -6,7 +6,12 @@ import {
   RetikzStandardErrorCode,
   SurfaceProvider,
 } from '@retikz/standard/presentation';
-import type { InputChild, InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type {
+  InputChild,
+  InputEmbed,
+  SynchronousInputEmbedAdapter,
+  NormalizedInputEmbedChildren,
+} from '@retikz/vanilla';
 
 import { StandardSurfaceEmbedKind } from '../shared/constants';
 
@@ -25,10 +30,41 @@ export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | '
 export const surfaceChild = (child: InputSurfaceChild): InputSurfaceChild => child;
 
 /** Standard Surface 的 InputEmbed adapter */
-export const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
+const createSurfaceContribution = (props: InputSurface, normalized: NormalizedInputEmbedChildren) => {
+  const { child, id, ...input } = props;
+  void child;
+  if (normalized.children.length !== 1)
+    throw new RetikzStandardError({
+      code: RetikzStandardErrorCode.AuthoringInvalid,
+      message: 'Standard Surface requires exactly one normalized child.',
+      details: { childCount: normalized.children.length },
+    });
+  return {
+    node: createSurface({
+      namespace: 'standard',
+      type: 'surface',
+      ...input,
+      ...(id === undefined ? {} : { id }),
+      child: normalized.children[0],
+    }),
+    runtimeInputs: normalized.runtimeInputs?.map(binding => ({
+      ...binding,
+      path: ['child', ...binding.path.slice(1)],
+    })),
+    providerDependencies: {
+      roots: [SurfaceProvider.key, ...normalized.providerDependencies.roots],
+      providers: [SurfaceProvider, PathClipProvider, ...normalized.providerDependencies.providers],
+    },
+    ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+  };
+};
+
+/** Standard Surface 的同步与异步 InputEmbed adapter */
+export const SurfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>> = {
   kind: StandardSurfaceEmbedKind,
   lower: (props, context) => {
-    const { child, id, ...input } = props;
+    const { child } = props;
     const normalizeChildren = context.normalizeChildren;
     if (normalizeChildren === undefined) {
       throw new RetikzStandardError({
@@ -38,27 +74,11 @@ export const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
       });
     }
     const normalized = normalizeChildren([child]);
-    if (normalized.children.length !== 1) {
-      throw new RetikzStandardError({
-        code: RetikzStandardErrorCode.AuthoringInvalid,
-        message: 'Standard Surface requires exactly one normalized child.',
-        details: { childCount: normalized.children.length },
-      });
-    }
-    return {
-      node: createSurface({
-        namespace: 'standard',
-        type: 'surface',
-        ...input,
-        ...(id === undefined ? {} : { id }),
-        child: normalized.children[0],
-      }),
-      providerDependencies: {
-        roots: [SurfaceProvider.key, ...normalized.providerDependencies.roots],
-        providers: [SurfaceProvider, PathClipProvider, ...normalized.providerDependencies.providers],
-      },
-      ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
-    };
+    return createSurfaceContribution(props, normalized);
+  },
+  prepare: async (props, context) => {
+    const child = await context.prepareChildren([props.child]);
+    return { execute: async () => createSurfaceContribution(props, await child.execute()) };
   },
 };
 

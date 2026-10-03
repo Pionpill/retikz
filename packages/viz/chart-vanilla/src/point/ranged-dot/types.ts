@@ -6,5 +6,5 @@ import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 export type InputRangedDotChart = InputTypedChart<IRRangedDotChart>;
 
 /** Ranged Dot factory 的 typed authoring 输入 */
-export type RangedDotChartInputEmbedProps = TypedChartCommonInput<IRRangedDotChart> &
+export type RangedDotChartInputEmbedProps<TNative = never> = TypedChartCommonInput<IRRangedDotChart, TNative> &
   Pick<InputRangedDotChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

@@ -90,5 +90,5 @@ export const previewControlContract = {
       values: { strategy: 'thresholds', count: 8, step: 4, thresholdPreset: 'focused' },
     },
   ],
-  relatedApis: ['IRPlotBinTransform.count', 'IRPlotBinTransform.step', 'IRPlotBinTransform.thresholds'],
+  relatedApis: ['IRDataBinTransform.count', 'IRDataBinTransform.step', 'IRDataBinTransform.thresholds'],
 } satisfies PreviewControlContract;

@@ -1,0 +1,244 @@
+---
+title: Map · 映射
+description: 使用 Map 展示键值记录，配置单元格、组合图形并查询 API 与 Schema。
+---
+
+`Map` 将有序键值对画成对齐的两列，适合展示对象字段和键值记录。它只负责绘制，不执行字典查询或去重。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/extension` 注入 `PathClipDefinition`。
+
+<ComponentPreview files="map-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Map } from '@retikz/standard-react/collection';
+
+export const Example = () => (
+  <Layout>
+    <Map
+      entries={[
+        { key: 'a', value: '1' },
+        { key: 'b', value: '2' },
+      ]}
+    />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { MapDefinition } from '@retikz/standard/collection';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'map',
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[MapDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    map({
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [MapInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { MapDefinition } from '@retikz/standard/collection';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'map',
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, {
+  compile: { composites: [MapDefinition] },
+});
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 选择输入方式
+
+三种输入方式互斥；根据是否需要单格样式、命名或图形内容选择。
+
+| 输入           | 适用场景                                     |
+| -------------- | -------------------------------------------- |
+| `entries`      | 明确配置文字、单格样式与 id                  |
+| `data`         | 直接递归展示 JSON 对象                       |
+| JSX `children` | 用 MapEntry / MapKey / MapValue 组合图形内容 |
+
+`entries` 按数组顺序展示；每项包含 `key` 和 `value`，二者均可为字符串或 `{ content, id?, style?, layout? }`。文字 key 可以重复，字符串不会自动成为单元格 id。
+
+### 样式与尺寸
+
+样式优先级为 **结构默认 → 整体 style → style.key / style.value → 单格 style**；可以分别设置键和值的外观。
+
+字体按字段合并；`fillOpacity` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
+
+<ComponentPreview files="map-styles" size="sm" />
+
+`layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零；省略或 `'auto'` 时自适应。单格同名字段优先，显式 `'auto'` 可以解除继承的固定尺寸。`layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
+
+布局优先级为 **整体 layout → layout.key / layout.value → 单格 layout**。两列分别按本列最大需求确定宽度，每行按较高单元格确定高度。固定尺寸不会被拉伸，较小单元格从轨道起点对齐，因此同列边框宽度或同行边框高度可以不同。`layout.gap` 支持数字或 `{ row, column }`。
+
+### 容器标签
+
+`label` 为整个容器添加文字，支持单个对象或数组，可设置位置、距离、旋转和引线。标签不撑大布局尺寸，但计入最终绘制范围；空容器也能显示标签。
+
+```tsx
+<Map entries={[{ key: 'a', value: '1' }]} label={{ text: 'record', position: 'top' }} />
+```
+
+整体字体、文字颜色及 `defaults.label` 可作为标签默认，标签自身设置优先；键值角色和单格样式不影响容器标签，`data` 中的嵌套容器也不继承根标签。
+
+<ComponentAlert
+  type="tip"
+  title="标签配置"
+  description={
+    <>
+      标签配置复用 Node label；完整位置、样式及引线选项见<a href="/kernel/components/node/labels">节点标签文档</a>。
+    </>
+  }
+/>
+
+## 扩展用法
+
+### 组合图形内容
+
+每个 `MapEntry` 必须恰好包含一个 `MapKey` 和一个 `MapValue`；每格设置 `text` 或唯一的 drawable child，二者互斥。
+
+```text
+Map
+└── MapEntry
+    ├── MapKey
+    └── MapValue
+        └── List
+```
+
+`MapEntry` 是一条记录，`MapKey` 和 `MapValue` 分别占据键列和值列。组合组件只声明内容，不能脱离上述父子关系单独渲染。
+
+多个图元先用 `Scope` 包成一个 child，再放入单元格。React 的数据数组只放文字配置，不嵌 JSX；Vanilla 的单格 `content` 接受文字或一个 authoring child，直接 IR 的 `content` 接受文字或一个可序列化图元。
+
+<ComponentPreview files="map-composition" size="sm" />
+
+### 直接展示 JSON 数据
+
+`data` 接受 JSON 对象，根对象始终由 Map 展示。其非空对象值默认递归画成 Map；设置 `dataObjectDisplay="text"` 后，对象值改为紧凑的 JSON 文本。嵌套数组仍递归画成 List，并沿用这一设置。该选项仅用于 `data`，不适用于 `entries` 或 JSX 组合。下例使用文本模式。
+
+<ComponentPreview files="map-data" />
+
+对象键按原始文字显示，字符串值按带引号和转义的 JSON 字面量显示，因此 `"null"` 与 `null` 不会混淆。数字、布尔值和 null 原样显示；嵌套空对象、空数组显示为 `{}`、`[]`，空根结构的自然尺寸为零。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 Map 的 `entries`。
+
+数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。要连线或逐格定制，改用显式单元格，在其中嵌套带 `data` 的组件。整体 style / layout 只控制当前层，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
+
+React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ListDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
+
+### 引用单元格与控制溢出
+
+为单元格设置 `id` 后，可以在路径端点引用它，如 `to={{ id: 'selected', anchor: 'right' }}`。引用区域是该格的边框矩形，不包含间隙、索引或视觉溢出；关闭背景不会改变引用区域。内容自身的 id 则指向内容几何。未设 id 的格不会按数组下标自动获得身份。
+
+自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+
+## 错误与限制
+
+- 不混用输入方式；同一容器内显式单元格 id 必须唯一。重复文字应与身份分开配置。
+- 组合标记必须放在规定的直属父组件中，单格图形必须恰好一个；非法 JSX 组合会报错。
+- `data` 只接受 JSON 值树，不传函数、运行时实例、循环引用或稀疏数组；展示前自行投影数据。
+- 固定单格尺寸可以小于内容，但父级分配若容纳不下整组单元格与间隙，会编译失败。父级给出多余空间时，单元格仍从起点排布，不拉伸填满。
+- 这是数据结构的绘制组件，不负责数据处理、任意矩阵或合并单元格。
+
+## API 参考
+
+以下为当前组件的 React、Vanilla 和 IR 公开入口局部参考，签名与说明由源码生成。共享样式和持久化字段见后面的 Schema；不在这里复制整包公共契约。
+
+{/* @include library/standard/collection/map/generated */}
+
+## Schema 参考
+
+`MapSchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'map'`；entries 与 data 二选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
+
+#### MapSchema
+
+<ZodSchema name="MapSchema" description="有序键值对的双列展示，支持显式记录或 JSON 对象" expandNested />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Surface · 表面',
+      description: '为单个图形添加背景、内边距和裁切',
+      url: '/library/standard/presentation/surface',
+    },
+  ]}
+/>

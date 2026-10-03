@@ -9,6 +9,8 @@ import type {
   ShapeDefinition,
   ThemeStyleDefinition,
 } from '../../contract';
+import type { CompositeRuntimeInputScope } from '../../contract/composite';
+import { resolveCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -37,6 +39,8 @@ import type { CompileObservationRuntime } from './observation';
  * @description compileToScene 入口把选项、内置 provider、自定义 provider、资源表和 rounding 规则集中解析到这里；
  */
 export type CompileContext = {
+  /** 与本次 Source 配对的实例运行时输入 */
+  runtimeInputs: CompositeRuntimeInputScope;
   /** canonical 输入 IR；composite 分支在 traversal 中保留 occurrence provenance 后处理 */
   loweredIr: IRScene;
   /** Scene 根解析后的完整 Theme */
@@ -127,6 +131,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
   const themeStyles = resolveThemeStyleRegistry(options.themeStyles);
 
   return {
+    runtimeInputs: resolveCompositeInputScope(ir, options.compositeInputs),
     loweredIr: ir,
     theme: resolveTheme(DEFAULT_RESOLVED_THEME, ir.theme, 'scene.theme', themeStyles),
     themeStyles,

@@ -1,5 +1,8 @@
-import { BendDirection, BoxSpacingSchema, FoldStepVia, PaintSchema } from '@retikz/core';
 import {
+  BendDirection,
+  BoxSpacingSchema,
+  FoldStepVia,
+  PaintSchema,
   AnchorRefSchema,
   PathDecorationSchema,
   PathFillSchema,
@@ -7,9 +10,9 @@ import {
   PathStrokeSchema,
   PositionSchema,
   StepLabelSchema,
-} from '@retikz/core';
-import { AxisScaleSchema, BoxSizeSchema, CssColorSchema } from '@retikz/core';
-import {
+  AxisScaleSchema,
+  BoxSizeSchema,
+  CssColorSchema,
   BlendMode,
   BoundarySchema,
   DropShadowSchema,
@@ -23,6 +26,7 @@ import {
   ShadowPreset,
   ShapeValueSchema,
 } from '@retikz/core';
+import { DataTransformDeclarationSchema } from '@retikz/data';
 import { CenterlineRibbonPathOptionsSchema, TaperRibbonWidthSchema } from '@retikz/extension';
 import {
   JsonValueSchema,
@@ -56,7 +60,6 @@ import {
 } from '../encoding';
 import { PlotLayerSchema } from '../layer';
 import { MarkPlacementSchema } from '../position-adjustment';
-import { TransformSchema } from '../transform';
 import {
   BUILTIN_MARK_TYPES,
   IntervalBoundKind,
@@ -71,7 +74,7 @@ import {
   RelationRoutingKind,
 } from './constants';
 
-export const MarkTransformSchema = array(TransformSchema).describe(
+export const MarkTransformSchema = array(DataTransformDeclarationSchema).describe(
   'Mark-local transform pipeline applied after the plot root transform to derive rows consumed only by this mark',
 );
 
