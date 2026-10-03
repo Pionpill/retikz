@@ -1,5 +1,5 @@
 import { createBubbleChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
@@ -7,7 +7,7 @@ import { normalizeBubbleChart } from './normalize';
 import type { BubbleChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 Bubble 输入并组装 provider 依赖 */
-export const BubbleChartInputEmbedAdapter: InputEmbedAdapter<BubbleChartInputEmbedProps> = {
+export const BubbleChartInputEmbedAdapter: SynchronousInputEmbedAdapter<BubbleChartInputEmbedProps> = {
   kind: 'chart.bubble',
   lower: input => {
     const parts = typedChartPartsOf(input);

@@ -4,7 +4,7 @@ import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import type { IRTable, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
@@ -63,7 +63,7 @@ export type TableProps = TableCommonProps & {
 /** 带静态 Tier 2 adapter 的 Table React 组件 */
 export type InputEmbeddableTableComponent<TProps> = FC<TProps> & {
   isTier2Embeddable: true;
-  inputEmbedAdapter: InputEmbedAdapter<InputTable>;
+  inputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable>;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => InputTable;
 };
 

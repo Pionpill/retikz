@@ -10,6 +10,7 @@ import {
 
 import type { AnyCompositeDefinition } from '../../contract';
 import { CoreOwnerDefinition } from '../../contract';
+import { resolveCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { compileCoreSnapshot } from '../compile';
 import { CompileWarningCode } from '../constants';
@@ -40,6 +41,12 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
   runtimeOptions: CoreProgramRuntimeOptions = {},
 ): CoreProgramDefinition<TComposites> => {
   const fixedOptions = copyCoreProgramOptions(options);
+  const compositeInputOwner = runtimeOptions.compositeInputOwner;
+  if (compositeInputOwner !== undefined && options.compositeInputs !== undefined)
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Contract,
+      'createCoreProgram: composite inputs must come from either fixed options or the runtime owner',
+    );
   const invalidationOwners = Object.freeze([...(runtimeOptions.invalidationOwners ?? [])]);
   const observers = Object.freeze([...(runtimeOptions.observers ?? [])]);
   const warningSink = fixedOptions.onWarn ?? dispatchDefaultWarning;
@@ -51,7 +58,11 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
     CoreProgramPublicRead<TComposites>
   >({
     id: CORE_PROGRAM_ID,
-    owners: [CoreOwnerDefinition, ...invalidationOwners],
+    owners: [
+      CoreOwnerDefinition,
+      ...(compositeInputOwner === undefined ? [] : [compositeInputOwner]),
+      ...invalidationOwners,
+    ],
     programs: [],
     tracePhases: [
       {
@@ -86,6 +97,7 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
         source,
         {
           ...fixedOptions,
+          ...(compositeInputOwner === undefined ? {} : { compositeInputs: view.snapshot(compositeInputOwner).value }),
           onWarn: undefined,
           trace: counter,
         },
@@ -150,12 +162,18 @@ export const createCoreProgram = <const TComposites extends ReadonlyArray<AnyCom
     },
     update: (previous, view, context) => {
       if (view.phase !== RuntimeProgramPhase.Update) return { kind: RuntimeProgramKind.Fallback };
+      if (compositeInputOwner !== undefined && view.changed(compositeInputOwner))
+        return { kind: RuntimeProgramKind.Fallback };
       if (invalidationOwners.some(owner => view.changed(owner))) {
         return { kind: RuntimeProgramKind.Fallback };
       }
       if (observers.length > 0) return { kind: RuntimeProgramKind.Fallback };
       const changeSet = view.changeSet(CoreOwnerDefinition);
       const nextSource = view.snapshot(CoreOwnerDefinition).value;
+      resolveCompositeInputScope(
+        nextSource,
+        compositeInputOwner === undefined ? fixedOptions.compositeInputs : view.snapshot(compositeInputOwner).value,
+      );
       const nextIndex = createCoreSnapshotIndex(nextSource);
       if (changeSet !== undefined && !coreChangeSetMatchesSnapshots(previous.state.index, nextIndex, changeSet)) {
         return {

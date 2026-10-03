@@ -1,5 +1,5 @@
 import { createConnectedScatterChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
@@ -7,7 +7,7 @@ import { normalizeConnectedScatterChart } from './normalize';
 import type { ConnectedScatterChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 ConnectedScatter 输入并组装 provider 依赖 */
-export const ConnectedScatterChartInputEmbedAdapter: InputEmbedAdapter<ConnectedScatterChartInputEmbedProps> = {
+export const ConnectedScatterChartInputEmbedAdapter: SynchronousInputEmbedAdapter<ConnectedScatterChartInputEmbedProps> = {
   kind: 'chart.connected-scatter',
   lower: input => {
     const parts = typedChartPartsOf(input);

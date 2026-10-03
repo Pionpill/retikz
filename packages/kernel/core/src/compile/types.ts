@@ -6,6 +6,7 @@ import type {
   AnyCompositeDefinition,
   CompileObserverOutput,
   CompileOccurrenceLocator,
+  CompositeInputBindings,
   Scene,
   SpatialHandleIndex,
 } from '../contract';
@@ -182,6 +183,8 @@ export type CompileProviderOptions = Omit<CoreProviderDefinitions, 'composites'>
 export type CompileCompositeOptions<
   TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
 > = {
+  /** 与本次完整 Source 配对的 composite 实例运行时输入 */
+  compositeInputs?: CompositeInputBindings;
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑
    * @description Core 不预留官方 namespace 名称；未注册的 namespace/type 会触发 warning，并跳过该 composite 节点，重复的完整 namespace/type 键在注册期报错
@@ -212,7 +215,10 @@ export type LoweredIRScene = Omit<IRScene, 'children'> & {
 };
 
 /** `lowerIRToKernel` 使用的 composite Definition 与深度选项 */
-export type LowerIRToKernelOptions = Pick<CompileCompositeOptions, 'composites' | 'maxCompositeDepth'> &
+export type LowerIRToKernelOptions = Pick<
+  CompileCompositeOptions,
+  'composites' | 'maxCompositeDepth' | 'compositeInputs'
+> &
   Pick<CompileProviderOptions, 'themeStyles'>;
 
 /** compileToScene 的可选参数 */

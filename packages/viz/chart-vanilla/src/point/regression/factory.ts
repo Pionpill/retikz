@@ -1,5 +1,5 @@
 import { createRegressionChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
@@ -7,7 +7,7 @@ import { normalizeRegressionChart } from './normalize';
 import type { RegressionChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 Regression 输入并组装 provider 依赖 */
-export const RegressionChartInputEmbedAdapter: InputEmbedAdapter<RegressionChartInputEmbedProps> = {
+export const RegressionChartInputEmbedAdapter: SynchronousInputEmbedAdapter<RegressionChartInputEmbedProps> = {
   kind: 'chart.regression',
   lower: input => {
     const parts = typedChartPartsOf(input);

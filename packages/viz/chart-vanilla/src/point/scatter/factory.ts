@@ -1,5 +1,5 @@
 import { createScatterChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
@@ -7,7 +7,7 @@ import { normalizeScatterChart } from './normalize';
 import type { ScatterChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 Scatter 输入并组装 provider 依赖 */
-export const ScatterChartInputEmbedAdapter: InputEmbedAdapter<ScatterChartInputEmbedProps> = {
+export const ScatterChartInputEmbedAdapter: SynchronousInputEmbedAdapter<ScatterChartInputEmbedProps> = {
   kind: 'chart.scatter',
   lower: input => {
     const parts = typedChartPartsOf(input);

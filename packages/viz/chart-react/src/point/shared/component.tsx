@@ -4,7 +4,7 @@ import type { IRScene } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { createElement, useMemo } from 'react';
 
@@ -312,8 +312,8 @@ export const createTypedChartComponent = <
 >(
   displayName: string,
   createInput: (props: TProps) => TInput,
-  adapter: InputEmbedAdapter<TInput>,
-): InputEmbeddableChartComponent<TProps, TInput, InputEmbedAdapter<TInput>> => {
+  adapter: SynchronousInputEmbedAdapter<TInput>,
+): InputEmbeddableChartComponent<TProps, TInput, SynchronousInputEmbedAdapter<TInput>> => {
   const Component: FC<TProps> = props => {
     const { children, layout, lowerOptions, themeDefinitions } = props;
     const ambientThemeDefinitions = useChartThemeDefinitions();
@@ -331,7 +331,7 @@ export const createTypedChartComponent = <
     const embeddedProps = { ...effectiveProps, children: standalone.children };
     return createElement(Layout, standalone.host, createElement(Component, embeddedProps));
   };
-  const chart = Component as InputEmbeddableChartComponent<TProps, TInput, InputEmbedAdapter<TInput>>;
+  const chart = Component as InputEmbeddableChartComponent<TProps, TInput, SynchronousInputEmbedAdapter<TInput>>;
   chart.displayName = displayName;
   chart.isTier2Embeddable = true;
   chart.inputEmbedAdapter = adapter;

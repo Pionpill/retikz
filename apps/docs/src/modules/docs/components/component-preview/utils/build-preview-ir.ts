@@ -6,6 +6,7 @@ import type { FC, ReactElement, ReactNode } from 'react';
 import { createElement, isValidElement } from 'react';
 
 import type { Lang } from '@/i18n';
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 import type { ComponentPreviewDemoComponent } from '../types';
 import { buildPreviewSourceIR, collectPreviewChartSources } from './build-preview-source-ir';
@@ -67,7 +68,7 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
     props.ir === undefined
       ? (() => {
           const input = createInputScene(childNode);
-          const runtime = normalizeScene(input.scene, { adapters: input.adapters });
+          const runtime = normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) });
           return {
             ...runtime,
             sourceIr: buildPreviewSourceIR(input.scene, runtime.ir, collectPreviewChartSources(childNode)),

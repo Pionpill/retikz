@@ -5,7 +5,7 @@ import type { TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import type { InputTable, InputTableVariant } from '@retikz/table-vanilla';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { useCallback, useMemo, useRef } from 'react';
 
@@ -19,7 +19,7 @@ type TableRuntimeEmbedProps = InputTable;
 /** React Layout 遍历时识别的 Table Vanilla InputEmbed 宿主 */
 type TableRuntimeEmbedComponent = FC<TableRuntimeEmbedProps> & {
   isTier2Embeddable: true;
-  inputEmbedAdapter: InputEmbedAdapter<InputTable>;
+  inputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable>;
 };
 
 const TableRuntimeEmbed = (() => null) as unknown as TableRuntimeEmbedComponent;

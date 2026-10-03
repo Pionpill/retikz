@@ -1,5 +1,5 @@
 import { createRangedDotChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
@@ -7,7 +7,7 @@ import { normalizeRangedDotChart } from './normalize';
 import type { RangedDotChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 RangedDot 输入并组装 provider 依赖 */
-export const RangedDotChartInputEmbedAdapter: InputEmbedAdapter<RangedDotChartInputEmbedProps> = {
+export const RangedDotChartInputEmbedAdapter: SynchronousInputEmbedAdapter<RangedDotChartInputEmbedProps> = {
   kind: 'chart.ranged-dot',
   lower: input => {
     const parts = typedChartPartsOf(input);

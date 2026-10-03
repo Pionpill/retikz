@@ -1,5 +1,6 @@
 import type {
   CompileObservationOwner,
+  CompositeInputBinding,
   CoreProviderContribution,
   IRChild,
   IRCoordinate,
@@ -9,7 +10,7 @@ import type {
 import type { ValueOf } from '@retikz/foundation';
 
 import type { InputCoordinate } from '../coordinate';
-import type { AnyInputEmbed, AnyInputEmbedAdapter, InputEmbedThemeContextResolver } from '../embed';
+import type { AnyInputEmbed, SynchronousInputEmbedAdapter, InputEmbedThemeContextResolver } from '../embed';
 import type { InputNode } from '../node';
 import type { InputPath } from '../path';
 import type { InputScope } from '../scope';
@@ -121,6 +122,8 @@ export type InputRuntimeMeta = Readonly<{
 
 /** 单次 Scene 输入归一化的完整结果 */
 export type NormalizedInputScene = {
+  /** 相对最终 Source IR 的 composite 实例输入 */
+  runtimeInputs?: ReadonlyArray<CompositeInputBinding>;
   /** 唯一的 Core Source IR */
   ir: IRScene;
   /** 原样收集，待 processing 唯一调用 Core resolver */
@@ -134,7 +137,7 @@ export type NormalizedInputScene = {
 /** Input 归一化选项 */
 export type InputNormalizeOptions = {
   /** 调用方显式提供的 Tier 2 adapter */
-  adapters?: ReadonlyArray<AnyInputEmbedAdapter>;
+  adapters?: ReadonlyArray<SynchronousInputEmbedAdapter<never>>;
   /** 仅由 processing 准备并注入的 Scope Theme 上下文解析器 */
   embedThemeContext?: InputEmbedThemeContextResolver;
 };

@@ -1,5 +1,5 @@
 import { createStripChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
@@ -7,7 +7,7 @@ import { normalizeStripChart } from './normalize';
 import type { StripChartInputEmbedProps } from './types';
 
 /** 在场景处理时规范化 Strip 输入并组装 provider 依赖 */
-export const StripChartInputEmbedAdapter: InputEmbedAdapter<StripChartInputEmbedProps> = {
+export const StripChartInputEmbedAdapter: SynchronousInputEmbedAdapter<StripChartInputEmbedProps> = {
   kind: 'chart.strip',
   lower: input => {
     const parts = typedChartPartsOf(input);

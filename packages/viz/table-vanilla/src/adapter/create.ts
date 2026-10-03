@@ -1,11 +1,11 @@
 import { createTableRuntimeContribution, TABLE_NAMESPACE } from '@retikz/table';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputTable } from '../normalize/table';
 import { normalizeTable } from '../normalize/table';
 
 /** 可复用于多个 embed 与 update 周期的无状态 Table InputEmbed adapter */
-export const TableInputEmbedAdapter: InputEmbedAdapter<InputTable> = {
+export const TableInputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable> = {
   kind: TABLE_NAMESPACE,
   lower: (props, context) => {
     const spec = normalizeTable(props.table);

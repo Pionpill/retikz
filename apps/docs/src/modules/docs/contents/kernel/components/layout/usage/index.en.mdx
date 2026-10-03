@@ -5,6 +5,12 @@ description: Provide drawing input and configure framing, defaults, and renderin
 
 `<Layout>` is the top-level React drawing entry. Place Node, Path, or other drawing components inside it. Framing is automatic by default, so ordinary figures need no explicit size or viewBox. See [Quick start](/kernel/components/get-start) for setup.
 
+## Connect async components
+
+Layout defaults to `runtime.preparation: 'sync'`. For components using Promises or external computation, set `runtime={{ preparation: 'async', signal }}` on the outermost Layout. One host prepares the entire author tree and publishes atomically, while executors and handles remain runtime objects. Cancellation, unmount and stale requests do not publish; a failed current request preserves the previous frame. Standalone Plot, Chart and Table clients select async preparation automatically.
+
+React server rendering remains synchronous. Use [Vanilla processing](/kernel/packages/vanilla/overview#async-authoring-preparation) or domain renderAsync entry points for async SSR. See [Data external computation](/viz/data/transform/extensions) for modes and a working example.
+
 ## Integration options
 
 Choose a host and input format: React accepts JSX or an `ir` prop; Vanilla accepts builder output or IR directly. All four variants draw the same three-node triangle with automatic framing. IR is a serializable drawing description that can come from an editor, an LLM, or a database.

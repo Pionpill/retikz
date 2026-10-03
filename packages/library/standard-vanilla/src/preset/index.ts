@@ -1,4 +1,4 @@
-import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { ListInputEmbedAdapter } from '../container/list';
 import { MapInputEmbedAdapter } from '../container/map';
@@ -18,7 +18,7 @@ import {
 } from '../shape';
 
 /** 当前 Standard 版本全部 InputEmbed adapter 的 catalog */
-export const StandardInputEmbedAdapters: ReadonlyArray<AnyInputEmbedAdapter> = Object.freeze([
+export const StandardInputEmbedAdapters: ReadonlyArray<SynchronousInputEmbedAdapter<never>> = Object.freeze([
   MapInputEmbedAdapter,
   ListInputEmbedAdapter,
   GridInputEmbedAdapter,

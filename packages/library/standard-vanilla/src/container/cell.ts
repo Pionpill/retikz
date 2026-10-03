@@ -2,7 +2,7 @@ import type { CoreDependencyProvider, IRChild } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 import type { IRCell } from '@retikz/standard/container';
 import { ListProvider, MapProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/container';
-import type { InputChild, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputChild, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 /** 单元格接受纯文本或根 Scene 的统一 authoring 输入；字符串保留到 Standard IR */
 export type InputCell<TCell extends { content: string | IRChild } = IRCell> = Omit<TCell, 'content'> & {
@@ -18,7 +18,7 @@ export const dataCellDependencies = {
 /** 归一化每格的唯一 child，并保留其依赖与 authoring sites */
 export const normalizeCells = <TCell extends { content: string | InputChild }>(
   cells: Array<TCell>,
-  context: Parameters<InputEmbedAdapter<unknown>['lower']>[1],
+  context: Parameters<SynchronousInputEmbedAdapter<unknown>['lower']>[1],
   provider: CoreDependencyProvider,
 ) => {
   const normalizeChildren = context.normalizeChildren;

@@ -8,6 +8,7 @@ import type {
   SceneRuntimeSnapshot,
 } from '../../contract';
 import { CORE_OWNER_KEY } from '../../contract';
+import type { CoreCompositeInputOwnerDefinition } from '../../contract';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from '../types';
 import type { CompileWarning } from '../warning';
 import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } from './types';
@@ -22,6 +23,8 @@ export type CoreProgramOptions<
 
 /** Core Program 的 Runtime 装配选项 */
 export type CoreProgramRuntimeOptions = Readonly<{
+  /** 从本次 candidate snapshot 读取实例输入，Source 与此 owner 必须同事务更新 */
+  compositeInputOwner?: typeof CoreCompositeInputOwnerDefinition;
   /** 只负责使固定 compile definitions 外部状态失效的 owner；其 value 不进入 Core IR */
   invalidationOwners?: ReadonlyArray<RuntimeOwnerToken>;
   /** Program session 生命周期内固定的 observer definitions */

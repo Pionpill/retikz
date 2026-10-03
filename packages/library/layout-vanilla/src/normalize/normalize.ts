@@ -1,36 +1,38 @@
 import type { FlexLayoutItemInput, GridLayoutItemInput, OverlayLayoutItemInput } from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
-import type { InputChild, InputEmbedContext, InputEmbedContribution } from '@retikz/vanilla';
+import type {
+  InputChild,
+  InputEmbedContext,
+  InputEmbedContribution,
+  InputEmbedPreparationContext,
+  InputEmbedChildrenPreparation,
+  NormalizedInputEmbedChildren,
+} from '@retikz/vanilla';
 
 type LayoutItem = FlexLayoutItemInput | GridLayoutItemInput | OverlayLayoutItemInput;
 type CoreProviderContribution = InputEmbedContribution['providerDependencies'];
 type InputEmbedAuthoringSites = NonNullable<InputEmbedContribution['authoringSites']>;
 
-/** 将 Vanilla Layout items 收敛为持久化输入与向外转发的 Layout provider contribution */
-export const normalizeLayoutItems = <TItem extends LayoutItem>(
-  inputs: ReadonlyArray<Omit<TItem, 'child'> & { child: InputChild }> | undefined,
-  context: InputEmbedContext,
+/** 汇合已归一化的 Layout 子项与显式 Source 字段绑定 */
+const collectLayoutItems = <TItem extends LayoutItem>(
+  inputs: ReadonlyArray<Omit<TItem, 'child'> & { child: InputChild }>,
+  normalizedChildren: ReadonlyArray<NormalizedInputEmbedChildren>,
 ): Readonly<{
   items: Array<TItem>;
   providerDependencies: CoreProviderContribution;
   authoringSites: InputEmbedAuthoringSites;
+  runtimeInputs: NonNullable<InputEmbedContribution['runtimeInputs']>;
 }> => {
-  const normalizeChildren = context.normalizeChildren;
-  if (normalizeChildren === undefined) {
-    throw new RetikzLayoutError({
-      code: RetikzLayoutErrorCode.AuthoringInvalid,
-      message: 'Layout inputs require Kernel Vanilla normalizeScene.',
-      details: { operation: 'normalizeLayoutItems' },
-    });
-  }
   const items: Array<TItem> = [];
   const roots: Array<CoreProviderContribution['roots'][number]> = [];
   const providers: Array<CoreProviderContribution['providers'][number]> = [];
   const authoringSites: Array<InputEmbedAuthoringSites[number]> = [];
+  const runtimeInputs: Array<NonNullable<InputEmbedContribution['runtimeInputs']>[number]> = [];
 
-  for (const input of inputs ?? []) {
+  for (const [index, input] of inputs.entries()) {
     const { child, ...item } = input;
-    const normalized = normalizeChildren([child]);
+    void child;
+    const normalized = normalizedChildren[index];
     if (normalized.children.length !== 1) {
       throw new RetikzLayoutError({
         code: RetikzLayoutErrorCode.AuthoringInvalid,
@@ -41,6 +43,8 @@ export const normalizeLayoutItems = <TItem extends LayoutItem>(
     roots.push(...normalized.providerDependencies.roots);
     providers.push(...normalized.providerDependencies.providers);
     authoringSites.push(...normalized.authoringSites);
+    for (const binding of normalized.runtimeInputs ?? [])
+      runtimeInputs.push({ ...binding, path: ['children', items.length, 'child', ...binding.path.slice(1)] });
     items.push({ ...item, child: normalized.children[0] } as TItem);
   }
 
@@ -48,5 +52,39 @@ export const normalizeLayoutItems = <TItem extends LayoutItem>(
     items,
     providerDependencies: Object.freeze({ roots: Object.freeze(roots), providers: Object.freeze(providers) }),
     authoringSites: Object.freeze(authoringSites),
+    runtimeInputs: Object.freeze(runtimeInputs),
   });
+};
+
+/** 将 Vanilla Layout items 收敛为持久化输入与向外转发的 Layout provider contribution */
+export const normalizeLayoutItems = <TItem extends LayoutItem>(
+  inputs: ReadonlyArray<Omit<TItem, 'child'> & { child: InputChild }> | undefined,
+  context: InputEmbedContext,
+): ReturnType<typeof collectLayoutItems<TItem>> => {
+  const normalizeChildren = context.normalizeChildren;
+  if (normalizeChildren === undefined)
+    throw new RetikzLayoutError({
+      code: RetikzLayoutErrorCode.AuthoringInvalid,
+      message: 'Layout inputs require Kernel Vanilla normalizeScene.',
+      details: { operation: 'normalizeLayoutItems' },
+    });
+  const items = inputs ?? [];
+  return collectLayoutItems(
+    items,
+    items.map(input => normalizeChildren([input.child])),
+  );
+};
+
+/** 在全树准备阶段登记 Layout child；执行阶段复用同一字段组装 */
+export const prepareLayoutItems = async <TItem extends LayoutItem>(
+  inputs: ReadonlyArray<Omit<TItem, 'child'> & { child: InputChild }> | undefined,
+  context: InputEmbedPreparationContext,
+): Promise<() => Promise<ReturnType<typeof normalizeLayoutItems<TItem>>>> => {
+  const preparations: Array<InputEmbedChildrenPreparation> = [];
+  for (const input of inputs ?? []) preparations.push(await context.prepareChildren([input.child]));
+  return async () => {
+    const normalized: Array<NormalizedInputEmbedChildren> = [];
+    for (const preparation of preparations) normalized.push(await preparation.execute());
+    return collectLayoutItems<TItem>(inputs ?? [], normalized);
+  };
 };

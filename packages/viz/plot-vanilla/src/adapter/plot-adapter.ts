@@ -6,7 +6,7 @@ import {
   createPlotProviderContribution,
   PLOT_NAMESPACE,
 } from '@retikz/plot';
-import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter, InputScope } from '@retikz/vanilla';
 import { normalizeScopeWithChildren } from '@retikz/vanilla';
 
 import type { InputPlotEmbed } from '../spec';
@@ -65,7 +65,7 @@ export const resolvePlotContribution = (request: PlotContributionRequest): Resol
 };
 
 /** 将 Plot authoring input 下沉为 Core contribution 的 InputEmbed adapter */
-export const PlotInputEmbedAdapter: InputEmbedAdapter<InputPlotEmbed> = {
+export const PlotInputEmbedAdapter: SynchronousInputEmbedAdapter<InputPlotEmbed> = {
   kind: PLOT_NAMESPACE,
   lower: props => {
     const spec = plotIROf(props);

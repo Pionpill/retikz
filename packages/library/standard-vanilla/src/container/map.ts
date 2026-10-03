@@ -1,6 +1,6 @@
 import type { IRMap } from '@retikz/standard/container';
 import { createMap, MapProvider } from '@retikz/standard/container';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { StandardMapEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -9,12 +9,16 @@ import { dataCellDependencies, normalizeCells } from './cell';
 /** Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 style.key/value 与 layout.key/value */
 export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataObjectDisplay'> &
   (
-    | { entries: Array<{ key: string | InputCell; value: string | InputCell }>; data?: never; dataObjectDisplay?: never }
+    | {
+        entries: Array<{ key: string | InputCell; value: string | InputCell }>;
+        data?: never;
+        dataObjectDisplay?: never;
+      }
     | { data: NonNullable<IRMap['data']>; entries?: never; dataObjectDisplay?: IRMap['dataObjectDisplay'] }
   );
 
 /** 将 Map 输入与嵌套内容交给根级 traversal */
-export const MapInputEmbedAdapter: InputEmbedAdapter<InputMap> = {
+export const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
   kind: StandardMapEmbedKind,
   lower: (props, context) => {
     if (props.data !== undefined)

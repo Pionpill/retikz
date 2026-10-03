@@ -1,26 +1,46 @@
 import type { FlexLayoutItemInput } from '@retikz/layout';
 import { createFlexLayout, FlexLayoutProvider } from '@retikz/layout';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputFlexLayout } from './normalize';
-import { normalizeLayoutItems } from './normalize';
+import { normalizeLayoutItems, prepareLayoutItems } from './normalize';
 
 /** Vanilla Flex 布局嵌入项的稳定类别 */
 const FlexLayoutEmbedKind = 'layout.flexLayout';
 
 /** Layout Flex 布局的 InputEmbed adapter */
-export const FlexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout> = {
+export const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputFlexLayout>, 'prepare'>> = {
   kind: FlexLayoutEmbedKind,
   lower: (props, context) => {
     const { children, ...input } = props;
     const normalized = normalizeLayoutItems<FlexLayoutItemInput>(children, context);
     return {
+      runtimeInputs: normalized.runtimeInputs,
       node: createFlexLayout({ ...input, children: normalized.items }),
       providerDependencies: {
         roots: [FlexLayoutProvider.key, ...normalized.providerDependencies.roots],
         providers: [FlexLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+    };
+  },
+  prepare: async (props, context) => {
+    const { children, ...input } = props;
+    const execute = await prepareLayoutItems<FlexLayoutItemInput>(children, context);
+    return {
+      execute: async () => {
+        const normalized = await execute();
+        return {
+          node: createFlexLayout({ ...input, children: normalized.items }),
+          runtimeInputs: normalized.runtimeInputs,
+          providerDependencies: {
+            roots: [FlexLayoutProvider.key, ...normalized.providerDependencies.roots],
+            providers: [FlexLayoutProvider, ...normalized.providerDependencies.providers],
+          },
+          ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+        };
+      },
     };
   },
 };

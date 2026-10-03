@@ -2,7 +2,17 @@ export * from './arrow';
 export * from './boundary';
 export * from './box-spacing';
 export * from './clip';
-export * from './composite';
+export * from './composite/constants';
+export * from './composite/define';
+export { createCompositeInputBindings } from './composite/input';
+export type {
+  CompositeBoundChild,
+  CompositeInputBinding,
+  CompositeInputBindings,
+  CompositeInputPath,
+  CompositeRuntimeInputContext,
+} from './composite/input';
+export * from './composite/types';
 export * from './observation';
 export * from './occurrence';
 export * from './path-generator';

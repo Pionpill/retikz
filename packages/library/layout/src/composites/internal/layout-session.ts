@@ -1,5 +1,6 @@
 import type {
   CompositeCompileChild,
+  CompositeBoundChild,
   IRChild,
   LayoutChildResult,
   LayoutCompositeCompileContext,
@@ -15,7 +16,7 @@ import { layoutClipOf } from './geometry';
 
 /** 绑定一个待布局 child 与稳定的 authored occurrence */
 export type LayoutChildHandle = Readonly<{
-  child: IRChild;
+  child: IRChild | CompositeBoundChild;
   occurrence: number;
 }>;
 

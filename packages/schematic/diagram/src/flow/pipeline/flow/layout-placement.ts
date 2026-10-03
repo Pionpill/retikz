@@ -158,7 +158,12 @@ export const createFlowLayoutExecutionContext = (
             };
           }),
         });
-        const compileContext = { ...context, proposal: intrinsicLayoutProposal('natural') };
+        const children = grid.children?.map(item => context.bindChild(item.child, [])) ?? [];
+        const compileContext: LayoutCompositeCompileContext = {
+          ...context,
+          proposal: intrinsicLayoutProposal('natural'),
+          sourceChild: path => children[path[1] as number],
+        };
         // 所有 relation 基于同一输入取最大标签尺寸，避免遍历顺序影响结果
         let rowGap = layout.gap.row;
         let columnGap = layout.gap.column;
@@ -209,9 +214,11 @@ export const createFlowLayoutExecutionContext = (
           margin: element.margin,
         })),
       });
+      const children = flex.children?.map(item => context.bindChild(item.child, [])) ?? [];
       const artifact = compileFlexLayout(flex, {
         ...context,
         proposal: intrinsicLayoutProposal('natural'),
+        sourceChild: path => children[path[1] as number],
       }).artifact;
       if (artifact === undefined) return placementFailure(input, 'FlexLayout returned no placement artifact.');
       return projectPlacementBounds(

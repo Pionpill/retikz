@@ -8,7 +8,7 @@ import { normalizeStripChart } from '@retikz/chart-vanilla/point';
 import { ScatterChartSchema } from '@retikz/chart/point';
 import { PlotAxis, PlotFacet, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout, Text } from '@retikz/react';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -38,7 +38,7 @@ import { ScatterChart, ScatterEncodings, ScatterMark, ScatterProperties } from '
 import { StripChart, StripEncodings, StripMark, StripProperties } from '../src/point/strip';
 
 type InputComponent<TInput> = {
-  inputEmbedAdapter: InputEmbedAdapter<TInput>;
+  inputEmbedAdapter: SynchronousInputEmbedAdapter<TInput>;
   createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => TInput;
 };
 

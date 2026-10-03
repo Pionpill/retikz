@@ -11,6 +11,8 @@ import { normalizeScene, scene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
+
 const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
   new Proxy(
     {},
@@ -90,7 +92,7 @@ describe('Standard Legend renderer boundary', () => {
       }),
     );
     const react = LegendSchema.parse(
-      normalizeScene(reactInput.scene, { adapters: reactInput.adapters }).ir.children[0],
+      normalizeScene(reactInput.scene, { adapters: synchronousInputAdaptersOf(reactInput.adapters) }).ir.children[0],
     );
     const vanillaInput = scene({ children: [legend(input)] });
     const vanilla = LegendSchema.parse(

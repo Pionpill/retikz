@@ -1,26 +1,46 @@
 import type { OverlayLayoutItemInput } from '@retikz/layout';
 import { createOverlayLayout, OverlayLayoutProvider } from '@retikz/layout';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputOverlayLayout } from './normalize';
-import { normalizeLayoutItems } from './normalize';
+import { normalizeLayoutItems, prepareLayoutItems } from './normalize';
 
 /** Vanilla Overlay 布局嵌入项的稳定类别 */
 const OverlayLayoutEmbedKind = 'layout.overlayLayout';
 
 /** Layout Overlay 布局的 InputEmbed adapter */
-export const OverlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayout> = {
+export const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>> = {
   kind: OverlayLayoutEmbedKind,
   lower: (props, context) => {
     const { children, ...input } = props;
     const normalized = normalizeLayoutItems<OverlayLayoutItemInput>(children, context);
     return {
+      runtimeInputs: normalized.runtimeInputs,
       node: createOverlayLayout({ ...input, children: normalized.items }),
       providerDependencies: {
         roots: [OverlayLayoutProvider.key, ...normalized.providerDependencies.roots],
         providers: [OverlayLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+    };
+  },
+  prepare: async (props, context) => {
+    const { children, ...input } = props;
+    const execute = await prepareLayoutItems<OverlayLayoutItemInput>(children, context);
+    return {
+      execute: async () => {
+        const normalized = await execute();
+        return {
+          node: createOverlayLayout({ ...input, children: normalized.items }),
+          runtimeInputs: normalized.runtimeInputs,
+          providerDependencies: {
+            roots: [OverlayLayoutProvider.key, ...normalized.providerDependencies.roots],
+            providers: [OverlayLayoutProvider, ...normalized.providerDependencies.providers],
+          },
+          ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+        };
+      },
     };
   },
 };
