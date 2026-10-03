@@ -69,13 +69,15 @@
     "@retikz/core": "workspace:^",
     "@retikz/foundation": "workspace:^",
     "@retikz/math": "workspace:^",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "d3-scale": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@types/d3-scale": "catalog:"
   }
 }

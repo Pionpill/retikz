@@ -1,16 +1,15 @@
-import type { IRPlotTransform } from '@retikz/plot';
+import type { IRDataTransform } from '@retikz/data';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { createPlotTransformTableViews } from '../../transform-table-views';
 import { revenue } from './transform-normalize.data';
-
 /** 根据实时控件值创建归一化与堆叠流水线 */
 export const normalizeOperationsOf = (values: {
   basis: 'fraction' | 'percent';
   grouping: 'quarter' | 'global';
-}): Array<IRPlotTransform> => [
+}): Array<IRDataTransform> => [
   {
     kind: 'normalize',
     field: 'amount',
@@ -85,5 +84,5 @@ export const previewControlContract = {
     { id: 'quarter-percent', label: '季度百分比', values: { basis: 'percent', grouping: 'quarter' } },
     { id: 'global-fraction', label: '全局比例', values: { basis: 'fraction', grouping: 'global' } },
   ],
-  relatedApis: ['IRPlotNormalizeTransform.basis', 'IRPlotNormalizeTransform.groupBy'],
+  relatedApis: ['IRDataNormalizeTransform.basis', 'IRDataNormalizeTransform.groupBy'],
 } satisfies PreviewControlContract;

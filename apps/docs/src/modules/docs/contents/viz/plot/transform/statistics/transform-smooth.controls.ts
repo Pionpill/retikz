@@ -79,5 +79,5 @@ export const previewControlContract = {
     { id: 'observed', label: '观测范围', values: { sampleCount: 32, extentMode: 'observed' } },
     { id: 'extend', label: '外推趋势', values: { sampleCount: 48, extentMode: 'extend' } },
   ],
-  relatedApis: ['IRPlotSmoothTransform.sampleCount', 'IRPlotSmoothTransform.extent'],
+  relatedApis: ['IRDataSmoothTransform.sampleCount', 'IRDataSmoothTransform.extent'],
 } satisfies PreviewControlContract;

@@ -9,6 +9,14 @@ IRTable 只保存 JSON-safe 结构；datasets、Definitions、Core compile optio
 
 `createDetailTableIR()` 与 `createManualTableIR()` 组装独立的稀疏 Source；外部 JSON 使用 `TableSchema.parse()`。布局 resolver 应用默认值，formatter / presentation 直接消费已确定的内部配置；自定义插件的 options 和返回值仍在各自边界校验。
 
+## 数据变换与异步准备
+
+Detail 和绑定数据的 Custom Table 支持根 `transform` declaration 数组与 `dataExecution`。变换在 Structure 解析前完成；Manual 和无数据 Custom 不接受这些配置。`sourceIndex` 指向本次绑定结果，不等同于数据库主键或变换前行号。
+
+React Table / DetailTable 接收 `dataBindings`、`dataTransformExecutor`、`signal` 及独立 Data 定义/实现选项。dataBindings 与 data 互斥。DetailTable 可直接传 transform 与 dataExecution；Table 的根配置可覆盖 spec 入口，但不能同时在两处提供。ManualTable 不接受数据执行器。独立客户端自动准备；嵌入外层 Layout 时开启 `runtime={{ preparation: 'async' }}`。
+
+Vanilla `embedTable(spec, { dataBindings, dataTransformExecutor, signal, lowerOptions })` 交给支持 prepare 的 TableInputEmbedAdapter。异步 SSR 用 `renderTableAsync(spec, options?)`：默认返回 Promise SVG；`artifacts: true` 返回 `{ svg, manifest }`，manifest 来自实际同次编译。同步 renderTable / compileTable 与 React SSR 只支持本地同步计算。完整执行方式和模型边界见 [Data 扩展机制](/viz/data/transform/extensions)。
+
 ## 入口如何汇合
 
 React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 authoring 和宿主方式不同，但它们不会复制 Table 的 normalize、defaults cascade、presentation 或 layout 算法。

@@ -1,23 +1,29 @@
-﻿import { BendDirection } from '@retikz/core';
-import { BuiltinRegressionMethod, FieldOrderMode } from '@retikz/data';
-import { DataSortOrder, ReducerOperationKind, RowSelectorTie, SelectorOperationKind } from '@retikz/data';
+import { BendDirection } from '@retikz/core';
+import {
+  BuiltinRegressionMethod,
+  FieldOrderMode,
+  DataSortOrder,
+  ReducerOperationKind,
+  RowSelectorTie,
+  SelectorOperationKind,
+  DensityBandwidthKind,
+  JitterAxis,
+  NormalizeBasis,
+  PairMeasureOperationKind,
+  TransformSchema,
+} from '@retikz/data';
 import { RibbonAlignment, RibbonTaperInterpolation } from '@retikz/extension';
 import {
   AxisLineExtentTarget,
   AxisTitleBaseline,
   CoordinateArrangementKind,
   CoordinateViewPlacementKind,
-  DensityBandwidthKind,
-  JitterAxis,
-  NormalizeBasis,
-  PairMeasureOperationKind,
   PolarInterpolation,
   PositionScaleContinuity,
   ReferenceMarkKind,
   RelationOrthogonalLabelStep,
   RelationRouteStepKind,
   RelationRoutingKind,
-  TransformSchema,
 } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 

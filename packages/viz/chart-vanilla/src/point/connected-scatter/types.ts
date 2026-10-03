@@ -6,5 +6,8 @@ import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 export type InputConnectedScatterChart = InputTypedChart<IRConnectedScatterChart>;
 
 /** Connected Scatter factory 的 typed authoring 输入 */
-export type ConnectedScatterChartInputEmbedProps = TypedChartCommonInput<IRConnectedScatterChart> &
+export type ConnectedScatterChartInputEmbedProps<TNative = never> = TypedChartCommonInput<
+  IRConnectedScatterChart,
+  TNative
+> &
   Pick<InputConnectedScatterChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

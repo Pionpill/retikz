@@ -79,7 +79,7 @@ describe('stat-geom composition surface (contract)', () => {
       marks: [
         {
           type: 'interval',
-          transform: [boxSummary],
+          transform: [{ operation: boxSummary }],
           bounds: {
             x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
             y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
@@ -89,21 +89,21 @@ describe('stat-geom composition surface (contract)', () => {
         },
         {
           type: 'reference',
-          transform: [boxSummary],
+          transform: [{ operation: boxSummary }],
           extentField: 'boxX0',
           extentToField: 'boxX1',
           encoding: { y: { field: 'median' } },
         },
         {
           type: 'reference',
-          transform: [boxSummary],
+          transform: [{ operation: boxSummary }],
           extentField: 'whiskerMin',
           extentToField: 'whiskerMax',
           encoding: { x: { field: 'boxX' } },
         },
         {
           type: 'point',
-          transform: [boxOutside],
+          transform: [{ operation: boxOutside }],
           encoding: { x: { field: 'boxX' }, y: { field: 'value' } },
         },
       ],
@@ -140,7 +140,9 @@ describe('stat-geom composition surface (contract)', () => {
         { type: 'point', encoding: { x: { field: 'time' }, y: { field: 'value' } } },
         {
           type: 'path',
-          transform: [{ kind: 'smooth', x: 'time', y: 'value', sampleCount: 5, xAs: 'trendX', yAs: 'trendY' }],
+          transform: [
+            { operation: { kind: 'smooth', x: 'time', y: 'value', sampleCount: 5, xAs: 'trendX', yAs: 'trendY' } },
+          ],
           order: 'trendX',
           encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
         },
@@ -148,12 +150,14 @@ describe('stat-geom composition surface (contract)', () => {
           type: 'path',
           transform: [
             {
-              kind: 'density',
-              field: 'value',
-              bandwidth: { kind: 'value', value: 2 },
-              sampleCount: 4,
-              xAs: 'densityX',
-              densityAs: 'density',
+              operation: {
+                kind: 'density',
+                field: 'value',
+                bandwidth: { kind: 'value', value: 2 },
+                sampleCount: 4,
+                xAs: 'densityX',
+                densityAs: 'density',
+              },
             },
           ],
           closure: { kind: 'baseline', baseline: 0 },

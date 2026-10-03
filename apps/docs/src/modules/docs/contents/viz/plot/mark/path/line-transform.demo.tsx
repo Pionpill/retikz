@@ -24,7 +24,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         color={groupByChannel ? 'channel' : undefined}
         stroke={groupByChannel ? undefined : '#0f172a'}
         strokeWidth={2.5}
-        transform={[lineTransformOperationOf(values)]}
+        transform={[{ operation: lineTransformOperationOf(values) }]}
       />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

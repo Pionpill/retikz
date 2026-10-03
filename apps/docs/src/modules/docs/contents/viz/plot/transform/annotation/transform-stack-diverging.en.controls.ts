@@ -32,5 +32,5 @@ export const stackDivergingControls = definePreviewControls({
 export const previewControlContract = {
   controls: stackDivergingControls,
   canonicalValues: {},
-  relatedApis: ['IRPlotStackTransform.offset'],
+  relatedApis: ['IRDataStackTransform.offset'],
 } satisfies PreviewControlContract;

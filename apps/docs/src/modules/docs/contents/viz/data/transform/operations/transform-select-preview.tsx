@@ -25,7 +25,7 @@ export const transformSelectOperationOf = (values: TransformSelectValues): IRDat
 /** 渲染受控 selector 保留的原始城市行 */
 export const renderTransformSelectPreview = (values: TransformSelectValues) => (
   <Plot data={cityRevenue} width={520} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-    <PlotTransform {...transformSelectOperationOf(values)} />
+    <PlotTransform operation={{ ...transformSelectOperationOf(values) }} />
     <PointMark x="city" y="revenue" color="region" text="city" size={7} />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

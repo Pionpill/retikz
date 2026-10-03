@@ -14,13 +14,23 @@ describe('buildPlotIR stat-geom 结构组合', () => {
             x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
             y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
           }}
-          transform={[boxplotSummary]}
+          transform={[{ operation: boxplotSummary }]}
           x="boxX"
           y="boxHigh"
         />
-        <ReferenceMark extentField="boxX0" extentToField="boxX1" transform={[boxplotSummary]} y="median" />
-        <ReferenceMark extentField="whiskerMin" extentToField="whiskerMax" transform={[boxplotSummary]} x="boxX" />
-        <PointMark transform={[boxplotOutside]} x="boxX" y="value" />
+        <ReferenceMark
+          extentField="boxX0"
+          extentToField="boxX1"
+          transform={[{ operation: boxplotSummary }]}
+          y="median"
+        />
+        <ReferenceMark
+          extentField="whiskerMin"
+          extentToField="whiskerMax"
+          transform={[{ operation: boxplotSummary }]}
+          x="boxX"
+        />
+        <PointMark transform={[{ operation: boxplotOutside }]} x="boxX" y="value" />
       </>,
       '__plot',
       { deferPositionScaleInference: true },
@@ -32,8 +42,8 @@ describe('buildPlotIR stat-geom 结构组合', () => {
       'reference',
       'point',
     ]);
-    expect(spec.marks[0]).toMatchObject({ type: 'interval', transform: [boxplotSummary] });
-    expect(spec.marks[3]).toMatchObject({ type: 'point', transform: [boxplotOutside] });
+    expect(spec.marks[0]).toMatchObject({ type: 'interval', transform: [{ operation: boxplotSummary }] });
+    expect(spec.marks[3]).toMatchObject({ type: 'point', transform: [{ operation: boxplotOutside }] });
     expect(JSON.stringify(spec)).not.toMatch(/BoxPlot|DensityPlot|RegressionPlot|boxplot/i);
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });

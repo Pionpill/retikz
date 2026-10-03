@@ -391,7 +391,7 @@ const pieSpec = (): IRPlot =>
     namespace: 'plot',
     type: 'plot',
     data: { reference: 'd' },
-    transform: [{ kind: 'stack', y: 'value' }],
+    transform: [{ operation: { kind: 'stack', y: 'value' } }],
     coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
     scales: [
       { type: 'linear', name: 'a' },
@@ -739,7 +739,7 @@ describe('interval x0Field / x1Field → 连续 x 区间柱（histogram）', () 
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      transform: [{ kind: 'bin', field: 'm', step: 2 }],
+      transform: [{ operation: { kind: 'bin', field: 'm', step: 2 } }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       scales: [
         { type: 'linear', name: 'x' },

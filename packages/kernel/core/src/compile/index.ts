@@ -3,6 +3,7 @@ export { compileToScene, observeCompileToScene } from './compile';
 export { CompileWarningCode } from './constants';
 export * from './incremental';
 export * from './lower';
+export { samplePathRoute } from './path';
 export { computeLayout } from './scene';
 export type {
   LoweredTex,

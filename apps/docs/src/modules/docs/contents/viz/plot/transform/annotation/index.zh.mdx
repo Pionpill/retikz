@@ -28,11 +28,20 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 `diverging` 面向同时含正值和负值的数据：正值从 0 向上累加，负值从 0 向下累加。它需要单独的有符号数据示例；这类输入不能交给只定义非负占比的 `normalize`。
 
-<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.preview.tsx', 'transform-stack-diverging.i18n.ts', 'transform-stack-diverging.data.ts']} defaultSourceFile="transform-stack-diverging.preview.tsx" size="lg" />
+<ComponentPreview
+  files={[
+    'transform-stack-diverging',
+    'transform-stack-diverging.preview.tsx',
+    'transform-stack-diverging.i18n.ts',
+    'transform-stack-diverging.data.ts',
+  ]}
+  defaultSourceFile="transform-stack-diverging.preview.tsx"
+  size="lg"
+/>
 
 ### API 参考
 
-`IRPlotStackTransform` 的 `kind` 固定为 `'stack'`。
+`IRDataStackTransform` 的 `kind` 固定为 `'stack'`。
 
 | prop          | 类型                             | 默认值     | 说明                               |
 | ------------- | -------------------------------- | ---------- | ---------------------------------- |
@@ -62,9 +71,7 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
   sources={[
     {
       label: 'stack 的分组、排序与边界计算',
-      path: 'packages/viz/plot/src/providers/transform/row.ts',
-      startLine: 33,
-      endLine: 116,
+      path: 'packages/viz/data/src/providers/transform/row.ts',
     },
   ]}
 />
@@ -90,7 +97,7 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
 
 ### API 参考
 
-`IRPlotNormalizeTransform` 的 `kind` 固定为 `'normalize'`。
+`IRDataNormalizeTransform` 的 `kind` 固定为 `'normalize'`。
 
 | prop       | 类型                                | 默认值       | 说明                     |
 | ---------- | ----------------------------------- | ------------ | ------------------------ |
@@ -113,9 +120,7 @@ description: 堆叠与占比保留每一条明细行，同时补出 plot 绘图�
   sources={[
     {
       label: 'normalize 的负值校验、分组、零和保护与写回',
-      path: 'packages/viz/plot/src/providers/transform/row.ts',
-      startLine: 122,
-      endLine: 148,
+      path: 'packages/viz/data/src/providers/transform/row.ts',
     },
   ]}
 />

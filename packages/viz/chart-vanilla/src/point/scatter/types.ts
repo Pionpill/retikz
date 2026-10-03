@@ -6,5 +6,5 @@ import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 export type InputScatterChart = InputTypedChart<IRScatterChart>;
 
 /** ScatterChart InputEmbed 的完整编写输入 */
-export type ScatterChartInputEmbedProps = TypedChartCommonInput<IRScatterChart> &
+export type ScatterChartInputEmbedProps<TNative = never> = TypedChartCommonInput<IRScatterChart, TNative> &
   Pick<InputScatterChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

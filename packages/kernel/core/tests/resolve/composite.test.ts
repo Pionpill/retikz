@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import type { AnyCompositeDefinition, IRComposite } from '../../src';
-import { CompositeBaseSchema, defineComposite } from '../../src';
+import { CompositeBaseSchema, DEFAULT_RESOLVED_THEME, defineComposite } from '../../src';
 import { bindComposite, resolveComposite } from '../../src/resolve';
 
 const source = (overrides: Record<string, unknown> = {}): IRComposite => ({
@@ -53,7 +53,18 @@ describe('resolveComposite', () => {
 
     expect(resolution).toMatchObject({ kind: 'expand', key: 'test.box', node: source() });
     if (resolution.kind !== 'expand') throw new Error('expected expand resolution');
-    expect(resolution.expand(resolution.node, { theme: {} as never })).toEqual({
+    expect(
+      resolution.expand(resolution.node, {
+        theme: DEFAULT_RESOLVED_THEME,
+        runtimeInput: undefined,
+        sourceChild: () => {
+          throw new Error('unused source child');
+        },
+        bindChild: () => {
+          throw new Error('unused generated child');
+        },
+      }),
+    ).toEqual({
       children: [{ type: 'node', position: [3, 0] }],
     });
   });

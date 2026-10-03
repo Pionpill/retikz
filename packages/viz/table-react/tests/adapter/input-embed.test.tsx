@@ -7,12 +7,12 @@ import { describe, expect, it } from 'vitest';
 import { DetailTable, ManualTable, Table } from '../../src';
 
 type InputEmbeddableTableComponent = {
-  inputEmbedAdapter?: InputEmbedAdapter<InputTable>;
-  createInputEmbedProps?: (props: Readonly<Record<string, unknown>>) => InputTable;
+  inputEmbedAdapter?: InputEmbedAdapter<InputTable<unknown>>;
+  createInputEmbedProps?: (props: Readonly<Record<string, unknown>>) => InputTable<unknown>;
 };
 
 /** 读取 React Table 组件交给 Vanilla 的唯一输入 */
-const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProps): InputTable => {
+const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProps): InputTable<unknown> => {
   if (component.inputEmbedAdapter !== TableInputEmbedAdapter) {
     throw new Error('expected the shared Table Vanilla adapter');
   }

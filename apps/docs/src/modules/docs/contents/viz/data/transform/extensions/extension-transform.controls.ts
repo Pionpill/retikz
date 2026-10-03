@@ -4,7 +4,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { scaleField, scaleFieldOperationOf } from './extension-transform-preview';
+import { scaleField, scaleFieldImplementation, scaleFieldOperationOf } from './extension-transform-preview';
 import { customTransformRows } from './extension-transform.data';
 
 const transformRegistry = resolveTransformRegistry([scaleField]);
@@ -25,7 +25,7 @@ export const extensionTransformControls = definePreviewControls({
             { source: '原始', result: '变换' },
             customTransformRows,
             scaleFieldOperationOf,
-            { registry: transformRegistry },
+            { registry: transformRegistry, transformImplementations: [scaleFieldImplementation] },
           ),
         },
       ],

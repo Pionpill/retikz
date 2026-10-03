@@ -4,7 +4,7 @@ import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runtime';
 
-import type { AnyInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
+import type { SynchronousInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
 import type { VanillaCompileDriver } from './compile-driver';
 import type { VanillaViewMode } from './constants';
 
@@ -126,7 +126,7 @@ export type CommonOptions = {
   /** runtime 动画选项 */
   animation?: VanillaAnimationOptions;
   /** 可嵌入 Tier2 adapter 列表，仅 InputScene normalize 使用 */
-  adapters?: ReadonlyArray<AnyInputEmbedAdapter>;
+  adapters?: ReadonlyArray<SynchronousInputEmbedAdapter<never>>;
 };
 
 /** SSR / build-time SVG string options；显式禁止 mount-only runtime 配置 */

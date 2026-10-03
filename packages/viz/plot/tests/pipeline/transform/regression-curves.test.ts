@@ -1,14 +1,23 @@
 import type { IRChild, IRPath } from '@retikz/core';
-import { defineRegression, DEFAULT_TRANSFORM_CONTEXT, resolveRegressionRegistry } from '@retikz/data';
+import {
+  defineRegression,
+  defineRegressionImplementation,
+  DEFAULT_TRANSFORM_CONTEXT,
+  resolveRegressionRegistry,
+  resolveRegressionImplementationRegistry,
+  applySmooth,
+} from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import { PlotSchema } from '../../../src';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
-import { applySmooth } from '../../../src/providers';
 
 const definition = defineRegression({
   schema: strictObject({ kind: literal('degree-fit'), degree: number().default(1) }),
+});
+const implementation = defineRegressionImplementation({
+  definition,
   fit: (_pairs, operation) => ({ predict: x => x ** operation.degree }),
 });
 
@@ -37,15 +46,17 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
         encoding: { x: { field: 'tx' }, y: { field: 'ty' } },
         transform: [
           {
-            kind: 'smooth',
-            x: 'x',
-            y: 'y',
-            xAs: 'tx',
-            yAs: 'ty',
-            sampleCount: 8,
-            method: { kind: 'degree-fit', degree },
+            operation: {
+              kind: 'smooth',
+              x: 'x',
+              y: 'y',
+              xAs: 'tx',
+              yAs: 'ty',
+              sampleCount: 8,
+              method: { kind: 'degree-fit', degree },
+            },
           },
-          ...(later ? [{ kind: 'sort', field: 'tx' }] : []),
+          ...(later ? [{ operation: { kind: 'sort', field: 'tx' } }] : []),
         ],
       },
     ],
@@ -60,7 +71,7 @@ const draw = (degree: number, scale = 'linear', clamp = false, curve = 'catmullR
           { x: 3, y: 3 },
         ],
       },
-      { width: 480, height: 300, regressionDefinitions: [definition] },
+      { width: 480, height: 300, regressionDefinitions: [definition], regressionImplementations: [implementation] },
     ),
   )[0];
 };
@@ -87,8 +98,12 @@ describe('regression curve geometry', () => {
 it('rejects invalid intermediate predictions', () => {
   const brokenDefinition = defineRegression({
     schema: strictObject({ kind: literal('broken-line') }),
+  });
+  const brokenImplementation = defineRegressionImplementation({
+    definition: brokenDefinition,
     fit: () => ({ predict: x => (x === 2 ? Infinity : x) }),
   });
+  const registry = resolveRegressionRegistry([brokenDefinition]);
   expect(() =>
     applySmooth(
       [
@@ -96,7 +111,11 @@ it('rejects invalid intermediate predictions', () => {
         { x: 3, y: 3 },
       ],
       { kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', sampleCount: 3, method: { kind: 'broken-line' } },
-      { ...DEFAULT_TRANSFORM_CONTEXT, regressionRegistry: resolveRegressionRegistry([brokenDefinition]) },
+      {
+        ...DEFAULT_TRANSFORM_CONTEXT,
+        regressionRegistry: registry,
+        regressionImplementationRegistry: resolveRegressionImplementationRegistry(registry, [brokenImplementation]),
+      },
     ),
   ).toThrow(/non-finite/);
 });
@@ -109,7 +128,14 @@ it('rejects a degenerate inferred extent even when a custom fitter accepts the o
         { x: 1, y: 2 },
       ],
       { kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'degree-fit' } },
-      { ...DEFAULT_TRANSFORM_CONTEXT, regressionRegistry: resolveRegressionRegistry([definition]) },
+      {
+        ...DEFAULT_TRANSFORM_CONTEXT,
+        regressionRegistry: resolveRegressionRegistry([definition]),
+        regressionImplementationRegistry: resolveRegressionImplementationRegistry(
+          resolveRegressionRegistry([definition]),
+          [implementation],
+        ),
+      },
     ),
   ).toThrow(/extent/);
 });

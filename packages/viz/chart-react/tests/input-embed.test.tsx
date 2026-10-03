@@ -10,7 +10,7 @@ import type { RegressionChartInputEmbedProps } from '@retikz/chart-vanilla/point
 import { regressionChart } from '@retikz/chart-vanilla/point';
 import type { ScatterChartInputEmbedProps } from '@retikz/chart-vanilla/point';
 import { scatterChart } from '@retikz/chart-vanilla/point';
-import { defineRegression } from '@retikz/data';
+import { defineRegressionImplementation, defineRegression } from '@retikz/data';
 import { PointMark } from '@retikz/plot-react';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -29,7 +29,7 @@ type InputComponent<TInput> = {
 const inputOf = <TInput,>(component: InputComponent<TInput>, props: Readonly<Record<string, unknown>>): TInput =>
   component.createInputEmbedProps(props);
 
-const sourceOf = (input: ScatterChartInputEmbedProps): IRChartSource =>
+const sourceOf = (input: ScatterChartInputEmbedProps<unknown>): IRChartSource =>
   normalizeScene(scene({ children: [scatterChart(input)] }), { adapters: [ScatterChartInputEmbedAdapter] }).ir
     .children[0] as IRChartSource;
 
@@ -209,11 +209,12 @@ describe('Chart React InputEmbed routing', () => {
 
 describe('custom Regression adapter parity', () => {
   it('preserves custom methods and runtime definitions through React and Vanilla', () => {
-    const definition = defineRegression({
-      schema: strictObject({ kind: literal('identity-fit') }),
+    const definition = defineRegression({ schema: strictObject({ kind: literal('identity-fit') }) });
+    const definitionImplementation = defineRegressionImplementation({
+      definition,
       fit: () => ({ predict: x => x }),
     });
-    const lowerOptions = { regressionDefinitions: [definition] };
+    const lowerOptions = { regressionDefinitions: [definition], regressionImplementations: [definitionImplementation] };
     const rows = [
       { x: 1, y: 1 },
       { x: 2, y: 2 },

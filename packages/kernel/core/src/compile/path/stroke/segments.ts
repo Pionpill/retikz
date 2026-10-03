@@ -1,9 +1,9 @@
-import { curve, isFinitePoint } from '@retikz/math';
+import { curve } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
+import { BendOutAngleSchema, BendInAngleSchema, BendLoosenessSchema } from '../../../schemas';
 import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
 import { clipTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host';
 import type { PathCommandEmitter } from './commands';
@@ -107,14 +107,14 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     const fromReference = penOverride ?? previous.anchor;
     const [control1, control2] =
       step.outAngle !== undefined || step.inAngle !== undefined
-        ? outInControlPoints(fromReference, currentAnchor, step.outAngle ?? 0, step.inAngle ?? 180, step.looseness)
+        ? outInControlPoints(
+            fromReference,
+            currentAnchor,
+            step.outAngle ?? BendOutAngleSchema.parse(undefined),
+            step.inAngle ?? BendInAngleSchema.parse(undefined),
+            step.looseness ?? BendLoosenessSchema.parse(undefined),
+          )
         : bendControlPoints(fromReference, currentAnchor, step.bendDirection, step.bendAngle);
-    if (!isFinitePoint(control1) || !isFinitePoint(control2)) {
-      throw new RetikzCoreError(
-        RetikzCoreErrorCode.Compile,
-        'Bend produced a non-finite control point (looseness / angle too large); use smaller values.',
-      );
-    }
     const fromClip = penOverride ?? clipTarget(previous.step.to, control1, targetContext);
     const toClip = clipTarget(step.to, control2, targetContext);
     if (!fromClip || !toClip) return false;

@@ -2,6 +2,8 @@ import type { IRChartSource } from '@retikz/chart';
 import { defineChartTheme } from '@retikz/chart';
 import { defineThemeStyle } from '@retikz/core';
 import {
+  defineTransformImplementation,
+  defineRegressionImplementation,
   DataTransformBindingClass,
   DataTransformFieldEffect,
   DataTransformPhase,
@@ -254,7 +256,6 @@ describe('Chart Vanilla authoring', () => {
         as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
-      outputFields: operation => [operation.as],
       outputModel: operation => ({
         kind: 'preserve',
         outputs: [{ field: operation.as, type: { from: operation.field } }],
@@ -264,6 +265,9 @@ describe('Chart Vanilla authoring', () => {
         bindingClass: DataTransformBindingClass.Field,
         fieldEffect: DataTransformFieldEffect.Preserve,
       },
+    });
+    const copyFieldImplementation = defineTransformImplementation({
+      definition: copyField,
       apply: (inputRows, operation) => inputRows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
     });
     const chart = scatterChart({
@@ -271,12 +275,12 @@ describe('Chart Vanilla authoring', () => {
       data: rows,
       encodings: {
         x: {
-          transform: { kind: 'copy-chart-field', field: 'x', as: 'copiedX' },
+          transform: { operation: { kind: 'copy-chart-field', field: 'x', as: 'copiedX' } },
           output: 'copiedX',
         },
         y: 'y',
       },
-      lowerOptions: { transformDefinitions: [copyField] },
+      lowerOptions: { transformDefinitions: [copyField], transformImplementations: [copyFieldImplementation] },
     });
 
     expect(() => renderChart(chart, { adapters })).not.toThrow();
@@ -341,15 +345,16 @@ describe('Chart Vanilla authoring', () => {
 
 describe('custom regression SSR', () => {
   it('consumes runtime definitions and leaves only JSON method parameters in Source', () => {
-    const definition = defineRegression({
-      schema: strictObject({ kind: literal('identity-fit') }),
+    const definition = defineRegression({ schema: strictObject({ kind: literal('identity-fit') }) });
+    const definitionImplementation = defineRegressionImplementation({
+      definition,
       fit: () => ({ predict: x => x }),
     });
     const chart = regressionChart({
       data: regressionRows,
       encodings: { x: 'x', y: 'y' },
       properties: { method: { kind: 'identity-fit' }, trend: { curve: 'catmullRom' } },
-      lowerOptions: { regressionDefinitions: [definition] },
+      lowerOptions: { regressionDefinitions: [definition], regressionImplementations: [definitionImplementation] },
     });
     const rendered = renderChart(chart, { adapters });
     expect(rendered.svg).toContain('<svg');

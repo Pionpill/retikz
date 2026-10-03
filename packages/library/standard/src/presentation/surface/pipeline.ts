@@ -65,7 +65,7 @@ export const compileSurface = (
   const surface = resolveSurface(sourceSurface);
   const child = requiredLayoutProbe(
     context,
-    { child: surface.child, occurrence: 0 },
+    { child: context.sourceChild(['child']), occurrence: 0 },
     childProposal(surface, context.proposal),
   );
   const width = surfaceAxisSize(context.proposal.x, child.slotSize.width, axisPadding(surface, 'x'));

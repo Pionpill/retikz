@@ -1,5 +1,5 @@
 import { CompositeBaseSchema } from '@retikz/core';
-import { DataReferenceSchema } from '@retikz/data';
+import { DataReferenceSchema, DataExecutionSchema, DataTransformDeclarationSchema } from '@retikz/data';
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import type { infer as ZodInfer, RefinementCtx, ZodType } from 'zod';
 import { array, literal, never, union } from 'zod';
@@ -52,6 +52,10 @@ const validateTableRoot = (spec: TableRootSemanticInput, context: RefinementCtx)
 };
 
 export const DetailTableSchema = TableBaseSchema.extend({
+  transform: array(DataTransformDeclarationSchema)
+    .optional()
+    .describe('Ordered data transforms before Table structure resolution'),
+  dataExecution: DataExecutionSchema.optional(),
   data: DataReferenceSchema.describe(
     'External dataset reference required by this detail Table. Actual rows stay outside the IR.',
   ),
@@ -61,6 +65,8 @@ export const DetailTableSchema = TableBaseSchema.extend({
   .describe('JSON-safe detail Table composite specification bound to external data.');
 
 export const ManualTableSchema = TableBaseSchema.extend({
+  transform: never().optional().describe('Manual Table does not accept data transforms'),
+  dataExecution: never().optional().describe('Manual Table does not accept data execution configuration'),
   data: never().optional().describe('Manual Table specifications do not accept an external dataset reference.'),
   structure: ManualTableStructureSchema.describe('Explicit row-major Cell matrix for this manual Table.'),
 })
@@ -68,6 +74,10 @@ export const ManualTableSchema = TableBaseSchema.extend({
   .describe('JSON-safe manual Table composite specification with explicit content.');
 
 export const CustomTableSchema = TableBaseSchema.extend({
+  transform: array(DataTransformDeclarationSchema)
+    .optional()
+    .describe('Ordered data transforms requiring a bound dataset'),
+  dataExecution: DataExecutionSchema.optional(),
   data: DataReferenceSchema.optional().describe(
     'Optional external dataset reference exposed to the selected custom structure definition at runtime.',
   ),

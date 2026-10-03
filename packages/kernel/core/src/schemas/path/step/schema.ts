@@ -9,6 +9,12 @@ import type { RefinementCtx } from 'zod';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, strictObject, union } from 'zod';
 
 import { Side } from '../../../shared';
+import {
+  DEFAULT_BEND_ANGLE,
+  DEFAULT_BEND_OUT_ANGLE,
+  DEFAULT_BEND_IN_ANGLE,
+  DEFAULT_BEND_LOOSENESS,
+} from '../../../shared/geometry';
 import { PositionSchema } from '../../position';
 import { AngleDegreesSchema } from '../../scalar';
 import { createLabelVisualStyleShape, TextBlockSchema } from '../../text';
@@ -134,6 +140,24 @@ export const CubicStepSchema = strictObject({
   label: StepLabelSchema.optional().describe('Edge label attached to this cubic Bezier'),
 }).describe('Cubic action: cubic Bezier; two control points give precise tangent control at both ends');
 
+/** 对称 bend 角度的权威约束与默认 */
+export const BendAngleSchema = AngleDegreesSchema.gt(-180)
+  .lt(180)
+  .describe('Symmetric bend angle in degrees; negative values reverse the side. Defaults to 30.')
+  .default(DEFAULT_BEND_ANGLE);
+/** 切线 bend 出射角的权威约束与默认 */
+export const BendOutAngleSchema = AngleDegreesSchema.describe(
+  'Absolute outgoing tangent angle in screen coordinates (positive toward +y). Either tangent angle activates tangent mode and overrides symmetric bend parameters. Defaults to 0.',
+).default(DEFAULT_BEND_OUT_ANGLE);
+/** 切线 bend 入射角的权威约束与默认 */
+export const BendInAngleSchema = AngleDegreesSchema.describe(
+  'Absolute incoming tangent angle in screen coordinates, measured from the endpoint toward its control point. Either tangent angle activates tangent mode. Defaults to 180.',
+).default(DEFAULT_BEND_IN_ANGLE);
+/** 切线 bend 松弛度的权威约束与默认 */
+export const BendLoosenessSchema = PositiveNumberSchema.describe(
+  'Control-point distance multiplier used only in tangent mode; does not activate tangent mode by itself. Defaults to 1.',
+).default(DEFAULT_BEND_LOOSENESS);
+
 export const BendStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('bend').describe(
@@ -142,19 +166,11 @@ export const BendStepSchema = strictObject({
   to: TargetSchema.describe('Destination point of the bend'),
   bendDirection: zodEnum(BendDirection)
     .optional()
-    .describe(
-      'Bend side relative to the from-to direction. Use with bendAngle unless outAngle and inAngle are provided.',
-    ),
-  bendAngle: AngleDegreesSchema.gt(-180).lt(180).optional().describe('Bend angle in degrees. Omitted fields use 30.'),
-  outAngle: AngleDegreesSchema.optional().describe(
-    'Outgoing tangent angle in degrees at the start point. With `inAngle`, takes precedence over bendDirection and bendAngle.',
-  ),
-  inAngle: AngleDegreesSchema.optional().describe(
-    'Incoming tangent angle in degrees at the end point. Used with `outAngle` for explicit tangent control.',
-  ),
-  looseness: PositiveNumberSchema.optional().describe(
-    'Curve looseness factor controlling control-point distance from the endpoints. Larger values produce a looser curve.',
-  ),
+    .describe('Bend side relative to the from-to direction. Ignored when either outAngle or inAngle is provided.'),
+  bendAngle: BendAngleSchema.unwrap().optional(),
+  outAngle: BendOutAngleSchema.unwrap().optional(),
+  inAngle: BendInAngleSchema.unwrap().optional(),
+  looseness: BendLoosenessSchema.unwrap().optional(),
   label: StepLabelSchema.optional().describe('Edge label attached to this bend segment'),
 }).describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 

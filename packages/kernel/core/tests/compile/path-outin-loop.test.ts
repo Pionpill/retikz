@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { compileToScene } from '../../src/compile/compile';
 import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
+import type { IRScene, IRStep } from '../../src/schemas';
 
 const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim => {
   for (const p of prims) {
@@ -42,6 +42,26 @@ const angleDiff = (a: number, b: number): number => {
 };
 
 describe('out/in 角编译为 cubic 控制点方向', () => {
+  it('single tangent angles compile like explicit defaults without changing symmetric bend', () => {
+    const render = (parameters: Partial<Extract<IRStep, { kind: 'bend' }>>) =>
+      compileToScene({
+        type: 'scene',
+        version: 1,
+        children: [
+          {
+            type: 'path',
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'bend', to: [100, 0], ...parameters },
+            ],
+          },
+        ],
+      }).scene;
+    expect(render({ outAngle: 45 })).toEqual(render({ outAngle: 45, inAngle: 180, looseness: 1 }));
+    expect(render({ inAngle: 135 })).toEqual(render({ outAngle: 0, inAngle: 135, looseness: 1 }));
+    expect(render({})).toEqual(render({ bendDirection: 'left', bendAngle: 30 }));
+    expect(render({})).not.toEqual(render({ outAngle: 0 }));
+  });
   it('outAngle/inAngle → control1 沿 outAngle、control2 沿 inAngle', () => {
     const ir: IRScene = {
       version: 1,

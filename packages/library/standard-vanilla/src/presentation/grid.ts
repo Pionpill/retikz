@@ -1,11 +1,11 @@
 import type { GridInput } from '@retikz/standard/presentation';
 import { createGrid, GridProvider } from '@retikz/standard/presentation';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { StandardGridEmbedKind } from '../shared/constants';
 
 /** Standard Grid 的 InputEmbed adapter */
-export const GridInputEmbedAdapter: InputEmbedAdapter<GridInput> = {
+export const GridInputEmbedAdapter: SynchronousInputEmbedAdapter<GridInput> = {
   kind: StandardGridEmbedKind,
   lower: props => ({
     node: createGrid(props),

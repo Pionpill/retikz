@@ -4,6 +4,8 @@
 
 ## 1. 目标与接入方式
 
+当前内置行数据变换统一由 Data 拥有：`sort`、`summarize`、`select`、`annotate`、`stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density`、`smooth`。schema、Definition、输入输出模型与计算从 `@retikz/data` 根入口提供；Plot/Chart 负责宿主展开和视觉消费。投影后的 position adjustment 与 Table 的结构生成保持各自宿主职责，参见 [统一数据变换所有权](../decisions/data/v0/v0.2/001-shared-transforms.md)。
+
 `@retikz/data` 为 Plot、Table 等宿主提供统一的数据模型与计算语义。用户可以独立使用模型能力，选择由 Retikz 或第三方引擎处理数据；使用 Retikz 可视化不要求把数据库全量明细交给前端，也不要求在后端运行 Retikz 的计算实现。
 
 | 接入方式              | 计算声明         | 计算执行                       | 宿主收到的内容                 |

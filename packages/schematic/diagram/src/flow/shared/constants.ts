@@ -33,6 +33,8 @@ export const FlowLayoutAlignment = {
 
 /** Flow relation 的路由意图 */
 export const FlowRoutingKind = {
+  /** 复用 Core bend 的常规曲线 */
+  Bend: 'bend',
   /** 以直线路径连接关系端点 */
   Straight: 'straight',
   /** 以轴对齐折线路径连接关系端点 */

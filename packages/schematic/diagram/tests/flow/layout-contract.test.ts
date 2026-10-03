@@ -39,16 +39,29 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
       },
     })),
     relations: input.relations.map(() => ({
-      points: [
-        [0, 0],
-        [1, 0],
-      ],
+      route: {
+        kind: 'straight',
+        points: [
+          [0, 0],
+          [1, 0],
+        ],
+      },
     })),
   }),
   ...overrides,
 });
 
 describe('Flow Layout Definition contract', () => {
+  it('supports automatic bend without a default angle or axis radius', () => {
+    const base = validDefinition();
+    const bend = {
+      ...base,
+      capabilities: { ...base.capabilities, routingKinds: ['bend' as const] },
+      defaults: { ...base.defaults, routing: { kind: 'bend' as const } },
+    };
+    expect(resolveFlowLayoutRegistry({ flowLayouts: [bend] }).layouts.get('custom')).toBe(bend);
+  });
+
   it.each([-1, NaN, Infinity])('rejects invalid physical-axis spacing: %s', vertical => {
     const definition = validDefinition();
     expect(() =>

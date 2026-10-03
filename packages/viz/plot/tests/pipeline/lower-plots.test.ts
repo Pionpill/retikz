@@ -1130,7 +1130,7 @@ describe('lowerPlots relation (contract)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 's' },
-      transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
+      transform: [{ operation: { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' } }],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y', domainPadding: 0 },
@@ -1237,7 +1237,7 @@ describe('lowerPlots relation (contract)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 's' },
-      transform: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
+      transform: [{ operation: { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' } }],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y', domainPadding: 0 },

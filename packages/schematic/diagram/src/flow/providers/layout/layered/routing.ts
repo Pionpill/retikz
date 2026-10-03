@@ -1,14 +1,25 @@
 import type { BoundsRect, Position } from '@retikz/math';
+import { DEFAULT_EPSILON } from '@retikz/math';
 
 import type {
   EffectiveFlowLayout,
+  FlowBendRoute,
   FlowLayoutElementInput,
   FlowLayoutElementOutput,
   FlowLayoutInput,
   FlowLayoutRelationInput,
   FlowLayoutRelationOutput,
+  FlowLayoutRoute,
 } from '../../../contract';
 import { FlowRoutingKind } from '../../../shared';
+import { FLOW_BEND_ANGLES, doFlowBoundsOverlap, findFlowCurveObstacleIntervals } from '../../../shared/geometry';
+import {
+  createFlowBendCurve,
+  flowBendGeometryFailure,
+  flowRelationObstacles,
+  flowRouteLabelBounds,
+  scoreFlowBendNodes,
+} from '../geometry';
 
 type RoutingIndex = Readonly<{
   scopes: ReadonlyMap<string, ReadonlyArray<string>>;
@@ -155,14 +166,32 @@ export const routeLayeredRelations = (
     pairs.set(key, indices);
   });
 
-  return input.relations.map((relation, relationIndex) => {
+  const routed: Array<FlowLayoutRelationOutput> = input.relations.map((relation, relationIndex) => {
     const sourceBounds = bounds.get(relation.source);
     const targetBounds = bounds.get(relation.target);
     if (sourceBounds === undefined || targetBounds === undefined) {
-      return { points: [] };
+      return { route: { kind: 'straight', points: [] } };
     }
     const source = centerOf(sourceBounds);
     const target = centerOf(targetBounds);
+    if (relation.routing.kind === 'bend') {
+      const route: FlowLayoutRoute =
+        'outAngle' in relation.routing
+          ? { ...relation.routing, points: [source, target] }
+          : {
+              ...relation.routing,
+              bendAngle: relation.routing.bendAngle ?? FLOW_BEND_ANGLES[0],
+              bendDirection: relation.routing.bendDirection ?? 'left',
+              points: [source, target],
+            };
+      try {
+        createFlowBendCurve(route);
+        const labelBounds = flowRouteLabelBounds(route, relation);
+        return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+      } catch (cause) {
+        return flowBendGeometryFailure(relationIndex, relation, cause);
+      }
+    }
     const sourceScopes = index.scopes.get(relation.source) ?? [];
     const targetScopes = index.scopes.get(relation.target) ?? [];
     const scope = commonScope(sourceScopes, targetScopes);
@@ -188,9 +217,74 @@ export const routeLayeredRelations = (
                 envelope,
                 scopeLayout.rankGap,
               );
-    return {
-      points,
-      ...(relation.labelSize === undefined ? {} : { labelBounds: labelBoundsFor(points, relation.labelSize) }),
-    };
+    const route: FlowLayoutRoute = { ...relation.routing, points };
+    const labelBounds =
+      relation.labelPlacement === undefined
+        ? relation.labelSize === undefined
+          ? undefined
+          : labelBoundsFor(points, relation.labelSize)
+        : flowRouteLabelBounds(route, relation);
+    return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
   });
+  const isAutomatic = (relation: FlowLayoutRelationInput): boolean =>
+    relation.routing.kind === 'bend' &&
+    !('outAngle' in relation.routing) &&
+    (relation.routing.bendDirection === undefined || relation.routing.bendAngle === undefined);
+  for (const [relationIndex, relation] of input.relations.entries()) {
+    const routing = relation.routing;
+    if (!isAutomatic(relation) || routing.kind !== 'bend' || 'outAngle' in routing) continue;
+    const initial = routed[relationIndex].route;
+    if (initial.kind !== 'bend' || !('bendAngle' in initial)) continue;
+    const obstacles = flowRelationObstacles(input, { elements }, relation);
+    const otherOutputs = routed.filter(
+      (other, otherIndex) =>
+        other.labelBounds !== undefined &&
+        otherIndex !== relationIndex &&
+        (otherIndex < relationIndex || !isAutomatic(input.relations[otherIndex])),
+    );
+    const angles = routing.bendAngle === undefined ? FLOW_BEND_ANGLES : [routing.bendAngle];
+    const directions: ReadonlyArray<'left' | 'right'> =
+      routing.bendDirection === undefined ? ['left', 'right'] : [routing.bendDirection];
+    try {
+      let bestNodes: readonly [number, number] | undefined;
+      let finalists: Array<FlowBendRoute> = [];
+      for (const bendAngle of angles)
+        for (const bendDirection of directions) {
+          const route = { ...initial, bendAngle, bendDirection };
+          const nodes = scoreFlowBendNodes(route, relation, obstacles);
+          const difference =
+            bestNodes === undefined
+              ? -1
+              : nodes.findIndex((value, scoreIndex) => Math.abs(value - bestNodes![scoreIndex]) > DEFAULT_EPSILON);
+          if (bestNodes === undefined || (difference >= 0 && nodes[difference] < bestNodes[difference])) {
+            bestNodes = nodes;
+            finalists = [route];
+          } else if (difference < 0) finalists.push(route);
+        }
+      let bestLabels = Infinity;
+      for (const route of finalists) {
+        const labelBounds = flowRouteLabelBounds(route, relation);
+        let conflicts = 0;
+        // 节点评分已决胜时无需计算标签冲突；其预留盒仍作为输出交付
+        if (finalists.length > 1) {
+          const segment = createFlowBendCurve(route);
+          for (const other of otherOutputs) {
+            if (findFlowCurveObstacleIntervals(segment, other.labelBounds!).length > 0) conflicts += 1;
+            if (labelBounds !== undefined && doFlowBoundsOverlap(labelBounds, other.labelBounds!)) conflicts += 1;
+          }
+          if (labelBounds !== undefined)
+            for (const obstacle of obstacles) if (doFlowBoundsOverlap(labelBounds, obstacle.bounds)) conflicts += 1;
+        }
+        if (conflicts < bestLabels) {
+          bestLabels = conflicts;
+          routed[relationIndex] = { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+        }
+        // 候选已按小角度、左侧优先排序，零标签冲突不可能再改善
+        if (conflicts === 0) break;
+      }
+    } catch (cause) {
+      flowBendGeometryFailure(relationIndex, relation, cause);
+    }
+  }
+  return routed;
 };

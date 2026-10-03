@@ -1,14 +1,17 @@
+import {
+  BinTransformSchema,
+  ExternalTransformSchema,
+  JitterTransformSchema,
+  NormalizeTransformSchema,
+  DataTransformDeclarationSchema,
+} from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import {
   BandScaleSchema,
-  BinTransformSchema,
   CustomScaleSchema,
   DivergingColorScaleSchema,
-  ExternalPlotTransformSchema,
-  JitterTransformSchema,
   LinearScaleSchema,
   LogScaleSchema,
-  NormalizeTransformSchema,
   OrdinalScaleSchema,
   PlotPartitionDimensionsSchema,
   PointScaleSchema,
@@ -31,7 +34,6 @@ import {
   createChartDirectMappingSchema,
   createChartScaleBindingSchema,
 } from '../../_chart/schemas/encoding';
-
 /** Point 位置通道允许使用的尺度 operation */
 export const PointPositionScaleOperationSchema = union([
   LinearScaleSchema,
@@ -71,17 +73,21 @@ export const PointOpacityScaleBindingSchema = createChartScaleBindingSchema(unio
 
 const createPointJitterMappingSchema = (role: 'x' | 'y', chartType: string) =>
   strictObject({
-    transform: JitterTransformSchema,
+    transform: strictObject({
+      operation: JitterTransformSchema,
+      dataExecution: DataTransformDeclarationSchema.shape.dataExecution,
+    }),
     output: NonBlankStringSchema,
     scale: PointPositionScaleBindingSchema.optional(),
   })
     .superRefine((mapping, context) => {
-      const axis = mapping.transform.axis ?? 'x';
-      const field = role === 'x' ? (mapping.transform.xField ?? 'x') : (mapping.transform.yField ?? 'y');
+      const axis = mapping.transform.operation.axis ?? 'x';
+      const field =
+        role === 'x' ? (mapping.transform.operation.xField ?? 'x') : (mapping.transform.operation.yField ?? 'y');
       if (axis !== role) {
         context.addIssue({
           code: 'custom',
-          path: ['transform', 'axis'],
+          path: ['transform', 'operation', 'axis'],
           message: `${chartType} ${role} jitter must target only the ${role} axis`,
         });
       }
@@ -104,7 +110,7 @@ export const createPointPositionEncodingSchema = (role: 'x' | 'y', chartType: st
     createChartDerivedMappingSchema(BinTransformSchema, PointPositionScaleBindingSchema),
     createChartDerivedMappingSchema(NormalizeTransformSchema, PointPositionScaleBindingSchema),
     createPointJitterMappingSchema(role, chartType),
-    createChartDerivedMappingSchema(ExternalPlotTransformSchema, PointPositionScaleBindingSchema),
+    createChartDerivedMappingSchema(ExternalTransformSchema, PointPositionScaleBindingSchema),
   ]).describe(`${chartType} ${role} field mapping`);
 
 /** Point 颜色字段映射 */
@@ -120,7 +126,7 @@ export const PointSizeEncodingSchema = union([
   createChartDirectMappingSchema(PointSizeScaleBindingSchema),
   createChartAggregateMappingSchema(PointSizeScaleBindingSchema),
   createChartDerivedMappingSchema(NormalizeTransformSchema, PointSizeScaleBindingSchema),
-  createChartDerivedMappingSchema(ExternalPlotTransformSchema, PointSizeScaleBindingSchema),
+  createChartDerivedMappingSchema(ExternalTransformSchema, PointSizeScaleBindingSchema),
 ]).describe('Point size field mapping');
 
 /** Point 透明度字段映射 */
@@ -129,7 +135,7 @@ export const PointOpacityEncodingSchema = union([
   createChartDirectMappingSchema(PointOpacityScaleBindingSchema),
   createChartAggregateMappingSchema(PointOpacityScaleBindingSchema),
   createChartDerivedMappingSchema(NormalizeTransformSchema, PointOpacityScaleBindingSchema),
-  createChartDerivedMappingSchema(ExternalPlotTransformSchema, PointOpacityScaleBindingSchema),
+  createChartDerivedMappingSchema(ExternalTransformSchema, PointOpacityScaleBindingSchema),
 ]).describe('Point opacity field mapping');
 
 /** Point 形状字段映射 */
@@ -170,7 +176,7 @@ export const refinePointFacetEncodings = (
   if (!hasFacet) return;
   for (const role of ['x', 'y'] as const) {
     const mapping = encodings[role];
-    if (typeof mapping !== 'string' && 'transform' in mapping && mapping.transform.kind === 'bin') {
+    if (typeof mapping !== 'string' && 'transform' in mapping && mapping.transform.operation.kind === 'bin') {
       context.addIssue({
         code: 'custom',
         path: [role, 'transform'],

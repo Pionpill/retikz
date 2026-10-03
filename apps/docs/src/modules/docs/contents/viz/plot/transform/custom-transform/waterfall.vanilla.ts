@@ -2,13 +2,13 @@ import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { waterfallRows } from './waterfall.data';
-import { waterfallTransform } from './waterfall.definition';
+import { waterfallTransform, waterfallTransformImplementation } from './waterfall.definition';
 
 const spec = PlotSchema.parse({
   namespace: 'plot',
   type: 'plot',
   data: { reference: 'changes' },
-  transform: [{ kind: 'waterfall', field: 'delta', initialValue: 60 }],
+  transform: [{ operation: { kind: 'waterfall', field: 'delta', initialValue: 60 } }],
   plotDefaults: { palette: { categorical: ['#16a34a', '#dc2626'] } },
   scales: [
     { type: 'band', name: 'period', paddingInner: 0.2, paddingOuter: 0.08 },
@@ -36,5 +36,6 @@ export const svg = renderPlot(
     width: 420,
     height: 260,
     transformDefinitions: [waterfallTransform],
+    transformImplementations: [waterfallTransformImplementation],
   },
 );

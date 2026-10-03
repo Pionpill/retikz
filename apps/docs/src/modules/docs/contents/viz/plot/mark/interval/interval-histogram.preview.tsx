@@ -33,7 +33,7 @@ export const IntervalHistogramPreview = (values: IntervalHistogramPreviewValues)
     <Layout viewBox={{ x: -16, y: -16, width: 392, height: 312 }}>
       {values.continuousMode === 'histogram' ? (
         <Plot data={measurements} width={360} height={280} coordinate={coordinate}>
-          <PlotTransform {...intervalHistogramOperationOf(values.count)} />
+          <PlotTransform operation={{ ...intervalHistogramOperationOf(values.count) }} />
           <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
           <PlotScale dimension="x" type="linear" domainPadding={xDomainPadding} />
           <PlotScale dimension="y" type="linear" domainPadding={yDomainPadding} />

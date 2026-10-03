@@ -6,5 +6,5 @@ import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 export type InputStripChart = InputTypedChart<IRStripChart>;
 
 /** StripChart InputEmbed 的完整编写输入 */
-export type StripChartInputEmbedProps = TypedChartCommonInput<IRStripChart> &
+export type StripChartInputEmbedProps<TNative = never> = TypedChartCommonInput<IRStripChart, TNative> &
   Pick<InputStripChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

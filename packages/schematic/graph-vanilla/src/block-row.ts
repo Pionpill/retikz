@@ -1,5 +1,5 @@
 import { BlockRowProviderKey } from '@retikz/graph';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { BlockRowEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
@@ -16,7 +16,7 @@ const inputOf = (props: BlockRowInputEmbedProps): InputBlockRow => {
 };
 
 /** Block Row Source 的 InputEmbed adapter */
-export const BlockRowInputEmbedAdapter: InputEmbedAdapter<BlockRowInputEmbedProps> = {
+export const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInputEmbedProps> = {
   kind: BlockRowEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);

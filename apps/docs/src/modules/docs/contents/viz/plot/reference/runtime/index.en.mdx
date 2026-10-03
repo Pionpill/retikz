@@ -7,6 +7,16 @@ The Plot runtime separates how a chart is authored from how it executes. React, 
 
 > This page explains the overall runtime contract rather than repeating schema fields. Use the contract pages in this group for JSON shapes, and see [Design Principles](/kernel/components/design/principles) for the complete Kernel compilation boundary.
 
+## Async data preparation and SSR
+
+Root and mark-local `transform` contain `{ operation, dataExecution? }` declarations. Root `dataExecution` overrides executor defaults; declaration settings take highest priority. The final default is builtin. See [Data execution](/viz/data/transform/extensions).
+
+Standalone React Plot clients prepare asynchronously. Embedded Plot uses `runtime={{ preparation: 'async' }}` on the outer Layout. The shared host preflights the complete author tree plus root, mark and facet templates before execution and publication. Failures preserve the previous frame; cancellation and stale results never publish. Layout probes consume prepared results without recomputation.
+
+`dataBindings` is exclusive with raw `data`. Each reference binds rows, a result with a complete model, or a native source. Native sources require an explicit complete model; result/source bindings reject source parsers, formats and field maps. Executors and signals remain runtime values.
+
+For async SSR, call `renderPlotAsync(spec, dataBindings, options?)` from `@retikz/plot-vanilla`. Options accept dataTransformExecutor, signal and existing lowering/lineage settings. It returns a Promise of an SVG string, or `{ svg, lineage }` from the same execution when lineage is enabled. Synchronous renderPlot, lowering and React SSR accept local synchronous computation.
+
 ## Hosts and Package Boundaries
 
 <ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />

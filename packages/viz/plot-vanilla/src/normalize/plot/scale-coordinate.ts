@@ -1,6 +1,6 @@
-import type { IRDataModel } from '@retikz/data';
+import type { IRDataModel, IRDataTransform } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
-import type { IRPlotMark, IRPlotScale, IRPlotTransform } from '@retikz/plot';
+import type { IRPlotMark, IRPlotScale } from '@retikz/plot';
 import { PlotScale } from '@retikz/plot';
 
 import { RetikzPlotVanillaError } from '../../error';
@@ -205,7 +205,7 @@ export const collectExplicitScales = (
 export const buildShortcutTransforms = (
   marks: ReadonlyArray<IRPlotMark>,
   definitions: ReadonlyArray<MarkTransformShortcutDefinition> | undefined,
-): Array<IRPlotTransform> => {
+): Array<IRDataTransform> => {
   if (definitions === undefined || definitions.length === 0) return [];
   return marks.flatMap((mark, markIndex) =>
     definitions

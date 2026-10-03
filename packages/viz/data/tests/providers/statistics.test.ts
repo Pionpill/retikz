@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import {
+  defineStatisticsReducerImplementation,
+  defineRowSelectorImplementation,
+  resolveRowSelectorImplementationRegistry,
   applyReducerOperation,
   applySelectorOperation,
   BuiltinReducerOperationSchemas,
@@ -15,6 +18,7 @@ import {
   reducerOutputDescriptors,
   reducerOutputFields,
   resolveRowSelectorRegistry,
+  resolveStatisticsReducerImplementationRegistry,
   resolveStatisticsReducerRegistry,
   SelectorOperationKind,
   SelectorOperationSchema,
@@ -70,15 +74,13 @@ describe('statistics provider schema boundaries', () => {
     expect(reducerOutputDescriptors({ kind: 'quantile', field: 'value', p: 0.5, as: 'median' })).toEqual([
       { field: 'median', type: DataFieldType.Continuous },
     ]);
-    expect(reducerOutputDescriptors({ kind: 'extent', field: 'value', as: 'range' })).toEqual([]);
+    expect(reducerOutputDescriptors({ kind: 'extent', field: 'value', as: 'range' })).toEqual([{ field: 'range' }]);
   });
 
   it('uses the registered reducer descriptor for custom scalar candidates', () => {
     const definition = defineStatisticsReducer({
       schema: strictObject({ kind: literal('custom-scalar'), as: string() }),
-      outputFields: operation => [operation.as],
       outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
-      reduce: (_rows, operation) => ({ [operation.as]: 1 }),
     });
     const registry = resolveStatisticsReducerRegistry([definition]);
 
@@ -95,6 +97,10 @@ describe('statistics provider schema boundaries', () => {
         kind: literal('unsafe-output'),
         stamp: string().transform(value => new Date(value)),
       }),
+      outputs: () => [],
+    });
+    const definitionImplementation = defineStatisticsReducerImplementation({
+      definition,
       reduce: (_rows, operation) => {
         observed = operation.stamp;
         return {};
@@ -103,6 +109,10 @@ describe('statistics provider schema boundaries', () => {
     const context = {
       ...DEFAULT_TRANSFORM_CONTEXT,
       statisticsReducerRegistry: resolveStatisticsReducerRegistry([definition]),
+      statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+        resolveStatisticsReducerRegistry([definition]),
+        [definitionImplementation],
+      ),
     };
     const operation = { kind: 'unsafe-output', stamp: '2026-07-11T00:00:00.000Z' } as const;
 
@@ -117,6 +127,9 @@ describe('statistics provider schema boundaries', () => {
         kind: literal('unsafe-selector-output'),
         stamp: string().transform(value => new Date(value)),
       }),
+    });
+    const definitionImplementation = defineRowSelectorImplementation({
+      definition,
       select: (_rows, operation) => {
         observed = operation.stamp;
         return [];
@@ -125,6 +138,10 @@ describe('statistics provider schema boundaries', () => {
     const context = {
       ...DEFAULT_TRANSFORM_CONTEXT,
       rowSelectorRegistry: resolveRowSelectorRegistry([definition]),
+      rowSelectorImplementationRegistry: resolveRowSelectorImplementationRegistry(
+        resolveRowSelectorRegistry([definition]),
+        [definitionImplementation],
+      ),
     };
     const operation = { kind: 'unsafe-selector-output', stamp: '2026-07-11T00:00:00.000Z' } as const;
 

@@ -30,6 +30,10 @@ const copyConfigValue = <T>(value: T, ancestors: ReadonlySet<object>): T => {
 export const copyCoreProgramOptions = <TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
   options: CoreProgramOptions<TComposites>,
 ): CoreProgramOptions<TComposites> => {
-  const copied = copyConfigValue(options, new Set());
+  const copied = copyConfigValue<CoreProgramOptions<TComposites>>(
+    { ...options, compositeInputs: undefined },
+    new Set(),
+  );
+  if (options.compositeInputs !== undefined) copied.compositeInputs = options.compositeInputs;
   return copied;
 };

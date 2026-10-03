@@ -187,11 +187,18 @@ Relation examples use the default style and support light and dark modes. The co
   defaultSourceFile="relation-influence.preview.tsx"
 />
 
-### Semantic status
+### status · Semantic status
 
 `status` preserves a directly readable Graph state on a Relation. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. `disabled` also draws the arrow body with a `[6, 4]` dash pattern; its marker remains gray and keeps its existing shape. Omitting status means no special marker and does not write `normal`. Status supplies appearance defaults only; it does not alter the role, kind, direction, route, or marker shape
 
-Every Relation role demo exposes a no-status option alongside these four values through its controls. The Relation path and every present source or target marker inherit the same status color. Explicit path, marker, or label appearance has final precedence while retaining Source status. A domain predicate's `params.status` is not mapped here automatically
+The controls below switch between no status and these four values. The example uses a fixed bidirectional `flow`; its path and both endpoint markers inherit the same status color. Explicit path, marker, or label appearance has final precedence while retaining Source status. A domain predicate's `params.status` is not mapped here automatically
+
+<ComponentPreview
+  files={['relation-status', 'relation-status.preview.tsx']}
+  size="sm"
+  caption="Switch status to observe the path and both arrow colors. Disabled uses a dashed path; node positions, direction, and arrow shapes stay fixed."
+  defaultSourceFile="relation-status.preview.tsx"
+/>
 
 ### Style adjustments
 

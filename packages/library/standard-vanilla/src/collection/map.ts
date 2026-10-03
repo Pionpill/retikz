@@ -1,6 +1,6 @@
 import type { IRMap } from '@retikz/standard/collection';
 import { createMap, MapProvider } from '@retikz/standard/collection';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { StandardMapEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -18,7 +18,7 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
   );
 
 /** 将 Map 输入与嵌套内容交给根级 traversal */
-export const MapInputEmbedAdapter: InputEmbedAdapter<InputMap> = {
+export const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
   kind: StandardMapEmbedKind,
   lower: (props, context) => {
     if (props.data !== undefined)

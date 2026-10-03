@@ -386,12 +386,11 @@ describe('statistics provider runtime', () => {
 
     const reducer = defineStatisticsReducer({
       schema: strictObject({ kind: literal('custom-total') }),
-      reduce: () => ({}),
+      outputs: () => [],
     });
-    const selector = defineRowSelector({
-      schema: strictObject({ kind: literal('custom-row') }),
-      select: () => [],
-    });
+
+    const selector = defineRowSelector({ schema: strictObject({ kind: literal('custom-row') }) });
+
     expect(() => resolveStatisticsReducerRegistry([reducer, reducer])).toThrow(
       'data: duplicate statistics reducer registration: "custom-total"',
     );

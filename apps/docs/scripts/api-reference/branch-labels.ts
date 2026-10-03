@@ -12,6 +12,23 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/diagram#FlowBendRoute': [
+    { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
+    { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
+  ],
+  '@retikz/diagram#FlowLayoutRouting': [
+    { value: 'straight', field: 'kind', type: "'straight'", label: { zh: '直线', en: 'Straight' } },
+    { value: 'axis', field: 'cornerRadius', type: 'number', label: { zh: '轴对齐', en: 'Axis-aligned' } },
+    { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
+    { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
+  ],
+  '@retikz/diagram#FlowLayoutRoute': [
+    { value: 'straight', field: 'kind', type: "'straight'", label: { zh: '直线', en: 'Straight' } },
+    { value: 'axis', field: 'cornerRadius', type: 'number', label: { zh: '轴对齐', en: 'Axis-aligned' } },
+    { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
+    { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
+  ],
+
   '@retikz/diagram-react#FlowLayoutProps': [
     { value: 'linear', field: 'kind', type: '"linear"', label: { zh: '线性排列', en: 'Linear placement' } },
     { value: 'grid', field: 'kind', type: '"grid"', label: { zh: '网格排列', en: 'Grid placement' } },

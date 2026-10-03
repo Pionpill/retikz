@@ -34,13 +34,15 @@ describe('smooth path composition (contract)', () => {
       data: { reference: 'samples' },
       transform: [
         {
-          kind: 'smooth',
-          x: 'time',
-          y: 'value',
-          groupBy: ['group'],
-          sampleCount: 4,
-          xAs: 'trendX',
-          yAs: 'trendY',
+          operation: {
+            kind: 'smooth',
+            x: 'time',
+            y: 'value',
+            groupBy: ['group'],
+            sampleCount: 4,
+            xAs: 'trendX',
+            yAs: 'trendY',
+          },
         },
       ],
       scales: [
@@ -84,7 +86,9 @@ describe('smooth path composition (contract)', () => {
         { type: 'point', encoding: { x: { field: 'time' }, y: { field: 'value' } } },
         {
           type: 'path',
-          transform: [{ kind: 'smooth', x: 'time', y: 'value', sampleCount: 5, xAs: 'trendX', yAs: 'trendY' }],
+          transform: [
+            { operation: { kind: 'smooth', x: 'time', y: 'value', sampleCount: 5, xAs: 'trendX', yAs: 'trendY' } },
+          ],
           order: 'trendX',
           encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
         },
@@ -117,7 +121,7 @@ describe('smooth path composition (contract)', () => {
         {
           type: 'path',
           order: 'trendX',
-          transform: [{ kind: 'smooth', x: 'x', y: 'y', sampleCount: 2, xAs: 'trendX', yAs: 'trendY' }],
+          transform: [{ operation: { kind: 'smooth', x: 'x', y: 'y', sampleCount: 2, xAs: 'trendX', yAs: 'trendY' } }],
           encoding: { x: { field: 'trendX' }, y: { field: 'trendY' } },
         },
       ],
@@ -166,13 +170,15 @@ describe('smooth path composition (contract)', () => {
             order: 'trendX',
             transform: [
               {
-                kind: 'smooth',
-                x: 'x',
-                y: 'y',
-                groupBy: ['series'],
-                sampleCount: 2,
-                xAs: 'trendX',
-                yAs: 'trendY',
+                operation: {
+                  kind: 'smooth',
+                  x: 'x',
+                  y: 'y',
+                  groupBy: ['series'],
+                  sampleCount: 2,
+                  xAs: 'trendX',
+                  yAs: 'trendY',
+                },
               },
             ],
             encoding: {

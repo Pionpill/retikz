@@ -16,22 +16,24 @@ import type {
   TableLayoutManifest,
   TableLayoutManifestSchema,
   TableThemeStyleDefinition,
+  TableDataOptions,
 } from '../contract';
 import type { TABLE_NAMESPACE } from '../schemas';
 
 /** Table lowering 的运行时扩展选项 */
-export type LowerTablesOptions = Readonly<{
-  /** 用户自定义 structure definitions */
-  structureDefinitions?: ReadonlyArray<AnyTableStructureDefinition>;
-  /** 用户自定义 Cell presentation definitions */
-  presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>;
-  /** 用户自定义 Cell formatter definitions */
-  formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
-  /** 用户自定义 Cell visual scale definitions */
-  visualScaleDefinitions?: ReadonlyArray<AnyCellVisualScaleDefinition>;
-  /** 用户自定义 Table Theme style definitions */
-  tableThemeStyles?: ReadonlyArray<TableThemeStyleDefinition>;
-}>;
+export type LowerTablesOptions = TableDataOptions &
+  Readonly<{
+    /** 用户自定义 structure definitions */
+    structureDefinitions?: ReadonlyArray<AnyTableStructureDefinition>;
+    /** 用户自定义 Cell presentation definitions */
+    presentationDefinitions?: ReadonlyArray<AnyCellPresentationDefinition>;
+    /** 用户自定义 Cell formatter definitions */
+    formatterDefinitions?: ReadonlyArray<AnyCellFormatterDefinition>;
+    /** 用户自定义 Cell visual scale definitions */
+    visualScaleDefinitions?: ReadonlyArray<AnyCellVisualScaleDefinition>;
+    /** 用户自定义 Table Theme style definitions */
+    tableThemeStyles?: ReadonlyArray<TableThemeStyleDefinition>;
+  }>;
 
 /** Table layout-aware composite 的 typed artifact */
 export type TableCompileArtifact = CompositeCompileArtifact<

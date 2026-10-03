@@ -4,6 +4,9 @@ import { literal, object } from 'zod';
 
 import type { DataLineageEvent, ExternalRow } from '../../src';
 import {
+  defineTransformImplementation,
+  defineStatisticsReducerImplementation,
+  resolveStatisticsReducerImplementationRegistry,
   applyTransforms,
   applyTransformsWithLineage,
   defineStatisticsReducer,
@@ -235,7 +238,13 @@ describe('data lineage runtime', () => {
         as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
-      outputFields: operation => [operation.as],
+      outputModel: operation => ({
+        kind: 'preserve',
+        outputs: [{ field: operation.as }],
+      }),
+    });
+    const doubleRevenueImplementation = defineTransformImplementation({
+      definition: doubleRevenue,
       apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: Number(row[operation.field]) * 2 })),
     });
 
@@ -244,6 +253,7 @@ describe('data lineage runtime', () => {
       [{ kind: 'double-revenue', field: 'revenue', as: 'doubleRevenue' }],
       {
         registry: resolveTransformRegistry([doubleRevenue]),
+        transformImplementations: [doubleRevenueImplementation],
         lineage: { fieldFlow: true },
       },
     );
@@ -262,16 +272,19 @@ describe('data lineage runtime', () => {
   it('uses the output model as lineage field-flow authority when it is available', () => {
     const derive = defineTransform({
       schema: object({ kind: literal('derive'), as: NonBlankStringSchema }),
-      outputFields: () => ['stale-declaration'],
       outputModel: operation => ({
         kind: 'preserve',
         outputs: [{ field: operation.as, type: 'continuous' }],
       }),
+    });
+    const deriveImplementation = defineTransformImplementation({
+      definition: derive,
       apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: 1 })),
     });
 
     const { lineage } = applyTransformsWithLineage([{ source: 1 }], [{ kind: 'derive', as: 'derived' }], {
       registry: resolveTransformRegistry([derive]),
+      transformImplementations: [deriveImplementation],
       lineage: { fieldFlow: true },
     });
 
@@ -382,7 +395,10 @@ describe('data lineage runtime', () => {
         as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
-      outputFields: operation => [operation.as],
+      outputs: operation => [{ field: operation.as }],
+    });
+    const rangeImplementation = defineStatisticsReducerImplementation({
+      definition: range,
       reduce: (rows, operation) => {
         const values = rows.map(row => Number(row[operation.field]));
         return { [operation.as]: Math.max(...values) - Math.min(...values) };
@@ -399,7 +415,13 @@ describe('data lineage runtime', () => {
         },
       ],
       {
-        context: { statisticsReducerRegistry: resolveStatisticsReducerRegistry([range]) },
+        context: {
+          statisticsReducerRegistry: resolveStatisticsReducerRegistry([range]),
+          statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+            resolveStatisticsReducerRegistry([range]),
+            [rangeImplementation],
+          ),
+        },
         lineage: { reducerOperations: true, calculationDetails: { maxRows: 1, fields: ['product', 'revenue'] } },
       },
     );

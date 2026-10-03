@@ -7,17 +7,17 @@ import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectRangedDotChartDeclarations } from './declaration-collection';
 
 /** Ranged Dot Chart React 属性 */
-export type RangedDotChartProps = TypedChartCommonProps<IRRangedDotChart>;
+export type RangedDotChartProps<TNative = never> = TypedChartCommonProps<IRRangedDotChart, TNative>;
 
 /** 组装 Ranged Dot 声明并复用 Vanilla factory 的 React Chart 组件 */
 export const RangedDotChart = createTypedChartComponent<
-  RangedDotChartProps,
+  RangedDotChartProps<unknown>,
   IRRangedDotChart,
-  RangedDotChartInputEmbedProps
+  RangedDotChartInputEmbedProps<unknown>
 >(
   'RangedDotChart',
   props =>
-    createTypedChartInput<RangedDotChartProps, IRRangedDotChart, RangedDotChartInputEmbedProps>(
+    createTypedChartInput<RangedDotChartProps<unknown>, IRRangedDotChart, RangedDotChartInputEmbedProps<unknown>>(
       props,
       collectRangedDotChartDeclarations(props.children),
       input => rangedDotChart(input),

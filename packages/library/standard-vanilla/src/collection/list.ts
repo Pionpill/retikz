@@ -1,6 +1,6 @@
 import type { IRList, IRListCell } from '@retikz/standard/collection';
 import { createList, ListProvider } from '@retikz/standard/collection';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { StandardListEmbedKind } from '../shared/constants';
 import type { InputCell } from './cell';
@@ -17,7 +17,7 @@ export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | '
   );
 
 /** 将 List 输入与嵌套内容交给根级 traversal */
-export const ListInputEmbedAdapter: InputEmbedAdapter<InputList> = {
+export const ListInputEmbedAdapter: SynchronousInputEmbedAdapter<InputList> = {
   kind: StandardListEmbedKind,
   lower: (props, context) => {
     if (props.data !== undefined)

@@ -11,8 +11,12 @@ import type {
   FlowLayoutPlacementInput,
   FlowLayoutPlacementOutput,
   FlowLayoutRelationInput,
+  FlowLayoutRoute,
 } from '../../contract';
+import { flowBendGeometryFailure, flowRouteLabelBounds } from '../../providers';
+import { FlowRouteArtifactSchema } from '../../schemas';
 import { FlowRoutingKind } from '../../shared';
+import { FLOW_BEND_ANGLES } from '../../shared/geometry';
 
 type PlainRecord = Readonly<Record<string, unknown>>;
 
@@ -87,18 +91,6 @@ const parseBounds = (
   return bounds;
 };
 
-const parsePosition = (
-  value: unknown,
-  definition: FlowLayoutDefinition,
-  path: ReadonlyArray<string | number>,
-): Position => {
-  if (!Array.isArray(value) || value.length !== 2)
-    return invalidOutput(definition, path, 'expected a two-dimensional point.');
-  const x = parseFiniteNumber(value[0], definition, [...path, 0]);
-  const y = parseFiniteNumber(value[1], definition, [...path, 1]);
-  return [Object.is(x, -0) ? 0 : x, Object.is(y, -0) ? 0 : y];
-};
-
 const collapsePoints = (points: ReadonlyArray<Position>): ReadonlyArray<Position> =>
   points.filter(
     (point, index) => index === 0 || point[0] !== points[index - 1]?.[0] || point[1] !== points[index - 1]?.[1],
@@ -107,7 +99,7 @@ const collapsePoints = (points: ReadonlyArray<Position>): ReadonlyArray<Position
 const flattenElements = (elements: ReadonlyArray<FlowLayoutElementInput>): ReadonlyArray<FlowLayoutElementInput> =>
   elements.flatMap(element => [element, ...(element.kind === 'leaf' ? [] : flattenElements(element.elements))]);
 
-const containsPoint = (bounds: Readonly<BoundsRect>, point: Position): boolean =>
+const containsPoint = (bounds: Readonly<BoundsRect>, point: Readonly<Position>): boolean =>
   point[0] >= bounds.x &&
   point[0] <= bounds.x + bounds.width &&
   point[1] >= bounds.y &&
@@ -384,20 +376,43 @@ const validateRecordedPlacements = (
 
 const validateRoute = (
   relation: FlowLayoutRelationInput,
-  points: ReadonlyArray<Position>,
+  route: FlowLayoutRoute,
   labelBounds: Readonly<BoundsRect> | undefined,
   boundsById: ReadonlyMap<string, Readonly<BoundsRect>>,
   definition: FlowLayoutDefinition,
   relationIndex: number,
 ): void => {
+  const points = route.points;
   const path = ['relations', relationIndex] as const;
   const relatedIds = [relation.source, relation.target];
+  if (route.kind !== relation.routing.kind)
+    invalidOutput(definition, [...path, 'route', 'kind'], 'route kind must match input.', relatedIds);
+  for (const [key, value] of Object.entries(relation.routing)) {
+    if (value !== undefined && Reflect.get(route, key) !== value)
+      invalidOutput(definition, [...path, 'route', key], 'route parameters must preserve effective input.', relatedIds);
+  }
+  if (relation.routing.kind === 'bend' && route.kind === 'bend') {
+    if ('outAngle' in relation.routing !== 'outAngle' in route)
+      invalidOutput(definition, [...path, 'route'], 'bend parameter family must preserve effective input.', relatedIds);
+    if (
+      !('outAngle' in relation.routing) &&
+      relation.routing.bendAngle === undefined &&
+      'bendAngle' in route &&
+      !FLOW_BEND_ANGLES.includes(route.bendAngle)
+    )
+      invalidOutput(
+        definition,
+        [...path, 'route', 'bendAngle'],
+        'automatic bend angle must be 30, 45 or 60.',
+        relatedIds,
+      );
+  }
   if (points.length < 2)
     invalidOutput(definition, [...path, 'points'], 'route must contain at least two distinct points.', relatedIds);
   if (relation.routing.kind === 'straight' && points.length !== 2) {
     invalidOutput(definition, [...path, 'points'], 'straight route must contain exactly two points.', relatedIds);
   }
-  if (relation.routing.kind !== FlowRoutingKind.Straight) {
+  if (relation.routing.kind !== FlowRoutingKind.Straight && relation.routing.kind !== FlowRoutingKind.Bend) {
     points.slice(1).forEach((point, index) => {
       const previous = points[index];
       if (point[0] !== previous[0] && point[1] !== previous[1]) {
@@ -422,6 +437,19 @@ const validateRoute = (
   }
   if (!containsPoint(sourceBounds, points[0]) || !containsPoint(targetBounds, points.at(-1)!)) {
     invalidOutput(definition, [...path, 'points'], 'route endpoints must lie inside their element bounds.', relatedIds);
+  }
+  if (route.kind === 'bend') {
+    const centers: Array<Position> = [
+      [sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2],
+      [targetBounds.x + targetBounds.width / 2, targetBounds.y + targetBounds.height / 2],
+    ];
+    if (points.some((point, index) => point[0] !== centers[index][0] || point[1] !== centers[index][1]))
+      invalidOutput(
+        definition,
+        [...path, 'route', 'points'],
+        'bend endpoints must preserve element centers.',
+        relatedIds,
+      );
   }
   if (
     relation.routing.kind === FlowRoutingKind.HorizontalThenVertical ||
@@ -458,7 +486,20 @@ const validateRoute = (
         relatedIds,
       );
     }
-    if (labelBounds.width !== relation.labelSize.width || labelBounds.height !== relation.labelSize.height) {
+    let expectedSize = relation.labelSize;
+    if (relation.labelPlacement?.sloped) {
+      try {
+        expectedSize = flowRouteLabelBounds(route, relation) ?? expectedSize;
+      } catch (cause) {
+        return flowBendGeometryFailure(relationIndex, relation, cause);
+      }
+    }
+    if (
+      !layoutLessThanOrEqual(labelBounds.width, expectedSize.width) ||
+      !layoutLessThanOrEqual(expectedSize.width, labelBounds.width) ||
+      !layoutLessThanOrEqual(labelBounds.height, expectedSize.height) ||
+      !layoutLessThanOrEqual(expectedSize.height, labelBounds.height)
+    ) {
       invalidOutput(definition, [...path, 'labelBounds'], 'label bounds must preserve measured size.', relatedIds);
     }
   }
@@ -500,27 +541,33 @@ const normalizeAndValidateOutput = (
   }
   const relations = value.relations.map((relationValue, index) => {
     const path = ['relations', index] as const;
-    if (!isPlainRecord(relationValue) || !hasExactKeys(relationValue, ['points'], ['labelBounds'])) {
+    if (!isPlainRecord(relationValue) || !hasExactKeys(relationValue, ['route'], ['labelBounds'])) {
       return invalidOutput(definition, path, 'expected a closed relation output record.');
     }
     const expected = input.relations[index];
-    if (!Array.isArray(relationValue.points)) {
-      return invalidOutput(definition, [...path, 'points'], 'relation points must be an array.', [
-        expected.source,
-        expected.target,
-      ]);
-    }
-    const points = collapsePoints(
-      relationValue.points.map((point, pointIndex) =>
-        parsePosition(point, definition, [...path, 'points', pointIndex]),
-      ),
-    );
+    const parsed = FlowRouteArtifactSchema.safeParse(relationValue.route);
+    if (!parsed.success)
+      return invalidOutput(
+        definition,
+        [...path, 'route'],
+        'expected a complete discriminated route.',
+        [expected.source, expected.target],
+        parsed.error,
+      );
+    const normalizePoint = (point: Position): Position => [
+      point[0] === 0 ? 0 : point[0],
+      point[1] === 0 ? 0 : point[1],
+    ];
+    const route: FlowLayoutRoute =
+      parsed.data.kind === 'bend'
+        ? { ...parsed.data, points: [normalizePoint(parsed.data.points[0]), normalizePoint(parsed.data.points[1])] }
+        : { ...parsed.data, points: collapsePoints(parsed.data.points.map(normalizePoint)) };
     const labelBounds =
       relationValue.labelBounds === undefined
         ? undefined
         : parseBounds(relationValue.labelBounds, definition, [...path, 'labelBounds']);
-    validateRoute(expected, points, labelBounds, boundsById, definition, index);
-    return { points, ...(labelBounds === undefined ? {} : { labelBounds }) };
+    validateRoute(expected, route, labelBounds, boundsById, definition, index);
+    return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
   });
   return { elements, relations };
 };
@@ -577,7 +624,11 @@ export const executeFlowLayout = (
   try {
     callbackOutput = definition.layout(inputSnapshot, executionContext);
   } catch (cause) {
-    if (cause instanceof RetikzDiagramError && cause.code === RetikzDiagramErrorCode.FlowLayoutOutputInvalid)
+    if (
+      cause instanceof RetikzDiagramError &&
+      (cause.code === RetikzDiagramErrorCode.FlowLayoutOutputInvalid ||
+        cause.code === RetikzDiagramErrorCode.FlowMaterializationFailed)
+    )
       throw cause;
     return callbackFailed(definition, 'layout callback threw.', cause);
   }

@@ -237,7 +237,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'share' },
-      transform: [{ kind: 'stack', y: 'value' }],
+      transform: [{ operation: { kind: 'stack', y: 'value' } }],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r', innerRadius },
       scales: [
         { type: 'linear', name: 'a', domainPadding: 0 },
@@ -309,7 +309,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'share' },
-      transform: [{ kind: 'stack', y: 'value' }],
+      transform: [{ operation: { kind: 'stack', y: 'value' } }],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
         { type: 'linear', name: 'a', domainPadding: 0 },
@@ -370,7 +370,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'share' },
-      transform: [{ kind: 'stack', y: 'value' }],
+      transform: [{ operation: { kind: 'stack', y: 'value' } }],
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       scales: [
         { type: 'linear', name: 'a', domainPadding: 0 },

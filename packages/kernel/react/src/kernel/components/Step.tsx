@@ -139,11 +139,11 @@ export type BendStepProps = {
    * @default 30
    */
   bendAngle?: number;
-  /** 非对称弯 / 自环模式的出射角（度，TikZ `out=`）；与 inAngle 一起编译成 cubic，给定时优先于 bendDirection */
+  /** 屏幕绝对出射角（度）；任一 outAngle / inAngle 触发切线模式，缺省出射角为 0，优先于对称配置 */
   outAngle?: number;
-  /** 非对称弯 / 自环模式的入射角（度，TikZ `in=`）；与 outAngle 一起编译成 cubic */
+  /** 屏幕绝对入射角（度）；任一 outAngle / inAngle 触发切线模式，缺省入射角为 180 */
   inAngle?: number;
-  /** 非对称弯 / 自环模式的曲线松紧系数（TikZ `looseness=`，控制控制点距离），缺省约 1；也缩放自环默认大小 */
+  /** 切线模式的正数控制点距离倍率，默认 1；也缩放自环默认大小，对称模式忽略 */
   looseness?: number;
   /** 终点 */
   to: DslTarget;

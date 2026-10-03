@@ -1,4 +1,4 @@
-import type { ExternalDatasets, IRDataReference } from '@retikz/data';
+import type { ExternalDatasets, IRDataReference, DataTransformResult } from '@retikz/data';
 
 import type { AnyTableStructureDefinition } from '../../contract';
 
@@ -8,6 +8,8 @@ export type NormalizeTableStructureOptions = Readonly<{
   data?: IRDataReference;
   /** 宿主注入的外部 datasets */
   datasets?: ExternalDatasets;
+  /** 本次准备的规范结果，不再次解析源数据 */
+  preparedData?: DataTransformResult;
   /** 用户自定义 structure definitions */
   structureDefinitions?: ReadonlyArray<AnyTableStructureDefinition>;
 }>;

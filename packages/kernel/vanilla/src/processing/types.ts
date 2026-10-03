@@ -10,6 +10,7 @@ import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import type { RuntimeUpdateStrategyValue } from '@retikz/runtime';
 
 import type { InputAuthoringSite, InputNormalizeOptions, InputRuntimeMeta, InputScene } from '../normalize';
+import type { AnyInputEmbedAdapter } from '../normalize';
 import type { VanillaCompileDriver } from '../runtime/compile-driver';
 
 /** 可进入 Vanilla 框架无关 processing 的作者输入 */
@@ -70,3 +71,34 @@ export type ProcessingController = Readonly<{
   /** 释放 controller，之后禁止更新与订阅 */
   dispose: () => void;
 }>;
+
+/** 异步作者准备配置；只接受已声明 prepare 能力的 adapter */
+export type AsyncProcessingOptions = Readonly<Omit<ProcessingOptions, 'adapters'>> &
+  Readonly<{
+    /** 命名领域 adapter */
+    adapters?: ReadonlyArray<AnyInputEmbedAdapter & Required<Pick<AnyInputEmbedAdapter, 'prepare'>>>;
+    /** 单次静态请求或 controller 生命周期取消信号 */
+    signal?: AbortSignal;
+  }>;
+
+/** 同步编译结束后的完整候选，其提交与丢弃互斥 */
+export type PreparedAsyncStaticProcessing = Readonly<{
+  /** 同 revision 的不可变结果 */
+  result: ProcessingResult;
+  /** 原子发布一次；重复提交无副作用 */
+  commit: () => void;
+  /** 放弃候选；重复丢弃无副作用 */
+  discard: () => void;
+}>;
+
+/** 单次作者更新最终是否仍拥有发布权 */
+export type ProcessingUpdateOutcome =
+  | Readonly<{ kind: 'committed'; result: ProcessingResult }>
+  | Readonly<{ kind: 'superseded' }>;
+
+/** 异步准备后复用唯一的同步 retained 提交 */
+export type AsyncProcessingController = Readonly<Omit<ProcessingController, 'update'>> &
+  Readonly<{
+    /** 到达时立即使更早的准备请求失效 */
+    update: (source: ProcessingSource) => Promise<ProcessingUpdateOutcome>;
+  }>;

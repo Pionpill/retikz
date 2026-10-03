@@ -7,6 +7,7 @@ export * from './lineage';
 export * from './locator';
 export * from './mark';
 export * from './position-adjustment';
+export * from './preparation';
 export * from './provenance';
 export * from './scale';
 export * from './theme';
