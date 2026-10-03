@@ -103,7 +103,7 @@ export const resolveRegressionMarkGroup = (
       closed: false,
       curve: RegressionTrendCurveSchema.parse(trend.curve),
       ...(series === undefined ? {} : { series: series.field }),
-      transform: [smooth],
+      transform: [{ operation: smooth }],
       encoding: { x: { field: trendXField }, y: { field: trendYField } },
       ...constantPathPropertiesOf(settings),
       ...(series === undefined || explicitStroke

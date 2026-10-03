@@ -9,6 +9,14 @@ IRTable stores only JSON-safe structure. Datasets, Definitions, Core compile opt
 
 `createDetailTableIR()` and `createManualTableIR()` assemble detached sparse Source; use `TableSchema.parse()` for external JSON. Layout resolvers apply defaults, while formatter / presentation consume resolved internal configuration. Custom-plugin options and outputs are still validated at their own boundaries.
 
+## Data transforms and async preparation
+
+Detail and data-bound Custom Tables accept root `transform` declarations and `dataExecution`. Transforms run before Structure resolution. Manual and unbound Custom Tables reject these settings. `sourceIndex` addresses the currently bound result rather than a database key or pre-transform row.
+
+React Table / DetailTable accept `dataBindings`, `dataTransformExecutor`, `signal`, and separate Data definitions/implementations. Bindings and raw data are exclusive. DetailTable accepts transform/dataExecution directly; Table accepts a root override but rejects duplicate configuration in the spec and props. ManualTable has no data executor. Standalone clients prepare automatically; embedded clients enable `runtime={{ preparation: 'async' }}` on their outer Layout.
+
+Vanilla `embedTable(spec, { dataBindings, dataTransformExecutor, signal, lowerOptions })` uses TableInputEmbedAdapter preparation. Async SSR uses `renderTableAsync(spec, options?)`: it returns a Promise SVG string, or `{ svg, manifest }` with `artifacts: true`. The manifest comes from the actual compilation. Synchronous renderTable/compileTable and React SSR use local synchronous computation. See [Data extensions](/viz/data/transform/extensions) for execution and model boundaries.
+
 ## How entries converge
 
 React standalone, Vanilla SSR, direct `compileTable()`, and embedded Tables use different authoring and host surfaces, but they do not duplicate Table normalization, defaults cascade, presentation, or layout algorithms.

@@ -5,12 +5,13 @@ import type {
   ExternalDatasets,
   ExternalRow,
   TransformContext,
-  IRDataTransform,
+  IRDataTransformDeclaration,
 } from '@retikz/data';
 import {
   applyFieldResolver,
   applyTransformsToDataView,
   collectFormatFields,
+  createDataView,
   DEFAULT_TRANSFORM_CONTEXT,
   normalizeRows,
   resolveFieldPath,
@@ -20,6 +21,10 @@ import {
   resolveRegressionRegistry,
   resolveStatisticsReducerRegistry,
   resolveTransformRegistry,
+  resolveTransformImplementationRegistry,
+  resolveStatisticsReducerImplementationRegistry,
+  resolveRowSelectorImplementationRegistry,
+  resolveRegressionImplementationRegistry,
 } from '@retikz/data';
 
 import type { AnyMarkDefinition, AnyPositionAdjustmentDefinition, AnyScaleDefinition } from '../../contract';
@@ -35,9 +40,13 @@ export const applyMarkTransforms = (
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext: TransformContext,
 ): DataView => {
-  const transform = (mark as { transform?: Array<IRDataTransform> }).transform;
+  const transform = (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
   if (transform === undefined) return dataView;
-  return applyTransformsToDataView(dataView, transform, transformRegistry, transformContext);
+  return applyTransformsToDataView(
+    dataView,
+    transform.map(declaration => declaration.operation),
+    { registry: transformRegistry, context: transformContext },
+  );
 };
 
 /**
@@ -81,6 +90,8 @@ export const prepareRows = (
   options: LowerPlotsOptions,
   ingested: Array<ExternalRow>,
 ): {
+  /** 规范 rows 与完整逻辑字段模型 */
+  dataView: DataView;
   fieldTypes: DataFieldTypeMap;
   /** 最终字段类型具有 model、format、resolver 或有效观测依据的字段 */
   fieldTypeEvidence: ReadonlySet<string>;
@@ -92,17 +103,10 @@ export const prepareRows = (
   positionAdjustmentRegistry: Map<string, AnyPositionAdjustmentDefinition>;
 } => {
   validateFieldMaps(spec, datasets, options.fieldMaps);
-  const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
-  const transformContext: TransformContext = {
-    ...DEFAULT_TRANSFORM_CONTEXT,
-    regressionRegistry: resolveRegressionRegistry(options.regressionDefinitions),
-    statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.statisticsReducerDefinitions),
-    rowSelectorRegistry: resolveRowSelectorRegistry(options.rowSelectorDefinitions),
-  };
-  const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
-  const markRegistry = resolveMarkRegistry(options.markDefinitions);
-  const positionAdjustmentRegistry = resolvePositionAdjustmentRegistry(options.positionAdjustmentDefinitions);
+  const { transformRegistry, transformContext, scaleRegistry, markRegistry, positionAdjustmentRegistry } =
+    preparePlotRegistries(options);
   const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
+  for (const field of spec.data.model ?? []) userSourceFields.add(field.name);
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap =
     options.fieldMaps !== undefined && Object.hasOwn(options.fieldMaps, spec.data.reference)
@@ -147,6 +151,14 @@ export const prepareRows = (
     if (hasUsableObservation) fieldTypeEvidence.add(field);
   }
   return {
+    dataView: createDataView(
+      normalized,
+      [...userSourceFields].map(name => {
+        const type = fieldTypeEvidence.has(name) ? fieldTypes.get(name) : undefined;
+        const order = spec.data.model?.find(field => field.name === name)?.order;
+        return { name, ...(type === undefined ? {} : { type }), ...(order === undefined ? {} : { order }) };
+      }),
+    ),
     fieldTypes,
     fieldTypeEvidence,
     normalized,
@@ -156,4 +168,35 @@ export const prepareRows = (
     markRegistry,
     positionAdjustmentRegistry,
   };
+};
+
+/** 为同步 lowering 和异步数据准备建立同一领域注册表 */
+export const preparePlotRegistries = (options: LowerPlotsOptions) => {
+  const transformRegistry = resolveTransformRegistry(options.transformDefinitions);
+  const transformContext: TransformContext = {
+    ...DEFAULT_TRANSFORM_CONTEXT,
+    regressionRegistry: resolveRegressionRegistry(options.regressionDefinitions),
+    statisticsReducerRegistry: resolveStatisticsReducerRegistry(options.statisticsReducerDefinitions),
+    rowSelectorRegistry: resolveRowSelectorRegistry(options.rowSelectorDefinitions),
+  };
+  transformContext.transformImplementationRegistry = resolveTransformImplementationRegistry(
+    transformRegistry,
+    options.transformImplementations,
+  );
+  transformContext.statisticsReducerImplementationRegistry = resolveStatisticsReducerImplementationRegistry(
+    transformContext.statisticsReducerRegistry,
+    options.statisticsReducerImplementations,
+  );
+  transformContext.rowSelectorImplementationRegistry = resolveRowSelectorImplementationRegistry(
+    transformContext.rowSelectorRegistry,
+    options.rowSelectorImplementations,
+  );
+  transformContext.regressionImplementationRegistry = resolveRegressionImplementationRegistry(
+    transformContext.regressionRegistry,
+    options.regressionImplementations,
+  );
+  const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
+  const markRegistry = resolveMarkRegistry(options.markDefinitions);
+  const positionAdjustmentRegistry = resolvePositionAdjustmentRegistry(options.positionAdjustmentDefinitions);
+  return { transformRegistry, transformContext, scaleRegistry, markRegistry, positionAdjustmentRegistry };
 };

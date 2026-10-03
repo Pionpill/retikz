@@ -1,4 +1,5 @@
 import { compileToScene } from '@retikz/core';
+import { defineTransformImplementation } from '@retikz/data';
 import type { AnyTransformDefinition, ExternalRow } from '@retikz/data';
 import {
   applyTransforms,
@@ -28,7 +29,10 @@ const doubleDefinition = defineTransform({
     as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+});
+const doubleDefinitionImplementation = defineTransformImplementation({
+  definition: doubleDefinition,
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
@@ -44,7 +48,16 @@ const groupSumDefinition = defineTransform({
     as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.groupBy, operation.field],
-  outputFields: operation => [operation.as],
+  outputModel: operation => ({
+    kind: 'replace',
+    fields: [
+      { field: operation.groupBy, type: { from: operation.groupBy } },
+      { field: operation.as, type: 'continuous' },
+    ],
+  }),
+});
+const groupSumDefinitionImplementation = defineTransformImplementation({
+  definition: groupSumDefinition,
   apply: (rows, operation, context) => {
     const groups = new Map<string, Array<ExternalRow>>();
     for (const row of rows) {
@@ -70,7 +83,12 @@ const compile = (
 ) =>
   compileToScene(
     { version: 1, type: 'scene', children: [spec] },
-    { composites: lowerPlots(datasets, { transformDefinitions: definitions }) },
+    {
+      composites: lowerPlots(datasets, {
+        transformDefinitions: definitions,
+        transformImplementations: definitions.includes(doubleDefinition) ? [doubleDefinitionImplementation] : [],
+      }),
+    },
   ).scene;
 
 const pointSpec = (transform: IRPlot['transform']): IRPlot =>
@@ -144,46 +162,45 @@ describe('transform registry (contract)', () => {
     );
     const builtinCollision = defineTransform({
       schema: object({ kind: literal('sort') }),
-      apply: rows => rows,
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
     expect(() => resolveTransformRegistry([builtinCollision])).toThrow(/duplicate transform registration/i);
   });
 
   it('malformed_registration_schema_throws', () => {
-    const nonObject: AnyTransformDefinition = {
-      schema: string(),
-      apply: rows => rows,
-    };
     const missingLiteralKind: AnyTransformDefinition = {
       schema: object({ kind: string() }),
-      apply: rows => rows,
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
     };
-    expect(() => resolveTransformRegistry([nonObject])).toThrow(/ZodObject/i);
+    expect(() => extractTransformKind(string())).toThrow(/ZodObject/i);
     expect(() => resolveTransformRegistry([missingLiteralKind])).toThrow(/literal/i);
   });
 
   it('custom_transform_apply_uses_same_registry_pipeline', () => {
     const registry = resolveTransformRegistry([doubleDefinition]);
-    const rows = applyTransforms([{ x: 2, y: 5 }], [{ kind: 'double', field: 'x', as: 'x2' }], registry);
+    const rows = applyTransforms([{ x: 2, y: 5 }], [{ kind: 'double', field: 'x', as: 'x2' }], {
+      registry,
+      transformImplementations: [doubleDefinitionImplementation],
+    });
     expect(rows).toEqual([{ x: 2, y: 5, x2: 4 }]);
   });
 
   it('input_and_output_fields_feed_source_field_collection', () => {
-    const spec = pointSpec([{ kind: 'double', field: 'x', as: 'x2' }]);
+    const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
     const fields = collectSourceFields(spec, resolveTransformRegistry([doubleDefinition]));
     expect([...fields].sort()).toEqual(['x', 'y']);
   });
 
   it('unknown_or_invalid_custom_operation_throws_at_lowering', () => {
-    const spec = pointSpec([{ kind: 'double', field: 'x' }]);
+    const spec = pointSpec([{ operation: { kind: 'double', field: 'x' } }]);
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).toThrow();
     expect(() =>
-      compile(pointSpec([{ kind: 'unknown-transform', field: 'x', as: 'x2' }]), { d: [{ x: 2, y: 5 }] }),
+      compile(pointSpec([{ operation: { kind: 'unknown-transform', field: 'x', as: 'x2' } }]), { d: [{ x: 2, y: 5 }] }),
     ).toThrow(/not registered/i);
   });
 
   it('custom_output_fields_strict_model_passes_when_registered', () => {
-    const spec = pointSpec([{ kind: 'double', field: 'x', as: 'x2' }]);
+    const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).not.toThrow();
   });
 
@@ -191,9 +208,9 @@ describe('transform registry (contract)', () => {
     const missingOutputDefinition = defineTransform({
       schema: doubleDefinition.schema,
       inputFields: operation => [operation.field],
-      apply: doubleDefinition.apply,
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
-    const spec = pointSpec([{ kind: 'double', field: 'x', as: 'x2' }]);
+    const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] }, [missingOutputDefinition])).toThrow(/x2/);
   });
 
@@ -206,7 +223,7 @@ describe('transform registry (contract)', () => {
         { group: 'B', value: 5 },
       ]),
       [{ kind: 'group-sum', groupBy: 'group', field: 'value', as: 'total' }],
-      registry,
+      { registry, transformImplementations: [groupSumDefinitionImplementation] },
     );
     expect(rows).toEqual([
       expect.objectContaining({ group: 'A', total: 5 }),
@@ -224,7 +241,7 @@ describe('transform registry (contract)', () => {
         { kind: 'double', field: 'x', as: 'x2' },
         { kind: 'sort', field: 'x2', order: 'descending' },
       ],
-      registry,
+      { registry, transformImplementations: [doubleDefinitionImplementation] },
     );
     expect(rows.map(row => row.x2)).toEqual([4, 2]);
   });

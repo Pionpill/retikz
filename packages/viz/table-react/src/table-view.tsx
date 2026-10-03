@@ -5,7 +5,7 @@ import type { TableCompileArtifact } from '@retikz/table';
 import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import type { InputTable, InputTableVariant } from '@retikz/table-vanilla';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
-import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { useCallback, useMemo, useRef } from 'react';
 
@@ -14,12 +14,12 @@ import type { ReactTableRuntime } from './table-runtime';
 import { useTableThemeStyles } from './theme-context';
 
 /** standalone Table 运行时交给 Layout 的内部 InputEmbed 组件属性 */
-type TableRuntimeEmbedProps = InputTable;
+type TableRuntimeEmbedProps = InputTable<unknown>;
 
 /** React Layout 遍历时识别的 Table Vanilla InputEmbed 宿主 */
 type TableRuntimeEmbedComponent = FC<TableRuntimeEmbedProps> & {
   isTier2Embeddable: true;
-  inputEmbedAdapter: SynchronousInputEmbedAdapter<InputTable>;
+  inputEmbedAdapter: InputEmbedAdapter<InputTable<unknown>>;
 };
 
 const TableRuntimeEmbed = (() => null) as unknown as TableRuntimeEmbedComponent;
@@ -54,6 +54,15 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
     structureDefinitions,
     tableThemeStyles,
     visualScaleDefinitions,
+    formatDefinitions,
+    transformDefinitions,
+    statisticsReducerDefinitions,
+    rowSelectorDefinitions,
+    regressionDefinitions,
+    transformImplementations,
+    statisticsReducerImplementations,
+    rowSelectorImplementations,
+    regressionImplementations,
   } = lowerOptions;
   const ambientTableThemeStyles = useTableThemeStyles();
   const effectiveTableThemeStyles = useMemo(() => {
@@ -68,6 +77,15 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
       ...(structureDefinitions === undefined ? {} : { structureDefinitions }),
       ...(visualScaleDefinitions === undefined ? {} : { visualScaleDefinitions }),
       ...(effectiveTableThemeStyles === undefined ? {} : { tableThemeStyles: effectiveTableThemeStyles }),
+      formatDefinitions,
+      transformDefinitions,
+      statisticsReducerDefinitions,
+      rowSelectorDefinitions,
+      regressionDefinitions,
+      transformImplementations,
+      statisticsReducerImplementations,
+      rowSelectorImplementations,
+      regressionImplementations,
     }),
     [
       effectiveTableThemeStyles,
@@ -75,16 +93,35 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
       presentationDefinitions,
       structureDefinitions,
       visualScaleDefinitions,
+      formatDefinitions,
+      transformDefinitions,
+      statisticsReducerDefinitions,
+      rowSelectorDefinitions,
+      regressionDefinitions,
+      transformImplementations,
+      statisticsReducerImplementations,
+      rowSelectorImplementations,
+      regressionImplementations,
     ],
   );
-  const input = useMemo<InputTable>(
+  const input = useMemo<InputTable<unknown>>(
     () => ({
       table: stableTable,
-      data: stableDatasets,
+      ...(runtime.dataBindings === undefined ? { data: stableDatasets } : { dataBindings: runtime.dataBindings }),
+      dataTransformExecutor: runtime.dataTransformExecutor,
+      signal: runtime.signal,
       lowerOptions: stableLowerOptions,
       composites,
     }),
-    [composites, stableDatasets, stableLowerOptions, stableTable],
+    [
+      composites,
+      stableDatasets,
+      stableLowerOptions,
+      stableTable,
+      runtime.dataBindings,
+      runtime.dataTransformExecutor,
+      runtime.signal,
+    ],
   );
   const inputChild = useMemo(() => <TableRuntimeEmbed {...input} />, [input]);
   const notifiedManifestKey = useRef<string>();
@@ -106,7 +143,12 @@ export const TableRuntimeView: FC<Readonly<{ runtime: ReactTableRuntime }>> = ({
   );
 
   return (
-    <Layout onArtifacts={onManifest === undefined ? undefined : handleArtifacts} {...hostProps} extensions={{ shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, themeStyles }}>
+    <Layout
+      runtime={{ preparation: 'async', signal: runtime.signal }}
+      onArtifacts={onManifest === undefined ? undefined : handleArtifacts}
+      {...hostProps}
+      extensions={{ shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, themeStyles }}
+    >
       {inputChild}
     </Layout>
   );

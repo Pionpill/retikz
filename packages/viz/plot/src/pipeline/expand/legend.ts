@@ -2,7 +2,7 @@ import type { IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
 import { categoricalColorAt } from '@retikz/core';
 import type { DataFieldTypeValue } from '@retikz/data';
-import { DataFieldType } from '@retikz/data';
+import { createDataView, DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 
 import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
@@ -36,11 +36,13 @@ export const collectChannelDescriptors = (
   const register = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor) out.push(descriptor);
   };
-  const rootDataView = {
-    rows: channelCtx.rows,
-    fieldTypes: channelCtx.fieldTypes,
-    fieldTypeEvidence: channelCtx.fieldTypeEvidence ?? new Set<string>(),
-  };
+  const rootDataView = createDataView(
+    channelCtx.rows,
+    [...channelCtx.fieldTypes].map(([name, type]) => ({
+      name,
+      ...(channelCtx.fieldTypeEvidence?.has(name) ? { type } : {}),
+    })),
+  );
   for (const view of markDataViews ??
     node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }))) {
     const markChannels = resolveMarkChannels(view.mark, {

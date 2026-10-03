@@ -1,15 +1,15 @@
 import { createBubbleChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed } from '@retikz/vanilla';
 
-import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
+import { createChartInputEmbedAdapter } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeBubbleChart } from './normalize';
 import type { BubbleChartInputEmbedProps } from './types';
 
-/** 在场景处理时规范化 Bubble 输入并组装 provider 依赖 */
-export const BubbleChartInputEmbedAdapter: SynchronousInputEmbedAdapter<BubbleChartInputEmbedProps> = {
-  kind: 'chart.bubble',
-  lower: input => {
+/** 在场景处理时规范化 BubbleChart 输入并复用统一数据准备 */
+export const BubbleChartInputEmbedAdapter = createChartInputEmbedAdapter(
+  'chart.bubble',
+  (input: BubbleChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
     const source = normalizeBubbleChart({
       ...parts.root,
@@ -22,20 +22,18 @@ export const BubbleChartInputEmbedAdapter: SynchronousInputEmbedAdapter<BubbleCh
       ...(input.guides === undefined ? {} : { guides: input.guides }),
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
-    const runtime = buildPointChartRuntime(
+    return buildPointChartRuntime(
       source,
       parts,
       createBubbleChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
     );
-    return {
-      node: wrapChartPanel(runtime.source, runtime.panel),
-      providerDependencies: buildChartProviderContribution(runtime),
-    };
   },
-};
+);
 
 /** 创建可直接组合到 Vanilla Scene 的 Bubble 节点 */
-export const bubbleChart = (input: BubbleChartInputEmbedProps): InputEmbed<BubbleChartInputEmbedProps> => ({
+export const bubbleChart = <TNative = never>(
+  input: BubbleChartInputEmbedProps<TNative>,
+): InputEmbed<BubbleChartInputEmbedProps<TNative>> => ({
   type: 'embed',
   kind: BubbleChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),

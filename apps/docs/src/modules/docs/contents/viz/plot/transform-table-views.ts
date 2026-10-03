@@ -20,6 +20,7 @@ export const createPlotTransformResultView = <TValues extends object>(
   createTransformResultView(id, label, rows, operationsOf, {
     registry: resolveTransformRegistry(options.transformDefinitions),
     context: options.context,
+    transformImplementations: options.transformImplementations,
   });
 
 /** 创建使用完整 Plot transform registry 的原始行与结果视图 */
@@ -32,4 +33,5 @@ export const createPlotTransformTableViews = <TValues extends object>(
   createTransformTableViews(labels, rows, operationsOf, {
     registry: resolveTransformRegistry(options.transformDefinitions),
     context: options.context,
+    transformImplementations: options.transformImplementations,
   });

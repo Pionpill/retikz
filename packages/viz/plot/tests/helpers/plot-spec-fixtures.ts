@@ -29,7 +29,7 @@ export const createPolarPieSpec = (
   namespace: 'plot',
   type: 'plot',
   data: { reference },
-  transform: [{ kind: 'stack', y: 'value' }],
+  transform: [{ operation: { kind: 'stack', y: 'value' } }],
   scales: [
     { type: 'linear', name: scales.angle },
     { type: 'linear', name: scales.radius },
@@ -96,7 +96,7 @@ export const createHistogramSpec = (
   namespace: 'plot',
   type: 'plot',
   data: { reference },
-  transform: [{ kind: 'bin', field: 'm', step }],
+  transform: [{ operation: { kind: 'bin', field: 'm', step } }],
   scales: [
     { type: 'linear', name: scales.x },
     { type: 'linear', name: scales.y },
@@ -136,13 +136,15 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensityOpt
     data: { reference },
     transform: [
       {
-        kind: 'density',
-        field: 'value',
-        groupBy: ['species'],
-        ...(options.bandwidth ? { bandwidth: options.bandwidth } : {}),
-        sampleCount: options.sampleCount ?? 8,
-        xAs: 'densityX',
-        densityAs: 'density',
+        operation: {
+          kind: 'density',
+          field: 'value',
+          groupBy: ['species'],
+          ...(options.bandwidth ? { bandwidth: options.bandwidth } : {}),
+          sampleCount: options.sampleCount ?? 8,
+          xAs: 'densityX',
+          densityAs: 'density',
+        },
       },
     ],
     scales: [
@@ -210,14 +212,16 @@ export const createSmoothTrendSpec = (reference = 'samples', options: SmoothOpti
         type: 'path',
         transform: [
           {
-            kind: 'smooth',
-            x: 'time',
-            y: 'value',
-            groupBy: ['series'],
-            ...(options.method ? { method: options.method } : {}),
-            sampleCount: options.sampleCount ?? 8,
-            xAs: 'trendX',
-            yAs: 'trendY',
+            operation: {
+              kind: 'smooth',
+              x: 'time',
+              y: 'value',
+              groupBy: ['series'],
+              ...(options.method ? { method: options.method } : {}),
+              sampleCount: options.sampleCount ?? 8,
+              xAs: 'trendX',
+              yAs: 'trendY',
+            },
           },
         ],
         series: 'series',
@@ -292,7 +296,7 @@ export const createBoxplotComposition = (
   marks: [
     {
       type: 'interval',
-      transform: [boxplotSummary],
+      transform: [{ operation: boxplotSummary }],
       bounds: {
         x: { kind: 'extent', from: 'boxX0', to: 'boxX1' },
         y: { kind: 'extent', from: 'boxLow', to: 'boxHigh' },
@@ -303,19 +307,23 @@ export const createBoxplotComposition = (
     },
     {
       type: 'reference',
-      transform: [boxplotSummary],
+      transform: [{ operation: boxplotSummary }],
       extentField: 'boxX0',
       extentToField: 'boxX1',
       encoding: { y: { field: 'median' } },
     },
     {
       type: 'reference',
-      transform: [boxplotSummary],
+      transform: [{ operation: boxplotSummary }],
       extentField: 'whiskerMin',
       extentToField: 'whiskerMax',
       encoding: { x: { field: 'boxX' } },
     },
-    { type: 'point', transform: [boxplotOutside], encoding: { x: { field: 'boxX' }, y: { field: 'value' } } },
+    {
+      type: 'point',
+      transform: [{ operation: boxplotOutside }],
+      encoding: { x: { field: 'boxX' }, y: { field: 'value' } },
+    },
   ],
   guides: [],
 });

@@ -3,6 +3,7 @@ import {
   ExternalTransformSchema,
   JitterTransformSchema,
   NormalizeTransformSchema,
+  DataTransformDeclarationSchema,
 } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import {
@@ -72,17 +73,21 @@ export const PointOpacityScaleBindingSchema = createChartScaleBindingSchema(unio
 
 const createPointJitterMappingSchema = (role: 'x' | 'y', chartType: string) =>
   strictObject({
-    transform: JitterTransformSchema,
+    transform: strictObject({
+      operation: JitterTransformSchema,
+      dataExecution: DataTransformDeclarationSchema.shape.dataExecution,
+    }),
     output: NonBlankStringSchema,
     scale: PointPositionScaleBindingSchema.optional(),
   })
     .superRefine((mapping, context) => {
-      const axis = mapping.transform.axis ?? 'x';
-      const field = role === 'x' ? (mapping.transform.xField ?? 'x') : (mapping.transform.yField ?? 'y');
+      const axis = mapping.transform.operation.axis ?? 'x';
+      const field =
+        role === 'x' ? (mapping.transform.operation.xField ?? 'x') : (mapping.transform.operation.yField ?? 'y');
       if (axis !== role) {
         context.addIssue({
           code: 'custom',
-          path: ['transform', 'axis'],
+          path: ['transform', 'operation', 'axis'],
           message: `${chartType} ${role} jitter must target only the ${role} axis`,
         });
       }
@@ -171,7 +176,7 @@ export const refinePointFacetEncodings = (
   if (!hasFacet) return;
   for (const role of ['x', 'y'] as const) {
     const mapping = encodings[role];
-    if (typeof mapping !== 'string' && 'transform' in mapping && mapping.transform.kind === 'bin') {
+    if (typeof mapping !== 'string' && 'transform' in mapping && mapping.transform.operation.kind === 'bin') {
       context.addIssue({
         code: 'custom',
         path: [role, 'transform'],

@@ -26,7 +26,7 @@ import {
   ShadowPreset,
   ShapeValueSchema,
 } from '@retikz/core';
-import { TransformSchema } from '@retikz/data';
+import { DataTransformDeclarationSchema } from '@retikz/data';
 import { CenterlineRibbonPathOptionsSchema, TaperRibbonWidthSchema } from '@retikz/extension';
 import {
   JsonValueSchema,
@@ -74,7 +74,7 @@ import {
   RelationRoutingKind,
 } from './constants';
 
-export const MarkTransformSchema = array(TransformSchema).describe(
+export const MarkTransformSchema = array(DataTransformDeclarationSchema).describe(
   'Mark-local transform pipeline applied after the plot root transform to derive rows consumed only by this mark',
 );
 

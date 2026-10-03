@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
-import type { AnyTransformDefinition, ExternalRow, TransformContext, IRDataTransform } from '../../src';
+import type { ExternalRow } from '../../src';
 import {
   applyTransforms as applyDataTransforms,
   defineTransform,
@@ -11,14 +11,11 @@ import {
   TransformSchema,
 } from '../../src';
 
-const TRANSFORM_REGISTRY = resolveTransformRegistry();
-
 const applyTransforms = (
   rows: Array<ExternalRow>,
-  operations?: Array<IRDataTransform>,
-  registry: ReadonlyMap<string, AnyTransformDefinition> = TRANSFORM_REGISTRY,
-  context?: TransformContext,
-): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
+  operations?: Parameters<typeof applyDataTransforms>[1],
+  options?: Parameters<typeof applyDataTransforms>[2],
+): Array<ExternalRow> => applyDataTransforms(rows, operations, options);
 
 const smoothOperation = (operation: unknown) => TransformSchema.parse(operation);
 
@@ -504,7 +501,7 @@ describe('smooth transform behavior (contract)', () => {
   it('rejects custom transform registration collisions with smooth', () => {
     const collision = defineTransform({
       schema: object({ kind: literal('smooth') }),
-      apply: inputRows => inputRows,
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
 
     expect(() => resolveTransformRegistry([collision])).toThrow(/duplicate transform registration/i);

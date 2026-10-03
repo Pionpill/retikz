@@ -2,8 +2,12 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, number, object } from 'zod';
 
-import type { AnyTransformDefinition, ExternalRow, TransformContext } from '../../src';
+import type { ExternalRow } from '../../src';
 import {
+  defineStatisticsReducerImplementation,
+  defineRowSelectorImplementation,
+  resolveStatisticsReducerImplementationRegistry,
+  resolveRowSelectorImplementationRegistry,
   applyTransforms as applyDataTransforms,
   DEFAULT_TRANSFORM_CONTEXT,
   defineRowSelector,
@@ -13,17 +17,13 @@ import {
   readSourceIndex,
   readSourceIndices,
   tagSourceIndex,
-  resolveTransformRegistry,
 } from '../../src';
-
-const TRANSFORM_REGISTRY = resolveTransformRegistry();
 
 const applyTransforms = (
   rows: Array<ExternalRow>,
   operations?: Parameters<typeof applyDataTransforms>[1],
-  registry: ReadonlyMap<string, AnyTransformDefinition> = TRANSFORM_REGISTRY,
-  context?: TransformContext,
-): Array<ExternalRow> => applyDataTransforms(rows, operations, registry, context);
+  options?: Parameters<typeof applyDataTransforms>[2],
+): Array<ExternalRow> => applyDataTransforms(rows, operations, options);
 
 const ORDERS: Array<ExternalRow> = [
   { region: 'N', product: 'A', revenue: 3 },
@@ -219,7 +219,10 @@ describe('statistical transform algebra (contract)', () => {
         as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field, operation.weight],
-      outputFields: operation => [operation.as],
+      outputs: operation => [{ field: operation.as }],
+    });
+    const weightedMeanImplementation = defineStatisticsReducerImplementation({
+      definition: weightedMean,
       reduce: (rows, operation) => {
         const weighted = rows.reduce(
           (sum, row) => sum + Number(row[operation.field]) * Number(row[operation.weight]),
@@ -242,8 +245,16 @@ describe('statistical transform algebra (contract)', () => {
           metrics: [{ kind: 'weighted-mean', field: 'value', weight: 'weight', as: 'weightedValue' }],
         },
       ],
-      undefined,
-      { ...DEFAULT_TRANSFORM_CONTEXT, statisticsReducerRegistry: resolveStatisticsReducerRegistry([weightedMean]) },
+      {
+        context: {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          statisticsReducerRegistry: resolveStatisticsReducerRegistry([weightedMean]),
+          statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+            resolveStatisticsReducerRegistry([weightedMean]),
+            [weightedMeanImplementation],
+          ),
+        },
+      },
     );
 
     expect(out).toEqual([expect.objectContaining({ group: 'A', weightedValue: 17.5 })]);
@@ -257,6 +268,9 @@ describe('statistical transform algebra (contract)', () => {
         target: number(),
       }),
       inputFields: operation => [operation.field],
+    });
+    const nearestImplementation = defineRowSelectorImplementation({
+      definition: nearest,
       select: (rows, operation) => {
         const ranked = [...rows].sort(
           (left, right) =>
@@ -281,8 +295,16 @@ describe('statistical transform algebra (contract)', () => {
           rankAs: 'rank',
         },
       ],
-      undefined,
-      { ...DEFAULT_TRANSFORM_CONTEXT, rowSelectorRegistry: resolveRowSelectorRegistry([nearest]) },
+      {
+        context: {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          rowSelectorRegistry: resolveRowSelectorRegistry([nearest]),
+          rowSelectorImplementationRegistry: resolveRowSelectorImplementationRegistry(
+            resolveRowSelectorRegistry([nearest]),
+            [nearestImplementation],
+          ),
+        },
+      },
     );
 
     expect(out).toEqual([expect.objectContaining({ group: 'A', value: 9, rank: 1 })]);

@@ -1,4 +1,5 @@
 import { compileToScene } from '@retikz/core';
+import { defineTransformImplementation } from '@retikz/data';
 import {
   applyTransforms,
   coerceValue,
@@ -78,7 +79,10 @@ const doubleDefinition = defineTransform({
     as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+});
+const doubleDefinitionImplementation = defineTransformImplementation({
+  definition: doubleDefinition,
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
@@ -177,7 +181,9 @@ describe('coerce-before-transform 关键回归', () => {
       ],
       new Map([['v', DataFieldType.Continuous]]),
     );
-    const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }], resolveTransformRegistry());
+    const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }], {
+      registry: resolveTransformRegistry(),
+    });
     expect(stacked[1]).toMatchObject({ y0: 3, y1: 8 });
   });
 });
@@ -308,7 +314,7 @@ describe('custom transform data portability（contract）', () => {
           { name: 'y', type: 'continuous' },
         ],
       },
-      transform: [{ kind: 'double', field: 'x', as: 'x2' }],
+      transform: [{ operation: { kind: 'double', field: 'x', as: 'x2' } }],
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -319,7 +325,11 @@ describe('custom transform data portability（contract）', () => {
 
   it('strict_model_accepts_registered_custom_output_field', () => {
     expect(() =>
-      compile(customSpec(), { d: [{ x: 2, y: 5 }] }, { transformDefinitions: [doubleDefinition] }),
+      compile(
+        customSpec(),
+        { d: [{ x: 2, y: 5 }] },
+        { transformDefinitions: [doubleDefinition], transformImplementations: [doubleDefinitionImplementation] },
+      ),
     ).not.toThrow();
   });
 
@@ -327,10 +337,21 @@ describe('custom transform data portability（contract）', () => {
     const missingOutputDefinition = defineTransform({
       schema: doubleDefinition.schema,
       inputFields: operation => [operation.field],
-      apply: doubleDefinition.apply,
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
+    });
+    const missingOutputDefinitionImplementation = defineTransformImplementation({
+      definition: missingOutputDefinition,
+      apply: doubleDefinitionImplementation.apply,
     });
     expect(() =>
-      compile(customSpec(), { d: [{ x: 2, y: 5 }] }, { transformDefinitions: [missingOutputDefinition] }),
+      compile(
+        customSpec(),
+        { d: [{ x: 2, y: 5 }] },
+        {
+          transformDefinitions: [missingOutputDefinition],
+          transformImplementations: [missingOutputDefinitionImplementation],
+        },
+      ),
     ).toThrow(/x2/);
   });
 });

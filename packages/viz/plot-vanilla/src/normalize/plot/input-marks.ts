@@ -15,7 +15,7 @@ import type {
   NodeTextAlignValue,
   ShadowPresetValue,
 } from '@retikz/core';
-import type { ExternalRow, IRDataTransform } from '@retikz/data';
+import type { ExternalRow, IRDataTransformDeclaration } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 import type {
   IRPlotAnchorId,
@@ -101,7 +101,7 @@ export type InputPlotExtensionChannel = InputPlotFieldName | JsonValue | IRPlotC
 /** 所有 mark 共享的局部数据变换与语义图层属性 */
 export type InputPlotMarkTransform = {
   /** 只作用于当前 mark 数据视图的变换链 */
-  transform?: Array<IRDataTransform>;
+  transform?: Array<IRDataTransformDeclaration>;
   /** 语义图层覆盖；控制该 mark 外层 scope 在 plot 内的 zIndex */
   layer?: IRPlotLayer;
 };

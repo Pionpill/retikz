@@ -1774,6 +1774,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'FieldDefinition',
     url: '/viz/data/reference/contract#fielddefinitionschema',
   },
+  DataExecutionSchema: {
+    schema: DataIR.DataExecutionSchema,
+    label: 'DataExecution',
+    url: '/viz/data/reference/contract#dataexecutionschema',
+  },
+  DataTransformDeclarationSchema: {
+    schema: DataIR.DataTransformDeclarationSchema,
+    label: 'DataTransformDeclaration',
+    url: '/viz/data/reference/contract#datatransformdeclarationschema',
+  },
   DataTransformSchema: {
     schema: DataIR.TransformSchema,
     label: 'DataTransform',

@@ -42,7 +42,9 @@ describe('smooth transform behavior (contract)', () => {
           { name: 'value', type: 'continuous' },
         ],
       },
-      transform: [{ kind: 'smooth', x: 'time', y: 'value', groupBy: ['series'], xAs: 'trendX', yAs: 'trendY' }],
+      transform: [
+        { operation: { kind: 'smooth', x: 'time', y: 'value', groupBy: ['series'], xAs: 'trendX', yAs: 'trendY' } },
+      ],
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },

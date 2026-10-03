@@ -1,5 +1,5 @@
 import { CompositeBaseSchema } from '@retikz/core';
-import { DataReferenceSchema, TransformSchema } from '@retikz/data';
+import { DataReferenceSchema, DataExecutionSchema, DataTransformDeclarationSchema } from '@retikz/data';
 import {
   JsonObjectSchema,
   NonBlankStringSchema,
@@ -389,7 +389,10 @@ export const PlotSchema = CompositeBaseSchema.extend({
   data: DataReferenceSchema.describe(
     'Data binding: a named reference to an externally-supplied dataset plus an optional data model. The dataset values never enter the IR; they are injected at compile time via lowerPlots(datasets).',
   ),
-  transform: array(TransformSchema)
+  dataExecution: DataExecutionSchema.optional().describe(
+    'Execution defaults for all data transform scopes owned by this plot',
+  ),
+  transform: array(DataTransformDeclarationSchema)
     .optional()
     .describe(
       'Ordered data-transform operation pipeline applied to the bound dataset before scale inference and mark lowering; omit for no transform',

@@ -5,9 +5,15 @@ import { ZodLiteral, ZodObject } from 'zod';
 import { RetikzDataError } from '../error';
 import type { DataFieldTypeValue, IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
+import type { DataTransformDependency, DataTransformModel } from './execution';
 import type { DataLineageRecorder } from './lineage';
-import type { AnyRegressionDefinition } from './regression';
-import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
+import type { AnyRegressionDefinition, AnySynchronousRegressionImplementation } from './regression';
+import type {
+  AnyRowSelectorDefinition,
+  AnyStatisticsReducerDefinition,
+  AnySynchronousStatisticsReducerImplementation,
+  AnySynchronousRowSelectorImplementation,
+} from './statistics';
 
 /** transform的闭合调度阶段 */
 export const DataTransformPhase = {
@@ -65,7 +71,7 @@ export type DataTransformOutputDescriptor = Readonly<{
   /** operation输出的逻辑字段名 */
   field: string;
   /** 固定字段类型，或复用当前DataView中另一个字段的类型 */
-  type: DataFieldTypeValue | Readonly<{ from: string }>;
+  type?: DataFieldTypeValue | Readonly<{ from: string }>;
 }>;
 
 /** transform对字段类型图的完整影响 */
@@ -96,15 +102,35 @@ export type TransformContext = {
   readSourceIndices: (row: ExternalRow) => Array<number> | undefined;
   /** 给一个改行数输出行打组级源序标记；成员行无标记时原样返回 */
   groupProvenance: (out: ExternalRow, members: Array<ExternalRow>) => ExternalRow;
-  /** 统计 reducer registry；缺省时使用内置 reducer */
   /** 当前运行的拟合方法 registry */
   regressionRegistry?: ReadonlyMap<string, AnyRegressionDefinition>;
+  /** 统计 reducer registry；缺省时使用内置 reducer */
   statisticsReducerRegistry?: ReadonlyMap<string, AnyStatisticsReducerDefinition>;
   /** row selector registry；缺省时使用内置 selector */
   rowSelectorRegistry?: ReadonlyMap<string, AnyRowSelectorDefinition>;
   /** data lineage recorder；缺省时不记录 transform / reducer / selector 事件 */
   lineage?: DataLineageRecorder;
+  /** 本次明确注册的同步 transform 计算实现 */
+  transformImplementationRegistry?: ReadonlyMap<string, AnySynchronousTransformImplementation>;
+  /** 本次同步统计实现 */
+  statisticsReducerImplementationRegistry?: ReadonlyMap<string, AnySynchronousStatisticsReducerImplementation>;
+  /** 本次同步选择实现 */
+  rowSelectorImplementationRegistry?: ReadonlyMap<string, AnySynchronousRowSelectorImplementation>;
+  /** 本次同步拟合实现 */
+  regressionImplementationRegistry?: ReadonlyMap<string, AnySynchronousRegressionImplementation>;
 };
+
+/** 不读取行、不计算统计量的语义上下文 */
+export type TransformSemanticContext = Readonly<{
+  /** 当前阶段的完整字段模型 */
+  model: DataTransformModel;
+  /** 统计语义 registry */
+  statisticsReducerRegistry?: ReadonlyMap<string, AnyStatisticsReducerDefinition>;
+  /** 选择语义 registry */
+  rowSelectorRegistry?: ReadonlyMap<string, AnyRowSelectorDefinition>;
+  /** 拟合语义 registry */
+  regressionRegistry?: ReadonlyMap<string, AnyRegressionDefinition>;
+}>;
 
 /**
  * transform runtime definition。
@@ -114,20 +140,20 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
   /** 完整 transform operation schema；必须含非空 z.literal('kind') 供 registry 提取注册键 */
   schema: ZodType<TTransform>;
   /** 该 transform 消费的源字段名；参与 data.model strict 校验 */
-  inputFields?: (operation: TTransform, context: TransformContext) => Array<string>;
-  /** 该 transform 产出的派生字段名；从 data.model strict 校验的源字段集中排除 */
-  outputFields?: (operation: TTransform, context: TransformContext) => Array<string>;
-  /** 该transform对字段类型图的影响；省略时下游不得保留旧类型证据 */
-  outputModel?: (operation: TTransform, context: TransformContext) => DataTransformOutputModel | undefined;
+  inputFields?: (operation: TTransform, context: TransformSemanticContext) => Array<string>;
+  /** 完整字段影响；没有类型证据的输出只声明字段名 */
+  outputModel: (operation: TTransform, context: TransformSemanticContext) => DataTransformOutputModel;
+  /** 模型和参数的领域不变量 */
+  validate?: (operation: TTransform, context: TransformSemanticContext) => void;
+  /** 当前 operation 的全部精确统计依赖 */
+  dependencies?: (operation: TTransform, context: TransformSemanticContext) => Array<DataTransformDependency>;
   /** 允许上层宿主闭合调度该Definition的固定描述 */
   schedule?: DataTransformSchedule;
-  /** 执行 transform；必须纯且确定；改行数且代表源行集合时要用 context.groupProvenance 保留 provenance */
-  apply: (rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => Array<ExternalRow>;
 };
 
 /**
  * 定义一个 transform definition。
- * @description 保留 schema / inputFields / outputFields / apply 之间的泛型关联；内置与自定义 transform 都经同一 registry 入口分派。
+ * @description 保留 schema、字段影响与依赖声明之间的泛型关联；内置与自定义 transform 都经同一 registry 入口解析
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
  */
 export const defineTransform = <TTransform extends IRDataTransform>(
@@ -140,19 +166,57 @@ export const defineTransform = <TTransform extends IRDataTransform>(
  */
 export type AnyTransformDefinition = Omit<
   TransformDefinition<IRDataTransform>,
-  'schema' | 'inputFields' | 'outputFields' | 'outputModel' | 'apply'
+  'schema' | 'inputFields' | 'outputModel' | 'validate' | 'dependencies'
 > & {
   /** 不同 definition 的 schema 泛型不同，registry 只关心能从中提取 kind 并执行 parse */
-  schema: ZodType;
+  schema: ZodType<IRDataTransform>;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
-  inputFields?: (operation: never, context: TransformContext) => Array<string>;
-  /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
-  outputFields?: (operation: never, context: TransformContext) => Array<string>;
+  inputFields?: (operation: never, context: TransformSemanticContext) => Array<string>;
   /** 内部宽类型占位；真正调用前必须用该definition.schema解析operation */
-  outputModel?: (operation: never, context: TransformContext) => DataTransformOutputModel | undefined;
-  /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */
-  apply: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => Array<ExternalRow>;
+  outputModel: (operation: never, context: TransformSemanticContext) => DataTransformOutputModel;
+  /** 解析完成后的领域不变量 */
+  validate?: (operation: never, context: TransformSemanticContext) => void;
+  /** 完整统计依赖 */
+  dependencies?: (operation: never, context: TransformSemanticContext) => Array<DataTransformDependency>;
 };
+
+/** 引用唯一语义 Definition 的独立计算实现 */
+export type TransformImplementation<
+  TTransform extends IRDataTransform = IRDataTransform,
+  TResult extends Array<ExternalRow> | Promise<Array<ExternalRow>> = Array<ExternalRow> | Promise<Array<ExternalRow>>,
+> = Readonly<{
+  /** 计算遵守的语义身份 */
+  definition: TransformDefinition<TTransform>;
+  /** 计算规范行，不修改声明 */
+  apply: (rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => TResult;
+}>;
+
+/** 保留语义定义与实际计算参数之间的泛型关联 */
+export const defineTransformImplementation = <
+  TTransform extends IRDataTransform,
+  TResult extends Array<ExternalRow> | Promise<Array<ExternalRow>>,
+>(
+  implementation: TransformImplementation<TTransform, TResult>,
+): TransformImplementation<TTransform, TResult> => implementation;
+
+/** 异构实现注册表中的计算入口 */
+export type AnyTransformImplementation = Readonly<{
+  /** 本次 registry 中相同的语义 Definition */
+  definition: AnyTransformDefinition;
+  /** 精确解析后才能调用的计算入口 */
+  apply: (
+    rows: Array<ExternalRow>,
+    operation: never,
+    context: TransformContext,
+  ) => Array<ExternalRow> | Promise<Array<ExternalRow>>;
+}>;
+
+/** 同步入口只接受不会返回 Promise 的计算实现 */
+export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformImplementation, 'apply'>> &
+  Readonly<{
+    /** 同步计算，不探测或启动异步任务 */
+    apply: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => Array<ExternalRow>;
+  }>;
 
 /**
  * 从 transform definition schema 中提取 registry key。

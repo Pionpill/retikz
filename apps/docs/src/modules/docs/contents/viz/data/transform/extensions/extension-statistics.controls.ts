@@ -6,8 +6,10 @@ import { createTransformResultView } from '@/modules/docs/preview';
 
 import {
   closestToMean,
+  closestToMeanImplementation,
   closestToMeanSelectOperationOf,
   midpoint,
+  midpointImplementation,
   midpointSummaryOperationOf,
 } from './extension-statistics-preview';
 import { scoreRows } from './extension-statistics.data';
@@ -36,9 +38,11 @@ export const extensionStatisticsControls = definePreviewControls({
             { id: 'source', label: '原始', rows: scoreRows },
             createTransformResultView('reducer-result', 'Reducer 输出', scoreRows, midpointSummaryOperationOf, {
               context: reducerContext,
+              statisticsReducerImplementations: [midpointImplementation],
             }),
             createTransformResultView('selector-result', 'Selector 输出', scoreRows, closestToMeanSelectOperationOf, {
               context: selectorContext,
+              rowSelectorImplementations: [closestToMeanImplementation],
             }),
           ],
         },

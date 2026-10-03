@@ -9,32 +9,31 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 
 <ComponentPreview files="data-runtime-flow" hideCode size="lg" />
 
-因此，JSON-safe 契约决定允许保存什么配置，Definition 与 registry 决定这些配置如何执行。处理后的 rows 可按需携带 Symbol provenance；lineage 则作为独立运行记录返回或发送给事件 sink。
+因此，JSON-safe 契约决定允许保存什么配置，Definition 声明这些配置的语义，Implementation 与执行器决定如何计算。处理后的 rows 可按需携带 Symbol provenance；lineage 则作为独立运行记录返回或发送给事件 sink。
 
-## 运行阶段
+## 语义与计算分离
 
-| 阶段       | 主要公开入口                                                                                                          | 产物                                            |
-| ---------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| 定义扩展   | `defineFieldFormat`、`defineTransform`、`defineStatisticsReducer`、`defineRowSelector`                                | 带注册键或 schema 与纯函数实现的 Definition     |
-| 解析注册表 | `resolveFormatRegistry`、`resolveTransformRegistry`、`resolveStatisticsReducerRegistry`、`resolveRowSelectorRegistry` | 内置与自定义 Definition 合并后的 `Map`          |
-| 字段准备   | `resolveFieldTypes`、`applyFieldResolver`、`collectFormatFields`、`normalizeRows`                                     | 字段类型、parser 与 canonical rows              |
-| 执行变换   | `collectTransformFields`、`applyTransforms`、`applyTransformsWithLineage`                                             | 变换后的 rows，可选 `DataLineageRun`            |
-| 来源追踪   | `tagSourceIndex`、`withGroupProvenance`、`createDataLineageRecorder`                                                  | Symbol provenance 与可消费的结构化 lineage 事件 |
+| 契约       | 语义 Definition                             | 计算 Implementation |
+| ---------- | ------------------------------------------- | ------------------- |
+| transform  | schema、输入字段、outputModel、dependencies | apply               |
+| reducer    | schema、输入字段、outputs                   | reduce              |
+| selector   | schema、输入字段                            | select              |
+| regression | schema                                      | fit                 |
 
-宿主负责收集自己会读取的字段、选择数据集，并把自定义 Definition 传给 resolver。Data 负责按 schema 校验 operation、阻止注册键冲突、按顺序执行纯函数，并把结果交回宿主。
+`defineTransform` 等语义工厂与对应 `define*Implementation` 分别注册。实现必须引用注册表中的同一个 Definition，不能用相同 kind 替代身份。内置语义与实现也遵守此契约。FieldFormatDefinition 继续拥有源值 parser，不参与此次计算分离。
 
-## Definition 与 registry
+语义 registry 合并内置与自定义 Definition；重复键或覆盖内置键失败。开放 operation 的 JSON schema 保存参数，dispatch 后由精确 Definition schema 一次解析。`resolveDataTransforms(declarations, inputModel, options?)` 按顺序解析字段与完整输出模型，不读取行或执行计算。
 
-| 契约                          | 注册键                   | 实现职责                                  |
-| ----------------------------- | ------------------------ | ----------------------------------------- |
-| `FieldFormatDefinition`       | `name`                   | 声明蕴含类型并把原始值解析为 canonical 值 |
-| `TransformDefinition`         | schema 的 `kind` literal | 声明输入/输出字段并把 rows 变换为 rows    |
-| `StatisticsReducerDefinition` | schema 的 `kind` literal | 对一组 rows 计算输出字段片段              |
-| `RowSelectorDefinition`       | schema 的 `kind` literal | 从一组 rows 选择原始行及可选排名          |
+## 异步执行
 
-四类 resolver 都先装入内置 Definition，再合并调用方数组；自定义键不能覆盖内置键，也不能重复。format 直接校验 `name` 并使用其 parser；transform、reducer 与 selector 的公开 Source schema 以 JSON catchall 校验开放配置，registry dispatch 后只运行命中的精确 Definition schema。不会在精确 schema 前后再套通用 JSON object 校验。未知 transform、reducer 或 selector `kind` 会 fail-loud 并提示对应注入入口。
+`createDataTransformExecutor(options?)` 保存本地实现、具名 externalProviders、默认 dataExecution 和可选 materializeSource。执行配置优先级为执行器 < 宿主根 < 单条 declaration，mode 与 external 名称分别继承。
 
-内置集合可通过 `BUILTIN_FORMATS`、`BUILTIN_TRANSFORMS`、`BUILTIN_STATISTICS_REDUCERS` 与 `BUILTIN_ROW_SELECTORS` 检查。完整自定义流程见[数据模型扩展](/viz/data/model/extensions)和[数据变换扩展](/viz/data/transform/extensions)。
+1. `executor.prepare(descriptor, resolution, options?)` 预检整个计划；descriptor 只提供模型与必要源句柄，不伪造 rows
+2. 返回 ready 后，用 `bind(actualInput)` 绑定真实 source 或 result
+3. 调用一次 `execute()`，取得 `DataTransformResult` 或 Promise；任何成功、失败或取消后均不能重试该实例
+4. `ingestDataTransformResult` 核对 rows、完整 model 与语义计划；空行仍保留字段和分类顺序，额外 payload 字段不会自动进入模型
+
+`executeDataTransforms` 是上述过程的单次调用入口。provider 的 resolve 与阶段 execute 都允许 Promise。hybrid 仅对预检明确 unsupported 的阶段选择本地；查询异常、执行失败、非法输出或取消均不补算。完整模式和可运行例子见[扩展机制](/viz/data/transform/extensions)。
 
 ## 字段准备
 
@@ -51,7 +50,7 @@ Data schema 只保存配置；外部 rows、字段 parser、Definition、registr
 
 ## Transform 与 lineage
 
-`applyTransforms(rows, operations?, registry?, context?)` 按声明顺序执行 operation，只返回 rows。`applyTransformsWithLineage(rows, operations?, options?)` 会先给输入行添加不可序列化到 JSON 的 Symbol 来源标记，再返回：
+`applyTransforms(rows, operations?, options?)` 按声明顺序执行 operation，只返回 rows；options 提供 registry、独立同步实现与 context。Promise 或外接模式使用执行器。`applyTransformsWithLineage(rows, operations?, options?)` 会先给输入行添加不可序列化到 JSON 的 Symbol 来源标记，再返回：
 
 | 字段      | 类型                 | 说明                                                       |
 | --------- | -------------------- | ---------------------------------------------------------- |

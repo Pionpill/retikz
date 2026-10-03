@@ -244,7 +244,7 @@ describe('scope id/meta — boundary', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      transform: [{ kind: 'stack', y: 'v' }],
+      transform: [{ operation: { kind: 'stack', y: 'v' } }],
       scales: [
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },
@@ -350,7 +350,7 @@ describe('scope id/meta — boundary', () => {
       type: 'plot',
       id: 'sales',
       data: { reference: 'sales' },
-      transform: [{ kind: 'sort', field: 'month' }],
+      transform: [{ operation: { kind: 'sort', field: 'month' } }],
       scales: [
         { type: 'band', name: 'x' },
         { type: 'linear', name: 'y' },
@@ -442,7 +442,7 @@ describe('scope id/meta — interaction', () => {
       type: 'plot',
       id: 'pie',
       data: { reference: 'd' },
-      transform: [{ kind: 'stack', y: 'v' }],
+      transform: [{ operation: { kind: 'stack', y: 'v' } }],
       scales: [
         { type: 'linear', name: 'a' },
         { type: 'linear', name: 'r' },

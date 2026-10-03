@@ -15,7 +15,7 @@ describe('Plot member extraction characterization', () => {
     const resolvePointLabel = (row: Record<string, unknown>): string => String(row.category);
     const spec = buildPlotIR(
       <>
-        <PlotTransform kind="sort" field="y" order="descending" />
+        <PlotTransform operation={{ kind: 'sort', field: 'y', order: 'descending' }} />
         <PointMark id="points" x="x" y="y" fill="category" resolveLabel={resolvePointLabel} />
         <PathMark id="trend" x="x" y="y" order="x" series="category" />
         <IntervalMark id="bars" x="category" y="value" />
@@ -25,7 +25,7 @@ describe('Plot member extraction characterization', () => {
       </>,
       'rows',
       {
-        transforms: [{ kind: 'sort', field: 'category', order: 'ascending' }],
+        transforms: [{ operation: { kind: 'sort', field: 'category', order: 'ascending' } }],
         markTransformShortcuts: [
           {
             markType: 'point',
@@ -40,9 +40,9 @@ describe('Plot member extraction characterization', () => {
       type: 'plot',
       data: { reference: 'rows' },
       transform: [
-        { kind: 'sort', field: 'category', order: 'ascending' },
-        { kind: 'sort', field: 'y', order: 'descending' },
-        { kind: 'sort', field: 'x', order: 'ascending' },
+        { operation: { kind: 'sort', field: 'category', order: 'ascending' } },
+        { operation: { kind: 'sort', field: 'y', order: 'descending' } },
+        { operation: { kind: 'sort', field: 'x', order: 'ascending' } },
       ],
       scales: [
         { type: 'band', name: '__x' },

@@ -1,11 +1,13 @@
-import type { IRDataTransform } from '@retikz/data';
+import type { IRDataTransform, IRDataTransformDeclaration } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';
 import { IntervalMark, PathMark, PointMark, ReferenceMark } from '../../../src/components/marks';
 
 describe('buildPlotIR mark-local transform', () => {
-  const markTransform: Array<IRDataTransform> = [{ kind: 'sort', field: 'score', order: 'descending' }];
+  const markTransform: Array<IRDataTransformDeclaration> = [
+    { operation: { kind: 'sort', field: 'score', order: 'descending' } },
+  ];
 
   it('point_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(<PointMark x="x" y="score" transform={markTransform} />, '__plot');
@@ -38,7 +40,7 @@ describe('buildPlotIR mark-local transform', () => {
       ],
     });
 
-    expect(spec.transform).toEqual([shortcutTransform]);
+    expect(spec.transform).toEqual([{ operation: shortcutTransform }]);
     expect(spec.marks[0]).toMatchObject({ type: 'point', transform: markTransform });
   });
 });

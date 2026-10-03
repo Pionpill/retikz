@@ -4,6 +4,9 @@ import { literal, number, object, strictObject } from 'zod';
 
 import type { ExternalRow } from '../../src';
 import {
+  defineTransformImplementation,
+  defineStatisticsReducerImplementation,
+  resolveStatisticsReducerImplementationRegistry,
   applyTransforms,
   DataTransformBindingClass,
   DataTransformFieldEffect,
@@ -39,7 +42,7 @@ describe('data transform runtime', () => {
         bindingClass: DataTransformBindingClass.Field,
         fieldEffect: DataTransformFieldEffect.Preserve,
       },
-      apply: rows => rows,
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
 
     expect(resolveTransformRegistry([custom]).get('custom-derive')?.schedule).toEqual(custom.schedule);
@@ -66,15 +69,20 @@ describe('data transform runtime', () => {
         as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
-      outputFields: operation => [operation.as],
+      outputModel: operation => ({
+        kind: 'preserve',
+        outputs: [{ field: operation.as }],
+      }),
+    });
+    const doubleRevenueImplementation = defineTransformImplementation({
+      definition: doubleRevenue,
       apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: Number(row[operation.field]) * 2 })),
     });
 
-    const out = applyTransforms(
-      [{ revenue: 3 }],
-      [{ kind: 'double-revenue', field: 'revenue', as: 'doubleRevenue' }],
-      resolveTransformRegistry([doubleRevenue]),
-    );
+    const out = applyTransforms([{ revenue: 3 }], [{ kind: 'double-revenue', field: 'revenue', as: 'doubleRevenue' }], {
+      registry: resolveTransformRegistry([doubleRevenue]),
+      transformImplementations: [doubleRevenueImplementation],
+    });
 
     expect(out).toEqual([{ revenue: 3, doubleRevenue: 6 }]);
   });
@@ -82,7 +90,7 @@ describe('data transform runtime', () => {
   it('fails loud for unknown and duplicate transform registrations', () => {
     const custom = defineTransform({
       schema: object({ kind: literal('custom'), value: number() }),
-      apply: rows => rows,
+      outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
 
     expect(() => applyTransforms([{ value: 1 }], [{ kind: 'missing', value: 1 }])).toThrow(/not registered/);
@@ -110,7 +118,10 @@ describe('data transform runtime', () => {
         as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
-      outputFields: operation => [operation.as],
+      outputs: operation => [{ field: operation.as }],
+    });
+    const rangeImplementation = defineStatisticsReducerImplementation({
+      definition: range,
       reduce: (rows, operation) => {
         const values = rows.map(row => Number(row[operation.field]));
         return { [operation.as]: Math.max(...values) - Math.min(...values) };
@@ -126,8 +137,16 @@ describe('data transform runtime', () => {
           metrics: [{ kind: 'range', field: 'revenue', as: 'revenueRange' }],
         },
       ],
-      undefined,
-      { ...DEFAULT_TRANSFORM_CONTEXT, statisticsReducerRegistry: resolveStatisticsReducerRegistry([range]) },
+      {
+        context: {
+          ...DEFAULT_TRANSFORM_CONTEXT,
+          statisticsReducerRegistry: resolveStatisticsReducerRegistry([range]),
+          statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+            resolveStatisticsReducerRegistry([range]),
+            [rangeImplementation],
+          ),
+        },
+      },
     );
 
     expect(out).toEqual([
@@ -142,7 +161,10 @@ describe('data transform runtime', () => {
     let secondStatCalls = 0;
     const groupWriter = defineStatisticsReducer({
       schema: strictObject({ kind: literal('group-writer') }),
-      outputFields: () => ['group'],
+      outputs: () => ['group'].map(field => ({ field })),
+    });
+    const groupWriterImplementation = defineStatisticsReducerImplementation({
+      definition: groupWriter,
       reduce: () => {
         groupWriterCalls += 1;
         return { group: 2 };
@@ -150,7 +172,10 @@ describe('data transform runtime', () => {
     });
     const firstStat = defineStatisticsReducer({
       schema: strictObject({ kind: literal('first-stat') }),
-      outputFields: () => ['stat'],
+      outputs: () => ['stat'].map(field => ({ field })),
+    });
+    const firstStatImplementation = defineStatisticsReducerImplementation({
+      definition: firstStat,
       reduce: () => {
         firstStatCalls += 1;
         return { stat: 1 };
@@ -158,7 +183,10 @@ describe('data transform runtime', () => {
     });
     const secondStat = defineStatisticsReducer({
       schema: strictObject({ kind: literal('second-stat') }),
-      outputFields: () => ['stat'],
+      outputs: () => ['stat'].map(field => ({ field })),
+    });
+    const secondStatImplementation = defineStatisticsReducerImplementation({
+      definition: secondStat,
       reduce: () => {
         secondStatCalls += 1;
         return { stat: 2 };
@@ -169,10 +197,15 @@ describe('data transform runtime', () => {
       applyTransforms(
         [{ group: 'A', value: 1 }],
         [{ kind: 'summarize', groupBy: ['group'], metrics: [{ kind: 'group-writer' }] }],
-        undefined,
         {
-          ...DEFAULT_TRANSFORM_CONTEXT,
-          statisticsReducerRegistry: resolveStatisticsReducerRegistry([groupWriter]),
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            statisticsReducerRegistry: resolveStatisticsReducerRegistry([groupWriter]),
+            statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+              resolveStatisticsReducerRegistry([groupWriter]),
+              [groupWriterImplementation],
+            ),
+          },
         },
       ),
     ).toThrow('data: reducer output field "group" must not collide with a groupBy field');
@@ -182,10 +215,15 @@ describe('data transform runtime', () => {
       applyTransforms(
         [{ value: 1 }],
         [{ kind: 'summarize', metrics: [{ kind: 'first-stat' }, { kind: 'second-stat' }] }],
-        undefined,
         {
-          ...DEFAULT_TRANSFORM_CONTEXT,
-          statisticsReducerRegistry: resolveStatisticsReducerRegistry([firstStat, secondStat]),
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            statisticsReducerRegistry: resolveStatisticsReducerRegistry([firstStat, secondStat]),
+            statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+              resolveStatisticsReducerRegistry([firstStat, secondStat]),
+              [firstStatImplementation, secondStatImplementation],
+            ),
+          },
         },
       ),
     ).toThrow('data: duplicate reducer output field "stat"');
@@ -197,7 +235,10 @@ describe('data transform runtime', () => {
     let statWriterCalls = 0;
     const statWriter = defineStatisticsReducer({
       schema: strictObject({ kind: literal('stat-writer') }),
-      outputFields: () => ['stat'],
+      outputs: () => ['stat'].map(field => ({ field })),
+    });
+    const statWriterImplementation = defineStatisticsReducerImplementation({
+      definition: statWriter,
       reduce: () => {
         statWriterCalls += 1;
         return { stat: 1 };
@@ -214,10 +255,15 @@ describe('data transform runtime', () => {
             selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'stat' }],
           },
         ],
-        undefined,
         {
-          ...DEFAULT_TRANSFORM_CONTEXT,
-          statisticsReducerRegistry: resolveStatisticsReducerRegistry([statWriter]),
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            statisticsReducerRegistry: resolveStatisticsReducerRegistry([statWriter]),
+            statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+              resolveStatisticsReducerRegistry([statWriter]),
+              [statWriterImplementation],
+            ),
+          },
         },
       ),
     ).toThrow('data: reducer output field "stat" must not collide with an annotate selector output field');
@@ -227,7 +273,10 @@ describe('data transform runtime', () => {
   it('allows custom annotate reducer and selector outputs with distinct fields', () => {
     const meanWriter = defineStatisticsReducer({
       schema: strictObject({ kind: literal('mean-writer') }),
-      outputFields: () => ['mean'],
+      outputs: () => ['mean'].map(field => ({ field })),
+    });
+    const meanWriterImplementation = defineStatisticsReducerImplementation({
+      definition: meanWriter,
       reduce: rows => ({ mean: rows.reduce((sum, row) => sum + Number(row.value), 0) / rows.length }),
     });
 
@@ -241,10 +290,15 @@ describe('data transform runtime', () => {
             selectors: [{ selector: { kind: 'max', by: 'value' }, as: 'peak' }],
           },
         ],
-        undefined,
         {
-          ...DEFAULT_TRANSFORM_CONTEXT,
-          statisticsReducerRegistry: resolveStatisticsReducerRegistry([meanWriter]),
+          context: {
+            ...DEFAULT_TRANSFORM_CONTEXT,
+            statisticsReducerRegistry: resolveStatisticsReducerRegistry([meanWriter]),
+            statisticsReducerImplementationRegistry: resolveStatisticsReducerImplementationRegistry(
+              resolveStatisticsReducerRegistry([meanWriter]),
+              [meanWriterImplementation],
+            ),
+          },
         },
       ),
     ).toEqual([

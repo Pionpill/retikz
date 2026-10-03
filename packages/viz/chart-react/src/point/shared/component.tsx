@@ -1,7 +1,7 @@
 import type { IRChartPlotExtension, IRChartSource } from '@retikz/chart';
 import type { InputChartCoordinate } from '@retikz/chart-vanilla';
 import type { IRScene } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
+import type { ExternalRow, DataInputBindings } from '@retikz/data';
 import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
@@ -11,6 +11,7 @@ import { createElement, useMemo } from 'react';
 import { RetikzChartReactError } from '../../error';
 import type {
   ChartDataProps,
+  ChartDataRuntimeProps,
   ChartDeclarationPath,
   ChartExtensionProps,
   ChartLayoutProps,
@@ -29,14 +30,13 @@ import {
 import { lowerOptionsWithAmbientThemeOf, lowerOptionsWithPlotRuntimeOf } from './helpers';
 
 /** Point family concrete Chart 共用的 React 根属性 */
-export type TypedChartCommonProps<TSource extends IRChartSource> = ChartPanelProps &
+export type TypedChartCommonProps<TSource extends IRChartSource, TNative = never> = ChartPanelProps &
   ChartThemeDefinitionsProps &
-  Pick<TSource, 'id' | 'background' | 'chartDefaults'> &
+  Pick<TSource, 'id' | 'background' | 'chartDefaults' | 'dataExecution'> &
+  ChartDataRuntimeProps<TNative> &
   Readonly<{
     /** Core host Theme 环境 */
     theme?: IRScene['theme'];
-    /** 运行时数据行；不写入 Chart Source */
-    rows?: Array<ExternalRow>;
     /** Chart Source 数据配置 */
     data?: TSource['data'];
     /** Chart Source 外层尺寸 */
@@ -54,7 +54,8 @@ export type TypedChartCommonProps<TSource extends IRChartSource> = ChartPanelPro
   }>;
 
 type PointFactoryInput = Readonly<{
-  data: Array<ExternalRow>;
+  data?: Array<ExternalRow>;
+  dataBindings?: DataInputBindings<unknown>;
   coordinate?: InputChartCoordinate;
   encodings: unknown;
   properties?: unknown;
@@ -172,7 +173,7 @@ const presentationOf = <TSource extends IRChartSource>(
 
 /** 从 typed Point declarations 组装 Vanilla 精确输入 */
 export const createTypedChartInput = <
-  TProps extends TypedChartCommonProps<TSource>,
+  TProps extends TypedChartCommonProps<TSource, unknown>,
   TSource extends IRChartSource,
   TInput extends PointFactoryInput,
 >(
@@ -198,7 +199,8 @@ export const createTypedChartInput = <
     lowerOptions,
   } = props;
   const rootRecipe = recipe as TypedChartRootRecipe<TInput> | undefined;
-  const hasRootData = Object.hasOwn(props, 'rows') || Object.hasOwn(props, 'data');
+  const hasRootData =
+    Object.hasOwn(props, 'rows') || Object.hasOwn(props, 'data') || Object.hasOwn(props, 'dataBindings');
   const hasRootLayout = Object.hasOwn(props, 'layout');
   const hasRootCoordinate = Object.hasOwn(props, 'coordinate');
   const hasRootPlotExtension = Object.hasOwn(props, 'plotExtension');
@@ -233,14 +235,14 @@ export const createTypedChartInput = <
     throw new RetikzChartReactError('chart react: ChartData must appear exactly once');
   }
   const rows = hasRootData ? rootRows : declarations.data?.props.data;
-  if (rows === undefined) {
+  if (rows === undefined && props.dataBindings === undefined) {
     throw new RetikzChartReactError(
       'chart react: runtime rows are required from the concrete Chart root or <ChartData>',
     );
   }
   const data = hasRootData
     ? {
-        data: rows,
+        data: rows ?? [],
         ...(rootData?.reference === undefined ? {} : { reference: rootData.reference }),
         ...(rootData?.model === undefined ? {} : { model: rootData.model }),
       }
@@ -279,7 +281,10 @@ export const createTypedChartInput = <
   const effectiveLayout = hasRootLayout ? rootLayout : declarations.layout?.props.layout;
   const effectiveCoordinate = hasRootCoordinate ? rootCoordinate : declarations.coordinate?.props.coordinate;
   const input = {
-    data: data.data,
+    ...(props.dataBindings === undefined ? { data: data.data } : { dataBindings: props.dataBindings }),
+    ...(props.dataExecution === undefined ? {} : { dataExecution: props.dataExecution }),
+    ...(props.dataTransformExecutor === undefined ? {} : { dataTransformExecutor: props.dataTransformExecutor }),
+    ...(props.signal === undefined ? {} : { signal: props.signal }),
     ...(data.reference === undefined ? {} : { dataRef: data.reference }),
     ...(data.model === undefined ? {} : { dataModel: data.model }),
     ...(effectiveLayout === undefined ? {} : { layout: effectiveLayout }),
@@ -306,7 +311,7 @@ export const createTypedChartInput = <
 
 /** 创建共享 InputEmbed 生命周期接线的 concrete Chart 组件 */
 export const createTypedChartComponent = <
-  TProps extends TypedChartCommonProps<TSource>,
+  TProps extends TypedChartCommonProps<TSource, unknown>,
   TSource extends IRChartSource,
   TInput,
 >(
@@ -328,10 +333,18 @@ export const createTypedChartComponent = <
       };
     }, [ambientPlotThemeStyles, ambientThemeDefinitions, themeDefinitions, lowerOptions, props]);
     const standalone = prepareStandaloneChartDeclarations(children, layout);
-    const embeddedProps = { ...effectiveProps, children: standalone.children };
-    return createElement(Layout, standalone.host, createElement(Component, embeddedProps));
+    const embeddedProps = { ...effectiveProps, children: standalone.children } as TProps;
+    return createElement(
+      Layout,
+      { ...standalone.host, runtime: { preparation: 'async', signal: props.signal } },
+      createElement(Component, embeddedProps),
+    );
   };
-  const chart = Component as InputEmbeddableChartComponent<TProps, TInput, SynchronousInputEmbedAdapter<TInput>>;
+  const chart = Component as unknown as InputEmbeddableChartComponent<
+    TProps,
+    TInput,
+    SynchronousInputEmbedAdapter<TInput>
+  >;
   chart.displayName = displayName;
   chart.isTier2Embeddable = true;
   chart.inputEmbedAdapter = adapter;

@@ -15,7 +15,7 @@ import { Plot, PlotTransform } from '@retikz/plot-react';
 
 ```tsx
 <Plot data={rows}>
-  <PlotTransform kind="sort" field="date" order="ascending" />
+  <PlotTransform operation={{ kind: 'sort', field: 'date', order: 'ascending' }} />
   {/* 图元 */}
 </Plot>
 ```
@@ -55,7 +55,7 @@ import { Plot, PlotTransform } from '@retikz/plot-react';
   description="需要排查组件为什么不渲染、多个入口先后顺序或自动变换去重时再回来读。"
 />
 
-`PlotTransform` 的函数体直接返回 `null`。`Plot` 在构建绘图规范（spec）时同步遍历子元素（children），识别 `PlotTransform` 元素并把它的属性（props）原样收集为 `IRDataTransform`；因此它是配置载体，不是可见图层，也没有子元素。
+`PlotTransform` 的函数体直接返回 `null`。`Plot` 在构建绘图规范（spec）时同步遍历子元素（children），识别 `PlotTransform` 元素并把它的属性（props）原样收集为 `IRDataTransformDeclaration`；因此它是配置载体，不是可见图层，也没有子元素。
 
 共享管线按下面的顺序装配：
 
@@ -86,26 +86,16 @@ import { Plot, PlotTransform } from '@retikz/plot-react';
 
 #### PlotTransform / PlotTransformProps
 
-`PlotTransformProps` 等于 `IRDataTransform`，是按 `kind` 判别的联合类型。选择 `kind` 后，TypeScript 会要求对应操作的其余配置。
+`PlotTransformProps` 复用 `IRDataTransformDeclaration`。必填 `operation` 按 `kind` 判别；可选 `dataExecution` 只改变这一阶段的计算入口。
 
-| 属性   | 类型                      | 默认值 | 说明                                                                       |
-| ------ | ------------------------- | ------ | -------------------------------------------------------------------------- |
-| `kind` | `IRDataTransform['kind']` | —      | 操作判别字段；其余属性由所选联合分支决定，参数见对应 Data 或 Plot 变换页面 |
+| 属性            | 类型              | 说明                                                                               |
+| --------------- | ----------------- | ---------------------------------------------------------------------------------- |
+| `operation`     | `IRDataTransform` | 运算参数，完整分支见 [Data 契约](/viz/data/reference/contract#datatransformschema) |
+| `dataExecution` | `IRDataExecution` | 稀疏 `mode` 与 `external` 名称，分别继承                                           |
 
-`PlotTransformProps['kind']` 的取值范围如下：
+组件、`dataTransforms` 和图元局部 `transform` 都使用 `{ operation, dataExecution? }`，不直接传裸 operation。十二种内置操作与自定义操作共用此声明。
 
-| 能力归属 | kind                                                                                    | 文档                                       |
-| -------- | --------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Data     | `sort`、`summarize`、`select`、`annotate`                                               | [变换操作](/viz/data/transform/operations) |
-| Data     | `stack`、`bin`、`normalize`、`derive-interval`、`relate`、`jitter`、`density`、`smooth` | [绘图语法的变换](/viz/plot/transform)      |
-| 自定义   | 已注册且不与内置名冲突的字符串                                                          | [扩展机制](/viz/data/transform/extensions) |
-
-`PlotTransform` 与 `PlotTransformProps` 从包入口导出：
-
-| 导出                 | 类型                     | 默认值 | 说明                          |
-| -------------------- | ------------------------ | ------ | ----------------------------- |
-| `PlotTransform`      | `FC<PlotTransformProps>` | —      | 声明一个变换操作，返回 `null` |
-| `PlotTransformProps` | `IRDataTransform`        | —      | 组件属性引用 Data 变换 IR     |
+执行器默认配置 < Plot 根 `dataExecution` < 单条声明 `dataExecution`，从左到右优先级升高。`builtin` 为最终缺省模式；`external` 要求外接入口支持全部阶段；`hybrid` 只在外接预检明确不支持时使用本地实现。外接注册与 Promise 宿主接线见[扩展机制](/viz/data/transform/extensions)。
 
 ## 相关
 

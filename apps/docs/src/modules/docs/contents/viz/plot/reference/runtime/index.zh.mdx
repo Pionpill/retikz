@@ -7,6 +7,16 @@ Plot 运行时把“怎样声明图”和“怎样执行图”分开：React、V
 
 > 这里解释整体运行契约，不重复 schema 字段。JSON 形状请查本组的契约页；完整 Kernel 编译边界见[设计原则](/kernel/components/design/principles)。
 
+## 异步数据准备与 SSR
+
+Plot 根和图元局部 `transform` 保存 `{ operation, dataExecution? }` 声明。根 `dataExecution` 设置本图策略，单条声明优先级最高；执行器默认配置优先级更低，缺省为 builtin。详见 [Data 执行契约](/viz/data/transform/extensions)。
+
+独立 React Plot 客户端自动异步准备；嵌入时在外层 Layout 设置 `runtime={{ preparation: 'async' }}`。共享宿主先预检完整作者树及 Plot 根、图元和 facet 模板，再执行并提交。失败保留旧帧，取消或过期结果不发布；布局 probes 消费已准备结果，不再次计算。
+
+`dataBindings` 与原始 `data` 互斥；按 reference 绑定 rows、完整 model 的 result 或原生 source。原生源要求显式完整 model；result 与 source 不接收源 parser/format/field map。执行器和 signal 留在运行时。
+
+异步 SSR 从 `@retikz/plot-vanilla` 调用 `renderPlotAsync(spec, dataBindings, options?)`，options 接收 dataTransformExecutor、signal 和原有 lowering / lineage 配置。默认 Promise 返回 SVG 字符串，开启 lineage 时返回同次执行的 `{ svg, lineage }`。同步 renderPlot、同步 lowering 和 React SSR 只支持本地同步计算。
+
 ## 宿主与包边界
 
 <ComponentPreview files="plot-runtime-architecture" size="xs" hideCode />

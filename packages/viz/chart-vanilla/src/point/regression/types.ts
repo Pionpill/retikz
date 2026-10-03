@@ -6,5 +6,5 @@ import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 export type InputRegressionChart = InputTypedChart<IRRegressionChart>;
 
 /** RegressionChart InputEmbed 的完整编写输入 */
-export type RegressionChartInputEmbedProps = TypedChartCommonInput<IRRegressionChart> &
+export type RegressionChartInputEmbedProps<TNative = never> = TypedChartCommonInput<IRRegressionChart, TNative> &
   Pick<InputRegressionChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

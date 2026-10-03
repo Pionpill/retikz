@@ -8,7 +8,7 @@ describe('TransformSchema external operations', () => {
       namespace: 'plot',
       type: 'plot',
       data: { reference: 'd' },
-      transform: [{ kind: 'regression', x: 'year', y: 'value' }],
+      transform: [{ operation: { kind: 'regression', x: 'year', y: 'value' } }],
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       scales: [
         { type: 'linear', name: 'x' },

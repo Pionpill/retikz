@@ -22,7 +22,7 @@ export const transformAnnotateOperationOf = (values: TransformAnnotateValues): I
 /** 渲染保留明细点且广播受控统计量的视图 */
 export const renderTransformAnnotatePreview = (values: TransformAnnotateValues) => (
   <Plot data={storeRevenue} width={460} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
-    <PlotTransform {...transformAnnotateOperationOf(values)} />
+    <PlotTransform operation={{ ...transformAnnotateOperationOf(values) }} />
     <PointMark x="quarter" y="revenue" color="store" size={5} />
     <PathMark x="quarter" y="benchmark" series="store" strokeWidth={2.2} />
     <PlotAxis dimension="x" />

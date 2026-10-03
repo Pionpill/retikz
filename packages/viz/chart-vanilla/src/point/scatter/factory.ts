@@ -1,15 +1,15 @@
 import { createScatterChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed } from '@retikz/vanilla';
 
-import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
+import { createChartInputEmbedAdapter } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeScatterChart } from './normalize';
 import type { ScatterChartInputEmbedProps } from './types';
 
-/** 在场景处理时规范化 Scatter 输入并组装 provider 依赖 */
-export const ScatterChartInputEmbedAdapter: SynchronousInputEmbedAdapter<ScatterChartInputEmbedProps> = {
-  kind: 'chart.scatter',
-  lower: input => {
+/** 在场景处理时规范化 ScatterChart 输入并复用统一数据准备 */
+export const ScatterChartInputEmbedAdapter = createChartInputEmbedAdapter(
+  'chart.scatter',
+  (input: ScatterChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
     const source = normalizeScatterChart({
       ...parts.root,
@@ -22,20 +22,18 @@ export const ScatterChartInputEmbedAdapter: SynchronousInputEmbedAdapter<Scatter
       ...(input.guides === undefined ? {} : { guides: input.guides }),
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
-    const runtime = buildPointChartRuntime(
+    return buildPointChartRuntime(
       source,
       parts,
       createScatterChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
     );
-    return {
-      node: wrapChartPanel(runtime.source, runtime.panel),
-      providerDependencies: buildChartProviderContribution(runtime),
-    };
   },
-};
+);
 
 /** 创建可直接组合到 Vanilla Scene 的 Scatter 节点 */
-export const scatterChart = (input: ScatterChartInputEmbedProps): InputEmbed<ScatterChartInputEmbedProps> => ({
+export const scatterChart = <TNative = never>(
+  input: ScatterChartInputEmbedProps<TNative>,
+): InputEmbed<ScatterChartInputEmbedProps<TNative>> => ({
   type: 'embed',
   kind: ScatterChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),

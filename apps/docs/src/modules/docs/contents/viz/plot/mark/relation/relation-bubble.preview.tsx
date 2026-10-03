@@ -34,7 +34,7 @@ export const RelationBubblePreview = (values: RelationBubblePreviewValues) => {
         strokeWidth={0.8}
       />
       <RelationMark
-        transform={[relationBubbleOperation]}
+        transform={[{ operation: relationBubbleOperation }]}
         source={{ anchorId: { prefix: 'bubble', field: 'sourceId' }, boundary: true }}
         target={{ anchorId: { prefix: 'bubble', field: 'targetId' }, boundary: true }}
         style={{

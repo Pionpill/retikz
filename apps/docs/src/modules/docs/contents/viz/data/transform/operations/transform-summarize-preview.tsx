@@ -21,7 +21,7 @@ export const transformSummarizeOperationOf = (values: TransformSummarizeValues):
 /** 渲染受控统计规约后的分组柱形 */
 export const renderTransformSummarizePreview = (values: TransformSummarizeValues) => (
   <Plot data={orders} width={400} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
-    <PlotTransform {...transformSummarizeOperationOf(values)} />
+    <PlotTransform operation={{ ...transformSummarizeOperationOf(values) }} />
     <IntervalMark x="region" y="metric" color="region" />
     <PlotScale dimension="y" type="linear" domainPadding={0} />
     <PlotAxis dimension="x" />

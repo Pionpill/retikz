@@ -6,5 +6,5 @@ import type { InputTypedChart, TypedChartCommonInput } from '../shared';
 export type InputBubbleChart = InputTypedChart<IRBubbleChart>;
 
 /** BubbleChart InputEmbed 的完整编写输入 */
-export type BubbleChartInputEmbedProps = TypedChartCommonInput<IRBubbleChart> &
+export type BubbleChartInputEmbedProps<TNative = never> = TypedChartCommonInput<IRBubbleChart, TNative> &
   Pick<InputBubbleChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

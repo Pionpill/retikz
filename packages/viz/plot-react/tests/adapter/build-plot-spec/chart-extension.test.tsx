@@ -83,7 +83,7 @@ describe('Plot chart-extension declaration normalization', () => {
   it('emits only explicit JSON-safe members and preserves their authored order', () => {
     const result = normalizeExtension(
       [
-        <PlotTransform key="sort" kind="sort" field="amount" order="descending" />,
+        <PlotTransform key="sort" operation={{ kind: 'sort', field: 'amount', order: 'descending' }} />,
         <PointMark key="point" id="extension.point" x="amount" y="margin" />,
         <PlotScale key="scale" dimension="x" type="log" base={2} />,
         <PlotAxis key="axis" dimension="x" grid />,
@@ -99,7 +99,7 @@ describe('Plot chart-extension declaration normalization', () => {
 
     expect(result).toEqual({
       fragment: {
-        transform: [{ kind: 'sort', field: 'amount', order: 'descending' }],
+        transform: [{ operation: { kind: 'sort', field: 'amount', order: 'descending' } }],
         scales: [{ type: 'log', name: '__x', base: 2 }],
         coordinate: { type: 'cartesian2D', x: '__x', y: 'recipe.y' },
         marks: [

@@ -33,6 +33,22 @@ Data 契约只保存 JSON-safe 配置。真实 rows、parser、Definition、regi
   }}
 />
 
+## DataExecutionSchema
+
+<ZodSchema
+  name="DataExecutionSchema"
+  description="继承后才应用 builtin 缺省值的稀疏执行配置。"
+  descriptions={{ mode: 'builtin、external 或 hybrid 阶段选择策略。', external: '引用运行时注册的具名外接 provider。' }}
+/>
+
+## DataTransformDeclarationSchema
+
+<ZodSchema
+  name="DataTransformDeclarationSchema"
+  description="将数据操作与执行策略分开保存。"
+  descriptions={{ operation: 'JSON-safe 数据操作参数。', dataExecution: '本条声明覆盖的稀疏执行配置。' }}
+/>
+
 ## DataTransformSchema
 
 <ZodSchema name="DataTransformSchema" description="内置或运行时注册的通用 Data transform operation 联合。" />

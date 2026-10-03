@@ -15,7 +15,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       size="orders"
       color="region"
       label="rep"
-      transform={[pointTransformOperationOf(values)]}
+      transform={[{ operation: pointTransformOperationOf(values) }]}
     />
     <PlotAxis dimension="x" />
     <PlotAxis dimension="y" grid />

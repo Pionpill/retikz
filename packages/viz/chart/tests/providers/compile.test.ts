@@ -5,7 +5,7 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
-import { defineRegression } from '@retikz/data';
+import { defineTransformImplementation, defineRegressionImplementation, defineRegression } from '@retikz/data';
 import type { ExternalDatasets } from '@retikz/data';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
 import { PathClipProvider } from '@retikz/extension';
@@ -865,7 +865,6 @@ describe('Chart providers through Core compile', () => {
         as: NonBlankStringSchema,
       }),
       inputFields: operation => [operation.field],
-      outputFields: operation => [operation.as],
       outputModel: operation => ({
         kind: 'preserve',
         outputs: [{ field: operation.as, type: { from: operation.field } }],
@@ -875,9 +874,15 @@ describe('Chart providers through Core compile', () => {
         bindingClass: DataTransformBindingClass.Field,
         fieldEffect: DataTransformFieldEffect.Preserve,
       },
+    });
+    const copyFieldImplementation = defineTransformImplementation({
+      definition: copyField,
       apply: (inputRows, operation) => inputRows.map(row => ({ ...row, [operation.as]: row[operation.field] })),
     });
-    const lowerOptions: LowerPlotsOptions = { transformDefinitions: [copyField] };
+    const lowerOptions: LowerPlotsOptions = {
+      transformDefinitions: [copyField],
+      transformImplementations: [copyFieldImplementation],
+    };
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
       type: 'point',
@@ -887,7 +892,7 @@ describe('Chart providers through Core compile', () => {
         chartType: 'scatter',
         encodings: {
           x: {
-            transform: { kind: 'copy-chart-field', field: 'x', as: 'copiedX' },
+            transform: { operation: { kind: 'copy-chart-field', field: 'x', as: 'copiedX' } },
             output: 'copiedX',
           },
           y: 'y',
@@ -1039,9 +1044,12 @@ describe('point-aware compile boundaries', () => {
 describe('registered regression compilation', () => {
   const definition = defineRegression({
     schema: strictObject({ kind: literal('custom-polynomial'), degree: number().default(2) }),
+  });
+  const definitionImplementation = defineRegressionImplementation({
+    definition,
     fit: (_pairs, operation) => ({ predict: x => x ** operation.degree }),
   });
-  const lowerOptions = { regressionDefinitions: [definition] };
+  const lowerOptions = { regressionDefinitions: [definition], regressionImplementations: [definitionImplementation] };
   const compile = (properties: JsonObject) => {
     const source = RegressionChartSchema.parse({
       namespace: 'chart',

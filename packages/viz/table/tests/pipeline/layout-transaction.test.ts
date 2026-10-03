@@ -752,7 +752,11 @@ describe('Table layout transaction', () => {
         const tableContext: LayoutCompositeCompileContext = {
           ...context,
           layoutChild: (child, proposal) => {
-            if (child.type !== 'scope' || Reflect.get(child.meta ?? {}, 'role') !== 'tableBorders') {
+            if (
+              !('type' in child) ||
+              child.type !== 'scope' ||
+              Reflect.get(child.meta ?? {}, 'role') !== 'tableBorders'
+            ) {
               return context.layoutChild(child, proposal);
             }
             borderLayoutCalls += 1;

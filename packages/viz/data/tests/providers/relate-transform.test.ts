@@ -42,7 +42,7 @@ describe('relate transform', () => {
         { id: 'c', x: 2, value: 21 },
       ],
       [operation],
-      resolveTransformRegistry(),
+      { registry: resolveTransformRegistry() },
     );
     expect(rows).toEqual([
       {
@@ -67,7 +67,7 @@ describe('relate transform', () => {
         { group: 'B', id: 'b2', x: 1, value: 15 },
       ],
       [{ ...operation, groupBy: ['group'] }],
-      resolveTransformRegistry(),
+      { registry: resolveTransformRegistry() },
     );
     expect(rows).toEqual([
       expect.objectContaining({ group: 'A', sourceId: 'a2', targetId: 'a1', delta: 8 }),
@@ -90,7 +90,7 @@ describe('relate transform', () => {
           target: { selector: { kind: 'first' }, fields: { id: 'id' } },
         },
       ],
-      resolveTransformRegistry(),
+      { registry: resolveTransformRegistry() },
     );
     expect(rows).toEqual([expect.objectContaining({ group: 'A', sourceId: 'last', targetId: 'first' })]);
   });

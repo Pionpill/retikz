@@ -1,7 +1,7 @@
-import type { IRDataTransform } from '@retikz/data';
+import type { IRDataTransformDeclaration } from '@retikz/data';
 import type { FC } from 'react';
 
-export type PlotTransformProps = IRDataTransform;
+export type PlotTransformProps = IRDataTransformDeclaration;
 
 /** 通用数据变换声明组件 */
 export const PlotTransform: FC<PlotTransformProps> = () => null;

@@ -32,7 +32,7 @@ describe('relate transform', () => {
       marks: [
         {
           type: 'relation',
-          transform: [operation],
+          transform: [{ operation }],
           source: { project: { x: 'sourceX', y: 'sourceY' } },
           target: { project: { x: 'targetX', y: 'targetY' } },
           label: { content: { field: 'deltaLabel' } },

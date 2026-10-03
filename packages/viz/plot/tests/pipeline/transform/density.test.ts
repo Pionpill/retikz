@@ -40,7 +40,9 @@ describe('density transform behavior (contract)', () => {
           { name: 'value', type: 'continuous' },
         ],
       },
-      transform: [{ kind: 'density', field: 'value', groupBy: ['species'], xAs: 'densityX', densityAs: 'density' }],
+      transform: [
+        { operation: { kind: 'density', field: 'value', groupBy: ['species'], xAs: 'densityX', densityAs: 'density' } },
+      ],
       scales: [
         { type: 'linear', name: 'x' },
         { type: 'linear', name: 'y' },

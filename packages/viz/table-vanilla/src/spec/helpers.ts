@@ -13,7 +13,10 @@ export const detailTable = (input: DetailTableInput): IRDetailTable => createDet
 export const manualTable = (input: ManualTableInput): IRManualTable => createManualTableIR(input);
 
 /** 构造可由 Table Vanilla adapter 消费的标准 embed spec */
-export const embedTable = (spec: IRTable, options: Omit<InputTable, 'table'> = {}): InputEmbed<InputTable> => {
+export const embedTable = <TSource = never>(
+  spec: IRTable,
+  options: Omit<InputTable<TSource>, 'table'> = {},
+): InputEmbed<InputTable<TSource>> => {
   const table: InputTableVariant = inputTableFromIR(spec);
   return embed({
     kind: TABLE_NAMESPACE,

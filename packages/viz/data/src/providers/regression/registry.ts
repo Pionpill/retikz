@@ -1,8 +1,37 @@
-import type { AnyRegressionDefinition, RegressionResolution } from '../../contract';
+import type {
+  AnyRegressionDefinition,
+  RegressionResolution,
+  AnyRegressionImplementation,
+  AnySynchronousRegressionImplementation,
+} from '../../contract';
 import { extractRegressionKind } from '../../contract';
+import type { DataTransformDependency } from '../../contract';
 import { RetikzDataError } from '../../error';
 import type { IRRegressionMethod } from '../../schemas';
-import { BUILTIN_REGRESSIONS } from './definitions';
+import { resolveImplementationRegistry } from '../shared';
+import { BUILTIN_REGRESSIONS, BUILTIN_REGRESSION_IMPLEMENTATIONS } from './definitions';
+
+/** 注册独立拟合计算 */
+export const resolveRegressionImplementationRegistry = <
+  TImplementation extends AnyRegressionImplementation = AnySynchronousRegressionImplementation,
+>(
+  definitions: ReadonlyMap<string, AnyRegressionDefinition> = resolveRegressionRegistry(),
+  custom: ReadonlyArray<TImplementation> = [],
+): Map<string, TImplementation | AnySynchronousRegressionImplementation> =>
+  resolveImplementationRegistry(definitions, [...BUILTIN_REGRESSION_IMPLEMENTATIONS, ...custom], extractRegressionKind);
+
+/** 解析拟合语义依赖，不读取观测或执行拟合 */
+export const resolveRegressionDependency = (
+  operation: IRRegressionMethod,
+  registry: ReadonlyMap<string, AnyRegressionDefinition> = resolveRegressionRegistry(),
+): DataTransformDependency => {
+  return regressionBoundary(operation, () => {
+    const definition = registry.get(operation.kind);
+    if (definition === undefined) throw new RetikzDataError(`data: regression "${operation.kind}" is not registered`);
+    const parsed = definition.schema.parse(operation) as IRRegressionMethod;
+    return { type: 'regression', operation: parsed, definition };
+  });
+};
 
 /** 建立本次运行的拟合 registry，重复键明确失败 */
 export const resolveRegressionRegistry = (
@@ -34,6 +63,10 @@ const regressionBoundary = <T>(method: IRRegressionMethod, action: () => T): T =
 export const resolveRegression = (
   method: IRRegressionMethod,
   registry: ReadonlyMap<string, AnyRegressionDefinition> = resolveRegressionRegistry(),
+  implementations: ReadonlyMap<
+    string,
+    AnySynchronousRegressionImplementation
+  > = resolveRegressionImplementationRegistry<AnySynchronousRegressionImplementation>(registry),
 ): RegressionResolution => {
   const definition = registry.get(method.kind);
   if (definition === undefined)
@@ -46,7 +79,10 @@ export const resolveRegression = (
       validateExtent: extent => regressionBoundary(method, () => definition.validateExtent?.(operation, extent)),
       fit: pairs =>
         regressionBoundary(method, () => {
-          const model = definition.fit(pairs, operation);
+          const implementation = implementations.get(method.kind);
+          if (implementation === undefined)
+            throw new RetikzDataError(`data: regression "${method.kind}" has no local implementation`);
+          const model = implementation.fit(pairs, operation);
           return {
             predict: x =>
               regressionBoundary(method, () => {

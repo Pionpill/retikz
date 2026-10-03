@@ -1,4 +1,4 @@
-import type { IRDataStackTransform, IRDataTransform } from '@retikz/data';
+import type { IRDataStackTransform, IRDataTransform, IRDataTransformDeclaration } from '@retikz/data';
 import { DataTransform } from '@retikz/data';
 
 import type { NormalizationState, PlotAuthoringContext } from './contracts';
@@ -10,8 +10,11 @@ const isStackTransform = (transform: IRDataTransform): transform is IRDataStackT
   transform.kind === DataTransform.Stack;
 
 /** 归并根 transforms、声明 transforms 与 mark shortcut transforms */
-export const assembledTransformsOf = (collected: Collected, context: PlotAuthoringContext): Array<IRDataTransform> => {
-  const explicitTransforms: Array<IRDataTransform> = [...(context.dataTransforms ?? []), ...collected.transforms];
+export const assembledTransformsOf = (
+  collected: Collected,
+  context: PlotAuthoringContext,
+): Array<IRDataTransformDeclaration> => {
+  const explicitTransforms = [...(context.dataTransforms ?? []), ...collected.transforms];
   const shortcutTransforms = [
     ...collected.shortcutTransforms,
     ...buildShortcutTransforms(collected.marks, context.markTransformShortcuts),
@@ -25,11 +28,16 @@ export const assembledTransformsOf = (collected: Collected, context: PlotAuthori
       transform.startField ?? null,
       transform.endField ?? null,
     ]);
-  const explicitStackSignatures = new Set(explicitTransforms.filter(isStackTransform).map(stackSignature));
+  const explicitStackSignatures = new Set(
+    explicitTransforms
+      .map(declaration => declaration.operation)
+      .filter(isStackTransform)
+      .map(stackSignature),
+  );
   return [
     ...explicitTransforms,
-    ...shortcutTransforms.filter(
-      transform => !isStackTransform(transform) || !explicitStackSignatures.has(stackSignature(transform)),
-    ),
+    ...shortcutTransforms
+      .filter(transform => !isStackTransform(transform) || !explicitStackSignatures.has(stackSignature(transform)))
+      .map(operation => ({ operation })),
   ];
 };

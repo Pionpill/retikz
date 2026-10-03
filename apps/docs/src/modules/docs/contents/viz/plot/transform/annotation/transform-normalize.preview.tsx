@@ -18,7 +18,7 @@ export const TransformNormalizePreview = (values: TransformNormalizePreviewValue
   return (
     <Plot data={revenue} width={420} height={260}>
       {normalizeOperationsOf(values).map((operation, index) => (
-        <PlotTransform key={index} {...operation} />
+        <PlotTransform key={index} operation={{ ...operation }} />
       ))}
       <PlotScale dimension="y" type="linear" domain={values.basis === 'percent' ? [0, 100] : [0, 1]} />
       <IntervalMark x="quarter" y="share" series="product" stack />

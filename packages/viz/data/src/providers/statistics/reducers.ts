@@ -1,3 +1,5 @@
+import { defineStatisticsReducerImplementation } from '../../contract';
+import type { AnySynchronousStatisticsReducerImplementation } from '../../contract';
 import type { AnyStatisticsReducerDefinition } from '../../contract';
 import { defineStatisticsReducer } from '../../contract';
 import { BuiltinReducerOperationSchemas, DataFieldType } from '../../schemas';
@@ -19,6 +21,11 @@ import {
 const countReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Count,
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+
+/** 与 countReducerDefinition 共享语义的内置计算 */
+const countReducerImplementation = defineStatisticsReducerImplementation({
+  definition: countReducerDefinition,
   reduce: (rows, operation) => ({ [operation.as]: rows.length }),
 });
 
@@ -27,6 +34,11 @@ const sumReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Sum,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+
+/** 与 sumReducerDefinition 共享语义的内置计算 */
+const sumReducerImplementation = defineStatisticsReducerImplementation({
+  definition: sumReducerDefinition,
   reduce: (rows, operation) => ({
     [operation.as]: finiteFieldValuesOf(rows, operation.field).reduce((sum, value) => sum + value, 0),
   }),
@@ -37,6 +49,11 @@ const meanReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Mean,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+
+/** 与 meanReducerDefinition 共享语义的内置计算 */
+const meanReducerImplementation = defineStatisticsReducerImplementation({
+  definition: meanReducerDefinition,
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: meanOf(values) };
@@ -48,6 +65,11 @@ const medianReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Median,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+
+/** 与 medianReducerDefinition 共享语义的内置计算 */
+const medianReducerImplementation = defineStatisticsReducerImplementation({
+  definition: medianReducerDefinition,
   reduce: (rows, operation) => ({ [operation.as]: medianOf(finiteFieldValuesOf(rows, operation.field)) }),
 });
 
@@ -56,6 +78,11 @@ const minReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Min,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+
+/** 与 minReducerDefinition 共享语义的内置计算 */
+const minReducerImplementation = defineStatisticsReducerImplementation({
+  definition: minReducerDefinition,
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: finiteExtentOf(values).min };
@@ -67,6 +94,11 @@ const maxReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Max,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+
+/** 与 maxReducerDefinition 共享语义的内置计算 */
+const maxReducerImplementation = defineStatisticsReducerImplementation({
+  definition: maxReducerDefinition,
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
     return { [operation.as]: finiteExtentOf(values).max };
@@ -77,7 +109,12 @@ const maxReducerDefinition = defineStatisticsReducer({
 const extentReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Extent,
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputs: operation => [{ field: operation.as }],
+});
+
+/** 与 extentReducerDefinition 共享语义的内置计算 */
+const extentReducerImplementation = defineStatisticsReducerImplementation({
+  definition: extentReducerDefinition,
   reduce: (rows, operation) => {
     const values = finiteFieldValuesOf(rows, operation.field);
     const { min, max } = finiteExtentOf(values);
@@ -90,6 +127,11 @@ const quantileReducerDefinition = defineStatisticsReducer({
   schema: BuiltinReducerOperationSchemas.Quantile,
   inputFields: operation => [operation.field],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+
+/** 与 quantileReducerDefinition 共享语义的内置计算 */
+const quantileReducerImplementation = defineStatisticsReducerImplementation({
+  definition: quantileReducerDefinition,
   reduce: (rows, operation) => ({
     [operation.as]: quantileOf(finiteFieldValuesOf(rows, operation.field), operation.p),
   }),
@@ -120,6 +162,11 @@ const quantileBandReducerDefinition = defineStatisticsReducer({
     }
     return fields.map(field => ({ field, type: DataFieldType.Continuous }));
   },
+});
+
+/** 与 quantileBandReducerDefinition 共享语义的内置计算 */
+const quantileBandReducerImplementation = defineStatisticsReducerImplementation({
+  definition: quantileBandReducerDefinition,
   reduce: (rows, operation) => {
     const stats = quantileBandStatsOf(rows, operation.field, operation.lowerP, operation.upperP);
     const out: ExternalRow = {
@@ -165,3 +212,17 @@ export const BUILTIN_STATISTICS_REDUCERS: ReadonlyArray<AnyStatisticsReducerDefi
   quantileReducerDefinition,
   quantileBandReducerDefinition,
 ]);
+
+/** 内置同步计算集合；与语义 registry 分离 */
+export const BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS: ReadonlyArray<AnySynchronousStatisticsReducerImplementation> =
+  freezeDefinitions([
+    countReducerImplementation,
+    sumReducerImplementation,
+    meanReducerImplementation,
+    medianReducerImplementation,
+    minReducerImplementation,
+    maxReducerImplementation,
+    extentReducerImplementation,
+    quantileReducerImplementation,
+    quantileBandReducerImplementation,
+  ]);

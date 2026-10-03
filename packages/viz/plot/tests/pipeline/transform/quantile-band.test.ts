@@ -392,17 +392,19 @@ describe('quantile-band statistics behavior (contract)', () => {
       },
       transform: [
         {
-          kind: 'summarize',
-          groupBy: ['group'],
-          metrics: [
-            {
-              kind: 'quantile-band',
-              field: 'value',
-              lowerP: 0.25,
-              upperP: 0.75,
-              outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }] },
-            },
-          ],
+          operation: {
+            kind: 'summarize',
+            groupBy: ['group'],
+            metrics: [
+              {
+                kind: 'quantile-band',
+                field: 'value',
+                lowerP: 0.25,
+                upperP: 0.75,
+                outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }] },
+              },
+            ],
+          },
         },
       ],
       scales: [

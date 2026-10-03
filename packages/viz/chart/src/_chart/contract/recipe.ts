@@ -4,6 +4,7 @@ import type {
   AnyStatisticsReducerDefinition,
   AnyTransformDefinition,
   IRDataTransform,
+  IRDataTransformDeclaration,
 } from '@retikz/data';
 import type { JsonObject, NonEmptyReadonlyArray, ValueOf } from '@retikz/foundation';
 import type {
@@ -68,7 +69,7 @@ export type ChartEncodingResolution = Readonly<{
   /** semantic与authored Chart mark消费的direct field投影 */
   encodings: JsonObject;
   /** 按闭合phase与ordered slots排列的派生operation */
-  transform: ReadonlyArray<IRDataTransform>;
+  transform: ReadonlyArray<IRDataTransformDeclaration>;
   /** encoding唯一声明的named scale operation */
   scales: ReadonlyArray<IRPlotScaleOperation>;
   /** plotExtension 中由 encoding 引用后经 owner Definition 解析的 scale operation */

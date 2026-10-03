@@ -1,5 +1,5 @@
 import { compileToScene } from '@retikz/core';
-import type { IRDataRelateTransform } from '@retikz/data';
+import type { IRDataTransformDeclaration } from '@retikz/data';
 import type { IRPlot, IRPlotRelationRouting } from '@retikz/plot';
 import { lowerPlots, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
@@ -265,12 +265,14 @@ describe('buildPlotIR 装配', () => {
   });
 
   it('relation mark forwards mark-scoped transform and routing strategy', () => {
-    const transform: Array<IRDataRelateTransform> = [
+    const transform: Array<IRDataTransformDeclaration> = [
       {
-        kind: 'relate',
-        source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
-        target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
-        measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+        operation: {
+          kind: 'relate',
+          source: { selector: { kind: 'min', by: 'value' }, fields: { id: 'id' } },
+          target: { selector: { kind: 'max', by: 'value' }, fields: { id: 'id' } },
+          measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel', labelPrefix: '+' }],
+        },
       },
     ];
     const routing: IRPlotRelationRouting = { kind: 'bend', bendDirection: 'left', bendAngle: 20 };

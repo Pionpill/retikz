@@ -1,4 +1,4 @@
-import { defineRegression } from '@retikz/data';
+import { defineRegression, defineRegressionImplementation } from '@retikz/data';
 import { lowerPlotWithLineage, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
@@ -9,8 +9,8 @@ describe('Plot regression runtime injection', () => {
   it.each([false, true])('forwards custom fitting definitions with embedded=%s', embedded => {
     const definition = defineRegression({
       schema: strictObject({ kind: literal('identity-fit') }),
-      fit: () => ({ predict: x => x }),
     });
+    const implementation = defineRegressionImplementation({ definition, fit: () => ({ predict: x => x }) });
     const spec = PlotSchema.parse({
       namespace: 'plot',
       type: 'plot',
@@ -24,7 +24,9 @@ describe('Plot regression runtime injection', () => {
         {
           type: 'path',
           encoding: { x: { field: 'tx' }, y: { field: 'ty' } },
-          transform: [{ kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'identity-fit' } }],
+          transform: [
+            { operation: { kind: 'smooth', x: 'x', y: 'y', xAs: 'tx', yAs: 'ty', method: { kind: 'identity-fit' } } },
+          ],
         },
       ],
     });
@@ -38,11 +40,12 @@ describe('Plot regression runtime injection', () => {
           ],
         },
         regressionDefinitions: [definition],
+        regressionImplementations: [implementation],
       },
       { embedded },
     );
     expect(result.lowerOptions.regressionDefinitions?.[0]).toBe(definition);
-    expect(() => lowerPlotWithLineage(result.spec, result.datasets, result.lowerOptions)).not.toThrow();
+    expect(() => lowerPlotWithLineage(result.spec, result.datasets ?? {}, result.lowerOptions)).not.toThrow();
     expect(JSON.stringify(result.spec)).not.toMatch(/regressionDefinitions|predict|schema/);
   });
 });

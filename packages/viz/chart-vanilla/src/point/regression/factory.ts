@@ -1,15 +1,15 @@
 import { createRegressionChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed } from '@retikz/vanilla';
 
-import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
+import { createChartInputEmbedAdapter } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeRegressionChart } from './normalize';
 import type { RegressionChartInputEmbedProps } from './types';
 
-/** 在场景处理时规范化 Regression 输入并组装 provider 依赖 */
-export const RegressionChartInputEmbedAdapter: SynchronousInputEmbedAdapter<RegressionChartInputEmbedProps> = {
-  kind: 'chart.regression',
-  lower: input => {
+/** 在场景处理时规范化 RegressionChart 输入并复用统一数据准备 */
+export const RegressionChartInputEmbedAdapter = createChartInputEmbedAdapter(
+  'chart.regression',
+  (input: RegressionChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
     const source = normalizeRegressionChart({
       ...parts.root,
@@ -22,20 +22,18 @@ export const RegressionChartInputEmbedAdapter: SynchronousInputEmbedAdapter<Regr
       ...(input.guides === undefined ? {} : { guides: input.guides }),
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
-    const runtime = buildPointChartRuntime(
+    return buildPointChartRuntime(
       source,
       parts,
       createRegressionChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
     );
-    return {
-      node: wrapChartPanel(runtime.source, runtime.panel),
-      providerDependencies: buildChartProviderContribution(runtime),
-    };
   },
-};
+);
 
 /** 创建可直接组合到 Vanilla Scene 的 Regression 节点 */
-export const regressionChart = (input: RegressionChartInputEmbedProps): InputEmbed<RegressionChartInputEmbedProps> => ({
+export const regressionChart = <TNative = never>(
+  input: RegressionChartInputEmbedProps<TNative>,
+): InputEmbed<RegressionChartInputEmbedProps<TNative>> => ({
   type: 'embed',
   kind: RegressionChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),

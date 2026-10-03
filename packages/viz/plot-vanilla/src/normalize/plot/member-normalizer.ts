@@ -1,4 +1,4 @@
-import type { IRDataTransform } from '@retikz/data';
+import type { IRDataTransformDeclaration } from '@retikz/data';
 import { DataTransform } from '@retikz/data';
 import type {
   IRPlotIntervalBounds,
@@ -665,7 +665,7 @@ export const applyDeclaration = (
   } else if (declaration.kind === 'scale') {
     into.scales.push(child.props as InputPlotScale);
   } else if (declaration.kind === 'transform') {
-    // 通用 <PlotTransform kind="..."> 声明：props 即 IR transform operation（按声明序进 spec.transform）
-    into.transforms.push(child.props as IRDataTransform);
+    // 通用数据声明携带独立 operation 和稀疏执行配置
+    into.transforms.push(child.props as IRDataTransformDeclaration);
   }
 };

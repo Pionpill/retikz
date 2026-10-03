@@ -1,4 +1,4 @@
-import type { DataSourceIdentity, ExternalDatasets, ExternalRow, IRDataTransform } from '@retikz/data';
+import type { DataSourceIdentity, ExternalDatasets, ExternalRow, IRDataTransformDeclaration } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 
@@ -14,6 +14,7 @@ import type {
   PlotRowValueOptions,
   PlotScaleLineage,
   PlotSeriesLineage,
+  PreparedPlotData,
 } from '../contract';
 import { RetikzPlotError } from '../error';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
@@ -86,8 +87,8 @@ const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encodin
 };
 
 /** 取 operation kind 列表 */
-const operationKindsOf = (operations: Array<IRDataTransform> | undefined): Array<string> =>
-  operations?.map(operation => operation.kind) ?? [];
+const operationKindsOf = (operations: Array<IRDataTransformDeclaration> | undefined): Array<string> =>
+  operations?.map(declaration => declaration.operation.kind) ?? [];
 
 /** 按字段白名单裁剪 mark rows */
 const sampleRows = (rows: Array<ExternalRow>, options: PlotRowValueOptions): Array<ExternalRow> =>
@@ -223,7 +224,7 @@ const buildPlotLineage = (
       : hostMetadataOf(lineageOptions.hostMetadata, options.hostLineageMetadata);
 
   spec.marks.forEach((mark, markIndex) => {
-    const transform = (mark as { transform?: Array<IRDataTransform> }).transform;
+    const transform = (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
     markData.push({ markIndex, events: markLineages[markIndex]?.events ?? [] });
 
     const markLineage: PlotMarkLineage = {
@@ -261,9 +262,10 @@ export const lowerPlotWithLineage = (
   spec: IRPlot,
   datasets: ExternalDatasets,
   options: PlotLineageLowerOptions = {},
+  preparedData?: PreparedPlotData,
 ): PlotLineageLowerResult => {
   const lineageOptions = resolvePlotLineageOptions(options.lineage);
-  const lowered = lowerPlotWithDataArtifact(spec, datasets, options, undefined, lineageOptions.data);
+  const lowered = lowerPlotWithDataArtifact(spec, datasets, options, undefined, lineageOptions.data, preparedData);
   return { children: [lowered.child], lineage: buildPlotLineage(spec, options, lowered.dataArtifact) };
 };
 

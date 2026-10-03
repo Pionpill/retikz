@@ -22,8 +22,6 @@ export type RegressionModel = Readonly<{
 export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressionMethod, TOperation = TSource> = {
   /** 精确参数 schema，kind 必须是非空字面量 */
   schema: ZodType<TOperation, TSource>;
-  /** 纯同步拟合，不得修改观测 */
-  fit: (pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => RegressionModel;
   /** 方法专有预测域约束 */
   validateExtent?: (operation: TOperation, extent: readonly [number, number]) => void;
 };
@@ -37,11 +35,45 @@ export const defineRegression = <TSource extends IRRegressionMethod, TOperation 
 export type AnyRegressionDefinition = {
   /** 精确参数 schema */
   schema: ZodType;
-  /** 已解析参数的拟合回调 */
-  fit: (pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel;
   /** 已解析参数的预测域校验 */
   validateExtent?: (operation: never, extent: readonly [number, number]) => void;
 };
+
+/** 拟合的独立计算实现 */
+export type RegressionImplementation<
+  TSource extends IRRegressionMethod = IRRegressionMethod,
+  TOperation = TSource,
+  TResult extends RegressionModel | Promise<RegressionModel> = RegressionModel | Promise<RegressionModel>,
+> = Readonly<{
+  /** 同一方法的唯一语义身份 */
+  definition: RegressionDefinition<TSource, TOperation>;
+  /** 拟合规范有限观测，返回预测模型 */
+  fit: (pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => TResult;
+}>;
+
+/** 保留 schema 与拟合参数关联 */
+export const defineRegressionImplementation = <
+  TSource extends IRRegressionMethod,
+  TOperation,
+  TResult extends RegressionModel | Promise<RegressionModel>,
+>(
+  implementation: RegressionImplementation<TSource, TOperation, TResult>,
+): RegressionImplementation<TSource, TOperation, TResult> => implementation;
+
+/** 异构拟合计算注册项 */
+export type AnyRegressionImplementation = Readonly<{
+  /** 唯一拟合语义身份 */
+  definition: AnyRegressionDefinition;
+  /** 精确解析后的拟合 */
+  fit: (pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel | Promise<RegressionModel>;
+}>;
+
+/** 同步拟合入口限定结果类型 */
+export type AnySynchronousRegressionImplementation = Omit<AnyRegressionImplementation, 'fit'> &
+  Readonly<{
+    /** 不返回 Promise 的拟合 */
+    fit: (pairs: ReadonlyArray<RegressionPair>, operation: never) => RegressionModel;
+  }>;
 
 /** 从 Definition 提取唯一注册键 */
 export const extractRegressionKind = (schema: ZodType): string => {

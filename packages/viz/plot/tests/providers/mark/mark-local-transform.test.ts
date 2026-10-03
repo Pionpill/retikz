@@ -1,6 +1,7 @@
 import type { IRScope } from '@retikz/core';
+import { defineTransformImplementation } from '@retikz/data';
 import type { ExternalRow } from '@retikz/data';
-import { defineTransform, resolveTransformRegistry, TransformSchema } from '@retikz/data';
+import { defineTransform, resolveTransformRegistry, DataTransformDeclarationSchema } from '@retikz/data';
 import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import type { infer as ZodInfer } from 'zod';
@@ -8,7 +9,7 @@ import { array, literal, looseObject, object } from 'zod';
 
 import { defineMark } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import { lowerPlot, lowerPlotWithDataArtifact } from '../../../src/pipeline/expand/lower';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import type { IRPlot } from '../../../src/schemas';
 import { EncodingSchema, PlotSchema } from '../../../src/schemas';
@@ -18,7 +19,7 @@ type Datasets = Record<string, Array<Record<string, unknown>>>;
 const DotMarkSchema = looseObject({
   type: literal('dot'),
   encoding: EncodingSchema.optional(),
-  transform: array(TransformSchema).optional(),
+  transform: array(DataTransformDeclarationSchema).optional(),
 }).catchall(JsonValueSchema);
 
 type DotMark = ZodInfer<typeof DotMarkSchema>;
@@ -46,7 +47,13 @@ const groupPointSpec = (): IRPlot =>
       {
         type: 'point',
         transform: [
-          { kind: 'summarize', groupBy: ['category'], metrics: [{ kind: 'sum', field: 'value', as: 'total' }] },
+          {
+            operation: {
+              kind: 'summarize',
+              groupBy: ['category'],
+              metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+            },
+          },
         ],
         encoding: { x: { field: 'category' }, y: { field: 'total' } },
       },
@@ -60,7 +67,10 @@ const doubleTransform = defineTransform({
     as: NonBlankStringSchema,
   }),
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+});
+const doubleTransformImplementation = defineTransformImplementation({
+  definition: doubleTransform,
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
@@ -82,6 +92,46 @@ const recorderMark = (record: { rows: Array<ExternalRow> }) =>
   });
 
 describe('mark-local transform', () => {
+  it('retains unknown output fields and category order across empty root and mark scopes', () => {
+    const spec = PlotSchema.parse({
+      namespace: 'plot',
+      type: 'plot',
+      data: {
+        reference: 'rows',
+        model: [
+          { name: 'group', type: 'categorical', order: ['B', 'A'] },
+          { name: 'value', type: 'continuous' },
+        ],
+      },
+      transform: [
+        {
+          operation: {
+            kind: 'summarize',
+            groupBy: ['group'],
+            metrics: [{ kind: 'extent', field: 'value', as: 'range' }],
+          },
+        },
+      ],
+      scales: [
+        { type: 'band', name: 'x' },
+        { type: 'linear', name: 'y' },
+      ],
+      coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
+      marks: [
+        {
+          type: 'point',
+          transform: [{ operation: { kind: 'sort', field: 'range' } }],
+          encoding: { x: { field: 'group' }, y: { field: 'range' } },
+        },
+      ],
+    });
+    const { dataArtifact } = lowerPlotWithDataArtifact(spec, { rows: [] });
+    const expectedModel = [{ name: 'group', type: 'categorical', order: ['B', 'A'] }, { name: 'range' }];
+    expect(dataArtifact.rootDataView.model).toEqual(expectedModel);
+    expect(dataArtifact.markDataViews[0].dataView.model).toEqual(expectedModel);
+    expect(dataArtifact.markDataViews[0].dataView.fieldTypeEvidence.has('range')).toBe(false);
+    expect(dataArtifact.markDataViews[0].dataView.rows).toEqual([]);
+  });
   it('builtin_mark_uses_local_transform_rows_for_lowering', () => {
     const layer = firstLayer(groupPointSpec(), {
       sales: [
@@ -112,7 +162,7 @@ describe('mark-local transform', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ kind: 'normalize', field: 'value', as: 'value' }],
+          transform: [{ operation: { kind: 'normalize', field: 'value', as: 'value' } }],
           encoding: { x: { field: 'x' }, y: { field: 'value' } },
         },
       ],
@@ -136,7 +186,13 @@ describe('mark-local transform', () => {
         {
           type: 'dot',
           transform: [
-            { kind: 'summarize', groupBy: ['category'], metrics: [{ kind: 'sum', field: 'value', as: 'total' }] },
+            {
+              operation: {
+                kind: 'summarize',
+                groupBy: ['category'],
+                metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+              },
+            },
           ],
           encoding: { x: { field: 'category' }, y: { field: 'total' } },
         },
@@ -175,7 +231,7 @@ describe('mark-local transform', () => {
         marks: [
           {
             type: 'point',
-            transform: [{ kind: 'double-local', field: 'value', as: 'double' }],
+            transform: [{ operation: { kind: 'double-local', field: 'value', as: 'double' } }],
             encoding: { x: { field: 'x' }, y: { field: 'double' } },
           },
         ],
@@ -186,7 +242,7 @@ describe('mark-local transform', () => {
           { x: 1, value: 5 },
         ],
       },
-      { ...opts, transformDefinitions: [doubleTransform] },
+      { ...opts, transformDefinitions: [doubleTransform], transformImplementations: [doubleTransformImplementation] },
     );
 
     expect(layer.children).toHaveLength(2);
@@ -205,7 +261,7 @@ describe('mark-local transform', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ kind: 'double-local', field: 'value', as: 'double' }],
+          transform: [{ operation: { kind: 'double-local', field: 'value', as: 'double' } }],
           encoding: { x: { field: 'x' }, y: { field: 'double' } },
         },
       ],

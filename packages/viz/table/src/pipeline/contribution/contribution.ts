@@ -19,21 +19,30 @@ const encodeRuntimeReference = (reference: string): string =>
 const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
   Object.freeze({
     ...input,
-    ...(input.structureDefinitions === undefined
-      ? {}
-      : { structureDefinitions: Object.freeze([...input.structureDefinitions]) }),
-    ...(input.presentationDefinitions === undefined
-      ? {}
-      : { presentationDefinitions: Object.freeze([...input.presentationDefinitions]) }),
-    ...(input.formatterDefinitions === undefined
-      ? {}
-      : { formatterDefinitions: Object.freeze([...input.formatterDefinitions]) }),
-    ...(input.visualScaleDefinitions === undefined
-      ? {}
-      : { visualScaleDefinitions: Object.freeze([...input.visualScaleDefinitions]) }),
-    ...(input.tableThemeStyles === undefined ? {} : { tableThemeStyles: Object.freeze([...input.tableThemeStyles]) }),
+    ...Object.fromEntries(
+      (
+        [
+          'structureDefinitions',
+          'presentationDefinitions',
+          'formatterDefinitions',
+          'visualScaleDefinitions',
+          'tableThemeStyles',
+          'formatDefinitions',
+          'transformDefinitions',
+          'statisticsReducerDefinitions',
+          'rowSelectorDefinitions',
+          'regressionDefinitions',
+          'transformImplementations',
+          'statisticsReducerImplementations',
+          'rowSelectorImplementations',
+          'regressionImplementations',
+        ] satisfies Array<keyof LowerTablesOptions>
+      ).map(key => {
+        const entries = input[key];
+        return [key, entries === undefined ? undefined : Object.freeze([...entries])];
+      }),
+    ),
   });
-
 /** 创建供 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
 export const createTableRuntimeContribution = (input: TableRuntimeContributionInput): TableRuntimeContribution => {
   assertNonEmptyString(

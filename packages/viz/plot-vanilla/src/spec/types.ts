@@ -1,5 +1,12 @@
-import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
+import type { DataInputBindings, DataTransformExecutor, ExternalDatasets } from '@retikz/data';
+import type {
+  IRPlot,
+  LowerPlotsOptions,
+  PlotHostLineageMetadata,
+  PlotLineageOptions,
+  PlotLineageRun,
+  PreparedPlotData,
+} from '@retikz/plot';
 import type { InputScope } from '@retikz/vanilla';
 
 import type { InputPlot } from '../normalize/plot';
@@ -28,12 +35,40 @@ export type PlotSource =
     }>;
 
 /** Plot InputEmbed 交给 adapter 的属性 */
-export type InputPlotEmbed = PlotSource &
+export type InputPlotEmbed<TSource = never> = PlotSource &
+  (
+    | Readonly<{ datasets: ExternalDatasets; dataBindings?: never }>
+    | Readonly<{ dataBindings: DataInputBindings<TSource>; datasets?: never }>
+  ) &
   Readonly<{
-    /** Plot lowering 消费的外部 datasets */
-    datasets: ExternalDatasets;
+    /** 通用异步 transform 执行器，不进入 Source IR */
+    dataTransformExecutor?: DataTransformExecutor<TSource>;
+    /** 此 Plot 的外部请求取消信号 */
+    signal?: AbortSignal;
+    /** 可选的同次数据链路记录 */
+    lineage?: false | PlotLineageOptions;
+    /** 链路宿主元数据 */
+    hostLineageMetadata?: PlotHostLineageMetadata;
+    /** 同次完整帧提交后通知，不在 preparation 中调用 */
+    onLineage?: (lineage: PlotLineageRun) => void;
     /** Plot lowering runtime options */
     lowerOptions?: LowerPlotsOptions;
     /** 作用于 Plot 根节点的可选 Core Scope */
     panel?: InputPlotPanel;
   }>;
+
+/** Plot contribution 提供给同 revision compile driver 的链路消费输入 */
+export type PreparedPlotLineageNotification = Readonly<{
+  /** 本请求借用的作者 Source */
+  spec: IRPlot;
+  /** 已完成的数据计算 */
+  preparedData: PreparedPlotData;
+  /** 同次 lowering 配置 */
+  lowerOptions?: LowerPlotsOptions;
+  /** 链路配置 */
+  lineage: PlotLineageOptions;
+  /** 元数据 */
+  hostLineageMetadata?: PlotHostLineageMetadata;
+  /** 帧成功提交后的通知 */
+  onLineage: (lineage: PlotLineageRun) => void;
+}>;
