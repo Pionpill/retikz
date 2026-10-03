@@ -48,7 +48,7 @@ describe('Strip Chart exact Source schema', () => {
 
     for (const encodings of [
       { x: { aggregate: { kind: 'mean', field: 'value', as: 'mean' } }, y: 'value' },
-      { x: 'category', y: { transform: { kind: 'bin', field: 'value', as: 'bin' }, output: 'bin' } },
+      { x: 'category', y: { transform: { operation: { kind: 'bin', field: 'value', as: 'bin' } }, output: 'bin' } },
       { x: 'category', y: 'value', color: { aggregate: { kind: 'count', as: 'count' } } },
       { x: 'category', y: 'value', facet: { empty: 'show' } },
       { x: 'category', y: 'value', series: 'series' },

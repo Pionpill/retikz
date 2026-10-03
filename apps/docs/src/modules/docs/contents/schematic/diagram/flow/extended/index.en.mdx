@@ -5,6 +5,18 @@ description: Combine Flow grouping and fixed layouts, and share appearance setti
 
 This page builds on [Basic usage](/schematic/diagram/flow/usage) through two tasks: organize elements and share appearance. See [Basic usage](/schematic/diagram/flow/usage#connections-and-routing) for connections and routing.
 
+## Curve side selection and complete labels
+
+`bend` is a regular route alongside straight, orthogonal, and single-elbow routes. This example fixes three nodes and connects only the first and last, leaving the middle node as an obstacle. By default, side and angle are omitted, comparing left/right at `30° / 45° / 60°`. Nodes take priority and labels break ties; remaining ties prefer smaller angles, then left. Edge overlaps and crossings are not compared. Disable “Automatic angle” to compare only the two sides at the specified angle. Nodes and route kinds remain unchanged. At explicit angle 0 both candidates coincide and cross the middle node; the relation is still drawn and a `FlowBendObstacleConflict` warning points to the original relation.
+
+<ComponentPreview
+  files="flow-bend"
+  size="xl"
+  caption="Switch between automatic and explicit angles to explore bounded candidate selection around a fixed obstacle; move the label and toggle slope and interruption along the same curve."
+/>
+
+A compact `label: 'Continue'` retains the default label strategy. A complete object such as `label: { text: 'Continue', position: 0.5, sloped: true }` exposes all Core GeometryLabel options: `position`, `side`, `sloped`, `placement`, `distance`, `interrupt`, `gap`, `textColor`, `font`, and `opacity`. Position uses the curve parameter rather than equal arc length; slope follows the tangent, while interruption and gap control the stroke opening around the label. An object containing only text still uses complete-label defaults. Font fields inherit individually, with label appearance taking precedence over relation appearance. Reserved boxes inform layout scoring; Core draws the final text and clips endpoints to node boundaries.
+
 ## Structure and layout
 
 `FlowLayout` fixes the arrangement of direct children. `FlowGroup` draws a named semantic boundary and automatically lays out the steps inside it. Examine each one before combining them in one diagram.

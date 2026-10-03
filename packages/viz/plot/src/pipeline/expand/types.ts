@@ -3,6 +3,7 @@ import type {
   AnyRowSelectorDefinition,
   AnyStatisticsReducerDefinition,
   AnyTransformDefinition,
+  ApplyTransformsOptions,
   FieldFormatDefinition,
   ResolveField,
 } from '@retikz/data';
@@ -66,6 +67,14 @@ export type LowerPlotsOptions = {
   coordinates?: Array<AnyCoordinateDefinition>;
   /** 自定义 transform definitions；内置项与自定义项通过同一个 registry 解析 */
   transformDefinitions?: Array<AnyTransformDefinition>;
+  /** 本地同步 transform 实现；通用 Promise 执行器经异步作者准备接入 */
+  transformImplementations?: ApplyTransformsOptions['transformImplementations'];
+  /** 本地同步 reducer 实现 */
+  statisticsReducerImplementations?: ApplyTransformsOptions['statisticsReducerImplementations'];
+  /** 本地同步 selector 实现 */
+  rowSelectorImplementations?: ApplyTransformsOptions['rowSelectorImplementations'];
+  /** 本地同步 regression 实现 */
+  regressionImplementations?: ApplyTransformsOptions['regressionImplementations'];
   /** 当前运行注入的拟合 Definition */
   regressionDefinitions?: Array<AnyRegressionDefinition>;
   /** 自定义 statistics reducer definitions；内置项与自定义项通过同一个 registry 解析 */

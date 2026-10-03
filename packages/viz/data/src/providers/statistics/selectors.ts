@@ -1,4 +1,6 @@
-﻿import type { AnyRowSelectorDefinition } from '../../contract';
+import { defineRowSelectorImplementation } from '../../contract';
+import type { AnySynchronousRowSelectorImplementation } from '../../contract';
+import type { AnyRowSelectorDefinition } from '../../contract';
 import { defineRowSelector } from '../../contract';
 import type { RowSelectorTieValue } from '../../schemas';
 import { BuiltinSelectorOperationSchemas, DataSortOrder, RowSelectorTie } from '../../schemas';
@@ -35,6 +37,11 @@ const selectTopBottomRows = (
 const minSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Min,
   inputFields: operation => [operation.by],
+});
+
+/** 与 minSelectorDefinition 共享语义的内置计算 */
+const minSelectorImplementation = defineRowSelectorImplementation({
+  definition: minSelectorDefinition,
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Ascending);
     if (ranked.length === 0) return [];
@@ -60,6 +67,11 @@ const minSelectorDefinition = defineRowSelector({
 const maxSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Max,
   inputFields: operation => [operation.by],
+});
+
+/** 与 maxSelectorDefinition 共享语义的内置计算 */
+const maxSelectorImplementation = defineRowSelectorImplementation({
+  definition: maxSelectorDefinition,
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Descending);
     if (ranked.length === 0) return [];
@@ -85,6 +97,11 @@ const maxSelectorDefinition = defineRowSelector({
 const firstSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.First,
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
+});
+
+/** 与 firstSelectorDefinition 共享语义的内置计算 */
+const firstSelectorImplementation = defineRowSelectorImplementation({
+  definition: firstSelectorDefinition,
   select: (rows, operation) => {
     const ordered = orderRows(rows, operation.orderBy);
     return ordered.length === 0 ? [] : [{ row: ordered[0], rank: 1 }];
@@ -95,6 +112,11 @@ const firstSelectorDefinition = defineRowSelector({
 const lastSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Last,
   inputFields: operation => operation.orderBy?.map(order => order.field) ?? [],
+});
+
+/** 与 lastSelectorDefinition 共享语义的内置计算 */
+const lastSelectorImplementation = defineRowSelectorImplementation({
+  definition: lastSelectorDefinition,
   select: (rows, operation) => {
     const ordered = orderRows(rows, operation.orderBy);
     return ordered.length === 0 ? [] : [{ row: ordered[ordered.length - 1], rank: 1 }];
@@ -105,6 +127,11 @@ const lastSelectorDefinition = defineRowSelector({
 const topSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Top,
   inputFields: operation => [operation.by],
+});
+
+/** 与 topSelectorDefinition 共享语义的内置计算 */
+const topSelectorImplementation = defineRowSelectorImplementation({
+  definition: topSelectorDefinition,
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Descending);
     const selected = selectTopBottomRows(ranked, operation);
@@ -116,6 +143,11 @@ const topSelectorDefinition = defineRowSelector({
 const bottomSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Bottom,
   inputFields: operation => [operation.by],
+});
+
+/** 与 bottomSelectorDefinition 共享语义的内置计算 */
+const bottomSelectorImplementation = defineRowSelectorImplementation({
+  definition: bottomSelectorDefinition,
   select: (rows, operation) => {
     const ranked = rankedByNumericField(rows, operation.by, DataSortOrder.Ascending);
     const selected = selectTopBottomRows(ranked, operation);
@@ -127,6 +159,11 @@ const bottomSelectorDefinition = defineRowSelector({
 const nthSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.Nth,
   inputFields: operation => operation.orderBy.map(order => order.field),
+});
+
+/** 与 nthSelectorDefinition 共享语义的内置计算 */
+const nthSelectorImplementation = defineRowSelectorImplementation({
+  definition: nthSelectorDefinition,
   select: (rows, operation) => {
     const ordered = orderRows(rows, operation.orderBy);
     return operation.index >= ordered.length ? [] : [{ row: ordered[operation.index], rank: operation.index + 1 }];
@@ -137,6 +174,11 @@ const nthSelectorDefinition = defineRowSelector({
 const outsideQuantileBandSelectorDefinition = defineRowSelector({
   schema: BuiltinSelectorOperationSchemas.OutsideQuantileBand,
   inputFields: operation => [operation.field],
+});
+
+/** 与 outsideQuantileBandSelectorDefinition 共享语义的内置计算 */
+const outsideQuantileBandSelectorImplementation = defineRowSelectorImplementation({
+  definition: outsideQuantileBandSelectorDefinition,
   select: (rows, operation) => {
     const stats = quantileBandStatsOf(rows, operation.field, operation.lowerP, operation.upperP);
     const boundary = operation.boundary ?? { kind: 'band' };
@@ -160,3 +202,16 @@ export const BUILTIN_ROW_SELECTORS: ReadonlyArray<AnyRowSelectorDefinition> = fr
   nthSelectorDefinition,
   outsideQuantileBandSelectorDefinition,
 ]);
+
+/** 内置同步计算集合；与语义 registry 分离 */
+export const BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS: ReadonlyArray<AnySynchronousRowSelectorImplementation> =
+  freezeDefinitions([
+    minSelectorImplementation,
+    maxSelectorImplementation,
+    firstSelectorImplementation,
+    lastSelectorImplementation,
+    topSelectorImplementation,
+    bottomSelectorImplementation,
+    nthSelectorImplementation,
+    outsideQuantileBandSelectorImplementation,
+  ]);

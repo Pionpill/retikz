@@ -98,6 +98,7 @@ export const normalizePlotIR = (
     type: PlotComposite.Plot,
     ...(options.id === undefined ? {} : { id: options.id }),
     data,
+    ...(options.dataExecution === undefined ? {} : { dataExecution: options.dataExecution }),
     ...(transform === undefined ? {} : { transform }),
     scales,
     ...coordinateRoot,

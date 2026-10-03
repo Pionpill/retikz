@@ -239,7 +239,7 @@ describe('Viz Data transform controls', () => {
       dataFieldNames: new Set(['month', 'revenue']),
     });
 
-    expect(spec.transform).toContainEqual({ kind: 'sort', field: 'month', order: 'ascending' });
+    expect(spec.transform).toContainEqual({ operation: { kind: 'sort', field: 'month', order: 'ascending' } });
     expect(spec.scales).toContainEqual({ type: 'band', name: '__x', paddingInner: 0.2, paddingOuter: 0.12 });
     expect(spec.scales).toContainEqual({ type: 'linear', name: '__y', domainPadding: 0 });
   });

@@ -30,6 +30,8 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
     visualDefaults: '已存在 visual encoding 的分类色与连续色默认值。',
     tableDefaults: '稀疏 Table defaults 片段；同级显式 Source 字段优先。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
+    transform: '结构解析前执行的有序变换声明。',
+    dataExecution: '本 Table 的稀疏执行配置。',
     data: '明细表必需的外部数据引用；实际记录不写入 IR。',
     structure: '每条源记录生成一行的 detail Structure。',
     'structure.kind': 'record-per-row detail Structure 的判别值。',

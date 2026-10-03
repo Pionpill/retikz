@@ -1,0 +1,31 @@
+/** bend 自动避让流程的双语文字 */
+export const flowBendRoutingI18n = {
+  zh: {
+    candidates: '生成允许的候选',
+    candidatesNote: '方向 × 角度，最多六条',
+    bounds: '矩形筛选',
+    boundsNote: '每条曲线一次；排除不相交节点盒',
+    contact: '连续曲线检测',
+    contactNote: '只检测剩余节点，保留端点豁免',
+    nodes: '保留节点最优候选',
+    nodesNote: '先冲突数，再穿越参数跨度',
+    labels: '并列时比较标签',
+    labelsNote: '再按小角度、左侧优先',
+    result: '交付选中路线',
+    resultNote: '全部受阻仍选最优；节点冲突告警',
+  },
+  en: {
+    candidates: 'Allowed candidates',
+    candidatesNote: 'Side × angle, at most six',
+    bounds: 'Rectangle filter',
+    boundsNote: 'Once per curve; exclude disjoint boxes',
+    contact: 'Continuous curve check',
+    contactNote: 'Remaining nodes; endpoint exemptions',
+    nodes: 'Keep best node scores',
+    nodesNote: 'Conflict count, then parameter span',
+    labels: 'Compare labels on ties',
+    labelsNote: 'Then smaller angle, then left side',
+    result: 'Deliver selected route',
+    resultNote: 'Best even if blocked; warn on node contact',
+  },
+} as const;

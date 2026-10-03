@@ -147,7 +147,7 @@ describe('layered Flow layout', () => {
 
     expect(centers).toEqual([34, 34, 34]);
     for (const route of output.relations) {
-      expect(route.points.every(point => point[1] === 34)).toBe(true);
+      expect(route.route.points.every(point => point[1] === 34)).toBe(true);
     }
   });
 
@@ -165,7 +165,7 @@ describe('layered Flow layout', () => {
       });
       const source = boundsOf(output, 'source');
       const target = boundsOf(output, 'target');
-      const bends = output.relations[0]?.points.slice(1, -1) ?? [];
+      const bends = output.relations[0]?.route.points.slice(1, -1) ?? [];
       const gap =
         direction === 'right'
           ? [source.x + source.width, target.x]
@@ -219,12 +219,12 @@ describe('layered Flow layout', () => {
 
     expect(first).toEqual(second);
     expect(first.relations).toHaveLength(3);
-    expect(first.relations[0]?.points).not.toEqual(first.relations[1]?.points);
+    expect(first.relations[0]?.route.points).not.toEqual(first.relations[1]?.route.points);
     expect(first.relations[0]?.labelBounds).toMatchObject({ width: 30, height: 12 });
     for (const route of first.relations) {
-      expect(route.points.length).toBeGreaterThanOrEqual(2);
-      route.points.slice(1).forEach((point, index) => {
-        const previous = route.points[index];
+      expect(route.route.points.length).toBeGreaterThanOrEqual(2);
+      route.route.points.slice(1).forEach((point, index) => {
+        const previous = route.route.points[index];
         expect(point[0] === previous[0] || point[1] === previous[1]).toBe(true);
       });
     }
@@ -333,7 +333,7 @@ describe('layered Flow layout', () => {
 
     expect(api.x + api.width / 2).toBe(45);
     expect(database.x + database.width / 2).toBe(45);
-    expect(output.relations[0]?.points.every(point => point[0] === 45)).toBe(true);
+    expect(output.relations[0]?.route.points.every(point => point[0] === 45)).toBe(true);
   });
 
   it('lays out recursive Groups before their parent and keeps cross-Group endpoints in one root coordinate system', () => {

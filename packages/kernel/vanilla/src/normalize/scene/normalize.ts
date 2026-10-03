@@ -1,4 +1,10 @@
-import type { CoreProviderContribution, IRChild, IRScope } from '@retikz/core';
+import type {
+  CompositeInputBinding,
+  CompositeInputPath,
+  CoreProviderContribution,
+  IRChild,
+  IRScope,
+} from '@retikz/core';
 import { CURRENT_IR_VERSION, PathKind } from '@retikz/core';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
@@ -7,6 +13,7 @@ import type {
   InputEmbedAuthoringSite,
   InputEmbedContext,
   InputEmbedThemeContext,
+  InputEmbedContribution,
   NormalizedInputEmbedChildren,
 } from '../embed';
 import type { InputNode } from '../node';
@@ -39,6 +46,8 @@ type ReusedEmbedIdentity = {
 
 /** 规范化过程共享的上下文 */
 type NormalizeContext = {
+  runtimePath: CompositeInputPath;
+  runtimeInputs: Array<CompositeInputBinding>;
   layerId: string;
   parentId: string;
   path: Array<string>;
@@ -58,6 +67,26 @@ type NormalizeContext = {
 type AdapterOutputContext = NormalizeContext & {
   embedId: string;
 };
+
+/** 准备 traversal 只描述作者位置，不执行 adapter 或构造占位贡献 */
+export type InputEmbedSite = Readonly<{
+  input: AnyInputEmbed;
+  context: Omit<InputEmbedContext, 'normalizeChildren'>;
+  sourcePath: string;
+  children: (children: ReadonlyArray<InputChild>) => InputChildrenTraversal;
+}>;
+
+/** 子项完整贡献就绪后，复用同步 normalizer */
+export type InputChildrenTraversal = Readonly<{
+  sites: ReadonlyArray<InputEmbedSite>;
+  normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => NormalizedInputEmbedChildren;
+}>;
+
+/** 根 traversal 与唯一 Source 归一化的衔接 */
+export type InputSceneTraversal = Readonly<{
+  sites: ReadonlyArray<InputEmbedSite>;
+  normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => NormalizedInputScene;
+}>;
 
 /** 判断输入是否为 Scene Input */
 export const isInputScene = (input: unknown): input is InputScene =>
@@ -157,6 +186,154 @@ const isCoreScope = (child: IRChild): child is IRScope => child.type === 'scope'
 const childSourcePath = (context: NormalizeContext, index: number): string =>
   context.sourcePath.length === 0 ? `children[${index}]` : `${context.sourcePath}.children[${index}]`;
 
+/** 同一嵌入的多个作者 slot 按调用顺序区分；首个 slot 保留正常单槽路径 */
+const embedSlotSourcePath = (sourcePath: string, slotIndex: number): string =>
+  slotIndex === 0 ? `${sourcePath}.embed` : `${sourcePath}.embed.slots[${slotIndex}]`;
+
+/** 同步归一化与准备 traversal 共用的 Scope 位置及有效 Theme */
+const scopeContextOf = (input: InputScope, identity: string | undefined, ctx: NormalizeContext): NormalizeContext => {
+  const scopeThemeContext =
+    ctx.embedThemeContext === undefined || ctx.resolveEmbedScopeTheme === undefined
+      ? undefined
+      : ctx.resolveEmbedScopeTheme(ctx.embedThemeContext, input.theme, `${ctx.sourcePath}.theme`);
+  return {
+    ...ctx,
+    parentId: identity ?? ctx.parentId,
+    path: identity === undefined ? ctx.path : [...ctx.path, identity],
+    ...(input.localNamespace ? { identityFrame: nestedIdentityFrame(ctx, identity) } : {}),
+    sourcePath: `${ctx.sourcePath}.scope`,
+    ...(scopeThemeContext === undefined ? {} : { embedThemeContext: scopeThemeContext }),
+  };
+};
+
+/** adapter contribution 到达后按固定作者位置消费，不能在归一化时发现新计算 */
+const completedAdaptersOf = (
+  sites: ReadonlyArray<InputEmbedSite>,
+  contributions: ReadonlyArray<InputEmbedContribution>,
+): NonNullable<InputNormalizeOptions['adapters']> => {
+  const kinds = [...new Set(sites.map(site => site.input.kind))];
+  return kinds.map(kind => {
+    const positions = sites.flatMap((site, index) =>
+      site.input.kind === kind ? [{ site, contribution: contributions[index] }] : [],
+    );
+    let index = 0;
+    return {
+      kind,
+      lower: (props, context) => {
+        const position = positions[index++];
+        if (
+          position.site.input.props !== props ||
+          position.site.context.id !== context.id ||
+          JSON.stringify(position.site.context.identityPath) !== JSON.stringify(context.identityPath)
+        )
+          throw new RetikzVanillaError(
+            RetikzVanillaErrorCode.Normalize,
+            'Prepared contribution does not match its authoring position',
+          );
+        return position.contribution;
+      },
+    };
+  });
+};
+
+/** 沿唯一作者分派规则读取实际嵌入位置；opaque props 的子项由 adapter 明确登记 */
+const collectChildEmbedSites = (
+  children: ReadonlyArray<InputChild>,
+  ctx: NormalizeContext,
+  offset = 0,
+): Array<InputEmbedSite> => {
+  const sites: Array<InputEmbedSite> = [];
+  for (const [index, input] of children.entries()) {
+    const context = { ...ctx, sourcePath: childSourcePath(ctx, offset + index) };
+    if (isInputEmbed(input)) {
+      const id = inputEmbedIdentityOf(input, context);
+      const location: Omit<InputEmbedContext, 'normalizeChildren'> = {
+        id,
+        kind: input.kind,
+        layerId: ctx.layerId,
+        identityPath: [...ctx.path, id],
+        ...(ctx.embedThemeContext === undefined
+          ? {}
+          : { theme: ctx.embedThemeContext.theme, themeStyles: ctx.embedThemeContext.themeStyles }),
+      };
+      let slotIndex = 0;
+      const reusedEmbedIdentity: ReusedEmbedIdentity = { id, used: false };
+      sites.push({
+        input,
+        context: location,
+        sourcePath: context.sourcePath,
+        children: nested => {
+          const nestedContext = {
+            ...context,
+            parentId: id,
+            path: [...ctx.path, id],
+            sourcePath: embedSlotSourcePath(context.sourcePath, slotIndex++),
+          };
+          const nestedSites = collectChildEmbedSites(nested, nestedContext);
+          return {
+            sites: nestedSites,
+            normalize: contributions =>
+              normalizeEmbeddedChildren(
+                nested,
+                {
+                  ...nestedContext,
+                  adapters: completedAdaptersOf(nestedSites, contributions),
+                },
+                reusedEmbedIdentity,
+              ),
+          };
+        },
+      });
+    } else if (isInputScope(input)) {
+      const nested = scopeContextOf(input, readIdentity(input), context);
+      sites.push(...collectChildEmbedSites(input.children, nested));
+    }
+  }
+  return sites;
+};
+
+/** 准备阶段与同步归一化共用的作者分层上下文 */
+export const createInputSceneTraversal = (
+  scene: InputScene,
+  options: InputNormalizeOptions = {},
+): InputSceneTraversal => {
+  const layers = asLayerStack(scene);
+  const sites: Array<InputEmbedSite> = [];
+  const layerIds = new Set<string>();
+  let offset = 0;
+  for (const layer of layers) {
+    if (layerIds.has(layer.id))
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Normalize,
+        `normalizeScene: duplicate identity "${layer.id}" at layer "${layer.id}"`,
+      );
+    layerIds.add(layer.id);
+    const context: NormalizeContext = {
+      layerId: layer.id,
+      parentId: layer.id,
+      path: [layer.id],
+      adapters: options.adapters,
+      embedThemeContext: options.embedThemeContext?.root,
+      resolveEmbedScopeTheme: options.embedThemeContext?.resolveScope,
+      contributions: [],
+      identityIndex: new Map(),
+      parentIndex: new Map(),
+      identityFrame: '',
+      sourcePath: '',
+      runtimePath: [],
+      runtimeInputs: [],
+      authoringSites: [],
+    };
+    sites.push(...collectChildEmbedSites(layer.children, context, offset));
+    offset += layer.children.length;
+  }
+  return {
+    sites,
+    normalize: contributions =>
+      normalizeScene(scene, { ...options, adapters: completedAdaptersOf(sites, contributions) }),
+  };
+};
+
 /** 递归确认 adapter 产物不抢占其他公开 identity */
 const validateAdapterOutputIdentities = (
   child: IRChild,
@@ -191,10 +368,12 @@ const normalizeEmbeddedChildren = (
   reusedEmbedIdentity: ReusedEmbedIdentity,
 ): NormalizedInputEmbedChildren => {
   const contributions: Array<CoreProviderContribution> = [];
+  const runtimeInputs: Array<CompositeInputBinding> = [];
   const authoringSites: Array<InputAuthoringSite> = [];
   const nestedContext: NormalizeContext = {
     ...context,
     contributions,
+    runtimeInputs,
     authoringSites,
     reusedEmbedIdentity,
   };
@@ -202,6 +381,7 @@ const normalizeEmbeddedChildren = (
     normalizeChild(child, {
       ...nestedContext,
       sourcePath: `${context.sourcePath}.children[${index}]`,
+      runtimePath: [index],
     }),
   );
   const sites: Array<InputEmbedAuthoringSite> = [];
@@ -218,6 +398,7 @@ const normalizeEmbeddedChildren = (
   }
   return Object.freeze({
     children: Object.freeze(normalizedChildren),
+    ...(runtimeInputs.length === 0 ? {} : { runtimeInputs: Object.freeze(runtimeInputs) }),
     providerDependencies: Object.freeze({
       roots: Object.freeze(contributions.flatMap(contribution => contribution.roots)),
       providers: Object.freeze(contributions.flatMap(contribution => contribution.providers)),
@@ -236,6 +417,7 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: NormalizeCon
     );
   }
   const reusedEmbedIdentity: ReusedEmbedIdentity = { id: embedId, used: false };
+  let slotIndex = 0;
   const context: InputEmbedContext = {
     id: embedId,
     kind: input.kind,
@@ -256,12 +438,16 @@ const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: NormalizeCon
           ...ctx,
           parentId: embedId,
           path: [...ctx.path, embedId],
-          sourcePath: `${ctx.sourcePath}.embed`,
+          sourcePath: embedSlotSourcePath(ctx.sourcePath, slotIndex++),
         },
         reusedEmbedIdentity,
       ),
   };
   const contribution = adapter.lower(input.props as never, context);
+  for (const binding of contribution.runtimeInputs ?? [])
+    ctx.runtimeInputs.push(
+      Object.freeze({ path: Object.freeze([...ctx.runtimePath, ...binding.path]), input: binding.input }),
+    );
   ctx.contributions.push(contribution.providerDependencies);
   validateAdapterOutputIdentities(contribution.node, {
     ...ctx,
@@ -344,23 +530,14 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
         authoring: input.authoring,
       }),
     );
-    const scopeParentId = identity ?? ctx.parentId;
-    const scopePath = identity === undefined ? ctx.path : [...ctx.path, identity];
-    const scopeThemeContext =
-      ctx.embedThemeContext === undefined || ctx.resolveEmbedScopeTheme === undefined
-        ? undefined
-        : ctx.resolveEmbedScopeTheme(ctx.embedThemeContext, input.theme, `${ctx.sourcePath}.theme`);
-    const nestedContext: NormalizeContext = {
-      ...ctx,
-      parentId: scopeParentId,
-      path: scopePath,
-      ...(input.localNamespace ? { identityFrame: nestedIdentityFrame(ctx, identity) } : {}),
-      sourcePath: `${ctx.sourcePath}.scope`,
-      ...(scopeThemeContext === undefined ? {} : { embedThemeContext: scopeThemeContext }),
-    };
+    const nestedContext = scopeContextOf(input, identity, ctx);
     return normalizeScopeWithChildren(input, children =>
       children.map((child, index) =>
-        normalizeChild(child, { ...nestedContext, sourcePath: childSourcePath(nestedContext, index) }),
+        normalizeChild(child, {
+          ...nestedContext,
+          sourcePath: childSourcePath(nestedContext, index),
+          runtimePath: [...ctx.runtimePath, 'children', index],
+        }),
       ),
     );
   }
@@ -400,8 +577,18 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
 
 /** 将 InputScene 一次性归一为唯一 Source IR、contribution 与 runtime metadata */
 export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions = {}): NormalizedInputScene => {
+  const adapterKinds = new Set<string>();
+  for (const adapter of options.adapters ?? []) {
+    if (adapterKinds.has(adapter.kind))
+      throw new RetikzVanillaError(
+        RetikzVanillaErrorCode.Normalize,
+        `Duplicate input embed adapter kind "${adapter.kind}"`,
+      );
+    adapterKinds.add(adapter.kind);
+  }
   const layers = asLayerStack(scene);
   const contributions: Array<CoreProviderContribution> = [];
+  const runtimeInputs: Array<CompositeInputBinding> = [];
   const identityIndex = new Map<string, Array<string>>();
   const parentIndex = new Map<string, string>();
   const layerIds = new Set<string>();
@@ -429,6 +616,8 @@ export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions
         ? {}
         : { resolveEmbedScopeTheme: options.embedThemeContext.resolveScope }),
       contributions,
+      runtimeInputs,
+      runtimePath: [],
       identityIndex,
       parentIndex,
       identityFrame: '',
@@ -437,7 +626,11 @@ export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions
     };
     const sceneOffset = children.length;
     const layerChildren = layer.children.map((child, index) =>
-      normalizeChild(child, { ...context, sourcePath: childSourcePath(context, sceneOffset + index) }),
+      normalizeChild(child, {
+        ...context,
+        sourcePath: childSourcePath(context, sceneOffset + index),
+        runtimePath: ['children', sceneOffset + index],
+      }),
     );
     children.push(...layerChildren);
     layerMetas.push({
@@ -480,6 +673,7 @@ export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions
   return {
     ir: { type: 'scene', version: CURRENT_IR_VERSION, ...rest, children },
     contributions: Object.freeze([...contributions]),
+    ...(runtimeInputs.length === 0 ? {} : { runtimeInputs: Object.freeze(runtimeInputs) }),
     runtimeMeta,
     authoringSites: Object.freeze(authoringSites),
   };

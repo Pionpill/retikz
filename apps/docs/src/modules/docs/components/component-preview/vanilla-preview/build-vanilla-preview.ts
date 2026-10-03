@@ -105,7 +105,7 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import { list, ListInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/container';
+import { list, ListInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -129,8 +129,8 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
-import type { IRCell, IRList, IRMap } from '@retikz/standard/container';
-import { ListDefinition, MapDefinition } from '@retikz/standard/container';
+import type { IRCell, IRList, IRMap } from '@retikz/standard/collection';
+import { ListDefinition, MapDefinition } from '@retikz/standard/collection';
 import {
   AxesDefinition,
   AxesSchema,
@@ -162,7 +162,7 @@ import {
 import type { IRTable } from '@retikz/table';
 import { TableSchema, TableStructureKind } from '@retikz/table';
 import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
-import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 import { renderToSvgString, scene, scope } from '@retikz/vanilla';
 
 import { PreviewThemeDefinitionBundle } from '../theme/presets';
@@ -625,7 +625,7 @@ const convertPreviewChild = (
   );
 };
 
-const standardAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
+const standardAdapters = (state: LibraryConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
   ...(state.adapters.has('circle') ? [CircleInputEmbedAdapter] : []),
   ...(state.adapters.has('ellipse') ? [EllipseInputEmbedAdapter] : []),
   ...(state.adapters.has('rectangle') ? [RectangleInputEmbedAdapter] : []),
@@ -634,30 +634,32 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInput
   ...(state.adapters.has('arc') ? [ArcInputEmbedAdapter] : []),
   ...(state.adapters.has('sector') ? [SectorInputEmbedAdapter] : []),
 
-  ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('list') ? [ListInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('map') ? [MapInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('list') ? [ListInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('map') ? [MapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
 ];
 
-const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
-  ...(state.adapters.has('flexLayout') ? [FlexLayoutInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('gridLayout') ? [GridLayoutInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('overlayLayout') ? [OverlayLayoutInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+const layoutAdapters = (state: LibraryConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
+  ...(state.adapters.has('flexLayout') ? [FlexLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('gridLayout') ? [GridLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('overlayLayout')
+    ? [OverlayLayoutInputEmbedAdapter as SynchronousInputEmbedAdapter<never>]
+    : []),
 ];
 
-const graphAdapters = (state: GraphConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
-  ...(state.adapters.has('graph') ? [GraphInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('group') ? [GroupInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('block') ? [BlockInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('blockHeader') ? [BlockHeaderInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('blockSection') ? [BlockSectionInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('blockRow') ? [BlockRowInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('entity') ? [EntityInputEmbedAdapter as AnyInputEmbedAdapter] : []),
-  ...(state.adapters.has('relation') ? [RelationInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+const graphAdapters = (state: GraphConversionState): ReadonlyArray<SynchronousInputEmbedAdapter<never>> => [
+  ...(state.adapters.has('graph') ? [GraphInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('group') ? [GroupInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('block') ? [BlockInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('blockHeader') ? [BlockHeaderInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('blockSection') ? [BlockSectionInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('blockRow') ? [BlockRowInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('entity') ? [EntityInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('relation') ? [RelationInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
 ];
 
 const standardDefinitionByName = {

@@ -19,17 +19,13 @@ export type StatisticsReducerDefinition<
   schema: ZodType<TReducerOperation, TReducerSource>;
   /** 该 reducer 消费的源字段名；参与 data.model strict 校验 */
   inputFields?: (operation: TReducerOperation) => Array<string>;
-  /** 该 reducer 产出的派生字段名；用于 data.model strict 源字段排除与运行时输出冲突检查，提供时必须完整声明 reduce 可能写入的字段 */
-  outputFields?: (operation: TReducerOperation) => Array<string>;
-  /** 该reducer产生的已类型化scalar字段；多值或类型不可表达的输出可只声明outputFields */
-  outputs?: (operation: TReducerOperation) => Array<DataTransformOutputDescriptor>;
-  /** 对一组 rows 执行 reducer；返回要写入输出行 / annotation 行的字段片段 */
-  reduce: (rows: Array<ExternalRow>, operation: TReducerOperation, context: TransformContext) => ExternalRow;
+  /** 完整输出字段；非标量或没有类型证据时省略 descriptor.type */
+  outputs: (operation: TReducerOperation) => Array<DataTransformOutputDescriptor>;
 };
 
 /**
  * 定义一个统计 reducer。
- * @description 保留 schema / inputFields / outputFields / reduce 之间的泛型关联；内置与自定义 reducer 都经同一 registry 入口分派。
+ * @description 保留 schema、输入字段与完整输出声明之间的泛型关联；内置与自定义 reducer 都经同一 registry 入口解析
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
  */
 export const defineStatisticsReducer = <
@@ -46,9 +42,7 @@ export const defineStatisticsReducer = <
 export type AnyStatisticsReducerDefinition = {
   schema: ZodType;
   inputFields?: (operation: never) => Array<string>;
-  outputFields?: (operation: never) => Array<string>;
-  outputs?: (operation: never) => Array<DataTransformOutputDescriptor>;
-  reduce: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => ExternalRow;
+  outputs: (operation: never) => Array<DataTransformOutputDescriptor>;
 };
 
 /** row selector 的单行选择结果 */
@@ -71,13 +65,11 @@ export type RowSelectorDefinition<
   schema: ZodType<TSelectorOperation, TSelectorSource>;
   /** 该 selector 消费的源字段名；参与 data.model strict 校验 */
   inputFields?: (operation: TSelectorOperation) => Array<string>;
-  /** 对一组 rows 执行 selector；返回被选原始行与可选排名 */
-  select: (rows: Array<ExternalRow>, operation: TSelectorOperation) => Array<RowSelection>;
 };
 
 /**
  * 定义一个 row selector。
- * @description 保留 schema / inputFields / select 之间的泛型关联；内置与自定义 selector 都经同一 registry 入口分派。
+ * @description 保留 schema 与输入字段声明之间的泛型关联；内置与自定义 selector 都经同一 registry 入口解析
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
  */
 export const defineRowSelector = <
@@ -94,8 +86,81 @@ export const defineRowSelector = <
 export type AnyRowSelectorDefinition = {
   schema: ZodType;
   inputFields?: (operation: never) => Array<string>;
-  select: (rows: Array<ExternalRow>, operation: never) => Array<RowSelection>;
 };
+
+/** reducer 的独立计算；参数由同一语义 schema 解析 */
+export type StatisticsReducerImplementation<
+  TSource extends IRDataReducerOperation = IRDataReducerOperation,
+  TOperation = TSource,
+  TResult extends ExternalRow | Promise<ExternalRow> = ExternalRow | Promise<ExternalRow>,
+> = Readonly<{
+  /** 唯一统计语义身份 */
+  definition: StatisticsReducerDefinition<TSource, TOperation>;
+  /** 规约当前组并返回声明字段 */
+  reduce: (rows: Array<ExternalRow>, operation: TOperation, context: TransformContext) => TResult;
+}>;
+
+/** 保留 schema 输入、解析参数与计算回调的关联 */
+export const defineStatisticsReducerImplementation = <
+  TSource extends IRDataReducerOperation,
+  TOperation,
+  TResult extends ExternalRow | Promise<ExternalRow>,
+>(
+  implementation: StatisticsReducerImplementation<TSource, TOperation, TResult>,
+): StatisticsReducerImplementation<TSource, TOperation, TResult> => implementation;
+
+/** 异构 reducer 计算注册项 */
+export type AnyStatisticsReducerImplementation = Readonly<{
+  /** 唯一语义身份 */
+  definition: AnyStatisticsReducerDefinition;
+  /** 已解析参数的计算 */
+  reduce: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => ExternalRow | Promise<ExternalRow>;
+}>;
+
+/** 同步统计入口限定结果类型 */
+export type AnySynchronousStatisticsReducerImplementation = Omit<AnyStatisticsReducerImplementation, 'reduce'> &
+  Readonly<{
+    /** 不返回 Promise 的计算 */
+    reduce: (rows: Array<ExternalRow>, operation: never, context: TransformContext) => ExternalRow;
+  }>;
+
+/** selector 的独立计算实现 */
+export type RowSelectorImplementation<
+  TSource extends IRDataSelectorOperation = IRDataSelectorOperation,
+  TOperation = TSource,
+  TResult extends Array<RowSelection> | Promise<Array<RowSelection>> =
+    | Array<RowSelection>
+    | Promise<Array<RowSelection>>,
+> = Readonly<{
+  /** 唯一选择语义身份 */
+  definition: RowSelectorDefinition<TSource, TOperation>;
+  /** 选择本组原始行及一基排名 */
+  select: (rows: Array<ExternalRow>, operation: TOperation) => TResult;
+}>;
+
+/** 保留 selector 定义与解析参数关联 */
+export const defineRowSelectorImplementation = <
+  TSource extends IRDataSelectorOperation,
+  TOperation,
+  TResult extends Array<RowSelection> | Promise<Array<RowSelection>>,
+>(
+  implementation: RowSelectorImplementation<TSource, TOperation, TResult>,
+): RowSelectorImplementation<TSource, TOperation, TResult> => implementation;
+
+/** 异构 selector 计算注册项 */
+export type AnyRowSelectorImplementation = Readonly<{
+  /** 唯一语义身份 */
+  definition: AnyRowSelectorDefinition;
+  /** 已解析参数的计算 */
+  select: (rows: Array<ExternalRow>, operation: never) => Array<RowSelection> | Promise<Array<RowSelection>>;
+}>;
+
+/** 同步选择入口限定结果类型 */
+export type AnySynchronousRowSelectorImplementation = Omit<AnyRowSelectorImplementation, 'select'> &
+  Readonly<{
+    /** 不返回 Promise 的计算 */
+    select: (rows: Array<ExternalRow>, operation: never) => Array<RowSelection>;
+  }>;
 
 /**
  * 从统计子算子定义 schema 中提取注册键。

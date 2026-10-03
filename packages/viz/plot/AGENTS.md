@@ -5,7 +5,7 @@
 ## 包职责契约
 
 - **解决的问题**：用可扩展的 grammar-of-graphics 把数据与可视化语义确定性地映射为 Core IR，而不依赖 chart type、framework 或 renderer
-- **拥有的契约**：Plot IR / schema、channel / scale / coordinate / mark / guide / composition 领域解析与 registries、Plot surface / typography / Axis / Legend 视觉 token、palette、style definition / preset / resolver / mapping / inspection、plot-specific transform、lowering、visualization provenance / locator
+- **拥有的契约**：Plot IR / schema、channel / scale / coordinate / mark / guide / composition 领域解析与 registries、Plot surface / typography / Axis / Legend 视觉 token、palette、style definition / preset / resolver / mapping / inspection、视觉 position adjustment、lowering、visualization provenance / locator
 - **不拥有的能力**：Chart canvas / presentation / recipe token、宿主无关的数据模型与 transform 算法、跨领域 Legend 视觉结构 / 内部布局 / lowering、Core Theme 继承、Core IR / Scene 语义、SVG / Canvas 执行、`InputPlot` authoring、React / Vanilla adapter 与业务 dashboard 状态
 - **输入与输出**：接收已形成的 `IRPlot`、Data view / datasets、plot definitions 与 lowering options，向 Standard 产生已经解析好的通用绘图输入，并输出 Core IR contribution、plot lineage / locator 和 diagnostics；不直接输出 DOM、SVG 或 Canvas
 - **缺口流向**：通用数据能力下沉 `@retikz/data`；通用机制 / 几何能力下沉 core / math；被多个领域复用的绘图 composite 进入 `@retikz/standard`；完整图表 presentation 上移 Chart；`InputPlot` normalize、`PlotSource` / `InputPlotEmbed` 与输入接入进入 `@retikz/plot-vanilla`；React props / children 进入 `@retikz/plot-react`；只有依赖可视化语法轴的能力才进入 plot
@@ -18,7 +18,7 @@
 shared/       无依赖共享词汇、纯函数、映射和工具类型
 schemas/      Zod schema 与 Plot IR 类型真源
 contract/     coordinate / scale / mark / channel / guide / locator 等可视化扩展契约与公开类型
-providers/    内置 definition / implementation、plot-specific transform、BUILTIN_* 与 registry merge
+providers/    内置 definition / implementation、视觉 position adjustment、BUILTIN_* 与 registry merge
 resolve/      消费 Source IR + 窄 resolve context，统一做 context determination、lookup、默认、优先级与领域校验，产出 Canonical / Effective / Resolution
 pipeline/     创建 context、排阶段并调度 resolver，消费已确定结果后完成 Tier 2 -> Kernel IR 的 lowering / emit
 ```
@@ -49,7 +49,7 @@ pipeline/     创建 context、排阶段并调度 resolver，消费已确定结�
 - core IR / Scene 类型从 `@retikz/core` 获取，不在 plot 内复制。
 - title、entries、swatch / ramp / symbol、约束布局与 artifact 等通用 Legend 呈现使用 `@retikz/standard`；plot 只拥有 channel / scale / formatter、guide resolve、theme mapping、provenance / locator 与交互意图。
 - 有限 / 无穷数值判断、字段解析、label 格式化、scale 解析等优先使用所属模块已有 helper。
-- 通用数据模型、字段、transform / statistics / format 与 lineage 从 `@retikz/data` 获取；plot-specific transform 复用 data contract，不复制 apply pipeline。
+- 通用数据模型、字段、transform / statistics / format 与 lineage 从 `@retikz/data` 获取；所有内置行数据变换由 Data 根入口提供，Plot 保留数据作用域与视觉消费，不复制 definition、registry 或 apply pipeline。
 - 函数保持纯计算和 plain data；不要把 d3 scale 函数、class 实例、ReactNode 等放入 IR。
 
 ## Registry 规则

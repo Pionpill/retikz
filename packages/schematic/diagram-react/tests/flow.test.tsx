@@ -1,7 +1,7 @@
 import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { createInputScene } from '@retikz/react';
-import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
+import { normalizeScene, prepareProcessingInput, processToStaticInputResult } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -742,4 +742,59 @@ describe('@retikz/diagram-react/flow', () => {
 
     expect(artifact?.value).toMatchObject({ elements: [{ id: 'only', kind: 'entity' }] });
   });
+});
+
+it('compiles bend and complete labels identically through React, Vanilla and direct Source', () => {
+  const relation = {
+    source: 'a',
+    target: 'b',
+    routing: { kind: 'bend' as const, outAngle: -45 },
+    label: {
+      text: 'Continue',
+      position: 0.25,
+      sloped: true,
+      interrupt: true,
+      gap: 6,
+      font: { size: 18 },
+      textColor: '#123456',
+    },
+  };
+  const entities = [
+    { id: 'a', text: 'A' },
+    { id: 'b', text: 'B' },
+  ];
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowEntities items={entities} />
+      <FlowReact.FlowRelations items={[relation]} />
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  const vanilla = normalizeFlowDiagram({
+    entities,
+    groups: [],
+    layouts: [],
+    children: ['a', 'b'],
+    relations: [relation],
+  });
+  const direct = FlowDiagramSchema.parse({
+    namespace: 'diagram',
+    type: 'flow',
+    entities,
+    groups: [],
+    layouts: [],
+    children: ['a', 'b'],
+    relations: [relation],
+  });
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
+  expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
+  const providers = prepareProcessingInput(input.scene, { adapters: input.adapters }).coreOptions;
+  const expected = processToStaticInputResult(
+    { type: 'scene', version: 1, children: [direct] },
+    { compile: providers },
+  ).scene;
+  expect(
+    processToStaticInputResult({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene,
+  ).toEqual(expected);
+  expect(processToStaticInputResult(input.scene, { adapters: input.adapters }).scene).toEqual(expected);
 });

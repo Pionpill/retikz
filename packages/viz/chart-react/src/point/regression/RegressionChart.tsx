@@ -7,17 +7,17 @@ import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectRegressionChartDeclarations } from './declaration-collection';
 
 /** RegressionChart React 根属性 */
-export type RegressionChartProps = TypedChartCommonProps<IRRegressionChart>;
+export type RegressionChartProps<TNative = never> = TypedChartCommonProps<IRRegressionChart, TNative>;
 
 /** Regression 具体类型的 Chart React 组件 */
 export const RegressionChart = createTypedChartComponent<
-  RegressionChartProps,
+  RegressionChartProps<unknown>,
   IRRegressionChart,
-  RegressionChartInputEmbedProps
+  RegressionChartInputEmbedProps<unknown>
 >(
   'RegressionChart',
   props =>
-    createTypedChartInput<RegressionChartProps, IRRegressionChart, RegressionChartInputEmbedProps>(
+    createTypedChartInput<RegressionChartProps<unknown>, IRRegressionChart, RegressionChartInputEmbedProps<unknown>>(
       props,
       collectRegressionChartDeclarations(props.children),
       input => regressionChart(input),

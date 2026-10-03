@@ -5,6 +5,14 @@ description: Start with the Chart root structure, then explore data, presentatio
 
 The root fields of Chart Source describe the complete graphic. They identify its family and configure data, presentation, layout, style, and coordinates. A `recipe` selects the concrete chart type.
 
+## Data transforms and runtime entry points
+
+Every Chart root supports `transform: Array<IRDataTransformDeclaration>` and `dataExecution`. Each declaration is `{ operation, dataExecution? }`; derived encodings also wrap their operation and can configure that stage. Stages run root transforms, then derived encodings, then recipe/mark-local transforms. Priority is declaration > Chart root > executor defaults > builtin.
+
+All six React Chart families accept dataBindings, dataTransformExecutor and signal. Raw rows and dataBindings are exclusive; lowerOptions injects separate Data Definitions and Implementations. Standalone clients prepare automatically; embedded Charts enable async runtime.preparation on the outer Layout.
+
+Vanilla chart factories accept the same runtime inputs. Async SSR uses `renderChartAsync(input, { adapters: [the chart adapter], signal })` and returns a Promise of `{ svg, compileResult }`. Synchronous renderChart and React SSR use local synchronous computation. See [Data extensions](/viz/data/transform/extensions) for bindings and modes.
+
 ## Chart root structure
 
 This Point-family Scatter Source preserves authored input. Plot marks, scales, and guides generated during resolution are not written back into it.

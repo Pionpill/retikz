@@ -63,7 +63,7 @@ FlexLayout 并不执行浏览器 CSS：它测量和放置子图形 IR，没有 D
 | 多行多列共享轨道，需要跨行、跨列或二维对齐 | [GridLayout](/library/layout/grid-layout)       |
 | 多个图形放在同一区域，需要叠加与定位       | [OverlayLayout](/library/layout/overlay-layout) |
 
-FlexLayout 的换行仍然按顺序逐行分配，不建立跨行共享的列轨道。它也不负责将内容转换成列表单元格或键值条目；需要这些可视结构时，选择标准包的 [List](/library/standard/container/list) 或 [Map](/library/standard/container/map)。
+FlexLayout 的换行仍然按顺序逐行分配，不建立跨行共享的列轨道。它也不负责将内容转换成列表单元格或键值条目；需要这些可视结构时，选择标准包的 [List](/library/standard/collection/list) 或 [Map](/library/standard/collection/map)。
 
 首次使用从基础用法开始，了解如何声明容器与子项。需要组合尺寸约束或观察求解结果时进入扩展用法；查参数直接阅读 API 或 Schema 参考，只有需要理解行为依据时才阅读实现原理。
 

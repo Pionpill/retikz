@@ -1,5 +1,5 @@
-import type { ExternalDatasets, IRDataReference, IRDataScalarValue } from '@retikz/data';
-import { resolveFieldPath, resolveFieldTypes, ScalarValueSchema } from '@retikz/data';
+import type { ExternalDatasets, IRDataReference, IRDataScalarValue, DataTransformResult } from '@retikz/data';
+import { createDataView, resolveFieldPath, resolveFieldTypes, ScalarValueSchema } from '@retikz/data';
 
 import type { TableStructureContext } from '../../contract/structure';
 import { RetikzTableError } from '../../error';
@@ -9,6 +9,7 @@ import { deepFreeze } from '../../shared';
 export const createTableStructureContext = (
   data: IRDataReference | undefined,
   datasets: ExternalDatasets,
+  preparedData?: DataTransformResult,
 ): TableStructureContext => {
   if (data === undefined) {
     return Object.freeze({
@@ -18,12 +19,14 @@ export const createTableStructureContext = (
   }
 
   const parsedData = structuredClone(data);
-  if (!Object.hasOwn(datasets, parsedData.reference)) {
+  if (preparedData === undefined && !Object.hasOwn(datasets, parsedData.reference)) {
     throw new RetikzTableError(`dataset "${parsedData.reference}" not found in provided datasets`);
   }
-  const rows = datasets[parsedData.reference];
+  const rows = preparedData?.rows ?? datasets[parsedData.reference];
   const sourceIndices = deepFreeze(rows.map((_, index) => index));
-  const model = parsedData.model === undefined ? undefined : deepFreeze(parsedData.model);
+  const modelSource = preparedData?.model ?? parsedData.model;
+  const model = modelSource === undefined ? undefined : deepFreeze(structuredClone(modelSource));
+  const preparedView = preparedData === undefined ? undefined : createDataView(preparedData.rows, preparedData.model);
 
   const resolveScalarField = (sourceIndex: number, field: string): IRDataScalarValue | undefined => {
     if (!Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex >= rows.length) {
@@ -46,8 +49,13 @@ export const createTableStructureContext = (
       ...(model === undefined ? {} : { model }),
       sourceIndices,
     }),
-    resolveFieldTypes: (sourceFields: ReadonlySet<string>) =>
-      resolveFieldTypes(parsedData.model, rows, new Set(sourceFields)),
+    resolveFieldTypes: (sourceFields: ReadonlySet<string>) => {
+      if (preparedView === undefined) return resolveFieldTypes(parsedData.model, rows, new Set(sourceFields));
+      const declared = new Set(preparedView.model.map(field => field.name));
+      for (const field of sourceFields)
+        if (!declared.has(field)) throw new RetikzTableError(`unknown field "${field}" in prepared Table data model`);
+      return new Map([...preparedView.fieldTypes].filter(([name]) => sourceFields.has(name)));
+    },
     resolveField: resolveScalarField,
   });
 };

@@ -63,7 +63,7 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
         zIndex={2}
       />
       <PointMark
-        transform={[coordinate1DCompositionOperation]}
+        transform={[{ operation: coordinate1DCompositionOperation }]}
         x="practiceX"
         anchorId={{ prefix: 'practice', field: 'practiceId' }}
         text="practiceGlyph"
@@ -77,7 +77,7 @@ export const Coordinate1dCompositionPreview = (values: Coordinate1dCompositionPr
       />
       {values.targetLabelVisible ? (
         <PointMark
-          transform={[coordinate1DCompositionOperation]}
+          transform={[{ operation: coordinate1DCompositionOperation }]}
           x="practiceX"
           text="practiceLabel"
           textColor="#334155"

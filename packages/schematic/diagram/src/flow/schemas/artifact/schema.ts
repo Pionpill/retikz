@@ -1,8 +1,15 @@
-import { PositionSchema } from '@retikz/core';
+import {
+  BendAngleSchema,
+  BendOutAngleSchema,
+  BendInAngleSchema,
+  BendLoosenessSchema,
+  BendDirection,
+  PositionSchema,
+} from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutArtifactRectSchema } from '@retikz/layout';
 import type { infer as ZodInfer, ZodType } from 'zod';
-import { array, discriminatedUnion, lazy, literal, strictObject, union } from 'zod';
+import { array, discriminatedUnion, lazy, literal, strictObject, union, tuple, enum as zodEnum } from 'zod';
 
 import { FlowRoutingKind } from '../../shared';
 
@@ -69,7 +76,7 @@ const FlowOrthogonalRouteArtifactSchema = strictObject({
   points: array(PositionSchema).min(2).describe('Canonical Flow-local orthogonal point chain.'),
 });
 
-export const FlowRouteArtifactSchema = discriminatedUnion('kind', [
+const FlowPointRouteArtifactSchema = discriminatedUnion('kind', [
   FlowStraightRouteArtifactSchema,
   FlowOrthogonalRouteArtifactSchema,
   FlowOrthogonalRouteArtifactSchema.extend({
@@ -83,6 +90,24 @@ export const FlowRouteArtifactSchema = discriminatedUnion('kind', [
     ),
   }),
 ]).describe('Canonical renderer-neutral Flow relation route.');
+
+const FlowBendRouteShape = {
+  kind: literal('bend'),
+  points: tuple([PositionSchema, PositionSchema]).describe('Two reference endpoint centers in Flow-local coordinates.'),
+};
+
+export const FlowRouteArtifactSchema = union([
+  FlowPointRouteArtifactSchema,
+  strictObject({ ...FlowBendRouteShape, bendDirection: zodEnum(BendDirection), bendAngle: BendAngleSchema.unwrap() }),
+  strictObject({
+    ...FlowBendRouteShape,
+    outAngle: BendOutAngleSchema.unwrap(),
+    inAngle: BendInAngleSchema.unwrap(),
+    looseness: BendLoosenessSchema.unwrap(),
+  }),
+]).describe(
+  'Canonical reference route with exactly one active parameter family; boundary clipping and arrow shortening remain Core responsibilities.',
+);
 
 export const FlowRelationArtifactSchema = strictObject({
   source: NonBlankStringSchema.describe('Authored source Flow element identity.'),

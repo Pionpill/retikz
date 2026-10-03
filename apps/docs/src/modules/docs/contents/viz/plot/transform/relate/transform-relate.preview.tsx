@@ -38,7 +38,7 @@ export const TransformRelatePreview = (values: TransformRelatePreviewValues, lan
         size={5}
       />
       <RelationMark
-        transform={[relateOperationOf(values)]}
+        transform={[{ operation: relateOperationOf(values) }]}
         source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
         target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
         style={{

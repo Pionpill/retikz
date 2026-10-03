@@ -21,11 +21,12 @@ import OpaqueColorFlow from '@/modules/docs/contents/kernel/packages/foundation/
 import InspectCompileFlow from '@/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-compile-flow';
 import AffineCompositionFlow from '@/modules/docs/contents/kernel/packages/math/transforms/affine-composition-flow';
 import CoordinateConversionFlow from '@/modules/docs/contents/kernel/packages/math/transforms/coordinate-conversion-flow';
+import { synchronousInputAdaptersOf } from '@/modules/docs/lib';
 
 /** 经过 React authoring 与 Vanilla normalize 读取逻辑图的 Source IR */
 const readLogicFigure = (element: ReactNode) => {
   const input = createInputScene(element);
-  return normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
+  return normalizeScene(input.scene, { adapters: synchronousInputAdaptersOf(input.adapters) }).ir.children[0];
 };
 
 describe('LogicFigure semantic vocabulary', () => {

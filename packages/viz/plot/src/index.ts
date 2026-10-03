@@ -9,6 +9,7 @@ export {
   lowerPlots,
   lowerPlotWithLineage,
   PlotProviderKey,
+  preparePlotData,
 } from './pipeline';
 export * from './providers';
 export type { PlotFacetCompositionResolveContext } from './resolve';

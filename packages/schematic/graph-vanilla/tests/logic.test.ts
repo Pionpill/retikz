@@ -11,7 +11,7 @@ import {
   GroupProviderKey,
   RelationProviderKey,
 } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
@@ -58,7 +58,7 @@ const contextOf = (id: string, kind: string): InputEmbedContext => ({
   layerId: 'layer',
   identityPath: ['layer', id],
 });
-const lower = <TProps>(spec: InputEmbed<TProps>, adapter: InputEmbedAdapter<TProps>) =>
+const lower = <TProps>(spec: InputEmbed<TProps>, adapter: SynchronousInputEmbedAdapter<TProps>) =>
   adapter.lower(spec.props, contextOf(spec.id ?? '__test-embed', spec.kind));
 describe('@retikz/graph-vanilla package boundary', () => {
   it('exports one adapter and builder for each Graph semantic composite', async () => {

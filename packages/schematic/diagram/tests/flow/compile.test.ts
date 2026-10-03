@@ -83,7 +83,7 @@ const input: FlowLayoutInput = {
 const output = (): {
   elements: Array<{ id: string; bounds: { x: number; y: number; width: number; height: number } }>;
   relations: Array<{
-    points: Array<[number, number]>;
+    route: { kind: 'orthogonal'; cornerRadius: number; points: Array<[number, number]> };
     labelBounds: { x: number; y: number; width: number; height: number };
   }>;
 } => ({
@@ -93,12 +93,16 @@ const output = (): {
   ],
   relations: [
     {
-      points: [
-        [-0, 5],
-        [10, 5],
-        [10, 5],
-        [20, 5],
-      ],
+      route: {
+        kind: 'orthogonal',
+        cornerRadius: 6,
+        points: [
+          [-0, 5],
+          [10, 5],
+          [10, 5],
+          [20, 5],
+        ],
+      },
       labelBounds: { x: 11, y: 3, width: 8, height: 4 },
     },
   ],
@@ -177,19 +181,19 @@ describe('Flow layout callback execution', () => {
       input,
     );
 
-    mutableOutput.relations[0].points[0][0] = 99;
+    mutableOutput.relations[0].route.points[0][0] = 99;
 
     expect(callCount).toBe(1);
     expect(receivedInput).not.toBe(input);
     expect(Object.isFrozen(receivedInput)).toBe(true);
     expect(Object.isFrozen(receivedInput?.elements)).toBe(true);
-    expect(result.relations[0]?.points).toEqual([
+    expect(result.relations[0]?.route.points).toEqual([
       [0, 5],
       [10, 5],
       [20, 5],
     ]);
     expect(Object.isFrozen(result)).toBe(true);
-    expect(Object.isFrozen(result.relations[0]?.points)).toBe(true);
+    expect(Object.isFrozen(result.relations[0]?.route.points)).toBe(true);
   });
 
   it('rejects Promise and non-plain callback outputs with the Definition callback error', () => {
@@ -237,10 +241,14 @@ describe('Flow layout callback execution', () => {
         relations: [
           {
             ...output().relations[0],
-            points: [
-              [11, 5],
-              [20, 5],
-            ],
+            route: {
+              kind: 'orthogonal',
+              cornerRadius: 6,
+              points: [
+                [11, 5],
+                [20, 5],
+              ],
+            },
           },
         ],
       },
@@ -249,11 +257,15 @@ describe('Flow layout callback execution', () => {
         relations: [
           {
             ...output().relations[0],
-            points: [
-              [0, 5],
-              [10, 7],
-              [20, 5],
-            ],
+            route: {
+              kind: 'orthogonal',
+              cornerRadius: 6,
+              points: [
+                [0, 5],
+                [10, 7],
+                [20, 5],
+              ],
+            },
           },
         ],
       },
@@ -992,7 +1004,7 @@ describe('Flow Diagram compile transaction', () => {
           ],
           relations: [
             {
-              points,
+              route: { kind: 'orthogonal', cornerRadius: 6, points },
               labelBounds: {
                 x: labelCenter[0] - labelSize.width / 2,
                 y: labelCenter[1] - labelSize.height / 2,
@@ -1196,7 +1208,11 @@ describe('Flow Diagram compile transaction', () => {
         ],
         relations: [
           {
-            points: [childCenter, [outsideX - 16, childCenter[1]], [outsideX - 16, outsideCenter[1]], outsideCenter],
+            route: {
+              kind: 'orthogonal',
+              cornerRadius: 6,
+              points: [childCenter, [outsideX - 16, childCenter[1]], [outsideX - 16, outsideCenter[1]], outsideCenter],
+            },
             ...(labelSize === undefined
               ? {}
               : {

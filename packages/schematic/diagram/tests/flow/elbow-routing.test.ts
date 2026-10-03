@@ -90,7 +90,10 @@ describe('Flow single-elbow routing', () => {
       ]);
       const priorCalls = calls;
       expect(() =>
-        compile({ ...provider, capabilities: { ...provider.capabilities, routingKinds: ['straight', 'orthogonal'] } }),
+        compile({
+          ...provider,
+          capabilities: { ...provider.capabilities, routingKinds: ['straight', 'orthogonal', 'bend'] },
+        }),
       ).toThrow(
         expect.objectContaining({
           cause: expect.objectContaining({ code: RetikzDiagramErrorCode.FlowLayoutCapabilityUnsupported }),
@@ -299,14 +302,14 @@ describe('Flow single-elbow routing', () => {
       const input = inputFor(kind);
       const elements = elementsAt(target);
       const relations = routeLayeredRelations(input, elements);
-      expect(relations[0].points).toEqual(expected);
+      expect(relations[0].route.points).toEqual(expected);
       expect(
         executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => ({ elements, relations }) }, input)
-          .relations[0].points,
+          .relations[0].route.points,
       ).toEqual(expected);
       expect(
         routeLayeredRelations({ ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] }, elements)[0]
-          .points,
+          .route.points,
       ).toEqual(expected);
     },
   );
@@ -344,7 +347,10 @@ describe('Flow single-elbow routing', () => {
         executeFlowLayout(
           {
             ...LayeredFlowLayoutDefinition,
-            layout: () => ({ elements: elementsAt([100, 80]), relations: [{ points }] }),
+            layout: () => ({
+              elements: elementsAt([100, 80]),
+              relations: [{ route: { kind, cornerRadius: 0, points } }],
+            }),
           },
           inputFor(kind),
         ),
@@ -358,10 +364,14 @@ describe('Flow single-elbow routing', () => {
             elements: elementsAt([0, 0]),
             relations: [
               {
-                points: [
-                  [0, 0],
-                  [0, 0],
-                ],
+                route: {
+                  kind: '-|',
+                  cornerRadius: 0,
+                  points: [
+                    [0, 0],
+                    [0, 0],
+                  ],
+                },
               },
             ],
           }),

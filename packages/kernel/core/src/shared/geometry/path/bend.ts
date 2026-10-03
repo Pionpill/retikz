@@ -1,6 +1,19 @@
 import type { Position } from '@retikz/math';
+import { isFinitePoint } from '@retikz/math';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { DEG_TO_RAD } from '../angle';
+import { DEFAULT_BEND_LOOSENESS } from './constants';
+
+/** 拒绝计算溢出产生的控制点，保留 Core 几何错误归属 */
+const assertFiniteBendControls = (control1: Position, control2: Position): void => {
+  if (!isFinitePoint(control1) || !isFinitePoint(control2)) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      'Bend produced a non-finite control point (looseness / angle too large); use smaller values.',
+    );
+  }
+};
 
 /**
  * cubic Bezier 拟合 from→to 的弧形 bend
@@ -30,11 +43,9 @@ export const bendControlPoints = (
 
   const c1: Position = [from[0] + dx / 3 + ctlOffset * nx, from[1] + dy / 3 + ctlOffset * ny];
   const c2: Position = [from[0] + (2 * dx) / 3 + ctlOffset * nx, from[1] + (2 * dy) / 3 + ctlOffset * ny];
+  assertFiniteBendControls(c1, c2);
   return [c1, c2];
 };
-
-/** 默认 looseness（looseness 缺省时） */
-const DEFAULT_LOOSENESS = 1;
 
 /** self-loop（from==to）默认环大小（user units，受 looseness 缩放） */
 const DEFAULT_LOOP_SIZE = 1;
@@ -61,7 +72,7 @@ export const outInControlPoints = (
   inAngle: number,
   looseness?: number,
 ): [Position, Position] => {
-  const k = looseness ?? DEFAULT_LOOSENESS;
+  const k = looseness ?? DEFAULT_BEND_LOOSENESS;
   const chord = Math.hypot(to[0] - from[0], to[1] - from[1]);
   const distance = chord === 0 ? DEFAULT_LOOP_SIZE : chord * OUTIN_DISTANCE_FACTOR;
   const d = k * distance;
@@ -69,5 +80,6 @@ export const outInControlPoints = (
   const inDir = dirOf(inAngle);
   const c1: Position = [from[0] + d * outDir[0], from[1] + d * outDir[1]];
   const c2: Position = [to[0] + d * inDir[0], to[1] + d * inDir[1]];
+  assertFiniteBendControls(c1, c2);
   return [c1, c2];
 };

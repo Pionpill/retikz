@@ -1,5 +1,6 @@
 import type { CompositeCoreProviderKey, LayoutAxisProposal, LayoutCompositeDefinition } from '@retikz/core';
 import { defineComposite, LayoutAxisProposalKind, LayoutChildProbeKind } from '@retikz/core';
+import type { PreparedPlotData } from '@retikz/plot';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { CHART_NAMESPACE } from '../constants';
@@ -73,7 +74,20 @@ export const createChartDefinition = (
         context.warn(warning.code, warning.message, warning.subPath);
       }
       const proposal = chartProposalOf(source, resolution.presentation.layout, context.proposal);
-      const probe = context.layoutChild(resolution.presentation.surface, proposal);
+      const prepared = context.runtimeInput as PreparedPlotData | undefined;
+      const surface =
+        prepared === undefined
+          ? resolution.presentation.surface
+          : context.bindChild(resolution.presentation.surface, [
+              {
+                path:
+                  source.presentation === undefined
+                    ? ['child']
+                    : ['child', 'children', resolution.presentation.slots.indexOf('plot'), 'child'],
+                input: prepared,
+              },
+            ]);
+      const probe = context.layoutChild(surface, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) {
         try {
           return context.raise(probe.failure);

@@ -7,6 +7,14 @@ description: 用无框架 InputScene 组织图形，并在根入口处理归一�
 
 包根不依赖浏览器 DOM：可用于 SSR、构建脚本或其它框架。浏览器 SVG / Canvas 挂载位于 `@retikz/vanilla/dom` 子入口。IR、schema、几何与编译规则属于 `@retikz/core`，后端输出属于 `@retikz/render`。
 
+## 异步作者输入准备
+
+`prepareProcessingInputAsync` 先遍历完整作者树，调用 adapter.prepare 完成无计算预检，再运行各 preparation.execute 并归一化。嵌套输入由 context.prepareChildren 登记；不得在准备阶段提前执行 children。同步 adapter 明确提供 lower；异步 adapter 必须提供 prepare，宿主不会调用 lower 猜测支持。
+
+一次性编译使用 `processToStaticInputResultAsync(input, options?)`；需要控制发布时使用 `prepareStaticProcessingAsync` 的 commit / discard。交互宿主使用 `createProcessingControllerAsync`，等待 update 的 committed / discarded 结果。signal 取消与新请求使旧结果失效，失败保留已提交结果。Core 编译和 renderer 仍同步，Promise 只发生在作者准备边界。
+
+prepared runtime input 通过 contribution.runtimeInputs 按真实 Source 位置绑定，不进入 JSON IR。转交复合 child 时使用共享 opaque child transport，不依赖 id、dataset 名称或对象引用猜测实例。常用领域宿主已接好此边界；应用通常只需使用相应 async 入口。
+
 ## 安装与使用
 
 ```bash

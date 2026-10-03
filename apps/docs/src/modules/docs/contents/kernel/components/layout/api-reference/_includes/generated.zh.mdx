@@ -4,8 +4,8 @@
 
 ### Layout / LayoutProps
 
-- `Layout`：<ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={362}>将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画</ApiSourceLink>
-- `LayoutProps`：<ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={192}>React Layout 的公开属性</ApiSourceLink>
+- `Layout`：<ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={397}>将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画</ApiSourceLink>
+- `LayoutProps`：<ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={227}>React Layout 的公开属性</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -97,7 +97,7 @@ export type LayoutProps = {
   <ApiSourceLink
     label={'LayoutExtensions'}
     path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'}
-    startLine={143}
+    startLine={178}
   >
     为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展
   </ApiSourceLink>
@@ -153,7 +153,7 @@ export type LayoutExtensions = Readonly<{
   <ApiSourceLink
     label={'LayoutRetainedRuntimeOptions'}
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
-    startLine={14}
+    startLine={24}
   >
     保留执行状态以处理后续图形更新；省略 runtime 或 mode 时使用此模式
   </ApiSourceLink>
@@ -169,6 +169,8 @@ export type LayoutExtensions = Readonly<{
 | -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime Session                                               |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
+| `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
+| `readonly signal?`         | `AbortSignal`                             | —                            | 异步 preparation 与 controller 的生命周期信号                            |
 | `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
 
 </ApiTable>
@@ -178,11 +180,12 @@ export type LayoutExtensions = Readonly<{
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LayoutRetainedRuntimeOptions = Readonly<{
-  mode?: typeof LayoutRuntimeMode.Retained;
-  updateStrategy?: RuntimeUpdateStrategyValue;
-  onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
-}>;
+export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
+  Readonly<{
+    mode?: typeof LayoutRuntimeMode.Retained;
+    updateStrategy?: RuntimeUpdateStrategyValue;
+    onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
+  }>;
 ```
 
 </DocTab>
@@ -227,7 +230,7 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
   <ApiSourceLink
     label={'LayoutRuntimeOptions'}
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
-    startLine={40}
+    startLine={52}
   >
     通过 mode 选择图形更新方式；retained 支持更新策略和诊断回调，static 不接受这两个选项
   </ApiSourceLink>
@@ -243,6 +246,8 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 | -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime Session                                               |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
+| `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
+| `readonly signal?`         | `AbortSignal`                             | —                            | 异步 preparation 与 controller 的生命周期信号                            |
 | `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
 
 </ApiTable>
@@ -253,11 +258,13 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 
 <ApiTable>
 
-| 成员                       | 类型                              | 默认值 | 说明                                                         |
-| -------------------------- | --------------------------------- | ------ | ------------------------------------------------------------ |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —      | 不创建 Runtime Session，直接完整编译与物化                   |
-| `readonly onDiagnostic?`   | `never`                           | —      | static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 |
-| `readonly updateStrategy?` | `never`                           | —      | static 不支持 Program 更新策略                               |
+| 成员                       | 类型                              | 默认值   | 说明                                                         |
+| -------------------------- | --------------------------------- | -------- | ------------------------------------------------------------ |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | 不创建 Runtime Session，直接完整编译与物化                   |
+| `readonly onDiagnostic?`   | `never`                           | —        | static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 |
+| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower                |
+| `readonly signal?`         | `AbortSignal`                     | —        | 异步 preparation 与 controller 的生命周期信号                |
+| `readonly updateStrategy?` | `never`                           | —        | static 不支持 Program 更新策略                               |
 
 </ApiTable>
 
@@ -279,7 +286,7 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
   <ApiSourceLink
     label={'LayoutStaticRuntimeOptions'}
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
-    startLine={30}
+    startLine={41}
   >
     每次输入变化时完整编译图形，不保留增量执行状态
   </ApiSourceLink>
@@ -291,11 +298,13 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 
 <ApiTable>
 
-| 成员                       | 类型                              | 默认值 | 说明                                                         |
-| -------------------------- | --------------------------------- | ------ | ------------------------------------------------------------ |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —      | 不创建 Runtime Session，直接完整编译与物化                   |
-| `readonly onDiagnostic?`   | `never`                           | —      | static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 |
-| `readonly updateStrategy?` | `never`                           | —      | static 不支持 Program 更新策略                               |
+| 成员                       | 类型                              | 默认值   | 说明                                                         |
+| -------------------------- | --------------------------------- | -------- | ------------------------------------------------------------ |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | 不创建 Runtime Session，直接完整编译与物化                   |
+| `readonly onDiagnostic?`   | `never`                           | —        | static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 |
+| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower                |
+| `readonly signal?`         | `AbortSignal`                     | —        | 异步 preparation 与 controller 的生命周期信号                |
+| `readonly updateStrategy?` | `never`                           | —        | static 不支持 Program 更新策略                               |
 
 </ApiTable>
 
@@ -304,11 +313,12 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type LayoutStaticRuntimeOptions = Readonly<{
-  mode: typeof LayoutRuntimeMode.Static;
-  updateStrategy?: never;
-  onDiagnostic?: never;
-}>;
+export type LayoutStaticRuntimeOptions = LayoutPreparationOptions &
+  Readonly<{
+    mode: typeof LayoutRuntimeMode.Static;
+    updateStrategy?: never;
+    onDiagnostic?: never;
+  }>;
 ```
 
 </DocTab>
@@ -339,7 +349,7 @@ export const LayoutRuntimeMode = Object.freeze({
 ### InputLayer
 
 <p>
-  <ApiSourceLink label={'InputLayer'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={28}>
+  <ApiSourceLink label={'InputLayer'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={29}>
     作者侧 Layer 输入
   </ApiSourceLink>
 </p>
@@ -381,7 +391,7 @@ export type InputLayer = {
 ### InputScene
 
 <p>
-  <ApiSourceLink label={'InputScene'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={89}>
+  <ApiSourceLink label={'InputScene'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={90}>
     作者侧 Scene 输入
   </ApiSourceLink>
 </p>
@@ -444,7 +454,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
   <ApiSourceLink
     label={'InputSceneChildren'}
     path={'packages/kernel/vanilla/src/normalize/scene/types.ts'}
-    startLine={73}
+    startLine={74}
   >
     使用 children 简写的作者侧 Scene 输入
   </ApiSourceLink>
@@ -491,7 +501,7 @@ export type InputSceneChildren = InputSceneBase & {
   <ApiSourceLink
     label={'InputSceneLayers'}
     path={'packages/kernel/vanilla/src/normalize/scene/types.ts'}
-    startLine={81}
+    startLine={82}
   >
     使用 Layer 列表的作者侧 Scene 输入
   </ApiSourceLink>

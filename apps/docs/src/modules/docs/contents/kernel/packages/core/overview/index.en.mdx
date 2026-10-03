@@ -5,6 +5,12 @@ description: Compile complete Core IR into a deterministic Scene, then publish c
 
 `@retikz/core` owns IR, Definitions, registries, compilation, and Scene semantics. `compileToScene()` remains the stateless full-compile entry; for state across revisions, `CoreOwnerDefinition` and `createCoreProgram()` connect the same compile semantics to `@retikz/runtime`.
 
+## Composite runtime inputs
+
+`CompileOptions.compositeInputs` binds runtime input to exact Source positions for the current compilation. Composite callbacks consume it through context.runtimeInput; unbound positions yield undefined. Sources, functions and prepared results stay outside IR; Core does not interpret their domain meaning.
+
+Composite context.sourceChild preserves authored child identity; context.bindChild explicitly binds generated children. Opaque children belong to one compile context and cannot be manually unpacked or serialized. Probes, replay and direct lowering consume the same bindings without reexecuting domain computation. Retained Programs publish runtime input and Source in one transaction.
+
 ## Theme environment
 
 Core exports `ThemeMode`, `ThemeSchema`, `ResolvedTheme`, and `ResolvedThemeColors`. `IRScene.theme` and `IRScope.theme` persist only sparse, JSON-safe `style` / `mode` selectors. Compile starts from the default light baseline, inherits through Scene → Scope, and passes a complete frozen `ResolvedTheme` to `CompositeDefinition.expand`, layout-aware `compile`, and the observation context.

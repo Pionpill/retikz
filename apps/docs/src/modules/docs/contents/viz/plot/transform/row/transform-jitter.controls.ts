@@ -49,5 +49,5 @@ export const previewControlContract = {
     { id: 'subtle', label: '轻微抖动', values: { amount: 0.1, seed: 42 } },
     { id: 'strong', label: '明显抖动', values: { amount: 0.32, seed: 42 } },
   ],
-  relatedApis: ['IRPlotJitterTransform.amount', 'IRPlotJitterTransform.seed'],
+  relatedApis: ['IRDataJitterTransform.amount', 'IRDataJitterTransform.seed'],
 } satisfies PreviewControlContract;

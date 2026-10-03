@@ -17,7 +17,7 @@ export const TransformJitterPreview = (values: TransformJitterPreviewValues, lan
   const i18n = transformJitterI18n[lang];
   return (
     <Plot data={samples} width={420} height={260}>
-      <PlotTransform {...jitterOperationOf(values)} />
+      <PlotTransform operation={{ ...jitterOperationOf(values) }} />
       <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} />
       <PlotScale dimension="y" type="linear" domain={[10, 32]} />
       <PointMark x="dose" y="response" />

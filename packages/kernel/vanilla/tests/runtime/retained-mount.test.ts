@@ -303,6 +303,13 @@ describe('@retikz/vanilla retained mount', () => {
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
     const node = { namespace: 'fixture', type: 'datasetBox' } as never;
     const context = {
+      runtimeInput: undefined,
+      sourceChild: () => {
+        throw new Error('unused source child');
+      },
+      bindChild: () => {
+        throw new Error('unused generated child');
+      },
       theme: {
         mode: 'light',
         tokens: {},
@@ -341,6 +348,13 @@ describe('@retikz/vanilla retained mount', () => {
     const delegate = retained.definitions[0];
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
     const context = {
+      runtimeInput: undefined,
+      sourceChild: () => {
+        throw new Error('unused source child');
+      },
+      bindChild: () => {
+        throw new Error('unused generated child');
+      },
       theme: {
         mode: 'dark',
         tokens: {},

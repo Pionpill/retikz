@@ -1,6 +1,6 @@
 import type { FlowDiagramDefinitionOptions } from '@retikz/diagram/flow';
 import { createFlowDiagramProviderContribution } from '@retikz/diagram/flow';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { FlowDiagramEmbedKind } from './constants';
 import type { InputFlowDiagram } from './normalize';
@@ -40,7 +40,7 @@ const inputOf = (props: FlowDiagramInputEmbedProps): InputFlowDiagram => {
 };
 
 /** Flow Diagram Source root 的 InputEmbed adapter */
-export const FlowDiagramInputEmbedAdapter: InputEmbedAdapter<FlowDiagramInputEmbedProps> = {
+export const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiagramInputEmbedProps> = {
   kind: FlowDiagramEmbedKind,
   lower: props => ({
     node: normalizeFlowDiagram(inputOf(props)),

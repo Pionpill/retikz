@@ -97,20 +97,23 @@ const measureRelationLabel = (
       ...resolvedGraphOptions,
       theme: context.theme,
     });
+    const label = relation.source.label;
+    const fullLabel = typeof label === 'object' && !Array.isArray(label) ? label : undefined;
+    const textColor = fullLabel?.textColor ?? appearance.labelTextForeground;
     const labelNode: IRNode = {
       type: 'node',
       position: [0, 0],
       shape: 'rectangle',
       scale: 1,
       rotate: 0,
-      text: relation.source.label,
+      text: typeof label === 'object' && !Array.isArray(label) ? label.text : label,
       style: {
         fill: 'none',
         stroke: 'none',
         strokeWidth: 0,
-        ...(appearance.labelTextForeground === undefined ? {} : { textColor: appearance.labelTextForeground }),
-        ...(appearance.labelFont === undefined ? {} : { font: appearance.labelFont }),
-        opacity: appearance.labelOpacity,
+        ...(textColor === undefined ? {} : { textColor }),
+        font: { ...appearance.labelFont, ...fullLabel?.font },
+        opacity: fullLabel?.opacity ?? appearance.labelOpacity,
       },
       layout: { padding: 0, margin: 0, minimumSize: 0 },
     };
@@ -236,12 +239,18 @@ const relationInputs = (
     const scopeLayout = scopeId === undefined ? rootLayout : (state.effectiveLayouts.get(scopeId) ?? rootLayout);
     const routing = resolveEffectiveFlowLayout(definition, {}, scopeLayout, relation.routing).routing;
     const labelSize = measureRelationLabel(relation, context, graphOptions);
+    const label = relation.source.label;
+    const labelPlacement =
+      label !== undefined && typeof label === 'object' && !Array.isArray(label)
+        ? (({ text: _text, textColor: _textColor, font: _font, opacity: _opacity, ...geometry }) => geometry)(label)
+        : undefined;
     return {
       source: relation.source.source,
       target: relation.source.target,
       direction: relation.graph.direction ?? 'forward',
       routing,
       ...(labelSize === undefined ? {} : { labelSize }),
+      ...(labelPlacement === undefined ? {} : { labelPlacement }),
     };
   });
 

@@ -3,7 +3,7 @@ import { CompileWarningCode, compileToScene } from '@retikz/core';
 import { PathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { ListDefinition, MapDefinition } from '../../../src/container';
+import { ListDefinition, MapDefinition } from '../../../src/collection';
 
 const content: IRChild = {
   type: 'node',

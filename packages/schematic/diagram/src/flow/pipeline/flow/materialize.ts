@@ -94,24 +94,40 @@ const materializeElements = (
 const materializeRelation = (
   relation: CanonicalFlowRelation,
   output: FlowLayoutOutput['relations'][number],
-  routing: FlowMeasurement['input']['relations'][number]['routing'],
 ): IRGraphRelation => {
-  const innerPoints = output.points.slice(1, -1);
-  const label = relation.source.label === undefined ? undefined : { text: relation.source.label };
+  const { route: routing } = output;
+  const innerPoints = routing.points.slice(1, -1);
+  const labelSource = relation.source.label;
+  const label =
+    labelSource === undefined
+      ? undefined
+      : typeof labelSource === 'object' && !Array.isArray(labelSource)
+        ? labelSource
+        : { text: labelSource };
+  const bend =
+    routing.kind === 'bend'
+      ? 'outAngle' in routing
+        ? { outAngle: routing.outAngle, inAngle: routing.inAngle, looseness: routing.looseness }
+        : { bendDirection: routing.bendDirection, bendAngle: routing.bendAngle }
+      : undefined;
   return {
     ...relation.graph,
     source: { id: relation.source.source },
     target: { id: relation.source.target },
     route: [
       { type: 'step', kind: 'move', to: { id: relation.source.source } },
-      ...innerPoints.map(point => ({
-        type: 'step' as const,
-        kind: 'line' as const,
-        to: [point[0], point[1]] as [number, number],
-      })),
-      { type: 'step', kind: 'line', to: { id: relation.source.target } },
+      ...(bend !== undefined
+        ? [{ type: 'step' as const, kind: 'bend' as const, to: { id: relation.source.target }, ...bend }]
+        : [
+            ...innerPoints.map(point => ({
+              type: 'step' as const,
+              kind: 'line' as const,
+              to: [point[0], point[1]] as [number, number],
+            })),
+            { type: 'step' as const, kind: 'line' as const, to: { id: relation.source.target } },
+          ]),
     ],
-    ...(routing.kind !== 'straight' && routing.cornerRadius > 0 ? { roundedCorners: routing.cornerRadius } : {}),
+    ...('cornerRadius' in routing && routing.cornerRadius > 0 ? { roundedCorners: routing.cornerRadius } : {}),
     ...(label === undefined ? {} : { labels: [label] }),
   };
 };
@@ -121,8 +137,7 @@ export const materializeFlowGraph = (measurement: FlowMeasurement, output: FlowL
   const boundsById = new Map(output.elements.map(element => [element.id, element.bounds]));
   const relations = measurement.diagram.relations.map((relation, relationIndex) => {
     const relationOutput = output.relations[relationIndex];
-    const relationInput = measurement.input.relations[relationIndex];
-    return materializeRelation(relation, relationOutput, relationInput.routing);
+    return materializeRelation(relation, relationOutput);
   });
   return {
     namespace: 'graph',

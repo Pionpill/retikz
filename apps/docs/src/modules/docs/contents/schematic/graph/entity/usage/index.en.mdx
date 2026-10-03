@@ -114,7 +114,7 @@ An `id` is not required for drawing. Omit it for a standalone text node, and pro
 
 The Source schema allows `position` to be omitted so that a layout can supply it. Drawing still requires a position. Omitting it without a layout supplying one produces an error rather than an implicit origin.
 
-### Adding text
+### text · Adding text
 
 Use children in JSX and `text` in Vanilla or IR. They describe the same text content; do not provide both on one Entity. JSX children support strings, numbers, fragments and `Text`, not arbitrary shapes, paths or layout components.
 
@@ -124,7 +124,7 @@ As text grows, the entity size accounts for text measurement and the role's padd
 
 Entity uses `role`, `status`, optional `kind` and `group` for different layers of meaning: `role` determines structure, `status` supplies theme status appearance, `kind` can refine appearance through author rules, and `group` marks entities that belong to the same semantic group.
 
-### Choosing a role: `role`
+### role · Choosing a role
 
 A `role` expresses the object's primary meaning and determines its shape, boundary, corner radius, padding and base minimum size. Choose by meaning, not just by the outline you prefer. Longer text or a larger `layout.minimumSize` can still increase the entity size, but cannot replace role-owned structure.
 
@@ -142,7 +142,7 @@ The seven built-in roles below share the same style so you can compare their out
 
 <ComponentPreview files="entity-roles" size="md" />
 
-### Setting a status: `status`
+### status · Setting a status
 
 `status` answers “what state is it in now?” without changing the shape, boundary, corner radius or padding selected by the role. A payment task remains an `activity` after setting `status="success"`. The `state` role is an object category, not a status setting.
 
@@ -160,7 +160,7 @@ The gallery below keeps `role="activity"` fixed. From left to right it shows no 
 
 The built-in theme rules for `error`, `success` and `warning` change the main color; `disabled` changes the main color and uses a dashed outline. Exact colors follow the theme. Status rules provide defaults that explicit instance styles can override field by field. A custom predicate parameter named `status` does not become this top-level status; it only participates in predicate matching.
 
-### Refining a type: `kind`
+### kind · Refining a type
 
 Entity provides a `kind` field but no built-in kind values. The field is reserved for business-defined, stable subtypes within the current role, distinguishing objects that share the same structure. For example, tasks with the `activity` role can have different kinds. A kind does not change shape, boundary, corner radius, padding or color by itself. It affects main color, fill, stroke or other fields only when matching author `graphRules` set those `style` fields. Register the kind under its role before use. See [Custom usage](/schematic/graph/entity/custom) for definition and registration.
 
@@ -168,7 +168,7 @@ The three `docs.task.*` kinds below are registered by this documentation page. A
 
 <ComponentPreview files="entity-kinds" size="sm" />
 
-### Entity grouping: `group`
+### group · Entity grouping
 
 Within one Graph, entities with the same `group` value receive the same categorical main-color default. Author rules and explicit instance styles can still override that color. This field does not create a visible container; use [Group](/schematic/graph/group) when a shell is needed.
 

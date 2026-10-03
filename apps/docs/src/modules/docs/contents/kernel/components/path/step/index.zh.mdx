@@ -207,6 +207,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 `<Step kind="bend">` 除对称的 `bendDirection` + `bendAngle` 外，还可用 `outAngle` / `inAngle` 指定起点出射角与终点入射角，画非对称曲线；`looseness` 调控制点距离（松紧，缺省 ≈1）。**out/in 给定时优先于 `bendDirection`**。当 `from == to`（同节点 / 同坐标）时退化为**自环**——这是 out/in 最大价值场景（状态机自跳转），对称 bend 画不出。面板可在自环与双端点连接间切换，并配合虚点线方向参考调整出入射角与松紧度。
 
+任一 `outAngle` 或 `inAngle` 即选择切线模式，缺少的另一项默认分别为 `0` 或 `180`；`looseness` 默认 `1`，仅在切线模式生效。角度使用屏幕绝对方向：`0` 向右，`90` 向下。
+
 <ComponentPreview
   files={['path-outin-loop', 'path-outin-loop.preview.tsx']}
   size="md"

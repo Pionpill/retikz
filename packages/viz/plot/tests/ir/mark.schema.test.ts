@@ -960,7 +960,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_point_accepts_local_transform', () => {
     const m = {
       type: 'point',
-      transform: [{ kind: 'sort', field: 'score', order: 'descending' }],
+      transform: [{ operation: { kind: 'sort', field: 'score', order: 'descending' } }],
       encoding: { x: { field: 'x' }, y: { field: 'score' } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
@@ -969,7 +969,15 @@ describe('MarkSchema (contract)', () => {
   it('mark_path_accepts_local_transform', () => {
     const m = {
       type: 'path',
-      transform: [{ kind: 'summarize', groupBy: ['series'], metrics: [{ kind: 'sum', field: 'value', as: 'total' }] }],
+      transform: [
+        {
+          operation: {
+            kind: 'summarize',
+            groupBy: ['series'],
+            metrics: [{ kind: 'sum', field: 'value', as: 'total' }],
+          },
+        },
+      ],
       order: 'series',
       encoding: { x: { field: 'series' }, y: { field: 'total' } },
     };
@@ -979,7 +987,7 @@ describe('MarkSchema (contract)', () => {
   it('mark_reference_accepts_local_transform', () => {
     const m = {
       type: 'reference',
-      transform: [{ kind: 'derive-interval', startFrom: 'low', endFrom: 'high' }],
+      transform: [{ operation: { kind: 'derive-interval', startFrom: 'low', endFrom: 'high' } }],
       encoding: { y: { field: 'intervalEnd' } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
@@ -988,7 +996,7 @@ describe('MarkSchema (contract)', () => {
   it('custom_mark_accepts_local_transform', () => {
     const m = {
       type: 'dot',
-      transform: [{ kind: 'top-n', field: 'score', n: 3 }],
+      transform: [{ operation: { kind: 'top-n', field: 'score', n: 3 } }],
       encoding: { x: { field: 'x' }, y: { field: 'score' } },
     };
     expect(MarkOperationSchema.parse(m)).toEqual(m);

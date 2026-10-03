@@ -27,7 +27,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
-import type { IRCell, IRList, IRListCell, IRMap } from '@retikz/standard/container';
+import type { IRCell, IRList, IRListCell, IRMap } from '@retikz/standard/collection';
 
 import {
   entityPreviewAuthoringInput,
@@ -910,13 +910,15 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     );
     const members = [...standardHelpers, ...standardAdapters];
     const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
-    const containerMemberNames = new Set<string>(['list', 'map', 'ListInputEmbedAdapter', 'MapInputEmbedAdapter']);
-    const containerMembers = members.filter(name => containerMemberNames.has(name));
-    const presentationMembers = members.filter(name => !shapeMembers.includes(name) && !containerMemberNames.has(name));
+    const collectionMemberNames = new Set<string>(['list', 'map', 'ListInputEmbedAdapter', 'MapInputEmbedAdapter']);
+    const collectionMembers = members.filter(name => collectionMemberNames.has(name));
+    const presentationMembers = members.filter(
+      name => !shapeMembers.includes(name) && !collectionMemberNames.has(name),
+    );
     if (presentationMembers.length > 0)
       imports.push(`import { ${presentationMembers.join(', ')} } from '@retikz/standard-vanilla/presentation';`);
-    if (containerMembers.length > 0)
-      imports.push(`import { ${containerMembers.join(', ')} } from '@retikz/standard-vanilla/container';`);
+    if (collectionMembers.length > 0)
+      imports.push(`import { ${collectionMembers.join(', ')} } from '@retikz/standard-vanilla/collection';`);
     if (shapeMembers.length > 0)
       imports.push(`import { ${shapeMembers.join(', ')} } from '@retikz/standard-vanilla/shape';`);
   }
@@ -937,17 +939,17 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     const shapeDefinitions = definitions.standard.filter(name =>
       STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0].toUpperCase()}${kind.slice(1)}`)),
     );
-    const containerDefinitionNames = new Set<string>(['ListDefinition', 'MapDefinition']);
-    const containerDefinitions = definitions.standard.filter(name => containerDefinitionNames.has(name));
+    const collectionDefinitionNames = new Set<string>(['ListDefinition', 'MapDefinition']);
+    const collectionDefinitions = definitions.standard.filter(name => collectionDefinitionNames.has(name));
     const presentationDefinitions = definitions.standard.filter(
-      name => !shapeDefinitions.includes(name) && !containerDefinitionNames.has(name),
+      name => !shapeDefinitions.includes(name) && !collectionDefinitionNames.has(name),
     );
     if (shapeDefinitions.length > 0)
       imports.push(`import { ${shapeDefinitions.join(', ')} } from '@retikz/standard/shape';`);
     if (presentationDefinitions.length > 0)
       imports.push(`import { ${presentationDefinitions.join(', ')} } from '@retikz/standard/presentation';`);
-    if (containerDefinitions.length > 0)
-      imports.push(`import { ${containerDefinitions.join(', ')} } from '@retikz/standard/container';`);
+    if (collectionDefinitions.length > 0)
+      imports.push(`import { ${collectionDefinitions.join(', ')} } from '@retikz/standard/collection';`);
   }
   if (definitions.layout.length > 0) {
     imports.push(`import { ${definitions.layout.join(', ')} } from '@retikz/layout';`);

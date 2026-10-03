@@ -298,13 +298,18 @@ export const resolveChartPlot = (
       runtime,
     }) ?? mergedGuides;
   const marks = [...chartMarks.map((mark, index) => identifiedMarks.get(index) ?? mark), ...(extension?.marks ?? [])];
-  const transforms = [...(extension?.transform ?? []), ...encodings.transform, ...(recipe.scaffold.transform ?? [])];
+  const transforms = [
+    ...(extension?.transform ?? []),
+    ...encodings.transform,
+    ...(recipe.scaffold.transform ?? []).map(operation => ({ operation })),
+  ];
 
   const candidate = {
     namespace: 'plot' as const,
     type: 'plot' as const,
     ...(source.id === undefined ? {} : { id: `${source.id}/plot` }),
     data: source.data,
+    ...(source.dataExecution === undefined ? {} : { dataExecution: source.dataExecution }),
     ...(transforms.length === 0 ? {} : { transform: transforms }),
     scales,
     ...(themePlotDefaults === undefined && extension?.plotDefaults === undefined

@@ -1,7 +1,13 @@
-import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
+import type {
+  CompositeCoreProviderKey,
+  CoreDependencyProvider,
+  CoreProviderContribution,
+  ResolvedTheme,
+} from '@retikz/core';
+import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
-import type { LowerPlotsOptions } from '@retikz/plot';
-import { PlotProviderKey } from '@retikz/plot';
+import type { LowerPlotsOptions, PlotDataPreparationOptions } from '@retikz/plot';
+import { PlotProviderKey, preparePlotData } from '@retikz/plot';
 import { SurfaceProvider } from '@retikz/standard/presentation';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -10,6 +16,7 @@ import { eraseChartRecipeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
 import { chartProviderKeyOf, createChartDefinition } from './definition';
 import { resolveChartProviderRegistry } from './registry';
+import { resolveChartFromProvider } from './resolve';
 import type { ChartProviderContribution, ChartRecipeProviderContribution } from './types';
 
 const ChartRecipeProviderEnvelopeKey = Symbol('retikz.chart.recipeProvider');
@@ -104,3 +111,24 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
 
 /** 公开给具体 recipe provider 使用的 Core key 工厂 */
 export const chartProviderKeyOfFamily = (family: string): CompositeCoreProviderKey => chartProviderKeyOf(family);
+
+/** 复用具体 Chart provider 的精确语义与 Theme，先准备生成 Plot 的全部数据作用域 */
+export const prepareChartData = async <TSource = never>(
+  source: IRChartSource,
+  request: PlotDataPreparationOptions<TSource>,
+  contribution: CoreProviderContribution,
+  theme: ResolvedTheme = DEFAULT_RESOLVED_THEME,
+  lowerOptions: LowerPlotsOptions = {},
+) => {
+  const contributions: Array<ChartRecipeProviderContribution> = [];
+  for (const provider of contribution.providers) {
+    for (const value of Object.values(provider.datasets)) {
+      const recipe = recipeContributionOf(value);
+      if (recipe !== undefined) contributions.push(recipe);
+    }
+  }
+  const registry = resolveChartProviderRegistry(contributions);
+  const parsed = registry.schema.parse(source);
+  const resolution = resolveChartFromProvider(parsed, { registry, theme });
+  return preparePlotData(resolution.plot, request, lowerOptions);
+};

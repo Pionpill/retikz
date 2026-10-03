@@ -1,4 +1,5 @@
 import type { CompiledSceneFragment } from '../../contract';
+import { captureCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { safeErrorMessage } from '../../resolve/diagnostics';
 import type { IRChild } from '../../schemas';
@@ -31,6 +32,7 @@ export const compileObservedFragment = (
   const clip = createClipRegistry(context.round, context.clips, context.maxClipDepth);
   const sandbox: CompileContext = {
     ...context,
+    runtimeInputs: captureCompositeInputScope({ children: values }, []),
     observation: undefined,
     trace: undefined,
     paint,

@@ -30,7 +30,7 @@ description: 用 bin 把连续字段切成区间，并为直方图生成箱边�
 
 ### API 参考
 
-`IRPlotBinTransform` 的 `kind` 固定为 `'bin'`。`count`、`step`、`thresholds` 是三种可选策略；都省略时默认使用 `count: 10`。
+`IRDataBinTransform` 的 `kind` 固定为 `'bin'`。`count`、`step`、`thresholds` 是三种可选策略；都省略时默认使用 `count: 10`。
 
 | prop          | 类型                   | 默认值             | 说明                                     |
 | ------------- | ---------------------- | ------------------ | ---------------------------------------- |
@@ -64,15 +64,11 @@ description: 用 bin 把连续字段切成区间，并为直方图生成箱边�
   sources={[
     {
       label: 'bin 的 schema 与默认语义',
-      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
-      startLine: 51,
-      endLine: 96,
+      path: 'packages/viz/data/src/schemas/transform/schema.ts',
     },
     {
       label: '箱边、分桶与每箱输出',
-      path: 'packages/viz/plot/src/providers/transform/group.ts',
-      startLine: 32,
-      endLine: 126,
+      path: 'packages/viz/data/src/providers/transform/group.ts',
     },
   ]}
 />

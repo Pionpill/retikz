@@ -1,17 +1,14 @@
-import type { ExternalRow } from '@retikz/data';
 import type { DetailTableInput, TableDetailColumnInput } from '@retikz/table';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { FC, ReactNode } from 'react';
 
-import type { InputEmbeddableTableComponent, TableCommonProps } from './Table';
+import type { InputEmbeddableDataTableComponent, TableCommonProps, DetailTableDatasetProps } from './Table';
 import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 
-type DetailTableRootProps = TableCommonProps &
-  Omit<DetailTableInput, 'columns'> & {
-    /** dataRef 对应的运行时数据行 */
-    data: Array<ExternalRow>;
-  };
+type DetailTableRootProps<TSource = never> = TableCommonProps &
+  DetailTableDatasetProps<TSource> &
+  Omit<DetailTableInput, 'columns'>;
 
 type DetailTableColumnPropsMode = {
   /** 按显示顺序声明的完整明细列输入，与 children 互斥 */
@@ -28,16 +25,17 @@ type DetailTableColumnChildrenMode = {
 };
 
 /** 明细表 React 组件的 props */
-export type DetailTableProps = DetailTableRootProps & (DetailTableColumnPropsMode | DetailTableColumnChildrenMode);
+export type DetailTableProps<TSource = never> = DetailTableRootProps<TSource> &
+  (DetailTableColumnPropsMode | DetailTableColumnChildrenMode);
 
-const DetailTableComponent: FC<DetailTableProps> = props => (
+const DetailTableComponent: FC<DetailTableProps<unknown>> = props => (
   <TableRuntimeView runtime={resolveReactTableRuntime(ReactTableRuntimeKind.Detail, props)} />
 );
 
 /** 从 records 与 columns 构造并渲染 detail Table */
-export const DetailTable = DetailTableComponent as InputEmbeddableTableComponent<DetailTableProps>;
+export const DetailTable = DetailTableComponent as InputEmbeddableDataTableComponent<DetailTableProps<unknown>>;
 DetailTable.displayName = 'DetailTable';
 DetailTable.isTier2Embeddable = true;
 DetailTable.inputEmbedAdapter = TableInputEmbedAdapter;
 DetailTable.createInputEmbedProps = props =>
-  createReactTableInput(ReactTableRuntimeKind.Detail, props as DetailTableProps);
+  createReactTableInput(ReactTableRuntimeKind.Detail, props as DetailTableProps<unknown>);

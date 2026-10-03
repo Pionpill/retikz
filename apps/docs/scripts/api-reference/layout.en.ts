@@ -1,5 +1,8 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '客户端作者准备方式；同步 SSR 仍消费同步 lower':
+    'Client authoring preparation mode; synchronous SSR continues to use synchronous lower',
+  '异步 preparation 与 controller 的生命周期信号': 'Lifecycle signal for async preparation and the controller',
   '固定为 layer 的作者分层标识': 'Authoring layer discriminator, fixed to layer',
   '可省略的场景类别；归一化后固定为 scene': 'Optional scene discriminator; fixed to scene after normalization',
   '作者输入不接受版本号；归一化时写入当前 IR 版本':

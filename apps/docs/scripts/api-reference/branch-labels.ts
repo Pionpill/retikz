@@ -12,6 +12,23 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/diagram#FlowBendRoute': [
+    { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
+    { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
+  ],
+  '@retikz/diagram#FlowLayoutRouting': [
+    { value: 'straight', field: 'kind', type: "'straight'", label: { zh: '直线', en: 'Straight' } },
+    { value: 'axis', field: 'cornerRadius', type: 'number', label: { zh: '轴对齐', en: 'Axis-aligned' } },
+    { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
+    { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
+  ],
+  '@retikz/diagram#FlowLayoutRoute': [
+    { value: 'straight', field: 'kind', type: "'straight'", label: { zh: '直线', en: 'Straight' } },
+    { value: 'axis', field: 'cornerRadius', type: 'number', label: { zh: '轴对齐', en: 'Axis-aligned' } },
+    { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
+    { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
+  ],
+
   '@retikz/diagram-react#FlowLayoutProps': [
     { value: 'linear', field: 'kind', type: '"linear"', label: { zh: '线性排列', en: 'Linear placement' } },
     { value: 'grid', field: 'kind', type: '"grid"', label: { zh: '网格排列', en: 'Grid placement' } },
@@ -68,27 +85,27 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
     { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
   ],
-  '@retikz/standard/container#IRMap': [
+  '@retikz/standard/collection#IRMap': [
     { value: 'entries', field: 'data', type: 'never', label: { zh: '显式键值记录', en: 'Explicit entries' } },
     { value: 'data', field: 'entries', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
   ],
-  '@retikz/standard-vanilla/container#InputMap': [
+  '@retikz/standard-vanilla/collection#InputMap': [
     { value: 'entries', field: 'data', type: 'never', label: { zh: '显式键值记录', en: 'Explicit entries' } },
     { value: 'data', field: 'entries', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
   ],
-  '@retikz/standard-react/container#MapKeyProps': [
+  '@retikz/standard-react/collection#MapKeyProps': [
     { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],
-  '@retikz/standard-react/container#MapValueProps': [
+  '@retikz/standard-react/collection#MapValueProps': [
     { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],
-  '@retikz/standard-vanilla/container#InputList': [
+  '@retikz/standard-vanilla/collection#InputList': [
     { value: 'items', field: 'data', type: 'never', label: { zh: '显式单元格', en: 'Explicit cells' } },
     { value: 'data', field: 'items', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
   ],
-  '@retikz/standard-react/container#ListItemProps': [
+  '@retikz/standard-react/collection#ListItemProps': [
     { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],

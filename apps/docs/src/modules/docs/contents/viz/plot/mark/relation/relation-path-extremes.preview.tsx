@@ -30,7 +30,7 @@ export const RelationPathExtremesPreview = (values: RelationPathExtremesPreviewV
       />
       <PointMark x="x" y="y" fill="#ffffff" stroke="#0f766e" strokeWidth={1} size={4.5} />
       <RelationMark
-        transform={[relationPathOperationOf(values)]}
+        transform={[{ operation: relationPathOperationOf(values) }]}
         source={{ anchorId: { prefix: 'trend', field: 'sourceId' } }}
         target={{ anchorId: { prefix: 'trend', field: 'targetId' } }}
         style={{

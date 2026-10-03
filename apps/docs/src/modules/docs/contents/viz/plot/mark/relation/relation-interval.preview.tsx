@@ -54,7 +54,7 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
           labelFont={{ size: 10, weight: 'bold' }}
         />
         <RelationMark
-          transform={[relationDecreaseOperation]}
+          transform={[{ operation: relationDecreaseOperation }]}
           source={{ project: { x: 'sourceX', y: 'sourceY' } }}
           target={{ project: { x: 'targetX', y: 'targetY' } }}
           style={{
@@ -79,7 +79,7 @@ export const RelationIntervalPreview = (values: RelationIntervalPreviewValues) =
           }}
         />
         <RelationMark
-          transform={[relationIncreaseOperation]}
+          transform={[{ operation: relationIncreaseOperation }]}
           source={{ project: { x: 'sourceX', y: 'sourceY' } }}
           target={{ project: { x: 'targetX', y: 'targetY' } }}
           style={{

@@ -11,12 +11,14 @@ describe('buildPlotIR density transform forwarding', () => {
     const spec = buildPlotIR(
       <>
         <PlotTransform
-          kind="density"
-          field="value"
-          groupBy={['species']}
-          xAs="densityX"
-          densityAs="density"
-          sampleCount={96}
+          operation={{
+            kind: 'density',
+            field: 'value',
+            groupBy: ['species'],
+            xAs: 'densityX',
+            densityAs: 'density',
+            sampleCount: 96,
+          }}
         />
         <PathMark
           x="densityX"

@@ -8,6 +8,7 @@ import type {
   CompileObservationOwner,
   CompileOccurrenceLocator,
   CompositeCompileChild,
+  CompositeBoundChild,
   CompositeCompileScopeProps,
   CompositeReplay,
   CompositeReplayWrapper,
@@ -19,6 +20,7 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
+import type { CompositeRuntimeInputScope } from '../../contract/composite';
 import type { StyleResolveFrame } from '../../resolve';
 import type { IRChild, IRPathBase, IRPosition, ResolvedDropShadow } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
@@ -152,6 +154,11 @@ export type CompositeReplayTransaction = {
 /** runtime output tree 中的递归节点 */
 export type CompositeRuntimeOutputChild =
   | Readonly<{
+      kind: 'bound';
+      child: IRChild;
+      runtimeInputs: CompositeRuntimeInputScope;
+    }>
+  | Readonly<{
       kind: 'replay';
       replay: CompositeReplay;
       wrapper?: CompositeReplayWrapper;
@@ -159,7 +166,7 @@ export type CompositeRuntimeOutputChild =
   | Readonly<{
       kind: 'scope';
       props: CompositeCompileScopeProps;
-      children: ReadonlyArray<IRChild | CompositeCompileChild>;
+      children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
       spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
     }>;
 
@@ -195,6 +202,8 @@ export type CompositeCompileSession = {
 
 /** 单次 traversal 的可选隔离输入 */
 export type TraversalCompileOptions = {
+  /** probe 或显式绑定子项的局部运行时输入 */
+  runtimeInputs?: CompositeRuntimeInputScope;
   /** 隔离 traversal 继承的逻辑容器祖先 */
   ancestors?: ReadonlyArray<CompileObservationAncestor>;
   /** 当前 traversal 是否为 layoutChild 隔离 probe */
@@ -285,6 +294,8 @@ export type TraversalRuntime = {
 
 /** 递归处理一层 child 时的上下文 */
 export type TraversalFrame = {
+  /** 当前 Source 容器的局部实例输入，生成普通 child 不继承 */
+  runtimeInputs?: CompositeRuntimeInputScope;
   /** 当前 child 的外层逻辑容器，不含自身 */
   ancestors: ReadonlyArray<CompileObservationAncestor>;
   /** 只供当前直接 child 消费的父 proposal；递归 Scope 不向普通后代广播 */

@@ -1,6 +1,7 @@
+import { DataTransform } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-import { PathMarkSchema, PlotMark, PlotTransform } from '@retikz/plot';
+import { PathMarkSchema, PlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
 import { defineChartMark } from '../../_chart/contract';
@@ -85,7 +86,7 @@ export const resolveRegressionMarkGroup = (
   /** 在共享数据上创建一条 mark-local 趋势，仅额外项显式 stroke 可覆盖分类色 */
   const createTrend = (settings: IRRegressionChartProperties, explicitStroke = false): IRPlotMarkOperation => {
     const smooth: JsonObject = {
-      kind: PlotTransform.Smooth,
+      kind: DataTransform.Smooth,
       x,
       y,
       ...(series === undefined ? {} : { groupBy: [series.field] }),
@@ -102,7 +103,7 @@ export const resolveRegressionMarkGroup = (
       closed: false,
       curve: RegressionTrendCurveSchema.parse(trend.curve),
       ...(series === undefined ? {} : { series: series.field }),
-      transform: [smooth],
+      transform: [{ operation: smooth }],
       encoding: { x: { field: trendXField }, y: { field: trendYField } },
       ...constantPathPropertiesOf(settings),
       ...(series === undefined || explicitStroke

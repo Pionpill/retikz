@@ -23,7 +23,7 @@ export const TransformStackPreview = (values: TransformStackPreviewValues, lang:
   const i18n = transformStackI18n[lang];
   return (
     <Plot data={productRevenue} width={420} height={260}>
-      <PlotTransform {...stackOperationOf(values)} />
+      <PlotTransform operation={{ ...stackOperationOf(values) }} />
       <PlotScale dimension="y" type="linear" domain={yDomainByOffset[values.offset]} />
       <IntervalMark
         x="quarter"

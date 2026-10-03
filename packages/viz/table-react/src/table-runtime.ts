@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { ExternalDatasets, ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { AssertEqual, ValueOf } from '@retikz/foundation';
 import type { LayoutProps } from '@retikz/react';
 import type { LowerTablesOptions, ManualTableInput, TableDetailColumnInput, TableLayoutManifest } from '@retikz/table';
@@ -72,6 +72,12 @@ export type ReactTableRuntime = Readonly<{
   table: InputTableVariant;
   /** Table lowering 消费的外部 datasets */
   datasets: ExternalDatasets;
+  /** 规范结果或原生源绑定 */
+  dataBindings?: DataInputBindings<unknown>;
+  /** 本次请求执行器 */
+  dataTransformExecutor?: DataTransformExecutor<unknown>;
+  /** 本次请求取消信号 */
+  signal?: AbortSignal;
   /** 保留原始引用的 dataset 输入，用于 standalone compile memo */
   datasetSource: ExternalDatasets | Array<ExternalRow>;
   /** detail datasetSource 对应的 runtime reference */
@@ -86,7 +92,7 @@ export type ReactTableRuntime = Readonly<{
   display: Omit<TableLayoutHostProps, 'containerStyle'> & Pick<LayoutProps, 'style'>;
 }>;
 
-type AnyTableProps = TableProps | DetailTableProps | ManualTableProps;
+type AnyTableProps = TableProps<unknown> | DetailTableProps<unknown> | ManualTableProps;
 
 /** 从共享 props 提取 Table lowering options */
 const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
@@ -95,6 +101,15 @@ const lowerOptionsOf = (props: TableCommonProps): LowerTablesOptions => ({
   presentationDefinitions: props.presentationDefinitions,
   visualScaleDefinitions: props.visualScaleDefinitions,
   tableThemeStyles: props.tableThemeStyles,
+  formatDefinitions: props.formatDefinitions,
+  transformDefinitions: props.transformDefinitions,
+  statisticsReducerDefinitions: props.statisticsReducerDefinitions,
+  rowSelectorDefinitions: props.rowSelectorDefinitions,
+  regressionDefinitions: props.regressionDefinitions,
+  transformImplementations: props.transformImplementations,
+  statisticsReducerImplementations: props.statisticsReducerImplementations,
+  rowSelectorImplementations: props.rowSelectorImplementations,
+  regressionImplementations: props.regressionImplementations,
 });
 
 /** 从共享 props 精确提取 React Layout 宿主选项 */
@@ -117,7 +132,7 @@ const unsupportedEmbeddedPropsOf = (props: TableCommonProps): Array<string> => {
 };
 
 /** 统一 DetailTable 的 columns props 与 marker children authoring */
-const detailColumnsOf = (props: DetailTableProps): Array<TableDetailColumnInput> => {
+const detailColumnsOf = (props: DetailTableProps<unknown>): Array<TableDetailColumnInput> => {
   if (props.columns !== undefined) return props.columns;
   return buildDetailColumns(props.children);
 };
@@ -132,7 +147,7 @@ const manualStructureOf = (props: ManualTableProps): Pick<ManualTableInput, 'row
 };
 
 /** 从 detail React props 提取 framework-neutral authoring 输入 */
-const detailTableOf = (props: DetailTableProps): InputDetailTable => {
+const detailTableOf = (props: DetailTableProps<unknown>): InputDetailTable => {
   const columns = detailColumnsOf(props);
   return {
     kind: InputTableKind.Detail,
@@ -140,6 +155,8 @@ const detailTableOf = (props: DetailTableProps): InputDetailTable => {
       ...(props.id === undefined ? {} : { id: props.id }),
       dataRef: props.dataRef,
       ...(props.model === undefined ? {} : { model: props.model }),
+      ...(props.transform === undefined ? {} : { transform: props.transform }),
+      ...(props.dataExecution === undefined ? {} : { dataExecution: props.dataExecution }),
       columns,
       ...(props.header === undefined ? {} : { header: props.header }),
       ...(props.layout === undefined ? {} : { layout: props.layout }),
@@ -182,18 +199,37 @@ export const resolveReactTableRuntime = (
   let datasets: ExternalDatasets;
   let datasetSource: ExternalDatasets | Array<ExternalRow>;
   let datasetReference: string | undefined;
+  let dataBindings: DataInputBindings<unknown> | undefined;
+  let dataTransformExecutor: DataTransformExecutor<unknown> | undefined;
+  let signal: AbortSignal | undefined;
   if (kind === ReactTableRuntimeKind.Table) {
-    const tableProps = props as TableProps;
+    const tableProps = props as TableProps<unknown>;
+    if (tableProps.dataExecution !== undefined && tableProps.spec.dataExecution !== undefined)
+      throw new RetikzTableReactError('Table dataExecution cannot be supplied in both spec and root props');
     table = inputTableFromIR(tableProps.spec);
+    if (tableProps.dataExecution !== undefined) {
+      if (table.kind === InputTableKind.Manual)
+        throw new RetikzTableReactError('Manual Table does not accept dataExecution');
+      table =
+        table.kind === InputTableKind.Detail
+          ? { kind: InputTableKind.Detail, input: { ...table.input, dataExecution: tableProps.dataExecution } }
+          : { kind: InputTableKind.Custom, input: { ...table.input, dataExecution: tableProps.dataExecution } };
+    }
     datasets = tableProps.data ?? EMPTY_DATASETS;
     datasetSource = datasets;
+    dataBindings = tableProps.dataBindings;
+    dataTransformExecutor = tableProps.dataTransformExecutor;
+    signal = tableProps.signal;
   } else if (kind === ReactTableRuntimeKind.Detail) {
-    const detailProps = props as DetailTableProps;
+    const detailProps = props as DetailTableProps<unknown>;
     const detailTable = detailTableOf(detailProps);
     table = detailTable;
-    datasets = { [detailTable.input.dataRef]: detailProps.data };
-    datasetSource = detailProps.data;
+    datasets = detailProps.data === undefined ? EMPTY_DATASETS : { [detailTable.input.dataRef]: detailProps.data };
+    datasetSource = detailProps.data ?? EMPTY_DATASETS;
     datasetReference = detailTable.input.dataRef;
+    dataBindings = detailProps.dataBindings;
+    dataTransformExecutor = detailProps.dataTransformExecutor;
+    signal = detailProps.signal;
   } else {
     const manualProps = props as ManualTableProps;
     table = manualTableOf(manualProps);
@@ -213,6 +249,9 @@ export const resolveReactTableRuntime = (
   return {
     table,
     datasets,
+    dataBindings,
+    dataTransformExecutor,
+    signal,
     datasetSource,
     ...(datasetReference === undefined ? {} : { datasetReference }),
     lowerOptions: lowerOptionsOf(props),
@@ -223,11 +262,13 @@ export const resolveReactTableRuntime = (
 };
 
 /** 将 React Table props 转换为唯一的 Table Vanilla 输入 */
-export const createReactTableInput = (kind: ReactTableRuntimeKindValue, props: AnyTableProps): InputTable => {
+export const createReactTableInput = (kind: ReactTableRuntimeKindValue, props: AnyTableProps): InputTable<unknown> => {
   const runtime = resolveReactTableRuntime(kind, props, { embedded: true });
   return {
     table: runtime.table,
-    data: runtime.datasets,
+    ...(runtime.dataBindings === undefined ? { data: runtime.datasets } : { dataBindings: runtime.dataBindings }),
+    dataTransformExecutor: runtime.dataTransformExecutor,
+    signal: runtime.signal,
     lowerOptions: runtime.lowerOptions,
     composites: runtime.composites,
   };

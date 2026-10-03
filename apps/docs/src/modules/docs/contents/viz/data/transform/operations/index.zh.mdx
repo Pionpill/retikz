@@ -1,9 +1,24 @@
 ---
 title: 变换操作
-description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变换的行语义、参数和示例。
+description: 查询 Data 十二种内置变换的输入输出关系，并组合排序、汇总、选行与统计回填。
 ---
 
-`@retikz/data` 内置四种通用变换操作（operation）。它们只处理规范化行，不知道结果最终会进入图形、表格还是其它消费模块；本页用 Plot 作为默认示例宿主。
+`@retikz/data` 内置十二种行数据变换操作（operation）。它们只处理规范化行，不知道结果最终会进入图形、表格还是其它消费模块；本页用 Plot 作为默认示例宿主。
+
+## 全部内置操作
+
+十二种 operation 的 schema、Definition、registry 和计算都从 `@retikz/data` 根入口提供。操作按声明顺序执行；改变行粒度的操作会替换结果模型，后续只能读取保留下来的字段。
+
+| 操作                                 | 输入 → 输出                       | 示例/参考                                  |
+| ------------------------------------ | --------------------------------- | ------------------------------------------ |
+| sort / summarize / select / annotate | 明细 → 重排、汇总、选行或回填结果 | 本页后续示例                               |
+| stack / normalize                    | 数值明细 → 累计区间或组内占比     | [绘图组合](/viz/plot/transform/annotation) |
+| derive-interval / jitter             | 数值字段 → 起止字段或确定性扰动   | [字段派生](/viz/plot/transform/row)        |
+| bin                                  | 连续观测 → 分桶边界与统计行       | [分桶示例](/viz/plot/transform/bin)        |
+| relate                               | 分组与两端 selector → 配对结果行  | [关联示例](/viz/plot/transform/relate)     |
+| density / smooth                     | 数值样本 → 密度或拟合预测行       | [统计采样](/viz/plot/transform/statistics) |
+
+完整配置见 [Data 契约](/viz/data/reference/contract#datatransformschema)。`applyTransforms(rows, operations)` 可独立执行这些操作；Plot 与 Chart 使用同一数据契约。
 
 ## 能力一览
 
@@ -40,7 +55,7 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 
 `summarize` 按 `groupBy` 分组，并用 `metrics` 把每组明细规约成一行。输出行保留组键，每个规约器（reducer）都必须显式写 `as` 字段名。
 
-同一个变换操作内的输出名必须唯一：规约器输出不能与 `groupBy` 重名，也不能互相重名。内置规约器的静态字段冲突会在 Schema 解析阶段报错；自定义规约器由定义（Definition）的 `outputFields()` 声明动态字段，字段冲突会在执行规约器前报错。
+同一个变换操作内的输出名必须唯一：规约器输出不能与 `groupBy` 重名，也不能互相重名。内置规约器的静态字段冲突会在 Schema 解析阶段报错；自定义规约器由定义（Definition）的 `outputs` 声明动态字段，字段冲突会在执行规约器前报错。
 
 <ComponentPreview
   files={['transform-summarize', 'transform-summarize-preview.tsx', 'transform-summarize.data.ts']}
@@ -58,13 +73,15 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 
 ```tsx
 <PlotTransform
-  kind="summarize"
-  groupBy={['region']}
-  metrics={[
-    { kind: 'sum', field: 'revenue', as: 'total' },
-    { kind: 'median', field: 'revenue', as: 'median' },
-    { kind: 'count', as: 'orders' },
-  ]}
+  operation={{
+    kind: 'summarize',
+    groupBy: ['region'],
+    metrics: [
+      { kind: 'sum', field: 'revenue', as: 'total' },
+      { kind: 'median', field: 'revenue', as: 'median' },
+      { kind: 'count', as: 'orders' },
+    ],
+  }}
 />
 ```
 
@@ -88,7 +105,9 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 | `rankAs?`  | `string`                  | —        | 把一基 rank 写入该字段 |
 
 ```tsx
-<PlotTransform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
+<PlotTransform
+  operation={{ kind: 'select', groupBy: ['region'], selector: { kind: 'top', by: 'revenue', n: 3 }, rankAs: 'rank' }}
+/>
 ```
 
 ## 统计标注 annotate
@@ -114,10 +133,12 @@ description: 查询 sort、summarize、select 与 annotate 四种 Data 内置变
 
 ```tsx
 <PlotTransform
-  kind="annotate"
-  groupBy={['store']}
-  metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}
-  selectors={[{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }]}
+  operation={{
+    kind: 'annotate',
+    groupBy: ['store'],
+    metrics: [{ kind: 'mean', field: 'revenue', as: 'storeMean' }],
+    selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }],
+  }}
 />
 ```
 

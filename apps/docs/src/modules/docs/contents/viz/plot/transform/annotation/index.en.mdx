@@ -28,11 +28,20 @@ Switch `offset` to compare standard accumulation, normalization, centering, and 
 
 `diverging` is for data containing both positive and negative values. Positive segments accumulate upward from 0, while negative segments accumulate downward. This signed input must not be passed to `normalize`, whose share contract is non-negative.
 
-<ComponentPreview files={['transform-stack-diverging', 'transform-stack-diverging.preview.tsx', 'transform-stack-diverging.i18n.ts', 'transform-stack-diverging.data.ts']} defaultSourceFile="transform-stack-diverging.preview.tsx" size="lg" />
+<ComponentPreview
+  files={[
+    'transform-stack-diverging',
+    'transform-stack-diverging.preview.tsx',
+    'transform-stack-diverging.i18n.ts',
+    'transform-stack-diverging.data.ts',
+  ]}
+  defaultSourceFile="transform-stack-diverging.preview.tsx"
+  size="lg"
+/>
 
 ### API Reference
 
-`IRPlotStackTransform` fixes `kind` to `'stack'`.
+`IRDataStackTransform` fixes `kind` to `'stack'`.
 
 | prop          | type                             | default        | description                                                      |
 | ------------- | -------------------------------- | -------------- | ---------------------------------------------------------------- |
@@ -62,9 +71,7 @@ Each group calculates bounds according to `offset`:
   sources={[
     {
       label: 'stack grouping, ordering, and bounds',
-      path: 'packages/viz/plot/src/providers/transform/row.ts',
-      startLine: 33,
-      endLine: 116,
+      path: 'packages/viz/data/src/providers/transform/row.ts',
     },
   ]}
 />
@@ -90,7 +97,7 @@ Switch `basis` and grouping scope to compare 0–1 fractions, 0–100 percentage
 
 ### API Reference
 
-`IRPlotNormalizeTransform` fixes `kind` to `'normalize'`.
+`IRDataNormalizeTransform` fixes `kind` to `'normalize'`.
 
 | prop       | type                                | default          | description                             |
 | ---------- | ----------------------------------- | ---------------- | --------------------------------------- |
@@ -113,9 +120,7 @@ When `groupBy` is omitted, every row shares one total. Multiple group fields for
   sources={[
     {
       label: 'normalize negative-value validation, grouping, zero-sum guard, and output',
-      path: 'packages/viz/plot/src/providers/transform/row.ts',
-      startLine: 122,
-      endLine: 148,
+      path: 'packages/viz/data/src/providers/transform/row.ts',
     },
   ]}
 />

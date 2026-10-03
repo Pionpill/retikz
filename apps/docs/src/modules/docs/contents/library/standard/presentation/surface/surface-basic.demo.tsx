@@ -8,14 +8,24 @@ const Demo: FC = () => (
     <Surface
       id="provider-surface"
       padding={{ x: 22, y: 16 }}
-      background={{ fill: '#f8fafc' }}
-      border={{ stroke: '#64748b', strokeWidth: 1.5 }}
+      background={{ fill: 'currentColor', fillOpacity: 0.04 }}
+      border={{ stroke: 'gray', strokeWidth: 1 }}
       cornerRadius={12}
     >
       <Scope>
-        <Node id="provider" position={[-90, 0]} text="Provider" style={{ fill: '#dbeafe', stroke: '#2563eb' }} />
-        <Node id="definition" position={[90, 0]} text="Definition" style={{ fill: '#dcfce7', stroke: '#16a34a' }} />
-        <Draw way={['provider', 'definition']} arrow="->" style={{ stroke: '#64748b' }} />
+        <Node
+          id="provider"
+          position={[-90, 0]}
+          text="Provider"
+          style={{ fill: 'dodgerblue', fillOpacity: 0.12, stroke: 'dodgerblue' }}
+        />
+        <Node
+          id="definition"
+          position={[90, 0]}
+          text="Definition"
+          style={{ fill: 'dodgerblue', fillOpacity: 0.12, stroke: 'dodgerblue' }}
+        />
+        <Draw way={['provider', 'definition']} arrow="->" style={{ stroke: 'gray' }} />
       </Scope>
     </Surface>
   </Layout>

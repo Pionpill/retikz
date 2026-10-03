@@ -8,6 +8,8 @@ import type {
   CompileOccurrenceLocator,
   CompileOwnerOutputPublisher,
   CompositeCompileChild,
+  CompositeBoundChild,
+  CompositeRuntimeInputContext,
   CompositeCompileScopeProps,
   CompositeReplay,
   CompositeReplayWrapper,
@@ -36,6 +38,8 @@ import {
   NodeOwnerOutputSchema,
   ScopeOwnerOutputSchema,
 } from '../../contract';
+import type { CompositeRuntimeInputScope } from '../../contract/composite';
+import { captureCompositeInputScope, selectCompositeInputScope } from '../../contract/composite';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolver, PathResolution, PathTargetResolver, TargetResolution } from '../../resolve';
 import {
@@ -120,6 +124,7 @@ import { freezeCompileArtifact, freezeOccurrence, orderCompileArtifacts } from '
 import { canonicalizeBoundsRect, collectLayoutBounds } from './bounds';
 import {
   createCompositeReplayChild,
+  createCompositeBoundChild,
   createCompositeScopeChild,
   snapshotCompositeLayoutChild,
   snapshotCompositeOutputChild,
@@ -1199,6 +1204,7 @@ export const compileChildrenToPrimitives = (
     let framePrimitives: Array<ScenePrimitive> = [];
     try {
       const scopeFrame: TraversalFrame = {
+        runtimeInputs: frame.runtimeInputs,
         ancestors: scopeAncestors,
         childProposal: frame.childProposal,
         scopeChain: preliminaryScopeChain,
@@ -1757,7 +1763,7 @@ export const compileChildrenToPrimitives = (
   };
 
   /** opaque handle 只由当前 compile session 的 identity table 识别 */
-  const isCompositeOutputHandle = (output: unknown): output is CompositeCompileChild =>
+  const isCompositeOutputHandle = (output: unknown): output is CompositeCompileChild | CompositeBoundChild =>
     output !== null && typeof output === 'object' && runtime.context.session.outputChildren.has(output);
 
   type PreparedRuntimeOutput = Readonly<{
@@ -1802,6 +1808,10 @@ export const compileChildrenToPrimitives = (
         throw createCompositeContractError(`${owner.label} received the same output child more than once.`);
       }
       entriesToConsume.push(entry);
+      if (entry.child.kind === 'bound') {
+        preparedOutputs.set(handle, { output: entry.child });
+        return;
+      }
       if (entry.child.kind === 'scope') {
         for (const declaration of entry.child.spatialHandles ?? []) {
           for (const id of [declaration.id, ...(declaration.aliasIds ?? [])]) {
@@ -1886,7 +1896,10 @@ export const compileChildrenToPrimitives = (
     frame: TraversalFrame,
     parentOccurrence: CompileOccurrenceLocator,
     ownerOccurrence: CompileOccurrenceLocator,
-    scopeSegment: typeof CompileExpansionKind.Output | typeof CompileExpansionKind.ScopeChild,
+    scopeSegment:
+      | typeof CompileExpansionKind.Output
+      | typeof CompileExpansionKind.ScopeChild
+      | typeof CompileExpansionKind.Expand,
     compositeDepth: number,
     owner: CompositeCompileOwner,
     prepared: PreparedCompositeOutputs,
@@ -1894,6 +1907,24 @@ export const compileChildrenToPrimitives = (
     preparedScopeClipShape?: ClipShape,
     authoredPreliminaryTransforms?: ReadonlyArray<Transform>,
   ): void => {
+    if (output.kind === 'bound') {
+      const boundOccurrence: CompileOccurrenceLocator = {
+        sourcePath: parentOccurrence.sourcePath,
+        expansionPath: [...parentOccurrence.expansionPath, { kind: scopeSegment, index }],
+      };
+      compileChild(
+        output.child,
+        index,
+        { ...frame, runtimeInputs: output.runtimeInputs },
+        boundOccurrence,
+        compositeDepth,
+        true,
+        semanticOwner === undefined
+          ? undefined
+          : runtime.state.identityTracker?.createGeneratedOwner(output.child, index, semanticOwner),
+      );
+      return;
+    }
     if (output.kind === 'replay') {
       commitReplay(
         output.replay,
@@ -1945,7 +1976,7 @@ export const compileChildrenToPrimitives = (
             compileChild(
               child,
               childIndex,
-              scopeFrame,
+              { ...scopeFrame, runtimeInputs: undefined },
               childOccurrence,
               compositeDepth,
               true,
@@ -2011,6 +2042,28 @@ export const compileChildrenToPrimitives = (
       );
     }
     const resolution = resolveComposite(binding, occurrence.sourcePath);
+    const owner: CompositeCompileOwner = {
+      label: `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
+    };
+    const sourceInputs = frame.runtimeInputs ?? { source: child, bindings: [] };
+    const authoredChildren = new Map<string, CompositeBoundChild>();
+    const runtimeInputContext: CompositeRuntimeInputContext = Object.freeze({
+      runtimeInput: sourceInputs.bindings.find(input => input.path.length === 0)?.input,
+      sourceChild: path => {
+        const pathKey = JSON.stringify(path);
+        const existing = authoredChildren.get(pathKey);
+        if (existing !== undefined) return existing;
+        const selected = createCompositeBoundChild(
+          runtime.context.session,
+          owner,
+          selectCompositeInputScope(sourceInputs, path),
+        );
+        authoredChildren.set(pathKey, selected);
+        return selected;
+      },
+      bindChild: (nextChild, inputs) =>
+        createCompositeBoundChild(runtime.context.session, owner, captureCompositeInputScope(nextChild, inputs)),
+    });
     const parsedId = (resolution.node as Record<string, unknown>).id;
     const spatialOwner: SpatialHandleOwner = Object.freeze({
       namespace: child.namespace,
@@ -2026,8 +2079,31 @@ export const compileChildrenToPrimitives = (
     });
     const childAncestors: TraversalFrame['ancestors'] = [...frame.ancestors, { owner: observationOwner, occurrence }];
     if (resolution.kind === 'expand') {
-      const produced = resolution.expand(resolution.node, Object.freeze({ theme: frame.theme }));
-      const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);
+      const produced = resolution.expand(
+        resolution.node,
+        Object.freeze({ theme: frame.theme, ...runtimeInputContext }),
+      );
+      const expanded = validateExpandCompositeOutput(
+        `Composite '${key}'`,
+        produced,
+        (output, outputIndex) => {
+          if (isCompositeOutputHandle(output)) {
+            const entry = runtime.context.session.outputChildren.get(output);
+            if (entry?.owner !== owner || entry.child.kind !== 'bound')
+              throw createCompositeContractError(`${owner.label} received a child from another composite callback`);
+            return output as CompositeBoundChild;
+          }
+          return snapshotCompositeOutputChild(owner.label, output, outputIndex);
+        },
+        output => {
+          if (!isCompositeOutputHandle(output)) return output;
+          const entry = runtime.context.session.outputChildren.get(output);
+          if (entry?.owner !== owner || entry.child.kind !== 'bound')
+            throw createCompositeContractError(`${owner.label} received a child from another composite callback`);
+          return entry.child.child;
+        },
+      );
+      const preparedOutputs = preflightCompositeOutputs(expanded.children, owner);
       for (const declaration of expanded.spatialHandles ?? []) {
         frame.spatialHandleSink.push({
           ownerPath: spatialOwnerPath,
@@ -2037,8 +2113,31 @@ export const compileChildrenToPrimitives = (
           scopeChain: [...frame.scopeChain],
         });
       }
-      const expandedFrame: TraversalFrame = { ...frame, spatialOwnerPath, ancestors: childAncestors };
+      const expandedFrame: TraversalFrame = {
+        ...frame,
+        runtimeInputs: undefined,
+        spatialOwnerPath,
+        ancestors: childAncestors,
+      };
       for (const [outputIndex, output] of expanded.children.entries()) {
+        if (isCompositeOutputHandle(output)) {
+          const preparedOutput = preparedOutputs.outputs.get(output);
+          if (preparedOutput === undefined)
+            throw createCompileInvariantError('internal: bound expand child was not preflighted');
+          compileRuntimeOutputChild(
+            preparedOutput.output,
+            outputIndex,
+            expandedFrame,
+            occurrence,
+            occurrence,
+            CompileExpansionKind.Expand,
+            compositeDepth + 1,
+            owner,
+            preparedOutputs,
+            semanticOwner,
+          );
+          continue;
+        }
         compileChild(
           output,
           outputIndex,
@@ -2063,9 +2162,6 @@ export const compileChildrenToPrimitives = (
         : runtime.context.observation.select(
             Object.freeze({ owner: observationOwner, sourcePath: occurrence.sourcePath }),
           );
-    const owner: CompositeCompileOwner = {
-      label: `Composite '${key}' at ${formatCompileOccurrence(occurrence)}`,
-    };
     let callbackResult: unknown;
     let layoutProbeIndex = 0;
 
@@ -2077,6 +2173,7 @@ export const compileChildrenToPrimitives = (
       probeStyleStack: TraversalFrame['styleStack'],
       probeTheme: TraversalFrame['theme'],
       scopeChainApplied = false,
+      probeInputs?: CompositeRuntimeInputScope,
     ): Readonly<{ layoutResult: LayoutChildResult; transaction: CompositeReplayTransaction }> => {
       const warnings: Array<CompileWarningInput> = [];
       const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarningInput }> = [];
@@ -2134,6 +2231,7 @@ export const compileChildrenToPrimitives = (
         probe: true,
         proposal: clonedProposal,
         session: runtime.context.session,
+        runtimeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
         spatialOwnerPath,
         ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
         observeWarningOccurrence: current => {
@@ -2182,6 +2280,7 @@ export const compileChildrenToPrimitives = (
 
     try {
       callbackResult = callable.compile(callable.node, {
+        ...runtimeInputContext,
         theme: frame.theme,
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
         warn: (code, message, subPath) =>
@@ -2192,8 +2291,18 @@ export const compileChildrenToPrimitives = (
           }),
         layoutChild: (nextChild, proposal) => {
           const clonedProposal = cloneLayoutProposal(proposal, key, occurrence);
+          const inputEntry = runtime.context.session.outputChildren.get(nextChild);
+          if (inputEntry !== undefined && (inputEntry.owner !== owner || inputEntry.child.kind !== 'bound'))
+            throw createCompositeContractError(
+              `${owner.label} layoutChild requires an authored or bound child from this callback`,
+            );
+          const probeInputs = inputEntry?.child.kind === 'bound' ? inputEntry.child.runtimeInputs : undefined;
           const clonedChild = withProviderOutputValidationBoundary(owner.label, () =>
-            snapshotCompositeLayoutChild(owner.label, nextChild, layoutProbeIndex),
+            snapshotCompositeLayoutChild(
+              owner.label,
+              inputEntry?.child.kind === 'bound' ? inputEntry.child.child : nextChild,
+              layoutProbeIndex,
+            ),
           );
           const probeOccurrence = freezeOccurrence({
             sourcePath: occurrence.sourcePath,
@@ -2208,11 +2317,21 @@ export const compileChildrenToPrimitives = (
               frame.scopeChain,
               frame.styleStack,
               frame.theme,
+              false,
+              probeInputs,
             );
             const { layoutResult, transaction } = probed;
             transaction.materialize = ({ scopeChain, styleStack, theme }: CompositeReplayMaterializeContext) =>
-              probeLayoutChild(clonedChild, clonedProposal, probeOccurrence, scopeChain, styleStack, theme, true)
-                .transaction;
+              probeLayoutChild(
+                clonedChild,
+                clonedProposal,
+                probeOccurrence,
+                scopeChain,
+                styleStack,
+                theme,
+                true,
+                probeInputs,
+              ).transaction;
             runtime.context.session.replayTransactions.set(layoutResult.replay, transaction);
             runtime.context.session.layoutResults.set(layoutResult, { owner, replay: layoutResult.replay });
             return Object.freeze({ kind: LayoutChildProbeKind.Resolved, result: layoutResult });
@@ -2272,10 +2391,13 @@ export const compileChildrenToPrimitives = (
           `${owner.label} returned an invalid compile result; children must be an array.`,
         );
       }
-      const children = Array.from(resultChildren, (output, outputIndex): IRChild | CompositeCompileChild => {
-        if (isCompositeOutputHandle(output)) return output;
-        return snapshotCompositeOutputChild(owner.label, output, outputIndex);
-      });
+      const children = Array.from(
+        resultChildren,
+        (output, outputIndex): IRChild | CompositeCompileChild | CompositeBoundChild => {
+          if (isCompositeOutputHandle(output)) return output;
+          return snapshotCompositeOutputChild(owner.label, output, outputIndex);
+        },
+      );
       const explicitAllocation =
         resultAllocationBounds === undefined
           ? undefined
@@ -2333,6 +2455,7 @@ export const compileChildrenToPrimitives = (
     }
     const outputFrame: TraversalFrame = {
       ...frame,
+      runtimeInputs: undefined,
       ancestors: childAncestors,
       alignmentGuideSink: [],
       spatialOwnerPath,
@@ -2457,7 +2580,13 @@ export const compileChildrenToPrimitives = (
               sourcePath: 'namespace' in child ? entityPath : `${entityPath}.${child.type}`,
               expansionPath: [],
             };
-      compileChild(child, i, frame, occurrence, compositeDepth, generated, semanticOwners?.[i]);
+      const runtimeInputs =
+        useProvidedOccurrence && options.occurrence !== undefined && children.length === 1
+          ? options.runtimeInputs
+          : frame.runtimeInputs === undefined
+            ? undefined
+            : selectCompositeInputScope(frame.runtimeInputs, ['children', i]);
+      compileChild(child, i, { ...frame, runtimeInputs }, occurrence, compositeDepth, generated, semanticOwners?.[i]);
     }
   };
 
@@ -2474,6 +2603,7 @@ export const compileChildrenToPrimitives = (
     rootChildren,
     {
       childProposal: options.proposal ?? NaturalLayoutProposal,
+      runtimeInputs: options.runtimeInputs ?? context.runtimeInputs,
       ancestors: options.ancestors ?? [],
       scopeChain: options.scopeChain ?? [],
       primitiveSink: runtime.state.primitives,

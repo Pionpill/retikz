@@ -1101,12 +1101,16 @@ describe('Point Chart recipe Definitions', () => {
     expect(marks[2]).toMatchObject({
       strokeWidth: { value: 3 },
       opacity: { value: 0.6 },
-      transform: [expect.objectContaining({ method: { kind: 'quadratic' }, sampleCount: 12, extent: [1, 8] })],
+      transform: [
+        { operation: expect.objectContaining({ method: { kind: 'quadratic' }, sampleCount: 12, extent: [1, 8] }) },
+      ],
     });
     expect(marks[3]).toMatchObject({
       strokeWidth: { value: 3 },
       opacity: { value: 0.9 },
-      transform: [expect.objectContaining({ method: { kind: 'power' }, sampleCount: 20, extent: [2, 6] })],
+      transform: [
+        { operation: expect.objectContaining({ method: { kind: 'power' }, sampleCount: 20, extent: [2, 6] }) },
+      ],
     });
   });
 
@@ -1121,7 +1125,10 @@ describe('Point Chart recipe Definitions', () => {
     );
     const marks = result.semanticMarks[0].plotMarks;
     for (const mark of marks.slice(1))
-      expect(mark).toMatchObject({ series: 'species', transform: [expect.objectContaining({ groupBy: ['species'] })] });
+      expect(mark).toMatchObject({
+        series: 'species',
+        transform: [{ operation: expect.objectContaining({ groupBy: ['species'] }) }],
+      });
     expect(marks[1]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
     expect(marks[2]).toMatchObject({ stroke: { kind: 'field', value: 'species' } });
     expect(marks[3]).toMatchObject({ stroke: { kind: 'constant', value: '#00f' } });
@@ -1155,7 +1162,9 @@ describe('Point Chart recipe Definitions', () => {
         expect(result.plot.marks[2]).toMatchObject({
           strokeWidth: { value: 2 },
           opacity: { value: 0.8 },
-          transform: [expect.objectContaining({ method: extraMethods?.[0].method ?? { kind: 'quadratic' } })],
+          transform: [
+            { operation: expect.objectContaining({ method: extraMethods?.[0].method ?? { kind: 'quadratic' } }) },
+          ],
         });
     },
   );
@@ -1192,14 +1201,16 @@ describe('Point Chart recipe Definitions', () => {
             },
             transform: [
               {
-                kind: 'smooth',
-                x: 'sepalLength',
-                y: 'petalLength',
-                method: { kind: 'quadratic' },
-                sampleCount: 5,
-                extent: [1, 5],
-                xAs: '__chart.regression.trend.x',
-                yAs: '__chart.regression.trend.y',
+                operation: {
+                  kind: 'smooth',
+                  x: 'sepalLength',
+                  y: 'petalLength',
+                  method: { kind: 'quadratic' },
+                  sampleCount: 5,
+                  extent: [1, 5],
+                  xAs: '__chart.regression.trend.x',
+                  yAs: '__chart.regression.trend.y',
+                },
               },
             ],
             strokeWidth: { kind: 'constant', value: 2 },
@@ -1299,7 +1310,7 @@ describe('Point Chart recipe Definitions', () => {
     expect(path).toMatchObject({
       series: 'species',
       stroke: { kind: 'field', value: 'species', scale },
-      transform: [expect.objectContaining({ kind: 'smooth', groupBy: ['species'] })],
+      transform: [{ operation: expect.objectContaining({ kind: 'smooth', groupBy: ['species'] }) }],
     });
   });
 
@@ -1346,13 +1357,15 @@ describe('Point Chart recipe Definitions', () => {
       strokeWidth: { kind: 'constant', value: 4 },
       opacity: { kind: 'constant', value: 0.6 },
       transform: [
-        expect.objectContaining({
-          x: 'x2',
-          y: 'y',
-          method: { kind: 'polynomial', order: 2 },
-          sampleCount: 10,
-          groupBy: ['series'],
-        }),
+        {
+          operation: expect.objectContaining({
+            x: 'x2',
+            y: 'y',
+            method: { kind: 'polynomial', order: 2 },
+            sampleCount: 10,
+            groupBy: ['series'],
+          }),
+        },
       ],
     });
     expect(result.plot.marks[2]).toMatchObject({
@@ -1846,7 +1859,7 @@ describe('Regression hidden observations', () => {
     const plot = plotOf(true);
     expect(plot.marks.map(mark => mark.type)).toEqual(['path', 'path']);
     for (const mark of plot.marks)
-      expect(mark.transform).toEqual([expect.objectContaining({ kind: 'smooth', x: 'x', y: 'y' })]);
+      expect(mark.transform).toEqual([{ operation: expect.objectContaining({ kind: 'smooth', x: 'x', y: 'y' }) }]);
     expect(plotOf(true, false).marks.map(mark => mark.type)).toEqual(['point', 'path', 'path', 'path']);
   });
 });

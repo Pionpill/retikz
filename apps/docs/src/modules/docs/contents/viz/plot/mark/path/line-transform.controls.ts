@@ -60,5 +60,5 @@ export const lineTransformControls = definePreviewControls({
 export const previewControlContract = {
   controls: lineTransformControls,
   canonicalValues: { [LINE_TRANSFORM_GROUPING_ID]: 'overall' },
-  relatedApis: ['PathMark.transform', 'IRPlotSmoothTransform.groupBy', 'PathMark.series'],
+  relatedApis: ['PathMark.transform', 'IRDataSmoothTransform.groupBy', 'PathMark.series'],
 } satisfies PreviewControlContract;

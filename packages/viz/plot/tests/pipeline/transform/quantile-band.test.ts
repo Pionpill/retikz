@@ -1,10 +1,8 @@
-import { applyTransforms, collectTransformFields } from '@retikz/data';
+import { applyTransforms, collectTransformFields, resolveTransformRegistry, TransformSchema } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
-import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { createFieldCollector } from '../../../src/providers/channel/shared';
-import { TransformSchema } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas/plot';
 
 describe('quantile-band statistics schema (contract)', () => {
@@ -374,7 +372,7 @@ describe('quantile-band statistics behavior (contract)', () => {
       },
       createFieldCollector(fields),
       derivedOutputs,
-      resolvePlotTransformRegistry(),
+      resolveTransformRegistry(),
     );
 
     expect([...fields].sort()).toEqual(['group', 'value']);
@@ -394,17 +392,19 @@ describe('quantile-band statistics behavior (contract)', () => {
       },
       transform: [
         {
-          kind: 'summarize',
-          groupBy: ['group'],
-          metrics: [
-            {
-              kind: 'quantile-band',
-              field: 'value',
-              lowerP: 0.25,
-              upperP: 0.75,
-              outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }] },
-            },
-          ],
+          operation: {
+            kind: 'summarize',
+            groupBy: ['group'],
+            metrics: [
+              {
+                kind: 'quantile-band',
+                field: 'value',
+                lowerP: 0.25,
+                upperP: 0.75,
+                outputs: { lower: 'boxLow', upper: 'boxHigh', points: [{ p: 0.5, as: 'median' }] },
+              },
+            ],
+          },
         },
       ],
       scales: [
@@ -421,6 +421,6 @@ describe('quantile-band statistics behavior (contract)', () => {
       ],
     });
 
-    expect([...collectSourceFields(spec, resolvePlotTransformRegistry())].sort()).toEqual(['group', 'value']);
+    expect([...collectSourceFields(spec, resolveTransformRegistry())].sort()).toEqual(['group', 'value']);
   });
 });

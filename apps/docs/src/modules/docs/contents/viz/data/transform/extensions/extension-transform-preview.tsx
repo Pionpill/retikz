@@ -1,5 +1,6 @@
 import type { IRDataModel } from '@retikz/data';
 import {
+  defineTransformImplementation,
   DataFieldType,
   DataTransformBindingClass,
   DataTransformFieldEffect,
@@ -24,7 +25,6 @@ export const scaleField = defineTransform({
     factor: z.number().positive().describe('Serializable multiplication factor'),
   }),
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
   outputModel: operation => ({
     kind: 'preserve',
     outputs: [{ field: operation.as, type: DataFieldType.Continuous }],
@@ -34,6 +34,10 @@ export const scaleField = defineTransform({
     bindingClass: DataTransformBindingClass.Field,
     fieldEffect: DataTransformFieldEffect.Preserve,
   },
+});
+/** scaleField的本地计算实现 */
+export const scaleFieldImplementation = defineTransformImplementation({
+  definition: scaleField,
   apply: (rows, operation) =>
     rows.map(row => ({
       ...row,
@@ -63,9 +67,10 @@ export const renderExtensionTransformPreview = (values: ExtensionTransformValues
     width={420}
     height={260}
     transformDefinitions={[scaleField]}
+    transformImplementations={[scaleFieldImplementation]}
     style={{ maxWidth: '100%', height: 'auto' }}
   >
-    <PlotTransform {...scaleFieldOperationOf(values)} />
+    <PlotTransform operation={{ ...scaleFieldOperationOf(values) }} />
     <PlotScale dimension="x" type="linear" domain={[0, 16]} />
     <PointMark x="x" y="y" fill="#94a3b8" opacity={0.7} size={5} />
     <PointMark x="scaledX" y="y" fill="#2563eb" size={7} />
