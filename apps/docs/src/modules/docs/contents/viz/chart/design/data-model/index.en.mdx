@@ -75,6 +75,8 @@ Chart Source
 
 ## Shared fields describe the whole chart
 
+Shared root fields come from one schema field set; each chart adds its exact family and recipe. `ChartSourceShape<TFamily, TRecipe>`, exported by `@retikz/chart`, is the derived Zod shape type used by `createChartSourceSchema()`, not a general runtime schema that accepts arbitrary recipes. Authors continue to use concrete entry points such as `ScatterChartSchema`.
+
 `data` names the dataset reference and can include a data model. Data owns field types and related semantics; each chart type does not redefine them. Every recipe starts from this dataset, while `recipe.encodings` decides how its fields enter the drawing.
 
 `layout` controls the outer Chart size and spacing between regions. `width` and `height` set the external bounds; `padding` and `gap` adjust space around existing presentation regions and Plot content. They do not define Plot's internal coordinate domain or mark positions.

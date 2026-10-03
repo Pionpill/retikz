@@ -8,6 +8,10 @@ import type {
   GraphicPaintSchema,
   GraphicStyleSchema,
   PaintValueSchema,
+  GraphicColorSchema,
+  GraphicElementOpacitySchema,
+  GraphicFillSchema,
+  GraphicStrokeSchema,
 } from './schema';
 
 /** 精确 CSS 颜色或从有效主色派生的归一化权重 */
@@ -27,3 +31,8 @@ export type IRGraphicEffects = ZodInfer<typeof GraphicEffectsSchema>;
 export type IRCascadingGraphicStyle = ZodInfer<typeof CascadingGraphicStyleSchema>;
 
 export type IRGraphicStyle = ZodInfer<typeof GraphicStyleSchema>;
+
+export type IRGraphicColor = ZodInfer<typeof GraphicColorSchema>;
+export type IRGraphicElementOpacity = ZodInfer<typeof GraphicElementOpacitySchema>;
+export type IRGraphicFill = ZodInfer<typeof GraphicFillSchema>;
+export type IRGraphicStroke = ZodInfer<typeof GraphicStrokeSchema>;

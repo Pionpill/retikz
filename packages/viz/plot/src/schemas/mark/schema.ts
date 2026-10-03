@@ -25,6 +25,8 @@ import {
   PathThickness,
   ShadowPreset,
   ShapeValueSchema,
+  OpacitySchema,
+  StrokeDashPatternSchema,
 } from '@retikz/core';
 import { DataTransformDeclarationSchema } from '@retikz/data';
 import { CenterlineRibbonPathOptionsSchema, TaperRibbonWidthSchema } from '@retikz/extension';
@@ -291,16 +293,11 @@ const markValueSchema = <T extends ZodType>(
 
 const StylePaintSchema = union([CssColorSchema, PaintSchema]);
 const StyleNumberSchema = number();
-const StyleNonnegativeNumberSchema = NonNegativeNumberSchema;
-const StylePositiveNumberSchema = PositiveNumberSchema;
-const StyleOpacitySchema = number().min(0).max(1);
-const StyleDashPatternSchema = array(StyleNonnegativeNumberSchema).min(1);
 const StyleShadowSchema = union([zodEnum(ShadowPreset), DropShadowSchema]);
-const StyleShapeSchema = ShapeValueSchema;
 const StyleBlendModeSchema = zodEnum(BlendMode);
-const StyleBoxSpacingSchema = union([StyleNonnegativeNumberSchema, BoxSpacingSchema]);
-const StyleAxisScaleSchema = union([StylePositiveNumberSchema, AxisScaleSchema]);
-const StyleBoxSizeSchema = union([StyleNonnegativeNumberSchema, BoxSizeSchema]);
+const StyleBoxSpacingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]);
+const StyleAxisScaleSchema = union([PositiveNumberSchema, AxisScaleSchema]);
+const StyleBoxSizeSchema = union([NonNegativeNumberSchema, BoxSizeSchema]);
 
 export const PointFillStyleSchema = markValueSchema(
   StylePaintSchema,
@@ -315,13 +312,13 @@ export const PointColorStyleSchema = markValueSchema(
   'point color value',
 );
 export const PointSizeStyleSchema = markValueSchema(
-  StyleNonnegativeNumberSchema,
+  NonNegativeNumberSchema,
   'Data field path bound to point size',
   'Constant final glyph radius',
   'point size value',
 );
 export const PointShapeStyleSchema = markValueSchema(
-  StyleShapeSchema,
+  ShapeValueSchema,
   'Data field path bound to point shape',
   'Constant core Node shape name or shape ref',
   'point shape value',
@@ -339,13 +336,13 @@ export const PointNumberStyleSchema = markValueSchema(
   'point numeric style value',
 );
 export const PointNonnegativeNumberStyleSchema = markValueSchema(
-  StyleNonnegativeNumberSchema,
+  NonNegativeNumberSchema,
   'Data field path bound to a non-negative point style value',
   'Constant non-negative style value',
   'point non-negative numeric style value',
 );
 export const PointOpacityStyleSchema = markValueSchema(
-  StyleOpacitySchema,
+  OpacitySchema,
   'Data field path bound to an opacity style value',
   'Constant opacity value 0..1',
   'point opacity style value',
@@ -357,7 +354,7 @@ export const PointZIndexStyleSchema = markValueSchema(
   'point zIndex style value',
 );
 export const NodePositiveNumberStyleSchema = markValueSchema(
-  StylePositiveNumberSchema,
+  PositiveNumberSchema,
   'Data field path bound to a positive node style value',
   'Constant positive node style value',
   'node positive numeric style value',
@@ -375,7 +372,7 @@ export const NodeBooleanStyleSchema = markValueSchema(
   'node boolean style value',
 );
 export const NodeDashPatternStyleSchema = markValueSchema(
-  StyleDashPatternSchema,
+  StrokeDashPatternSchema,
   'Data field path bound to node dashPattern',
   'Constant core Node dashPattern',
   'node dashPattern style value',
@@ -435,7 +432,7 @@ export const PathLineJoinStyleSchema = markValueSchema(
   'path lineJoin style value',
 );
 export const PathRoundedCornersStyleSchema = markValueSchema(
-  StyleNonnegativeNumberSchema,
+  NonNegativeNumberSchema,
   'Data field path bound to path roundedCorners',
   'Constant core Path roundedCorners radius',
   'path roundedCorners style value',
@@ -707,7 +704,7 @@ export const RelationEndpointGlyphsSchema = strictObject({
 /** 开放轨迹跨缺值连接段的常量描边覆盖 */
 export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
   stroke: CssColorSchema.optional(),
-  strokeOpacity: number().min(0).max(1).optional(),
+  strokeOpacity: OpacitySchema.optional(),
   dashPattern: PathStrokeSchema.shape.dashPattern.unwrap().default([6, 4]).optional(),
 }).describe('Stroke overrides for bridges across missing projected points in an open unfilled path');
 

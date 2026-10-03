@@ -1,10 +1,10 @@
 import type { JsonObject } from '@retikz/foundation';
-import { JsonObjectSchema, JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, JsonValueSchema, NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/layout';
 import { PlotSchema } from '@retikz/plot';
 import { SurfaceBackgroundSchema } from '@retikz/standard/presentation';
-import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
-import { array, literal, number, object, strictObject } from 'zod';
+import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodType } from 'zod';
+import { array, literal, object, strictObject } from 'zod';
 
 import { CHART_NAMESPACE } from '../constants';
 import { ChartPlotExtensionSchema } from './plot-extension';
@@ -15,8 +15,8 @@ const ChartPaddingSchema = LayoutContainerBoxSchema.shape.padding.unwrap();
 
 /** Chart 外部 layout 的正有限尺寸 */
 export const ChartLayoutSchema = strictObject({
-  width: number().positive().optional().describe('External Chart border-box width'),
-  height: number().positive().optional().describe('External Chart border-box height'),
+  width: PositiveNumberSchema.optional().describe('External Chart border-box width'),
+  height: PositiveNumberSchema.optional().describe('External Chart border-box height'),
   padding: ChartPaddingSchema.optional().describe(
     'Chart shell padding around existing presentation regions and Plot content',
   ),
@@ -33,10 +33,8 @@ const ChartRecipeShellSchema = object({
     .describe('Ordered Chart marks'),
 }).catchall(JsonValueSchema);
 
-/** 内部 erased Source shell schema；不参与最终 Source parse */
-const ChartSourceShellSchema = strictObject({
+const ChartSourceFieldsSchema = strictObject({
   namespace: literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
-  type: NonBlankStringSchema.describe('Registered Chart family discriminator'),
   id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
   background: SurfaceBackgroundSchema.optional().describe('Chart surface background'),
   presentation: ChartPresentationSchema.optional(),
@@ -45,24 +43,20 @@ const ChartSourceShellSchema = strictObject({
   dataExecution: PlotSchema.shape.dataExecution,
   layout: ChartLayoutSchema.optional(),
   coordinate: PlotSchema.shape.coordinate,
-  recipe: ChartRecipeShellSchema,
   plotExtension: ChartPlotExtensionSchema.optional(),
+}).describe('Shared Chart Source fields composed with a family discriminator and an exact recipe.');
+
+/** 内部 erased Source shell schema；不参与最终 Source parse */
+const ChartSourceShellSchema = strictObject({
+  ...ChartSourceFieldsSchema.shape,
+  type: NonBlankStringSchema.describe('Registered Chart family discriminator'),
+  recipe: ChartRecipeShellSchema,
 }).describe('Common strict Chart Source shell before a recipe-specific schema is selected');
 
 /** 精确 recipe schema 组装所用的 root shape */
-type ChartSourceShape<TFamily extends string, TRecipe extends ZodType> = {
-  namespace: ZodLiteral<typeof CHART_NAMESPACE>;
+export type ChartSourceShape<TFamily extends string, TRecipe extends ZodType> = typeof ChartSourceFieldsSchema.shape & {
   type: ZodLiteral<TFamily>;
-  id: ZodOptional<ZodString>;
-  background: ZodOptional<typeof SurfaceBackgroundSchema>;
-  presentation: ZodOptional<typeof ChartPresentationSchema>;
-  chartDefaults: ZodOptional<typeof ChartDefaultsSchema>;
-  data: typeof PlotSchema.shape.data;
-  dataExecution: typeof PlotSchema.shape.dataExecution;
-  layout: ZodOptional<typeof ChartLayoutSchema>;
-  coordinate: typeof PlotSchema.shape.coordinate;
   recipe: TRecipe;
-  plotExtension: ZodOptional<typeof ChartPlotExtensionSchema>;
 };
 
 /** 按 family 与精确 recipe schema 创建 strict Source schema */
@@ -71,18 +65,9 @@ export const createChartSourceSchema = <TFamily extends string, TRecipe extends 
   recipe: TRecipe,
 ): ZodObject<ChartSourceShape<TFamily, TRecipe>> => {
   return strictObject({
-    namespace: literal(CHART_NAMESPACE).describe('Chart namespace discriminator'),
+    ...ChartSourceFieldsSchema.shape,
     type: literal(family).describe('Stable Chart family discriminator'),
-    id: NonBlankStringSchema.optional().describe('Optional Chart identity'),
-    background: SurfaceBackgroundSchema.optional().describe('Chart surface background'),
-    presentation: ChartPresentationSchema.optional(),
-    chartDefaults: ChartDefaultsSchema.optional(),
-    data: PlotSchema.shape.data.describe('Unique external dataset reference'),
-    dataExecution: PlotSchema.shape.dataExecution,
-    layout: ChartLayoutSchema.optional(),
-    coordinate: PlotSchema.shape.coordinate,
     recipe,
-    plotExtension: ChartPlotExtensionSchema.optional(),
   }).superRefine((source, context) => {
     if (source.coordinate !== undefined && source.plotExtension?.composition !== undefined) {
       context.addIssue({

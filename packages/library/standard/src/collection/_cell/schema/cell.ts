@@ -1,19 +1,27 @@
-import { ChildSchema, NodeStyleSchema, ScopePropsSchema } from '@retikz/core';
+import {
+  ChildSchema,
+  GraphicColorSchema,
+  GraphicElementOpacitySchema,
+  GraphicFillSchema,
+  GraphicStrokeSchema,
+  PathStrokeSchema,
+  TextVisualSchema,
+  ScopePropsSchema,
+} from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { literal, strictObject, string, union } from 'zod';
 
 import { SurfaceSchema } from '../../../presentation/surface/schema';
-import { StandardPathStrokeStyleSchema } from '../../../shared/schemas';
 
-export const CellStyleSchema = StandardPathStrokeStyleSchema.omit({ zIndex: true })
-  .extend({
-    fill: NodeStyleSchema.shape.fill,
-    fillOpacity: NodeStyleSchema.shape.fillOpacity,
-    font: NodeStyleSchema.shape.font,
-    textColor: NodeStyleSchema.shape.textColor,
-    cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
-  })
-  .describe('Sparse visual overrides for a List or Map cell.');
+export const CellStyleSchema = strictObject({
+  ...GraphicColorSchema.shape,
+  ...GraphicElementOpacitySchema.shape,
+  ...GraphicStrokeSchema.shape,
+  ...PathStrokeSchema.shape,
+  ...GraphicFillSchema.shape,
+  ...TextVisualSchema.shape,
+  cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
+}).describe('Sparse visual overrides for a List or Map cell.');
 
 export const CellLayoutSchema = strictObject({
   width: union([NonNegativeNumberSchema, literal('auto')])

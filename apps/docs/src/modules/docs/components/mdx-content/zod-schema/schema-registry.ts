@@ -956,6 +956,14 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'NodeTarget',
   },
 
+  GraphicColorSchema: { schema: IR.GraphicColorSchema, label: 'GraphicColor' },
+  GraphicElementOpacitySchema: { schema: IR.GraphicElementOpacitySchema, label: 'GraphicElementOpacity' },
+  GraphicFillSchema: { schema: IR.GraphicFillSchema, label: 'GraphicFill' },
+  GraphicStrokeSchema: { schema: IR.GraphicStrokeSchema, label: 'GraphicStroke' },
+  StrokeCapJoinSchema: { schema: IR.StrokeCapJoinSchema, label: 'StrokeCapJoin' },
+  TextVisualSchema: { schema: IR.TextVisualSchema, label: 'TextVisual' },
+  TextLayoutSchema: { schema: IR.TextLayoutSchema, label: 'TextLayout' },
+  PathTransformSchema: { schema: IR.PathTransformSchema, label: 'PathTransform' },
   GraphicPaintSchema: {
     schema: IR.GraphicPaintSchema,
     label: 'GraphicPaint',

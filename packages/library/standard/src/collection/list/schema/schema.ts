@@ -1,4 +1,11 @@
-import { CompositeBaseSchema, NodeSchema, NodeStyleSchema, ScopePropsSchema } from '@retikz/core';
+import {
+  CompositeBaseSchema,
+  NodeSchema,
+  GraphicColorSchema,
+  GraphicElementOpacitySchema,
+  TextVisualSchema,
+  ScopePropsSchema,
+} from '@retikz/core';
 import {
   JsonValueSchema,
   NonBlankStringSchema,
@@ -12,11 +19,10 @@ import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schem
 import { ListCellIdMode, ListDirection, ListIndexPosition } from '../constants';
 
 /** 索引文本外观，复用 Node 样式字段，不继承单格覆盖 */
-export const ListIndexStyleSchema = NodeStyleSchema.pick({
-  font: true,
-  textColor: true,
-  color: true,
-  opacity: true,
+export const ListIndexStyleSchema = strictObject({
+  ...TextVisualSchema.shape,
+  ...GraphicColorSchema.shape,
+  ...GraphicElementOpacitySchema.shape,
 }).describe('Index text appearance; cell-level styles do not affect indices.');
 
 /** 索引条的位置、起点和文本样式 */

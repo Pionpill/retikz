@@ -5,6 +5,26 @@ description: Compile complete Core IR into a deterministic Scene, then publish c
 
 `@retikz/core` owns IR, Definitions, registries, compilation, and Scene semantics. `compileToScene()` remains the stateless full-compile entry; for state across revisions, `CoreOwnerDefinition` and `createCoreProgram()` connect the same compile semantics to `@retikz/runtime`.
 
+## Composable schema fragments
+
+Custom inputs can import these closed fragments from `@retikz/core` and compose the fields they need. The fragments remain sparse and do not materialize defaults; the final entity still owns cross-field validation and its unknown-key policy.
+
+| Fragment                      | Fields and purpose                                                               |
+| ----------------------------- | -------------------------------------------------------------------------------- |
+| `GraphicColorSchema`          | `color`: the graphic master color                                                |
+| `GraphicElementOpacitySchema` | `opacity`: whole-element opacity                                                 |
+| `GraphicFillSchema`           | `fill`, `fillOpacity`: fill paint and opacity                                    |
+| `GraphicStrokeSchema`         | `stroke`, `strokeOpacity`: stroke paint and opacity                              |
+| `StrokeStyleSchema`           | `strokeWidth`, `dashPattern`, `dashOffset`: width and dashes                     |
+| `StrokeCapJoinSchema`         | `lineCap`, `lineJoin`: endpoint caps and corner joins                            |
+| `TextVisualSchema`            | `textColor`, `font`: text color and font within an element                       |
+| `TextLayoutSchema`            | `align`, `lineHeight`, `maxTextWidth`: text layout and wrapping                  |
+| `PathTransformSchema`         | `roundedCorners`, `rotate`, `scale`: geometric corners and whole-path transforms |
+
+Fill and stroke share `PaintValueSchema`, including gradient paints. Master color and whole-element opacity are selected independently; the text visual fragment does not include label-specific opacity or layout fields. Each fragment has a corresponding inferred `IRXxx` type. Existing complete Node, Path, and style aggregates remain available.
+
+Composing `.shape` reuses fields only; it does not carry object-level refinements, transforms, or catchalls. Domain inputs should select only fragments they consume. For example, combining stroke, fill, and text for a Cell does not also admit `zIndex` or visual effects.
+
 ## Composite runtime inputs
 
 `CompileOptions.compositeInputs` binds runtime input to exact Source positions for the current compilation. Composite callbacks consume it through context.runtimeInput; unbound positions yield undefined. Sources, functions and prepared results stay outside IR; Core does not interpret their domain meaning.

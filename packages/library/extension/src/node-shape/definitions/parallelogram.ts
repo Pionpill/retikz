@@ -1,9 +1,9 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import { defineShape, DEG_TO_RAD } from '@retikz/core';
-import { NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
-import { enum as zodEnum, number, strictObject } from 'zod';
+import { enum as zodEnum, strictObject } from 'zod';
 
 import { ExtensionShapeName } from '../constants';
 import {
@@ -16,7 +16,7 @@ import {
 
 const ParallelogramShapeParamsSchema = strictObject({
   slantDirection: zodEnum(['left', 'right']).optional().describe('Direction of the top-edge horizontal offset.'),
-  slantAngle: number().positive().max(90).optional().describe('Angle between the slanted side and horizontal edge.'),
+  slantAngle: PositiveNumberSchema.max(90).optional().describe('Angle between the slanted side and horizontal edge.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe('Uniform corner radius in user units.'),
 });
 

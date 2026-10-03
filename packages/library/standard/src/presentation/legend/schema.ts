@@ -1,5 +1,5 @@
 import { ChildSchema, CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
-import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeIntegerSchema, NormalizedFractionSchema } from '@retikz/foundation';
 import {
   LayoutAlignment,
   LayoutArtifactContainerSchema,
@@ -48,7 +48,7 @@ export const LegendItemsContentSchema = strictObject({
 
 export const LegendTickSchema = strictObject({
   key: NonBlankStringSchema.describe('Container-local stable identity for this continuous legend tick.'),
-  offset: number().min(0).max(1).describe('Normalized authored position along the sample main axis.'),
+  offset: NormalizedFractionSchema.describe('Normalized authored position along the sample main axis.'),
   label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the tick position.'),
 }).describe('Canonical normalized tick in a continuous Standard Legend.');
 

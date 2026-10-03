@@ -64,13 +64,18 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 
 ## BaseSchema 与 refinement
 
-优先把字段契约集中在 `XxxBaseSchema`，跨字段 / 跨 kind 语义放最终 `XxxSchema.superRefine(...)`。
+组合优先：按稳定语义复用值 schema 与命名字段片段，由 owner 组合完整实体；不要先继承宽泛对象再连续删改字段。跨字段 / 跨 kind 语义放最终 `XxxSchema.superRefine(...)`。
 
 同一概念出现多个同前缀一级字段时，优先收敛成一个对象字段；对象子字段用命名 schema/type 承载，并通过 `shape` spread、`.extend()` 或对象 spread 复用，不重复声明同一份字段 shape。
 
 当同一对象需要紧凑 Source IR 时，`XxxSchema` / `IRXxx` 可以保留 `number | object` 等等价联合，以维持持久化体积。schema parse 只校验并产出 Source IR；Vanilla API `normalizeXxx` 把 authoring `InputXxx` 组装为 Source IR，纵向领域 `resolve/<domain>/resolve.ts` 结合当前 context 展开为无等价联合的 `CanonicalXxx`。默认值、显式 `0`、字段 refinement 与 strict unknown-field 语义必须在 Source 与 Canonical 之间保持一致；pipeline / compile 只消费 Canonical / Resolution。
 
-上层需要与允许依赖层完全同义的字段时，从该层公开的权威 schema 用 `.pick()`、`.omit()`、`.extend()` 或 `.shape` 精确复用。只选择所需字段，不从 primitive schema 重复拼装同一契约，也不整段引入包含无关字段的 BaseSchema；复用后验证默认值、refinement 与未知字段拒绝行为保持预期。
+上层需要同义字段时，优先从允许依赖层的公开命名片段正向组合；单次领域投影、判别变体及明确的默认覆盖仍可用 `.pick()`、`.omit()`、`.extend()`。重复投影相同子集时先审查原子边界，不机械禁止这些 API，也不为消除调用新增通用拼装框架。
+
+- 提取公共原子前必须整体 review：覆盖所有 packages 的定义、导出、组合与真实消费者，记录值域、单位 / 坐标系、缺省 / null、继承、失败与最终消费；引用次数仅作候选线索。流程与反例见[原子设计](../../../../notes/architecture/atomic-contract-design.md#整体-review-与抽象门禁)
+- 片段按语义独立、字段尽量不重叠；共享值不强制共享 optional / default 包装。重名字段覆盖必须显式说明 owner 与行为差异，不依赖 spread 顺序静默覆盖
+- `.shape` 只复用字段，不继承对象 refinement、transform 或 catchall；组合后由最终 owner 保留完整不变量和 unknown-key 策略。`.safeExtend()` 的类型可赋值性不能代替语义验证
+- 等价重组与接受范围、默认、错误时机变化分开决策；不得为统一原子而放宽领域限制，或开放 lowering 不消费的字段
 
 适用场景：
 
