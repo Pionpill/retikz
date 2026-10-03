@@ -37,8 +37,69 @@ export type EffectiveFlowPlacement =
       excludeFromBounds?: ReadonlyArray<string>;
     }>;
 
+/** 自动或完整显式的贝塞尔输入，不存储可推导的 mode */
+export type FlowBezierRouting =
+  | Readonly<{
+      /** 二次贝塞尔输入 */
+      kind: 'curve';
+      /** Flow 根坐标控制点，省略时自动生成 */
+      control?: Readonly<Position>;
+    }>
+  | Readonly<{
+      /** 三次贝塞尔输入 */
+      kind: 'cubic';
+      /** 自动三次必须同时省略两个控制点 */
+      control1?: never;
+      /** 自动三次必须同时省略两个控制点 */
+      control2?: never;
+    }>
+  | Readonly<{
+      /** 三次贝塞尔输入 */
+      kind: 'cubic';
+      /** Flow 根坐标的起点切线控制点，显式值不可移动 */
+      control1: Readonly<Position>;
+      /** Flow 根坐标的终点切线控制点，显式值不可移动 */
+      control2: Readonly<Position>;
+    }>;
+
+/** 完整数值贝塞尔参考路线 */
+export type FlowBezierRoute = Readonly<{
+  /** 按 source 到 target 排列的中心参考端点 */
+  points: readonly [Readonly<Position>, Readonly<Position>];
+}> &
+  (
+    | Readonly<{
+        /** 二次贝塞尔参考几何 */
+        kind: 'curve';
+        /** 已确定的二次控制点，不是曲线经过点 */
+        control: Readonly<Position>;
+      }>
+    | Readonly<{
+        /** 三次贝塞尔参考几何 */
+        kind: 'cubic';
+        /** 已确定的起点切线控制点 */
+        control1: Readonly<Position>;
+        /** 已确定的终点切线控制点 */
+        control2: Readonly<Position>;
+      }>
+  );
+
+/** 每种路由及其可消费的作者输入语义 */
+export type FlowRoutingCapability =
+  | Readonly<{
+      /** 支持既有完整输入语义的常规路由 */
+      kind: Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>;
+    }>
+  | Readonly<{
+      /** 支持的贝塞尔种类 */
+      kind: 'curve' | 'cubic';
+      /** 可消费的自动或显式输入，非空且无重复；Source 不填写 mode */
+      modes: ReadonlyArray<'auto' | 'explicit'>;
+    }>;
+
 /** Flow layout provider 使用的有效路由 */
 export type FlowLayoutRouting =
+  | FlowBezierRouting
   | Readonly<{ kind: 'straight' }>
   | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; cornerRadius: number }>
   | Readonly<{
@@ -64,7 +125,8 @@ export type FlowBendRoute = Readonly<{ kind: 'bend'; points: readonly [Readonly<
 export type FlowLayoutRoute =
   | Readonly<{ kind: 'straight'; points: ReadonlyArray<Readonly<Position>> }>
   | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; points: ReadonlyArray<Readonly<Position>>; cornerRadius: number }>
-  | FlowBendRoute;
+  | FlowBendRoute
+  | FlowBezierRoute;
 
 /** Flow layout scope 已补全的有效配置 */
 export type EffectiveFlowLayout = Readonly<{
@@ -95,8 +157,8 @@ export type FlowLayoutDefaults = Readonly<{
   }>;
   /** Source 与祖先均未指定时采用的关系路由 */
   routing: Readonly<{
-    /** 默认路由种类，必须包含在 capabilities.routingKinds 中 */
-    kind: FlowRoutingKindValue;
+    /** 默认路由种类，必须包含在 capabilities.routing 中 */
+    kind: Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>;
     /** 所有轴对齐路由的圆角默认；支持任一轴对齐模式时必填 */
     orthogonalCornerRadius?: number;
   }>;
@@ -259,7 +321,7 @@ export type FlowLayoutCapabilities = Readonly<{
   /** 支持的语义箭头方向，必须非空且无重复 */
   relationDirections: ReadonlyArray<RelationDirectionValue>;
   /** 支持的路由种类，必须非空且无重复 */
-  routingKinds: ReadonlyArray<FlowRoutingKindValue>;
+  routing: ReadonlyArray<FlowRoutingCapability>;
 }>;
 
 /** 同步确定 Flow element bounds、relation route 与 label reservation 的布局定义 */

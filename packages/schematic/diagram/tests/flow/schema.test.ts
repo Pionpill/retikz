@@ -11,7 +11,12 @@ describe('Flow bend authoring', () => {
   it.each([-180, 180, Infinity])('rejects invalid bend angle %s at its field', bendAngle => {
     const parsed = FlowRoutingSchema.safeParse({ kind: 'bend', bendAngle });
     expect(parsed.success).toBe(false);
-    if (!parsed.success) expect(parsed.error.issues[0].path).toEqual(['bendAngle']);
+    if (!parsed.success) {
+      const issues = parsed.error.issues.flatMap(issue =>
+        issue.code === 'invalid_union' ? issue.errors.flat() : [issue],
+      );
+      expect(issues.some(issue => issue.path.join('.') === 'bendAngle')).toBe(true);
+    }
   });
 });
 

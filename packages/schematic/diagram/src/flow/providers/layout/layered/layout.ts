@@ -428,8 +428,9 @@ export const layoutLayeredFlow = (input: FlowLayoutInput, context: FlowLayoutExe
   const root = layoutScope(input.elements, input.layout, input.relations, index, undefined, context);
   const elements: Array<FlowLayoutElementOutput> = [];
   flattenElements(root.elements, 0, 0, elements);
+  const byId = new Map(elements.map(element => [element.id, element]));
   return {
-    elements,
+    elements: [...index.kinds.keys()].map(id => byId.get(id)!),
     relations: routeLayeredRelations(input, elements),
   };
 };

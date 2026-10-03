@@ -264,7 +264,7 @@ describe('Flow bend routing', () => {
     const provider = {
       ...LayeredFlowLayoutDefinition,
       name: 'straight-only',
-      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routingKinds: ['straight' as const] },
+      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routing: [{ kind: 'straight' as const }] },
       defaults: { ...LayeredFlowLayoutDefinition.defaults, routing: { kind: 'straight' as const } },
       layout: (...args: Parameters<typeof LayeredFlowLayoutDefinition.layout>) => {
         calls++;

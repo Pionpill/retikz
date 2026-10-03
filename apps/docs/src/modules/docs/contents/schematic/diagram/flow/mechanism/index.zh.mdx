@@ -198,6 +198,77 @@ Flow 会检查布局结果是否完整、实体的大小是否与测量结果一
   ]}
 />
 
+## 贝塞尔曲线的自动避让
+
+贝塞尔沿用 bend 的“生成候选、检测冲突、比较路线”流程，但控制点由障碍位置反求，允许不对称绕行。`curve` 是二次曲线，`cubic` 是三次曲线；省略控制点才进入自动求解，完整提供控制点时直接保留作者配置。
+
+### 从经过点反求控制点
+
+- **P₀、P₁**：布局给出的两个节点中心，是参考曲线端点。
+- **Q**：希望曲线经过的绕行位置，取自冲突障碍包络的两侧。
+- **τ**：到达 Q 的曲线参数位置，候选为 `1/4、1/2、3/4`，不是弧长比例。
+- **C / C₁、C₂**：决定弯曲的控制点，曲线通常不经过它们。
+
+下图固定 τ = 1/2。蓝色曲线经过障碍上方的 Q，橙色 C 更靠外；灰色控制折线只用于说明控制关系。
+
+<ComponentPreview files="flow-bezier-controls" hideCode type="illustration" size="xxl" />
+
+二次曲线由 `C = [Q − (1−τ)²P₀ − τ²P₁] / [2(1−τ)τ]` 反求。三次先选定首尾方向，再解 `C₁ = P₀ + a d₀`、`C₂ = P₁ − b d₁` 中的控制臂 a、b，使曲线在 τ 经过 Q。每个 Q/τ 比较四组方向组合；没有正解、方程退化或控制臂超过四倍弦长时淘汰。二次控制点到任一端点也不能超过四倍弦长。这些约束只用于自动生成，不限制合法显式点。
+
+<SourceLinks
+  sources={[{ label: '控制点候选构造', path: 'packages/schematic/diagram/src/flow/providers/layout/bezier.ts' }]}
+/>
+
+### 有界候选逐轮比较
+
+先生成同阶共线基线，无冲突就返回，所以自动贝塞尔不一定弯曲。基线受阻时，把当前最优路线碰到的节点及标签投影到弦方向与法线方向，取两侧 Q；后续轮合并已发现的冲突障碍，避免只绕开第一个节点。
+
+首轮绕行间距为最近公共布局作用域 `max(nodeGap, rankGap, 1) / 2`，第二轮翻倍。每侧取三个 τ，三次另有四组方向，因此二次最多提出 **13 条**、三次最多 **49 条**候选，包括基线、无效和重复提案。下图展示一次扩展的顺序；基线无冲突时跳过扩展，最多执行两轮。
+
+<ComponentPreview files="flow-bezier-search" hideCode type="flow" size="md" />
+
+下面把同一组节点画三次，观察路线变化：基线穿过 A、B，因此先用 A、B 的包络生成两侧经过点；上侧候选虽然绕开 A、B，却碰到 C，下侧候选则同时避开三个节点。虚框是生成候选的参考范围，不是用来判定整条曲线碰撞的大盒子。
+
+<ComponentPreview files="flow-bezier-obstacles" hideCode type="illustration" size="xxxl" />
+
+图中只画 τ = 1/2 的两条二次代表候选；实现仍会完整比较本轮的全部候选。这里第一轮已有无冲突路线，所以不会因为另一条候选碰到 C 就强制继续。只有**本轮最优路线仍有冲突**时，才合并它新碰到的障碍、增大间距并进入第二轮。节点位置始终不变，也不是每遇到一个节点就追加一段曲线。
+
+每条候选复用上一节的真实极值 AABB 和子曲线细分，**最多沿同一分支二分 8 次**，不把子曲线替换成直线。碰撞检测与长度估计是两件事：长度使用 32 个等参数区间近似，不能把它理解成碰撞只采样 32 个点。
+
+同一轮完整比较后，按 **节点冲突数 → 标签冲突对数 → 近似长度 → 最大法向偏移 → 固定提案顺序** 选优。节点与标签都无冲突时结束；否则进入下一轮。它只选已评估集合中的最佳，不承诺未生成的路线更差，也不使用 bend 的参数跨度比较不同曲线。关系仍按 Source 顺序求解，共享此前自动路线和全部非自动路线的标签预留。
+
+<SourceLinks
+  sources={[
+    { label: '候选排序和提前结束', path: 'packages/schematic/diagram/src/flow/providers/layout/bezier.ts' },
+    { label: '八层子曲线检测', path: 'packages/schematic/diagram/src/flow/shared/geometry/bend.ts' },
+  ]}
+/>
+
+### 三次曲线如何用两个控制点绕行
+
+三次仍从冲突包络生成 Q，但一个经过点不足以唯一确定两个控制点。因此先选择首尾切线方向，再求两个控制臂的长度，使曲线在指定 τ 经过 Q。下图沿用 A、B、C 场景，固定下侧 Q 与 τ = 1/2；第一幅标出两个控制点，第二幅比较不同方向组合。
+
+<ComponentPreview files="flow-cubic-avoidance" hideCode type="illustration" size="xxl" />
+
+第一幅蓝线采用相对弦方向的 `(30°, −30°)` 组合并镜像到下侧。`P₀→C₁` 决定出发方向，`C₂→P₁` 决定到达方向；灰色控制折线不是实际路径。第二幅橙线换成 `(60°, −60°)`，仍经过同一个 Q，但端点附近弯曲不同；上侧红线则碰到 C，不能只因为通过了包络外的 Q 就判为安全。
+
+实现还会尝试 `(60°, 30°)`、`(−30°, −60°)` 两组非对称方向，以及另外两个 τ。只有控制臂为正、有限且不超过四倍弦长的候选才进入碰撞评分；图中只展示其中三条代表曲线。每轮最多 `两侧 × 三个 τ × 四组方向 = 24` 个提案，两轮加基线最多 49 个，仍按节点、标签、长度、偏移的顺序择优，不是逐个节点分别设置一个控制点。
+
+### 参考路线与最终连接分开理解
+
+显式冲突发出 `FlowBezierObstacleConflict`，自动结果仍冲突则发出 `FlowBezierSearchExhausted`；两者都保留路线，不切换 bend 或 smooth。后者只表示有限搜索没有找到通过检测的路线，不表示不存在可行路线。自动模式端点中心重合、无法建立方向时，以 `FlowBezierRouteUnavailable` 失败。
+
+**检测和 artifact 记录的是中心参考曲线。** Core 按节点真实边界重新确定曲线首尾并保留控制点，之后还处理箭头缩短、标签中断；最终曲线形状和标签位置可能变化。没有 warning 不等于最终像素安全，仍需检查实际绘图。
+
+artifact 中端点、控制点、标签盒统一处于完整 allocation-local 坐标；`regions.drawing.origin` 记录 Flow 根原点的实际平移。从同一次编译结果复制控制点时先减去 origin，再填回 Relation.routing。drawing 包围盒左上角不能代替 origin，尤其是曲线向负坐标溢出时。
+
+<SourceLinks
+  sources={[
+    { label: '参考冲突诊断', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
+    { label: '控制点与原点交付', path: 'packages/schematic/diagram/src/flow/pipeline/flow/artifact.ts' },
+  ]}
+/>
+
 ## 按布局绘图并保存结果
 
 位置和连线确定后，Flow 会把它们交给 Graph 来生成图形：实体绘制成节点，Group 绘制成分组，Layout 用 Scope 保留排列和层级。连线也按布局结果绘制，原来的包含关系保持不变。
@@ -217,7 +288,7 @@ Flow 会检查布局结果是否完整、实体的大小是否与测量结果一
   ]}
 />
 
-布局关系输出统一使用 `{ route, labelBounds? }`。`route.kind` 区分直线、三类轴对齐路线与 bend；bend 只保存两个中心参考端点和一个有效参数族，不保存重复的控制点或采样点。完整标签通过 `labelSize` 与 `labelPlacement` 进入布局，空几何投影仍使用 Core 默认；倾斜标签预留盒是旋转文字盒的 AABB。
+布局关系输出统一使用 `{ route, labelBounds? }`。`route.kind` 区分直线、三类轴对齐路线、bend 与二次/三次贝塞尔；bend 只保存两个中心参考端点和一个有效参数族，不保存重复的控制点或采样点。完整标签通过 `labelSize` 与 `labelPlacement` 进入布局，空几何投影仍使用 Core 默认；倾斜标签预留盒是旋转文字盒的 AABB。
 
 Graph/Core 随后负责端点边界、箭头缩短、标签断线与最终绘制包络。artifact 的 route 和预留盒只平移坐标，不是最终裁剪后的描边或 glyph bounds。
 

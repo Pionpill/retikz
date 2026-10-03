@@ -216,6 +216,79 @@ Search stays within the allowed candidates without moving nodes or searching for
   ]}
 />
 
+## Automatic Bezier avoidance
+
+Bezier follows the same generate–check–compare process as bend, but derives controls from obstacles to allow asymmetric detours. `curve` is quadratic and `cubic` is cubic. Omitting all controls requests automatic routing; complete controls preserve the authored geometry.
+
+### Derive controls from a point on the curve
+
+- **P₀, P₁**: node centers supplied by layout, used as reference endpoints.
+- **Q**: a desired point on the curve, placed on either side of conflicting obstacles.
+- **τ**: the parameter at Q, chosen from `1/4, 1/2, 3/4`; it is not an arc-length fraction.
+- **C / C₁, C₂**: controls that shape the curve; the curve usually does not pass through them.
+
+The figure fixes τ = 1/2. The blue curve passes Q above the obstacle; orange C lies farther away. The gray control polygon only explains how the shape is controlled.
+
+<ComponentPreview files="flow-bezier-controls" hideCode type="illustration" size="xxl" />
+
+A quadratic uses `C = [Q − (1−τ)²P₀ − τ²P₁] / [2(1−τ)τ]`. A cubic first chooses endpoint directions, then solves the arms a, b in `C₁ = P₀ + a d₀`, `C₂ = P₁ − b d₁` so that the curve passes Q at τ. Four direction profiles are tried per Q/τ. Singular equations, nonpositive arms, or arms longer than four chord lengths are rejected. A quadratic control must also stay within four chord lengths of both endpoints. These limits only filter automatic candidates, not valid explicit controls.
+
+<SourceLinks
+  sources={[
+    { label: 'Control candidate construction', path: 'packages/schematic/diagram/src/flow/providers/layout/bezier.ts' },
+  ]}
+/>
+
+### Compare bounded candidates in waves
+
+Start with collinear controls of the requested degree and return immediately if clear; an automatic Bezier need not visibly bend. When blocked, project conflicting nodes and labels onto the chord and its normal to choose Q on either side. Later waves accumulate discovered blockers rather than only avoiding the first obstacle.
+
+The first clearance is `max(nodeGap, rankGap, 1) / 2` from the nearest common layout scope; the second doubles it. Two sides, three τ values and four cubic direction profiles give at most **13 quadratic** or **49 cubic** proposals, including the baseline, invalid proposals and duplicates. The figure shows one expansion; a clear baseline skips expansion, and there are at most two waves.
+
+<ComponentPreview files="flow-bezier-search" hideCode type="flow" size="md" />
+
+The same nodes appear three times below. The baseline crosses A and B, so their envelope supplies waypoints on both sides. The upper candidate clears A/B but hits C; the lower candidate clears all three. The dotted envelope guides candidate generation; it is not a single box used to decide whether the entire curve collides.
+
+<ComponentPreview files="flow-bezier-obstacles" hideCode type="illustration" size="xxxl" />
+
+Only two representative quadratic candidates at τ = 1/2 are drawn; the implementation compares the whole wave. A clear route already exists here, so another candidate hitting C does not force a second wave. Only when **the best route still conflicts** are its new blockers merged and clearance increased for wave two. Nodes stay fixed, and encountering another node does not append another curve segment.
+
+Each candidate reuses the true-extrema AABB and subcurve checks above, with **at most 8 bisections along a branch**. Subcurves are not replaced by line segments. Length estimation is separate: 32 equal-parameter intervals approximate length, not collision detection at only 32 points.
+
+Finish evaluating a whole wave, then compare **node conflicts → label conflict pairs → approximate length → maximum normal offset → fixed proposal order**. Stop when both conflict counts are zero; otherwise expand again. The winner is best only among evaluated candidates. Bend parameter spans are not used to compare different curves. Relations still follow Source order, sharing labels of earlier automatic routes and all nonautomatic routes.
+
+<SourceLinks
+  sources={[
+    { label: 'Ranking and early termination', path: 'packages/schematic/diagram/src/flow/providers/layout/bezier.ts' },
+    { label: 'Eight-level subcurve checks', path: 'packages/schematic/diagram/src/flow/shared/geometry/bend.ts' },
+  ]}
+/>
+
+### How two cubic controls guide avoidance
+
+Cubic routing generates Q from the same blocker envelope, but one waypoint cannot uniquely determine two controls. It first chooses endpoint tangent directions, then solves both arm lengths so the curve passes through Q at τ. The same A/B/C scene below fixes the lower Q and τ = 1/2: the first panel exposes both controls; the second compares direction profiles.
+
+<ComponentPreview files="flow-cubic-avoidance" hideCode type="illustration" size="xxl" />
+
+The first blue curve uses the chord-relative `(30°, −30°)` profile mirrored to the lower side. `P₀→C₁` sets the departure direction and `C₂→P₁` the arrival direction; the dotted control polygon is not the route. Orange uses `(60°, −60°)`: it reaches the same Q with different bending near the endpoints. The red upper candidate hits C, showing why a waypoint outside the envelope does not itself prove safety.
+
+The implementation also tries asymmetric `(60°, 30°)` and `(−30°, −60°)` profiles and two other τ values. Only finite positive arms no longer than four chord lengths proceed to collision scoring; the figure shows three representative curves. Each wave proposes at most `two sides × three τ values × four profiles = 24` candidates, totaling 49 with two waves and the baseline. Node conflicts, label conflicts, length and offset still determine the ranking; controls are not assigned one per obstacle.
+
+### Separate reference routes from final connections
+
+Explicit conflicts emit `FlowBezierObstacleConflict`; an automatic result with conflicts emits `FlowBezierSearchExhausted`. Both retain the route without switching to bend or smooth. Exhaustion means bounded search did not find a clear route, not that none exists. Automatic coincident endpoint centers cannot define a direction and fail with `FlowBezierRouteUnavailable`.
+
+**Checks and artifacts describe the center reference curve.** Core recomputes endpoints on real node boundaries while preserving controls, then handles arrow shortening and label interruption. The final shape and label position can change. No warning is not a guarantee of pixel-level safety; inspect the rendered drawing.
+
+Artifact endpoints, controls and label boxes use full allocation-local coordinates. `regions.drawing.origin` records the actual translation of the Flow root origin. Subtract it from controls in the same compilation artifact before copying them into Relation.routing. The drawing bounds' top-left cannot replace origin, especially with negative curve overflow.
+
+<SourceLinks
+  sources={[
+    { label: 'Reference conflict diagnostics', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
+    { label: 'Control and origin delivery', path: 'packages/schematic/diagram/src/flow/pipeline/flow/artifact.ts' },
+  ]}
+/>
+
 ## Draw from the layout and save the results
 
 Once positions and connections are determined, Flow passes them to Graph to build the drawing: Entities become nodes, Groups become visible groups, and Layouts use Scopes to preserve their arrangement and hierarchy. Connections follow the layout results, and containment stays the same.

@@ -6,6 +6,7 @@ import { applyAffine, boundsOf, boundsToRect, cornersOfBounds, rectToBounds } fr
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   FlowBendRoute,
+  FlowBezierRoute,
   FlowLayoutElementInput,
   FlowLayoutInput,
   FlowLayoutOutput,
@@ -25,6 +26,18 @@ export const createFlowBendCurve = (route: FlowBendRoute): CurveSegment => {
   return { kind: 'cubicBezier', from, to, control1, control2 };
 };
 
+/** 数值贝塞尔路由转换为 Math 曲线，不复制曲线求值逻辑 */
+export const createFlowBezierCurve = (route: FlowBezierRoute): CurveSegment =>
+  route.kind === 'curve'
+    ? { kind: 'quadraticBezier', from: [...route.points[0]], to: [...route.points[1]], control: [...route.control] }
+    : {
+        kind: 'cubicBezier',
+        from: [...route.points[0]],
+        to: [...route.points[1]],
+        control1: [...route.control1],
+        control2: [...route.control2],
+      };
+
 /** 路由转为 Core 采样输入，保留 Core 圆角语义 */
 const routeCommands = (route: FlowLayoutRoute): Array<PathCommand> => {
   const commands: Array<PathCommand> = [{ kind: 'move', to: [...route.points[0]] }];
@@ -32,7 +45,16 @@ const routeCommands = (route: FlowLayoutRoute): Array<PathCommand> => {
     const segment = createFlowBendCurve(route);
     if (segment.kind === 'cubicBezier')
       commands.push({ kind: 'cubic', control1: segment.control1, control2: segment.control2, to: segment.to });
-  } else for (const point of route.points.slice(1)) commands.push({ kind: 'line', to: [...point] });
+  } else if (route.kind === 'curve')
+    commands.push({ kind: 'quad', control: [...route.control], to: [...route.points[1]] });
+  else if (route.kind === 'cubic')
+    commands.push({
+      kind: 'cubic',
+      control1: [...route.control1],
+      control2: [...route.control2],
+      to: [...route.points[1]],
+    });
+  else for (const point of route.points.slice(1)) commands.push({ kind: 'line', to: [...point] });
   return commands;
 };
 

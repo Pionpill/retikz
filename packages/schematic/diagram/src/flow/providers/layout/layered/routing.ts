@@ -14,6 +14,12 @@ import type {
 import { FlowRoutingKind } from '../../../shared';
 import { FLOW_BEND_ANGLES, doFlowBoundsOverlap, findFlowCurveObstacleIntervals } from '../../../shared/geometry';
 import {
+  createFlowBezierBaseline,
+  selectFlowBezierRoute,
+  isFlowAutomaticRouting,
+  flowPriorLabelReservations,
+} from '../bezier';
+import {
   createFlowBendCurve,
   flowBendGeometryFailure,
   flowRelationObstacles,
@@ -174,6 +180,11 @@ export const routeLayeredRelations = (
     }
     const source = centerOf(sourceBounds);
     const target = centerOf(targetBounds);
+    if (relation.routing.kind === 'curve' || relation.routing.kind === 'cubic') {
+      const route = createFlowBezierBaseline(relation.routing, [source, target], relation, relationIndex);
+      const labelBounds = flowRouteLabelBounds(route, relation);
+      return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+    }
     if (relation.routing.kind === 'bend') {
       const route: FlowLayoutRoute =
         'outAngle' in relation.routing
@@ -226,12 +237,22 @@ export const routeLayeredRelations = (
         : flowRouteLabelBounds(route, relation);
     return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
   });
-  const isAutomatic = (relation: FlowLayoutRelationInput): boolean =>
-    relation.routing.kind === 'bend' &&
-    !('outAngle' in relation.routing) &&
-    (relation.routing.bendDirection === undefined || relation.routing.bendAngle === undefined);
+  const isAutomatic = (relation: FlowLayoutRelationInput): boolean => isFlowAutomaticRouting(relation.routing);
   for (const [relationIndex, relation] of input.relations.entries()) {
     const routing = relation.routing;
+    const initialBezier = routed[relationIndex].route;
+    if (isAutomatic(relation) && (initialBezier.kind === 'curve' || initialBezier.kind === 'cubic')) {
+      const scope = commonScope(index.scopes.get(relation.source) ?? [], index.scopes.get(relation.target) ?? []);
+      const scopeLayout = scope === undefined ? input.layout : (index.layouts.get(scope) ?? input.layout);
+      routed[relationIndex] = selectFlowBezierRoute(
+        initialBezier,
+        relation,
+        scopeLayout,
+        flowRelationObstacles(input, { elements }, relation),
+        flowPriorLabelReservations(input.relations, routed, relationIndex),
+      );
+      continue;
+    }
     if (!isAutomatic(relation) || routing.kind !== 'bend' || 'outAngle' in routing) continue;
     const initial = routed[relationIndex].route;
     if (initial.kind !== 'bend' || !('bendAngle' in initial)) continue;

@@ -730,6 +730,10 @@ export declare const FlowRelation: {
         | { kind: 'orthogonal'; cornerRadius?: number | undefined }
         | { kind: '-|'; cornerRadius?: number | undefined }
         | { kind: '|-'; cornerRadius?: number | undefined }
+        | { kind: 'curve' }
+        | { kind: 'curve'; control: [number, number] }
+        | { kind: 'cubic' }
+        | { kind: 'cubic'; control1: [number, number]; control2: [number, number] }
         | undefined;
       source: string;
       sourceMarker?:
@@ -1038,7 +1042,7 @@ export type InputFlowDiagram = Omit<IRFlowDiagram, 'namespace' | 'type'>;
 </p>
 
 ```ts
-export declare const FlowDiagramInputEmbedAdapter: InputEmbedAdapter<FlowDiagramInputEmbedProps>;
+export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<FlowDiagramInputEmbedProps>;
 ```
 
 ## `@retikz/diagram/flow`
@@ -1049,7 +1053,7 @@ export declare const FlowDiagramInputEmbedAdapter: InputEmbedAdapter<FlowDiagram
   <ApiSourceLink
     label={'FlowBendRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={57}
+    startLine={117}
   >
     Bend reference geometry containing only the active parameter family
   </ApiSourceLink>
@@ -1106,6 +1110,151 @@ export type FlowBendRoute = Readonly<{
         looseness: number;
       }>
   );
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowBezierRoute
+
+<p>
+  <ApiSourceLink
+    label={'FlowBezierRoute'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={66}
+  >
+    Complete numeric Bezier reference route
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="curve">
+
+<DocTab value="curve" label="Members · Quadratic Bezier">
+
+<ApiTable>
+
+| Member             | Type                                                                       | Default | Description                                              |
+| ------------------ | -------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
+| `readonly control` | `Readonly<Position>`                                                       | —       | Resolved quadratic control, not a point on the curve     |
+| `readonly kind`    | `'curve'`                                                                  | —       | Quadratic Bezier reference geometry                      |
+| `readonly points`  | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Center reference endpoints ordered from source to target |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="cubic" label="Members · Cubic Bezier">
+
+<ApiTable>
+
+| Member              | Type                                                                       | Default | Description                                              |
+| ------------------- | -------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
+| `readonly control1` | `Readonly<Position>`                                                       | —       | Resolved source tangent control                          |
+| `readonly control2` | `Readonly<Position>`                                                       | —       | Resolved target tangent control                          |
+| `readonly kind`     | `'cubic'`                                                                  | —       | Cubic Bezier reference geometry                          |
+| `readonly points`   | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Center reference endpoints ordered from source to target |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowBezierRoute = Readonly<{
+  points: readonly [Readonly<Position>, Readonly<Position>];
+}> &
+  (
+    | Readonly<{
+        kind: 'curve';
+        control: Readonly<Position>;
+      }>
+    | Readonly<{
+        kind: 'cubic';
+        control1: Readonly<Position>;
+        control2: Readonly<Position>;
+      }>
+  );
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowBezierRouting
+
+<p>
+  <ApiSourceLink
+    label={'FlowBezierRouting'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={41}
+  >
+    Automatic or complete explicit Bezier input without a redundant mode field
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="curve">
+
+<DocTab value="curve" label="Members · Quadratic Bezier">
+
+<ApiTable>
+
+| Member              | Type                 | Default | Description                                                     |
+| ------------------- | -------------------- | ------- | --------------------------------------------------------------- |
+| `readonly control?` | `Readonly<Position>` | —       | Control in Flow root coordinates; omit for automatic generation |
+| `readonly kind`     | `'curve'`            | —       | Quadratic Bezier input                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="cubic-auto" label="Members · Automatic cubic Bezier">
+
+<ApiTable>
+
+| Member               | Type      | Default | Description                                   |
+| -------------------- | --------- | ------- | --------------------------------------------- |
+| `readonly control1?` | `never`   | —       | Automatic cubic input must omit both controls |
+| `readonly control2?` | `never`   | —       | Automatic cubic input must omit both controls |
+| `readonly kind`      | `'cubic'` | —       | Cubic Bezier input                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="cubic-explicit" label="Members · Explicit cubic Bezier">
+
+<ApiTable>
+
+| Member              | Type                 | Default | Description                                                                    |
+| ------------------- | -------------------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly control1` | `Readonly<Position>` | —       | Source tangent control in Flow root coordinates; explicit values must not move |
+| `readonly control2` | `Readonly<Position>` | —       | Target tangent control in Flow root coordinates; explicit values must not move |
+| `readonly kind`     | `'cubic'`            | —       | Cubic Bezier input                                                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowBezierRouting =
+  | Readonly<{
+      kind: 'curve';
+      control?: Readonly<Position>;
+    }>
+  | Readonly<{
+      kind: 'cubic';
+      control1?: never;
+      control2?: never;
+    }>
+  | Readonly<{
+      kind: 'cubic';
+      control1: Readonly<Position>;
+      control2: Readonly<Position>;
+    }>;
 ```
 
 </DocTab>
@@ -1210,7 +1359,7 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
   <ApiSourceLink
     label={'FlowLayoutDefinition'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={266}
+    startLine={327}
   >
     Layout definition that synchronously determines Flow element bounds, relation routes, and label reservations
   </ApiSourceLink>
@@ -1256,7 +1405,7 @@ export type FlowLayoutDefinition = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutLabelPlacement'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={54}
+    startLine={114}
   >
     Complete-label geometry provided to layout, excluding text and appearance
   </ApiSourceLink>
@@ -1298,7 +1447,7 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | '
   <ApiSourceLink
     label={'FlowLayoutRelationInput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={192}
+    startLine={253}
   >
     Measured Flow layout relation input
   </ApiSourceLink>
@@ -1346,7 +1495,7 @@ export type FlowLayoutRelationInput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRelationOutput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={226}
+    startLine={287}
   >
     Layout output for one Flow relation in root coordinates
   </ApiSourceLink>
@@ -1386,7 +1535,7 @@ export type FlowLayoutRelationOutput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={64}
+    startLine={124}
   >
     Reference route determined by layout; Core performs actual endpoint clipping and arrow shortening
   </ApiSourceLink>
@@ -1420,6 +1569,35 @@ export type FlowLayoutRelationOutput = Readonly<{
 | `readonly looseness` | `number`                                                                   | —       | —           |
 | `readonly outAngle`  | `number`                                                                   | —       | —           |
 | `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="curve" label="Members · Quadratic Bezier">
+
+<ApiTable>
+
+| Member             | Type                                                                       | Default | Description                                              |
+| ------------------ | -------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
+| `readonly control` | `Readonly<Position>`                                                       | —       | Resolved quadratic control, not a point on the curve     |
+| `readonly kind`    | `'curve'`                                                                  | —       | Quadratic Bezier reference geometry                      |
+| `readonly points`  | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Center reference endpoints ordered from source to target |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="cubic" label="Members · Cubic Bezier">
+
+<ApiTable>
+
+| Member              | Type                                                                       | Default | Description                                              |
+| ------------------- | -------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
+| `readonly control1` | `Readonly<Position>`                                                       | —       | Resolved source tangent control                          |
+| `readonly control2` | `Readonly<Position>`                                                       | —       | Resolved target tangent control                          |
+| `readonly kind`     | `'cubic'`                                                                  | —       | Cubic Bezier reference geometry                          |
+| `readonly points`   | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Center reference endpoints ordered from source to target |
 
 </ApiTable>
 
@@ -1465,7 +1643,8 @@ export type FlowLayoutRoute =
       points: ReadonlyArray<Readonly<Position>>;
       cornerRadius: number;
     }>
-  | FlowBendRoute;
+  | FlowBendRoute
+  | FlowBezierRoute;
 ```
 
 </DocTab>
@@ -1478,13 +1657,54 @@ export type FlowLayoutRoute =
   <ApiSourceLink
     label={'FlowLayoutRouting'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={41}
+    startLine={100}
   >
     Effective routing consumed by the Flow layout provider
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="straight">
+<DocTabs defaultValue="curve">
+
+<DocTab value="curve" label="Members · Quadratic Bezier">
+
+<ApiTable>
+
+| Member              | Type                 | Default | Description                                                     |
+| ------------------- | -------------------- | ------- | --------------------------------------------------------------- |
+| `readonly control?` | `Readonly<Position>` | —       | Control in Flow root coordinates; omit for automatic generation |
+| `readonly kind`     | `'curve'`            | —       | Quadratic Bezier input                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="cubic-auto" label="Members · Automatic cubic Bezier">
+
+<ApiTable>
+
+| Member               | Type      | Default | Description                                   |
+| -------------------- | --------- | ------- | --------------------------------------------- |
+| `readonly control1?` | `never`   | —       | Automatic cubic input must omit both controls |
+| `readonly control2?` | `never`   | —       | Automatic cubic input must omit both controls |
+| `readonly kind`      | `'cubic'` | —       | Cubic Bezier input                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="cubic-explicit" label="Members · Explicit cubic Bezier">
+
+<ApiTable>
+
+| Member              | Type                 | Default | Description                                                                    |
+| ------------------- | -------------------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly control1` | `Readonly<Position>` | —       | Source tangent control in Flow root coordinates; explicit values must not move |
+| `readonly control2` | `Readonly<Position>` | —       | Target tangent control in Flow root coordinates; explicit values must not move |
+| `readonly kind`     | `'cubic'`            | —       | Cubic Bezier input                                                             |
+
+</ApiTable>
+
+</DocTab>
 
 <DocTab value="straight" label="Members · Straight">
 
@@ -1544,6 +1764,7 @@ export type FlowLayoutRoute =
 
 ```ts
 export type FlowLayoutRouting =
+  | FlowBezierRouting
   | Readonly<{
       kind: 'straight';
     }>
@@ -1561,6 +1782,62 @@ export type FlowLayoutRouting =
       outAngle: number;
       inAngle: number;
       looseness: number;
+    }>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowRoutingCapability
+
+<p>
+  <ApiSourceLink
+    label={'FlowRoutingCapability'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={87}
+  >
+    Each routing kind and its supported authoring modes
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="regular">
+
+<DocTab value="regular" label="Members · Regular routing">
+
+<ApiTable>
+
+| Member          | Type                                                | Default | Description                                                |
+| --------------- | --------------------------------------------------- | ------- | ---------------------------------------------------------- |
+| `readonly kind` | `Exclude<FlowRoutingKindValue, 'curve' \| 'cubic'>` | —       | Regular routing with its complete existing input semantics |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="bezier" label="Members · Bezier capabilities">
+
+<ApiTable>
+
+| Member           | Type                                  | Default | Description                                                                           |
+| ---------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `readonly kind`  | `'curve' \| 'cubic'`                  | —       | Supported Bezier kind                                                                 |
+| `readonly modes` | `ReadonlyArray<'auto' \| 'explicit'>` | —       | Supported automatic or explicit inputs; nonempty and unique. Source has no mode field |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowRoutingCapability =
+  | Readonly<{
+      kind: Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>;
+    }>
+  | Readonly<{
+      kind: 'curve' | 'cubic';
+      modes: ReadonlyArray<'auto' | 'explicit'>;
     }>;
 ```
 
@@ -1713,7 +1990,7 @@ export declare const defineFlowLayout: (definition: FlowLayoutDefinition) => Flo
   <ApiSourceLink
     label={'getFlowLayoutCatalog'}
     path={'packages/schematic/diagram/src/flow/providers/layout/registry.ts'}
-    startLine={193}
+    startLine={204}
   >
     Project a stable JSON-safe catalog from the live registry
   </ApiSourceLink>

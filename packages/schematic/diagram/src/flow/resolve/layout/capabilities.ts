@@ -125,8 +125,15 @@ export const deriveFlowLayoutCapabilities = (
     const scopeId = commonScope(sourceScopes, targetScopes);
     const scopeRouting = inheritedRoutingForScope(diagram, scopeId, sourceScopes, index.elementsById);
     const routingKind = relation.routing?.kind ?? scopeRouting?.kind ?? definition.defaults.routing.kind;
-    if (!definition.capabilities.routingKinds.includes(routingKind)) {
+    const routingCapability = definition.capabilities.routing.find(item => item.kind === routingKind);
+    if (routingCapability === undefined) {
       pushEvidence(evidence, `routing:${routingKind}`, relationEndpointIds);
+    }
+    if (routingCapability !== undefined && 'modes' in routingCapability) {
+      const authored = relation.routing;
+      const mode = authored !== undefined && ('control' in authored || 'control1' in authored) ? 'explicit' : 'auto';
+      if (!routingCapability.modes.includes(mode))
+        pushEvidence(evidence, `routing:${routingKind}:${mode}`, relationEndpointIds);
     }
     const pair = [relation.source.source, relation.source.target].sort().join('\u0000');
     const pairRelations = unorderedPairs.get(pair);
@@ -155,7 +162,7 @@ export const assertFlowLayoutCapabilities = (definition: FlowLayoutDefinition, d
     if (capability.startsWith('direction:') || capability.startsWith('routing:') || capability.startsWith('placement:'))
       return true;
     return !definition.capabilities[
-      capability as keyof Omit<typeof definition.capabilities, 'relationDirections' | 'routingKinds' | 'placementKinds'>
+      capability as keyof Omit<typeof definition.capabilities, 'relationDirections' | 'routing' | 'placementKinds'>
     ];
   });
   if (unsupported.length === 0) return;

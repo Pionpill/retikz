@@ -97,6 +97,13 @@ const FlowBendRouteShape = {
 };
 
 export const FlowRouteArtifactSchema = union([
+  strictObject({ kind: literal('curve'), points: tuple([PositionSchema, PositionSchema]), control: PositionSchema }),
+  strictObject({
+    kind: literal('cubic'),
+    points: tuple([PositionSchema, PositionSchema]),
+    control1: PositionSchema,
+    control2: PositionSchema,
+  }),
   FlowPointRouteArtifactSchema,
   strictObject({ ...FlowBendRouteShape, bendDirection: zodEnum(BendDirection), bendAngle: BendAngleSchema.unwrap() }),
   strictObject({
@@ -124,7 +131,11 @@ export const FlowDiagramArtifactSchema = strictObject({
   regions: strictObject({
     title: FlowArtifactBoundsSchema.optional().describe('Title region when authored.'),
     description: FlowArtifactBoundsSchema.optional().describe('Description region when authored.'),
-    drawing: FlowArtifactBoundsSchema.describe('Required Flow drawing region.'),
+    drawing: FlowArtifactBoundsSchema.extend({
+      origin: PositionSchema.describe(
+        'Flow root origin in allocation-local coordinates; subtract from artifact controls for explicit authoring.',
+      ),
+    }).describe('Required Flow drawing region.'),
     legend: FlowArtifactBoundsSchema.optional().describe('Legend region when authored.'),
   }).describe('Only the Diagram regions present in this compile result.'),
   elements: array(FlowElementArtifactSchema).nonempty().describe('Recursive authored Flow element geometry.'),

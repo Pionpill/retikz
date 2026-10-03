@@ -22,7 +22,7 @@ const customDefinition = (name = 'custom'): FlowLayoutDefinition =>
       parallelRelations: false,
       relationLabels: false,
       relationDirections: ['forward'],
-      routingKinds: ['straight'],
+      routing: [{ kind: 'straight' }],
     },
     defaults: {
       direction: 'down',

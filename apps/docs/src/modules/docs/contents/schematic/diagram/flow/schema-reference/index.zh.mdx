@@ -143,11 +143,16 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
 
 ## FlowRoutingSchema
 
+省略所有控制点表示自动；完整提供表示显式；cubic 只填一个点或填写 mode 均拒绝。贝塞尔仅限 Relation。
+
 <ZodSchema
   name="FlowRoutingSchema"
   description="与布局实现无关的 Flow 关系路由意图"
   expandNested
   descriptions={{
+    control: 'Flow 根坐标中的显式二次控制点；从 artifact 复制时减去 drawing.origin',
+    control1: 'Flow 根坐标中的起点切线控制点，必须与 control2 一起提供',
+    control2: 'Flow 根坐标中的终点切线控制点，必须与 control1 一起提供',
     '/case/"kind"/string/"bend"/field/"kind"': '常规曲线，自动最多比较六条候选；节点优先、标签次级，不比较边交叉或保证全局避障',
     '/case/"kind"/string/"bend"/field/"bendDirection"': '相对 source 到 target 的弯曲侧，省略时布局自动选择',
     '/case/"kind"/string/"bend"/field/"bendAngle"': '对称角度范围 (-180, 180)；显式或继承值锁定，省略比较 30/45/60；同分小角优先再选左，负值翻侧',

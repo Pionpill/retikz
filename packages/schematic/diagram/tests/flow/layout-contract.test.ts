@@ -18,7 +18,7 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
     parallelRelations: false,
     relationLabels: false,
     relationDirections: ['forward'],
-    routingKinds: ['straight'],
+    routing: [{ kind: 'straight' }],
   },
   defaults: {
     direction: 'right',
@@ -56,7 +56,7 @@ describe('Flow Layout Definition contract', () => {
     const base = validDefinition();
     const bend = {
       ...base,
-      capabilities: { ...base.capabilities, routingKinds: ['bend' as const] },
+      capabilities: { ...base.capabilities, routing: [{ kind: 'bend' as const }] },
       defaults: { ...base.defaults, routing: { kind: 'bend' as const } },
     };
     expect(resolveFlowLayoutRegistry({ flowLayouts: [bend] }).layouts.get('custom')).toBe(bend);
@@ -134,7 +134,7 @@ describe('Flow Layout Definition contract', () => {
         capabilities: { ...validDefinition().capabilities, relationDirections: ['forward', 'forward'] },
       }),
     ],
-    ['empty routing kinds', validDefinition({ capabilities: { ...validDefinition().capabilities, routingKinds: [] } })],
+    ['empty routing kinds', validDefinition({ capabilities: { ...validDefinition().capabilities, routing: [] } })],
     [
       'unsupported default routing',
       validDefinition({
@@ -144,7 +144,7 @@ describe('Flow Layout Definition contract', () => {
     [
       'missing orthogonal radius',
       validDefinition({
-        capabilities: { ...validDefinition().capabilities, routingKinds: ['straight', 'orthogonal'] },
+        capabilities: { ...validDefinition().capabilities, routing: [{ kind: 'straight' }, { kind: 'orthogonal' }] },
       }),
     ],
     [

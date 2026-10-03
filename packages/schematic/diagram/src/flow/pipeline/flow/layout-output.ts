@@ -388,7 +388,12 @@ const validateRoute = (
   if (route.kind !== relation.routing.kind)
     invalidOutput(definition, [...path, 'route', 'kind'], 'route kind must match input.', relatedIds);
   for (const [key, value] of Object.entries(relation.routing)) {
-    if (value !== undefined && Reflect.get(route, key) !== value)
+    if (
+      value !== undefined &&
+      (Array.isArray(value)
+        ? JSON.stringify(Reflect.get(route, key)) !== JSON.stringify(value)
+        : Reflect.get(route, key) !== value)
+    )
       invalidOutput(definition, [...path, 'route', key], 'route parameters must preserve effective input.', relatedIds);
   }
   if (relation.routing.kind === 'bend' && route.kind === 'bend') {
@@ -412,7 +417,7 @@ const validateRoute = (
   if (relation.routing.kind === 'straight' && points.length !== 2) {
     invalidOutput(definition, [...path, 'points'], 'straight route must contain exactly two points.', relatedIds);
   }
-  if (relation.routing.kind !== FlowRoutingKind.Straight && relation.routing.kind !== FlowRoutingKind.Bend) {
+  if ('cornerRadius' in relation.routing) {
     points.slice(1).forEach((point, index) => {
       const previous = points[index];
       if (point[0] !== previous[0] && point[1] !== previous[1]) {
@@ -438,7 +443,7 @@ const validateRoute = (
   if (!containsPoint(sourceBounds, points[0]) || !containsPoint(targetBounds, points.at(-1)!)) {
     invalidOutput(definition, [...path, 'points'], 'route endpoints must lie inside their element bounds.', relatedIds);
   }
-  if (route.kind === 'bend') {
+  if (route.kind === 'bend' || route.kind === 'curve' || route.kind === 'cubic') {
     const centers: Array<Position> = [
       [sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2],
       [targetBounds.x + targetBounds.width / 2, targetBounds.y + targetBounds.height / 2],
@@ -447,7 +452,7 @@ const validateRoute = (
       invalidOutput(
         definition,
         [...path, 'route', 'points'],
-        'bend endpoints must preserve element centers.',
+        'curve endpoints must preserve element centers.',
         relatedIds,
       );
   }
@@ -559,7 +564,7 @@ const normalizeAndValidateOutput = (
       point[1] === 0 ? 0 : point[1],
     ];
     const route: FlowLayoutRoute =
-      parsed.data.kind === 'bend'
+      parsed.data.kind === 'bend' || parsed.data.kind === 'curve' || parsed.data.kind === 'cubic'
         ? { ...parsed.data, points: [normalizePoint(parsed.data.points[0]), normalizePoint(parsed.data.points[1])] }
         : { ...parsed.data, points: collapsePoints(parsed.data.points.map(normalizePoint)) };
     const labelBounds =
@@ -627,7 +632,8 @@ export const executeFlowLayout = (
     if (
       cause instanceof RetikzDiagramError &&
       (cause.code === RetikzDiagramErrorCode.FlowLayoutOutputInvalid ||
-        cause.code === RetikzDiagramErrorCode.FlowMaterializationFailed)
+        cause.code === RetikzDiagramErrorCode.FlowMaterializationFailed ||
+        cause.code === RetikzDiagramErrorCode.FlowBezierRouteUnavailable)
     )
       throw cause;
     return callbackFailed(definition, 'layout callback threw.', cause);

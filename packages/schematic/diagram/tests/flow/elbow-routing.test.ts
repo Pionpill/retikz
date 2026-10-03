@@ -92,7 +92,10 @@ describe('Flow single-elbow routing', () => {
       expect(() =>
         compile({
           ...provider,
-          capabilities: { ...provider.capabilities, routingKinds: ['straight', 'orthogonal', 'bend'] },
+          capabilities: {
+            ...provider.capabilities,
+            routing: [{ kind: 'straight' }, { kind: 'orthogonal' }, { kind: 'bend' }],
+          },
         }),
       ).toThrow(
         expect.objectContaining({
@@ -170,7 +173,7 @@ describe('Flow single-elbow routing', () => {
     const provider = {
       ...LayeredFlowLayoutDefinition,
       name: 'elbow',
-      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routingKinds: [kind] },
+      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routing: [{ kind }] },
       defaults: { ...LayeredFlowLayoutDefinition.defaults, routing: { kind, orthogonalCornerRadius: 5 } },
     };
     expect(

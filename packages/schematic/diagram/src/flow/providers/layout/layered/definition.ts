@@ -17,7 +17,9 @@ export const LayeredFlowLayoutDefinition: FlowLayoutDefinition = defineFlowLayou
     parallelRelations: true,
     relationLabels: true,
     relationDirections: ['none', 'forward', 'reverse', 'both'],
-    routingKinds: Object.values(FlowRoutingKind),
+    routing: Object.values(FlowRoutingKind).map(kind =>
+      kind === 'curve' || kind === 'cubic' ? { kind, modes: ['auto', 'explicit'] } : { kind },
+    ),
   },
   defaults: {
     direction: 'right',

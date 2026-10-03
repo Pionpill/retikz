@@ -1,5 +1,31 @@
 /** Flow API 页经人工核对的英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  二次贝塞尔输入: 'Quadratic Bezier input',
+  三次贝塞尔输入: 'Cubic Bezier input',
+  'Flow 根坐标控制点，省略时自动生成': 'Control in Flow root coordinates; omit for automatic generation',
+  自动三次必须同时省略两个控制点: 'Automatic cubic input must omit both controls',
+  'Flow 根坐标的起点切线控制点，显式值不可移动':
+    'Source tangent control in Flow root coordinates; explicit values must not move',
+  'Flow 根坐标的终点切线控制点，显式值不可移动':
+    'Target tangent control in Flow root coordinates; explicit values must not move',
+  '按 source 到 target 排列的中心参考端点': 'Center reference endpoints ordered from source to target',
+  二次贝塞尔参考几何: 'Quadratic Bezier reference geometry',
+  三次贝塞尔参考几何: 'Cubic Bezier reference geometry',
+  '已确定的二次控制点，不是曲线经过点': 'Resolved quadratic control, not a point on the curve',
+  已确定的起点切线控制点: 'Resolved source tangent control',
+  已确定的终点切线控制点: 'Resolved target tangent control',
+  支持既有完整输入语义的常规路由: 'Regular routing with its complete existing input semantics',
+  支持的贝塞尔种类: 'Supported Bezier kind',
+  '可消费的自动或显式输入，非空且无重复；Source 不填写 mode':
+    'Supported automatic or explicit inputs; nonempty and unique. Source has no mode field',
+
+  '自动或完整显式的贝塞尔输入，不存储可推导的 mode':
+    'Automatic or complete explicit Bezier input without a redundant mode field',
+  完整数值贝塞尔参考路线: 'Complete numeric Bezier reference route',
+  每种路由及其可消费的作者输入语义: 'Each routing kind and its supported authoring modes',
+  '默认路由种类，必须包含在 capabilities.routing 中':
+    'Default routing kind, which must be declared in capabilities.routing',
+
   'Flow layout provider 使用的有效路由': 'Effective routing consumed by the Flow layout provider',
   'Flow layout relation 输入': 'Measured Flow layout relation input',
   省略时由布局比较左右候选: 'Omission lets layout compare left and right candidates',

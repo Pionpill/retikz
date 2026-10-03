@@ -27,6 +27,7 @@ const artifact = {
       visualBounds: { x: 16, y: 12, width: 288, height: 20 },
     },
     drawing: {
+      origin: [16, 44],
       allocationBounds: { x: 16, y: 44, width: 288, height: 120 },
       visualBounds: { x: 16, y: 44, width: 288, height: 120 },
     },

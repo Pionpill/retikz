@@ -1,5 +1,11 @@
 import type { IRTextBlock } from '@retikz/core';
-import { BendStepSchema, GeometryLabelSchema, ScopePropsSchema, TextBlockSchema } from '@retikz/core';
+import {
+  BendStepSchema,
+  ControlPointSchema,
+  GeometryLabelSchema,
+  ScopePropsSchema,
+  TextBlockSchema,
+} from '@retikz/core';
 import {
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
@@ -66,7 +72,7 @@ const FlowVerticalThenHorizontalRoutingSchema = FlowOrthogonalRoutingSchema.exte
   ),
 });
 
-export const FlowRoutingSchema = discriminatedUnion('kind', [
+export const FlowScopeRoutingSchema = discriminatedUnion('kind', [
   strictObject({
     kind: literal(FlowRoutingKind.Bend).describe(
       'Regular bend routing alongside straight and axis-aligned routes. Prefer this over manual curve controls; omitted side and angle search up to six candidates (left/right at 30, 45, 60 degrees) after inheritance. Nodes take priority, labels break ties; edge crossings and overlaps are not scored. No global obstacle avoidance guarantee.',
@@ -86,6 +92,32 @@ export const FlowRoutingSchema = discriminatedUnion('kind', [
   FlowHorizontalThenVerticalRoutingSchema,
   FlowVerticalThenHorizontalRoutingSchema,
 ]).describe('Provider-neutral Flow relation routing intent.');
+
+/** 关系专属贝塞尔：控制点全省略或完整提供 */
+export const FlowBezierRoutingSchema = union([
+  strictObject({ kind: literal(FlowRoutingKind.Curve) }),
+  strictObject({
+    kind: literal(FlowRoutingKind.Curve),
+    control: ControlPointSchema.describe(
+      'Explicit quadratic control in Flow root coordinates; subtract artifact drawing.origin when copying a control from an artifact.',
+    ),
+  }),
+  strictObject({ kind: literal(FlowRoutingKind.Cubic) }),
+  strictObject({
+    kind: literal(FlowRoutingKind.Cubic),
+    control1: ControlPointSchema.describe(
+      'Explicit source tangent control in Flow root coordinates; must accompany control2.',
+    ),
+    control2: ControlPointSchema.describe(
+      'Explicit target tangent control in Flow root coordinates; must accompany control1.',
+    ),
+  }),
+]).describe(
+  'Prefer bend for simple routing. Omit all controls for bounded automatic Bezier avoidance; provide all controls for exact authoring. Controls are not waypoints. Reference collision checks do not guarantee final drawing safety.',
+);
+
+/** Flow 关系路由；祖先默认只接受常规路由子集 */
+export const FlowRoutingSchema = union([...FlowScopeRoutingSchema.options, ...FlowBezierRoutingSchema.options]);
 
 const FlowLayoutIntentBaseSchema = strictObject({
   direction: zodEnum(FlowDirection).optional().describe('Primary direction for this Flow layout scope.'),
@@ -228,7 +260,7 @@ export const FlowGroupSchema = strictObject({
   id: GroupSchema.shape.id.unwrap().describe('Flow-wide authored Group identity.'),
   rank: NonNegativeIntegerSchema.optional().describe('Optional rank constraint within the nearest Flow scope.'),
   layout: FlowLayoutIntentSchema.optional().describe('Layout overrides for this Group contents.'),
-  routing: FlowRoutingSchema.optional().describe('Routing default for Relations in this Group scope.'),
+  routing: FlowScopeRoutingSchema.optional().describe('Routing default for Relations in this Group scope.'),
   children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
 }).describe(
   'Graph Group surface with Flow identity, reference children and automatic layout; excludes transforms, placement and localNamespace.',
@@ -416,7 +448,7 @@ export const FlowDiagramSchema = strictObject({
     .optional()
     .describe('Optional ordered Graph rules for Flow-materialized Entities and Relations.'),
   layout: FlowLayoutIntentSchema.optional().describe('Root Flow layout overrides.'),
-  routing: FlowRoutingSchema.optional().describe('Root Flow relation routing default.'),
+  routing: FlowScopeRoutingSchema.optional().describe('Root Flow relation routing default.'),
   entities: array(FlowEntitySchema).nonempty().describe('Non-empty flat Flow Entity declaration catalog.'),
   groups: array(FlowGroupSchema).describe('Flat Flow Group declaration catalog; empty when no Groups are authored.'),
   layouts: array(FlowLayoutSchema).describe(

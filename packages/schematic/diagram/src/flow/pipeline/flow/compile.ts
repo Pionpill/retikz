@@ -5,7 +5,14 @@ import type { Position } from '@retikz/math';
 import { composeDiagramFoundation, resolveDiagramFoundation } from '../../../_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { ResolvedFlowDiagramDefinitionOptions } from '../../providers';
-import { flowBendGeometryFailure, flowRelationObstacles, scoreFlowBendNodes } from '../../providers';
+import {
+  evaluateFlowBezierConflicts,
+  flowPriorLabelReservations,
+  isFlowAutomaticRouting,
+  flowBendGeometryFailure,
+  flowRelationObstacles,
+  scoreFlowBendNodes,
+} from '../../providers';
 import type { CanonicalFlowDiagram } from '../../resolve';
 import { assertFlowLayoutCapabilities, resolveFlowDiagram } from '../../resolve';
 import type { FlowDiagramArtifact, IRFlowDiagram } from '../../schemas';
@@ -113,6 +120,22 @@ export const createCompileFlowDiagram =
       createFlowLayoutExecutionContext(context, measurement.input),
     );
     for (const [index, geometry] of output.relations.entries()) {
+      if (geometry.route.kind === 'curve' || geometry.route.kind === 'cubic') {
+        const relation = measurement.input.relations[index];
+        const conflicts = evaluateFlowBezierConflicts(
+          geometry.route,
+          relation,
+          flowRelationObstacles(measurement.input, output, relation),
+          flowPriorLabelReservations(measurement.input.relations, output.relations, index),
+        );
+        if (conflicts.nodes > 0 || conflicts.labelConflicts > 0)
+          context.warn(
+            isFlowAutomaticRouting(relation.routing) ? 'FlowBezierSearchExhausted' : 'FlowBezierObstacleConflict',
+            `Bezier reference geometry conflicts with ${conflicts.relatedIds.join(', ')}; inspect the final drawing.`,
+            `relations[${index}]`,
+          );
+        continue;
+      }
       if (geometry.route.kind !== 'bend') continue;
       const relation = measurement.input.relations[index];
       let conflictCount: number;
@@ -168,7 +191,7 @@ export const createCompileFlowDiagram =
       definitionName: definition.name,
       frameAllocationBounds: foundation.frame.allocationBounds,
       frameVisualBounds: foundation.frame.visualBounds,
-      regions: foundation.regions,
+      regions: { ...foundation.regions, drawing: { ...foundation.regions.drawing, origin: drawingOffset } },
       drawingOffset,
       elements: diagram.elements,
       relations: diagram.relations,
@@ -176,7 +199,7 @@ export const createCompileFlowDiagram =
     });
     const spatialHandles = createFlowSpatialHandles(
       foundation.frame.allocationBounds,
-      foundation.regions,
+      artifact.regions,
       artifact.elements,
     );
     return {

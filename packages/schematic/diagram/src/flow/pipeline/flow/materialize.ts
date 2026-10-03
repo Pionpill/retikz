@@ -116,16 +116,35 @@ const materializeRelation = (
     target: { id: relation.source.target },
     route: [
       { type: 'step', kind: 'move', to: { id: relation.source.source } },
-      ...(bend !== undefined
-        ? [{ type: 'step' as const, kind: 'bend' as const, to: { id: relation.source.target }, ...bend }]
-        : [
-            ...innerPoints.map(point => ({
+      ...(routing.kind === 'curve'
+        ? [
+            {
               type: 'step' as const,
-              kind: 'line' as const,
-              to: [point[0], point[1]] as [number, number],
-            })),
-            { type: 'step' as const, kind: 'line' as const, to: { id: relation.source.target } },
-          ]),
+              kind: 'curve' as const,
+              to: { id: relation.source.target },
+              control: [...routing.control] as [number, number],
+            },
+          ]
+        : routing.kind === 'cubic'
+          ? [
+              {
+                type: 'step' as const,
+                kind: 'cubic' as const,
+                to: { id: relation.source.target },
+                control1: [...routing.control1] as [number, number],
+                control2: [...routing.control2] as [number, number],
+              },
+            ]
+          : bend !== undefined
+            ? [{ type: 'step' as const, kind: 'bend' as const, to: { id: relation.source.target }, ...bend }]
+            : [
+                ...innerPoints.map(point => ({
+                  type: 'step' as const,
+                  kind: 'line' as const,
+                  to: [point[0], point[1]] as [number, number],
+                })),
+                { type: 'step' as const, kind: 'line' as const, to: { id: relation.source.target } },
+              ]),
     ],
     ...('cornerRadius' in routing && routing.cornerRadius > 0 ? { roundedCorners: routing.cornerRadius } : {}),
     ...(label === undefined ? {} : { labels: [label] }),

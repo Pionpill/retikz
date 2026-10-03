@@ -202,6 +202,23 @@ Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group �
   ]}
 />
 
+## 贝塞尔曲线
+
+简单曲线优先使用 bend；有限 bend 候选不足时，再在单条 Relation 上使用 `curve` 或 `cubic`。省略全部控制点即可自动生成，不需要填写 mode。下面固定三个节点，三次曲线自动尝试绕开中间节点。
+
+<ComponentPreview files="flow-bezier" size="sm" />
+
+| routing                                                       | 含义           |
+| ------------------------------------------------------------- | -------------- |
+| `{ kind: 'curve' }`                                           | 自动二次曲线   |
+| `{ kind: 'cubic' }`                                           | 自动三次曲线   |
+| `{ kind: 'curve', control: [100, -80] }`                      | 显式二次控制点 |
+| `{ kind: 'cubic', control1: [30, -80], control2: [160, 50] }` | 显式三次控制点 |
+
+三次只填一个控制点会被拒绝；根和 Group 不能设置贝塞尔默认。控制点是 Flow 根坐标，通常不在曲线上。从 artifact 复制时须减去 `regions.drawing.origin`。布局变化不会自动搬移显式控制点。
+
+自动二次/三次最多提出 13/49 条候选，碰撞最多二分 8 层。搜索受阻会保留最佳有限路线并警告；检测针对中心参考曲线，Core 连接节点边界后形状可能变化，最终绘图仍需检查。完整流程见[贝塞尔自动避让原理](/schematic/diagram/flow/mechanism#贝塞尔曲线的自动避让)。
+
 ## 延伸阅读
 
 <LinkedSections

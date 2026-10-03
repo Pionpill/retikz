@@ -205,6 +205,23 @@ These are the members used to combine the features on this page. See the [API re
   ]}
 />
 
+## Bezier curves
+
+Prefer bend for simple curves. When its finite candidates are insufficient, use `curve` or `cubic` on an individual Relation. Omit all controls for automatic generation; there is no mode field. This example fixes three nodes and asks a cubic to avoid the middle one.
+
+<ComponentPreview files="flow-bezier" size="sm" />
+
+| routing                                                       | Meaning                          |
+| ------------------------------------------------------------- | -------------------------------- |
+| `{ kind: 'curve' }`                                           | Automatic quadratic              |
+| `{ kind: 'cubic' }`                                           | Automatic cubic                  |
+| `{ kind: 'curve', control: [100, -80] }`                      | Explicit quadratic control       |
+| `{ kind: 'cubic', control1: [30, -80], control2: [160, 50] }` | Complete explicit cubic controls |
+
+Providing only one cubic control is rejected. Root and Group defaults cannot use Bezier routing. Controls use Flow root coordinates and usually do not lie on the curve. Subtract `regions.drawing.origin` when copying controls from an artifact. Layout changes do not move explicit controls.
+
+Automatic quadratics/cubics propose at most 13/49 candidates; collision checks bisect at most 8 levels. Blocked search retains the best finite route with a warning. Checks concern the center reference curve; Core boundary connections can change its shape, so inspect the final drawing. See [automatic Bezier avoidance](/schematic/diagram/flow/mechanism#automatic-bezier-avoidance) for details.
+
 ## Further reading
 
 <LinkedSections

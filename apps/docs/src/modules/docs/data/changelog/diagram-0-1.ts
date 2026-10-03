@@ -10,6 +10,16 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: {
+          zh: '待发布 · 贝塞尔路由与 BREAKING 布局能力声明',
+          en: 'Unreleased · Bezier routing and BREAKING layout capabilities',
+        },
+        content: {
+          zh: 'Relation 支持自动及完整显式 curve/cubic，省略控制点自动求解，三次部分控制点拒绝。有限搜索最多提出 13/49 条候选，碰撞最多二分 8 层；冲突保留路线并警告，仅保证参考几何检测。自定义 Layout Definition 将 capabilities.routingKinds 迁移为 capabilities.routing，每项为 { kind }，贝塞尔额外声明 modes。artifact.regions.drawing 新增必填 origin，用于控制点回写 Flow 根坐标。',
+          en: 'Relations support automatic and complete explicit curve/cubic routing. Omitted controls request generation; partial cubic controls are rejected. Search proposes at most 13/49 candidates and collision checks bisect at most 8 levels; conflicts retain routes with warnings and checks cover reference geometry only. Custom Layout Definitions must replace capabilities.routingKinds with capabilities.routing entries { kind }, adding modes for Bezier. artifact.regions.drawing now requires origin for converting controls back to Flow root coordinates.',
+        },
+      },
+      {
         label: { zh: '曲线路由与完整标签', en: 'Bend routing and complete labels' },
         content: {
           zh: 'Flow 新增 bend 常规曲线路由，支持左右 30°/45°/60° 自动选择（节点优先、标签次级，不比较边交叉）、显式方向和完整切线配置；节点冲突保留绘制并提供 Source 定位警告。Relation.label 支持完整 Core 几何与外观配置。Layout provider 输出从 points 改为有判别的 route，artifact 保留同一参考几何。provider 对称 bend 输入允许省略角度进行搜索，Definition 不设置 bendAngle 默认；不提供全局避障或自环。',

@@ -31,6 +31,7 @@ const resolveFlowSchemaLocalization = createSchemaLocalizationResolver([
       'FlowGroupSchema',
       'FlowLayoutSchema',
       'FlowRelationSchema',
+      'FlowScopeRoutingSchema',
       'FlowRoutingSchema',
       'FlowDefaultsSchema',
     ] as const
@@ -40,7 +41,7 @@ const resolveFlowSchemaLocalization = createSchemaLocalizationResolver([
       zh: {
         descriptions: {
           ...(name === 'FlowGroupSchema' ? groupDescriptions : {}),
-          ...readSchemaDescriptions(schemaReference, name),
+          ...readSchemaDescriptions(schemaReference, name === 'FlowScopeRoutingSchema' ? 'FlowRoutingSchema' : name),
         },
       },
     },
@@ -113,6 +114,9 @@ export const flowApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'FlowLayoutRouting',
       'FlowLayoutRoute',
       'FlowBendRoute',
+      'FlowBezierRoute',
+      'FlowBezierRouting',
+      'FlowRoutingCapability',
       'FlowLayoutLabelPlacement',
       'FlowLayoutRelationInput',
       'FlowLayoutRelationOutput',

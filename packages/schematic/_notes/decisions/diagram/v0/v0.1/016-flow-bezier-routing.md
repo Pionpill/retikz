@@ -1,144 +1,129 @@
 ---
-description: Flow 二次与三次贝塞尔的有界自动避让、显式控制点、曲线碰撞检测与坐标契约
+description: Flow 二次与三次贝塞尔的自动和显式输入、有界候选搜索、参考曲线碰撞与坐标契约
 keywords: Flow、Bezier、curve、cubic、控制点、自动避让、AABB、搜索预算、routing、drawing.origin
 ---
 
 # ADR-016：Flow 贝塞尔路由
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-10-02
-- 修订日期：2026-10-03
+- 修订日期：2026-10-04
 - 关联：[Diagram v0.1 roadmap](./roadmap.md) · [Flow Source](./003-flow-source-model.md) · [Layout Definition](./004-flow-layout-definition-registry.md) · [结果交付](./005-flow-orchestration-result-artifact.md) · [bend 路由](./015-flow-bend-routing.md)
 
 ## 背景与目标
 
-bend、二次 / 三次贝塞尔与过点曲线都服务曲线连接和路径避让。bend 已以三次贝塞尔表达几何，并支持切线配置；显式 cubic 并不会天然获得更强避障能力。贝塞尔自动模式的价值在于依据障碍生成非对称、定向的有限候选，显式模式则服务作者精确指定路径。
+bend、二次和三次贝塞尔都服务曲线连接与局部避让。bend 本身已使用三次贝塞尔表达；新增模式的价值是障碍驱动的非对称候选与完整显式控制点，不是提高曲线阶数就能保证避障。
 
-常规曲线优先 bend；有限 bend 候选不能满足避让需求，或关系有明确的非对称 / 首尾方向要求时，再选择贝塞尔。需要多个有序绕行位置时考虑过点曲线。更高阶表达不等于全局无碰撞保证。
+常规曲线优先 bend；其有限候选不足时使用自动贝塞尔；已知精确控制点时使用显式模式。需要多个有序经过点时考虑 smooth。本决策不提供全局路径规划、自动切换路由、节点重排或最终像素级安全保证。
 
 ## 决策
 
-### 自动意图与显式控制点分离
+### 关系级输入
 
-Flow 单条 Relation 的 routing 支持 Core 同名的 `curve` 与 `cubic`，每种具有互斥的自动与显式输入语义：
+`Relation.routing` 通过控制点是否完整提供区分自动与显式输入，不提供 `mode` 字段。与 bend 的省略参数自动求解体验一致：不填控制点时自动生成，完整填写时使用作者控制点；不支持部分自动补点或额外自动约束配置字段：
 
-- 自动输入表达生成意图及已支持的约束，控制点由本次布局确定；不要求 LLM 先猜绝对坐标
-- 显式二次输入完整提供 `control`；显式三次输入完整提供 `control1`、`control2`，复用 Core ControlPointSchema 的有限笛卡尔 `[x, y]` 值域
-- 不支持部分手写、部分自动补齐控制点；显式点不得被 provider 移动、clamp 或换成其他 routing kind
-- 自动结果只进入 layout route 和 artifact，不回写 Source；作者主动将结果转为显式输入时才形成新的作者事实
+```ts
+type FlowBezierRouting =
+  | { kind: 'curve'; control?: never }
+  | { kind: 'curve'; control: IRPosition }
+  | { kind: 'cubic'; control1?: never; control2?: never }
+  | { kind: 'cubic'; control1: IRPosition; control2: IRPosition };
+```
 
-Source 的自动 / 显式判别写法和自动约束字段仍待定，本文不把省略控制点视为已经冻结的自动入口。最终 schema 必须排除两种意图混用与不完整的显式输入。
+控制点复用 Core ControlPointSchema 的有限笛卡尔 `[x, y]` 值域。`curve` 省略 control 时为自动，提供时为显式；`cubic` 同时省略 control1/control2 时为自动，同时提供时为显式。只提供一个三次控制点、提供其他 kind 的控制点字段或填写 mode 均在 Source schema 边界拒绝；无效控制点也不得被视为省略后转成自动。显式点不得被移动、clamp 或替换。根、Group、Layout 作用域和 Definition 默认 routing 均只接受原有常规模式。关系标签仍由完整 `Relation.label` 表达，source / target 仍绑定 Flow element id。
 
-source / target 仍是 Flow element id，曲线首尾由关系绑定；Relation.label 是唯一完整标签入口。Graph materialization 生成对应 Core curve / cubic，不以 bend 近似替代，不在 Diagram 重写曲线求值、极值或切分能力。
+自动求解结果只进入 route / artifact，不回写 Source。显式点不会随布局变化搬移；作者需要精确首尾方向时通过显式控制点表达，本版自动模式不公开方向锁定参数。
 
-### 关系级作用域和扩展入口
+### 唯一能力声明
 
-本提案将自动和显式 curve / cubic 均限定在 Relation.routing，根、Group 与 Definition 默认 routing kind 继续使用常规模式。显式控制点不从祖先、其他关系或 Definition 补出；选定自动模式后，候选生成使用本条关系与本次布局环境。
+Layout Definition / registry 仍是唯一扩展入口，不增加 routing registry。将 `capabilities.routingKinds` 替换为 `capabilities.routing`：每种 kind 只出现一次，普通模式保持既有输入语义，贝塞尔必须明确非空、无重复的 modes。
 
-内置与自定义布局继续共用 Layout Definition / registry，不增加独立 routing registry。`routingKinds` 表达几何种类，但仅声明 curve / cubic 不足以区分自动生成与显式消费能力；两种能力的准确声明、catalog 投影及调用前拒绝语义必须在公开契约定稿时同步冻结，不能默认所有 provider 都支持自动生成。
+```ts
+type FlowRoutingCapability =
+  | { kind: 'straight' | 'orthogonal' | '-|' | '|-' | 'bend' }
+  | { kind: 'curve' | 'cubic'; modes: ReadonlyArray<'auto' | 'explicit'> };
 
-### 障碍驱动的有限候选
+// capabilities.routing: ReadonlyArray<FlowRoutingCapability>
+```
 
-自动模式先选择绕行侧和少量目标位置，再产生控制点并验证真实曲线。候选依赖已确定的端点、合法连接方向、节点障碍盒与标签预留；不在二维坐标空间中无界枚举控制点，也不改变节点布局。绕行目标 Q 是希望曲线经过的位置，不是控制点；安全的 Q 不证明整条曲线安全。
+能力声明中的 modes 表示 provider 支持的输入语义，不是作者需要填写的字段；预检从已解析控制点结构推导 auto/explicit。该数组非空；catalog 原样投影它，不另存重复的 kinds 或自动能力布尔值。内置 layered 对 curve / cubic 均声明 auto、explicit；自定义 Definition 可以只支持其中一种 kind 或 mode。不支持的请求在调用 callback 前以 `FlowLayoutCapabilityUnsupported` 拒绝。Definition 默认 kind 必须存在且属于常规模式。所有内置消费者同步迁移，不保留旧字段兼容入口。
 
-二次曲线可从经过目标 Q 和参数位置 τ 反求控制点。设端点为 P₀、P₁：
+### 有限搜索与控制点生成
+
+以下搜索规则属于内置 layered；自定义 provider 可以采用其他算法，但必须遵守输入模式、有限几何、显式点不可变和公共输出验证。
+
+首先用同 kind 的共线控制点构造基线：二次取中点，三次取弦的三分点。无节点及标签冲突时直接采用基线；auto 不承诺一定呈现弯曲形状。
+
+基线受阻时最多扩展两轮。以起终点弦为纵轴、其左法线为横轴，把当前最优路线的冲突障碍投影到这个坐标系；后一轮合并此前已发现的冲突障碍。障碍包括曲线遇到的节点、已有标签，以及本关系标签撞到的节点或标签，不以整图所有节点的大盒替代局部障碍。
+
+目标 Q 的纵向位置取冲突包络中心并限制在弦长的 1/4 至 3/4；横向位置分别取包络两侧向外扩展的边界。首轮间距取最近公共布局作用域 `max(nodeGap, rankGap, 1) / 2`，第二轮翻倍，单位为用户单位。每侧分别使用 τ = 1/4、1/2、3/4。目标点和参数位置是独立量，Q 在曲线外侧不代表整条曲线安全。
+
+二次曲线端点为 P₀、P₁，控制点反求为：
 
 $$
 C=\frac{Q-(1-\tau)^2P_0-\tau^2P_1}{2(1-\tau)\tau}
 $$
 
-τ = 1/2 时，C = 2Q − (P₀ + P₁)/2。候选目标可位于障碍两侧，并依据障碍靠近起点、中部或终点调整 τ 和绕行间距。τ 必须远离 0、1，避免控制点失控；具体取值和距离范围尚未冻结。
+三次候选令 C₁ = P₀ + a d₀、C₂ = P₁ − b d₁。d₀ 是离开起点的方向，d₁ 是进入终点的前进方向；将 B(τ) = Q 代入后解两个控制臂 a、b。每个 Q / τ 使用四组相对弦方向的角度 `(30°, −30°)`、`(60°, −60°)`、`(60°, 30°)`、`(−30°, −60°)`，另一侧镜像。退化方程、非有限值、非正控制臂或控制臂超过四倍弦长时直接淘汰，不 clamp 成另一条曲线。
 
-三次曲线优先用合法的首尾方向约束控制点：C₁ = P₀ + a d₀，C₂ = P₁ − b d₁，a、b > 0。d₀ 表示离开起点的方向，d₁ 表示进入终点的前进方向。确定方向后只需确定两个控制臂长度；结合 Q 与 τ 可求解长度，但退化、无可用正解或超过允许长度的候选应淘汰，不改写作者约束。非对称与 S 形只是有限候选形状，不保证所有方向组合均有解。
+二次也限制控制点到两个端点的距离均不超过四倍弦长，避免远端目标产生不可控外扩。上述约束只筛选自动候选，不限制合法显式控制点。二次反求和三次约束求解属于 Diagram 的候选构造；曲线求值、极值、切分、长度计算仍消费 Math，不另建几何底座。
 
-候选生成与现有 bend 的几何表达可重叠，其新增能力来自障碍驱动的选择。单段曲线无法满足多次转弯时，结束本次搜索并报告有限搜索失败；不静默增加曲线段、切换 smooth 或推断不存在可行路径。
+每条关系最多提出 **13 条二次候选**（1 + 2 × 2 × 3）或 **49 条三次候选**（1 + 2 × 2 × 3 × 4）。无效和重复提案也占预算，不追加补偿候选。这不是推荐总要计算的条数；基础路线可直接结束，第一轮成功后也不进入第二轮。
 
-### 坐标系和修图闭环
+### 碰撞、评分和提前结束
 
-显式控制点和自动求解的内部控制点使用本次 Flow 布局的根坐标系，先于 Diagram title、Frame、padding 和 drawing placement；不是屏幕像素、完整 Frame-local 坐标或 Scene world 坐标。Group 内关系仍使用 Flow 根坐标，不按 Group 再偏移。
+节点障碍沿用 bounds + margin、端点局部豁免与祖先 Group 规则。出发时位于自身节点中的连续区间可以豁免，离开后重新穿入仍检测。完整标签与倾斜标签的旋转 AABB 沿用 bend 的 Core 采样及预留语义。
 
-Flow artifact 的 `regions.drawing` 增加必需 `origin: Position`，表示 Flow 根坐标 `[0, 0]` 在完整 Flow allocation-local 空间中的位置。该值等于实际 drawing placement 所用的平移，不等于 drawing allocationBounds 的左上角；负坐标或曲线溢出时两者可以不同。
+曲线先求真实 x/y 极值 AABB，重叠部分递归切分为子曲线并继续比较 AABB。控制点包围盒不作为精确碰撞结果，子曲线也不改成直线。根为第 0 层，每条分支最多二分 **8 次**；现有 0.25 用户单位的空间终止阈值沿用。未分离的终端区间保守保留，允许贴边和空白角落误判。
 
-artifact 中的 route 端点、控制点与标签预留盒仍统一使用 allocation-local 坐标。作者从同 revision artifact 取得控制点时，先减去 drawing.origin 再写回 Source；Scene 的祖先 transform、缩放和屏幕映射另由 Core world-space 查询处理。origin 是坐标转换所需的独立事实，不保存一份重复的根坐标 route 或 Source 快照。
+候选按以下元组依次比较：
 
-LLM 通常先生成常规模式并检查真实渲染结果，结合同次编译的 artifact 定位冲突，只修改受影响关系。显式控制点是作者事实，布局改变时仍使用原值；Flow 不自行搬移它们或保证原绕行继续安全。自动模式则根据变化后的布局重新求解。作者应重新渲染检查，优先调整方向、布局间距或简单 bend；需要精确局部绕行时再用贝塞尔。
+1. 撞到的非豁免节点数量，同节点只计一次
+2. 标签冲突对数：曲线与已有标签、本关系标签与节点、其他标签；相同对象对只计一次
+3. Math 以 32 个等参数区间计算的近似曲线长度
+4. 曲线沿弦法线的最大绝对偏移，以真实投影极值计算
+5. 固定提案顺序：先基线，再轮次、左侧/右侧、τ 升序、方向组顺序
 
-### 真实曲线碰撞与候选比较
+不使用碰撞参数跨度作为二次/三次的路径质量指标，不跨 kind 选路。每轮全部候选比较结束后，与此前最优候选一起择优；当前最优节点数和标签数都为零时结束。结果只保证是已评估集合中的最佳，不声称之后未展开的候选更差。
 
-节点障碍盒沿用 bounds + margin 及 ADR-015 的端点、祖先 Group 和合法跨组边界规则。曲线 AABB 使用实际曲线首尾与 x、y 方向极值，不把控制点折线或其大包围盒当成精确碰撞结果。二次与三次的极值、子曲线切分均复用 Math 能力。
+关系按 Source 顺序求解。预留集合包含所有显式/非自动路线标签和此前已确定的自动路线标签；后续自动关系参考已选结果，不迭代回改前面的曲线。节点冲突少优先于标签冲突少，不能只因碰到第一条无节点冲突曲线就停止本轮。
 
-检测沿用整曲线 AABB 初筛、重叠分支递归细分、子曲线 AABB 保守判断。子段仍是曲线，不被当成直线。自动与显式二次 / 三次曲线的碰撞检测统一最多沿同一递归分支二分 8 次，整曲线为第 0 层。达到既定几何精度或第 8 层仍未分离的区间保守保留，因此空白角落和贴边可能误判；无 warning 不等于精确安全证明。
+### 参考几何与最终绘制边界
 
-候选先比较节点冲突，再比较标签冲突；安全性相同时优先较短、绕行幅度较小的路线，最终以固定顺序决胜。现有 bend 的碰撞参数跨度是启发式量，不是实际穿越长度，不能未经归一或其他设计直接跨二次、三次与多段曲线比较。确切评分指标、曲线长度近似及提前结束条件仍待冻结，不承诺跨模式全局最优。
+自动选择、冲突诊断与 artifact 均针对 provider 的中心参考路线和标签预留。Core 根据控制点方向与实际节点连接面重新计算曲线首尾，保留控制点，再处理箭头缩短、标签中断等；这不是简单截取原曲线的一段，最终曲线和标签位置可能改变。
 
-验证必须说明参考端点曲线与 Core 边界处理后实际路径的关系，覆盖首尾接近节点的位置和完整标签。不得仅因中心参考路线通过检测，就承诺最终裁剪、箭头或标签均无冲突；所需几何应通过下层公开能力获得，不读取 renderer 反推路径。
+因此无 warning 仅表示参考几何通过当前保守检测，不代表最终描边、箭头、节点形状或标签像素无冲突。本版不新增 Core 最终路径查询，也不复制 Core clipping 或从 renderer 反推路径。作者仍需检查最终绘制；不能以参考检测结果声称最终几何已验证。边交叉、平行边重叠同样不在保证范围。
 
-显式曲线穿越非豁免节点时保留控制点和绘制，发出 `FlowBezierObstacleConflict` warning。自动搜索用尽预算仍未找到通过检测的候选时，必须区分“检测到冲突”和“有限搜索未找到安全路线”；具体诊断标识、保留最优冲突路线还是拒绝交付的公开语义列为待决，不静默换路由。边交叉与平行边重叠不作为本提案的安全保证。
+### 失败交付与诊断
 
-### 确定性预算与有限保证
+显式路线保留原控制点并绘制，参考节点或标签冲突发出 `FlowBezierObstacleConflict` warning，指出关系和冲突对象。
 
-自动贝塞尔是有固定搜索预算的局部避让，不是无界路径规划。先检查少量基础候选，只对受阻关系扩展；每条关系的总候选数、扩展轮数和几何细分均须有确定上限，不能仅限制单个参数档位后任由组合膨胀。预算耗尽的行为必须可诊断，相同输入与配置产生相同结果，不使用墙钟超时决定选路。
+自动搜索结束仍有冲突时，保留已评估集合中的最佳有限路线并发出 `FlowBezierSearchExhausted` warning。该诊断表示有界搜索未找到通过检测的路线，不表示数学上无路可走；包含冲突对象，不静默切换 bend / smooth。内置 provider 在预算完成后返回最优路线，公共 compile 对自动输出的参考冲突使用该诊断；对于自定义 provider，它仅说明其已返回的搜索结果仍冲突，不推断其内部候选数。两种模式不对同一关系重复发送两类 warning。
 
-满足已定义安全条件与偏好顺序后允许提前结束，但不能跳过仍可能按公开评分获胜的候选后宣称“最优”。候选顺序、质量排序与提前结束的组合必须在定稿时形成一致契约。
+不同元素中心重合时，内置自动生成没有可用弦方向，抛出 `FlowBezierRouteUnavailable`，不构造伪方向或非有限点；自环仍先受已有 selfLoops capability 约束。有限且不重合的端点至少保留基线；若计算无法形成任何有限路线，同样拒绝交付。显式退化几何不单凭共线、重合或控制点在节点内拒绝，沿用 Core 语义；Core 失败保留 cause。
 
-控制点反求成本通常低于候选碰撞检测。主要成本随关系数、候选数、障碍数及实际细分工作增长；贴边曲线和候选组合是主要风险。同一候选的极值和子段几何可在本次计算中复用，不因此新增持久化派生状态。本文不承诺毫秒级延迟、相对 bend 的倍数或已达到交互性能；细分深度上限已确定为 8；候选总数、扩展轮数及性能目标仍待单独验证。
+### 坐标和公开输出
 
-### LLM 选择条件
+显式点使用 Flow 布局根坐标，位于 Diagram title、Frame、padding 和 drawing placement 之前。Group 内关系也使用 Flow 根坐标，不叠加 Group 偏移。
 
-Schema guidance、Definition catalog 与文档示例共同表达：常规分支和简单绕行优先 bend；其有限候选受阻，或需要明确的非对称 / 首尾方向时，选择自动贝塞尔；已知精确路径时可以直接使用显式控制点。需要多个有序绕行位置时考虑 smooth，不仅因“更平滑”升级模式。
+`FlowLayoutRoute` 增加二次、三次分支，各只保存两个 endpoint 参考点及完整 control 或 control1/control2；不保存与控制点等价的采样数组、自动参数或 Source 快照。自动/显式语义从有效输入的控制点结构推导，不额外保存 mode，也不重复写入数值 route。回调继续返回 `{ route, labelBounds? }`。
 
-自动模式让 LLM 表达意图，由布局求解控制点；显式修图必须使用同 revision artifact 并进行 origin 转换。两者都需要重新检查最终绘图，不把控制点当经过点，不把曲线阶数当成避障保证，也不在调用方未选择的情况下自动升级路由类型。
+输出验证要求 kind 与输入一致、端点对应 source / target 参考中心、全部坐标有限，显式控制点逐值相等。无标签时不得输出 labelBounds，有标签时必须输出。违规沿用 `FlowLayoutOutputInvalid`。
 
-## 基础数据结构与公开契约
+Graph materialization 生成 Core 同名 curve / cubic，不用 bend 近似替代。reverse、both、none 只影响箭头语义，不交换控制点或改写 source → target 顺序。完整 GeometryLabel 属性原样进入 Core；position 使用曲线参数语义，不使用控制折线长度。
 
-```ts
-// 仅展示显式分支；自动 Source / callback 输入形态尚未冻结
-type FlowBezierExplicitRouting =
-  { kind: 'curve'; control: IRPosition } | { kind: 'cubic'; control1: IRPosition; control2: IRPosition };
+artifact 的 `regions.drawing` 增加必需 `origin: Position`，记录 Flow 根原点在完整 allocation-local 中的真实 drawing 平移。它与 drawing allocationBounds 左上角不同，负坐标溢出时不能互换。route endpoints、全部控制点和标签预留盒统一平移一次到 allocation-local；将同 revision artifact 的控制点减 origin 才能写回显式 Source。祖先 transform 和屏幕映射仍归 Core world-space 查询。
 
-type FlowBezierRoute =
-  | Readonly<{
-      kind: 'curve';
-      points: readonly [Readonly<Position>, Readonly<Position>];
-      control: Readonly<Position>;
-    }>
-  | Readonly<{
-      kind: 'cubic';
-      points: readonly [Readonly<Position>, Readonly<Position>];
-      control1: Readonly<Position>;
-      control2: Readonly<Position>;
-    }>;
+React、Vanilla、direct JSON 共享该契约，不提供 adapter 私有自动算法或 JSX Step children。所有 artifact 消费者同步新必填字段，不 fallback 猜测旧原点。
 
-type FlowDrawingArtifact = FlowArtifactBounds &
-  Readonly<{
-    origin: Readonly<Position>;
-  }>;
-```
+### LLM 选择条件和成本边界
 
-`FlowRoutingSchema` / `IRFlowRouting` 在 ADR-015 的基础上增加这两个分支，并以互斥输入区分自动与显式语义，作为单条关系路由。根与 Group 使用其常规模式子集；不建立第二套同义字段或新的作者路径格式。实际类型从复用 Core 字段的 schema 派生。
+Schema guidance、catalog 与文档共同表达 bend → 自动贝塞尔 → 精确显式控制点/多经过点 smooth 的选择条件；这不是运行时自动升级链。控制点通常不在曲线上，Q 才是候选经过点。自动 Bézier 不承诺比 bend 更短、更快或更安全。
 
-`FlowLayoutRouting` 和 `FlowLayoutRoute` 分别增加同名有效输入与几何输出分支。回调输出沿用 ADR-015 的 `{ route, labelBounds? }`。route.points 只保存两个 endpoint 参考点，不能把控制点塞入 points 冒充经过点，也不同时保存与控制点等价的采样点或参数形状。
+成本随关系数、候选数、障碍数和细分工作增长。8 层限制作用于单曲线/单障碍检测，13/49 是单关系提案上限，均不是整图固定成本或毫秒承诺。不使用墙钟超时决定路线；几何中间结果只在本次计算中复用，不新增持久化派生缓存。
 
-`capabilities.routingKinds` 增加 `curve`、`cubic` 两个独立值；内置 layered 的目标是消费显式配置并提供有界自动生成；最终声明必须与实际能力一致。Definition 可以只支持其中一种，必须准确反映 catalog，不因为两者都属贝塞尔而自动接受未声明模式。Definition 默认 kind 不得是这两个关系专属模式。
+## 兼容性与能力归属
 
-输出验证要求端点对应 source / target 的参考中心、全部坐标有限，并保留 routing kind。显式模式逐值保留有效输入控制点；自动模式验证已声明约束及有限几何，不要求与不存在的 Source 控制点比较。Core 对实际首尾按 control / control1 / control2 的方向与真实连接面进行边界处理，再应用箭头缩短与标签中断；artifact 仍是参考路线。
+本决策扩展 ADR-003 的关系几何输入、ADR-004 的 capability 声明和 ADR-005 的 artifact 坐标转换；其余常规路由默认及作者 placement 不变。Diagram 拥有 Source、候选、选择和诊断；Math 提供曲线计算，Core 拥有最终连接和绘制语义，Graph 只负责关系语义及 lowering。
 
-标签的全部属性、显式配置优先级与旋转预留沿用 ADR-015。`position` 分别是二次、三次贝塞尔的参数位置，不能按控制点折线长度或均分折线点推算；最终绘制和倾斜标签使用 Core 的真实曲线采样语义。
-
-React、Vanilla 和 direct JSON 接受相同完整 routing 与标签属性，不提供独立 JSX Step children 或 adapter 私有控制点转换。artifact 平移 points、全部 control 字段和 labelReservation，不能只平移首尾。
-
-LLM describe 沿用上述选择条件；control1 / control2 说明首尾切线影响，显式控制点字段说明 Flow 根坐标与 artifact origin 转换。
-
-## 行为、失败语义与兼容性
-
-- 显式模式缺少必要控制点、混用自动与显式字段、填写其他曲线分支字段或在根/Group 指定 curve / cubic，在 Source 边界拒绝；自动模式不制造作者控制点快照
-- Definition 未声明对应 mode 时沿用 capability 错误；返回显式控制点变更、自动约束违反、旧 points 输出、错误 route kind 或非有限几何时沿用 `FlowLayoutOutputInvalid`
-- 显式控制点重合、共线或落在节点内不单凭形状判为 schema 错误；保留 Kernel 对退化几何的语义，真实穿越使用 warning，非有限编译失败保留 Core cause；自动候选的淘汰不改变显式输入的合法性
-- 正向、反向、双向和无箭头只影响 Graph 语义箭头，不交换两个控制点或重写 authored source → target 的曲线
-- 新增模式不改常规路由、默认 straight、自环 capability 或作者固定 Layout placement；Node/Group 仍不得由曲线路由重新定位
-- `regions.drawing.origin` 为新增必需 artifact 字段，所有内置消费者和 schema 同步更新，不通过 fallback 猜测旧 artifact 的原点
-- 本决策扩展 ADR-003 对作者路径几何的限制：关系允许这两个有类型的几何输入，仍不开放任意 Core route；扩展 ADR-004 的 mode 与 ADR-005 的 artifact 坐标转换，其余约束沿用 ADR-015
-
-## 待决契约
-
-本提案尚未冻结自动 Source 的判别与约束字段、Definition 自动 / 显式能力声明、默认候选预算与扩展参数、评分及提前结束条件、最终路径验证边界，以及自动失败诊断和交付策略。控制臂退化、重合端点等无法生成有效候选的情形也必须纳入失败契约。相关决策完成前不视为可直接实施的完整 API；性能数字与具体参数不以推测写成保证。
+本设计已接受；接受设计不等于实现完成。性能目标及最终像素级避障不属于本版承诺。

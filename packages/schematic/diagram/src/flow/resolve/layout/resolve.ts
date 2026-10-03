@@ -50,6 +50,7 @@ const resolveFlowLayoutRouting = (
   inheritedRouting: FlowLayoutRouting | undefined,
 ): FlowLayoutRouting => {
   const routing = intent ?? inheritedRouting ?? definition.defaults.routing;
+  if (routing.kind === 'curve' || routing.kind === 'cubic') return routing;
   if (routing.kind === 'straight') return { kind: routing.kind };
   if (routing.kind === 'bend') {
     const authored = intent?.kind === 'bend' ? intent : undefined;

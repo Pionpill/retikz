@@ -16,6 +16,7 @@ export const RetikzDiagramErrorCode = {
   FlowLayoutCapabilityUnsupported: 'DIAGRAM_FLOW_LAYOUT_CAPABILITY_UNSUPPORTED',
   FlowLayoutOutputInvalid: 'DIAGRAM_FLOW_LAYOUT_OUTPUT_INVALID',
   FlowMeasurementFailed: 'DIAGRAM_FLOW_MEASUREMENT_FAILED',
+  FlowBezierRouteUnavailable: 'DIAGRAM_FLOW_BEZIER_ROUTE_UNAVAILABLE',
   FlowMaterializationFailed: 'DIAGRAM_FLOW_MATERIALIZATION_FAILED',
 } as const;
 

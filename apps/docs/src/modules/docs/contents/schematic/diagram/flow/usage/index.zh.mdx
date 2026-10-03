@@ -60,6 +60,8 @@ Flow Source 由下列成员组成。React 组件负责声明这些成员，运�
 
 bend 与直线、折线并列，用于常规连接。自动选择优先减少节点穿越，标签只在节点评分相同时决胜，不比较路径重叠或交叉；同分优先小角度，再选左侧。显式或继承的角度与方向保持不变，也不移动节点。所有候选都穿越节点时仍绘图，并在对应关系上报告 `FlowBendObstacleConflict`。显式方向和切线也会检测冲突；平行边可能重叠，内置布局仍不支持自环。
 
+常规连接优先 bend；单条 Relation 还支持 `curve` / `cubic`：省略控制点自动生成，完整提供控制点则保留显式几何。贝塞尔不作为根或 Group 默认，详见[贝塞尔用法](/schematic/diagram/flow/extended#贝塞尔曲线)。
+
 根和 Group 用独立 `routing` 设置路由意图，Relation 的 `routing` 优先。未指定时取两个 endpoint 最近公共 Group 的有效路由，再取根和布局 Definition 的默认路由；中间的 FlowLayout 不建立路由层。例如根为 straight、Group 为 orthogonal 时，嵌套 Layout 内的关系仍使用 orthogonal。
 
 三种轴对齐模式共享圆角继承：实例 `cornerRadius` 优先，其次祖先有效 routing 的半径，再取 Definition 的 `orthogonalCornerRadius`，内置值为 `8`。切换 `kind` 不丢失继承半径，显式 `0` 禁用圆角。
@@ -111,7 +113,7 @@ bend 只继承同种路由的有效参数族。局部提供方向或角度而不
       name: 'FlowRelation.routing',
       kind: 'property',
       type: 'IRFlowRouting',
-      description: '关系局部覆盖优先；支持直线、三种轴对齐模式与 bend 曲线，参数按有效模式继承。',
+      description: '关系局部覆盖优先；支持常规路由及关系专属 curve/cubic；贝塞尔控制点不继承。',
     },
   ]}
 />

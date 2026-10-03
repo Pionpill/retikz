@@ -97,7 +97,7 @@ Core 的 `LayoutCompositeCompileContext.resolvePathTargets` 同步接收 `PathTa
 
 输出验证使用 provider 最终 element bounds 和同一 Core Target 查询核对全部 knots。不能只验证两个端点，或把中间点随意改为另一条安全路线。合法重复 knots 保留 Core 的退化语义，不沿用折线路由的相邻点折叠去改变这条点列的参数分段。
 
-`capabilities.routingKinds` 增加 `smooth`，内置 layered 声明支持；自定义 provider 接收相同查询 context、Target 输入与数值输出合同。不支持时在 callback 前拒绝。自环仍是独立 capability，smooth 不自行增加 layered self-loop 支持。
+沿用 ADR-016 的 `capabilities.routing`，增加 `{ kind: 'smooth' }`，内置 layered 声明支持；自定义 provider 接收相同查询 context、Target 输入与数值输出合同。不支持时在 callback 前拒绝。自环仍是独立 capability，smooth 不自行增加 layered self-loop 支持。
 
 完整标签语义沿用 ADR-015；smooth 的 position 按 Core 对生成 cubic 段的参数规则解释，不声明为整条曲线弧长比例。倾斜预留和绘制必须使用实际曲线切线，而不是相邻 knot 的折线方向。label、曲线和箭头的可见边界计入 drawing 包络。
 

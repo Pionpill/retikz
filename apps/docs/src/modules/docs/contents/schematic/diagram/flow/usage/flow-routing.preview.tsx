@@ -7,10 +7,16 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import type { previewControls } from './flow-routing.controls';
 
-const routingKinds: ReadonlyArray<FlowRoutingKindValue> = ['straight', 'orthogonal', '-|', '|-', 'bend'];
+const routingKinds: ReadonlyArray<Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>> = [
+  'straight',
+  'orthogonal',
+  '-|',
+  '|-',
+  'bend',
+];
 
 /** 将面板选项收窄为公开的路由模式 */
-const routingKindOf = (value: string): FlowRoutingKindValue => {
+const routingKindOf = (value: string): Exclude<FlowRoutingKindValue, 'curve' | 'cubic'> => {
   const kind = routingKinds.find(candidate => candidate === value);
   if (kind === undefined) throw new Error(`Unsupported Flow routing kind: ${value}`);
   return kind;

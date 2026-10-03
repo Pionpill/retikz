@@ -122,7 +122,7 @@ const definition = (layout: FlowLayoutDefinition['layout']): FlowLayoutDefinitio
       parallelRelations: true,
       relationLabels: true,
       relationDirections: ['none', 'forward', 'reverse', 'both'],
-      routingKinds: ['straight', 'orthogonal'],
+      routing: [{ kind: 'straight' }, { kind: 'orthogonal' }],
     },
     defaults: {
       direction: 'right',
