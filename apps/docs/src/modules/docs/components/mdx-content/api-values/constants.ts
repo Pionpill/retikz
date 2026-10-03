@@ -59,7 +59,7 @@ import {
   ReferenceMarkKind,
   RelationGeometryKind,
 } from '@retikz/plot';
-import { ListIndexPosition } from '@retikz/standard/container';
+import { ListIndexPosition } from '@retikz/standard/collection';
 import {
   AxesArrowMode,
   AxesLabelEnd,

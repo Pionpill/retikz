@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { ListSchema } from '../../../src/container/list/schema';
-import { MapSchema } from '../../../src/container/map/schema';
+import { ListSchema } from '../../../src/collection/list/schema';
+import { MapSchema } from '../../../src/collection/map/schema';
 
 const content = { type: 'node', position: [0, 0], text: 'a' };
 it('parses index shorthand, object defaults, and JSON text styles', () => {

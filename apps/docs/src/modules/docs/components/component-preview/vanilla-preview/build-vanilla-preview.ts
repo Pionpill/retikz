@@ -105,7 +105,7 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import { list, ListInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/container';
+import { list, ListInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -129,8 +129,8 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
-import type { IRCell, IRList, IRMap } from '@retikz/standard/container';
-import { ListDefinition, MapDefinition } from '@retikz/standard/container';
+import type { IRCell, IRList, IRMap } from '@retikz/standard/collection';
+import { ListDefinition, MapDefinition } from '@retikz/standard/collection';
 import {
   AxesDefinition,
   AxesSchema,

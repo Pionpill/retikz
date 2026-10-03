@@ -269,17 +269,17 @@ Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles t
 
 <ApiTable>
 
-| Member           | Type                | Default  | Description                                                                                                                                            |
-| ---------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `bendAngle?`     | `number`            | `30`     | Symmetric bend angle in degrees; defaults to 30                                                                                                        |
-| `bendDirection?` | `'left' \| 'right'` | `'left'` | Symmetric bend direction: 'left' or 'right' relative to from→to; optional alongside the out/in form                                                    |
-| `children?`      | `ReactNode`         | —        | Sugar form                                                                                                                                             |
-| `inAngle?`       | `number`            | —        | Incoming angle in degrees for asymmetric bends or loops (TikZ `in=`); combined with outAngle into a cubic                                              |
-| `kind`           | `'bend'`            | —        | Discriminant for a bend step                                                                                                                           |
-| `label?`         | `InputStepLabel`    | —        | Edge label                                                                                                                                             |
-| `looseness?`     | `number`            | —        | Control-point distance multiplier for asymmetric bends or loops (TikZ `looseness=`); defaults to approximately 1 and also scales the default loop size |
-| `outAngle?`      | `number`            | —        | Outgoing angle in degrees for asymmetric bends or loops (TikZ `out=`); combined with inAngle into a cubic and takes precedence over bendDirection      |
-| `to`             | `DslTarget`         | —        | Endpoint                                                                                                                                               |
+| Member           | Type                | Default  | Description                                                                                                                                                    |
+| ---------------- | ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bendAngle?`     | `number`            | `30`     | Symmetric bend angle in degrees; defaults to 30                                                                                                                |
+| `bendDirection?` | `'left' \| 'right'` | `'left'` | Symmetric bend direction: 'left' or 'right' relative to from→to; optional alongside the out/in form                                                            |
+| `children?`      | `ReactNode`         | —        | Sugar form                                                                                                                                                     |
+| `inAngle?`       | `number`            | —        | Absolute screen incoming angle in degrees; either outAngle or inAngle selects tangent mode, with incoming angle defaulting to 180                              |
+| `kind`           | `'bend'`            | —        | Discriminant for a bend step                                                                                                                                   |
+| `label?`         | `InputStepLabel`    | —        | Edge label                                                                                                                                                     |
+| `looseness?`     | `number`            | —        | Positive control-point distance multiplier for tangent mode, default 1; also scales loops and is ignored in symmetric mode                                     |
+| `outAngle?`      | `number`            | —        | Absolute screen outgoing angle in degrees; either outAngle or inAngle selects tangent mode, with outgoing angle defaulting to 0 and symmetric settings ignored |
+| `to`             | `DslTarget`         | —        | Endpoint                                                                                                                                                       |
 
 </ApiTable>
 
@@ -991,6 +991,99 @@ export type ArrowEmitContext = {
 
 </DocTabs>
 
+### CanonicalGeometryLabelPlacement
+
+<p>
+  <ApiSourceLink
+    label={'CanonicalGeometryLabelPlacement'}
+    path={'packages/kernel/core/src/resolve/path/types.ts'}
+    startLine={39}
+  >
+    Label geometry with defaults resolved, excluding text and visual appearance
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member       | Type                                               | Default | Description                                                                                                     |
+| ------------ | -------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
+| `distance`   | `number`                                           | —       | Distance relative to the host                                                                                   |
+| `gap`        | `number`                                           | —       | Gap around the stroke interruption                                                                              |
+| `interrupt`  | `boolean`                                          | —       | Whether to interrupt the host stroke                                                                            |
+| `placement?` | `"outside" \| "inside"`                            | —       | Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band. |
+| `position`   | `number`                                           | —       | Normalized position along the path                                                                              |
+| `side`       | `NonNullable<IRGeometryLabel['side']> \| 'center'` | —       | Side relative to the host                                                                                       |
+| `sloped?`    | `false \| true`                                    | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CanonicalGeometryLabelPlacement = Omit<
+  GeometryLabelGeometryOptions,
+  'position' | 'side' | 'distance' | 'interrupt' | 'gap'
+> & {
+  position: number;
+  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  distance: number;
+  interrupt: boolean;
+  gap: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+### GeometryLabelGeometryOptions
+
+<p>
+  <ApiSourceLink
+    label={'GeometryLabelGeometryOptions'}
+    path={'packages/kernel/core/src/resolve/path/types.ts'}
+    startLine={36}
+  >
+    Label geometry excluding text and visual appearance
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member       | Type                                                                                                                 | Default | Description                                                                                                             |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `distance?`  | `number`                                                                                                             | —       | Side offset distance in user units. Defaults to the same distance as Path step labels.                                  |
+| `gap?`       | `number`                                                                                                             | —       | Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.                            |
+| `interrupt?` | `false \| true`                                                                                                      | —       | Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.                      |
+| `placement?` | `"outside" \| "inside"`                                                                                              | —       | Geometry label placement mode. outside uses side offset; inside lets area hosts place labels within their band.         |
+| `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —       | Position along the step: keyword or normalized number. Parameter meaning follows the step kind.                         |
+| `side?`      | `"top" \| "right" \| "bottom" \| "left"`                                                                             | —       | Authored side relative to the label anchor. An omitted value canonicalizes to `top`, or `center` when `sloped` is true. |
+| `sloped?`    | `false \| true`                                                                                                      | —       | Rotate the label along the sampled tangent. An omitted `side` canonicalizes to `center`.                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type GeometryLabelGeometryOptions = Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### PathGeneratorDefinition
 
 <p>
@@ -1457,6 +1550,92 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 ```ts
 export declare const definePathGenerator: (def: PathGeneratorDefinition) => PathGeneratorDefinition;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### resolveGeometryLabelPlacement
+
+<p>
+  <ApiSourceLink
+    label={'resolveGeometryLabelPlacement'}
+    path={'packages/kernel/core/src/resolve/path/resolve.ts'}
+    startLine={118}
+  >
+    Resolves defaults for position, side, distance, interruption and gap
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                        | Type / signature                  | Description |
+| ---------- | --------------------------- | --------------------------------- | ----------- |
+| Parameters | `label`                     | `GeometryLabelGeometryOptions`    | —           |
+|            | `canAutomaticallyInterrupt` | `boolean`                         | —           |
+| Returns    | —                           | `CanonicalGeometryLabelPlacement` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const resolveGeometryLabelPlacement: (
+  label: GeometryLabelGeometryOptions,
+  canAutomaticallyInterrupt: boolean,
+) => CanonicalGeometryLabelPlacement;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### samplePathRoute
+
+<p>
+  <ApiSourceLink
+    label={'samplePathRoute'}
+    path={'packages/kernel/core/src/compile/path/stroke/route-sampling.ts'}
+    startLine={12}
+  >
+    Samples the position and tangent of a structured reference path
+  </ApiSourceLink>
+</p>
+
+Each drawing command is treated as one ordinary step. Unrounded paths divide the parameter equally across drawing segments; rounded paths reuse Core final-path sampling. Empty paths return undefined
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name           | Type / signature                  | Description |
+| ---------- | -------------- | --------------------------------- | ----------- |
+| Parameters | `commands`     | `ReadonlyArray<PathCommand>`      | —           |
+|            | `cornerRadius` | `number`                          | —           |
+|            | `position`     | `number`                          | —           |
+| Returns    | —              | `CurveSegmentSample \| undefined` | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const samplePathRoute: (
+  commands: ReadonlyArray<PathCommand>,
+  cornerRadius: number,
+  position: number,
+) => CurveSegmentSample | undefined;
 ```
 
 </DocTab>

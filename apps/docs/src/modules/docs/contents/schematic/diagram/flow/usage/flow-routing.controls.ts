@@ -12,8 +12,9 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     title: copy.title,
     sections: [
       {
+        label: copy.section,
         controls: [
-          { kind: 'select', id: 'kind', label: copy.kind, defaultValue: '-|', options: copy.kindOptions },
+          { kind: 'select', id: 'kind', label: copy.kind, defaultValue: 'bend', options: copy.kindOptions },
           {
             kind: 'range',
             id: 'cornerRadius',
@@ -26,12 +27,90 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
           },
         ],
       },
+      {
+        label: copy.bend,
+        visibleWhen: { controlId: 'kind', oneOf: ['bend'] },
+        controls: [
+          {
+            kind: 'select',
+            id: 'configuration',
+            label: copy.configuration,
+            defaultValue: 'auto',
+            options: copy.configurationOptions,
+          },
+          {
+            kind: 'select',
+            id: 'side',
+            label: copy.side,
+            defaultValue: 'auto',
+            options: copy.sideOptions,
+            visibleWhen: { controlId: 'configuration', oneOf: ['auto', 'symmetric'] },
+          },
+          {
+            kind: 'range',
+            id: 'angle',
+            label: copy.angle,
+            defaultValue: 30,
+            min: -90,
+            max: 90,
+            step: 15,
+            visibleWhen: { controlId: 'configuration', oneOf: ['symmetric'] },
+          },
+          {
+            kind: 'range',
+            id: 'outAngle',
+            label: copy.outAngle,
+            defaultValue: 0,
+            min: -180,
+            max: 180,
+            step: 15,
+            visibleWhen: { controlId: 'configuration', oneOf: ['tangent'] },
+          },
+          {
+            kind: 'range',
+            id: 'inAngle',
+            label: copy.inAngle,
+            defaultValue: 180,
+            min: -180,
+            max: 180,
+            step: 15,
+            visibleWhen: { controlId: 'configuration', oneOf: ['tangent'] },
+          },
+          {
+            kind: 'range',
+            id: 'looseness',
+            label: copy.looseness,
+            defaultValue: 1,
+            min: 0.25,
+            max: 2,
+            step: 0.25,
+            visibleWhen: { controlId: 'configuration', oneOf: ['tangent'] },
+          },
+        ],
+      },
     ],
   });
   return {
     controls,
-    canonicalValues: { kind: '-|', cornerRadius: 0 },
-    relatedApis: ['FlowRelation.routing.kind', 'FlowRelation.routing.cornerRadius'],
+    canonicalValues: {
+      kind: 'bend',
+      cornerRadius: 0,
+      configuration: 'auto',
+      side: 'auto',
+      angle: 30,
+      outAngle: 0,
+      inAngle: 180,
+      looseness: 1,
+    } as const,
+    relatedApis: [
+      'FlowRelation.routing.kind',
+      'FlowRelation.routing.cornerRadius',
+      'FlowRelation.routing.bendDirection',
+      'FlowRelation.routing.bendAngle',
+      'FlowRelation.routing.outAngle',
+      'FlowRelation.routing.inAngle',
+      'FlowRelation.routing.looseness',
+    ],
   } satisfies PreviewControlContract;
 };
 

@@ -143,7 +143,7 @@ Axes IR is not a renderer-specific primitive. After `AxesDefinition` is loaded, 
 
 The following figure shows only the conversion chain owned by Axes. Its responsibility ends when the output reaches `Core IR[]`.
 
-<ComponentPreview files="axes-lowering" hideCode size="xs" />
+<ComponentPreview files="axes-lowering" hideCode type="flow" size="xs" />
 
 The y-axis path always runs from its negative endpoint to its positive endpoint. A positive value `v` maps to `originY - v`, so the default positive arrow points upward. This is not a new global coordinate system: neighboring `<Node position>` and `<Step to>` values still use Core's y-down coordinates.
 

@@ -270,17 +270,17 @@ export type AxisLineStepProps = {
 
 <ApiTable>
 
-| 成员             | 类型                | 默认值   | 说明                                                                                                    |
-| ---------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `bendAngle?`     | `number`            | `30`     | 对称弯模式的弯角度（度），缺省 30                                                                       |
-| `bendDirection?` | `'left' \| 'right'` | `'left'` | 对称弯模式的弯向：'left' / 'right'（视觉左右，相对 from→to）；可选，与 out/in 互补                      |
-| `children?`      | `ReactNode`         | —        | sugar 形态                                                                                              |
-| `inAngle?`       | `number`            | —        | 非对称弯 / 自环模式的入射角（度，TikZ `in=`）；与 outAngle 一起编译成 cubic                             |
-| `kind`           | `'bend'`            | —        | 弧形简记 step 鉴别字面量                                                                                |
-| `label?`         | `InputStepLabel`    | —        | 边标注                                                                                                  |
-| `looseness?`     | `number`            | —        | 非对称弯 / 自环模式的曲线松紧系数（TikZ `looseness=`，控制控制点距离），缺省约 1；也缩放自环默认大小    |
-| `outAngle?`      | `number`            | —        | 非对称弯 / 自环模式的出射角（度，TikZ `out=`）；与 inAngle 一起编译成 cubic，给定时优先于 bendDirection |
-| `to`             | `DslTarget`         | —        | 终点                                                                                                    |
+| 成员             | 类型                | 默认值   | 说明                                                                                       |
+| ---------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `bendAngle?`     | `number`            | `30`     | 对称弯模式的弯角度（度），缺省 30                                                          |
+| `bendDirection?` | `'left' \| 'right'` | `'left'` | 对称弯模式的弯向：'left' / 'right'（视觉左右，相对 from→to）；可选，与 out/in 互补         |
+| `children?`      | `ReactNode`         | —        | sugar 形态                                                                                 |
+| `inAngle?`       | `number`            | —        | 屏幕绝对入射角（度）；任一 outAngle / inAngle 触发切线模式，缺省入射角为 180               |
+| `kind`           | `'bend'`            | —        | 弧形简记 step 鉴别字面量                                                                   |
+| `label?`         | `InputStepLabel`    | —        | 边标注                                                                                     |
+| `looseness?`     | `number`            | —        | 切线模式的正数控制点距离倍率，默认 1；也缩放自环默认大小，对称模式忽略                     |
+| `outAngle?`      | `number`            | —        | 屏幕绝对出射角（度）；任一 outAngle / inAngle 触发切线模式，缺省出射角为 0，优先于对称配置 |
+| `to`             | `DslTarget`         | —        | 终点                                                                                       |
 
 </ApiTable>
 
@@ -991,6 +991,99 @@ export type ArrowEmitContext = {
 
 </DocTabs>
 
+### CanonicalGeometryLabelPlacement
+
+<p>
+  <ApiSourceLink
+    label={'CanonicalGeometryLabelPlacement'}
+    path={'packages/kernel/core/src/resolve/path/types.ts'}
+    startLine={39}
+  >
+    已展开默认的标签几何，不含文本和视觉外观
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员         | 类型                                               | 默认值 | 说明                                                                                                            |
+| ------------ | -------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| `distance`   | `number`                                           | —      | 相对宿主的距离                                                                                                  |
+| `gap`        | `number`                                           | —      | 断口留白                                                                                                        |
+| `interrupt`  | `boolean`                                          | —      | 是否中断宿主描边                                                                                                |
+| `placement?` | `"outside" \| "inside"`                            | —      | 标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部 |
+| `position`   | `number`                                           | —      | 路径上的归一化位置                                                                                              |
+| `side`       | `NonNullable<IRGeometryLabel['side']> \| 'center'` | —      | 相对宿主的方向                                                                                                  |
+| `sloped?`    | `false \| true`                                    | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CanonicalGeometryLabelPlacement = Omit<
+  GeometryLabelGeometryOptions,
+  'position' | 'side' | 'distance' | 'interrupt' | 'gap'
+> & {
+  position: number;
+  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  distance: number;
+  interrupt: boolean;
+  gap: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+### GeometryLabelGeometryOptions
+
+<p>
+  <ApiSourceLink
+    label={'GeometryLabelGeometryOptions'}
+    path={'packages/kernel/core/src/resolve/path/types.ts'}
+    startLine={36}
+  >
+    标签的几何配置，不含文本和视觉外观
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员         | 类型                                                                                                                 | 默认值 | 说明                                                                                                            |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| `distance?`  | `number`                                                                                                             | —      | side 偏移距离，默认与 Path step label 一致                                                                      |
+| `gap?`       | `number`                                                                                                             | —      | 文字断口两侧的额外间距；仅在 interrupt 生效时使用                                                               |
+| `interrupt?` | `false \| true`                                                                                                      | —      | 是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用      |
+| `placement?` | `"outside" \| "inside"`                                                                                              | —      | 标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部 |
+| `position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —      | 沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway                                                          |
+| `side?`      | `"top" \| "right" \| "bottom" \| "left"`                                                                             | —      | 标签相对锚点的可写方位：top / bottom / left / right。center 只在 resolve 后产生，不能作为 IR side 写入          |
+| `sloped?`    | `false \| true`                                                                                                      | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type GeometryLabelGeometryOptions = Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### PathGeneratorDefinition
 
 <p>
@@ -1458,6 +1551,92 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 ```ts
 export declare const definePathGenerator: (def: PathGeneratorDefinition) => PathGeneratorDefinition;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### resolveGeometryLabelPlacement
+
+<p>
+  <ApiSourceLink
+    label={'resolveGeometryLabelPlacement'}
+    path={'packages/kernel/core/src/resolve/path/resolve.ts'}
+    startLine={118}
+  >
+    展开位置、方向、距离、interruption 与断口留白的默认值
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                        | 类型 / 签名                       | 说明 |
+| ------ | --------------------------- | --------------------------------- | ---- |
+| 参数   | `label`                     | `GeometryLabelGeometryOptions`    | —    |
+|        | `canAutomaticallyInterrupt` | `boolean`                         | —    |
+| 返回值 | —                           | `CanonicalGeometryLabelPlacement` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const resolveGeometryLabelPlacement: (
+  label: GeometryLabelGeometryOptions,
+  canAutomaticallyInterrupt: boolean,
+) => CanonicalGeometryLabelPlacement;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### samplePathRoute
+
+<p>
+  <ApiSourceLink
+    label={'samplePathRoute'}
+    path={'packages/kernel/core/src/compile/path/stroke/route-sampling.ts'}
+    startLine={12}
+  >
+    采样结构化参考路径的位置与切线
+  </ApiSourceLink>
+</p>
+
+每条绘制 command 视为一个普通 step；未圆角时按绘制段均分参数，圆角时复用 Core 最终路径采样。空路径返回 undefined
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称           | 类型 / 签名                       | 说明 |
+| ------ | -------------- | --------------------------------- | ---- |
+| 参数   | `commands`     | `ReadonlyArray<PathCommand>`      | —    |
+|        | `cornerRadius` | `number`                          | —    |
+|        | `position`     | `number`                          | —    |
+| 返回值 | —              | `CurveSegmentSample \| undefined` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const samplePathRoute: (
+  commands: ReadonlyArray<PathCommand>,
+  cornerRadius: number,
+  position: number,
+) => CurveSegmentSample | undefined;
 ```
 
 </DocTab>

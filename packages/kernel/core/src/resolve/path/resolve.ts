@@ -14,7 +14,7 @@ import type {
   IRTarget,
   IRTextRun,
 } from '../../schemas';
-import { PathKind } from '../../schemas';
+import { BendAngleSchema, PathKind } from '../../schemas';
 import {
   isAtPositionLike,
   isBetweenPositionLike,
@@ -32,6 +32,8 @@ import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine 
 import { resolvePathKind } from './provider';
 import type {
   CanonicalGeometryLabel,
+  CanonicalGeometryLabelPlacement,
+  GeometryLabelGeometryOptions,
   CanonicalPath,
   CanonicalStep,
   PathResolution,
@@ -113,10 +115,10 @@ const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string)
 };
 
 /** 展开位置、方向、距离、interruption 与断口留白的默认值 */
-const canonicalizeLabel = (
-  label: ResolvedGeometryLabel,
+export const resolveGeometryLabelPlacement = (
+  label: GeometryLabelGeometryOptions,
   canAutomaticallyInterrupt: boolean,
-): CanonicalGeometryLabel => {
+): CanonicalGeometryLabelPlacement => {
   const side = label.side ?? (label.sloped === true || label.placement === 'inside' ? 'center' : 'top');
   return {
     ...label,
@@ -132,6 +134,15 @@ const canonicalizeLabel = (
     gap: label.gap ?? 4,
   };
 };
+
+/** 在已确定文本外观上应用统一的标签几何默认 */
+const canonicalizeLabel = (
+  label: ResolvedGeometryLabel,
+  canAutomaticallyInterrupt: boolean,
+): CanonicalGeometryLabel => ({
+  ...label,
+  ...resolveGeometryLabelPlacement(label, canAutomaticallyInterrupt),
+});
 
 const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: boolean): CanonicalStep => {
   if (step.kind === 'move' || step.kind === 'cycle' || step.kind === 'rectangle') return step;
@@ -152,7 +163,7 @@ const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: b
       ...step,
       label,
       bendDirection: step.bendDirection ?? 'left',
-      bendAngle: step.bendAngle ?? 30,
+      bendAngle: step.bendAngle ?? BendAngleSchema.parse(undefined),
     };
   }
   if (step.kind === 'circlePath' || step.kind === 'ellipsePath') {

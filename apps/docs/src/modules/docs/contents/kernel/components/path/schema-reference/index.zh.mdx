@@ -165,11 +165,9 @@ description: 路径与步骤的持久化字段，以及绘制专属配置
     bendDirection:
       '弧形偏转方向（相对 from→to 弦的视觉左 / 右），可选；给 bendDirection/bendAngle 出对称弧，或给 outAngle/inAngle 出非对称曲线 / 自环（同时给时 out/in 优先）',
     bendAngle: '弯曲角度（°），默认 30；限 (-180, 180)',
-    outAngle:
-      '起点出射角（°，TikZ `out=`）；与 inAngle 配合定起点控制点方向，给了 out/in 则优先于 bendDirection/bendAngle',
-    inAngle: '终点入射角（°，TikZ `in=`）；与 outAngle 配合定终点控制点方向',
-    looseness:
-      '曲线松紧因子（TikZ `looseness=`），默认约 1；越大控制点越往外推、曲线越松；from==to 时还缩放默认自环尺寸',
+    outAngle: '屏幕绝对出射角（°）；任一 out/in 触发切线模式，缺省出射角为 0，优先于对称参数',
+    inAngle: '屏幕绝对入射角（°）；任一 out/in 触发切线模式，缺省入射角为 180',
+    looseness: '切线模式的正数控制点距离倍率，默认 1；越大曲线越松，也缩放自环尺寸；对称模式忽略',
     label: '边标注：附在本段上的文字标签',
   }}
 />

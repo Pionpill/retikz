@@ -4,5 +4,7 @@ export * from './error';
 export * from './parse';
 export * from './providers';
 export { DEFAULT_RESOLVED_THEME, resolveTheme } from './resolve';
+export { resolveGeometryLabelPlacement } from './resolve';
+export type { CanonicalGeometryLabelPlacement, GeometryLabelGeometryOptions } from './resolve';
 export * from './schemas';
 export * from './shared';

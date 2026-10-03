@@ -14,7 +14,7 @@ import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writeRelationApiReferenceMdx } from './api-reference/relation';
 import { writeRibbonApiReferenceMdx } from './api-reference/ribbon';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
-import { writeStandardContainerApiReferences } from './api-reference/standard-containers';
+import { writeStandardCollectionApiReferences } from './api-reference/standard-collections';
 import { writeStandardPresentationApiReferences } from './api-reference/standard-presentation';
 import { writeStandardShapeApiReferences } from './api-reference/standard-shapes';
 import { writeTexApiReferenceMdx } from './api-reference/tex';
@@ -28,8 +28,8 @@ await writeGroupApiReferenceMdx(path.resolve(docsRoot, 'src/modules/docs/content
 await writeBlockApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/block/api-reference/_includes'),
 );
-await writeStandardContainerApiReferences(
-  path.resolve(docsRoot, 'src/modules/docs/contents/library/standard/container'),
+await writeStandardCollectionApiReferences(
+  path.resolve(docsRoot, 'src/modules/docs/contents/library/standard/collection'),
 );
 await writeEntityApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/entity/api-reference/_includes'),

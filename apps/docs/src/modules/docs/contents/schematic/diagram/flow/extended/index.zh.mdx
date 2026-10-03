@@ -5,6 +5,18 @@ description: 组合 Flow 的分组与固定布局，并统一图示的外观与�
 
 本页在[基础用法](/schematic/diagram/flow/usage)之上，按两个常见任务组合已有能力：组织元素与统一外观。连线与路由见[基础用法](/schematic/diagram/flow/usage#连线与路由)。
 
+## 曲线选侧与完整标签
+
+`bend` 与直线、正交和单折角路由并列使用。下面固定三个节点，只连接首尾，保留中间节点作为障碍。示例默认省略方向与角度，比较左右各 `30° / 45° / 60°`：节点优先，标签次级，同分先选小角度再选左侧，不比较边的重叠与交叉。关闭“自动选择角度”后，指定角度只比较左右两侧；不会移动节点或改成其他路由。手动角度为 0 时，两条候选重合并穿过中间节点，仍然绘制，同时报告 `FlowBendObstacleConflict`，定位到原始关系。
+
+<ComponentPreview
+  files="flow-bend"
+  size="xl"
+  caption="切换自动角度与手动角度，观察固定障碍下的有限候选选择；移动标签、切换倾斜和中断，观察同一曲线上的标签布局。"
+/>
+
+紧凑 `label: '继续'` 沿用默认标签策略。完整对象 `label: { text: '继续', position: 0.5, sloped: true }` 开放 Core GeometryLabel 的全部配置：`position`、`side`、`sloped`、`placement`、`distance`、`interrupt`、`gap`、`textColor`、`font` 和 `opacity`。`position` 使用曲线参数而非等弧长；`sloped` 跟随切线，`interrupt` 与 `gap` 控制标签处的描边间隙。完整对象即使只填 text，也使用完整标签默认。字体字段逐项继承，标签自身外观优先于关系外观。预留盒帮助布局评分，最终文字和节点边界裁剪仍由 Core 绘制。
+
 ## 结构与排布
 
 `FlowLayout` 固定排列直接子项，`FlowGroup` 划定可命名的可见边界并自动排布内部步骤。先分别观察两者，再把它们组合到一张图中。

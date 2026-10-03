@@ -1,5 +1,5 @@
 import { StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
-import { ListInputEmbedAdapter, MapInputEmbedAdapter } from '@retikz/standard-vanilla/container';
+import { ListInputEmbedAdapter, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import {
   axes,
   AxesInputEmbedAdapter,

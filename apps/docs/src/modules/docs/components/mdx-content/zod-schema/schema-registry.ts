@@ -138,7 +138,7 @@ import {
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
-import * as StandardContainerIR from '@retikz/standard/container';
+import * as StandardCollectionIR from '@retikz/standard/collection';
 import * as StandardPresentationIR from '@retikz/standard/presentation';
 import {
   CircleSchema,
@@ -1316,11 +1316,15 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
   ListSchema: {
-    schema: StandardContainerIR.ListSchema,
+    schema: StandardCollectionIR.ListSchema,
     label: 'List',
-    url: '/library/standard/container/list#listschema',
+    url: '/library/standard/collection/list#listschema',
   },
-  MapSchema: { schema: StandardContainerIR.MapSchema, label: 'Map', url: '/library/standard/container/map#mapschema' },
+  MapSchema: {
+    schema: StandardCollectionIR.MapSchema,
+    label: 'Map',
+    url: '/library/standard/collection/map#mapschema',
+  },
   SurfaceSchema: {
     schema: StandardPresentationIR.SurfaceSchema,
     label: 'Surface',

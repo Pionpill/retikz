@@ -453,7 +453,7 @@ export type FlowEntitiesProps = Readonly<{
 | `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —      | Group 内容溢出策略                           |
 | `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | Group 外壳的内边距                           |
 | `rank?`              | `number`                                                                                                                                                                                                           | —      | 最近 Flow 作用域内的可选层级约束             |
-| `routing?`           | `{ kind: "straight"; } \| { kind: "orthogonal"; cornerRadius?: number \| undefined; } \| { kind: "-\|"; cornerRadius?: number \| undefined; } \| { kind: "\|-"; cornerRadius?: number \| undefined; }`             | —      | Group 作用域内关系的默认路由                 |
+| `routing?`           | `FlowGroupProps["routing"]`                                                                                                                                                                                        | —      | Group 作用域内关系的默认路由                 |
 | `style?`             | `FlowGroupProps["style"]`                                                                                                                                                                                          | —      | 后代的级联视觉覆盖                           |
 | `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                           |
 | `zIndex?`            | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                   |
@@ -554,23 +554,23 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 
 <ApiTable>
 
-| 成员                   | 类型                                                                                                                                                                                                   | 默认值 | 说明                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------- |
-| `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                                           | —      | 覆盖 Graph role 的语义箭头方向           |
-| `group?`               | `string`                                                                                                                                                                                               | —      | 与 Entity 共享分类色的分组 key           |
-| `kind?`                | `string`                                                                                                                                                                                               | —      | 当前 role 下的稳定子类型                 |
-| `label?`               | `InputFlowRelation['label']`                                                                                                                                                                           | —      | 可选的非空文字或 TeX 标签块              |
-| `labelFont?`           | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                  | —      | 标签字体                                 |
-| `labelOpacity?`        | `number`                                                                                                                                                                                               | —      | 标签不透明度                             |
-| `labelTextForeground?` | `string \| number`                                                                                                                                                                                     | —      | 标签文字颜色                             |
-| `role?`                | `"flow" \| string & {} \| "association" \| "dependency" \| "generalization" \| "influence"`                                                                                                            | —      | Graph Relation 的开放角色，省略使用 flow |
-| `routing?`             | `{ kind: "straight"; } \| { kind: "orthogonal"; cornerRadius?: number \| undefined; } \| { kind: "-\|"; cornerRadius?: number \| undefined; } \| { kind: "\|-"; cornerRadius?: number \| undefined; }` | —      | 当前 Relation 的路由覆盖                 |
-| `source`               | `string`                                                                                                                                                                                               | —      | 起点 Entity 或 Group 的作者 id           |
-| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                     | —      | 起点 marker 外观                         |
-| `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                                      | —      | Graph 语义状态                           |
-| `style?`               | `InputFlowRelation['style']`                                                                                                                                                                           | —      | 当前 Relation 的路径外观覆盖             |
-| `target`               | `string`                                                                                                                                                                                               | —      | 终点 Entity 或 Group 的作者 id           |
-| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                                     | —      | 终点 marker 外观                         |
+| 成员                   | 类型                                                                                                                                                                                  | 默认值 | 说明                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------- |
+| `direction?`           | `"none" \| "reverse" \| "both" \| "forward"`                                                                                                                                          | —      | 覆盖 Graph role 的语义箭头方向                                 |
+| `group?`               | `string`                                                                                                                                                                              | —      | 与 Entity 共享分类色的分组 key                                 |
+| `kind?`                | `string`                                                                                                                                                                              | —      | 当前 role 下的稳定子类型                                       |
+| `label?`               | `InputFlowRelation['label']`                                                                                                                                                          | —      | 非空 TextBlock，或保留 Core 全部几何与外观字段的 GeometryLabel |
+| `labelFont?`           | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —      | 标签字体                                                       |
+| `labelOpacity?`        | `number`                                                                                                                                                                              | —      | 标签不透明度                                                   |
+| `labelTextForeground?` | `string \| number`                                                                                                                                                                    | —      | 标签文字颜色                                                   |
+| `role?`                | `"flow" \| string & {} \| "association" \| "dependency" \| "generalization" \| "influence"`                                                                                           | —      | Graph Relation 的开放角色，省略使用 flow                       |
+| `routing?`             | `InputFlowRelation['routing']`                                                                                                                                                        | —      | 当前 Relation 的路由覆盖                                       |
+| `source`               | `string`                                                                                                                                                                              | —      | 起点 Entity 或 Group 的作者 id                                 |
+| `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —      | 起点 marker 外观                                               |
+| `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                     | —      | Graph 语义状态                                                 |
+| `style?`               | `InputFlowRelation['style']`                                                                                                                                                          | —      | 当前 Relation 的路径外观覆盖                                   |
+| `target`               | `string`                                                                                                                                                                              | —      | 终点 Entity 或 Group 的作者 id                                 |
+| `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —      | 终点 marker 外观                                               |
 
 </ApiTable>
 
@@ -626,6 +626,75 @@ export declare const FlowRelation: {
                 >;
               }
           >
+        | {
+            text:
+              | string
+              | Array<
+                  | string
+                  | {
+                      text: string;
+                      fill?: string | number | undefined;
+                      opacity?: number | undefined;
+                      font?:
+                        | {
+                            family?: string | undefined;
+                            size?: string | number | undefined;
+                            weight?: number | 'normal' | 'bold' | undefined;
+                            style?: 'normal' | 'italic' | 'oblique' | undefined;
+                          }
+                        | undefined;
+                    }
+                  | {
+                      runs: Array<
+                        | {
+                            text: string;
+                            fill?: string | number | undefined;
+                            opacity?: number | undefined;
+                            font?:
+                              | {
+                                  family?: string | undefined;
+                                  size?: string | number | undefined;
+                                  weight?: number | 'normal' | 'bold' | undefined;
+                                  style?: 'normal' | 'italic' | 'oblique' | undefined;
+                                }
+                              | undefined;
+                          }
+                        | {
+                            tex: string;
+                            displayMode?: boolean | undefined;
+                            fill?: string | number | undefined;
+                            opacity?: number | undefined;
+                          }
+                      >;
+                    }
+                >;
+            position?:
+              | number
+              | 'at-start'
+              | 'very-near-start'
+              | 'near-start'
+              | 'midway'
+              | 'near-end'
+              | 'very-near-end'
+              | 'at-end'
+              | undefined;
+            side?: 'top' | 'right' | 'bottom' | 'left' | undefined;
+            sloped?: boolean | undefined;
+            interrupt?: boolean | undefined;
+            gap?: number | undefined;
+            placement?: 'outside' | 'inside' | undefined;
+            distance?: number | undefined;
+            textColor?: string | number | undefined;
+            opacity?: number | undefined;
+            font?:
+              | {
+                  family?: string | undefined;
+                  size?: string | number | undefined;
+                  weight?: number | 'normal' | 'bold' | undefined;
+                  style?: 'normal' | 'italic' | 'oblique' | undefined;
+                }
+              | undefined;
+          }
         | undefined;
       labelFont?:
         | {
@@ -649,6 +718,14 @@ export declare const FlowRelation: {
           >
         | undefined;
       routing?:
+        | {
+            kind: 'bend';
+            bendDirection?: 'right' | 'left' | undefined;
+            bendAngle?: number | undefined;
+            outAngle?: number | undefined;
+            inAngle?: number | undefined;
+            looseness?: number | undefined;
+          }
         | { kind: 'straight' }
         | { kind: 'orthogonal'; cornerRadius?: number | undefined }
         | { kind: '-|'; cornerRadius?: number | undefined }
@@ -860,45 +937,45 @@ export type FlowRelationsProps = Readonly<{
 
 <ApiTable>
 
-| 成员                           | 类型                                                                                                                                                                                                   | 默认值                             | 说明                                                                               |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------- |
-| `animations?`                  | `InputFlowDiagram['animations']`                                                                                                                                                                       | —                                  | 整张图的动画轨道，不参与 Flow 排布                                                 |
-| `boundingShape?`               | `"rectangle" \| "circle"`                                                                                                                                                                              | —                                  | 图示引用 id 使用的合成包络形状                                                     |
-| `children`                     | `Array<string>`                                                                                                                                                                                        | —                                  | 根级直接子项 id 的非空有序列表                                                     |
-| `clip?`                        | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                               | —                                  | 图示局部坐标系中的裁剪区域                                                         |
-| `readonly defaultFlowLayout?`  | `string`                                                                                                                                                                                               | `LayeredFlowLayoutDefinition.name` | 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局                    |
-| `defaults?`                    | `InputFlowDiagram['defaults']`                                                                                                                                                                         | —                                  | 后代默认样式及继承屏障                                                             |
-| `diagramDefaults?`             | `InputFlowDiagram['diagramDefaults']`                                                                                                                                                                  | —                                  | Diagram 层的稀疏默认值                                                             |
-| `readonly diagramThemeStyles?` | `ReadonlyArray<DiagramThemeStyleDefinition>`                                                                                                                                                           | `[]`                               | 与 Core Theme style 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义 |
-| `entities`                     | `InputFlowDiagram['entities']`                                                                                                                                                                         | —                                  | 非空的平级 Entity 声明目录                                                         |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`                                                                                                                                                                  | `[]`                               | 自定义 Entity kind definitions                                                     |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`                                                                                                                                                             | `[]`                               | 自定义 Entity predicate definitions                                                |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`                                                                                                                                                                  | `[]`                               | 自定义 Entity role definitions                                                     |
-| `flowDefaults?`                | `InputFlowDiagram['flowDefaults']`                                                                                                                                                                     | —                                  | Flow 布局和对象外观的稀疏默认值                                                    |
-| `readonly flowLayouts?`        | `ReadonlyArray<FlowLayoutDefinition>`                                                                                                                                                                  | `[]`                               | 追加到内置布局目录的自定义定义；名称不能与不同定义重复                             |
-| `readonly flowThemeStyles?`    | `ReadonlyArray<FlowThemeStyleDefinition>`                                                                                                                                                              | `[]`                               | 与 Core Theme style 同名的 Flow Theme definitions；使用命名主题时需提供匹配定义    |
-| `frame?`                       | `InputFlowDiagram['frame']`                                                                                                                                                                            | —                                  | 图示外框覆盖                                                                       |
-| `graphRules?`                  | `InputFlowDiagram['graphRules']`                                                                                                                                                                       | —                                  | 作用于生成的 Entity 与 Relation 的有序 Graph 规则                                  |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`                                                                                                                                                             | `[]`                               | 与 Core Theme style 同名的 Graph Theme definitions                                 |
-| `groups`                       | `InputFlowDiagram['groups']`                                                                                                                                                                           | —                                  | 平级 Group 声明目录，可为空                                                        |
-| `id?`                          | `string`                                                                                                                                                                                               | —                                  | 可选的图示引用 id                                                                  |
-| `layout?`                      | `{ direction?: "right" \| "left" \| "up" \| "down" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }`                                                                      | —                                  | 根级方向与间距覆盖                                                                 |
-| `layouts`                      | `InputFlowDiagram['layouts']`                                                                                                                                                                          | —                                  | 平级无外壳 Layout 声明目录，可为空                                                 |
-| `localNamespace?`              | `false \| true`                                                                                                                                                                                        | —                                  | 将后代 id 留在本图的局部命名空间                                                   |
-| `meta?`                        | `Record<string, JsonValue>`                                                                                                                                                                            | —                                  | 透传且不参与编译的 JSON 元信息                                                     |
-| `placement?`                   | `InputFlowDiagram['placement']`                                                                                                                                                                        | —                                  | 固有布局与变换之后的最终放置                                                       |
-| `presentation?`                | `InputFlowDiagram['presentation']`                                                                                                                                                                     | —                                  | 标题、说明与图例等完整图示内容                                                     |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`                                                                                                                                                                | `[]`                               | 自定义 Relation kind definitions                                                   |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>`                                                                                                                                                           | `[]`                               | 自定义 Relation predicate definitions                                              |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`                                                                                                                                                                | `[]`                               | 自定义 Relation role definitions                                                   |
-| `relations?`                   | `InputFlowDiagram['relations']`                                                                                                                                                                        | —                                  | 可选的根级有序 Relation 声明                                                       |
-| `routing?`                     | `{ kind: "straight"; } \| { kind: "orthogonal"; cornerRadius?: number \| undefined; } \| { kind: "-\|"; cornerRadius?: number \| undefined; } \| { kind: "\|-"; cornerRadius?: number \| undefined; }` | —                                  | 根级关系路由默认值                                                                 |
-| `style?`                       | `InputFlowDiagram['style']`                                                                                                                                                                            | —                                  | 后代的级联图形样式                                                                 |
-| `theme?`                       | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                              | —                                  | 本图及后代的稀疏主题覆盖                                                           |
-| `transforms?`                  | `InputFlowDiagram['transforms']`                                                                                                                                                                       | —                                  | 应用于图示整体的局部变换                                                           |
-| `zIndex?`                      | `number`                                                                                                                                                                                               | —                                  | 整张图在同级内容中的绘制顺序                                                       |
-| `input` (参数)                 | `FlowDiagramInputEmbedProps`                                                                                                                                                                           | —                                  | Flow 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider                  |
-| 返回值                         | `InputEmbed<FlowDiagramInputEmbedProps>`                                                                                                                                                               | —                                  | 保留 input 对象引用的 embed 节点，不在此处执行布局                                 |
+| 成员                           | 类型                                                                                                                              | 默认值                             | 说明                                                                               |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------- |
+| `animations?`                  | `InputFlowDiagram['animations']`                                                                                                  | —                                  | 整张图的动画轨道，不参与 Flow 排布                                                 |
+| `boundingShape?`               | `"rectangle" \| "circle"`                                                                                                         | —                                  | 图示引用 id 使用的合成包络形状                                                     |
+| `children`                     | `Array<string>`                                                                                                                   | —                                  | 根级直接子项 id 的非空有序列表                                                     |
+| `clip?`                        | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —                                  | 图示局部坐标系中的裁剪区域                                                         |
+| `readonly defaultFlowLayout?`  | `string`                                                                                                                          | `LayeredFlowLayoutDefinition.name` | 当前编译使用的布局名称，必须已注册；省略时使用内置 layered 布局                    |
+| `defaults?`                    | `InputFlowDiagram['defaults']`                                                                                                    | —                                  | 后代默认样式及继承屏障                                                             |
+| `diagramDefaults?`             | `InputFlowDiagram['diagramDefaults']`                                                                                             | —                                  | Diagram 层的稀疏默认值                                                             |
+| `readonly diagramThemeStyles?` | `ReadonlyArray<DiagramThemeStyleDefinition>`                                                                                      | `[]`                               | 与 Core Theme style 同名的 Diagram Theme definitions；使用命名主题时需提供匹配定义 |
+| `entities`                     | `InputFlowDiagram['entities']`                                                                                                    | —                                  | 非空的平级 Entity 声明目录                                                         |
+| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`                                                                                             | `[]`                               | 自定义 Entity kind definitions                                                     |
+| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`                                                                                        | `[]`                               | 自定义 Entity predicate definitions                                                |
+| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`                                                                                             | `[]`                               | 自定义 Entity role definitions                                                     |
+| `flowDefaults?`                | `InputFlowDiagram['flowDefaults']`                                                                                                | —                                  | Flow 布局和对象外观的稀疏默认值                                                    |
+| `readonly flowLayouts?`        | `ReadonlyArray<FlowLayoutDefinition>`                                                                                             | `[]`                               | 追加到内置布局目录的自定义定义；名称不能与不同定义重复                             |
+| `readonly flowThemeStyles?`    | `ReadonlyArray<FlowThemeStyleDefinition>`                                                                                         | `[]`                               | 与 Core Theme style 同名的 Flow Theme definitions；使用命名主题时需提供匹配定义    |
+| `frame?`                       | `InputFlowDiagram['frame']`                                                                                                       | —                                  | 图示外框覆盖                                                                       |
+| `graphRules?`                  | `InputFlowDiagram['graphRules']`                                                                                                  | —                                  | 作用于生成的 Entity 与 Relation 的有序 Graph 规则                                  |
+| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`                                                                                        | `[]`                               | 与 Core Theme style 同名的 Graph Theme definitions                                 |
+| `groups`                       | `InputFlowDiagram['groups']`                                                                                                      | —                                  | 平级 Group 声明目录，可为空                                                        |
+| `id?`                          | `string`                                                                                                                          | —                                  | 可选的图示引用 id                                                                  |
+| `layout?`                      | `{ direction?: "right" \| "left" \| "up" \| "down" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }` | —                                  | 根级方向与间距覆盖                                                                 |
+| `layouts`                      | `InputFlowDiagram['layouts']`                                                                                                     | —                                  | 平级无外壳 Layout 声明目录，可为空                                                 |
+| `localNamespace?`              | `false \| true`                                                                                                                   | —                                  | 将后代 id 留在本图的局部命名空间                                                   |
+| `meta?`                        | `Record<string, JsonValue>`                                                                                                       | —                                  | 透传且不参与编译的 JSON 元信息                                                     |
+| `placement?`                   | `InputFlowDiagram['placement']`                                                                                                   | —                                  | 固有布局与变换之后的最终放置                                                       |
+| `presentation?`                | `InputFlowDiagram['presentation']`                                                                                                | —                                  | 标题、说明与图例等完整图示内容                                                     |
+| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`                                                                                           | `[]`                               | 自定义 Relation kind definitions                                                   |
+| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>`                                                                                      | `[]`                               | 自定义 Relation predicate definitions                                              |
+| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`                                                                                           | `[]`                               | 自定义 Relation role definitions                                                   |
+| `relations?`                   | `InputFlowDiagram['relations']`                                                                                                   | —                                  | 可选的根级有序 Relation 声明                                                       |
+| `routing?`                     | `InputFlowDiagram['routing']`                                                                                                     | —                                  | 根级关系路由默认值                                                                 |
+| `style?`                       | `InputFlowDiagram['style']`                                                                                                       | —                                  | 后代的级联图形样式                                                                 |
+| `theme?`                       | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                         | —                                  | 本图及后代的稀疏主题覆盖                                                           |
+| `transforms?`                  | `InputFlowDiagram['transforms']`                                                                                                  | —                                  | 应用于图示整体的局部变换                                                           |
+| `zIndex?`                      | `number`                                                                                                                          | —                                  | 整张图在同级内容中的绘制顺序                                                       |
+| `input` (参数)                 | `FlowDiagramInputEmbedProps`                                                                                                      | —                                  | Flow 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider                  |
+| 返回值                         | `InputEmbed<FlowDiagramInputEmbedProps>`                                                                                          | —                                  | 保留 input 对象引用的 embed 节点，不在此处执行布局                                 |
 
 </ApiTable>
 
@@ -965,6 +1042,75 @@ export declare const FlowDiagramInputEmbedAdapter: InputEmbedAdapter<FlowDiagram
 ```
 
 ## `@retikz/diagram/flow`
+
+### FlowBendRoute
+
+<p>
+  <ApiSourceLink
+    label={'FlowBendRoute'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={57}
+  >
+    bend 参考几何，仅保留一个生效参数族
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="symmetric">
+
+<DocTab value="symmetric" label="属性 · 对称弯曲">
+
+<ApiTable>
+
+| 成员                     | 类型                                                                       | 默认值 | 说明 |
+| ------------------------ | -------------------------------------------------------------------------- | ------ | ---- |
+| `readonly bendAngle`     | `number`                                                                   | —      | —    |
+| `readonly bendDirection` | `'left' \| 'right'`                                                        | —      | —    |
+| `readonly kind`          | `'bend'`                                                                   | —      | —    |
+| `readonly points`        | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="tangent" label="属性 · 切线弯曲">
+
+<ApiTable>
+
+| 成员                 | 类型                                                                       | 默认值 | 说明 |
+| -------------------- | -------------------------------------------------------------------------- | ------ | ---- |
+| `readonly inAngle`   | `number`                                                                   | —      | —    |
+| `readonly kind`      | `'bend'`                                                                   | —      | —    |
+| `readonly looseness` | `number`                                                                   | —      | —    |
+| `readonly outAngle`  | `number`                                                                   | —      | —    |
+| `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowBendRoute = Readonly<{
+  kind: 'bend';
+  points: readonly [Readonly<Position>, Readonly<Position>];
+}> &
+  (
+    | Readonly<{
+        bendDirection: 'left' | 'right';
+        bendAngle: number;
+      }>
+    | Readonly<{
+        outAngle: number;
+        inAngle: number;
+        looseness: number;
+      }>
+  );
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### FlowDiagramArtifact
 
@@ -1064,7 +1210,7 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
   <ApiSourceLink
     label={'FlowLayoutDefinition'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={239}
+    startLine={266}
   >
     同步确定 Flow element bounds、relation route 与 label reservation 的布局定义
   </ApiSourceLink>
@@ -1104,6 +1250,324 @@ export type FlowLayoutDefinition = Readonly<{
 
 </DocTabs>
 
+### FlowLayoutLabelPlacement
+
+<p>
+  <ApiSourceLink
+    label={'FlowLayoutLabelPlacement'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={54}
+  >
+    完整标签提供给布局的几何配置，不包含文字或外观
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                  | 类型                                                                                                                 | 默认值 | 说明                                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| `readonly distance?`  | `number`                                                                                                             | —      | side 偏移距离，默认与 Path step label 一致                                                                      |
+| `readonly gap?`       | `number`                                                                                                             | —      | 文字断口两侧的额外间距；仅在 interrupt 生效时使用                                                               |
+| `readonly interrupt?` | `false \| true`                                                                                                      | —      | 是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用      |
+| `readonly placement?` | `"outside" \| "inside"`                                                                                              | —      | 标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Extension Ribbon 等面状宿主在未指定 side 时放在内部 |
+| `readonly position?`  | `number \| "at-start" \| "very-near-start" \| "near-start" \| "midway" \| "near-end" \| "very-near-end" \| "at-end"` | —      | 沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway                                                          |
+| `readonly side?`      | `"right" \| "left" \| "top" \| "bottom"`                                                                             | —      | 标签相对锚点的可写方位：top / bottom / left / right。center 只在 resolve 后产生，不能作为 IR side 写入          |
+| `readonly sloped?`    | `false \| true`                                                                                                      | —      | 是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowLayoutRelationInput
+
+<p>
+  <ApiSourceLink
+    label={'FlowLayoutRelationInput'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={192}
+  >
+    Flow layout relation 输入
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                       | 类型                       | 默认值 | 说明                                                             |
+| -------------------------- | -------------------------- | ------ | ---------------------------------------------------------------- |
+| `readonly direction`       | `RelationDirectionValue`   | —      | 已解析的语义箭头方向                                             |
+| `readonly labelPlacement?` | `FlowLayoutLabelPlacement` | —      | 完整标签的几何投影；空对象仍表示使用 Core 默认，紧凑标签省略此项 |
+| `readonly labelSize?`      | `FlowLayoutSize`           | —      | 已测量的标签尺寸；无标签时省略                                   |
+| `readonly routing`         | `FlowLayoutRouting`        | —      | 已补全参数的关系路由                                             |
+| `readonly source`          | `string`                   | —      | 起点 Entity 或 Group 的作者 id                                   |
+| `readonly target`          | `string`                   | —      | 终点 Entity 或 Group 的作者 id                                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowLayoutRelationInput = Readonly<{
+  source: string;
+  target: string;
+  direction: RelationDirectionValue;
+  routing: FlowLayoutRouting;
+  labelSize?: FlowLayoutSize;
+  labelPlacement?: FlowLayoutLabelPlacement;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowLayoutRelationOutput
+
+<p>
+  <ApiSourceLink
+    label={'FlowLayoutRelationOutput'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={226}
+  >
+    一条 Flow relation 的根坐标系布局输出
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                    | 类型                   | 默认值 | 说明                                                                                            |
+| ----------------------- | ---------------------- | ------ | ----------------------------------------------------------------------------------------------- |
+| `readonly labelBounds?` | `Readonly<BoundsRect>` | —      | 标签在 Flow 根坐标系中的预留矩形，倾斜标签使用旋转后的 AABB；有标签时必须提供，无标签时必须省略 |
+| `readonly route`        | `FlowLayoutRoute`      | —      | 根坐标系中的有判别参考几何                                                                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowLayoutRelationOutput = Readonly<{
+  route: FlowLayoutRoute;
+  labelBounds?: Readonly<BoundsRect>;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowLayoutRoute
+
+<p>
+  <ApiSourceLink
+    label={'FlowLayoutRoute'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={64}
+  >
+    布局已确定的参考路由，实际端点裁剪与箭头缩短由 Core 执行
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="symmetric">
+
+<DocTab value="symmetric" label="属性 · 对称弯曲">
+
+<ApiTable>
+
+| 成员                     | 类型                                                                       | 默认值 | 说明 |
+| ------------------------ | -------------------------------------------------------------------------- | ------ | ---- |
+| `readonly bendAngle`     | `number`                                                                   | —      | —    |
+| `readonly bendDirection` | `'left' \| 'right'`                                                        | —      | —    |
+| `readonly kind`          | `'bend'`                                                                   | —      | —    |
+| `readonly points`        | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="tangent" label="属性 · 切线弯曲">
+
+<ApiTable>
+
+| 成员                 | 类型                                                                       | 默认值 | 说明 |
+| -------------------- | -------------------------------------------------------------------------- | ------ | ---- |
+| `readonly inAngle`   | `number`                                                                   | —      | —    |
+| `readonly kind`      | `'bend'`                                                                   | —      | —    |
+| `readonly looseness` | `number`                                                                   | —      | —    |
+| `readonly outAngle`  | `number`                                                                   | —      | —    |
+| `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="straight" label="属性 · 直线">
+
+<ApiTable>
+
+| 成员              | 类型                                | 默认值 | 说明 |
+| ----------------- | ----------------------------------- | ------ | ---- |
+| `readonly kind`   | `'straight'`                        | —      | —    |
+| `readonly points` | `ReadonlyArray<Readonly<Position>>` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="axis" label="属性 · 轴对齐">
+
+<ApiTable>
+
+| 成员                    | 类型                                | 默认值 | 说明 |
+| ----------------------- | ----------------------------------- | ------ | ---- |
+| `readonly cornerRadius` | `number`                            | —      | —    |
+| `readonly kind`         | `'orthogonal' \| '-\|' \| '\|-'`    | —      | —    |
+| `readonly points`       | `ReadonlyArray<Readonly<Position>>` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowLayoutRoute =
+  | Readonly<{
+      kind: 'straight';
+      points: ReadonlyArray<Readonly<Position>>;
+    }>
+  | Readonly<{
+      kind: 'orthogonal' | '-|' | '|-';
+      points: ReadonlyArray<Readonly<Position>>;
+      cornerRadius: number;
+    }>
+  | FlowBendRoute;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowLayoutRouting
+
+<p>
+  <ApiSourceLink
+    label={'FlowLayoutRouting'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={41}
+  >
+    Flow layout provider 使用的有效路由
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="straight">
+
+<DocTab value="straight" label="属性 · 直线">
+
+<ApiTable>
+
+| 成员            | 类型         | 默认值 | 说明 |
+| --------------- | ------------ | ------ | ---- |
+| `readonly kind` | `'straight'` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="axis" label="属性 · 轴对齐">
+
+<ApiTable>
+
+| 成员                    | 类型                             | 默认值 | 说明 |
+| ----------------------- | -------------------------------- | ------ | ---- |
+| `readonly cornerRadius` | `number`                         | —      | —    |
+| `readonly kind`         | `'orthogonal' \| '-\|' \| '\|-'` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="symmetric" label="属性 · 对称弯曲">
+
+<ApiTable>
+
+| 成员                      | 类型                | 默认值 | 说明                                                 |
+| ------------------------- | ------------------- | ------ | ---------------------------------------------------- |
+| `readonly bendAngle?`     | `number`            | —      | 省略时由布局比较 30、45、60 度；显式及继承值必须保留 |
+| `readonly bendDirection?` | `'left' \| 'right'` | —      | 省略时由布局比较左右候选                             |
+| `readonly kind`           | `'bend'`            | —      | —                                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="tangent" label="属性 · 切线弯曲">
+
+<ApiTable>
+
+| 成员                 | 类型     | 默认值 | 说明 |
+| -------------------- | -------- | ------ | ---- |
+| `readonly inAngle`   | `number` | —      | —    |
+| `readonly kind`      | `'bend'` | —      | —    |
+| `readonly looseness` | `number` | —      | —    |
+| `readonly outAngle`  | `number` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowLayoutRouting =
+  | Readonly<{
+      kind: 'straight';
+    }>
+  | Readonly<{
+      kind: 'orthogonal' | '-|' | '|-';
+      cornerRadius: number;
+    }>
+  | Readonly<{
+      kind: 'bend';
+      bendDirection?: 'left' | 'right';
+      bendAngle?: number;
+    }>
+  | Readonly<{
+      kind: 'bend';
+      outAngle: number;
+      inAngle: number;
+      looseness: number;
+    }>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### IRFlowDiagram
 
 <p>
@@ -1122,34 +1586,34 @@ export type FlowLayoutDefinition = Readonly<{
 
 <ApiTable>
 
-| 成员               | 类型                                                                                                                                                                                                   | 默认值 | 说明                                              |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------- |
-| `animations?`      | `ZodInfer<typeof FlowDiagramSchema.shape["animations"]>`                                                                                                                                               | —      | 整张图的动画轨道，不参与 Flow 排布                |
-| `boundingShape?`   | `"rectangle" \| "circle"`                                                                                                                                                                              | —      | 图示引用 id 使用的合成包络形状                    |
-| `children`         | `Array<string>`                                                                                                                                                                                        | —      | 根级直接子项 id 的非空有序列表                    |
-| `clip?`            | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                               | —      | 图示局部坐标系中的裁剪区域                        |
-| `defaults?`        | `ZodInfer<typeof FlowDiagramSchema.shape["defaults"]>`                                                                                                                                                 | —      | 后代默认样式及继承屏障                            |
-| `diagramDefaults?` | `ZodInfer<typeof FlowDiagramSchema.shape["diagramDefaults"]>`                                                                                                                                          | —      | Diagram 层的稀疏默认值                            |
-| `entities`         | `ZodInfer<typeof FlowDiagramSchema.shape["entities"]>`                                                                                                                                                 | —      | 非空的平级 Entity 声明目录                        |
-| `flowDefaults?`    | `ZodInfer<typeof FlowDiagramSchema.shape["flowDefaults"]>`                                                                                                                                             | —      | Flow 布局和对象外观的稀疏默认值                   |
-| `frame?`           | `ZodInfer<typeof FlowDiagramSchema.shape["frame"]>`                                                                                                                                                    | —      | 图示外框覆盖                                      |
-| `graphRules?`      | `ZodInfer<typeof FlowDiagramSchema.shape["graphRules"]>`                                                                                                                                               | —      | 作用于生成的 Entity 与 Relation 的有序 Graph 规则 |
-| `groups`           | `ZodInfer<typeof FlowDiagramSchema.shape["groups"]>`                                                                                                                                                   | —      | 平级 Group 声明目录，可为空                       |
-| `id?`              | `string`                                                                                                                                                                                               | —      | 可选的图示引用 id                                 |
-| `layout?`          | `{ direction?: "up" \| "right" \| "down" \| "left" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }`                                                                      | —      | 根级方向与间距覆盖                                |
-| `layouts`          | `ZodInfer<typeof FlowDiagramSchema.shape["layouts"]>`                                                                                                                                                  | —      | 平级无外壳 Layout 声明目录，可为空                |
-| `localNamespace?`  | `false \| true`                                                                                                                                                                                        | —      | 将后代 id 留在本图的局部命名空间                  |
-| `meta?`            | `Record<string, JsonValue>`                                                                                                                                                                            | —      | 透传且不参与编译的 JSON 元信息                    |
-| `namespace`        | `"diagram"`                                                                                                                                                                                            | —      | 命名空间，固定为 diagram                          |
-| `placement?`       | `ZodInfer<typeof FlowDiagramSchema.shape["placement"]>`                                                                                                                                                | —      | 固有布局与变换之后的最终放置                      |
-| `presentation?`    | `ZodInfer<typeof FlowDiagramSchema.shape["presentation"]>`                                                                                                                                             | —      | 标题、说明与图例等完整图示内容                    |
-| `relations?`       | `ZodInfer<typeof FlowDiagramSchema.shape["relations"]>`                                                                                                                                                | —      | 可选的根级有序 Relation 声明                      |
-| `routing?`         | `{ kind: "straight"; } \| { kind: "orthogonal"; cornerRadius?: number \| undefined; } \| { kind: "-\|"; cornerRadius?: number \| undefined; } \| { kind: "\|-"; cornerRadius?: number \| undefined; }` | —      | 根级关系路由默认值                                |
-| `style?`           | `ZodInfer<typeof FlowDiagramSchema.shape["style"]>`                                                                                                                                                    | —      | 后代的级联图形样式                                |
-| `theme?`           | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                              | —      | 本图及后代的稀疏主题覆盖                          |
-| `transforms?`      | `ZodInfer<typeof FlowDiagramSchema.shape["transforms"]>`                                                                                                                                               | —      | 应用于图示整体的局部变换                          |
-| `type`             | `"flow"`                                                                                                                                                                                               | —      | Flow Diagram Source 的判别字段                    |
-| `zIndex?`          | `number`                                                                                                                                                                                               | —      | 整张图在同级内容中的绘制顺序                      |
+| 成员               | 类型                                                                                                                              | 默认值 | 说明                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------- |
+| `animations?`      | `ZodInfer<typeof FlowDiagramSchema.shape["animations"]>`                                                                          | —      | 整张图的动画轨道，不参与 Flow 排布                |
+| `boundingShape?`   | `"rectangle" \| "circle"`                                                                                                         | —      | 图示引用 id 使用的合成包络形状                    |
+| `children`         | `Array<string>`                                                                                                                   | —      | 根级直接子项 id 的非空有序列表                    |
+| `clip?`            | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                          | —      | 图示局部坐标系中的裁剪区域                        |
+| `defaults?`        | `ZodInfer<typeof FlowDiagramSchema.shape["defaults"]>`                                                                            | —      | 后代默认样式及继承屏障                            |
+| `diagramDefaults?` | `ZodInfer<typeof FlowDiagramSchema.shape["diagramDefaults"]>`                                                                     | —      | Diagram 层的稀疏默认值                            |
+| `entities`         | `ZodInfer<typeof FlowDiagramSchema.shape["entities"]>`                                                                            | —      | 非空的平级 Entity 声明目录                        |
+| `flowDefaults?`    | `ZodInfer<typeof FlowDiagramSchema.shape["flowDefaults"]>`                                                                        | —      | Flow 布局和对象外观的稀疏默认值                   |
+| `frame?`           | `ZodInfer<typeof FlowDiagramSchema.shape["frame"]>`                                                                               | —      | 图示外框覆盖                                      |
+| `graphRules?`      | `ZodInfer<typeof FlowDiagramSchema.shape["graphRules"]>`                                                                          | —      | 作用于生成的 Entity 与 Relation 的有序 Graph 规则 |
+| `groups`           | `ZodInfer<typeof FlowDiagramSchema.shape["groups"]>`                                                                              | —      | 平级 Group 声明目录，可为空                       |
+| `id?`              | `string`                                                                                                                          | —      | 可选的图示引用 id                                 |
+| `layout?`          | `{ direction?: "up" \| "right" \| "down" \| "left" \| undefined; nodeGap?: number \| undefined; rankGap?: number \| undefined; }` | —      | 根级方向与间距覆盖                                |
+| `layouts`          | `ZodInfer<typeof FlowDiagramSchema.shape["layouts"]>`                                                                             | —      | 平级无外壳 Layout 声明目录，可为空                |
+| `localNamespace?`  | `false \| true`                                                                                                                   | —      | 将后代 id 留在本图的局部命名空间                  |
+| `meta?`            | `Record<string, JsonValue>`                                                                                                       | —      | 透传且不参与编译的 JSON 元信息                    |
+| `namespace`        | `"diagram"`                                                                                                                       | —      | 命名空间，固定为 diagram                          |
+| `placement?`       | `ZodInfer<typeof FlowDiagramSchema.shape["placement"]>`                                                                           | —      | 固有布局与变换之后的最终放置                      |
+| `presentation?`    | `ZodInfer<typeof FlowDiagramSchema.shape["presentation"]>`                                                                        | —      | 标题、说明与图例等完整图示内容                    |
+| `relations?`       | `ZodInfer<typeof FlowDiagramSchema.shape["relations"]>`                                                                           | —      | 可选的根级有序 Relation 声明                      |
+| `routing?`         | `ZodInfer<typeof FlowDiagramSchema.shape["routing"]>`                                                                             | —      | 根级关系路由默认值                                |
+| `style?`           | `ZodInfer<typeof FlowDiagramSchema.shape["style"]>`                                                                               | —      | 后代的级联图形样式                                |
+| `theme?`           | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                         | —      | 本图及后代的稀疏主题覆盖                          |
+| `transforms?`      | `ZodInfer<typeof FlowDiagramSchema.shape["transforms"]>`                                                                          | —      | 应用于图示整体的局部变换                          |
+| `type`             | `"flow"`                                                                                                                          | —      | Flow Diagram Source 的判别字段                    |
+| `zIndex?`          | `number`                                                                                                                          | —      | 整张图在同级内容中的绘制顺序                      |
 
 </ApiTable>
 
@@ -1249,7 +1713,7 @@ export declare const defineFlowLayout: (definition: FlowLayoutDefinition) => Flo
   <ApiSourceLink
     label={'getFlowLayoutCatalog'}
     path={'packages/schematic/diagram/src/flow/providers/layout/registry.ts'}
-    startLine={191}
+    startLine={193}
   >
     从同一次真实 registry 投影稳定的 JSON-safe catalog
   </ApiSourceLink>

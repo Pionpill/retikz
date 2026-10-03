@@ -1,7 +1,7 @@
 import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
-import { ListInputEmbedAdapter } from '../container/list';
-import { MapInputEmbedAdapter } from '../container/map';
+import { ListInputEmbedAdapter } from '../collection/list';
+import { MapInputEmbedAdapter } from '../collection/map';
 import { AxesInputEmbedAdapter } from '../presentation/axes';
 import { FrameInputEmbedAdapter } from '../presentation/frame';
 import { GridInputEmbedAdapter } from '../presentation/grid';

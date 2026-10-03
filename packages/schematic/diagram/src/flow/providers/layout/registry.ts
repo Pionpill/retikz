@@ -141,7 +141,9 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   if (!capabilities.routingKinds.includes(defaults.routing.kind)) {
     invalidDefinition(definition, 'defaults.routing.kind is not declared by routingKinds.');
   }
-  const supportsOrthogonal = capabilities.routingKinds.some(kind => kind !== FlowRoutingKind.Straight);
+  const supportsOrthogonal = capabilities.routingKinds.some(
+    kind => kind === 'orthogonal' || kind === '-|' || kind === '|-',
+  );
   const radius = defaults.routing.orthogonalCornerRadius;
   if (supportsOrthogonal !== (radius !== undefined)) {
     invalidDefinition(

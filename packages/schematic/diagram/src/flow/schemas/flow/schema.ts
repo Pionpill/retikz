@@ -1,5 +1,5 @@
 import type { IRTextBlock } from '@retikz/core';
-import { ScopePropsSchema, TextBlockSchema } from '@retikz/core';
+import { BendStepSchema, GeometryLabelSchema, ScopePropsSchema, TextBlockSchema } from '@retikz/core';
 import {
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
@@ -20,7 +20,16 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS } from '@retikz/layout';
-import { array, boolean as zodBoolean, discriminatedUnion, enum as zodEnum, literal, record, strictObject } from 'zod';
+import {
+  array,
+  boolean as zodBoolean,
+  discriminatedUnion,
+  enum as zodEnum,
+  literal,
+  record,
+  strictObject,
+  union,
+} from 'zod';
 
 import {
   DIAGRAM_NAMESPACE,
@@ -58,6 +67,20 @@ const FlowVerticalThenHorizontalRoutingSchema = FlowOrthogonalRoutingSchema.exte
 });
 
 export const FlowRoutingSchema = discriminatedUnion('kind', [
+  strictObject({
+    kind: literal(FlowRoutingKind.Bend).describe(
+      'Regular bend routing alongside straight and axis-aligned routes. Prefer this over manual curve controls; omitted side and angle search up to six candidates (left/right at 30, 45, 60 degrees) after inheritance. Nodes take priority, labels break ties; edge crossings and overlaps are not scored. No global obstacle avoidance guarantee.',
+    ),
+    bendDirection: BendStepSchema.shape.bendDirection.describe(
+      'Explicit side relative to source-to-target; omission asks the layout to choose. Ignored when either tangent angle is present.',
+    ),
+    bendAngle: BendStepSchema.shape.bendAngle.describe(
+      'Symmetric bend angle in (-180, 180). Explicit or inherited values are fixed, including zero and negative values; omission searches 30, 45 and 60 degrees. Ties prefer the smaller angle, then left. Ignored when either tangent angle is present.',
+    ),
+    outAngle: BendStepSchema.shape.outAngle,
+    inAngle: BendStepSchema.shape.inAngle,
+    looseness: BendStepSchema.shape.looseness,
+  }),
   FlowStraightRoutingSchema,
   FlowOrthogonalRoutingSchema,
   FlowHorizontalThenVerticalRoutingSchema,
@@ -172,9 +195,14 @@ const FlowEntityTextSchema = TextBlockSchema.refine(hasFlowEntityText, {
   message: 'Flow Entity text must contain at least one non-whitespace text or TeX run.',
 });
 
-const FlowRelationLabelSchema = TextBlockSchema.refine(hasFlowEntityText, {
+const FlowRelationLabelTextSchema = TextBlockSchema.refine(hasFlowEntityText, {
   message: 'Flow Relation label must contain at least one non-whitespace text or TeX run.',
 });
+
+const FlowRelationLabelSchema = union([
+  FlowRelationLabelTextSchema,
+  GeometryLabelSchema.extend({ text: FlowRelationLabelTextSchema }),
+]);
 
 export const FlowEntitySchema = strictObject({
   id: NonBlankStringSchema.describe('Flow-wide authored Entity identity.'),
@@ -359,7 +387,9 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
 export const FlowRelationSchema = strictObject({
   source: NonBlankStringSchema.describe('Authored source Flow element id.'),
   target: NonBlankStringSchema.describe('Authored target Flow element id.'),
-  label: FlowRelationLabelSchema.optional().describe('Optional Core TextBlock measured and placed by Flow.'),
+  label: FlowRelationLabelSchema.optional().describe(
+    'Optional compact Core TextBlock or complete GeometryLabel; full objects preserve Core geometry and appearance, including position, sloped, interruption and gap.',
+  ),
   role: RelationRoleSchema.optional().describe('Open Graph Relation role; omission resolves to flow.'),
   kind: RelationKindSchema.optional().describe('Open stable kind within the selected Relation role.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),

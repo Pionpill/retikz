@@ -187,7 +187,7 @@ marker 脱离 `Legend` 单独使用、marker 与 form 不匹配或基数不合�
 
 `LegendDefinition` 由 Core composite registry 消费。它先对标题、样本和标签执行 minimum / natural probe，求出结构轮廓。内容宽度确定后，标题按 x 轴 range 与 y 轴 natural 再 probe；样本和标签则按最终 slot 执行 exact probe。编译只 replay 被选中的结果，被丢弃的 probe 不发布图元、资源或产物。
 
-<ComponentPreview files="legend-pipeline" hideCode size="xs" />
+<ComponentPreview files="legend-pipeline" hideCode type="flow" size="md" />
 
 `LegendDefinition` 返回普通 Core IR children，并在同次编译并列返回 `LegendArtifact`。Core 随后把这些 children 编译进 Scene，而 artifact 保持为独立产物；SVG 与 Canvas renderer 不认识 `standard.legend`，也不提供专属分支。
 

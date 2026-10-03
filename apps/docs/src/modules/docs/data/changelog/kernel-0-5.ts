@@ -311,6 +311,14 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · 路径几何复用', en: 'Unreleased · Shared path geometry' },
+          content: {
+            zh: '公开 samplePathRoute 与 resolveGeometryLabelPlacement，供上层复用路径采样和标签默认。bend 单独提供 outAngle 或 inAngle 即启用切线模式，缺项使用统一权威默认；控制点溢出保留 Core 错误。',
+            en: 'Exports samplePathRoute and resolveGeometryLabelPlacement for shared path sampling and label defaults. Either outAngle or inAngle selects tangent bend mode, with omitted fields using authoritative defaults. Control-point overflow retains a Core error.',
+          },
+        },
+
+        {
           label: { zh: '待发布：复合组件实例运行输入', en: 'Unreleased: composite instance runtime inputs' },
           content: {
             zh: '按真实 Source 位置绑定 runtimeInput，作者 child 和生成 child 显式转交 opaque 绑定；probe/replay/direct lowering 和 retained 事务复用同一运行输入，保持 Core 同步且领域中立。',

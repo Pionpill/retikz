@@ -46,9 +46,9 @@
       "types": "./src/presentation/index.ts",
       "default": "./src/presentation/index.ts"
     },
-    "./container": {
-      "types": "./src/container/index.ts",
-      "default": "./src/container/index.ts"
+    "./collection": {
+      "types": "./src/collection/index.ts",
+      "default": "./src/collection/index.ts"
     }
   },
   "publishConfig": {
@@ -71,10 +71,10 @@
         "import": "./dist/presentation/index.js",
         "default": "./dist/presentation/index.js"
       },
-      "./container": {
-        "types": "./dist/types/container/index.d.ts",
-        "import": "./dist/container/index.js",
-        "default": "./dist/container/index.js"
+      "./collection": {
+        "types": "./dist/types/collection/index.d.ts",
+        "import": "./dist/collection/index.js",
+        "default": "./dist/collection/index.js"
       }
     }
   },

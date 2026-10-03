@@ -1,5 +1,26 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '屏幕绝对出射角（度）；任一 outAngle / inAngle 触发切线模式，缺省出射角为 0，优先于对称配置':
+    'Absolute screen outgoing angle in degrees; either outAngle or inAngle selects tangent mode, with outgoing angle defaulting to 0 and symmetric settings ignored',
+  '屏幕绝对入射角（度）；任一 outAngle / inAngle 触发切线模式，缺省入射角为 180':
+    'Absolute screen incoming angle in degrees; either outAngle or inAngle selects tangent mode, with incoming angle defaulting to 180',
+  '切线模式的正数控制点距离倍率，默认 1；也缩放自环默认大小，对称模式忽略':
+    'Positive control-point distance multiplier for tangent mode, default 1; also scales loops and is ignored in symmetric mode',
+
+  采样结构化参考路径的位置与切线: 'Samples the position and tangent of a structured reference path',
+  '每条绘制 command 视为一个普通 step；未圆角时按绘制段均分参数，圆角时复用 Core 最终路径采样。空路径返回 undefined':
+    'Each drawing command is treated as one ordinary step. Unrounded paths divide the parameter equally across drawing segments; rounded paths reuse Core final-path sampling. Empty paths return undefined',
+  '展开位置、方向、距离、interruption 与断口留白的默认值':
+    'Resolves defaults for position, side, distance, interruption and gap',
+  '标签的几何配置，不含文本和视觉外观': 'Label geometry excluding text and visual appearance',
+  '已展开默认的标签几何，不含文本和视觉外观':
+    'Label geometry with defaults resolved, excluding text and visual appearance',
+  路径上的归一化位置: 'Normalized position along the path',
+  相对宿主的方向: 'Side relative to the host',
+  相对宿主的距离: 'Distance relative to the host',
+  是否中断宿主描边: 'Whether to interrupt the host stroke',
+  断口留白: 'Gap around the stroke interruption',
+
   '包装自定义几何的完整输出，汇总宿主标签边界并应用 Path rotate / scale 与元数据':
     'Wraps complete custom geometry output, includes host-label bounds, and applies Path rotate / scale and metadata',
   '在全部标签发射后调用一次并直接返回；emitStroke 的结果已包装，不应再次调用':
