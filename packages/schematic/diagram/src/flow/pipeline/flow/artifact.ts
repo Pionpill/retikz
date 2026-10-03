@@ -2,7 +2,7 @@ import type { SpatialHandleDeclaration } from '@retikz/core';
 import type { BoundsRect, Position } from '@retikz/math';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { FlowLayoutOutput, FlowLayoutRouting } from '../../contract';
+import type { FlowLayoutOutput } from '../../contract';
 import type { CanonicalFlowElement, CanonicalFlowRelation } from '../../resolve';
 import type { FlowArtifactBounds, FlowDiagramArtifact, FlowElementArtifact } from '../../schemas';
 
@@ -55,19 +55,26 @@ const artifactElements = (
 const artifactRelations = (
   relations: ReadonlyArray<CanonicalFlowRelation>,
   output: FlowLayoutOutput,
-  routings: ReadonlyArray<FlowLayoutRouting>,
   drawingOffset: Readonly<Position>,
 ): FlowDiagramArtifact['relations'] =>
   relations.map((relation, index) => {
     const geometry = output.relations[index];
-    const routing = routings[index];
+    const routing = geometry.route;
+    const translatePoint = (point: Readonly<Position>): Position => [
+      point[0] + drawingOffset[0],
+      point[1] + drawingOffset[1],
+    ];
+    const route =
+      routing.kind === 'bend'
+        ? {
+            ...routing,
+            points: [translatePoint(routing.points[0]), translatePoint(routing.points[1])] as [Position, Position],
+          }
+        : { ...routing, points: routing.points.map(translatePoint) };
     return {
       source: relation.source.source,
       target: relation.source.target,
-      route: {
-        ...routing,
-        points: geometry.points.map(point => [point[0] + drawingOffset[0], point[1] + drawingOffset[1]]),
-      },
+      route,
       ...(geometry.labelBounds === undefined
         ? {}
         : { labelReservation: translateBounds(geometry.labelBounds, drawingOffset) }),
@@ -123,7 +130,6 @@ export const createFlowDiagramArtifact = (options: {
   elements: ReadonlyArray<CanonicalFlowElement>;
   relations: ReadonlyArray<CanonicalFlowRelation>;
   output: FlowLayoutOutput;
-  routings: ReadonlyArray<FlowLayoutRouting>;
 }): FlowDiagramArtifact => {
   const boundsById = new Map(options.output.elements.map(element => [element.id, element.bounds]));
   return {
@@ -131,6 +137,6 @@ export const createFlowDiagramArtifact = (options: {
     frame: translateArtifactBounds(options.frameAllocationBounds, options.frameVisualBounds, [0, 0]),
     regions: options.regions,
     elements: artifactElements(options.elements, boundsById, options.drawingOffset),
-    relations: artifactRelations(options.relations, options.output, options.routings, options.drawingOffset),
+    relations: artifactRelations(options.relations, options.output, options.drawingOffset),
   };
 };

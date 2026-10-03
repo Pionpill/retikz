@@ -1,3 +1,5 @@
+import { BendOutAngleSchema, BendInAngleSchema, BendLoosenessSchema } from '@retikz/core';
+
 import type {
   EffectiveFlowLayout,
   EffectiveFlowPlacement,
@@ -49,11 +51,35 @@ const resolveFlowLayoutRouting = (
 ): FlowLayoutRouting => {
   const routing = intent ?? inheritedRouting ?? definition.defaults.routing;
   if (routing.kind === 'straight') return { kind: routing.kind };
+  if (routing.kind === 'bend') {
+    const authored = intent?.kind === 'bend' ? intent : undefined;
+    const ancestor = inheritedRouting?.kind === 'bend' ? inheritedRouting : undefined;
+    const localTangents = authored?.outAngle !== undefined || authored?.inAngle !== undefined;
+    const localSymmetric =
+      !localTangents && (authored?.bendDirection !== undefined || authored?.bendAngle !== undefined);
+    const inheritedTangents = ancestor !== undefined && 'outAngle' in ancestor ? ancestor : undefined;
+    if (localTangents || (!localSymmetric && inheritedTangents !== undefined)) {
+      return {
+        kind: 'bend',
+        outAngle: authored?.outAngle ?? inheritedTangents?.outAngle ?? BendOutAngleSchema.parse(undefined),
+        inAngle: authored?.inAngle ?? inheritedTangents?.inAngle ?? BendInAngleSchema.parse(undefined),
+        looseness: authored?.looseness ?? inheritedTangents?.looseness ?? BendLoosenessSchema.parse(undefined),
+      };
+    }
+    const inheritedSymmetric = ancestor !== undefined && !('outAngle' in ancestor) ? ancestor : undefined;
+    const bendDirection = authored?.bendDirection ?? inheritedSymmetric?.bendDirection;
+    const bendAngle = authored?.bendAngle ?? inheritedSymmetric?.bendAngle;
+    return {
+      kind: 'bend',
+      ...(bendAngle === undefined ? {} : { bendAngle }),
+      ...(bendDirection === undefined ? {} : { bendDirection }),
+    };
+  }
   return {
     kind: routing.kind,
     cornerRadius:
       ('cornerRadius' in routing ? routing.cornerRadius : undefined) ??
-      (inheritedRouting !== undefined && inheritedRouting.kind !== 'straight'
+      (inheritedRouting !== undefined && 'cornerRadius' in inheritedRouting
         ? inheritedRouting.cornerRadius
         : undefined) ??
       definition.defaults.routing.orthogonalCornerRadius ??

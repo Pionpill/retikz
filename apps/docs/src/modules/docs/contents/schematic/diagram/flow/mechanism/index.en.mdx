@@ -105,11 +105,11 @@ The input now has `size`, but no final position; positions in the figure only ar
 
 ## Layout determines positions and connections
 
-Using the measurements from the previous stage, the layout callback places each object and decides where connections go. It returns each object's position and size (`bounds`), plus a sequence of points for each connection. It can also reserve room for text on a connection.
+Using the measurements from the previous stage, the layout callback places each object and decides where connections go. It returns each object's position and size (`bounds`), plus a reference `route` for each connection: straight and axis-aligned routes store point chains, while bend stores two reference endpoints and its active curve parameters. It can also reserve room for text on a connection.
 
 For each fixed Layout specified in the input, the callback first uses `context.placeLayout` to calculate its internal arrangement, then places it in the whole diagram. Each fixed Layout is calculated once; moving it as a whole preserves the relative positions of its objects.
 
-Flow checks that the result is complete, Entity sizes match their measurements, groups contain their contents, and objects, connections, and text have no disallowed overlaps. Once these checks pass, the positions and connections can be used to draw the diagram.
+Flow checks that the result is complete, Entity sizes match their measurements, groups contain their contents, and objects, connections, and text satisfy the output contract. Contract errors stop compilation; a bend crossing a node keeps its route and emits a warning, as explained below.
 
 The diagram below shows how a fixed arrangement fits into the whole diagram: both objects move together while keeping their sizes and spacing.
 
@@ -121,6 +121,58 @@ The dotted lines mark the Layout's extent. Layout arranges objects without drawi
   sources={[
     { label: 'Fixed placement', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-placement.ts' },
     { label: 'Callback output validation', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-output.ts' },
+  ]}
+/>
+
+### bend uses bounded candidates to avoid nodes and labels
+
+The built-in layered layout places nodes before selecting bend routes. With no authored or inherited angle, it compares `30° / 45° / 60°`; with no direction, it compares both sides, giving at most six candidates. An explicit or inherited side limits selection to that side; an explicit or inherited angle fixes the angle. When both are fixed, or tangent parameters are used, the author's configuration is used directly.
+
+Candidates are selected in the following priority order, moving to the next criterion only on a tie:
+
+1. **Fewer node conflicts:** prefer fewer intersected obstacle boxes, then a smaller total curve-parameter span inside those boxes. For example, if both `30°` curves cross a node but `45°` clears it, prefer `45°`.
+2. **Fewer label conflicts:** when node scores tie, count conflicts between the curve and existing labels, and between its label and existing labels or node obstacle boxes. A larger angle wins if it has the same node score and fewer label conflicts.
+3. **Smaller angle:** when both node and label scores tie, prefer `30° → 45° → 60°`. For example, if both `45°` and `60°` are clear, choose `45°`.
+4. **Left side:** when scores and angles all tie, prefer left for a stable result.
+
+Omitted angles remain omitted until layout, so automatic selection is not mistaken for an authored `30°` constraint.
+
+The figure keeps both endpoints fixed and overlays six reference candidates. The middle node blocks both `30°` curves, and an existing label blocks left `45°`. Right `45°` and both `60°` curves are clear, so the smaller-angle preference selects right `45°`. Candidate angle annotations are explanatory guides and do not enter label scoring.
+
+<ComponentPreview files="flow-bend-candidates" hideCode type="illustration" size="lg" />
+
+Edge overlaps and crossings are neither checked nor scored for two main reasons:
+
+1. **High computational cost:** each candidate curve would need comparison against other paths, with multiple segment-intersection checks after curve subdivision. This cost becomes more pronounced as the number of elements and connections grows, so it is excluded from automatic route selection.
+2. **Crossings are common:** intersecting connections are normal in flowcharts, and an intersection does not necessarily obscure a node or label. Detecting and scoring crossings solely to reduce their number does not justify the additional cost here; automatic avoidance prioritizes node and label readability.
+
+Unlabeled parallel relations may consequently choose identical routes. A unique best node candidate is returned directly. When labels need comparison, the first zero-conflict candidate in preference order ends the search without changing the node-first, label-second result.
+
+Relations are processed in Source order. Label comparisons include previously selected automatic routes and all non-automatic routes, excluding automatic routes still awaiting selection. The result is repeatable, but does not jointly optimize all relations.
+
+Node checks first compute one bounding rectangle per candidate curve using Math's curve extrema. Nodes whose obstacle boxes do not intersect that rectangle are excluded. The test uses the entire obstacle box, not its center; edge contact and contact within numerical tolerance are retained. Rectangle overlap only calls for further checking and is not itself a conflict.
+
+Remaining nodes undergo continuous curve checks with a conservative geometric approximation, rather than checks of only the midpoint or control points. Leaf margins contribute to obstacle boxes. Relevant ancestor Group shells are not solid obstacles. Endpoints exempt only continuous legal departure and arrival; re-entering after departure still counts as a conflict. Rectangle filtering still traverses obstacle boxes across all levels of the same Flow, but computes the candidate rectangle once and keeps distant nodes out of further curve checks. No spatial index is built.
+
+The flow below follows automatic route selection. Rectangle filtering and continuous checks run separately for each allowed candidate. Labels are compared only when the best node scores tie.
+
+<ComponentPreview files="flow-bend-routing" hideCode type="flow" size="md" />
+
+Rectangle filtering reduces the objects checked while preserving node priority, secondary label scoring, and tie preferences. A unique best node candidate is delivered directly.
+
+Search stays within the allowed candidates without moving nodes or searching for arbitrary control points. If all candidates are obstructed, the best-scoring route is still selected. A shared post-layout check also covers explicitly configured bends and custom providers. Node crossings emit a `FlowBendObstacleConflict` warning at the relation's Source path while preserving the drawing, without switching route kinds.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Candidate generation and ordered scoring',
+      path: 'packages/schematic/diagram/src/flow/providers/layout/layered/routing.ts',
+    },
+    {
+      label: 'Obstacle boxes and node scoring',
+      path: 'packages/schematic/diagram/src/flow/providers/layout/geometry.ts',
+    },
+    { label: 'Post-layout conflict warnings', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
   ]}
 />
 
@@ -142,6 +194,10 @@ Using “Receive” as an example, the figure puts its recorded position and siz
     { label: 'Artifact creation', path: 'packages/schematic/diagram/src/flow/pipeline/flow/artifact.ts' },
   ]}
 />
+
+Layout relations return `{ route, labelBounds? }`. The discriminated route records straight or axis-aligned points, or two bend reference centers and one active parameter family; it does not duplicate controls or samples. Full labels enter layout as `labelSize` plus `labelPlacement`, including an empty projection for Core defaults. Sloped reservations use the rotated measured rectangle AABB.
+
+Graph/Core then applies boundary clipping, arrow shortening, label interruption and final drawing bounds. Artifact reference routes and reservations translate coordinates only; they are not final clipped strokes or glyph bounds.
 
 ## Further reading
 

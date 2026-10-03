@@ -10,6 +10,13 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '曲线路由与完整标签', en: 'Bend routing and complete labels' },
+        content: {
+          zh: 'Flow 新增 bend 常规曲线路由，支持左右 30°/45°/60° 自动选择（节点优先、标签次级，不比较边交叉）、显式方向和完整切线配置；节点冲突保留绘制并提供 Source 定位警告。Relation.label 支持完整 Core 几何与外观配置。Layout provider 输出从 points 改为有判别的 route，artifact 保留同一参考几何。provider 对称 bend 输入允许省略角度进行搜索，Definition 不设置 bendAngle 默认；不提供全局避障或自环。',
+          en: 'Flow adds regular bend routing with automatic selection among left/right 30°/45°/60° candidates (nodes first, labels second, no edge-crossing comparison), explicit sides, and complete tangent parameters. Node conflicts retain the drawing and emit source-located warnings. Relation.label accepts complete Core geometry and appearance settings. Layout provider outputs change from points to discriminated route objects, shared by artifacts. Symmetric provider inputs may omit the angle for automatic search; Definitions do not set a bendAngle default. Global obstacle avoidance and self-loops are not provided.',
+        },
+      },
+      {
         label: { zh: '布局边界贡献控制', en: 'Layout bounds contribution' },
         content: {
           zh: 'FlowLayout 的 excludeFromBounds 可局部排除直接子项对上层占位的贡献，同时保留子树排列、独立连线与完整绘制范围。Linear/Grid 和三入口使用统一契约；可见 Group 仍包含全部后代，不提供 absolute 定位或自动避障。',
