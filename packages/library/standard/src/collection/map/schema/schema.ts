@@ -2,8 +2,8 @@ import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core'
 import { JsonObjectSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { array, literal, never, strictObject, string, union } from 'zod';
 
-import { DataObjectDisplaySchema } from '../../shared/cell/data';
-import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../shared/cell/schema';
+import { DataObjectDisplaySchema } from '../../_cell/data';
+import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
 
 export const MapGapSchema = strictObject({ row: NonNegativeNumberSchema, column: NonNegativeNumberSchema }).describe(
   'Separate row and column gaps.',

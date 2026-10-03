@@ -1,5 +1,5 @@
-import { createDataCell, DataObjectDisplaySchema } from '../../shared/cell/data';
-import { resolveCell } from '../../shared/cell/resolve';
+import { createDataCell, DataObjectDisplaySchema } from '../../_cell/data';
+import { resolveCell } from '../../_cell/resolve';
 import type { IRMap } from '../schema';
 import { MapLayoutSchema } from '../schema';
 import type { CanonicalMap } from './types';

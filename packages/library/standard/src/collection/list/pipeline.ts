@@ -5,8 +5,8 @@ import type {
   LayoutCompositeCompileResult,
 } from '@retikz/core';
 
-import { compileCells, measureCell, measureCellChild } from '../shared/cell-layout';
-import type { CellPlacement } from '../shared/cell-layout';
+import { compileCells, measureCell, measureCellChild } from '../_cell';
+import type { CellPlacement } from '../_cell';
 import { ListDirection, ListIndexPosition } from './constants';
 import { resolveList } from './resolve';
 import type { IRList } from './schema';

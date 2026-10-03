@@ -1,5 +1,5 @@
-import { createDataCell, DataObjectDisplaySchema } from '../../shared/cell/data';
-import { resolveCell } from '../../shared/cell/resolve';
+import { createDataCell, DataObjectDisplaySchema } from '../../_cell/data';
+import { resolveCell } from '../../_cell/resolve';
 import { ListCellIdMode } from '../constants';
 import type { IRList } from '../schema';
 import { ListIndexOptionsSchema, ListLayoutSchema } from '../schema';

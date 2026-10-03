@@ -2,7 +2,7 @@ import type { IRScopeProps } from '@retikz/core';
 import type { IRChild } from '@retikz/core';
 import type { input } from 'zod';
 
-import type { IRCell } from '../../shared/cell/schema';
+import type { IRCell } from '../../_cell/schema';
 import type { ListCellSchema, ListIndexOptionsSchema, ListIndexStyleSchema, ListSchema } from './schema';
 
 /** 启用索引带时的位置、显示起点与文本外观 */

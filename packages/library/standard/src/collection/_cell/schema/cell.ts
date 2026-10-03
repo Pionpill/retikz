@@ -2,8 +2,8 @@ import { ChildSchema, NodeStyleSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { literal, strictObject, string, union } from 'zod';
 
-import { SurfaceSchema } from '../../../../presentation/surface/schema';
-import { StandardPathStrokeStyleSchema } from '../../../../shared/schemas';
+import { SurfaceSchema } from '../../../presentation/surface/schema';
+import { StandardPathStrokeStyleSchema } from '../../../shared/schemas';
 
 export const CellStyleSchema = StandardPathStrokeStyleSchema.omit({ zIndex: true })
   .extend({

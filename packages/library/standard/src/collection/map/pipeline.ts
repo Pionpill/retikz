@@ -1,7 +1,7 @@
 import type { LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
 
-import { compileCells, measureCell } from '../shared/cell-layout';
-import type { CellPlacement } from '../shared/cell-layout';
+import { compileCells, measureCell } from '../_cell';
+import type { CellPlacement } from '../_cell';
 import { resolveMap } from './resolve';
 import type { IRMap } from './schema';
 

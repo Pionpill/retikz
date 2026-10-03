@@ -13,7 +13,7 @@ import { intrinsicLayoutProposal, requiredLayoutProbe, resolveLayoutAxisSize } f
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
 import { surfaceBoundaryPath, surfaceClip } from '../../shared/surface-geometry';
-import type { CanonicalCell } from './cell/resolve';
+import type { CanonicalCell } from './resolve';
 
 /** 内容一次自然测量的结果与含 padding 的需求 */
 export type MeasuredCell = { cell: CanonicalCell; result: LayoutChildResult; width: number; height: number };

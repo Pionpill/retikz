@@ -1,6 +1,6 @@
 import type { IRChild } from '@retikz/core';
 
-import type { IRSurface } from '../../../../presentation/surface';
+import type { IRSurface } from '../../../presentation/surface';
 import type { IRCell, IRCellLayout } from '../schema';
 
 /** 共享解析器接受 List 额外的宽度值，Map Source 仍由其自身 schema 限定 */

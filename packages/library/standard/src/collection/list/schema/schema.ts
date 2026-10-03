@@ -7,8 +7,8 @@ import {
 } from '@retikz/foundation';
 import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
 
-import { DataObjectDisplaySchema } from '../../shared/cell/data';
-import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../shared/cell/schema';
+import { DataObjectDisplaySchema } from '../../_cell/data';
+import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
 import { ListCellIdMode, ListDirection, ListIndexPosition } from '../constants';
 
 /** 索引文本外观，复用 Node 样式字段，不继承单格覆盖 */

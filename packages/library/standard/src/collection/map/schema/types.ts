@@ -1,7 +1,7 @@
 import type { IRScopeProps } from '@retikz/core';
 import type { input } from 'zod';
 
-import type { IRCell } from '../../shared/cell/schema';
+import type { IRCell } from '../../_cell/schema';
 import type { MapSchema } from './schema';
 
 /** 稀疏 Map Source，展示键允许重复 */
