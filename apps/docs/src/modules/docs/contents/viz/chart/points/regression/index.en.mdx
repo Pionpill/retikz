@@ -502,7 +502,7 @@ The flow below follows one regression chart through the capabilities provided by
 
 <ComponentPreview files="regression-fitting-flow" size="lg" hideCode type="flow" />
 
-Define a method with `defineRegression` from `@retikz/data`, then inject it through `lowerOptions.regressionDefinitions`. Built-in and external methods share registration and execution. JSON stores only the method name and parameters, never callbacks.
+Declare semantics with `defineRegression`, supply computation with `defineRegressionImplementation`, and register them separately through `lowerOptions.regressionDefinitions` and `lowerOptions.regressionImplementations`. JSON stores only method names and parameters. See [Data extensions](/viz/data/transform/extensions) for external engines.
 
 This example implements a **fixed-slope fitting algorithm**: the caller supplies the slope, and the algorithm estimates the intercept that minimizes squared residuals. Use it when a prior relationship determines the slope and only an overall offset needs to be estimated.
 
@@ -517,7 +517,7 @@ $$
 Fitting takes $O(N)$ time and each prediction takes $O(1)$. For the three observations below and `slope: 2`, the intercept is $a=4/3$; predictions at $x=0,1,2$ are $4/3,10/3,16/3$. The caller fixes the slope while each group's data determines the intercept.
 
 ```ts
-import { defineRegression, RetikzDataError } from '@retikz/data';
+import { defineRegressionImplementation, defineRegression, RetikzDataError } from '@retikz/data';
 import { literal, number, strictObject } from 'zod';
 
 export const fixedSlopeFit = defineRegression({
@@ -525,6 +525,10 @@ export const fixedSlopeFit = defineRegression({
     kind: literal('fixed-slope'),
     slope: number().default(1),
   }),
+});
+/** fixedSlopeFit的本地计算实现 */
+export const fixedSlopeFitImplementation = defineRegressionImplementation({
+  definition: fixedSlopeFit,
   fit: (pairs, { slope }) => {
     if (pairs.length === 0) throw new RetikzDataError('fixed-slope requires at least one observation');
     const intercept = pairs.reduce((sum, pair) => sum + pair.y - slope * pair.x, 0) / pairs.length;
@@ -532,7 +536,10 @@ export const fixedSlopeFit = defineRegression({
   },
 });
 
-export const lowerOptions = { regressionDefinitions: [fixedSlopeFit] };
+export const lowerOptions = {
+  regressionDefinitions: [fixedSlopeFit],
+  regressionImplementations: [fixedSlopeFitImplementation],
+};
 export const rows = [
   { x: 0, y: 1 },
   { x: 1, y: 4 },

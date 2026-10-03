@@ -146,7 +146,7 @@ The body accepts only a nonempty set of direct Core Nodes, not Paths, Scopes, or
 
 Frame JSON IR does not become a new renderer primitive. `FrameDefinition` validates and matches `standard.frame`, then lowering emits only the `Scope`, `Path`, and `Node` types already understood by Core.
 
-<ComponentPreview files="frame-lowering" hideCode size="xs" />
+<ComponentPreview files="frame-lowering" hideCode type="flow" size="xs" />
 
 Frame's responsibility ends at Core IR. A hand-authored `IRFrame` without `FrameDefinition` produces `COMPOSITE_NOT_REGISTERED` and is skipped instead of being guessed by a renderer.
 

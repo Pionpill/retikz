@@ -1,0 +1,33 @@
+/** 六候选筛选示意的双语文案 */
+export const flowBendCandidatesI18n = {
+  zh: {
+    source: '起点',
+    target: '终点',
+    node: '节点',
+    label: '已有标签',
+    left: '左',
+    right: '右',
+    nodes: '① 节点优先',
+    nodeResult: '排除左 / 右 30°',
+    labels: '② 标签次级',
+    labelResult: '排除左 45°',
+    preference: '③ 同分选小角度',
+    result: '右 45° 优于左 / 右 60°',
+    legend: '灰色点线：候选参考曲线 · 蓝色实线：选中路线',
+  },
+  en: {
+    source: 'Source',
+    target: 'Target',
+    node: 'Node',
+    label: 'Existing label',
+    left: 'L',
+    right: 'R',
+    nodes: '① Nodes first',
+    nodeResult: 'Eliminate L / R 30°',
+    labels: '② Labels second',
+    labelResult: 'Eliminate L 45°',
+    preference: '③ Prefer smaller angles',
+    result: 'R 45° beats L / R 60°',
+    legend: 'Gray dotted: reference candidates · Blue solid: selected route',
+  },
+} as const;

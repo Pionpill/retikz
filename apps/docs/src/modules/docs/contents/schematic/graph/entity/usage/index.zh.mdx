@@ -114,7 +114,7 @@ const view = mount(document.getElementById('diagram')!, ir, {
 
 Source Schema 允许省略 `position`，以便布局阶段补齐位置；但实际绘制前必须已有位置。没有布局提供位置时直接省略会报错，并不会默认落在原点。
 
-### 添加文字
+### text · 添加文字
 
 JSX 使用 Entity 的 children；Vanilla 和 IR 使用 `text`。两种形式表达相同的文字内容，不要在一个 Entity 上同时设置 children 与 `text`。JSX children 支持字符串、数字、Fragment 和 `Text`，不支持塞入任意形状、路径或布局组件。
 
@@ -124,7 +124,7 @@ JSX 使用 Entity 的 children；Vanilla 和 IR 使用 `text`。两种形式表�
 
 Entity 用 `role`、`status`、可选的 `kind` 和 `group` 表达不同层次的含义：`role` 确定结构，`status` 提供主题状态外观，`kind` 可供作者规则细分外观，`group` 标记多个实体属于同一语义组。
 
-### 选择角色：`role`
+### role · 选择角色
 
 `role` 表达对象的主要语义，决定形状、边界、圆角、内边距和基础最小尺寸。先按对象的含义选角色，不要只按喜欢的轮廓选。文字变长或设置更大的 `layout.minimumSize` 仍可使实体变大，但不能改写 role 的结构。
 
@@ -142,7 +142,7 @@ Entity 用 `role`、`status`、可选的 `kind` 和 `group` 表达不同层次�
 
 <ComponentPreview files="entity-roles" size="md" />
 
-### 设置状态：`status`
+### status · 设置状态
 
 `status` 回答“当前处于什么状态”，不改变 role 选出的形状、边界、圆角和内边距。例如一次支付任务始终是 `activity`，成功后设置 `status="success"`。`role="state"` 是状态节点这一对象类别，不等于设置 status。
 
@@ -160,7 +160,7 @@ Entity 用 `role`、`status`、可选的 `kind` 和 `group` 表达不同层次�
 
 内置主题的 `error`、`success`、`warning` 规则改变主色；`disabled` 改变主色并使用虚线轮廓。具体颜色跟随主题。状态规则提供默认外观，实例显式样式仍可覆盖相同字段。自定义 predicate 中名为 `status` 的参数不会自动变成这里的顶层 status，它只参与该 predicate 的规则匹配。
 
-### 细分类型：`kind`
+### kind · 细分类型
 
 Entity 提供 `kind` 字段，但不提供内置 kind 值；这个字段预留给业务定义当前 role 内的稳定子类型，用于区分同一结构下的业务对象。例如同为 `activity` 的任务可以有不同的 kind。它本身不改变形状、边界、圆角、内边距或颜色；只有匹配该 kind 的作者 `graphRules` 设置了 `style`，才会改变主色、填充、描边等对应字段。kind 必须注册在当前 role 下。定义和注册方法见[自定义用法](/schematic/graph/entity/custom)。
 
@@ -168,7 +168,7 @@ Entity 提供 `kind` 字段，但不提供内置 kind 值；这个字段预留�
 
 <ComponentPreview files="entity-kinds" size="sm" />
 
-### 实体分组: `group`
+### group · 实体分组
 
 在同一 Graph 中，给属于同一组的 Entity 设置相同的 `group` 值，可为它们分配相同的分类主色默认值。作者规则和实例显式样式仍可覆盖颜色；`group` 不会创建可见容器，需要外框时使用 [Group](/schematic/graph/group)。
 

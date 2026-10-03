@@ -110,7 +110,7 @@ describe('Regression exact Source schema', () => {
 
   it.each([
     ['aggregate series', { aggregate: { kind: 'count', as: 'count' } }],
-    ['derived series', { transform: { kind: 'normalize', field: 'species' }, output: 'species' }],
+    ['derived series', { transform: { operation: { kind: 'normalize', field: 'species' } }, output: 'species' }],
     ['constant series', 3],
     ['sequential series scale', { field: 'species', scale: { operation: { type: 'sequential', name: 's' } } }],
   ])('rejects non-direct or non-ordinal series: %s', (_name, series) => {

@@ -124,9 +124,9 @@ export const previewControlContract = {
     },
   ],
   relatedApis: [
-    'IRPlotRelateTransform.groupBy',
-    'IRPlotRelateTransform.source',
-    'IRPlotRelateTransform.target',
-    'IRPlotRelateTransform.measures',
+    'IRDataRelateTransform.groupBy',
+    'IRDataRelateTransform.source',
+    'IRDataRelateTransform.target',
+    'IRDataRelateTransform.measures',
   ],
 } satisfies PreviewControlContract;

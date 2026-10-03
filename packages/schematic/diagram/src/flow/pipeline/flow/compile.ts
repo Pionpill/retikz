@@ -5,6 +5,7 @@ import type { Position } from '@retikz/math';
 import { composeDiagramFoundation, resolveDiagramFoundation } from '../../../_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { ResolvedFlowDiagramDefinitionOptions } from '../../providers';
+import { flowBendGeometryFailure, flowRelationObstacles, scoreFlowBendNodes } from '../../providers';
 import type { CanonicalFlowDiagram } from '../../resolve';
 import { assertFlowLayoutCapabilities, resolveFlowDiagram } from '../../resolve';
 import type { FlowDiagramArtifact, IRFlowDiagram } from '../../schemas';
@@ -111,6 +112,29 @@ export const createCompileFlowDiagram =
       measurement.input,
       createFlowLayoutExecutionContext(context, measurement.input),
     );
+    for (const [index, geometry] of output.relations.entries()) {
+      if (geometry.route.kind !== 'bend') continue;
+      const relation = measurement.input.relations[index];
+      let conflictCount: number;
+      try {
+        [conflictCount] = scoreFlowBendNodes(
+          geometry.route,
+          relation,
+          flowRelationObstacles(measurement.input, output, relation),
+        );
+      } catch (cause) {
+        return flowBendGeometryFailure(index, relation, cause);
+      }
+      if (conflictCount > 0)
+        context.warn(
+          'FlowBendObstacleConflict',
+          'Bend reference curve may intersect node bounds; inspect the drawing and adjust routing if needed.',
+          diagram.relations[index].path
+            .map(part => (typeof part === 'number' ? `[${part}]` : `.${part}`))
+            .join('')
+            .replace(/^\./, ''),
+        );
+    }
     const drawing = materializeFlowGraph(measurement, output);
     try {
       requiredLayoutProbe(context, { child: drawing, occurrence: 0 }, intrinsicLayoutProposal('natural'));
@@ -140,7 +164,6 @@ export const createCompileFlowDiagram =
       });
     }
     const drawingOffset: Position = [foundation.drawingOffset[0], foundation.drawingOffset[1]];
-    const routings = measurement.input.relations.map(relation => relation.routing);
     const artifact = createFlowDiagramArtifact({
       definitionName: definition.name,
       frameAllocationBounds: foundation.frame.allocationBounds,
@@ -150,7 +173,6 @@ export const createCompileFlowDiagram =
       elements: diagram.elements,
       relations: diagram.relations,
       output,
-      routings,
     });
     const spatialHandles = createFlowSpatialHandles(
       foundation.frame.allocationBounds,

@@ -1,4 +1,4 @@
-/** Continuous values binned by <PlotTransform kind="bin"> for the interval histogram demo. */
+/** 区间直方图使用 bin operation 处理的连续值 */
 export const measurements: Array<Record<string, number>> = [
   { measurement: 2 },
   { measurement: 3 },

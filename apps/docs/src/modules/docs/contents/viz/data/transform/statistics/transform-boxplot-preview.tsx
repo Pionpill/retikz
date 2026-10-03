@@ -64,7 +64,7 @@ export const renderTransformBoxplotPreview = (values: TransformBoxplotValues) =>
           fillOpacity={0.32}
           stroke="#2563eb"
           strokeWidth={1.4}
-          transform={[boxSummary]}
+          transform={[{ operation: boxSummary }]}
           x="boxX"
           y="boxHigh"
         />
@@ -73,7 +73,7 @@ export const renderTransformBoxplotPreview = (values: TransformBoxplotValues) =>
           extentField="boxX0"
           extentToField="boxX1"
           strokeWidth={2}
-          transform={[boxSummary]}
+          transform={[{ operation: boxSummary }]}
           y="median"
         />
         <ReferenceMark
@@ -81,10 +81,17 @@ export const renderTransformBoxplotPreview = (values: TransformBoxplotValues) =>
           extentField="whiskerMin"
           extentToField="whiskerMax"
           strokeWidth={1.2}
-          transform={[boxSummary]}
+          transform={[{ operation: boxSummary }]}
           x="boxX"
         />
-        <PointMark fill="#0f172a" opacity={0.82} size={18} transform={[outsideBoxRows]} x="boxX" y="value" />
+        <PointMark
+          fill="#0f172a"
+          opacity={0.82}
+          size={18}
+          transform={[{ operation: outsideBoxRows }]}
+          x="boxX"
+          y="value"
+        />
       </Plot>
     </Layout>
   );

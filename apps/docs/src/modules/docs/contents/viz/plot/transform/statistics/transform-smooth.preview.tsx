@@ -27,7 +27,7 @@ export const TransformSmoothPreview = (values: TransformSmoothPreviewValues, lan
         order="trendX"
         series="series"
         strokeWidth={2.4}
-        transform={smoothTransform}
+        transform={smoothTransform.map(operation => ({ operation }))}
         x="trendX"
         y="trendY"
       />
@@ -36,7 +36,7 @@ export const TransformSmoothPreview = (values: TransformSmoothPreviewValues, lan
         size={3.5}
         stroke="series"
         strokeWidth={1}
-        transform={smoothTransform}
+        transform={smoothTransform.map(operation => ({ operation }))}
         x="trendX"
         y="trendY"
       />

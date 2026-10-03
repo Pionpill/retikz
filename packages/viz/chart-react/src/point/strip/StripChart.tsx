@@ -7,13 +7,17 @@ import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectStripChartDeclarations } from './declaration-collection';
 
 /** StripChart React 根属性 */
-export type StripChartProps = TypedChartCommonProps<IRStripChart>;
+export type StripChartProps<TNative = never> = TypedChartCommonProps<IRStripChart, TNative>;
 
 /** Strip 具体类型的 Chart React 组件 */
-export const StripChart = createTypedChartComponent<StripChartProps, IRStripChart, StripChartInputEmbedProps>(
+export const StripChart = createTypedChartComponent<
+  StripChartProps<unknown>,
+  IRStripChart,
+  StripChartInputEmbedProps<unknown>
+>(
   'StripChart',
   props =>
-    createTypedChartInput<StripChartProps, IRStripChart, StripChartInputEmbedProps>(
+    createTypedChartInput<StripChartProps<unknown>, IRStripChart, StripChartInputEmbedProps<unknown>>(
       props,
       collectStripChartDeclarations(props.children),
       input => stripChart(input),

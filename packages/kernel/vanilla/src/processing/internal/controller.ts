@@ -1,5 +1,5 @@
 import type { AnyCompositeDefinition, CoreProgramOutput } from '@retikz/core';
-import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { CoreOwnerDefinition, CoreCompositeInputOwnerDefinition, createCoreProgram } from '@retikz/core';
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,
@@ -25,14 +25,12 @@ import {
 } from '../../runtime/compile-driver';
 import { createRetainedCompositeDefinitions, VanillaCompositeRevisionOwnerDefinition } from '../composites';
 import { prepareProcessingInput } from '../prepare';
+import type { PreparedProcessingInput, ProcessingOptions, ProcessingResult, ProcessingSource } from '../types';
 import type {
-  PreparedProcessingInput,
-  ProcessingController,
-  ProcessingOptions,
-  ProcessingResult,
-  ProcessingSource,
-} from '../types';
-import type { InternalProcessingController, ProcessingTransactionParticipantFactory } from './types';
+  InternalProcessingController,
+  ProcessingTransactionParticipantFactory,
+  PreparedInputProcessingController,
+} from './types';
 
 /** 自定义编译驱动下一 revision 的领域中立失效标识 */
 const VanillaCompileDriverRevisionOwnerDefinition = defineRuntimeOwner<number, number, number, never>({
@@ -145,13 +143,15 @@ const createRetainedProcessingState = (
   compileDriver: NonNullable<ProcessingOptions['compileDriver']>,
   hasCustomCompileDriver: boolean,
   compileSession: VanillaCompileDriverSession,
+  assertCurrent: () => void,
   transactionParticipantFactory?: ProcessingTransactionParticipantFactory,
 ): RetainedProcessingState => {
   const compositeDefinitions = createRetainedCompositeDefinitions(initial.coreOptions.composites);
   let driverInput = initialDriverInput;
   const coreProgram = createCoreProgram(
-    { ...initial.coreOptions, composites: compositeDefinitions.definitions },
+    { ...initial.coreOptions, compositeInputs: undefined, composites: compositeDefinitions.definitions },
     {
+      compositeInputOwner: CoreCompositeInputOwnerDefinition,
       invalidationOwners: [
         VanillaCompositeRevisionOwnerDefinition,
         ...(hasCustomCompileDriver ? [VanillaCompileDriverRevisionOwnerDefinition] : []),
@@ -169,6 +169,7 @@ const createRetainedProcessingState = (
   const owners = createRuntimeOwnerRegistry({
     builtins: [
       CoreOwnerDefinition,
+      CoreCompositeInputOwnerDefinition,
       VanillaCompositeRevisionOwnerDefinition,
       VanillaCompileDriverRevisionOwnerDefinition,
       ...(transactionParticipant?.owners ?? []),
@@ -187,9 +188,11 @@ const createRetainedProcessingState = (
     prepare: candidate => {
       const output = candidate.artifact(coreProgram).value.output;
       const next = createProcessingResult(participantRevision, participantPrepared, output, compileSession);
+      assertCurrent();
       const previous = participantResult;
       return Object.freeze({
         commit: () => {
+          assertCurrent();
           participantResult = next;
         },
         rollback: () => {
@@ -219,6 +222,7 @@ const createRetainedProcessingState = (
       ],
       initialSnapshots: [
         createRuntimeOwnerInput(CoreOwnerDefinition, initial.source),
+        createRuntimeOwnerInput(CoreCompositeInputOwnerDefinition, initial.coreOptions.compositeInputs),
         createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
         createRuntimeOwnerInput(VanillaCompileDriverRevisionOwnerDefinition, 0),
         ...(transactionParticipant?.initialSnapshots ?? []),
@@ -250,6 +254,7 @@ const createRetainedProcessingState = (
       const previousDriverInput = driverInput;
       try {
         const nextCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
+        assertCurrent();
         if (nextCompileSession !== compileSession) {
           throw new RetikzVanillaError(
             RetikzVanillaErrorCode.Processing,
@@ -264,6 +269,7 @@ const createRetainedProcessingState = (
           baseRevision: session.revision(),
           owners: [
             createRuntimeOwnerUpdate(CoreOwnerDefinition, next.source),
+            createRuntimeOwnerUpdate(CoreCompositeInputOwnerDefinition, next.coreOptions.compositeInputs),
             ...(definitions.changed
               ? [createRuntimeOwnerUpdate(VanillaCompositeRevisionOwnerDefinition, nextCompositeRevision)]
               : []),
@@ -332,9 +338,12 @@ const createProcessingController = (
   source: ProcessingSource,
   options: ProcessingOptions = {},
   transactionParticipantFactory?: ProcessingTransactionParticipantFactory,
-): ProcessingController => {
+  initialPrepared?: PreparedProcessingInput,
+  assertInitial?: () => void,
+): PreparedInputProcessingController => {
+  let assertCurrent = assertInitial ?? (() => undefined);
   const fixedOptions = captureProcessingOptions(options);
-  const initial = prepareProcessingInput(source, fixedOptions);
+  const initial = initialPrepared ?? prepareProcessingInput(source, fixedOptions);
   const compileDriver = fixedOptions.compileDriver ?? defaultVanillaCompileDriver;
   const hasCustomCompileDriver = fixedOptions.compileDriver !== undefined;
   const instance = Object.freeze({});
@@ -347,6 +356,7 @@ const createProcessingController = (
     });
   const initialDriverInput = driverInput(initial);
   const compileSession = createVanillaCompileDriverSession(compileDriver, initialDriverInput);
+  assertCurrent();
   const createState = (
     prepared: PreparedProcessingInput,
     input: VanillaCompileDriverInput,
@@ -361,11 +371,13 @@ const createProcessingController = (
       compileDriver,
       hasCustomCompileDriver,
       compileSession,
+      () => assertCurrent(),
       participantFactory,
     );
   let state = createState(initial, initialDriverInput, 0, transactionParticipantFactory);
   let current = state.read();
   state.commitDriver();
+  assertCurrent = () => undefined;
   let disposed = false;
   const listeners = new Set<(result: ProcessingResult) => void>();
   const diagnostics: Array<unknown> = [];
@@ -385,7 +397,72 @@ const createProcessingController = (
     if (disposed) throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Processing controller is disposed');
   };
 
+  const applyPrepared = (next: PreparedProcessingInput): void => {
+    assertActive();
+    const nextDriverInput = driverInput(next);
+    if (!state.compositeDefinitions.isCompatible(next.coreOptions.composites)) {
+      const previous = state;
+      let candidate: RetainedProcessingState;
+      try {
+        const candidateCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
+        assertCurrent();
+        if (candidateCompileSession !== compileSession) {
+          throw new RetikzVanillaError(
+            RetikzVanillaErrorCode.Processing,
+            'Vanilla compile driver must preserve its session for a retained processing controller',
+          );
+        }
+        candidate = createState(next, nextDriverInput, current.revision + 1, transactionParticipantFactory);
+      } catch (cause) {
+        try {
+          restoreVanillaCompileDriverSession(compileDriver, previous.driverInput(), compileSession);
+        } catch (restoreCause) {
+          const rollbackCause = new RetikzVanillaError(
+            RetikzVanillaErrorCode.Processing,
+            'Vanilla compile driver input rollback failed',
+            { cause: restoreCause },
+          );
+          diagnostics.push(rollbackCause);
+          throw rollbackCause;
+        }
+        diagnostics.push(cause);
+        throw cause;
+      }
+      previous.dispose();
+      state = candidate;
+      current = state.read();
+      state.commitDriver();
+      notifyListeners(current);
+      return;
+    }
+    try {
+      current = state.update(next, nextDriverInput, current.revision + 1);
+      notifyListeners(current);
+    } catch (cause) {
+      diagnostics.push(cause);
+      throw cause;
+    }
+  };
   return Object.freeze({
+    updatePrepared: (next, check) => {
+      // 保留此前诊断，过期请求只清理自身事务产生的失败
+      if (check !== undefined) diagnostics.push(...state.diagnostics());
+      assertCurrent = check ?? (() => undefined);
+      try {
+        assertCurrent();
+        applyPrepared(next);
+      } catch (cause) {
+        try {
+          check?.();
+        } catch {
+          if (diagnostics.at(-1) === cause) diagnostics.pop();
+          state.diagnostics();
+        }
+        throw cause;
+      } finally {
+        assertCurrent = () => undefined;
+      }
+    },
     update: nextSource => {
       assertActive();
       let next: PreparedProcessingInput;
@@ -395,48 +472,7 @@ const createProcessingController = (
         diagnostics.push(cause);
         throw cause;
       }
-      const nextDriverInput = driverInput(next);
-      if (!state.compositeDefinitions.isCompatible(next.coreOptions.composites)) {
-        const previous = state;
-        let candidate: RetainedProcessingState;
-        try {
-          const candidateCompileSession = createVanillaCompileDriverSession(compileDriver, nextDriverInput);
-          if (candidateCompileSession !== compileSession) {
-            throw new RetikzVanillaError(
-              RetikzVanillaErrorCode.Processing,
-              'Vanilla compile driver must preserve its session for a retained processing controller',
-            );
-          }
-          candidate = createState(next, nextDriverInput, current.revision + 1, transactionParticipantFactory);
-        } catch (cause) {
-          try {
-            restoreVanillaCompileDriverSession(compileDriver, previous.driverInput(), compileSession);
-          } catch (restoreCause) {
-            const rollbackCause = new RetikzVanillaError(
-              RetikzVanillaErrorCode.Processing,
-              'Vanilla compile driver input rollback failed',
-              { cause: restoreCause },
-            );
-            diagnostics.push(rollbackCause);
-            throw rollbackCause;
-          }
-          diagnostics.push(cause);
-          throw cause;
-        }
-        previous.dispose();
-        state = candidate;
-        current = state.read();
-        state.commitDriver();
-        notifyListeners(current);
-        return;
-      }
-      try {
-        current = state.update(next, nextDriverInput, current.revision + 1);
-        notifyListeners(current);
-      } catch (cause) {
-        diagnostics.push(cause);
-        throw cause;
-      }
+      applyPrepared(next);
     },
     read: () => current,
     subscribe: listener => {
@@ -472,5 +508,12 @@ export const createDomProcessingController = (
   source: ProcessingSource,
   options: ProcessingOptions = {},
   transactionParticipantFactory?: ProcessingTransactionParticipantFactory,
-): InternalProcessingController =>
-  createProcessingController(source, options, transactionParticipantFactory) as InternalProcessingController;
+): InternalProcessingController => createProcessingController(source, options, transactionParticipantFactory);
+
+/** 异步作者贡献已就绪时复用 retained controller，而不是重建 Source 或静态 revision */
+export const createPreparedInputProcessingController = (
+  input: PreparedProcessingInput,
+  options: ProcessingOptions,
+  assertCurrent?: () => void,
+): PreparedInputProcessingController =>
+  createProcessingController(input.source, options, undefined, input, assertCurrent);

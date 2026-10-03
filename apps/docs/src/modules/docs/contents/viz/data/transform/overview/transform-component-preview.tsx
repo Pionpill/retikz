@@ -19,8 +19,8 @@ export const renderTransformComponentPreview = () => {
 
   return (
     <Plot data={regionalOrders} width={400} height={250} style={{ maxWidth: '100%', height: 'auto' }}>
-      <PlotTransform {...summarize} />
-      <PlotTransform {...sort} />
+      <PlotTransform operation={{ ...summarize }} />
+      <PlotTransform operation={{ ...sort }} />
       <IntervalMark x="region" y="total" color="region" />
       <PlotScale dimension="y" type="linear" domainPadding={0} />
       <PlotAxis dimension="x" />

@@ -1,4 +1,4 @@
-import { defineTransform } from '@retikz/data';
+import { defineTransformImplementation, defineTransform } from '@retikz/data';
 import { z } from 'zod';
 
 const WaterfallTransformSchema = z.strictObject({
@@ -11,7 +11,18 @@ const WaterfallTransformSchema = z.strictObject({
 export const waterfallTransform = defineTransform({
   schema: WaterfallTransformSchema,
   inputFields: operation => [operation.field],
-  outputFields: () => ['from', 'to', 'direction'],
+  outputModel: () => ({
+    kind: 'preserve',
+    outputs: [
+      { field: 'from', type: 'continuous' },
+      { field: 'to', type: 'continuous' },
+      { field: 'direction', type: 'categorical' },
+    ],
+  }),
+});
+/** waterfallTransform的本地计算实现 */
+export const waterfallTransformImplementation = defineTransformImplementation({
+  definition: waterfallTransform,
   apply: (rows, operation) => {
     let cursor = operation.initialValue ?? 0;
 

@@ -1,4 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
+import { defineTransformImplementation } from '@retikz/data';
 import type { DataFieldTypeValue } from '@retikz/data';
 import { DataFieldType, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -25,7 +26,10 @@ const deriveSizeValueTransform = defineTransform({
     as: NonBlankStringSchema.describe('Output field receiving the derived value'),
     value: union([string(), number()]).describe('Scalar value written to every output row'),
   }).describe('Test-only transform that writes a derived size field'),
-  outputFields: operation => [operation.as],
+  outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
+});
+const deriveSizeValueTransformImplementation = defineTransformImplementation({
+  definition: deriveSizeValueTransform,
   apply: (rows, operation) => rows.map(row => ({ ...row, [operation.as]: operation.value })),
 });
 
@@ -92,7 +96,7 @@ const derivedSizePointSpec = (value: string | number): IRPlot =>
     marks: [
       {
         type: 'point',
-        transform: [{ kind: SizeChannelTestTransform.DeriveValue, as: 'derivedSize', value }],
+        transform: [{ operation: { kind: SizeChannelTestTransform.DeriveValue, as: 'derivedSize', value } }],
         size: { kind: 'field', value: 'derivedSize' },
         encoding: { x: { field: 'x' }, y: { field: 'y' } },
       },
@@ -374,7 +378,11 @@ describe('size channel 错误输入', () => {
       expandOf(
         derivedSizePointSpec(value),
         { d: [{ x: 0, y: 0 }] },
-        { ...cartOpts, transformDefinitions: [deriveSizeValueTransform] },
+        {
+          ...cartOpts,
+          transformDefinitions: [deriveSizeValueTransform],
+          transformImplementations: [deriveSizeValueTransformImplementation],
+        },
       ),
     ).toThrow(/size requires a continuous field/);
   });
@@ -469,7 +477,7 @@ describe('size channel 错误输入', () => {
       marks: [
         {
           type: 'point',
-          transform: [{ kind: 'normalize', field: 'p', as: 'p' }],
+          transform: [{ operation: { kind: 'normalize', field: 'p', as: 'p' } }],
           size: { kind: 'field', value: 'p' },
           encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },

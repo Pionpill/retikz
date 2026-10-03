@@ -1,5 +1,5 @@
 import { BlockSectionProviderKey } from '@retikz/graph';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { BlockSectionEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
@@ -16,7 +16,7 @@ const inputOf = (props: BlockSectionInputEmbedProps): InputBlockSection => {
 };
 
 /** Block Section Source 的 InputEmbed adapter */
-export const BlockSectionInputEmbedAdapter: InputEmbedAdapter<BlockSectionInputEmbedProps> = {
+export const BlockSectionInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockSectionInputEmbedProps> = {
   kind: BlockSectionEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);

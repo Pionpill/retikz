@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TextMeasurer } from '../../src';
+import { samplePathRoute, resolveGeometryLabelPlacement } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
@@ -54,6 +55,65 @@ const linePathHostLabelIR = (label: NonNullable<Parameters<typeof JSON.stringify
 });
 
 describe('path.label：stroke host label 几何', () => {
+  it('public route sampling matches host label sampling', () => {
+    const commands = [
+      { kind: 'move' as const, to: [0, 0] as [number, number] },
+      { kind: 'line' as const, to: [100, 0] as [number, number] },
+      { kind: 'line' as const, to: [100, 20] as [number, number] },
+    ];
+    expect(samplePathRoute(commands, 0, 0.75)?.point).toEqual([100, 10]);
+    const rounded = samplePathRoute(commands, 10, 0.5);
+    const scene = compileToScene({
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'path',
+          roundedCorners: 10,
+          label: { text: 'label', position: 0.5, side: 'top', distance: 0, interrupt: false },
+          children: commands.map(command => ({ type: 'step' as const, ...command })),
+        },
+      ],
+    }).scene;
+    const label = findTextPrims(scene.primitives)[0];
+    expect(label.x).toBeCloseTo(rounded!.point[0], 2);
+    expect(visualBottom(label)).toBeCloseTo(rounded!.point[1], 2);
+    expect(resolveGeometryLabelPlacement({ position: 'near-end', sloped: true }, true)).toMatchObject({
+      position: 0.75,
+      side: 'center',
+      interrupt: true,
+      distance: 4,
+      gap: 4,
+    });
+  });
+  it('rounded public sampling retains cubic segments and matches rendered host labels', () => {
+    const commands = [
+      { kind: 'move' as const, to: [0, 0] as [number, number] },
+      {
+        kind: 'cubic' as const,
+        control1: [0, -100] as [number, number],
+        control2: [100, -100] as [number, number],
+        to: [100, 0] as [number, number],
+      },
+    ];
+    const sample = samplePathRoute(commands, 10, 0.5);
+    expect(sample?.point).toEqual([50, -75]);
+    const scene = compileToScene({
+      type: 'scene',
+      version: 1,
+      children: [
+        {
+          type: 'path',
+          roundedCorners: 10,
+          label: { text: 'curve', position: 0.5, side: 'top', distance: 0, interrupt: false },
+          children: commands.map(command => ({ type: 'step' as const, ...command })),
+        },
+      ],
+    }).scene;
+    const label = findTextPrims(scene.primitives)[0];
+    expect(label.x).toBeCloseTo(sample!.point[0], 2);
+    expect(visualBottom(label)).toBeCloseTo(sample!.point[1], 2);
+  });
   it('renders a host label at the whole-path position', () => {
     const scene = compileToScene(linePathHostLabelIR({ text: 'relation', position: 'near-end' })).scene;
     const labels = findTextPrims(scene.primitives);

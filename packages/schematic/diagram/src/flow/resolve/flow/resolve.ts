@@ -371,7 +371,13 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
     ...(source.status === undefined ? {} : { status: source.status }),
     ...(source.direction === undefined ? {} : { direction: source.direction }),
     ...(source.group === undefined ? {} : { group: source.group }),
-    ...(source.label === undefined ? {} : { labels: [{ text: source.label }] }),
+    ...(source.label === undefined
+      ? {}
+      : {
+          labels: [
+            typeof source.label === 'object' && !Array.isArray(source.label) ? source.label : { text: source.label },
+          ],
+        }),
     ...(defaults?.style === undefined ? {} : { style: defaults.style }),
     ...(defaults?.sourceMarker === undefined ? {} : { sourceMarker: defaults.sourceMarker }),
     ...(defaults?.targetMarker === undefined ? {} : { targetMarker: defaults.targetMarker }),

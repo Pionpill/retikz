@@ -57,3 +57,10 @@ export type InternalProcessingController = ProcessingController &
     /** 在同一 Runtime transaction 更新固定 participant 的配置 */
     updateParticipant: () => void;
   }>;
+
+/** 仅供共享异步准备提交完整输入的内部 controller */
+export type PreparedInputProcessingController = InternalProcessingController &
+  Readonly<{
+    /** 不重新归一或计算贡献，直接进入同一同步事务 */
+    updatePrepared: (input: PreparedProcessingInput, assertCurrent?: () => void) => void;
+  }>;

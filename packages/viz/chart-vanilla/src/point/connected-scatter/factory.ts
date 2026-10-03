@@ -1,15 +1,15 @@
 import { createConnectedScatterChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed } from '@retikz/vanilla';
 
-import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
+import { createChartInputEmbedAdapter } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeConnectedScatterChart } from './normalize';
 import type { ConnectedScatterChartInputEmbedProps } from './types';
 
-/** 在场景处理时规范化 ConnectedScatter 输入并组装 provider 依赖 */
-export const ConnectedScatterChartInputEmbedAdapter: InputEmbedAdapter<ConnectedScatterChartInputEmbedProps> = {
-  kind: 'chart.connected-scatter',
-  lower: input => {
+/** 在场景处理时规范化 ConnectedScatterChart 输入并复用统一数据准备 */
+export const ConnectedScatterChartInputEmbedAdapter = createChartInputEmbedAdapter(
+  'chart.connected-scatter',
+  (input: ConnectedScatterChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
     const source = normalizeConnectedScatterChart({
       ...parts.root,
@@ -22,22 +22,18 @@ export const ConnectedScatterChartInputEmbedAdapter: InputEmbedAdapter<Connected
       ...(input.guides === undefined ? {} : { guides: input.guides }),
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
-    const runtime = buildPointChartRuntime(
+    return buildPointChartRuntime(
       source,
       parts,
       createConnectedScatterChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
     );
-    return {
-      node: wrapChartPanel(runtime.source, runtime.panel),
-      providerDependencies: buildChartProviderContribution(runtime),
-    };
   },
-};
+);
 
 /** 创建可直接组合到 Vanilla Scene 的 ConnectedScatter 节点 */
-export const connectedScatterChart = (
-  input: ConnectedScatterChartInputEmbedProps,
-): InputEmbed<ConnectedScatterChartInputEmbedProps> => ({
+export const connectedScatterChart = <TNative = never>(
+  input: ConnectedScatterChartInputEmbedProps<TNative>,
+): InputEmbed<ConnectedScatterChartInputEmbedProps<TNative>> => ({
   type: 'embed',
   kind: ConnectedScatterChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),

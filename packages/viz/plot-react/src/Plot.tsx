@@ -1,8 +1,14 @@
-import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
+import type {
+  DataInputBindings,
+  DataTransformExecutor,
+  ExternalDatasets,
+  ExternalRow,
+  IRDataModel,
+  IRDataTransformDeclaration,
+} from '@retikz/data';
 import type { AssertEqual } from '@retikz/foundation';
 import type {
   IRPlot,
-  IRPlotTransform,
   LowerPlotsOptions,
   PlotHostLineageMetadata,
   PlotLineageOptions,
@@ -14,16 +20,15 @@ import type {
   InputPlotPanel,
   MarkTransformShortcutDefinition,
 } from '@retikz/plot-vanilla';
-import { PlotInputEmbedAdapter } from '@retikz/plot-vanilla';
+import { PlotInputEmbedAdapter, createPlotLineageCompileDriver } from '@retikz/plot-vanilla';
 import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { Layout } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 
 import { RetikzPlotReactError } from './error';
-import { resolvePlotAuthoring, resolvePlotLineage } from './plot-runtime';
+import { resolvePlotAuthoring } from './plot-runtime';
 import { usePlotThemeStyles } from './theme-context';
-
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 
@@ -57,7 +62,16 @@ const plotStandalonePropKeysCheck: PlotStandalonePropKeysCheck = true;
 void plotStandalonePropKeysCheck;
 
 /** <Plot> 两条入口共享的展示 props 与 Plot lowering 选项 */
-export type PlotCommonProps = PlotStandaloneProps & PlotPanelProps & LowerPlotsOptions;
+export type PlotCommonProps<TSource = never> = PlotStandaloneProps &
+  PlotPanelProps &
+  LowerPlotsOptions & {
+    /** 通用执行器的最低优先级配置 */
+    dataTransformExecutor?: DataTransformExecutor<TSource>;
+    /** 请求取消信号 */
+    signal?: AbortSignal;
+    /** 根级执行配置；spec已声明时不能重复提供 */
+    dataExecution?: IRPlot['dataExecution'];
+  };
 
 /** Plot-owned theme 输入 */
 export type PlotThemeProps = {
@@ -68,17 +82,17 @@ export type PlotThemeProps = {
 };
 
 /** 已构造 Plot Source IR 的薄包装入口 */
-export type PlotIRProps = PlotCommonProps &
-  PlotThemeProps & {
+export type PlotIRProps<TSource = never> = PlotCommonProps<TSource> &
+  PlotThemeProps &
+  ({ data: ExternalDatasets; dataBindings?: never } | { dataBindings: DataInputBindings<TSource>; data?: never }) & {
     /** 完整 Plot Source IR 根节点 */
     spec: IRPlot;
     /** 由 Plot lowering 消费的外部数据集表 */
-    data: ExternalDatasets;
     children?: never;
   };
 
 /** 由 React 组合 DSL 构造 Plot Source IR 的入口 */
-export type PlotDslProps = PlotCommonProps &
+export type PlotDslProps<TSource = never> = PlotCommonProps<TSource> &
   PlotThemeProps & {
     /** 不与 children 入口并存 */
     spec?: never;
@@ -88,6 +102,8 @@ export type PlotDslProps = PlotCommonProps &
     dataRef?: string;
     /** 运行时数据行 */
     data: Array<ExternalRow>;
+    /** 行数据 DSL 不叠加第二份 runtime 绑定 */
+    dataBindings?: never;
     /** mark 与 guide React 子组件 */
     children: ReactNode;
     /** 字段名与字段类型模型 */
@@ -99,13 +115,13 @@ export type PlotDslProps = PlotCommonProps &
     /** Plot composition 输入 */
     composition?: IRPlot['composition'];
     /** 组合 DSL 前插入的 Plot data transforms */
-    dataTransforms?: Array<IRPlotTransform>;
+    dataTransforms?: Array<IRDataTransformDeclaration>;
     /** 由 mark 组件收集的 transform shortcut 定义 */
     markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   };
 
 /** <Plot> props，spec 入口与组合 DSL 入口二选一 */
-export type PlotProps = PlotIRProps | PlotDslProps;
+export type PlotProps<TSource = never> = PlotIRProps<TSource> | PlotDslProps<TSource>;
 
 /** 从 React 面板 props 组装 Plot Vanilla Input 的 Scope 部分 */
 const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined => {
@@ -131,26 +147,26 @@ const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined
 };
 
 /** 将 React Plot props 收敛为由 Plot Vanilla adapter 消费的 Input */
-const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmbed => {
-  const plotProps = props as PlotProps;
+const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmbed<unknown> => {
+  const plotProps = props as PlotProps<unknown>;
   const unsupportedStandaloneProps = PLOT_STANDALONE_PROP_KEYS.filter(key => Object.hasOwn(plotProps, key));
   if (unsupportedStandaloneProps.length > 0) {
     throw new RetikzPlotReactError(
       `plot react: embedded Plot does not support standalone props: ${unsupportedStandaloneProps.join(', ')}; move Layout host props to the outer <Layout> and remove standalone lineage props`,
     );
   }
-  const { spec, datasets, lowerOptions } = resolvePlotAuthoring(plotProps, { embedded: true });
+  const authored = resolvePlotAuthoring(plotProps, { embedded: true });
   const panel = createPlotPanelInput(plotProps);
   return {
-    spec,
-    datasets,
-    lowerOptions,
+    ...authored,
+    dataTransformExecutor: plotProps.dataTransformExecutor,
+    signal: plotProps.signal,
     ...(panel === undefined ? {} : { panel }),
   };
 };
 
 /** 移除 standalone 已消费的宿主与 lineage 字段，避免内部 embed 重新接收 */
-const plotContentPropsOf = (props: PlotProps): PlotProps => {
+const plotContentPropsOf = <TSource,>(props: PlotProps<TSource>): PlotProps<TSource> => {
   const {
     className: _className,
     style: _style,
@@ -171,36 +187,52 @@ const plotContentPropsOf = (props: PlotProps): PlotProps => {
   return contentProps;
 };
 
-type InputEmbeddablePlotComponent = FC<PlotProps> & {
+type InputEmbeddablePlotComponent = (<TSource = never>(
+  props: PlotProps<TSource>,
+) => ReturnType<FC<PlotProps<TSource>>>) & {
   isTier2Embeddable: true;
   inputEmbedAdapter: typeof PlotInputEmbedAdapter;
-  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => InputPlotEmbed;
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => InputPlotEmbed<unknown>;
+  displayName?: string;
 };
 
 /** Plot React 组件 */
-const PlotComponent: FC<PlotProps> = props => {
+const PlotContent: FC<InputPlotEmbed<unknown>> = () => null;
+const EmbeddablePlotContent = Object.assign(PlotContent, {
+  isTier2Embeddable: true as const,
+  inputEmbedAdapter: PlotInputEmbedAdapter,
+  createInputEmbedProps: (props: Readonly<Record<string, unknown>>) => props,
+});
+
+const PlotComponent: FC<PlotProps<unknown>> = props => {
   const { className, style, renderer, themeStyles, onLineage } = props;
   const ambientPlotThemeStyles = usePlotThemeStyles();
+  const lineageDriver = useMemo(() => createPlotLineageCompileDriver(), []);
   const effectiveProps = useMemo(() => {
     if (ambientPlotThemeStyles === undefined) return props;
     if (props.plotThemeStyles === undefined) return { ...props, plotThemeStyles: ambientPlotThemeStyles };
     return { ...props, plotThemeStyles: [...ambientPlotThemeStyles, ...props.plotThemeStyles] };
   }, [ambientPlotThemeStyles, props]);
-  const notifiedLineageKey = useRef<string>();
-  const lineage = onLineage === undefined || props.lineage === false ? undefined : resolvePlotLineage(effectiveProps);
-  const lineageKey = lineage === undefined ? undefined : JSON.stringify(lineage);
   const contentProps = plotContentPropsOf(effectiveProps);
-
-  useEffect(() => {
-    if (lineage === undefined || lineageKey === undefined || onLineage === undefined) return;
-    if (notifiedLineageKey.current === lineageKey) return;
-    notifiedLineageKey.current = lineageKey;
-    onLineage(lineage);
-  }, [lineage, lineageKey, onLineage]);
+  const authored = resolvePlotAuthoring(contentProps);
 
   return (
-    <Layout className={className} style={style} renderer={renderer} extensions={{ themeStyles }}>
-      <PlotComponent {...contentProps} />
+    <Layout
+      className={className}
+      style={style}
+      renderer={renderer}
+      extensions={{ themeStyles }}
+      runtime={{ preparation: 'async', signal: props.signal }}
+      compileDriver={lineageDriver}
+    >
+      <EmbeddablePlotContent
+        {...authored}
+        dataTransformExecutor={props.dataTransformExecutor}
+        signal={props.signal}
+        lineage={props.lineage}
+        hostLineageMetadata={props.hostLineageMetadata}
+        onLineage={onLineage}
+      />
     </Layout>
   );
 };

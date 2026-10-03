@@ -1,5 +1,5 @@
 import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
-import { DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
+import { createDataView, DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
 import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
@@ -248,7 +248,13 @@ export const resolveCoordinateFrame = (
     lowerCustomAxis,
   } = context;
   const node = source;
-  const rootDataView = { rows, fieldTypes, fieldTypeEvidence: fieldTypeEvidence ?? new Set<string>() };
+  const rootDataView = createDataView(
+    rows,
+    [...fieldTypes].map(([name, type]) => {
+      const order = node.data.model?.find(field => field.name === name)?.order;
+      return { name, ...(fieldTypeEvidence?.has(name) ? { type } : {}), ...(order === undefined ? {} : { order }) };
+    }),
+  );
   const markDataViews =
     context.markDataViews ?? node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }));
   const markDataViewsForRole = (role: DimensionRole): Array<MarkDataView> =>

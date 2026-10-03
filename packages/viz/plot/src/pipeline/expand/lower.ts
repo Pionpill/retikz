@@ -14,9 +14,16 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
-import type { DataLineageOptions, DataLineageRun, DataView, ExternalDatasets } from '@retikz/data';
-import { applyTransformsToDataView, applyTransformsToDataViewWithLineage, tagSourceIndex } from '@retikz/data';
-import { assertAllValuesValid, validateBoundData } from '@retikz/data';
+import type { DataLineageOptions, DataLineageRun, DataTransformResult, DataView, ExternalDatasets } from '@retikz/data';
+import {
+  applyTransformsToDataView,
+  applyTransformsToDataViewWithLineage,
+  createDataView,
+  tagSourceIndex,
+  assertAllValuesValid,
+  validateBoundData,
+  resolveDataExecution,
+} from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 
 import type {
@@ -25,11 +32,17 @@ import type {
   DatumIdRegistrar,
   DimensionRole,
   ProvenanceContext,
+  PreparedPlotData,
 } from '../../contract';
 import { PositionScaleContinuity, rootMeta, slug } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import { isPolarCoordinateFrame, resolveCoordinateRegistry } from '../../providers';
-import { lowerMark, makeColorSchemeResolver, resolveChannelRegistry } from '../../providers';
+import {
+  isPolarCoordinateFrame,
+  resolveCoordinateRegistry,
+  lowerMark,
+  makeColorSchemeResolver,
+  resolveChannelRegistry,
+} from '../../providers';
 import type { ChannelResolveContext } from '../../resolve/channel';
 import { resolveMarkChannels } from '../../resolve/channel';
 import type {
@@ -68,8 +81,13 @@ import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../
 import { resolveCoordinateFrame } from '../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import { resolveMarkOperation } from '../../resolve/mark';
-import { createMarkPaddingContext, markDomainPaddingOf } from '../../resolve/scale';
-import { orderedCategoryDomain, resolveChannelScale, resolvePositionScaleContinuity } from '../../resolve/scale';
+import {
+  createMarkPaddingContext,
+  markDomainPaddingOf,
+  orderedCategoryDomain,
+  resolveChannelScale,
+  resolvePositionScaleContinuity,
+} from '../../resolve/scale';
 import {
   resolveAxisGuideTokens,
   resolvePlotAxisGuideTheme,
@@ -83,7 +101,6 @@ import type {
   IRPlotCoordinateOperation,
   IRPlotGuide,
   IRPlotMarkOperation,
-  IRPlotTransform,
 } from '../../schemas';
 import {
   AxisGridApplyTo,
@@ -100,11 +117,11 @@ import { lowerCustomAxis, lowerGuide } from '../guide';
 import { resolveMarkPlacement, resolveMarkPlacementRangeOverrides } from '../placement';
 import { createDatumIdRegistrar } from '../provenance';
 import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from './composition';
-import { applyMarkTransforms, prepareRows } from './data';
+import { applyMarkTransforms, preparePlotRegistries, prepareRows } from './data';
 import { resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveLegendBands } from './legend';
+import { plotMarkTransformsOf } from './preparation';
 import type { LowerPlotsOptions, MarkDataView } from './types';
-
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
   frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;
@@ -301,6 +318,7 @@ export const lowerPlotWithDataArtifact = (
   options: LowerPlotsOptions = {},
   effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
   lineageOptions?: DataLineageOptions,
+  preparedData?: PreparedPlotData,
 ): PlotDataArtifactLowerResult => {
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
   const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
@@ -313,8 +331,17 @@ export const lowerPlotWithDataArtifact = (
     throw new RetikzPlotError(`lowerPlots: height must be a positive finite number, got ${height}`);
   }
 
-  if (!Object.hasOwn(datasets, node.data.reference)) {
+  if (preparedData === undefined && !Object.hasOwn(datasets, node.data.reference)) {
     throw new RetikzPlotError(`lowerPlots: dataset "${node.data.reference}" not found in provided datasets`);
+  }
+
+  if (preparedData === undefined) {
+    for (const declaration of [...(node.transform ?? []), ...node.marks.flatMap(plotMarkTransformsOf)]) {
+      if (resolveDataExecution(undefined, node.dataExecution, declaration.dataExecution).mode !== 'builtin')
+        throw new RetikzPlotError('Plot external/hybrid transforms require the async preparation entry');
+    }
+  } else if (preparedData.marks.length !== node.marks.length) {
+    throw new RetikzPlotError('Plot prepared mark scopes do not match the current source');
   }
 
   // provenance 总开关：provenance / datumProvenance / datumIdField 任一开即启用（后两者蕴含 provenance）；
@@ -331,44 +358,67 @@ export const lowerPlotWithDataArtifact = (
     : undefined;
 
   // 取数：provenance 开时先打源序标记（symbol 键，跨 transform 存活，供 sourceIndex 回指），再过 transform 管线
-  const ingested = provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference];
+  const ingested =
+    preparedData?.root.rows ??
+    (provenance ? tagSourceIndex(datasets[node.data.reference]) : datasets[node.data.reference]);
 
   // fieldMaps 校验 + 用户源字段类型解析（strict）+ ingest 恒归一化。与 locator 共用 prepareRows 保 parity。
   // 类型 Map 是 type-driven scale / coercion 的单一真源；归一化置于 transform 前、无论有无 model 都跑（恒 canonical）。
+  const preparedRootView =
+    preparedData === undefined ? undefined : createDataView(preparedData.root.rows, preparedData.root.model);
   const {
+    dataView: normalizedDataView,
     fieldTypes,
-    fieldTypeEvidence,
     normalized,
     transformRegistry,
     transformContext,
     scaleRegistry,
     markRegistry,
     positionAdjustmentRegistry,
-  } = prepareRows(node, datasets, options, ingested);
+  } = preparedRootView === undefined
+    ? prepareRows(node, datasets, options, ingested)
+    : {
+        ...preparePlotRegistries(options),
+        dataView: preparedRootView,
+        fieldTypes: preparedRootView.fieldTypes,
+        normalized: preparedRootView.rows,
+      };
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
-  if (options.validateData) {
+  if (preparedData === undefined && options.validateData) {
     const sampleRows = typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100;
     validateBoundData(normalized, fieldTypes, sampleRows);
   }
   // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
   //   置于 transform 前 → 错误定位到原始源字段、不被 transform 改写干扰。默认 'skip' 不校验（哨兵留给下游跳）。
-  if (options.invalid === 'error') {
+  if (preparedData === undefined && options.invalid === 'error') {
     assertAllValuesValid(normalized, fieldTypes);
   }
 
-  const normalizedDataView: DataView = { rows: normalized, fieldTypes, fieldTypeEvidence };
   const rootTransformResult =
-    lineageOptions === undefined
-      ? undefined
-      : applyTransformsToDataViewWithLineage(normalizedDataView, node.transform, {
-          registry: transformRegistry,
-          context: transformContext,
-          lineage: lineageOptions,
-        });
+    preparedData !== undefined
+      ? { dataView: normalizedDataView, lineage: preparedData.root.lineage ?? { events: [] } }
+      : lineageOptions === undefined
+        ? undefined
+        : applyTransformsToDataViewWithLineage(
+            normalizedDataView,
+            node.transform?.map(declaration => declaration.operation),
+            {
+              registry: transformRegistry,
+              context: transformContext,
+              lineage: lineageOptions,
+            },
+          );
   const rootDataView =
     rootTransformResult?.dataView ??
-    applyTransformsToDataView(normalizedDataView, node.transform, transformRegistry, transformContext);
+    applyTransformsToDataView(
+      normalizedDataView,
+      node.transform?.map(declaration => declaration.operation),
+      {
+        registry: transformRegistry,
+        context: transformContext,
+      },
+    );
   const compositionResolution = resolveComposition(node);
   const {
     coordinateScopes,
@@ -379,9 +429,23 @@ export const lowerPlotWithDataArtifact = (
     policyContext: compositionPolicyContext,
   } = compositionResolution;
   /** 在一个明确DataView scope内执行一次mark-local transform并保留可选lineage */
-  const resolveMarkTransform = (mark: IRPlotMarkOperation, markIndex: number, inputDataView: DataView) => {
-    const transform = (mark as { transform?: Array<IRPlotTransform> }).transform;
-    if (lineageOptions === undefined || transform === undefined) {
+  const resolveMarkTransform = (
+    mark: IRPlotMarkOperation,
+    markIndex: number,
+    inputDataView: DataView,
+    prepared?: DataTransformResult,
+  ) => {
+    if (prepared !== undefined)
+      return {
+        markDataView: {
+          markIndex,
+          mark,
+          dataView: createDataView(prepared.rows, prepared.model),
+        } satisfies MarkDataView,
+        ...(prepared.lineage === undefined ? {} : { lineage: prepared.lineage }),
+      };
+    const transform = plotMarkTransformsOf(mark).map(declaration => declaration.operation);
+    if (lineageOptions === undefined || transform.length === 0) {
       return {
         markDataView: {
           markIndex,
@@ -401,7 +465,9 @@ export const lowerPlotWithDataArtifact = (
       lineage: result.lineage,
     };
   };
-  const rootMarkResults = node.marks.map((mark, markIndex) => resolveMarkTransform(mark, markIndex, rootDataView));
+  const rootMarkResults = node.marks.map((mark, markIndex) =>
+    resolveMarkTransform(mark, markIndex, rootDataView, preparedData?.marks[markIndex]),
+  );
   const rootMarkDataViews = rootMarkResults.map(result => result.markDataView);
   const markDataViews: Array<MarkDataView> = rootMarkDataViews;
   const themeResolution = resolvePlotTheme(
@@ -687,15 +753,19 @@ export const lowerPlotWithDataArtifact = (
 
     const usedFacetScopeIds = new Set(coordinateScopes.scopes.map(scope => scope.id));
     const panels = facets.flatMap(facet => resolveFacetPanels(facet, rootDataView.rows, usedFacetScopeIds));
-    const panelMarkResults = panels.map(panel => {
-      const panelDataView: DataView = {
-        rows: panel.rows,
-        fieldTypes: rootDataView.fieldTypes,
-        fieldTypeEvidence: rootDataView.fieldTypeEvidence,
-      };
+    if (
+      preparedData !== undefined &&
+      (preparedData.panels.length !== panels.length ||
+        preparedData.panels.some(panel => panel.length !== node.marks.length))
+    )
+      throw new RetikzPlotError('Plot prepared facet scopes do not match the current source');
+    const panelMarkResults = panels.map((panel, panelIndex) => {
+      const panelDataView = createDataView(panel.rows, rootDataView.model);
       return {
         panelDataView,
-        markResults: node.marks.map((mark, markIndex) => resolveMarkTransform(mark, markIndex, panelDataView)),
+        markResults: node.marks.map((mark, markIndex) =>
+          resolveMarkTransform(mark, markIndex, panelDataView, preparedData?.panels[panelIndex]?.[markIndex]),
+        ),
       };
     });
     const sharedFacetMarkDataViews: Array<MarkDataView> = node.marks.map((mark, markIndex) => {
@@ -707,11 +777,10 @@ export const lowerPlotWithDataArtifact = (
       return {
         markIndex,
         mark,
-        dataView: {
-          rows: scopedDataViews.flatMap(dataView => dataView.rows),
-          fieldTypes: representativeDataView.fieldTypes,
-          fieldTypeEvidence: representativeDataView.fieldTypeEvidence,
-        },
+        dataView: createDataView(
+          scopedDataViews.flatMap(dataView => dataView.rows),
+          representativeDataView.model,
+        ),
       };
     });
     dataArtifact.markDataViews = sharedFacetMarkDataViews;
@@ -1360,7 +1429,8 @@ export const lowerPlot = (
   datasets: ExternalDatasets,
   options: LowerPlotsOptions = {},
   effectiveTheme: ResolvedTheme = DEFAULT_PLOT_THEME,
-): IRChild => lowerPlotWithDataArtifact(node, datasets, options, effectiveTheme).child;
+  preparedData?: PreparedPlotData,
+): IRChild => lowerPlotWithDataArtifact(node, datasets, options, effectiveTheme, undefined, preparedData).child;
 
 /**
  * 构造 plot 的 Tier 2 下沉逻辑，供 core `CompileOptions.composites` 注入
@@ -1380,7 +1450,13 @@ export const lowerPlots = (
       const width = resolvePlotAxisSize(intrinsicWidth, context.proposal.x);
       const height = resolvePlotAxisSize(intrinsicHeight, context.proposal.y);
       const loweredNode: IRPlot = { ...node, width, height };
-      const child = lowerPlot(loweredNode, datasets, options, context.theme);
+      const child = lowerPlot(
+        loweredNode,
+        datasets,
+        options,
+        context.theme,
+        context.runtimeInput as PreparedPlotData | undefined,
+      );
       const probe = context.layoutChild(child, context.proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
       return {

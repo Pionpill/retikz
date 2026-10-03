@@ -5,6 +5,12 @@ description: 组织图形输入，设置视框、全图默认值与渲染输出
 
 `<Layout>` 是 React 图形的顶层入口。把 Node、Path 等组件放入其中即可显示图形；默认自动取景，通常不必设置宽高或 viewBox。安装步骤见[快速开始](/kernel/components/get-start)。
 
+## 接入异步组件
+
+Layout 默认 `runtime.preparation: 'sync'`。包含使用 Promise 或外接计算的组件时，在最外层 Layout 设置 `runtime={{ preparation: 'async', signal }}`，由同一宿主准备完整作者树并原子提交；组件传入的执行器与句柄留在运行时。取消、卸载或过期请求不发布，当前请求失败保留旧画面。独立 Plot、Chart、Table 客户端已自动选择异步准备。
+
+React 服务端渲染保持同步，不等待异步准备。需要异步 SSR 时使用 [Vanilla processing](/kernel/packages/vanilla/overview#异步作者输入准备) 或领域 renderAsync 入口。模式及可运行示例见 [Data 外接计算](/viz/data/transform/extensions)。
+
 ## 接入方式
 
 选择宿主与输入形式：React 使用 JSX 或 `ir` 属性；Vanilla 使用构造函数或直接传入 IR。四种写法都绘制同一个三角形节点图，显示范围自动计算。IR 是可保存为 JSON 的图形描述，可来自编辑器、LLM 或数据库。

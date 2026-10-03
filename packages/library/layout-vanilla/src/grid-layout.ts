@@ -1,26 +1,46 @@
 import type { GridLayoutItemInput } from '@retikz/layout';
 import { createGridLayout, GridLayoutProvider } from '@retikz/layout';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputGridLayout } from './normalize';
-import { normalizeLayoutItems } from './normalize';
+import { normalizeLayoutItems, prepareLayoutItems } from './normalize';
 
 /** Vanilla Grid 布局嵌入项的稳定类别 */
 const GridLayoutEmbedKind = 'layout.gridLayout';
 
 /** Layout Grid 布局的 InputEmbed adapter */
-export const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLayout> = {
+export const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGridLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputGridLayout>, 'prepare'>> = {
   kind: GridLayoutEmbedKind,
   lower: (props, context) => {
     const { children, ...input } = props;
     const normalized = normalizeLayoutItems<GridLayoutItemInput>(children, context);
     return {
+      runtimeInputs: normalized.runtimeInputs,
       node: createGridLayout({ ...input, children: normalized.items }),
       providerDependencies: {
         roots: [GridLayoutProvider.key, ...normalized.providerDependencies.roots],
         providers: [GridLayoutProvider, ...normalized.providerDependencies.providers],
       },
       ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+    };
+  },
+  prepare: async (props, context) => {
+    const { children, ...input } = props;
+    const execute = await prepareLayoutItems<GridLayoutItemInput>(children, context);
+    return {
+      execute: async () => {
+        const normalized = await execute();
+        return {
+          node: createGridLayout({ ...input, children: normalized.items }),
+          runtimeInputs: normalized.runtimeInputs,
+          providerDependencies: {
+            roots: [GridLayoutProvider.key, ...normalized.providerDependencies.roots],
+            providers: [GridLayoutProvider, ...normalized.providerDependencies.providers],
+          },
+          ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+        };
+      },
     };
   },
 };

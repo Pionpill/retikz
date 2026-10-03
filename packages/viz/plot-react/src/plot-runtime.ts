@@ -1,21 +1,25 @@
-import type { ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { DataInputBindings, ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { IRPlot, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot';
 import { lowerPlotWithLineage } from '@retikz/plot';
 import type { ResolveLabelMap } from '@retikz/plot-vanilla';
 import { normalizePlotIR, resolveLabelOf } from '@retikz/plot-vanilla';
 
 import { collectPlotDeclarations } from './adapter';
+import { RetikzPlotReactError } from './error';
 import type { PlotProps } from './Plot';
 
 /** `Plot` props 的完整 authoring 结果 */
-export type ResolvedPlotAuthoring = Readonly<{
+export type ResolvedPlotAuthoring<TSource = never> = Readonly<{
   /** 完整 Plot Source IR */
   spec: IRPlot;
   /** runtime-only dataset table */
-  datasets: ExternalDatasets;
   /** Plot lowering runtime options */
   lowerOptions: LowerPlotsOptions;
-}>;
+}> &
+  (
+    | Readonly<{ datasets: ExternalDatasets; dataBindings?: never }>
+    | Readonly<{ dataBindings: DataInputBindings<TSource>; datasets?: never }>
+  );
 
 /** `resolvePlotAuthoring` 的可选嵌入与默认数据引用配置 */
 export type ResolvePlotAuthoringOptions = Readonly<{
@@ -40,8 +44,8 @@ const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
   return next;
 };
 
-const lowerPlotOptionsOf = (
-  props: PlotProps,
+const lowerPlotOptionsOf = <TSource>(
+  props: PlotProps<TSource>,
   effectiveFieldMaps: LowerPlotsOptions['fieldMaps'],
   collectedResolveLabel: ResolveLabelMap | undefined,
 ): LowerPlotsOptions => {
@@ -59,6 +63,10 @@ const lowerPlotOptionsOf = (
     invalid,
     coordinates,
     transformDefinitions,
+    transformImplementations,
+    statisticsReducerImplementations,
+    rowSelectorImplementations,
+    regressionImplementations,
     statisticsReducerDefinitions,
     regressionDefinitions,
     rowSelectorDefinitions,
@@ -90,6 +98,10 @@ const lowerPlotOptionsOf = (
     invalid,
     coordinates,
     transformDefinitions,
+    transformImplementations,
+    statisticsReducerImplementations,
+    rowSelectorImplementations,
+    regressionImplementations,
     statisticsReducerDefinitions,
     regressionDefinitions,
     rowSelectorDefinitions,
@@ -119,17 +131,20 @@ const dataFieldNamesOf = (rows: Array<ExternalRow>): ReadonlySet<string> => {
 };
 
 /** 将 React spec 入口的显式展示覆盖装配到 Plot Source IR */
-const applyPlotPropsToSpec = (
+const applyPlotPropsToSpec = <TSource>(
   spec: IRPlot,
-  props: Pick<PlotProps, 'width' | 'height' | 'plotDefaults' | 'plotRules'>,
+  props: Pick<PlotProps<TSource>, 'width' | 'height' | 'plotDefaults' | 'plotRules' | 'dataExecution'>,
 ): IRPlot => {
+  if (spec.dataExecution !== undefined && props.dataExecution !== undefined)
+    throw new RetikzPlotReactError('Plot dataExecution is declared in both spec and root props');
   const width = spec.width === undefined && props.width !== undefined ? props.width : undefined;
   const height = spec.height === undefined && props.height !== undefined ? props.height : undefined;
   if (
     width === undefined &&
     height === undefined &&
     props.plotDefaults === undefined &&
-    props.plotRules === undefined
+    props.plotRules === undefined &&
+    props.dataExecution === undefined
   ) {
     return spec;
   }
@@ -139,14 +154,15 @@ const applyPlotPropsToSpec = (
     ...(height === undefined ? {} : { height }),
     ...(props.plotDefaults === undefined ? {} : { plotDefaults: props.plotDefaults }),
     ...(props.plotRules === undefined ? {} : { plotRules: props.plotRules }),
+    ...(props.dataExecution === undefined ? {} : { dataExecution: props.dataExecution }),
   };
 };
 
 /** 解析 `<Plot>` props 为下沉运行时输入。 */
-export const resolvePlotAuthoring = (
-  props: PlotProps,
+export const resolvePlotAuthoring = <TSource = never>(
+  props: PlotProps<TSource>,
   options: ResolvePlotAuthoringOptions = {},
-): ResolvedPlotAuthoring => {
+): ResolvedPlotAuthoring<TSource> => {
   const dataRef = !props.spec
     ? (props.dataRef ??
       options.defaultDataReference ??
@@ -163,7 +179,7 @@ export const resolvePlotAuthoring = (
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
     spec = applyPlotPropsToSpec(props.spec, props);
-    datasets = props.data;
+    datasets = props.data ?? {};
   } else {
     // DSL 入口：model 经 buildPlotIR 注入 data.model **并改走 type-driven 派生**（省略 AUTO 位置 scale 绑定，
     // 否则 model 的 temporal/nominal 不会派生 time/band、甚至被当显式 linear 校验）。扁平 fieldMap 映射到数据集名。
@@ -178,6 +194,7 @@ export const resolvePlotAuthoring = (
       plotDefaults: props.plotDefaults,
       plotRules: props.plotRules,
       transforms: props.dataTransforms,
+      dataExecution: props.dataExecution,
       markTransformShortcuts: props.markTransformShortcuts,
       deferPositionScaleInference: props.model === undefined,
     });
@@ -187,18 +204,20 @@ export const resolvePlotAuthoring = (
   }
   return {
     spec,
-    datasets,
+    ...(props.dataBindings === undefined ? { datasets } : { dataBindings: props.dataBindings }),
     lowerOptions: lowerPlotOptionsOf(props, effectiveFieldMaps, collectedResolveLabel),
   };
 };
 
 /** 解析一组 `<Plot>` props 对应的 runtime-only 图元链路。 */
-export const resolvePlotLineage = (
-  props: PlotProps,
+export const resolvePlotLineage = <TSource = never>(
+  props: PlotProps<TSource>,
   options: { embedded?: boolean } = {},
 ): PlotLineageRun | undefined => {
   if (props.lineage === false) return undefined;
   const { spec, datasets, lowerOptions } = resolvePlotAuthoring(props, options);
+  if (datasets === undefined || props.dataTransformExecutor !== undefined)
+    throw new RetikzPlotReactError('Plot async lineage is delivered from the committed processing result');
   return lowerPlotWithLineage(spec, datasets, {
     ...lowerOptions,
     lineage: props.lineage ?? {},

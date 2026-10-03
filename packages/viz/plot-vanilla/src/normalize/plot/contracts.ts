@@ -1,4 +1,11 @@
-import type { ExternalRow, IRDataModel, IRDataReference } from '@retikz/data';
+import type {
+  ExternalRow,
+  IRDataExecution,
+  IRDataModel,
+  IRDataReference,
+  IRDataTransform,
+  IRDataTransformDeclaration,
+} from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import type {
   IRPlot,
@@ -7,13 +14,11 @@ import type {
   IRPlotMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  IRPlotTransform,
   PolarInterpolationValue,
 } from '@retikz/plot';
 
 import type { InputPlotFacet, InputPlotMark } from './input';
 import type { InputPlotScale } from './input-scales';
-
 /** `<Plot coordinate>` 入口形态：字符串简写、内置对象配置或自定义坐标配置 */
 export type InputPlotCoordinate =
   | 'polar2D'
@@ -82,7 +87,7 @@ export type MarkTransformShortcutDefinition = {
   /** 匹配的 mark type */
   markType: string;
   /** 构造普通 Plot transforms */
-  build: (context: MarkTransformShortcutContext) => Array<IRPlotTransform> | undefined;
+  build: (context: MarkTransformShortcutContext) => Array<IRDataTransform> | undefined;
 };
 
 /** `buildPlotIR` 的坐标、数据模型和根级装配选项 */
@@ -102,7 +107,9 @@ export type BuildPlotOptions = {
   /** 数据字段模型，声明后写入 `data.model`，并让未显式声明的位置比例尺按字段类型派生 */
   model?: IRDataModel;
   /** 直传的根级数据变换，装配在 `<PlotTransform>` 收集结果与自动 mark shortcut 之前 */
-  transforms?: Array<IRPlotTransform>;
+  transforms?: Array<IRDataTransformDeclaration>;
+  /** 宿主拥有的全部数据变换的稀疏执行默认值 */
+  dataExecution?: IRDataExecution;
   /** 把 mark 形态转换为普通 Plot-level transforms 的作者侧简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** Plot-owned Source-shaped visual defaults 稀疏覆盖 */
@@ -150,7 +157,7 @@ export type PlotAuthoringContext = {
   /** 显式 mark 集合来源 */
   marks?: PlotDeclarationSource<ReadonlyArray<IRPlotMarkOperation>>;
   /** 根级数据变换 */
-  dataTransforms?: Array<IRPlotTransform>;
+  dataTransforms?: Array<IRDataTransformDeclaration>;
   /** mark 作者侧变换简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   /** 规范化模式 */
@@ -160,7 +167,7 @@ export type PlotAuthoringContext = {
 /** `normalizePlotDeclarations` 产出的 JSON-safe Plot member fragment */
 export type PlotMemberFragment = {
   /** 根级变换 */
-  transform?: Array<IRPlotTransform>;
+  transform?: Array<IRDataTransformDeclaration>;
   /** Plot 比例尺 */
   scales?: Array<IRPlotScaleOperation>;
   /** 单坐标系根 */
@@ -228,9 +235,9 @@ export type NormalizationState = {
   /** 已收集的 scaffold */
   scaffolds: Array<CollectedScaffold>;
   /** 显式变换 */
-  transforms: Array<IRPlotTransform>;
+  transforms: Array<IRDataTransformDeclaration>;
   /** mark 简写自动装配的变换 */
-  shortcutTransforms: Array<IRPlotTransform>;
+  shortcutTransforms: Array<IRDataTransform>;
   /** 显式声明的位置比例尺 */
   scales: Array<InputPlotScale>;
   /** 仅运行时使用的标签解析器 */

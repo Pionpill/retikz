@@ -84,7 +84,7 @@ const specStack = (): IRPlot =>
       { type: 'linear', name: 'y' },
     ],
     coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
-    transform: [{ kind: 'stack', x: 'm', y: 'v' }],
+    transform: [{ operation: { kind: 'stack', x: 'm', y: 'v' } }],
     marks: [
       {
         type: 'interval',

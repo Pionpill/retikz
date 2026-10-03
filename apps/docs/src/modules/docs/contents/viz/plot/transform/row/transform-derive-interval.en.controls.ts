@@ -64,9 +64,9 @@ export const previewControlContract = {
     { id: 'baseline', label: 'From baseline', values: { mode: 'baseline', baseline: 0 } },
   ],
   relatedApis: [
-    'IRPlotDeriveIntervalTransform.from',
-    'IRPlotDeriveIntervalTransform.baseline',
-    'IRPlotDeriveIntervalTransform.startFrom',
-    'IRPlotDeriveIntervalTransform.endFrom',
+    'IRDataDeriveIntervalTransform.from',
+    'IRDataDeriveIntervalTransform.baseline',
+    'IRDataDeriveIntervalTransform.startFrom',
+    'IRDataDeriveIntervalTransform.endFrom',
   ],
 } satisfies PreviewControlContract;

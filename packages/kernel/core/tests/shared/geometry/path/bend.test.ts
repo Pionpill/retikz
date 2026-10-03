@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { bendControlPoints } from '../../../../src/shared/geometry/path';
+import { RetikzCoreError } from '../../../../src/error';
+import { bendControlPoints, outInControlPoints } from '../../../../src/shared/geometry/path';
 
 describe('bendControlPoints', () => {
+  it('computed nonfinite controls use owner error', () => {
+    expect(() => outInControlPoints([0, 0], [100, 0], 0, 180, Number.MAX_VALUE)).toThrow(RetikzCoreError);
+    expect(() => bendControlPoints([-Number.MAX_VALUE, 0], [Number.MAX_VALUE, 0], 'left', 30)).toThrow(RetikzCoreError);
+  });
   it("水平 chord，bend left 30° → 控制点 y 在 chord 上方（SVG y 向下，'上方' 即 y<0）", () => {
     const [c1, c2] = bendControlPoints([0, 0], [10, 0], 'left', 30);
     // 1/3 / 2/3 处控制点；offset =（chord/2）× tan(15°) × 4/3（apexOffset 为圆弧 sagitta）

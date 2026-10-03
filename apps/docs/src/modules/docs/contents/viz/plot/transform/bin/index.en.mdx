@@ -30,7 +30,7 @@ Switch among the mutually exclusive `count`, `step`, and `thresholds` strategies
 
 ### API Reference
 
-`IRPlotBinTransform` fixes `kind` to `'bin'`. `count`, `step`, and `thresholds` are alternative strategies. When all three are omitted, the default is `count: 10`.
+`IRDataBinTransform` fixes `kind` to `'bin'`. `count`, `step`, and `thresholds` are alternative strategies. When all three are omitted, the default is `count: 10`.
 
 | prop          | type                   | default             | description                                                                            |
 | ------------- | ---------------------- | ------------------- | -------------------------------------------------------------------------------------- |
@@ -64,15 +64,11 @@ Providing more than one strategy throws during lowering. `nice` only affects `co
   sources={[
     {
       label: 'bin schema and defaults',
-      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
-      startLine: 51,
-      endLine: 96,
+      path: 'packages/viz/data/src/schemas/transform/schema.ts',
     },
     {
       label: 'bin edges, buckets, and per-bin output',
-      path: 'packages/viz/plot/src/providers/transform/group.ts',
-      startLine: 32,
-      endLine: 126,
+      path: 'packages/viz/data/src/providers/transform/group.ts',
     },
   ]}
 />

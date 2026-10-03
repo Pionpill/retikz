@@ -6,6 +6,7 @@ keywords: 'data、provider、sort、summarize、select、annotate'
 # ADR-002：收敛 data 内置 provider 边界
 
 - 状态：Accepted
+- 替代关系：本文 transform 内置集合与 Plot 所有权部分已由 [Data v0.2 ADR-001](../v0.2/001-shared-transforms.md) 替代；其余共享数据边界继续有效
 - 决策日期：2026-07-06
 - 关联：[data v0.1-beta.1 roadmap](./roadmap.md) · [ADR-001：从 plot 迁出通用数据层](./001-plot-data-migration.md) · [plot ADR-102](../../../plot/v0/v0.1/102-plot-transform-registration.md)
 

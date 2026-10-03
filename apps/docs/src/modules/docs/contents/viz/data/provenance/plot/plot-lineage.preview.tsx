@@ -41,13 +41,19 @@ export const PlotLineagePreview: FC<PlotLineagePreviewProps> = props => {
           id="salesPlot"
           dataRef="sales"
           data={sales}
-          dataTransforms={transforms.root}
+          dataTransforms={transforms.root.map(operation => ({ operation }))}
           width={300}
           height={220}
           lineage={lineageOptions}
           onLineage={handleLineage}
         >
-          <IntervalMark id="revenueBars" x="region" y="revenue" color="month" transform={transforms.mark} />
+          <IntervalMark
+            id="revenueBars"
+            x="region"
+            y="revenue"
+            color="month"
+            transform={transforms.mark.map(operation => ({ operation }))}
+          />
           <PlotScale dimension="y" type="linear" domainPadding={0} />
           <PlotAxis dimension="x" />
           <PlotAxis dimension="y" grid />

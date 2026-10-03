@@ -21,7 +21,10 @@ export const resolveChartEncodingMappings = <
   const scales = resolveChartEncodingScales(context, consumers, transforms.encodings);
   return {
     encodings: transforms.encodings,
-    transform: transforms.records.map(record => record.operation),
+    transform: transforms.records.map(record => ({
+      operation: record.operation,
+      ...(record.dataExecution === undefined ? {} : { dataExecution: record.dataExecution }),
+    })),
     scales: scales.scales,
     extensionScales: scales.extensionScales,
     positionScales: scales.positionScales,

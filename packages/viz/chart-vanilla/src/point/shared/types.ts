@@ -1,16 +1,21 @@
 import type { ChartThemeDefinition, IRChartSource } from '@retikz/chart';
 import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
+import type { ExternalRow, DataInputBindings, DataTransformExecutor } from '@retikz/data';
 import type { LowerPlotsOptions } from '@retikz/plot';
 
 import type { InputChartCoordinate, InputChartPresentation } from '../../normalize/chart';
 import type { InputChartPanel } from '../../shared';
 
 /** Point family 各 concrete chartType 共用的 Vanilla 输入字段 */
-export type TypedChartCommonInput<TSource extends IRChartSource> = InputChartPresentation &
+export type TypedChartCommonInput<TSource extends IRChartSource, TNative = never> = InputChartPresentation &
+  ({ data: Array<ExternalRow>; dataBindings?: never } | { dataBindings: DataInputBindings<TNative>; data?: never }) &
   Readonly<{
-    /** 具体类型解析方案使用的数据行 */
-    data: Array<ExternalRow>;
+    /** 根级执行配置 */
+    dataExecution?: TSource['dataExecution'];
+    /** 执行器默认配置与外部入口 */
+    dataTransformExecutor?: DataTransformExecutor<TNative>;
+    /** 请求取消信号 */
+    signal?: AbortSignal;
     /** 稳定的数据引用；省略时固定为 `chart.data` */
     dataRef?: string;
     /** 可选的 Plot 数据模型 */

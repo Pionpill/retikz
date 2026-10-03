@@ -77,11 +77,13 @@ const captureSurfaceContentPlacement = (
   context: LayoutCompositeCompileContext,
 ): SurfaceContentPlacement => {
   let placement: SurfaceContentPlacement | undefined;
+  const content = context.bindChild(surface.child, []);
   compileSurface(surface, {
     ...context,
+    sourceChild: () => content,
     layoutChild: (child, proposal) => {
       const probe = context.layoutChild(child, proposal);
-      if (child === surface.child && probe.kind === LayoutChildProbeKind.Resolved) {
+      if (child === content && probe.kind === LayoutChildProbeKind.Resolved) {
         placement = { proposal, result: probe.result };
       }
       return probe;
@@ -99,7 +101,12 @@ const collectFoundationFlexRegions = (
   resolution: DiagramFoundationResolution,
   state: FoundationPlacementState,
 ): void => {
-  const artifact = compileFlexLayout(flex, { ...context, proposal }).artifact;
+  const children = flex.children?.map(item => context.bindChild(item.child, [])) ?? [];
+  const artifact = compileFlexLayout(flex, {
+    ...context,
+    proposal,
+    sourceChild: path => children[path[1] as number],
+  }).artifact;
   if (artifact === undefined) return foundationCompositionFailure('FlexLayout returned no placement artifact.');
 
   artifact.items.forEach(item => {

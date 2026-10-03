@@ -1,5 +1,5 @@
 import { BlockHeaderProviderKey } from '@retikz/graph';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import { BlockHeaderEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
@@ -16,7 +16,7 @@ const inputOf = (props: BlockHeaderInputEmbedProps): InputBlockHeader => {
 };
 
 /** Block Header Source 的 InputEmbed adapter */
-export const BlockHeaderInputEmbedAdapter: InputEmbedAdapter<BlockHeaderInputEmbedProps> = {
+export const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHeaderInputEmbedProps> = {
   kind: BlockHeaderEmbedKind,
   lower: (props, context) => {
     const input = inputOf(props);

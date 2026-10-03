@@ -187,11 +187,18 @@ Relation 的示例统一使用默认风格，并支持明暗模式。下面的 c
   defaultSourceFile="relation-influence.preview.tsx"
 />
 
-### 语义状态
+### status · 语义状态
 
 `status` 为 Relation 保存可直接读取的图式状态：`error`、`success`、`warning` 与 `disabled` 分别使用当前 Core Theme 的 `semantic.error`、`semantic.success`、`semantic.warning` 与 `semantic.guide`。`disabled` 还会以 `[6, 4]` 虚线绘制箭身，箭头 marker 保持灰色与原有 shape。省略 status 表示没有特别标记，不写入 `normal`。状态只提供 appearance 默认，不改变 role、kind、direction、route 或 marker shape
 
-每个 Relation role demo 的 controls 都可在“无状态”和这四种状态之间切换。Relation 的 path 与实际存在的 source / target marker 会继承同一 status 颜色。显式 path、marker 或 label appearance 最终优先，但保留 Source status；领域 predicate 的 `params.status` 也不会自动映射到这里
+下面的 controls 可在“无状态”和这四种状态之间切换。示例固定使用双向 `flow`，Relation 的 path 与两端 marker 会继承同一 status 颜色。显式 path、marker 或 label appearance 最终优先，但保留 Source status；领域 predicate 的 `params.status` 也不会自动映射到这里
+
+<ComponentPreview
+  files={['relation-status', 'relation-status.preview.tsx']}
+  size="sm"
+  caption="切换状态，观察路径与两端箭头的颜色；禁用状态使用虚线，节点位置、方向和箭头形状保持不变。"
+  defaultSourceFile="relation-status.preview.tsx"
+/>
 
 ### 样式调整
 

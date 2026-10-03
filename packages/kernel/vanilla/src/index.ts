@@ -1,5 +1,13 @@
 export * from './error';
-export * from './normalize';
+export * from './normalize/coordinate';
+export * from './normalize/embed';
+export * from './normalize/helpers';
+export * from './normalize/node';
+export * from './normalize/path';
+export { isInputScene, normalizeScene } from './normalize/scene';
+export * from './normalize/scene/runtime-meta';
+export * from './normalize/scene/types';
+export * from './normalize/scope';
 export * from './processing';
 export * from './runtime/compile-driver';
 export * from './runtime/render-svg';

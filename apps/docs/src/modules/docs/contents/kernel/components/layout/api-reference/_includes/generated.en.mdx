@@ -4,8 +4,8 @@
 
 ### Layout / LayoutProps
 
-- `Layout`: <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={362}>Render JSX drawings or scene IR as SVG or Canvas, with updates and animation</ApiSourceLink>
-- `LayoutProps`: <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={192}>Public props for React Layout</ApiSourceLink>
+- `Layout`: <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={397}>Render JSX drawings or scene IR as SVG or Canvas, with updates and animation</ApiSourceLink>
+- `LayoutProps`: <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={227}>Public props for React Layout</ApiSourceLink>
 
 Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.
 
@@ -97,7 +97,7 @@ export type LayoutProps = {
   <ApiSourceLink
     label={'LayoutExtensions'}
     path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'}
-    startLine={143}
+    startLine={178}
   >
     Register custom shapes, arrows, clips, and other drawing extensions for Layout
   </ApiSourceLink>
@@ -153,7 +153,7 @@ export type LayoutExtensions = Readonly<{
   <ApiSourceLink
     label={'LayoutRetainedRuntimeOptions'}
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
-    startLine={14}
+    startLine={24}
   >
     Keep execution state for subsequent drawing updates; used when runtime or mode is omitted
   </ApiSourceLink>
@@ -169,6 +169,8 @@ export type LayoutExtensions = Readonly<{
 | -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                                                                       |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
+| `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
+| `readonly signal?`         | `AbortSignal`                             | —                            | Lifecycle signal for async preparation and the controller                                                                                |
 | `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </ApiTable>
@@ -178,11 +180,12 @@ export type LayoutExtensions = Readonly<{
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type LayoutRetainedRuntimeOptions = Readonly<{
-  mode?: typeof LayoutRuntimeMode.Retained;
-  updateStrategy?: RuntimeUpdateStrategyValue;
-  onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
-}>;
+export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
+  Readonly<{
+    mode?: typeof LayoutRuntimeMode.Retained;
+    updateStrategy?: RuntimeUpdateStrategyValue;
+    onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
+  }>;
 ```
 
 </DocTab>
@@ -227,7 +230,7 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
   <ApiSourceLink
     label={'LayoutRuntimeOptions'}
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
-    startLine={40}
+    startLine={52}
   >
     Select how drawings update through mode; retained supports an update strategy and diagnostics callback, while static
     accepts neither option
@@ -244,6 +247,8 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 | -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                                                                       |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
+| `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
+| `readonly signal?`         | `AbortSignal`                             | —                            | Lifecycle signal for async preparation and the controller                                                                                |
 | `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </ApiTable>
@@ -254,11 +259,13 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 
 <ApiTable>
 
-| Member                     | Type                              | Default | Description                                                                                  |
-| -------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —       | Compiles and materializes the complete result directly, without creating a Runtime Session   |
-| `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
-| `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Program update strategy                                       |
+| Member                     | Type                              | Default  | Description                                                                                  |
+| -------------------------- | --------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | Compiles and materializes the complete result directly, without creating a Runtime Session   |
+| `readonly onDiagnostic?`   | `never`                           | —        | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
+| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | Client authoring preparation mode; synchronous SSR continues to use synchronous lower        |
+| `readonly signal?`         | `AbortSignal`                     | —        | Lifecycle signal for async preparation and the controller                                    |
+| `readonly updateStrategy?` | `never`                           | —        | Static mode does not support a Program update strategy                                       |
 
 </ApiTable>
 
@@ -280,7 +287,7 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
   <ApiSourceLink
     label={'LayoutStaticRuntimeOptions'}
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
-    startLine={30}
+    startLine={41}
   >
     Compile the complete drawing whenever input changes, without retaining incremental execution state
   </ApiSourceLink>
@@ -292,11 +299,13 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 
 <ApiTable>
 
-| Member                     | Type                              | Default | Description                                                                                  |
-| -------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —       | Compiles and materializes the complete result directly, without creating a Runtime Session   |
-| `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
-| `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Program update strategy                                       |
+| Member                     | Type                              | Default  | Description                                                                                  |
+| -------------------------- | --------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | Compiles and materializes the complete result directly, without creating a Runtime Session   |
+| `readonly onDiagnostic?`   | `never`                           | —        | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
+| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | Client authoring preparation mode; synchronous SSR continues to use synchronous lower        |
+| `readonly signal?`         | `AbortSignal`                     | —        | Lifecycle signal for async preparation and the controller                                    |
+| `readonly updateStrategy?` | `never`                           | —        | Static mode does not support a Program update strategy                                       |
 
 </ApiTable>
 
@@ -305,11 +314,12 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type LayoutStaticRuntimeOptions = Readonly<{
-  mode: typeof LayoutRuntimeMode.Static;
-  updateStrategy?: never;
-  onDiagnostic?: never;
-}>;
+export type LayoutStaticRuntimeOptions = LayoutPreparationOptions &
+  Readonly<{
+    mode: typeof LayoutRuntimeMode.Static;
+    updateStrategy?: never;
+    onDiagnostic?: never;
+  }>;
 ```
 
 </DocTab>
@@ -340,7 +350,7 @@ export const LayoutRuntimeMode = Object.freeze({
 ### InputLayer
 
 <p>
-  <ApiSourceLink label={'InputLayer'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={28}>
+  <ApiSourceLink label={'InputLayer'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={29}>
     Authoring input for a layer
   </ApiSourceLink>
 </p>
@@ -382,7 +392,7 @@ export type InputLayer = {
 ### InputScene
 
 <p>
-  <ApiSourceLink label={'InputScene'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={89}>
+  <ApiSourceLink label={'InputScene'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={90}>
     Scene authoring input
   </ApiSourceLink>
 </p>
@@ -445,7 +455,7 @@ export type InputScene = InputSceneChildren | InputSceneLayers;
   <ApiSourceLink
     label={'InputSceneChildren'}
     path={'packages/kernel/vanilla/src/normalize/scene/types.ts'}
-    startLine={73}
+    startLine={74}
   >
     Scene authoring input using a children list
   </ApiSourceLink>
@@ -492,7 +502,7 @@ export type InputSceneChildren = InputSceneBase & {
   <ApiSourceLink
     label={'InputSceneLayers'}
     path={'packages/kernel/vanilla/src/normalize/scene/types.ts'}
-    startLine={81}
+    startLine={82}
   >
     Scene authoring input using explicit layers
   </ApiSourceLink>

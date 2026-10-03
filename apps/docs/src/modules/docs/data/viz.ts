@@ -164,6 +164,53 @@ export const vizSection: Array<Section> = [
     ],
   },
   {
+    id: 'table',
+    label: 'viz.table',
+    navigationDescription: 'viz.tableNavigationDescription',
+    document: true,
+    pages: [
+      { id: 'detail', label: 'viz.detailTable', difficulty: DocDifficulty.Beginner },
+      {
+        id: 'model',
+        label: 'viz.tableModel',
+        children: [
+          { id: 'structure', label: 'viz.tableModelStructure', difficulty: DocDifficulty.Advanced },
+          { id: 'presentation', label: 'viz.tableModelPresentation', difficulty: DocDifficulty.Advanced },
+          { id: 'layout', label: 'viz.tableModelLayout', difficulty: DocDifficulty.Advanced },
+          { id: 'manifest', label: 'viz.tableModelManifest', difficulty: DocDifficulty.Internals },
+        ],
+        meta: {
+          pageType: 'concept',
+          audience: 'integrator',
+          capability: 'table.model',
+          sourceOfTruth: 'runtime',
+        },
+      },
+      {
+        id: 'reference',
+        label: 'viz.tableReference',
+        children: [
+          { id: 'contract-detail', label: 'viz.tableReferenceContractDetail' },
+          { id: 'contract-table', label: 'viz.tableReferenceContractTable' },
+          { id: 'contract-layout', label: 'viz.tableReferenceContractLayout' },
+          { id: 'manifest', label: 'viz.tableReferenceManifest' },
+          { id: 'runtime', label: 'viz.tableReferenceRuntime' },
+        ],
+      },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'table.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
+    ],
+  },
+  {
     id: 'chart',
     label: 'viz.chart',
     navigationDescription: 'viz.chartNavigationDescription',
@@ -310,53 +357,6 @@ export const vizSection: Array<Section> = [
           audience: 'integrator',
           capability: 'chart.model',
           sourceOfTruth: 'runtime',
-        },
-      },
-    ],
-  },
-  {
-    id: 'table',
-    label: 'viz.table',
-    navigationDescription: 'viz.tableNavigationDescription',
-    document: true,
-    pages: [
-      { id: 'detail', label: 'viz.detailTable', difficulty: DocDifficulty.Beginner },
-      {
-        id: 'model',
-        label: 'viz.tableModel',
-        children: [
-          { id: 'structure', label: 'viz.tableModelStructure', difficulty: DocDifficulty.Advanced },
-          { id: 'presentation', label: 'viz.tableModelPresentation', difficulty: DocDifficulty.Advanced },
-          { id: 'layout', label: 'viz.tableModelLayout', difficulty: DocDifficulty.Advanced },
-          { id: 'manifest', label: 'viz.tableModelManifest', difficulty: DocDifficulty.Internals },
-        ],
-        meta: {
-          pageType: 'concept',
-          audience: 'integrator',
-          capability: 'table.model',
-          sourceOfTruth: 'runtime',
-        },
-      },
-      {
-        id: 'reference',
-        label: 'viz.tableReference',
-        children: [
-          { id: 'contract-detail', label: 'viz.tableReferenceContractDetail' },
-          { id: 'contract-table', label: 'viz.tableReferenceContractTable' },
-          { id: 'contract-layout', label: 'viz.tableReferenceContractLayout' },
-          { id: 'manifest', label: 'viz.tableReferenceManifest' },
-          { id: 'runtime', label: 'viz.tableReferenceRuntime' },
-        ],
-      },
-      {
-        id: 'changelog',
-        label: 'viz.changelog',
-        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'table.release',
-          sourceOfTruth: 'changelog',
         },
       },
     ],

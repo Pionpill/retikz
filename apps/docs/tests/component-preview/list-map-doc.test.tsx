@@ -1,5 +1,5 @@
 import { Layout } from '@retikz/react';
-import { Map } from '@retikz/standard-react/container';
+import { Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -15,18 +15,18 @@ import { buildVanillaPreview } from '../../src/modules/docs/components/component
 import NamespaceConsumption from '../../src/modules/docs/contents/kernel/components/node/mechanism/namespace-consumption';
 import NamespaceScope from '../../src/modules/docs/contents/kernel/components/node/mechanism/namespace-scope';
 import NamespaceStorage from '../../src/modules/docs/contents/kernel/components/node/mechanism/namespace-storage';
-import ListBasic from '../../src/modules/docs/contents/library/standard/container/list/list-basic';
-import ListComposition from '../../src/modules/docs/contents/library/standard/container/list/list-composition';
-import ListData from '../../src/modules/docs/contents/library/standard/container/list/list-data';
-import { previewSource as listDataPreviewSource } from '../../src/modules/docs/contents/library/standard/container/list/list-data';
-import ListLabels from '../../src/modules/docs/contents/library/standard/container/list/list-labels';
-import { createPreviewControlContract as createListLabelContract } from '../../src/modules/docs/contents/library/standard/container/list/list-labels.controls';
-import { previewSource as listStylesPreviewSource } from '../../src/modules/docs/contents/library/standard/container/list/list-styles';
-import { createPreviewControlContract as createListStylesContract } from '../../src/modules/docs/contents/library/standard/container/list/list-styles.controls';
-import MapBasic from '../../src/modules/docs/contents/library/standard/container/map/map-basic';
-import MapComposition from '../../src/modules/docs/contents/library/standard/container/map/map-composition';
-import MapData from '../../src/modules/docs/contents/library/standard/container/map/map-data';
-import MapStyles from '../../src/modules/docs/contents/library/standard/container/map/map-styles';
+import ListBasic from '../../src/modules/docs/contents/library/standard/collection/list/list-basic';
+import ListComposition from '../../src/modules/docs/contents/library/standard/collection/list/list-composition';
+import ListData from '../../src/modules/docs/contents/library/standard/collection/list/list-data';
+import { previewSource as listDataPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/list/list-data';
+import ListLabels from '../../src/modules/docs/contents/library/standard/collection/list/list-labels';
+import { createPreviewControlContract as createListLabelContract } from '../../src/modules/docs/contents/library/standard/collection/list/list-labels.controls';
+import { previewSource as listStylesPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/list/list-styles';
+import { createPreviewControlContract as createListStylesContract } from '../../src/modules/docs/contents/library/standard/collection/list/list-styles.controls';
+import MapBasic from '../../src/modules/docs/contents/library/standard/collection/map/map-basic';
+import MapComposition from '../../src/modules/docs/contents/library/standard/collection/map/map-composition';
+import MapData from '../../src/modules/docs/contents/library/standard/collection/map/map-data';
+import MapStyles from '../../src/modules/docs/contents/library/standard/collection/map/map-styles';
 
 const ListStylesCanonical: FC = () => listStylesPreviewSource.canonicalRender?.() ?? null;
 const ListDataCanonical: FC = () => listDataPreviewSource.canonicalRender?.() ?? null;

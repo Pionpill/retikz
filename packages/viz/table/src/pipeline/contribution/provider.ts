@@ -1,5 +1,6 @@
 import type { AnyCompositeDefinition, CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { extractRegressionKind, extractStatisticOperation, extractTransformKind } from '@retikz/data';
 
 import type {
   AnyCellFormatterDefinition,
@@ -20,6 +21,17 @@ const FORMATTER_DEFINITIONS_KEY = 'formatterDefinitions';
 const PRESENTATION_DEFINITIONS_KEY = 'presentationDefinitions';
 const VISUAL_SCALE_DEFINITIONS_KEY = 'visualScaleDefinitions';
 const TABLE_THEME_STYLES_KEY = 'tableThemeStyles';
+const DATA_OPTIONS_KEYS = new Set([
+  'formatDefinitions',
+  'transformDefinitions',
+  'statisticsReducerDefinitions',
+  'rowSelectorDefinitions',
+  'regressionDefinitions',
+  'transformImplementations',
+  'statisticsReducerImplementations',
+  'rowSelectorImplementations',
+  'regressionImplementations',
+]);
 const NestedDefinitionReference = '@@retikz/table/nested-definition';
 
 /** Table runtime-only envelope；只在宿主聚合阶段存在 */
@@ -73,7 +85,8 @@ const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>):
         key === FORMATTER_DEFINITIONS_KEY ||
         key === PRESENTATION_DEFINITIONS_KEY ||
         key === VISUAL_SCALE_DEFINITIONS_KEY ||
-        key === TABLE_THEME_STYLES_KEY
+        key === TABLE_THEME_STYLES_KEY ||
+        DATA_OPTIONS_KEYS.has(key)
       )
         continue;
       if (Object.hasOwn(merged, key) && !Object.is(merged[key], value)) {
@@ -115,6 +128,51 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
   );
   return {
     ...mergeSharedLowerOptions(optionSets),
+    formatDefinitions: mergeByIdentity(
+      optionSets.map(options => options.formatDefinitions),
+      definition => definition.name,
+      'field format',
+    ),
+    transformDefinitions: mergeByIdentity(
+      optionSets.map(options => options.transformDefinitions),
+      definition => extractTransformKind(definition.schema),
+      'transform definition',
+    ),
+    statisticsReducerDefinitions: mergeByIdentity(
+      optionSets.map(options => options.statisticsReducerDefinitions),
+      definition => extractStatisticOperation(definition.schema),
+      'reducer definition',
+    ),
+    rowSelectorDefinitions: mergeByIdentity(
+      optionSets.map(options => options.rowSelectorDefinitions),
+      definition => extractStatisticOperation(definition.schema),
+      'selector definition',
+    ),
+    regressionDefinitions: mergeByIdentity(
+      optionSets.map(options => options.regressionDefinitions),
+      definition => extractRegressionKind(definition.schema),
+      'regression definition',
+    ),
+    transformImplementations: mergeByIdentity(
+      optionSets.map(options => options.transformImplementations),
+      implementation => extractTransformKind(implementation.definition.schema),
+      'transform implementation',
+    ),
+    statisticsReducerImplementations: mergeByIdentity(
+      optionSets.map(options => options.statisticsReducerImplementations),
+      implementation => extractStatisticOperation(implementation.definition.schema),
+      'reducer implementation',
+    ),
+    rowSelectorImplementations: mergeByIdentity(
+      optionSets.map(options => options.rowSelectorImplementations),
+      implementation => extractStatisticOperation(implementation.definition.schema),
+      'selector implementation',
+    ),
+    regressionImplementations: mergeByIdentity(
+      optionSets.map(options => options.regressionImplementations),
+      implementation => extractRegressionKind(implementation.definition.schema),
+      'regression implementation',
+    ),
     ...(structureDefinitions.length === 0 ? {} : { structureDefinitions }),
     ...(formatterDefinitions.length === 0 ? {} : { formatterDefinitions }),
     ...(presentationDefinitions.length === 0 ? {} : { presentationDefinitions }),

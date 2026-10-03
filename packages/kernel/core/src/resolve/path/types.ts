@@ -32,6 +32,26 @@ export type ResolvedGeometryLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> 
   text: ResolvedLabelTextBlock;
 };
 
+/** 标签的几何配置，不含文本和视觉外观 */
+export type GeometryLabelGeometryOptions = Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>;
+
+/** 已展开默认的标签几何，不含文本和视觉外观 */
+export type CanonicalGeometryLabelPlacement = Omit<
+  GeometryLabelGeometryOptions,
+  'position' | 'side' | 'distance' | 'interrupt' | 'gap'
+> & {
+  /** 路径上的归一化位置 */
+  position: number;
+  /** 相对宿主的方向 */
+  side: NonNullable<IRGeometryLabel['side']> | 'center';
+  /** 相对宿主的距离 */
+  distance: number;
+  /** 是否中断宿主描边 */
+  interrupt: boolean;
+  /** 断口留白 */
+  gap: number;
+};
+
 /** 展开位置、方向与距离默认值后的路径几何标签 */
 export type CanonicalGeometryLabel = Omit<
   ResolvedGeometryLabel,

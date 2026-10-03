@@ -1,3 +1,4 @@
+import type { IRGeometryLabel } from '@retikz/core';
 import type { RelationDirectionValue } from '@retikz/graph';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
@@ -39,7 +40,31 @@ export type EffectiveFlowPlacement =
 /** Flow layout provider 使用的有效路由 */
 export type FlowLayoutRouting =
   | Readonly<{ kind: 'straight' }>
-  | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; cornerRadius: number }>;
+  | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; cornerRadius: number }>
+  | Readonly<{
+      kind: 'bend';
+      /** 省略时由布局比较左右候选 */
+      bendDirection?: 'left' | 'right';
+      /** 省略时由布局比较 30、45、60 度；显式及继承值必须保留 */
+      bendAngle?: number;
+    }>
+  | Readonly<{ kind: 'bend'; outAngle: number; inAngle: number; looseness: number }>;
+
+/** 完整标签提供给布局的几何配置，不包含文字或外观 */
+export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
+
+/** bend 参考几何，仅保留一个生效参数族 */
+export type FlowBendRoute = Readonly<{ kind: 'bend'; points: readonly [Readonly<Position>, Readonly<Position>] }> &
+  (
+    | Readonly<{ bendDirection: 'left' | 'right'; bendAngle: number }>
+    | Readonly<{ outAngle: number; inAngle: number; looseness: number }>
+  );
+
+/** 布局已确定的参考路由，实际端点裁剪与箭头缩短由 Core 执行 */
+export type FlowLayoutRoute =
+  | Readonly<{ kind: 'straight'; points: ReadonlyArray<Readonly<Position>> }>
+  | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; points: ReadonlyArray<Readonly<Position>>; cornerRadius: number }>
+  | FlowBendRoute;
 
 /** Flow layout scope 已补全的有效配置 */
 export type EffectiveFlowLayout = Readonly<{
@@ -175,6 +200,8 @@ export type FlowLayoutRelationInput = Readonly<{
   routing: FlowLayoutRouting;
   /** 已测量的标签尺寸；无标签时省略 */
   labelSize?: FlowLayoutSize;
+  /** 完整标签的几何投影；空对象仍表示使用 Core 默认，紧凑标签省略此项 */
+  labelPlacement?: FlowLayoutLabelPlacement;
 }>;
 
 /** 一次原子 Flow layout callback 的完整输入 */
@@ -197,9 +224,9 @@ export type FlowLayoutElementOutput = Readonly<{
 
 /** 一条 Flow relation 的根坐标系布局输出 */
 export type FlowLayoutRelationOutput = Readonly<{
-  /** 从起点到终点的路径点链，使用 Flow 根坐标系 */
-  points: ReadonlyArray<Readonly<Position>>;
-  /** 标签在 Flow 根坐标系中的预留矩形，保持测量尺寸；有标签时必须提供，无标签时必须省略 */
+  /** 根坐标系中的有判别参考几何 */
+  route: FlowLayoutRoute;
+  /** 标签在 Flow 根坐标系中的预留矩形，倾斜标签使用旋转后的 AABB；有标签时必须提供，无标签时必须省略 */
   labelBounds?: Readonly<BoundsRect>;
 }>;
 

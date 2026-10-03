@@ -40,11 +40,11 @@ const contextOf = (id: string): InputEmbedContext => ({
 
 type InputTableComponent = {
   inputEmbedAdapter?: unknown;
-  createInputEmbedProps?: (props: Readonly<Record<string, unknown>>) => InputTable;
+  createInputEmbedProps?: (props: Readonly<Record<string, unknown>>) => InputTable<unknown>;
 };
 
 /** 读取 React 根组件构造的唯一 Table Vanilla 输入 */
-const inputOf = <TProps,>(component: InputTableComponent, props: TProps): InputTable => {
+const inputOf = <TProps,>(component: InputTableComponent, props: TProps): InputTable<unknown> => {
   if (component.inputEmbedAdapter !== TableInputEmbedAdapter) throw new Error('expected Table Vanilla adapter');
   if (component.createInputEmbedProps === undefined) throw new Error('expected Table Vanilla input factory');
   return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);

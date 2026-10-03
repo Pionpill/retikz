@@ -11,7 +11,7 @@ Standard 是 Retikz 的标准组件库。已经知道要画“一个列表”“
 
 下面的 List 用单元格表达顺序，其中一个单元格嵌入 Map 表达记录。你控制“哪些内容属于哪一格”，组件负责各自的排布与边界。
 
-<ComponentPreview files="/library/standard/container/list/list-composition" size="sm" />
+<ComponentPreview files="/library/standard/collection/list/list-composition" size="sm" />
 
 这类组合不需要你给每一格手动指定坐标。同样，Frame 会根据 Node 内容更新分组边框，Surface 为一个子图增加留白、背景与裁剪；已知中心、半径或角度时，形状组件则直接绘制对应轮廓。
 
@@ -30,7 +30,7 @@ Standard 不推断业务数据的含义。Axes 的刻度文字由你提供，Leg
 
 ## 按宿主选择写法
 
-React 组件来自 `@retikz/standard-react` 的家族子入口，Vanilla 函数来自 `@retikz/standard-vanilla`；JSON 契约与 Definition 来自 `@retikz/standard`。三个包都按 `/shape`、`/container`、`/presentation` 划分，具体组件页的“接入方式”会给出四种等价写法。
+React 组件来自 `@retikz/standard-react` 的家族子入口，Vanilla 函数来自 `@retikz/standard-vanilla`；JSON 契约与 Definition 来自 `@retikz/standard`。三个包都按 `/shape`、`/collection`、`/presentation` 划分，具体组件页的“接入方式”会给出四种等价写法。
 
 首次使用先完成快速开始。日常配置先读基础用法与错误限制；需要查参数时跳到 API 或 Schema 参考，实现原理可以留到需要诊断时再读。
 
@@ -41,7 +41,7 @@ React 组件来自 `@retikz/standard-react` 的家族子入口，Vanilla 函数�
     {
       title: 'List · 列表',
       description: '从顺序内容开始，学习单格控制与嵌套组合',
-      url: '/library/standard/container/list',
+      url: '/library/standard/collection/list',
     },
     {
       title: 'Surface · 表面',

@@ -10,18 +10,18 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
   it('transform_bin_declared_to_ir', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform kind="bin" field="measurement" count={20} />
+        <PlotTransform operation={{ kind: 'bin', field: 'measurement', count: 20 }} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
     );
-    expect(spec.transform).toEqual([{ kind: 'bin', field: 'measurement', count: 20 }]);
+    expect(spec.transform).toEqual([{ operation: { kind: 'bin', field: 'measurement', count: 20 } }]);
   });
 
   it('bar_x0x1_histogram_continuous_x_not_band', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform kind="bin" field="m" step={5} />
+        <PlotTransform operation={{ kind: 'bin', field: 'm', step: 5 }} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',
@@ -54,16 +54,24 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     const spec = buildPlotIR(
       <>
         <PlotTransform
-          kind="summarize"
-          groupBy={['region']}
-          metrics={[{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }]}
+          operation={{
+            kind: 'summarize',
+            groupBy: ['region'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+          }}
         />
         <IntervalMark x="region" y="totalRevenue" />
       </>,
       '__plot',
     );
     expect(spec.transform).toEqual([
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }] },
+      {
+        operation: {
+          kind: 'summarize',
+          groupBy: ['region'],
+          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        },
+      },
     ]);
     // 普通分类柱（x band）
     expect(spec.marks[0]).toMatchObject({
@@ -75,24 +83,36 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
   it('plot_transforms_option_direct_pass', () => {
     const spec = buildPlotIR(<IntervalMark x="region" y="total" />, '__plot', {
       transforms: [
-        { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
+        {
+          operation: {
+            kind: 'summarize',
+            groupBy: ['region'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+          },
+        },
       ],
     });
     expect(spec.transform).toEqual([
-      { kind: 'summarize', groupBy: ['region'], metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }] },
+      {
+        operation: {
+          kind: 'summarize',
+          groupBy: ['region'],
+          metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+        },
+      },
     ]);
   });
 
   it('explicit_stack_suppresses_shortcut_stack_no_double', () => {
-    // 显式 <PlotTransform kind="stack"> 存在时，<IntervalMark stack> 的 shortcut stack 不再注入（B4 去重）
+    // 显式 stack operation 存在时，IntervalMark stack 的 shortcut 不再注入
     const spec = buildPlotIR(
       <>
-        <PlotTransform kind="stack" x="month" y="revenue" groupBy="product" />
+        <PlotTransform operation={{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }} />
         <IntervalMark x="month" y="revenue" series="product" stack />
       </>,
       '__plot',
     );
-    const stacks = (spec.transform ?? []).filter(t => t.kind === 'stack');
+    const stacks = (spec.transform ?? []).map(declaration => declaration.operation).filter(t => t.kind === 'stack');
     expect(stacks).toHaveLength(1);
     // mark 仍标记为 stack 排布（bounds.y extent 读 y0/y1）
     expect(spec.marks[0]).toMatchObject({ type: 'interval', bounds: { y: { kind: 'extent', from: 'y0', to: 'y1' } } });
@@ -100,9 +120,11 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
 
   it('options_transforms_with_stack_suppresses_shortcut_stack', () => {
     const spec = buildPlotIR(<IntervalMark x="month" y="revenue" series="product" stack />, '__plot', {
-      transforms: [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
+      transforms: [{ operation: { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' } }],
     });
-    expect((spec.transform ?? []).filter(t => t.kind === 'stack')).toHaveLength(1);
+    expect(
+      (spec.transform ?? []).map(declaration => declaration.operation).filter(t => t.kind === 'stack'),
+    ).toHaveLength(1);
   });
 
   it('transform_order_explicit_before_shortcut_stack', () => {
@@ -110,22 +132,24 @@ describe('buildPlotIR <PlotTransform> / bin / summarize / histogram x0x1', () =>
     const spec = buildPlotIR(
       <>
         <PlotTransform
-          kind="summarize"
-          groupBy={['month', 'product']}
-          metrics={[{ kind: 'sum', field: 'revenue', as: 'total' }]}
+          operation={{
+            kind: 'summarize',
+            groupBy: ['month', 'product'],
+            metrics: [{ kind: 'sum', field: 'revenue', as: 'total' }],
+          }}
         />
         <IntervalMark x="month" y="total" series="product" stack />
       </>,
       '__plot',
     );
-    expect(spec.transform?.[0]).toMatchObject({ kind: 'summarize' });
-    expect(spec.transform?.[1]).toMatchObject({ kind: 'stack' });
+    expect(spec.transform?.[0].operation).toMatchObject({ kind: 'summarize' });
+    expect(spec.transform?.[1].operation).toMatchObject({ kind: 'stack' });
   });
 
   it('transform 装配产物过 PlotSchema', () => {
     const spec = buildPlotIR(
       <>
-        <PlotTransform kind="bin" field="m" count={10} />
+        <PlotTransform operation={{ kind: 'bin', field: 'm', count: 10 }} />
         <IntervalMark x0="binStart" x1="binEnd" y="binCount" />
       </>,
       '__plot',

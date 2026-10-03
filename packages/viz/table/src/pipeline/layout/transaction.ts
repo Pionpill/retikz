@@ -15,7 +15,7 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
+import type { ExternalDatasets, DataTransformResult } from '@retikz/data';
 import { ScalarValueSchema } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -40,6 +40,7 @@ import { formatTable } from '../formatter';
 import { emitTableBorderScope, emitTableBoundsSentinel, emitTableCellBackground } from '../lower';
 import { buildTableLayoutManifest } from '../manifest';
 import { normalizeTableStructure } from '../normalize';
+import { resolveTableData } from '../preparation';
 import { presentTable } from '../presentation';
 import type { ResolvedTableDefaults } from '../rule';
 import type { ResolvedTablePlan, TableCellAppearanceTrace } from '../rule';
@@ -739,6 +740,8 @@ export const resolveTableTransaction = (
   const semantic = normalizeTableStructure(spec.structure, {
     data: spec.data,
     datasets,
+    preparedData:
+      (context.runtimeInput as DataTransformResult | undefined) ?? resolveTableData(spec, datasets, options),
     structureDefinitions: options.structureDefinitions,
   });
   const tableDefaults = resolveTableDefaults(context.theme, spec, options.tableThemeStyles);

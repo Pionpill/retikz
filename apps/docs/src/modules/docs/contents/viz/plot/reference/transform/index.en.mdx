@@ -1,58 +1,24 @@
 ---
-title: Contract - Transform
-description: Query the Plot schemas for stack, bin, relate, normalize, interval derivation, jitter, density, and trend transforms.
+title: Contract - Transforms
+description: Query shared and mark-local data transform scopes in Plot and the owning Data operation contracts.
 ---
 
-`TransformSchema` executes in array order and combines shared `@retikz/data` transforms, Plot-only built-ins, and runtime-registered extensions. Row-count-changing operations must precede marks that consume their output fields.
+Plot's `transform` consumes `IRDataTransform` from the `@retikz/data` package root. Data owns the schemas, definitions, and computation of all twelve built-in operations. Complete field contracts are in [Data Contract](/viz/data/reference/contract#datatransformschema).
 
-## TransformSchema
+## Data scopes
 
-<ZodSchema name="PlotTransformSchema" />
+| Entry                                | Input and result                                                                   |
+| ------------------------------------ | ---------------------------------------------------------------------------------- |
+| Plot root `transform`                | Ordered operations over the shared data view; marks and domains consume the result |
+| Mark `transform`                     | A local result from that mark's input view; other marks keep their data            |
+| `<PlotTransform>` / `dataTransforms` | Authoring forms assembled into Plot's root operation array                         |
 
-## StackTransformSchema
+Operations execute in declaration order. After row or field changes, subsequent marks must reference fields present in the result. Data `jitter` uses data units; projected [position adjustment](/viz/plot/reference/mark#jitterpositionadjustmentschema) remains a separate Plot capability.
 
-<ZodSchema name="StackTransformSchema" />
+## Contract entry points
 
-## BinTransformSchema
+Import `TransformSchema`, `DataTransform`, and concrete `IRDataXxxTransform` types from `@retikz/data`. Plot does not re-export these data contracts.
 
-<ZodSchema name="BinTransformSchema" />
-
-## RelateTransformSchema
-
-<ZodSchema name="RelateTransformSchema" />
-
-### EndpointProjectionSchema
-
-<ZodSchema name="EndpointProjectionSchema" />
-
-### PairMeasureOperationSchema
-
-<ZodSchema name="PairMeasureOperationSchema" />
-
-## NormalizeTransformSchema
-
-<ZodSchema name="NormalizeTransformSchema" />
-
-## DeriveIntervalTransformSchema
-
-<ZodSchema name="DeriveIntervalTransformSchema" />
-
-## JitterTransformSchema
-
-<ZodSchema name="JitterTransformSchema" />
-
-## DensityTransformSchema
-
-<ZodSchema name="DensityTransformSchema" />
-
-### DensityBandwidthSchema
-
-<ZodSchema name="DensityBandwidthSchema" />
-
-## SmoothTransformSchema
-
-<ZodSchema name="SmoothTransformSchema" />
-
-### RegressionMethodSchema
-
-<ZodSchema name="RegressionMethodSchema" />
+- [Data JSON Contract](/viz/data/reference/contract#datatransformschema)
+- [Data Transform Operations](/viz/data/transform/operations)
+- [Composition examples in Plot](/viz/plot/transform)

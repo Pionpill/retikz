@@ -3,7 +3,7 @@ import { compileToScene, resolveSpatialHandle, selectSpatialHandles } from '@ret
 import { PathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { getListCellId, ListDefinition, ListSchema, MapDefinition } from '../../../src/container';
+import { getListCellId, ListDefinition, ListSchema, MapDefinition } from '../../../src/collection';
 import { RetikzStandardError } from '../../../src/shared/errors';
 
 const base = { namespace: 'standard', type: 'list', id: 'list', cellIdMode: 'index' };

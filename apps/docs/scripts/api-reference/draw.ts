@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { pathSchemaDescriptions } from '../schema-reference/path';
+import { geometryLabelSchemaDescriptions, pathSchemaDescriptions } from '../schema-reference/path';
 import { translateDrawApiReference } from './draw.en';
 import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
 import { createApiReferenceMdx } from './tex';
@@ -48,7 +48,10 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
-    schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
+    schemaLocalizations: {
+      GeometryLabelSchema: { descriptions: geometryLabelSchemaDescriptions },
+      PathBaseSchema: { descriptions: pathSchemaDescriptions },
+    },
   },
   {
     packageName: '@retikz/vanilla',
@@ -64,7 +67,10 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
-    schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
+    schemaLocalizations: {
+      GeometryLabelSchema: { descriptions: geometryLabelSchemaDescriptions },
+      PathBaseSchema: { descriptions: pathSchemaDescriptions },
+    },
   },
   {
     packageName: '@retikz/core',
@@ -81,6 +87,10 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
           ],
         },
         symbols: [
+          'samplePathRoute',
+          'resolveGeometryLabelPlacement',
+          'GeometryLabelGeometryOptions',
+          'CanonicalGeometryLabelPlacement',
           'DrawWay',
           'WayDSL',
           'WayItem',
@@ -99,7 +109,10 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
-    schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
+    schemaLocalizations: {
+      GeometryLabelSchema: { descriptions: geometryLabelSchemaDescriptions },
+      PathBaseSchema: { descriptions: pathSchemaDescriptions },
+    },
   },
 ];
 

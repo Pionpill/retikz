@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import { waterfallRows } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.data';
-import { waterfallTransform } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.definition';
+import { waterfallTransformImplementation } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.definition';
 import WaterfallDemo from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.demo';
 
 const renderWithInitialValue = (Component: FC, initialValue: number) =>
@@ -25,7 +25,7 @@ const renderWithInitialValue = (Component: FC, initialValue: number) =>
 
 describe('Plot custom transform documentation', () => {
   it('waterfall Definition derives cumulative interval fields for IntervalMark', () => {
-    const rows = waterfallTransform.apply(
+    const rows = waterfallTransformImplementation.apply(
       waterfallRows,
       { kind: 'waterfall', field: 'delta', initialValue: 60 },
       DEFAULT_TRANSFORM_CONTEXT,

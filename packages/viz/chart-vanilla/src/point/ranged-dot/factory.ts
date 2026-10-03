@@ -1,15 +1,15 @@
 import { createRangedDotChartProviderContribution } from '@retikz/chart/point';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbed } from '@retikz/vanilla';
 
-import { buildChartProviderContribution, wrapChartPanel } from '../../shared';
+import { createChartInputEmbedAdapter } from '../../shared';
 import { buildPointChartRuntime, typedChartPartsOf } from '../shared';
 import { normalizeRangedDotChart } from './normalize';
 import type { RangedDotChartInputEmbedProps } from './types';
 
-/** 在场景处理时规范化 RangedDot 输入并组装 provider 依赖 */
-export const RangedDotChartInputEmbedAdapter: InputEmbedAdapter<RangedDotChartInputEmbedProps> = {
-  kind: 'chart.ranged-dot',
-  lower: input => {
+/** 在场景处理时规范化 RangedDotChart 输入并复用统一数据准备 */
+export const RangedDotChartInputEmbedAdapter = createChartInputEmbedAdapter(
+  'chart.ranged-dot',
+  (input: RangedDotChartInputEmbedProps<unknown>) => {
     const parts = typedChartPartsOf(input);
     const source = normalizeRangedDotChart({
       ...parts.root,
@@ -22,20 +22,18 @@ export const RangedDotChartInputEmbedAdapter: InputEmbedAdapter<RangedDotChartIn
       ...(input.guides === undefined ? {} : { guides: input.guides }),
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
-    const runtime = buildPointChartRuntime(
+    return buildPointChartRuntime(
       source,
       parts,
       createRangedDotChartProviderContribution(parts.themeDefinitions, parts.lowerOptions),
     );
-    return {
-      node: wrapChartPanel(runtime.source, runtime.panel),
-      providerDependencies: buildChartProviderContribution(runtime),
-    };
   },
-};
+);
 
 /** 创建可直接组合到 Vanilla Scene 的 RangedDot 节点 */
-export const rangedDotChart = (input: RangedDotChartInputEmbedProps): InputEmbed<RangedDotChartInputEmbedProps> => ({
+export const rangedDotChart = <TNative = never>(
+  input: RangedDotChartInputEmbedProps<TNative>,
+): InputEmbed<RangedDotChartInputEmbedProps<TNative>> => ({
   type: 'embed',
   kind: RangedDotChartInputEmbedAdapter.kind,
   ...(input.id === undefined ? {} : { id: input.id }),

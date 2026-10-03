@@ -143,7 +143,7 @@ Axes IR 不会成为 renderer 专有图元。当前图加载 `AxesDefinition` �
 
 下图只展示 Axes 自己负责的转换链。输出到达 `Core IR[]` 后，它的职责就结束了。
 
-<ComponentPreview files="axes-lowering" hideCode size="xs" />
+<ComponentPreview files="axes-lowering" hideCode type="flow" size="xs" />
 
 y 轴路径始终从负端走向正端；正值 `v` 映射到屏幕位置 `originY - v`，所以默认正向箭头稳定朝上。这不是新的全局坐标系，旁边的 `<Node position>` 与 `<Step to>` 仍使用 Core 的 y-down 坐标。
 

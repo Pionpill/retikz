@@ -14,7 +14,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       bounds={{ y: { kind: 'extent', from: 'y0', to: 'y1' } }}
       color="segment"
       label="store"
-      transform={[barTransformOperationOf(values)]}
+      transform={[{ operation: barTransformOperationOf(values) }]}
     />
     <PlotScale dimension="x" type="band" paddingInner={values[BAR_TRANSFORM_GAP_ID]} paddingOuter={0.15} />
     <PlotScale dimension="y" type="linear" domainPadding={0} />

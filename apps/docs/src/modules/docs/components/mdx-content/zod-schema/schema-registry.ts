@@ -138,7 +138,7 @@ import {
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
-import * as StandardContainerIR from '@retikz/standard/container';
+import * as StandardCollectionIR from '@retikz/standard/collection';
 import * as StandardPresentationIR from '@retikz/standard/presentation';
 import {
   CircleSchema,
@@ -664,7 +664,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   TransformSchema: {
     schema: IR.TransformSchema,
     label: 'Transform',
-    url: '/viz/plot/reference/transform#transformschema',
   },
   ClipSchema: { schema: IR.ClipSchema, label: 'Clip', url: '/kernel/components/scope/schema-reference#clipschema' },
   RectClipSchema: {
@@ -1317,11 +1316,15 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
   ListSchema: {
-    schema: StandardContainerIR.ListSchema,
+    schema: StandardCollectionIR.ListSchema,
     label: 'List',
-    url: '/library/standard/container/list#listschema',
+    url: '/library/standard/collection/list#listschema',
   },
-  MapSchema: { schema: StandardContainerIR.MapSchema, label: 'Map', url: '/library/standard/container/map#mapschema' },
+  MapSchema: {
+    schema: StandardCollectionIR.MapSchema,
+    label: 'Map',
+    url: '/library/standard/collection/map#mapschema',
+  },
   SurfaceSchema: {
     schema: StandardPresentationIR.SurfaceSchema,
     label: 'Surface',
@@ -1775,10 +1778,20 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'FieldDefinition',
     url: '/viz/data/reference/contract#fielddefinitionschema',
   },
+  DataExecutionSchema: {
+    schema: DataIR.DataExecutionSchema,
+    label: 'DataExecution',
+    url: '/viz/data/reference/contract#dataexecutionschema',
+  },
+  DataTransformDeclarationSchema: {
+    schema: DataIR.DataTransformDeclarationSchema,
+    label: 'DataTransformDeclaration',
+    url: '/viz/data/reference/contract#datatransformdeclarationschema',
+  },
   DataTransformSchema: {
     schema: DataIR.TransformSchema,
     label: 'DataTransform',
-    url: '/viz/data/reference/contract#transformschema',
+    url: '/viz/data/reference/contract#datatransformschema',
   },
   SortTransformSchema: {
     schema: DataIR.SortTransformSchema,
@@ -1921,70 +1934,65 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'MarkGeometryLabel',
     url: '/viz/plot/reference/encoding#markgeometrylabelschema',
   },
-  PlotTransformSchema: {
-    schema: IRPlot.TransformSchema,
-    label: 'PlotTransform',
-    url: '/viz/plot/reference/transform#transformschema',
-  },
   StackTransformSchema: {
-    schema: IRPlot.StackTransformSchema,
+    schema: DataIR.StackTransformSchema,
     label: 'StackTransform',
-    url: '/viz/plot/reference/transform#stacktransformschema',
+    url: '/viz/data/reference/contract#stacktransformschema',
   },
   BinTransformSchema: {
-    schema: IRPlot.BinTransformSchema,
+    schema: DataIR.BinTransformSchema,
     label: 'BinTransform',
-    url: '/viz/plot/reference/transform#bintransformschema',
+    url: '/viz/data/reference/contract#bintransformschema',
   },
   RelateTransformSchema: {
-    schema: IRPlot.RelateTransformSchema,
+    schema: DataIR.RelateTransformSchema,
     label: 'RelateTransform',
-    url: '/viz/plot/reference/transform#relatetransformschema',
+    url: '/viz/data/reference/contract#relatetransformschema',
   },
   EndpointProjectionSchema: {
-    schema: IRPlot.EndpointProjectionSchema,
+    schema: DataIR.EndpointProjectionSchema,
     label: 'EndpointProjection',
-    url: '/viz/plot/reference/transform#endpointprojectionschema',
+    url: '/viz/data/reference/contract#endpointprojectionschema',
   },
   PairMeasureOperationSchema: {
-    schema: IRPlot.PairMeasureOperationSchema,
+    schema: DataIR.PairMeasureOperationSchema,
     label: 'PairMeasureOperation',
-    url: '/viz/plot/reference/transform#pairmeasureoperationschema',
+    url: '/viz/data/reference/contract#pairmeasureoperationschema',
   },
   NormalizeTransformSchema: {
-    schema: IRPlot.NormalizeTransformSchema,
+    schema: DataIR.NormalizeTransformSchema,
     label: 'NormalizeTransform',
-    url: '/viz/plot/reference/transform#normalizetransformschema',
+    url: '/viz/data/reference/contract#normalizetransformschema',
   },
   DeriveIntervalTransformSchema: {
-    schema: IRPlot.DeriveIntervalTransformSchema,
+    schema: DataIR.DeriveIntervalTransformSchema,
     label: 'DeriveIntervalTransform',
-    url: '/viz/plot/reference/transform#deriveintervaltransformschema',
+    url: '/viz/data/reference/contract#deriveintervaltransformschema',
   },
   JitterTransformSchema: {
-    schema: IRPlot.JitterTransformSchema,
+    schema: DataIR.JitterTransformSchema,
     label: 'JitterTransform',
-    url: '/viz/plot/reference/transform#jittertransformschema',
+    url: '/viz/data/reference/contract#jittertransformschema',
   },
   DensityTransformSchema: {
-    schema: IRPlot.DensityTransformSchema,
+    schema: DataIR.DensityTransformSchema,
     label: 'DensityTransform',
-    url: '/viz/plot/reference/transform#densitytransformschema',
+    url: '/viz/data/reference/contract#densitytransformschema',
   },
   DensityBandwidthSchema: {
-    schema: IRPlot.DensityBandwidthSchema,
+    schema: DataIR.DensityBandwidthSchema,
     label: 'DensityBandwidth',
-    url: '/viz/plot/reference/transform#densitybandwidthschema',
+    url: '/viz/data/reference/contract#densitybandwidthschema',
   },
   SmoothTransformSchema: {
-    schema: IRPlot.SmoothTransformSchema,
+    schema: DataIR.SmoothTransformSchema,
     label: 'SmoothTransform',
-    url: '/viz/plot/reference/transform#smoothtransformschema',
+    url: '/viz/data/reference/contract#smoothtransformschema',
   },
   RegressionMethodSchema: {
     schema: DataIR.RegressionMethodSchema,
     label: 'RegressionMethod',
-    url: '/viz/plot/reference/transform#regressionmethodschema',
+    url: '/viz/data/reference/contract#regressionmethodschema',
   },
   MarkSchema: {
     schema: IRPlot.MarkSchema,

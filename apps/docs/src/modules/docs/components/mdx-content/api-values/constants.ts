@@ -25,7 +25,18 @@ import {
   Side,
   WebFontSizePreset,
 } from '@retikz/core';
-import { BuiltinRegressionMethod, DataFieldFormat, DataFieldType, DataSortOrder, FieldOrderMode } from '@retikz/data';
+import {
+  BuiltinRegressionMethod,
+  DataFieldFormat,
+  DataFieldType,
+  DataSortOrder,
+  FieldOrderMode,
+  DensityBandwidthKind,
+  JitterAxis,
+  NormalizeBasis,
+  PairMeasureOperationKind,
+  StackOffset,
+} from '@retikz/data';
 import { EntityRole, GraphStatus, RelationRole, RelationDirection } from '@retikz/graph';
 import {
   FlexLayoutDirection,
@@ -39,21 +50,16 @@ import {
 } from '@retikz/layout';
 import {
   AxisPlacementKind,
-  DensityBandwidthKind,
-  JitterAxis,
   LegendOrient,
   LegendPosition,
   LegendSymbolFit,
-  NormalizeBasis,
-  PairMeasureOperationKind,
   PathCurve,
   PolarInterpolation,
   PositionScaleContinuity,
   ReferenceMarkKind,
   RelationGeometryKind,
-  StackOffset,
 } from '@retikz/plot';
-import { ListIndexPosition } from '@retikz/standard/container';
+import { ListIndexPosition } from '@retikz/standard/collection';
 import {
   AxesArrowMode,
   AxesLabelEnd,
@@ -74,7 +80,6 @@ import {
   TableVerticalAlignment,
 } from '@retikz/table';
 import { MathJaxExtension, MathJaxProfile } from '@retikz/tex';
-
 /** API 值集合注册项 */
 export type ApiValueRegistryEntry = {
   /** 按公开常量声明顺序展示的值 */

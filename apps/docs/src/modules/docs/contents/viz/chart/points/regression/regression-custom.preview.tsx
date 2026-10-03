@@ -1,9 +1,12 @@
 import { RegressionChart } from '@retikz/chart-react/point';
 
-import { fixedSlopeFit } from './regression-custom-fit';
+import { fixedSlopeFit, fixedSlopeFitImplementation } from './regression-custom-fit';
 import { fixedSlopeRows } from './regression-custom.data';
 
-const lowerOptions = { regressionDefinitions: [fixedSlopeFit] };
+const lowerOptions = {
+  regressionDefinitions: [fixedSlopeFit],
+  regressionImplementations: [fixedSlopeFitImplementation],
+};
 
 /** 自定义固定斜率拟合的图形参数 */
 export type RegressionCustomPreviewOptions = {

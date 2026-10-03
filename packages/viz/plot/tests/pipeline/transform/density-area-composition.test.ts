@@ -37,13 +37,15 @@ describe('density area composition (contract)', () => {
       data: { reference: 'samples' },
       transform: [
         {
-          kind: 'density',
-          field: 'value',
-          groupBy: ['group'],
-          bandwidth: { kind: 'value', value: 2 },
-          sampleCount: 4,
-          xAs: 'densityX',
-          densityAs: 'density',
+          operation: {
+            kind: 'density',
+            field: 'value',
+            groupBy: ['group'],
+            bandwidth: { kind: 'value', value: 2 },
+            sampleCount: 4,
+            xAs: 'densityX',
+            densityAs: 'density',
+          },
         },
       ],
       scales: [
@@ -91,12 +93,14 @@ describe('density area composition (contract)', () => {
           type: 'path',
           transform: [
             {
-              kind: 'density',
-              field: 'value',
-              bandwidth: { kind: 'value', value: 2 },
-              sampleCount: 5,
-              xAs: 'densityX',
-              densityAs: 'density',
+              operation: {
+                kind: 'density',
+                field: 'value',
+                bandwidth: { kind: 'value', value: 2 },
+                sampleCount: 5,
+                xAs: 'densityX',
+                densityAs: 'density',
+              },
             },
           ],
           order: 'densityX',

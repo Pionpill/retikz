@@ -1,9 +1,24 @@
 ---
 title: Transform Operations
-description: Look up the row semantics, parameters, and examples for Data's sort, summarize, select, and annotate transforms.
+description: Look up the input and output relationships of Data's twelve built-in transforms, and combine sorting, aggregation, selection, and statistical annotation.
 ---
 
-`@retikz/data` provides four general-purpose operations. They process canonical rows without knowing whether the result will feed a chart, table, or another consumer; this page uses Plot only as the default example host.
+`@retikz/data` provides twelve built-in row-data operations. They process canonical rows without knowing whether the result will feed a chart, table, or another consumer; this page uses Plot only as the default example host.
+
+## All built-in operations
+
+All twelve operations obtain their schemas, definitions, registry, and computation from the `@retikz/data` package root. Operations execute in declaration order. Operations that replace row shape also replace the result model; subsequent consumers can only read retained fields.
+
+| Operations                           | Input → output                                                  | Examples/reference                                     |
+| ------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------ |
+| sort / summarize / select / annotate | Records → reordered, aggregated, selected, or annotated records | Examples below                                         |
+| stack / normalize                    | Numeric records → cumulative intervals or group shares          | [Drawing compositions](/viz/plot/transform/annotation) |
+| derive-interval / jitter             | Numeric fields → interval fields or deterministic offsets       | [Field derivation](/viz/plot/transform/row)            |
+| bin                                  | Continuous observations → bin edges and metric records          | [Binning example](/viz/plot/transform/bin)             |
+| relate                               | Groups and endpoint selectors → paired records                  | [Relation example](/viz/plot/transform/relate)         |
+| density / smooth                     | Numeric samples → density or fitted prediction records          | [Statistical sampling](/viz/plot/transform/statistics) |
+
+See [Data Contract](/viz/data/reference/contract#datatransformschema) for complete configuration. `applyTransforms(rows, operations)` executes independently; Plot and Chart consume the same data contracts.
 
 ## Capabilities
 
@@ -40,7 +55,7 @@ Keep it separate from [`order`](/viz/data/model/contract#category-order) in the 
 
 `summarize` groups by `groupBy`, then reduces each group into one output row through `metrics`. The output row keeps the group keys, and every reducer must declare an `as` field name.
 
-Output names must be unique within one operation: reducer outputs cannot collide with `groupBy` or with each other. The schema rejects static field conflicts from built-in reducers; custom reducer fields declared by the Definition's `outputFields()` fail before reducer execution.
+Output names must be unique within one operation: reducer outputs cannot collide with `groupBy` or with each other. The schema rejects static field conflicts from built-in reducers; custom reducer fields declared by the Definition's `outputs` fail before reducer execution.
 
 <ComponentPreview
   files={['transform-summarize', 'transform-summarize-preview.tsx', 'transform-summarize.data.ts']}
@@ -58,13 +73,15 @@ Output names must be unique within one operation: reducer outputs cannot collide
 
 ```tsx
 <PlotTransform
-  kind="summarize"
-  groupBy={['region']}
-  metrics={[
-    { kind: 'sum', field: 'revenue', as: 'total' },
-    { kind: 'median', field: 'revenue', as: 'median' },
-    { kind: 'count', as: 'orders' },
-  ]}
+  operation={{
+    kind: 'summarize',
+    groupBy: ['region'],
+    metrics: [
+      { kind: 'sum', field: 'revenue', as: 'total' },
+      { kind: 'median', field: 'revenue', as: 'median' },
+      { kind: 'count', as: 'orders' },
+    ],
+  }}
 />
 ```
 
@@ -88,7 +105,9 @@ Output names must be unique within one operation: reducer outputs cannot collide
 | `rankAs?`  | `string`                  | —                | One-based rank field on output rows |
 
 ```tsx
-<PlotTransform kind="select" groupBy={['region']} selector={{ kind: 'top', by: 'revenue', n: 3 }} rankAs="rank" />
+<PlotTransform
+  operation={{ kind: 'select', groupBy: ['region'], selector: { kind: 'top', by: 'revenue', n: 3 }, rankAs: 'rank' }}
+/>
 ```
 
 ## annotate
@@ -114,10 +133,12 @@ Selector annotations accept only built-in rules that select at most one row: `mi
 
 ```tsx
 <PlotTransform
-  kind="annotate"
-  groupBy={['store']}
-  metrics={[{ kind: 'mean', field: 'revenue', as: 'storeMean' }]}
-  selectors={[{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }]}
+  operation={{
+    kind: 'annotate',
+    groupBy: ['store'],
+    metrics: [{ kind: 'mean', field: 'revenue', as: 'storeMean' }],
+    selectors: [{ selector: { kind: 'max', by: 'revenue' }, as: 'storeMax' }],
+  }}
 />
 ```
 

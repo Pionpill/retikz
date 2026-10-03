@@ -1,27 +1,27 @@
-import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
-import { collectTransformFields } from '@retikz/data';
+import type { AnyTransformDefinition, TransformContext, IRDataTransformDeclaration } from '@retikz/data';
+import { collectTransformFields, resolveTransformRegistry } from '@retikz/data';
 
 import type { AnyMarkDefinition } from '../contract';
-import { createFieldCollector, resolveMarkRegistry, resolvePlotTransformRegistry } from '../providers';
+import { createFieldCollector, resolveMarkRegistry } from '../providers';
 import { collectMarkFields } from '../resolve/mark';
-import type { IRPlot, IRPlotMarkOperation, IRPlotTransform } from '../schemas';
+import type { IRPlot, IRPlotMarkOperation } from '../schemas';
 
-const markTransformOf = (mark: IRPlotMarkOperation): Array<IRPlotTransform> | undefined =>
-  (mark as { transform?: Array<IRPlotTransform> }).transform;
+const markTransformOf = (mark: IRPlotMarkOperation): Array<IRDataTransformDeclaration> | undefined =>
+  (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
 
 /**
  * 按执行顺序收集 transform 管线依赖的外部字段，并返回管线结束后的派生字段集合
  * @description 同一步先读取输入再登记输出，因此 `field === as` 的原位覆盖仍保留源字段；后续步骤读取既有派生字段则不会误入 data.model
  */
 const collectTransformPipelineFields = (
-  transforms: ReadonlyArray<IRPlotTransform>,
+  transforms: ReadonlyArray<IRDataTransformDeclaration>,
   initialDerived: ReadonlySet<string>,
   sourceFields: Set<string>,
   transformRegistry: ReadonlyMap<string, AnyTransformDefinition>,
   transformContext?: TransformContext,
 ): Set<string> => {
   const derived = new Set(initialDerived);
-  for (const transform of transforms) {
+  for (const { operation: transform } of transforms) {
     const inputs = new Set<string>();
     const outputs = new Set<string>();
     collectTransformFields(transform, createFieldCollector(inputs), outputs, transformRegistry, transformContext);
@@ -36,7 +36,7 @@ const collectTransformPipelineFields = (
 /** 收集 plot spec 引用的外部源字段；派生字段会被排除，不参与 data.model strict 校验 */
 export const collectSourceFields = (
   spec: IRPlot,
-  transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolvePlotTransformRegistry(),
+  transformRegistry: ReadonlyMap<string, AnyTransformDefinition> = resolveTransformRegistry(),
   markRegistry: ReadonlyMap<string, AnyMarkDefinition> = resolveMarkRegistry(),
   transformContext?: TransformContext,
 ): Set<string> => {

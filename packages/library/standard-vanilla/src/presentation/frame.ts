@@ -11,7 +11,13 @@ import {
   RetikzStandardError,
   RetikzStandardErrorCode,
 } from '@retikz/standard/presentation';
-import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContribution, InputNode } from '@retikz/vanilla';
+import type {
+  InputChild,
+  InputEmbed,
+  SynchronousInputEmbedAdapter,
+  InputEmbedContribution,
+  InputNode,
+} from '@retikz/vanilla';
 
 import { StandardFrameEmbedKind } from '../shared/constants';
 
@@ -53,7 +59,7 @@ export const frameTitle = (input: FrameTitleInput): IRFrameTitle => ({ ...input 
 export const frameDescription = (input: FrameDescriptionInput): IRFrameDescription => ({ ...input });
 
 /** Standard Frame 的 InputEmbed adapter */
-export const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {
+export const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame> = {
   kind: StandardFrameEmbedKind,
   lower: (props, context) => {
     const { children, headers, id, ...input } = props;

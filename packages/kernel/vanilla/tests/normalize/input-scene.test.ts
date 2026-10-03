@@ -11,7 +11,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
-import type { InputChild, InputEmbedAdapter, InputScene } from '../../src';
+import type { InputChild, InputEmbedAdapter, InputScene, SynchronousInputEmbedAdapter } from '../../src';
 import { coordinate, embed, InputLayerCache, layer, node, normalizeScene, path, scene, scope } from '../../src';
 
 it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入嵌套 Core IR', () => {
@@ -81,7 +81,7 @@ const boxComposite = defineComposite({
 
 const createBoxAdapter = (
   makeDefinition = vi.fn<(datasets: Readonly<Record<string, unknown>>) => AnyCompositeDefinition>(() => boxComposite),
-): InputEmbedAdapter<{ text: string; data: object }> => ({
+): SynchronousInputEmbedAdapter<{ text: string; data: object }> => ({
   kind: 'fixture-box',
   lower: props => ({
     node: { namespace: 'fixture', type: 'box', text: props.text },

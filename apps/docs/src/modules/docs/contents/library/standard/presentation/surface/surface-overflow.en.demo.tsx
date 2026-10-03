@@ -1,44 +1,48 @@
-import { Draw, Layout } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import { Surface } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
-/** English comparison of visible and clipped Surface overflow */
+/** 用相同内容对比 Surface 的视觉溢出与圆角裁剪 */
 const Demo: FC = () => (
   <Layout>
     <Surface
       id="visible-overflow"
-      transforms={[{ kind: 'translate', x: -145, y: 0 }]}
-      padding={10}
-      background={{ fill: '#eff6ff' }}
-      border={{ stroke: '#2563eb' }}
-      cornerRadius={10}
+      transforms={[{ kind: 'translate', x: -136, y: 0 }]}
+      padding={6}
+      background={{ fill: 'currentColor', fillOpacity: 0.04 }}
+      border={{ stroke: 'gray' }}
+      cornerRadius={14}
       overflow="visible"
     >
       <Draw
         way={[
           [0, 0],
-          [120, 0],
+          [50, 36],
+          [100, 0],
         ]}
-        style={{ stroke: '#dc2626', strokeWidth: 18 }}
+        style={{ stroke: 'dodgerblue', strokeWidth: 24, lineCap: 'round', lineJoin: 'round' }}
       />
     </Surface>
+    <Node position={[-80, 78]} text="visible" style={{ stroke: 'none', fill: 'none' }} />
     <Surface
       id="clipped-overflow"
-      transforms={[{ kind: 'translate', x: 55, y: 0 }]}
-      padding={10}
-      background={{ fill: '#f0fdf4' }}
-      border={{ stroke: '#16a34a' }}
-      cornerRadius={10}
+      transforms={[{ kind: 'translate', x: 24, y: 0 }]}
+      padding={6}
+      background={{ fill: 'currentColor', fillOpacity: 0.04 }}
+      border={{ stroke: 'gray' }}
+      cornerRadius={14}
       overflow="clip"
     >
       <Draw
         way={[
           [0, 0],
-          [120, 0],
+          [50, 36],
+          [100, 0],
         ]}
-        style={{ stroke: '#dc2626', strokeWidth: 18 }}
+        style={{ stroke: 'dodgerblue', strokeWidth: 24, lineCap: 'round', lineJoin: 'round' }}
       />
     </Surface>
+    <Node position={[80, 78]} text="clip" style={{ stroke: 'none', fill: 'none' }} />
   </Layout>
 );
 

@@ -25,16 +25,16 @@ description: 用 relate 从每个分组选择 source 和 target 行，并投影�
 
 ### API 参考
 
-`IRPlotRelateTransform` 的 `kind` 固定为 `'relate'`。
+`IRDataRelateTransform` 的 `kind` 固定为 `'relate'`。
 
 | prop        | 类型                                | 默认值   | 说明                                |
 | ----------- | ----------------------------------- | -------- | ----------------------------------- |
 | `groupBy?`  | `Array<string>`                     | 全局单组 | 每组独立生成零个或一个关系行        |
-| `source`    | `IRPlotEndpointProjection`          | —        | source 端点 selector 与非空字段映射 |
-| `target`    | `IRPlotEndpointProjection`          | —        | target 端点 selector 与非空字段映射 |
-| `measures?` | `Array<IRPlotPairMeasureOperation>` | —        | source 与 target 之间的派生度量     |
+| `source`    | `IRDataEndpointProjection`          | —        | source 端点 selector 与非空字段映射 |
+| `target`    | `IRDataEndpointProjection`          | —        | target 端点 selector 与非空字段映射 |
+| `measures?` | `Array<IRDataPairMeasureOperation>` | —        | source 与 target 之间的派生度量     |
 
-`IRPlotEndpointProjection` 包含：
+`IRDataEndpointProjection` 包含：
 
 | prop       | 类型                      | 说明                            |
 | ---------- | ------------------------- | ------------------------------- |
@@ -62,15 +62,11 @@ description: 用 relate 从每个分组选择 source 和 target 行，并投影�
   sources={[
     {
       label: '端点投影、度量与 relate schema',
-      path: 'packages/viz/plot/src/schemas/transform/schema.ts',
-      startLine: 98,
-      endLine: 145,
+      path: 'packages/viz/data/src/schemas/transform/schema.ts',
     },
     {
       label: '双端点选择、投影与零行规则',
-      path: 'packages/viz/plot/src/providers/transform/group.ts',
-      startLine: 127,
-      endLine: 186,
+      path: 'packages/viz/data/src/providers/transform/group.ts',
     },
   ]}
 />

@@ -94,5 +94,5 @@ export const previewControlContract = {
       },
     },
   ],
-  relatedApis: ['IRPlotJitterTransform.amount', 'IRPlotJitterTransform.seed'],
+  relatedApis: ['IRDataJitterTransform.amount', 'IRDataJitterTransform.seed'],
 } satisfies PreviewControlContract;

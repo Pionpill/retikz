@@ -1,9 +1,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { GeometryLabelSchema } from '@retikz/core';
 import * as flowSchemas from '@retikz/diagram/flow';
 
 import { readSchemaDescriptions } from '../schema-reference/descriptions';
+import { geometryLabelSchemaDescriptions } from '../schema-reference/path';
 import { assertFlowApiReferenceTranslated, translateFlowApiReference } from './flow.en';
 import { createSchemaLocalizationResolver, resolveStandardSchemaLocalization } from './standard-schema';
 import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
@@ -21,6 +23,7 @@ const groupDescriptions = readSchemaDescriptions(
 );
 /** 复用 Schema 页的说明，固定排列的各分支保留独立词典 */
 const resolveFlowSchemaLocalization = createSchemaLocalizationResolver([
+  { schema: GeometryLabelSchema, localizations: { zh: { descriptions: geometryLabelSchemaDescriptions } } },
   ...(
     [
       'FlowDiagramSchema',
@@ -107,6 +110,12 @@ export const flowApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
     symbols: [
       'defineFlowLayout',
       'FlowLayoutDefinition',
+      'FlowLayoutRouting',
+      'FlowLayoutRoute',
+      'FlowBendRoute',
+      'FlowLayoutLabelPlacement',
+      'FlowLayoutRelationInput',
+      'FlowLayoutRelationOutput',
       'FlowDiagramDefinitionOptions',
       'createFlowDiagramProviderContribution',
       'getFlowLayoutCatalog',

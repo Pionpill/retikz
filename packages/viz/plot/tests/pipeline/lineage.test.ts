@@ -1,4 +1,5 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
+import { defineTransformImplementation } from '@retikz/data';
 import type { ExternalDatasets } from '@retikz/data';
 import { defineTransform } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
@@ -75,9 +76,11 @@ const summarySpec = (): IRPlot =>
     data: { reference: 'sales' },
     transform: [
       {
-        kind: 'summarize',
-        groupBy: ['region'],
-        metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        operation: {
+          kind: 'summarize',
+          groupBy: ['region'],
+          metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
+        },
       },
     ],
     scales: [
@@ -89,7 +92,7 @@ const summarySpec = (): IRPlot =>
       {
         id: 'bars',
         type: 'interval',
-        transform: [{ kind: 'sort', field: 'totalRevenue', order: 'descending' }],
+        transform: [{ operation: { kind: 'sort', field: 'totalRevenue', order: 'descending' } }],
         encoding: { x: { field: 'region' }, y: { field: 'totalRevenue' } },
       },
     ],
@@ -207,8 +210,8 @@ describe('plot lineage runtime', () => {
 
   it('keeps original source identities after root reorder and mark-local transforms', () => {
     const spec = pointSpec();
-    spec.transform = [{ kind: 'sort', field: 'revenue', order: 'descending' }];
-    spec.marks[0].transform = [{ kind: 'sort', field: 'revenue', order: 'ascending' }];
+    spec.transform = [{ operation: { kind: 'sort', field: 'revenue', order: 'descending' } }];
+    spec.marks[0].transform = [{ operation: { kind: 'sort', field: 'revenue', order: 'ascending' } }];
 
     const { lineage } = lowerPlotWithLineage(spec, datasets, { lineage: {} });
     const markSource = lineage.data.marks[0]?.events.find(event => event.kind === 'source');
@@ -269,18 +272,22 @@ describe('plot lineage runtime', () => {
         scope: union([literal('root'), literal('mark')]),
       }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
+    });
+    const countingTransformImplementation = defineTransformImplementation({
+      definition: countingTransform,
       apply: (rows, operation) => {
         applyCounts[operation.scope] += 1;
         return rows;
       },
     });
     const spec = pointSpec();
-    spec.transform = [{ kind: 'count-lineage-apply', scope: 'root' }];
-    spec.marks[0].transform = [{ kind: 'count-lineage-apply', scope: 'mark' }];
+    spec.transform = [{ operation: { kind: 'count-lineage-apply', scope: 'root' } }];
+    spec.marks[0].transform = [{ operation: { kind: 'count-lineage-apply', scope: 'mark' } }];
 
     lowerPlotWithLineage(spec, datasets, {
       lineage: {},
       transformDefinitions: [countingTransform],
+      transformImplementations: [countingTransformImplementation],
     });
 
     expect(applyCounts).toEqual({ root: 1, mark: 1 });
@@ -294,18 +301,22 @@ describe('plot lineage runtime', () => {
         scope: union([literal('root'), literal('mark')]),
       }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
+    });
+    const countingTransformImplementation = defineTransformImplementation({
+      definition: countingTransform,
       apply: (rows, operation) => {
         applyCounts[operation.scope] += 1;
         return rows;
       },
     });
     const spec = pointSpec();
-    spec.transform = [{ kind: 'count-lineage-locator-apply', scope: 'root' }];
-    spec.marks[0].transform = [{ kind: 'count-lineage-locator-apply', scope: 'mark' }];
+    spec.transform = [{ operation: { kind: 'count-lineage-locator-apply', scope: 'root' } }];
+    spec.marks[0].transform = [{ operation: { kind: 'count-lineage-locator-apply', scope: 'mark' } }];
 
     createPlotLineageLocator(spec, datasets, {
       lineage: {},
       transformDefinitions: [countingTransform],
+      transformImplementations: [countingTransformImplementation],
     });
 
     expect(applyCounts).toEqual({ root: 1, mark: 1 });
@@ -319,17 +330,21 @@ describe('plot lineage runtime', () => {
         scope: union([literal('root'), literal('mark')]),
       }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
+    });
+    const countingTransformImplementation = defineTransformImplementation({
+      definition: countingTransform,
       apply: (rows, operation) => {
         applyCounts[operation.scope] += 1;
         return rows;
       },
     });
     const spec = pointSpec();
-    spec.transform = [{ kind: 'count-independent-lineage-apply', scope: 'root' }];
-    spec.marks[0].transform = [{ kind: 'count-independent-lineage-apply', scope: 'mark' }];
+    spec.transform = [{ operation: { kind: 'count-independent-lineage-apply', scope: 'root' } }];
+    spec.marks[0].transform = [{ operation: { kind: 'count-independent-lineage-apply', scope: 'mark' } }];
     const options = {
       lineage: {},
       transformDefinitions: [countingTransform],
+      transformImplementations: [countingTransformImplementation],
     };
 
     lowerPlotWithLineage(spec, datasets, options);
@@ -388,7 +403,7 @@ describe('plot lineage runtime', () => {
   it('keeps unknown transform errors aligned with lowerPlots', () => {
     const spec = {
       ...pointSpec(),
-      transform: [{ kind: 'missing-transform' as const }],
+      transform: [{ operation: { kind: 'missing-transform' as const } }],
     };
 
     expect(() => lowerPlot(spec, datasets)).toThrow(/not registered/);

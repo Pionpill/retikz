@@ -7,13 +7,17 @@ import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectBubbleChartDeclarations } from './declaration-collection';
 
 /** BubbleChart React 根属性 */
-export type BubbleChartProps = TypedChartCommonProps<IRBubbleChart>;
+export type BubbleChartProps<TNative = never> = TypedChartCommonProps<IRBubbleChart, TNative>;
 
 /** Bubble 具体类型的 Chart React 组件 */
-export const BubbleChart = createTypedChartComponent<BubbleChartProps, IRBubbleChart, BubbleChartInputEmbedProps>(
+export const BubbleChart = createTypedChartComponent<
+  BubbleChartProps<unknown>,
+  IRBubbleChart,
+  BubbleChartInputEmbedProps<unknown>
+>(
   'BubbleChart',
   props =>
-    createTypedChartInput<BubbleChartProps, IRBubbleChart, BubbleChartInputEmbedProps>(
+    createTypedChartInput<BubbleChartProps<unknown>, IRBubbleChart, BubbleChartInputEmbedProps<unknown>>(
       props,
       collectBubbleChartDeclarations(props.children),
       input => bubbleChart(input),

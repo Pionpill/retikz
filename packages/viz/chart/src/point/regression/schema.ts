@@ -10,9 +10,9 @@ import {
   StrokeDashPatternSchema,
   StrokeWidthSchema,
 } from '@retikz/core';
-import { RegressionMethodSchema } from '@retikz/data';
+import { RegressionMethodSchema, SmoothTransformSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
-import { PathCurve, PathMarkSchema, SmoothTransformSchema } from '@retikz/plot';
+import { PathCurve, PathMarkSchema } from '@retikz/plot';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
@@ -25,7 +25,6 @@ import {
   PointRecipeGuidesSchema,
 } from '../shared';
 import { RegressionChartEncodingsSchema } from './encoding-schema';
-
 /** Regression 原始观测点的完整常量 properties */
 export const RegressionPointPropertiesSchema = PointPropertiesSchema.describe(
   'Regression observation Point constant properties',

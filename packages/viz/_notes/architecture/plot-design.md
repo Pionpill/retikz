@@ -324,7 +324,7 @@ Data API（包：`@retikz/data`）是 viz 的共享数据层。它负责数据�
 
 - 内置数据处理逻辑与外部注入逻辑都是一等公民，统一走 definition / registry。
 - 通用 transform 可以放在 data：filter、derive、sort、limit、sample、groupBy、aggregate 等只关心数据表和字段的变换。
-- 领域 transform 留在使用方：plot 保留依赖 series / mark / geometry 的 stack / dodge 和 stratify / force / packing / treemap / wordCloud 等 layout transform；bin / density / smooth 等操作如果只依赖 rows / fields / statistics，应下沉 data，当前代码位置不决定长期所有权。table 保留 pivot / subtotal / column sizing 等表格语义；geo 若独立则保留 projection / topojson feature extraction / tile / graticule 等地图语义。
+- 领域 transform 留在使用方：plot 保留依赖视觉位置与几何的 dodge / position adjustment 和 stratify / force / packing / treemap / wordCloud 等 layout transform；当前 stack / bin / normalize / derive-interval / relate / jitter / density / smooth 纯行数据计算统一归 Data，默认字段名与绘图用途不决定算法所有权。table 保留 pivot / subtotal / column sizing 等表格语义；geo 若独立则保留 projection / topojson feature extraction / tile / graticule 等地图语义。
 - data 不拥有 coordinate / mark / guide / layout / lowering。
 
 ### 5.3 Plot API

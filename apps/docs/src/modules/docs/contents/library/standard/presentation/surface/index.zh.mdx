@@ -9,7 +9,7 @@ description: 为单个子图添加留白、背景、边框与内容裁剪
 
 完成[安装与首次渲染](/library/standard/get-start)后，从 `/presentation` 导入。下面四种方式绘制相同的单节点表面。
 
-<ComponentPreview files="entry" hideCode />
+<ComponentPreview files="entry" size="xs" hideCode />
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -27,7 +27,7 @@ import { Surface } from '@retikz/standard-react/presentation';
 
 export const Example = () => (
   <Layout>
-    <Surface padding={16} border={{ stroke: 'currentColor' }}>
+    <Surface padding={16} border={{ stroke: 'currentColor', strokeOpacity: 0.65 }}>
       <Node position={[0, 0]} text="A" />
     </Surface>
   </Layout>
@@ -50,7 +50,7 @@ const ir: IRScene = {
       namespace: 'standard',
       type: 'surface',
       padding: 16,
-      border: { stroke: 'currentColor' },
+      border: { stroke: 'currentColor', strokeOpacity: 0.65 },
       child: { type: 'node', position: [0, 0], text: 'A' },
     },
   ],
@@ -69,7 +69,7 @@ const input = scene({
   children: [
     surface({
       padding: 16,
-      border: { stroke: 'currentColor' },
+      border: { stroke: 'currentColor', strokeOpacity: 0.65 },
       child: surfaceChild(node({ position: [0, 0], text: 'A' })),
     }),
   ],
@@ -94,7 +94,7 @@ const ir: IRScene = {
       namespace: 'standard',
       type: 'surface',
       padding: 16,
-      border: { stroke: 'currentColor' },
+      border: { stroke: 'currentColor', strokeOpacity: 0.65 },
       child: { type: 'node', position: [0, 0], text: 'A' },
     },
   ],

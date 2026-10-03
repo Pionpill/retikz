@@ -1,5 +1,11 @@
 import type { IRDataModel } from '@retikz/data';
-import { DataFieldType, defineRowSelector, defineStatisticsReducer } from '@retikz/data';
+import {
+  defineStatisticsReducerImplementation,
+  defineRowSelectorImplementation,
+  DataFieldType,
+  defineRowSelector,
+  defineStatisticsReducer,
+} from '@retikz/data';
 import { Plot, PlotAxis, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 import { z } from 'zod';
@@ -14,8 +20,11 @@ export const midpoint = defineStatisticsReducer({
     as: z.string().min(1),
   }),
   inputFields: operation => [operation.field],
-  outputFields: operation => [operation.as],
   outputs: operation => [{ field: operation.as, type: DataFieldType.Continuous }],
+});
+/** midpoint的本地计算实现 */
+export const midpointImplementation = defineStatisticsReducerImplementation({
+  definition: midpoint,
   reduce: (rows, operation) => {
     const values = rows.map(row => Number(row[operation.field])).filter(Number.isFinite);
     if (values.length === 0) return { [operation.as]: Number.NaN };
@@ -30,6 +39,10 @@ export const closestToMean = defineRowSelector({
     field: z.string().min(1),
   }),
   inputFields: operation => [operation.field],
+});
+/** closestToMean的本地计算实现 */
+export const closestToMeanImplementation = defineRowSelectorImplementation({
+  definition: closestToMean,
   select: (rows, operation) => {
     const candidates = rows
       .map(row => ({ row, value: Number(row[operation.field]) }))
@@ -71,12 +84,13 @@ export const renderExtensionStatisticsPreview = () => (
       data={scoreRows}
       model={model}
       statisticsReducerDefinitions={[midpoint]}
+      statisticsReducerImplementations={[midpointImplementation]}
       width={250}
       height={220}
       x={0}
       y={20}
     >
-      <PlotTransform {...midpointSummaryOperationOf()} />
+      <PlotTransform operation={{ ...midpointSummaryOperationOf() }} />
       <PointMark x="group" y="midpoint" />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />
@@ -85,12 +99,13 @@ export const renderExtensionStatisticsPreview = () => (
       data={scoreRows}
       model={model}
       rowSelectorDefinitions={[closestToMean]}
+      rowSelectorImplementations={[closestToMeanImplementation]}
       width={250}
       height={220}
       x={270}
       y={20}
     >
-      <PlotTransform {...closestToMeanSelectOperationOf()} />
+      <PlotTransform operation={{ ...closestToMeanSelectOperationOf() }} />
       <PointMark x="group" y="score" />
       <PlotAxis dimension="x" />
       <PlotAxis dimension="y" grid />

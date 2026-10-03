@@ -1,6 +1,6 @@
 import { FlowEntities, FlowGroup, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import { Layout, Node, Path, Scope } from '@retikz/react';
-import { List, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/container';
+import { List, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';

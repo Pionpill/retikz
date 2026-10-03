@@ -405,7 +405,9 @@ describe('mark padding effective observations', () => {
       ...base,
       marks: base.marks.map(mark => ({
         ...mark,
-        transform: [{ kind: 'summarize', groupBy: ['x', 'y'], metrics: [{ kind: 'mean', field: 'r', as: 'r' }] }],
+        transform: [
+          { operation: { kind: 'summarize', groupBy: ['x', 'y'], metrics: [{ kind: 'mean', field: 'r', as: 'r' }] } },
+        ],
       })),
     });
     const duplicateRows = [

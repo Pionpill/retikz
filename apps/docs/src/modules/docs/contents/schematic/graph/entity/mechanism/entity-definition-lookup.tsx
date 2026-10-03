@@ -1,5 +1,5 @@
 import { Draw, Layout, Node } from '@retikz/react';
-import { Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/container';
+import { Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';

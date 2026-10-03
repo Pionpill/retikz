@@ -1,5 +1,27 @@
 /** Flow API 页经人工核对的英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  'Flow layout provider 使用的有效路由': 'Effective routing consumed by the Flow layout provider',
+  'Flow layout relation 输入': 'Measured Flow layout relation input',
+  省略时由布局比较左右候选: 'Omission lets layout compare left and right candidates',
+  '省略时由布局比较 30、45、60 度；显式及继承值必须保留':
+    'Omission lets layout compare 30, 45 and 60 degrees; explicit and inherited values must be preserved',
+  'bend 参考几何，仅保留一个生效参数族': 'Bend reference geometry containing only the active parameter family',
+  '一条 Flow relation 的根坐标系布局输出': 'Layout output for one Flow relation in root coordinates',
+  '完整标签提供给布局的几何配置，不包含文字或外观':
+    'Complete-label geometry provided to layout, excluding text and appearance',
+  '完整标签的几何投影；空对象仍表示使用 Core 默认，紧凑标签省略此项':
+    'Complete-label geometry; an empty object still requests Core defaults, while compact labels omit this field',
+  '已测量的标签尺寸；无标签时省略': 'Measured label dimensions; omitted without a label',
+  已补全参数的关系路由: 'Relation routing with effective parameters',
+  已解析的语义箭头方向: 'Resolved semantic arrow direction',
+  '布局已确定的参考路由，实际端点裁剪与箭头缩短由 Core 执行':
+    'Reference route determined by layout; Core performs actual endpoint clipping and arrow shortening',
+  '标签在 Flow 根坐标系中的预留矩形，倾斜标签使用旋转后的 AABB；有标签时必须提供，无标签时必须省略':
+    'Reserved rectangle in Flow root coordinates, using the rotated AABB for sloped labels; required with a label and omitted otherwise',
+  根坐标系中的有判别参考几何: 'Discriminated reference geometry in root coordinates',
+  '终点 Entity 或 Group 的作者 id': 'Authored id of the target Entity or Group',
+  '起点 Entity 或 Group 的作者 id': 'Authored id of the source Entity or Group',
+
   'Flow 声明与运行时扩展；由 adapter 在编译时组装 Source 和 provider':
     'Flow declarations and runtime extensions; the adapter assembles the Source and providers during compilation',
   'RetikzDiagramError 布局定义无效、名称冲突或默认布局未注册时抛出':

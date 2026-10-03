@@ -496,7 +496,7 @@ $$
 
 <ComponentPreview files="regression-fitting-flow" size="lg" hideCode type="flow" />
 
-用 `@retikz/data` 的 `defineRegression` 定义方法，再通过 `lowerOptions.regressionDefinitions` 注入。内置与外部方法使用同一注册与执行流程；JSON 只保存方法名和参数，不保存函数。
+用 `defineRegression` 声明方法语义，再用 `defineRegressionImplementation` 提供计算，分别通过 `lowerOptions.regressionDefinitions` 与 `lowerOptions.regressionImplementations` 注入。JSON 只保存方法名和参数；外接引擎接入见 [Data 扩展机制](/viz/data/transform/extensions)。
 
 下面实现一个**固定斜率拟合算法**：调用方给定斜率，算法根据观测数据自动求解截距，使残差平方和最小。它适合斜率已由先验关系确定、只需估计整体偏移的情况。
 
@@ -511,7 +511,7 @@ $$
 这个例子的拟合复杂度为 $O(N)$，单次预测为 $O(1)$。使用下面的三对观测并设置 `slope: 2`，得到 $a=4/3$；在 $x=0,1,2$ 处的预测值分别为 $4/3,10/3,16/3$。斜率由调用方指定，截距仍由当前组数据计算。
 
 ```ts
-import { defineRegression, RetikzDataError } from '@retikz/data';
+import { defineRegressionImplementation, defineRegression, RetikzDataError } from '@retikz/data';
 import { literal, number, strictObject } from 'zod';
 
 export const fixedSlopeFit = defineRegression({
@@ -519,6 +519,10 @@ export const fixedSlopeFit = defineRegression({
     kind: literal('fixed-slope'),
     slope: number().default(1),
   }),
+});
+/** fixedSlopeFit的本地计算实现 */
+export const fixedSlopeFitImplementation = defineRegressionImplementation({
+  definition: fixedSlopeFit,
   fit: (pairs, { slope }) => {
     if (pairs.length === 0) throw new RetikzDataError('fixed-slope requires at least one observation');
     const intercept = pairs.reduce((sum, pair) => sum + pair.y - slope * pair.x, 0) / pairs.length;
@@ -526,7 +530,10 @@ export const fixedSlopeFit = defineRegression({
   },
 });
 
-export const lowerOptions = { regressionDefinitions: [fixedSlopeFit] };
+export const lowerOptions = {
+  regressionDefinitions: [fixedSlopeFit],
+  regressionImplementations: [fixedSlopeFitImplementation],
+};
 export const rows = [
   { x: 0, y: 1 },
   { x: 1, y: 4 },
@@ -653,6 +660,8 @@ React 中，同一项配置不能同时通过根属性与子组件声明；不�
     background: '图表背景',
     presentation: '标题、副标题、注释与来源',
     chartDefaults: '图表内部默认配置',
+    transform: '有序 { operation, dataExecution? } 数据变换声明。',
+    dataExecution: '本 Chart 的稀疏执行配置。',
     data: '外部数据集引用，不内嵌运行时数据',
     layout: '图表布局尺寸与间距',
     coordinate: '坐标系操作；不能与 plotExtension.composition 同时提供',
