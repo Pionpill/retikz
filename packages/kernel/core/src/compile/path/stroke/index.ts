@@ -5,6 +5,7 @@ export * from './lower';
 export * from './marks';
 export * from './output';
 export * from './rounded-corners';
+export * from './route-sampling';
 export * from './shrink';
 export * from './split';
 export * from './transform';

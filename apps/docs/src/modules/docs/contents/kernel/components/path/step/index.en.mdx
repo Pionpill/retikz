@@ -207,6 +207,8 @@ Switch among `curve`, `cubic`, `bend`, `smooth`, `arc`, `circlePath`, and `ellip
 
 Besides the symmetric `bendDirection` + `bendAngle`, `<Step kind="bend">` accepts `outAngle` / `inAngle` for the start out-angle and end in-angle to draw asymmetric curves; `looseness` tunes the control-point distance (default ≈1). **out/in take precedence over `bendDirection`.** When `from == to` (same node / same coordinate) it degenerates into a **self-loop** — the prime use case for out/in (a state-machine self transition), which a symmetric bend cannot draw. Switch between a self-loop and a two-endpoint connection in the panel, then use the dotted direction guides to tune both angles and looseness.
 
+Either `outAngle` or `inAngle` selects tangent mode; the omitted partner defaults to `0` or `180`, respectively. `looseness` defaults to `1` and only affects tangent mode. Angles are absolute screen directions: `0` points right and `90` points down.
+
 <ComponentPreview
   files={['path-outin-loop', 'path-outin-loop.preview.tsx']}
   size="md"

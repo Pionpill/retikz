@@ -311,6 +311,14 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · 路径几何复用', en: 'Unreleased · Shared path geometry' },
+          content: {
+            zh: '公开 samplePathRoute 与 resolveGeometryLabelPlacement，供上层复用路径采样和标签默认。bend 单独提供 outAngle 或 inAngle 即启用切线模式，缺项使用统一权威默认；控制点溢出保留 Core 错误。',
+            en: 'Exports samplePathRoute and resolveGeometryLabelPlacement for shared path sampling and label defaults. Either outAngle or inAngle selects tangent bend mode, with omitted fields using authoritative defaults. Control-point overflow retains a Core error.',
+          },
+        },
+
+        {
           label: { zh: '未发布 · Node 默认位置', en: 'Unreleased · Default Node position' },
           content: {
             zh: 'Node 的 position 可省略，Core 统一解析为当前局部坐标系的 [0, 0]；React、Vanilla 与 Source IR 使用同一语义，布局子项无需显式填写零坐标。显式定位保持不变，Coordinate 的 position 仍必填。',
