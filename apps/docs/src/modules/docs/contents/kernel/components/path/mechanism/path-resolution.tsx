@@ -1,5 +1,5 @@
 import { Draw, Layout, Node, Path, Scope, Step } from '@retikz/react';
-import { List, Map } from '@retikz/standard-react/collection';
+import { Array, Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -14,7 +14,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
   const t = pathResolutionI18n[lang];
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
-      <List
+      <Array
         id="steps"
         label={{
           text: t.steps,
@@ -32,7 +32,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
         ]}
         index
       />
-      <List
+      <Array
         id="commands"
         transforms={[{ kind: 'translate', x: 0, y: 180 }]}
         label={{

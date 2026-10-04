@@ -21,7 +21,7 @@ export const CellStyleSchema = strictObject({
   ...GraphicFillSchema.shape,
   ...TextVisualSchema.shape,
   cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
-}).describe('Sparse visual overrides for a List or Map cell.');
+}).describe('Sparse visual overrides for a Array or Map cell.');
 
 export const CellLayoutSchema = strictObject({
   width: union([NonNegativeNumberSchema, literal('auto')])

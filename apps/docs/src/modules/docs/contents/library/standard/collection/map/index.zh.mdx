@@ -1,4 +1,4 @@
-﻿---
+---
 title: Map · 映射
 description: 使用 Map 展示键值记录，配置单元格、组合图形并查询 API 与 Schema。
 ---
@@ -197,7 +197,7 @@ Map
 └── MapEntry
     ├── MapKey
     └── MapValue
-        └── List
+        └── Array
 ```
 
 `MapEntry` 是一条记录，`MapKey` 和 `MapValue` 分别占据键列和值列。组合组件只声明内容，不能脱离上述父子关系单独渲染。
@@ -210,12 +210,12 @@ Map
 
 `data` 接受 JSON 对象。`dataExpand` 控制嵌套对象和数组的展示方式，默认 `true`；它不改变外层 Map 的结构，只用于 `data`，不适用于显式单元格或 JSX 组合。
 
-| 配置                               | 嵌套对象  | 嵌套数组  |
-| ---------------------------------- | --------- | --------- |
-| `true`（默认）或 `['map', 'list']` | Map       | List      |
-| `false` 或 `[]`                    | JSON 文本 | JSON 文本 |
-| `['map']`                          | Map       | JSON 文本 |
-| `['list']`                         | JSON 文本 | List      |
+| 配置                                | 嵌套对象  | 嵌套数组  |
+| ----------------------------------- | --------- | --------- |
+| `true`（默认）或 `['map', 'array']` | Map       | Array     |
+| `false` 或 `[]`                     | JSON 文本 | JSON 文本 |
+| `['map']`                           | Map       | JSON 文本 |
+| `['array']`                         | JSON 文本 | Array     |
 
 展开的子组件递归沿用同一选择；结构转为文本后，其整个子树都保留在紧凑 JSON 文本中，不再继续展开。空对象与空数组始终显示为 `{}` 和 `[]`。数组选项的顺序和重复项不影响结果。下例默认仅展开数组，可切换四种展示方式。
 
@@ -225,7 +225,7 @@ Map
 
 数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。要连线或逐格定制，改用显式单元格，在其中嵌套带 `data` 的组件。整体 style / layout 只控制当前层，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
 
-React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ListDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
+React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ArrayDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
 
 ### 引用单元格与控制溢出
 

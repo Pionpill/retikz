@@ -198,7 +198,7 @@ Map
 └── MapEntry
     ├── MapKey
     └── MapValue
-        └── List
+        └── Array
 ```
 
 `MapEntry` represents one record; `MapKey` and `MapValue` occupy its key and value columns. These markers declare content and cannot render independently outside this parent-child structure.
@@ -211,12 +211,12 @@ Wrap multiple drawings in one `Scope` before putting them in a cell. React data 
 
 `data` accepts a JSON object. `dataExpand` controls nested objects and arrays and defaults to `true`. It preserves the outer Map structure and applies only to `data`, not explicit cells or JSX composition.
 
-| Setting                               | Nested objects | Nested arrays |
-| ------------------------------------- | -------------- | ------------- |
-| `true` (default) or `['map', 'list']` | Map            | List          |
-| `false` or `[]`                       | JSON text      | JSON text     |
-| `['map']`                             | Map            | JSON text     |
-| `['list']`                            | JSON text      | List          |
+| Setting                                | Nested objects | Nested arrays |
+| -------------------------------------- | -------------- | ------------- |
+| `true` (default) or `['map', 'array']` | Map            | Array         |
+| `false` or `[]`                        | JSON text      | JSON text     |
+| `['map']`                              | Map            | JSON text     |
+| `['array']`                            | JSON text      | Array         |
 
 Generated components recursively use the same selection. A structure displayed as text retains its entire subtree as compact JSON and stops expanding. Empty objects and arrays always appear as `{}` and `[]`. Selection order and duplicates do not affect the result. The example starts with arrays only; switch between the four modes.
 
@@ -226,7 +226,7 @@ Object keys are displayed as plain text; string values use quoted, escaped JSON 
 
 Data never generates cell ids, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. For connections or per-cell customization, use explicit cells containing a nested component with `data`. Overall style / layout affects the current level only; nested structures use their own defaults, with font and text color inherited through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
 
-React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ListDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
+React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ArrayDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
 
 ### Reference cells and control overflow
 

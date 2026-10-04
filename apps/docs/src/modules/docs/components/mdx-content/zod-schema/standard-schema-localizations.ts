@@ -60,7 +60,7 @@ const pageLocalizations = {
       cornerRadius: '背景、边框与内容裁剪共用的非负圆角半径',
     },
   },
-  ListSchema: {
+  ArraySchema: {
     descriptions: {
       '/union/0/field/"namespace"': '命名空间，固定为 standard',
       '/union/0/field/"type"': '组件类型判别字段',
@@ -84,10 +84,10 @@ const pageLocalizations = {
         '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
       '/union/0/field/"items"': '按顺序排列的单元格；字符串默认只提供文字',
       '/union/0/field/"cellIdMode"':
-        '身份来源：explicit 仅显式 id，string 使用 items 字符串，index 由 List id 与零基下标生成',
+        '身份来源：explicit 仅显式 id，string 使用 items 字符串，index 由 Array id 与零基下标生成',
       '/union/0/field/"items"/array/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
       '/union/0/field/"items"/array/union/1/field/"content"': '可省略的文字或唯一可绘制 child；省略时保留空格',
-      '/union/0/field/"items"/array/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+      '/union/0/field/"items"/array/union/1/field/"style"': 'Array / Map 单元格的稀疏外观覆盖',
       '/union/0/field/"items"/array/union/1/field/"style"/field/"color"':
         '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/0/field/"items"/array/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
@@ -115,7 +115,7 @@ const pageLocalizations = {
       '/union/0/field/"items"/array/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
       '/union/0/field/"data"': '此分支禁止 data',
       '/union/0/field/"dataExpand"': '此分支禁止 dataExpand',
-      '/union/0/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+      '/union/0/field/"style"': 'Array / Map 单元格的稀疏外观覆盖',
       '/union/0/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/0/field/"style"/field/"stroke"': '描边颜色或绘制对象',
       '/union/0/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
@@ -132,7 +132,7 @@ const pageLocalizations = {
         '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
       '/union/0/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
       '/union/0/field/"label"': '容器附属标签，通过 position 与 distance 定位',
-      '/union/0/field/"layout"': 'List 单元格分配与排列',
+      '/union/0/field/"layout"': 'Array 单元格分配与排列',
       '/union/0/field/"layout"/field/"width"':
         '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用各格内容宽度加内边距',
       '/union/0/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
@@ -174,9 +174,9 @@ const pageLocalizations = {
       '/union/1/field/"items"': '此分支禁止显式单元格',
       '/union/1/field/"data"': '递归展示 JSON 数组，默认不推导单元格 id',
       '/union/1/field/"dataExpand"':
-        '嵌套非空 JSON 结构的展开选择：true 全部展开，false 全部显示文本，数组选择 map / list；默认 true',
-      '/union/1/field/"cellIdMode"': '身份来源：explicit 默认不生成 id，index 由 List id 与零基下标生成；禁止 string',
-      '/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+        '嵌套非空 JSON 结构的展开选择：true 全部展开，false 全部显示文本，数组选择 map / array；默认 true',
+      '/union/1/field/"cellIdMode"': '身份来源：explicit 默认不生成 id，index 由 Array id 与零基下标生成；禁止 string',
+      '/union/1/field/"style"': 'Array / Map 单元格的稀疏外观覆盖',
       '/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
       '/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
@@ -193,7 +193,7 @@ const pageLocalizations = {
         '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
       '/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
       '/union/1/field/"label"': '容器附属标签，通过 position 与 distance 定位',
-      '/union/1/field/"layout"': 'List 单元格分配与排列',
+      '/union/1/field/"layout"': 'Array 单元格分配与排列',
       '/union/1/field/"layout"/field/"width"':
         '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用各格内容宽度加内边距',
       '/union/1/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
@@ -258,8 +258,8 @@ const pageLocalizations = {
       '/union/2/field/"defaults"/field/"arrow"': '箭头默认样式',
       '/union/2/field/"defaults"/field/"reset"':
         '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
-      '/union/2/field/"cellIdMode"': '身份来源：explicit 默认不生成 id，index 由 List id 与零基下标生成；禁止 string',
-      '/union/2/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+      '/union/2/field/"cellIdMode"': '身份来源：explicit 默认不生成 id，index 由 Array id 与零基下标生成；禁止 string',
+      '/union/2/field/"style"': 'Array / Map 单元格的稀疏外观覆盖',
       '/union/2/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/2/field/"style"/field/"stroke"': '描边颜色或绘制对象',
       '/union/2/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
@@ -276,7 +276,7 @@ const pageLocalizations = {
         '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
       '/union/2/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
       '/union/2/field/"label"': '容器附属标签，通过 position 与 distance 定位',
-      '/union/2/field/"layout"': 'List 单元格分配与排列',
+      '/union/2/field/"layout"': 'Array 单元格分配与排列',
       '/union/2/field/"layout"/field/"width"':
         '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用各格内容宽度加内边距',
       '/union/2/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
@@ -346,7 +346,7 @@ const pageLocalizations = {
       '/union/0/field/"entries"/array/field/"key"/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
       '/union/0/field/"entries"/array/field/"key"/union/1/field/"content"':
         '可省略的文字或唯一可绘制 child；省略时保留空格',
-      '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+      '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"': 'Array / Map 单元格的稀疏外观覆盖',
       '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"color"':
         '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
@@ -380,7 +380,7 @@ const pageLocalizations = {
       '/union/0/field/"entries"/array/field/"value"/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
       '/union/0/field/"entries"/array/field/"value"/union/1/field/"content"':
         '可省略的文字或唯一可绘制 child；省略时保留空格',
-      '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+      '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"': 'Array / Map 单元格的稀疏外观覆盖',
       '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"color"':
         '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',

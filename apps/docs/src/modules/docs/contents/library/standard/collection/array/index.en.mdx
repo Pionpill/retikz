@@ -1,0 +1,404 @@
+---
+title: Array
+description: Use Array to display one-dimensional content, configure cells, compose drawings, and look up API and Schema contracts.
+---
+
+`Array` draws one-dimensional content as a row or column of cells, suitable for arrays, queues, and indexed values. Each cell contains text or one drawable component.
+
+## Using this topic
+
+After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/extension`.
+
+<ComponentPreview files="array-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Array } from '@retikz/standard-react/collection';
+
+export const Example = () => (
+  <Layout>
+    <Array items={['A', 'B']} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { ArrayDefinition } from '@retikz/standard/collection';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'array',
+      items: ['A', 'B'],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[ArrayDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { array, ArrayInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    array({
+      items: ['A', 'B'],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [ArrayInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { ArrayDefinition } from '@retikz/standard/collection';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'array',
+      items: ['A', 'B'],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, {
+  compile: { composites: [ArrayDefinition] },
+});
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Choose an input form
+
+The four input forms are mutually exclusive. Choose by the source of your content and how you author it: use `items` for ordinary hand-authored content, `data` for existing persisted JSON data, JSX shorthand to write child components directly in React, or `skeleton` for schematic structures.
+
+<DocTabs defaultValue="items">
+<DocTab value="items" label="items · Hand-authored">
+
+Use `items` for ordinary hand-authored content: write text item by item and configure cell styles, dimensions, and ids as needed. Useful for array diagrams, queues, and other content requiring per-cell control.
+
+```tsx
+<Array items={['A', { content: 'B', id: 'selected', style: { fill: 'dodgerblue' } }]} />
+```
+
+A string in `items` supplies text only by default: `'A'` is equivalent to `{ content: 'A' }`, so strings may repeat or be empty. Use `{ content?, id?, style?, layout? }` for individual styling. Set `cellIdMode="string"` to also use each string as its cell id; strings must then be nonblank and unique within the Array, including explicit ids on object items. This mode cannot be combined with `data` or `skeleton`. An object without id does not derive identity from content.
+
+</DocTab>
+<DocTab value="data" label="data · Persisted data">
+
+Pass a JSON array read from a JSON file, storage, or an API. Nested arrays and objects are displayed recursively without converting each cell into configuration. The JSON array below represents data that has already been loaded.
+
+```tsx
+<Array data={['A', 42, { enabled: true }]} />
+```
+
+`data` treats its input as content to display, not as cell configuration: fields such as `style` and `id` remain ordinary data. Use `items` or JSX when you need to control an individual cell's appearance or identity. “Persisted data” describes the source of the values; `data` itself does not read or write storage.
+
+</DocTab>
+<DocTab value="jsx" label="JSX · Declarative shorthand">
+
+In React, use `ArrayItem` children as declarative shorthand for content authored alongside your page JSX. Supply text through `text`, or nest one drawable component, without assembling the children into an `items` array.
+
+```text
+Array
+├── ArrayItem
+└── ArrayItem
+    └── Map
+```
+
+`ArrayItem` must be a direct child of `Array`. Supply text through `text`, or a nested drawable as its child. The example below starts with two text cells; see extended usage for drawable composition.
+
+```tsx
+import { Array, ArrayItem } from '@retikz/standard-react/collection';
+
+<Array>
+  <ArrayItem text="A" />
+  <ArrayItem text="B" id="selected" style={{ fill: 'dodgerblue' }} />
+</Array>;
+```
+
+</DocTab>
+</DocTabs>
+
+### Draw a schematic skeleton
+
+Use `skeleton` when no real data is needed. Components, Vanilla `array()`, and IR share this configuration. It is mutually exclusive with `data`, `items`, and JSX children, even when another input is empty.
+
+| Configuration                  | Result                                                                |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `{ count: 4 }`                 | Four contentless cells                                                |
+| `{ labels: ['x₁', '', 'xₙ'] }` | Three cells with text in the first and last, and an empty middle cell |
+
+Choose count or labels. count is a nonnegative safe integer; labels determines the cell count, preserves repeated text, and treats an empty string as absent content. An empty array or zero count creates an empty collection. Inside labels are plain text without JSON quotes or formula parsing.
+
+`skeleton.labels` appears inside cells, while `index.labels` appears outside. Use both together, or use `index: { start: 1 }` for automatic outside numbering. index.labels excludes start and must match the cell count. Empty labels are hidden; an entirely empty index strip consumes no space or extra gap. Neither label source creates identity. A skeleton can use `cellIdMode="index"` with a Array id for direct-cell references; string mode is unavailable.
+
+<ComponentPreview
+  files={['array-skeleton', 'array-skeleton.preview.tsx']}
+  defaultSourceFile="array-skeleton.preview.tsx"
+  caption="This example fixes cells at 42 × 36. Switch inside content and outside indices independently. Two adjacent separators leave an empty cell."
+/>
+
+Contentless cells retain backgrounds, borders, padding, and reference regions. Their content has zero natural size; default padding still occupies space. Set layout.width / height for explicit proportions, or use items / ArrayItem for per-cell styles, ids, or drawings. Omitted explicit content means no content; `content: ''` remains empty text.
+
+### Style and dimensions
+
+The overall `style` supplies shared appearance; each cell can override individual fields.
+
+Font fields merge individually. `fillOpacity` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
+
+<ComponentPreview
+  files={['array-styles', 'array-styles.preview.tsx']}
+  size="lg"
+  caption="Switch between fixed, shared maximum, and per-cell content widths to compare A, B1, and C. Adjust padding to see how content sizing adds space. Cell B1 overrides color only, not dimensions. The demo starts with fixed dimensions, borders, and backgrounds."
+  defaultSourceFile="array-styles.preview.tsx"
+/>
+
+`layout.width` / `height` set cell border-box dimensions, including padding; zero is valid. Omit width or use `'auto'` to give auto-sized cells the largest effective width in the Array. Use `'content'` to size each cell to its own natural content width plus padding. Omitted or `'auto'` height still uses the largest cell height. Cell-level values take precedence, so a Array using `'content'` can give one cell a fixed width or `'auto'`. `layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
+
+`layout.direction` defaults to `row`; use `column` for vertical ordering. Cells do not wrap. `auto` axes use the largest cell requirement, while fixed axes retain their specified dimensions. `style.cornerRadius` sets the corner radius of all cells; individual cell styles can override it.
+
+Omit `index` or set it to `false` to hide indices. Use `true` or `{}` to enable the defaults. The object form accepts:
+
+- `position`: `before` (default) places indices above a row or to the left of a column; `after` places them below a row or to the right of a column.
+- `labels`: custom outside labels, mutually exclusive with `start`. The length must match the cell count; an empty string hides that label.
+- `start`: the starting value, a nonnegative integer defaulting to `0`. Indices are display labels, not cell ids.
+- `style`: configure index text with `font`, `textColor`, `color`, and `opacity`. Font fields inherit individually from the Array font; text color inherits the overall text color unless overridden. Cell styles do not affect indices.
+
+The index strip is measured from its actual text and separated from cells by `layout.gap`. Changing its font size changes the strip size, not the cell dimensions. Switch direction and index position in the panel above to compare all four sides.
+
+### Container labels
+
+`label` adds text to the whole container. It accepts one object or an array, with position, distance, rotation, and pin options. Labels do not enlarge the layout allocation but do contribute to the final drawing bounds, including on empty containers.
+
+<ComponentPreview
+  files={['array-labels', 'array-labels.preview.tsx']}
+  size="md"
+  caption="Keep the array fixed while changing label placement, rotation, and its pin. The pin is enabled for demonstration."
+  defaultSourceFile="array-labels.preview.tsx"
+/>
+
+Overall font, text color, and `defaults.label` supply label defaults, overridden by the label itself. Cell styles do not affect container labels, and nested containers created by `data` do not inherit the root label.
+
+<ComponentAlert
+  type="tip"
+  title="Label configuration"
+  description={
+    <>
+      Label configuration reuses Node label. See the{' '}
+      <a href="/kernel/components/node/labels">node label documentation</a> for all position, style, and pin options.
+    </>
+  }
+/>
+
+## Extended usage
+
+### Compose drawable content
+
+Use `ArrayItem` to provide either `text` or exactly one drawable child per cell, never both. Omitting both preserves an empty cell.
+
+Wrap multiple drawings in one `Scope` before putting them in a cell. React data arrays contain text configurations, not JSX. Vanilla cell `content` accepts text or one authoring child; direct IR `content` accepts text or one serializable drawable.
+
+The React example below uses this component hierarchy:
+
+```text
+Array
+├── ArrayItem
+└── ArrayItem
+    └── Map
+```
+
+<ComponentPreview files="array-composition" size="xs" />
+
+### Display JSON data directly
+
+`data` accepts a JSON array. `dataExpand` controls nested objects and arrays and defaults to `true`. It preserves the outer Array structure and applies only to `data`, not explicit cells or JSX composition.
+
+| Setting                                | Nested objects | Nested arrays |
+| -------------------------------------- | -------------- | ------------- |
+| `true` (default) or `['map', 'array']` | Map            | Array         |
+| `false` or `[]`                        | JSON text      | JSON text     |
+| `['map']`                              | Map            | JSON text     |
+| `['array']`                            | JSON text      | Array         |
+
+Generated components recursively use the same selection. A structure displayed as text retains its entire subtree as compact JSON and stops expanding. Empty objects and arrays always appear as `{}` and `[]`. Selection order and duplicates do not affect the result. The example starts with arrays only; switch between the four modes. `layout.width: 'content'` sizes generated Array cells to their own content.
+
+<ComponentPreview
+  files={['array-data', 'array-data.preview.tsx']}
+  size="xs"
+  defaultSourceFile="array-data.preview.tsx"
+/>
+
+| Data type       | Input example   | Display                                                        |
+| --------------- | --------------- | -------------------------------------------------------------- |
+| String value    | `"null"`        | A quoted, escaped JSON literal: `"null"`, distinct from `null` |
+| Number          | `42`            | Displayed as `42`                                              |
+| Boolean         | `true`, `false` | Displayed as `true`, `false`                                   |
+| Null            | `null`          | Displayed as `null`                                            |
+| Nonempty array  | `["A", 2]`      | Recursively displayed as a Array, with one cell per element    |
+| Empty array     | `[]`            | Displayed as the text `[]`                                     |
+| Nonempty object | `{"a": 1}`      | A nested Map by default; `text` mode displays `{"a":1}`        |
+| Empty object    | `{}`            | Displayed as the text `{}`                                     |
+
+An empty root has zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use Map `entries` for custom ordering or repeated keys.
+
+Data does not generate cell ids by default, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. Use explicit cells for per-cell customization. Overall style / layout affects the current level only, except that `layout.width: 'content'` in `data` mode passes through the automatically generated Array / Map data tree to descendant Arrays, sizing cells at each level to their own content. Hand-authored nested components do not inherit it. Font and text color inherit through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
+
+React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ArrayDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
+
+### Reference cells and control overflow
+
+Set a cell `id` to reference it from a path endpoint, for example `to={{ id: 'selected', anchor: 'right' }}`. The reference uses the cell border rectangle, excluding gaps, indices, and visual overflow. Hiding the background does not change it. An id on the content references its own geometry. In the default mode, cells without ids do not acquire identities from array indices.
+
+`cellIdMode` selects identities for direct cells and defaults to `explicit`:
+
+| Mode       | Purpose                                                                                             |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| `explicit` | Register only ids explicitly set on objects or `ArrayItem`; text does not create identity           |
+| `string`   | Use `items` strings as both content and id; disallows `data` and `skeleton`                         |
+| `index`    | Require a Array id and generate `<array-id>-<index>` for direct `items` / `data` / `skeleton` cells |
+
+For example, the second cell of `<Array id="queue" cellIdMode="index" data={['A', 'B']} />` is referenced as `queue-1`. Import `getArrayCellId` from `@retikz/standard/collection` and call `getArrayCellId('queue', 1)` to obtain the same name. Arguments must be a nonblank Array id and a nonnegative integer; the helper does not check whether the cell exists.
+
+<ComponentPreview
+  files="array-cell-reference"
+  size="xs"
+  caption="The arrow points to queue-1, generated from the Array id and index; displayed index 1 is the second cell."
+/>
+
+Identity indices always start at zero, independently of the displayed `index.start`. They identify current positions, which may contain different items after reordering. Nested descendants do not inherit these ids. An explicit cell id remains usable alongside its generated id, referencing the same rectangle without duplicating geometry. Equal names on one cell are deduplicated; collisions between different cells fail.
+
+<ComponentAlert
+  type="tip"
+  title="Inspection lookup"
+  description={
+    <>
+      The primary id <code>cell:queue-1</code> and alias <code>{'cell:<explicit-id>'}</code> query the same spatial
+      record.
+    </>
+  }
+/>
+
+Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
+
+<ComponentPreview
+  files="array-overflow"
+  size="sm"
+  caption="Same fixed cell width: text overflows on the left and is clipped to the cell border on the right."
+/>
+
+## Errors and limitations
+
+- Do not mix input forms. Explicit cell ids must be unique within the container; configure repeated text separately from identity.
+- Composition markers must be direct children of their required parents, with empty cells allowed and exactly one drawable when provided. Invalid JSX composition raises an error.
+- `data` accepts JSON value trees only, not functions, runtime instances, cycles, or sparse arrays. Project data before rendering when needed.
+- A fixed cell may be smaller than its content, but compilation fails if the parent allocation cannot fit all cells and gaps. Extra parent space remains at the end rather than stretching cells.
+- These components draw data structures; they do not process data or implement arbitrary matrices or merged cells.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains internal implementation. If you only need to use the component, skip ahead to the API reference."
+/>
+
+### How dimensions are determined
+
+`resolveArray` merges overall and per-cell settings before applying defaults. Text becomes a node with no background, border, or padding. `compileArray` measures each content once at its natural size and adds padding. `auto` uses the largest cell requirement, `content` width keeps each cell's own requirement, and fixed dimensions retain their values. Placement advances by cell size plus gap along the chosen direction. Indices are measured separately using the merged font and reserve a strip above/below rows or left/right of columns according to `index.position`.
+
+Compare the cell borders for the same content under two width modes, and note the separate index strip outside them:
+
+<ComponentPreview files="array-measurement-figure" size="sm" hideCode type="illustration" />
+
+On the left, `auto` gives both cells the largest content requirement. On the right, `content` keeps each cell's own content width plus padding. The index strip takes additional space without changing cell widths.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Settings and defaults',
+      path: 'packages/library/standard/src/collection/array/resolve/resolve.ts',
+      startLine: 1,
+    },
+    {
+      label: 'Measurement and placement',
+      path: 'packages/library/standard/src/collection/array/pipeline.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+### Why references and labels do not resize cells
+
+After placement, `compileCells` reuses the measured results to center content and emit the background, clipped content layer, and border separately. An invisible rectangular node carries each cell id using its allocated size, so content overflow does not affect the reference. Separate `container` and `cell:<id>` spatial handles support inspection rather than replacing named references.
+
+Another invisible rectangle hosts container labels using the container allocation, including the index strip when enabled. Labels attach after cell placement and do not feed back into cell measurement; they only extend visible bounds. The label host does not inherit cell role styling or use `defaults.node`.
+
+The blue border shows the fixed cell allocation and reference bounds. Compare the arrow endpoint with the overflowing text and container label outside the border:
+
+<ComponentPreview files="array-reference-figure" size="md" hideCode type="illustration" />
+
+Text overflow and the label extend visible bounds without changing the cell's 82 × 42 allocation. The reference arrow still points to the rectangle's bottom edge.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Content replay, reference rectangles, and label host',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## API reference
+
+This local reference covers the component’s public React, Vanilla, and IR entries, generated from source signatures and comments. See the Schema section for persistent fields; shared package contracts are not duplicated here.
+
+{/* @include library/standard/collection/array/generated */}
+
+## Schema reference
+
+`ArraySchema` describes persistent input with `namespace: 'standard'` and `type: 'array'`. Choose items, data, or skeleton. Factories preserve sparse input; explicit `schema.parse` materializes declared static defaults. Cell inheritance and the dynamic clipping default are resolved after settings merge.
+
+#### ArraySchema
+
+<ZodSchema name="ArraySchema" expandNested />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Surface',
+      description: 'Add a background, padding, and clipping to a single drawing',
+      url: '/library/standard/presentation/surface',
+    },
+  ]}
+/>

@@ -1,13 +1,13 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { createInputScene } from '@retikz/react';
 import type { InputCell } from '@retikz/standard-vanilla/collection';
-import type { IRCell, IRListCell } from '@retikz/standard/collection';
+import type { IRCell, IRArrayCell } from '@retikz/standard/collection';
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/collection';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
-type CellLayoutSource = IRListCell['layout'];
+type CellLayoutSource = IRArrayCell['layout'];
 type CellWithLayout<TLayout extends CellLayoutSource> = Omit<IRCell, 'layout'> & { layout?: TLayout };
 
 /** React 数据入口的文本单元格；复杂内容使用组合组件 */
@@ -80,7 +80,7 @@ export const createCellsInput = <TLayout extends CellLayoutSource>(
     const collected = createInputScene(cell.content, { embedIdPrefix: `${context.id}:cell:${index}` });
     const children = collected.scene.children;
     if (children === undefined || children.length !== 1) {
-      return invalidCellAuthoring('Each List / Map cell requires exactly one authoring child.');
+      return invalidCellAuthoring('Each Array / Map cell requires exactly one authoring child.');
     }
     adapters.push(...collected.adapters);
     return { ...cell, content: children[0] };

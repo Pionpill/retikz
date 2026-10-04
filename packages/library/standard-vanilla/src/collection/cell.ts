@@ -1,7 +1,7 @@
 import type { CoreDependencyProvider, IRChild } from '@retikz/core';
 import { PathClipProvider } from '@retikz/extension';
 import type { IRCell } from '@retikz/standard/collection';
-import { ListProvider, MapProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/collection';
+import { ArrayProvider, MapProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/collection';
 import type { InputChild, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 /** 单元格接受纯文本或根 Scene 的统一 authoring 输入；字符串保留到 Standard IR */
@@ -11,8 +11,8 @@ export type InputCell<TCell extends { content?: string | IRChild } = IRCell> = O
 
 /** JSON 数据可交替嵌套两种结构，根入口装配依赖而不使 provider 相互依赖 */
 export const dataCellDependencies = {
-  roots: [ListProvider.key, MapProvider.key],
-  providers: [ListProvider, MapProvider, PathClipProvider],
+  roots: [ArrayProvider.key, MapProvider.key],
+  providers: [ArrayProvider, MapProvider, PathClipProvider],
 };
 
 /** 归一化每格的唯一 child，并保留其依赖与 authoring sites */
@@ -25,7 +25,7 @@ export const normalizeCells = <TCell extends { content?: string | InputChild }>(
   if (normalizeChildren === undefined)
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
-      message: 'List / Map requires Kernel Vanilla normalizeScene.',
+      message: 'Array / Map requires Kernel Vanilla normalizeScene.',
       details: { operation: 'normalizeCells' },
     });
   const normalized = cells.map(cell =>

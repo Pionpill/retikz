@@ -80,8 +80,8 @@ export const librarySection: Array<Section> = [
         meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
         children: [
           {
-            id: 'list',
-            label: 'library.standardList',
+            id: 'array',
+            label: 'library.standardArray',
             difficulty: 'beginner',
           },
           {

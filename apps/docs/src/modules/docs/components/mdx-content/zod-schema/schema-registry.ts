@@ -1323,10 +1323,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/standard/presentation/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
-  ListSchema: {
-    schema: StandardCollectionIR.ListSchema,
-    label: 'List',
-    url: '/library/standard/collection/list#listschema',
+  ArraySchema: {
+    schema: StandardCollectionIR.ArraySchema,
+    label: 'Array',
+    url: '/library/standard/collection/array#listschema',
   },
   MapSchema: {
     schema: StandardCollectionIR.MapSchema,

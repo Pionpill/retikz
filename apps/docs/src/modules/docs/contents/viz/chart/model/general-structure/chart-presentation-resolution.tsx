@@ -1,5 +1,5 @@
 import { Draw, Layout } from '@retikz/react';
-import { List, Map } from '@retikz/standard-react/collection';
+import { Array, Map } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -30,7 +30,7 @@ const ChartPresentationResolution: FC<ChartPresentationResolutionProps> = props 
           { key: 'subtitle', value: t.subtitle },
         ]}
       />
-      <List
+      <Array
         id="resolved-flex"
         transforms={[{ kind: 'translate', x: 435, y: 12 }]}
         label={label(t.resolved)}

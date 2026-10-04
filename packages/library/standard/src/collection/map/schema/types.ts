@@ -19,7 +19,7 @@ export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries'
         /** 递归展示 JSON 对象，不推导单元格 id */ data: NonNullable<input<typeof MapSchema>['data']>;
         entries?: never;
         skeleton?: never;
-        /** 嵌套对象与数组的展开选择；true 全部展开，false 全部显示为文本，数组选择 map / list
+        /** 嵌套对象与数组的展开选择；true 全部展开，false 全部显示为文本，数组选择 map / array
          * @default true
          */
         dataExpand?: input<typeof MapSchema>['dataExpand'];

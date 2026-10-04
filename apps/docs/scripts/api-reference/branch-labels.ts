@@ -139,7 +139,7 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
     { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
   ],
-  '@retikz/standard/collection#IRListIndexOptions': [
+  '@retikz/standard/collection#IRArrayIndexOptions': [
     { value: 'automatic', field: 'start', type: 'number', label: { zh: '自动编号', en: 'Automatic numbering' } },
     { value: 'labels', field: 'start', type: 'never', label: { zh: '显式标号', en: 'Explicit labels' } },
   ],
@@ -192,22 +192,22 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],
-  '@retikz/standard-vanilla/collection#InputList': [
+  '@retikz/standard-vanilla/collection#InputArray': [
     {
       value: 'items',
       field: 'items',
-      type: `Array<string | InputCell<IRListCell>>`,
+      type: `Array<string | InputCell<IRArrayCell>>`,
       label: { zh: '显式单元格', en: 'Explicit cells' },
     },
-    { value: 'data', field: 'data', type: "NonNullable<IRList['data']>", label: { zh: 'JSON 数据', en: 'JSON data' } },
+    { value: 'data', field: 'data', type: "NonNullable<IRArray['data']>", label: { zh: 'JSON 数据', en: 'JSON data' } },
     {
       value: 'skeleton',
       field: 'skeleton',
-      type: "NonNullable<IRList['skeleton']>",
+      type: "NonNullable<IRArray['skeleton']>",
       label: { zh: '示意骨架', en: 'Skeleton' },
     },
   ],
-  '@retikz/standard-react/collection#ListItemProps': [
+  '@retikz/standard-react/collection#ArrayItemProps': [
     { value: 'text', field: 'text', type: 'string', label: { zh: '文本或空格', en: 'Text or empty cell' } },
     { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
   ],

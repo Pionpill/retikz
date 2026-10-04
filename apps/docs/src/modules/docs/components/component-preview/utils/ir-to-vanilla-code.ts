@@ -27,7 +27,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
-import type { IRCell, IRList, IRListCell, IRMap } from '@retikz/standard/collection';
+import type { IRCell, IRArray, IRArrayCell, IRMap } from '@retikz/standard/collection';
 
 import {
   entityPreviewAuthoringInput,
@@ -302,7 +302,7 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'frame',
   'surface',
   'surfaceChild',
-  'list',
+  'array',
   'map',
   'legend',
   'shape',
@@ -319,7 +319,7 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'AxesInputEmbedAdapter',
   'FrameInputEmbedAdapter',
   'SurfaceInputEmbedAdapter',
-  'ListInputEmbedAdapter',
+  'ArrayInputEmbedAdapter',
   'MapInputEmbedAdapter',
   'LegendInputEmbedAdapter',
 ];
@@ -362,7 +362,7 @@ export type StandardPreviewDefinitionName =
   | 'GridDefinition'
   | 'AxesDefinition'
   | 'FrameDefinition'
-  | 'ListDefinition'
+  | 'ArrayDefinition'
   | 'MapDefinition'
   | 'SurfaceDefinition'
   | 'LegendDefinition';
@@ -392,7 +392,7 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   grid: 'GridDefinition',
   axes: 'AxesDefinition',
   frame: 'FrameDefinition',
-  list: 'ListDefinition',
+  array: 'ArrayDefinition',
   map: 'MapDefinition',
   surface: 'SurfaceDefinition',
   legend: 'LegendDefinition',
@@ -431,8 +431,8 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const row = BlockRowSchema.parse(child);
     return 'children' in row ? [...(row.children ?? [])] : [];
   }
-  if (child.namespace === 'standard' && child.type === 'list')
-    return ((child as IRList).items ?? []).flatMap(cell =>
+  if (child.namespace === 'standard' && child.type === 'array')
+    return ((child as IRArray).items ?? []).flatMap(cell =>
       typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string' ? [] : [cell.content],
     );
   if (child.namespace === 'standard' && child.type === 'map')
@@ -516,8 +516,8 @@ export const collectPreviewDefinitions = (
         }
         if (!standardAdapterKinds.has(child.type)) {
           standard.add(definitionName);
-          if ((child.type === 'list' || child.type === 'map') && (child as IRList | IRMap).data !== undefined) {
-            standard.add('ListDefinition');
+          if ((child.type === 'array' || child.type === 'map') && (child as IRArray | IRMap).data !== undefined) {
+            standard.add('ArrayDefinition');
             standard.add('MapDefinition');
           }
         }
@@ -578,10 +578,10 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardCounts.set(record.type, count);
   ctx.standardHelpers.add(STANDARD_SHAPE_KINDS.includes(record.type) ? 'shape' : record.type);
   ctx.standardAdapters.add(adapterName);
-  if (record.type === 'list' || record.type === 'map') {
+  if (record.type === 'array' || record.type === 'map') {
     if (record.data !== undefined || record.skeleton !== undefined)
       return `${record.type}(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
-    const cellCode = (cell: string | IRCell | IRListCell) => {
+    const cellCode = (cell: string | IRCell | IRArrayCell) => {
       if (typeof cell === 'string') return formatString(cell);
       const { content, ...props } = cell;
       if (content === undefined) return formatObject(props, indent + 2);
@@ -591,10 +591,10 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
       );
     };
     const input = stripKeys(record, ['namespace', 'type', 'items', 'entries']);
-    const field = record.type === 'list' ? 'items' : 'entries';
+    const field = record.type === 'array' ? 'items' : 'entries';
     const values =
-      record.type === 'list'
-        ? ((child as IRList).items ?? []).map(cellCode)
+      record.type === 'array'
+        ? ((child as IRArray).items ?? []).map(cellCode)
         : ((child as IRMap).entries ?? []).map(
             entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
           );
@@ -913,7 +913,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     );
     const members = [...standardHelpers, ...standardAdapters];
     const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
-    const collectionMemberNames = new Set<string>(['list', 'map', 'ListInputEmbedAdapter', 'MapInputEmbedAdapter']);
+    const collectionMemberNames = new Set<string>(['array', 'map', 'ArrayInputEmbedAdapter', 'MapInputEmbedAdapter']);
     const collectionMembers = members.filter(name => collectionMemberNames.has(name));
     const presentationMembers = members.filter(
       name => !shapeMembers.includes(name) && !collectionMemberNames.has(name),
@@ -942,7 +942,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     const shapeDefinitions = definitions.standard.filter(name =>
       STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0].toUpperCase()}${kind.slice(1)}`)),
     );
-    const collectionDefinitionNames = new Set<string>(['ListDefinition', 'MapDefinition']);
+    const collectionDefinitionNames = new Set<string>(['ArrayDefinition', 'MapDefinition']);
     const collectionDefinitions = definitions.standard.filter(name => collectionDefinitionNames.has(name));
     const presentationDefinitions = definitions.standard.filter(
       name => !shapeDefinitions.includes(name) && !collectionDefinitionNames.has(name),

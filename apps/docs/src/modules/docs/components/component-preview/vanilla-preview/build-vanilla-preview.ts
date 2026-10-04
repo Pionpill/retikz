@@ -105,7 +105,7 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import { list, ListInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { array, ArrayInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -129,8 +129,8 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
-import type { IRCell, IRList, IRMap } from '@retikz/standard/collection';
-import { ListDefinition, MapDefinition } from '@retikz/standard/collection';
+import type { IRCell, IRArray, IRMap } from '@retikz/standard/collection';
+import { ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
 import {
   AxesDefinition,
   AxesSchema,
@@ -270,7 +270,7 @@ type StandardKind =
   | 'frame'
   | 'surface'
   | 'legend'
-  | 'list'
+  | 'array'
   | 'map';
 
 type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
@@ -387,13 +387,13 @@ const convertStandardChild = (
         content: normalizedContent,
       });
     }
-    case 'list': {
-      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRList;
+    case 'array': {
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRArray;
       void _namespace;
       void _type;
-      if (skeleton !== undefined) return list({ ...input, skeleton });
-      if (data !== undefined) return list({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
-      return list({
+      if (skeleton !== undefined) return array({ ...input, skeleton });
+      if (data !== undefined) return array({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+      return array({
         ...input,
         items: items.map(cell =>
           typeof cell === 'string'
@@ -639,7 +639,7 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<Synchron
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('list') ? [ListInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('array') ? [ArrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('map') ? [MapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
@@ -676,7 +676,7 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
-  ListDefinition,
+  ArrayDefinition,
   MapDefinition,
   SurfaceDefinition,
   LegendDefinition,
@@ -722,7 +722,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'frame',
           'surface',
           'legend',
-          'list',
+          'array',
           'map',
           'circle',
           'ellipse',

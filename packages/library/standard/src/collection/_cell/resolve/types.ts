@@ -4,7 +4,7 @@ import type { BoundsInsets } from '@retikz/math';
 import type { IRSurface } from '../../../presentation/surface';
 import type { IRCell, IRCellLayout, IRCellStyle } from '../schema';
 
-/** 共享解析器接受 List 额外的宽度值，Map Source 仍由其自身 schema 限定 */
+/** 共享解析器接受 Array 额外的宽度值，Map Source 仍由其自身 schema 限定 */
 export type CellResolveSource = Omit<IRCell, 'layout'> & {
   layout?: Omit<IRCellLayout, 'width'> & { width?: number | 'auto' | 'content' };
 };

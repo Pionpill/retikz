@@ -1,26 +1,26 @@
 ---
 title: collection · 集合
-description: 用列表与映射展示顺序集合、键值记录和嵌套结构。
+description: 用数组与映射展示顺序集合、键值记录和嵌套结构。
 ---
 
-集合组件把结构化内容画成可识别的单元格。List 按顺序组织项目，Map 按键和值组织条目；单元格也可以承载另一个组件，用来表达嵌套结构。
+集合组件把结构化内容画成可识别的单元格。Array 按顺序组织项目，Map 按键和值组织条目；单元格也可以承载另一个组件，用来表达嵌套结构。
 
 ## 职责一览
 
-| 组件        | 职责                                 | 何时阅读                   |
-| ----------- | ------------------------------------ | -------------------------- |
-| List · 列表 | 按顺序排列内容，支持横排、竖排与索引 | 表达数组、队列等顺序结构   |
-| Map · 映射  | 将键与值组织为条目                   | 表达记录、属性表或键值集合 |
+| 组件         | 职责                                 | 何时阅读                   |
+| ------------ | ------------------------------------ | -------------------------- |
+| Array · 数组 | 按顺序排列内容，支持横排、竖排与索引 | 表达数组、队列等顺序结构   |
+| Map · 映射   | 将键与值组织为条目                   | 表达记录、属性表或键值集合 |
 
 ## 在序列中展示一条记录
 
-下面复用列表页的组合示例：外层 List 表达先后顺序，其中一个 ListItem 放入 Map 展示记录字段。外层负责项目排列，内层负责键值关系。
+下面复用数组页的组合示例：外层 Array 表达先后顺序，其中一个 ArrayItem 放入 Map 展示记录字段。外层负责项目排列，内层负责键值关系。
 
-<ComponentPreview files="/library/standard/collection/list/list-composition" size="sm" />
+<ComponentPreview files="/library/standard/collection/array/array-composition" size="sm" />
 
-嵌套改变的是单元格内容，列表的顺序仍然清楚。单元格样式、索引和引用方式分别在 List、Map 子页展开。
+嵌套改变的是单元格内容，数组的顺序仍然清楚。单元格样式、索引和引用方式分别在 Array、Map 子页展开。
 
-同一个 JSON 数组可以直接作为 List 的 `data`，JSON 对象可以作为 Map 的 `data`；需要给单格设置身份、样式或嵌套可绘制内容时，使用显式 items / entries 或 React 组合子项。两种入口分别承担数据展示与逐格控制，不要在同一实例混用。
+同一个 JSON 数组可以直接作为 Array 的 `data`，JSON 对象可以作为 Map 的 `data`；需要给单格设置身份、样式或嵌套可绘制内容时，使用显式 items / entries 或 React 组合子项。两种入口分别承担数据展示与逐格控制，不要在同一实例混用。
 
 ## 选择与边界
 
@@ -31,9 +31,9 @@ description: 用列表与映射展示顺序集合、键值记录和嵌套结构�
 <LinkedSections
   items={[
     {
-      title: 'List · 列表',
+      title: 'Array · 数组',
       description: '按顺序排列内容，支持横排、竖排与索引',
-      url: '/library/standard/collection/list',
+      url: '/library/standard/collection/array',
     },
     { title: 'Map · 映射', description: '将键与值组织为条目', url: '/library/standard/collection/map' },
   ]}

@@ -206,7 +206,7 @@
     "standardAxes": "Axes",
     "standardFrame": "Frame",
     "standardSurface": "Surface",
-    "standardList": "List",
+    "standardArray": "Array",
     "standardMap": "Map",
     "standardLegend": "Legend",
     "layout": "Layout",

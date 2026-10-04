@@ -25,7 +25,7 @@ import type { SurfaceInput, AxesInput, GridInput, GridLineInput } from '@retikz/
 import type { IRArc, PolygonSchema } from '@retikz/standard/shape';
 import type { ArcProps } from '@retikz/standard-react/shape';
 import type { InputArc } from '@retikz/standard-vanilla/shape';
-import type { IRList, IRListCell } from '@retikz/standard/collection';
+import type { IRArray, IRArrayCell } from '@retikz/standard/collection';
 import type { input as ZodInput } from 'zod';
 type PolygonSource = ZodInput<typeof PolygonSchema>;
 export type ArcFields = Pick<IRArc, 'close' | 'startAngle'>;
@@ -35,8 +35,8 @@ export type CustomArc = Omit<IRArc, 'close'> & {
   /** 自定义闭合选项 */
   close?: boolean;
 };
-export type CellFields = Pick<IRListCell, 'content' | 'id'>;
-export type ListFields = Pick<IRList, 'index' | 'cellIdMode'>;
+export type CellFields = Pick<IRArrayCell, 'content' | 'id'>;
+export type ArrayFields = Pick<IRArray, 'index' | 'cellIdMode'>;
 export type SurfaceFields = Pick<SurfaceInput, 'padding' | 'background' | 'overflow'>;
 export type AxesFields = Pick<AxesInput, 'x' | 'y' | 'animations' | 'origin'>;
 export type Grid = Pick<GridInput, 'line' | 'localNamespace' | 'bounds'>;
@@ -111,7 +111,7 @@ export type IRPolygon = (Pick<Extract<PolygonSource, { radius: number }>, 'radiu
             'SurfaceFields',
             'AxesFields',
             'CellFields',
-            'ListFields',
+            'ArrayFields',
           ],
         },
       ],
