@@ -8,12 +8,12 @@ import { dataCellDependencies, normalizeCells } from './cell';
 
 /**
  * List 的 Vanilla authoring 输入
- * @description items 与 data 二选一；dataObjectDisplay 仅用于 data 入口。其余字段沿用 IRList，namespace 与 type 由 adapter 补齐
+ * @description items 与 data 二选一；dataExpand 仅用于 data 入口。其余字段沿用 IRList，namespace 与 type 由 adapter 补齐
  */
-export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
+export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataExpand'> &
   (
-    | { items: Array<string | InputCell<IRListCell>>; data?: never; dataObjectDisplay?: never }
-    | { data: NonNullable<IRList['data']>; items?: never; dataObjectDisplay?: IRList['dataObjectDisplay'] }
+    | { items: Array<string | InputCell<IRListCell>>; data?: never; dataExpand?: never }
+    | { data: NonNullable<IRList['data']>; items?: never; dataExpand?: IRList['dataExpand'] }
   );
 
 /** 将 List 输入与嵌套内容交给根级 traversal */

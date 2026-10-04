@@ -7,7 +7,7 @@ import { renderListDataPreview } from './list-data.preview';
 export const previewControls = previewControlContract.controls;
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   renderListDataPreview({
-    dataObjectDisplay: values.dataObjectDisplay,
+    dataExpand: values.dataExpand,
   }),
 );
 export const previewSource = controlledPreview.source;

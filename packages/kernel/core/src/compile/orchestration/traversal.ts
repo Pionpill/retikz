@@ -1333,6 +1333,7 @@ export const compileChildrenToPrimitives = (
         frame.publicationSink.push(globalEnvelope);
       }
       flushPendingPathEmissions(scopePendingPaths);
+      options.captureScopeTargets?.(child, runtime.state.namespaceStack, [...frame.scopeChain, ...scopeTransforms]);
       frame.compileObservationSink.push(...scopeCompileObservations);
       for (const contribution of effectiveAllocations(scopeAllocations)) {
         pushAllocation(
@@ -2174,7 +2175,12 @@ export const compileChildrenToPrimitives = (
       probeTheme: TraversalFrame['theme'],
       scopeChainApplied = false,
       probeInputs?: CompositeRuntimeInputScope,
-    ): Readonly<{ layoutResult: LayoutChildResult; transaction: CompositeReplayTransaction }> => {
+      captureScopeTargets?: TraversalCompileOptions['captureScopeTargets'],
+    ): Readonly<{
+      layoutResult: LayoutChildResult;
+      transaction: CompositeReplayTransaction;
+      namespaceStack: NamespaceStack;
+    }> => {
       const warnings: Array<CompileWarningInput> = [];
       const namespaceBaselineWarnings: Array<{ id: string; warning: CompileWarningInput }> = [];
       const captureWarning = (warning: CompileWarningInput): void => {
@@ -2232,6 +2238,7 @@ export const compileChildrenToPrimitives = (
         proposal: clonedProposal,
         session: runtime.context.session,
         runtimeInputs: probeInputs ?? { source: clonedChild, bindings: [] },
+        ...(captureScopeTargets === undefined ? {} : { captureScopeTargets }),
         spatialOwnerPath,
         ...(probeIdentityTracker === undefined ? {} : { identityTracker: probeIdentityTracker }),
         observeWarningOccurrence: current => {
@@ -2275,7 +2282,7 @@ export const compileChildrenToPrimitives = (
         themeFingerprint: replayThemeFingerprint(probeTheme),
         ...(scopeChainApplied ? { scopeChainApplied: true } : {}),
       };
-      return { layoutResult, transaction };
+      return { layoutResult, transaction, namespaceStack };
     };
 
     try {
@@ -2283,6 +2290,91 @@ export const compileChildrenToPrimitives = (
         ...runtimeInputContext,
         theme: frame.theme,
         proposal: cloneLayoutProposal(frame.childProposal ?? NaturalLayoutProposal, key, occurrence),
+        resolvePathTargets: query => {
+          const queryChild = snapshotCompositeLayoutChild(owner.label, query.child, layoutProbeIndex++);
+          let queryNamespace: NamespaceStack | undefined;
+          let queryChain = frame.scopeChain;
+          const probe = probeLayoutChild(
+            queryChild,
+            NaturalLayoutProposal,
+            occurrence,
+            frame.scopeChain,
+            frame.styleStack,
+            frame.theme,
+            false,
+            undefined,
+            (scope, namespace, chain) => {
+              if (scope !== queryChild) return;
+              queryNamespace = namespace.fork();
+              queryChain = chain;
+            },
+          );
+          const targetNamespace = queryNamespace ?? probe.namespaceStack;
+          const positionContext = createPositionResolveContext({
+            namespaceStack: targetNamespace,
+            nodeDistance: context.nodeDistance,
+            scopeChain: queryChain,
+            resolveExplicitBoundary,
+          });
+          targetNamespace.enterResolvingPhase();
+          try {
+            const bindingOf = (target: IRTarget) => {
+              try {
+                return bindPathTarget(target, positionContext);
+              } catch (cause) {
+                const pointIndex = query.points.indexOf(target);
+                const field = target === query.source ? 'source' : `points[${pointIndex}]`;
+                throw new RetikzCoreError({
+                  code: RetikzCoreErrorCode.Compile,
+                  message: `Path target query could not resolve ${field}.`,
+                  details: { path: field },
+                  cause,
+                });
+              }
+            };
+            const queryResolution = resolvePathValue(
+              {
+                type: 'path',
+                children: [
+                  { type: 'step', kind: 'move', to: query.source },
+                  { type: 'step', kind: 'smooth', points: [...query.points] },
+                ],
+              },
+              {
+                mode: frame.theme.mode,
+                scopeChain: queryChain,
+                targetResolver: {
+                  pointOfTarget: target => bindingOf(target)?.point ?? null,
+                  bindTarget: target => bindingOf(target),
+                },
+                pathKinds: context.pathKinds,
+                pathGenerators: context.pathGenerators,
+                arrows: context.arrows,
+                patterns: context.patterns,
+                round: context.round,
+                irPath: 'query',
+              },
+            );
+            const pointAt = (locator: string, field: string): IRPosition => {
+              const point = queryResolution.targets.get(locator)?.point;
+              if (point === undefined || point === null || !point.every(Number.isFinite))
+                throw new RetikzCoreError({
+                  code: RetikzCoreErrorCode.Compile,
+                  message: `Path target query could not resolve ${field}.`,
+                  details: { path: field },
+                });
+              return [point[0], point[1]];
+            };
+            return {
+              source: pointAt('query.children[0].to', 'source'),
+              points: query.points.map((_point, pointIndex) =>
+                pointAt(`query.children[1].points[${pointIndex}]`, `points[${pointIndex}]`),
+              ),
+            };
+          } finally {
+            targetNamespace.exitResolvingPhase();
+          }
+        },
         warn: (code, message, subPath) =>
           runtime.context.onWarn({
             code,

@@ -2,7 +2,11 @@ import {
   BoxSpacingSchema,
   ChildSchema,
   CompositeBaseSchema,
-  GraphicOpacitySchema,
+  GraphicFillSchema,
+  GraphicColorSchema,
+  GraphicElementOpacitySchema,
+  GraphicStrokeSchema,
+  PathStrokeSchema,
   PaintValueSchema,
   ScopePropsSchema,
 } from '@retikz/core';
@@ -11,17 +15,19 @@ import { LayoutOverflow, LayoutOverflowSchema } from '@retikz/layout/compose';
 import { literal, strictObject, union } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
-import { StandardPathStrokeStyleSchema } from '../../shared/schemas';
 import { SURFACE_TYPE } from './constants';
 
 export const SurfaceBackgroundSchema = strictObject({
   fill: PaintValueSchema.describe('Fill paint covering the complete Surface allocation box.'),
-  fillOpacity: GraphicOpacitySchema.shape.fillOpacity,
+  fillOpacity: GraphicFillSchema.shape.fillOpacity,
 }).describe('Optional fill appearance for the Surface allocation box.');
 
-export const SurfaceBorderSchema = StandardPathStrokeStyleSchema.omit({ zIndex: true }).describe(
-  'Optional stroke appearance drawn on the Surface allocation boundary.',
-);
+export const SurfaceBorderSchema = strictObject({
+  ...GraphicColorSchema.shape,
+  ...GraphicElementOpacitySchema.shape,
+  ...GraphicStrokeSchema.shape,
+  ...PathStrokeSchema.shape,
+}).describe('Optional stroke appearance drawn on the Surface allocation boundary.');
 
 const SurfacePaddingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).describe(
   'Uniform or side-specific non-negative Surface padding.',

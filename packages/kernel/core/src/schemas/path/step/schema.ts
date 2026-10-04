@@ -286,6 +286,10 @@ export const RectangleStepSchema = strictObject({
   ),
 }).describe('Rectangle action: closed axis-aligned rectangle (optionally rounded) drawn between two opposite corners.');
 
+export const SmoothTensionSchema = PositiveNumberSchema.default(1).describe(
+  'Tangent-length multiplier controlling curve slackness; defaults to 1.',
+);
+
 export const SmoothStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('smooth').describe(
@@ -296,9 +300,7 @@ export const SmoothStepSchema = strictObject({
     .describe(
       'Through-points after the cursor, in order. The cursor is the implicit first knot and ends at the last point.',
     ),
-  tension: PositiveNumberSchema.optional().describe(
-    'Tangent-length multiplier controlling curve slackness. Omitted fields use 1.',
-  ),
+  tension: SmoothTensionSchema.unwrap().optional().describe(SmoothTensionSchema.description!),
   label: StepLabelSchema.optional().describe(
     'Edge label attached to the generated curve; positioned along the produced cubic commands by Bezier parameter (same as curve / cubic step labels).',
   ),

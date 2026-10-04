@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import type { ZodType } from 'zod';
 
 import { ListSchema } from '../../../src/collection/list/schema';
-import { MapSchema } from '../../../src/collection/map/schema';
+import { MapLayoutSchema, MapSchema } from '../../../src/collection/map/schema';
 
 const content = { type: 'node', position: [0, 0], text: 'a' };
+const parseExternal = (schema: ZodType, source: unknown) => schema.safeParse(source);
+it('保留 Map 的默认间距以及显式零和独立行列间距', () => {
+  expect(MapLayoutSchema.parse({}).gap).toBe(2);
+  expect(MapLayoutSchema.parse({ gap: 0 }).gap).toBe(0);
+  expect(MapLayoutSchema.parse({ gap: { row: 0, column: 4 } }).gap).toEqual({ row: 0, column: 4 });
+});
 it('parses index shorthand, object defaults, and JSON text styles', () => {
   const base = { namespace: 'standard', type: 'list', items: ['A'] };
   expect(ListSchema.parse(base).index).toBe(false);
@@ -33,25 +40,31 @@ it('treats List strings as content by default and validates derived ids when ena
   ).toBe(false);
 });
 describe('List / Map Source contracts', () => {
-  it('accepts a persisted data object display mode and rejects it on explicit cells', () => {
-    const listSource = { namespace: 'standard', type: 'list', data: [{ a: 1 }] };
-    const mapSource = { namespace: 'standard', type: 'map', data: { value: { a: 1 } } };
-    expect(ListSchema.parse(listSource).dataObjectDisplay).toBe('map');
-    expect(MapSchema.parse(mapSource).dataObjectDisplay).toBe('map');
-    expect(
-      ListSchema.parse(JSON.parse(JSON.stringify({ ...listSource, dataObjectDisplay: 'text' }))).dataObjectDisplay,
-    ).toBe('text');
-    expect(
-      MapSchema.parse(JSON.parse(JSON.stringify({ ...mapSource, dataObjectDisplay: 'text' }))).dataObjectDisplay,
-    ).toBe('text');
-    expect(ListSchema.safeParse({ ...listSource, dataObjectDisplay: 'raw' }).success).toBe(false);
-    expect(MapSchema.safeParse({ ...mapSource, dataObjectDisplay: 'raw' }).success).toBe(false);
-    expect(
-      ListSchema.safeParse({ namespace: 'standard', type: 'list', items: ['A'], dataObjectDisplay: 'text' }).success,
-    ).toBe(false);
-    expect(
-      MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [], dataObjectDisplay: 'text' }).success,
-    ).toBe(false);
+  it('persists expansion selections with a shared default and precise invalid-member diagnostics', () => {
+    for (const [schema, source] of [
+      [ListSchema, { namespace: 'standard', type: 'list', data: [{ a: 1 }] }],
+      [MapSchema, { namespace: 'standard', type: 'map', data: { value: { a: 1 } } }],
+    ] as const) {
+      expect(schema.parse(source).dataExpand).toBe(true);
+      for (const dataExpand of [true, false, [], ['map'], ['list'], ['list', 'map'], ['map', 'map']]) {
+        const parsed = schema.parse(JSON.parse(JSON.stringify({ ...source, dataExpand })));
+        expect(parsed.dataExpand).toEqual(dataExpand);
+        expect(JSON.stringify(parsed.data)).toBe(JSON.stringify(source.data));
+      }
+      for (const dataExpand of ['map', 'text', null, {}, 0, ['unknown'], [false]]) {
+        expect(parseExternal(schema, { ...source, dataExpand }).success).toBe(false);
+      }
+      const result = parseExternal(schema, { ...source, dataExpand: ['map', 'unknown'] });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(JSON.stringify(result.error.issues)).toContain('dataExpand');
+      expect(parseExternal(schema, { ...source, dataObjectDisplay: 'text' }).success).toBe(false);
+    }
+    expect(ListSchema.safeParse({ namespace: 'standard', type: 'list', items: [], dataExpand: false }).success).toBe(
+      false,
+    );
+    expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [], dataExpand: [] }).success).toBe(
+      false,
+    );
   });
   it('accepts content width only for List overall and direct cells after JSON round-trip', () => {
     const source = {

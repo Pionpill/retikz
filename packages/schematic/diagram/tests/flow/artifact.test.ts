@@ -27,6 +27,7 @@ const artifact = {
       visualBounds: { x: 16, y: 12, width: 288, height: 20 },
     },
     drawing: {
+      origin: [16, 44],
       allocationBounds: { x: 16, y: 44, width: 288, height: 120 },
       visualBounds: { x: 16, y: 44, width: 288, height: 120 },
     },
@@ -49,8 +50,8 @@ const artifact = {
   ],
   relations: [
     {
-      source: 'source',
-      target: 'target',
+      source: { id: 'source' },
+      target: { id: 'target' },
       route: {
         kind: 'orthogonal',
         cornerRadius: 8,
@@ -64,8 +65,8 @@ const artifact = {
       labelReservation: { x: 107, y: 76, width: 42, height: 16 },
     },
     {
-      source: 'group',
-      target: 'source',
+      source: { id: 'group' },
+      target: { id: 'source' },
       route: {
         kind: 'straight',
         points: [

@@ -5,6 +5,26 @@ description: 把完整 Core IR 编译为确定性 Scene，并通过 Core Runtime
 
 `@retikz/core` 拥有 IR、Definition、registry、编译与 Scene 语义。`compileToScene()` 仍是无状态的完整编译入口；需要跨 revision 管理状态时，`CoreSourceDefinition` 与 `createCoreComputation()` 把同一编译语义接入 `@retikz/runtime`。
 
+## 可组合的 Schema 片段
+
+自定义组合输入可以从 `@retikz/core` 导入以下闭合片段，按需组合字段。它们保持稀疏，不主动物化默认；最终实体仍负责跨字段校验与未知字段策略。
+
+| 片段                          | 字段与职责                                                  |
+| ----------------------------- | ----------------------------------------------------------- |
+| `GraphicColorSchema`          | `color`，图形主色                                           |
+| `GraphicElementOpacitySchema` | `opacity`，整个图元的透明度                                 |
+| `GraphicFillSchema`           | `fill`、`fillOpacity`，填充 paint 与透明度                  |
+| `GraphicStrokeSchema`         | `stroke`、`strokeOpacity`，描边 paint 与透明度              |
+| `StrokeStyleSchema`           | `strokeWidth`、`dashPattern`、`dashOffset`，线宽与虚线      |
+| `StrokeCapJoinSchema`         | `lineCap`、`lineJoin`，端点与转角样式                       |
+| `TextVisualSchema`            | `textColor`、`font`，图元内的文字颜色与字体                 |
+| `TextLayoutSchema`            | `align`、`lineHeight`、`maxTextWidth`，文本排列与换行       |
+| `PathTransformSchema`         | `roundedCorners`、`rotate`、`scale`，路径几何圆角与整体变换 |
+
+填充和描边共同使用 `PaintValueSchema`，均可表达渐变。主色与整体透明度分别选择，文字片段不附带 label 专属透明度或布局字段。每个片段均提供对应的 `IRXxx` 推导类型；原有完整 Node、Path 与样式聚合仍可直接使用。
+
+组合 `.shape` 只复用字段，不会继承对象级 refinement、transform 或 catchall。领域输入应仅选择实际消费的片段；例如 Cell 组合描边、填充和文字，仍不因此接受 `zIndex` 或视觉效果。
+
 ## 复合组件运行时输入
 
 `CompileOptions.compositeInputs` 将 runtime input 精确绑定到本次 Source 节点位置，由 composite callback 通过 context.runtimeInput 消费；未绑定的位置为 undefined。数据源、函数和准备结果不进入 IR，Core 不解释其领域内容。

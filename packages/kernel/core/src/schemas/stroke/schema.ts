@@ -26,3 +26,12 @@ export const StrokeStyleSchema = strictObject({
     'Stroke dash offset in user units. Positive and negative finite values are allowed.',
   ),
 }).describe('Shared stroke style fields for drawable geometry.');
+
+export const StrokeCapJoinSchema = strictObject({
+  lineCap: PathLineCapSchema.optional().describe(
+    'Stroke endpoint shape. Omitted fields use butt; round adds a half-disc cap and square extends past the endpoint.',
+  ),
+  lineJoin: PathLineJoinSchema.optional().describe(
+    'Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.',
+  ),
+}).describe('Stroke endpoint caps and corner joins.');

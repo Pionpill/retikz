@@ -3,7 +3,13 @@ import {
   ArrowEndDetailSchema,
   GeometryLabelSchema,
   NodeTargetSchema,
-  PathBaseSchema,
+  DrawableInstanceSchema,
+  PathTransformSchema,
+  GraphicColorSchema,
+  GraphicElementOpacitySchema,
+  GraphicStrokeSchema,
+  GraphicEffectsSchema,
+  PathStrokeSchema,
   PathStyleSchema,
   StepSchema,
 } from '@retikz/core';
@@ -75,21 +81,18 @@ export const GraphRelationLabelFontSchema = GeometryLabelSchema.shape.font.descr
 export const GraphRelationLabelOpacitySchema =
   GeometryLabelSchema.shape.opacity.describe('Relation root label opacity.');
 
-const RelationPathShape = PathBaseSchema.omit({
-  type: true,
-  kind: true,
-  kindOptions: true,
-  children: true,
-  label: true,
-  marks: true,
-  style: true,
-}).shape;
-
 export const RelationSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Relation).describe('Relation Source record discriminator.'),
-  ...RelationPathShape,
-  style: PathStyleSchema.omit({ fill: true, fillOpacity: true, fillRule: true })
+  ...DrawableInstanceSchema.shape,
+  ...PathTransformSchema.shape,
+  style: strictObject({
+    ...GraphicColorSchema.shape,
+    ...GraphicElementOpacitySchema.shape,
+    ...GraphicStrokeSchema.shape,
+    ...GraphicEffectsSchema.shape,
+    ...PathStrokeSchema.shape,
+  })
     .optional()
     .describe('Path visual overrides without Relation fill fields.'),
   source: NodeTargetSchema.describe('Core source target reference.'),

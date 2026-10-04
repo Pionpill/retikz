@@ -2,7 +2,7 @@ import type { JsonValue, ValueOf } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRChild, IRClip, IRScopeProps } from '../../schemas';
+import type { IRChild, IRClip, IRPosition, IRScopeProps, IRTarget } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { Transform } from '../scene';
 import type { SpatialHandleDeclaration } from '../spatial-handle';
@@ -150,6 +150,24 @@ export type CompositeReplayWrapper = Readonly<{
   clip?: IRClip;
 }>;
 
+/** 在当前编译环境中查询 child 根局部空间的有序路径目标 */
+export type PathTargetQuery = Readonly<{
+  /** 提供真实布局、引用和定义绑定的 child */
+  child: IRChild;
+  /** 初始参考点；相对形式以局部原点为基准 */
+  source: IRTarget;
+  /** 按 smooth cursor 规则消费的目标序列 */
+  points: ReadonlyArray<IRTarget>;
+}>;
+
+/** 与输入点列一一对应的有限局部坐标，不包含路径裁剪或插值 */
+export type PathTargetQueryResult = Readonly<{
+  /** 起始参考点 */
+  source: Readonly<IRPosition>;
+  /** 有序目标参考点 */
+  points: ReadonlyArray<Readonly<IRPosition>>;
+}>;
+
 /** layout-aware composite 可见的受限编译上下文 */
 export type LayoutCompositeCompileContext = CompositeRuntimeInputContext &
   Readonly<{
@@ -166,6 +184,8 @@ export type LayoutCompositeCompileContext = CompositeRuntimeInputContext &
     warn: (code: string, message: string, subPath?: string) => void;
     /** 在完整 compile 环境中 probe 任意 child */
     layoutChild: (child: IRChild | CompositeBoundChild, proposal: LayoutProposal) => LayoutChildProbe;
+    /** 隔离绑定真实 child 后查询有序目标，不提交 probe 绘图或修改作者点列 */
+    resolvePathTargets: (query: PathTargetQuery) => PathTargetQueryResult;
     /**
      * 把当前 callback 的一次布局结果转为 one-use output child
      * @param result 当前 callback 的 resolved probe result

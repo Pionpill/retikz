@@ -14,7 +14,7 @@ import type {
   IRTarget,
   IRTextRun,
 } from '../../schemas';
-import { BendAngleSchema, PathKind } from '../../schemas';
+import { BendAngleSchema, PathKind, SmoothTensionSchema } from '../../schemas';
 import {
   isAtPositionLike,
   isBetweenPositionLike,
@@ -157,7 +157,7 @@ const canonicalizeStep = (step: ResolvedStepSource, canAutomaticallyInterrupt: b
         return { ...step, label };
     }
   }
-  if (step.kind === 'smooth') return { ...step, label, tension: step.tension ?? 1 };
+  if (step.kind === 'smooth') return { ...step, label, tension: step.tension ?? SmoothTensionSchema.parse(undefined) };
   if (step.kind === 'bend') {
     return {
       ...step,

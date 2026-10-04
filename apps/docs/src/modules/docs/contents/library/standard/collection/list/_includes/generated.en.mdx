@@ -7,32 +7,32 @@
 - `List`: <ApiSourceLink label={"List"} path={"packages/library/standard-react/src/collection/list/List.tsx"} startLine={52}>Standard List presentation component</ApiSourceLink>
 - `ListProps`: <ApiSourceLink label={"ListProps"} path={"packages/library/standard-react/src/collection/list/List.tsx"} startLine={17}>React authoring props for List</ApiSourceLink>
 
-The data, items, and ListItem children inputs are mutually exclusive; omitting all three creates an empty list. dataObjectDisplay applies only to data
+The data, items, and ListItem children inputs are mutually exclusive; omitting all three creates an empty list. dataExpand applies only to data
 
 ```ts
 export declare const List: {
   (props: ListProps, context?: any): ReactNode;
 };
 
-export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
+export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataExpand'> &
   (
     | {
         data: NonNullable<IRList['data']>;
         items?: never;
         children?: never;
-        dataObjectDisplay?: IRList['dataObjectDisplay'];
+        dataExpand?: IRList['dataExpand'];
       }
     | {
         data?: never;
         items: Array<string | CellProps<IRListCell['layout']>>;
         children?: never;
-        dataObjectDisplay?: never;
+        dataExpand?: never;
       }
     | {
         data?: never;
         items?: never;
         children?: ReactNode;
-        dataObjectDisplay?: never;
+        dataExpand?: never;
       }
   );
 ```
@@ -97,7 +97,7 @@ export type ListItemProps = CellMarkerProps<IRListCell['layout']>;
 - `list`: <ApiSourceLink label={"list"} path={"packages/library/standard-vanilla/src/collection/list.ts"} startLine={52}>Create a List embed; explicit input.id identifies both the domain component and the embed</ApiSourceLink>
 - `InputList`: <ApiSourceLink label={"InputList"} path={"packages/library/standard-vanilla/src/collection/list.ts"} startLine={13}>Vanilla authoring input for List</ApiSourceLink>
 
-Choose either items or data; dataObjectDisplay applies only to data. Other fields follow IRList, and the adapter supplies namespace and type
+Choose either items or data; dataExpand applies only to data. Other fields follow IRList, and the adapter supplies namespace and type
 
 <DocTabs defaultValue="items">
 
@@ -105,30 +105,30 @@ Choose either items or data; dataObjectDisplay applies only to data. Other field
 
 <ApiTable>
 
-| Member               | Type                                                                                     | Default      | Description                                                                                                                                     |
-| -------------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`        | `IRList['animations']`                                                                   | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
-| `cellIdMode?`        | `input<typeof ListSchema>['cellIdMode']`                                                 | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the List id                                              |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
-| `data?`              | `never`                                                                                  | —            | —                                                                                                                                               |
-| `dataObjectDisplay?` | `never`                                                                                  | —            | —                                                                                                                                               |
-| `defaults?`          | `IRList['defaults']`                                                                     | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
-| `frame?`             | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
-| `id?`                | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
-| `index?`             | `IRList['index']`                                                                        | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
-| `items`              | `Array<string \| InputCell<IRListCell>>`                                                 | —            | —                                                                                                                                               |
-| `label?`             | `IRList['label']`                                                                        | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
-| `layout?`            | `IRList['layout']`                                                                       | —            | List cell allocation and ordering.                                                                                                              |
-| `localNamespace?`    | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
-| `meta?`              | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
-| `placement?`         | `IRList['placement']`                                                                    | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
-| `style?`             | `IRCell['style']`                                                                        | —            | —                                                                                                                                               |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
-| `transforms?`        | `IRList['transforms']`                                                                   | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
-| `zIndex?`            | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
-| `input` (Parameter)  | `InputList`                                                                              | —            | List input using explicit cells or a JSON array                                                                                                 |
-| Returns              | `InputEmbed<InputList>`                                                                  | —            | An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation        |
+| Member              | Type                                                                                     | Default      | Description                                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`       | `IRList['animations']`                                                                   | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`    | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`       | `input<typeof ListSchema>['cellIdMode']`                                                 | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the List id                                              |
+| `clip?`             | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `data?`             | `never`                                                                                  | —            | —                                                                                                                                               |
+| `dataExpand?`       | `never`                                                                                  | —            | —                                                                                                                                               |
+| `defaults?`         | `IRList['defaults']`                                                                     | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`            | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`               | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`            | `IRList['index']`                                                                        | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
+| `items`             | `Array<string \| InputCell<IRListCell>>`                                                 | —            | —                                                                                                                                               |
+| `label?`            | `IRList['label']`                                                                        | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`           | `IRList['layout']`                                                                       | —            | List cell allocation and ordering.                                                                                                              |
+| `localNamespace?`   | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`             | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`        | `IRList['placement']`                                                                    | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`            | `IRCell['style']`                                                                        | —            | —                                                                                                                                               |
+| `theme?`            | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`       | `IRList['transforms']`                                                                   | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`           | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+| `input` (Parameter) | `InputList`                                                                              | —            | List input using explicit cells or a JSON array                                                                                                 |
+| Returns             | `InputEmbed<InputList>`                                                                  | —            | An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation        |
 
 </ApiTable>
 
@@ -138,30 +138,30 @@ Choose either items or data; dataObjectDisplay applies only to data. Other field
 
 <ApiTable>
 
-| Member               | Type                                                                                     | Default      | Description                                                                                                                                     |
-| -------------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animations?`        | `IRList['animations']`                                                                   | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
-| `cellIdMode?`        | `input<typeof ListSchema>['cellIdMode']`                                                 | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the List id                                              |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
-| `data`               | `NonNullable<IRList['data']>`                                                            | —            | —                                                                                                                                               |
-| `dataObjectDisplay?` | `IRList['dataObjectDisplay']`                                                            | —            | —                                                                                                                                               |
-| `defaults?`          | `IRList['defaults']`                                                                     | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
-| `frame?`             | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
-| `id?`                | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
-| `index?`             | `IRList['index']`                                                                        | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
-| `items?`             | `never`                                                                                  | —            | —                                                                                                                                               |
-| `label?`             | `IRList['label']`                                                                        | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
-| `layout?`            | `IRList['layout']`                                                                       | —            | List cell allocation and ordering.                                                                                                              |
-| `localNamespace?`    | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
-| `meta?`              | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
-| `placement?`         | `IRList['placement']`                                                                    | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
-| `style?`             | `IRCell['style']`                                                                        | —            | —                                                                                                                                               |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
-| `transforms?`        | `IRList['transforms']`                                                                   | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
-| `zIndex?`            | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
-| `input` (Parameter)  | `InputList`                                                                              | —            | List input using explicit cells or a JSON array                                                                                                 |
-| Returns              | `InputEmbed<InputList>`                                                                  | —            | An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation        |
+| Member              | Type                                                                                     | Default      | Description                                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`       | `IRList['animations']`                                                                   | —            | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `boundingShape?`    | `"rectangle" \| "circle"`                                                                | —            | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `cellIdMode?`       | `input<typeof ListSchema>['cellIdMode']`                                                 | `'explicit'` | Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the List id                                              |
+| `clip?`             | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —            | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `data`              | `NonNullable<IRList['data']>`                                                            | —            | —                                                                                                                                               |
+| `dataExpand?`       | `IRList['dataExpand']`                                                                   | —            | —                                                                                                                                               |
+| `defaults?`         | `IRList['defaults']`                                                                     | —            | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`            | `IRScopeFrame`                                                                           | —            | Envelope decoration with optional defaults                                                                                                      |
+| `id?`               | `string`                                                                                 | —            | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `index?`            | `IRList['index']`                                                                        | `false`      | False hides indices; true or an object enables the index strip.                                                                                 |
+| `items?`            | `never`                                                                                  | —            | —                                                                                                                                               |
+| `label?`            | `IRList['label']`                                                                        | —            | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                   |
+| `layout?`           | `IRList['layout']`                                                                       | —            | List cell allocation and ordering.                                                                                                              |
+| `localNamespace?`   | `false \| true`                                                                          | —            | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`             | `Record<string, JsonValue>`                                                              | —            | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `placement?`        | `IRList['placement']`                                                                    | —            | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`            | `IRCell['style']`                                                                        | —            | —                                                                                                                                               |
+| `theme?`            | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —            | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`       | `IRList['transforms']`                                                                   | —            | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`           | `number`                                                                                 | —            | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
+| `input` (Parameter) | `InputList`                                                                              | —            | List input using explicit cells or a JSON array                                                                                                 |
+| Returns             | `InputEmbed<InputList>`                                                                  | —            | An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation        |
 
 </ApiTable>
 
@@ -172,17 +172,17 @@ Choose either items or data; dataObjectDisplay applies only to data. Other field
 ```ts
 export declare const list: (input: InputList) => InputEmbed<InputList>;
 
-export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
+export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataExpand'> &
   (
     | {
         items: Array<string | InputCell<IRListCell>>;
         data?: never;
-        dataObjectDisplay?: never;
+        dataExpand?: never;
       }
     | {
         data: NonNullable<IRList['data']>;
         items?: never;
-        dataObjectDisplay?: IRList['dataObjectDisplay'];
+        dataExpand?: IRList['dataExpand'];
       }
   );
 ```
@@ -204,7 +204,7 @@ export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | '
 </p>
 
 ```ts
-export declare const ListInputEmbedAdapter: InputEmbedAdapter<InputList>;
+export declare const ListInputEmbedAdapter: SynchronousInputEmbedAdapter<InputList>;
 ```
 
 **`@retikz/standard`**
@@ -220,7 +220,7 @@ export declare const ListInputEmbedAdapter: InputEmbedAdapter<InputList>;
 ```ts
 export type IRList = Omit<
   input<typeof ListSchema>,
-  keyof IRScopeProps | 'items' | 'data' | 'cellIdMode' | 'dataObjectDisplay'
+  keyof IRScopeProps | 'items' | 'data' | 'cellIdMode' | 'dataExpand'
 > &
   Omit<IRScopeProps, 'style'> & {
     style?: IRCell['style'];
@@ -229,12 +229,12 @@ export type IRList = Omit<
     | {
         items: Array<string | IRListCell>;
         data?: never;
-        dataObjectDisplay?: never;
+        dataExpand?: never;
       }
     | {
         data: NonNullable<input<typeof ListSchema>['data']>;
         items?: never;
-        dataObjectDisplay?: input<typeof ListSchema>['dataObjectDisplay'];
+        dataExpand?: input<typeof ListSchema>['dataExpand'];
       }
   );
 ```

@@ -247,7 +247,7 @@
     "components": "组件",
     "diagram": "Diagram · 结构图",
     "diagramNavigationDescription": "构建流程图与各类图示",
-    "flowDiagram": "Flow · 逻辑图",
+    "flowDiagram": "Flow · 流程图",
     "group": "Group · 分组",
     "block": "Block · 结构块",
     "basicUsage": "基础用法",
@@ -522,7 +522,8 @@
     "pageCopied": "已复制页面 Markdown",
     "prevPage": "上一页",
     "nextPage": "下一页",
-    "docStats": "约 {{minutes}} 分钟 · 共 {{chars}} 字 · {{components}} 个组件"
+    "docStats": "正文约 {{minutes}} 分钟 · {{chars}} 字 · {{examples}} 个示例",
+    "docStatsDetails": "按正文非空白字符估算，包含行内代码，不含代码块与标签属性；另有 {{chars}} 个 API / Schema 参考字符，未计入正文阅读时间。示例数仅统计预览示例。"
   },
   "sourceViewer": {
     "title": "查看源码",

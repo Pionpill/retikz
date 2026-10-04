@@ -83,8 +83,8 @@ zod schema 仍是唯一真源；JSON-Schema 是**生成物**，随源码 `gen:sc
 
 Schema 描述的是用户需要持久化、传递或生成的最小 Source IR，而不是把所有运行时默认值提前物化的完整快照。凡是省略后具有确定默认语义、且不会丢失独立事实的字段，都应保持可选，让用户配置保持精简
 
-- schema / parse 只校验 JSON 形态并保留省略状态，不为了方便下游消费而主动写入默认字段；不要用 `z.default(...)` 把领域默认提前固化到 Source IR
-- 默认值、空集合、继承、优先级和上下文相关的补全在编译链路中处理，具体由领域 `resolve/<domain>/` 在当前 context 下确定，pipeline / compile 只负责调度并消费确定结果
+- 静态默认保留权威 schema 的真实 `.default()`，供运行时与 JSON-Schema 共享；可省略 Source 类型从 `z.input` 派生，解析结果从 `z.output` / `z.infer` 派生。直接 parse 会物化默认，其结果是快照，不保留原始省略意图
+- 类型化作者配置保留原始稀疏输入，继承先合并原始配置，再由领域 `resolve/<domain>/` 应用同一 schema 默认与上下文补全；pipeline / compile 只调度并消费确定结果。上下文继承所需的默认字段投影可用 `.unwrap().optional()`，不复制约束或默认常量
 - `CanonicalXxx` / `XxxResolution` 可以保存完整的有效结构，但该内部形态不应反向扩大公开 Source IR 的必填面
 - 显式提供的 `false`、`0`、空字符串和有独立语义的空数组必须保留；只有省略字段才使用默认逻辑，省略与显式空值等价时也要在字段描述中写明
 - schema 的 `.describe(...)` 和生成的 JSON-Schema 必须说明省略后的默认行为与处理阶段，避免 LLM 把运行时补全字段误写进用户配置
@@ -99,7 +99,7 @@ Schema 描述的是用户需要持久化、传递或生成的最小 Source IR，
 - **手写第二份 JSON-Schema**：必漂移。只能从 zod 生成。
 - **`metadata: localRegistry` 旁路 globalRegistry**：丢字段级描述（见 §2.4）。
 - **per-entity 57 文件 / 单文件 / 纯自包含内联**：见 §2.2。
-- **在 schema / normalize 阶段物化领域默认**：会把可省略的配置膨胀成冗余 Source IR；默认应在编译链路的 resolve 阶段确定。
+- **在继承前把稀疏配置当作默认已物化快照合并**：会让缺省值覆盖父级；静态 `.default()` 仍是真源，直接 parse 结果中的默认字段按显式值参与后续合并，normalize 不另建默认表。
 
 ---
 

@@ -14,18 +14,36 @@ export const PaintValueSchema = union([ContextualColorSchema, PaintSchema]).desc
   'Paint value: a contextual color or an IRPaint object.',
 );
 
-export const GraphicPaintSchema = strictObject({
+export const GraphicColorSchema = strictObject({
   color: CssColorSchema.optional().describe(
     'Master color for primary geometry. Stroke, fill, labels, and arrows may inherit it unless individually overridden.',
   ),
+}).describe('Master color inherited by primary geometry and its decorations.');
+
+export const GraphicElementOpacitySchema = strictObject({
+  opacity: OpacitySchema.optional().describe('Whole-element opacity applied to primary geometry.'),
+}).describe('Whole-element opacity for primary geometry.');
+
+export const GraphicFillSchema = strictObject({
   fill: PaintValueSchema.optional().describe('Fill paint for primary geometry: contextual color or IRPaint.'),
+  fillOpacity: OpacitySchema.optional().describe('Fill-only opacity for filled regions.'),
+}).describe('Fill paint and fill-only opacity for primary geometry.');
+
+export const GraphicStrokeSchema = strictObject({
   stroke: PaintValueSchema.optional().describe('Stroke paint for primary geometry: contextual color or IRPaint.'),
+  strokeOpacity: OpacitySchema.optional().describe('Stroke-only opacity for outlines.'),
+}).describe('Stroke paint and stroke-only opacity for primary geometry.');
+
+export const GraphicPaintSchema = strictObject({
+  ...GraphicColorSchema.shape,
+  fill: GraphicFillSchema.shape.fill,
+  stroke: GraphicStrokeSchema.shape.stroke,
 }).describe('Graphic paint fields shared by primary geometry.');
 
 export const GraphicOpacitySchema = strictObject({
-  opacity: OpacitySchema.optional().describe('Whole-element opacity applied to primary geometry.'),
-  fillOpacity: OpacitySchema.optional().describe('Fill-only opacity for filled regions.'),
-  strokeOpacity: OpacitySchema.optional().describe('Stroke-only opacity for outlines.'),
+  ...GraphicElementOpacitySchema.shape,
+  fillOpacity: GraphicFillSchema.shape.fillOpacity,
+  strokeOpacity: GraphicStrokeSchema.shape.strokeOpacity,
 }).describe('Graphic opacity fields shared by primary geometry.');
 
 export const GraphicEffectsSchema = strictObject({
@@ -42,18 +60,18 @@ export const GraphicEffectsSchema = strictObject({
 }).describe('Graphic effect fields shared by primary geometry.');
 
 export const GraphicStyleSchema = strictObject({
-  ...GraphicPaintSchema.shape,
-  fillOpacity: GraphicOpacitySchema.shape.fillOpacity,
+  ...GraphicColorSchema.shape,
+  ...GraphicFillSchema.shape,
+  ...GraphicStrokeSchema.shape,
+  ...GraphicElementOpacitySchema.shape,
   strokeWidth: StrokeStyleSchema.shape.strokeWidth,
-  strokeOpacity: GraphicOpacitySchema.shape.strokeOpacity,
-  opacity: GraphicOpacitySchema.shape.opacity,
   ...GraphicEffectsSchema.shape,
 }).describe('Graphic style fields for primary node / drawable geometry.');
 
 export const CascadingGraphicStyleSchema = strictObject({
-  ...GraphicPaintSchema.shape,
-  fillOpacity: GraphicOpacitySchema.shape.fillOpacity,
+  ...GraphicColorSchema.shape,
+  ...GraphicFillSchema.shape,
+  ...GraphicStrokeSchema.shape,
+  ...GraphicElementOpacitySchema.shape,
   strokeWidth: StrokeStyleSchema.shape.strokeWidth,
-  strokeOpacity: GraphicOpacitySchema.shape.strokeOpacity,
-  opacity: GraphicOpacitySchema.shape.opacity,
 }).describe('Cascading graphic style fields shared by node and path-like elements.');

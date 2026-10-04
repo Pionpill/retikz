@@ -78,6 +78,8 @@ Replay wrapper 先用 `transforms` 把 child 放进 parent allocation coordinate
 
 ### 同次类型化产物
 
+需要在当前 child 的真实布局上解析有序 Target 时，调用 `context.resolvePathTargets({ child, source, points })`，得到 `{ source, points }` 数值坐标。它复用同次编译的 namespace、形状定义、变换与 smooth cursor 规则，不发布查询 child 的图元或 artifact，也不执行路径裁剪、路由搜索或箭头缩短。解析失败抛出带 `source` 或 `points[index]` 字段位置的 Core 错误，不跳过失败点。
+
 例如，artifact 可保存 `{ width: 120 }` 这样的领域结果，且必须满足 `artifactSchema`。它与最终 Scene 同次产生，供应用读取，而不是交给 renderer 再布局。
 
 布局感知定义可以声明 `artifactSchema` 并从 `compile` 返回 JSON-safe `artifact`。Core 在 `CompileResult.artifacts` 中用 `namespace`、`type` 和 occurrence locator 封装它；locator 由原始 `sourcePath` 与结构化 expansion / output / replay 路径组成，不依赖全局 Map、回调捕获或第二次遍历。宿主因而能从同一次 compile 同时得到 Scene 与领域产物。

@@ -4,6 +4,7 @@ import {
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   PositiveNumberSchema,
+  NormalizedFractionSchema,
 } from '@retikz/foundation';
 import {
   array,
@@ -134,21 +135,15 @@ export const BandScaleSchema = object({
   domain: array(CategoryValueSchema)
     .optional()
     .describe('Ordered category list; omit to infer the distinct field values in data-encounter order at lowering'),
-  paddingInner: number()
-    .min(0)
-    .max(1)
-    .optional()
-    .describe('Gap between adjacent bands as a fraction of step, 0..1; default 0.1'),
-  paddingOuter: number()
-    .min(0)
-    .max(1)
-    .optional()
-    .describe('Gap before the first and after the last band as a fraction of step, 0..1; default = paddingInner'),
-  align: number()
-    .min(0)
-    .max(1)
-    .optional()
-    .describe('How outer padding is distributed around the bands, 0..1; default 0.5 (centered)'),
+  paddingInner: NormalizedFractionSchema.optional().describe(
+    'Gap between adjacent bands as a fraction of step, 0..1; default 0.1',
+  ),
+  paddingOuter: NormalizedFractionSchema.optional().describe(
+    'Gap before the first and after the last band as a fraction of step, 0..1; default = paddingInner',
+  ),
+  align: NormalizedFractionSchema.optional().describe(
+    'How outer padding is distributed around the bands, 0..1; default 0.5 (centered)',
+  ),
 }).describe('Band scale: maps a discrete category set to equal-width bands across the range');
 
 export const PointScaleSchema = object({
@@ -162,8 +157,8 @@ export const PointScaleSchema = object({
   domain: array(CategoryValueSchema)
     .optional()
     .describe('Ordered category list; omit to infer the distinct field values in data-encounter order at lowering'),
-  padding: number().min(0).max(1).optional().describe('Outer padding as a fraction of step, 0..1; default 0.5'),
-  align: number().min(0).max(1).optional().describe('How padding is distributed, 0..1; default 0.5 (centered)'),
+  padding: NormalizedFractionSchema.optional().describe('Outer padding as a fraction of step, 0..1; default 0.5'),
+  align: NormalizedFractionSchema.optional().describe('How padding is distributed, 0..1; default 0.5 (centered)'),
 }).describe('Point scale: degenerate band (zero width) placing categories on evenly spaced positions');
 
 export const OrdinalScaleSchema = object({

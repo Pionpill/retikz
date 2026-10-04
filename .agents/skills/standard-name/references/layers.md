@@ -16,6 +16,15 @@
 
 不得为了套用本表而新建占位目录、泛化 `helpers.ts` 或纯转发 shim。
 
+## 内部领域目录与公共边界
+
+- 在包或能力家族内，具有独立领域职责、被多个具体 owner 复用且不作为独立公共组件或 package subpath 的基础模块，目录使用 `_<domain>`，如 `_chart`、`_diagram`；放在实际消费方的最近共同领域下，不使用 `_shared`、`_internal` 等泛化名称
+- 包级基础 owner 放 `src/_<domain>`，家族内部基础 owner 放 `<family>/_<domain>`，与其消费方 owner 同级；目录提升不自动扩大能力归属或公共导出
+- `shared/` 承载稳定词汇和纯工具；拥有领域 schema、resolve 或 pipeline 的基础模块使用语义 owner，不因多个消费者共用而塞进 `shared/`
+- `_` 只标识目录的内部基础角色，不等于其中所有符号都禁止公开。包内跨 owner 仍经其 barrel 或稳定二级 owner barrel 消费；确需公开的类型或能力由公共 facade 选择并经 package `exports` 暴露，不把 `_` 路径作为公共子入口，不泄漏内部消费态
+- 不因“未公开”给所有目录和文件加 `_`：`resolve/`、`pipeline/` 等阶段目录和普通 helper 文件保持语义名，不使用 `_xxx.ts`；领域目录内部也不重复添加前缀
+- `_notes/`、`_scratch/`、`__snapshots__/` 等文档、临时产物和测试工具目录遵循各自规则，不作为源码领域命名依据
+
 ## 按语义阶段命名符号
 
 | 概念                            | 必须使用的名称                                                         | Owner                                                                                                      |

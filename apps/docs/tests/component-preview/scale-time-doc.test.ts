@@ -4,7 +4,10 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const scaleTimeRoot = resolve('src/modules/docs/contents/viz/plot/scale/position');
-const demoSource = readFileSync(resolve(scaleTimeRoot, 'scale-time.demo.tsx'), 'utf8');
+const demoSource = [
+  readFileSync(resolve(scaleTimeRoot, 'scale-time.demo.tsx'), 'utf8'),
+  readFileSync(resolve(scaleTimeRoot, 'scale-time.preview.tsx'), 'utf8'),
+].join('\n');
 const dataSource = readFileSync(resolve(scaleTimeRoot, 'scale-time.data.ts'), 'utf8');
 const chinesePage = readFileSync(resolve(scaleTimeRoot, 'index.zh.mdx'), 'utf8');
 const englishPage = readFileSync(resolve(scaleTimeRoot, 'index.en.mdx'), 'utf8');

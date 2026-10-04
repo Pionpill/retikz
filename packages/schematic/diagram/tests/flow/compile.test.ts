@@ -71,8 +71,8 @@ const input: FlowLayoutInput = {
   ],
   relations: [
     {
-      source: 'a',
-      target: 'b',
+      source: { id: 'a', overlap: 'allow' },
+      target: { id: 'b', overlap: 'allow' },
       direction: 'forward',
       routing: { kind: 'orthogonal', cornerRadius: 6 },
       labelSize: { width: 8, height: 4 },
@@ -83,6 +83,8 @@ const input: FlowLayoutInput = {
 const output = (): {
   elements: Array<{ id: string; bounds: { x: number; y: number; width: number; height: number } }>;
   relations: Array<{
+    source: { id: string };
+    target: { id: string };
     route: { kind: 'orthogonal'; cornerRadius: number; points: Array<[number, number]> };
     labelBounds: { x: number; y: number; width: number; height: number };
   }>;
@@ -93,6 +95,8 @@ const output = (): {
   ],
   relations: [
     {
+      source: { id: 'a' },
+      target: { id: 'b' },
       route: {
         kind: 'orthogonal',
         cornerRadius: 6,
@@ -120,9 +124,10 @@ const definition = (layout: FlowLayoutDefinition['layout']): FlowLayoutDefinitio
       cycles: true,
       selfLoops: false,
       parallelRelations: true,
+      endpointPlacement: true,
       relationLabels: true,
       relationDirections: ['none', 'forward', 'reverse', 'both'],
-      routingKinds: ['straight', 'orthogonal'],
+      routing: [{ kind: 'straight' }, { kind: 'orthogonal' }],
     },
     defaults: {
       direction: 'right',
@@ -302,6 +307,12 @@ describe('Flow layout callback execution', () => {
       relations: [],
     };
     const placementContext: FlowLayoutExecutionContext = {
+      resolveEndpoint: () => {
+        throw new Error('Unexpected endpoint query');
+      },
+      resolveRoutePoints: () => {
+        throw new Error('Unexpected waypoint query');
+      },
       placeLayout: () => ({
         bounds: { x: 0, y: 0, width: 10, height: 10 },
         elements: [{ id: 'a', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
@@ -1004,6 +1015,8 @@ describe('Flow Diagram compile transaction', () => {
           ],
           relations: [
             {
+              source: { id: relation.source.id },
+              target: { id: relation.target.id },
               route: { kind: 'orthogonal', cornerRadius: 6, points },
               labelBounds: {
                 x: labelCenter[0] - labelSize.width / 2,
@@ -1208,6 +1221,8 @@ describe('Flow Diagram compile transaction', () => {
         ],
         relations: [
           {
+            source: { id: layoutInput.relations[0].source.id },
+            target: { id: layoutInput.relations[0].target.id },
             route: {
               kind: 'orthogonal',
               cornerRadius: 6,
@@ -1272,8 +1287,8 @@ describe('Flow Diagram compile transaction', () => {
       elements: [{ id: 'nested' }],
     });
     expect(artifact.relations[0]).toMatchObject({
-      source: 'nested',
-      target: 'outside',
+      source: { id: 'nested' },
+      target: { id: 'outside' },
       route: { kind: 'orthogonal', cornerRadius: 6 },
       labelReservation: { width: 56 },
     });

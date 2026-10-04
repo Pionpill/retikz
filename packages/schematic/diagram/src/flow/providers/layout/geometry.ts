@@ -1,11 +1,13 @@
 import type { PathCommand } from '@retikz/core';
 import { bendControlPoints, outInControlPoints, resolveGeometryLabelPlacement, samplePathRoute } from '@retikz/core';
 import type { BoundsRect, CurveSegment, Position } from '@retikz/math';
-import { applyAffine, boundsOf, boundsToRect, cornersOfBounds, rectToBounds } from '@retikz/math';
+import { applyAffine, boundsOf, boundsToRect, cornersOfBounds, rectToBounds, curve } from '@retikz/math';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   FlowBendRoute,
+  FlowSmoothRoute,
+  FlowBezierRoute,
   FlowLayoutElementInput,
   FlowLayoutInput,
   FlowLayoutOutput,
@@ -25,14 +27,73 @@ export const createFlowBendCurve = (route: FlowBendRoute): CurveSegment => {
   return { kind: 'cubicBezier', from, to, control1, control2 };
 };
 
+/** 数值贝塞尔路由转换为 Math 曲线，不复制曲线求值逻辑 */
+export const createFlowBezierCurve = (route: FlowBezierRoute): CurveSegment =>
+  route.kind === 'curve'
+    ? { kind: 'quadraticBezier', from: [...route.points[0]], to: [...route.points[1]], control: [...route.control] }
+    : {
+        kind: 'cubicBezier',
+        from: [...route.points[0]],
+        to: [...route.points[1]],
+        control1: [...route.control1],
+        control2: [...route.control2],
+      };
+
+/** 检查全部样条段，跨段合并连续接触后只豁免首尾连接区间 */
+export const flowSmoothConflicts = (
+  route: FlowSmoothRoute,
+  relation: FlowLayoutRelationInput,
+  obstacles: ReturnType<typeof flowRelationObstacles>,
+): Array<string> => {
+  const segments = curve.catmullRomToCubic(
+    route.points.map(point => [...point]),
+    route.tension,
+  );
+  return obstacles
+    .filter(obstacle => {
+      const intervals: Array<[number, number]> = [];
+      for (const [index, segment] of segments.entries()) {
+        for (const [start, end] of findFlowCurveObstacleIntervals(
+          { kind: 'cubicBezier', from: index === 0 ? [...route.points[0]] : segments[index - 1].to, ...segment },
+          obstacle.bounds,
+        )) {
+          const previous = intervals.at(-1);
+          if (previous?.[1] === index + start) previous[1] = index + end;
+          else intervals.push([index + start, index + end]);
+        }
+      }
+      return intervals.some(
+        ([start, end]) =>
+          !(obstacle.id === relation.source.id && start === 0) &&
+          !(obstacle.id === relation.target.id && end === segments.length),
+      );
+    })
+    .map(obstacle => obstacle.id);
+};
+
 /** 路由转为 Core 采样输入，保留 Core 圆角语义 */
 const routeCommands = (route: FlowLayoutRoute): Array<PathCommand> => {
   const commands: Array<PathCommand> = [{ kind: 'move', to: [...route.points[0]] }];
-  if (route.kind === 'bend') {
+  if (route.kind === 'smooth') {
+    for (const segment of curve.catmullRomToCubic(
+      route.points.map(point => [...point]),
+      route.tension,
+    ))
+      commands.push({ kind: 'cubic', control1: segment.control1, control2: segment.control2, to: segment.to });
+  } else if (route.kind === 'bend') {
     const segment = createFlowBendCurve(route);
     if (segment.kind === 'cubicBezier')
       commands.push({ kind: 'cubic', control1: segment.control1, control2: segment.control2, to: segment.to });
-  } else for (const point of route.points.slice(1)) commands.push({ kind: 'line', to: [...point] });
+  } else if (route.kind === 'curve')
+    commands.push({ kind: 'quad', control: [...route.control], to: [...route.points[1]] });
+  else if (route.kind === 'cubic')
+    commands.push({
+      kind: 'cubic',
+      control1: [...route.control1],
+      control2: [...route.control2],
+      to: [...route.points[1]],
+    });
+  else for (const point of route.points.slice(1)) commands.push({ kind: 'line', to: [...point] });
   return commands;
 };
 
@@ -77,7 +138,8 @@ export const flowRelationObstacles = (
   const ancestors = new Set<string>();
   const visitAncestors = (elements: ReadonlyArray<FlowLayoutElementInput>, path: ReadonlyArray<string>): void => {
     for (const element of elements) {
-      if (element.id === relation.source || element.id === relation.target) for (const id of path) ancestors.add(id);
+      if (element.id === relation.source.id || element.id === relation.target.id)
+        for (const id of path) ancestors.add(id);
       if (element.kind !== 'leaf') visitAncestors(element.elements, [...path, element.id]);
     }
   };
@@ -120,8 +182,8 @@ export const scoreFlowBendNodes = (
     const intervals = findFlowCurveObstacleIntervals(
       segment,
       obstacle.bounds,
-      obstacle.id === relation.source,
-      obstacle.id === relation.target,
+      obstacle.id === relation.source.id,
+      obstacle.id === relation.target.id,
     );
     if (intervals.length > 0) count += 1;
     span += intervals.reduce((total, [start, end]) => total + end - start, 0);
@@ -141,7 +203,7 @@ export const flowBendGeometryFailure = (
     details: {
       stage: 'materialize',
       path: ['relations', relationIndex],
-      relatedIds: [relation.source, relation.target],
+      relatedIds: [relation.source.id, relation.target.id],
     },
     cause,
   });

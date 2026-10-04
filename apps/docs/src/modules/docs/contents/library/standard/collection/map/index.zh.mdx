@@ -193,9 +193,18 @@ Map
 
 ### 直接展示 JSON 数据
 
-`data` 接受 JSON 对象，根对象始终由 Map 展示。其非空对象值默认递归画成 Map；设置 `dataObjectDisplay="text"` 后，对象值改为紧凑的 JSON 文本。嵌套数组仍递归画成 List，并沿用这一设置。该选项仅用于 `data`，不适用于 `entries` 或 JSX 组合。下例使用文本模式。
+`data` 接受 JSON 对象。`dataExpand` 控制嵌套对象和数组的展示方式，默认 `true`；它不改变外层 Map 的结构，只用于 `data`，不适用于显式单元格或 JSX 组合。
 
-<ComponentPreview files="map-data" />
+| 配置                               | 嵌套对象  | 嵌套数组  |
+| ---------------------------------- | --------- | --------- |
+| `true`（默认）或 `['map', 'list']` | Map       | List      |
+| `false` 或 `[]`                    | JSON 文本 | JSON 文本 |
+| `['map']`                          | Map       | JSON 文本 |
+| `['list']`                         | JSON 文本 | List      |
+
+展开的子组件递归沿用同一选择；结构转为文本后，其整个子树都保留在紧凑 JSON 文本中，不再继续展开。空对象与空数组始终显示为 `{}` 和 `[]`。数组选项的顺序和重复项不影响结果。下例默认仅展开数组，可切换四种展示方式。
+
+<ComponentPreview files={['map-data', 'map-data.preview.tsx']} defaultSourceFile="map-data.preview.tsx" />
 
 对象键按原始文字显示，字符串值按带引号和转义的 JSON 字面量显示，因此 `"null"` 与 `null` 不会混淆。数字、布尔值和 null 原样显示；嵌套空对象、空数组显示为 `{}`、`[]`，空根结构的自然尺寸为零。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 Map 的 `entries`。
 
