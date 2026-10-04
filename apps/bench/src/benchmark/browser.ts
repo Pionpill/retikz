@@ -1,5 +1,5 @@
 import type { IRScene, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition } from '@retikz/core';
+import { compileToScene, CORE_SOURCE_KEY, CoreSourceDefinition } from '@retikz/core';
 import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 import type {
   RenderFrameSnapshot,
@@ -14,7 +14,7 @@ import { builtinRetainedRendererFactory, defineRetainedRenderer } from '@retikz/
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
 import type { PerformanceTraceOutcomeValue, PerformanceTraceRecord } from '@retikz/runtime';
 import {
-  createRuntimeOwnerUpdate,
+  createRuntimeSourceUpdate,
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,
   PerformanceTracePhase,
@@ -203,7 +203,7 @@ const assertRetainedDisposeLifecycle = (backend: 'svg' | 'canvas', baseSource: I
       if (target === null) throw new Error('SVG retained lifecycle target is unavailable');
       target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     } else {
-      const snapshot = value.session.artifact(value.coreProgram).value.snapshot;
+      const snapshot = value.session.artifact(value.coreComputation).value.snapshot;
       const client = toCanvasClientPoint(host as HTMLCanvasElement, snapshot, { x: 0, y: 0 });
       host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: client.x, clientY: client.y }));
       if (images.length === 0) throw new Error('Canvas retained lifecycle probe did not create an image resource');
@@ -495,16 +495,16 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
     runWithSession(backend, current, (host, records, value) => {
       const fullId = `${backend}-retained-full-5000`;
       const fullRecord = readRetainedFullRecord(fullId, backend, records);
-      const initialScene = value.session.artifact(value.coreProgram).value.snapshot.scene as unknown as Scene;
+      const initialScene = value.session.artifact(value.coreComputation).value.snapshot.scene as unknown as Scene;
       results.push(toResult(fullId, assertBackendOracle(fullId, backend, host, initialScene), fullRecord, liveHandles));
 
       const unchangedSvgNode = backend === 'svg' ? host.querySelector('[data-retikz-id="entity-00000"]') : undefined;
       records.length = 0;
       value.session.update({
         baseRevision: value.session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
       });
-      const artifact = value.session.artifact(value.coreProgram).value;
+      const artifact = value.session.artifact(value.coreComputation).value;
       const id = `${backend}-single-entity-update-5000`;
       if (
         artifact.patch?.operations.length !== 1 ||
@@ -530,9 +530,9 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
       records.length = 0;
       value.session.update({
         baseRevision: value.session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, groupNext)],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, groupNext)],
       });
-      const artifact = value.session.artifact(value.coreProgram).value;
+      const artifact = value.session.artifact(value.coreComputation).value;
       const id = `${backend}-group-update-5000`;
       if (
         artifact.patch?.operations.length !== 1 ||
@@ -554,7 +554,7 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
         records.length = 0;
         value.session.update({
           baseRevision: value.session.revision(),
-          owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+          sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
         });
         const id = `${backend}-replace-fallback-5000`;
         if (
@@ -657,11 +657,11 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
         records.length = 0;
         value.session.update({
           baseRevision: value.session.revision(),
-          owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+          sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
         });
         const outcome = updateStrategy === 'full' ? PerformanceTraceOutcome.Full : PerformanceTraceOutcome.Incremental;
         const work = assertSingleTraceRecord(id, records, {
-          owner: CORE_OWNER_KEY,
+          owner: CORE_SOURCE_KEY,
           phase: PerformanceTracePhase.Update,
           unit: PerformanceTraceUnit.IrChild,
           outcome,
@@ -704,7 +704,7 @@ const measureRetainedUpdateScenario = (
     return measureScenario(id, warmupRuns, sampleRuns, () => {
       value.session.update({
         baseRevision: value.session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
       });
       next = next === first ? second : first;
     });

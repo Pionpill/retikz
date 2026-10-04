@@ -33,6 +33,12 @@ export const FlowLayoutAlignment = {
 
 /** Flow relation 的路由意图 */
 export const FlowRoutingKind = {
+  /** 按作者指定的中间点生成样条，不自动搜索经过点 */
+  Smooth: 'smooth',
+  /** 二次贝塞尔，省略控制点时自动求解 */
+  Curve: 'curve',
+  /** 三次贝塞尔，省略两个控制点时自动求解 */
+  Cubic: 'cubic',
   /** 复用 Core bend 的常规曲线 */
   Bend: 'bend',
   /** 以直线路径连接关系端点 */
@@ -44,3 +50,6 @@ export const FlowRoutingKind = {
   /** 从 source 到 target 先垂直后水平 */
   VerticalThenHorizontal: '|-',
 } as const;
+
+/** 同侧连接落点的分配策略 */
+export const FlowEndpointOverlap = { Allow: 'allow', Separate: 'separate' } as const;

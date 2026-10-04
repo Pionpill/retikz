@@ -5,6 +5,7 @@ import {
   BendLoosenessSchema,
   BendDirection,
   PositionSchema,
+  SmoothTensionSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutArtifactRectSchema } from '@retikz/layout';
@@ -12,6 +13,8 @@ import type { infer as ZodInfer, ZodType } from 'zod';
 import { array, discriminatedUnion, lazy, literal, strictObject, union, tuple, enum as zodEnum } from 'zod';
 
 import { FlowRoutingKind } from '../../shared';
+import { FlowEndpointTargetSchema } from '../flow';
+import { FlowOrthogonalRoutingSchema } from '../flow';
 
 export const FlowArtifactBoundsSchema = strictObject({
   allocationBounds: LayoutArtifactRectSchema.describe('Final allocation rectangle in Flow-local coordinates.'),
@@ -72,6 +75,7 @@ const FlowStraightRouteArtifactSchema = strictObject({
 
 const FlowOrthogonalRouteArtifactSchema = strictObject({
   kind: literal(FlowRoutingKind.Orthogonal).describe('Orthogonal Flow route discriminator.'),
+  turnPosition: FlowOrthogonalRoutingSchema.shape.turnPosition,
   cornerRadius: NonNegativeNumberSchema.describe('Effective rounded-corner radius in user units.'),
   points: array(PositionSchema).min(2).describe('Canonical Flow-local orthogonal point chain.'),
 });
@@ -79,12 +83,12 @@ const FlowOrthogonalRouteArtifactSchema = strictObject({
 const FlowPointRouteArtifactSchema = discriminatedUnion('kind', [
   FlowStraightRouteArtifactSchema,
   FlowOrthogonalRouteArtifactSchema,
-  FlowOrthogonalRouteArtifactSchema.extend({
+  FlowOrthogonalRouteArtifactSchema.omit({ turnPosition: true }).extend({
     kind: literal(FlowRoutingKind.HorizontalThenVertical).describe(
       'Horizontal then vertical Flow route discriminator.',
     ),
   }),
-  FlowOrthogonalRouteArtifactSchema.extend({
+  FlowOrthogonalRouteArtifactSchema.omit({ turnPosition: true }).extend({
     kind: literal(FlowRoutingKind.VerticalThenHorizontal).describe(
       'Vertical then horizontal Flow route discriminator.',
     ),
@@ -97,6 +101,18 @@ const FlowBendRouteShape = {
 };
 
 export const FlowRouteArtifactSchema = union([
+  strictObject({
+    kind: literal(FlowRoutingKind.Smooth),
+    points: array(PositionSchema).min(3),
+    tension: SmoothTensionSchema.unwrap(),
+  }),
+  strictObject({ kind: literal('curve'), points: tuple([PositionSchema, PositionSchema]), control: PositionSchema }),
+  strictObject({
+    kind: literal('cubic'),
+    points: tuple([PositionSchema, PositionSchema]),
+    control1: PositionSchema,
+    control2: PositionSchema,
+  }),
   FlowPointRouteArtifactSchema,
   strictObject({ ...FlowBendRouteShape, bendDirection: zodEnum(BendDirection), bendAngle: BendAngleSchema.unwrap() }),
   strictObject({
@@ -110,8 +126,8 @@ export const FlowRouteArtifactSchema = union([
 );
 
 export const FlowRelationArtifactSchema = strictObject({
-  source: NonBlankStringSchema.describe('Authored source Flow element identity.'),
-  target: NonBlankStringSchema.describe('Authored target Flow element identity.'),
+  source: FlowEndpointTargetSchema.describe('Authored source Flow element identity.'),
+  target: FlowEndpointTargetSchema.describe('Authored target Flow element identity.'),
   route: FlowRouteArtifactSchema.describe('Final relation route in Flow-local coordinates.'),
   labelReservation: LayoutArtifactRectSchema.optional().describe('Optional reserved label rectangle.'),
 }).describe('Final renderer-neutral geometry for one authored Flow Relation.');
@@ -124,7 +140,11 @@ export const FlowDiagramArtifactSchema = strictObject({
   regions: strictObject({
     title: FlowArtifactBoundsSchema.optional().describe('Title region when authored.'),
     description: FlowArtifactBoundsSchema.optional().describe('Description region when authored.'),
-    drawing: FlowArtifactBoundsSchema.describe('Required Flow drawing region.'),
+    drawing: FlowArtifactBoundsSchema.extend({
+      origin: PositionSchema.describe(
+        'Flow root origin in allocation-local coordinates; subtract from artifact controls for explicit authoring.',
+      ),
+    }).describe('Required Flow drawing region.'),
     legend: FlowArtifactBoundsSchema.optional().describe('Legend region when authored.'),
   }).describe('Only the Diagram regions present in this compile result.'),
   elements: array(FlowElementArtifactSchema).nonempty().describe('Recursive authored Flow element geometry.'),

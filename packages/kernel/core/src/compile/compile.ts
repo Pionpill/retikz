@@ -46,13 +46,13 @@ const dispatchCompileDiagnostics = (
   diagnostics.forEach(warningSink);
 };
 
-/** Core full compile 的内部输出，供同步入口与 Runtime Program 共享 */
+/** Core full compile 的内部输出，供同步入口与 Runtime Computation 共享 */
 export type CoreCompileSnapshot<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 完整 compile result */
   result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
   /** 仅在完整 compile 成功后可提交的 canonical warnings */
   diagnostics: ReadonlyArray<CompileWarning>;
-  /** Runtime Program 路径产生的 primitive identity metadata */
+  /** Runtime Computation 路径产生的 primitive identity metadata */
   primitiveMetadata?: RuntimePrimitiveMetadataTable;
   /** 显式 observed compile 的冻结 observer outputs */
   observerOutputs: ReadonlyArray<CompileObserverOutput>;

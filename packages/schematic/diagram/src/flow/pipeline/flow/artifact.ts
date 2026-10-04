@@ -64,16 +64,29 @@ const artifactRelations = (
       point[0] + drawingOffset[0],
       point[1] + drawingOffset[1],
     ];
-    const route =
-      routing.kind === 'bend'
+    const route: FlowDiagramArtifact['relations'][number]['route'] =
+      routing.kind === 'curve'
         ? {
             ...routing,
-            points: [translatePoint(routing.points[0]), translatePoint(routing.points[1])] as [Position, Position],
+            points: [translatePoint(routing.points[0]), translatePoint(routing.points[1])],
+            control: translatePoint(routing.control),
           }
-        : { ...routing, points: routing.points.map(translatePoint) };
+        : routing.kind === 'cubic'
+          ? {
+              ...routing,
+              points: [translatePoint(routing.points[0]), translatePoint(routing.points[1])],
+              control1: translatePoint(routing.control1),
+              control2: translatePoint(routing.control2),
+            }
+          : routing.kind === 'bend'
+            ? {
+                ...routing,
+                points: [translatePoint(routing.points[0]), translatePoint(routing.points[1])] as [Position, Position],
+              }
+            : { ...routing, points: routing.points.map(translatePoint) };
     return {
-      source: relation.source.source,
-      target: relation.source.target,
+      source: geometry.source,
+      target: geometry.target,
       route,
       ...(geometry.labelBounds === undefined
         ? {}

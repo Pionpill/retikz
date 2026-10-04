@@ -167,7 +167,7 @@ export type LayoutExtensions = Readonly<{
 
 | 成员                       | 类型                                      | 默认值                       | 说明                                                                     |
 | -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime Session                                               |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime                                                       |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
 | `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
 | `readonly signal?`         | `AbortSignal`                             | —                            | 异步 preparation 与 controller 的生命周期信号                            |
@@ -244,7 +244,7 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 
 | 成员                       | 类型                                      | 默认值                       | 说明                                                                     |
 | -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime Session                                               |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime                                                       |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
 | `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
 | `readonly signal?`         | `AbortSignal`                             | —                            | 异步 preparation 与 controller 的生命周期信号                            |
@@ -258,13 +258,13 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 
 <ApiTable>
 
-| 成员                       | 类型                              | 默认值   | 说明                                                         |
-| -------------------------- | --------------------------------- | -------- | ------------------------------------------------------------ |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | 不创建 Runtime Session，直接完整编译与物化                   |
-| `readonly onDiagnostic?`   | `never`                           | —        | static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 |
-| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower                |
-| `readonly signal?`         | `AbortSignal`                     | —        | 异步 preparation 与 controller 的生命周期信号                |
-| `readonly updateStrategy?` | `never`                           | —        | static 不支持 Program 更新策略                               |
+| 成员                       | 类型                              | 默认值   | 说明                                                 |
+| -------------------------- | --------------------------------- | -------- | ---------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | 不创建 Runtime，直接完整编译与物化                   |
+| `readonly onDiagnostic?`   | `never`                           | —        | static 不创建 Runtime，因此不产生 Runtime 结构化诊断 |
+| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower        |
+| `readonly signal?`         | `AbortSignal`                     | —        | 异步 preparation 与 controller 的生命周期信号        |
+| `readonly updateStrategy?` | `never`                           | —        | static 不支持 Computation 更新策略                   |
 
 </ApiTable>
 
@@ -298,13 +298,13 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 
 <ApiTable>
 
-| 成员                       | 类型                              | 默认值   | 说明                                                         |
-| -------------------------- | --------------------------------- | -------- | ------------------------------------------------------------ |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | 不创建 Runtime Session，直接完整编译与物化                   |
-| `readonly onDiagnostic?`   | `never`                           | —        | static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 |
-| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower                |
-| `readonly signal?`         | `AbortSignal`                     | —        | 异步 preparation 与 controller 的生命周期信号                |
-| `readonly updateStrategy?` | `never`                           | —        | static 不支持 Program 更新策略                               |
+| 成员                       | 类型                              | 默认值   | 说明                                                 |
+| -------------------------- | --------------------------------- | -------- | ---------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | 不创建 Runtime，直接完整编译与物化                   |
+| `readonly onDiagnostic?`   | `never`                           | —        | static 不创建 Runtime，因此不产生 Runtime 结构化诊断 |
+| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | 客户端作者准备方式；同步 SSR 仍消费同步 lower        |
+| `readonly signal?`         | `AbortSignal`                     | —        | 异步 preparation 与 controller 的生命周期信号        |
+| `readonly updateStrategy?` | `never`                           | —        | static 不支持 Computation 更新策略                   |
 
 </ApiTable>
 

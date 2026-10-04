@@ -11,6 +11,8 @@ import { normalizeScene } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { synchronousAdapters } from './helpers/synchronous-adapters';
+
 describe('Standard React definition loading', () => {
   it('keeps JSX components self-registering through their static adapters', () => {
     expect(() =>
@@ -52,7 +54,7 @@ describe('Standard React definition loading', () => {
       ),
     ).not.toThrow();
     const input = createInputScene(legend);
-    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
     expect(normalized.contributions[0]).toEqual({
       roots: [LegendProvider.key, GridProvider.key],
       providers: [LegendProvider, GridProvider],

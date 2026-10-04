@@ -1,0 +1,41 @@
+/** 贝塞尔试验场与控件文案 */
+export const flowBezierI18n = {
+  zh: {
+    obstacleX: '障碍 X',
+    obstacleY: '障碍 Y',
+    source: '起点',
+    obstacle: '障碍',
+    target: '终点',
+    label: '贝塞尔连线',
+    title: '贝塞尔路由',
+    kind: '曲线类型',
+    automatic: '自动生成控制点',
+    x1: '第一控制点横坐标',
+    y1: '第一控制点纵坐标',
+    x2: '第二控制点横坐标',
+    y2: '第二控制点纵坐标',
+    options: [
+      { value: 'curve', label: '二次贝塞尔' },
+      { value: 'cubic', label: '三次贝塞尔' },
+    ],
+  },
+  en: {
+    obstacleX: 'Obstacle X',
+    obstacleY: 'Obstacle Y',
+    source: 'Source',
+    obstacle: 'Obstacle',
+    target: 'Target',
+    label: 'Bezier connection',
+    title: 'Bezier routing',
+    kind: 'Curve type',
+    automatic: 'Automatic control points',
+    x1: 'First control X',
+    y1: 'First control Y',
+    x2: 'Second control X',
+    y2: 'Second control Y',
+    options: [
+      { value: 'curve', label: 'Quadratic Bezier' },
+      { value: 'cubic', label: 'Cubic Bezier' },
+    ],
+  },
+} as const;

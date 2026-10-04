@@ -57,6 +57,7 @@ export default defineConfig(({ command, mode }) => ({
   optimizeDeps: {
     exclude: [
       '@retikz/core',
+      '@retikz/runtime',
       '@retikz/react',
       '@retikz/vanilla',
       '@retikz/tex',

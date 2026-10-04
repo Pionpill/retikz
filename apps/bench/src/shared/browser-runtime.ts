@@ -1,17 +1,17 @@
 import type { IRScene } from '@retikz/core';
-import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
 import type { RenderRuntimeConfigInput, RetainedRendererFactory } from '@retikz/render/runtime';
 import {
   builtinRetainedRendererFactory,
   createRetainedRenderParticipant,
-  RenderRuntimeOwnerDefinition,
+  RenderRuntimeSourceDefinition,
 } from '@retikz/render/runtime';
-import type { PerformanceTraceRecord, RuntimeSession } from '@retikz/runtime';
+import type { PerformanceTraceRecord, Runtime } from '@retikz/runtime';
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeComputationRegistry,
+  createRuntime,
 } from '@retikz/runtime';
 
 /** 创建固定尺寸的真实 browser Canvas */
@@ -27,10 +27,10 @@ export const createBenchmarkCanvas = (): Readonly<{
   return Object.freeze({ canvas, context });
 };
 
-/** Bench runner 与交互式 Lab 共享的 retained Runtime session */
+/** Bench runner 与交互式 Lab 共享的 retained Runtime */
 export type RetainedBenchmarkSession = Readonly<{
-  coreProgram: ReturnType<typeof createCoreProgram<readonly []>>;
-  session: RuntimeSession;
+  coreComputation: ReturnType<typeof createCoreComputation<readonly []>>;
+  session: Runtime;
 }>;
 
 /** 创建使用公共 Runtime、Core 与 Render 入口的 retained benchmark session */
@@ -43,7 +43,7 @@ export const createRetainedBenchmarkSession = (
   config: RenderRuntimeConfigInput = {},
   updateStrategy?: 'auto' | 'full',
 ): RetainedBenchmarkSession => {
-  const coreProgram = createCoreProgram({ onWarn: () => undefined });
+  const coreComputation = createCoreComputation({ onWarn: () => undefined });
   const handle =
     backend === 'svg'
       ? createRetainedRenderParticipant({
@@ -51,29 +51,29 @@ export const createRetainedBenchmarkSession = (
           host: host as SVGSVGElement,
           rendererFactory,
           immutableOptions: { backend, idPrefix: 'retained-bench' },
-          coreProgram,
+          coreComputation,
         })
       : createRetainedRenderParticipant({
           backend,
           host: host as HTMLCanvasElement,
           rendererFactory,
           immutableOptions: { backend, idPrefix: 'retained-bench', devicePixelRatio: 1 },
-          coreProgram,
+          coreComputation,
         });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const session = createRuntime({
+    sources,
+    computations,
     updateStrategy,
     participants: [handle.participant],
     initialSnapshots: [
-      createRuntimeOwnerInput(CoreOwnerDefinition, source),
-      createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, config),
+      createRuntimeSourceInput(CoreSourceDefinition, source),
+      createRuntimeSourceInput(RenderRuntimeSourceDefinition, config),
     ],
     trace: record => records.push(record),
   });
-  return Object.freeze({ coreProgram, session });
+  return Object.freeze({ coreComputation, session });
 };
 
 /** 创建指定 renderer backend 的真实 browser host */

@@ -1,4 +1,4 @@
-import type { IRChild } from '@retikz/core';
+import type { IRChild, IRTarget } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 import type { IRGraph, IRGraphEntity, IRGraphRelation, IRGroup, IRGroupCaptionText } from '@retikz/graph';
 import {
@@ -12,6 +12,7 @@ import {
 } from '@retikz/graph';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { FlowLayoutEndpoint } from '../../contract';
 import type {
   IRFlowDefaults,
   IRFlowDiagram,
@@ -20,6 +21,7 @@ import type {
   IRFlowLayout,
   IRFlowRelation,
 } from '../../schemas';
+import { FlowEndpointOverlapSchema } from '../../schemas';
 import { mergeFlowDefaults, mergeFlowLayoutIntent, resolveFlowTheme } from '../theme';
 import type {
   CanonicalFlowDiagram,
@@ -341,10 +343,43 @@ const relationDefaultsOf = (defaults: IRFlowDefaults['relation'], source: IRFlow
   return mergeGraphDefaults(defaults === undefined ? undefined : { relation: defaults }, sourceOverride)?.relation;
 };
 
-const resolveRelationRecord = (source: IRFlowRelation, index: number, state: ResolveState): CanonicalFlowRelation => {
+/** 只检查 Flow 引用域，坐标求值交由 Core */
+const assertWaypointReferences = (target: IRTarget | string, path: FlowSourcePath, state: ResolveState): void => {
+  if (typeof target === 'string' || (!Array.isArray(target) && 'id' in target)) {
+    const id = typeof target === 'string' ? target : target.id;
+    if (!state.ids.has(id) || state.layouts.has(id))
+      throw new RetikzDiagramError({
+        code: RetikzDiagramErrorCode.FlowReferenceNotFound,
+        message: `Smooth waypoint must reference an Entity or Group in this Flow: '${id}'.`,
+        details: { path, relatedIds: [id] },
+      });
+    return;
+  }
+  if (Array.isArray(target)) return;
+  if ('between' in target)
+    target.between.forEach((point, index) => assertWaypointReferences(point, [...path, 'between', index], state));
+  else if ('of' in target) assertWaypointReferences(target.of, [...path, 'of'], state);
+  else if ('origin' in target && target.origin !== undefined)
+    assertWaypointReferences(target.origin, [...path, 'origin'], state);
+};
+
+const resolveRelationRecord = (authored: IRFlowRelation, index: number, state: ResolveState): CanonicalFlowRelation => {
+  const resolveEndpoint = (key: 'source' | 'target'): FlowLayoutEndpoint => {
+    const value = authored[key];
+    const fields = typeof value === 'string' ? { id: value } : value;
+    return {
+      ...fields,
+      overlap: FlowEndpointOverlapSchema.parse(fields.overlap ?? state.defaults.relation?.[key]?.overlap),
+    };
+  };
+  const source = { ...authored, source: resolveEndpoint('source'), target: resolveEndpoint('target') };
   const path: FlowSourcePath = ['relations', index];
+  if (source.routing?.kind === 'smooth')
+    source.routing.points.forEach((point, pointIndex) =>
+      assertWaypointReferences(point, [...path, 'routing', 'points', pointIndex], state),
+    );
   for (const endpoint of ['source', 'target'] as const) {
-    const id = source[endpoint];
+    const id = source[endpoint].id;
     if (!state.ids.has(id)) {
       throw new RetikzDiagramError({
         code: RetikzDiagramErrorCode.FlowReferenceNotFound,
@@ -364,8 +399,8 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
   const graph: IRGraphRelation = {
     namespace: 'graph',
     type: GraphType.Relation,
-    source: { id: source.source },
-    target: { id: source.target },
+    source: { id: source.source.id, ...(source.source.anchor === undefined ? {} : { anchor: source.source.anchor }) },
+    target: { id: source.target.id, ...(source.target.anchor === undefined ? {} : { anchor: source.target.anchor }) },
     role: source.role ?? RelationRole.Flow,
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.status === undefined ? {} : { status: source.status }),

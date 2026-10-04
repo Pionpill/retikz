@@ -617,7 +617,7 @@ describe('PreviewControlPanel', () => {
     const rangeField = container.querySelector('[data-control-id="opacity"]');
     const textLabel = textField?.querySelector('label');
     const switchLabel = switchField?.querySelector('label');
-    const rangeLabel = rangeField?.querySelector('label');
+    const rangeLabel = rangeField?.querySelector('button');
     const textInput = textLabel?.nextElementSibling;
     const switchInput = switchLabel?.nextElementSibling;
     const rangeInput = rangeLabel?.nextElementSibling;
@@ -878,55 +878,63 @@ describe('PreviewControlPanel', () => {
   it('未配置时用 2 秒播放 range，并在到达终点后恢复播放动作', async () => {
     await i18n.changeLanguage('en');
     const container = await mount(<WorkspaceHarness definition={definition} />);
-    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const playButton = container.querySelector<HTMLButtonElement>(
+      '[data-control-id="opacity"] button[aria-pressed="false"]',
+    );
     const rangeValue = () => container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent;
 
     expect(playButton).not.toBeNull();
     await act(() => playButton?.click());
     expect(rangeValue()).toBe('0');
-    expect(container.querySelector('button[aria-label="Pause range"]')).not.toBeNull();
+    expect(container.querySelector('[data-control-id="opacity"] button[aria-pressed="true"]')).not.toBeNull();
 
     await flushAnimationFrames(0);
     await flushAnimationFrames(1999);
 
-    expect(container.querySelector('button[aria-label="Pause range"]')).not.toBeNull();
+    expect(container.querySelector('[data-control-id="opacity"] button[aria-pressed="true"]')).not.toBeNull();
 
     await flushAnimationFrames(2000);
 
     expect(rangeValue()).toBe('1');
-    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+    expect(container.querySelector('[data-control-id="opacity"] button[aria-pressed="false"]')).not.toBeNull();
   });
 
   it('range 可通过 playDuration 覆盖默认播放时长', async () => {
     await i18n.changeLanguage('en');
     const container = await mount(<WorkspaceHarness definition={shortRangeDurationDefinition} />);
-    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const playButton = container.querySelector<HTMLButtonElement>(
+      '[data-control-id="opacity"] button[aria-pressed="false"]',
+    );
 
     await act(() => playButton?.click());
     await flushAnimationFrames(0);
     await flushAnimationFrames(400);
 
     expect(container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent).toBe('1');
-    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+    expect(container.querySelector('[data-control-id="opacity"] button[aria-pressed="false"]')).not.toBeNull();
   });
 
   it('uses the global range playback duration unless the field overrides it', async () => {
     await i18n.changeLanguage('en');
     const container = await mount(<WorkspaceHarness definition={definition} rangePlaybackDuration={400} />);
-    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const playButton = container.querySelector<HTMLButtonElement>(
+      '[data-control-id="opacity"] button[aria-pressed="false"]',
+    );
 
     await act(() => playButton?.click());
     await flushAnimationFrames(0);
     await flushAnimationFrames(400);
 
     expect(container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent).toBe('1');
-    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+    expect(container.querySelector('[data-control-id="opacity"] button[aria-pressed="false"]')).not.toBeNull();
   });
 
   it('手动修改播放中的 range 会取消后续播放帧', async () => {
     await i18n.changeLanguage('en');
     const container = await mount(<WorkspaceHarness definition={definition} />);
-    const playButton = container.querySelector<HTMLButtonElement>('button[aria-label="Play range"]');
+    const playButton = container.querySelector<HTMLButtonElement>(
+      '[data-control-id="opacity"] button[aria-pressed="false"]',
+    );
     const thumb = container.querySelector<HTMLElement>('[data-control-id="opacity"] [data-slot="slider-thumb"]');
     const rangeValue = () => container.querySelector('[data-control-id="opacity"] .tabular-nums')?.textContent;
 
@@ -935,7 +943,7 @@ describe('PreviewControlPanel', () => {
     await flushAnimationFrames(1200);
 
     expect(rangeValue()).toBe('0.1');
-    expect(container.querySelector('button[aria-label="Play range"]')).not.toBeNull();
+    expect(container.querySelector('[data-control-id="opacity"] button[aria-pressed="false"]')).not.toBeNull();
   });
 
   it('按控件数量均衡拆成两列并重复跨列 section 标题', () => {

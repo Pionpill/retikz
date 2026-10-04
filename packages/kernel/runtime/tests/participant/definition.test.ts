@@ -16,8 +16,8 @@ describe('runtime commit participant definition', () => {
   it('只在 token 上公开冻结 metadata，不暴露 lifecycle callbacks', () => {
     const input = {
       key: 'renderer',
-      owners: [],
-      programs: [],
+      sources: [],
+      computations: [],
       revisionPolicy: 'continuous' as const,
       tracePhases: [],
       prepare: () => ({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined }),
@@ -28,8 +28,8 @@ describe('runtime commit participant definition', () => {
 
     expect(participant).toEqual({
       key: 'renderer',
-      owners: [],
-      programs: [],
+      sources: [],
+      computations: [],
       revisionPolicy: 'continuous',
       tracePhases: [],
     });
@@ -50,8 +50,8 @@ describe('runtime commit participant definition', () => {
     ];
     const participant = runtime.defineRuntimeCommitParticipant({
       key: 'renderer',
-      owners: [],
-      programs: [],
+      sources: [],
+      computations: [],
       revisionPolicy: 'continuous',
       tracePhases,
       prepare: () => ({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined }),
@@ -74,8 +74,8 @@ describe('runtime commit participant definition', () => {
     expect(() =>
       runtime.defineRuntimeCommitParticipant({
         key: '',
-        owners: [],
-        programs: [],
+        sources: [],
+        computations: [],
         revisionPolicy: 'continuous',
         tracePhases: [],
         prepare: () => ({ commit: () => undefined, rollback: () => undefined, dispose: () => undefined }),

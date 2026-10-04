@@ -202,6 +202,8 @@ export type CompositeCompileSession = {
 
 /** 单次 traversal 的可选隔离输入 */
 export type TraversalCompileOptions = {
+  /** 查询 probe 在 Scope 出栈前读取最终引用环境，不向公共 context 暴露可变状态 */
+  captureScopeTargets?: (child: ScopeChild, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
   /** probe 或显式绑定子项的局部运行时输入 */
   runtimeInputs?: CompositeRuntimeInputScope;
   /** 隔离 traversal 继承的逻辑容器祖先 */
@@ -226,7 +228,7 @@ export type TraversalCompileOptions = {
   proposal?: LayoutProposal;
   /** 根 compile 共享 session */
   session?: CompositeCompileSession;
-  /** Runtime Program full compile 使用的 identity tracker */
+  /** Runtime Computation full compile 使用的 identity tracker */
   identityTracker?: RuntimeTopologyTracker;
   /** 隔离 traversal 继承的 semantic owner */
   semanticOwner?: RuntimeSemanticOwner;

@@ -10,6 +10,37 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '待发布 · 端点选侧与自动等分', en: 'Unreleased · Endpoint sides and automatic spacing' },
+        content: {
+          zh: 'Relation source/target 支持 { id, side?, overlap? } 或固定 anchor；separate 在同侧按 i/(n+1) 分配独立位置，allow 共用位置，固定锚点不移动。BREAKING：自定义布局输入端点改为对象并声明 endpointPlacement，输出及 artifact 的 source/target 改为 { id, anchor? }；用 resolveEndpoint 查询真实边界。自动比例要求形状支持 Core side anchor，当前 polygon 不支持；不保证箭头图形或路径无重叠。',
+          en: 'Relation source/target supports { id, side?, overlap? } or a fixed anchor. Separate endpoints use i/(n+1) slots per side; allow endpoints share a slot and fixed anchors never move. BREAKING: custom layouts consume endpoint objects and declare endpointPlacement; output and artifact endpoints become { id, anchor? }. Use resolveEndpoint for real boundaries. Automatic fractions require Core side-anchor support, currently unavailable for polygon; arrow-shape and route overlap are not prevented.',
+        },
+      },
+      {
+        label: { zh: '待发布 · 正交连线自动避让', en: 'Unreleased · Automatic orthogonal avoidance' },
+        content: {
+          zh: 'orthogonal 省略 turnPosition 时比较中点、四分之一与四分之三候选；显式比例保持不变。全部受阻保留最佳路线并警告，水平或垂直对齐时直接连接，不作避让。同步三入口与文档控件。公开 routeFlowRelations，供自定义布局在最终元素边界上复用内置路由；避让示例支持移动障碍。',
+          en: 'Orthogonal routes compare midpoint, quarter and three-quarter candidates when turnPosition is omitted, preserving explicit fractions. Exhausted searches retain the best route with a warning; aligned endpoints connect directly without avoidance. All entry points and documentation controls share the contract. Public routeFlowRelations lets custom layouts reuse built-in routing on final element bounds; avoidance demos support moving obstacles.',
+        },
+      },
+      {
+        label: { zh: '待发布 · 过点曲线路由', en: 'Unreleased · Through-point routing' },
+        content: {
+          zh: 'Relation 新增 smooth，保留完整 Target 经过点与正数 tension；自动追加关系终点。Core 提供同次编译的真实 Target 查询和 smooth 终点边界连接。布局输出核对所有 knots，保留重复点；逐段最多二分 8 层检测，冲突警告但不搜索或改点。React、Vanilla、IR、完整标签与 artifact 使用同一契约。',
+          en: 'Relations add smooth routing with full Target waypoints and positive tension, automatically appending the relation target. Core provides compile-local Target queries and smooth terminal boundary connections. Output validation checks all knots and retains duplicates. Per-segment collision checks subdivide up to 8 levels and warn without searching or moving points. React, Vanilla, IR, full labels and artifacts share the contract.',
+        },
+      },
+      {
+        label: {
+          zh: '待发布 · 贝塞尔路由与 BREAKING 布局能力声明',
+          en: 'Unreleased · Bezier routing and BREAKING layout capabilities',
+        },
+        content: {
+          zh: 'Relation 支持自动及完整显式 curve/cubic，省略控制点自动求解，三次部分控制点拒绝。有限搜索最多提出 13/49 条候选，碰撞最多二分 8 层；冲突保留路线并警告，仅保证参考几何检测。自定义 Layout Definition 将 capabilities.routingKinds 迁移为 capabilities.routing，每项为 { kind }，贝塞尔额外声明 modes。artifact.regions.drawing 新增必填 origin，用于控制点回写 Flow 根坐标。',
+          en: 'Relations support automatic and complete explicit curve/cubic routing. Omitted controls request generation; partial cubic controls are rejected. Search proposes at most 13/49 candidates and collision checks bisect at most 8 levels; conflicts retain routes with warnings and checks cover reference geometry only. Custom Layout Definitions must replace capabilities.routingKinds with capabilities.routing entries { kind }, adding modes for Bezier. artifact.regions.drawing now requires origin for converting controls back to Flow root coordinates.',
+        },
+      },
+      {
         label: { zh: '曲线路由与完整标签', en: 'Bend routing and complete labels' },
         content: {
           zh: 'Flow 新增 bend 常规曲线路由，支持左右 30°/45°/60° 自动选择（节点优先、标签次级，不比较边交叉）、显式方向和完整切线配置；节点冲突保留绘制并提供 Source 定位警告。Relation.label 支持完整 Core 几何与外观配置。Layout provider 输出从 points 改为有判别的 route，artifact 保留同一参考几何。provider 对称 bend 输入允许省略角度进行搜索，Definition 不设置 bendAngle 默认；不提供全局避障或自环。',

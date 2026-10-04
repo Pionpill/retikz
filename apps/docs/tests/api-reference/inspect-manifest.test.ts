@@ -35,7 +35,7 @@ describe('Inspect API Reference', () => {
         'CoordinateInspectOptionsSchema',
       ]) {
         const schemaSection = source.split(`### ${schema}\n`)[1]?.split('\n### ')[0];
-        expect(schemaSection).not.toContain('/schema-reference#');
+        expect(schemaSection).toContain('/schema-reference#');
         expect(schemaSection).toContain('ApiSourceLink');
         expect(schemaSection).not.toContain('```');
       }

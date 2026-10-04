@@ -35,7 +35,7 @@ retikz 的多 Tier lowering、renderer-agnostic Scene 与可序列化 IR 带来�
 ```text
 Snapshot / ChangeSet
   → Runtime Transaction
-  → Tier Programs
+  → Tier Computations
   → Core Contributions
   → Core Compiler
   → Scene Snapshot / Patch
@@ -102,7 +102,7 @@ Compile cache、索引、候选结果和 retained state 都属于显式 runtime 
 
 React Concurrent Rendering 不会自动中断普通 JavaScript lowering。Kernel 需要 framework-neutral 的 cooperative scheduler；React 和 Vanilla 只负责宿主接线。
 
-Program 可以声明三类执行能力：
+Computation 可以声明三类执行能力：
 
 - **blocking**：必须一次完成的短任务。
 - **chunkable**：可保存进度并按预算主动让出。
@@ -128,7 +128,7 @@ SVG、Canvas 与未来 renderer 共享 Scene Patch 语义，但各自拥有 reta
 - **原子呈现**：完整结果准备并物化后一次显示，适合 SSR、导出、截图、严格一致性视图以及不希望出现搭建过程的场景。
 - **渐进呈现**：首屏或大型更新按合法 presentation batch 显示，适合交互式浏览和强调尽快反馈的场景。
 
-首屏与后续更新是否渐进应允许分别选择。Program 仍只产出完整 Scene；渐进策略只有在调用方启用且 renderer / Scene 边界声明支持时生效，否则回退到原子呈现并提供可观察诊断；具体开关、默认值、诊断和 `auto` 策略由 runtime / renderer ADR 冻结。
+首屏与后续更新是否渐进应允许分别选择。Computation 仍只产出完整 Scene；渐进策略只有在调用方启用且 renderer / Scene 边界声明支持时生效，否则回退到原子呈现并提供可观察诊断；具体开关、默认值、诊断和 `auto` 策略由 runtime / renderer ADR 冻结。
 
 逻辑 transaction 的 semantic revision 仍然原子提交。渐进模式可以在最终 semantic commit 前显示可回滚的候选 presentation batch，也可以在 commit 后继续物化同一 Scene；这些 batch 都不构成 document、contribution 或 Scene 的部分提交。
 
@@ -182,7 +182,7 @@ v0.5 的主性能门槛是中等规模持续更新中的帧延迟与无效工作
 建议按以下顺序推进：
 
 1. 测量、tracing 与基准场景。
-2. Session、revision、identity 与 ownership。
+2. Runtime、revision、identity 与 ownership。
 3. Snapshot Diff、bailout 与局部失效。
 4. 各 Tier incremental program 与 provenance。
 5. Scene Patch 与 retained renderer。

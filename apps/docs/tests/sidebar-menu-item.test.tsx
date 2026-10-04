@@ -214,10 +214,9 @@ describe('<AppSidebarMenu>', () => {
     );
 
     expect(intro?.querySelector('[data-doc-difficulty-dot="beginner"]')).not.toBeNull();
-    expect(introDifficultySlot?.classList.contains('size-6')).toBe(true);
     expect(groupExpandButton?.classList.contains('size-6')).toBe(true);
     expect(introDifficultySlot?.classList.contains('ml-1')).toBe(true);
-    expect(introDifficultySlot?.classList.contains('opacity-100')).toBe(true);
+    expect(introDifficultySlot?.classList.contains('inline-flex')).toBe(true);
     expect(groupExpandButton?.classList.contains('ml-1')).toBe(true);
     expect(api?.querySelector('[data-doc-difficulty-dot]')).toBeNull();
     expect(group?.querySelector('[data-doc-difficulty-dot]')).toBeNull();

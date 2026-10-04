@@ -5,7 +5,7 @@ description: 用 JSX 组织 Kernel 与 Sugar 组件，构造 Vanilla InputScene�
 
 `@retikz/react` 是 React 应用的首选入口。你用 `<Layout>`、`<Node>`、`<Path>`、`<Scope>`、`<Draw>` 等 JSX 组件声明图形；包内 collector 把 props 与 children 收集为 `@retikz/vanilla` 的 `InputScene`，再由 `<Layout>` 宿主 processing 结果的 SVG 或 Canvas。
 
-它负责 React 写法和结果宿主，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`；Input 归一、composite 依赖解析、Core Program 与 retained processing 状态属于 `@retikz/vanilla`。
+它负责 React 写法和结果宿主，不另造图形语义：IR、schema、几何与编译规则属于 `@retikz/core`；Input 归一、composite 依赖解析、Core Computation 与 retained processing 状态属于 `@retikz/vanilla`。
 
 ## 安装与使用
 
@@ -108,7 +108,7 @@ return (
 
 频繁更新的大图可在组件外或 `useMemo` 中持有稳定 IR、children 与 Core options，避免无意义地重建 Input 或 processing controller。直接传 `ir` prop 时会跳过 JSX collector，但仍由 Vanilla processing 统一执行后续编译。
 
-Vanilla controller 在 retained 模式中拥有 Core Program、runtime session 与更新策略；static 模式只准备一次无生命周期的 processing。React 订阅该 controller 的只读结果，再以 `ProcessingResultHost` 呈现同 revision 的 Scene、artifacts、只读图层和事件接线。
+Vanilla controller 在 retained 模式中拥有 Core Computation、runtime session 与更新策略；static 模式只准备一次无生命周期的 processing。React 订阅该 controller 的只读结果，再以 `ProcessingResultHost` 呈现同 revision 的 Scene、artifacts、只读图层和事件接线。
 
 Definition 数组按有序元素 identity 规范化，因此 render 时重新创建 `[shape]` 这类等价容器不会重建 processing controller。Definition 本身、renderer backend、`idPrefix` 或 processing options 改变时会重新挂载 controller。并发调度与 progressive materialization 仍不属于当前公开契约。
 
@@ -127,7 +127,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
       endLine: 296,
     },
     {
-      label: 'Vanilla retained controller 创建 Core Program 与 Runtime',
+      label: 'Vanilla retained controller 创建 Core Computation 与 Runtime',
       path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
       startLine: 94,
       endLine: 149,
@@ -137,7 +137,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 ### 执行模式与更新策略
 
-`<Layout>` 的 `runtime` 用两个正交参数选择宿主生命周期和 Program 更新方式。省略配置时是 `retained + auto`：
+`<Layout>` 的 `runtime` 用两个正交参数选择宿主生命周期和 Computation 更新方式。省略配置时是 `retained + auto`：
 
 ```tsx
 <Layout /> {/* retained + auto */}
@@ -145,11 +145,11 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 <Layout runtime={{ mode: 'static' }} />
 ```
 
-| 配置              | 更新行为                                         | Session、内存与失败语义                                                                 |
-| ----------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `retained + auto` | 安全变化走局部 Patch，其余完整 fallback          | 保留 Snapshot、candidate、diagnostics、原子 commit 与 rollback；默认配置                |
-| `retained + full` | 有实际依赖变化时跳过 Program `update()` 完整运行 | 与 auto 持有相同 Runtime 状态和事务能力；不是低内存模式                                 |
-| `static`          | 每次完整 compile 并直接物化 SVG / Canvas         | 不创建 Session、Snapshot、diff、transaction 或 rollback；减少常驻状态，但每次工作量更大 |
+| 配置              | 更新行为                                             | Session、内存与失败语义                                                                 |
+| ----------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `retained + auto` | 安全变化走局部 Patch，其余完整 fallback              | 保留 Snapshot、candidate、diagnostics、原子 commit 与 rollback；默认配置                |
+| `retained + full` | 有实际依赖变化时跳过 Computation `update()` 完整运行 | 与 auto 持有相同 Runtime 状态和事务能力；不是低内存模式                                 |
+| `static`          | 每次完整 compile 并直接物化 SVG / Canvas             | 不创建 Session、Snapshot、diff、transaction 或 rollback；减少常驻状态，但每次工作量更大 |
 
 `mode: 'static'` 不能同时传 `updateStrategy` 或 `onDiagnostic`。TypeScript 的 `LayoutRuntimeOptions` 会拒绝组合，JavaScript 入口也会在创建宿主前抛错。static 的 compile 在宿主写入前失败时不会发布新画面；物化、动画或水合已开始后若失败则向外传播错误，但不承诺恢复旧宿主状态。
 
@@ -170,7 +170,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
       endLine: 296,
     },
     {
-      label: 'Vanilla retained controller 的 Core Program 与更新策略',
+      label: 'Vanilla retained controller 的 Core Computation 与更新策略',
       path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
       startLine: 94,
       endLine: 174,
@@ -180,7 +180,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 ## 从 JSX 到 Scene
 
-`<Layout>` 先调用 React collector 把 JSX 适配为 Vanilla Input；每次输入或 Core options 改变时，React 只准备 static fallback，并在客户端 commit 后让 Vanilla processing 创建或更新 Core Program。下图蓝色节点属于 `@retikz/react` 的 authoring / host，绿色节点是 `@retikz/vanilla` 的共享 processing，橙色节点是 `@retikz/core` 拥有的数据契约与编译器。
+`<Layout>` 先调用 React collector 把 JSX 适配为 Vanilla Input；每次输入或 Core options 改变时，React 只准备 static fallback，并在客户端 commit 后让 Vanilla processing 创建或更新 Core Computation。下图蓝色节点属于 `@retikz/react` 的 authoring / host，绿色节点是 `@retikz/vanilla` 的共享 processing，橙色节点是 `@retikz/core` 拥有的数据契约与编译器。
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
@@ -232,10 +232,10 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 Scene 已经没有 React 组件语义。Vanilla processing 负责保留或静态地得到同一 revision 的结果，`@retikz/react` 只订阅并把这个结果宿主到 React：
 
-| 目标   | `@retikz/vanilla`                                      | `@retikz/react`                                           |
-| ------ | ------------------------------------------------------ | --------------------------------------------------------- |
-| SVG    | 管理 processing controller、Core Program 与 Scene 结果 | 用 `ProcessingResultHost` 映射为稳定 SVG 并绑定 hydration |
-| Canvas | 管理 processing controller、Core Program 与 Scene 结果 | 用 `ProcessingResultHost` 映射为 Canvas 宿主              |
+| 目标   | `@retikz/vanilla`                                          | `@retikz/react`                                           |
+| ------ | ---------------------------------------------------------- | --------------------------------------------------------- |
+| SVG    | 管理 processing controller、Core Computation 与 Scene 结果 | 用 `ProcessingResultHost` 映射为稳定 SVG 并绑定 hydration |
+| Canvas | 管理 processing controller、Core Computation 与 Scene 结果 | 用 `ProcessingResultHost` 映射为 Canvas 宿主              |
 
 事件 handler 是函数，不能进入 JSON IR。children 模式下，React 侧会用另一条 `collectHydrationHandlers` 扫描按图元 id 收集函数；渲染完成后再绑定到 SVG 定位或 Canvas hit-test。直接传 `ir` prop 时，则通过 `handlers` prop 提供这条运行时旁路。
 

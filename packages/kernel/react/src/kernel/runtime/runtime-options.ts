@@ -24,7 +24,7 @@ type LayoutPreparationOptions = Readonly<{
 export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
   Readonly<{
     /**
-     * 创建保留式 Runtime Session
+     * 创建保留式 Runtime
      * @default LayoutRuntimeMode.Retained
      */
     mode?: typeof LayoutRuntimeMode.Retained;
@@ -40,11 +40,11 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
 /** 每次输入变化时完整编译图形，不保留增量执行状态 */
 export type LayoutStaticRuntimeOptions = LayoutPreparationOptions &
   Readonly<{
-    /** 不创建 Runtime Session，直接完整编译与物化 */
+    /** 不创建 Runtime，直接完整编译与物化 */
     mode: typeof LayoutRuntimeMode.Static;
-    /** static 不支持 Program 更新策略 */
+    /** static 不支持 Computation 更新策略 */
     updateStrategy?: never;
-    /** static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 */
+    /** static 不创建 Runtime，因此不产生 Runtime 结构化诊断 */
     onDiagnostic?: never;
   }>;
 

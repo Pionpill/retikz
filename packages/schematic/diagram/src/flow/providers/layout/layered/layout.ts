@@ -11,7 +11,7 @@ import type {
   FlowLayoutRelationInput,
 } from '../../../contract';
 import type { FlowDirectionValue } from '../../../shared';
-import { routeLayeredRelations } from './routing';
+import { routeFlowRelations } from '../routing';
 import type { LayeredRankEdge } from './topology';
 import { resolveLayeredRanks } from './topology';
 
@@ -113,11 +113,11 @@ const rankEdgesForScope = (
     ? []
     : relations.flatMap(relation => {
         if (relation.direction === 'none' || relation.direction === 'both') return [];
-        const sourceScopes = index.scopes.get(relation.source) ?? [];
-        const targetScopes = index.scopes.get(relation.target) ?? [];
+        const sourceScopes = index.scopes.get(relation.source.id) ?? [];
+        const targetScopes = index.scopes.get(relation.target.id) ?? [];
         if (commonScope(sourceScopes, targetScopes) !== scopeId) return [];
-        const authoredSource = directChildId(relation.source, sourceScopes, scopeId);
-        const authoredTarget = directChildId(relation.target, targetScopes, scopeId);
+        const authoredSource = directChildId(relation.source.id, sourceScopes, scopeId);
+        const authoredTarget = directChildId(relation.target.id, targetScopes, scopeId);
         const source = relation.direction === 'reverse' ? authoredTarget : authoredSource;
         const target = relation.direction === 'reverse' ? authoredSource : authoredTarget;
         return source === target ? [] : [{ source, target }];
@@ -139,11 +139,11 @@ const withLayoutLabelMargins = (
   };
   for (const relation of relations) {
     if (relation.labelSize === undefined) continue;
-    const sourceScopes = index.scopes.get(relation.source) ?? [];
-    const targetScopes = index.scopes.get(relation.target) ?? [];
+    const sourceScopes = index.scopes.get(relation.source.id) ?? [];
+    const targetScopes = index.scopes.get(relation.target.id) ?? [];
     if (commonScope(sourceScopes, targetScopes) !== layoutId) continue;
-    const source = directChildId(relation.source, sourceScopes, layoutId);
-    const target = directChildId(relation.target, targetScopes, layoutId);
+    const source = directChildId(relation.source.id, sourceScopes, layoutId);
+    const target = directChildId(relation.target.id, targetScopes, layoutId);
     const sourceIndex = childIndices.get(source);
     const targetIndex = childIndices.get(target);
     if (sourceIndex === undefined || targetIndex === undefined || sourceIndex === targetIndex) continue;
@@ -296,11 +296,11 @@ const rankGapsForScope = (
   const gaps = rankValues.slice(1).map(() => defaultGap);
   for (const relation of relations) {
     if (relation.labelSize === undefined) continue;
-    const sourceScopes = index.scopes.get(relation.source) ?? [];
-    const targetScopes = index.scopes.get(relation.target) ?? [];
+    const sourceScopes = index.scopes.get(relation.source.id) ?? [];
+    const targetScopes = index.scopes.get(relation.target.id) ?? [];
     if (commonScope(sourceScopes, targetScopes) !== scopeId) continue;
-    const source = directChildId(relation.source, sourceScopes, scopeId);
-    const target = directChildId(relation.target, targetScopes, scopeId);
+    const source = directChildId(relation.source.id, sourceScopes, scopeId);
+    const target = directChildId(relation.target.id, targetScopes, scopeId);
     const sourceRank = ranks.get(source);
     const targetRank = ranks.get(target);
     if (sourceRank === undefined || targetRank === undefined || sourceRank === targetRank) continue;
@@ -428,8 +428,9 @@ export const layoutLayeredFlow = (input: FlowLayoutInput, context: FlowLayoutExe
   const root = layoutScope(input.elements, input.layout, input.relations, index, undefined, context);
   const elements: Array<FlowLayoutElementOutput> = [];
   flattenElements(root.elements, 0, 0, elements);
+  const byId = new Map(elements.map(element => [element.id, element]));
   return {
-    elements,
-    relations: routeLayeredRelations(input, elements),
+    elements: [...index.kinds.keys()].map(id => byId.get(id)!),
+    relations: routeFlowRelations(input, elements, context),
   };
 };

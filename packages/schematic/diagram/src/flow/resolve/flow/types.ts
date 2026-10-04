@@ -1,6 +1,7 @@
 import type { ResolvedTheme } from '@retikz/core';
 import type { GraphDefinitionOptions, IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
 
+import type { FlowLayoutEndpoint } from '../../contract';
 import type { FlowThemeStyleDefinition } from '../../contract';
 import type {
   IRFlowDefaults,
@@ -66,7 +67,7 @@ export type CanonicalFlowElement = CanonicalFlowEntity | CanonicalFlowGroup | Ca
 
 /** 解析后的 Flow Relation */
 export type CanonicalFlowRelation = Readonly<{
-  source: IRFlowRelation;
+  source: Omit<IRFlowRelation, 'source' | 'target'> & { source: FlowLayoutEndpoint; target: FlowLayoutEndpoint };
   graph: IRGraphRelation;
   routing?: IRFlowRouting;
   path: FlowSourcePath;

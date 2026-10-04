@@ -65,13 +65,13 @@ export const createRuntimeIdentity = (owner: string, path: ReadonlyArray<string>
   return copyIdentity({ owner, path });
 };
 
-/** 按 owner、path 长度与 segment exact equality 比较 identity */
+/** 按 Source、path 长度与 segment exact equality 比较 identity */
 export const runtimeIdentityEquals = (left: RuntimeIdentity, right: RuntimeIdentity): boolean =>
   left.owner === right.owner &&
   left.path.length === right.path.length &&
   left.path.every((segment, index) => segment === right.path[index]);
 
-/** 创建复制输入、验证 owner/唯一性并稳定排序的 identity lookup */
+/** 创建复制输入、验证 Source/唯一性并稳定排序的 identity lookup */
 export const createRuntimeIdentityLookup = (
   owner: string,
   identities: ReadonlyArray<RuntimeIdentity>,

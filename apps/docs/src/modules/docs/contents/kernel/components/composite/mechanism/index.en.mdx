@@ -78,6 +78,8 @@ A replay wrapper first places the child with `transforms`, then applies `clip` i
 
 ### Typed artifacts from the same compile
 
+To resolve ordered Targets against a child's real layout, call `context.resolvePathTargets({ child, source, points })` and receive numeric `{ source, points }`. It reuses the current compilation's namespace, shape definitions, transforms and smooth cursor semantics. It publishes no queried primitives or artifacts and performs no clipping, routing search or arrow shortening. Resolution failure throws a Core error locating `source` or `points[index]`, without skipping points.
+
 For example, an artifact may contain domain output such as `{ width: 120 }`, validated by artifactSchema. It is produced with the final Scene for applications to read, not for renderers to lay out again.
 
 A layout-aware definition can declare `artifactSchema` and return a JSON-safe `artifact` from `compile`. Core wraps it in `CompileResult.artifacts` with `namespace`, `type`, and an occurrence locator. The locator combines the original `sourcePath` with structured expansion / output / replay segments, without a global Map, callback capture, or second traversal. Hosts therefore receive the Scene and domain artifacts from one canonical compile.
