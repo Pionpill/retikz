@@ -4,8 +4,9 @@ import {
   NonNegativeIntegerSchema,
   NonNegativeNumberSchema,
   PositiveIntegerSchema,
+  NormalizedFractionSchema,
 } from '@retikz/foundation';
-import { array, discriminatedUnion, enum as zodEnum, literal, looseObject, number, strictObject, union } from 'zod';
+import { array, discriminatedUnion, enum as zodEnum, literal, looseObject, strictObject, union } from 'zod';
 
 import { DataSortOrder, RESERVED_SELECTOR_OPERATION_KINDS, RowSelectorTie, SelectorOperationKind } from './constants';
 import { SelectorOperationKindSchema } from './kind';
@@ -62,8 +63,8 @@ export const OutsideQuantileBandBoundarySchema = discriminatedUnion('kind', [
 export const OutsideQuantileBandSelectorOperationSchema = strictObject({
   kind: literal(SelectorOperationKind.OutsideQuantileBand).describe('Discriminator: outside-band selector'),
   field: NonBlankStringSchema.describe('Numeric source field'),
-  lowerP: number().min(0).max(1).describe('Lower quantile probability'),
-  upperP: number().min(0).max(1).describe('Upper quantile probability'),
+  lowerP: NormalizedFractionSchema.describe('Lower quantile probability'),
+  upperP: NormalizedFractionSchema.describe('Upper quantile probability'),
   boundary: OutsideQuantileBandBoundarySchema.optional().describe('Boundary strategy; default band'),
 })
   .refine(operation => operation.lowerP < operation.upperP, {

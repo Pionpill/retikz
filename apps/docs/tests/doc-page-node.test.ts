@@ -24,10 +24,10 @@ describe('resolveDocPageNode', () => {
   });
 
   it('解析分组文档页面', () => {
-    const node = resolveDocPageNode({ moduleId: 'viz', sectionId: 'chart', pageId: null });
-    expect(node.section?.id).toBe('chart');
-    expect(node.target?.id).toBe('chart');
-    expect(node.target?.label).toBe('viz.chart');
+    const node = resolveDocPageNode({ moduleId: 'viz', sectionId: 'table', pageId: null });
+    expect(node.section?.id).toBe('table');
+    expect(node.target?.id).toBe('table');
+    expect(node.target?.label).toBe('viz.table');
   });
 
   it('缺失页面时返回空 target', () => {

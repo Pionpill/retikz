@@ -1,11 +1,11 @@
-import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { compileToScene, CORE_SOURCE_KEY, CoreSourceDefinition, createCoreComputation } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,
   PerformanceTracePhase,
@@ -65,25 +65,25 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
   }
   const current = createSimpleNodeScene(5_000);
   const next = updateSimpleNodeFill(current, 2_500, '#22c55e');
-  const program = createCoreProgram({ onWarn: () => undefined });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+  const program = createCoreComputation({ onWarn: () => undefined });
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
   const records: Array<PerformanceTraceRecord> = [];
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, current)],
+  const session = createRuntime({
+    sources,
+    computations,
+    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, current)],
     trace: record => records.push(record),
   });
   try {
     records.length = 0;
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
     const artifact = session.artifact(program).value;
     const record = assertSingleTraceRecord('core-single-entity-update-5000', records, {
-      owner: CORE_OWNER_KEY,
+      owner: CORE_SOURCE_KEY,
       phase: PerformanceTracePhase.Update,
       unit: PerformanceTraceUnit.IrChild,
       outcome: PerformanceTraceOutcome.Incremental,
@@ -92,7 +92,7 @@ export const runCoreDeterministicBenchmarks = (): ReadonlyArray<DeterministicBen
       changed: 1,
     });
     assertSingleTraceRecord('core-single-entity-update-5000', records, {
-      owner: CORE_OWNER_KEY,
+      owner: CORE_SOURCE_KEY,
       phase: PerformanceTracePhase.Update,
       unit: PerformanceTraceUnit.SceneChange,
       outcome: PerformanceTraceOutcome.Incremental,

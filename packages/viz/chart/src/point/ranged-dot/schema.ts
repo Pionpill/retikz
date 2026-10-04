@@ -8,8 +8,10 @@ import {
   ShadowPreset,
   ShapeNameSchema,
   StrokeDashPatternSchema,
+  OpacitySchema,
+  StrokeWidthSchema,
 } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
@@ -21,24 +23,24 @@ import { RangedDotChartEncodingsSchema } from './encoding-schema';
 /** Ranged Dot endpoint 允许的常量 Point 表现 */
 export const RangedDotPointPropertiesSchema = strictObject({
   color: CssColorSchema.optional(),
-  size: number().nonnegative().optional(),
+  size: NonNegativeNumberSchema.optional(),
   shape: ShapeNameSchema.optional(),
   fill: union([CssColorSchema, PaintSchema]).optional(),
   stroke: union([CssColorSchema, PaintSchema]).optional(),
-  strokeWidth: number().nonnegative().optional(),
-  fillOpacity: number().min(0).max(1).optional(),
-  strokeOpacity: number().min(0).max(1).optional(),
-  opacity: number().min(0).max(1).optional(),
+  strokeWidth: StrokeWidthSchema.optional(),
+  fillOpacity: OpacitySchema.optional(),
+  strokeOpacity: OpacitySchema.optional(),
+  opacity: OpacitySchema.optional(),
   rotate: number().optional(),
-  minimumSize: number().nonnegative().optional(),
+  minimumSize: NonNegativeNumberSchema.optional(),
 }).describe('Ranged Dot endpoint constant Point appearance');
 
 /** Ranged Dot connector 允许的常量 Path 表现 */
 export const RangedDotRangePropertiesSchema = strictObject({
   stroke: union([CssColorSchema, PaintSchema]).optional(),
-  strokeWidth: number().nonnegative().optional(),
-  strokeOpacity: number().min(0).max(1).optional(),
-  opacity: number().min(0).max(1).optional(),
+  strokeWidth: StrokeWidthSchema.optional(),
+  strokeOpacity: OpacitySchema.optional(),
+  opacity: OpacitySchema.optional(),
   lineCap: PathLineCapSchema.optional(),
   lineJoin: PathLineJoinSchema.optional(),
   dashPattern: StrokeDashPatternSchema.optional(),

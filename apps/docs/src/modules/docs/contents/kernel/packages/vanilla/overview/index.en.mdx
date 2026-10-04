@@ -75,7 +75,7 @@ Blue nodes in this diagram belong to Vanilla input and processing; orange nodes 
 | Core `IRScene`   | `@retikz/core`    | Skips Input normalization and prepares Core compilation                |
 | Compiled `Scene` | `@retikz/core`    | Skips normalization and compilation; DOM can only redraw it statically |
 
-`normalizeScene()` produces Core Source IR, Composite dependency contributions, authoring provenance, and metadata. `prepareProcessingInput()` then combines the only Core resolver options. `createProcessingController()` keeps a Core Program and Runtime session in retained mode, while `prepareStaticProcessing()` returns one successful result with no lifecycle.
+`normalizeScene()` produces Core Source IR, Composite dependency contributions, authoring provenance, and metadata. `prepareProcessingInput()` then combines the only Core resolver options. `createProcessingController()` keeps a Core Computation and Runtime in retained mode, while `prepareStaticProcessing()` returns one successful result with no lifecycle.
 
 <SourceLinks
   sources={[
@@ -168,7 +168,7 @@ Adapters, Composite definitions, and compile topology are fixed for a retained m
 | ----------------------- | ----------------------------------------------------------- | ------------------------------------ |
 | Framework-neutral input | Builds InputScene, Layers, embeds, and Core primitive input | `@retikz/core` IR                    |
 | Input normalization     | Lowers Input to IR and collects adapter contributions       | `@retikz/core` compile contract      |
-| Shared processing       | Prepares input and manages Core Program and results         | `@retikz/core` / `@retikz/runtime`   |
+| Shared processing       | Prepares input and manages Core Computation and results     | `@retikz/core` / `@retikz/runtime`   |
 | DOM host                | `/dom` SVG / Canvas output, updates, hydration, animation   | `@retikz/render` backend execution   |
 | Tier 2 embeds           | Dispatches Input adapters and collects lowering results     | Domain packages own props / lowering |
 

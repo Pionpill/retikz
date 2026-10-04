@@ -1,10 +1,10 @@
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
-  RuntimeProgramKind,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
+  RuntimeComputationKind,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
@@ -13,8 +13,8 @@ import type { IRScene } from '../../../src';
 import {
   compileToScene,
   CompositeBaseSchema,
-  CoreOwnerDefinition,
-  createCoreProgram,
+  CoreSourceDefinition,
+  createCoreComputation,
   defineComposite,
   ThemeMode,
 } from '../../../src';
@@ -40,17 +40,17 @@ const themedComposite = defineComposite({
 
 const runUpdate = (initial: IRScene, next: IRScene) => {
   const options = { composites: [themedComposite], onWarn: () => {} } as const;
-  const program = createCoreProgram(options);
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+  const program = createCoreComputation(options);
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+  const session = createRuntime({
+    sources,
+    computations,
+    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
   });
   const result = session.update({
     baseRevision: session.revision(),
-    owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
   });
   return { result, actual: session.artifact(program).value.output.result, expected: compileToScene(next, options) };
 };
@@ -67,7 +67,7 @@ describe('Theme retained invalidation', () => {
 
     const update = runUpdate(initial, next);
 
-    expect(update.result.outcome).toBe(RuntimeProgramKind.Fallback);
+    expect(update.result.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(update.actual).toEqual(update.expected);
   });
 
@@ -91,7 +91,7 @@ describe('Theme retained invalidation', () => {
 
     const update = runUpdate(initial, next);
 
-    expect(update.result.outcome).toBe(RuntimeProgramKind.Fallback);
+    expect(update.result.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(update.actual).toEqual(update.expected);
   });
 });

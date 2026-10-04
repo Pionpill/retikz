@@ -106,7 +106,7 @@ Foundation 禁止承载：
 
 - 对象 / 数组 schema、JSON / IR 类型、IR / DSL parser、Definition、registry、provider、compile、lowering、Scene 或 manifest
 - coercion、transform、default、catch、参数化 range factory、颜色 schema、几何或领域 refinement
-- 独立数学 / 计算几何能力、Runtime session / transaction / identity、renderer 或宿主状态
+- 独立数学 / 计算几何能力、Runtime / transaction / identity、renderer 或宿主状态
 - Theme token vocabulary、preset、领域 resolver、Plot / Chart / Table / Standard 语义
 - 通用 Diagnostic、日志、telemetry、错误码目录或跨领域错误映射
 - 仅有一个调用点的短 helper、消费方专属默认值、DOM / React / Node 工具

@@ -75,7 +75,7 @@ Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position
 | Core `IRScene`   | `@retikz/core`    | 跳过 Input 归一，直接准备 Core 编译                     |
 | 已编译的 `Scene` | `@retikz/core`    | 跳过归一与编译，只能由 DOM 子入口进行 static 完整重绘   |
 
-`InputScene` 先由 `normalizeScene()` 生成 Core Source IR、Composite dependency contributions、作者来源与 metadata；`prepareProcessingInput()` 再合并唯一的 Core resolver 选项。`createProcessingController()` 在 retained 模式保存 Core Program 与 Runtime session，`prepareStaticProcessing()` 则只返回一次无生命周期的成功结果。
+`InputScene` 先由 `normalizeScene()` 生成 Core Source IR、Composite dependency contributions、作者来源与 metadata；`prepareProcessingInput()` 再合并唯一的 Core resolver 选项。`createProcessingController()` 在 retained 模式保存 Core Computation 与 Runtime，`prepareStaticProcessing()` 则只返回一次无生命周期的成功结果。
 
 <SourceLinks
   sources={[
@@ -168,7 +168,7 @@ adapter、Composite definition 和 compile topology 在 retained mount 生命周
 | --------------- | --------------------------------------------------------- | ---------------------------------- |
 | 无框架输入      | 构造 InputScene、Layer、embed 与 Core 图元输入            | `@retikz/core` IR                  |
 | 输入归一        | 将 Input 下沉为 IR，收集 adapter contribution 与 metadata | `@retikz/core` compile 契约        |
-| 共享 processing | 准备输入、管理 Core Program 与处理结果                    | `@retikz/core` / `@retikz/runtime` |
+| 共享 processing | 准备输入、管理 Core Computation 与处理结果                | `@retikz/core` / `@retikz/runtime` |
 | DOM 宿主        | 在 `/dom` 输出 SVG / Canvas、更新、水合与动画生命周期     | `@retikz/render` 后端执行          |
 | Tier 2 嵌入     | 按 `kind` 调用 Input adapter 并聚合 lowering contribution | 各领域包拥有 props 与 lowering     |
 

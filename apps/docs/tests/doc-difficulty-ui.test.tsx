@@ -88,9 +88,8 @@ describe('<DocDifficultyDot>', () => {
 
     expect(slot?.getAttribute('aria-label')).toBe('difficulty.pageTooltip:difficulty.advanced');
     expect(slot?.getAttribute('class')).toContain('ml-1');
-    expect(slot?.getAttribute('class')).toContain('size-6');
-    expect(slot?.getAttribute('class')).toContain('opacity-0');
-    expect(slot?.getAttribute('class')).toContain('group-hover:opacity-100');
+    expect(slot?.getAttribute('class')).toContain('hidden');
+    expect(slot?.getAttribute('class')).toContain('group-hover:inline-flex');
     expect(dot?.getAttribute('class')).toContain('bg-yellow');
     expect(unmarked.querySelector('[data-doc-difficulty-dot]')).toBeNull();
   });

@@ -10,7 +10,6 @@ import { array, boolean, enum as zodEnum, literal, NEVER, number, object, prepro
 import { Side } from '../../shared';
 import { AnimationTrackSchema } from '../animation';
 import { BoundarySchema } from '../boundary';
-import { FontSchema } from '../font';
 import {
   AnchorPositionSchema,
   AtPositionSchema,
@@ -27,9 +26,9 @@ import {
   BoundaryLabelSchema,
   createLabelVisualStyleShape,
   LabelTextContentSchema,
-  LineHeightSchema,
-  TextAlignSchema,
   TextBlockSchema,
+  TextVisualSchema,
+  TextLayoutSchema,
 } from '../text';
 import { NodeLabelPlacement, NodeLabelPosition } from './constants';
 
@@ -174,23 +173,12 @@ export const NodeStyleSchema = strictObject({
   dashOffset: StrokeDashOffsetSchema.optional().describe(
     'Explicit stroke dash offset in user units. Positive and negative finite values are allowed.',
   ),
-  textColor: ContextualColorSchema.optional().describe(
-    'Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`.',
-  ),
-  font: FontSchema.optional().describe('Font spec for the inner text label. Missing fields use text defaults.'),
+  ...TextVisualSchema.shape,
 }).describe('Node visual overrides; fields independently override inherited defaults.');
 
 /** 节点尺寸、间距与文本布局 */
 export const NodeLayoutSchema = strictObject({
-  align: TextAlignSchema.optional().describe(
-    'Multi-line text alignment within the text block. Omitted fields use middle.',
-  ),
-  lineHeight: LineHeightSchema.optional().describe(
-    'Line height in user units; falls back to `font.size × 1.2` when omitted.',
-  ),
-  maxTextWidth: PositiveNumberSchema.optional().describe(
-    'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
-  ),
+  ...TextLayoutSchema.shape,
   width: PositiveNumberSchema.optional().describe(
     'Exact unscaled visible border width in user units. Excludes margin and must not be smaller than the effective minimum width.',
   ),

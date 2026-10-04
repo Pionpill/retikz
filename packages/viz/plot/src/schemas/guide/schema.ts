@@ -11,6 +11,8 @@ import {
   StrokeWidthSchema,
   TextAlignSchema,
   TextBlockSchema,
+  StrokeDashPatternSchema,
+  StrokeDashOffsetSchema,
 } from '@retikz/core';
 import {
   NonBlankStringSchema,
@@ -141,11 +143,8 @@ export const GuideLineStyleSchema = strictObject({
   stroke: PaintValueSchema.optional().describe('Guide line stroke paint; omit to inherit currentColor'),
   strokeWidth: StrokeWidthSchema.optional().describe('Guide line stroke width in user units'),
   drawOpacity: OpacitySchema.optional().describe('Guide line stroke opacity'),
-  dashPattern: array(NonNegativeNumberSchema)
-    .min(1)
-    .optional()
-    .describe('Guide line dash pattern lengths in user units'),
-  dashOffset: number().optional().describe('Guide line dash offset in user units'),
+  dashPattern: StrokeDashPatternSchema.optional().describe('Guide line dash pattern lengths in user units'),
+  dashOffset: StrokeDashOffsetSchema.optional().describe('Guide line dash offset in user units'),
 }).describe('Shared guide line style fields mapped to core path vocabulary');
 
 export const AxisLineStyleSchema = GuideLineStyleSchema.extend({

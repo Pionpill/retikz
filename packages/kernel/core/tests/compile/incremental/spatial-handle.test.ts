@@ -1,9 +1,9 @@
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { array, literal, number, string } from 'zod';
@@ -11,8 +11,8 @@ import { array, literal, number, string } from 'zod';
 import type { IRScene } from '../../../src';
 import {
   CompositeBaseSchema,
-  CoreOwnerDefinition,
-  createCoreProgram,
+  CoreSourceDefinition,
+  createCoreComputation,
   compileToScene,
   defineComposite,
   selectSpatialHandles,
@@ -58,18 +58,18 @@ describe('incremental spatial handle atomicity', () => {
         },
       ],
     });
-    const program = createCoreProgram({ onWarn: () => undefined });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
-    const session = createRuntimeSession({
-      owners,
-      programs,
-      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, source(['alternate']))],
+    const program = createCoreComputation({ onWarn: () => undefined });
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const session = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source(['alternate']))],
     });
     for (const aliasIds of [[], ['alternate']]) {
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source(aliasIds))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source(aliasIds))],
       });
       expect(session.artifact(program).value.output.result.scene).toEqual(
         compileToScene(source(aliasIds), { onWarn: () => undefined }).scene,
@@ -77,18 +77,18 @@ describe('incremental spatial handle atomicity', () => {
     }
   });
   it('commits Scene, artifacts, and spatial index together and preserves the previous revision on failure', () => {
-    const program = createCoreProgram({ composites: [card] });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
-    const session = createRuntimeSession({
-      owners,
-      programs,
-      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, scene(10))],
+    const program = createCoreComputation({ composites: [card] });
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const session = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, scene(10))],
     });
 
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene(20, ['alternate']))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene(20, ['alternate']))],
     });
     const committed = session.artifact(program).value.output.result;
     expect(committed.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
@@ -99,15 +99,15 @@ describe('incremental spatial handle atomicity', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene(-1))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene(-1))],
       }),
-    ).toThrow(/RUNTIME_PROGRAM_RUN_FAILED/);
+    ).toThrow(/RUNTIME_COMPUTATION_RUN_FAILED/);
 
     expect(session.artifact(program).value.output.result).toBe(committed);
     expect(session.artifact(program).value.output.result.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene(20, ['new']))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene(20, ['new']))],
     });
     const updated = session.artifact(program).value.output.result;
     expect(selectSpatialHandles(updated.spatialHandles, { id: 'alternate' })).toEqual([]);

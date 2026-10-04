@@ -1,17 +1,21 @@
 import type { Lang } from '@/i18n';
 
-/** JSON 数据示例的双语面板文案 */
+/** JSON 数据展开的双语面板文案 */
 export const listDataI18n = {
   zh: {
-    title: 'JSON 数据展示',
-    dataObjectDisplay: '对象展示方式',
-    map: 'Map',
-    text: '文本',
+    title: '嵌套数据展开',
+    dataExpand: '展开结构',
+    all: '对象与数组',
+    none: '全部显示为文本',
+    map: '仅对象',
+    list: '仅数组',
   },
   en: {
-    title: 'JSON data display',
-    dataObjectDisplay: 'Object display mode',
-    map: 'Map',
-    text: 'Text',
+    title: 'Nested data expansion',
+    dataExpand: 'Expanded structures',
+    all: 'Objects and arrays',
+    none: 'All as text',
+    map: 'Objects only',
+    list: 'Arrays only',
   },
 } satisfies Record<Lang, Record<string, string>>;

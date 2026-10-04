@@ -92,7 +92,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/components/path/schema-reference#axislinestepschema');
     expect(lookupSchema(RelativeTargetSchema)?.url).toBeUndefined();
     expect(lookupSchema(LayoutInspectSpacingOptionsSchema)?.url).toBe(
-      '/library/layout/flex-layout/extended#layoutinspectspacingoptionsschema',
+      '/library/layout/flex-layout/schema-reference#layoutinspectspacingoptionsschema',
     );
     expect(lookupSchema(TableSchema)?.url).toBe('/viz/table/reference/contract-table#tableschema');
     expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/presentation/legend#legendschema');
@@ -100,17 +100,16 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/presentation/surface#surfaceschema');
   });
 
-  it('documents the Layout Inspector spacing schema in the shared Layout extended usage guide', () => {
-    const referenceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/layout/flex-layout/extended');
-    const zhSource = readFileSync(resolve(referenceRoot, 'index.zh.mdx'), 'utf8');
-    const enSource = readFileSync(resolve(referenceRoot, 'index.en.mdx'), 'utf8');
-
-    expect(zhSource).toContain('### LayoutInspectSpacingOptionsSchema');
-    expect(zhSource).toMatch(/<ZodSchema\s+name="LayoutInspectSpacingOptionsSchema"/);
-    expect(zhSource).toContain("padding: '是否为容器已解析的 padding 绘制阴影。'");
-    expect(zhSource).toContain("margin: '是否为子项已解析的 margin 绘制阴影。'");
-    expect(enSource).toContain('### LayoutInspectSpacingOptionsSchema');
-    expect(enSource).toContain('<ZodSchema name="LayoutInspectSpacingOptionsSchema" />');
+  it('links Layout Inspector options to the bilingual schema reference', () => {
+    const referenceRoot = resolve(
+      process.cwd(),
+      'src/modules/docs/contents/library/layout/flex-layout/schema-reference',
+    );
+    for (const lang of ['zh', 'en']) {
+      const source = readFileSync(resolve(referenceRoot, `index.${lang}.mdx`), 'utf8');
+      expect(source).toContain('## LayoutInspectSpacingOptionsSchema');
+      expect(source).toContain('<ZodSchema name="LayoutInspectSpacingOptionsSchema"');
+    }
   });
 
   it.each(['data', 'table', 'plot'] as const)(

@@ -1,10 +1,21 @@
-import { BoxSpacingSchema, CssColorSchema } from '@retikz/core';
+import {
+  BoxSpacingSchema,
+  CssColorSchema,
+  OpacitySchema,
+  StrokeWidthSchema,
+  StrokeDashPatternSchema,
+} from '@retikz/core';
 import { ShapeNameSchema } from '@retikz/core';
-import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
+import {
+  JsonObjectSchema,
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { DomainPaddingClearanceSchema, MarkNodeLabelListSchema, PlotDomainPaddingKind } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
 import type { ZodType } from 'zod';
-import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
+import { boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 const PointAutoPaddingKindSchema = zodEnum(['max-radius', 'point-aware']);
 
@@ -43,7 +54,7 @@ const PointPositionDomainPaddingObjectSchema = strictObject({
   });
 
 export const PointPositionDomainPaddingSchema = union([
-  number().nonnegative(),
+  NonNegativeNumberSchema,
   PointPositionDomainPaddingObjectSchema,
 ]).describe('Shared or per-role continuous position domain padding');
 
@@ -89,27 +100,27 @@ export const PointMarkEncodingWithoutSizeSchema = PointMarkEncodingSchema.omit({
 export const PointPropertiesSchema = strictObject({
   color: CssColorSchema.optional().describe('Constant point color'),
   textColor: CssColorSchema.optional().describe('Constant point text color'),
-  size: number().nonnegative().optional().describe('Constant point radius'),
+  size: NonNegativeNumberSchema.optional().describe('Constant point radius'),
   shape: ShapeNameSchema.optional().describe('Constant point shape'),
   fill: union([CssColorSchema, JsonObjectSchema]).optional().describe('Constant point fill paint'),
   stroke: union([CssColorSchema, JsonObjectSchema]).optional().describe('Constant point stroke paint'),
-  strokeWidth: number().nonnegative().optional().describe('Constant point stroke width'),
-  fillOpacity: number().min(0).max(1).optional().describe('Constant point fill opacity'),
-  strokeOpacity: number().min(0).max(1).optional().describe('Constant point stroke opacity'),
-  opacity: number().min(0).max(1).optional().describe('Constant point opacity'),
+  strokeWidth: StrokeWidthSchema.optional().describe('Constant point stroke width'),
+  fillOpacity: OpacitySchema.optional().describe('Constant point fill opacity'),
+  strokeOpacity: OpacitySchema.optional().describe('Constant point stroke opacity'),
+  opacity: OpacitySchema.optional().describe('Constant point opacity'),
   rotate: number().optional().describe('Constant point rotation'),
-  minimumSize: union([number().nonnegative(), JsonObjectSchema]).optional(),
+  minimumSize: union([NonNegativeNumberSchema, JsonObjectSchema]).optional(),
   zIndex: number().int().optional().describe('Constant point drawing order'),
   align: zodEnum(['start', 'middle', 'end']).optional().describe('Constant point text alignment'),
-  lineHeight: number().positive().optional().describe('Constant point line height'),
-  maxTextWidth: number().positive().optional().describe('Constant point maximum text width'),
-  cornerRadius: number().nonnegative().optional().describe('Constant point corner radius'),
+  lineHeight: PositiveNumberSchema.optional().describe('Constant point line height'),
+  maxTextWidth: PositiveNumberSchema.optional().describe('Constant point maximum text width'),
+  cornerRadius: NonNegativeNumberSchema.optional().describe('Constant point corner radius'),
   scale: union([number(), JsonObjectSchema]).optional().describe('Constant point scale'),
-  padding: union([number().nonnegative(), JsonObjectSchema]).optional(),
-  margin: union([number().nonnegative(), JsonObjectSchema]).optional(),
+  padding: union([NonNegativeNumberSchema, JsonObjectSchema]).optional(),
+  margin: union([NonNegativeNumberSchema, JsonObjectSchema]).optional(),
   dashed: boolean().optional(),
   dotted: boolean().optional(),
-  dashPattern: array(number().nonnegative()).min(1).optional(),
+  dashPattern: StrokeDashPatternSchema.optional(),
   font: JsonObjectSchema.optional(),
   boundary: union([JsonObjectSchema, boolean()]).optional(),
   shadow: union([NonBlankStringSchema, JsonObjectSchema]).optional(),

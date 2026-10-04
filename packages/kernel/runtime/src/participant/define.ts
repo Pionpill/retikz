@@ -23,7 +23,7 @@ const invalidParticipant = (cause: unknown) =>
 export const defineRuntimeCommitParticipant = <TRead>(
   input: RuntimeCommitParticipantDefinitionInput<TRead>,
 ): RuntimeCommitParticipant<TRead> => {
-  const { key, owners, programs, revisionPolicy, tracePhases, prepare, read, dispose } = input;
+  const { key, sources, computations, revisionPolicy, tracePhases, prepare, read, dispose } = input;
   if (key.length === 0) throw invalidParticipant(input);
   try {
     createRuntimeTraceReporter({ owner: key, phases: tracePhases, sink: () => undefined });
@@ -41,8 +41,8 @@ export const defineRuntimeCommitParticipant = <TRead>(
   );
   const token = Object.freeze({
     key,
-    owners: Object.freeze([...owners]),
-    programs: Object.freeze([...programs]),
+    sources: Object.freeze([...sources]),
+    computations: Object.freeze([...computations]),
     revisionPolicy,
     tracePhases: copiedTracePhases,
   }) as RuntimeCommitParticipant<TRead>;

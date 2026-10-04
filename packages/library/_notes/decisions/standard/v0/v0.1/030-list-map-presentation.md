@@ -9,6 +9,7 @@ keywords: List、Map、JSON、data、数据结构、presentation、cell、anchor
 - 决策日期：2026-09-19
 - data 扩展状态：Accepted（2026-09-20）
 - 索引字段与位置决策由 [ADR-033](./033-list-index.md) 替代，其余契约继续生效
+- 嵌套数据展开选择由 [ADR-036](./036-nested-data-expansion.md) 替代原 `dataObjectDisplay` 契约
 - 关联：[roadmap](./roadmap.md) · [Standard 设计](../../../../architecture/standard-library-design.md) · [ADR-015](./015-presentation-composite-reuse.md) · [ADR-022](./022-arbitrary-child-surface.md) · [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md) · [Core ADR-028](../../../../../../kernel/_notes/decisions/v0/v0.5/028-qualified-spatial-handles.md)
 
 ## 背景与决策
@@ -48,7 +49,7 @@ React 经 Vanilla 表达同一契约；adapter 仅归一 authoring、保留嵌�
 
 对象键直接显示原始文本，不额外添加引号；不推导 id。对象遵循 ECMAScript 自有可枚举字符串键顺序，整数索引键优先，不排序；数组保持顺序和重复值。所有字段均为普通数据，包括 id、style、content、type、namespace；生成的格和嵌套容器不推导 id，根显式 id 仍有效。
 
-List 与 Map 的 `data` 入口可设置 `dataObjectDisplay: 'map' | 'text'`，默认 `map`，只控制非空对象值：`map` 递归展示为 Map，`text` 在当前单元格中显示紧凑的 JSON 对象文本。嵌套数组仍递归展示为 List，并沿数据树传递该选择；空对象继续显示为 `{}`。Map 自身的根 `data` 仍由 Map 展示，对象键仍为原始文字。显式 `items` / `entries` 和 React 组合不接受该字段，也不改变其中显式放入的 Map。该模式由 Source IR 持久化，React、Vanilla 与直接 IR 语义一致，不接受函数式 formatter。
+List 与 Map 的 `data` 入口使用 `dataExpand` 选择嵌套对象与数组是否展开为对应组件，默认全部展开；未展开的结构显示为紧凑 JSON 文本。值域、递归边界、入口限制及旧字段替代遵循 [ADR-036](./036-nested-data-expansion.md)。上表描述默认呈现。
 
 data 只接受 JSON 值树，不接收函数、undefined、Symbol、BigInt、非有限数、稀疏数组、循环引用、Date、Map / Set 或自定义实例；不调用 toJSON、序列化清洗或生成循环占位。沿既有类型化输入与外部 parse 边界校验，不重复反射验证。
 

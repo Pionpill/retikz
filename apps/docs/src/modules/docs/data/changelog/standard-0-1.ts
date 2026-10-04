@@ -13,6 +13,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · BREAKING：嵌套数据展开', en: 'Unreleased · BREAKING: nested data expansion' },
+          content: {
+            zh: "List / Map 使用 dataExpand 统一选择嵌套对象与数组的呈现：true 默认全部展开，false 全部显示为 JSON 文本，数组选择 map / list。根结构不变，空结构保留字面量。移除 dataObjectDisplay；原 map 改用 true，原 text 改用 ['list']，不保留兼容字段。",
+            en: "List / Map use dataExpand for nested objects and arrays: true expands all by default, false renders JSON text, and an array selects map/list. Root structures remain intact and empty structures stay literal. dataObjectDisplay is removed: replace map with true and text with ['list']; no compatibility field is retained.",
+          },
+        },
+        {
           label: { zh: '未发布 · List 内容宽度', en: 'Unreleased · List content width' },
           content: {
             zh: 'List 的整体或单格 layout.width 可设为 content，使每格按自身内容自然宽度加内边距定宽；data 模式下还会沿自动生成的数据树传给后代 List。auto 仍使用全组最大宽度，单格设置优先。Map 的宽度模式不变。',

@@ -257,7 +257,8 @@ describe('three-level layout proposal closure', () => {
     const selectedParentResult = run.parentResults[1];
     expect(selectedObservation.text.slotSize).toEqual({ width: 50, height: 20 });
     expect(selectedObservation.text.allocationBounds).toEqual({ x: -25, y: -10, width: 50, height: 20 });
-    expect(selectedObservation.text.visualBounds).toEqual({ x: -25.5, y: -22, width: 51, height: 32.5 });
+    // 首行 baseline 使用 measurer 的 ascent；视觉范围仍包含文字与节点描边
+    expect(selectedObservation.text.visualBounds).toEqual({ x: -25.5, y: -12, width: 51, height: 22.5 });
     expect(selectedObservation.path.slotSize).toEqual({ width: 50, height: 10 });
     expect(selectedObservation.path.allocationBounds).toEqual({ x: 0, y: 0, width: 40, height: 10 });
     expect(selectedObservation.path.visualBounds).toEqual({ x: -20, y: -20, width: 80, height: 50 });

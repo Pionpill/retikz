@@ -231,7 +231,7 @@ describe('Viz Data model controls', () => {
     expect(renderWithValues(ValueParsingDemo, { inputShape: 'report' })).toContain('<svg');
   });
 
-  it('recovers from a real validation error without losing the controlled preview', () => {
+  it('recovers from a real validation error without losing the controlled preview', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -257,9 +257,11 @@ describe('Viz Data model controls', () => {
       );
 
     try {
-      render({ dataset: 'allInvalid', policy: 'sample' });
+      await render({ dataset: 'allInvalid', policy: 'sample' });
+      await vi.waitFor(() => expect(container.textContent).toContain('校验失败'));
       expect(container.textContent).toContain('校验失败');
-      render({ dataset: 'dirty', policy: 'skip' });
+      await render({ dataset: 'dirty', policy: 'skip' });
+      await vi.waitFor(() => expect(container.querySelector('svg')).not.toBeNull());
       expect(container.querySelector('svg')).not.toBeNull();
     } finally {
       window.removeEventListener('error', preventExpectedWindowError);

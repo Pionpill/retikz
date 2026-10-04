@@ -1,13 +1,13 @@
 import { RetikzError } from '@retikz/foundation';
 
 import type { RuntimeDiagnostic } from '../diagnostic';
-import type { RuntimeProgramId } from '../identity';
+import type { RuntimeComputationId } from '../identity';
 import type { RetikzRuntimeErrorCodeValue } from './types';
 
 type RetikzRuntimeErrorDetails = Readonly<{
   phase: string;
   owner?: string;
-  program?: RuntimeProgramId;
+  computation?: RuntimeComputationId;
   diagnostics: ReadonlyArray<RuntimeDiagnostic>;
 }>;
 
@@ -19,10 +19,10 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCodeValue,
   readonly phase: string;
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
-  /** 可选 owner context */
+  /** 可选来源归属，例如 Source key 或 participant key */
   readonly owner?: string;
-  /** 可选 Program context */
-  readonly program?: RuntimeProgramId;
+  /** 可选 Computation context */
+  readonly computation?: RuntimeComputationId;
   /** cleanup 等 secondary diagnostics */
   readonly diagnostics: ReadonlyArray<RuntimeDiagnostic>;
 
@@ -33,14 +33,14 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCodeValue,
     message?: string;
     cause?: unknown;
     owner?: string;
-    program?: RuntimeProgramId;
+    computation?: RuntimeComputationId;
     diagnostics?: ReadonlyArray<RuntimeDiagnostic>;
   }) {
     const diagnostics = Object.freeze([...(input.diagnostics ?? [])]);
     const details = {
       phase: input.phase,
       ...(input.owner === undefined ? {} : { owner: input.owner }),
-      ...(input.program === undefined ? {} : { program: input.program }),
+      ...(input.computation === undefined ? {} : { computation: input.computation }),
       diagnostics,
     };
     super({
@@ -54,7 +54,7 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCodeValue,
     this.phase = input.phase;
     this.cause = input.cause;
     this.owner = input.owner;
-    this.program = input.program;
+    this.computation = input.computation;
     this.diagnostics = diagnostics;
   }
 }

@@ -26,6 +26,12 @@ description: 查询持久化容器输入的字段与约束
   }}
 />
 
+## 公共间距 Schema
+
+`@retikz/layout` 导出 `LayoutGapSchema`，表示单个有限非负间距；`LayoutRowColumnGapSchema` 接受单个间距或 `{ row, column }`。对象形式要求两个字段齐全：`row` 表示垂直间距，`column` 表示水平间距。允许零，拒绝负数和额外对象字段。
+
+两个公共 Schema 均不设置默认值。FlexLayout 使用 `0`，Map 使用 `2`，Legend 图例项间距使用 `8`。这三个组件共用 `LayoutRowColumnGapSchema`；组合 Schema 时使用该导出，原 `MapGapSchema` 已移除。
+
 ## LayoutItem 联合
 
 ### LayoutItemSchema
@@ -45,3 +51,27 @@ description: 查询持久化容器输入的字段与约束
 | `margin?` | `number` \| `IRBoxSpacing`      | `0`      | 分配区域外围间距，不进入子图形的空间提案               |
 
 React 中把可选 JSON `key` 写成 `itemKey`，并通过一个可绘制子元素或 `ir` 提供 `child`。省略时，Layout 按 source index 生成确定且唯一的有效 key；自动 key 只存在于内部产物，不写回 Source IR。若插入、删除或重排子项，按位置生成的身份可能变化；需要跨重排保持稳定身份时应显式传入 `key`。React 使用 `FlexLayoutItem`、`GridLayoutItem` 或 `OverlayLayoutItem` 表达对应容器的直属子项，不会单独生成图元；`kind` 由 adapter 按组件身份补充，Vanilla 与 IR 仍显式填写。
+
+## LayoutInspectBoundsOptionsSchema
+
+布局检查器的可选配置，通过 `@retikz/layout/inspect` 导入。
+
+<ZodSchema name="LayoutInspectBoundsOptionsSchema" />
+
+## LayoutInspectSpacingOptionsSchema
+
+布局检查器的可选配置，通过 `@retikz/layout/inspect` 导入。
+
+<ZodSchema name="LayoutInspectSpacingOptionsSchema" />
+
+## BaseLayoutInspectOptionsSchema
+
+布局检查器的可选配置，通过 `@retikz/layout/inspect` 导入。
+
+<ZodSchema name="BaseLayoutInspectOptionsSchema" />
+
+## FlexLayoutInspectOptionsSchema
+
+布局检查器的可选配置，通过 `@retikz/layout/inspect` 导入。
+
+<ZodSchema name="FlexLayoutInspectOptionsSchema" />

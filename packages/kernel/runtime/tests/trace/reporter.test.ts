@@ -109,11 +109,11 @@ describe('createRuntimeTraceReporter', () => {
 
   it('允许空 phase 列表，并把未声明报告作为非致命诊断', () => {
     const sink = vi.fn();
-    const reporter = createRuntimeTraceReporter({ owner: '@retikz/program', phases: [], sink });
+    const reporter = createRuntimeTraceReporter({ owner: '@retikz/computation', phases: [], sink });
 
     reporter.report({
       phase: PerformanceTracePhase.Update,
-      unit: PerformanceTraceUnit.Program,
+      unit: PerformanceTraceUnit.Computation,
       outcome: PerformanceTraceOutcome.Full,
       visited: 1,
       reused: 0,
@@ -122,18 +122,18 @@ describe('createRuntimeTraceReporter', () => {
 
     expect(sink).not.toHaveBeenCalled();
     expect(reporter.diagnostics()).toEqual([
-      { code: 'invalid-record', owner: '@retikz/program', phase: PerformanceTracePhase.Update },
+      { code: 'invalid-record', owner: '@retikz/computation', phase: PerformanceTracePhase.Update },
     ]);
   });
 
   it('允许同一 phase 声明不同 unit，并分别校验 outcome', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const reporter = createRuntimeTraceReporter({
-      owner: '@retikz/program',
+      owner: '@retikz/computation',
       phases: [
         {
           phase: PerformanceTracePhase.Update,
-          unit: PerformanceTraceUnit.Program,
+          unit: PerformanceTraceUnit.Computation,
           outcomes: [PerformanceTraceOutcome.Incremental],
         },
         {
@@ -147,7 +147,7 @@ describe('createRuntimeTraceReporter', () => {
 
     reporter.report({
       phase: PerformanceTracePhase.Update,
-      unit: PerformanceTraceUnit.Program,
+      unit: PerformanceTraceUnit.Computation,
       outcome: PerformanceTraceOutcome.Incremental,
       visited: 2,
       reused: 1,
@@ -163,7 +163,7 @@ describe('createRuntimeTraceReporter', () => {
     });
     reporter.report({
       phase: PerformanceTracePhase.Update,
-      unit: PerformanceTraceUnit.Program,
+      unit: PerformanceTraceUnit.Computation,
       outcome: PerformanceTraceOutcome.Commit,
       visited: 1,
       reused: 0,
@@ -179,12 +179,12 @@ describe('createRuntimeTraceReporter', () => {
     });
 
     expect(records.map(record => [record.unit, record.outcome])).toEqual([
-      [PerformanceTraceUnit.Program, PerformanceTraceOutcome.Incremental],
+      [PerformanceTraceUnit.Computation, PerformanceTraceOutcome.Incremental],
       [PerformanceTraceUnit.SceneChange, PerformanceTraceOutcome.Commit],
     ]);
     expect(reporter.diagnostics()).toEqual([
-      { code: 'invalid-record', owner: '@retikz/program', phase: PerformanceTracePhase.Update },
-      { code: 'invalid-record', owner: '@retikz/program', phase: PerformanceTracePhase.Update },
+      { code: 'invalid-record', owner: '@retikz/computation', phase: PerformanceTracePhase.Update },
+      { code: 'invalid-record', owner: '@retikz/computation', phase: PerformanceTracePhase.Update },
     ]);
   });
 

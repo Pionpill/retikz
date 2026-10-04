@@ -7,7 +7,7 @@ keywords: 'Vanilla、InputEmbed、identity、anonymous、normalize、React'
 
 - 状态：Accepted
 - 决策日期：2026-09-22
-- 关联：[Vanilla Authoring](./029-vanilla-authoring-normalization.md) · [Runtime identity](./011-runtime-identity-owner-registry.md)
+- 关联：[Vanilla Authoring](./029-vanilla-authoring-normalization.md) · [Runtime identity](./011-runtime-identity-source-registry.md)
 
 ## 背景与目标
 

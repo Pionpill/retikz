@@ -19,14 +19,16 @@ const readRequiredFile = (name: string): string => {
 describe('颜色比例尺文档结构', () => {
   it('离散化小节接入独立可交互 demo', () => {
     for (const page of [chinesePage, englishPage]) {
-      expect(page).toContain("files={['scale-discretization', 'scale-discretization.data.ts']}");
+      expect(page).toContain(
+        "files={['scale-discretization', 'scale-discretization.preview.tsx', 'scale-discretization.data.ts']}",
+      );
       expect(page).toContain('caption=');
     }
 
     readRequiredFile('scale-discretization.data.ts');
     readRequiredFile('scale-discretization.controls.ts');
     readRequiredFile('scale-discretization.en.controls.ts');
-    const demo = readRequiredFile('scale-discretization.demo.tsx');
+    const demo = readRequiredFile('scale-discretization.preview.tsx');
 
     expect(demo).toContain("type: 'quantize'");
     expect(demo).toContain("type: 'threshold'");
