@@ -2,7 +2,7 @@ import type { RuntimeChangeSet, RuntimeIdentity } from '@retikz/runtime';
 import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { CoreChange } from '../../contract';
-import { CORE_OWNER_KEY } from '../../contract';
+import { CORE_SOURCE_KEY } from '../../contract';
 import type { IRChild, IRScene, IRScope } from '../../schemas';
 import { jsonStructuralEquals } from '../../shared/json';
 
@@ -22,7 +22,7 @@ export type CoreSnapshotIndexEntry = Readonly<{
   value: CoreSnapshotRootValue | CoreSnapshotScopeValue | IRChild;
 }>;
 
-/** 只供 Core Program 使用的 conservative Snapshot index */
+/** 只供 Core Computation 使用的 conservative Snapshot index */
 export type CoreSnapshotIndexRead = Readonly<{
   /** 当前切片能否精确校验 change hint */
   complete: boolean;
@@ -39,7 +39,7 @@ const createScopeValue = (scope: Readonly<IRScope>): CoreSnapshotScopeValue => {
 
 /** 从完整 Snapshot 建立保守的 stable identity tree */
 export const createCoreSnapshotIndex = (source: Readonly<IRScene>): CoreSnapshotIndexRead => {
-  const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
+  const rootIdentity = createRuntimeIdentity(CORE_SOURCE_KEY, ['root']);
   const rootValue: CoreSnapshotRootValue = {
     type: source.type,
     version: source.version,
@@ -63,7 +63,7 @@ export const createCoreSnapshotIndex = (source: Readonly<IRScene>): CoreSnapshot
         continue;
       }
       seenIds.add(child.id);
-      const identity = createRuntimeIdentity(CORE_OWNER_KEY, [...parent.path, child.type, child.id]);
+      const identity = createRuntimeIdentity(CORE_SOURCE_KEY, [...parent.path, child.type, child.id]);
       entries.push({
         identity,
         parent,
@@ -172,7 +172,7 @@ export const coreChangeSetMatchesSnapshots = (
 ): boolean => {
   if (!previous.complete || !next.complete) return false;
   try {
-    const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
+    const rootIdentity = createRuntimeIdentity(CORE_SOURCE_KEY, ['root']);
     const previousLookup = createSnapshotEntryLookup(previous);
     const nextLookup = createSnapshotEntryLookup(next);
     if (
@@ -187,11 +187,11 @@ export const coreChangeSetMatchesSnapshots = (
     const previousEntities = previous.entries.slice(1);
     const nextEntities = next.entries.slice(1);
     const previousIdentities = createRuntimeIdentityLookup(
-      CORE_OWNER_KEY,
+      CORE_SOURCE_KEY,
       previous.entries.map(entry => entry.identity),
     );
     const nextIdentities = createRuntimeIdentityLookup(
-      CORE_OWNER_KEY,
+      CORE_SOURCE_KEY,
       next.entries.map(entry => entry.identity),
     );
     const matchedUpdates = new Set<CoreSnapshotIndexEntry>();

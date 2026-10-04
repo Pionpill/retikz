@@ -190,6 +190,13 @@ export const vizV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Source 字段组合', en: 'Unreleased · Source field composition' },
+          content: {
+            zh: 'Chart 公共根字段由单一 schema 片段提供，精确 recipe schema 与类型共用真源；公开 ChartSourceShape 泛型供 schema factory 的返回类型引用，已有配置、默认和约束保持不变。',
+            en: 'A single schema fragment supplies common Chart root fields to exact recipe schemas and their types. The exported ChartSourceShape generic names the schema factory return shape; existing configuration, defaults, and constraints are unchanged.',
+          },
+        },
+        {
           label: {
             zh: '待发布：异步数据准备与执行策略',
             en: 'Unreleased: async data preparation and execution policies',

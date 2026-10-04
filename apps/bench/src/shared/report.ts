@@ -1,10 +1,10 @@
-import { compileToScene, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { compileToScene, CoreSourceDefinition, createCoreComputation } from '@retikz/core';
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
 } from '@retikz/runtime';
 
 import { createSimpleNodeScene, updateSimpleNodeFill } from './fixtures';
@@ -51,23 +51,23 @@ export const runCoreWallClockReport = (
   }
   const first = createSimpleNodeScene(5_000);
   const second = updateSimpleNodeFill(first, 2_500, '#22c55e');
-  const coreProgram = createCoreProgram({ onWarn: () => undefined });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+  const coreComputation = createCoreComputation({ onWarn: () => undefined });
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
   reports.push(
     measureScenario('core-retained-full-5000', warmupRuns, sampleRuns, () => {
-      const initial = createRuntimeSession({
-        owners,
-        programs,
-        initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, first)],
+      const initial = createRuntime({
+        sources,
+        computations,
+        initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, first)],
       });
       initial.dispose();
     }),
   );
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, first)],
+  const session = createRuntime({
+    sources,
+    computations,
+    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, first)],
   });
   let next = second;
   try {
@@ -75,7 +75,7 @@ export const runCoreWallClockReport = (
       measureScenario('core-single-entity-update-5000', warmupRuns, sampleRuns, () => {
         session.update({
           baseRevision: session.revision(),
-          owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+          sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
         });
         next = next === first ? second : first;
       }),

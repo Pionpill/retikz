@@ -217,7 +217,16 @@ List
 
 ### Display JSON data directly
 
-`data` accepts a JSON array. Arrays become nested Lists, and nonempty objects become nested Maps by default. Set `dataObjectDisplay="text"` to display object values as compact JSON text instead: `{ "ready": false }` appears as `{"ready":false}`. This option propagates into nested arrays and applies only to `data`, not `items` or JSX composition. The example uses text mode and `layout.width: 'content'` to size both outer and automatically generated nested Lists by each cell's content.
+`data` accepts a JSON array. `dataExpand` controls nested objects and arrays and defaults to `true`. It preserves the outer List structure and applies only to `data`, not explicit cells or JSX composition.
+
+| Setting                               | Nested objects | Nested arrays |
+| ------------------------------------- | -------------- | ------------- |
+| `true` (default) or `['map', 'list']` | Map            | List          |
+| `false` or `[]`                       | JSON text      | JSON text     |
+| `['map']`                             | Map            | JSON text     |
+| `['list']`                            | JSON text      | List          |
+
+Generated components recursively use the same selection. A structure displayed as text retains its entire subtree as compact JSON and stops expanding. Empty objects and arrays always appear as `{}` and `[]`. Selection order and duplicates do not affect the result. The example starts with arrays only; switch between the four modes. `layout.width: 'content'` sizes generated List cells to their own content.
 
 <ComponentPreview files={['list-data', 'list-data.preview.tsx']} size="xs" defaultSourceFile="list-data.preview.tsx" />
 
@@ -336,7 +345,7 @@ Text overflow and the label extend visible bounds without changing the cell's 82
   sources={[
     {
       label: 'Content replay, reference rectangles, and label host',
-      path: 'packages/library/standard/src/collection/shared/cell-layout.ts',
+      path: 'packages/library/standard/src/collection/_cell/pipeline.ts',
       startLine: 1,
     },
   ]}

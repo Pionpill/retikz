@@ -24,7 +24,7 @@ export type ProcessingOptions = Readonly<{
   adapters?: InputNormalizeOptions['adapters'];
   /** 领域中立的同 revision compile observer driver */
   compileDriver?: VanillaCompileDriver;
-  /** Core Program 的 retained 更新策略 */
+  /** Core Computation 的 retained 更新策略 */
   updateStrategy?: RuntimeUpdateStrategyValue;
 }>;
 

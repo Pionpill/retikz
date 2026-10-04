@@ -64,8 +64,8 @@ const renderAtRoute = (path: string, node: ReactNode): string =>
 
 describe('ComponentPreview 资源加载', () => {
   it.each([
-    { module: 'schematic', section: 'graph', page: 'entity', subPage: 'basic', name: 'entity-event' },
-    { module: 'schematic', section: 'diagram', page: 'flow', subPage: 'basic', name: 'flow-basic' },
+    { module: 'schematic', section: 'graph', page: 'entity', subPage: 'usage', name: 'entity-minimal' },
+    { module: 'schematic', section: 'diagram', page: 'flow', subPage: 'usage', name: 'flow-basic' },
     { module: 'kernel', section: 'packages', page: 'math', subPage: 'primitives', name: 'bounds-candidate-flow' },
   ])(
     '$module/$section 中的图式示例固定默认风格并保留明暗切换',

@@ -568,19 +568,16 @@ export const kernelSection: Array<Section> = [
         ],
       },
       {
+        id: 'runtime',
+        label: 'kernel.pkgRuntime',
+        sidebarGroup: 'kernel.pkgGroupCore',
+        children: [{ id: 'usage', label: 'kernel.pkgRuntimeUsage', difficulty: DocDifficulty.Beginner }],
+      },
+      {
         id: 'core',
         label: 'kernel.pkgCore',
         sidebarGroup: 'kernel.pkgGroupCore',
         children: [{ id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals }],
-      },
-      {
-        id: 'runtime',
-        label: 'kernel.pkgRuntime',
-        sidebarGroup: 'kernel.pkgGroupCore',
-        children: [
-          { id: 'overview', label: 'kernel.pkgOverview', difficulty: DocDifficulty.Internals },
-          { id: 'session', label: 'kernel.pkgRuntimeSession', difficulty: DocDifficulty.Internals },
-        ],
       },
       {
         id: 'tex',

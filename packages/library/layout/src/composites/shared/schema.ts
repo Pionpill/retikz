@@ -15,6 +15,15 @@ import {
 /** 布局中相邻内容之间的非负物理间距 */
 export const LayoutGapSchema = NonNegativeNumberSchema.describe('Non-negative physical gap in user units.');
 
+/** 统一或分别指定行列间距；默认值由消费方决定 */
+export const LayoutRowColumnGapSchema = union([
+  LayoutGapSchema.describe('Uniform physical gap applied to both rows and columns.'),
+  strictObject({
+    row: LayoutGapSchema.describe('Physical vertical gap between adjacent rows.'),
+    column: LayoutGapSchema.describe('Physical horizontal gap between adjacent columns.'),
+  }).describe('Independent physical row and column gaps.'),
+]).describe('Physical row and column gaps; a number applies uniformly to both axes.');
+
 const LayoutContentAxisSizeSchema = strictObject({
   kind: literal(LayoutAxisSizeKind.Content).describe('Discriminator for intrinsic content sizing.'),
   min: NonNegativeNumberSchema.optional().describe('Optional authored minimum allocation size.'),

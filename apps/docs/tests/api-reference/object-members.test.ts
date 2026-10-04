@@ -4,9 +4,34 @@ import { join } from 'node:path';
 
 import { compile } from '@mdx-js/mdx';
 import remarkGfm from 'remark-gfm';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 
 import { createApiReferenceMdx } from '../../scripts/api-reference/tex';
+
+vi.mock('../../scripts/api-reference/branch-labels', () => ({
+  apiReferenceBranchLabels: {
+    'object-reference-fixture#GenericMarker': [
+      { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+      { value: 'children', field: 'children', type: 'Nested', label: { zh: '子项', en: 'Children' } },
+    ],
+    'object-reference-fixture#IndexedProps': [
+      { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+      { value: 'children', field: 'children', type: 'Nested', label: { zh: '子项', en: 'Children' } },
+    ],
+    'object-reference-fixture#MarkerProps': [
+      { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+      { value: 'children', field: 'children', type: 'Nested', label: { zh: '子项', en: 'Children' } },
+    ],
+    'object-reference-fixture#PlainMarkerProps': [
+      { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+      { value: 'children', field: 'children', type: 'Nested', label: { zh: '子项', en: 'Children' } },
+    ],
+    'object-reference-fixture#Either': [
+      { value: 'base', field: 'id', type: 'string', label: { zh: '基础对象', en: 'Base' } },
+      { value: 'alternative', field: 'alternative', type: 'string', label: { zh: '替代对象', en: 'Alternative' } },
+    ],
+  },
+}));
 
 it('自动展开一层对象，保留映射修饰符、继承说明与索引，复杂非对象保持原签名', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'retikz-object-reference-'));
@@ -124,19 +149,26 @@ export type IndexedProps = IndexedMarker;
     expect(definition).toContain("export type MarkerProps = Marker<Cell['layout']>;");
     expect(marker).toContain('Render a marker');
     expect(marker).toContain('Marker configuration');
-    expect(marker).toContain('#### Parameters');
-    expect(section('plainMarker / PlainMarkerProps')).not.toContain('#### Parameters');
+    expect(marker).toContain('| `input` (Parameter) | `MarkerProps` | — | Marker configuration |');
+    expect(section('plainMarker / PlainMarkerProps')).not.toContain('`input` (Parameter)');
     expect(section('plainMarker / PlainMarkerProps')).toContain('plainMarker(input: PlainMarkerProps)');
     expect(marker).toContain('Requires a parent container');
     expect(marker).toContain("export type MarkerProps = Marker<Cell['layout']>;");
-    const expandedMarker = marker.split('#### Expanded type')[1];
-    expect(expandedMarker).toContain('readonly id?: string;');
-    expect(expandedMarker).toContain("layout?: Cell['layout'];");
-    expect(expandedMarker).toMatch(/text: string;\s+children\?: never;/);
-    expect(expandedMarker).toMatch(/text\?: never;\s+children: Nested;/);
-    expect(expandedMarker).not.toContain('Omit<');
-    expect(section('GenericMarker')).not.toContain('#### Expanded type');
-    expect(section('IndexedProps')).not.toContain('#### Expanded type');
+    const branch = (value: string) => marker.split(`<DocTab value="${value}"`)[1]?.split('</DocTab>')[0] ?? '';
+    for (const value of ['text', 'children']) {
+      expect(branch(value)).toContain('| `readonly id?` | `string`');
+      expect(branch(value)).toContain('| `layout?` | `{ width: number; }`');
+      expect(branch(value)).not.toContain('Omit<');
+    }
+    expect(branch('text')).toContain('| `text` | `string`');
+    expect(branch('text')).toContain('| `children?` | `never`');
+    expect(branch('children')).toContain('| `children` | `Nested`');
+    expect(branch('children')).toContain('| `text?` | `never`');
+    expect(section('GenericMarker')).toContain('| `layout?` | `T`');
+    for (const name of ['GenericMarker', 'IndexedProps']) {
+      expect(section(name)).toContain('<DocTab value="text" label="Members · Text">');
+      expect(section(name)).toContain('<DocTab value="children" label="Members · Children">');
+    }
     for (const name of ['Omitted', 'Inherited', 'Combined']) {
       expect(section(name)).toContain('| `nested` | `Nested`');
       expect(section(name)).not.toContain('| `inside`');
@@ -150,14 +182,20 @@ export type IndexedProps = IndexedMarker;
     expect(section('Inherited')).toContain('Stable identity');
     expect(section('Combined')).toContain('| `extra` | `boolean`');
     expect(section('Dictionary')).toContain('readonly [key: string]: Nested');
-    expect(section('Dictionary')).toContain('#### Index signatures');
+    expect(section('Dictionary')).toContain('| Index signature | `readonly [key: string]: Nested`');
     expect(section('Keys')).toContain('| `one` | `Nested`');
     expect(section('Keys')).toContain('| `two` | `Nested`');
-    for (const name of ['Callback', 'CallbackObject', 'Items', 'Pair', 'Either', 'Generic', 'Conditional']) {
+    for (const name of ['Callback', 'CallbackObject', 'Items', 'Pair']) {
       expect(section(name)).not.toContain('| Member |');
       expect(section(name)).not.toContain('<details>');
       expect(section(name)).toContain('```ts');
     }
+    for (const name of ['Generic', 'Conditional']) {
+      expect(section(name)).toContain('| `T` (Type parameter)');
+      expect(section(name)).not.toContain('| `nested`');
+    }
+    expect(section('Either')).toContain('<DocTabs');
+    expect(section('Either')).toContain('alternative');
     expect(section('Generic')).toContain('Pick<T, keyof T>');
     expect(section('Conditional')).toContain('T extends string ? Base : Nested');
     expect(section('Instantiated')).toContain('| `value` | `boolean`');

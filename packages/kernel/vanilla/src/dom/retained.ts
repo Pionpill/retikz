@@ -5,10 +5,10 @@ import {
   builtinRetainedRendererFactory,
   createRetainedRenderParticipant,
   RenderCachePolicy,
-  RenderRuntimeOwnerDefinition,
+  RenderRuntimeSourceDefinition,
 } from '@retikz/render/runtime';
 import type { RuntimeDiagnostic } from '@retikz/runtime';
-import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '@retikz/runtime';
+import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '@retikz/runtime';
 
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
@@ -57,7 +57,7 @@ const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyComp
         },
   ) as AnyCompositeDefinition;
 
-/** 捕获 retained session 会在后续 normalization 继续读取的 mount options */
+/** 捕获 retained runtime 会在后续 normalization 继续读取的 mount options */
 const captureRetainedMountOptions = (options: RetainedMountCanvasOptions): RetainedMountCanvasOptions => {
   const adapters = options.adapters?.map(adapter => Object.freeze({ kind: adapter.kind, lower: adapter.lower }));
   const composites = options.compile?.composites?.map(captureCompositeDefinition);
@@ -84,7 +84,7 @@ const resolveCachePolicy = (runtimeMeta: InputRuntimeMeta): 'auto' | 'static' | 
   return RenderCachePolicy.Auto;
 };
 
-type RetainedSessionState = Readonly<{
+type RetainedRuntimeState = Readonly<{
   /** 当前 committed 动画配置 */
   animation: VanillaAnimationOptions;
   /** 当前 committed Canvas 可变配置 */
@@ -93,14 +93,14 @@ type RetainedSessionState = Readonly<{
   runtimeMeta: InputRuntimeMeta;
 }>;
 
-type CreateSvgRetainedSessionOptions = Readonly<{
+type CreateSvgRetainedRuntimeOptions = Readonly<{
   /** 要创建的 renderer 后端 */
   backend: 'svg';
   /** retained renderer 独占的宿主根元素 */
   host: SVGSVGElement;
   /** 初始完整 IR 或 InputScene */
   input: RetainedRenderInput;
-  /** session-lifetime mount 配置 */
+  /** runtime-lifetime mount 配置 */
   options: RetainedMountOptions;
   /** 已在宿主创建前校验并复制的 Runtime 配置 */
   runtimeOptions: VanillaRetainedRuntimeOptions;
@@ -108,30 +108,30 @@ type CreateSvgRetainedSessionOptions = Readonly<{
   idPrefix: string;
 }>;
 
-type CreateCanvasRetainedSessionOptions = Readonly<{
+type CreateCanvasRetainedRuntimeOptions = Readonly<{
   /** 要创建的 renderer 后端 */
   backend: 'canvas';
   /** retained renderer 独占的宿主根元素 */
   host: HTMLCanvasElement;
   /** 初始完整 IR 或 InputScene */
   input: RetainedRenderInput;
-  /** session-lifetime mount 配置 */
+  /** runtime-lifetime mount 配置 */
   options: RetainedMountCanvasOptions;
   /** 已在宿主创建前校验并复制的 Runtime 配置 */
   runtimeOptions: VanillaRetainedRuntimeOptions;
   /** SSR 与资源引用共用的稳定 id 前缀 */
   idPrefix: string;
-  /** Canvas session-lifetime 设备像素比 */
+  /** Canvas runtime-lifetime 设备像素比 */
   devicePixelRatio?: number;
 }>;
 
-type CreateRetainedSessionOptions = CreateSvgRetainedSessionOptions | CreateCanvasRetainedSessionOptions;
+type CreateRetainedRuntimeOptions = CreateSvgRetainedRuntimeOptions | CreateCanvasRetainedRuntimeOptions;
 
 type CreateRetainedProcessingController = {
   /** 创建 SVG retained processing controller */
-  (options: CreateSvgRetainedSessionOptions): DomRetainedProcessingController<RetainedSvgUpdateOptions>;
+  (options: CreateSvgRetainedRuntimeOptions): DomRetainedProcessingController<RetainedSvgUpdateOptions>;
   /** 创建 Canvas retained processing controller */
-  (options: CreateCanvasRetainedSessionOptions): DomRetainedProcessingController<RetainedCanvasUpdateOptions>;
+  (options: CreateCanvasRetainedRuntimeOptions): DomRetainedProcessingController<RetainedCanvasUpdateOptions>;
 };
 
 /** DOM 子入口使用的 retained processing 控制面 */
@@ -141,7 +141,7 @@ type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOpt
     update: (source: RetainedRenderInput, options?: TUpdateOptions) => void;
     /** 向当前提交帧注册 hydration handlers */
     hydrate: (options: HydrateOptions) => HydrationHandle;
-    /** 释放 processing session 与已挂载 renderer */
+    /** 释放 processing runtime 与已挂载 renderer */
     dispose: () => void;
     /** 读取并清空 Runtime 诊断 */
     diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
@@ -151,7 +151,7 @@ type DomRetainedProcessingController<TUpdateOptions extends RetainedSvgUpdateOpt
     result: () => ProcessingResult;
   }>;
 
-/** 移除 direct compile 专属 trace，构造 session-lifetime processing options */
+/** 移除 direct compile 专属 trace，构造 runtime-lifetime processing options */
 const toProcessingOptions = (
   options: CommonOptions,
   updateStrategy: VanillaRetainedRuntimeOptions['updateStrategy'],
@@ -174,7 +174,7 @@ const captureHydrationHandlers = (handlers: HydrateOptions['handlers']): Hydrate
 
 /** 将当前 retained state 收敛为 Render Runtime config */
 const createRenderConfig = (
-  state: RetainedSessionState,
+  state: RetainedRuntimeState,
   handlers: ReadonlyArray<RenderHandlerContribution>,
   canvas: RenderRuntimeConfigInput['canvas'],
 ): RenderRuntimeConfigInput => ({
@@ -191,15 +191,17 @@ const createRenderConfig = (
 
 /** 创建 DOM 子入口固定注入的 Render participant factory */
 const createRenderParticipantFactory = (
-  options: CreateRetainedSessionOptions,
-  initialState: RetainedSessionState,
+  options: CreateRetainedRuntimeOptions,
+  initialState: RetainedRuntimeState,
   canvas: RenderRuntimeConfigInput['canvas'],
-  state: () => RetainedSessionState,
+  state: () => RetainedRuntimeState,
   handlers: () => ReadonlyArray<RenderHandlerContribution>,
 ): Readonly<{
   factory: ProcessingTransactionParticipantFactory;
   read: () => RetainedRendererRead;
-  updateConfig: (input: ProcessingParticipantUpdateInput) => ReadonlyArray<ReturnType<typeof createRuntimeOwnerUpdate>>;
+  updateConfig: (
+    input: ProcessingParticipantUpdateInput,
+  ) => ReadonlyArray<ReturnType<typeof createRuntimeSourceUpdate>>;
 }> => {
   let lease: ReturnType<typeof createRetainedRenderParticipant>['lease'] | undefined;
   let active:
@@ -207,7 +209,7 @@ const createRenderParticipantFactory = (
         read: () => RetainedRendererRead;
         updateConfig: (
           input: ProcessingParticipantUpdateInput,
-        ) => ReadonlyArray<ReturnType<typeof createRuntimeOwnerUpdate>>;
+        ) => ReadonlyArray<ReturnType<typeof createRuntimeSourceUpdate>>;
       }>
     | undefined;
   const factory: ProcessingTransactionParticipantFactory = context => {
@@ -219,7 +221,7 @@ const createRenderParticipantFactory = (
             host: options.host,
             rendererFactory,
             immutableOptions: { backend: 'svg', idPrefix: options.idPrefix },
-            coreProgram: context.coreProgram,
+            coreComputation: context.coreComputation,
             resolveReadonlyLayers: context.resolveReadonlyLayers,
             ...(lease === undefined ? {} : { rendererLease: lease }),
           })
@@ -232,7 +234,7 @@ const createRenderParticipantFactory = (
               idPrefix: options.idPrefix,
               ...(options.devicePixelRatio === undefined ? {} : { devicePixelRatio: options.devicePixelRatio }),
             },
-            coreProgram: context.coreProgram,
+            coreComputation: context.coreComputation,
             resolveReadonlyLayers: context.resolveReadonlyLayers,
             ...(lease === undefined ? {} : { rendererLease: lease }),
           });
@@ -240,25 +242,25 @@ const createRenderParticipantFactory = (
     let currentHandlers = handlers();
     const updateConfig = (
       input: ProcessingParticipantUpdateInput,
-    ): ReadonlyArray<ReturnType<typeof createRuntimeOwnerUpdate>> => {
+    ): ReadonlyArray<ReturnType<typeof createRuntimeSourceUpdate>> => {
       current =
         input.kind === 'source' ? Object.freeze({ ...state(), runtimeMeta: input.prepared.runtimeMeta }) : state();
       currentHandlers = handlers();
       return Object.freeze([
-        createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, createRenderConfig(current, currentHandlers, canvas)),
+        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, createRenderConfig(current, currentHandlers, canvas)),
       ]);
     };
     return Object.freeze({
-      owners: Object.freeze([RenderRuntimeOwnerDefinition]),
+      sources: Object.freeze([RenderRuntimeSourceDefinition]),
       initialSnapshots: Object.freeze([
-        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, createRenderConfig(current, currentHandlers, canvas)),
+        createRuntimeSourceInput(RenderRuntimeSourceDefinition, createRenderConfig(current, currentHandlers, canvas)),
       ]),
       participant: renderer.participant,
       update: input => updateConfig(input),
-      connect: nextSession => {
+      connect: nextRuntime => {
         lease = renderer.lease;
         active = Object.freeze({
-          read: () => renderer.read(nextSession),
+          read: () => renderer.read(nextRuntime),
           updateConfig,
         });
       },
@@ -283,7 +285,7 @@ const createRenderParticipantFactory = (
 
 /** 创建 DOM 子入口使用的 retained processing controller */
 const createRetainedProcessingControllerImplementation = (
-  options: CreateRetainedSessionOptions,
+  options: CreateRetainedRuntimeOptions,
 ): DomRetainedProcessingController<RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions> => {
   const fixedOptions = captureRetainedMountOptions(options.options);
   const { devicePixelRatio: _devicePixelRatio, ...initialCanvas } = fixedOptions.canvas ?? {};
@@ -292,7 +294,7 @@ const createRetainedProcessingControllerImplementation = (
     animation: fixedOptions.animation ?? {},
     ...(options.backend === 'canvas' ? { canvas: initialCanvas } : {}),
   });
-  let state: RetainedSessionState = Object.freeze({
+  let state: RetainedRuntimeState = Object.freeze({
     animation: initialMutableOptions.animation ?? {},
     canvas: ('canvas' in initialMutableOptions ? initialMutableOptions.canvas : undefined) ?? {},
     runtimeMeta: createEmptyInputRuntimeMetaSnapshot(),

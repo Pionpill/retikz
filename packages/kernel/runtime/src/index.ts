@@ -1,54 +1,54 @@
-export * from './diagnostic';
-export * from './error';
-export * from './identity';
-export type {
-  RuntimeChangeSet,
-  RuntimeOwnedValueDefinitionInput,
-  RuntimeOwnerDefinition,
-  RuntimeOwnerDefinitionInput,
-  RuntimeOwnerToken,
-  RuntimeRevision,
-} from './owner';
-export { defineRuntimeOwner } from './owner';
-export * from './participant';
 export type {
   RuntimeCandidateLookup,
   RuntimeCandidateView,
   RuntimeCommitEvent,
-  RuntimeProgramArtifactDefinitionInput,
-  RuntimeProgramContext,
-  RuntimeProgramDefinition,
-  RuntimeProgramDefinitionInput,
-  RuntimeProgramExecutionValue,
-  RuntimeProgramKindValue,
-  RuntimeProgramPhaseValue,
-  RuntimeProgramToken,
-  RuntimeProgramTraceReporter,
-  RuntimeProgramWarningInput,
+  RuntimeComputationArtifactDefinitionInput,
+  RuntimeComputationContext,
+  RuntimeComputationDefinition,
+  RuntimeComputationDefinitionInput,
+  RuntimeComputationExecutionValue,
+  RuntimeComputationKindValue,
+  RuntimeComputationPhaseValue,
+  RuntimeComputationToken,
+  RuntimeComputationTraceReporter,
+  RuntimeComputationWarningInput,
   RuntimeRunResult,
   RuntimeUpdateResult,
-} from './program';
-export { RuntimeProgramExecution, RuntimeProgramKind, RuntimeProgramPhase } from './program';
-export { defineRuntimeProgram } from './program';
+} from './computation';
+export { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from './computation';
+export { defineRuntimeComputation } from './computation';
+export * from './diagnostic';
+export * from './error';
+export * from './identity';
+export * from './participant';
 export type {
-  RuntimeOwnerRegistry,
-  RuntimeOwnerRegistryInput,
-  RuntimeProgramRegistry,
-  RuntimeProgramRegistryInput,
+  RuntimeComputationRegistry,
+  RuntimeComputationRegistryInput,
+  RuntimeSourceRegistry,
+  RuntimeSourceRegistryInput,
 } from './registry';
-export { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from './registry';
-export * from './session';
+export { createRuntimeComputationRegistry, createRuntimeSourceRegistry } from './registry';
+export * from './runtime';
+export type {
+  RuntimeChangeSet,
+  RuntimeRevision,
+  RuntimeSourceDefinition,
+  RuntimeSourceDefinitionInput,
+  RuntimeSourceToken,
+  RuntimeSourceValueDefinitionInput,
+} from './source';
+export { defineRuntimeSource } from './source';
 export * from './trace';
 export type {
-  RuntimeOwnerInput,
-  RuntimeOwnerUpdate,
-  RuntimeSessionResult,
-  RuntimeSessionUpdate,
+  RuntimeResult,
   RuntimeSnapshot,
+  RuntimeSourceInput,
+  RuntimeSourceUpdate,
+  RuntimeUpdate,
 } from './transaction';
 export {
   createRuntimeChangeSet,
-  createRuntimeOwnerInput,
-  createRuntimeOwnerUpdate,
   createRuntimeRevision,
+  createRuntimeSourceInput,
+  createRuntimeSourceUpdate,
 } from './transaction';

@@ -1,21 +1,21 @@
-import type { CoreProgramDefinition, IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import type { CoreComputationDefinition, IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
 import { isRetikzError } from '@retikz/foundation';
 import type { PerformanceTraceRecord, RuntimePreparedCommit } from '@retikz/runtime';
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
-  defineRuntimeOwner,
-  defineRuntimeProgram,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
+  defineRuntimeSource,
+  defineRuntimeComputation,
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
   RetikzRuntimeError,
   RetikzRuntimeErrorCode,
-  RuntimeProgramKind,
+  RuntimeComputationKind,
 } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -29,7 +29,7 @@ import {
   createRetainedRenderParticipant,
   defineRetainedRenderer,
   isRetikzRenderError,
-  RenderRuntimeOwnerDefinition,
+  RenderRuntimeSourceDefinition,
   RetainedRendererCapability,
   RetikzRenderError,
   RetikzRenderErrorCode,
@@ -105,30 +105,30 @@ const createHarness = (
   }> = {},
 ) => {
   const renderer = createRendererHarness(capability);
-  const coreProgram = createCoreProgram({ onWarn: () => undefined });
+  const coreComputation = createCoreComputation({ onWarn: () => undefined });
   const factory = vi.fn(() => renderer.renderer) as unknown as RetainedRendererFactory;
   const handle = createRetainedRenderParticipant({
     backend: 'svg',
     host: svgHost,
     rendererFactory: factory,
     immutableOptions: { backend: 'svg', idPrefix: 'test' },
-    coreProgram,
+    coreComputation,
   });
-  const owners = createRuntimeOwnerRegistry({
-    builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition],
+  const sources = createRuntimeSourceRegistry({
+    builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition],
   });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const session = createRuntime({
+    sources,
+    computations,
     ...runtimeOptions,
     participants: [handle.participant],
     initialSnapshots: [
-      createRuntimeOwnerInput(CoreOwnerDefinition, initialScene),
-      createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+      createRuntimeSourceInput(CoreSourceDefinition, initialScene),
+      createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
     ],
   });
-  return { renderer, coreProgram, handle, session, factory };
+  return { renderer, coreComputation, handle, session, factory };
 };
 
 describe('@retikz/render/runtime public contract', () => {
@@ -227,7 +227,7 @@ describe('@retikz/render/runtime public contract', () => {
   });
 });
 
-describe('RenderRuntimeOwnerDefinition', () => {
+describe('RenderRuntimeSourceDefinition', () => {
   it('复制并递归冻结 config 容器，同时保留 callback identity', () => {
     const click = vi.fn();
     const protoClick = vi.fn();
@@ -242,14 +242,14 @@ describe('RenderRuntimeOwnerDefinition', () => {
       canvas: { width: 320, height: 180 },
       cachePolicy: 'static' as const,
     };
-    const owners = createRuntimeOwnerRegistry({ builtins: [RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [] });
-    const session = createRuntimeSession({
-      owners,
-      programs,
-      initialSnapshots: [createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, input)],
+    const sources = createRuntimeSourceRegistry({ builtins: [RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
+    const session = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(RenderRuntimeSourceDefinition, input)],
     });
-    const config = session.snapshot(RenderRuntimeOwnerDefinition).value;
+    const config = session.snapshot(RenderRuntimeSourceDefinition).value;
 
     input.handlerContributions.length = 0;
     input.animation.enabled = false;
@@ -265,13 +265,13 @@ describe('RenderRuntimeOwnerDefinition', () => {
   });
 
   it('按 registration 排序，并拒绝重复 registration 与非法动态字段', () => {
-    const owners = createRuntimeOwnerRegistry({ builtins: [RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [] });
-    const sorted = createRuntimeSession({
-      owners,
-      programs,
+    const sources = createRuntimeSourceRegistry({ builtins: [RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
+    const sorted = createRuntime({
+      sources,
+      computations,
       initialSnapshots: [
-        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {
+        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {
           handlerContributions: [
             { registration: 2, handlers: {} },
             { registration: 0, handlers: {} },
@@ -280,7 +280,7 @@ describe('RenderRuntimeOwnerDefinition', () => {
       ],
     });
     expect(
-      sorted.snapshot(RenderRuntimeOwnerDefinition).value.handlerContributions?.map(item => item.registration),
+      sorted.snapshot(RenderRuntimeSourceDefinition).value.handlerContributions?.map(item => item.registration),
     ).toEqual([0, 2]);
 
     for (const input of [
@@ -298,11 +298,11 @@ describe('RenderRuntimeOwnerDefinition', () => {
       { handlerContributions: [{ registration: 0, handlers: new Date() }] },
     ]) {
       try {
-        createRuntimeSession({
-          owners,
-          programs,
+        createRuntime({
+          sources,
+          computations,
           initialSnapshots: [
-            createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, input as unknown as RenderRuntimeConfigInput),
+            createRuntimeSourceInput(RenderRuntimeSourceDefinition, input as unknown as RenderRuntimeConfigInput),
           ],
         });
         throw new Error('expected invalid config to fail');
@@ -317,8 +317,8 @@ describe('RenderRuntimeOwnerDefinition', () => {
   });
 
   it('在读取前递归拒绝 config accessor 与非标准数组属性', () => {
-    const owners = createRuntimeOwnerRegistry({ builtins: [RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [] });
+    const sources = createRuntimeSourceRegistry({ builtins: [RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
     const getter = vi.fn(() => [0, 0, 1, 1]);
     const easings = Object.defineProperty({}, 'custom', {
       enumerable: true,
@@ -326,10 +326,10 @@ describe('RenderRuntimeOwnerDefinition', () => {
     });
 
     expect(() =>
-      createRuntimeSession({
-        owners,
-        programs,
-        initialSnapshots: [createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, { animation: { easings } })],
+      createRuntime({
+        sources,
+        computations,
+        initialSnapshots: [createRuntimeSourceInput(RenderRuntimeSourceDefinition, { animation: { easings } })],
       }),
     ).toThrow(
       expect.objectContaining({
@@ -341,11 +341,11 @@ describe('RenderRuntimeOwnerDefinition', () => {
     const tuple = [0, 0, 1, 1];
     Object.defineProperty(tuple, Symbol('hidden'), { enumerable: true, value: true });
     expect(() =>
-      createRuntimeSession({
-        owners,
-        programs,
+      createRuntime({
+        sources,
+        computations,
         initialSnapshots: [
-          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {
+          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {
             animation: { easings: { custom: tuple } },
           } as never),
         ],
@@ -362,11 +362,11 @@ describe('RenderRuntimeOwnerDefinition', () => {
     const inheritedTuple: [number, number, number, number] = [0, 0, 1, 1];
     Object.setPrototypeOf(inheritedTuple, tuplePrototype);
     expect(() =>
-      createRuntimeSession({
-        owners,
-        programs,
+      createRuntime({
+        sources,
+        computations,
         initialSnapshots: [
-          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {
+          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {
             animation: { easings: { custom: inheritedTuple } },
           }),
         ],
@@ -380,11 +380,11 @@ describe('RenderRuntimeOwnerDefinition', () => {
     const inheritedContributions = [{ registration: 0, handlers: {} }];
     Object.setPrototypeOf(inheritedContributions, contributionPrototype);
     expect(() =>
-      createRuntimeSession({
-        owners,
-        programs,
+      createRuntime({
+        sources,
+        computations,
         initialSnapshots: [
-          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {
+          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {
             handlerContributions: inheritedContributions,
           }),
         ],
@@ -421,8 +421,8 @@ describe('createRetainedRenderParticipant', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(CoreOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(CoreSourceDefinition, {
           ...initial,
           children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
         }),
@@ -450,7 +450,7 @@ describe('createRetainedRenderParticipant', () => {
 
   it('直接 replaceScene 物化记录为 full，不伪报 incremental 或 fallback', () => {
     const records: Array<PerformanceTraceRecord> = [];
-    const { renderer, coreProgram, session } = createHarness('entity', scene('A'), {
+    const { renderer, coreComputation, session } = createHarness('entity', scene('A'), {
       updateStrategy: 'full',
       trace: record => records.push(record),
     });
@@ -458,15 +458,15 @@ describe('createRetainedRenderParticipant', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(CoreOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(CoreSourceDefinition, {
           ...scene('A'),
           children: [{ ...scene('A').children[0], style: { fill: '#22c55e' } }],
         }),
       ],
     });
 
-    expect(session.artifact(coreProgram).value.patch?.operations[0]?.kind).toBe('replaceScene');
+    expect(session.artifact(coreComputation).value.patch?.operations[0]?.kind).toBe('replaceScene');
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('replaceScene');
     expect(
       records.filter(
@@ -486,8 +486,8 @@ describe('createRetainedRenderParticipant', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
           animation: { enabled: false },
           cachePolicy: 'dynamic',
         }),
@@ -506,7 +506,7 @@ describe('createRetainedRenderParticipant', () => {
   it('合法但 capability 不支持的 Patch 在 renderer 调用前转换为独占 replace 并报告 warning', () => {
     const initial = { ...scene('A'), children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }] };
     const records: Array<PerformanceTraceRecord> = [];
-    const { renderer, coreProgram, session } = createHarness('none', initial, {
+    const { renderer, coreComputation, session } = createHarness('none', initial, {
       trace: record => records.push(record),
     });
     session.diagnostics();
@@ -514,15 +514,15 @@ describe('createRetainedRenderParticipant', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(CoreOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(CoreSourceDefinition, {
           ...initial,
           children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
         }),
       ],
     });
 
-    expect(session.artifact(coreProgram).value.patch?.operations[0]?.kind).toBe('update');
+    expect(session.artifact(coreComputation).value.patch?.operations[0]?.kind).toBe('update');
     expect(renderer.patches[0]?.operations).toEqual([
       expect.objectContaining({ kind: 'replaceScene', snapshot: expect.objectContaining({ revision: 1 }) }),
     ]);
@@ -547,26 +547,26 @@ describe('createRetainedRenderParticipant', () => {
 
   it('group capability 保留 stable Group subtree update，不产生 fallback warning', () => {
     const initial = { ...scene('A'), children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }] };
-    const { renderer, coreProgram, session } = createHarness('group', initial);
+    const { renderer, coreComputation, session } = createHarness('group', initial);
     session.diagnostics();
 
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(CoreOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(CoreSourceDefinition, {
           ...initial,
           children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
         }),
       ],
     });
 
-    expect(session.artifact(coreProgram).value.patch?.operations[0]?.kind).toBe('update');
+    expect(session.artifact(coreComputation).value.patch?.operations[0]?.kind).toBe('update');
     expect(renderer.patches[0]?.operations[0]?.kind).toBe('update');
     expect(session.diagnostics()).toEqual([]);
   });
 
   it('validator failure 发生在 renderer prepare 与 fallback trace/warning 之前', () => {
-    const sourceOwner = defineRuntimeOwner<boolean, boolean, boolean, never>({
+    const sourceOwner = defineRuntimeSource<boolean, boolean, boolean, never>({
       key: '@test/render-validator-source',
       value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
     });
@@ -592,18 +592,18 @@ describe('createRetainedRenderParticipant', () => {
         }),
         ...(patch === undefined ? {} : { patch }),
       });
-    const program = defineRuntimeProgram({
+    const program = defineRuntimeComputation({
       id: Object.freeze({ owner: sourceOwner.key, key: 'compile' }),
-      owners: [sourceOwner],
-      programs: [],
+      sources: [sourceOwner],
+      computations: [],
       tracePhases: [],
-      artifact: { capture: value => value, readForProgram: value => value, read: value => value },
-      run: view => ({ kind: RuntimeProgramKind.Full, artifact: artifact(snapshot(view.candidateRevision, false)) }),
+      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: artifact(snapshot(view.candidateRevision, false)) }),
       update: (_previous, view) => {
         const next = snapshot(view.candidateRevision, view.snapshot(sourceOwner).value);
         if (view.baseRevision === undefined) throw new Error('expected update base revision');
         return {
-          kind: RuntimeProgramKind.Incremental,
+          kind: RuntimeComputationKind.Incremental,
           artifact: artifact(
             next,
             Object.freeze({
@@ -614,26 +614,26 @@ describe('createRetainedRenderParticipant', () => {
           ),
         };
       },
-    }) as unknown as CoreProgramDefinition<readonly []>;
+    }) as unknown as CoreComputationDefinition<readonly []>;
     const renderer = createRendererHarness('none');
     const handle = createRetainedRenderParticipant({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer.renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'validator-first' },
-      coreProgram: program,
+      coreComputation: program,
     });
-    const owners = createRuntimeOwnerRegistry({ builtins: [sourceOwner, RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const sources = createRuntimeSourceRegistry({ builtins: [sourceOwner, RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
     const records: Array<PerformanceTraceRecord> = [];
-    const session = createRuntimeSession({
-      owners,
-      programs,
+    const session = createRuntime({
+      sources,
+      computations,
       trace: record => records.push(record),
       participants: [handle.participant],
       initialSnapshots: [
-        createRuntimeOwnerInput(sourceOwner, false),
-        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+        createRuntimeSourceInput(sourceOwner, false),
+        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
       ],
     });
     records.length = 0;
@@ -641,7 +641,7 @@ describe('createRetainedRenderParticipant', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(sourceOwner, true)],
+        sources: [createRuntimeSourceUpdate(sourceOwner, true)],
       }),
     ).toThrowError(RetikzRuntimeError);
     expect(renderer.prepare).not.toHaveBeenCalled();
@@ -653,7 +653,7 @@ describe('createRetainedRenderParticipant', () => {
     const renderer = createRendererHarness();
     const originalRead = renderer.renderer;
     void originalRead;
-    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     let stale: RenderFrameSnapshot | undefined;
     const mismatching = defineRetainedRenderer({
       backend: 'svg',
@@ -676,17 +676,17 @@ describe('createRetainedRenderParticipant', () => {
       host: svgHost,
       rendererFactory: (() => mismatching) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'stale' },
-      coreProgram,
+      coreComputation,
     });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-    const session = createRuntimeSession({
-      owners,
-      programs,
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const session = createRuntime({
+      sources,
+      computations,
       participants: [handle.participant],
       initialSnapshots: [
-        createRuntimeOwnerInput(CoreOwnerDefinition, scene('A')),
-        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+        createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
+        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
       ],
     });
     const before = handle.read(session);
@@ -694,7 +694,7 @@ describe('createRetainedRenderParticipant', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('B'))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('B'))],
       }),
     ).toThrowError(RetikzRuntimeError);
     expect(session.revision()).toBe(0);
@@ -702,7 +702,7 @@ describe('createRetainedRenderParticipant', () => {
   });
 
   it('结构等价但可变的第三方 snapshot 不会泄漏到 committed public read', () => {
-    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     let committed: RenderFrameSnapshot | undefined;
     let exposedClone: RenderFrameSnapshot | undefined;
     const renderer = defineRetainedRenderer({
@@ -730,17 +730,17 @@ describe('createRetainedRenderParticipant', () => {
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'mutable-read' },
-      coreProgram,
+      coreComputation,
     });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-    const session = createRuntimeSession({
-      owners,
-      programs,
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const session = createRuntime({
+      sources,
+      computations,
       participants: [handle.participant],
       initialSnapshots: [
-        createRuntimeOwnerInput(CoreOwnerDefinition, scene('A')),
-        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+        createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
+        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
       ],
     });
     const read = handle.read(session);
@@ -774,7 +774,7 @@ describe('createRetainedRenderParticipant', () => {
         host: svgHost,
         rendererFactory: (() => mismatching) as unknown as RetainedRendererFactory,
         immutableOptions: { backend: 'svg', idPrefix: 'mismatch' },
-        coreProgram: createCoreProgram({ onWarn: () => undefined }),
+        coreComputation: createCoreComputation({ onWarn: () => undefined }),
       });
       throw new Error('expected renderer mismatch');
     } catch (error) {
@@ -787,7 +787,7 @@ describe('createRetainedRenderParticipant', () => {
     }
   });
 
-  it('公开 Runtime Session 仅重试失败 renderer cleanup，成功后进入幂等 disposed 状态', () => {
+  it('公开 Runtime 仅重试失败 renderer cleanup，成功后进入幂等 disposed 状态', () => {
     const disposeFailure = new Error('dispose rejected');
     let remainingFailures = 2;
     const dispose = vi.fn(() => {
@@ -822,25 +822,25 @@ describe('createRetainedRenderParticipant', () => {
       },
       dispose,
     });
-    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     const handle = createRetainedRenderParticipant({
       backend: 'svg',
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'dispose-retry' },
-      coreProgram,
+      coreComputation,
     });
-    const owners = createRuntimeOwnerRegistry({
-      builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition],
+    const sources = createRuntimeSourceRegistry({
+      builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition],
     });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-    const session = createRuntimeSession({
-      owners,
-      programs,
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const session = createRuntime({
+      sources,
+      computations,
       participants: [handle.participant],
       initialSnapshots: [
-        createRuntimeOwnerInput(CoreOwnerDefinition, scene('dispose')),
-        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+        createRuntimeSourceInput(CoreSourceDefinition, scene('dispose')),
+        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
       ],
     });
 
@@ -850,9 +850,7 @@ describe('createRetainedRenderParticipant', () => {
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantDisposeFailed, cause: disposeFailure }),
     ]);
-    expect(() => handle.read(session)).toThrowError(
-      expect.objectContaining({ code: RetikzRuntimeErrorCode.SessionDisposed }),
-    );
+    expect(() => handle.read(session)).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.Disposed }));
 
     expect(() => session.dispose()).not.toThrow();
     expect(() => session.dispose()).not.toThrow();
@@ -867,7 +865,7 @@ describe('createRetainedRenderParticipant', () => {
         host: Object.freeze({ tagName: 'canvas' }) as unknown as SVGSVGElement,
         rendererFactory: factory as RetainedRendererFactory,
         immutableOptions: { backend: 'svg', idPrefix: 'invalid' },
-        coreProgram: createCoreProgram({ onWarn: () => undefined }),
+        coreComputation: createCoreComputation({ onWarn: () => undefined }),
       }),
     ).toThrowError(expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRenderParticipantInputInvalid }));
     expect(factory).not.toHaveBeenCalled();
@@ -896,7 +894,7 @@ describe('createRetainedRenderParticipant', () => {
       host: svgHost,
       rendererFactory: (() => renderer.renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg' as const, idPrefix: 'capture-once' },
-      coreProgram: createCoreProgram({ onWarn: () => undefined }),
+      coreComputation: createCoreComputation({ onWarn: () => undefined }),
     };
     const reads = new Map<PropertyKey, number>();
     const options = new Proxy(target, {
@@ -913,7 +911,7 @@ describe('createRetainedRenderParticipant', () => {
   });
 
   it('把 renderer 未知 prepare throw 包装为稳定 RetikzRenderError cause', () => {
-    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
@@ -933,19 +931,19 @@ describe('createRetainedRenderParticipant', () => {
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'throw' },
-      coreProgram,
+      coreComputation,
     });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
     try {
-      createRuntimeSession({
-        owners,
-        programs,
+      createRuntime({
+        sources,
+        computations,
         participants: [handle.participant],
         initialSnapshots: [
-          createRuntimeOwnerInput(CoreOwnerDefinition, scene('A')),
-          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+          createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
+          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
         ],
       });
       throw new Error('expected create to fail');
@@ -963,7 +961,7 @@ describe('createRetainedRenderParticipant', () => {
       code: RetikzRenderErrorCode.ScenePatchInvalid,
       cause: Object.freeze({ fixture: true }),
     });
-    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
@@ -983,19 +981,19 @@ describe('createRetainedRenderParticipant', () => {
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'retained-error' },
-      coreProgram,
+      coreComputation,
     });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
     try {
-      createRuntimeSession({
-        owners,
-        programs,
+      createRuntime({
+        sources,
+        computations,
         participants: [handle.participant],
         initialSnapshots: [
-          createRuntimeOwnerInput(CoreOwnerDefinition, scene('A')),
-          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+          createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
+          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
         ],
       });
       throw new Error('expected create to fail');
@@ -1011,7 +1009,7 @@ describe('createRetainedRenderParticipant', () => {
 
   it('把 renderer read getter throw 包装为稳定 snapshot mismatch cause', () => {
     const getterFailure = new Error('read getter failed');
-    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     const renderer = defineRetainedRenderer({
       backend: 'svg',
       host: svgHost,
@@ -1032,19 +1030,19 @@ describe('createRetainedRenderParticipant', () => {
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'read-getter' },
-      coreProgram,
+      coreComputation,
     });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
     try {
-      createRuntimeSession({
-        owners,
-        programs,
+      createRuntime({
+        sources,
+        computations,
         participants: [handle.participant],
         initialSnapshots: [
-          createRuntimeOwnerInput(CoreOwnerDefinition, scene('A')),
-          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+          createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
+          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
         ],
       });
       throw new Error('expected create to fail');
@@ -1062,7 +1060,7 @@ describe('createRetainedRenderParticipant', () => {
   });
 
   it('在 publish 前拒绝 malformed AnimationControls', () => {
-    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     let committed: RenderFrameSnapshot | undefined;
     const renderer = defineRetainedRenderer({
       backend: 'svg',
@@ -1085,19 +1083,19 @@ describe('createRetainedRenderParticipant', () => {
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'malformed-animation' },
-      coreProgram,
+      coreComputation,
     });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
 
     expect(() =>
-      createRuntimeSession({
-        owners,
-        programs,
+      createRuntime({
+        sources,
+        computations,
         participants: [handle.participant],
         initialSnapshots: [
-          createRuntimeOwnerInput(CoreOwnerDefinition, scene('A')),
-          createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+          createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
+          createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
         ],
       }),
     ).toThrowError(
@@ -1109,7 +1107,7 @@ describe('createRetainedRenderParticipant', () => {
   });
 
   it('固定捕获 AnimationControls callback 与 data state，不保留可变容器 alias', () => {
-    const coreProgram = createCoreProgram({ onWarn: () => undefined });
+    const coreComputation = createCoreComputation({ onWarn: () => undefined });
     let committed: RenderFrameSnapshot | undefined;
     const originalPlay = vi.fn();
     const replacementPlay = vi.fn();
@@ -1142,17 +1140,17 @@ describe('createRetainedRenderParticipant', () => {
       host: svgHost,
       rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
       immutableOptions: { backend: 'svg', idPrefix: 'animation-capture' },
-      coreProgram,
+      coreComputation,
     });
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-    const session = createRuntimeSession({
-      owners,
-      programs,
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+    const session = createRuntime({
+      sources,
+      computations,
       participants: [handle.participant],
       initialSnapshots: [
-        createRuntimeOwnerInput(CoreOwnerDefinition, scene('A')),
-        createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+        createRuntimeSourceInput(CoreSourceDefinition, scene('A')),
+        createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
       ],
     });
     const animation = handle.read(session).animation;

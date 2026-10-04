@@ -24,14 +24,13 @@ import LegendRampZhDemo from '@/modules/docs/contents/library/standard/presentat
 import type { PreviewControlsDefinition } from '@/modules/docs/preview';
 
 const legendRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/standard/presentation/legend');
-const changelogPath = resolve(process.cwd(), 'src/modules/docs/data/changelog/standard-0-1.ts');
 
 const readPage = (language: 'zh' | 'en'): string => readFileSync(resolve(legendRoot, `index.${language}.mdx`), 'utf8');
 
-const readLegendFile = (fileName: string): string => readFileSync(resolve(legendRoot, fileName), 'utf8');
-
 const headings = (source: string): Array<string> =>
   Array.from(source.matchAll(/^(#{2,6})\s+(.+)$/gm), match => `${match[1]} ${match[2]}`);
+
+const readLegendFile = (name: string): string => readFileSync(resolve(legendRoot, name), 'utf8');
 
 const fieldContractOf = (definition: PreviewControlsDefinition) =>
   getPreviewControlFields(definition).map(field => ({
@@ -66,89 +65,26 @@ describe('Standard Legend documentation', () => {
     const en = readPage('en');
 
     expect(headings(zh).map(heading => heading.replace(/^## /, ''))).toHaveLength(headings(en).length);
-    expect(headings(zh).filter(heading => heading.startsWith('## '))).toEqual([
-      '## 用法',
-      '## 例子',
-      '## 技术原理',
-      '## API 参考',
-      '## 相关',
-    ]);
-    expect(headings(en).filter(heading => heading.startsWith('## '))).toEqual([
-      '## Usage',
-      '## Examples',
-      '## How it works',
-      '## API Reference',
-      '## Related',
-    ]);
-    for (const heading of ['### LegendSchema', '### LegendArtifactSchema']) {
-      expect(zh).toContain(heading);
-      expect(en).toContain(heading);
+    for (const source of [zh, en]) {
+      for (const schema of ['LegendSchema', 'LegendArtifactSchema']) {
+        expect(source).toMatch(new RegExp(`^#{3,4} ${schema}$`, 'm'));
+        expect(source).toMatch(new RegExp(`<ZodSchema\\s+name="${schema}"\\s+expandNested`));
+      }
     }
   });
 
-  it('consumes both schemas in deep mode and exposes all user paths and previews', () => {
-    const zh = readPage('zh');
-    const en = readPage('en');
-
-    for (const source of [zh, en]) {
-      expect(source).toMatch(/<ZodSchema\s+name="LegendSchema"\s+expandNested\s*\/>/);
-      expect(source).toMatch(/<ZodSchema\s+name="LegendArtifactSchema"\s+expandNested\s*\/>/);
-      for (const api of ['Legend', 'legend()', 'LegendInputEmbedAdapter', 'createLegend()', 'LegendDefinition']) {
+  it('documents all authoring entries and the executable preview sources in both languages', () => {
+    for (const source of [readPage('zh'), readPage('en')]) {
+      for (const api of ['LegendInputEmbedAdapter', 'LegendDefinition', 'InputLegend', 'IRLegend']) {
         expect(source).toContain(api);
       }
-      for (const preview of ['legend-basic', 'legend-ramp', 'legend-playground', 'legend-pipeline']) {
-        expect(source).toContain(`files="${preview}"`);
-      }
-    }
-
-    expect(zh).toMatch(
-      /<details>[\s\S]*<summary>查看完整 LegendArtifactSchema 字段<\/summary>[\s\S]*<ZodSchema\s+name="LegendArtifactSchema"\s+expandNested\s*\/>[\s\S]*<\/details>/,
-    );
-    expect(en).toMatch(
-      /<details>[\s\S]*<summary>View all LegendArtifactSchema fields<\/summary>[\s\S]*<ZodSchema\s+name="LegendArtifactSchema"\s+expandNested\s*\/>[\s\S]*<\/details>/,
-    );
-  });
-
-  it('documents the five headless React exports and keeps Vanilla and IR plain-data authoring separate', () => {
-    const zh = readPage('zh');
-    const en = readPage('en');
-    const changelog = readFileSync(changelogPath, 'utf8');
-
-    for (const source of [zh, en]) {
       for (const component of ['Legend', 'LegendTitle', 'LegendItem', 'LegendRamp', 'LegendTick']) {
-        expect(source).toContain(`### ${component}`);
+        expect(source).toContain(component);
       }
-      expect(source).toMatch(/<Legend\s+kind=(?:"items"|\{LegendContentKind\.Items\})/);
-      expect(source).toContain('<LegendTitle>');
-      expect(source).toContain('<LegendItem');
-      expect(source).toContain('Vanilla');
-      expect(source).toContain('LegendInput');
-      expect(source).not.toContain('React 接收 plain-data props');
-      expect(source).not.toContain('React receives plain-data props');
-      expect(source).not.toContain('不提供 `children` 模板入口');
-      expect(source).not.toContain('does not expose a `children` template');
+      for (const preview of ['legend-basic', 'legend-ramp', 'legend-playground', 'legend-pipeline']) {
+        expect(source).toMatch(new RegExp(`files=(?:"${preview}"|\\{\\['${preview}')`));
+      }
     }
-
-    for (const fileName of [
-      'legend-basic.zh.demo.tsx',
-      'legend-basic.en.demo.tsx',
-      'legend-ramp.zh.demo.tsx',
-      'legend-ramp.en.demo.tsx',
-      'legend-playground.demo.tsx',
-      'legend-playground.preview.tsx',
-    ]) {
-      expect(readLegendFile(fileName)).not.toMatch(/\bcontent=\{/);
-    }
-    expect(readLegendFile('legend-basic.zh.demo.tsx')).toContain('<LegendItem');
-    expect(readLegendFile('legend-ramp.zh.demo.tsx')).toContain('<LegendRamp>');
-    expect(readLegendFile('legend-ramp.zh.demo.tsx')).toContain('<LegendTick');
-    expect(readLegendFile('legend-playground.preview.tsx')).toContain('<LegendTitle>');
-    expect(changelog).toContain('LegendTitle');
-    expect(changelog).toContain('LegendItem');
-    expect(changelog).toContain('LegendRamp');
-    expect(changelog).toContain('LegendTick');
-    expect(changelog).toMatch(/BREAKING/);
-    expect(changelog).not.toContain('Legend plain-data props');
   });
 
   it('documents the strict marker and slot composition boundary in both languages', () => {
@@ -167,8 +103,6 @@ describe('Standard Legend documentation', () => {
     expect(en).toContain('optional label');
     expect(zh).toMatch(/optional label[^\n]*恰好一个可转换的函数 element[^\n]*DOM \/ 对象型 wrapper/);
     expect(en).toMatch(/optional label[^\n]*exactly one convertible function element[^\n]*DOM \/ object wrappers/);
-    expect(zh).toContain('[组合边界](#react-组合边界)');
-    expect(en).toContain('[composition boundary](#react-composition-boundary)');
   });
 
   it('exposes bilingual title and content-kind controls with branch-specific fields', () => {

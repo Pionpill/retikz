@@ -14,6 +14,7 @@ import type {
   PathStrokeSchema,
   PathStructureSchema,
   PathStyleSchema,
+  PathTransformSchema,
 } from './schema';
 
 /** 路径填充规则关键字类型 */
@@ -56,3 +57,5 @@ export type IRPathBase = ZodInfer<typeof PathBaseSchema>;
 export type IRPath = Omit<IRPathBase, 'children'> & { children: Array<ZodInfer<typeof StepSchema>> };
 
 export type IRPathStyle = ZodInfer<typeof PathStyleSchema>;
+
+export type IRPathTransform = ZodInfer<typeof PathTransformSchema>;

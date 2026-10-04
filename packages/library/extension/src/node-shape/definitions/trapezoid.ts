@@ -1,9 +1,9 @@
 import type { CoreDependencyProvider, SideValue } from '@retikz/core';
 import { defineShape, SideValues } from '@retikz/core';
-import { NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
-import { enum as zodEnum, number, strictObject } from 'zod';
+import { enum as zodEnum, strictObject } from 'zod';
 
 import { ExtensionShapeName } from '../constants';
 import {
@@ -16,7 +16,7 @@ import {
 
 const TrapezoidShapeParamsSchema = strictObject({
   shortSide: zodEnum(SideValues).optional().describe('Side shorter than its opposite side; defaults to top.'),
-  shortSideRatio: number().positive().max(1).optional().describe('Short-side length divided by opposite-side length.'),
+  shortSideRatio: PositiveNumberSchema.max(1).optional().describe('Short-side length divided by opposite-side length.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe('Uniform corner radius in user units.'),
 });
 

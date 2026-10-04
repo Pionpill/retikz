@@ -1,4 +1,4 @@
-import type { RuntimeOwnerToken, RuntimeProgramDefinition } from '@retikz/runtime';
+import type { RuntimeSourceToken, RuntimeComputationDefinition } from '@retikz/runtime';
 
 import type {
   AnyCompositeDefinition,
@@ -7,32 +7,32 @@ import type {
   ScenePatch,
   SceneRuntimeSnapshot,
 } from '../../contract';
-import { CORE_OWNER_KEY } from '../../contract';
-import type { CoreCompositeInputOwnerDefinition } from '../../contract';
+import { CORE_SOURCE_KEY } from '../../contract';
+import type { CoreCompositeInputSourceDefinition } from '../../contract';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from '../types';
 import type { CompileWarning } from '../warning';
-import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } from './types';
+import type { CoreComputationArtifact, CoreComputationArtifactInput, CoreComputationRead } from './types';
 
-/** Core compile Program 的固定 identity */
-export const CORE_PROGRAM_ID = Object.freeze({ owner: CORE_OWNER_KEY, key: 'compile' } as const);
+/** Core compile Computation 的固定 identity */
+export const CORE_COMPUTATION_ID = Object.freeze({ owner: CORE_SOURCE_KEY, key: 'compile' } as const);
 
-/** Program 生命周期内固定的 Core compile options */
-export type CoreProgramOptions<
+/** Computation 生命周期内固定的 Core compile options */
+export type CoreComputationOptions<
   TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
 > = Omit<CompileOptions<TComposites>, 'trace'>;
 
-/** Core Program 的 Runtime 装配选项 */
-export type CoreProgramRuntimeOptions = Readonly<{
+/** Core Computation 的 Runtime 装配选项 */
+export type CoreComputationRuntimeOptions = Readonly<{
   /** 从本次 candidate snapshot 读取实例输入，Source 与此 owner 必须同事务更新 */
-  compositeInputOwner?: typeof CoreCompositeInputOwnerDefinition;
+  compositeInputSource?: typeof CoreCompositeInputSourceDefinition;
   /** 只负责使固定 compile definitions 外部状态失效的 owner；其 value 不进入 Core IR */
-  invalidationOwners?: ReadonlyArray<RuntimeOwnerToken>;
-  /** Program session 生命周期内固定的 observer definitions */
+  invalidationSources?: ReadonlyArray<RuntimeSourceToken>;
+  /** Computation runtime 生命周期内固定的 observer definitions */
   observers?: ReadonlyArray<CompileObserverDefinition>;
 }>;
 
-/** Core Program 对外提供的完整编译输出 */
-export type CoreProgramOutput<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
+/** Core Computation 对外提供的完整编译输出 */
+export type CoreComputationOutput<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 与 full oracle 等价的完整 compile result */
   result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
   /** 按 canonical compile 顺序收集的 warnings */
@@ -41,20 +41,21 @@ export type CoreProgramOutput<TComposites extends ReadonlyArray<AnyCompositeDefi
   observerOutputs: ReadonlyArray<CompileObserverOutput>;
 }>;
 
-/** 下游 Program、participant 与 session caller 可见的 Core artifact */
-export type CoreProgramPublicRead<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
+/** 下游 Computation、participant 与 runtime caller 可见的 Core artifact */
+export type CoreComputationPublicRead<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 完整编译输出 */
-  output: CoreProgramOutput<TComposites>;
+  output: CoreComputationOutput<TComposites>;
   /** 当前 revision 的完整 Runtime Scene */
   snapshot: SceneRuntimeSnapshot;
   /** update 相对 current revision 的原子 Patch；initial full run 缺省 */
   patch?: ScenePatch;
 }>;
 
-/** 保留 composite artifact 泛型的 Core Runtime Program Definition */
-export type CoreProgramDefinition<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = RuntimeProgramDefinition<
-  CoreProgramArtifactInput<TComposites>,
-  CoreProgramArtifact<TComposites>,
-  CoreProgramRead<TComposites>,
-  CoreProgramPublicRead<TComposites>
->;
+/** 保留 composite artifact 泛型的 Core Runtime Computation Definition */
+export type CoreComputationDefinition<TComposites extends ReadonlyArray<AnyCompositeDefinition>> =
+  RuntimeComputationDefinition<
+    CoreComputationArtifactInput<TComposites>,
+    CoreComputationArtifact<TComposites>,
+    CoreComputationRead<TComposites>,
+    CoreComputationPublicRead<TComposites>
+  >;

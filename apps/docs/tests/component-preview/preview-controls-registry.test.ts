@@ -42,7 +42,16 @@ import {
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/usage/node-geometry.controls';
 import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
-import { controlModules, demoModules, demoSources } from './load-preview-registry';
+import { controlModules, demoModules, demoSources, localSourceFiles } from './load-preview-registry';
+
+/** Source views include the authoring wrapper and its shared preview implementation */
+const demoSourceOf = (segments: Array<string>, name: string, lang: 'zh' | 'en' = 'zh') =>
+  [
+    demoSources[resolveDemoKey(segments, name, lang)],
+    localSourceFiles[buildSourceFileKey(segments, `${name}.preview.tsx`)],
+  ]
+    .filter(source => source !== undefined)
+    .join('\n');
 
 /** 使用实际注册的 demo 和面板状态渲染 SVG，检查可见输出而不是源码写法 */
 const renderControlledDemo = (
@@ -975,12 +984,12 @@ describe('preview controls registry', () => {
     const segments = ['kernel', 'components', 'node', 'coordinate'];
 
     for (const language of ['zh', 'en'] as const) {
-      const source = demoSources[resolveDemoKey(segments, 'coordinate-offset-chain', language)];
+      const source = demoSourceOf(segments, 'coordinate-offset-chain', language);
 
       expect(source, language).toContain('way={coordinateOffsetChainFrame.xAxis}');
       expect(source, language).toContain('way={coordinateOffsetChainFrame.yAxis}');
-      expect(source?.match(/dashPattern: \[1, 4\]/g), language).toHaveLength(2);
-      expect(source?.match(/lineCap: 'round'/g), language).toHaveLength(2);
+      expect(source.match(/dashPattern: \[1, 4\]/g), language).toHaveLength(2);
+      expect(source.match(/lineCap: 'round'/g), language).toHaveLength(2);
     }
   });
 
@@ -988,12 +997,12 @@ describe('preview controls registry', () => {
     const segments = ['kernel', 'components', 'node', 'coordinate'];
 
     for (const language of ['zh', 'en'] as const) {
-      const source = demoSources[resolveDemoKey(segments, 'coordinate-as-anchor', language)];
+      const source = demoSourceOf(segments, 'coordinate-as-anchor', language);
 
       expect(source, language).toContain('way={coordinateAsAnchorFrame.xAxis}');
       expect(source, language).toContain('way={coordinateAsAnchorFrame.yAxis}');
-      expect(source?.match(/dashPattern: \[1, 4\]/g), language).toHaveLength(2);
-      expect(source?.match(/lineCap: 'round'/g), language).toHaveLength(2);
+      expect(source.match(/dashPattern: \[1, 4\]/g), language).toHaveLength(2);
+      expect(source.match(/lineCap: 'round'/g), language).toHaveLength(2);
     }
   });
 
@@ -1105,7 +1114,7 @@ describe('preview controls registry', () => {
 
   it('Coordinate 比例定位 playground 以真实 Coordinate 承载可调位置', () => {
     const segments = ['kernel', 'components', 'node', 'coordinate'];
-    const source = demoSources[buildKey(segments, 'coordinate-between')];
+    const source = demoSourceOf(segments, 'coordinate-between');
 
     expect(source).toContain("import { Coordinate, Draw, Layout, Node } from '@retikz/react';");
     expect(source).toMatch(/<Coordinate\s+id="Q"/);
@@ -1154,9 +1163,9 @@ describe('preview controls registry', () => {
       expect(definition.sections.flatMap(section => section.controls.map(field => field.id))).toEqual(expectedIds);
     }
 
-    const source = demoSources[buildKey(segments, 'node-styled')];
-    expect(source).toContain('shape="rectangle"');
-    expect(source).toMatch(/>\s*Node\s*<\/Node>/);
+    const markup = renderControlledDemo(segments, 'node-styled', 'zh', {});
+    expect(markup).toContain('<rect');
+    expect(markup).toContain('Node');
   });
 
   it('Node 标签仅在启用旋转时显示 keepUpright', () => {
@@ -1289,7 +1298,7 @@ describe('preview controls registry', () => {
       expect.arrayContaining(['spacingX', 'spacingY', 'originX', 'originY', 'majorEvery', 'borderPadding']),
     );
 
-    const source = demoSources[buildKey(segments, 'grid-playground')];
+    const source = demoSourceOf(segments, 'grid-playground');
     expect(source).toContain('export const previewControls =');
     expect(source).toContain('defineControlledPreview(previewControlContract');
     expect(source).toMatch(/viewBox=\{\{ x: 0, y: 0, width: 400, height: 280 \}\}/u);
@@ -1338,7 +1347,7 @@ describe('preview controls registry', () => {
       'connected',
     ]);
 
-    const playgroundSource = demoSources[buildKey(segments, 'frame-playground')];
+    const playgroundSource = demoSourceOf(segments, 'frame-playground');
     expect(playgroundSource).toContain('export const previewControls =');
     expect(playgroundSource).toContain('defineControlledPreview(previewControlContract');
     expect(playgroundSource).toMatch(/viewBox=\{\{ x: 0, y: 0, width: 420, height: 260 \}\}/u);
@@ -1358,7 +1367,8 @@ describe('preview controls registry', () => {
         match => match[1],
       );
 
-      expect(previewNames).toEqual(['frame-basic', 'frame-variants', 'frame-playground', 'frame-lowering']);
+      expect(previewNames).toEqual(['entry', 'frame-basic', 'frame-variants', 'frame-lowering']);
+      expect(pageSource).toContain("files={['frame-playground', 'frame-playground.preview.tsx']}");
       expect(pageSource).toContain('<ComponentPreview files="frame-lowering" hideCode');
       expect(demoSources[resolveDemoKey(segments, 'frame-basic', locale)]).toBeDefined();
       expect(demoSources[resolveDemoKey(segments, 'frame-variants', locale)]).toBeDefined();
@@ -1610,11 +1620,11 @@ describe('preview controls registry', () => {
         language,
       ).not.toEqual(expect.arrayContaining(['axisStroke', 'axisStrokeWidth']));
 
-      const source = demoSources[resolveDemoKey(segments, name, language)];
+      const source = demoSourceOf(segments, name, language);
       expect(source, language).toContain('defineControlledPreview(previewControlContract');
       expect(source, language).toContain("anchorId={{ prefix: 'thing', field: 'thingId' }}");
       expect(source, language).toContain("anchorId={{ prefix: 'practice', field: 'practiceId' }}");
-      expect(source, language).toContain('transform={[coordinate1DCompositionOperation]}');
+      expect(source, language).toContain('transform={[{ operation: coordinate1DCompositionOperation }]}');
       expect(source, language).toContain('text="practiceGlyph"');
       expect(source, language).toContain('path={{ routing }}');
       expect(source, language).toContain('COORDINATE_1D_COMPOSITION_CONTROL_IDS.relationStrokeWidth');
@@ -1898,7 +1908,10 @@ describe('preview controls registry', () => {
     expect(entries.length).toBeGreaterThan(0);
     for (const [key, mod] of entries) {
       expect(mod, key).toBeDefined();
-      expect(Object.hasOwn(mod ?? {}, 'previewControlContract'), key).toBe(true);
+      expect(
+        Object.hasOwn(mod ?? {}, 'previewControlContract') || typeof mod?.createPreviewControlContract === 'function',
+        key,
+      ).toBe(true);
 
       const contract = resolvePreviewControlContract(mod);
       expect(contract, key).toBeDefined();
@@ -1910,7 +1923,11 @@ describe('preview controls registry', () => {
       }
       const englishModule = controlModules[englishKey] ?? mod;
       expect(englishModule, englishKey).toBeDefined();
-      expect(Object.hasOwn(englishModule ?? {}, 'previewControlContract'), englishKey).toBe(true);
+      expect(
+        Object.hasOwn(englishModule ?? {}, 'previewControlContract') ||
+          typeof englishModule?.createPreviewControlContract === 'function',
+        englishKey,
+      ).toBe(true);
 
       const englishContract = resolvePreviewControlContract(englishModule, 'en');
       expect(englishContract, englishKey).toBeDefined();

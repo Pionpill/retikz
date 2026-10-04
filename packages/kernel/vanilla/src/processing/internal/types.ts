@@ -1,11 +1,11 @@
-import type { AnyCompositeDefinition, CoreProgramDefinition, CoreProgramOutput } from '@retikz/core';
+import type { AnyCompositeDefinition, CoreComputationDefinition, CoreComputationOutput } from '@retikz/core';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import type {
   RuntimeCommitParticipantToken,
-  RuntimeOwnerInput,
-  RuntimeOwnerToken,
-  RuntimeOwnerUpdate,
-  RuntimeSession,
+  RuntimeSourceInput,
+  RuntimeSourceToken,
+  RuntimeSourceUpdate,
+  Runtime,
 } from '@retikz/runtime';
 
 import type { PreparedProcessingInput } from '../types';
@@ -13,18 +13,18 @@ import type { ProcessingController } from '../types';
 
 /** processing 与 DOM materializer 间固定的内部事务 participant */
 export type ProcessingTransactionParticipant = Readonly<{
-  /** participant 需要追加到 processing Runtime session 的 owner 定义 */
-  owners: ReadonlyArray<RuntimeOwnerToken>;
-  /** session 初始 transaction 需要的 participant snapshot */
-  initialSnapshots: ReadonlyArray<RuntimeOwnerInput>;
+  /** participant 需要追加到 processing Runtime 的 owner 定义 */
+  sources: ReadonlyArray<RuntimeSourceToken>;
+  /** runtime 初始 transaction 需要的 participant snapshot */
+  initialSnapshots: ReadonlyArray<RuntimeSourceInput>;
   /** 与 Core/result participant 同次提交的 Runtime participant */
   participant: RuntimeCommitParticipantToken;
   /** 每次 source update 生成的 participant owner 更新 */
-  update: (input: ProcessingParticipantUpdateInput) => ReadonlyArray<RuntimeOwnerUpdate>;
-  /** session 创建完成后连接用于读取 committed participant 的 session */
-  connect?: (session: RuntimeSession) => void;
+  update: (input: ProcessingParticipantUpdateInput) => ReadonlyArray<RuntimeSourceUpdate>;
+  /** runtime 创建完成后连接用于读取 committed participant 的 runtime */
+  connect?: (runtime: Runtime) => void;
   /** 仅更新 participant 自身配置时生成 owner 更新 */
-  updateParticipant?: (revision: number) => ReadonlyArray<RuntimeOwnerUpdate>;
+  updateParticipant?: (revision: number) => ReadonlyArray<RuntimeSourceUpdate>;
 }>;
 
 /** 生成 transaction participant update 时可读取的 processing 候选状态 */
@@ -37,16 +37,16 @@ export type ProcessingParticipantUpdateInput = Readonly<{
   kind: 'source' | 'participant';
 }>;
 
-/** 在 processing 创建唯一 Runtime session 前构造固定 DOM participant 的内部工厂 */
+/** 在 processing 创建唯一 Runtime 前构造固定 DOM participant 的内部工厂 */
 export type ProcessingTransactionParticipantFactory = (
   context: Readonly<{
-    /** session 创建时的初始 processing 输入 */
+    /** runtime 创建时的初始 processing 输入 */
     initial: PreparedProcessingInput;
-    /** 该 session 唯一的 Core Program */
-    coreProgram: CoreProgramDefinition<ReadonlyArray<AnyCompositeDefinition>>;
+    /** 该 runtime 唯一的 Core Computation */
+    coreComputation: CoreComputationDefinition<ReadonlyArray<AnyCompositeDefinition>>;
     /** 从同一 Core candidate 读取 compile-driver readonly layers */
     resolveReadonlyLayers: (
-      output: CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>,
+      output: CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>>,
     ) => ReadonlyArray<RenderReadonlyLayer>;
   }>,
 ) => ProcessingTransactionParticipant;

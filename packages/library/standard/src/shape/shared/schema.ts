@@ -1,10 +1,21 @@
-import { PathBaseSchema, PositionSchema } from '@retikz/core';
-import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  PathBaseSchema,
+  DrawableInstanceSchema,
+  PathTransformSchema,
+  PathDecorationSchema,
+  PositionSchema,
+} from '@retikz/core';
+import { NonNegativeNumberSchema, PositiveNumberSchema, NormalizedFractionSchema } from '@retikz/foundation';
 import { enum as zodEnum, number, strictObject, union } from 'zod';
 import type { RefinementCtx, input as ZodInput } from 'zod';
 
 /** 形状复用的完整 Path 实例与呈现字段 */
-export const ShapePathSchema = PathBaseSchema.omit({ type: true, kind: true, kindOptions: true, children: true });
+export const ShapePathSchema = strictObject({
+  ...DrawableInstanceSchema.shape,
+  ...PathTransformSchema.shape,
+  ...PathDecorationSchema.shape,
+  style: PathBaseSchema.shape.style,
+});
 /** 盒拟合策略及其默认值 */
 export const ShapeFitSchema = zodEnum(['contain', 'cover'])
   .default('contain')
@@ -18,11 +29,9 @@ export const ShapeArcCloseSchema = zodEnum(['open', 'chord', 'sector'])
   .default('open')
   .describe('Arc closure: open, chord, or sector.');
 /** 星形内半径比例 */
-export const ShapeInnerRatioSchema = number()
-  .min(0)
-  .max(1)
-  .default(0.5)
-  .describe('Ratio of inner to outer star radius.');
+export const ShapeInnerRatioSchema = NormalizedFractionSchema.default(0.5).describe(
+  'Ratio of inner to outer star radius.',
+);
 /** 首顶点的默认方向 */
 export const ShapeVertexAngleSchema = number().default(-90).describe('Angle of the first outer vertex in degrees.');
 /** 形状拟合的轴对齐盒 */

@@ -70,7 +70,7 @@ Retikz 的底层契约会同时被完整 IR、Standard composite、Plot / Chart 
 
 公开数据类型从权威 schema 派生。不得为同一 JSON / IR 形状另写平行 interface 或重复字段约束。
 
-原子 schema、兼容聚合 schema 和最终能力 schema 的关系如下：
+原子 schema、语义组合 schema 和最终能力 schema 的关系如下：
 
 ```text
 稳定语义原子 schema
@@ -104,14 +104,16 @@ Contract 层描述第三方作者与内置 provider 共同实现的能力协议�
 
 原子契约按语义所在层级组织：
 
-| 层级                        | 典型拥有内容                                                            | 不拥有                                               |
-| --------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------- |
-| `@retikz/math`              | 无绘图语义的纯数值、向量和几何原子                                      | IR、样式、主题和 renderer 语义                       |
-| `@retikz/core`              | JSON-safe 绘图值、paint、opacity、font、stroke、effect、path 等通用原子 | Standard 布局、Plot guide、Chart / Table preset      |
-| `@retikz/standard`          | 去除领域词汇后的 presentation / layout / composite 组合                 | Plot / Table / Chart 领域模型和 recipe               |
-| Data / Plot / Chart / Table | 各自的数据、可视化或表格语义原子，以及领域组合                          | 其它 owner 的同义契约、Core compile 和 renderer 默认 |
-| React / Vanilla adapter     | 等价 authoring 输入、生命周期和宿主接线                                 | 平行 schema、默认值、领域 lowering                   |
-| renderer                    | 对统一 Scene / manifest 的后端执行                                      | schema、preset、token merge 和领域 mapping           |
+| 层级                                          | 典型拥有内容                                                            | 不拥有                                                  |
+| --------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| `@retikz/foundation`                          | 仅依赖 Zod 的 JSON、字符串、数值边界与基础值契约                        | 绘图、领域默认、计算与 renderer                         |
+| `@retikz/math`                                | 无绘图语义的纯数值、向量和几何计算                                      | Zod schema、IR、样式、主题和 renderer 语义              |
+| `@retikz/core`                                | JSON-safe 绘图值、paint、opacity、font、stroke、effect、path 等通用原子 | Standard 布局、Plot guide、Chart / Table preset         |
+| `@retikz/standard`                            | 去除领域词汇后的 presentation / composite 组合                          | Layout 排版算法、Plot / Table / Chart 领域模型和 recipe |
+| Layout / Extension                            | Layout 的排版输入与产物；Extension 的可选绘图 provider 参数             | Core 基础机制、领域数据解释                             |
+| Data / Plot / Chart / Table / Graph / Diagram | 各自的数据、可视化、表格与拓扑语义原子，以及领域组合                    | 其它 owner 的同义契约、Core compile 和 renderer 默认    |
+| React / Vanilla adapter                       | 等价 authoring 输入、生命周期和宿主接线                                 | 平行 schema、默认值、领域 lowering                      |
+| renderer                                      | 对统一 Scene / manifest 的后端执行                                      | schema、preset、token merge 和领域 mapping              |
 
 同一原子可以被多个上层组合，但只能有一个语义 owner。多个上层复用同一 Core 原子，不代表 Core 拥有这些上层的完整组合。
 
@@ -149,6 +151,27 @@ defaults.reset 仍只作用于原默认通道，不重置 Theme 环境。裸 Cor
 ThemeTokenSource 的 inherit / local 保留既有来源含义，不充当全链路优先级。inspection 使用实际结构路径，不通过值相等猜测来源或伪造未提供的 Scope lineage。具体治理与不变量见[通用视觉主题设计](./visual-theme-design.md)。
 
 ## 6. 新能力的设计流程
+
+### 整体 review 与抽象门禁
+
+原子化必须先 review 整个契约图，再决定抽象。调查覆盖所有 packages，包括没有 Zod 的 adapter、计算与执行包；不能只搜索 `schemas/`，还要检查 Definition、产物、导出入口、主题和实际消费路径。计数区分定义、引用位置、独立文件与包，明确静态扫描不能证明语义等价。
+
+每个候选至少记录：现有真源、全部已发现消费者、字段含义与单位 / 坐标系、值域、optional / null / default、继承粒度、未知字段策略、跨字段校验、解析变换、错误时机、公开导出和最终输出。必须提供同义复用的正例与不应合并的反例；高复用次数与同名字段都不能单独决定下沉。
+
+审查结论明确选择：复用已有原子、由正确 owner 新增原子、保留领域组合、保留有意投影，或单独设计行为变更。区分持久化 Source、可序列化公开产物、已有扩展协议校验及内部中间态；不能把所有后两者自动合法化，也不能仅因位于 pipeline 就删除现有公开协议。发现与“内部消费态不设平行 schema”冲突时，追踪外部边界并由对应 owner 决策。
+
+审查证据与逐项迁移清单进入 ignored plan，长期 owner、组合边界与行为写入架构 / ADR。全包覆盖指静态索引与领域消费审查，不等于所有运行时路径已经验证；进入实现前补齐目标原子的逐消费者行为证据。
+
+### 组合优先的具体边界
+
+- 值 schema 表达颜色、paint、数值等值域；语义片段表达稳定且可共同消费的字段组；完整实体负责判别、结构与跨片段不变量。不要以“每字段一个对象”为原子化目标
+- 完整实体正向组合所需片段，减少宽对象的连续增删改；单次领域投影、判别变体、明确默认覆盖允许受控 pick / omit / extend。没有真实复用的片段保持本地，不增加通用 schema-builder
+- 片段键尽量互斥。重名键必须由 owner 显式决定覆盖及其语义，不依赖展开顺序。整体 opacity、strokeOpacity、fillOpacity 与文字 opacity 的作用目标不同；color 不自动携带 opacity
+- Paint 值统一承载渐变等填充或描边均可用的表达；Fill 片段仅组合填充字段，不能把渐变能力圈定为 Fill 专属
+- 字段值域可共享，必填、可选、nullable、静态默认和上下文默认由契约归属决定。继承先合并原始输入再应用权威默认；直接 parse 是默认已物化快照，不恢复省略意图
+- 通过 shape 组合字段不会带上对象 refinement、transform 或 catchall；最终对象显式选择严格性并保留完整约束。safeExtend 的可赋值性不证明默认、错误路径或消费语义等价
+- 递归引用、开放 provider 与判别联合保持原有闭环；JSON Schema 的 allOf 是约束交集，不是对象继承或字段合并的替代机制
+- 拆分源码组合不要求改变 JSON 分组；接受范围、默认、诊断或能力变化须独立冻结，不能伪装为行为等价重构。废弃公开入口直接迁移，不建立旧名别名与双轨
 
 未来新增 schema、type、contract、Theme 片段 或其它可组合能力时，按以下顺序检查：
 

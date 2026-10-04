@@ -44,6 +44,7 @@
     "@retikz/plot-react": "workspace:*",
     "@retikz/plot-vanilla": "workspace:*",
     "@retikz/react": "workspace:*",
+    "@retikz/runtime": "workspace:*",
     "@retikz/render": "workspace:*",
     "@retikz/standard": "workspace:*",
     "@retikz/standard-react": "workspace:*",

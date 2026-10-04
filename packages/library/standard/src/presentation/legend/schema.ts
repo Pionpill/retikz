@@ -1,5 +1,5 @@
 import { ChildSchema, CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
-import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeIntegerSchema, NormalizedFractionSchema } from '@retikz/foundation';
 import {
   LayoutAlignment,
   LayoutArtifactContainerSchema,
@@ -7,22 +7,13 @@ import {
   LayoutArtifactRectSchema,
   LayoutContainerBoxSchema,
   LayoutGapSchema,
+  LayoutRowColumnGapSchema,
 } from '@retikz/layout';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
-import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
+import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
-
-const LegendGapSchema = union([
-  LayoutGapSchema.describe('Uniform physical gap applied to both rows and columns.'),
-  strictObject({
-    row: LayoutGapSchema.describe('Physical vertical gap between adjacent rows.'),
-    column: LayoutGapSchema.describe('Physical horizontal gap between adjacent columns.'),
-  }).describe('Independent physical row and column gaps.'),
-])
-  .default(8)
-  .describe('Physical gaps between adjacent rows and columns; a number applies uniformly to both axes.');
 
 export const LegendItemSchema = strictObject({
   key: NonBlankStringSchema.describe('Container-local stable identity for this discrete legend item.'),
@@ -38,7 +29,9 @@ export const LegendItemsContentSchema = strictObject({
   wrap: zodEnum(LegendWrap)
     .default(LegendWrap.NoWrap)
     .describe('Whether constrained items form additional rows or columns.'),
-  gap: LegendGapSchema,
+  gap: LayoutRowColumnGapSchema.default(8).describe(
+    'Physical gaps between adjacent rows and columns; a number applies uniformly to both axes.',
+  ),
   sampleGap: LayoutGapSchema.default(8).describe('Horizontal gap between an item sample and its label.'),
   sampleAlign: zodEnum(LegendSampleAlignment)
     .default(LegendSampleAlignment.Center)
@@ -48,7 +41,7 @@ export const LegendItemsContentSchema = strictObject({
 
 export const LegendTickSchema = strictObject({
   key: NonBlankStringSchema.describe('Container-local stable identity for this continuous legend tick.'),
-  offset: number().min(0).max(1).describe('Normalized authored position along the sample main axis.'),
+  offset: NormalizedFractionSchema.describe('Normalized authored position along the sample main axis.'),
   label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the tick position.'),
 }).describe('Canonical normalized tick in a continuous Standard Legend.');
 

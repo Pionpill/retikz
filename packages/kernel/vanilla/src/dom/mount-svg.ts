@@ -146,7 +146,7 @@ const mountStaticSvg = (
   };
 };
 
-/** 把 IR / InputScene 挂成 retained SVG Runtime session */
+/** 把 IR / InputScene 挂成 retained SVG Runtime */
 const mountRetainedSvg = (
   container: Element,
   input: RetainedRenderInput,

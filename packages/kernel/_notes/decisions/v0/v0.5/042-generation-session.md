@@ -28,7 +28,7 @@ type GenerationBatch<TOperation> = Readonly<{
 
 type GenerationDefinition<TInput, TValue, TRead, TChange, TSnapshot, TOperation> = Readonly<{
   key: string;
-  owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>;
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
   snapshot: Readonly<{
     fromRead: (read: TRead) => TSnapshot;
     toInput: (snapshot: TSnapshot) => TInput;
@@ -47,19 +47,19 @@ type GenerationSnapshot<TSnapshot> = Readonly<{
 }>;
 ```
 
-Generation definition 是按 key 注入的开放 contract，并通过同一个 typed `RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>` token 与正式 owner 绑定。`snapshot.fromRead()` 从 owner 的 immutable read view 建立 draft，`snapshot.toInput()` 把接受后的 draft 转回该 owner 的完整更新输入；二者都由 definition author 实现并接受 conformance 测试。Runtime 只协调 batch、checkpoint、scheduler、revision 和 accept，不解释领域 operation。Core 提供一个默认 generation definition，以稳定 qualified identity 表达 `upsert`、`remove`、`move` 和必要的 owner-specific operation；Plot、Table 或第三方 Tier 2 可以提供自己的 definition，内置与自定义走同一 registry、parse、validation 和 diagnostic 链路。数组下标 JSON Patch 不是公共主协议。
+Generation definition 是按 key 注入的开放 contract，并通过同一个 typed `RuntimeSourceDefinition<TInput, TValue, TRead, TChange>` token 与正式 owner 绑定。`snapshot.fromRead()` 从 owner 的 immutable read view 建立 draft，`snapshot.toInput()` 把接受后的 draft 转回该 owner 的完整更新输入；二者都由 definition author 实现并接受 conformance 测试。Runtime 只协调 batch、checkpoint、scheduler、revision 和 accept，不解释领域 operation。Core 提供一个默认 generation definition，以稳定 qualified identity 表达 `upsert`、`remove`、`move` 和必要的 owner-specific operation；Plot、Table 或第三方 Tier 2 可以提供自己的 definition，内置与自定义走同一 registry、parse、validation 和 diagnostic 链路。数组下标 JSON Patch 不是公共主协议。
 
 Session 表面：
 
-- `createGenerationSession({ runtime, definition, baseRevision? })` 从 `definition.owner` 的当前正式 read view 分叉；owner 泛型由同一 definition token 推导，不能另传不匹配的 owner。显式旧 base fail-loud。
+- `createGenerationSession({ runtime, definition, baseRevision? })` 从 `definition.source` 的当前正式 read view 分叉；owner 泛型由同一 definition token 推导，不能另传不匹配的 owner。显式旧 base fail-loud。
 - `append(batch, { priority?: 'visible' | 'background' })` 先 parse 全批 operation，在隔离 candidate 上 apply / validate，再原子提交下一 draftRevision。
 - batch id 在 session 内唯一；重复 id fail-loud，不做隐式幂等覆盖。
 - `checkpoint()` 返回包含 base revision、draft revision、完整 draft Snapshot 与 batch log cursor 的 opaque checkpoint。
 - `pause()` 停止接收新 batch；`resume(checkpoint)` 校验 definition / owner / base 后恢复。跨进程持久化只有 owner 额外提供 JSON codec 时才支持。
 - `cancel()` 取消 scheduled prepare、丢弃 draft branch 并恢复正式 view；正式 Runtime 不变。
-- `accept()` 先确认正式 current revision 仍等于 base revision，再调用 definition `snapshot.toInput()` 取得完整 `TInput`、调用 `diff()` 取得领域 change array；Runtime 用已验证的 session base revision经 `createRuntimeChangeSet()` 封装，并以同一个 typed owner token 调用 `createRuntimeOwnerUpdate()`，squash 为一次正式 transaction。Definition 不能自行构造或伪造 ChangeSet revision，也不能把其它 owner 的 input/change 混入本次接受。成功后只有一个正式 revision；generation batch log 不自动进入 history。
+- `accept()` 先确认正式 current revision 仍等于 base revision，再调用 definition `snapshot.toInput()` 取得完整 `TInput`、调用 `diff()` 取得领域 change array；Runtime 用已验证的 session base revision经 `createRuntimeChangeSet()` 封装，并以同一个 typed source token 调用 `createRuntimeSourceUpdate()`，squash 为一次正式 transaction。Definition 不能自行构造或伪造 ChangeSet revision，也不能把其它 owner 的 input/change 混入本次接受。成功后只有一个正式 revision；generation batch log 不自动进入 history。
 
-生成期间的可见预览由 adapter 显式选择 draft branch 作为 view source，并通过普通 Core Program / retained renderer 编译。每个 draft revision 可以独立选择 atomic 或 progressive materialization；renderer batch 不能反向生成 generation operation，也不能推进 draft revision。
+生成期间的可见预览由 adapter 显式选择 draft branch 作为 view source，并通过普通 Core Computation / retained renderer 编译。每个 draft revision 可以独立选择 atomic 或 progressive materialization；renderer batch 不能反向生成 generation operation，也不能推进 draft revision。
 
 正式 current revision 在 generation 期间变化时，session 进入 `conflicted`：停止追加和接受，保留只读 draft / checkpoint 供导出或人工处理。本提案不自动 rebase、merge 或覆盖 current；调用方只能取消，或基于新正式 revision 创建新 session 并显式重放经 owner 验证的 operation
 

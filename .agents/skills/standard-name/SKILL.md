@@ -13,7 +13,7 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 - 同组 re-export 按来源路径排序，具名导出成员按名称排序；存在初始化副作用依赖时保留执行次序，不为排序改变语义；由 LLM 自审
 
 - 使用完整的语义词。不得缩写 `direction`、`reference`、`background`；已建立的 TikZ / SVG / CSS 术语如 `stroke`、`fill`、`cx` 例外
-- 目录与非组件文件使用 kebab-case。源码名通常用一至两个语义词，只有确实区分独立概念时才用第三个；`.test` / `.demo` / `.data` / locale 后缀不计入词数
+- 目录与非组件文件的语义部分使用 kebab-case；内部领域基础目录使用 `_<domain>` 的条件见 [分层命名](references/layers.md)。源码名通常用一至两个语义词，只有确实区分独立概念时才用第三个；`.test` / `.demo` / `.data` / locale 后缀不计入词数
 - React 组件和类才使用 PascalCase。hook、store、context 分别使用 `useXxx`、`useXxxStore`、`useXxxContext`；其余值和函数使用 camelCase
 - `index.ts` 只用作目录 barrel：导出 owner 的稳定表面，不承载业务逻辑
 - `types.ts` 放导出或 owner 内共享类型，`constants.ts` 放稳定常量与 const object enum，`utils.ts` 只放没有更窄职责的纯 helper。只有一个调用点的 helper 与其 consumer 相邻

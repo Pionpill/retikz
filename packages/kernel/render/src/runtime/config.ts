@@ -1,6 +1,6 @@
 import type { RuntimeDeepReadonly } from '@retikz/core';
-import type { RuntimeOwnerDefinition } from '@retikz/runtime';
-import { defineRuntimeOwner } from '@retikz/runtime';
+import type { RuntimeSourceDefinition } from '@retikz/runtime';
+import { defineRuntimeSource } from '@retikz/runtime';
 
 import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
@@ -9,7 +9,7 @@ import { RetikzEvent } from '../hydration';
 import { cloneAndFreezeRuntimeValue, isPlainObject, runtimeStructuralEquals } from './shared';
 
 /** Render runtime config 的固定 owner key */
-export const RENDER_RUNTIME_OWNER_KEY = '@retikz/render:runtime-config' as const;
+export const RENDER_RUNTIME_SOURCE_KEY = '@retikz/render:runtime-config' as const;
 
 /** Retained renderer layer cache 策略 */
 export const RenderCachePolicy = {
@@ -284,13 +284,13 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
 };
 
 /** Render runtime config 的 Runtime owner Definition */
-export const RenderRuntimeOwnerDefinition: RuntimeOwnerDefinition<
+export const RenderRuntimeSourceDefinition: RuntimeSourceDefinition<
   RenderRuntimeConfigInput,
   RenderRuntimeConfig,
   RenderRuntimeConfig,
   never
-> = defineRuntimeOwner<RenderRuntimeConfigInput, RenderRuntimeConfig, RenderRuntimeConfig, never>({
-  key: RENDER_RUNTIME_OWNER_KEY,
+> = defineRuntimeSource<RenderRuntimeConfigInput, RenderRuntimeConfig, RenderRuntimeConfig, never>({
+  key: RENDER_RUNTIME_SOURCE_KEY,
   value: {
     capture: captureRuntimeConfig,
     read: value => value,

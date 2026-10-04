@@ -119,7 +119,7 @@
     "pkgInspectApiReference": "API reference",
     "pkgInspectSchemaReference": "Schema reference",
     "pkgRuntime": "runtime",
-    "pkgRuntimeSession": "runtime · Programs & Synchronous Sessions",
+    "pkgRuntimeUsage": "Starter example",
     "pkgReact": "react",
     "pkgVanilla": "vanilla",
     "pkgTex": "tex",
@@ -465,6 +465,7 @@
     "tikz": "TikZ",
     "vega": "Vega",
     "css": "CSS",
+    "react": "React",
     "close": "Hide {{target}} comparisons",
     "closeTitle": "Hide {{target}} comparisons?",
     "closeDescription": "{{target}} comparison content will be hidden across the docs. You can re-enable it from the upper-right ... menu under Comparisons.",
@@ -521,7 +522,8 @@
     "pageCopied": "Page copied",
     "prevPage": "Previous",
     "nextPage": "Next",
-    "docStats": "About {{minutes}} min · {{chars}} chars · {{components}} components"
+    "docStats": "Article: ~{{minutes}} min · {{chars}} chars · {{examples}} examples",
+    "docStatsDetails": "Estimated from non-whitespace article characters, including inline code but excluding code blocks and tag attributes. Another {{chars}} API / Schema reference characters are excluded from article reading time. Examples count previews only."
   },
   "sourceViewer": {
     "title": "View source",

@@ -9,7 +9,7 @@ keywords: Vanilla、InputEmbed、prepare、Promise、SSR、revision、AbortSigna
 - 决策日期：2026-10-02
 - 关联：[kernel v0.5 roadmap](./roadmap.md) · [包职能设计](../../../../../../notes/architecture/package-responsibility-design.md) · [Core 能力边界](../../../architecture/core-drawing-complete.md)
 - 前置：[Vanilla Authoring](./029-vanilla-authoring-normalization.md) · [匿名嵌入身份](./045-anonymous-input-embed-identity.md)
-- 约束：[同步事务](./012-program-transaction-lifecycle.md) · [Retained Renderer](./014-scene-patch-retained-renderer.md)
+- 约束：[同步事务](./012-computation-transaction-lifecycle.md) · [Retained Renderer](./014-scene-patch-retained-renderer.md)
 - 实例接入：[Composite 运行时输入](./048-composite-runtime-input.md)
 
 ## 背景与目标
