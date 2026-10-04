@@ -202,6 +202,8 @@ export type CompositeCompileSession = {
 
 /** 单次 traversal 的可选隔离输入 */
 export type TraversalCompileOptions = {
+  /** 查询 probe 在 Scope 出栈前读取最终引用环境，不向公共 context 暴露可变状态 */
+  captureScopeTargets?: (child: ScopeChild, namespace: NamespaceStack, chain: ReadonlyArray<Transform>) => void;
   /** probe 或显式绑定子项的局部运行时输入 */
   runtimeInputs?: CompositeRuntimeInputScope;
   /** 隔离 traversal 继承的逻辑容器祖先 */

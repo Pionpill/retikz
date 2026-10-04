@@ -209,7 +209,7 @@ const emitCanonicalPathPrimitive = (
           points.push(originalPoint);
           continue;
         }
-        points.push(resolved);
+        points.push(originalPoint);
         smoothBaseline = resolved;
       }
       step = { ...step, points };

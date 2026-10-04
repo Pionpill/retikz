@@ -237,6 +237,8 @@ Either `outAngle` or `inAngle` selects tangent mode; the omitted partner default
 
 ### Endpoint connection surface
 
+`smooth.points` accepts the full Target domain. Intermediate node references mean their resolved positions. The final NodeTarget without explicit anchor / offset clips to its connection boundary along the incoming direction before arrow shortening. Explicit anchor / offset positions are preserved. `tension` is a positive tangent multiplier, default 1.
+
 When an endpoint references a node (the `{ id }` object form, or an id inside a way), you can add a `boundary` field to override the target node's [`boundary`](/kernel/components/node/mechanism#visual-shape-vs-connection-geometry) (connection surface) **for that endpoint only**. It takes the same forms as the node's `boundary`: `'shape'` (the visual shape itself) / `'circle'` (a true circle) / any registered shape name / `{ type, params }`.
 
 ```tsx
