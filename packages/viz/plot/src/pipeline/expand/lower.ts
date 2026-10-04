@@ -368,7 +368,7 @@ export const lowerPlotWithDataArtifact = (
     preparedData === undefined ? undefined : createDataView(preparedData.root.rows, preparedData.root.model);
   const {
     dataView: normalizedDataView,
-    fieldTypes,
+    fieldTypeMap,
     normalized,
     transformRegistry,
     transformContext,
@@ -380,19 +380,19 @@ export const lowerPlotWithDataArtifact = (
     : {
         ...preparePlotRegistries(options),
         dataView: preparedRootView,
-        fieldTypes: preparedRootView.fieldTypes,
+        fieldTypeMap: preparedRootView.fieldTypeMap,
         normalized: preparedRootView.rows,
       };
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
   if (preparedData === undefined && options.validateData) {
     const sampleRows = typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100;
-    validateBoundData(normalized, fieldTypes, sampleRows);
+    validateBoundData(normalized, fieldTypeMap, sampleRows);
   }
-  // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypes 键）全量校验，遇任一非法 / 缺失 fail-loud；
+  // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypeMap 键）全量校验，遇任一非法 / 缺失 fail-loud；
   //   置于 transform 前 → 错误定位到原始源字段、不被 transform 改写干扰。默认 'skip' 不校验（哨兵留给下游跳）。
   if (preparedData === undefined && options.invalid === 'error') {
-    assertAllValuesValid(normalized, fieldTypes);
+    assertAllValuesValid(normalized, fieldTypeMap);
   }
 
   const rootTransformResult =
@@ -496,7 +496,7 @@ export const lowerPlotWithDataArtifact = (
     coordinate: source.coordinate,
     markPadding,
     rows: frameDataView.rows,
-    fieldTypes: frameDataView.fieldTypes,
+    fieldTypeMap: frameDataView.fieldTypeMap,
     fieldTypeEvidence: frameDataView.fieldTypeEvidence,
     width,
     height,
@@ -521,7 +521,7 @@ export const lowerPlotWithDataArtifact = (
   const channelCtx: ChannelResolveContext = {
     node,
     rows: rootDataView.rows,
-    fieldTypes: rootDataView.fieldTypes,
+    fieldTypeMap: rootDataView.fieldTypeMap,
     fieldTypeEvidence: rootDataView.fieldTypeEvidence,
     channelRegistry,
     markRegistry,
@@ -628,7 +628,7 @@ export const lowerPlotWithDataArtifact = (
       const markChannels = resolveMarkChannels(mark, {
         ...channelCtx,
         rows: dataView.rows,
-        fieldTypes: dataView.fieldTypes,
+        fieldTypeMap: dataView.fieldTypeMap,
         fieldTypeEvidence: dataView.fieldTypeEvidence,
         defaultColor: categoricalColorAt(
           resolvedTheme.palette.series,
@@ -1038,7 +1038,7 @@ export const lowerPlotWithDataArtifact = (
           const markChannels = resolveMarkChannels(mark, {
             ...channelCtx,
             rows: dataView.rows,
-            fieldTypes: dataView.fieldTypes,
+            fieldTypeMap: dataView.fieldTypeMap,
             fieldTypeEvidence: dataView.fieldTypeEvidence,
             defaultColor: categoricalColorAt(
               resolvedTheme.palette.series,
@@ -1217,7 +1217,7 @@ export const lowerPlotWithDataArtifact = (
             const markChannels = resolveMarkChannels(mark, {
               ...channelCtx,
               rows: markRows,
-              fieldTypes: markDataView.fieldTypes,
+              fieldTypeMap: markDataView.fieldTypeMap,
               fieldTypeEvidence: markDataView.fieldTypeEvidence,
               defaultColor: categoricalColorAt(
                 resolvedTheme.palette.series,
@@ -1323,7 +1323,7 @@ export const lowerPlotWithDataArtifact = (
       const markChannels = resolveMarkChannels(mark, {
         ...channelCtx,
         rows: markRows,
-        fieldTypes: dataView.fieldTypes,
+        fieldTypeMap: dataView.fieldTypeMap,
         fieldTypeEvidence: dataView.fieldTypeEvidence,
         defaultColor: categoricalColorAt(
           resolvedTheme.palette.series,

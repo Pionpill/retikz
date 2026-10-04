@@ -59,7 +59,7 @@ const defineSimplePathChannel = <T extends JsonValue>(
     channel,
     output,
     resolve: ctx => mark =>
-      makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.fieldTypes, {
+      makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.fieldTypeMap, {
         channelName: channel,
         parse,
       }),
@@ -69,7 +69,7 @@ const defineSimplePathChannel = <T extends JsonValue>(
 const makeNumericPathResolver = (
   node: IRPlot,
   rows: Array<ExternalRow>,
-  fieldTypes: DataFieldTypeMap,
+  fieldTypeMap: DataFieldTypeMap,
   pick: (mark: IRPlotMarkOperation) => MarkStyleValue<number> | undefined,
   channelName: string,
   options: NumericPathResolverOptions = {},
@@ -78,7 +78,7 @@ const makeNumericPathResolver = (
   return mark => {
     const channel = pick(mark);
     if (!channel) return undefined;
-    const source = makeMarkValueResolver<number>(channel, fieldTypes, {
+    const source = makeMarkValueResolver<number>(channel, fieldTypeMap, {
       channelName,
       expectedFieldType: DataFieldType.Continuous,
       parse: value => (isFiniteNumber(value) ? value : undefined),
@@ -138,7 +138,7 @@ const pathNumericChannels: {
     channel: 'strokeWidth',
     output: { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
     resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathStrokeWidth, 'strokeWidth', {
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypeMap, pickPathStrokeWidth, 'strokeWidth', {
         range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX],
         clamp: true,
       }),
@@ -151,7 +151,7 @@ const pathNumericChannels: {
     output: { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     legend: 'ramp',
     resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathOpacity, 'opacity', {
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypeMap, pickPathOpacity, 'opacity', {
         range: [OPACITY_MIN, 1],
         clamp: true,
       }),
@@ -163,7 +163,7 @@ const pathNumericChannels: {
     channel: 'fillOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
     resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypes, pickPathFillOpacity, 'fillOpacity', {
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypeMap, pickPathFillOpacity, 'fillOpacity', {
         range: [0.2, 1],
         clamp: true,
       }),
@@ -178,7 +178,7 @@ const pathNumericChannels: {
       makeNumericPathResolver(
         ctx.node,
         ctx.rows,
-        ctx.fieldTypes,
+        ctx.fieldTypeMap,
         mark => pickStyleChannel<number>(mark, 'roundedCorners'),
         'roundedCorners',
       ),
@@ -306,7 +306,7 @@ export const BUILTIN_PATH_CHANNELS = {
     resolve: ctx => mark => {
       return makeMarkValueResolver<'butt' | 'round' | 'square'>(
         pickStyleChannel<'butt' | 'round' | 'square'>(mark, 'lineCap'),
-        ctx.fieldTypes,
+        ctx.fieldTypeMap,
         {
           channelName: 'lineCap',
           parse: value =>
@@ -324,7 +324,7 @@ export const BUILTIN_PATH_CHANNELS = {
     resolve: ctx => mark => {
       return makeMarkValueResolver<'miter' | 'round' | 'bevel'>(
         pickStyleChannel<'miter' | 'round' | 'bevel'>(mark, 'lineJoin'),
-        ctx.fieldTypes,
+        ctx.fieldTypeMap,
         {
           channelName: 'lineJoin',
           parse: value =>

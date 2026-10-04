@@ -50,7 +50,7 @@ export type CoordinateResolveContext = {
   /** 当前 plot 绑定的数据行 */
   rows: Array<ExternalRow>;
   /** 字段类型表 */
-  fieldTypes: DataFieldTypeMap;
+  fieldTypeMap: DataFieldTypeMap;
   /** 已证明字段类型的字段集合 */
   fieldTypeEvidence?: ReadonlySet<string>;
   /** 画布宽度 */

@@ -97,7 +97,7 @@ describe('data provider runtime boundaries', () => {
       { field: 'amount', physicalPath: 'raw.amount', declaredType: undefined },
       { field: 'group', physicalPath: 'group', declaredType: DataFieldType.Categorical },
     ]);
-    expect(result.fieldTypes.get('amount')).toBe(DataFieldType.Continuous);
+    expect(result.fieldTypeMap.get('amount')).toBe(DataFieldType.Continuous);
     expect(result.parsers.get('amount')?.('$12')).toBe(12);
     expect(result.resolverHit).toBe(true);
     expect(baseTypes.get('amount')).toBe(DataFieldType.Categorical);

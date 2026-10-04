@@ -34,7 +34,7 @@ export type MarkValueResolverOptions<T> = {
 /** 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用 */
 export const makeMarkValueResolver = <T>(
   value: MarkStyleValue<T> | undefined,
-  fieldTypes: DataFieldTypeMap,
+  fieldTypeMap: DataFieldTypeMap,
   options: MarkValueResolverOptions<T>,
 ): MarkValueResolution<T> | undefined => {
   if (value === undefined) return undefined;
@@ -43,7 +43,7 @@ export const makeMarkValueResolver = <T>(
     return { resolver: () => value.value };
   }
   const field = value.value;
-  const fieldType = fieldTypes.get(field);
+  const fieldType = fieldTypeMap.get(field);
   if (options.expectedFieldType !== undefined && fieldType !== undefined && fieldType !== options.expectedFieldType) {
     throw new RetikzPlotError(
       `lowerPlots: ${options.channelName} channel field "${field}" is ${fieldType}; ${options.channelName} requires a ${options.expectedFieldType} field`,

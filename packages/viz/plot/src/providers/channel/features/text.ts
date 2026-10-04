@@ -33,7 +33,7 @@ export const createBuiltinTextChannels = (options: BuiltinTextChannelOptions = {
       const id = (mark as { id?: string }).id;
       const runtime = id !== undefined ? options.resolveLabel?.[id] : undefined;
       if (content === undefined && runtime === undefined) return undefined;
-      const fieldType = content?.field !== undefined ? ctx.fieldTypes.get(content.field) : undefined;
+      const fieldType = content?.field !== undefined ? ctx.fieldTypeMap.get(content.field) : undefined;
       const effectiveContent = content ?? { value: '' };
       return { resolver: row => labelOf(effectiveContent, row, fieldType, runtime) };
     },

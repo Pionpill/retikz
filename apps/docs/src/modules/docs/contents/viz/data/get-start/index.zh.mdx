@@ -30,8 +30,8 @@ const model: IRDataModel = [
   { name: 'region', type: DataFieldType.Categorical },
   { name: 'revenue', type: DataFieldType.Continuous },
 ];
-const fieldTypes = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
-const canonicalRows = normalizeRows(rows, fieldTypes);
+const fieldTypeMap = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
+const canonicalRows = normalizeRows(rows, fieldTypeMap);
 
 const transforms: Array<IRDataTransform> = [
   {

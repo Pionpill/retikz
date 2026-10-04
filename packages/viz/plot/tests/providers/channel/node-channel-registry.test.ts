@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { ChannelDefinitionKind } from '../../../src/contract';
 import {
@@ -76,7 +76,7 @@ describe('node channel registry', () => {
         marks: [],
       },
       rows: [],
-      fieldTypes: new Map(),
+      fieldTypeMap: new Map(),
       resolveChannelScale: () => ({
         of: () => undefined,
         legendForm: 'swatch',

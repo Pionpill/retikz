@@ -39,7 +39,7 @@ describe('applyTransforms (contract)', () => {
       [{ kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' }],
       { registry: TRANSFORM_REGISTRY },
     );
-    expect(stacked.fieldTypes).toEqual(
+    expect(stacked.fieldTypeMap).toEqual(
       new Map([
         ['month', DataFieldType.Categorical],
         ['product', DataFieldType.Categorical],
@@ -53,7 +53,7 @@ describe('applyTransforms (contract)', () => {
     const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', field: 'revenue' }], {
       registry: TRANSFORM_REGISTRY,
     });
-    expect(binned.fieldTypes).toEqual(
+    expect(binned.fieldTypeMap).toEqual(
       new Map([
         ['revenue', DataFieldType.Continuous],
         ['binStart', DataFieldType.Continuous],

@@ -116,7 +116,7 @@ const sizeResolutionOf = (
   const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
     node,
     rows,
-    fieldTypes: new Map([[size.value, options.fieldType ?? DataFieldType.Continuous]]),
+    fieldTypeMap: new Map([[size.value, options.fieldType ?? DataFieldType.Continuous]]),
     resolveChannelScale: () => ({
       of: () => undefined,
       legendForm: 'swatch',
@@ -392,7 +392,7 @@ describe('size channel 错误输入', () => {
     const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
       node,
       rows: [{ derivedSize: 4 }],
-      fieldTypes: new Map(),
+      fieldTypeMap: new Map(),
       fieldTypeEvidence: new Set(),
       resolveChannelScale: () => ({
         of: () => undefined,

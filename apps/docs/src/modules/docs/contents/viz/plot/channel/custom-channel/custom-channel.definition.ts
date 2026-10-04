@@ -43,7 +43,7 @@ export const intensityChannel = defineNodeChannel<number>({
         domain: [lo, hi],
         range: [0.3, 1],
         field,
-        fieldType: ctx.fieldTypes.get(field),
+        fieldType: ctx.fieldTypeMap.get(field),
       },
     };
   },

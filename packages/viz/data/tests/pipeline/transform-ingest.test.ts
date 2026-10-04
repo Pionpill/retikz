@@ -6,7 +6,7 @@ it('retains complete empty output models and does not reinterpret canonical temp
   const model = [{ name: 'when', type: 'temporal' as const }];
   const resolution = resolveDataTransforms([], model);
   const empty = ingestDataTransformResult(resolution, { rows: [], model });
-  expect(empty.fieldTypes.get('when')).toBe('temporal');
+  expect(empty.fieldTypeMap.get('when')).toBe('temporal');
   const rows = [{ when: 1700000000000 }];
   expect(ingestDataTransformResult(resolution, { rows, model }).rows).toBe(rows);
 });
@@ -45,7 +45,7 @@ it('preserves group type evidence while leaving non-scalar extent untyped', () =
     rows: [{ group: 'A', range: [1, 4], payload: 'raw' }],
     model: resolution.stages[0].outputModel,
   });
-  expect([...view.fieldTypes]).toEqual([['group', 'categorical']]);
+  expect([...view.fieldTypeMap]).toEqual([['group', 'categorical']]);
   expect(view.fieldTypeEvidence.has('payload')).toBe(false);
   expect(view.model).toEqual(resolution.stages[0].outputModel);
   const sorted = applyTransformsToDataView(view, [{ kind: 'sort', field: 'group' }]);
@@ -68,9 +68,9 @@ it('retains unknown field existence across empty transformed scopes', () => {
 it('derives type projections from the authoritative model without retaining mutable copies', () => {
   const model = [{ name: 'value', type: 'continuous' as const }];
   const view = ingestDataTransformResult(resolveDataTransforms([], model), { rows: [], model });
-  view.fieldTypes.set('fake', 'categorical');
-  view.fieldTypes.delete('value');
-  expect([...view.fieldTypes]).toEqual([['value', 'continuous']]);
+  view.fieldTypeMap.set('fake', 'categorical');
+  view.fieldTypeMap.delete('value');
+  expect([...view.fieldTypeMap]).toEqual([['value', 'continuous']]);
   expect([...view.fieldTypeEvidence]).toEqual(['value']);
   expect(view.model).toEqual(model);
 });

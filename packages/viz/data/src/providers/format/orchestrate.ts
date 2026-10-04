@@ -13,10 +13,10 @@ export const collectFormatFields = (
   baseTypes: DataFieldTypeMap,
   userSourceFields: Set<string>,
   registry: ReadonlyMap<string, FieldFormatDefinition> = resolveFormatRegistry(),
-): { fieldTypes: DataFieldTypeMap; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
-  const fieldTypes: DataFieldTypeMap = new Map(baseTypes);
+): { fieldTypeMap: DataFieldTypeMap; parsers: Map<string, (raw: unknown) => ParsedFieldValue> } => {
+  const fieldTypeMap: DataFieldTypeMap = new Map(baseTypes);
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
-  if (model === undefined) return { fieldTypes, parsers };
+  if (model === undefined) return { fieldTypeMap, parsers };
   for (const field of model) {
     if (field.format === undefined) continue;
     if (!userSourceFields.has(field.name)) continue;
@@ -32,8 +32,8 @@ export const collectFormatFields = (
         `data: field "${field.name}" declares type "${field.type}" but format "${field.format}" implies "${impliedType}" (incompatible)`,
       );
     }
-    fieldTypes.set(field.name, impliedType);
+    fieldTypeMap.set(field.name, impliedType);
     parsers.set(field.name, definition.parse);
   }
-  return { fieldTypes, parsers };
+  return { fieldTypeMap, parsers };
 };

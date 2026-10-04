@@ -54,7 +54,7 @@ export const createTableStructureContext = (
       const declared = new Set(preparedView.model.map(field => field.name));
       for (const field of sourceFields)
         if (!declared.has(field)) throw new RetikzTableError(`unknown field "${field}" in prepared Table data model`);
-      return new Map([...preparedView.fieldTypes].filter(([name]) => sourceFields.has(name)));
+      return new Map([...preparedView.fieldTypeMap].filter(([name]) => sourceFields.has(name)));
     },
     resolveField: resolveScalarField,
   });

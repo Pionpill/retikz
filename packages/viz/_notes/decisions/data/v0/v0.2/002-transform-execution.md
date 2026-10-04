@@ -118,7 +118,7 @@ reducer 的 outputs 必须声明全部字段；数组或其它非标量结果可
 
 `ingestDataTransformResult` 接收匹配的 resolution 与 result，输出 `DataView`。结果 model 必须完整列出逻辑输出字段，字段集合、已有类型和分类 order 与预期一致；未定类型可以由实际结果的有效观测获得证据，非标量字段保持未定。空结果仍携带模型，不用首行猜结构。输入解析 format 不携带到输出，不再次应用源值 parser。
 
-`DataView` 持有规范 rows 与完整逻辑 model，model 是字段存在性、已证明测量类型及分类 order 的唯一事实源；空行与未定类型字段跨作用域交接时仍保留。`createDataView(rows, model)` 从规范值观测补充未定字段的类型证据，不把额外 payload 当作模型字段。fieldTypes 与 fieldTypeEvidence 按需从 model 派生，不存储第二份可漂移的模型事实。同步变换与宿主消费直接使用该完整模型，不从行键或类型映射重建模型。持久化 data.model schema、源解析与溯源的职责保持原有边界；旧 DataView 构造形态不提供兼容分支。
+`DataView` 持有规范 rows 与完整逻辑 model，model 是字段存在性、已证明测量类型及分类 order 的唯一事实源；空行与未定类型字段跨作用域交接时仍保留。`createDataView(rows, model)` 从规范值观测补充未定字段的类型证据，不把额外 payload 当作模型字段。fieldTypeMap 与 fieldTypeEvidence 按需从 model 派生，不存储第二份可漂移的模型事实。同步变换与宿主消费直接使用该完整模型，不从行键或类型映射重建模型。持久化 data.model schema、源解析与溯源的职责保持原有边界；旧 DataView 构造形态不提供兼容分支。
 
 返回 rows 使用既有规范值和缺失值语义；Data 在结果接入边界检查模型与值是否一致，不进行静默字段删除、重命名或类型 coercion。rows 可以保留未纳入逻辑模型的原始 payload，但这些属性不得自动获得字段类型证据或作为声明之外的新逻辑输出。Arrow、列式表、数据库结果和其它物理结构由 adapter 转换为上述 runtime result；`Map`、`Set`、Symbol provenance 和非有限数值不被当作通用 JSON 传输格式。
 

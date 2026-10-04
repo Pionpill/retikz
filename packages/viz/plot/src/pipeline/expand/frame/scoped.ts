@@ -113,7 +113,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     coordinate: source.coordinate,
     markPadding: context.markPadding,
     rows: dataView.rows,
-    fieldTypes: dataView.fieldTypes,
+    fieldTypeMap: dataView.fieldTypeMap,
     fieldTypeEvidence: dataView.fieldTypeEvidence,
     width,
     height,

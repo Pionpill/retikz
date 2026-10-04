@@ -231,7 +231,7 @@ export const resolveCoordinateFrame = (
 ): CoordinateFrameResolution => {
   const {
     rows,
-    fieldTypes,
+    fieldTypeMap,
     fieldTypeEvidence,
     width,
     height,
@@ -250,7 +250,7 @@ export const resolveCoordinateFrame = (
   const node = source;
   const rootDataView = createDataView(
     rows,
-    [...fieldTypes].map(([name, type]) => {
+    [...fieldTypeMap].map(([name, type]) => {
       const order = node.data.model?.find(field => field.name === name)?.order;
       return { name, ...(fieldTypeEvidence?.has(name) ? { type } : {}), ...(order === undefined ? {} : { order }) };
     }),
@@ -353,13 +353,13 @@ export const resolveCoordinateFrame = (
         continue;
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
-      const type = dataView.fieldTypes.get(channel.field);
+      const type = dataView.fieldTypeMap.get(channel.field);
       if (type !== undefined) types.push(type);
     }
     return types;
   };
 
-  // 字段名 → order（来自 data.model，与 fieldTypes 同源）；缺 model / 未声明 order → 无条目
+  // 字段名 → order（来自 data.model，与 fieldTypeMap 同源）；缺 model / 未声明 order → 无条目
   const fieldOrders = new Map<string, CategoryOrder>();
   for (const field of node.data.model ?? []) {
     if (field.order !== undefined) fieldOrders.set(field.name, field.order);
@@ -382,7 +382,7 @@ export const resolveCoordinateFrame = (
       if (channel?.field === undefined) continue;
       const order = fieldOrders.get(channel.field);
       if (order === undefined || order === FieldOrderMode.Appearance) continue;
-      const type = dataView.fieldTypes.get(channel.field);
+      const type = dataView.fieldTypeMap.get(channel.field);
       if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new RetikzPlotError(
           `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,

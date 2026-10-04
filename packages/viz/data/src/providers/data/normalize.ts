@@ -29,13 +29,13 @@ const isCoercedValid = (value: unknown, type: DataFieldTypeValue): boolean => {
  */
 export const normalizeRows = (
   rows: Array<ExternalRow>,
-  fieldTypes: DataFieldTypeMap,
+  fieldTypeMap: DataFieldTypeMap,
   fieldMap?: Record<string, string>,
   parsers?: Map<string, (raw: unknown) => ParsedFieldValue>,
 ): Array<ExternalRow> =>
   rows.map(row => {
     const canonical: ExternalRow = { ...row };
-    for (const [logical, type] of fieldTypes) {
+    for (const [logical, type] of fieldTypeMap) {
       const physical = fieldMap?.[logical] ?? logical;
       const raw = resolveFieldPath(row, physical);
       const parse = parsers?.get(logical);
@@ -51,10 +51,14 @@ const isMissingRaw = (raw: unknown): boolean => raw === undefined || raw === nul
  * 抽样校验绑定数据：每个用户源字段在样本里至少有一个可 coercion 的值，否则 fail-loud。
  * @description validateData 开启时调用，用字段级 invalid / missing 计数解释空图原因；该阶段读取原始绑定数据
  */
-export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: DataFieldTypeMap, sampleRows: number): void => {
+export const validateBoundData = (
+  rows: Array<ExternalRow>,
+  fieldTypeMap: DataFieldTypeMap,
+  sampleRows: number,
+): void => {
   const limit = Math.min(rows.length, sampleRows);
   if (limit === 0) return;
-  for (const [logical, type] of fieldTypes) {
+  for (const [logical, type] of fieldTypeMap) {
     let valid = false;
     let invalidCount = 0;
     let missingCount = 0;
@@ -79,8 +83,8 @@ export const validateBoundData = (rows: Array<ExternalRow>, fieldTypes: DataFiel
  * 全量严格校验规范化字段值，任一坏值即 fail-loud。
  * @description invalid:'error' 使用；该阶段读取已过 parser / coercion 的规范化字段
  */
-export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypes: DataFieldTypeMap): void => {
-  for (const [logical, type] of fieldTypes) {
+export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypeMap: DataFieldTypeMap): void => {
+  for (const [logical, type] of fieldTypeMap) {
     for (let index = 0; index < normalized.length; index++) {
       const value = normalized[index][logical];
       if (isCoercedValid(value, type)) continue;

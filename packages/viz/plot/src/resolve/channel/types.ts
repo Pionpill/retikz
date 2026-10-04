@@ -12,7 +12,7 @@ export type ChannelResolveContext = {
   /** 当前 mark 实际消费的数据行 */
   rows: Array<ExternalRow>;
   /** 已解析字段类型表 */
-  fieldTypes: DataFieldTypeMap;
+  fieldTypeMap: DataFieldTypeMap;
   /** 字段类型证据集合，供 node channel 判断类型推断边界 */
   fieldTypeEvidence?: ReadonlySet<string>;
   /** 已合并的 channel definitions */

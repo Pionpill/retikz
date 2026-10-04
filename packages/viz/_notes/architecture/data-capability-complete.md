@@ -71,7 +71,7 @@ schema 可表达
 contract 可扩展
 provider 可内置
 registry 可合并
-pipeline 可消费并逐步产出 `{ rows, fieldTypes, fieldTypeEvidence }`
+pipeline 可消费并逐步产出 `{ rows, fieldTypeMap, fieldTypeEvidence }`
 output model 与实际 rows / lineage 一致
 lineage / diagnostics 可追踪
 宿主可复用

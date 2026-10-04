@@ -46,7 +46,7 @@ describe('resolved data view transforms', () => {
     });
 
     expect(result.rows).toEqual([{ source: 2, stale: 'old', copy: 2 }]);
-    expect([...result.fieldTypes]).toEqual([
+    expect([...result.fieldTypeMap]).toEqual([
       ['source', DataFieldType.Continuous],
       ['stale', DataFieldType.Categorical],
       ['copy', DataFieldType.Continuous],
@@ -73,7 +73,7 @@ describe('resolved data view transforms', () => {
     });
 
     expect(result.rows).toEqual([{ value: 7 }]);
-    expect([...result.fieldTypes]).toEqual([['value', DataFieldType.Continuous]]);
+    expect([...result.fieldTypeMap]).toEqual([['value', DataFieldType.Continuous]]);
     expect([...result.fieldTypeEvidence]).toEqual(['value']);
   });
 
@@ -122,7 +122,7 @@ describe('resolved data view transforms', () => {
     });
 
     expect(result.rows).toEqual([{ derived: 1 }]);
-    expect([...result.fieldTypes]).toEqual([['derived', 'continuous']]);
+    expect([...result.fieldTypeMap]).toEqual([['derived', 'continuous']]);
     expect([...result.fieldTypeEvidence]).toEqual(['derived']);
   });
 
@@ -147,7 +147,7 @@ describe('resolved data view transforms', () => {
     ]);
 
     expect(result.rows).toEqual([{ month: 'Jan', totalRevenue: 5 }]);
-    expect([...result.fieldTypes]).toEqual([
+    expect([...result.fieldTypeMap]).toEqual([
       ['month', DataFieldType.Categorical],
       ['totalRevenue', DataFieldType.Continuous],
     ]);

@@ -57,7 +57,7 @@ export const makeColorChannelDefinition = (
       }
       if (channel.field === undefined) return undefined;
       const field = channel.field;
-      const colorFieldType = ctx.fieldTypes.get(field);
+      const colorFieldType = ctx.fieldTypeMap.get(field);
       if (
         (colorFieldType === DataFieldType.Continuous || colorFieldType === DataFieldType.Temporal) &&
         channel.scale === undefined
@@ -91,7 +91,7 @@ export const makeColorChannelDefinition = (
       const resolution = ctx.resolveChannelScale(
         scaleOperation,
         rawValues,
-        colorResolveContext(ctx.fieldTypes, field, ctx.resolveColorScheme, ctx.palette),
+        colorResolveContext(ctx.fieldTypeMap, field, ctx.resolveColorScheme, ctx.palette),
       );
       return {
         resolver: row => resolution.of(resolveFieldPath(row, field)),
@@ -111,12 +111,12 @@ export const makeColorChannelDefinition = (
 });
 
 const colorResolveContext = (
-  fieldTypes: DataFieldTypeMap,
+  fieldTypeMap: DataFieldTypeMap,
   field: string,
   resolveColorScheme: (name: string) => (t: number) => string,
   palette: ChannelPaletteContext | undefined,
 ): ChannelScaleResolveContext => ({
-  fieldType: fieldTypes.get(field),
+  fieldType: fieldTypeMap.get(field),
   toNumber: value => (isFiniteNumber(value) ? value : null),
   coerceTimestamp,
   resolveColorScheme,

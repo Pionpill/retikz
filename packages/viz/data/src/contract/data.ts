@@ -1,4 +1,4 @@
-﻿import type { DataFieldTypeValue } from '../schemas';
+import type { DataFieldTypeValue } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataTransformModel } from './execution';
 
@@ -12,7 +12,7 @@ export type DataView = Readonly<{
   /** 唯一字段事实源；未定类型字段仍存在，分类顺序随作用域保留 */
   model: DataTransformModel;
   /** 从 model 派生的测量类型映射；修改此投影不改变模型 */
-  fieldTypes: DataFieldTypeMap;
+  fieldTypeMap: DataFieldTypeMap;
   /** 从 model 中已证明类型的字段派生 */
   fieldTypeEvidence: ReadonlySet<string>;
 }>;

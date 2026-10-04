@@ -48,11 +48,11 @@ export const preparePlotData = async <TSource = never>(
   if (binding.kind === 'rows') {
     const rows = provenance ? tagSourceIndex(binding.rows) : binding.rows;
     const prepared = prepareRows(spec, { [reference]: rows }, options, rows);
-    if (options.invalid === 'error') assertAllValuesValid(prepared.normalized, prepared.fieldTypes);
+    if (options.invalid === 'error') assertAllValuesValid(prepared.normalized, prepared.fieldTypeMap);
     if (options.validateData)
       validateBoundData(
         prepared.normalized,
-        prepared.fieldTypes,
+        prepared.fieldTypeMap,
         typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
       );
     input = { kind: 'result', result: { rows: prepared.dataView.rows, model: prepared.dataView.model } };
@@ -78,11 +78,11 @@ export const preparePlotData = async <TSource = never>(
         return copy;
       });
       const view = createDataView(provenance ? tagSourceIndex(rows) : rows, binding.result.model);
-      if (options.invalid === 'error') assertAllValuesValid(view.rows, view.fieldTypes);
+      if (options.invalid === 'error') assertAllValuesValid(view.rows, view.fieldTypeMap);
       if (options.validateData)
         validateBoundData(
           view.rows,
-          view.fieldTypes,
+          view.fieldTypeMap,
           typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
         );
       input = { kind: 'result', result: { ...binding.result, rows: view.rows, model: view.model } };

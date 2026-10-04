@@ -34,8 +34,8 @@ const model: IRDataModel = [
 ];
 
 const sourceFields = new Set(['region', 'revenue']);
-const fieldTypes = resolveFieldTypes(model, rows, sourceFields);
-const canonicalRows = normalizeRows(rows, fieldTypes);
+const fieldTypeMap = resolveFieldTypes(model, rows, sourceFields);
+const canonicalRows = normalizeRows(rows, fieldTypeMap);
 
 const transforms: Array<IRDataTransform> = [
   {
