@@ -3,7 +3,7 @@ title: 增量执行 · runtime
 description: 用 @retikz/runtime 管理完整状态、派生计算与一致发布，为领域能力提供无框架的执行底座
 ---
 
-当一份输入变化时，依赖它的计算结果也需要更新。`@retikz/runtime` 将输入状态及其派生结果组织在同一个 Session 中，让调用方读取同一已发布版本的数据，并统一管理被替换资源的释放。
+当一份输入变化时，依赖它的计算结果也需要更新。`@retikz/runtime` 将输入状态及其派生结果组织在同一个 Runtime 中，让调用方读取同一已发布版本的数据，并统一管理被替换资源的释放。
 
 它适合编写领域包、处理管线或宿主集成的开发者。普通绘图通常通过 React 或 Vanilla 接入，由这些上层入口组织 Runtime。
 
@@ -11,24 +11,24 @@ description: 用 @retikz/runtime 管理完整状态、派生计算与一致发�
 
 下面用一个计数器说明各对象如何协作：它保存当前计数，并计算计数的两倍；更新计数时，新计数与对应的计算结果需要一起发布，让读取方始终拿到同一版本的数据。
 
-| 对象     | 职责                                   | 计数器示例                    |
-| -------- | -------------------------------------- | ----------------------------- |
-| Owner    | 定义完整状态如何捕获、读取、比较和释放 | 保存当前计数                  |
-| Program  | 声明依赖并计算派生产物（artifact）     | 计算计数的两倍                |
-| Registry | 注册定义，确认身份与依赖关系           | 注册计数 Owner 与计算 Program |
-| Session  | 准备更新并发布一致的版本（revision）   | 一起发布新计数和计算结果      |
+| 对象        | 职责                                   | 计数器示例                         |
+| ----------- | -------------------------------------- | ---------------------------------- |
+| Source      | 定义完整状态如何捕获、读取、比较和释放 | 保存当前计数                       |
+| Computation | 声明依赖并计算派生产物（artifact）     | 计算计数的两倍                     |
+| Registry    | 注册定义，确认身份与依赖关系           | 注册计数 Source 与计算 Computation |
+| Runtime     | 准备更新并发布一致的版本（revision）   | 一起发布新计数和计算结果           |
 
-Snapshot 是带有 revision 的只读值。Owner 提供原始状态，Program 产生派生结果；两者都可以通过 Session 读取对应的 Snapshot。
+Snapshot 是带有 revision 的只读值。Source 提供原始状态，Computation 产生派生结果；两者都可以通过 Runtime 读取对应的 Snapshot。
 
 ## 从完整输入到一致结果
 
-例如计数从 1 变为 2，派生结果从 2 变为 4。调用方提交完整的新计数，Session 准备相关结果，再发布新 revision；尚未完成的结果不会成为公开读取值。
+例如计数从 1 变为 2，派生结果从 2 变为 4。调用方提交完整的新计数，Runtime 准备相关结果，再发布新 revision；尚未完成的结果不会成为公开读取值。
 
-下图展示完整输入、注册表、Session 与发布结果的关系。实线表示输入与执行依赖，虚线表示观测旁路。
+下图展示完整输入、注册表、Runtime 与发布结果的关系。实线表示输入与执行依赖，虚线表示观测旁路。
 
 <ComponentPreview files="runtime-architecture" size="xl" hideCode type="flow" />
 
-领域定义负责解释数据和执行计算，Runtime 负责组织生命周期与发布。增量计算是可选优化：Program 可以只提供完整计算，也可以提供增量更新；ChangeSet 只是变更提示，不能代替完整的新状态。
+领域定义负责解释数据和执行计算，Runtime 负责组织生命周期与发布。增量计算是可选优化：Computation 可以只提供完整计算，也可以提供增量更新；ChangeSet 只是变更提示，不能代替完整的新状态。
 
 <Comparison target="react" title="与 React 协调器的相同点和差异">
 
@@ -36,13 +36,13 @@ Snapshot 是带有 revision 的只读值。Owner 提供原始状态，Program �
 
 | 维度                   | Runtime                                                                             | React 协调器                                                                     |
 | ---------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 共同点：更新派生结果   | 根据 Owner 状态运行依赖它的 Program，产生 artifact                                  | 根据 props、state 和 context 计算下一棵 UI 树                                    |
+| 共同点：更新派生结果   | 根据 Source 状态运行依赖它的 Computation，产生 artifact                             | 根据 props、state 和 context 计算下一棵 UI 树                                    |
 | 共同点：分开计算与提交 | 先准备候选状态与产物，成功后发布 revision                                           | render 阶段计算下一份 UI，commit 阶段应用宿主更新                                |
-| 共同点：复用已有结果   | 可跳过不受影响的 Program，或由增量更新返回 bailout 复用产物                         | 可通过 bailout、memo 等机制跳过部分组件计算                                      |
-| 差异：组织与身份       | 显式注册 Owner 和 Program，以声明的依赖组成计算图                                   | 协调组件树，结合树中位置、组件类型与 key 判断组件身份                            |
-| 差异：调度方式         | Session 同步完成一次 update；不提供 UI 优先级或时间切片调度                         | 支持不同优先级的更新；Transition 渲染可被更紧急的更新打断并重新开始              |
+| 共同点：复用已有结果   | 可跳过不受影响的 Computation，或由增量更新返回 bailout 复用产物                     | 可通过 bailout、memo 等机制跳过部分组件计算                                      |
+| 差异：组织与身份       | 显式注册 Source 和 Computation，以声明的依赖组成计算图                              | 协调组件树，结合树中位置、组件类型与 key 判断组件身份                            |
+| 差异：调度方式         | Runtime 同步完成一次 update；不提供 UI 优先级或时间切片调度                         | 支持不同优先级的更新；Transition 渲染可被更紧急的更新打断并重新开始              |
 | 差异：发布结果         | 对外提供同一已发布 revision 的状态与 artifact；外部状态通过 commit participant 接入 | 通过 renderer 更新 DOM 等宿主树；不向调用方提供统一 revision 的领域 Snapshot API |
-| 差异：资源生命周期     | Owner、Program 与 participant 显式定义资源释放，由 Session 组织                     | 管理组件挂载、更新和卸载；Effect 清理随依赖变化或卸载执行，并非通用事务回滚      |
+| 差异：资源生命周期     | Source、Computation 与 participant 显式定义资源释放，由 Runtime 组织                | 管理组件挂载、更新和卸载；Effect 清理随依赖变化或卸载执行，并非通用事务回滚      |
 
 例如，React 负责决定计数器组件如何显示；Runtime 可以负责保存计数、计算两倍值并一致发布。Runtime 本身不解释 JSX、Hook 或组件树，也不代替 React 协调器。
 
@@ -63,7 +63,7 @@ const second = createRuntimeIdentity('example/counter', ['value']);
 runtimeIdentityEquals(first, second); // true
 ```
 
-创建、更新和释放 Session 的完整示例见[入门示例](/kernel/packages/runtime/usage)。
+创建、更新和释放 Runtime 的完整示例见[入门示例](/kernel/packages/runtime/usage)。
 
 ## 包边界
 
@@ -72,7 +72,7 @@ Runtime 的生产依赖只有 `@retikz/foundation`。Core 消费 Runtime 的公�
 | Runtime 管理                             | 由消费方提供                       |
 | ---------------------------------------- | ---------------------------------- |
 | 状态身份、所有权与完整 Snapshot 生命周期 | 状态的领域含义、复制方式与相等判断 |
-| Program 依赖关系与执行                   | 具体计算、领域变更提示及其有效性   |
+| Computation 依赖关系与执行               | 具体计算、领域变更提示及其有效性   |
 | 同步事务、revision 与提交参与者          | 绘图编译、后端执行及外部状态操作   |
 | Trace 与诊断的收集和隔离                 | 观测记录的消费方式                 |
 

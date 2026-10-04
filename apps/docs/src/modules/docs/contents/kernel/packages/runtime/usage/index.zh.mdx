@@ -1,13 +1,13 @@
 ---
 title: 入门示例
-description: 定义计数状态与派生计算，创建 Session，并完成一次完整更新、结果读取和资源释放
+description: 定义计数状态与派生计算，创建 Runtime，并完成一次完整更新、结果读取和资源释放
 ---
 
-本页用一个计数器走通 Runtime 的最小闭环：初始计数为 1，Program 计算两倍值 2；提交新计数 2 后，读取同一 revision 下的计数 2 和结果 4。
+本页用一个计数器走通 Runtime 的最小闭环：初始计数为 1，Computation 计算两倍值 2；提交新计数 2 后，读取同一 revision 下的计数 2 和结果 4。
 
 ## 接入方式
 
-调整初始计数和更新计数，查看 Runtime 实际返回的 Snapshot、artifact 与 revision。每次操作都会重新创建 Session 并执行一次更新；将两项设为相同值，可以观察无需更新时的 bailout。
+调整初始计数和更新计数，查看 Runtime 实际返回的 Snapshot、artifact 与 revision。每次操作都会重新创建 Runtime 并执行一次更新；将两项设为相同值，可以观察无需更新时的 bailout。
 
 <ComponentPreview
   files={['counter-result', 'counter-result.preview.tsx']}
@@ -15,20 +15,20 @@ description: 定义计数状态与派生计算，创建 Session，并完成一�
   caption="每次操作独立运行一次更新；重置恢复初始计数 1、更新计数 2。"
 />
 
-代码从 `@retikz/runtime` 根入口导入定义、注册表、输入命令和 Session 工厂。复制整段即可完成创建、更新、读取和释放：
+代码从 `@retikz/runtime` 根入口导入定义、注册表、输入命令和 Runtime 工厂。复制整段即可完成创建、更新、读取和释放：
 
 ```ts
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
-  defineRuntimeOwner,
-  defineRuntimeProgram,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
+  defineRuntimeSource,
+  defineRuntimeComputation,
 } from '@retikz/runtime';
 
-const counter = defineRuntimeOwner<number, number, number, never>({
+const counter = defineRuntimeSource<number, number, number, never>({
   key: 'example/counter',
   value: {
     capture: value => value,
@@ -37,37 +37,37 @@ const counter = defineRuntimeOwner<number, number, number, never>({
   },
 });
 
-const doubled = defineRuntimeProgram({
+const doubled = defineRuntimeComputation({
   id: { owner: 'example/counter', key: 'doubled' },
-  owners: [counter],
+  sources: [counter],
   run: view => ({
     kind: 'full',
     artifact: view.snapshot(counter).value * 2,
   }),
 });
 
-const owners = createRuntimeOwnerRegistry({ custom: [counter] });
-const programs = createRuntimeProgramRegistry({ owners, custom: [doubled] });
-const session = createRuntimeSession({
-  owners,
-  programs,
-  initialSnapshots: [createRuntimeOwnerInput(counter, 1)],
+const sources = createRuntimeSourceRegistry({ custom: [counter] });
+const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(counter, 1)],
 });
 
 try {
-  console.log(session.snapshot(counter)); // { revision: 0, value: 1 }
-  console.log(session.artifact(doubled)); // { revision: 0, value: 2 }
+  console.log(runtime.snapshot(counter)); // { revision: 0, value: 1 }
+  console.log(runtime.artifact(doubled)); // { revision: 0, value: 2 }
 
-  const result = session.update({
-    baseRevision: session.revision(),
-    owners: [createRuntimeOwnerUpdate(counter, 2)],
+  const result = runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(counter, 2)],
   });
 
   console.log(result.outcome); // 'full'
-  console.log(session.snapshot(counter)); // { revision: 1, value: 2 }
-  console.log(session.artifact(doubled)); // { revision: 1, value: 4 }
+  console.log(runtime.snapshot(counter)); // { revision: 1, value: 2 }
+  console.log(runtime.artifact(doubled)); // { revision: 1, value: 4 }
 } finally {
-  session.dispose();
+  runtime.dispose();
 }
 ```
 
@@ -77,27 +77,27 @@ try {
 
 ## 理解这次接入
 
-| 步骤         | 本例的作用                                                              |
-| ------------ | ----------------------------------------------------------------------- |
-| 定义 Owner   | `capture` 接收完整计数，`read` 暴露只读值，`equals` 判断计数是否相同    |
-| 定义 Program | `owners: [counter]` 声明读取权限，`run` 根据计数产生两倍值              |
-| 注册定义     | Program registry 绑定同一个 Owner registry，Session 使用这对注册表      |
-| 创建 Session | 初始 commands 精确覆盖注册的 Owner，创建 revision 0 并计算初始 artifact |
-| 更新与读取   | 提交完整的新计数，并读取带 revision 的状态与结果                        |
-| 释放 Session | 在 `finally` 中释放 Session 持有的资源                                  |
+| 步骤             | 本例的作用                                                               |
+| ---------------- | ------------------------------------------------------------------------ |
+| 定义 Source      | `capture` 接收完整计数，`read` 暴露只读值，`equals` 判断计数是否相同     |
+| 定义 Computation | `sources: [counter]` 声明读取权限，`run` 根据计数产生两倍值              |
+| 注册定义         | Computation registry 绑定同一个 Source registry，Runtime 使用这对注册表  |
+| 创建 Runtime     | 初始 commands 精确覆盖注册的 Source，创建 revision 0 并计算初始 artifact |
+| 更新与读取       | 提交完整的新计数，并读取带 revision 的状态与结果                         |
+| 释放 Runtime     | 在 `finally` 中释放 Runtime 持有的资源                                   |
 
-Owner 的四个泛型依次是输入、内部值、公开只读值与变更类型。本例前三项都是 `number`，没有变更提示，所以第四项为 `never`。
+Source 的四个泛型依次是输入、内部值、公开只读值与变更类型。本例前三项都是 `number`，没有变更提示，所以第四项为 `never`。
 
-Program 的四个泛型依次是 artifact 输入、内部 artifact、供自身增量更新读取的值、公开读取值。本例会从 `run` 推断为 `number`，无需显式填写。没有上游 Program 或观测阶段时，`programs` 与 `tracePhases` 可以省略，默认均为空数组。
+Computation 的四个泛型依次是 artifact 输入、内部 artifact、供自身增量更新读取的值、公开读取值。本例会从 `run` 推断为 `number`，无需显式填写。没有上游 Computation 或观测阶段时，`computations` 与 `tracePhases` 可以省略，默认均为空数组。
 
-`artifact.capture`、`artifact.readForProgram` 和 `artifact.read` 在各自输入与输出类型相同时都可独立省略，默认直接返回入参。本例也不需要释放资源，因此省略整个 `artifact`。发生类型转换时，必须提供对应回调；需要释放资源时，仍需提供 `artifact.dispose`。默认的公开读取直接返回内部 artifact，不经过 `readForProgram`。
+`artifact.capture`、`artifact.readForComputation` 和 `artifact.read` 在各自输入与输出类型相同时都可独立省略，默认直接返回入参。本例也不需要释放资源，因此省略整个 `artifact`。发生类型转换时，必须提供对应回调；需要释放资源时，仍需提供 `artifact.dispose`。默认的公开读取直接返回内部 artifact，不经过 `readForComputation`。
 
 这些默认值不会复制或冻结对象。省略回调后，定义者仍负责保证 candidate 与已发布值的所有权和不可变性。
 
 ## 错误与限制
 
-- 每次 Owner 更新都提供完整的新输入。本例的 `2` 表示新计数，不是“增加 2”。
-- `baseRevision` 必须来自当前 Session；过期版本会被拒绝，不要手写或重复使用已经过期的 revision。
-- Program 只能读取已声明的依赖，注册和调用时保留同一组 Definition token。
+- 每次 Source 更新都提供完整的新输入。本例的 `2` 表示新计数，不是“增加 2”。
+- `baseRevision` 必须来自当前 Runtime；过期版本会被拒绝，不要手写或重复使用已经过期的 revision。
+- Computation 只能读取已声明的依赖，注册和调用时保留同一组 Definition token。
 - 数组、Map 或资源对象不能直接照搬本例的 capture/read；定义者必须确保调用方、candidate 与已发布状态之间不存在不安全的可变共享。
-- 本例没有需要释放的外部资源，所以没有定义值级 `dispose`。持有资源时，应在所属 Owner 或 artifact 定义中提供释放逻辑，并在使用结束后调用 Session 的 `dispose()`。
+- 本例没有需要释放的外部资源，所以没有定义值级 `dispose`。持有资源时，应在所属 Source 或 artifact 定义中提供释放逻辑，并在使用结束后调用 Runtime 的 `dispose()`。

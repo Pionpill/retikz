@@ -1,22 +1,22 @@
 import {
   createRuntimeChangeSet,
   createRuntimeIdentity,
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
 import type { CoreChange, IRScene } from '../../../src';
-import { CompileWarningCode, CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '../../../src';
+import { CompileWarningCode, CORE_SOURCE_KEY, CoreSourceDefinition, createCoreComputation } from '../../../src';
 
-const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
-const nodeIdentity = (id: string) => createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', id]);
-const scopeIdentity = (id: string) => createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'scope', id]);
+const rootIdentity = createRuntimeIdentity(CORE_SOURCE_KEY, ['root']);
+const nodeIdentity = (id: string) => createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', id]);
+const scopeIdentity = (id: string) => createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'scope', id]);
 const scopedNodeIdentity = (scopeId: string, id: string) =>
-  createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'scope', scopeId, 'node', id]);
+  createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'scope', scopeId, 'node', id]);
 
 const scene = (...nodes: Array<Readonly<{ id: string; text: string }>>): IRScene => ({
   version: 1,
@@ -30,18 +30,18 @@ const scene = (...nodes: Array<Readonly<{ id: string; text: string }>>): IRScene
 });
 
 const updateWithHint = (initial: IRScene, next: IRScene, changes: ReadonlyArray<CoreChange>) => {
-  const program = createCoreProgram({ onWarn: () => {} });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+  const program = createCoreComputation({ onWarn: () => {} });
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+  const session = createRuntime({
+    sources,
+    computations,
+    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
   });
   const baseRevision = session.revision();
   return session.update({
     baseRevision,
-    owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next, createRuntimeChangeSet(baseRevision, changes))],
+    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next, createRuntimeChangeSet(baseRevision, changes))],
   });
 };
 
@@ -244,7 +244,7 @@ describe('Core stable-root structural Snapshot Diff', () => {
     const addB: CoreChange = {
       kind: 'add',
       identity: nodeIdentity('b'),
-      parent: createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', 'a']),
+      parent: createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', 'a']),
     };
     const validAddB: CoreChange = { ...addB, parent: rootIdentity };
 

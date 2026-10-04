@@ -33,7 +33,7 @@ export const kernelV05: Release = {
           },
           content: {
             zh: 'Runtime identity 的空 owner / path segment 现在 fail-loud，并由 `RetikzRuntimeError` 的稳定 code 区分且保留 rejected value 为 `cause`。Runtime、Core、Render、Vanilla、Chart、Plot Vanilla 与 Table 各自只保留一个包级 Error；专用 constructor 与 `instanceof` 分支移除，调用方改按 code / details 判定，原始 cause 与内部 recovery 语义保持不变。',
-            en: 'Runtime identity owners and path segments now fail loudly through a stable `RetikzRuntimeError` code while preserving the rejected value as `cause`. Runtime, Core, Render, Vanilla, Chart, Plot Vanilla, and Table now keep one package-level Error each. Specialized constructors and `instanceof` branches are removed; callers branch on code and details, while original causes and internal recovery semantics remain intact.',
+            en: 'Runtime identity sources and path segments now fail loudly through a stable `RetikzRuntimeError` code while preserving the rejected value as `cause`. Runtime, Core, Render, Vanilla, Chart, Plot Vanilla, and Table now keep one package-level Error each. Specialized constructors and `instanceof` branches are removed; callers branch on code and details, while original causes and internal recovery semantics remain intact.',
           },
         },
       ],
@@ -220,38 +220,38 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: 'Typed Program graph', en: 'Typed Program graphs' },
+          label: { zh: 'Typed Computation graph', en: 'Typed Computation graphs' },
           content: {
-            zh: '`defineRuntimeProgram()` 保留 artifact input / owned value / private read / public read 四组泛型；builtin/custom Definition 共用一个 registry，依赖按稳定拓扑顺序执行。',
-            en: '`defineRuntimeProgram()` retains artifact-input, owned-value, private-read, and public-read generics. Built-in and custom Definitions share one registry and execute in stable topological order.',
+            zh: '`defineRuntimeComputation()` 保留 artifact input / owned value / private read / public read 四组泛型；builtin/custom Definition 共用一个 registry，依赖按稳定拓扑顺序执行。',
+            en: '`defineRuntimeComputation()` retains artifact-input, owned-value, private-read, and public-read generics. Built-in and custom Definitions share one registry and execute in stable topological order.',
           },
         },
         {
           label: { zh: '原子同步 Session', en: 'Atomic synchronous Sessions' },
           content: {
-            zh: '完整 Owner Snapshot 先在隔离 candidate 中 capture/read/compare，再执行 incremental、bailout 或 fallback Program；所有 read 成功后才一次发布 revision。',
-            en: 'Complete Owner Snapshots are captured, read, and compared in an isolated candidate before Programs choose incremental, bailout, or fallback execution. The revision publishes only after every read succeeds.',
+            zh: '完整 Source Snapshot 先在隔离 candidate 中 capture/read/compare，再执行 incremental、bailout 或 fallback Computation；所有 read 成功后才一次发布 revision。',
+            en: 'Complete Source Snapshots are captured, read, and compared in an isolated candidate before Computations choose incremental, bailout, or fallback execution. The revision publishes only after every read succeeds.',
           },
         },
         {
           label: { zh: '可选更新策略', en: 'Selectable update strategies' },
           content: {
-            zh: '`RuntimeSessionOptions.updateStrategy` 默认 `auto`；选择 `full` 时保留 Snapshot、transaction、rollback 与 diagnostics，但有实际依赖变化的 Program 跳过 `update()` 并完整运行。`RuntimeProgramContext.execution` 可区分主动 full、incremental 与安全 fallback。',
-            en: '`RuntimeSessionOptions.updateStrategy` defaults to `auto`. Selecting `full` keeps Snapshots, transactions, rollback, and diagnostics while affected Programs skip `update()` and run fully. `RuntimeProgramContext.execution` distinguishes forced full, incremental, and safe fallback execution.',
+            zh: '`RuntimeOptions.updateStrategy` 默认 `auto`；选择 `full` 时保留 Snapshot、transaction、rollback 与 diagnostics，但有实际依赖变化的 Computation 跳过 `update()` 并完整运行。`RuntimeComputationContext.execution` 可区分主动 full、incremental 与安全 fallback。',
+            en: '`RuntimeOptions.updateStrategy` defaults to `auto`. Selecting `full` keeps Snapshots, transactions, rollback, and diagnostics while affected Computations skip `update()` and run fully. `RuntimeComputationContext.execution` distinguishes forced full, incremental, and safe fallback execution.',
           },
         },
         {
           label: { zh: '稳定诊断与资源回滚', en: 'Stable diagnostics and resource rollback' },
           content: {
-            zh: 'Program callback、artifact lifecycle、observer、trace 与 dispose 使用稳定 code/context；publish 前失败反向清理 candidate，publish 后 observer/retire failure 进入 drain queue 而不回滚。',
-            en: 'Program callbacks, artifact lifecycle, observers, traces, and disposal use stable codes and context. Pre-publish failures retire candidates in reverse order, while post-publish observer and retire failures enter the drain queue without rollback.',
+            zh: 'Computation callback、artifact lifecycle、observer、trace 与 dispose 使用稳定 code/context；publish 前失败反向清理 candidate，publish 后 observer/retire failure 进入 drain queue 而不回滚。',
+            en: 'Computation callbacks, artifact lifecycle, observers, traces, and disposal use stable codes and context. Pre-publish failures retire candidates in reverse order, while post-publish observer and retire failures enter the drain queue without rollback.',
           },
         },
         {
           label: { zh: 'Commit participant', en: 'Commit participants' },
           content: {
-            zh: '`defineRuntimeCommitParticipant()` 让 renderer 等外部状态与 Owner/Program candidate 同一 transaction prepare、commit、read 与 publish；失败反向 rollback，rollback 失败进入可诊断的 broken Session。',
-            en: '`defineRuntimeCommitParticipant()` lets renderer and other external state prepare, commit, read, and publish in the same transaction as Owner/Program candidates. Failures roll back in reverse order, while rollback failures enter a diagnosable broken Session.',
+            zh: '`defineRuntimeCommitParticipant()` 让 renderer 等外部状态与 Source/Computation candidate 同一 transaction prepare、commit、read 与 publish；失败反向 rollback，rollback 失败进入可诊断的 broken Session。',
+            en: '`defineRuntimeCommitParticipant()` lets renderer and other external state prepare, commit, read, and publish in the same transaction as Source/Computation candidates. Failures roll back in reverse order, while rollback failures enter a diagnosable broken Session.',
           },
         },
       ],
@@ -295,8 +295,8 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
-            zh: '交付 performance trace、Owner / Program / participant typed identity、同步 transaction、fallback、diagnostic queue 与 exactly-once lifecycle。',
-            en: 'Ships performance traces, typed Owner/Program/participant identity, synchronous transactions, fallback, diagnostic queues, and exactly-once lifecycle management.',
+            zh: '交付 performance trace、Source / Computation / participant typed identity、同步 transaction、fallback、diagnostic queue 与 exactly-once lifecycle。',
+            en: 'Ships performance traces, typed Source/Computation/participant identity, synchronous transactions, fallback, diagnostic queues, and exactly-once lifecycle management.',
           },
           items: [],
         },
@@ -343,7 +343,7 @@ export const kernelV05: Release = {
           label: { zh: '动画预设分层', en: 'Animation preset ownership' },
           content: {
             zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/extension 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Extension 双语文档和 API 参考同步按归属拆分。',
-            en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/extension root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Extension guides and API references follow their owners.',
+            en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/extension root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Extension guides and API references follow their sources.',
           },
         },
         {
@@ -382,10 +382,10 @@ export const kernelV05: Release = {
           },
         },
         {
-          label: { zh: 'Core Runtime Program', en: 'Core Runtime Program' },
+          label: { zh: 'Core Runtime Computation', en: 'Core Runtime Computation' },
           content: {
-            zh: '`createCoreProgram()` 让完整 IR Snapshot 在 Runtime transaction 中原子产出完整 CompileResult、带 canonical identity topology 的 Scene Snapshot 与 Patch。ChangeSet 会与前后 Snapshot 交叉校验；当前安全局部路径只重编一个 root Node 的纯色 fill，引用、资源、Scope、Path、Composite 与其它变化保守 full fallback。',
-            en: '`createCoreProgram()` atomically derives a complete CompileResult, a Scene Snapshot with canonical identity topology, and a Patch from complete IR Snapshots inside Runtime transactions. ChangeSets are cross-checked against previous and next Snapshots. The current safe local path recompiles only one root Node solid fill, while references, resources, Scopes, Paths, composites, and other changes conservatively use full fallback.',
+            zh: '`createCoreComputation()` 让完整 IR Snapshot 在 Runtime transaction 中原子产出完整 CompileResult、带 canonical identity topology 的 Scene Snapshot 与 Patch。ChangeSet 会与前后 Snapshot 交叉校验；当前安全局部路径只重编一个 root Node 的纯色 fill，引用、资源、Scope、Path、Composite 与其它变化保守 full fallback。',
+            en: '`createCoreComputation()` atomically derives a complete CompileResult, a Scene Snapshot with canonical identity topology, and a Patch from complete IR Snapshots inside Runtime transactions. ChangeSets are cross-checked against previous and next Snapshots. The current safe local path recompiles only one root Node solid fill, while references, resources, Scopes, Paths, composites, and other changes conservatively use full fallback.',
           },
         },
         {
@@ -510,8 +510,8 @@ export const kernelV05: Release = {
           version: 'alpha.2',
           date: '2026-08-04',
           summary: {
-            zh: '交付 Core Runtime Program、单 root Node fill 局部增量闭环、通用 provider dependency graph、最小内置集合、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与领域中立编译观测。',
-            en: 'Ships the Core Runtime Program, the one-root Node fill incremental path, a generic provider dependency graph, a minimal built-in set, layout-aware composite proposal / probe contracts, inherited Theme, and domain-neutral compile observation.',
+            zh: '交付 Core Runtime Computation、单 root Node fill 局部增量闭环、通用 provider dependency graph、最小内置集合、布局感知 Composite proposal / probe 合同、可继承 Theme 环境与领域中立编译观测。',
+            en: 'Ships the Core Runtime Computation, the one-root Node fill incremental path, a generic provider dependency graph, a minimal built-in set, layout-aware composite proposal / probe contracts, inherited Theme, and domain-neutral compile observation.',
           },
           items: [
             {

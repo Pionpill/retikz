@@ -1,12 +1,12 @@
 import { Layout, Node } from '@retikz/react';
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
-  defineRuntimeOwner,
-  defineRuntimeProgram,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
+  defineRuntimeSource,
+  defineRuntimeComputation,
 } from '@retikz/runtime';
 import type { FC } from 'react';
 
@@ -14,39 +14,39 @@ import type { Lang } from '@/i18n';
 
 import { counterResultI18n } from './counter-result.i18n';
 
-const counter = defineRuntimeOwner<number, number, number, never>({
+const counter = defineRuntimeSource<number, number, number, never>({
   key: 'example/counter',
   value: { capture: value => value, read: value => value, equals: (left, right) => left === right },
 });
-const doubled = defineRuntimeProgram({
+const doubled = defineRuntimeComputation({
   id: { owner: 'example/counter', key: 'doubled' },
-  owners: [counter],
+  sources: [counter],
   run: view => ({ kind: 'full', artifact: view.snapshot(counter).value * 2 }),
 });
-const owners = createRuntimeOwnerRegistry({ custom: [counter] });
-const programs = createRuntimeProgramRegistry({ owners, custom: [doubled] });
+const sources = createRuntimeSourceRegistry({ custom: [counter] });
+const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
 
 /** 一次完整更新的输入值与显示语言 */
 export type CounterResultPreviewProps = { initial: number; next: number; lang: Lang };
 
-/** 每次渲染独立运行并释放 Session，结果直接来自公开读取接口 */
+/** 每次渲染独立运行并释放 Runtime，结果直接来自公开读取接口 */
 export const CounterResultPreview: FC<CounterResultPreviewProps> = props => {
   const { initial, next, lang } = props;
   const i18n = counterResultI18n[lang];
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    initialSnapshots: [createRuntimeOwnerInput(counter, initial)],
+  const runtime = createRuntime({
+    sources,
+    computations,
+    initialSnapshots: [createRuntimeSourceInput(counter, initial)],
   });
   try {
-    const before = session.snapshot(counter);
-    const beforeArtifact = session.artifact(doubled);
-    const update = session.update({
-      baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(counter, next)],
+    const before = runtime.snapshot(counter);
+    const beforeArtifact = runtime.artifact(doubled);
+    const update = runtime.update({
+      baseRevision: runtime.revision(),
+      sources: [createRuntimeSourceUpdate(counter, next)],
     });
-    const after = session.snapshot(counter);
-    const afterArtifact = session.artifact(doubled);
+    const after = runtime.snapshot(counter);
+    const afterArtifact = runtime.artifact(doubled);
     return (
       <Layout viewBox={{ x: -145, y: -40, width: 290, height: 190 }}>
         <Node
@@ -65,6 +65,6 @@ export const CounterResultPreview: FC<CounterResultPreviewProps> = props => {
       </Layout>
     );
   } finally {
-    session.dispose();
+    runtime.dispose();
   }
 };

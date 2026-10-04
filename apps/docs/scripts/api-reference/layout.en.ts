@@ -89,15 +89,15 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Default relative node distance in drawing units; applies when position uses direction/of without distance',
   '默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号':
     'Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes',
-  '创建保留式 Runtime Session': 'Creates a retained Runtime Session',
+  '创建保留式 Runtime': 'Creates a retained Runtime',
   '按 Vanilla processing controller 的队列顺序接收 Runtime 结构化诊断':
     'Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller',
-  'Program 更新策略': 'Program update strategy',
-  '不创建 Runtime Session，直接完整编译与物化':
-    'Compiles and materializes the complete result directly, without creating a Runtime Session',
-  'static 不创建 Runtime session，因此不产生 Runtime 结构化诊断':
-    'Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics',
-  'static 不支持 Program 更新策略': 'Static mode does not support a Program update strategy',
+  'Computation 更新策略': 'Computation update strategy',
+  '不创建 Runtime，直接完整编译与物化':
+    'Compiles and materializes the complete result directly, without creating a Runtime',
+  'static 不创建 Runtime，因此不产生 Runtime 结构化诊断':
+    'Static mode creates no Runtime and therefore emits no structured Runtime diagnostics',
+  'static 不支持 Computation 更新策略': 'Static mode does not support a Computation update strategy',
   '为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展':
     'Register custom shapes, arrows, clips, and other drawing extensions for Layout',
   '通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据':
@@ -165,8 +165,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'React Layout static Runtime 配置': 'Static Runtime configuration for React Layout',
   'React Layout：JSX 转 Vanilla Input，随后只宿主化 Vanilla processing result':
     'React Layout converts JSX to Vanilla Input, then hosts the Vanilla processing result',
-  'React 不创建 Core Program、Runtime session 或 retained renderer；所有处理状态归 Vanilla':
-    'React does not create Core Programs, Runtime sessions, or retained renderers; Vanilla owns all processing state',
+  'React 不创建 Core Computation、Runtime 或 retained renderer；所有处理状态归 Vanilla':
+    'React does not create Core Computations, Runtimes, or retained renderers; Vanilla owns all processing state',
   'React Layout 的宿主执行模式': 'React Layout host execution modes',
 };
 

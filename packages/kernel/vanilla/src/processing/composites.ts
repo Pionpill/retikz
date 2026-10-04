@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, AnyExpandCompositeDefinition, AnyLayoutCompositeDefinition } from '@retikz/core';
 import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
-import { defineRuntimeOwner } from '@retikz/runtime';
+import { defineRuntimeSource } from '@retikz/runtime';
 
 type CompositeSlot = {
   /** 当前 transaction 可见的 composite Definition */
@@ -17,11 +17,11 @@ export type PreparedCompositeDefinitions = Readonly<{
   rollback: () => void;
 }>;
 
-/** retained Core Program 使用的稳定 composite definition 容器 */
+/** retained Core Computation 使用的稳定 composite definition 容器 */
 export type RetainedCompositeDefinitions = Readonly<{
   /** session-lifetime identity 稳定的代理 Definitions */
   definitions: ReadonlyArray<AnyCompositeDefinition>;
-  /** 判断 candidate 能否复用当前 Core Program 的固定 definition topology */
+  /** 判断 candidate 能否复用当前 Core Computation 的固定 definition topology */
   isCompatible: (next: ReadonlyArray<AnyCompositeDefinition> | undefined) => boolean;
   /** 校验固定 topology 并暂存下一组 callback */
   prepare: (next: ReadonlyArray<AnyCompositeDefinition> | undefined) => PreparedCompositeDefinitions;
@@ -36,7 +36,7 @@ const invalidDefinitions = (cause: unknown): never => {
 };
 
 /** Vanilla composite callback revision 的内部 owner */
-export const VanillaCompositeRevisionOwnerDefinition = defineRuntimeOwner<number, number, number, never>({
+export const VanillaCompositeRevisionSourceDefinition = defineRuntimeSource<number, number, number, never>({
   key: '@retikz/vanilla:composite-revision',
   value: {
     capture: value => {
@@ -89,8 +89,8 @@ const createDelegate = (slot: CompositeSlot): AnyCompositeDefinition => {
     : createLayoutDelegate(initial, slot);
 };
 
-/** 校验 next normalization 没有热改 Core Program 的固定 definition 拓扑 */
-/** 判断 candidate 是否保持当前 Core Program 的 definition topology */
+/** 校验 next normalization 没有热改 Core Computation 的固定 definition 拓扑 */
+/** 判断 candidate 是否保持当前 Core Computation 的 definition topology */
 const isCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompositeDefinition): boolean => {
   const initialExpand = typeof initial.expand === 'function';
   const nextExpand = typeof next.expand === 'function';
@@ -105,7 +105,7 @@ const isCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompos
 
 /**
  * 为 Vanilla normalization 生成的 definitions 建立稳定代理
- * @description Core Program options 在 session 内固定；同 key/schema/分支的 callback 可在 transaction prepare 前切到候选值，
+ * @description Core Computation options 在 session 内固定；同 key/schema/分支的 callback 可在 transaction prepare 前切到候选值，
  *   失败时恢复旧 callback，成功时与 Core artifact 一起成为 committed 语义
  */
 export const createRetainedCompositeDefinitions = (

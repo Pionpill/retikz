@@ -13,19 +13,19 @@ import type {
   SceneRuntimeNode,
   SceneRuntimeSubtree,
 } from '../../contract';
-import { CORE_OWNER_KEY } from '../../contract';
+import { CORE_SOURCE_KEY } from '../../contract';
 import type { IRNode, IRScene } from '../../schemas';
 import { jsonStructuralEquals } from '../../shared/json';
 import { compileCoreSnapshot } from '../compile';
 import type { CoreSnapshotIndexRead } from './diff';
-import type { CoreProgramOptions } from './public';
-import { createFullSceneRuntimeSnapshot, freezeProgramOutput } from './snapshot';
-import type { CoreProgramArtifactInput, CoreProgramRead } from './types';
+import type { CoreComputationOptions } from './public';
+import { createFullSceneRuntimeSnapshot, freezeComputationOutput } from './snapshot';
+import type { CoreComputationArtifactInput, CoreComputationRead } from './types';
 
 /** 单个 root Node 样式更新产生的 private incremental candidate */
 export type CoreRootNodeStyleCandidate<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 交给 Runtime capture 的完整 candidate artifact */
-  artifact: CoreProgramArtifactInput<TComposites>;
+  artifact: CoreComputationArtifactInput<TComposites>;
   /** 复用的 committed root child 数 */
   reused: number;
   /** 规范化 Scene Patch operation 数 */
@@ -93,10 +93,10 @@ const createPrimitiveSubtree = (
 export const tryCompileRootNodeStyleUpdate = <
   const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly [],
 >(
-  previous: CoreProgramRead<TComposites>,
+  previous: CoreComputationRead<TComposites>,
   nextSource: Readonly<IRScene>,
   nextIndex: CoreSnapshotIndexRead,
-  options: CoreProgramOptions<TComposites>,
+  options: CoreComputationOptions<TComposites>,
   baseRevision: RuntimeRevision,
   candidateRevision: RuntimeRevision,
 ): CoreRootNodeStyleCandidate<TComposites> | undefined => {
@@ -166,13 +166,13 @@ export const tryCompileRootNodeStyleUpdate = <
   ) {
     return undefined;
   }
-  freezeProgramOutput(isolated.result);
+  freezeComputationOutput(isolated.result);
   const isolatedSnapshot = createFullSceneRuntimeSnapshot(
     isolated.result.scene,
     candidateRevision,
     isolated.primitiveMetadata,
   );
-  const changedOwner = createRuntimeIdentity(CORE_OWNER_KEY, ['root', 'node', changedId]);
+  const changedOwner = createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', changedId]);
   const previousRootTopology = previous.snapshot.topology.filter(
     node => node.primitivePath.length === 1 && runtimeIdentityEquals(node.semanticOwner, changedOwner),
   );
@@ -214,15 +214,15 @@ export const tryCompileRootNodeStyleUpdate = <
   }
   if (operations.length === 0) return undefined;
 
-  const runtimePrimitives = freezeProgramOutput(nextPrimitives);
+  const runtimePrimitives = freezeComputationOutput(nextPrimitives);
   const outputPrimitives = runtimePrimitives as typeof previous.output.result.scene.primitives;
-  const result = freezeProgramOutput({
+  const result = freezeComputationOutput({
     ...previous.output.result,
     scene: { ...previous.output.result.scene, primitives: outputPrimitives },
   }) as typeof previous.output.result;
   const snapshot = Object.freeze({
     revision: candidateRevision,
-    scene: freezeProgramOutput({ ...previous.snapshot.scene, primitives: runtimePrimitives }),
+    scene: freezeComputationOutput({ ...previous.snapshot.scene, primitives: runtimePrimitives }),
     root: previous.snapshot.root,
     topology: previous.snapshot.topology,
   });

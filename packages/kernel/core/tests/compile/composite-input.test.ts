@@ -1,9 +1,9 @@
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerUpdate,
-  createRuntimeOwnerRegistry,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceUpdate,
+  createRuntimeSourceRegistry,
+  createRuntimeComputationRegistry,
+  createRuntime,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
@@ -14,9 +14,9 @@ import {
   compileToScene,
   CompositeBaseSchema,
   createCompositeInputBindings,
-  createCoreProgram,
-  CoreOwnerDefinition,
-  CoreCompositeInputOwnerDefinition,
+  createCoreComputation,
+  CoreSourceDefinition,
+  CoreCompositeInputSourceDefinition,
   defineComposite,
   LayoutChildProbeKind,
   NaturalLayoutProposal,
@@ -243,26 +243,28 @@ describe('composite instance runtime input', () => {
 
   it('recompiles changed inputs for identical JSON and rolls back a mismatched candidate', () => {
     const source = sceneOf([leaf()]);
-    const program = createCoreProgram(
+    const program = createCoreComputation(
       { composites: [prepared] },
-      { compositeInputOwner: CoreCompositeInputOwnerDefinition },
+      { compositeInputSource: CoreCompositeInputSourceDefinition },
     );
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, CoreCompositeInputOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+    const sources = createRuntimeSourceRegistry({
+      builtins: [CoreSourceDefinition, CoreCompositeInputSourceDefinition],
+    });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
     const inputs = (text: string) => createCompositeInputBindings(source, [{ path: ['children', 0], input: text }]);
-    const session = createRuntimeSession({
-      owners,
-      programs,
+    const session = createRuntime({
+      sources,
+      computations,
       initialSnapshots: [
-        createRuntimeOwnerInput(CoreOwnerDefinition, source),
-        createRuntimeOwnerInput(CoreCompositeInputOwnerDefinition, inputs('initial-ready')),
+        createRuntimeSourceInput(CoreSourceDefinition, source),
+        createRuntimeSourceInput(CoreCompositeInputSourceDefinition, inputs('initial-ready')),
       ],
     });
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(CoreOwnerDefinition, source),
-        createRuntimeOwnerUpdate(CoreCompositeInputOwnerDefinition, inputs('updated-ready')),
+      sources: [
+        createRuntimeSourceUpdate(CoreSourceDefinition, source),
+        createRuntimeSourceUpdate(CoreCompositeInputSourceDefinition, inputs('updated-ready')),
       ],
     });
     expect(JSON.stringify(session.artifact(program).value.output.result.scene)).toContain('updated-ready');
@@ -271,12 +273,12 @@ describe('composite instance runtime input', () => {
     expect(() =>
       session.update({
         baseRevision: revision,
-        owners: [
-          createRuntimeOwnerUpdate(CoreOwnerDefinition, sceneOf([leaf(), leaf()])),
-          createRuntimeOwnerUpdate(CoreCompositeInputOwnerDefinition, inputs('mismatched')),
+        sources: [
+          createRuntimeSourceUpdate(CoreSourceDefinition, sceneOf([leaf(), leaf()])),
+          createRuntimeSourceUpdate(CoreCompositeInputSourceDefinition, inputs('mismatched')),
         ],
       }),
-    ).toThrow(/RUNTIME_PROGRAM_RUN_FAILED/i);
+    ).toThrow(/RUNTIME_COMPUTATION_RUN_FAILED/i);
     expect(session.revision()).toBe(revision);
     expect(session.artifact(program).value.output.result).toBe(committed);
     session.dispose();

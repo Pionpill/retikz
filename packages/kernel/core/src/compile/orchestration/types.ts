@@ -226,7 +226,7 @@ export type TraversalCompileOptions = {
   proposal?: LayoutProposal;
   /** 根 compile 共享 session */
   session?: CompositeCompileSession;
-  /** Runtime Program full compile 使用的 identity tracker */
+  /** Runtime Computation full compile 使用的 identity tracker */
   identityTracker?: RuntimeTopologyTracker;
   /** 隔离 traversal 继承的 semantic owner */
   semanticOwner?: RuntimeSemanticOwner;

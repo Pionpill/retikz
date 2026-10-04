@@ -21,7 +21,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       ],
     }),
     canonicalValues: { initial: 1, next: 2 },
-    relatedApis: ['createRuntimeOwnerInput', 'createRuntimeOwnerUpdate', 'createRuntimeSession'],
+    relatedApis: ['createRuntimeSourceInput', 'createRuntimeSourceUpdate', 'createRuntime'],
   } satisfies PreviewControlContract;
 };
 

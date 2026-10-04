@@ -1,18 +1,18 @@
 ﻿// @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
 import type { IRScene, RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
 import type { RuntimeCommitParticipantToken } from '@retikz/runtime';
 import {
   createRuntimeIdentity,
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
   defineRuntimeCommitParticipant,
   RetikzRuntimeErrorCode,
-  RuntimeProgramPhase,
+  RuntimeComputationPhase,
 } from '@retikz/runtime';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -25,7 +25,7 @@ import type { RenderFrameSnapshot, RenderReadonlyLayer, RenderRuntimeConfigInput
 import {
   builtinRetainedRendererFactory,
   createRetainedRenderParticipant,
-  RenderRuntimeOwnerDefinition,
+  RenderRuntimeSourceDefinition,
 } from '../../src/runtime';
 import { getRetainedRendererExecutor } from '../../src/runtime/renderer';
 
@@ -167,7 +167,7 @@ const createSession = (
     useAmbientDevicePixelRatio?: boolean;
   }> = {},
 ) => {
-  const coreProgram = createCoreProgram({ onWarn: () => undefined });
+  const coreComputation = createCoreComputation({ onWarn: () => undefined });
   const handle =
     backend === 'svg'
       ? createRetainedRenderParticipant({
@@ -175,7 +175,7 @@ const createSession = (
           host: host as SVGSVGElement,
           rendererFactory: builtinRetainedRendererFactory,
           immutableOptions: { backend, idPrefix: 'builtin-test' },
-          coreProgram,
+          coreComputation,
           ...(options.mountMode === undefined ? {} : { mountMode: options.mountMode }),
         })
       : createRetainedRenderParticipant({
@@ -187,18 +187,18 @@ const createSession = (
             idPrefix: 'builtin-test',
             ...(options.useAmbientDevicePixelRatio === true ? {} : { devicePixelRatio: 1 }),
           },
-          coreProgram,
+          coreComputation,
           ...(options.mountMode === undefined ? {} : { mountMode: options.mountMode }),
         });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const session = createRuntime({
+    sources,
+    computations,
     participants: [handle.participant, ...(options.participants ?? [])],
     initialSnapshots: [
-      createRuntimeOwnerInput(CoreOwnerDefinition, options.ir ?? scene('#ef4444')),
-      createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, options.config ?? {}),
+      createRuntimeSourceInput(CoreSourceDefinition, options.ir ?? scene('#ef4444')),
+      createRuntimeSourceInput(RenderRuntimeSourceDefinition, options.config ?? {}),
     ],
   });
   return { handle, session };
@@ -206,20 +206,20 @@ const createSession = (
 
 /** 编译一对固定 Runtime snapshot 与 canonical Patch，供内置 renderer 黑盒测试 */
 const createCorePair = (currentSource: IRScene, nextSource: IRScene) => {
-  const coreProgram = createCoreProgram({ onWarn: () => undefined });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, currentSource)],
+  const coreComputation = createCoreComputation({ onWarn: () => undefined });
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const session = createRuntime({
+    sources,
+    computations,
+    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, currentSource)],
   });
-  const current = session.artifact(coreProgram).value.snapshot;
+  const current = session.artifact(coreComputation).value.snapshot;
   session.update({
     baseRevision: session.revision(),
-    owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, nextSource)],
+    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, nextSource)],
   });
-  const artifact = session.artifact(coreProgram).value;
+  const artifact = session.artifact(coreComputation).value;
   session.dispose();
   if (artifact.patch === undefined) throw new Error('expected incremental Core patch');
   return Object.freeze({ current, next: artifact.snapshot, patch: artifact.patch });
@@ -497,7 +497,7 @@ describe('builtin retained renderers', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
     });
     expect(host.getAttribute('aria-label')).toBe('external');
     expect(host.style.getPropertyValue('background-color')).toBe('rgb(1, 2, 3)');
@@ -546,8 +546,8 @@ describe('builtin retained renderers', () => {
     });
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
           handlerContributions: [
             { registration: 1, handlers: { 'node-a': { click: throwing } } },
             { registration: 2, handlers: { 'node-a': { click: second } } },
@@ -561,8 +561,8 @@ describe('builtin retained renderers', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
           handlerContributions: [{ registration: 2, handlers: { 'node-a': { click: second } } }],
         }),
       ],
@@ -581,13 +581,13 @@ describe('builtin retained renderers', () => {
     const second = vi.fn();
     const probe = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
       key: 'z:hydration-probe',
-      owners: [],
-      programs: [],
+      sources: [],
+      computations: [],
       revisionPolicy: 'continuous',
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === RuntimeProgramPhase.Update) {
+          if (candidate.phase === RuntimeComputationPhase.Update) {
             host.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
           }
         },
@@ -603,8 +603,8 @@ describe('builtin retained renderers', () => {
     });
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
           handlerContributions: [{ registration: 2, handlers: { 'node-a': { click: second } } }],
         }),
       ],
@@ -957,7 +957,7 @@ describe('builtin retained renderers', () => {
       expect(() =>
         svg.session.update({
           baseRevision: svg.session.revision(),
-          owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, animatedScene('#22c55e', 'manual'))],
+          sources: [createRuntimeSourceUpdate(CoreSourceDefinition, animatedScene('#22c55e', 'manual'))],
         }),
       ).toThrow();
       svgHost.querySelector('[data-retikz-id="node-a"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -1029,7 +1029,7 @@ describe('builtin retained renderers', () => {
     expect(() =>
       canvas.session.update({
         baseRevision: canvas.session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, autoplayScene)],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, autoplayScene)],
       }),
     ).toThrow();
     canvasHost.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 100, clientY: 50 }));
@@ -1062,7 +1062,7 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
       }),
     ).toThrowError(
       expect.objectContaining({
@@ -1100,14 +1100,14 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
       }),
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
     expect(host.innerHTML).toBe(committedMarkup);
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#3b82f6'))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#3b82f6'))],
       }),
     ).toThrowError(expect.objectContaining({ code: RetikzRuntimeErrorCode.ParticipantRollbackFailed }));
     expect(() => session.dispose()).not.toThrow();
@@ -1195,8 +1195,8 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [
-          createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+        sources: [
+          createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
             handlerContributions: [
               {
                 registration: 2,
@@ -1249,8 +1249,8 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [
-          createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+        sources: [
+          createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
             handlerContributions: [
               {
                 registration: 2,
@@ -1307,8 +1307,8 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [
-          createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+        sources: [
+          createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
             handlerContributions: [
               {
                 registration: 2,
@@ -3583,13 +3583,13 @@ describe('builtin retained renderers', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
     });
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(nodeA);
 
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e', true))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e', true))],
     });
     expect(host.querySelector('[data-retikz-id="node-a"]')).toBe(nodeA);
     expect(host.querySelector('[data-retikz-id="node-b"]')).toBe(nodeB);
@@ -3666,7 +3666,7 @@ describe('builtin retained renderers', () => {
     const current = duplicatePublicIds(seed.handle.read(seed.session).frame.primary);
     seed.session.update({
       baseRevision: seed.session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, sourceScene(true, true, true))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, sourceScene(true, true, true))],
     });
     const next = duplicatePublicIds(seed.handle.read(seed.session).frame.primary);
     seed.session.dispose();
@@ -3750,7 +3750,7 @@ describe('builtin retained renderers', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
     });
 
     expect(drawImage).toHaveBeenCalledTimes(2);
@@ -3784,8 +3784,8 @@ describe('builtin retained renderers', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
           handlerContributions: [{ registration: 0, handlers: {} }],
         }),
       ],
@@ -3847,7 +3847,7 @@ describe('builtin retained renderers', () => {
     computedStyle = { color: 'rgb(4, 5, 6)', fontFamily: 'Retikz Changed' } as CSSStyleDeclaration;
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { cachePolicy: 'static' })],
+      sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { cachePolicy: 'static' })],
     });
     expect(strokeStyles).toContain('rgb(4, 5, 6)');
     expect(fonts.some(font => String(font).includes('Retikz Changed'))).toBe(true);
@@ -4320,12 +4320,12 @@ describe('builtin retained renderers', () => {
     });
     const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
       key: 'z:prepare-failure',
-      owners: [],
-      programs: [],
+      sources: [],
+      computations: [],
       revisionPolicy: 'continuous',
       tracePhases: [],
       prepare: candidate => {
-        if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('late prepare failed');
+        if (candidate.phase === RuntimeComputationPhase.Update) throw new Error('late prepare failed');
         return { commit: () => undefined, rollback: () => undefined, dispose: () => undefined };
       },
       read: () => Object.freeze({ ok: true as const }),
@@ -4342,7 +4342,7 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
       }),
     ).toThrow();
     expect(drawImage).toHaveBeenCalledTimes(1);
@@ -4381,7 +4381,7 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
       }),
     ).toThrow();
     expect(connectedPaintCount).toBe(3);
@@ -4414,7 +4414,7 @@ describe('builtin retained renderers', () => {
     host.width = 300;
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { cachePolicy: 'static' })],
+      sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { cachePolicy: 'static' })],
     });
     expect(drawImage).toHaveBeenCalledTimes(2);
     session.dispose();
@@ -4444,7 +4444,7 @@ describe('builtin retained renderers', () => {
 
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { canvas: { width: 300, height: 120 } })],
+      sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { canvas: { width: 300, height: 120 } })],
     });
 
     expect([host.width, host.height]).toEqual([300, 120]);
@@ -4479,8 +4479,8 @@ describe('builtin retained renderers', () => {
     Object.defineProperty(globalThis, 'devicePixelRatio', { configurable: true, value: 2 });
     session.update({
       baseRevision: session.revision(),
-      owners: [
-        createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, {
+      sources: [
+        createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, {
           canvas: { width: 100, height: 50 },
           cachePolicy: 'static',
         }),
@@ -4510,8 +4510,8 @@ describe('builtin retained renderers', () => {
     let initial = true;
     const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
       key: 'z:canvas-size-commit-failure',
-      owners: [],
-      programs: [],
+      sources: [],
+      computations: [],
       revisionPolicy: 'continuous',
       tracePhases: [],
       prepare: () => ({
@@ -4536,7 +4536,7 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { canvas: { width: 300, height: 120 } })],
+        sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { canvas: { width: 300, height: 120 } })],
       }),
     ).toThrow();
     expect([host.width, host.height]).toEqual([200, 100]);
@@ -4670,7 +4670,7 @@ describe('builtin retained renderers', () => {
     before?.seek(123);
     session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, animatedScene('#22c55e', 'manual'))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, animatedScene('#22c55e', 'manual'))],
     });
     expect(handle.read(session).animation?.time).toBe(123);
     fillStyles.length = 0;
@@ -5472,13 +5472,13 @@ describe('builtin retained renderers', () => {
     };
     const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
       key: 'z:image-failure',
-      owners: [],
-      programs: [],
+      sources: [],
+      computations: [],
       revisionPolicy: 'continuous',
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('reject image candidate');
+          if (candidate.phase === RuntimeComputationPhase.Update) throw new Error('reject image candidate');
         },
         rollback: () => undefined,
         dispose: () => undefined,
@@ -5494,7 +5494,7 @@ describe('builtin retained renderers', () => {
     expect(() =>
       rollbackSession.update({
         baseRevision: rollbackSession.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, imageScene)],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, imageScene)],
       }),
     ).toThrow();
     const rolledBackImage = TestImage.instances.at(-1);
@@ -5510,7 +5510,7 @@ describe('builtin retained renderers', () => {
     expect(committedImage?.onload).not.toBeNull();
     removalSession.update({
       baseRevision: removalSession.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#ef4444'))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#ef4444'))],
     });
     expect(committedImage?.onload).toBeNull();
     removalSession.dispose();
@@ -5614,13 +5614,13 @@ describe('builtin retained renderers', () => {
   it('后序 participant commit 失败时恢复 SVG DOM 与旧 committed read identity', () => {
     const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
       key: 'z:failure',
-      owners: [],
-      programs: [],
+      sources: [],
+      computations: [],
       revisionPolicy: 'continuous',
       tracePhases: [],
       prepare: candidate => ({
         commit: () => {
-          if (candidate.phase === RuntimeProgramPhase.Update) throw new Error('late commit failed');
+          if (candidate.phase === RuntimeComputationPhase.Update) throw new Error('late commit failed');
         },
         rollback: () => undefined,
         dispose: () => undefined,
@@ -5637,7 +5637,7 @@ describe('builtin retained renderers', () => {
     expect(() =>
       session.update({
         baseRevision: session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, scene('#22c55e'))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, scene('#22c55e'))],
       }),
     ).toThrow();
     expect(handle.read(session)).toBe(previousRead);
@@ -5666,13 +5666,13 @@ it('Scope 外框在 SVG retained 更新与移除时保持命中隔离', () => {
   const frame = host.querySelector('[pointer-events="none"]');
   session.update({
     baseRevision: session.revision(),
-    owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source(20))],
+    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source(20))],
   });
   expect(host.querySelector('[pointer-events="none"]')).toBe(frame);
   expect(host.querySelector('[data-retikz-id="child"]')).not.toBeNull();
   session.update({
     baseRevision: session.revision(),
-    owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source())],
+    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source())],
   });
   expect(host.querySelector('[pointer-events="none"]')).toBeNull();
 });

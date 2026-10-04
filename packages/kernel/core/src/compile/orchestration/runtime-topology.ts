@@ -2,12 +2,12 @@ import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 import { createRuntimeIdentity } from '@retikz/runtime';
 
 import type { ScenePrimitive } from '../../contract';
-import { CORE_OWNER_KEY } from '../../contract';
+import { CORE_SOURCE_KEY } from '../../contract';
 import type { IRChild } from '../../schemas';
 import { createCompileInvariantError } from '../probe-failure';
 import type { RuntimePrimitiveMetadata, RuntimeSemanticOwner, RuntimeTopologyTracker } from './types';
 
-const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
+const rootIdentity = createRuntimeIdentity(CORE_SOURCE_KEY, ['root']);
 
 /** 返回 child 的 Kernel kind；Composite 保持 provider key 仅用于 candidate-local identity */
 const childKind = (child: IRChild): string =>
@@ -69,14 +69,14 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
       state.parent === undefined
         ? rootIdentity
         : state.candidate || state.id === undefined || state.childType === undefined
-          ? createRuntimeIdentity(CORE_OWNER_KEY, [
+          ? createRuntimeIdentity(CORE_SOURCE_KEY, [
               ...identityOf(state.parent).path,
               'candidate',
               String(revision),
               state.childKind ?? 'child',
               String(state.index ?? 0),
             ])
-          : createRuntimeIdentity(CORE_OWNER_KEY, [...identityOf(state.parent).path, state.childType, state.id]);
+          : createRuntimeIdentity(CORE_SOURCE_KEY, [...identityOf(state.parent).path, state.childType, state.id]);
     ownerIdentities.set(owner, identity);
     return identity;
   };
@@ -157,7 +157,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
         if (emission === undefined) return undefined;
         const semanticOwner = identityOf(emission.owner);
         return {
-          identity: createRuntimeIdentity(CORE_OWNER_KEY, [
+          identity: createRuntimeIdentity(CORE_SOURCE_KEY, [
             ...semanticOwner.path,
             'emission',
             emission.role,
