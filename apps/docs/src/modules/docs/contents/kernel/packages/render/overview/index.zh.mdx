@@ -19,7 +19,7 @@ description: 把渲染目标无关的 Scene 落到 SVG / Canvas，并以 retaine
 
 ## Retained Runtime
 
-`createRetainedRenderParticipant()` 把 Core Program、`RenderRuntimeOwnerDefinition` 与一个 retained renderer 接入同一 Runtime Session。首次 transaction 物化完整 Scene，后续 transaction 把 Scene Patch 与 renderer config 一起 prepare；只有所有 participant 都成功 commit 后，DOM / bitmap、事件、动画控制器与公开 read 才推进到同一 revision。失败 transaction 不发布新 revision，并尝试 rollback；rollback 成功时旧宿主继续可用，rollback 自身失败时 Session 进入 broken，需要 dispose 后重新创建。
+`createRetainedRenderParticipant()` 把 Core Computation、`RenderRuntimeSourceDefinition` 与一个 retained renderer 接入同一 Runtime Runtime。首次 transaction 物化完整 Scene，后续 transaction 把 Scene Patch 与 renderer config 一起 prepare；只有所有 participant 都成功 commit 后，DOM / bitmap、事件、动画控制器与公开 read 才推进到同一 revision。失败 transaction 不发布新 revision，并尝试 rollback；rollback 成功时旧宿主继续可用，rollback 自身失败时 Runtime 进入 broken，需要 dispose 后重新创建。
 
 最终 dispose 会对 hydration、animation 与 image loader 做反向 best-effort cleanup。SVG WAAPI binding 或 Canvas clock 一旦开始清理，公开 controls 与事件 / 可见性回调立即失活；animation、observer、listener、inline style ownership、visibility listener 与 clock 分别清理，成功项不重复，失败项保留给后续 dispose 重试。
 

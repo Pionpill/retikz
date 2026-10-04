@@ -1,14 +1,14 @@
 ---
-description: Core Runtime Program 与安全增量编译；背景：compileToScene() 是无状态完整编译入口
-keywords: 'Core、Runtime、Program、replaceScene、update、CompileResult、SceneRuntimeSnapshot'
+description: Core Runtime Computation 与安全增量编译；背景：compileToScene() 是无状态完整编译入口
+keywords: 'Core、Runtime、Computation、replaceScene、update、CompileResult、SceneRuntimeSnapshot'
 ---
 
-# ADR-013：Core Runtime Program 与安全增量编译
+# ADR-013：Core Runtime Computation 与安全增量编译
 
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-28
-- 关联：[ADR-012](./012-program-transaction-lifecycle.md) · [ADR-014](./014-scene-patch-retained-renderer.md)
+- 关联：[ADR-012](./012-computation-transaction-lifecycle.md) · [ADR-014](./014-scene-patch-retained-renderer.md)
 
 ## 背景
 
@@ -20,24 +20,24 @@ alpha.2 需要先把完整编译接入 Runtime transaction，冻结 Snapshot、i
 
 ### 完整编译保持真源
 
-`compileToScene()` 保持纯函数和无 session 的完整入口。`createCoreProgram(options)` 复用同一个内部完整编译器，把 Core Scene 接入 `@retikz/runtime` Program：
+`compileToScene()` 保持纯函数和无 runtime 的完整入口。`createCoreComputation(options)` 复用同一个内部完整编译器，把 Core Scene 接入 `@retikz/runtime` Computation：
 
 - initial revision 执行完整编译，产生完整 `CompileResult` 与 `SceneRuntimeSnapshot`
 - update 始终接收完整 next IR Snapshot
 - 局部路径无法证明等价时执行 full fallback，并以唯一 `replaceScene` operation 发布 Patch
 - Runtime 只协调 revision、candidate 隔离和原子发布，不解释 Core IR 或 Scene
 
-Program 生命周期内的 options、registry array 与 Definition record 在创建时复制并固定；callback reference 保持不变。要改变 measurer、lowerer、provider 或其闭包状态，调用方必须重建 Program 和 Session。
+Computation 生命周期内的 options、registry array 与 Definition record 在创建时复制并固定；callback reference 保持不变。要改变 measurer、lowerer、provider 或其闭包状态，调用方必须重建 Computation 和 Runtime。
 
 ### 公共 Runtime 表面
 
 Core 公开：
 
-- `CORE_OWNER_KEY` 与 `CORE_PROGRAM_ID`
-- `CoreOwnerDefinition`
-- `createCoreProgram(options)`
+- `CORE_SOURCE_KEY` 与 `CORE_COMPUTATION_ID`
+- `CoreSourceDefinition`
+- `createCoreComputation(options)`
 - `CoreChange` 的 `add`、`update`、`remove`、`move` change hint
-- `CoreProgramOptions`、`CoreProgramOutput`、`CoreProgramPublicRead` 与 `CoreProgramDefinition`
+- `CoreComputationOptions`、`CoreComputationOutput`、`CoreComputationPublicRead` 与 `CoreComputationDefinition`
 
 public read 固定包含：
 
@@ -45,11 +45,11 @@ public read 固定包含：
 - `snapshot`：当前 revision 的完整 Runtime Scene 与 topology
 - `patch`：相对 base revision 的原子 Scene Patch；initial full run 不提供
 
-source Snapshot、stable identity index 和复用状态只存在于同一 Core Program 的 private read，不进入公共查询契约。Core IR 与持久 Scene schema 不新增字段。
+source Snapshot、stable identity index 和复用状态只存在于同一 Core Computation 的 private read，不进入公共查询契约。Core IR 与持久 Scene schema 不新增字段。
 
 ### Snapshot identity 与 ChangeSet 校验
 
-Core owner 对 JSON-safe IR 做结构复制、冻结和相等比较。Program 根据完整 previous / next Snapshot 建立 conservative stable identity index：
+Core owner 对 JSON-safe IR 做结构复制、冻结和相等比较。Computation 根据完整 previous / next Snapshot 建立 conservative stable identity index：
 
 - document root path 固定为 `['root']`
 - 同一稳定 parent 下唯一非空 `id` 的普通 child 使用 `[type, id]`
@@ -77,9 +77,9 @@ Core 只重新编译该 Node，复用其余 committed root contribution，以 em
 
 ### Warning 与 trace
 
-Core Program 在 candidate 内收集 compile warnings，只在成功 commit 后按 canonical 顺序通过 `observeCommit` 派发。bailout、失败、stale 与 rollback 不派发；直接 `compileToScene()` 也只在完整成功后派发。
+Core Computation 在 candidate 内收集 compile warnings，只在成功 commit 后按 canonical 顺序通过 `observeCommit` 派发。bailout、失败、stale 与 rollback 不派发；直接 `compileToScene()` 也只在完整成功后派发。
 
-Program trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
+Computation trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 
 - initial full run 报告 `full`，不产生 Patch trace
 - 安全局部更新报告 `incremental`，并记录 reused / changed child 与 Patch operation 数
@@ -87,11 +87,11 @@ Program trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 
 ## 最终实现
 
-- Core owner 与 Program 接入 Runtime typed registry、Snapshot 和 transaction
-- 完整编译与 Program full run 共用 `compileCoreSnapshot()`
+- Core owner 与 Computation 接入 Runtime typed registry、Snapshot 和 transaction
+- 完整编译与 Computation full run 共用 `compileCoreSnapshot()`
 - canonical Runtime topology 为 Scene primitive 建立 semantic owner 与稳定 emission identity
 - stable root / nested Scope Diff 校验 add、update、remove 与最小 move
-- Program option、registry 与 Definition 输入在创建时隔离
+- Computation option、registry 与 Definition 输入在创建时隔离
 - full fallback 产生完整 Snapshot 和独占 `replaceScene` Patch
 - 单 root Node fill 变化使用 committed Scene 作为安全 contribution cache，产生局部 `update` Patch
 - public artifact、warning、Runtime diagnostic 与 trace 通道保持分离
@@ -99,9 +99,9 @@ Program trace 使用固定的 `update/ir-child` 与 `update/scene-change`：
 
 ## 公开影响与兼容性
 
-本 ADR 新增 Core Runtime Program 公共入口，并消费 ADR-014 定义的 readonly Scene Patch DTO；Core IR 与持久 Scene schema 不变。`compileToScene()` 继续可独立使用；调用方无需提供 ChangeSet，也不需要根据 full / incremental / fallback 切换消费协议。
+本 ADR 新增 Core Runtime Computation 公共入口，并消费 ADR-014 定义的 readonly Scene Patch DTO；Core IR 与持久 Scene schema 不变。`compileToScene()` 继续可独立使用；调用方无需提供 ChangeSet，也不需要根据 full / incremental / fallback 切换消费协议。
 
-这是 `0.x` 新能力，不提供旧写法别名。React / Vanilla session 接线与 retained SVG / Canvas commit 由 ADR-014 承接。
+这是 `0.x` 新能力，不提供旧写法别名。React / Vanilla runtime 接线与 retained SVG / Canvas commit 由 ADR-014 承接。
 
 ## 遗留风险与后续
 

@@ -1,6 +1,6 @@
 ---
 description: 性能观测与 Baseline；背景：Kernel 当前没有可复现的性能 harness、phase tracing、实体访问计数或持续更新基准
-keywords: 'Baseline、visited、commit、RuntimeProgramContext、durationMs'
+keywords: 'Baseline、visited、commit、RuntimeComputationContext、durationMs'
 ---
 
 # ADR-010：性能观测与 Baseline
@@ -8,7 +8,7 @@ keywords: 'Baseline、visited、commit、RuntimeProgramContext、durationMs'
 - 状态：Accepted
 - 决策日期：2026-07-26
 - 接受日期：2026-07-27
-- 关联：[ADR-011](./011-runtime-identity-owner-registry.md) · [ADR-012](./012-program-transaction-lifecycle.md)
+- 关联：[ADR-011](./011-runtime-identity-source-registry.md) · [ADR-012](./012-computation-transaction-lifecycle.md)
 
 ## 背景
 
@@ -18,15 +18,15 @@ Kernel 当前没有可复现的性能 harness、phase tracing、实体访问计�
 
 ## 决策：先建立 Runtime Trace 切片，再建立独立 Bench App
 
-ADR-010 先创建零领域依赖的 `@retikz/runtime` 包与最小 trace contract；ADR-011 / ADR-012 在同一包继续增加 identity / owner 与 Program / session。新增 private `@retikz/bench` app 统一承载 Node 与 browser benchmark。产品包不能依赖 bench，也不能复制 bench-local trace 类型。
+ADR-010 先创建零领域依赖的 `@retikz/runtime` 包与最小 trace contract；ADR-011 / ADR-012 在同一包继续增加 identity / owner 与 Computation / runtime。新增 private `@retikz/bench` app 统一承载 Node 与 browser benchmark。产品包不能依赖 bench，也不能复制 bench-local trace 类型。
 
-Trace 是 `RuntimeProgramContext` 后续复用的公共执行期扩展契约，不是稳定的第三方 profiling 服务。内置与第三方 Program 只能通过 context 提供的 owner-bound reporter 发出 record，不能伪造其它 owner；Runtime 统一校验 phase、outcome 和 count。`0.x` 可破坏性收紧字段，不提供兼容桥接。
+Trace 是 `RuntimeComputationContext` 后续复用的公共执行期扩展契约，不是稳定的第三方 profiling 服务。内置与第三方 Computation 只能通过 context 提供的 owner-bound reporter 发出 record，不能伪造其它 owner；Runtime 统一校验 phase、outcome 和 count。`0.x` 可破坏性收紧字段，不提供兼容桥接。
 
 ```ts
 type PerformanceTraceRecord = Readonly<{
   owner: string;
   phase: 'compile' | 'commit' | 'update';
-  unit: 'ir-child' | 'scene-primitive' | 'program' | 'scene-change';
+  unit: 'ir-child' | 'scene-primitive' | 'computation' | 'scene-change';
   outcome: 'full' | 'incremental' | 'bailout' | 'fallback' | 'commit';
   visited: number;
   reused: number;
@@ -64,7 +64,7 @@ Batch 0 冻结三个必报 full-path phase：
 | `@retikz/render:svg` / `commit`    | `scene-primitive` | 每次完整 SVG document build 正好 1 条 | `visited` 是递归消费的 `ScenePrimitive` occurrence 数，包含 Group；full commit 时 `reused = 0`、`changed = visited`        |
 | `@retikz/render:canvas` / `commit` | `scene-primitive` | 每次完整 Canvas draw 正好 1 条        | 与 SVG 使用相同 Scene occurrence 口径；full commit 时 `reused = 0`、`changed = visited`                                    |
 
-Reporter 由 `createRuntimeTraceReporter({ owner, phases, sink })` 创建。Runtime 只按调用方传入的 `RuntimeTracePhaseDefinition` 校验 phase/unit/outcome，不硬编码 Core、SVG 或 Canvas；owner 固定在 reporter 上，调用者无法通过 `report()` 改写。Core `CompileOptions.trace`、SVG `BuildDocumentOptions.trace` 与 Canvas `DrawOptions.trace` 分别接收 owner/type 已收窄的 reporter，并且只能在各自公开 full 入口完成后发射一次；内部 helper 不重复发射。Bench 直接创建三个 reporter；ADR-012 的 Program context 复用同一 reporter。
+Reporter 由 `createRuntimeTraceReporter({ owner, phases, sink })` 创建。Runtime 只按调用方传入的 `RuntimeTracePhaseDefinition` 校验 phase/unit/outcome，不硬编码 Core、SVG 或 Canvas；owner 固定在 reporter 上，调用者无法通过 `report()` 改写。Core `CompileOptions.trace`、SVG `BuildDocumentOptions.trace` 与 Canvas `DrawOptions.trace` 分别接收 owner/type 已收窄的 reporter，并且只能在各自公开 full 入口完成后发射一次；内部 helper 不重复发射。Bench 直接创建三个 reporter；ADR-012 的 Computation context 复用同一 reporter。
 
 所有 count 都是 finite nonnegative safe integer，并满足 `reused <= visited`、`changed <= visited`；`bailout` 必须 `changed = 0`，`incremental` / `fallback` 的具体发射基数和单位由 ADR-012～014 在接入时追加，不回改 batch-0 full 口径。漏报、重复报或 unit 不匹配都使 benchmark 失败。
 
@@ -98,7 +98,7 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 ## 观测表面
 
 - `@retikz/bench` 是 private app，不发布。
-- trace sink 由 Runtime reporter 注入 Core / Render；alpha.2 不把它暴露为 React props 或 Vanilla plain spec 字段。Batch 0 的 browser harness 直接观测公开 Core/Render full 入口；React / Vanilla 真实 session 接线由 ADR-014 回填同一 trace contract。
+- trace sink 由 Runtime reporter 注入 Core / Render；alpha.2 不把它暴露为 React props 或 Vanilla plain spec 字段。Batch 0 的 browser harness 直接观测公开 Core/Render full 入口；React / Vanilla 真实 runtime 接线由 ADR-014 回填同一 trace contract。
 - benchmark 输出结构化 JSON，包含环境、fixture、revision、指标和结果校验；结果目录默认 ignored，只有基准定义与预算配置入库。
 - 相同 fixture 的功能输出先通过等价校验，再记录性能指标；错误结果没有性能通过资格。
 - sink 在 record 完整构造后同步调用；record 不复用可变对象。sink throw / reentry 进入 reporter-local diagnostic queue，不改变产品输出。
@@ -112,7 +112,7 @@ CI 硬门槛使用 visited/reused/changed、发射基数、输出等价、retain
 
 ## 公开影响
 
-- Kernel release group从六包扩展为七包；ADR-010只实现 `@retikz/runtime`的 trace切片，ADR-011实现 identity/owner registry，ADR-012再实现 session。
+- Kernel release group从六包扩展为七包；ADR-010只实现 `@retikz/runtime`的 trace切片，ADR-011实现 identity/source registry，ADR-012再实现 runtime。
 - 新增 private benchmark app 与公共执行期 trace contract，不改变 IR、Scene、React 或 Vanilla authoring。
 - 提供独立的 benchmark 观测入口，不把计时或预算字段写入 IR / Scene。
 - 性能预算成为 alpha.2 后续 ADR 的进入与退出证据。

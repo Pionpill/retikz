@@ -25,10 +25,11 @@ import { previewSource as listStylesPreviewSource } from '../../src/modules/docs
 import { createPreviewControlContract as createListStylesContract } from '../../src/modules/docs/contents/library/standard/collection/list/list-styles.controls';
 import MapBasic from '../../src/modules/docs/contents/library/standard/collection/map/map-basic';
 import MapComposition from '../../src/modules/docs/contents/library/standard/collection/map/map-composition';
-import MapData from '../../src/modules/docs/contents/library/standard/collection/map/map-data';
+import { previewSource as mapDataPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/map/map-data';
 import MapStyles from '../../src/modules/docs/contents/library/standard/collection/map/map-styles';
 
 const ListStylesCanonical: FC = () => listStylesPreviewSource.canonicalRender?.() ?? null;
+const MapDataCanonical: FC = () => mapDataPreviewSource.canonicalRender?.() ?? null;
 const ListDataCanonical: FC = () => listDataPreviewSource.canonicalRender?.() ?? null;
 
 describe('List / Map documentation consumers', () => {
@@ -48,7 +49,7 @@ describe('List / Map documentation consumers', () => {
   });
   it.each([
     ListDataCanonical,
-    MapData,
+    MapDataCanonical,
     ListBasic,
     ListStylesCanonical,
     ListComposition,
@@ -100,11 +101,11 @@ it('retains List content width in copied Vanilla source', () => {
 });
 
 it('retains compact JSON data in copied code and runtime previews', () => {
-  for (const Component of [ListDataCanonical, MapData]) {
+  for (const Component of [ListDataCanonical, MapDataCanonical]) {
     const preview = buildPreviewIR(Component);
     const output = buildVanillaPreview(preview);
     expect(output.code).toContain('data:');
-    expect(output.code).toContain("dataObjectDisplay: 'text'");
+    expect(output.code).toContain("dataExpand: ['list']");
     expect(output.svg).toContain(Component === ListDataCanonical ? 'ready' : 'layout');
     expect(output.code).not.toContain('entries:');
     expect(output.code).not.toContain('items:');
@@ -112,13 +113,13 @@ it('retains compact JSON data in copied code and runtime previews', () => {
   }
 });
 
-it('switches the List JSON object preview between text and nested Map', () => {
-  const renderMode = (dataObjectDisplay: 'map' | 'text'): string =>
+it('switches nested objects and arrays between text and components', () => {
+  const renderMode = (dataExpand: 'all' | 'none' | 'map' | 'list'): string =>
     renderToStaticMarkup(
       <PreviewControlStateContext.Provider
         value={{
-          canonicalValues: { dataObjectDisplay: 'text' },
-          values: { dataObjectDisplay },
+          canonicalValues: { dataExpand: 'list' },
+          values: { dataExpand },
           setValue: () => undefined,
           applyValues: () => undefined,
           reset: () => undefined,
@@ -128,7 +129,10 @@ it('switches the List JSON object preview between text and nested Map', () => {
       </PreviewControlStateContext.Provider>,
     );
 
-  expect(renderMode('text')).toContain('{&quot;ready&quot;:false}');
+  expect(renderMode('none')).toContain('[1,{&quot;active&quot;:true}]');
+  expect(renderMode('map')).toContain('[1,{&quot;active&quot;:true}]');
+  expect(renderMode('all')).not.toContain('[1,{&quot;active&quot;:true}]');
+  expect(renderMode('list')).toContain('{&quot;ready&quot;:false}');
   expect(renderMode('map')).not.toContain('{&quot;ready&quot;:false}');
   expect(renderMode('map')).toContain('ready');
 });

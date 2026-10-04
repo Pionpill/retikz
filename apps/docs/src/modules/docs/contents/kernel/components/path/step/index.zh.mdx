@@ -237,6 +237,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ### 端点连接面
 
+`smooth.points` 支持完整 Target 值域。中间节点引用表示经过其解析位置；最后一个无显式 anchor / offset 的 NodeTarget 沿末段入射方向裁剪到连接边界，再应用箭头缩短。显式 anchor / offset 保留指定位置，`tension` 为正数控制臂倍率，默认 1。
+
 连接面只改变这条边贴到节点的位置，不改变节点的外观。端点引用节点时（`{ id }` 对象形态，或 way 里的 id），可加 `boundary` 字段，**只对这一个端点**覆盖目标节点的 [`boundary`](/kernel/components/node/mechanism#视觉形状与连接几何)（连接面）。取值与节点 `boundary` 同形：`'shape'`（视觉形状自身）/ `'circle'`（真圆）/ 任意注册 shape 名 / `{ type, params }`。
 
 ```tsx

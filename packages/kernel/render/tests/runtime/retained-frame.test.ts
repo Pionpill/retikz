@@ -1,11 +1,11 @@
-import type { CoreProgramOutput, IRScene, Scene } from '@retikz/core';
-import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import type { CoreComputationOutput, IRScene, Scene } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
   RetikzRuntimeErrorCode,
 } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
@@ -19,7 +19,7 @@ import type {
 import {
   createRetainedRenderParticipant,
   defineRetainedRenderer,
-  RenderRuntimeOwnerDefinition,
+  RenderRuntimeSourceDefinition,
   RetikzRenderErrorCode,
 } from '../../src/runtime';
 
@@ -36,7 +36,7 @@ const layerScene = (width: number): Scene => ({
   primitives: [{ type: 'rect', x: 0, y: 0, width, height: 10, stroke: '#2563eb' }],
 });
 
-const layersFrom = (output: CoreProgramOutput<readonly []>): ReadonlyArray<RenderReadonlyLayer> =>
+const layersFrom = (output: CoreComputationOutput<readonly []>): ReadonlyArray<RenderReadonlyLayer> =>
   Object.freeze([
     Object.freeze({
       key: 'guide',
@@ -50,7 +50,7 @@ const createHarness = (
   options: Readonly<{
     expectedInitialFrame?: StaticRenderFrame;
     onPrepareMount?: (frame: RenderFrameSnapshot) => void;
-    resolveReadonlyLayers?: (output: CoreProgramOutput<readonly []>) => ReadonlyArray<RenderReadonlyLayer>;
+    resolveReadonlyLayers?: (output: CoreComputationOutput<readonly []>) => ReadonlyArray<RenderReadonlyLayer>;
   }> = {},
 ) => {
   let current: RenderFrameSnapshot | undefined;
@@ -92,28 +92,28 @@ const createHarness = (
     },
     dispose: () => undefined,
   });
-  const coreProgram = createCoreProgram({ onWarn: () => undefined });
+  const coreComputation = createCoreComputation({ onWarn: () => undefined });
   const handle = createRetainedRenderParticipant({
     backend: 'svg',
     host: svgHost,
     immutableOptions: { backend: 'svg', idPrefix: 'retained-frame' },
     rendererFactory: (() => renderer) as unknown as RetainedRendererFactory,
-    coreProgram,
+    coreComputation,
     ...(options.expectedInitialFrame === undefined ? {} : { expectedInitialFrame: options.expectedInitialFrame }),
     ...(options.resolveReadonlyLayers === undefined ? {} : { resolveReadonlyLayers: options.resolveReadonlyLayers }),
   });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition, RenderRuntimeOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition, RenderRuntimeSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
+  const session = createRuntime({
+    sources,
+    computations,
     participants: [handle.participant],
     initialSnapshots: [
-      createRuntimeOwnerInput(CoreOwnerDefinition, source('initial')),
-      createRuntimeOwnerInput(RenderRuntimeOwnerDefinition, {}),
+      createRuntimeSourceInput(CoreSourceDefinition, source('initial')),
+      createRuntimeSourceInput(RenderRuntimeSourceDefinition, {}),
     ],
   });
-  return { coreProgram, handle, prepare, prepareMount, renderer, session };
+  return { coreComputation, handle, prepare, prepareMount, renderer, session };
 };
 
 describe('retained render frame contract', () => {
@@ -146,14 +146,14 @@ describe('retained render frame contract', () => {
   });
 
   it('resolves initial, Core update, and config-only candidates from the available Core output', () => {
-    const outputs: Array<CoreProgramOutput<readonly []>> = [];
+    const outputs: Array<CoreComputationOutput<readonly []>> = [];
     const harness = createHarness('supported', {
       resolveReadonlyLayers: output => {
         outputs.push(output);
         return layersFrom(output);
       },
     });
-    const initialOutput = harness.session.artifact(harness.coreProgram).value.output;
+    const initialOutput = harness.session.artifact(harness.coreComputation).value.output;
     const initialFrame = harness.handle.read(harness.session).frame;
 
     expect(outputs).toEqual([initialOutput]);
@@ -161,16 +161,16 @@ describe('retained render frame contract', () => {
 
     harness.session.update({
       baseRevision: harness.session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source('updated content'))],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source('updated content'))],
     });
-    const updatedOutput = harness.session.artifact(harness.coreProgram).value.output;
+    const updatedOutput = harness.session.artifact(harness.coreComputation).value.output;
     const updatedFrame = harness.handle.read(harness.session).frame;
     expect(outputs.at(-1)).toBe(updatedOutput);
     expect(updatedFrame.primary.revision).toBe(harness.session.revision());
 
     harness.session.update({
       baseRevision: harness.session.revision(),
-      owners: [createRuntimeOwnerUpdate(RenderRuntimeOwnerDefinition, { animation: { enabled: false } })],
+      sources: [createRuntimeSourceUpdate(RenderRuntimeSourceDefinition, { animation: { enabled: false } })],
     });
     const configFrame = harness.handle.read(harness.session).frame;
     expect(outputs.at(-1)).toBe(updatedOutput);
@@ -194,7 +194,7 @@ describe('retained render frame contract', () => {
     expect(() =>
       harness.session.update({
         baseRevision: harness.session.revision(),
-        owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source('rejected'))],
+        sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source('rejected'))],
       }),
     ).toThrowError(
       expect.objectContaining({

@@ -1,8 +1,8 @@
-import type { IRGeometryLabel } from '@retikz/core';
+import type { IRGeometryLabel, IRTarget, IRNodeTarget, SideValue } from '@retikz/core';
 import type { RelationDirectionValue } from '@retikz/graph';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
-import type { IRFlowLayout } from '../../schemas';
+import type { IRFlowLayout, FlowEndpointTarget } from '../../schemas';
 import type {
   FlowDirectionValue,
   FlowLayoutAlignmentValue,
@@ -37,10 +37,78 @@ export type EffectiveFlowPlacement =
       excludeFromBounds?: ReadonlyArray<string>;
     }>;
 
+/** 自动或完整显式的贝塞尔输入，不存储可推导的 mode */
+export type FlowBezierRouting =
+  | Readonly<{
+      /** 二次贝塞尔输入 */
+      kind: 'curve';
+      /** Flow 根坐标控制点，省略时自动生成 */
+      control?: Readonly<Position>;
+    }>
+  | Readonly<{
+      /** 三次贝塞尔输入 */
+      kind: 'cubic';
+      /** 自动三次必须同时省略两个控制点 */
+      control1?: never;
+      /** 自动三次必须同时省略两个控制点 */
+      control2?: never;
+    }>
+  | Readonly<{
+      /** 三次贝塞尔输入 */
+      kind: 'cubic';
+      /** Flow 根坐标的起点切线控制点，显式值不可移动 */
+      control1: Readonly<Position>;
+      /** Flow 根坐标的终点切线控制点，显式值不可移动 */
+      control2: Readonly<Position>;
+    }>;
+
+/** 完整数值贝塞尔参考路线 */
+export type FlowBezierRoute = Readonly<{
+  /** 按 source 到 target 排列的中心参考端点 */
+  points: readonly [Readonly<Position>, Readonly<Position>];
+}> &
+  (
+    | Readonly<{
+        /** 二次贝塞尔参考几何 */
+        kind: 'curve';
+        /** 已确定的二次控制点，不是曲线经过点 */
+        control: Readonly<Position>;
+      }>
+    | Readonly<{
+        /** 三次贝塞尔参考几何 */
+        kind: 'cubic';
+        /** 已确定的起点切线控制点 */
+        control1: Readonly<Position>;
+        /** 已确定的终点切线控制点 */
+        control2: Readonly<Position>;
+      }>
+  );
+
+/** 每种路由及其可消费的作者输入语义 */
+export type FlowRoutingCapability =
+  | Readonly<{
+      /** 支持既有完整输入语义的常规路由 */
+      kind: Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>;
+    }>
+  | Readonly<{
+      /** 支持的贝塞尔种类 */
+      kind: 'curve' | 'cubic';
+      /** 可消费的自动或显式输入，非空且无重复；Source 不填写 mode */
+      modes: ReadonlyArray<'auto' | 'explicit'>;
+    }>;
+
 /** Flow layout provider 使用的有效路由 */
 export type FlowLayoutRouting =
+  | FlowSmoothRouting
+  | FlowBezierRouting
   | Readonly<{ kind: 'straight' }>
-  | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; cornerRadius: number }>
+  | Readonly<{ kind: '-|' | '|-'; cornerRadius: number }>
+  | Readonly<{
+      kind: 'orthogonal';
+      cornerRadius: number;
+      /** 显式或继承的间隙比例，省略时自动选择 */
+      turnPosition?: 0.25 | 0.5 | 0.75;
+    }>
   | Readonly<{
       kind: 'bend';
       /** 省略时由布局比较左右候选 */
@@ -62,9 +130,18 @@ export type FlowBendRoute = Readonly<{ kind: 'bend'; points: readonly [Readonly<
 
 /** 布局已确定的参考路由，实际端点裁剪与箭头缩短由 Core 执行 */
 export type FlowLayoutRoute =
+  | FlowSmoothRoute
   | Readonly<{ kind: 'straight'; points: ReadonlyArray<Readonly<Position>> }>
-  | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; points: ReadonlyArray<Readonly<Position>>; cornerRadius: number }>
-  | FlowBendRoute;
+  | Readonly<{ kind: '-|' | '|-'; points: ReadonlyArray<Readonly<Position>>; cornerRadius: number }>
+  | Readonly<{
+      kind: 'orthogonal';
+      points: ReadonlyArray<Readonly<Position>>;
+      cornerRadius: number;
+      /** 作者的有效比例；自动选择不重复存储 */
+      turnPosition?: 0.25 | 0.5 | 0.75;
+    }>
+  | FlowBendRoute
+  | FlowBezierRoute;
 
 /** Flow layout scope 已补全的有效配置 */
 export type EffectiveFlowLayout = Readonly<{
@@ -95,8 +172,8 @@ export type FlowLayoutDefaults = Readonly<{
   }>;
   /** Source 与祖先均未指定时采用的关系路由 */
   routing: Readonly<{
-    /** 默认路由种类，必须包含在 capabilities.routingKinds 中 */
-    kind: FlowRoutingKindValue;
+    /** 默认路由种类，必须包含在 capabilities.routing 中 */
+    kind: Exclude<FlowRoutingKindValue, 'curve' | 'cubic' | 'smooth'>;
     /** 所有轴对齐路由的圆角默认；支持任一轴对齐模式时必填 */
     orthogonalCornerRadius?: number;
   }>;
@@ -184,16 +261,66 @@ export type FlowLayoutPlacementOutput = Readonly<{
 
 /** Flow Layout Definition 调用作者 placement 的同步执行边界 */
 export type FlowLayoutExecutionContext = Readonly<{
+  /** 以真实 Core 边界查询布局后的端点 */
+  resolveEndpoint: (
+    query: Readonly<{ target: FlowEndpointTarget; elements: ReadonlyArray<FlowLayoutElementOutput> }>,
+  ) => Readonly<Position>;
+  /** 用真实 Graph 几何解析经过点，返回包含首尾的根局部点列 */
+  resolveRoutePoints: (query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>;
   /** 按已测量尺寸执行作者的固定排列，返回容器局部坐标中的边界和子项位置 */
   placeLayout: (input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput;
 }>;
 
+/** 已补全 tension 的经过点路由意图 */
+export type FlowSmoothRouting = Readonly<{
+  /** 显式经过点样条 */
+  kind: 'smooth';
+  /** 有序中间目标，不包括自动追加的关系终点 */
+  points: ReadonlyArray<IRTarget>;
+  /** 正数控制臂倍率，使用 Core 默认值 */
+  tension: number;
+}>;
+
+/** 已解析的样条参考点列，保留合法重复点 */
+export type FlowSmoothRoute = Readonly<{
+  /** 经过点样条 */
+  kind: 'smooth';
+  /** 包含 source 和 target 的完整数值点列 */
+  points: ReadonlyArray<Readonly<Position>>;
+  /** 作者指定或 Core 补全的控制臂倍率 */
+  tension: number;
+}>;
+
+/** 当前布局中的真实经过点查询，不持有跨编译缓存 */
+export type FlowRoutePointsQuery = Readonly<{
+  /** 与最终输出一致的全部根局部元素矩形 */
+  elements: ReadonlyArray<FlowLayoutElementOutput>;
+  /** 关系起点身份 */
+  source: FlowEndpointTarget;
+  /** 关系终点身份 */
+  target: FlowEndpointTarget;
+  /** 有序中间目标 */
+  points: ReadonlyArray<IRTarget>;
+}>;
+
+/** 已补全默认的关系端点布局约束 */
+export type FlowLayoutEndpoint = Readonly<{
+  /** 目标 Entity 或 Group */
+  id: string;
+  /** 同侧落点许可 */
+  overlap: 'allow' | 'separate';
+  /** 自动分配的指定侧 */
+  side?: SideValue;
+  /** 作者固定的 Core 锚点 */
+  anchor?: IRNodeTarget['anchor'];
+}>;
+
 /** Flow layout relation 输入 */
 export type FlowLayoutRelationInput = Readonly<{
-  /** 起点 Entity 或 Group 的作者 id */
-  source: string;
-  /** 终点 Entity 或 Group 的作者 id */
-  target: string;
+  /** 起点 Entity 或 Group 的有效连接约束 */
+  source: FlowLayoutEndpoint;
+  /** 终点 Entity 或 Group 的有效连接约束 */
+  target: FlowLayoutEndpoint;
   /** 已解析的语义箭头方向 */
   direction: RelationDirectionValue;
   /** 已补全参数的关系路由 */
@@ -224,6 +351,10 @@ export type FlowLayoutElementOutput = Readonly<{
 
 /** 一条 Flow relation 的根坐标系布局输出 */
 export type FlowLayoutRelationOutput = Readonly<{
+  /** 已分配起点 */
+  source: FlowEndpointTarget;
+  /** 已分配终点 */
+  target: FlowEndpointTarget;
   /** 根坐标系中的有判别参考几何 */
   route: FlowLayoutRoute;
   /** 标签在 Flow 根坐标系中的预留矩形，倾斜标签使用旋转后的 AABB；有标签时必须提供，无标签时必须省略 */
@@ -252,6 +383,8 @@ export type FlowLayoutCapabilities = Readonly<{
   cycles: boolean;
   /** 是否支持起点与终点相同的关系 */
   selfLoops: boolean;
+  /** 支持端点选侧、固定锚点与自动分离 */
+  endpointPlacement: boolean;
   /** 是否支持相同起点和终点之间的多条关系 */
   parallelRelations: boolean;
   /** 是否支持关系标签的空间预留 */
@@ -259,7 +392,7 @@ export type FlowLayoutCapabilities = Readonly<{
   /** 支持的语义箭头方向，必须非空且无重复 */
   relationDirections: ReadonlyArray<RelationDirectionValue>;
   /** 支持的路由种类，必须非空且无重复 */
-  routingKinds: ReadonlyArray<FlowRoutingKindValue>;
+  routing: ReadonlyArray<FlowRoutingCapability>;
 }>;
 
 /** 同步确定 Flow element bounds、relation route 与 label reservation 的布局定义 */

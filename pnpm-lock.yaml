@@ -402,6 +402,9 @@ importers:
       '@retikz/render':
         specifier: workspace:*
         version: link:../../packages/kernel/render
+      '@retikz/runtime':
+        specifier: workspace:*
+        version: link:../../packages/kernel/runtime
       '@retikz/standard':
         specifier: workspace:*
         version: link:../../packages/library/standard

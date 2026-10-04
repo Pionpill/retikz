@@ -27,6 +27,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       ],
     }),
     canonicalValues: {},
-    relatedApis: [],
+    relatedApis: ['RangedDotChart.rows'],
   } satisfies PreviewControlContract;
 };

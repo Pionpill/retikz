@@ -147,8 +147,8 @@ describe('Flow relation geometry labels', () => {
       bendAngle: 0,
     };
     const relation = {
-      source: 'a',
-      target: 'b',
+      source: { id: 'a', overlap: 'allow' as const },
+      target: { id: 'b', overlap: 'allow' as const },
       direction: 'forward' as const,
       routing: { kind: 'bend' as const, bendAngle: 0 },
       labelSize: { width: 40, height: 10 },

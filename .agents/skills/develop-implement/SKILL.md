@@ -65,6 +65,11 @@ Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 [alpha](../flow-development/
 - 用户可见改动同步 docs。
 - React / Vanilla 或 plot-react / plot-vanilla authoring 面对等检查；只做一套时说明原因。
 
+## 集合遍历
+
+- 可合并的筛选、映射与聚合优先使用一次 `reduce` 或循环完成，避免连续 `filter().map()` 等操作造成多次遍历和中间数组分配；单独的 `filter` / `map` 按语义使用。
+- 聚合多个结果时共用一次遍历；累加器在本次遍历内原地更新，不在每轮通过对象 / 数组展开复制，也不改写输入数据。求最大值等聚合避免先生成数组再展开传给 `Math.max`。
+
 ## 完成标志
 
 - ADR 功能边界和 reviewed plan / TODO scope 内代码已实现。

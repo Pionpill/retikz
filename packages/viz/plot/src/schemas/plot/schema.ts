@@ -5,6 +5,7 @@ import {
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   PositiveNumberSchema,
+  NormalizedFractionSchema,
 } from '@retikz/foundation';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, record, strictObject, union } from 'zod';
@@ -154,8 +155,8 @@ export const FacetArrangementSchema = strictObject({
 
 const ScaffoldTrackBandSchema = strictObject({
   role: NonBlankStringSchema.describe('Coordinate role localized into this track band'),
-  start: number().min(0).max(1).describe('Track band start fraction in arrangement-local coordinates'),
-  end: number().min(0).max(1).describe('Track band end fraction in arrangement-local coordinates'),
+  start: NormalizedFractionSchema.describe('Track band start fraction in arrangement-local coordinates'),
+  end: NormalizedFractionSchema.describe('Track band end fraction in arrangement-local coordinates'),
 }).describe('Fractional role band occupied by one track arrangement lane');
 
 export const TrackArrangementTrackSchema = strictObject({

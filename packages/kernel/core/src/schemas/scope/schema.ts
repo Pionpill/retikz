@@ -5,7 +5,7 @@ import { AnimationTrackSchema } from '../animation';
 import { ClipSchema } from '../clip';
 import { FontSchema } from '../font';
 import { NodeSchema } from '../node';
-import { ArrowDetailSchema, PathBaseSchema } from '../path';
+import { ArrowDetailSchema, PathBaseSchema, PathTransformSchema } from '../path';
 import { NodeTargetSchema, PositionSchema } from '../position';
 import { getRecursiveChildSchema } from '../recursive';
 import { ScopeSelfPointSchema } from '../scope-point';
@@ -32,7 +32,10 @@ export const NodeDefaultSchema = strictObject(NodeSchema.shape).pick({
 });
 
 /** 路径默认值仅继承视觉与整体几何 */
-export const PathDefaultSchema = PathBaseSchema.pick({ style: true, roundedCorners: true, rotate: true, scale: true });
+export const PathDefaultSchema = strictObject({
+  style: PathBaseSchema.shape.style,
+  ...PathTransformSchema.shape,
+});
 
 export const LabelDefaultSchema = object({
   color: CssColorSchema.optional().describe('Master color for labels in this scope; textColor falls back to it.'),

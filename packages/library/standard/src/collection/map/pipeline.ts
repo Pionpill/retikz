@@ -1,7 +1,7 @@
 import type { LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
 
-import { compileCells, measureCell } from '../shared/cell-layout';
-import type { CellPlacement } from '../shared/cell-layout';
+import { compileCells, measureCell } from '../_cell';
+import type { CellPlacement } from '../_cell';
 import { resolveMap } from './resolve';
 import type { IRMap } from './schema';
 
@@ -10,12 +10,19 @@ export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext):
   const { namespace: _namespace, type: _type, entries, style, layout, label, ...scope } = resolveMap(node);
   void _namespace;
   void _type;
-  if (entries.length === 0) return compileCells([], 0, 0, scope, context, [], { label, style });
+  if (entries.length === 0)
+    return compileCells([], { width: 0, height: 0, scope, decoration: { label, style } }, context);
   const measured = entries
     .flatMap(entry => [entry.key, entry.value])
     .map((cell, index) => measureCell(cell, context, index, scope));
-  const keyWidth = Math.max(...measured.filter((_, index) => index % 2 === 0).map(cell => cell.width));
-  const valueWidth = Math.max(...measured.filter((_, index) => index % 2 === 1).map(cell => cell.width));
+  const { keyWidth, valueWidth } = measured.reduce(
+    (widths, cell, index) => {
+      if (index % 2 === 0) widths.keyWidth = Math.max(widths.keyWidth, cell.width);
+      else widths.valueWidth = Math.max(widths.valueWidth, cell.width);
+      return widths;
+    },
+    { keyWidth: 0, valueWidth: 0 },
+  );
   const cells: Array<CellPlacement> = [];
   let y = 0;
   for (let index = 0; index < entries.length; index++) {
@@ -40,8 +47,14 @@ export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext):
     });
     y += height + layout.gap.row;
   }
-  return compileCells(cells, keyWidth + layout.gap.column + valueWidth, y - layout.gap.row, scope, context, [], {
-    label,
-    style,
-  });
+  return compileCells(
+    cells,
+    {
+      width: keyWidth + layout.gap.column + valueWidth,
+      height: y - layout.gap.row,
+      scope,
+      decoration: { label, style },
+    },
+    context,
+  );
 };

@@ -3,7 +3,7 @@ import { curve, DEFAULT_EPSILON } from '@retikz/math';
 
 /** 候选比较的私有空间分辨率（用户单位），不承诺精确避障 */
 const CURVE_TOLERANCE = 0.25;
-const MAX_DEPTH = 12;
+const MAX_DEPTH = 8;
 
 /** 求曲线真极值包络 */
 export const getFlowCurveBounds = (segment: CurveSegment): BoundsRect => {

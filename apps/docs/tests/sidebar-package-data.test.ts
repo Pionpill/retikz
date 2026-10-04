@@ -40,15 +40,8 @@ describe('Kernel 包侧栏数据', () => {
           ['api-reference', 'kernel.pkgMathApiReference'],
         ],
       ],
+      ['runtime', 'kernel.pkgRuntime', [['usage', 'kernel.pkgRuntimeUsage']]],
       ['core', 'kernel.pkgCore', [['overview', 'kernel.pkgOverview']]],
-      [
-        'runtime',
-        'kernel.pkgRuntime',
-        [
-          ['overview', 'kernel.pkgOverview'],
-          ['session', 'kernel.pkgRuntimeSession'],
-        ],
-      ],
       [
         'tex',
         'kernel.pkgTex',

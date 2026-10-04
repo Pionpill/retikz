@@ -1,5 +1,6 @@
 import type { infer as ZodInfer } from 'zod';
 
+import type { FlowEndpointSchema, FlowEndpointTargetSchema } from './schema';
 import type {
   FlowDefaultsEntitySchema,
   FlowDefaultsGroupCaptionSchema,
@@ -70,3 +71,8 @@ export type IRFlowRelation = ZodInfer<typeof FlowRelationSchema>;
 
 /** Flow Diagram 的持久化 Source IR */
 export type IRFlowDiagram = ZodInfer<typeof FlowDiagramSchema>;
+
+/** 持久化关系端点约束 */
+export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
+/** 编译结果中可直接交给 Core 的端点目标 */
+export type FlowEndpointTarget = ZodInfer<typeof FlowEndpointTargetSchema>;

@@ -1,10 +1,10 @@
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
-  RuntimeProgramKind,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
+  RuntimeComputationKind,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, string } from 'zod';
@@ -23,8 +23,8 @@ import {
   compileToScene,
   CompileWarningCode,
   CompositeBaseSchema,
-  CoreOwnerDefinition,
-  createCoreProgram,
+  CoreSourceDefinition,
+  createCoreComputation,
   defineComposite,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
@@ -804,18 +804,18 @@ describe('Box Layout Composite contract', () => {
     const initial = sceneOf({ namespace: 'test', type: 'runtimeBox', x: 0 });
     const next = sceneOf({ namespace: 'test', type: 'runtimeBox', x: 30 });
     const options = { composites: [definition], onWarn: () => {} };
-    const program = createCoreProgram(options);
-    const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-    const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
-    const session = createRuntimeSession({
-      owners,
-      programs,
-      initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+    const program = createCoreComputation(options);
+    const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+    const session = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
     });
 
     const result = session.update({
       baseRevision: session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
     const artifact = session.artifact(program).value;
     const freshDiagnostics: Array<CompileWarning> = [];
@@ -824,7 +824,7 @@ describe('Box Layout Composite contract', () => {
       onWarn: warning => freshDiagnostics.push(warning),
     });
 
-    expect(result.outcome).toBe(RuntimeProgramKind.Fallback);
+    expect(result.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(artifact.patch).toEqual({
       baseRevision: 0,
       nextRevision: 1,

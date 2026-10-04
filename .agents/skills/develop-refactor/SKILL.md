@@ -33,6 +33,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 ## 执行规则
 
+- 集合处理遵循 [集合遍历](../develop-implement/SKILL.md#集合遍历)：优先单次 `reduce` 或循环，消除可合并的连续筛选、映射与中间数组。
 - 小型重构：主 agent 直接执行并跑受影响验证，不自动派 agent。
 - 中型优化重构：按已确认计划连续执行；计划有 reviewer 时使用单 reviewer 循环。
 - 大型功能型重构：按 `flow-long-task` 执行；计划已授权自动 commit 时按确认粒度提交，不在每个 commit 前重新询问。

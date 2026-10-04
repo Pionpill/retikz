@@ -75,6 +75,8 @@ Chart Source
 
 ## 公共字段描述整张图
 
+公共根字段由同一组 schema 字段组成，具体图形再加入精确的 family 与 recipe。`@retikz/chart` 导出的 `ChartSourceShape<TFamily, TRecipe>` 是 `createChartSourceSchema()` 的派生 Zod shape 类型，不是接受任意 recipe 的通用运行时 schema；作者仍使用 `ScatterChartSchema` 等具体入口。
+
 `data` 指定图表使用的数据引用，也可携带数据模型；字段类型等数据语义属于 Data，不由每个图形类型重新定义。所有 recipe 都从这份数据出发，具体字段怎样进入图形由 `recipe.encodings` 决定。
 
 `layout` 管整张 Chart 的外部尺寸和区域间距。`width`、`height` 决定外部边界，`padding`、`gap` 调整已有展示区域与 Plot 内容之间的留白；它们不是 Plot 内部坐标域或图元位置。

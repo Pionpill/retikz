@@ -4,7 +4,7 @@ import { createGroupBodyAllocation, GraphType } from '@retikz/graph';
 import type { BoundsRect, Position } from '@retikz/math';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import type { FlowLayoutOutput } from '../../contract';
+import type { FlowLayoutOutput, FlowLayoutElementOutput } from '../../contract';
 import type { CanonicalFlowElement, CanonicalFlowEntity, CanonicalFlowRelation } from '../../resolve';
 import type { FlowElementMeasurement, FlowMeasurement } from './types';
 
@@ -112,20 +112,48 @@ const materializeRelation = (
       : undefined;
   return {
     ...relation.graph,
-    source: { id: relation.source.source },
-    target: { id: relation.source.target },
+    source: output.source,
+    target: output.target,
     route: [
-      { type: 'step', kind: 'move', to: { id: relation.source.source } },
-      ...(bend !== undefined
-        ? [{ type: 'step' as const, kind: 'bend' as const, to: { id: relation.source.target }, ...bend }]
-        : [
-            ...innerPoints.map(point => ({
+      { type: 'step', kind: 'move', to: output.source },
+      ...(routing.kind === 'smooth'
+        ? [
+            {
               type: 'step' as const,
-              kind: 'line' as const,
-              to: [point[0], point[1]] as [number, number],
-            })),
-            { type: 'step' as const, kind: 'line' as const, to: { id: relation.source.target } },
-          ]),
+              kind: 'smooth' as const,
+              points: [...innerPoints.map(point => [point[0], point[1]] as Position), output.target],
+              tension: routing.tension,
+            },
+          ]
+        : routing.kind === 'curve'
+          ? [
+              {
+                type: 'step' as const,
+                kind: 'curve' as const,
+                to: output.target,
+                control: [...routing.control] as [number, number],
+              },
+            ]
+          : routing.kind === 'cubic'
+            ? [
+                {
+                  type: 'step' as const,
+                  kind: 'cubic' as const,
+                  to: output.target,
+                  control1: [...routing.control1] as [number, number],
+                  control2: [...routing.control2] as [number, number],
+                },
+              ]
+            : bend !== undefined
+              ? [{ type: 'step' as const, kind: 'bend' as const, to: output.target, ...bend }]
+              : [
+                  ...innerPoints.map(point => ({
+                    type: 'step' as const,
+                    kind: 'line' as const,
+                    to: [point[0], point[1]] as [number, number],
+                  })),
+                  { type: 'step' as const, kind: 'line' as const, to: output.target },
+                ]),
     ],
     ...('cornerRadius' in routing && routing.cornerRadius > 0 ? { roundedCorners: routing.cornerRadius } : {}),
     ...(label === undefined ? {} : { labels: [label] }),
@@ -134,7 +162,6 @@ const materializeRelation = (
 
 /** 把已验证 Flow geometry 投影为唯一 Graph drawing Source */
 export const materializeFlowGraph = (measurement: FlowMeasurement, output: FlowLayoutOutput): IRGraph => {
-  const boundsById = new Map(output.elements.map(element => [element.id, element.bounds]));
   const relations = measurement.diagram.relations.map((relation, relationIndex) => {
     const relationOutput = output.relations[relationIndex];
     return materializeRelation(relation, relationOutput);
@@ -142,9 +169,21 @@ export const materializeFlowGraph = (measurement: FlowMeasurement, output: FlowL
   return {
     namespace: 'graph',
     type: GraphType.Graph,
-    children: [
-      ...materializeElements(measurement.diagram.elements, [0, 0], boundsById, measurement.elementMeasurements),
-      ...relations,
-    ],
+    children: [...materializeFlowElements(measurement, output.elements).children!, ...relations],
   };
 };
+
+/** 查询与最终绘制共用真实 Graph 元素，保留 shape、包含关系与测量原点 */
+export const materializeFlowElements = (
+  measurement: FlowMeasurement,
+  elements: ReadonlyArray<FlowLayoutElementOutput>,
+): IRGraph => ({
+  namespace: 'graph',
+  type: GraphType.Graph,
+  children: materializeElements(
+    measurement.diagram.elements,
+    [0, 0],
+    new Map(elements.map(element => [element.id, element.bounds])),
+    measurement.elementMeasurements,
+  ),
+});

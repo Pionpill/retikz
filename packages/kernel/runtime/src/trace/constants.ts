@@ -19,8 +19,8 @@ export const PerformanceTraceUnit = {
   IrChild: 'ir-child',
   /** Scene 图元计数单位 */
   ScenePrimitive: 'scene-primitive',
-  /** Program 计数单位 */
-  Program: 'program',
+  /** Computation 计数单位 */
+  Computation: 'computation',
   /** Scene 变更计数单位 */
   SceneChange: 'scene-change',
 } as const;

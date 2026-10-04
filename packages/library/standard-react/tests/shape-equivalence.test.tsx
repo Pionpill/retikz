@@ -4,10 +4,11 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '../src/shape';
+import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 const ir = (jsx: ReactNode) => {
   const input = createInputScene(jsx);
-  return { children: processToStaticInputResult(input.scene, { adapters: input.adapters }).scene };
+  return { children: processToStaticInputResult(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene };
 };
 const polarXY = (center: [number, number], rx: number, ry: number, angle: number): [number, number] => [
   center[0] + rx * Math.cos((angle * Math.PI) / 180),

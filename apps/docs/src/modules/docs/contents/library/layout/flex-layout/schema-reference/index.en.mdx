@@ -12,6 +12,12 @@ This is the persistent input contract. Factories preserve omitted fields; parse(
   description="Canonical input for one-dimensional grow, shrink, wrap, and baseline layout."
 />
 
+## Shared gap schemas
+
+`@retikz/layout` exports `LayoutGapSchema` for a single finite non-negative gap and `LayoutRowColumnGapSchema` for either a single gap or `{ row, column }`. In the object form, both fields are required: `row` is the vertical gap and `column` is the horizontal gap. Zero is valid; negative values and unknown object fields are rejected.
+
+Neither shared schema supplies a default. FlexLayout uses `0`, Map uses `2`, and Legend item gaps use `8`. These components share `LayoutRowColumnGapSchema`; use that export instead of the removed `MapGapSchema` when composing a schema.
+
 ## LayoutItem union
 
 ### LayoutItemSchema
@@ -31,3 +37,27 @@ Every item shares these base fields. Each container page documents its additiona
 | `margin?` | `number` \| `IRBoxSpacing`      | `0`       | Spacing around the slot, excluded from the child proposal                |
 
 In React, write optional JSON `key` as `itemKey` and provide `child` through one drawable child or `ir`. When omitted, Layout creates a deterministic unique effective key from the source index. Generated keys exist only in internal artifacts and are not written back to Source IR. Inserting, deleting, or reordering items may change positional identities, so pass an explicit `key` when identity must remain stable across reordering. React uses `FlexLayoutItem`, `GridLayoutItem`, or `OverlayLayoutItem` for the matching container and emits no primitive for the item itself. The adapter supplies `kind` from component identity; Vanilla and IR still specify it explicitly.
+
+## LayoutInspectBoundsOptionsSchema
+
+Optional layout inspector configuration, imported from `@retikz/layout/inspect`.
+
+<ZodSchema name="LayoutInspectBoundsOptionsSchema" />
+
+## LayoutInspectSpacingOptionsSchema
+
+Optional layout inspector configuration, imported from `@retikz/layout/inspect`.
+
+<ZodSchema name="LayoutInspectSpacingOptionsSchema" />
+
+## BaseLayoutInspectOptionsSchema
+
+Optional layout inspector configuration, imported from `@retikz/layout/inspect`.
+
+<ZodSchema name="BaseLayoutInspectOptionsSchema" />
+
+## FlexLayoutInspectOptionsSchema
+
+Optional layout inspector configuration, imported from `@retikz/layout/inspect`.
+
+<ZodSchema name="FlexLayoutInspectOptionsSchema" />

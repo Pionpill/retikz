@@ -1,20 +1,17 @@
-import { NodeLayoutSchema, NodeStyleSchema, TextBlockSchema } from '@retikz/core';
+import { GraphicElementOpacitySchema, TextLayoutSchema, TextVisualSchema, TextBlockSchema } from '@retikz/core';
 import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
 /** Chart presentation 区域的视觉覆盖字段 */
-export const ChartPresentationStyleSchema = NodeStyleSchema.pick({
-  textColor: true,
-  font: true,
-  opacity: true,
+export const ChartPresentationStyleSchema = strictObject({
+  ...TextVisualSchema.shape,
+  ...GraphicElementOpacitySchema.shape,
 }).describe('Chart presentation text style overrides');
 
 /** Chart presentation 区域的文本布局覆盖字段 */
-export const ChartPresentationLayoutSchema = NodeLayoutSchema.pick({
-  align: true,
-  lineHeight: true,
-  maxTextWidth: true,
-}).describe('Chart presentation text layout overrides');
+export const ChartPresentationLayoutSchema = strictObject({ ...TextLayoutSchema.shape }).describe(
+  'Chart presentation text layout overrides',
+);
 
 /** Chart presentation 区域的正式 Source 片段 */
 export const ChartPresentationRegionSchema = strictObject({

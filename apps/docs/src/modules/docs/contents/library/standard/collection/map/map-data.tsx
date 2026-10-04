@@ -1,10 +1,13 @@
-import { Layout } from '@retikz/react';
-import { Map } from '@retikz/standard-react/collection';
-import type { FC } from 'react';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-const MapData: FC = () => (
-  <Layout>
-    <Map data={{ state: 'resolved', layout: { width: 60, height: 32 }, values: [0, false] }} dataObjectDisplay="text" />
-  </Layout>
+import { previewControlContract } from './map-data.controls';
+import { renderMapDataPreview } from './map-data.preview';
+
+/** JSON 数据展开控件 */
+export const previewControls = previewControlContract.controls;
+const controlledPreview = defineControlledPreview(previewControlContract, values =>
+  renderMapDataPreview({ dataExpand: values.dataExpand }),
 );
-export default MapData;
+export const previewSource = controlledPreview.source;
+const Demo = controlledPreview.Component;
+export default Demo;

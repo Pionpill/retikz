@@ -25,11 +25,29 @@ Source omits positions and routes derived by layout. Runtime Definition defaults
 
 <ZodSchema name="FlowLayoutSchema" expandNested />
 
+## FlowEndpointSchema
+
+Relation endpoints accept an id string or object. `side` selects a side, `overlap: 'separate'` spaces positions automatically, and `anchor` fixes an exact position and is mutually exclusive with `side`.
+
+<ZodSchema name="FlowEndpointSchema" />
+
+## FlowEndpointTargetSchema
+
+Layout endpoint result containing only identity and the resolved anchor.
+
+<ZodSchema name="FlowEndpointTargetSchema" />
+
 ## FlowRelationSchema
 
 <ZodSchema name="FlowRelationSchema" shallow />
 
 ## FlowRoutingSchema
+
+Relation-only `smooth` requires at least one ordered intermediate Target in `points` and appends the relation target automatically. `tension` is a positive multiplier, default 1. It never searches or moves waypoints.
+
+Omit all controls for automatic routing; complete controls select explicit routing. Partial cubic controls and a mode field are rejected. Bezier routing is Relation-only.
+
+For orthogonal routing, `turnPosition` locks 0.25, 0.5 or 0.75 of the source-to-target gap. Omission inherits within orthogonal routing or searches midpoint-first. Aligned endpoints remain straight without avoidance.
 
 <ZodSchema name="FlowRoutingSchema" expandNested />
 

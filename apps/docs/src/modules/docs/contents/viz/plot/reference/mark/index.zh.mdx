@@ -21,6 +21,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="PointMarkSchema"
   description="每条数据生成一个 glyph，或在 encoding.text 存在时生成无边框文本 Node。"
   descriptions={{
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
     type: '点图元判别值。',
     color: '数据绑定或常量 glyph 主颜色，优先于常量 fill。',
     textColor: '文本点的 Core Node textColor，仅 encoding.text 存在时生效。',
@@ -129,6 +130,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="PathMarkSchema"
   description="按顺序连接数据点形成一条或多条一维路径。"
   descriptions={{
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
     type: '路径图元判别值。',
     order: '连接顺序字段；省略时使用数组顺序。',
     series: '按不同值拆分多条路径的 series 字段。',
@@ -175,6 +177,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="IntervalMarkSchema"
   description="把正交区间乘积投影为线段、矩形、扇区或 cell。"
   descriptions={{
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
     type: '区间图元判别值。',
     series: '颜色分组和带内子分组的 series 字段。',
     bounds: '按坐标角色声明的区间边界；省略时从角色比例尺推断。',
@@ -229,6 +232,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="ReferenceMarkSchema"
   description="用常量或每数据位置表达参考线、单轴 band 或有界 region。"
   descriptions={{
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
     type: '参考图元判别值。',
     kind: '显式 region 形态；省略时从编码推断参考线或单轴 band。',
     interpolation: 'polar2D band / region 边界的局部连接空间覆盖；固定角度 line 保持直线。',
@@ -277,6 +281,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="RelationMarkSchema"
   description="把 source 与 target 目标通过 Core Path 连接，kind 选择描边或 ribbon 语义。"
   descriptions={{
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
     type: '关系图元判别值。',
     kind: '关系几何类型，省略时为 path。',
     source: '关系源目标。',
@@ -437,6 +442,7 @@ description: 查询 Plot 点、路径、区间、参考、关系与自定义图�
   name="CustomMarkSchema"
   description="由运行时 MarkDefinition 校验和 lowering 的开放 JSON 图元操作。"
   descriptions={{
+    defaultColorIndex: '默认分类色索引；省略时按默认颜色分组分配',
     type: '已注册的自定义图元类型，不得与内置类型冲突。',
     transform: '在 Plot 根变换之后执行的图元局部变换。',
     layer: '自定义图元外层 Scope 的语义图层覆盖。',

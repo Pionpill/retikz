@@ -6,11 +6,13 @@ import {
   PathLineJoinSchema,
   ShadowPreset,
   StrokeDashPatternSchema,
+  OpacitySchema,
+  StrokeWidthSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { PathMarkSchema } from '@retikz/plot';
 import type { infer as ZodInfer } from 'zod';
-import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
+import { array, boolean, enum as zodEnum, literal, strictObject, union } from 'zod';
 
 import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
@@ -32,9 +34,9 @@ export const ConnectedScatterPathPropertiesSchema = strictObject({
   /** 相邻观测点的连接方式，省略时使用直线 */
   curve: PathMarkSchema.shape.curve,
   stroke: CssColorSchema.optional(),
-  strokeWidth: number().nonnegative().optional(),
-  strokeOpacity: number().min(0).max(1).optional(),
-  opacity: number().min(0).max(1).optional(),
+  strokeWidth: StrokeWidthSchema.optional(),
+  strokeOpacity: OpacitySchema.optional(),
+  opacity: OpacitySchema.optional(),
   lineCap: PathLineCapSchema.optional(),
   lineJoin: PathLineJoinSchema.optional(),
   dashPattern: StrokeDashPatternSchema.optional(),

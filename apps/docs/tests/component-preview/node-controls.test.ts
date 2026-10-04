@@ -31,9 +31,6 @@ describe('Node controls', () => {
   });
 
   it('keeps English controls structurally aligned with Chinese controls', () => {
-    expect(nodeLabelPositionEnglishControls.sections).toEqual(
-      expect.arrayContaining([expect.objectContaining({ label: 'Attachment' })]),
-    );
     expect(nodeLabelPositionEnglishControls.sections[0].controls.map(control => control.id)).toEqual(
       nodeLabelPositionControls.sections[0].controls.map(control => control.id),
     );

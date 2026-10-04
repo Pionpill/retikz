@@ -10,7 +10,7 @@ import { array, enum as zodEnum, literal, object, strictObject, union, unknown }
 
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
 import { AngleDegreesSchema } from '../../scalar';
-import { PathLineCapSchema, PathLineJoinSchema, StrokeStyleSchema } from '../../stroke';
+import { StrokeCapJoinSchema, StrokeStyleSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';
 import { GeometryLabelSchema, StepSchema } from '../step';
 import { PathFillRule, PathKind } from './constants';
@@ -32,12 +32,7 @@ export const PathScaleSchema = union([PositiveNumberSchema, PathAnisotropicScale
 
 export const PathStrokeSchema = strictObject({
   ...StrokeStyleSchema.shape,
-  lineCap: PathLineCapSchema.optional().describe(
-    'Stroke endpoint shape. Omitted fields use butt; round adds a half-disc cap and square extends past the endpoint.',
-  ),
-  lineJoin: PathLineJoinSchema.optional().describe(
-    'Stroke corner shape. Omitted fields use miter; round rounds the join and bevel cuts the corner flat.',
-  ),
+  ...StrokeCapJoinSchema.shape,
 }).describe('Path stroke fields combining shared stroke style with path endpoint and join options.');
 
 export const ArrowMarkSchema = ArrowEndDetailSchema.extend({
@@ -68,7 +63,7 @@ export const PathFillSchema = strictObject({
   ),
 }).describe('Path fill fields controlling the fill winding rule.');
 
-export const PathGeometrySchema = strictObject({
+export const PathTransformSchema = strictObject({
   roundedCorners: NonNegativeNumberSchema.optional().describe(
     'Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.',
   ),
@@ -78,6 +73,10 @@ export const PathGeometrySchema = strictObject({
   scale: PathScaleSchema.optional().describe(
     'Scale the whole path around its bounding-box center. Applied with rotate around the same center.',
   ),
+}).describe('Whole-path transforms and geometric corner treatment.');
+
+export const PathGeometrySchema = strictObject({
+  ...PathTransformSchema.shape,
   children: array(StepSchema)
     .min(2)
     .optional()

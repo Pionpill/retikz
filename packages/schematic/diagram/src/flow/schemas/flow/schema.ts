@@ -1,5 +1,14 @@
 import type { IRTextBlock } from '@retikz/core';
-import { BendStepSchema, GeometryLabelSchema, ScopePropsSchema, TextBlockSchema } from '@retikz/core';
+import {
+  AnchorRefSchema,
+  Side,
+  BendStepSchema,
+  ControlPointSchema,
+  GeometryLabelSchema,
+  ScopePropsSchema,
+  SmoothStepSchema,
+  TextBlockSchema,
+} from '@retikz/core';
 import {
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
@@ -37,6 +46,7 @@ import {
   DiagramFrameSchema,
   DiagramPresentationSchema,
 } from '../../../_diagram';
+import { FlowEndpointOverlap } from '../../shared';
 import { FLOW_TYPE, FlowDirection, FlowLayoutAlignment, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 
 const requireOverrides = (label: string) => ({
@@ -47,26 +57,32 @@ const FlowStraightRoutingSchema = strictObject({
   kind: literal(FlowRoutingKind.Straight).describe('Straight two-endpoint route intent.'),
 });
 
-const FlowOrthogonalRoutingSchema = strictObject({
+/** 正交路由的有限候选与显式折点契约 */
+export const FlowOrthogonalRoutingSchema = strictObject({
   kind: literal(FlowRoutingKind.Orthogonal).describe('Axis-aligned route intent.'),
+  turnPosition: literal([0.25, 0.5, 0.75])
+    .optional()
+    .describe(
+      'Authored source-to-target gap fraction; inherits only orthogonal routing. Omission searches midpoint first, then quarter and three-quarter. Aligned endpoints stay straight; feedback uses the outer lane.',
+    ),
   cornerRadius: NonNegativeNumberSchema.optional().describe(
     'Corner radius; omission inherits the ancestor axis-aligned routing or the selected layout Definition.',
   ),
 });
 
-const FlowHorizontalThenVerticalRoutingSchema = FlowOrthogonalRoutingSchema.extend({
+const FlowHorizontalThenVerticalRoutingSchema = FlowOrthogonalRoutingSchema.omit({ turnPosition: true }).extend({
   kind: literal(FlowRoutingKind.HorizontalThenVertical).describe(
     'Horizontal then vertical single-elbow route; no obstacle avoidance.',
   ),
 });
 
-const FlowVerticalThenHorizontalRoutingSchema = FlowOrthogonalRoutingSchema.extend({
+const FlowVerticalThenHorizontalRoutingSchema = FlowOrthogonalRoutingSchema.omit({ turnPosition: true }).extend({
   kind: literal(FlowRoutingKind.VerticalThenHorizontal).describe(
     'Vertical then horizontal single-elbow route; no obstacle avoidance.',
   ),
 });
 
-export const FlowRoutingSchema = discriminatedUnion('kind', [
+export const FlowScopeRoutingSchema = discriminatedUnion('kind', [
   strictObject({
     kind: literal(FlowRoutingKind.Bend).describe(
       'Regular bend routing alongside straight and axis-aligned routes. Prefer this over manual curve controls; omitted side and angle search up to six candidates (left/right at 30, 45, 60 degrees) after inheritance. Nodes take priority, labels break ties; edge crossings and overlaps are not scored. No global obstacle avoidance guarantee.',
@@ -86,6 +102,46 @@ export const FlowRoutingSchema = discriminatedUnion('kind', [
   FlowHorizontalThenVerticalRoutingSchema,
   FlowVerticalThenHorizontalRoutingSchema,
 ]).describe('Provider-neutral Flow relation routing intent.');
+
+/** 关系专属贝塞尔：控制点全省略或完整提供 */
+export const FlowBezierRoutingSchema = union([
+  strictObject({ kind: literal(FlowRoutingKind.Curve) }),
+  strictObject({
+    kind: literal(FlowRoutingKind.Curve),
+    control: ControlPointSchema.describe(
+      'Explicit quadratic control in Flow root coordinates; subtract artifact drawing.origin when copying a control from an artifact.',
+    ),
+  }),
+  strictObject({ kind: literal(FlowRoutingKind.Cubic) }),
+  strictObject({
+    kind: literal(FlowRoutingKind.Cubic),
+    control1: ControlPointSchema.describe(
+      'Explicit source tangent control in Flow root coordinates; must accompany control2.',
+    ),
+    control2: ControlPointSchema.describe(
+      'Explicit target tangent control in Flow root coordinates; must accompany control1.',
+    ),
+  }),
+]).describe(
+  'Prefer bend for simple routing. Omit all controls for bounded automatic Bezier avoidance; provide all controls for exact authoring. Controls are not waypoints. Reference collision checks do not guarantee final drawing safety.',
+);
+
+/** Flow 关系路由；祖先默认只接受常规路由子集 */
+export const FlowSmoothRoutingSchema = strictObject({
+  kind: literal(FlowRoutingKind.Smooth),
+  points: SmoothStepSchema.shape.points.describe(
+    'Ordered intermediate Core Targets in Flow root coordinates; the relation target is appended automatically. Prefer 2-3 points at direction changes. Node references must belong to this Flow; Layout ids are not targets. No automatic waypoint search or movement.',
+  ),
+  tension: SmoothStepSchema.shape.tension,
+}).describe(
+  'Explicit through-point curve. Prefer automatic bend, then quadratic, then cubic routing for avoidance; use smooth when intermediate passage positions are known. Smoothing may leave the waypoint corridor; inspect the rendered curve and labels.',
+);
+
+export const FlowRoutingSchema = union([
+  ...FlowScopeRoutingSchema.options,
+  ...FlowBezierRoutingSchema.options,
+  FlowSmoothRoutingSchema,
+]);
 
 const FlowLayoutIntentBaseSchema = strictObject({
   direction: zodEnum(FlowDirection).optional().describe('Primary direction for this Flow layout scope.'),
@@ -171,8 +227,47 @@ export const FlowDefaultsGroupSchema = strictObject({
   caption: FlowDefaultsGroupCaptionSchema.optional().describe('Optional Group caption arrangement and text defaults.'),
 }).describe('Sparse Flow Group defaults without overflow or layout strategy.');
 
+/** 端点分离的末端默认，继承前复用 unwrap 保持稀疏 */
+export const FlowEndpointOverlapSchema = zodEnum(FlowEndpointOverlap)
+  .describe(
+    'allow permits coincident connection points; separate gives this endpoint its own equally spaced side slot. Does not prevent arrow shape overlap or route crossings.',
+  )
+  .default('allow');
+
+/** 关系端点的稀疏默认 */
+export const FlowEndpointDefaultsSchema = strictObject({ overlap: FlowEndpointOverlapSchema.unwrap().optional() });
+
+/** 已定位的端点结果，不保存自动分配意图 */
+export const FlowEndpointTargetSchema = strictObject({
+  id: NonBlankStringSchema.describe('Referenced Entity or Group id.'),
+  anchor: AnchorRefSchema.optional().describe('Resolved Core anchor; omission retains natural boundary clipping.'),
+});
+
+/** 单侧自动位置与精确锚点互斥，字符串保留最简作者表达 */
+export const FlowEndpointSchema = union([
+  NonBlankStringSchema,
+  strictObject({
+    id: NonBlankStringSchema,
+    side: zodEnum(Side)
+      .optional()
+      .describe(
+        'Constrain the connection to this side; fraction remains automatic. Usually omit. Mutually exclusive with anchor.',
+      ),
+    overlap: FlowEndpointOverlapSchema.unwrap().optional(),
+  }),
+  strictObject({
+    id: NonBlankStringSchema,
+    anchor: AnchorRefSchema.describe(
+      'Exact Core anchor. Last resort for precise positioning; never moved by automatic separation. Mutually exclusive with side.',
+    ),
+    overlap: FlowEndpointOverlapSchema.unwrap().optional(),
+  }),
+]);
+
 export const FlowDefaultsRelationSchema = strictObject({
   ...GraphRelationDefaultsSchema.shape,
+  source: FlowEndpointDefaultsSchema.optional(),
+  target: FlowEndpointDefaultsSchema.optional(),
 }).describe('Sparse Flow Relation defaults using Graph-compatible style and root fields.');
 
 export const FlowDefaultsSchema = strictObject({
@@ -228,7 +323,7 @@ export const FlowGroupSchema = strictObject({
   id: GroupSchema.shape.id.unwrap().describe('Flow-wide authored Group identity.'),
   rank: NonNegativeIntegerSchema.optional().describe('Optional rank constraint within the nearest Flow scope.'),
   layout: FlowLayoutIntentSchema.optional().describe('Layout overrides for this Group contents.'),
-  routing: FlowRoutingSchema.optional().describe('Routing default for Relations in this Group scope.'),
+  routing: FlowScopeRoutingSchema.optional().describe('Routing default for Relations in this Group scope.'),
   children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
 }).describe(
   'Graph Group surface with Flow identity, reference children and automatic layout; excludes transforms, placement and localNamespace.',
@@ -385,8 +480,8 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
   .describe('Invisible Flow Layout with explicit linear or grid placement.');
 
 export const FlowRelationSchema = strictObject({
-  source: NonBlankStringSchema.describe('Authored source Flow element id.'),
-  target: NonBlankStringSchema.describe('Authored target Flow element id.'),
+  source: FlowEndpointSchema.describe('Source Entity or Group with optional connection constraints.'),
+  target: FlowEndpointSchema.describe('Target Entity or Group with optional connection constraints.'),
   label: FlowRelationLabelSchema.optional().describe(
     'Optional compact Core TextBlock or complete GeometryLabel; full objects preserve Core geometry and appearance, including position, sloped, interruption and gap.',
   ),
@@ -416,7 +511,7 @@ export const FlowDiagramSchema = strictObject({
     .optional()
     .describe('Optional ordered Graph rules for Flow-materialized Entities and Relations.'),
   layout: FlowLayoutIntentSchema.optional().describe('Root Flow layout overrides.'),
-  routing: FlowRoutingSchema.optional().describe('Root Flow relation routing default.'),
+  routing: FlowScopeRoutingSchema.optional().describe('Root Flow relation routing default.'),
   entities: array(FlowEntitySchema).nonempty().describe('Non-empty flat Flow Entity declaration catalog.'),
   groups: array(FlowGroupSchema).describe('Flat Flow Group declaration catalog; empty when no Groups are authored.'),
   layouts: array(FlowLayoutSchema).describe(

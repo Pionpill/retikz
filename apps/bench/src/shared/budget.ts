@@ -11,7 +11,7 @@ export type BenchmarkExecutionOutcomeValue = Extract<
 
 /** 策略 A/B 场景的执行模式与可观察结果 */
 export type BenchmarkExecution = Readonly<{
-  /** 是否创建 retained Runtime Session */
+  /** 是否创建 retained Runtime */
   mode: 'static' | 'retained';
   /** retained Program 更新策略；static 不存在 */
   updateStrategy?: 'auto' | 'full';

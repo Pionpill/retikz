@@ -11,6 +11,7 @@
 
 ### Gate 重点
 
+- Schema 原子化须附全包定义 / 消费矩阵、同义与非同义反例、原子 owner 及默认 / refinement / 开放扩展边界；不能仅按重复次数或对象字段相似度批准下沉。整体抽象规则见[原子设计](../../../../notes/architecture/atomic-contract-design.md#整体-review-与抽象门禁)
 - 简略 plan 必须选择明确结论：组合、扩展当前域、下沉、上移、不支持或延期。
 - 新增开放语义时，ADR 冻结必要公开 contract；简略 plan 验证内置与自定义同路的 define-registry 链路。能力天然闭合时，理由记录在 plan。
 - 基础数据结构、公开契约、默认 / 失败语义和跨包接口必须足以冻结功能，不能让 plan 或 implementer 再决定所有权或公开字段。

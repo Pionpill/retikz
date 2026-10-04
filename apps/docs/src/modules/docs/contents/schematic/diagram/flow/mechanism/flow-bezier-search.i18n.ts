@@ -1,0 +1,31 @@
+/** 贝塞尔有限搜索图文案 */
+export const flowBezierSearchI18n = {
+  zh: {
+    baseline: '同阶共线基线',
+    baselineNote: '零冲突直接交付',
+    target: '障碍两侧目标 Q',
+    targetNote: '每侧 τ = 1/4、1/2、3/4',
+    control: '反求控制点',
+    controlNote: '无效提案淘汰，仍占预算',
+    check: '真实子曲线 AABB',
+    checkNote: '重叠分支最多二分 8 次',
+    score: '比较完整一轮',
+    scoreNote: '节点 → 标签 → 长度 → 偏移',
+    result: '保留当前最优',
+    resultNote: '仍冲突则扩展，最多两轮',
+  },
+  en: {
+    baseline: 'Collinear baseline',
+    baselineNote: 'Return if conflict-free',
+    target: 'Targets Q on both sides',
+    targetNote: 'τ = 1/4, 1/2, 3/4 per side',
+    control: 'Solve control points',
+    controlNote: 'Invalid proposals use budget',
+    check: 'Subcurve AABBs',
+    checkNote: 'Up to 8 bisections per branch',
+    score: 'Compare the whole wave',
+    scoreNote: 'Nodes → labels → length → offset',
+    result: 'Keep the best so far',
+    resultNote: 'Expand if blocked; two waves',
+  },
+};

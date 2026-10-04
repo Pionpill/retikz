@@ -7,14 +7,14 @@ import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCells } from './cell';
 
 /** Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 style.key/value 与 layout.key/value */
-export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataObjectDisplay'> &
+export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand'> &
   (
     | {
         entries: Array<{ key: string | InputCell; value: string | InputCell }>;
         data?: never;
-        dataObjectDisplay?: never;
+        dataExpand?: never;
       }
-    | { data: NonNullable<IRMap['data']>; entries?: never; dataObjectDisplay?: IRMap['dataObjectDisplay'] }
+    | { data: NonNullable<IRMap['data']>; entries?: never; dataExpand?: IRMap['dataExpand'] }
   );
 
 /** 将 Map 输入与嵌套内容交给根级 traversal */
