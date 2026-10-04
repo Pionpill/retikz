@@ -16,13 +16,15 @@ import { createFlowBezierCurve, flowRouteLabelBounds } from './geometry';
 
 /** 识别需要候选择优的曲线输入，供布局与诊断共享标签顺序 */
 export const isFlowAutomaticRouting = (routing: FlowLayoutRouting): boolean =>
-  routing.kind === 'curve'
-    ? routing.control === undefined
-    : routing.kind === 'cubic'
-      ? routing.control1 === undefined
-      : routing.kind === 'bend' &&
-        !('outAngle' in routing) &&
-        (routing.bendAngle === undefined || routing.bendDirection === undefined);
+  routing.kind === 'orthogonal'
+    ? routing.turnPosition === undefined
+    : routing.kind === 'curve'
+      ? routing.control === undefined
+      : routing.kind === 'cubic'
+        ? routing.control1 === undefined
+        : routing.kind === 'bend' &&
+          !('outAngle' in routing) &&
+          (routing.bendAngle === undefined || routing.bendDirection === undefined);
 
 /** 当前关系可见的其他标签，排除尚未求解的自动关系 */
 export const flowPriorLabelReservations = (

@@ -12,7 +12,7 @@ import type { FlowLayoutInput, FlowLayoutRoute, FlowLayoutOutput } from '../../s
 import { FlowRouteArtifactSchema } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 import { createFlowBendCurve, flowRelationObstacles, scoreFlowBendNodes } from '../../src/flow/providers';
-import { routeLayeredRelations } from '../../src/flow/providers/layout/layered/routing';
+import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
 import { findFlowCurveObstacleIntervals } from '../../src/flow/shared/geometry';
 
@@ -74,18 +74,18 @@ describe('Flow bend routing', () => {
     const clear = routingElements.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { x: 90, y: 200, width: 20, height: 2 } } : element,
     );
-    expect(routeLayeredRelations(automatic, clear)[0].route).toMatchObject({ bendDirection: 'left', bendAngle: 30 });
+    expect(routeFlowRelations(automatic, clear)[0].route).toMatchObject({ bendDirection: 'left', bendAngle: 30 });
     const blockThirty = clear.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { x: 90, y: -30, width: 20, height: 60 } } : element,
     );
-    expect(routeLayeredRelations(automatic, blockThirty)[0].route).toMatchObject({
+    expect(routeFlowRelations(automatic, blockThirty)[0].route).toMatchObject({
       bendDirection: 'left',
       bendAngle: 45,
     });
     const blockFortyFive = clear.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { x: 90, y: -45, width: 20, height: 90 } } : element,
     );
-    expect(routeLayeredRelations(automatic, blockFortyFive)[0].route).toMatchObject({
+    expect(routeFlowRelations(automatic, blockFortyFive)[0].route).toMatchObject({
       bendDirection: 'left',
       bendAngle: 60,
     });
@@ -93,11 +93,11 @@ describe('Flow bend routing', () => {
       ...automatic,
       relations: [{ ...automatic.relations[0], routing: { kind: 'bend', bendDirection: 'right' } }],
     };
-    expect(routeLayeredRelations(fixedSide, blockFortyFive)[0].route).toMatchObject({
+    expect(routeFlowRelations(fixedSide, blockFortyFive)[0].route).toMatchObject({
       bendDirection: 'right',
       bendAngle: 60,
     });
-    expect(routeLayeredRelations(automatic, blockFortyFive)).toEqual(routeLayeredRelations(automatic, blockFortyFive));
+    expect(routeFlowRelations(automatic, blockFortyFive)).toEqual(routeFlowRelations(automatic, blockFortyFive));
   });
 
   it('preserves omitted angles through resolution and locks inherited explicit zero and negative angles', () => {
@@ -194,11 +194,11 @@ describe('Flow bend routing', () => {
     const clear = routingElements.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { x: 98, y: 200, width: 4, height: 4 } } : element,
     );
-    expect(routeLayeredRelations(labeled, clear)[1].route).toMatchObject({ bendDirection: 'right', bendAngle: 60 });
+    expect(routeFlowRelations(labeled, clear)[1].route).toMatchObject({ bendDirection: 'right', bendAngle: 60 });
     const nodeOnRight = clear.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { x: 98, y: 56, width: 4, height: 4 } } : element,
     );
-    expect(routeLayeredRelations(labeled, nodeOnRight)[1].route).toMatchObject({
+    expect(routeFlowRelations(labeled, nodeOnRight)[1].route).toMatchObject({
       bendDirection: 'left',
       bendAngle: 60,
     });
@@ -310,7 +310,7 @@ describe('Flow bend routing', () => {
       labelPlacement: { sloped: true, position: 0.2 },
     };
     const labeled = { ...input, relations: [relation] };
-    const relations = routeLayeredRelations(labeled, routingElements);
+    const relations = routeFlowRelations(labeled, routingElements);
     const provider = { ...LayeredFlowLayoutDefinition, layout: () => ({ elements: routingElements, relations }) };
     expect(executeFlowLayout(provider, labeled).relations[0].labelBounds).toEqual(relations[0].labelBounds);
     expect(() =>
@@ -359,7 +359,7 @@ describe('Flow bend routing', () => {
     const blocked = routingElements.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { x: 80, y: -100, width: 40, height: 200 } } : element,
     );
-    const output = routeLayeredRelations(input, blocked);
+    const output = routeFlowRelations(input, blocked);
     expect(output[0].route).toMatchObject({ kind: 'bend', bendDirection: 'left', bendAngle: 60 });
     if (output[0].route.kind !== 'bend') throw new Error('expected bend');
     expect(
@@ -476,7 +476,7 @@ describe('Flow bend routing', () => {
             bounds: { x: center[0] - element.size.width / 2, y: center[1] - element.size.height / 2, ...element.size },
           };
         });
-        return { elements, relations: routeLayeredRelations(input, elements) };
+        return { elements, relations: routeFlowRelations(input, elements) };
       },
     };
     const source = FlowDiagramSchema.parse({
@@ -526,7 +526,7 @@ describe('Flow bend routing', () => {
           ...LayeredFlowLayoutDefinition,
           layout: received => ({
             elements: routingElements,
-            relations: routeLayeredRelations(received, routingElements),
+            relations: routeFlowRelations(received, routingElements),
           }),
         },
         overflowing,
@@ -541,14 +541,11 @@ describe('Flow bend routing', () => {
   });
   it('auto bend chooses the clear side at the authored angle using off-midpoint obstacles', () => {
     const input = routingInput();
-    const first = routeLayeredRelations(input, routingElements);
+    const first = routeFlowRelations(input, routingElements);
     expect(first[0].route).toMatchObject({ kind: 'bend', bendDirection: 'right', bendAngle: 60 });
-    expect(routeLayeredRelations(input, routingElements)).toEqual(first);
+    expect(routeFlowRelations(input, routingElements)).toEqual(first);
     expect(
-      routeLayeredRelations(
-        { ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] },
-        routingElements,
-      ),
+      routeFlowRelations({ ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] }, routingElements),
     ).toEqual(first);
     expect(routingElements[0].bounds.x).toBe(-2);
   });
@@ -558,7 +555,7 @@ describe('Flow bend routing', () => {
     const elements = routingElements.map(element =>
       element.id === 'obstacle' ? { ...element, bounds: { ...element.bounds, y: 200 } } : element,
     );
-    const routes = routeLayeredRelations(
+    const routes = routeFlowRelations(
       { ...input, relations: [input.relations[0], input.relations[0], input.relations[0]] },
       elements,
     );
@@ -586,7 +583,7 @@ describe('Flow bend routing', () => {
         { source: 'c', target: 'd', direction: 'forward', routing: { kind: 'straight' } },
       ],
     };
-    expect(routeLayeredRelations(crossing, elements)[0].route).toMatchObject({ bendDirection: 'left', bendAngle: 60 });
+    expect(routeFlowRelations(crossing, elements)[0].route).toMatchObject({ bendDirection: 'left', bendAngle: 60 });
   });
 
   it('custom output preserves centers and explicit parameters', () => {
@@ -627,7 +624,7 @@ describe('Flow bend routing', () => {
 
   it('coincident reference endpoints are retained for distinct endpoint identities', () => {
     const input = routingInput();
-    const routes = routeLayeredRelations(
+    const routes = routeFlowRelations(
       input,
       routingElements.map(element =>
         element.id === 'b' ? { ...element, bounds: routingElements[0].bounds } : element,

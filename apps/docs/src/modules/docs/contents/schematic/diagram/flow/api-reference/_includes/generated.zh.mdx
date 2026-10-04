@@ -727,13 +727,70 @@ export declare const FlowRelation: {
             looseness?: number | undefined;
           }
         | { kind: 'straight' }
-        | { kind: 'orthogonal'; cornerRadius?: number | undefined }
+        | { kind: 'orthogonal'; turnPosition?: 0.25 | 0.5 | 0.75 | undefined; cornerRadius?: number | undefined }
         | { kind: '-|'; cornerRadius?: number | undefined }
         | { kind: '|-'; cornerRadius?: number | undefined }
         | { kind: 'curve' }
         | { kind: 'curve'; control: [number, number] }
         | { kind: 'cubic' }
         | { kind: 'cubic'; control1: [number, number]; control2: [number, number] }
+        | {
+            kind: 'smooth';
+            points: Array<
+              | [number, number]
+              | SharedPolarPosition
+              | {
+                  id: string;
+                  anchor?:
+                    | number
+                    | OpenString<
+                        ValueOf<{
+                          readonly TopRight: 'top-right';
+                          readonly TopLeft: 'top-left';
+                          readonly BottomRight: 'bottom-right';
+                          readonly BottomLeft: 'bottom-left';
+                          readonly Top: 'top';
+                          readonly Right: 'right';
+                          readonly Bottom: 'bottom';
+                          readonly Left: 'left';
+                          readonly Center: 'center';
+                        }>
+                      >
+                    | { side: 'top' | 'right' | 'bottom' | 'left'; fraction: number }
+                    | undefined;
+                  offset?: [number, number] | undefined;
+                  boundary?:
+                    | OpenString<
+                        ValueOf<{
+                          readonly Self: 'shape';
+                          readonly Rectangle: 'rectangle';
+                          readonly Circle: 'circle';
+                          readonly Ellipse: 'ellipse';
+                          readonly Diamond: 'diamond';
+                          readonly Polygon: 'polygon';
+                        }>
+                      >
+                    | {
+                        type: OpenString<
+                          ValueOf<{
+                            readonly Rectangle: 'rectangle';
+                            readonly Circle: 'circle';
+                            readonly Ellipse: 'ellipse';
+                            readonly Diamond: 'diamond';
+                            readonly Polygon: 'polygon';
+                          }>
+                        >;
+                        params?: Record<string, JsonValue> | undefined;
+                      }
+                    | undefined;
+                }
+              | { of: string | [number, number] | SharedPolarPosition; offset: [number, number] }
+              | IRBetweenPosition
+              | { relative: [number, number] }
+              | { relativeAccumulate: [number, number] }
+            >;
+            tension?: number | undefined;
+          }
         | undefined;
       source: string;
       sourceMarker?:
@@ -1053,7 +1110,7 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
   <ApiSourceLink
     label={'FlowBendRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={117}
+    startLine={125}
   >
     bend 参考几何，仅保留一个生效参数族
   </ApiSourceLink>
@@ -1359,7 +1416,7 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
   <ApiSourceLink
     label={'FlowLayoutDefinition'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={327}
+    startLine={377}
   >
     同步确定 Flow element bounds、relation route 与 label reservation 的布局定义
   </ApiSourceLink>
@@ -1399,13 +1456,53 @@ export type FlowLayoutDefinition = Readonly<{
 
 </DocTabs>
 
+### FlowLayoutExecutionContext
+
+<p>
+  <ApiSourceLink
+    label={'FlowLayoutExecutionContext'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={263}
+  >
+    Flow Layout Definition 调用作者 placement 的同步执行边界
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                          | 类型                                                                 | 默认值 | 说明                                                               |
+| ----------------------------- | -------------------------------------------------------------------- | ------ | ------------------------------------------------------------------ |
+| `readonly placeLayout`        | `(input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput`     | —      | 按已测量尺寸执行作者的固定排列，返回容器局部坐标中的边界和子项位置 |
+| `readonly resolveRoutePoints` | `(query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>` | —      | 用真实 Graph 几何解析经过点，返回包含首尾的根局部点列              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowLayoutExecutionContext = Readonly<{
+  resolveRoutePoints: (query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>;
+  placeLayout: (input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### FlowLayoutLabelPlacement
 
 <p>
   <ApiSourceLink
     label={'FlowLayoutLabelPlacement'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={114}
+    startLine={122}
   >
     完整标签提供给布局的几何配置，不包含文字或外观
   </ApiSourceLink>
@@ -1447,7 +1544,7 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | '
   <ApiSourceLink
     label={'FlowLayoutRelationInput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={253}
+    startLine={303}
   >
     Flow layout relation 输入
   </ApiSourceLink>
@@ -1495,7 +1592,7 @@ export type FlowLayoutRelationInput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRelationOutput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={287}
+    startLine={337}
   >
     一条 Flow relation 的根坐标系布局输出
   </ApiSourceLink>
@@ -1535,13 +1632,27 @@ export type FlowLayoutRelationOutput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={124}
+    startLine={132}
   >
     布局已确定的参考路由，实际端点裁剪与箭头缩短由 Core 执行
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="symmetric">
+<DocTabs defaultValue="smooth">
+
+<DocTab value="smooth" label="属性 · 过点曲线">
+
+<ApiTable>
+
+| 成员               | 类型                                | 默认值 | 说明                                 |
+| ------------------ | ----------------------------------- | ------ | ------------------------------------ |
+| `readonly kind`    | `'smooth'`                          | —      | 经过点样条                           |
+| `readonly points`  | `ReadonlyArray<Readonly<Position>>` | —      | 包含 source 和 target 的完整数值点列 |
+| `readonly tension` | `number`                            | —      | 作者指定或 Core 补全的控制臂倍率     |
+
+</ApiTable>
+
+</DocTab>
 
 <DocTab value="symmetric" label="属性 · 对称弯曲">
 
@@ -1616,15 +1727,30 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 </DocTab>
 
-<DocTab value="axis" label="属性 · 轴对齐">
+<DocTab value="axis" label="属性 · 单折角">
 
 <ApiTable>
 
 | 成员                    | 类型                                | 默认值 | 说明 |
 | ----------------------- | ----------------------------------- | ------ | ---- |
 | `readonly cornerRadius` | `number`                            | —      | —    |
-| `readonly kind`         | `'orthogonal' \| '-\|' \| '\|-'`    | —      | —    |
+| `readonly kind`         | `'-\|' \| '\|-'`                    | —      | —    |
 | `readonly points`       | `ReadonlyArray<Readonly<Position>>` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="orthogonal" label="属性 · 正交折线">
+
+<ApiTable>
+
+| 成员                     | 类型                                | 默认值 | 说明                               |
+| ------------------------ | ----------------------------------- | ------ | ---------------------------------- |
+| `readonly cornerRadius`  | `number`                            | —      | —                                  |
+| `readonly kind`          | `'orthogonal'`                      | —      | —                                  |
+| `readonly points`        | `ReadonlyArray<Readonly<Position>>` | —      | —                                  |
+| `readonly turnPosition?` | `0.25 \| 0.5 \| 0.75`               | —      | 作者的有效比例；自动选择不重复存储 |
 
 </ApiTable>
 
@@ -1634,14 +1760,21 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 ```ts
 export type FlowLayoutRoute =
+  | FlowSmoothRoute
   | Readonly<{
       kind: 'straight';
       points: ReadonlyArray<Readonly<Position>>;
     }>
   | Readonly<{
-      kind: 'orthogonal' | '-|' | '|-';
+      kind: '-|' | '|-';
       points: ReadonlyArray<Readonly<Position>>;
       cornerRadius: number;
+    }>
+  | Readonly<{
+      kind: 'orthogonal';
+      points: ReadonlyArray<Readonly<Position>>;
+      cornerRadius: number;
+      turnPosition?: 0.25 | 0.5 | 0.75;
     }>
   | FlowBendRoute
   | FlowBezierRoute;
@@ -1657,120 +1790,27 @@ export type FlowLayoutRoute =
   <ApiSourceLink
     label={'FlowLayoutRouting'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={100}
+    startLine={101}
   >
     Flow layout provider 使用的有效路由
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="curve">
-
-<DocTab value="curve" label="属性 · 二次贝塞尔">
-
-<ApiTable>
-
-| 成员                | 类型                 | 默认值 | 说明                              |
-| ------------------- | -------------------- | ------ | --------------------------------- |
-| `readonly control?` | `Readonly<Position>` | —      | Flow 根坐标控制点，省略时自动生成 |
-| `readonly kind`     | `'curve'`            | —      | 二次贝塞尔输入                    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="cubic-auto" label="属性 · 自动三次贝塞尔">
-
-<ApiTable>
-
-| 成员                 | 类型      | 默认值 | 说明                           |
-| -------------------- | --------- | ------ | ------------------------------ |
-| `readonly control1?` | `never`   | —      | 自动三次必须同时省略两个控制点 |
-| `readonly control2?` | `never`   | —      | 自动三次必须同时省略两个控制点 |
-| `readonly kind`      | `'cubic'` | —      | 三次贝塞尔输入                 |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="cubic-explicit" label="属性 · 显式三次贝塞尔">
-
-<ApiTable>
-
-| 成员                | 类型                 | 默认值 | 说明                                        |
-| ------------------- | -------------------- | ------ | ------------------------------------------- |
-| `readonly control1` | `Readonly<Position>` | —      | Flow 根坐标的起点切线控制点，显式值不可移动 |
-| `readonly control2` | `Readonly<Position>` | —      | Flow 根坐标的终点切线控制点，显式值不可移动 |
-| `readonly kind`     | `'cubic'`            | —      | 三次贝塞尔输入                              |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="straight" label="属性 · 直线">
-
-<ApiTable>
-
-| 成员            | 类型         | 默认值 | 说明 |
-| --------------- | ------------ | ------ | ---- |
-| `readonly kind` | `'straight'` | —      | —    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="axis" label="属性 · 轴对齐">
-
-<ApiTable>
-
-| 成员                    | 类型                             | 默认值 | 说明 |
-| ----------------------- | -------------------------------- | ------ | ---- |
-| `readonly cornerRadius` | `number`                         | —      | —    |
-| `readonly kind`         | `'orthogonal' \| '-\|' \| '\|-'` | —      | —    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="symmetric" label="属性 · 对称弯曲">
-
-<ApiTable>
-
-| 成员                      | 类型                | 默认值 | 说明                                                 |
-| ------------------------- | ------------------- | ------ | ---------------------------------------------------- |
-| `readonly bendAngle?`     | `number`            | —      | 省略时由布局比较 30、45、60 度；显式及继承值必须保留 |
-| `readonly bendDirection?` | `'left' \| 'right'` | —      | 省略时由布局比较左右候选                             |
-| `readonly kind`           | `'bend'`            | —      | —                                                    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="tangent" label="属性 · 切线弯曲">
-
-<ApiTable>
-
-| 成员                 | 类型     | 默认值 | 说明 |
-| -------------------- | -------- | ------ | ---- |
-| `readonly inAngle`   | `number` | —      | —    |
-| `readonly kind`      | `'bend'` | —      | —    |
-| `readonly looseness` | `number` | —      | —    |
-| `readonly outAngle`  | `number` | —      | —    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
 ```ts
 export type FlowLayoutRouting =
+  | FlowSmoothRouting
   | FlowBezierRouting
   | Readonly<{
       kind: 'straight';
     }>
   | Readonly<{
-      kind: 'orthogonal' | '-|' | '|-';
+      kind: '-|' | '|-';
       cornerRadius: number;
+    }>
+  | Readonly<{
+      kind: 'orthogonal';
+      cornerRadius: number;
+      turnPosition?: 0.25 | 0.5 | 0.75;
     }>
   | Readonly<{
       kind: 'bend';
@@ -1785,6 +1825,46 @@ export type FlowLayoutRouting =
     }>;
 ```
 
+### FlowRoutePointsQuery
+
+<p>
+  <ApiSourceLink
+    label={'FlowRoutePointsQuery'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={291}
+  >
+    当前布局中的真实经过点查询，不持有跨编译缓存
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员                | 类型                                     | 默认值 | 说明                               |
+| ------------------- | ---------------------------------------- | ------ | ---------------------------------- |
+| `readonly elements` | `ReadonlyArray<FlowLayoutElementOutput>` | —      | 与最终输出一致的全部根局部元素矩形 |
+| `readonly points`   | `ReadonlyArray<IRTarget>`                | —      | 有序中间目标                       |
+| `readonly source`   | `string`                                 | —      | 关系起点身份                       |
+| `readonly target`   | `string`                                 | —      | 关系终点身份                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowRoutePointsQuery = Readonly<{
+  elements: ReadonlyArray<FlowLayoutElementOutput>;
+  source: string;
+  target: string;
+  points: ReadonlyArray<IRTarget>;
+}>;
+```
+
 </DocTab>
 
 </DocTabs>
@@ -1795,7 +1875,7 @@ export type FlowLayoutRouting =
   <ApiSourceLink
     label={'FlowRoutingCapability'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={87}
+    startLine={88}
   >
     每种路由及其可消费的作者输入语义
   </ApiSourceLink>
@@ -1839,6 +1919,90 @@ export type FlowRoutingCapability =
       kind: 'curve' | 'cubic';
       modes: ReadonlyArray<'auto' | 'explicit'>;
     }>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowSmoothRoute
+
+<p>
+  <ApiSourceLink
+    label={'FlowSmoothRoute'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={281}
+  >
+    已解析的样条参考点列，保留合法重复点
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员               | 类型                                | 默认值 | 说明                                 |
+| ------------------ | ----------------------------------- | ------ | ------------------------------------ |
+| `readonly kind`    | `'smooth'`                          | —      | 经过点样条                           |
+| `readonly points`  | `ReadonlyArray<Readonly<Position>>` | —      | 包含 source 和 target 的完整数值点列 |
+| `readonly tension` | `number`                            | —      | 作者指定或 Core 补全的控制臂倍率     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowSmoothRoute = Readonly<{
+  kind: 'smooth';
+  points: ReadonlyArray<Readonly<Position>>;
+  tension: number;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowSmoothRouting
+
+<p>
+  <ApiSourceLink
+    label={'FlowSmoothRouting'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={271}
+  >
+    已补全 tension 的经过点路由意图
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员               | 类型                      | 默认值 | 说明                                   |
+| ------------------ | ------------------------- | ------ | -------------------------------------- |
+| `readonly kind`    | `'smooth'`                | —      | 显式经过点样条                         |
+| `readonly points`  | `ReadonlyArray<IRTarget>` | —      | 有序中间目标，不包括自动追加的关系终点 |
+| `readonly tension` | `number`                  | —      | 正数控制臂倍率，使用 Core 默认值       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type FlowSmoothRouting = Readonly<{
+  kind: 'smooth';
+  points: ReadonlyArray<IRTarget>;
+  tension: number;
+}>;
 ```
 
 </DocTab>
@@ -2018,6 +2182,49 @@ export declare const defineFlowLayout: (definition: FlowLayoutDefinition) => Flo
 export declare const getFlowLayoutCatalog: (
   options?: FlowLayoutRegistryOptions,
 ) => ReadonlyArray<FlowLayoutCatalogEntry>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### routeFlowRelations
+
+<p>
+  <ApiSourceLink
+    label={'routeFlowRelations'}
+    path={'packages/schematic/diagram/src/flow/providers/layout/routing.ts'}
+    startLine={111}
+  >
+    基于完整的根局部元素边界计算关系路线和标签预留，不改变输入或元素位置
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称       | 类型 / 签名                               | 说明                                                                   |
+| ------ | ---------- | ----------------------------------------- | ---------------------------------------------------------------------- |
+| 参数   | `input`    | `FlowLayoutInput`                         | 已测量的布局输入，关系输出保持输入顺序                                 |
+|        | `elements` | `ReadonlyArray<FlowLayoutElementOutput>`  | 全部元素的最终根局部边界，与布局返回的元素一致                         |
+|        | `context?` | `FlowLayoutExecutionContext`              | 布局执行上下文，解析 smooth 经过点时必需                               |
+| 返回值 | —          | `ReadonlyArray<FlowLayoutRelationOutput>` | 按输入关系顺序排列的路由输出，由调用方与元素一起返回并接受布局输出校验 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const routeFlowRelations: (
+  input: FlowLayoutInput,
+  elements: ReadonlyArray<FlowLayoutElementOutput>,
+  context?: FlowLayoutExecutionContext,
+) => ReadonlyArray<FlowLayoutRelationOutput>;
 ```
 
 </DocTab>

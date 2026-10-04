@@ -1,4 +1,5 @@
 import type { IRScope, LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
+import { RetikzCoreError } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 import type { Position } from '@retikz/math';
 
@@ -7,11 +8,13 @@ import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { ResolvedFlowDiagramDefinitionOptions } from '../../providers';
 import {
   evaluateFlowBezierConflicts,
+  evaluateFlowOrthogonalConflicts,
   flowPriorLabelReservations,
   isFlowAutomaticRouting,
   flowBendGeometryFailure,
   flowRelationObstacles,
   scoreFlowBendNodes,
+  flowSmoothConflicts,
 } from '../../providers';
 import type { CanonicalFlowDiagram } from '../../resolve';
 import { assertFlowLayoutCapabilities, resolveFlowDiagram } from '../../resolve';
@@ -19,7 +22,7 @@ import type { FlowDiagramArtifact, IRFlowDiagram } from '../../schemas';
 import { createFlowDiagramArtifact, createFlowSpatialHandles } from './artifact';
 import { executeFlowLayout } from './layout-output';
 import { createFlowLayoutExecutionContext } from './layout-placement';
-import { materializeFlowGraph } from './materialize';
+import { materializeFlowGraph, materializeFlowElements } from './materialize';
 import { measureFlowDiagram } from './measure';
 
 const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children'> => {
@@ -114,12 +117,62 @@ export const createCompileFlowDiagram =
     });
     assertFlowLayoutCapabilities(definition, diagram);
     const measurement = measureFlowDiagram(diagram, context, definition, options.graph);
-    const output = executeFlowLayout(
-      definition,
-      measurement.input,
-      createFlowLayoutExecutionContext(context, measurement.input),
-    );
+    const output = executeFlowLayout(definition, measurement.input, {
+      ...createFlowLayoutExecutionContext(context, measurement.input),
+      resolveRoutePoints: query => {
+        try {
+          const resolved = context.resolvePathTargets({
+            child: {
+              type: 'scope',
+              ...(source.transforms === undefined ? {} : { transforms: source.transforms }),
+              localNamespace: true,
+              children: [materializeFlowElements(measurement, query.elements)],
+            },
+            source: { id: query.source },
+            points: [...query.points, { id: query.target }],
+          });
+          return [resolved.source, ...resolved.points];
+        } catch (cause) {
+          const index = measurement.input.relations.findIndex(
+            relation =>
+              relation.source === query.source &&
+              relation.target === query.target &&
+              relation.routing.kind === 'smooth' &&
+              JSON.stringify(relation.routing.points) === JSON.stringify(query.points),
+          );
+          const queryPath = cause instanceof RetikzCoreError ? cause.details?.path : undefined;
+          const pointMatch = typeof queryPath === 'string' ? /^points\[(\d+)\]$/.exec(queryPath) : null;
+          const pointIndex = pointMatch === null ? undefined : Number(pointMatch[1]);
+          return materializationFailure(definition.name, 'materialize', 'Smooth waypoint query failed.', cause, {
+            path:
+              index < 0
+                ? []
+                : queryPath === 'source'
+                  ? ['relations', index, 'source']
+                  : pointIndex === query.points.length
+                    ? ['relations', index, 'target']
+                    : ['relations', index, 'routing', 'points', ...(pointIndex === undefined ? [] : [pointIndex])],
+            relatedIds: [query.source, query.target],
+          });
+        }
+      },
+    });
     for (const [index, geometry] of output.relations.entries()) {
+      if (geometry.route.kind === 'smooth') {
+        const relation = measurement.input.relations[index];
+        const conflicts = flowSmoothConflicts(
+          geometry.route,
+          relation,
+          flowRelationObstacles(measurement.input, output, relation),
+        );
+        if (conflicts.length > 0)
+          context.warn(
+            'FlowSmoothObstacleConflict',
+            `Smooth reference curve conflicts with ${conflicts.join(', ')}; keep authored waypoints and inspect the final drawing.`,
+            `relations[${index}].routing.points`,
+          );
+        continue;
+      }
       if (geometry.route.kind === 'curve' || geometry.route.kind === 'cubic') {
         const relation = measurement.input.relations[index];
         const conflicts = evaluateFlowBezierConflicts(
@@ -132,6 +185,23 @@ export const createCompileFlowDiagram =
           context.warn(
             isFlowAutomaticRouting(relation.routing) ? 'FlowBezierSearchExhausted' : 'FlowBezierObstacleConflict',
             `Bezier reference geometry conflicts with ${conflicts.relatedIds.join(', ')}; inspect the final drawing.`,
+            `relations[${index}]`,
+          );
+        continue;
+      }
+      if (geometry.route.kind === 'orthogonal') {
+        if (geometry.route.points.length === 2) continue;
+        const relation = measurement.input.relations[index];
+        const { score } = evaluateFlowOrthogonalConflicts(
+          geometry.route,
+          relation,
+          flowRelationObstacles(measurement.input, output, relation),
+          flowPriorLabelReservations(measurement.input.relations, output.relations, index),
+        );
+        if (score[0] > 0 || score[2] > 0)
+          context.warn(
+            'FlowOrthogonalObstacleConflict',
+            'Orthogonal reference route conflicts with nodes or labels; the best available route is retained.',
             `relations[${index}]`,
           );
         continue;

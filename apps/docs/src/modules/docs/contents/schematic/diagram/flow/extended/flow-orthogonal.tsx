@@ -3,28 +3,30 @@ import type { FC } from 'react';
 import type { Lang } from '@/i18n';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { createPreviewControlContract, previewControls } from './flow-bend.controls';
-import { renderFlowBendPreview } from './flow-bend.preview';
+import { createPreviewControlContract, previewControls } from './flow-orthogonal.controls';
+import { renderFlowOrthogonalPreview } from './flow-orthogonal.preview';
 import { FlowCurveViewport } from './FlowCurveViewport';
 
 export { previewControls };
 const createPreview = (lang: Lang) => {
   const contract = createPreviewControlContract(lang);
   const controlled = defineControlledPreview(contract, values => (
-    <FlowCurveViewport diagram={renderFlowBendPreview(values, lang)} />
+    <FlowCurveViewport orthogonal diagram={renderFlowOrthogonalPreview(values, lang)} />
   ));
   return {
     ...controlled,
-    // 自定义布局含函数，自动 IR/Vanilla 源码无法保留其注册；展示完整 React 与附属布局源码
-    source: { deriveIR: false },
+    source: {
+      ...controlled.source,
+      canonicalRender: () => renderFlowOrthogonalPreview(contract.canonicalValues, lang),
+    },
   };
 };
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
 export const previewSource = previews.zh.source;
-/** 曲线与标签示例语言 */
-export type FlowBendProps = Readonly<{ lang?: Lang }>;
-/** 曲线避让限制及完整标签试验场 */
-const Demo: FC<FlowBendProps> = props => {
+/** 正交避让示例语言 */
+export type FlowOrthogonalProps = Readonly<{ lang?: Lang }>;
+/** 正交候选与对齐退化试验场 */
+const Demo: FC<FlowOrthogonalProps> = props => {
   const { lang = 'zh' } = props;
   const Preview = previews[lang].Component;
   return <Preview />;

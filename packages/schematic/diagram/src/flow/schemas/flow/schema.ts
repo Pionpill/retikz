@@ -4,6 +4,7 @@ import {
   ControlPointSchema,
   GeometryLabelSchema,
   ScopePropsSchema,
+  SmoothStepSchema,
   TextBlockSchema,
 } from '@retikz/core';
 import {
@@ -53,20 +54,26 @@ const FlowStraightRoutingSchema = strictObject({
   kind: literal(FlowRoutingKind.Straight).describe('Straight two-endpoint route intent.'),
 });
 
-const FlowOrthogonalRoutingSchema = strictObject({
+/** 正交路由的有限候选与显式折点契约 */
+export const FlowOrthogonalRoutingSchema = strictObject({
   kind: literal(FlowRoutingKind.Orthogonal).describe('Axis-aligned route intent.'),
+  turnPosition: literal([0.25, 0.5, 0.75])
+    .optional()
+    .describe(
+      'Authored source-to-target gap fraction; inherits only orthogonal routing. Omission searches midpoint first, then quarter and three-quarter. Aligned endpoints stay straight; feedback uses the outer lane.',
+    ),
   cornerRadius: NonNegativeNumberSchema.optional().describe(
     'Corner radius; omission inherits the ancestor axis-aligned routing or the selected layout Definition.',
   ),
 });
 
-const FlowHorizontalThenVerticalRoutingSchema = FlowOrthogonalRoutingSchema.extend({
+const FlowHorizontalThenVerticalRoutingSchema = FlowOrthogonalRoutingSchema.omit({ turnPosition: true }).extend({
   kind: literal(FlowRoutingKind.HorizontalThenVertical).describe(
     'Horizontal then vertical single-elbow route; no obstacle avoidance.',
   ),
 });
 
-const FlowVerticalThenHorizontalRoutingSchema = FlowOrthogonalRoutingSchema.extend({
+const FlowVerticalThenHorizontalRoutingSchema = FlowOrthogonalRoutingSchema.omit({ turnPosition: true }).extend({
   kind: literal(FlowRoutingKind.VerticalThenHorizontal).describe(
     'Vertical then horizontal single-elbow route; no obstacle avoidance.',
   ),
@@ -117,7 +124,21 @@ export const FlowBezierRoutingSchema = union([
 );
 
 /** Flow 关系路由；祖先默认只接受常规路由子集 */
-export const FlowRoutingSchema = union([...FlowScopeRoutingSchema.options, ...FlowBezierRoutingSchema.options]);
+export const FlowSmoothRoutingSchema = strictObject({
+  kind: literal(FlowRoutingKind.Smooth),
+  points: SmoothStepSchema.shape.points.describe(
+    'Ordered intermediate Core Targets in Flow root coordinates; the relation target is appended automatically. Prefer 2-3 points at direction changes. Node references must belong to this Flow; Layout ids are not targets. No automatic waypoint search or movement.',
+  ),
+  tension: SmoothStepSchema.shape.tension,
+}).describe(
+  'Explicit through-point curve. Prefer automatic bend, then quadratic, then cubic routing for avoidance; use smooth when intermediate passage positions are known. Smoothing may leave the waypoint corridor; inspect the rendered curve and labels.',
+);
+
+export const FlowRoutingSchema = union([
+  ...FlowScopeRoutingSchema.options,
+  ...FlowBezierRoutingSchema.options,
+  FlowSmoothRoutingSchema,
+]);
 
 const FlowLayoutIntentBaseSchema = strictObject({
   direction: zodEnum(FlowDirection).optional().describe('Primary direction for this Flow layout scope.'),

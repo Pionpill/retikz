@@ -13,6 +13,7 @@ import type {
   FlowLayoutRelationInput,
   FlowLayoutRoute,
 } from '../../contract';
+import { createFlowOrthogonalCandidates } from '../../providers';
 import { flowBendGeometryFailure, flowRouteLabelBounds } from '../../providers';
 import { FlowRouteArtifactSchema } from '../../schemas';
 import { FlowRoutingKind } from '../../shared';
@@ -388,6 +389,8 @@ const validateRoute = (
   if (route.kind !== relation.routing.kind)
     invalidOutput(definition, [...path, 'route', 'kind'], 'route kind must match input.', relatedIds);
   for (const [key, value] of Object.entries(relation.routing)) {
+    // smooth 输入是 Target，输出是完整数值 knots；稍后用最终布局重新查询逐项核对
+    if (relation.routing.kind === 'smooth' && key === 'points') continue;
     if (
       value !== undefined &&
       (Array.isArray(value)
@@ -566,12 +569,40 @@ const normalizeAndValidateOutput = (
     const route: FlowLayoutRoute =
       parsed.data.kind === 'bend' || parsed.data.kind === 'curve' || parsed.data.kind === 'cubic'
         ? { ...parsed.data, points: [normalizePoint(parsed.data.points[0]), normalizePoint(parsed.data.points[1])] }
-        : { ...parsed.data, points: collapsePoints(parsed.data.points.map(normalizePoint)) };
+        : {
+            ...parsed.data,
+            points:
+              parsed.data.kind === 'smooth'
+                ? parsed.data.points.map(normalizePoint)
+                : collapsePoints(parsed.data.points.map(normalizePoint)),
+          };
     const labelBounds =
       relationValue.labelBounds === undefined
         ? undefined
         : parseBounds(relationValue.labelBounds, definition, [...path, 'labelBounds']);
     validateRoute(expected, route, labelBounds, boundsById, definition, index);
+    if (
+      route.kind === 'orthogonal' &&
+      expected.routing.kind === 'orthogonal' &&
+      expected.routing.turnPosition !== undefined
+    ) {
+      const candidates = createFlowOrthogonalCandidates(input, elements, index);
+      if (
+        !candidates.some(
+          candidate =>
+            candidate.points.length === route.points.length &&
+            candidate.points.every((point, pointIndex) =>
+              point.every((coordinate, axis) => Math.abs(coordinate - route.points[pointIndex][axis]) <= 1e-6),
+            ),
+        )
+      )
+        invalidOutput(
+          definition,
+          [...path, 'route', 'points'],
+          'orthogonal points must preserve gap fractions, aligned endpoints and feedback lanes.',
+          [expected.source, expected.target],
+        );
+    }
     return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
   });
   return { elements, relations };
@@ -591,6 +622,11 @@ export const executeFlowLayout = (
   );
   const placements = new Map<string, PlacementRecord>();
   const executionContext: FlowLayoutExecutionContext = Object.freeze({
+    resolveRoutePoints: query => {
+      if (placementContext === undefined)
+        return invalidOutput(definition, ['relations'], 'Route point query context is unavailable.');
+      return cloneAndFreezeJson(placementContext.resolveRoutePoints(cloneAndFreezeJson(query)));
+    },
     placeLayout: value => {
       if (!isPlainRecord(value) || !isPlainRecord(value.layout) || typeof value.layout.id !== 'string') {
         return invalidOutput(definition, ['layouts'], 'expected a closed Layout placement input.');
@@ -654,5 +690,30 @@ export const executeFlowLayout = (
   }
   const output = cloneAndFreezeJson(normalizeAndValidateOutput(definition, inputSnapshot, detachedOutput));
   validateRecordedPlacements(definition, inputSnapshot, output, placements);
+  for (const [index, relation] of inputSnapshot.relations.entries()) {
+    if (relation.routing.kind !== 'smooth') continue;
+    const route = output.relations[index].route;
+    const expected = executionContext.resolveRoutePoints({
+      elements: output.elements,
+      source: relation.source,
+      target: relation.target,
+      points: relation.routing.points,
+    });
+    if (
+      route.kind !== 'smooth' ||
+      route.tension !== relation.routing.tension ||
+      route.points.length !== expected.length ||
+      route.points.some(
+        (point, pointIndex) => point[0] !== expected[pointIndex][0] || point[1] !== expected[pointIndex][1],
+      )
+    ) {
+      invalidOutput(
+        definition,
+        ['relations', index, 'route'],
+        'smooth route must preserve all resolved knots, order and tension.',
+        [relation.source, relation.target],
+      );
+    }
+  }
   return output;
 };

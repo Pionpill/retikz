@@ -10,6 +10,20 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '待发布 · 正交连线自动避让', en: 'Unreleased · Automatic orthogonal avoidance' },
+        content: {
+          zh: 'orthogonal 省略 turnPosition 时比较中点、四分之一与四分之三候选；显式比例保持不变。全部受阻保留最佳路线并警告，水平或垂直对齐时直接连接，不作避让。同步三入口与文档控件。公开 routeFlowRelations，供自定义布局在最终元素边界上复用内置路由；避让示例支持移动障碍。',
+          en: 'Orthogonal routes compare midpoint, quarter and three-quarter candidates when turnPosition is omitted, preserving explicit fractions. Exhausted searches retain the best route with a warning; aligned endpoints connect directly without avoidance. All entry points and documentation controls share the contract. Public routeFlowRelations lets custom layouts reuse built-in routing on final element bounds; avoidance demos support moving obstacles.',
+        },
+      },
+      {
+        label: { zh: '待发布 · 过点曲线路由', en: 'Unreleased · Through-point routing' },
+        content: {
+          zh: 'Relation 新增 smooth，保留完整 Target 经过点与正数 tension；自动追加关系终点。Core 提供同次编译的真实 Target 查询和 smooth 终点边界连接。布局输出核对所有 knots，保留重复点；逐段最多二分 8 层检测，冲突警告但不搜索或改点。React、Vanilla、IR、完整标签与 artifact 使用同一契约。',
+          en: 'Relations add smooth routing with full Target waypoints and positive tension, automatically appending the relation target. Core provides compile-local Target queries and smooth terminal boundary connections. Output validation checks all knots and retains duplicates. Per-segment collision checks subdivide up to 8 levels and warn without searching or moving points. React, Vanilla, IR, full labels and artifacts share the contract.',
+        },
+      },
+      {
         label: {
           zh: '待发布 · 贝塞尔路由与 BREAKING 布局能力声明',
           en: 'Unreleased · Bezier routing and BREAKING layout capabilities',

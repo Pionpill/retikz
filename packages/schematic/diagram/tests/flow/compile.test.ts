@@ -302,6 +302,9 @@ describe('Flow layout callback execution', () => {
       relations: [],
     };
     const placementContext: FlowLayoutExecutionContext = {
+      resolveRoutePoints: () => {
+        throw new Error('Unexpected waypoint query');
+      },
       placeLayout: () => ({
         bounds: { x: 0, y: 0, width: 10, height: 10 },
         elements: [{ id: 'a', bounds: { x: 0, y: 0, width: 10, height: 10 } }],

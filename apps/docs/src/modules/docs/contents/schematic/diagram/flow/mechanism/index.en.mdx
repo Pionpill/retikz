@@ -124,6 +124,18 @@ The dotted lines mark the Layout's extent. Layout arranges objects without drawi
   ]}
 />
 
+## Automatic orthogonal avoidance
+
+First check endpoint alignment: horizontally or vertically aligned endpoints connect directly, skipping avoidance and conflict warnings. Other forward routes use source-to-target facing boundary gaps at `0.5 / 0.25 / 0.75`, falling back to center intervals when boundaries overlap. Horizontal layouts move the middle vertical segment; vertical layouts move the middle horizontal segment. Feedback retains its outer lane.
+
+Each candidate has at most three axis-aligned segments. Intersect them directly with obstacle rectangles, without curve subdivision. Merge consecutive contact intervals across corners using path distance, exempting only continuous source egress and target ingress; reentry still conflicts. Compare node count, penetration length and label conflicts, preserving midpoint-first order on ties. With N obstacles and L labels, candidate scoring is O(3 × 3 × (N + L)); it does not recursively add candidates.
+
+Core rounds corners during drawing; scoring uses the reference polyline. Exhausted searches retain the best route with a warning, and explicit fractions are checked without replacement. Try the [orthogonal playground](/schematic/diagram/flow/extended#orthogonal-avoidance).
+
+The red dashed candidate crosses the obstacle; the blue solid candidate is selected. The gray dashed candidate is also clear but comes later in the candidate order. Labels are omitted, and paths show the reference polylines before corner rounding.
+
+<ComponentPreview files="flow-orthogonal-candidates" hideCode type="illustration" size="lg" />
+
 ## Automatic avoidance for bend curves
 
 The built-in layered layout places nodes before selecting from a bounded set of bend routes. Automatic avoidance prioritizes node conflicts, then labels; it neither moves nodes nor guarantees a globally collision-free result.
@@ -149,7 +161,7 @@ The figure keeps both endpoints fixed and overlays six reference candidates. The
   sources={[
     {
       label: 'Candidate generation and ordered scoring',
-      path: 'packages/schematic/diagram/src/flow/providers/layout/layered/routing.ts',
+      path: 'packages/schematic/diagram/src/flow/providers/layout/routing.ts',
     },
   ]}
 />
@@ -210,7 +222,7 @@ Search stays within the allowed candidates without moving nodes or searching for
   sources={[
     {
       label: 'Candidate generation and ordered scoring',
-      path: 'packages/schematic/diagram/src/flow/providers/layout/layered/routing.ts',
+      path: 'packages/schematic/diagram/src/flow/providers/layout/routing.ts',
     },
     { label: 'Post-layout conflict warnings', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
   ]}
@@ -286,6 +298,28 @@ Artifact endpoints, controls and label boxes use full allocation-local coordinat
   sources={[
     { label: 'Reference conflict diagnostics', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
     { label: 'Control and origin delivery', path: 'packages/schematic/diagram/src/flow/pipeline/flow/artifact.ts' },
+  ]}
+/>
+
+## Through-point curves preserve the authored route
+
+Smooth points are positions the curve passes through, not Bezier controls. S, P₁, P₂, P₃ and T form an ordered chain: P₁ passes above obstacle A, P₂ changes direction and P₃ passes below obstacle B. The blue spline passes through every knot; the dotted chain is only a reference.
+
+<ComponentPreview files="flow-smooth-knots" hideCode type="illustration" size="xl" />
+
+1. **Bind real positions.** After layout determines all bounds, Core resolves Targets against the same Graph elements used for drawing. Shape anchors, boundaries, transforms and relative cursors use the real resolver, not rectangle approximations. The chain includes source, intermediate knots and the appended target.
+2. **Interpolate between knots.** Core uses centripetal Catmull–Rom to generate cubic Bezier segments. `tension` scales tangent arms without moving knots. Valid repeats remain. The final implicit node target connects to its real boundary along the incoming direction; Core then shortens arrows.
+3. **Check the generated curve.** Each cubic starts with a bounds test, then subdivides overlapping portions up to 8 levels using subcurve AABBs. Continuous contact intervals merge across segments. Only continuous endpoint connection intervals are exempt; leaving and reentering an endpoint still counts. Relevant ancestor Group shells follow the existing exemption rules.
+
+A conflict produces `FlowSmoothObstacleConflict`, preserving the points and multiplier without searching, adding or removing knots. A safe knot chain does not guarantee a safe spline; inspect boundary-adjusted geometry and labels. For K intermediate knots and N obstacles the check is bounded by O((K + 1) × N × 2⁸), with bounds pruning usually terminating earlier. This is a work bound, not a timing benchmark.
+
+Custom layouts use `context.resolveRoutePoints`. After the callback returns, Flow queries with final bounds again and verifies every knot, its order and tension. Labels sample actual cubics and tangents. Artifacts store translated numeric knots and tension without duplicating controls.
+
+<SourceLinks
+  sources={[
+    { label: 'Real Target query', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Spline checks and labels', path: 'packages/schematic/diagram/src/flow/providers/layout/geometry.ts' },
+    { label: 'Output validation', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-output.ts' },
   ]}
 />
 

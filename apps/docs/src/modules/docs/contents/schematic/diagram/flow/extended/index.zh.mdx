@@ -1,21 +1,89 @@
 ---
 title: 扩展用法
-description: 组合 Flow 的分组与固定布局，并统一图示的外观与默认值。
+description: 配置 Flow 曲线路由、组合分组与固定布局，并统一外观与默认值。
 ---
 
-本页在[基础用法](/schematic/diagram/flow/usage)之上，按两个常见任务组合已有能力：组织元素与统一外观。连线与路由见[基础用法](/schematic/diagram/flow/usage#连线与路由)。
+本页在[基础用法](/schematic/diagram/flow/usage)之上，组合已有能力：调整曲线路由、组织元素与统一外观。连线与路由见[基础用法](/schematic/diagram/flow/usage#连线与路由)。
 
-## 曲线选侧与完整标签
+## 连接与路由
 
-`bend` 与直线、正交和单折角路由并列使用。下面固定三个节点，只连接首尾，保留中间节点作为障碍。示例默认省略方向与角度，比较左右各 `30° / 45° / 60°`：节点优先，标签次级，同分先选小角度再选左侧，不比较边的重叠与交叉。关闭“自动选择角度”后，指定角度只比较左右两侧；不会移动节点或改成其他路由。手动角度为 0 时，两条候选重合并穿过中间节点，仍然绘制，同时报告 `FlowBendObstacleConflict`，定位到原始关系。
+### 正交自动避让
+
+`orthogonal` 适合横平竖直的连线。省略 `turnPosition` 时优先尝试中点 `0.5`，再比较 `0.25`、`0.75`；显式填写比例则保持该位置，不自动改选。
+
+| 配置                              | 效果                                   |
+| --------------------------------- | -------------------------------------- |
+| `{ kind: 'orthogonal' }`          | 比较三条候选，同分保留中点             |
+| `turnPosition: 0.25 / 0.5 / 0.75` | 锁定从 source 到 target 的边界间隙比例 |
+| `cornerRadius`                    | 调整折角圆滑程度，不增加候选           |
+
+下面用矩形表示起点和终点，用椭圆表示障碍。调整障碍 X / Y（Flow 根坐标中的中心位置），观察自动模式如何改选折点；端点保持固定。切换显式比例可比较不自动改选的效果。两端水平或垂直对齐时始终直连，不进行避让。
 
 <ComponentPreview
-  files="flow-bend"
-  size="xl"
-  caption="切换自动角度与手动角度，观察固定障碍下的有限候选选择；移动标签、切换倾斜和中断，观察同一曲线上的标签布局。"
+  files={['flow-orthogonal', 'flow-orthogonal.preview.tsx', 'obstacle-layout.ts']}
+  defaultSourceFile="flow-orthogonal.preview.tsx"
+  size="md"
+/>
+
+评分依次比较碰撞节点数、节点内穿越长度、标签冲突数；全部同分按 `0.5 / 0.25 / 0.75` 顺序选择。所有候选有冲突时仍绘制最佳路线并报告 `FlowOrthogonalObstacleConflict`；显式比例有冲突时也只警告，不改写。回边保留外侧通道，比例不控制回边位置。平行关系沿用通道偏移和间隙限幅。
+
+比例仅在 `orthogonal` 根、Group、Relation 之间继承，局部值优先。`-|`、`|-` 不支持这个字段。检测针对圆角化之前的参考折线，不保证任意复杂场景或最终圆角全局无碰撞；详见[正交避让原理](/schematic/diagram/flow/mechanism#正交折线的自动避让)。
+
+### bend 曲线与标签
+
+`bend` 与直线、正交和单折角路由并列使用。下面固定矩形起点和终点，调整椭圆障碍的 X / Y，观察曲线重新选择。示例默认省略方向与角度，比较左右各 `30° / 45° / 60°`：先比较碰撞节点数，再比较碰撞参数区间总跨度，然后比较标签冲突数；同分先选小角度再选左侧，不比较边的重叠与交叉。关闭“自动选择角度”后，指定角度只比较左右两侧；不会移动节点或改成其他路由。障碍位于连线上且手动角度为 0 时，两条候选重合并穿过障碍，仍然绘制，同时报告 `FlowBendObstacleConflict`，定位到原始关系。
+
+<ComponentPreview
+  files={['flow-bend', 'flow-bend.preview.tsx', 'obstacle-layout.ts']}
+  defaultSourceFile="flow-bend.preview.tsx"
+  size="md"
+  caption="切换自动角度与手动角度，移动障碍观察有限候选选择；移动标签、切换倾斜和中断，观察同一曲线上的标签布局。"
 />
 
 紧凑 `label: '继续'` 沿用默认标签策略。完整对象 `label: { text: '继续', position: 0.5, sloped: true }` 开放 Core GeometryLabel 的全部配置：`position`、`side`、`sloped`、`placement`、`distance`、`interrupt`、`gap`、`textColor`、`font` 和 `opacity`。`position` 使用曲线参数而非等弧长；`sloped` 跟随切线，`interrupt` 与 `gap` 控制标签处的描边间隙。完整对象即使只填 text，也使用完整标签默认。字体字段逐项继承，标签自身外观优先于关系外观。预留盒帮助布局评分，最终文字和节点边界裁剪仍由 Core 绘制。
+
+### 贝塞尔曲线
+
+简单曲线优先使用 bend；有限 bend 候选不足时，再在单条 Relation 上使用 `curve` 或 `cubic`。省略全部控制点即可自动生成，不需要填写 mode。下面固定矩形起点和终点，移动椭圆障碍并切换二次与三次曲线，观察自动绕行；关闭自动生成后，可分别调整控制点横纵坐标。第二控制点仅对显式三次曲线生效。
+
+| routing                                                       | 含义           |
+| ------------------------------------------------------------- | -------------- |
+| `{ kind: 'curve' }`                                           | 自动二次曲线   |
+| `{ kind: 'cubic' }`                                           | 自动三次曲线   |
+| `{ kind: 'curve', control: [100, -80] }`                      | 显式二次控制点 |
+| `{ kind: 'cubic', control1: [30, -80], control2: [160, 50] }` | 显式三次控制点 |
+
+<ComponentPreview
+  files={['flow-bezier', 'flow-bezier.preview.tsx', 'obstacle-layout.ts']}
+  defaultSourceFile="flow-bezier.preview.tsx"
+  size="md"
+/>
+
+三次只填一个控制点会被拒绝；根和 Group 不能设置贝塞尔默认。控制点是 Flow 根坐标，通常不在曲线上。从 artifact 复制时须减去 `regions.drawing.origin`。布局变化不会自动搬移显式控制点。
+
+自动二次/三次最多提出 13/49 条候选，碰撞最多二分 8 层。评分依次比较碰撞节点数、标签冲突数、曲线长度、横向偏移，前一项相同才比较后一项，不按穿透深度排序。所有候选均有冲突时，保留最佳有限路线并报告 `FlowBezierSearchExhausted`；检测针对中心参考曲线，Core 连接节点边界后形状可能变化，最终绘图仍需检查。完整流程见[贝塞尔自动避让原理](/schematic/diagram/flow/mechanism#贝塞尔曲线的自动避让)。
+
+### 过点曲线
+
+已知路线必须经过哪些位置时，在单条 Relation 上设置 `routing: { kind: 'smooth', points, tension? }`。`points` 只写中间经过点，Flow 自动补上关系起点和终点。建议先用 2～3 个点，只在绕行方向改变时增点；没有数量硬上限。
+
+| 字段      | 作用                                                                                               |
+| --------- | -------------------------------------------------------------------------------------------------- |
+| `points`  | 至少一个有序 Target；支持坐标、极坐标、节点 anchor/offset、between、relative 与 relativeAccumulate |
+| `tension` | 正数控制臂倍率，默认 1；改变曲线形状，不移动经过点                                                 |
+
+下面固定三个节点，默认用两个相对端点的经过点绕行。点数可切换为 1～3：单点位于障碍上方，双点位于两端内侧，三点再增加障碍上方的点。调整高度改变点位，调整倍率观察同一组点之间的曲线变化。
+
+<ComponentPreview
+  files={['flow-smooth', 'flow-smooth.preview.tsx']}
+  defaultSourceFile="flow-smooth.preview.tsx"
+  size="md"
+  caption="降低绕行高度可能穿过障碍；smooth 会警告，但不会替作者改点或调整 tension。"
+/>
+
+引用只能指向本 Flow 的 Entity 或 Group，不能引用 Layout 或外部节点。普通 `relative` 不更新后续基准，`relativeAccumulate` 会更新；绝对点也更新基准。NodeTarget 的 `offset` 是世界向量，其他坐标写法沿用 Target 各自的坐标语义。根、Group 和布局 Definition 默认不接受 smooth。
+
+自动避让通常依次尝试 bend、二次贝塞尔、三次贝塞尔；知道控制方向时用显式贝塞尔，知道经过位置时用 smooth。这是选型顺序，运行时不会自动升级。安全的点链不保证平滑曲线安全，仍需检查曲线、箭头和标签。详见[过点曲线原理](/schematic/diagram/flow/mechanism#过点曲线保留作者指定的路线)。
 
 ## 结构与排布
 
@@ -154,6 +222,44 @@ Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group �
 <ComponentProps
   items={[
     {
+      name: 'FlowRelation.routing.turnPosition',
+      kind: 'property',
+      type: '0.25 | 0.5 | 0.75',
+      description: '仅正交路由；省略时继承，否则自动选择；显式比例固定。',
+    },
+    {
+      name: 'FlowRelation.routing.control',
+      kind: 'property',
+      type: 'Position ([number, number])',
+      description: '二次贝塞尔显式控制点；省略时自动生成。',
+    },
+    {
+      name: 'FlowRelation.routing.control1',
+      kind: 'property',
+      type: 'Position ([number, number])',
+      description: '三次贝塞尔第一控制点；与 control2 同时提供或同时省略。',
+    },
+    {
+      name: 'FlowRelation.routing.control2',
+      kind: 'property',
+      type: 'Position ([number, number])',
+      description: '三次贝塞尔第二控制点。',
+    },
+    {
+      name: 'FlowRelation.routing.points',
+      kind: 'property',
+      type: 'Array<IRTarget>',
+      description:
+        '过点曲线的有序中间点，至少一个；本例使用 `{ of: string, offset: [number, number] }` 引用节点位置，也可直接写 `[number, number]`。不自动避让。',
+    },
+    {
+      name: 'FlowRelation.routing.tension',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '1',
+      description: '正数控制臂倍率，默认 1；不改变经过点。',
+    },
+    {
       name: 'FlowGroup.caption',
       kind: 'property',
       type: '{ title?: IRGroupCaptionText; description?: IRGroupCaptionText; side?: "top" | "bottom"; direction?: "horizontal" | "vertical"; itemGap?: number; bodyGap?: number }',
@@ -201,23 +307,6 @@ Flow defaults 包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group �
     },
   ]}
 />
-
-## 贝塞尔曲线
-
-简单曲线优先使用 bend；有限 bend 候选不足时，再在单条 Relation 上使用 `curve` 或 `cubic`。省略全部控制点即可自动生成，不需要填写 mode。下面固定三个节点，三次曲线自动尝试绕开中间节点。
-
-<ComponentPreview files="flow-bezier" size="sm" />
-
-| routing                                                       | 含义           |
-| ------------------------------------------------------------- | -------------- |
-| `{ kind: 'curve' }`                                           | 自动二次曲线   |
-| `{ kind: 'cubic' }`                                           | 自动三次曲线   |
-| `{ kind: 'curve', control: [100, -80] }`                      | 显式二次控制点 |
-| `{ kind: 'cubic', control1: [30, -80], control2: [160, 50] }` | 显式三次控制点 |
-
-三次只填一个控制点会被拒绝；根和 Group 不能设置贝塞尔默认。控制点是 Flow 根坐标，通常不在曲线上。从 artifact 复制时须减去 `regions.drawing.origin`。布局变化不会自动搬移显式控制点。
-
-自动二次/三次最多提出 13/49 条候选，碰撞最多二分 8 层。搜索受阻会保留最佳有限路线并警告；检测针对中心参考曲线，Core 连接节点边界后形状可能变化，最终绘图仍需检查。完整流程见[贝塞尔自动避让原理](/schematic/diagram/flow/mechanism#贝塞尔曲线的自动避让)。
 
 ## 延伸阅读
 

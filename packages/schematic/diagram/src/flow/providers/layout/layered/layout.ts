@@ -11,7 +11,7 @@ import type {
   FlowLayoutRelationInput,
 } from '../../../contract';
 import type { FlowDirectionValue } from '../../../shared';
-import { routeLayeredRelations } from './routing';
+import { routeFlowRelations } from '../routing';
 import type { LayeredRankEdge } from './topology';
 import { resolveLayeredRanks } from './topology';
 
@@ -431,6 +431,6 @@ export const layoutLayeredFlow = (input: FlowLayoutInput, context: FlowLayoutExe
   const byId = new Map(elements.map(element => [element.id, element]));
   return {
     elements: [...index.kinds.keys()].map(id => byId.get(id)!),
-    relations: routeLayeredRelations(input, elements),
+    relations: routeFlowRelations(input, elements, context),
   };
 };

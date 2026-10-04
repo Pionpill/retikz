@@ -47,7 +47,7 @@ describe('Bezier authoring contract', () => {
 import type { FlowLayoutInput, FlowLayoutOutput } from '../../src/flow';
 import { LayeredFlowLayoutDefinition } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
-import { routeLayeredRelations } from '../../src/flow/providers/layout/layered/routing';
+import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { findFlowCurveObstacleIntervals } from '../../src/flow/shared/geometry';
 
 const elements: FlowLayoutOutput['elements'] = [
@@ -70,8 +70,8 @@ describe('Bezier layout', () => {
   it.each(['curve', 'cubic'] as const)('automatically avoids a central obstacle deterministically: %s', kind => {
     const input = inputFor(kind === 'curve' ? { kind } : { kind });
     const before = JSON.stringify(input);
-    const result = routeLayeredRelations(input, elements);
-    expect(result).toEqual(routeLayeredRelations(input, elements));
+    const result = routeFlowRelations(input, elements);
+    expect(result).toEqual(routeFlowRelations(input, elements));
     expect(JSON.stringify(input)).toBe(before);
     const route = result[0].route;
     if (route.kind !== 'curve' && route.kind !== 'cubic') throw new Error('expected Bezier');
@@ -139,7 +139,7 @@ describe('Bezier layout', () => {
   });
   it('rejects coincident automatic endpoints', () => {
     expect(() =>
-      routeLayeredRelations(
+      routeFlowRelations(
         inputFor({ kind: 'cubic' }),
         elements.map(element => (element.id === 'b' ? { ...element, bounds: elements[0].bounds } : element)),
       ),
@@ -309,7 +309,7 @@ it.each(['curve', 'cubic'] as const)(
       for (const reverse of [false, true]) {
         const input = inputFor(kind === 'curve' ? { kind } : { kind });
         const relation = { ...input.relations[0], source: reverse ? 'b' : 'a', target: reverse ? 'a' : 'b' };
-        const route = routeLayeredRelations({ ...input, relations: [relation] }, output)[0].route;
+        const route = routeFlowRelations({ ...input, relations: [relation] }, output)[0].route;
         if (route.kind !== 'curve' && route.kind !== 'cubic') throw new Error('Bezier expected');
         expect(
           evaluateFlowBezierConflicts(route, relation, [{ id: 'obstacle', bounds: output[2].bounds }], []).nodes,
@@ -322,14 +322,14 @@ it('returns a collinear baseline when clear and expands for a reserved label', (
   const clear = elements.map(element =>
     element.id === 'obstacle' ? { ...element, bounds: { ...element.bounds, y: 200 } } : element,
   );
-  expect(routeLayeredRelations(input, clear)[0].route).toMatchObject({ control: [100, 0] });
+  expect(routeFlowRelations(input, clear)[0].route).toMatchObject({ control: [100, 0] });
   const other = {
     ...input.relations[0],
     routing: { kind: 'straight' as const },
     labelSize: { width: 35, height: 25 },
     labelPlacement: { placement: 'inside' as const, position: 0.5 },
   };
-  const result = routeLayeredRelations({ ...input, relations: [other, ...input.relations] }, clear);
+  const result = routeFlowRelations({ ...input, relations: [other, ...input.relations] }, clear);
   expect(result[1].route).not.toMatchObject({ control: [100, 0] });
 });
 it('uses subcurve boxes to exclude empty interiors while retaining tangency and endpoint re-entry', () => {

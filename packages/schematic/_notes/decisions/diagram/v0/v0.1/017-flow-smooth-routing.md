@@ -5,8 +5,8 @@ keywords: Flow、smooth、tension、Target、relative、relativeAccumulate、rou
 
 # ADR-017：Flow 过点曲线路由
 
-- 状态：Proposed
-- 决策日期：2026-10-02
+- 状态：Accepted
+- 决策日期：2026-10-04
 - 关联：[Diagram v0.1 roadmap](./roadmap.md) · [Flow Source](./003-flow-source-model.md) · [Layout Definition](./004-flow-layout-definition-registry.md) · [结果交付](./005-flow-orchestration-result-artifact.md) · [bend 路由](./015-flow-bend-routing.md) · [贝塞尔路由](./016-flow-bezier-routing.md)
 
 ## 背景与目标
@@ -14,6 +14,8 @@ keywords: Flow、smooth、tension、Target、relative、relativeAccumulate、rou
 多处障碍或自定义绕行走廊可能无法用一条对称 bend 或单段贝塞尔清楚表达。作者需要指定按顺序经过的点，以连续曲线连接流程关系，同时仍由 Flow 负责节点排列。
 
 过点曲线的常规使用优先级低于 bend 和单段贝塞尔（自动或显式），主要用于检查渲染后仍需复杂绕行的关系。它也能表达已知的定制路径，但不能把安全经过点误认为整条平滑曲线已安全。
+
+LLM 默认先尝试自动 bend、自动二次贝塞尔、自动三次贝塞尔；明确控制方向时可用显式贝塞尔，明确经过位置时使用 smooth。这是选型建议，不是运行时自动升级链。smooth 建议先使用 2～3 个中间经过点，只在绕行方向需要改变时增点，不按障碍数量逐点配置；Schema 不设数量硬上限。检测成本随曲段数和障碍数增长，复用最多 8 层的子曲线 AABB 检测；不增加经过点组合搜索。
 
 ## 决策
 

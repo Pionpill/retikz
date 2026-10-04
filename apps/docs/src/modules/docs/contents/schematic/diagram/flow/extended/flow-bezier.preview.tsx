@@ -1,26 +1,34 @@
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import { FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
+import type { IRFlowRouting } from '@retikz/diagram/flow';
 import type { ReactElement } from 'react';
 
 import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import type { previewControls } from './flow-bend.controls';
-import { flowBendI18n } from './flow-bend.i18n';
+import type { previewControls } from './flow-bezier.controls';
+import { flowBezierI18n } from './flow-bezier.i18n';
 import { createObstacleLayout } from './obstacle-layout';
-
-/** 固定节点，观察有限候选选择及标签沿曲线的放置 */
-export const renderFlowBendPreview = (
+/** 固定节点，比较自动候选与作者指定的控制点 */
+export const renderFlowBezierPreview = (
   values: PreviewControlValuesFor<typeof previewControls>,
   lang: Lang = 'zh',
 ): ReactElement<FlowDiagramProps> => {
-  const copy = flowBendI18n[lang];
+  const copy = flowBezierI18n[lang];
+  const routing: IRFlowRouting =
+    values.kind === 'curve'
+      ? values.automatic
+        ? { kind: 'curve' }
+        : { kind: 'curve', control: [values.x1, values.y1] }
+      : values.automatic
+        ? { kind: 'cubic' }
+        : { kind: 'cubic', control1: [values.x1, values.y1], control2: [values.x2, values.y2] };
   return (
     <PreviewFlowDiagram
       flowLayouts={[createObstacleLayout(values.obstacleX, values.obstacleY, false)]}
       defaultFlowLayout="obstacle-playground"
-      viewBox={{ x: -24, y: -24, width: 520, height: 300 }}
+      viewBox={{ x: -24, y: -24, width: 540, height: 330 }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowEntities
@@ -31,24 +39,7 @@ export const renderFlowBendPreview = (
         ]}
       />
 
-      <FlowRelations
-        items={[
-          {
-            source: 'a',
-            target: 'b',
-            routing: { kind: 'bend', ...(values.autoAngle ? {} : { bendAngle: values.angle }) },
-            label: {
-              text: copy.text,
-              position: values.position,
-              sloped: values.sloped,
-              interrupt: values.interrupt,
-              gap: 4,
-              distance: 4,
-              font: { size: 14 },
-            },
-          },
-        ]}
-      />
+      <FlowRelations items={[{ source: 'a', target: 'b', routing, label: copy.label }]} />
     </PreviewFlowDiagram>
   );
 };

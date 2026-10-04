@@ -810,8 +810,26 @@ it('compiles bend and complete labels identically through React, Vanilla and dir
   );
 });
 
-it('preserves automatic and complete explicit Bezier routing through all authoring entries', () => {
+it('preserves automatic, explicit Bezier and smooth routing through all authoring entries', () => {
   const relations = [
+    {
+      source: 'a',
+      target: 'b',
+      routing: {
+        kind: 'smooth' as const,
+        points: [
+          [40, -50] as [number, number],
+          { relative: [20, 0] as [number, number] },
+          { id: 'a', anchor: 'right' },
+        ],
+        tension: 0.8,
+      },
+    },
+    {
+      source: 'a',
+      target: 'b',
+      routing: { kind: 'orthogonal' as const, turnPosition: 0.25 as const, cornerRadius: 8 },
+    },
     { source: 'a', target: 'b', routing: { kind: 'curve' as const } },
     {
       source: 'a',
@@ -855,4 +873,15 @@ it('preserves automatic and complete explicit Bezier routing through all authori
   });
   expect(FlowDiagramSchema.parse(react.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
+  const providers = prepareProcessingInput(input.scene, { adapters: synchronousAdapters(input.adapters) }).coreOptions;
+  const expected = processToStaticInputResult(
+    { type: 'scene', version: 1, children: [direct] },
+    { compile: providers },
+  ).scene;
+  expect(
+    processToStaticInputResult({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene,
+  ).toEqual(expected);
+  expect(processToStaticInputResult(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene).toEqual(
+    expected,
+  );
 });

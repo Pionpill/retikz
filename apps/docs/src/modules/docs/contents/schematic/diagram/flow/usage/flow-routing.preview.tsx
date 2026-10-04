@@ -1,3 +1,4 @@
+import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FlowRoutingKindValue, IRFlowRouting } from '@retikz/diagram/flow';
 import type { ReactElement } from 'react';
@@ -7,23 +8,29 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import type { previewControls } from './flow-routing.controls';
 
-const routingKinds: ReadonlyArray<Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>> = [
+const routingKinds: ReadonlyArray<FlowRoutingKindValue> = [
   'straight',
   'orthogonal',
   '-|',
   '|-',
   'bend',
+  'curve',
+  'cubic',
+  'smooth',
 ];
 
 /** 将面板选项收窄为公开的路由模式 */
-const routingKindOf = (value: string): Exclude<FlowRoutingKindValue, 'curve' | 'cubic'> => {
+const routingKindOf = (value: string): FlowRoutingKindValue => {
   const kind = routingKinds.find(candidate => candidate === value);
   if (kind === undefined) throw new Error(`Unsupported Flow routing kind: ${value}`);
   return kind;
 };
 
 /** 在固定端点间展示所选路由的路径形状 */
-export const renderFlowRoutingPreview = (values: PreviewControlValuesFor<typeof previewControls>): ReactElement => {
+export const renderFlowRoutingPreview = (
+  values: PreviewControlValuesFor<typeof previewControls>,
+  viewport?: Pick<FlowDiagramProps, 'viewBox'>,
+): ReactElement => {
   const kind = routingKindOf(values.kind);
   const routing: IRFlowRouting =
     kind === 'bend'
@@ -34,11 +41,43 @@ export const renderFlowRoutingPreview = (values: PreviewControlValuesFor<typeof 
             ...(values.side === 'left' || values.side === 'right' ? { bendDirection: values.side } : {}),
             ...(values.configuration === 'auto' ? {} : { bendAngle: values.angle }),
           }
-      : kind === 'straight'
-        ? { kind }
-        : { kind, cornerRadius: values.cornerRadius };
+      : kind === 'curve'
+        ? values.automatic
+          ? { kind }
+          : { kind, control: [90, -values.controlHeight] }
+        : kind === 'cubic'
+          ? values.automatic
+            ? { kind }
+            : { kind, control1: [40, -values.controlHeight], control2: [160, -values.controlHeight] }
+          : kind === 'smooth'
+            ? {
+                kind,
+                points: [
+                  { of: 'a', offset: [40, -values.height] },
+                  { of: 'b', offset: [-40, -values.height] },
+                ],
+                tension: values.tension,
+              }
+            : kind === 'orthogonal'
+              ? {
+                  kind,
+                  cornerRadius: values.cornerRadius,
+                  ...(values.turnPosition === 'auto'
+                    ? {}
+                    : {
+                        turnPosition:
+                          values.turnPosition === '0.25' ? 0.25 : values.turnPosition === '0.75' ? 0.75 : 0.5,
+                      }),
+                }
+              : kind === 'straight'
+                ? { kind }
+                : { kind, cornerRadius: values.cornerRadius };
   return (
-    <PreviewFlowDiagram viewBox={{ x: -48, y: -56, width: 400, height: 290 }}>
+    <PreviewFlowDiagram
+      viewBox={{ x: -48, y: -56, width: 400, height: 330 }}
+      style={{ maxWidth: '100%', height: 'auto' }}
+      {...viewport}
+    >
       <FlowLayout
         kind="grid"
         id="grid"

@@ -35,34 +35,36 @@ The form submission flow starts with user input, passes through a frontend form 
 
 A Relation routing setting changes its path without defining a new layout.
 
-| `routing.kind` | Behavior                                                         | Rounding                |
-| -------------- | ---------------------------------------------------------------- | ----------------------- |
-| `bend`         | Regular curve; omitted side and angle are selected automatically | No `cornerRadius`       |
-| `straight`     | Straight line; built-in default                                  | No `cornerRadius`       |
-| `orthogonal`   | Orthogonal polyline based on layout direction                    | Optional `cornerRadius` |
-| `-\|`          | Horizontal then vertical from source                             | Optional `cornerRadius` |
-| `\|-`          | Vertical then horizontal from source                             | Optional `cornerRadius` |
+| `routing.kind` | Behavior                                       | Notes                                                                                                                                               |
+| -------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `straight`     | Connects the endpoints directly                | Built-in default; a simple path without automatic obstacle avoidance                                                                                |
+| `orthogonal`   | Orthogonal polyline following layout direction | Midpoint-first avoidance with three turn positions; optional locked fraction and rounded corners. Aligned endpoints stay straight without avoidance |
+| `-\|`          | Horizontal then vertical from source           | Fixed single elbow, independent of layout direction; optional rounded corner, no automatic avoidance                                                |
+| `\|-`          | Vertical then horizontal from source           | Fixed single elbow, independent of layout direction; optional rounded corner, no automatic avoidance                                                |
+| `bend`         | Bends by angle or endpoint tangents            | First choice for ordinary curves; automatic mode searches finite avoidance candidates, or specify a side, angle or tangents                         |
+| `curve`        | Quadratic Bezier with one control point        | Use when bend candidates are insufficient; omit the control for automatic generation. An explicit control usually lies off the curve                |
+| `cubic`        | Cubic Bezier with two control points           | Controls the endpoint tangents separately for more complex curves; omit both controls for automatic generation or supply both explicitly            |
+| `smooth`       | Interpolates ordered intermediate waypoints    | Use for known passage positions, typically 2–3 points; checks collisions without adjusting the route automatically                                  |
 
-Switch between five `routing.kind` values for fixed endpoints A and B to compare a straight line, an orthogonal path, and two single-elbow paths. `-|` goes horizontally then vertically; `|-` goes vertically then horizontally. Neither the primary layout direction nor arrow direction changes this order, and neither mode routes around other nodes. The preview's React and Vanilla source use the same `routing` configuration.
+Switch between eight `routing.kind` values for fixed endpoints A and B to compare straight, polyline, bend, Bezier and through-point routes. `-|` goes horizontally then vertically; `|-` goes vertically then horizontally. Neither the primary layout direction nor arrow direction changes this order, and neither mode routes around other nodes. The preview's React and Vanilla source use the same `routing` configuration.
 
 <ComponentPreview
   files={['flow-routing', 'flow-routing.preview.tsx']}
   defaultSourceFile="flow-routing.preview.tsx"
-  size="sm"
-  caption="Switch routing modes for the same endpoints; adjust bend sides, angles or tangents, and corner radii for axis-aligned routes."
+  size="md"
+  caption="Switch routing modes for the same endpoints; adjust bend angles or tangents, toggle automatic Bezier controls, move smooth waypoints, or adjust polyline corner radii."
 />
 
-Single-elbow routes become straight for aligned endpoints; coincident centers report a routing error. Set `cornerRadius: 0` for a sharp corner or a positive value for rounding. Parallel edges can overlap; adjust the layout when needed, rather than treating single-elbow routing as an obstacle-avoidance algorithm.
+- **straight**: The simplest direct connection, without automatic avoidance.
+- **orthogonal**: Use for axis-aligned flowcharts. It compares three turn positions for avoidance by default, or locks an explicit fraction. Horizontally or vertically aligned endpoints connect directly.
+- **`-|` / `|-`**: Use when the route must go horizontally then vertically, or vice versa. These single-elbow routes support rounded corners but do not avoid obstacles automatically.
+- **bend**: The first choice for ordinary curves. Adjust the side, angle or tangents; automatic mode searches a finite set of avoidance candidates.
+- **curve / cubic**: Use when bend is not flexible enough. They support one or two control points respectively; omitting the controls generates avoidance candidates automatically.
+- **smooth**: Use when the route must pass through specified positions, typically 2–3 intermediate points. It checks for collisions without adjusting the route.
 
-Root and Group `routing` declare routing separately from layout; Relation `routing` takes precedence. Otherwise, routing follows the nearest common Group of the endpoints, then the root and layout Definition defaults. FlowLayout does not establish a routing layer: orthogonal routing on a Group remains effective inside its nested Layout even when the root uses straight routing.
+Automatic avoidance does not guarantee a collision-free route. If every candidate conflicts, it keeps the best route and warns; it does not switch routing kinds automatically.
 
-All three axis-aligned modes share radius inheritance: instance `cornerRadius`, then the ancestor's effective routing radius, then the Definition's `orthogonalCornerRadius`, which is `8` for the built-in layout. Changing `kind` preserves an inherited radius; explicit `0` disables rounding.
-
-Writing only `routing: { kind: 'bend' }` compares left/right candidates at `30° / 45° / 60°` when no angle is authored or inherited. Set `bendDirection: 'left' | 'right'` to constrain the side, or `bendAngle` to fix the angle. Side is relative to authored source → target, independent of reverse arrows. Negative angles flip the curve; zero remains a bend route with straight geometry. The angle range is `(-180, 180)`.
-
-Either `outAngle` or `inAngle` selects the tangent family and takes precedence over symmetric fields. The missing angle inherits from an active tangent ancestor, otherwise defaults to `0` or `180`; `looseness` defaults to `1` and only affects tangent mode. Angles are absolute screen angles: 0 points right and 90 points down. Automatic side and angle controls omit their respective fields rather than adding Source enum values.
-
-Automatic selection prioritizes node conflicts, using labels only to break node-score ties. Edge overlaps and crossings are not compared. Ties prefer the smaller angle, then left. Explicit or inherited angles and sides are preserved; nodes and route kinds do not change. If all candidates cross nodes, it draws the chosen curve and reports `FlowBendObstacleConflict` at the original relation. Explicit sides and tangent routes are checked too. Parallel relations may overlap; the built-in layout still rejects self-loops. Only the active parameter family inherits: a local side or angle without local tangent angles exits an inherited tangent family; ignored ancestor fields never return.
+See [Extended usage](/schematic/diagram/flow/extended) for parameters and [Implementation](/schematic/diagram/flow/mechanism) for candidate generation and collision detection.
 
 ## Related props
 
@@ -112,7 +114,7 @@ This list contains the members used here to declare steps and connections. See t
       kind: 'property',
       type: 'IRFlowRouting',
       description:
-        'A Relation override takes precedence. straight is a direct line; the other modes are axis aligned and can inherit a corner radius.',
+        'Relation overrides take precedence; supports regular routes and relation-only curve/cubic/smooth. Control points and waypoints do not inherit.',
     },
   ]}
 />

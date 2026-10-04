@@ -1,4 +1,4 @@
-import { BendOutAngleSchema, BendInAngleSchema, BendLoosenessSchema } from '@retikz/core';
+import { BendOutAngleSchema, BendInAngleSchema, BendLoosenessSchema, SmoothTensionSchema } from '@retikz/core';
 
 import type {
   EffectiveFlowLayout,
@@ -50,6 +50,8 @@ const resolveFlowLayoutRouting = (
   inheritedRouting: FlowLayoutRouting | undefined,
 ): FlowLayoutRouting => {
   const routing = intent ?? inheritedRouting ?? definition.defaults.routing;
+  if (routing.kind === 'smooth')
+    return { ...routing, tension: routing.tension ?? SmoothTensionSchema.parse(undefined) };
   if (routing.kind === 'curve' || routing.kind === 'cubic') return routing;
   if (routing.kind === 'straight') return { kind: routing.kind };
   if (routing.kind === 'bend') {
@@ -76,8 +78,14 @@ const resolveFlowLayoutRouting = (
       ...(bendDirection === undefined ? {} : { bendDirection }),
     };
   }
+  const turnPosition =
+    routing.kind === 'orthogonal'
+      ? (('turnPosition' in routing ? routing.turnPosition : undefined) ??
+        (inheritedRouting?.kind === 'orthogonal' ? inheritedRouting.turnPosition : undefined))
+      : undefined;
   return {
     kind: routing.kind,
+    ...(turnPosition === undefined ? {} : { turnPosition }),
     cornerRadius:
       ('cornerRadius' in routing ? routing.cornerRadius : undefined) ??
       (inheritedRouting !== undefined && 'cornerRadius' in inheritedRouting

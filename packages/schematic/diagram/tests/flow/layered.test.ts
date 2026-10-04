@@ -38,6 +38,9 @@ const relation = (
 });
 
 const noLayoutContext = {
+  resolveRoutePoints: () => {
+    throw new Error('Unexpected waypoint query');
+  },
   placeLayout: (): FlowLayoutPlacementOutput => {
     throw new Error('Unexpected Layout placement');
   },
@@ -152,7 +155,7 @@ describe('layered Flow layout', () => {
   });
 
   it.each(['right', 'left', 'down', 'up'] as const)(
-    'keeps forward orthogonal bends between differently sized endpoint bounds when direction is %s',
+    'keeps aligned endpoints straight despite different sizes when direction is %s',
     direction => {
       const horizontal = direction === 'right' || direction === 'left';
       const output = run({
@@ -163,24 +166,16 @@ describe('layered Flow layout', () => {
         ],
         relations: [relation('source', 'target')],
       });
-      const source = boundsOf(output, 'source');
-      const target = boundsOf(output, 'target');
-      const bends = output.relations[0]?.route.points.slice(1, -1) ?? [];
-      const gap =
-        direction === 'right'
-          ? [source.x + source.width, target.x]
-          : direction === 'left'
-            ? [target.x + target.width, source.x]
-            : direction === 'down'
-              ? [source.y + source.height, target.y]
-              : [target.y + target.height, source.y];
-      const axis = horizontal ? 0 : 1;
-
-      expect(bends.length).toBeGreaterThan(0);
-      for (const point of bends) {
-        expect(point[axis]).toBeGreaterThanOrEqual(gap[0]);
-        expect(point[axis]).toBeLessThanOrEqual(gap[1]);
-      }
+      expect(output.relations[0]?.route.points).toEqual([
+        [
+          boundsOf(output, 'source').x + boundsOf(output, 'source').width / 2,
+          boundsOf(output, 'source').y + boundsOf(output, 'source').height / 2,
+        ],
+        [
+          boundsOf(output, 'target').x + boundsOf(output, 'target').width / 2,
+          boundsOf(output, 'target').y + boundsOf(output, 'target').height / 2,
+        ],
+      ]);
     },
   );
 
@@ -219,7 +214,8 @@ describe('layered Flow layout', () => {
 
     expect(first).toEqual(second);
     expect(first.relations).toHaveLength(3);
-    expect(first.relations[0]?.route.points).not.toEqual(first.relations[1]?.route.points);
+    expect(first.relations[0]?.route.points).toEqual(first.relations[1]?.route.points);
+    expect(first.relations[0]?.route.points).toHaveLength(2);
     expect(first.relations[0]?.labelBounds).toMatchObject({ width: 30, height: 12 });
     for (const route of first.relations) {
       expect(route.route.points.length).toBeGreaterThanOrEqual(2);
@@ -291,6 +287,9 @@ describe('layered Flow layout', () => {
         relations: [relation('source', 'target', { labelSize: { width: 120, height: 12 } })],
       },
       {
+        resolveRoutePoints: () => {
+          throw new Error('Unexpected waypoint query');
+        },
         placeLayout: input => {
           receivedMargins = input.elements;
           placementInput = {
@@ -388,6 +387,9 @@ describe('layered Flow layout', () => {
         relations: [relation('second', 'first')],
       },
       {
+        resolveRoutePoints: () => {
+          throw new Error('Unexpected waypoint query');
+        },
         placeLayout: input => {
           calls += 1;
           expect(input.layout).toEqual({ kind: 'linear', id: 'lane', direction: 'down', gap: 10, align: 'end' });

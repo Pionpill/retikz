@@ -5,6 +5,7 @@ import {
   BendLoosenessSchema,
   BendDirection,
   PositionSchema,
+  SmoothTensionSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutArtifactRectSchema } from '@retikz/layout';
@@ -12,6 +13,7 @@ import type { infer as ZodInfer, ZodType } from 'zod';
 import { array, discriminatedUnion, lazy, literal, strictObject, union, tuple, enum as zodEnum } from 'zod';
 
 import { FlowRoutingKind } from '../../shared';
+import { FlowOrthogonalRoutingSchema } from '../flow';
 
 export const FlowArtifactBoundsSchema = strictObject({
   allocationBounds: LayoutArtifactRectSchema.describe('Final allocation rectangle in Flow-local coordinates.'),
@@ -72,6 +74,7 @@ const FlowStraightRouteArtifactSchema = strictObject({
 
 const FlowOrthogonalRouteArtifactSchema = strictObject({
   kind: literal(FlowRoutingKind.Orthogonal).describe('Orthogonal Flow route discriminator.'),
+  turnPosition: FlowOrthogonalRoutingSchema.shape.turnPosition,
   cornerRadius: NonNegativeNumberSchema.describe('Effective rounded-corner radius in user units.'),
   points: array(PositionSchema).min(2).describe('Canonical Flow-local orthogonal point chain.'),
 });
@@ -79,12 +82,12 @@ const FlowOrthogonalRouteArtifactSchema = strictObject({
 const FlowPointRouteArtifactSchema = discriminatedUnion('kind', [
   FlowStraightRouteArtifactSchema,
   FlowOrthogonalRouteArtifactSchema,
-  FlowOrthogonalRouteArtifactSchema.extend({
+  FlowOrthogonalRouteArtifactSchema.omit({ turnPosition: true }).extend({
     kind: literal(FlowRoutingKind.HorizontalThenVertical).describe(
       'Horizontal then vertical Flow route discriminator.',
     ),
   }),
-  FlowOrthogonalRouteArtifactSchema.extend({
+  FlowOrthogonalRouteArtifactSchema.omit({ turnPosition: true }).extend({
     kind: literal(FlowRoutingKind.VerticalThenHorizontal).describe(
       'Vertical then horizontal Flow route discriminator.',
     ),
@@ -97,6 +100,11 @@ const FlowBendRouteShape = {
 };
 
 export const FlowRouteArtifactSchema = union([
+  strictObject({
+    kind: literal(FlowRoutingKind.Smooth),
+    points: array(PositionSchema).min(3),
+    tension: SmoothTensionSchema.unwrap(),
+  }),
   strictObject({ kind: literal('curve'), points: tuple([PositionSchema, PositionSchema]), control: PositionSchema }),
   strictObject({
     kind: literal('cubic'),

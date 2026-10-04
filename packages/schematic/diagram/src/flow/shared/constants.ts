@@ -33,6 +33,8 @@ export const FlowLayoutAlignment = {
 
 /** Flow relation 的路由意图 */
 export const FlowRoutingKind = {
+  /** 按作者指定的中间点生成样条，不自动搜索经过点 */
+  Smooth: 'smooth',
   /** 二次贝塞尔，省略控制点时自动求解 */
   Curve: 'curve',
   /** 三次贝塞尔，省略两个控制点时自动求解 */

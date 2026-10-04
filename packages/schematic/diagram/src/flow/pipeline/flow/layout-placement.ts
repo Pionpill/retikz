@@ -125,7 +125,7 @@ const projectPlacementBounds = (
 export const createFlowLayoutExecutionContext = (
   context: LayoutCompositeCompileContext,
   flow: FlowLayoutInput,
-): FlowLayoutExecutionContext => ({
+): Pick<FlowLayoutExecutionContext, 'placeLayout'> => ({
   placeLayout: input => {
     try {
       if (input.layout.kind === 'grid') {

@@ -14,7 +14,7 @@ import {
   LayeredFlowLayoutDefinition,
 } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
-import { routeLayeredRelations } from '../../src/flow/providers/layout/layered/routing';
+import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
 
 const inputFor = (kind: '-|' | '|-'): FlowLayoutInput => ({
@@ -304,14 +304,14 @@ describe('Flow single-elbow routing', () => {
     (kind, target, expected) => {
       const input = inputFor(kind);
       const elements = elementsAt(target);
-      const relations = routeLayeredRelations(input, elements);
+      const relations = routeFlowRelations(input, elements);
       expect(relations[0].route.points).toEqual(expected);
       expect(
         executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => ({ elements, relations }) }, input)
           .relations[0].route.points,
       ).toEqual(expected);
       expect(
-        routeLayeredRelations({ ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] }, elements)[0]
+        routeFlowRelations({ ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] }, elements)[0]
           .route.points,
       ).toEqual(expected);
     },

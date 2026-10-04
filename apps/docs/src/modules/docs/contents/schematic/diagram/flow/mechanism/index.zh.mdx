@@ -118,6 +118,18 @@ Flow 会检查布局结果是否完整、实体的大小是否与测量结果一
   ]}
 />
 
+## 正交折线的自动避让
+
+先检查两个端点是否水平或垂直对齐：对齐就直接连接，跳过避让与冲突警告。其余前向关系以节点面对面边界为基准，沿 source → target 的间隙取 `0.5 / 0.25 / 0.75`；间隙重叠时改用中心间隔。横向布局改变中间竖段位置，纵向布局改变中间横段位置。回边保留外侧通道。
+
+每条候选至多三段轴对齐直线，直接与节点矩形求交，不做曲线二分。把跨折点连续的接触合并为路径长度区间，仅豁免起点离开和终点进入的连续区间；离开节点后重入仍算冲突。逐项比较节点数、穿越长度和标签冲突，同分保留中点优先顺序。障碍数量为 N、标签数量为 L 时，候选评分为 O(3 × 3 × (N + L))，不递归增加候选。
+
+圆角不参与参考折线评分，由 Core 在最终绘图时处理。失败保留最佳候选并警告，显式比例只检查而不改选。可在[正交避让试验场](/schematic/diagram/flow/extended#正交自动避让)切换折点比例和障碍位置。
+
+下图展示同一对端点的三个候选：红色虚线穿过障碍，蓝色实线是最终选择；灰色虚线同样无碰撞，但候选顺序靠后。图中省略标签，绘制的是圆角化前的参考折线。
+
+<ComponentPreview files="flow-orthogonal-candidates" hideCode type="illustration" size="lg" />
+
 ## bend 曲线的自动避让
 
 内置 layered 布局先确定节点位置，再从有限的 bend 候选中选择路线。自动避让优先减少节点冲突，再考虑标签；它不移动节点，也不保证全局无碰撞。
@@ -140,9 +152,7 @@ Flow 会检查布局结果是否完整、实体的大小是否与测量结果一
 <ComponentPreview files="flow-bend-candidates" hideCode type="illustration" size="lg" />
 
 <SourceLinks
-  sources={[
-    { label: '候选生成与逐项评分', path: 'packages/schematic/diagram/src/flow/providers/layout/layered/routing.ts' },
-  ]}
+  sources={[{ label: '候选生成与逐项评分', path: 'packages/schematic/diagram/src/flow/providers/layout/routing.ts' }]}
 />
 
 ### 递归细分排除曲线周围的空白
@@ -193,7 +203,7 @@ Flow 会检查布局结果是否完整、实体的大小是否与测量结果一
 
 <SourceLinks
   sources={[
-    { label: '候选生成与逐项评分', path: 'packages/schematic/diagram/src/flow/providers/layout/layered/routing.ts' },
+    { label: '候选生成与逐项评分', path: 'packages/schematic/diagram/src/flow/providers/layout/routing.ts' },
     { label: '布局后的冲突告警', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
   ]}
 />
@@ -266,6 +276,28 @@ artifact 中端点、控制点、标签盒统一处于完整 allocation-local �
   sources={[
     { label: '参考冲突诊断', path: 'packages/schematic/diagram/src/flow/pipeline/flow/compile.ts' },
     { label: '控制点与原点交付', path: 'packages/schematic/diagram/src/flow/pipeline/flow/artifact.ts' },
+  ]}
+/>
+
+## 过点曲线保留作者指定的路线
+
+smooth 的点是曲线必须经过的位置，不是贝塞尔控制点。图中的 S、P₁、P₂、P₃、T 构成有序点链：P₁ 从障碍 A 上方经过，P₂ 改变绕行方向，P₃ 从障碍 B 下方经过。蓝色样条穿过所有点，灰虚线只是点链参照。
+
+<ComponentPreview files="flow-smooth-knots" hideCode type="illustration" size="xl" />
+
+1. **绑定真实位置。** 布局确定全部节点矩形后，用与正式绘制相同的 Graph 元素查询 Target。节点形状的 anchor、连接面、变换与相对 cursor 由 Core 解析，不用矩形近似自定义形状的锚点。点列包含起点、全部中间点和自动追加的终点。
+2. **在相邻点之间插值。** Core 复用 centripetal Catmull–Rom 算法生成连续三次贝塞尔段；`tension` 缩放控制臂，经过点不动。合法重复点保留。最后的隐式节点终点沿入射方向接到真实边界，再由 Core 缩短箭头。
+3. **检查生成的曲线。** 每个三次段先比较包围盒，再对相交部分最多二分 8 层，用子曲线 AABB 判断接触区间。跨段连续区间合并后，只豁免端点处的连续连接区间；离开端点后重新穿回仍被检测。相关祖先 Group 外壳按既有规则豁免。
+
+发现冲突时发出 `FlowSmoothObstacleConflict`，保留原点列和倍率，不搜索新点、不自动增删点。安全点链不能保证样条安全；连接边界后的形状与标签仍须检查。K 个中间点、N 个障碍的检测上界是 O((K + 1) × N × 2⁸)，包围盒剪枝通常提前终止。这是工作量上界，不是耗时基准。
+
+自定义布局通过 `context.resolveRoutePoints` 使用同一查询能力。回调返回后，Flow 用最终节点位置再次查询，核对全部点数、顺序、坐标和 tension，拒绝替换作者路线。标签按实际三次曲线及切线预留；artifact 只保存平移后的数值点列和倍率，不重复保存控制点。
+
+<SourceLinks
+  sources={[
+    { label: '真实 Target 查询', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: '样条检测与标签', path: 'packages/schematic/diagram/src/flow/providers/layout/geometry.ts' },
+    { label: '点列输出核对', path: 'packages/schematic/diagram/src/flow/pipeline/flow/layout-output.ts' },
   ]}
 />
 

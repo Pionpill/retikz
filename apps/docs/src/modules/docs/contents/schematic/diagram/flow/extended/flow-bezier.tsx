@@ -1,29 +1,32 @@
-import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
-import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { flowBezierI18n } from './flow-bezier.i18n';
-/** 自动贝塞尔示例语言 */
+import { createPreviewControlContract, previewControls } from './flow-bezier.controls';
+import { renderFlowBezierPreview } from './flow-bezier.preview';
+import { FlowCurveViewport } from './FlowCurveViewport';
+
+export { previewControls };
+const createPreview = (lang: Lang) => {
+  const contract = createPreviewControlContract(lang);
+  const controlled = defineControlledPreview(contract, values => (
+    <FlowCurveViewport diagram={renderFlowBezierPreview(values, lang)} />
+  ));
+  return {
+    ...controlled,
+    // 自定义布局含函数，自动 IR/Vanilla 源码无法保留其注册；展示完整 React 与附属布局源码
+    source: { deriveIR: false },
+  };
+};
+const previews = { zh: createPreview('zh'), en: createPreview('en') };
+export const previewSource = previews.zh.source;
+/** 贝塞尔曲线示例语言 */
 export type FlowBezierProps = Readonly<{ lang?: Lang }>;
-/** 固定三个节点，由三次贝塞尔自动生成绕行控制点 */
+/** 自动与显式贝塞尔控制点试验场 */
 const Demo: FC<FlowBezierProps> = props => {
   const { lang = 'zh' } = props;
-  const copy = flowBezierI18n[lang];
-  return (
-    <PreviewFlowDiagram style={{ maxWidth: '100%', height: 'auto' }}>
-      <FlowLayout id="row" kind="linear" direction="right">
-        <FlowEntities
-          items={[
-            { id: 'a', text: copy.source },
-            { id: 'obstacle', text: copy.obstacle },
-            { id: 'b', text: copy.target },
-          ]}
-        />
-      </FlowLayout>
-      <FlowRelations items={[{ source: 'a', target: 'b', routing: { kind: 'cubic' }, label: copy.label }]} />
-    </PreviewFlowDiagram>
-  );
+  const Preview = previews[lang].Component;
+  return <Preview />;
 };
 export default Demo;

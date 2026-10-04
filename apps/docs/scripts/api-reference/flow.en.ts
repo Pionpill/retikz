@@ -1,5 +1,39 @@
 /** Flow API 页经人工核对的英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '基于完整的根局部元素边界计算关系路线和标签预留，不改变输入或元素位置':
+    'Compute routes and label reservations from complete root-local element bounds without mutating inputs or moving elements',
+  '已测量的布局输入，关系输出保持输入顺序': 'Measured layout input; relation outputs retain input order',
+  '全部元素的最终根局部边界，与布局返回的元素一致':
+    'Final root-local bounds for all elements, identical to the returned layout elements',
+  '布局执行上下文，解析 smooth 经过点时必需': 'Layout execution context, required for resolving smooth waypoints',
+  '按输入关系顺序排列的路由输出，由调用方与元素一起返回并接受布局输出校验':
+    'Routes in input relation order, returned together with elements by the caller for layout output validation',
+  '显式折点比例 0.25、0.5 或 0.75；省略时继承或中点优先自动避让，对齐端点保持直连':
+    'Explicit turn fraction 0.25, 0.5 or 0.75; omission inherits or searches midpoint-first. Aligned endpoints stay straight',
+  '显式或继承的间隙比例，省略时自动选择': 'Explicit or inherited gap fraction; omitted for automatic selection',
+  '作者的有效比例；自动选择不重复存储': 'Effective authored fraction; automatic selection is not stored redundantly',
+
+  'Flow Layout Definition 调用作者 placement 的同步执行边界':
+    'Synchronous execution context for Flow placement and waypoint queries',
+  与最终输出一致的全部根局部元素矩形: 'All root-local element bounds, identical to the final output',
+  '作者指定或 Core 补全的控制臂倍率': 'Authored tangent multiplier or the Core default',
+  关系终点身份: 'Relation target identity',
+  关系起点身份: 'Relation source identity',
+  '包含 source 和 target 的完整数值点列': 'Complete numeric knot chain including source and target',
+  '已补全 tension 的经过点路由意图': 'Through-point routing intent with effective tension',
+  '已解析的样条参考点列，保留合法重复点': 'Resolved spline reference knots, retaining valid repeats',
+  '当前布局中的真实经过点查询，不持有跨编译缓存':
+    'Real waypoint query within this layout, with no cross-compilation cache',
+  '按已测量尺寸执行作者的固定排列，返回容器局部坐标中的边界和子项位置':
+    'Execute authored placement using measured sizes and return container-local bounds and child positions',
+  显式经过点样条: 'Explicit through-point spline',
+  有序中间目标: 'Ordered intermediate Targets',
+  '有序中间目标，不包括自动追加的关系终点':
+    'Ordered intermediate Targets, excluding the automatically appended relation target',
+  '正数控制臂倍率，使用 Core 默认值': 'Positive tangent multiplier using the Core default',
+  '用真实 Graph 几何解析经过点，返回包含首尾的根局部点列':
+    'Resolve waypoints against real Graph geometry, returning a root-local chain including endpoints',
+  经过点样条: 'Through-point spline',
   二次贝塞尔输入: 'Quadratic Bezier input',
   三次贝塞尔输入: 'Cubic Bezier input',
   'Flow 根坐标控制点，省略时自动生成': 'Control in Flow root coordinates; omit for automatic generation',

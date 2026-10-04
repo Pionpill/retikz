@@ -7,36 +7,37 @@ import type {
   FlowLayoutElementInput,
   FlowLayoutElementOutput,
   FlowLayoutInput,
+  FlowLayoutExecutionContext,
   FlowLayoutRelationInput,
   FlowLayoutRelationOutput,
   FlowLayoutRoute,
-} from '../../../contract';
-import { FlowRoutingKind } from '../../../shared';
-import { FLOW_BEND_ANGLES, doFlowBoundsOverlap, findFlowCurveObstacleIntervals } from '../../../shared/geometry';
+} from '../../contract';
+import { FlowRoutingKind } from '../../shared';
+import { FLOW_BEND_ANGLES, doFlowBoundsOverlap, findFlowCurveObstacleIntervals } from '../../shared/geometry';
 import {
   createFlowBezierBaseline,
   selectFlowBezierRoute,
   isFlowAutomaticRouting,
   flowPriorLabelReservations,
-} from '../bezier';
+} from './bezier';
 import {
   createFlowBendCurve,
   flowBendGeometryFailure,
   flowRelationObstacles,
   flowRouteLabelBounds,
   scoreFlowBendNodes,
-} from '../geometry';
-
-type RoutingIndex = Readonly<{
-  scopes: ReadonlyMap<string, ReadonlyArray<string>>;
-  layouts: ReadonlyMap<string, EffectiveFlowLayout>;
-}>;
+} from './geometry';
+import { createFlowOrthogonalCandidates, evaluateFlowOrthogonalConflicts } from './orthogonal';
 
 const centerOf = (bounds: Readonly<BoundsRect>): Position => [
   bounds.x + bounds.width / 2,
   bounds.y + bounds.height / 2,
 ];
 
+type RoutingIndex = Readonly<{
+  scopes: ReadonlyMap<string, ReadonlyArray<string>>;
+  layouts: ReadonlyMap<string, EffectiveFlowLayout>;
+}>;
 const buildRoutingIndex = (elements: ReadonlyArray<FlowLayoutElementInput>): RoutingIndex => {
   const scopes = new Map<string, ReadonlyArray<string>>();
   const layouts = new Map<string, EffectiveFlowLayout>();
@@ -62,64 +63,13 @@ const commonScope = (source: ReadonlyArray<string>, target: ReadonlyArray<string
   return result;
 };
 
-const collapsePoints = (points: ReadonlyArray<Position>): ReadonlyArray<Position> =>
+const collapsePoints = (points: ReadonlyArray<Readonly<Position>>): ReadonlyArray<Readonly<Position>> =>
   points.filter(
     (point, index) => index === 0 || point[0] !== points[index - 1]?.[0] || point[1] !== points[index - 1]?.[1],
   );
 
-const middleOfGap = (start: number, end: number, centerFallback: number, laneOffset: number): number => {
-  if (start > end) return centerFallback + laneOffset;
-  return Math.min(end, Math.max(start, (start + end) / 2 + laneOffset));
-};
-
-const isFeedback = (
-  relation: FlowLayoutRelationInput,
-  source: Position,
-  target: Position,
-  direction: EffectiveFlowLayout['direction'],
-): boolean => {
-  if (relation.direction === 'none' || relation.direction === 'both') return false;
-  const [precedenceSource, precedenceTarget] = relation.direction === 'reverse' ? [target, source] : [source, target];
-  if (direction === 'right') return precedenceSource[0] >= precedenceTarget[0];
-  if (direction === 'left') return precedenceSource[0] <= precedenceTarget[0];
-  if (direction === 'down') return precedenceSource[1] >= precedenceTarget[1];
-  return precedenceSource[1] <= precedenceTarget[1];
-};
-
-const orthogonalPoints = (
-  relation: FlowLayoutRelationInput,
-  source: Position,
-  target: Position,
-  sourceBounds: Readonly<BoundsRect>,
-  targetBounds: Readonly<BoundsRect>,
-  direction: EffectiveFlowLayout['direction'],
-  laneOffset: number,
-  envelope: Readonly<BoundsRect>,
-  rankGap: number,
-): ReadonlyArray<Position> => {
-  const feedback = isFeedback(relation, source, target, direction);
-  if (direction === 'right' || direction === 'left') {
-    const middle = feedback
-      ? direction === 'right'
-        ? envelope.x + envelope.width + rankGap / 2 + Math.abs(laneOffset)
-        : envelope.x - rankGap / 2 - Math.abs(laneOffset)
-      : direction === 'right'
-        ? middleOfGap(sourceBounds.x + sourceBounds.width, targetBounds.x, (source[0] + target[0]) / 2, laneOffset)
-        : middleOfGap(targetBounds.x + targetBounds.width, sourceBounds.x, (source[0] + target[0]) / 2, laneOffset);
-    return collapsePoints([source, [middle, source[1]], [middle, target[1]], target]);
-  }
-  const middle = feedback
-    ? direction === 'down'
-      ? envelope.y + envelope.height + rankGap / 2 + Math.abs(laneOffset)
-      : envelope.y - rankGap / 2 - Math.abs(laneOffset)
-    : direction === 'down'
-      ? middleOfGap(sourceBounds.y + sourceBounds.height, targetBounds.y, (source[1] + target[1]) / 2, laneOffset)
-      : middleOfGap(targetBounds.y + targetBounds.height, sourceBounds.y, (source[1] + target[1]) / 2, laneOffset);
-  return collapsePoints([source, [source[0], middle], [target[0], middle], target]);
-};
-
 const labelBoundsFor = (
-  points: ReadonlyArray<Position>,
+  points: ReadonlyArray<Readonly<Position>>,
   size: NonNullable<FlowLayoutRelationInput['labelSize']>,
 ): Readonly<BoundsRect> => {
   const lengths = points.slice(1).map((point, index) => {
@@ -152,26 +102,19 @@ const labelBoundsFor = (
   };
 };
 
-/** 在全部 element root-local bounds 上确定 relation point chain 与 label reservation */
-export const routeLayeredRelations = (
+/** 基于完整的根局部元素边界计算关系路线和标签预留，不改变输入或元素位置
+ * @param input 已测量的布局输入，关系输出保持输入顺序
+ * @param elements 全部元素的最终根局部边界，与布局返回的元素一致
+ * @param context 布局执行上下文，解析 smooth 经过点时必需
+ * @returns 按输入关系顺序排列的路由输出，由调用方与元素一起返回并接受布局输出校验
+ */
+export const routeFlowRelations = (
   input: FlowLayoutInput,
   elements: ReadonlyArray<FlowLayoutElementOutput>,
+  context?: FlowLayoutExecutionContext,
 ): ReadonlyArray<FlowLayoutRelationOutput> => {
   const bounds = new Map(elements.map(element => [element.id, element.bounds]));
-  const minX = Math.min(0, ...elements.map(element => element.bounds.x));
-  const minY = Math.min(0, ...elements.map(element => element.bounds.y));
-  const maxX = Math.max(0, ...elements.map(element => element.bounds.x + element.bounds.width));
-  const maxY = Math.max(0, ...elements.map(element => element.bounds.y + element.bounds.height));
-  const envelope = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   const index = buildRoutingIndex(input.elements);
-  const pairs = new Map<string, Array<number>>();
-  input.relations.forEach((relation, relationIndex) => {
-    const key = [relation.source, relation.target].sort().join('\u0000');
-    const indices = pairs.get(key) ?? [];
-    indices.push(relationIndex);
-    pairs.set(key, indices);
-  });
-
   const routed: Array<FlowLayoutRelationOutput> = input.relations.map((relation, relationIndex) => {
     const sourceBounds = bounds.get(relation.source);
     const targetBounds = bounds.get(relation.target);
@@ -180,6 +123,21 @@ export const routeLayeredRelations = (
     }
     const source = centerOf(sourceBounds);
     const target = centerOf(targetBounds);
+    if (relation.routing.kind === 'smooth') {
+      if (context === undefined) return flowBendGeometryFailure(relationIndex, relation, undefined);
+      const route: FlowLayoutRoute = {
+        kind: 'smooth',
+        tension: relation.routing.tension,
+        points: context.resolveRoutePoints({
+          elements,
+          source: relation.source,
+          target: relation.target,
+          points: relation.routing.points,
+        }),
+      };
+      const labelBounds = flowRouteLabelBounds(route, relation);
+      return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+    }
     if (relation.routing.kind === 'curve' || relation.routing.kind === 'cubic') {
       const route = createFlowBezierBaseline(relation.routing, [source, target], relation, relationIndex);
       const labelBounds = flowRouteLabelBounds(route, relation);
@@ -203,13 +161,6 @@ export const routeLayeredRelations = (
         return flowBendGeometryFailure(relationIndex, relation, cause);
       }
     }
-    const sourceScopes = index.scopes.get(relation.source) ?? [];
-    const targetScopes = index.scopes.get(relation.target) ?? [];
-    const scope = commonScope(sourceScopes, targetScopes);
-    const scopeLayout = scope === undefined ? input.layout : (index.layouts.get(scope) ?? input.layout);
-    const pair = pairs.get([relation.source, relation.target].sort().join('\u0000')) ?? [relationIndex];
-    const pairIndex = pair.indexOf(relationIndex);
-    const laneOffset = (pairIndex - (pair.length - 1) / 2) * 12;
     const points =
       relation.routing.kind === 'straight'
         ? [source, target]
@@ -217,17 +168,7 @@ export const routeLayeredRelations = (
           ? collapsePoints([source, [target[0], source[1]], target])
           : relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
             ? collapsePoints([source, [source[0], target[1]], target])
-            : orthogonalPoints(
-                relation,
-                source,
-                target,
-                sourceBounds,
-                targetBounds,
-                scopeLayout.direction,
-                laneOffset,
-                envelope,
-                scopeLayout.rankGap,
-              );
+            : createFlowOrthogonalCandidates(input, elements, relationIndex)[0].points;
     const route: FlowLayoutRoute = { ...relation.routing, points };
     const labelBounds =
       relation.labelPlacement === undefined
@@ -240,6 +181,27 @@ export const routeLayeredRelations = (
   const isAutomatic = (relation: FlowLayoutRelationInput): boolean => isFlowAutomaticRouting(relation.routing);
   for (const [relationIndex, relation] of input.relations.entries()) {
     const routing = relation.routing;
+    if (routing.kind === 'orthogonal') {
+      const candidates = createFlowOrthogonalCandidates(input, elements, relationIndex);
+      const first = candidates[0];
+      if (first.points.length === 2) continue;
+      const obstacles = flowRelationObstacles(input, { elements }, relation);
+      const labels = flowPriorLabelReservations(input.relations, routed, relationIndex);
+      let best = { route: first, ...evaluateFlowOrthogonalConflicts(first, relation, obstacles, labels) };
+      for (const route of candidates.slice(1)) {
+        const candidate = { route, ...evaluateFlowOrthogonalConflicts(route, relation, obstacles, labels) };
+        const difference = candidate.score.findIndex(
+          (value, scoreIndex) => Math.abs(value - best.score[scoreIndex]) > DEFAULT_EPSILON,
+        );
+        if (difference >= 0 && candidate.score[difference] < best.score[difference]) best = candidate;
+      }
+      const labelBounds =
+        relation.labelPlacement === undefined && relation.labelSize !== undefined
+          ? labelBoundsFor(best.route.points, relation.labelSize)
+          : best.labelBounds;
+      routed[relationIndex] = { route: best.route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+      continue;
+    }
     const initialBezier = routed[relationIndex].route;
     if (isAutomatic(relation) && (initialBezier.kind === 'curve' || initialBezier.kind === 'cubic')) {
       const scope = commonScope(index.scopes.get(relation.source) ?? [], index.scopes.get(relation.target) ?? []);

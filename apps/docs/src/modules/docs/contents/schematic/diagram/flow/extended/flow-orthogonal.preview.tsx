@@ -6,21 +6,21 @@ import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
-import type { previewControls } from './flow-bend.controls';
-import { flowBendI18n } from './flow-bend.i18n';
+import type { previewControls } from './flow-orthogonal.controls';
+import { flowOrthogonalI18n } from './flow-orthogonal.i18n';
 import { createObstacleLayout } from './obstacle-layout';
-
-/** 固定节点，观察有限候选选择及标签沿曲线的放置 */
-export const renderFlowBendPreview = (
+/** 固定矩形起终点，移动椭圆障碍观察自动选路 */
+export const renderFlowOrthogonalPreview = (
   values: PreviewControlValuesFor<typeof previewControls>,
   lang: Lang = 'zh',
 ): ReactElement<FlowDiagramProps> => {
-  const copy = flowBendI18n[lang];
+  const copy = flowOrthogonalI18n[lang];
   return (
     <PreviewFlowDiagram
-      flowLayouts={[createObstacleLayout(values.obstacleX, values.obstacleY, false)]}
+      flowLayouts={[createObstacleLayout(values.obstacleX, values.obstacleY, true)]}
       defaultFlowLayout="obstacle-playground"
-      viewBox={{ x: -24, y: -24, width: 520, height: 300 }}
+      layout={{ direction: 'right' }}
+      viewBox={{ x: -8, y: -16, width: 560, height: 240 }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowEntities
@@ -36,15 +36,14 @@ export const renderFlowBendPreview = (
           {
             source: 'a',
             target: 'b',
-            routing: { kind: 'bend', ...(values.autoAngle ? {} : { bendAngle: values.angle }) },
-            label: {
-              text: copy.text,
-              position: values.position,
-              sloped: values.sloped,
-              interrupt: values.interrupt,
-              gap: 4,
-              distance: 4,
-              font: { size: 14 },
+            routing: {
+              kind: 'orthogonal',
+              cornerRadius: 8,
+              ...(values.turnPosition === 'auto'
+                ? {}
+                : {
+                    turnPosition: values.turnPosition === '0.25' ? 0.25 : values.turnPosition === '0.75' ? 0.75 : 0.5,
+                  }),
             },
           },
         ]}

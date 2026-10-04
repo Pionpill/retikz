@@ -727,13 +727,70 @@ export declare const FlowRelation: {
             looseness?: number | undefined;
           }
         | { kind: 'straight' }
-        | { kind: 'orthogonal'; cornerRadius?: number | undefined }
+        | { kind: 'orthogonal'; turnPosition?: 0.25 | 0.5 | 0.75 | undefined; cornerRadius?: number | undefined }
         | { kind: '-|'; cornerRadius?: number | undefined }
         | { kind: '|-'; cornerRadius?: number | undefined }
         | { kind: 'curve' }
         | { kind: 'curve'; control: [number, number] }
         | { kind: 'cubic' }
         | { kind: 'cubic'; control1: [number, number]; control2: [number, number] }
+        | {
+            kind: 'smooth';
+            points: Array<
+              | [number, number]
+              | SharedPolarPosition
+              | {
+                  id: string;
+                  anchor?:
+                    | number
+                    | OpenString<
+                        ValueOf<{
+                          readonly TopRight: 'top-right';
+                          readonly TopLeft: 'top-left';
+                          readonly BottomRight: 'bottom-right';
+                          readonly BottomLeft: 'bottom-left';
+                          readonly Top: 'top';
+                          readonly Right: 'right';
+                          readonly Bottom: 'bottom';
+                          readonly Left: 'left';
+                          readonly Center: 'center';
+                        }>
+                      >
+                    | { side: 'top' | 'right' | 'bottom' | 'left'; fraction: number }
+                    | undefined;
+                  offset?: [number, number] | undefined;
+                  boundary?:
+                    | OpenString<
+                        ValueOf<{
+                          readonly Self: 'shape';
+                          readonly Rectangle: 'rectangle';
+                          readonly Circle: 'circle';
+                          readonly Ellipse: 'ellipse';
+                          readonly Diamond: 'diamond';
+                          readonly Polygon: 'polygon';
+                        }>
+                      >
+                    | {
+                        type: OpenString<
+                          ValueOf<{
+                            readonly Rectangle: 'rectangle';
+                            readonly Circle: 'circle';
+                            readonly Ellipse: 'ellipse';
+                            readonly Diamond: 'diamond';
+                            readonly Polygon: 'polygon';
+                          }>
+                        >;
+                        params?: Record<string, JsonValue> | undefined;
+                      }
+                    | undefined;
+                }
+              | { of: string | [number, number] | SharedPolarPosition; offset: [number, number] }
+              | IRBetweenPosition
+              | { relative: [number, number] }
+              | { relativeAccumulate: [number, number] }
+            >;
+            tension?: number | undefined;
+          }
         | undefined;
       source: string;
       sourceMarker?:
@@ -1053,7 +1110,7 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
   <ApiSourceLink
     label={'FlowBendRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={117}
+    startLine={125}
   >
     Bend reference geometry containing only the active parameter family
   </ApiSourceLink>
@@ -1359,7 +1416,7 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
   <ApiSourceLink
     label={'FlowLayoutDefinition'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={327}
+    startLine={377}
   >
     Layout definition that synchronously determines Flow element bounds, relation routes, and label reservations
   </ApiSourceLink>
@@ -1399,13 +1456,53 @@ export type FlowLayoutDefinition = Readonly<{
 
 </DocTabs>
 
+### FlowLayoutExecutionContext
+
+<p>
+  <ApiSourceLink
+    label={'FlowLayoutExecutionContext'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={263}
+  >
+    Synchronous execution context for Flow placement and waypoint queries
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                        | Type                                                                 | Default | Description                                                                                           |
+| ----------------------------- | -------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `readonly placeLayout`        | `(input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput`     | —       | Execute authored placement using measured sizes and return container-local bounds and child positions |
+| `readonly resolveRoutePoints` | `(query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>` | —       | Resolve waypoints against real Graph geometry, returning a root-local chain including endpoints       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowLayoutExecutionContext = Readonly<{
+  resolveRoutePoints: (query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>;
+  placeLayout: (input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### FlowLayoutLabelPlacement
 
 <p>
   <ApiSourceLink
     label={'FlowLayoutLabelPlacement'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={114}
+    startLine={122}
   >
     Complete-label geometry provided to layout, excluding text and appearance
   </ApiSourceLink>
@@ -1447,7 +1544,7 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | '
   <ApiSourceLink
     label={'FlowLayoutRelationInput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={253}
+    startLine={303}
   >
     Measured Flow layout relation input
   </ApiSourceLink>
@@ -1495,7 +1592,7 @@ export type FlowLayoutRelationInput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRelationOutput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={287}
+    startLine={337}
   >
     Layout output for one Flow relation in root coordinates
   </ApiSourceLink>
@@ -1535,13 +1632,27 @@ export type FlowLayoutRelationOutput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={124}
+    startLine={132}
   >
     Reference route determined by layout; Core performs actual endpoint clipping and arrow shortening
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="symmetric">
+<DocTabs defaultValue="smooth">
+
+<DocTab value="smooth" label="Members · Through-point curve">
+
+<ApiTable>
+
+| Member             | Type                                | Default | Description                                             |
+| ------------------ | ----------------------------------- | ------- | ------------------------------------------------------- |
+| `readonly kind`    | `'smooth'`                          | —       | Through-point spline                                    |
+| `readonly points`  | `ReadonlyArray<Readonly<Position>>` | —       | Complete numeric knot chain including source and target |
+| `readonly tension` | `number`                            | —       | Authored tangent multiplier or the Core default         |
+
+</ApiTable>
+
+</DocTab>
 
 <DocTab value="symmetric" label="Members · Symmetric bend">
 
@@ -1616,15 +1727,30 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 </DocTab>
 
-<DocTab value="axis" label="Members · Axis-aligned">
+<DocTab value="axis" label="Members · Single elbow">
 
 <ApiTable>
 
 | Member                  | Type                                | Default | Description |
 | ----------------------- | ----------------------------------- | ------- | ----------- |
 | `readonly cornerRadius` | `number`                            | —       | —           |
-| `readonly kind`         | `'orthogonal' \| '-\|' \| '\|-'`    | —       | —           |
+| `readonly kind`         | `'-\|' \| '\|-'`                    | —       | —           |
 | `readonly points`       | `ReadonlyArray<Readonly<Position>>` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="orthogonal" label="Members · Orthogonal">
+
+<ApiTable>
+
+| Member                   | Type                                | Default | Description                                                                |
+| ------------------------ | ----------------------------------- | ------- | -------------------------------------------------------------------------- |
+| `readonly cornerRadius`  | `number`                            | —       | —                                                                          |
+| `readonly kind`          | `'orthogonal'`                      | —       | —                                                                          |
+| `readonly points`        | `ReadonlyArray<Readonly<Position>>` | —       | —                                                                          |
+| `readonly turnPosition?` | `0.25 \| 0.5 \| 0.75`               | —       | Effective authored fraction; automatic selection is not stored redundantly |
 
 </ApiTable>
 
@@ -1634,14 +1760,21 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 ```ts
 export type FlowLayoutRoute =
+  | FlowSmoothRoute
   | Readonly<{
       kind: 'straight';
       points: ReadonlyArray<Readonly<Position>>;
     }>
   | Readonly<{
-      kind: 'orthogonal' | '-|' | '|-';
+      kind: '-|' | '|-';
       points: ReadonlyArray<Readonly<Position>>;
       cornerRadius: number;
+    }>
+  | Readonly<{
+      kind: 'orthogonal';
+      points: ReadonlyArray<Readonly<Position>>;
+      cornerRadius: number;
+      turnPosition?: 0.25 | 0.5 | 0.75;
     }>
   | FlowBendRoute
   | FlowBezierRoute;
@@ -1657,120 +1790,27 @@ export type FlowLayoutRoute =
   <ApiSourceLink
     label={'FlowLayoutRouting'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={100}
+    startLine={101}
   >
     Effective routing consumed by the Flow layout provider
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="curve">
-
-<DocTab value="curve" label="Members · Quadratic Bezier">
-
-<ApiTable>
-
-| Member              | Type                 | Default | Description                                                     |
-| ------------------- | -------------------- | ------- | --------------------------------------------------------------- |
-| `readonly control?` | `Readonly<Position>` | —       | Control in Flow root coordinates; omit for automatic generation |
-| `readonly kind`     | `'curve'`            | —       | Quadratic Bezier input                                          |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="cubic-auto" label="Members · Automatic cubic Bezier">
-
-<ApiTable>
-
-| Member               | Type      | Default | Description                                   |
-| -------------------- | --------- | ------- | --------------------------------------------- |
-| `readonly control1?` | `never`   | —       | Automatic cubic input must omit both controls |
-| `readonly control2?` | `never`   | —       | Automatic cubic input must omit both controls |
-| `readonly kind`      | `'cubic'` | —       | Cubic Bezier input                            |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="cubic-explicit" label="Members · Explicit cubic Bezier">
-
-<ApiTable>
-
-| Member              | Type                 | Default | Description                                                                    |
-| ------------------- | -------------------- | ------- | ------------------------------------------------------------------------------ |
-| `readonly control1` | `Readonly<Position>` | —       | Source tangent control in Flow root coordinates; explicit values must not move |
-| `readonly control2` | `Readonly<Position>` | —       | Target tangent control in Flow root coordinates; explicit values must not move |
-| `readonly kind`     | `'cubic'`            | —       | Cubic Bezier input                                                             |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="straight" label="Members · Straight">
-
-<ApiTable>
-
-| Member          | Type         | Default | Description |
-| --------------- | ------------ | ------- | ----------- |
-| `readonly kind` | `'straight'` | —       | —           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="axis" label="Members · Axis-aligned">
-
-<ApiTable>
-
-| Member                  | Type                             | Default | Description |
-| ----------------------- | -------------------------------- | ------- | ----------- |
-| `readonly cornerRadius` | `number`                         | —       | —           |
-| `readonly kind`         | `'orthogonal' \| '-\|' \| '\|-'` | —       | —           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="symmetric" label="Members · Symmetric bend">
-
-<ApiTable>
-
-| Member                    | Type                | Default | Description                                                                                         |
-| ------------------------- | ------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `readonly bendAngle?`     | `number`            | —       | Omission lets layout compare 30, 45 and 60 degrees; explicit and inherited values must be preserved |
-| `readonly bendDirection?` | `'left' \| 'right'` | —       | Omission lets layout compare left and right candidates                                              |
-| `readonly kind`           | `'bend'`            | —       | —                                                                                                   |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="tangent" label="Members · Tangent bend">
-
-<ApiTable>
-
-| Member               | Type     | Default | Description |
-| -------------------- | -------- | ------- | ----------- |
-| `readonly inAngle`   | `number` | —       | —           |
-| `readonly kind`      | `'bend'` | —       | —           |
-| `readonly looseness` | `number` | —       | —           |
-| `readonly outAngle`  | `number` | —       | —           |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
 ```ts
 export type FlowLayoutRouting =
+  | FlowSmoothRouting
   | FlowBezierRouting
   | Readonly<{
       kind: 'straight';
     }>
   | Readonly<{
-      kind: 'orthogonal' | '-|' | '|-';
+      kind: '-|' | '|-';
       cornerRadius: number;
+    }>
+  | Readonly<{
+      kind: 'orthogonal';
+      cornerRadius: number;
+      turnPosition?: 0.25 | 0.5 | 0.75;
     }>
   | Readonly<{
       kind: 'bend';
@@ -1785,6 +1825,46 @@ export type FlowLayoutRouting =
     }>;
 ```
 
+### FlowRoutePointsQuery
+
+<p>
+  <ApiSourceLink
+    label={'FlowRoutePointsQuery'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={291}
+  >
+    Real waypoint query within this layout, with no cross-compilation cache
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member              | Type                                     | Default | Description                                                  |
+| ------------------- | ---------------------------------------- | ------- | ------------------------------------------------------------ |
+| `readonly elements` | `ReadonlyArray<FlowLayoutElementOutput>` | —       | All root-local element bounds, identical to the final output |
+| `readonly points`   | `ReadonlyArray<IRTarget>`                | —       | Ordered intermediate Targets                                 |
+| `readonly source`   | `string`                                 | —       | Relation source identity                                     |
+| `readonly target`   | `string`                                 | —       | Relation target identity                                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowRoutePointsQuery = Readonly<{
+  elements: ReadonlyArray<FlowLayoutElementOutput>;
+  source: string;
+  target: string;
+  points: ReadonlyArray<IRTarget>;
+}>;
+```
+
 </DocTab>
 
 </DocTabs>
@@ -1795,7 +1875,7 @@ export type FlowLayoutRouting =
   <ApiSourceLink
     label={'FlowRoutingCapability'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={87}
+    startLine={88}
   >
     Each routing kind and its supported authoring modes
   </ApiSourceLink>
@@ -1839,6 +1919,90 @@ export type FlowRoutingCapability =
       kind: 'curve' | 'cubic';
       modes: ReadonlyArray<'auto' | 'explicit'>;
     }>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowSmoothRoute
+
+<p>
+  <ApiSourceLink
+    label={'FlowSmoothRoute'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={281}
+  >
+    Resolved spline reference knots, retaining valid repeats
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member             | Type                                | Default | Description                                             |
+| ------------------ | ----------------------------------- | ------- | ------------------------------------------------------- |
+| `readonly kind`    | `'smooth'`                          | —       | Through-point spline                                    |
+| `readonly points`  | `ReadonlyArray<Readonly<Position>>` | —       | Complete numeric knot chain including source and target |
+| `readonly tension` | `number`                            | —       | Authored tangent multiplier or the Core default         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowSmoothRoute = Readonly<{
+  kind: 'smooth';
+  points: ReadonlyArray<Readonly<Position>>;
+  tension: number;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### FlowSmoothRouting
+
+<p>
+  <ApiSourceLink
+    label={'FlowSmoothRouting'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={271}
+  >
+    Through-point routing intent with effective tension
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member             | Type                      | Default | Description                                                                        |
+| ------------------ | ------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `readonly kind`    | `'smooth'`                | —       | Explicit through-point spline                                                      |
+| `readonly points`  | `ReadonlyArray<IRTarget>` | —       | Ordered intermediate Targets, excluding the automatically appended relation target |
+| `readonly tension` | `number`                  | —       | Positive tangent multiplier using the Core default                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowSmoothRouting = Readonly<{
+  kind: 'smooth';
+  points: ReadonlyArray<IRTarget>;
+  tension: number;
+}>;
 ```
 
 </DocTab>
@@ -2018,6 +2182,50 @@ export declare const defineFlowLayout: (definition: FlowLayoutDefinition) => Flo
 export declare const getFlowLayoutCatalog: (
   options?: FlowLayoutRegistryOptions,
 ) => ReadonlyArray<FlowLayoutCatalogEntry>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### routeFlowRelations
+
+<p>
+  <ApiSourceLink
+    label={'routeFlowRelations'}
+    path={'packages/schematic/diagram/src/flow/providers/layout/routing.ts'}
+    startLine={111}
+  >
+    Compute routes and label reservations from complete root-local element bounds without mutating inputs or moving
+    elements
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name       | Type / signature                          | Description                                                                                                |
+| ---------- | ---------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Parameters | `input`    | `FlowLayoutInput`                         | Measured layout input; relation outputs retain input order                                                 |
+|            | `elements` | `ReadonlyArray<FlowLayoutElementOutput>`  | Final root-local bounds for all elements, identical to the returned layout elements                        |
+|            | `context?` | `FlowLayoutExecutionContext`              | Layout execution context, required for resolving smooth waypoints                                          |
+| Returns    | —          | `ReadonlyArray<FlowLayoutRelationOutput>` | Routes in input relation order, returned together with elements by the caller for layout output validation |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const routeFlowRelations: (
+  input: FlowLayoutInput,
+  elements: ReadonlyArray<FlowLayoutElementOutput>,
+  context?: FlowLayoutExecutionContext,
+) => ReadonlyArray<FlowLayoutRelationOutput>;
 ```
 
 </DocTab>

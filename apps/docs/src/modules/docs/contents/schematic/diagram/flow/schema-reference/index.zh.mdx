@@ -143,6 +143,8 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
 
 ## FlowRoutingSchema
 
+`smooth` 仅用于 Relation：`points` 是至少一个有序中间 Target，自动追加关系 target；`tension` 是正数倍率，省略时使用 1。它不搜索或修改经过点。
+
 省略所有控制点表示自动；完整提供表示显式；cubic 只填一个点或填写 mode 均拒绝。贝塞尔仅限 Relation。
 
 <ZodSchema
@@ -152,6 +154,9 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
   descriptions={{
     control: 'Flow 根坐标中的显式二次控制点；从 artifact 复制时减去 drawing.origin',
     control1: 'Flow 根坐标中的起点切线控制点，必须与 control2 一起提供',
+    points: '有序中间 Target，建议 2～3 点；引用仅限本 Flow Entity/Group，自动追加关系终点，不自动移动点',
+    tension: '正数控制臂倍率，默认 1；经过点不变，平滑后仍需检查整条路线',
+    '/case/"kind"/string/"smooth"/field/"kind"': '显式过点曲线；优先尝试自动 bend、二次及三次贝塞尔，已知经过位置时使用',
     control2: 'Flow 根坐标中的终点切线控制点，必须与 control1 一起提供',
     '/case/"kind"/string/"bend"/field/"kind"': '常规曲线，自动最多比较六条候选；节点优先、标签次级，不比较边交叉或保证全局避障',
     '/case/"kind"/string/"bend"/field/"bendDirection"': '相对 source 到 target 的弯曲侧，省略时布局自动选择',
@@ -162,6 +167,7 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
 
     '/case/"kind"/string/"straight"/field/"kind"': '连接两个端点的直线路由',
     '/case/"kind"/string/"orthogonal"/field/"kind"': '与坐标轴对齐的折线路由',
+    '/case/"kind"/string/"orthogonal"/field/"turnPosition"': '显式折点比例 0.25、0.5 或 0.75；省略时继承或中点优先自动避让，对齐端点保持直连',
     '/case/"kind"/string/"orthogonal"/field/"cornerRadius"': '圆角半径，省略时继承祖先或所选布局 Definition',
     '/case/"kind"/string/"-|"/field/"kind"': '先水平再垂直的单折角路由，不自动避障',
     '/case/"kind"/string/"-|"/field/"cornerRadius"': '圆角半径，省略时继承祖先或所选布局 Definition',

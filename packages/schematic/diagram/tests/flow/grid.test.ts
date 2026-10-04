@@ -170,6 +170,9 @@ describe('Flow Grid', () => {
       name: 'observe-grid',
       layout: (input, context) =>
         LayeredFlowLayoutDefinition.layout(input, {
+          resolveRoutePoints: () => {
+            throw new Error('Unexpected waypoint query');
+          },
           placeLayout: placement => {
             calls += 1;
             expect(placement.layout.kind).toBe('grid');
@@ -189,6 +192,9 @@ describe('Flow Grid', () => {
       name: 'change-cells',
       layout: (input, context) =>
         LayeredFlowLayoutDefinition.layout(input, {
+          resolveRoutePoints: () => {
+            throw new Error('Unexpected waypoint query');
+          },
           placeLayout: placement =>
             context.placeLayout({
               ...placement,
