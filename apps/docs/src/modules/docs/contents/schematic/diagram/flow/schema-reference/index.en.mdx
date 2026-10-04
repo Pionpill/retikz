@@ -25,6 +25,18 @@ Source omits positions and routes derived by layout. Runtime Definition defaults
 
 <ZodSchema name="FlowLayoutSchema" expandNested />
 
+## FlowEndpointSchema
+
+Relation endpoints accept an id string or object. `side` selects a side, `overlap: 'separate'` spaces positions automatically, and `anchor` fixes an exact position and is mutually exclusive with `side`.
+
+<ZodSchema name="FlowEndpointSchema" />
+
+## FlowEndpointTargetSchema
+
+Layout endpoint result containing only identity and the resolved anchor.
+
+<ZodSchema name="FlowEndpointTargetSchema" />
+
 ## FlowRelationSchema
 
 <ZodSchema name="FlowRelationSchema" shallow />

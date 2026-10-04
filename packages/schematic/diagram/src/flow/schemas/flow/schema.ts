@@ -1,5 +1,7 @@
 import type { IRTextBlock } from '@retikz/core';
 import {
+  AnchorRefSchema,
+  Side,
   BendStepSchema,
   ControlPointSchema,
   GeometryLabelSchema,
@@ -44,6 +46,7 @@ import {
   DiagramFrameSchema,
   DiagramPresentationSchema,
 } from '../../../_diagram';
+import { FlowEndpointOverlap } from '../../shared';
 import { FLOW_TYPE, FlowDirection, FlowLayoutAlignment, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 
 const requireOverrides = (label: string) => ({
@@ -224,8 +227,47 @@ export const FlowDefaultsGroupSchema = strictObject({
   caption: FlowDefaultsGroupCaptionSchema.optional().describe('Optional Group caption arrangement and text defaults.'),
 }).describe('Sparse Flow Group defaults without overflow or layout strategy.');
 
+/** 端点分离的末端默认，继承前复用 unwrap 保持稀疏 */
+export const FlowEndpointOverlapSchema = zodEnum(FlowEndpointOverlap)
+  .describe(
+    'allow permits coincident connection points; separate gives this endpoint its own equally spaced side slot. Does not prevent arrow shape overlap or route crossings.',
+  )
+  .default('allow');
+
+/** 关系端点的稀疏默认 */
+export const FlowEndpointDefaultsSchema = strictObject({ overlap: FlowEndpointOverlapSchema.unwrap().optional() });
+
+/** 已定位的端点结果，不保存自动分配意图 */
+export const FlowEndpointTargetSchema = strictObject({
+  id: NonBlankStringSchema.describe('Referenced Entity or Group id.'),
+  anchor: AnchorRefSchema.optional().describe('Resolved Core anchor; omission retains natural boundary clipping.'),
+});
+
+/** 单侧自动位置与精确锚点互斥，字符串保留最简作者表达 */
+export const FlowEndpointSchema = union([
+  NonBlankStringSchema,
+  strictObject({
+    id: NonBlankStringSchema,
+    side: zodEnum(Side)
+      .optional()
+      .describe(
+        'Constrain the connection to this side; fraction remains automatic. Usually omit. Mutually exclusive with anchor.',
+      ),
+    overlap: FlowEndpointOverlapSchema.unwrap().optional(),
+  }),
+  strictObject({
+    id: NonBlankStringSchema,
+    anchor: AnchorRefSchema.describe(
+      'Exact Core anchor. Last resort for precise positioning; never moved by automatic separation. Mutually exclusive with side.',
+    ),
+    overlap: FlowEndpointOverlapSchema.unwrap().optional(),
+  }),
+]);
+
 export const FlowDefaultsRelationSchema = strictObject({
   ...GraphRelationDefaultsSchema.shape,
+  source: FlowEndpointDefaultsSchema.optional(),
+  target: FlowEndpointDefaultsSchema.optional(),
 }).describe('Sparse Flow Relation defaults using Graph-compatible style and root fields.');
 
 export const FlowDefaultsSchema = strictObject({
@@ -438,8 +480,8 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
   .describe('Invisible Flow Layout with explicit linear or grid placement.');
 
 export const FlowRelationSchema = strictObject({
-  source: NonBlankStringSchema.describe('Authored source Flow element id.'),
-  target: NonBlankStringSchema.describe('Authored target Flow element id.'),
+  source: FlowEndpointSchema.describe('Source Entity or Group with optional connection constraints.'),
+  target: FlowEndpointSchema.describe('Target Entity or Group with optional connection constraints.'),
   label: FlowRelationLabelSchema.optional().describe(
     'Optional compact Core TextBlock or complete GeometryLabel; full objects preserve Core geometry and appearance, including position, sloped, interruption and gap.',
   ),

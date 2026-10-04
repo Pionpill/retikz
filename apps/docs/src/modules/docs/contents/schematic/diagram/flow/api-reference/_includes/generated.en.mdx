@@ -565,11 +565,11 @@ export type FlowLayoutProps = FlowLayoutMarkerProps &
 | `labelTextForeground?` | `string \| number`                                                                                                                                                                    | —       | Relation label text color.                                                                                                                                       |
 | `role?`                | `"flow" \| string & {} \| "association" \| "dependency" \| "generalization" \| "influence"`                                                                                           | —       | Open Graph Relation role; omission resolves to flow.                                                                                                             |
 | `routing?`             | `InputFlowRelation['routing']`                                                                                                                                                        | —       | Relation-local routing override.                                                                                                                                 |
-| `source`               | `string`                                                                                                                                                                              | —       | Authored source Flow element id.                                                                                                                                 |
+| `source`               | `InputFlowRelation['source']`                                                                                                                                                         | —       | Source Entity or Group with optional connection constraints.                                                                                                     |
 | `sourceMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —       | Source marker appearance fields.                                                                                                                                 |
 | `status?`              | `"error" \| "success" \| "warning" \| "disabled"`                                                                                                                                     | —       | Optional closed Graph semantic status.                                                                                                                           |
 | `style?`               | `InputFlowRelation['style']`                                                                                                                                                          | —       | Relation-local path style overrides.                                                                                                                             |
-| `target`               | `string`                                                                                                                                                                              | —       | Authored target Flow element id.                                                                                                                                 |
+| `target`               | `InputFlowRelation['target']`                                                                                                                                                         | —       | Target Entity or Group with optional connection constraints.                                                                                                     |
 | `targetMarker?`        | `{ color?: string \| number \| undefined; opacity?: number \| undefined; lineWidth?: number \| undefined; fill?: string \| number \| undefined; }`                                    | —       | Target marker appearance fields.                                                                                                                                 |
 
 </ApiTable>
@@ -792,7 +792,33 @@ export declare const FlowRelation: {
             tension?: number | undefined;
           }
         | undefined;
-      source: string;
+      source:
+        | string
+        | {
+            id: string;
+            side?: 'top' | 'right' | 'bottom' | 'left' | undefined;
+            overlap?: 'allow' | 'separate' | undefined;
+          }
+        | {
+            id: string;
+            anchor:
+              | number
+              | OpenString<
+                  ValueOf<{
+                    readonly TopRight: 'top-right';
+                    readonly TopLeft: 'top-left';
+                    readonly BottomRight: 'bottom-right';
+                    readonly BottomLeft: 'bottom-left';
+                    readonly Top: 'top';
+                    readonly Right: 'right';
+                    readonly Bottom: 'bottom';
+                    readonly Left: 'left';
+                    readonly Center: 'center';
+                  }>
+                >
+              | { side: 'top' | 'right' | 'bottom' | 'left'; fraction: number };
+            overlap?: 'allow' | 'separate' | undefined;
+          };
       sourceMarker?:
         | {
             color?: string | number | undefined;
@@ -927,7 +953,33 @@ export declare const FlowRelation: {
               | undefined;
           }
         | undefined;
-      target: string;
+      target:
+        | string
+        | {
+            id: string;
+            side?: 'top' | 'right' | 'bottom' | 'left' | undefined;
+            overlap?: 'allow' | 'separate' | undefined;
+          }
+        | {
+            id: string;
+            anchor:
+              | number
+              | OpenString<
+                  ValueOf<{
+                    readonly TopRight: 'top-right';
+                    readonly TopLeft: 'top-left';
+                    readonly BottomRight: 'bottom-right';
+                    readonly BottomLeft: 'bottom-left';
+                    readonly Top: 'top';
+                    readonly Right: 'right';
+                    readonly Bottom: 'bottom';
+                    readonly Left: 'left';
+                    readonly Center: 'center';
+                  }>
+                >
+              | { side: 'top' | 'right' | 'bottom' | 'left'; fraction: number };
+            overlap?: 'allow' | 'separate' | undefined;
+          };
       targetMarker?:
         | {
             color?: string | number | undefined;
@@ -1410,13 +1462,50 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
 
 </DocTabs>
 
+### FlowEndpointTarget
+
+<p>
+  <ApiSourceLink
+    label={'FlowEndpointTarget'}
+    path={'packages/schematic/diagram/src/flow/schemas/flow/types.ts'}
+    startLine={78}
+  >
+    Compiled endpoint target ready for Core consumption
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member    | Type                                                                                                                                                                                                                 | Default | Description                                                       |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| `anchor?` | `number \| "right" \| "left" \| "center" \| string & {} \| "top" \| "bottom" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { side: "right" \| "left" \| "top" \| "bottom"; fraction: number; }` | —       | Resolved Core anchor; omission retains natural boundary clipping. |
+| `id`      | `string`                                                                                                                                                                                                             | —       | Referenced Entity or Group id.                                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowEndpointTarget = ZodInfer<typeof FlowEndpointTargetSchema>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### FlowLayoutDefinition
 
 <p>
   <ApiSourceLink
     label={'FlowLayoutDefinition'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={377}
+    startLine={399}
   >
     Layout definition that synchronously determines Flow element bounds, relation routes, and label reservations
   </ApiSourceLink>
@@ -1456,6 +1545,50 @@ export type FlowLayoutDefinition = Readonly<{
 
 </DocTabs>
 
+### FlowLayoutEndpoint
+
+<p>
+  <ApiSourceLink
+    label={'FlowLayoutEndpoint'}
+    path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
+    startLine={307}
+  >
+    Relation endpoint layout constraints with effective defaults
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member             | Type                     | Default | Description                           |
+| ------------------ | ------------------------ | ------- | ------------------------------------- |
+| `readonly anchor?` | `IRNodeTarget['anchor']` | —       | Authored fixed Core anchor            |
+| `readonly id`      | `string`                 | —       | Target Entity or Group                |
+| `readonly overlap` | `'allow' \| 'separate'`  | —       | Connection point overlap policy       |
+| `readonly side?`   | `SideValue`              | —       | Required side for automatic placement |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type FlowLayoutEndpoint = Readonly<{
+  id: string;
+  overlap: 'allow' | 'separate';
+  side?: SideValue;
+  anchor?: IRNodeTarget['anchor'];
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### FlowLayoutExecutionContext
 
 <p>
@@ -1474,10 +1607,11 @@ export type FlowLayoutDefinition = Readonly<{
 
 <ApiTable>
 
-| Member                        | Type                                                                 | Default | Description                                                                                           |
-| ----------------------------- | -------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| `readonly placeLayout`        | `(input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput`     | —       | Execute authored placement using measured sizes and return container-local bounds and child positions |
-| `readonly resolveRoutePoints` | `(query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>` | —       | Resolve waypoints against real Graph geometry, returning a root-local chain including endpoints       |
+| Member                        | Type                                                                                                                                              | Default | Description                                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `readonly placeLayout`        | `(input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput`                                                                                  | —       | Execute authored placement using measured sizes and return container-local bounds and child positions |
+| `readonly resolveEndpoint`    | `(query: Readonly<{`<br />`target: FlowEndpointTarget;`<br />`elements: ReadonlyArray<FlowLayoutElementOutput>;`<br />`}>) => Readonly<Position>` | —       | Query positioned endpoints against real Core boundaries                                               |
+| `readonly resolveRoutePoints` | `(query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>`                                                                              | —       | Resolve waypoints against real Graph geometry, returning a root-local chain including endpoints       |
 
 </ApiTable>
 
@@ -1487,6 +1621,12 @@ export type FlowLayoutDefinition = Readonly<{
 
 ```ts
 export type FlowLayoutExecutionContext = Readonly<{
+  resolveEndpoint: (
+    query: Readonly<{
+      target: FlowEndpointTarget;
+      elements: ReadonlyArray<FlowLayoutElementOutput>;
+    }>,
+  ) => Readonly<Position>;
   resolveRoutePoints: (query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>;
   placeLayout: (input: FlowLayoutPlacementInput) => FlowLayoutPlacementOutput;
 }>;
@@ -1544,7 +1684,7 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | '
   <ApiSourceLink
     label={'FlowLayoutRelationInput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={303}
+    startLine={319}
   >
     Measured Flow layout relation input
   </ApiSourceLink>
@@ -1562,8 +1702,8 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | '
 | `readonly labelPlacement?` | `FlowLayoutLabelPlacement` | —       | Complete-label geometry; an empty object still requests Core defaults, while compact labels omit this field |
 | `readonly labelSize?`      | `FlowLayoutSize`           | —       | Measured label dimensions; omitted without a label                                                          |
 | `readonly routing`         | `FlowLayoutRouting`        | —       | Relation routing with effective parameters                                                                  |
-| `readonly source`          | `string`                   | —       | Authored id of the source Entity or Group                                                                   |
-| `readonly target`          | `string`                   | —       | Authored id of the target Entity or Group                                                                   |
+| `readonly source`          | `FlowLayoutEndpoint`       | —       | Effective connection constraints for the source Entity or Group                                             |
+| `readonly target`          | `FlowLayoutEndpoint`       | —       | Effective connection constraints for the target Entity or Group                                             |
 
 </ApiTable>
 
@@ -1573,8 +1713,8 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | '
 
 ```ts
 export type FlowLayoutRelationInput = Readonly<{
-  source: string;
-  target: string;
+  source: FlowLayoutEndpoint;
+  target: FlowLayoutEndpoint;
   direction: RelationDirectionValue;
   routing: FlowLayoutRouting;
   labelSize?: FlowLayoutSize;
@@ -1592,7 +1732,7 @@ export type FlowLayoutRelationInput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRelationOutput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={337}
+    startLine={353}
   >
     Layout output for one Flow relation in root coordinates
   </ApiSourceLink>
@@ -1608,6 +1748,8 @@ export type FlowLayoutRelationInput = Readonly<{
 | ----------------------- | ---------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `readonly labelBounds?` | `Readonly<BoundsRect>` | —       | Reserved rectangle in Flow root coordinates, using the rotated AABB for sloped labels; required with a label and omitted otherwise |
 | `readonly route`        | `FlowLayoutRoute`      | —       | Discriminated reference geometry in root coordinates                                                                               |
+| `readonly source`       | `FlowEndpointTarget`   | —       | Assigned source endpoint                                                                                                           |
+| `readonly target`       | `FlowEndpointTarget`   | —       | Assigned target endpoint                                                                                                           |
 
 </ApiTable>
 
@@ -1617,6 +1759,8 @@ export type FlowLayoutRelationInput = Readonly<{
 
 ```ts
 export type FlowLayoutRelationOutput = Readonly<{
+  source: FlowEndpointTarget;
+  target: FlowEndpointTarget;
   route: FlowLayoutRoute;
   labelBounds?: Readonly<BoundsRect>;
 }>;
@@ -1831,7 +1975,7 @@ export type FlowLayoutRouting =
   <ApiSourceLink
     label={'FlowRoutePointsQuery'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={291}
+    startLine={295}
   >
     Real waypoint query within this layout, with no cross-compilation cache
   </ApiSourceLink>
@@ -1847,8 +1991,8 @@ export type FlowLayoutRouting =
 | ------------------- | ---------------------------------------- | ------- | ------------------------------------------------------------ |
 | `readonly elements` | `ReadonlyArray<FlowLayoutElementOutput>` | —       | All root-local element bounds, identical to the final output |
 | `readonly points`   | `ReadonlyArray<IRTarget>`                | —       | Ordered intermediate Targets                                 |
-| `readonly source`   | `string`                                 | —       | Relation source identity                                     |
-| `readonly target`   | `string`                                 | —       | Relation target identity                                     |
+| `readonly source`   | `FlowEndpointTarget`                     | —       | Relation source identity                                     |
+| `readonly target`   | `FlowEndpointTarget`                     | —       | Relation target identity                                     |
 
 </ApiTable>
 
@@ -1859,8 +2003,8 @@ export type FlowLayoutRouting =
 ```ts
 export type FlowRoutePointsQuery = Readonly<{
   elements: ReadonlyArray<FlowLayoutElementOutput>;
-  source: string;
-  target: string;
+  source: FlowEndpointTarget;
+  target: FlowEndpointTarget;
   points: ReadonlyArray<IRTarget>;
 }>;
 ```
@@ -1931,7 +2075,7 @@ export type FlowRoutingCapability =
   <ApiSourceLink
     label={'FlowSmoothRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={281}
+    startLine={285}
   >
     Resolved spline reference knots, retaining valid repeats
   </ApiSourceLink>
@@ -1973,7 +2117,7 @@ export type FlowSmoothRoute = Readonly<{
   <ApiSourceLink
     label={'FlowSmoothRouting'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={271}
+    startLine={275}
   >
     Through-point routing intent with effective tension
   </ApiSourceLink>
@@ -2015,7 +2159,7 @@ export type FlowSmoothRouting = Readonly<{
   <ApiSourceLink
     label={'IRFlowDiagram'}
     path={'packages/schematic/diagram/src/flow/schemas/flow/types.ts'}
-    startLine={72}
+    startLine={73}
   >
     Persistable Source IR for a Flow Diagram
   </ApiSourceLink>
@@ -2069,6 +2213,22 @@ export type IRFlowDiagram = ZodInfer<typeof FlowDiagramSchema>;
 </DocTab>
 
 </DocTabs>
+
+### IRFlowEndpoint
+
+<p>
+  <ApiSourceLink
+    label={'IRFlowEndpoint'}
+    path={'packages/schematic/diagram/src/flow/schemas/flow/types.ts'}
+    startLine={76}
+  >
+    Persistent relation endpoint constraints
+  </ApiSourceLink>
+</p>
+
+```ts
+export type IRFlowEndpoint = ZodInfer<typeof FlowEndpointSchema>;
+```
 
 ### createFlowDiagramProviderContribution
 
@@ -2154,7 +2314,7 @@ export declare const defineFlowLayout: (definition: FlowLayoutDefinition) => Flo
   <ApiSourceLink
     label={'getFlowLayoutCatalog'}
     path={'packages/schematic/diagram/src/flow/providers/layout/registry.ts'}
-    startLine={204}
+    startLine={205}
   >
     Project a stable JSON-safe catalog from the live registry
   </ApiSourceLink>
@@ -2194,7 +2354,7 @@ export declare const getFlowLayoutCatalog: (
   <ApiSourceLink
     label={'routeFlowRelations'}
     path={'packages/schematic/diagram/src/flow/providers/layout/routing.ts'}
-    startLine={111}
+    startLine={107}
   >
     Compute routes and label reservations from complete root-local element bounds without mutating inputs or moving
     elements

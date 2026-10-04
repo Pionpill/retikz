@@ -10,6 +10,13 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '待发布 · 端点选侧与自动等分', en: 'Unreleased · Endpoint sides and automatic spacing' },
+        content: {
+          zh: 'Relation source/target 支持 { id, side?, overlap? } 或固定 anchor；separate 在同侧按 i/(n+1) 分配独立位置，allow 共用位置，固定锚点不移动。BREAKING：自定义布局输入端点改为对象并声明 endpointPlacement，输出及 artifact 的 source/target 改为 { id, anchor? }；用 resolveEndpoint 查询真实边界。自动比例要求形状支持 Core side anchor，当前 polygon 不支持；不保证箭头图形或路径无重叠。',
+          en: 'Relation source/target supports { id, side?, overlap? } or a fixed anchor. Separate endpoints use i/(n+1) slots per side; allow endpoints share a slot and fixed anchors never move. BREAKING: custom layouts consume endpoint objects and declare endpointPlacement; output and artifact endpoints become { id, anchor? }. Use resolveEndpoint for real boundaries. Automatic fractions require Core side-anchor support, currently unavailable for polygon; arrow-shape and route overlap are not prevented.',
+        },
+      },
+      {
         label: { zh: '待发布 · 正交连线自动避让', en: 'Unreleased · Automatic orthogonal avoidance' },
         content: {
           zh: 'orthogonal 省略 turnPosition 时比较中点、四分之一与四分之三候选；显式比例保持不变。全部受阻保留最佳路线并警告，水平或垂直对齐时直接连接，不作避让。同步三入口与文档控件。公开 routeFlowRelations，供自定义布局在最终元素边界上复用内置路由；避让示例支持移动障碍。',

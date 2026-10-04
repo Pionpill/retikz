@@ -29,7 +29,7 @@ export const isFlowAutomaticRouting = (routing: FlowLayoutRouting): boolean =>
 /** 当前关系可见的其他标签，排除尚未求解的自动关系 */
 export const flowPriorLabelReservations = (
   relations: ReadonlyArray<FlowLayoutRelationInput>,
-  outputs: ReadonlyArray<FlowLayoutRelationOutput>,
+  outputs: ReadonlyArray<Omit<FlowLayoutRelationOutput, 'source' | 'target'>>,
   index: number,
 ): Array<Readonly<{ id: string; bounds: Readonly<BoundsRect> }>> =>
   outputs.flatMap((output, otherIndex) =>
@@ -45,7 +45,7 @@ const unavailable = (relation: FlowLayoutRelationInput, relationIndex: number): 
   throw new RetikzDiagramError({
     code: RetikzDiagramErrorCode.FlowBezierRouteUnavailable,
     message: 'Flow Bezier route requires distinct finite endpoint centers and finite controls.',
-    details: { path: ['relations', relationIndex, 'routing'], relatedIds: [relation.source, relation.target] },
+    details: { path: ['relations', relationIndex, 'routing'], relatedIds: [relation.source.id, relation.target.id] },
   });
 };
 
@@ -90,8 +90,8 @@ export const evaluateFlowBezierConflicts = (
       findFlowCurveObstacleIntervals(
         segment,
         obstacle.bounds,
-        obstacle.id === relation.source,
-        obstacle.id === relation.target,
+        obstacle.id === relation.source.id,
+        obstacle.id === relation.target.id,
       ).length > 0
     ) {
       nodes++;
@@ -126,7 +126,7 @@ export const selectFlowBezierRoute = (
   layout: EffectiveFlowLayout,
   obstacles: ReturnType<typeof flowRelationObstacles>,
   labels: ReturnType<typeof flowPriorLabelReservations>,
-): FlowLayoutRelationOutput => {
+): Omit<FlowLayoutRelationOutput, 'source' | 'target'> => {
   const [from, to] = initial.points;
   const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
   const tangent: Position = [(to[0] - from[0]) / length, (to[1] - from[1]) / length];

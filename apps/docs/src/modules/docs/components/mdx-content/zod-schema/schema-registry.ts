@@ -1351,6 +1351,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'FlowLayout',
     url: '/schematic/diagram/flow/schema-reference#flowlayoutschema',
   },
+  FlowEndpointSchema: {
+    schema: DiagramIR.FlowEndpointSchema,
+    label: 'FlowEndpoint',
+    url: '/schematic/diagram/flow/schema-reference#flowendpointschema',
+  },
+  FlowEndpointTargetSchema: {
+    schema: DiagramIR.FlowEndpointTargetSchema,
+    label: 'FlowEndpointTarget',
+    url: '/schematic/diagram/flow/schema-reference#flowendpointtargetschema',
+  },
   FlowRelationSchema: {
     schema: DiagramIR.FlowRelationSchema,
     label: 'FlowRelation',

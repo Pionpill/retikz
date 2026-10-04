@@ -12,6 +12,7 @@ import {
 } from '@retikz/graph';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { FlowLayoutEndpoint } from '../../contract';
 import type {
   IRFlowDefaults,
   IRFlowDiagram,
@@ -20,6 +21,7 @@ import type {
   IRFlowLayout,
   IRFlowRelation,
 } from '../../schemas';
+import { FlowEndpointOverlapSchema } from '../../schemas';
 import { mergeFlowDefaults, mergeFlowLayoutIntent, resolveFlowTheme } from '../theme';
 import type {
   CanonicalFlowDiagram,
@@ -361,14 +363,23 @@ const assertWaypointReferences = (target: IRTarget | string, path: FlowSourcePat
     assertWaypointReferences(target.origin, [...path, 'origin'], state);
 };
 
-const resolveRelationRecord = (source: IRFlowRelation, index: number, state: ResolveState): CanonicalFlowRelation => {
+const resolveRelationRecord = (authored: IRFlowRelation, index: number, state: ResolveState): CanonicalFlowRelation => {
+  const resolveEndpoint = (key: 'source' | 'target'): FlowLayoutEndpoint => {
+    const value = authored[key];
+    const fields = typeof value === 'string' ? { id: value } : value;
+    return {
+      ...fields,
+      overlap: FlowEndpointOverlapSchema.parse(fields.overlap ?? state.defaults.relation?.[key]?.overlap),
+    };
+  };
+  const source = { ...authored, source: resolveEndpoint('source'), target: resolveEndpoint('target') };
   const path: FlowSourcePath = ['relations', index];
   if (source.routing?.kind === 'smooth')
     source.routing.points.forEach((point, pointIndex) =>
       assertWaypointReferences(point, [...path, 'routing', 'points', pointIndex], state),
     );
   for (const endpoint of ['source', 'target'] as const) {
-    const id = source[endpoint];
+    const id = source[endpoint].id;
     if (!state.ids.has(id)) {
       throw new RetikzDiagramError({
         code: RetikzDiagramErrorCode.FlowReferenceNotFound,
@@ -388,8 +399,8 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
   const graph: IRGraphRelation = {
     namespace: 'graph',
     type: GraphType.Relation,
-    source: { id: source.source },
-    target: { id: source.target },
+    source: { id: source.source.id, ...(source.source.anchor === undefined ? {} : { anchor: source.source.anchor }) },
+    target: { id: source.target.id, ...(source.target.anchor === undefined ? {} : { anchor: source.target.anchor }) },
     role: source.role ?? RelationRole.Flow,
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.status === undefined ? {} : { status: source.status }),

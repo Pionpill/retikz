@@ -20,6 +20,7 @@ import {
   isFlowAutomaticRouting,
   flowPriorLabelReservations,
 } from './bezier';
+import { allocateFlowEndpoints, resolveFlowEndpointPosition } from './endpoints';
 import {
   createFlowBendCurve,
   flowBendGeometryFailure,
@@ -28,11 +29,6 @@ import {
   scoreFlowBendNodes,
 } from './geometry';
 import { createFlowOrthogonalCandidates, evaluateFlowOrthogonalConflicts } from './orthogonal';
-
-const centerOf = (bounds: Readonly<BoundsRect>): Position => [
-  bounds.x + bounds.width / 2,
-  bounds.y + bounds.height / 2,
-];
 
 type RoutingIndex = Readonly<{
   scopes: ReadonlyMap<string, ReadonlyArray<string>>;
@@ -113,76 +109,86 @@ export const routeFlowRelations = (
   elements: ReadonlyArray<FlowLayoutElementOutput>,
   context?: FlowLayoutExecutionContext,
 ): ReadonlyArray<FlowLayoutRelationOutput> => {
+  const endpoints = allocateFlowEndpoints(input, elements, context);
   const bounds = new Map(elements.map(element => [element.id, element.bounds]));
   const index = buildRoutingIndex(input.elements);
-  const routed: Array<FlowLayoutRelationOutput> = input.relations.map((relation, relationIndex) => {
-    const sourceBounds = bounds.get(relation.source);
-    const targetBounds = bounds.get(relation.target);
-    if (sourceBounds === undefined || targetBounds === undefined) {
-      return { route: { kind: 'straight', points: [] } };
-    }
-    const source = centerOf(sourceBounds);
-    const target = centerOf(targetBounds);
-    if (relation.routing.kind === 'smooth') {
-      if (context === undefined) return flowBendGeometryFailure(relationIndex, relation, undefined);
-      const route: FlowLayoutRoute = {
-        kind: 'smooth',
-        tension: relation.routing.tension,
-        points: context.resolveRoutePoints({
-          elements,
-          source: relation.source,
-          target: relation.target,
-          points: relation.routing.points,
-        }),
-      };
-      const labelBounds = flowRouteLabelBounds(route, relation);
-      return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
-    }
-    if (relation.routing.kind === 'curve' || relation.routing.kind === 'cubic') {
-      const route = createFlowBezierBaseline(relation.routing, [source, target], relation, relationIndex);
-      const labelBounds = flowRouteLabelBounds(route, relation);
-      return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
-    }
-    if (relation.routing.kind === 'bend') {
-      const route: FlowLayoutRoute =
-        'outAngle' in relation.routing
-          ? { ...relation.routing, points: [source, target] }
-          : {
-              ...relation.routing,
-              bendAngle: relation.routing.bendAngle ?? FLOW_BEND_ANGLES[0],
-              bendDirection: relation.routing.bendDirection ?? 'left',
-              points: [source, target],
-            };
-      try {
-        createFlowBendCurve(route);
+  const routed: Array<Omit<FlowLayoutRelationOutput, 'source' | 'target'>> = input.relations.map(
+    (relation, relationIndex) => {
+      const sourceBounds = bounds.get(relation.source.id);
+      const targetBounds = bounds.get(relation.target.id);
+      if (sourceBounds === undefined || targetBounds === undefined) {
+        return { route: { kind: 'straight', points: [] } };
+      }
+      const source = resolveFlowEndpointPosition(endpoints[relationIndex].source, elements, context);
+      const target = resolveFlowEndpointPosition(endpoints[relationIndex].target, elements, context);
+      if (relation.routing.kind === 'smooth') {
+        if (context === undefined) return flowBendGeometryFailure(relationIndex, relation, undefined);
+        const route: FlowLayoutRoute = {
+          kind: 'smooth',
+          tension: relation.routing.tension,
+          points: context.resolveRoutePoints({
+            elements,
+            source: endpoints[relationIndex].source,
+            target: endpoints[relationIndex].target,
+            points: relation.routing.points,
+          }),
+        };
         const labelBounds = flowRouteLabelBounds(route, relation);
         return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
-      } catch (cause) {
-        return flowBendGeometryFailure(relationIndex, relation, cause);
       }
-    }
-    const points =
-      relation.routing.kind === 'straight'
-        ? [source, target]
-        : relation.routing.kind === FlowRoutingKind.HorizontalThenVertical
-          ? collapsePoints([source, [target[0], source[1]], target])
-          : relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
-            ? collapsePoints([source, [source[0], target[1]], target])
-            : createFlowOrthogonalCandidates(input, elements, relationIndex)[0].points;
-    const route: FlowLayoutRoute = { ...relation.routing, points };
-    const labelBounds =
-      relation.labelPlacement === undefined
-        ? relation.labelSize === undefined
-          ? undefined
-          : labelBoundsFor(points, relation.labelSize)
-        : flowRouteLabelBounds(route, relation);
-    return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
-  });
+      if (relation.routing.kind === 'curve' || relation.routing.kind === 'cubic') {
+        const route = createFlowBezierBaseline(relation.routing, [source, target], relation, relationIndex);
+        const labelBounds = flowRouteLabelBounds(route, relation);
+        return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+      }
+      if (relation.routing.kind === 'bend') {
+        const route: FlowLayoutRoute =
+          'outAngle' in relation.routing
+            ? { ...relation.routing, points: [source, target] }
+            : {
+                ...relation.routing,
+                bendAngle: relation.routing.bendAngle ?? FLOW_BEND_ANGLES[0],
+                bendDirection: relation.routing.bendDirection ?? 'left',
+                points: [source, target],
+              };
+        try {
+          createFlowBendCurve(route);
+          const labelBounds = flowRouteLabelBounds(route, relation);
+          return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+        } catch (cause) {
+          return flowBendGeometryFailure(relationIndex, relation, cause);
+        }
+      }
+      const points =
+        relation.routing.kind === 'straight'
+          ? [source, target]
+          : relation.routing.kind === FlowRoutingKind.HorizontalThenVertical
+            ? collapsePoints([source, [target[0], source[1]], target])
+            : relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
+              ? collapsePoints([source, [source[0], target[1]], target])
+              : createFlowOrthogonalCandidates(input, elements, relationIndex, endpoints[relationIndex], context)[0]
+                  .points;
+      const route: FlowLayoutRoute = { ...relation.routing, points };
+      const labelBounds =
+        relation.labelPlacement === undefined
+          ? relation.labelSize === undefined
+            ? undefined
+            : labelBoundsFor(points, relation.labelSize)
+          : flowRouteLabelBounds(route, relation);
+      return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+    },
+  );
   const isAutomatic = (relation: FlowLayoutRelationInput): boolean => isFlowAutomaticRouting(relation.routing);
   for (const [relationIndex, relation] of input.relations.entries()) {
     const routing = relation.routing;
     if (routing.kind === 'orthogonal') {
-      const candidates = createFlowOrthogonalCandidates(input, elements, relationIndex);
+      const candidates = createFlowOrthogonalCandidates(
+        input,
+        elements,
+        relationIndex,
+        endpoints[relationIndex],
+        context,
+      );
       const first = candidates[0];
       if (first.points.length === 2) continue;
       const obstacles = flowRelationObstacles(input, { elements }, relation);
@@ -204,7 +210,7 @@ export const routeFlowRelations = (
     }
     const initialBezier = routed[relationIndex].route;
     if (isAutomatic(relation) && (initialBezier.kind === 'curve' || initialBezier.kind === 'cubic')) {
-      const scope = commonScope(index.scopes.get(relation.source) ?? [], index.scopes.get(relation.target) ?? []);
+      const scope = commonScope(index.scopes.get(relation.source.id) ?? [], index.scopes.get(relation.target.id) ?? []);
       const scopeLayout = scope === undefined ? input.layout : (index.layouts.get(scope) ?? input.layout);
       routed[relationIndex] = selectFlowBezierRoute(
         initialBezier,
@@ -269,5 +275,5 @@ export const routeFlowRelations = (
       flowBendGeometryFailure(relationIndex, relation, cause);
     }
   }
-  return routed;
+  return routed.map((output, relationIndex) => ({ ...output, ...endpoints[relationIndex] }));
 };

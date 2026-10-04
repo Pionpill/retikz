@@ -24,7 +24,14 @@ const routingInput = (): FlowLayoutInput => ({
     size: { width: 4, height: 4 },
     margin: { top: 0, left: 0, bottom: 0, right: 0 },
   })),
-  relations: [{ source: 'a', target: 'b', direction: 'forward', routing: { kind: 'bend', bendAngle: 60 } }],
+  relations: [
+    {
+      source: { id: 'a', overlap: 'allow' },
+      target: { id: 'b', overlap: 'allow' },
+      direction: 'forward',
+      routing: { kind: 'bend', bendAngle: 60 },
+    },
+  ],
 });
 const routingElements: FlowLayoutOutput['elements'] = [
   { id: 'a', bounds: { x: -2, y: -2, width: 4, height: 4 } },
@@ -126,7 +133,13 @@ describe('Flow bend routing', () => {
     };
     const run = (route: FlowLayoutRoute) =>
       executeFlowLayout(
-        { ...LayeredFlowLayoutDefinition, layout: () => ({ elements: routingElements, relations: [{ route }] }) },
+        {
+          ...LayeredFlowLayoutDefinition,
+          layout: () => ({
+            elements: routingElements,
+            relations: [{ source: { id: 'a' }, target: { id: 'b' }, route }],
+          }),
+        },
         input,
       );
     for (const bendAngle of [30, 45, 60]) {
@@ -580,7 +593,12 @@ describe('Flow bend routing', () => {
       elements: [...input.elements, ...['c', 'd'].map(id => ({ ...input.elements[0], id }))],
       relations: [
         input.relations[0],
-        { source: 'c', target: 'd', direction: 'forward', routing: { kind: 'straight' } },
+        {
+          source: { id: 'c', overlap: 'allow' },
+          target: { id: 'd', overlap: 'allow' },
+          direction: 'forward',
+          routing: { kind: 'straight' },
+        },
       ],
     };
     expect(routeFlowRelations(crossing, elements)[0].route).toMatchObject({ bendDirection: 'left', bendAngle: 60 });
@@ -605,7 +623,13 @@ describe('Flow bend routing', () => {
     };
     const run = (route: FlowLayoutRoute) =>
       executeFlowLayout(
-        { ...LayeredFlowLayoutDefinition, layout: () => ({ elements: routingElements, relations: [{ route }] }) },
+        {
+          ...LayeredFlowLayoutDefinition,
+          layout: () => ({
+            elements: routingElements,
+            relations: [{ source: { id: 'a' }, target: { id: 'b' }, route }],
+          }),
+        },
         explicit,
       );
     expect(run(valid).relations[0].route).toEqual(valid);
@@ -618,7 +642,7 @@ describe('Flow bend routing', () => {
           [200, 0],
         ],
       }),
-    ).toThrow('preserve element centers');
+    ).toThrow('match assigned endpoint positions');
     expect(() => run({ ...valid, bendAngle: 30 })).toThrow('preserve effective input');
   });
 

@@ -107,7 +107,7 @@ it('resolves cursor targets, preserves duplicates and appends the real relation 
     [60, -45],
   ]);
   expect(route.points).toHaveLength(7);
-  expect(artifact.relations[0].target).toBe('b');
+  expect(artifact.relations[0].target).toEqual({ id: 'b' });
   expect(artifact.relations[0].labelReservation).toBeDefined();
   expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
 });
@@ -171,7 +171,7 @@ it('rejects provider mutation of a middle knot', () => {
               index === 1 ? ([point[0] + 1, point[1]] as [number, number]) : point,
             ),
           };
-          return { route, labelBounds: flowRouteLabelBounds(route, input.relations[relationIndex]) };
+          return { ...relation, route, labelBounds: flowRouteLabelBounds(route, input.relations[relationIndex]) };
         }),
       };
     },
@@ -190,8 +190,8 @@ it('detects smooth crossings between safe knots and retains reentry into endpoin
     tension: 1,
   };
   const relation = {
-    source: 'a',
-    target: 'b',
+    source: { id: 'a', overlap: 'allow' as const },
+    target: { id: 'b', overlap: 'allow' as const },
     direction: 'forward' as const,
     routing: { kind: 'smooth' as const, points: [[100, 0]] as Array<[number, number]>, tension: 1 },
   };

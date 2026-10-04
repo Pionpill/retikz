@@ -5,6 +5,7 @@ import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   FlowLayoutDefinition,
   FlowLayoutElementInput,
+  FlowLayoutElementOutput,
   FlowLayoutExecutionContext,
   FlowLayoutInput,
   FlowLayoutOutput,
@@ -13,9 +14,10 @@ import type {
   FlowLayoutRelationInput,
   FlowLayoutRoute,
 } from '../../contract';
-import { createFlowOrthogonalCandidates } from '../../providers';
+import { coincidentFlowEndpoints, resolveFlowEndpointPosition, createFlowOrthogonalCandidates } from '../../providers';
 import { flowBendGeometryFailure, flowRouteLabelBounds } from '../../providers';
-import { FlowRouteArtifactSchema } from '../../schemas';
+import { FlowEndpointTargetSchema, FlowRouteArtifactSchema } from '../../schemas';
+import type { FlowEndpointTarget } from '../../schemas';
 import { FlowRoutingKind } from '../../shared';
 import { FLOW_BEND_ANGLES } from '../../shared/geometry';
 
@@ -99,12 +101,6 @@ const collapsePoints = (points: ReadonlyArray<Position>): ReadonlyArray<Position
 
 const flattenElements = (elements: ReadonlyArray<FlowLayoutElementInput>): ReadonlyArray<FlowLayoutElementInput> =>
   elements.flatMap(element => [element, ...(element.kind === 'leaf' ? [] : flattenElements(element.elements))]);
-
-const containsPoint = (bounds: Readonly<BoundsRect>, point: Readonly<Position>): boolean =>
-  point[0] >= bounds.x &&
-  point[0] <= bounds.x + bounds.width &&
-  point[1] >= bounds.y &&
-  point[1] <= bounds.y + bounds.height;
 
 /** 判断两个有限布局数值是否满足带尺度 epsilon 的小于等于关系 */
 const layoutLessThanOrEqual = (left: number, right: number): boolean =>
@@ -382,10 +378,13 @@ const validateRoute = (
   boundsById: ReadonlyMap<string, Readonly<BoundsRect>>,
   definition: FlowLayoutDefinition,
   relationIndex: number,
+  endpoints: Readonly<{ source: FlowEndpointTarget; target: FlowEndpointTarget }>,
+  elements: ReadonlyArray<FlowLayoutElementOutput>,
+  context: FlowLayoutExecutionContext,
 ): void => {
   const points = route.points;
   const path = ['relations', relationIndex] as const;
-  const relatedIds = [relation.source, relation.target];
+  const relatedIds = [relation.source.id, relation.target.id];
   if (route.kind !== relation.routing.kind)
     invalidOutput(definition, [...path, 'route', 'kind'], 'route kind must match input.', relatedIds);
   for (const [key, value] of Object.entries(relation.routing)) {
@@ -433,8 +432,8 @@ const validateRoute = (
       }
     });
   }
-  const sourceBounds = boundsById.get(relation.source);
-  const targetBounds = boundsById.get(relation.target);
+  const sourceBounds = boundsById.get(relation.source.id);
+  const targetBounds = boundsById.get(relation.target.id);
   if (sourceBounds === undefined || targetBounds === undefined) {
     return invalidOutput(
       definition,
@@ -443,33 +442,41 @@ const validateRoute = (
       relatedIds,
     );
   }
-  if (!containsPoint(sourceBounds, points[0]) || !containsPoint(targetBounds, points.at(-1)!)) {
-    invalidOutput(definition, [...path, 'points'], 'route endpoints must lie inside their element bounds.', relatedIds);
-  }
-  if (route.kind === 'bend' || route.kind === 'curve' || route.kind === 'cubic') {
-    const centers: Array<Position> = [
-      [sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2],
-      [targetBounds.x + targetBounds.width / 2, targetBounds.y + targetBounds.height / 2],
-    ];
-    if (points.some((point, index) => point[0] !== centers[index][0] || point[1] !== centers[index][1]))
-      invalidOutput(
-        definition,
-        [...path, 'route', 'points'],
-        'curve endpoints must preserve element centers.',
-        relatedIds,
-      );
+  const source = resolveFlowEndpointPosition(endpoints.source, elements, context);
+  const target = resolveFlowEndpointPosition(endpoints.target, elements, context);
+  const curve = route.kind === 'bend' || route.kind === 'curve' || route.kind === 'cubic';
+  const matches = (
+    endpoint: FlowEndpointTarget,
+    expected: Readonly<Position>,
+    point: Readonly<Position>,
+    bounds: Readonly<BoundsRect>,
+  ): boolean =>
+    endpoint.anchor !== undefined || curve
+      ? coincidentFlowEndpoints(expected, point)
+      : layoutLessThanOrEqual(bounds.x, point[0]) &&
+        layoutLessThanOrEqual(point[0], bounds.x + bounds.width) &&
+        layoutLessThanOrEqual(bounds.y, point[1]) &&
+        layoutLessThanOrEqual(point[1], bounds.y + bounds.height);
+  if (
+    !matches(endpoints.source, source, points[0], sourceBounds) ||
+    !matches(endpoints.target, target, points.at(-1)!, targetBounds)
+  ) {
+    invalidOutput(
+      definition,
+      [...path, 'route', 'points'],
+      'route endpoints must match assigned endpoint positions.',
+      relatedIds,
+    );
   }
   if (
     relation.routing.kind === FlowRoutingKind.HorizontalThenVertical ||
     relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
   ) {
-    const source: Position = [sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2];
-    const target: Position = [targetBounds.x + targetBounds.width / 2, targetBounds.y + targetBounds.height / 2];
     const corner: Position =
       relation.routing.kind === FlowRoutingKind.HorizontalThenVertical
         ? [target[0], source[1]]
         : [source[0], target[1]];
-    const expected = collapsePoints([source, corner, target]);
+    const expected = collapsePoints([[...source], corner, [...target]]);
     if (
       points.length !== expected.length ||
       points.some((point, index) => point[0] !== expected[index][0] || point[1] !== expected[index][1])
@@ -517,6 +524,7 @@ const normalizeAndValidateOutput = (
   definition: FlowLayoutDefinition,
   input: FlowLayoutInput,
   value: unknown,
+  context: FlowLayoutExecutionContext,
 ): FlowLayoutOutput => {
   if (!isPlainRecord(value) || !hasExactKeys(value, ['elements', 'relations'])) {
     return invalidOutput(definition, [], 'expected a closed output record.');
@@ -549,17 +557,46 @@ const normalizeAndValidateOutput = (
   }
   const relations = value.relations.map((relationValue, index) => {
     const path = ['relations', index] as const;
-    if (!isPlainRecord(relationValue) || !hasExactKeys(relationValue, ['route'], ['labelBounds'])) {
+    if (!isPlainRecord(relationValue) || !hasExactKeys(relationValue, ['source', 'target', 'route'], ['labelBounds'])) {
       return invalidOutput(definition, path, 'expected a closed relation output record.');
     }
     const expected = input.relations[index];
+    const parseEndpoint = (end: 'source' | 'target'): FlowEndpointTarget => {
+      const result = FlowEndpointTargetSchema.safeParse(relationValue[end]);
+      if (!result.success)
+        return invalidOutput(
+          definition,
+          [...path, end],
+          'expected a resolved endpoint target.',
+          undefined,
+          result.error,
+        );
+      const requested = expected[end];
+      const actual = result.data;
+      if (actual.id !== requested.id) invalidOutput(definition, [...path, end], 'endpoint id must match input.');
+      if (
+        requested.anchor !== undefined &&
+        (typeof requested.anchor === 'object'
+          ? typeof actual.anchor !== 'object' ||
+            actual.anchor.side !== requested.anchor.side ||
+            actual.anchor.fraction !== requested.anchor.fraction
+          : actual.anchor !== requested.anchor)
+      )
+        invalidOutput(definition, [...path, end], 'explicit anchor must remain fixed.');
+      if (requested.side !== undefined && (typeof actual.anchor !== 'object' || actual.anchor.side !== requested.side))
+        invalidOutput(definition, [...path, end], 'endpoint must preserve requested side.');
+      if (requested.overlap === 'separate' && actual.anchor === undefined)
+        invalidOutput(definition, [...path, end], 'separate endpoint must have a resolved anchor.');
+      return actual;
+    };
+    const endpoints = { source: parseEndpoint('source'), target: parseEndpoint('target') };
     const parsed = FlowRouteArtifactSchema.safeParse(relationValue.route);
     if (!parsed.success)
       return invalidOutput(
         definition,
         [...path, 'route'],
         'expected a complete discriminated route.',
-        [expected.source, expected.target],
+        [expected.source.id, expected.target.id],
         parsed.error,
       );
     const normalizePoint = (point: Position): Position => [
@@ -580,13 +617,13 @@ const normalizeAndValidateOutput = (
       relationValue.labelBounds === undefined
         ? undefined
         : parseBounds(relationValue.labelBounds, definition, [...path, 'labelBounds']);
-    validateRoute(expected, route, labelBounds, boundsById, definition, index);
+    validateRoute(expected, route, labelBounds, boundsById, definition, index, endpoints, elements, context);
     if (
       route.kind === 'orthogonal' &&
       expected.routing.kind === 'orthogonal' &&
       expected.routing.turnPosition !== undefined
     ) {
-      const candidates = createFlowOrthogonalCandidates(input, elements, index);
+      const candidates = createFlowOrthogonalCandidates(input, elements, index, endpoints, context);
       if (
         !candidates.some(
           candidate =>
@@ -600,10 +637,45 @@ const normalizeAndValidateOutput = (
           definition,
           [...path, 'route', 'points'],
           'orthogonal points must preserve gap fractions, aligned endpoints and feedback lanes.',
-          [expected.source, expected.target],
+          [expected.source.id, expected.target.id],
         );
     }
-    return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+    return { ...endpoints, route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+  });
+  const endpoints = relations.flatMap((relation, index) =>
+    (['source', 'target'] as const).map(end => ({
+      target: relation[end],
+      input: input.relations[index][end],
+      index,
+      end,
+    })),
+  );
+  endpoints.forEach((endpoint, index) => {
+    for (const other of endpoints.slice(0, index)) {
+      if (
+        endpoint.target.id !== other.target.id ||
+        (endpoint.input.overlap !== 'separate' && other.input.overlap !== 'separate')
+      )
+        continue;
+      if (endpoint.target.anchor === undefined || other.target.anchor === undefined)
+        invalidOutput(
+          definition,
+          ['relations', endpoint.index, endpoint.end],
+          'separation requires all incident endpoints to be resolved.',
+        );
+      if (
+        coincidentFlowEndpoints(
+          resolveFlowEndpointPosition(endpoint.target, elements, context),
+          resolveFlowEndpointPosition(other.target, elements, context),
+        )
+      )
+        invalidOutput(
+          definition,
+          ['relations', endpoint.index, endpoint.end],
+          'separate endpoints must not coincide.',
+          [endpoint.target.id],
+        );
+    }
   });
   return { elements, relations };
 };
@@ -622,6 +694,11 @@ export const executeFlowLayout = (
   );
   const placements = new Map<string, PlacementRecord>();
   const executionContext: FlowLayoutExecutionContext = Object.freeze({
+    resolveEndpoint: query => {
+      if (placementContext === undefined)
+        return invalidOutput(definition, ['relations'], 'Endpoint query context is unavailable.');
+      return cloneAndFreezeJson(placementContext.resolveEndpoint(cloneAndFreezeJson(query)));
+    },
     resolveRoutePoints: query => {
       if (placementContext === undefined)
         return invalidOutput(definition, ['relations'], 'Route point query context is unavailable.');
@@ -669,7 +746,8 @@ export const executeFlowLayout = (
       cause instanceof RetikzDiagramError &&
       (cause.code === RetikzDiagramErrorCode.FlowLayoutOutputInvalid ||
         cause.code === RetikzDiagramErrorCode.FlowMaterializationFailed ||
-        cause.code === RetikzDiagramErrorCode.FlowBezierRouteUnavailable)
+        cause.code === RetikzDiagramErrorCode.FlowBezierRouteUnavailable ||
+        cause.code === RetikzDiagramErrorCode.FlowConstraintUnsatisfiable)
     )
       throw cause;
     return callbackFailed(definition, 'layout callback threw.', cause);
@@ -688,15 +766,17 @@ export const executeFlowLayout = (
   } catch (cause) {
     return invalidOutput(definition, [], 'output must contain only JSON-safe plain data.', undefined, cause);
   }
-  const output = cloneAndFreezeJson(normalizeAndValidateOutput(definition, inputSnapshot, detachedOutput));
+  const output = cloneAndFreezeJson(
+    normalizeAndValidateOutput(definition, inputSnapshot, detachedOutput, executionContext),
+  );
   validateRecordedPlacements(definition, inputSnapshot, output, placements);
   for (const [index, relation] of inputSnapshot.relations.entries()) {
     if (relation.routing.kind !== 'smooth') continue;
     const route = output.relations[index].route;
     const expected = executionContext.resolveRoutePoints({
       elements: output.elements,
-      source: relation.source,
-      target: relation.target,
+      source: output.relations[index].source,
+      target: output.relations[index].target,
       points: relation.routing.points,
     });
     if (
@@ -711,7 +791,7 @@ export const executeFlowLayout = (
         definition,
         ['relations', index, 'route'],
         'smooth route must preserve all resolved knots, order and tension.',
-        [relation.source, relation.target],
+        [relation.source.id, relation.target.id],
       );
     }
   }

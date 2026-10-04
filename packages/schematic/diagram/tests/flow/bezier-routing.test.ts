@@ -63,7 +63,9 @@ const inputFor = (routing: FlowLayoutInput['relations'][number]['routing']): Flo
     size: { width: element.bounds.width, height: element.bounds.height },
     margin: { top: 0, bottom: 0, left: 0, right: 0 },
   })),
-  relations: [{ source: 'a', target: 'b', direction: 'forward', routing }],
+  relations: [
+    { source: { id: 'a', overlap: 'allow' }, target: { id: 'b', overlap: 'allow' }, direction: 'forward', routing },
+  ],
 });
 
 describe('Bezier layout', () => {
@@ -100,6 +102,8 @@ describe('Bezier layout', () => {
         elements,
         relations: [
           {
+            source: { id: 'a' },
+            target: { id: 'b' },
             route: {
               kind: 'curve' as const,
               points: [
@@ -121,6 +125,8 @@ describe('Bezier layout', () => {
             elements,
             relations: [
               {
+                source: { id: 'a' },
+                target: { id: 'b' },
                 route: {
                   kind: 'curve',
                   points: [
@@ -279,7 +285,7 @@ it('keeps conflicted explicit controls and distinguishes automatic conflict warn
             control: authored.kind === 'curve' && authored.control !== undefined ? authored.control : points[0],
           };
           const labelBounds = flowRouteLabelBounds(route, input.relations[index]);
-          return { route, ...(labelBounds === undefined ? {} : { labelBounds }) };
+          return { ...relation, route, ...(labelBounds === undefined ? {} : { labelBounds }) };
         }),
       };
     },
@@ -308,7 +314,11 @@ it.each(['curve', 'cubic'] as const)(
     for (const output of scenarios)
       for (const reverse of [false, true]) {
         const input = inputFor(kind === 'curve' ? { kind } : { kind });
-        const relation = { ...input.relations[0], source: reverse ? 'b' : 'a', target: reverse ? 'a' : 'b' };
+        const relation = {
+          ...input.relations[0],
+          source: { id: reverse ? 'b' : 'a', overlap: 'allow' as const },
+          target: { id: reverse ? 'a' : 'b', overlap: 'allow' as const },
+        };
         const route = routeFlowRelations({ ...input, relations: [relation] }, output)[0].route;
         if (route.kind !== 'curve' && route.kind !== 'cubic') throw new Error('Bezier expected');
         expect(

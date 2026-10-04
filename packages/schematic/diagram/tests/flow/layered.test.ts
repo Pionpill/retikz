@@ -30,14 +30,17 @@ const relation = (
   target: string,
   overrides: Partial<FlowLayoutRelationInput> = {},
 ): FlowLayoutRelationInput => ({
-  source,
-  target,
+  source: { id: source, overlap: 'allow' },
+  target: { id: target, overlap: 'allow' },
   direction: 'forward',
   routing: { kind: 'orthogonal', cornerRadius: 6 },
   ...overrides,
 });
 
 const noLayoutContext = {
+  resolveEndpoint: () => {
+    throw new Error('Unexpected endpoint query');
+  },
   resolveRoutePoints: () => {
     throw new Error('Unexpected waypoint query');
   },
@@ -287,6 +290,9 @@ describe('layered Flow layout', () => {
         relations: [relation('source', 'target', { labelSize: { width: 120, height: 12 } })],
       },
       {
+        resolveEndpoint: () => {
+          throw new Error('Unexpected endpoint query');
+        },
         resolveRoutePoints: () => {
           throw new Error('Unexpected waypoint query');
         },
@@ -387,6 +393,9 @@ describe('layered Flow layout', () => {
         relations: [relation('second', 'first')],
       },
       {
+        resolveEndpoint: () => {
+          throw new Error('Unexpected endpoint query');
+        },
         resolveRoutePoints: () => {
           throw new Error('Unexpected waypoint query');
         },

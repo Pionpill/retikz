@@ -120,6 +120,9 @@ describe('Flow Layout bounds contribution', () => {
       name: 'discard-bounds',
       layout: (input, context) =>
         LayeredFlowLayoutDefinition.layout(input, {
+          resolveEndpoint: () => {
+            throw new Error('Unexpected endpoint query');
+          },
           resolveRoutePoints: () => {
             throw new Error('Unexpected waypoint query');
           },

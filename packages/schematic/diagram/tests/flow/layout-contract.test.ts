@@ -16,6 +16,7 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
     cycles: false,
     selfLoops: false,
     parallelRelations: false,
+    endpointPlacement: false,
     relationLabels: false,
     relationDirections: ['forward'],
     routing: [{ kind: 'straight' }],
@@ -38,7 +39,9 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
           element.kind === 'leaf' ? element.size.height : element.kind === 'group' ? element.minimumSize.height : 0,
       },
     })),
-    relations: input.relations.map(() => ({
+    relations: input.relations.map(relation => ({
+      source: { id: relation.source.id },
+      target: { id: relation.target.id },
       route: {
         kind: 'straight',
         points: [

@@ -1,6 +1,6 @@
 ---
 title: Basic usage
-description: Describe entities and relations in a minimal Flow Source to render an automatically arranged logic diagram.
+description: Describe entities and relations in a minimal Flow Source to render an automatically arranged flowchart.
 ---
 
 Flow represents steps as entities and their connections as relations. Runtime layout computes positions. Start with the minimal result, then add groups, routing, or shared styles as needed.
@@ -30,6 +30,29 @@ The form submission flow starts with user input, passes through a frontend form 
   size="md"
   caption="Edit the main text and subtitle to observe per-line styling and block-level typography; role changes the semantic shape, while status changes the Graph Theme appearance."
 />
+
+## Connection sides and automatic separation
+
+To separate connections on one side, set `side` and `overlap: 'separate'` on a relation's `source` or `target`. These settings belong to each relation endpoint, so one node can receive both shared and separate connections.
+
+<ComponentPreview
+  files={['flow-endpoints', 'flow-endpoints.preview.tsx']}
+  defaultSourceFile="flow-endpoints.preview.tsx"
+  size="md"
+  caption="Toggle the three source nodes to see incoming positions redistribute automatically as connections are added or removed."
+/>
+
+Each `separate` endpoint owns one position; automatic `allow` endpoints on the same side share one position. For n positions, fractions are `i / (n + 1)`: 0.5 for one, approximately 0.33 and 0.67 for two, and 0.25, 0.5 and 0.75 for three. Calculations retain full precision. Top/bottom fractions run left to right; left/right fractions run top to bottom. Positions follow the spatial order of opposite nodes.
+
+| Field     | Usage                                                                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `side`    | Set `top`, `right`, `bottom` or `left` only when a particular side is required; omit for automatic selection                              |
+| `overlap` | Defaults to `allow`; `separate` separates connection points, without guaranteeing non-overlapping arrow shapes or crossing-free routes    |
+| `anchor`  | Use last for an exact constraint, such as `{ side: 'left', fraction: 0.4 }`; mutually exclusive with `side` and never moved automatically |
+
+Set diagram defaults with `flowDefaults.relation.source.overlap` and `flowDefaults.relation.target.overlap`. String endpoints inherit these defaults; local `allow` overrides `separate`. Automatic positions avoid fixed anchors when separation is required; conflicting fixed anchors fail explicitly. Unconstrained endpoints retain natural boundary connections.
+
+Automatic side fractions require Core side-anchor support from the underlying shape. Rectangles support it. The current gateway diamond uses polygon geometry, which does not support this query and fails explicitly; use a supported named or angular anchor instead.
 
 ## Connections and routing
 
@@ -108,6 +131,22 @@ This list contains the members used here to declare steps and connections. See t
       type: 'InputFlowEntityLayout',
       description:
         'This page uses align, lineHeight, and maxTextWidth to format the whole text block without changing placement between Flow nodes.',
+    },
+    {
+      name: 'FlowRelation.source',
+      kind: 'property',
+      type: 'IRFlowEndpoint',
+      required: true,
+      description:
+        'Source or target accepts an id string or an endpoint object with id, side / anchor and overlap; side and anchor are mutually exclusive.',
+    },
+    {
+      name: 'FlowRelation.target',
+      kind: 'property',
+      type: 'IRFlowEndpoint',
+      required: true,
+      description:
+        'Source or target accepts an id string or an endpoint object with id, side / anchor and overlap; side and anchor are mutually exclusive.',
     },
     {
       name: 'FlowRelation.routing',

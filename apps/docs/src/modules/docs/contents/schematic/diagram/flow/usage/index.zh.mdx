@@ -1,6 +1,6 @@
 ---
 title: 基础用法
-description: 用最小 Flow Source 描述实体与关系，并生成自动排布的逻辑图。
+description: 用最小 Flow Source 描述实体与关系，并生成自动排布的流程图。
 ---
 
 Flow 用实体表示步骤，用关系表示步骤间的连接，运行时自动计算位置。先看最小结果，再决定是否需要分组、路由或共享样式。
@@ -30,6 +30,29 @@ Flow Source 由下列成员组成。React 组件负责声明这些成员，运�
   size="md"
   caption="编辑主文本和副标题，观察多行文本的逐行样式与块级排版；role 改变语义形状，status 改变 Graph Theme 的状态外观。"
 />
+
+## 连接侧与自动分离
+
+需要多条连线在同一侧分开接入时，在关系的 `source` 或 `target` 上设置 `side` 和 `overlap: 'separate'`。属性属于每个关系端点，因此同一节点可以同时接收允许重合与要求分离的连线。
+
+<ComponentPreview
+  files={['flow-endpoints', 'flow-endpoints.preview.tsx']}
+  defaultSourceFile="flow-endpoints.preview.tsx"
+  size="md"
+  caption="切换左侧三个节点的显示开关，观察对应连线增减时，汇入位置如何自动重新等分。"
+/>
+
+同侧的每个 `separate` 端点独占一个位置；自动 `allow` 端点共用一个位置。共有 n 个位置时，按 `i / (n + 1)` 等分：一个为 0.5，两个约为 0.33、0.67，三个为 0.25、0.5、0.75。内部计算保留完整精度；上下侧从左到右、左右侧从上到下计数。位置按对端节点的空间顺序分配。
+
+| 字段      | 用法                                                                                           |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| `side`    | 仅在必须从某侧进入或离开时设置 `top`、`right`、`bottom` 或 `left`；省略时自动选择              |
+| `overlap` | 默认 `allow`；`separate` 自动分开连接落点，不保证箭头图形不重叠或路径不交叉                    |
+| `anchor`  | 最后才使用的精确约束，如 `{ side: 'left', fraction: 0.4 }`；与 `side` 互斥，自动分配不会移动它 |
+
+全图默认可通过 `flowDefaults.relation.source.overlap` 和 `flowDefaults.relation.target.overlap` 设置；字符串端点同样继承默认，局部 `allow` 可以覆盖 `separate`。指定 `anchor` 后，自动位置会避开需要分离的固定落点；两个固定落点冲突时会报错。没有端点约束时，保留原有自然边界连接。
+
+自动侧边比例要求底层形状支持 Core 的比例锚点。矩形可用；当前 gateway 菱形底层为 polygon，尚不支持该查询，会明确报错，可使用其已支持的命名或角度 anchor。
 
 ## 连线与路由
 
@@ -106,6 +129,20 @@ Flow Source 由下列成员组成。React 组件负责声明这些成员，运�
       kind: 'property',
       type: 'InputFlowEntityLayout',
       description: '本页使用 align、lineHeight 与 maxTextWidth 调整整个文本块的排版，不改变 Flow 节点间的排布。',
+    },
+    {
+      name: 'FlowRelation.source',
+      kind: 'property',
+      type: 'IRFlowEndpoint',
+      required: true,
+      description: '起点或终点可用 id 字符串，或包含 id、side / anchor、overlap 的端点对象；side 与 anchor 互斥。',
+    },
+    {
+      name: 'FlowRelation.target',
+      kind: 'property',
+      type: 'IRFlowEndpoint',
+      required: true,
+      description: '起点或终点可用 id 字符串，或包含 id、side / anchor、overlap 的端点对象；side 与 anchor 互斥。',
     },
     {
       name: 'FlowRelation.routing',

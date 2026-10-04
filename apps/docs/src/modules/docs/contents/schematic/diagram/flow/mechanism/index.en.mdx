@@ -234,7 +234,7 @@ Bezier follows the same generate–check–compare process as bend, but derives 
 
 ### Derive controls from a point on the curve
 
-- **P₀, P₁**: node centers supplied by layout, used as reference endpoints.
+- **P₀, P₁**: reference endpoints supplied by layout: resolved anchor positions when present, otherwise node centers.
 - **Q**: a desired point on the curve, placed on either side of conflicting obstacles.
 - **τ**: the parameter at Q, chosen from `1/4, 1/2, 3/4`; it is not an arc-length fraction.
 - **C / C₁, C₂**: controls that shape the curve; the curve usually does not pass through them.
@@ -288,9 +288,9 @@ The implementation also tries asymmetric `(60°, 30°)` and `(−30°, −60°)`
 
 ### Separate reference routes from final connections
 
-Explicit conflicts emit `FlowBezierObstacleConflict`; an automatic result with conflicts emits `FlowBezierSearchExhausted`. Both retain the route without switching to bend or smooth. Exhaustion means bounded search did not find a clear route, not that none exists. Automatic coincident endpoint centers cannot define a direction and fail with `FlowBezierRouteUnavailable`.
+Explicit conflicts emit `FlowBezierObstacleConflict`; an automatic result with conflicts emits `FlowBezierSearchExhausted`. Both retain the route without switching to bend or smooth. Exhaustion means bounded search did not find a clear route, not that none exists. Automatic coincident reference endpoints cannot define a direction and fail with `FlowBezierRouteUnavailable`.
 
-**Checks and artifacts describe the center reference curve.** Core recomputes endpoints on real node boundaries while preserving controls, then handles arrow shortening and label interruption. The final shape and label position can change. No warning is not a guarantee of pixel-level safety; inspect the rendered drawing.
+**Checks and artifacts describe the reference curve.** Resolved anchors supply exact endpoints; otherwise Core recomputes endpoints on real node boundaries while preserving controls, then handles arrow shortening and label interruption. The final shape and label position can change. No warning is not a guarantee of pixel-level safety; inspect the rendered drawing.
 
 Artifact endpoints, controls and label boxes use full allocation-local coordinates. `regions.drawing.origin` records the actual translation of the Flow root origin. Subtract it from controls in the same compilation artifact before copying them into Relation.routing. The drawing bounds' top-left cannot replace origin, especially with negative curve overflow.
 
@@ -323,6 +323,20 @@ Custom layouts use `context.resolveRoutePoints`. After the callback returns, Flo
   ]}
 />
 
+## Endpoint allocation
+
+Layout input normalizes each relation source/target into an object with id, effective overlap and optional side or anchor. The endpointPlacement capability is checked before the callback. Output retains only `{ id, anchor? }` and never writes back to Source.
+
+The built-in layout collects both ends by element, fixes explicit anchors, then sorts each separate endpoint and one shared allow slot per side. Fractions use i/(n+1) with full precision. Opposite node centers determine tangential order; ties retain relation input order. Automatic slots conflicting with fixed points try the nearest gap midpoint; coincident fixed points requiring separation fail.
+
+The rectangles below share the same side length. Compare one, two and three separate positions without fixed anchors. Blue dots mark connection points; fractions on the left side increase from 0 at the top to 1 at the bottom.
+
+<ComponentPreview files="flow-endpoint-allocation" hideCode type="illustration" size="lg" />
+
+The two-position labels display 0.33 and 0.67, while geometry uses 1/3 and 2/3. Positions count slots: multiple automatic allow endpoints occupy one shared slot.
+
+The context.resolveEndpoint query resolves real Core boundaries from target and elements, rather than replacing shapes with layout rectangles. Routing, Graph materialization and artifacts share the assigned result. Custom layouts must satisfy the same side, fixed-anchor and separation constraints. Separation only guarantees distinct connection points and does not measure arrow sizes.
+
 ## Draw from the layout and save the results
 
 Once positions and connections are determined, Flow passes them to Graph to build the drawing: Entities become nodes, Groups become visible groups, and Layouts use Scopes to preserve their arrangement and hierarchy. Connections follow the layout results, and containment stays the same.
@@ -342,7 +356,7 @@ Using “Receive” as an example, the figure puts its recorded position and siz
   ]}
 />
 
-Layout relations return `{ route, labelBounds? }`. The discriminated route records straight or axis-aligned points, or two bend reference centers and one active parameter family; it does not duplicate controls or samples. Full labels enter layout as `labelSize` plus `labelPlacement`, including an empty projection for Core defaults. Sloped reservations use the rotated measured rectangle AABB.
+Layout relations return `{ source, target, route, labelBounds? }`. The discriminated route records straight or axis-aligned points, or two assigned bend reference endpoints and one active parameter family; it does not duplicate controls or samples. Full labels enter layout as `labelSize` plus `labelPlacement`, including an empty projection for Core defaults. Sloped reservations use the rotated measured rectangle AABB.
 
 Graph/Core then applies boundary clipping, arrow shortening, label interruption and final drawing bounds. Artifact reference routes and reservations translate coordinates only; they are not final clipped strokes or glyph bounds.
 

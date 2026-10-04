@@ -14,6 +14,7 @@ export const LayeredFlowLayoutDefinition: FlowLayoutDefinition = defineFlowLayou
     crossScopeRelations: true,
     cycles: true,
     selfLoops: false,
+    endpointPlacement: true,
     parallelRelations: true,
     relationLabels: true,
     relationDirections: ['none', 'forward', 'reverse', 'both'],

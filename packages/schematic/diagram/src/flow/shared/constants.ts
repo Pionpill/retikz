@@ -50,3 +50,6 @@ export const FlowRoutingKind = {
   /** 从 source 到 target 先垂直后水平 */
   VerticalThenHorizontal: '|-',
 } as const;
+
+/** 同侧连接落点的分配策略 */
+export const FlowEndpointOverlap = { Allow: 'allow', Separate: 'separate' } as const;

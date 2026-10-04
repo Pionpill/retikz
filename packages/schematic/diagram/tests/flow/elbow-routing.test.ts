@@ -25,7 +25,14 @@ const inputFor = (kind: '-|' | '|-'): FlowLayoutInput => ({
     size: { width: 20, height: 20 },
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
   })),
-  relations: [{ source: 'a', target: 'b', direction: 'forward', routing: { kind, cornerRadius: 0 } }],
+  relations: [
+    {
+      source: { id: 'a', overlap: 'allow' },
+      target: { id: 'b', overlap: 'allow' },
+      direction: 'forward',
+      routing: { kind, cornerRadius: 0 },
+    },
+  ],
 });
 
 const elementsAt = (target: Position): FlowLayoutOutput['elements'] => [
@@ -352,7 +359,7 @@ describe('Flow single-elbow routing', () => {
             ...LayeredFlowLayoutDefinition,
             layout: () => ({
               elements: elementsAt([100, 80]),
-              relations: [{ route: { kind, cornerRadius: 0, points } }],
+              relations: [{ source: { id: 'a' }, target: { id: 'b' }, route: { kind, cornerRadius: 0, points } }],
             }),
           },
           inputFor(kind),
@@ -367,6 +374,8 @@ describe('Flow single-elbow routing', () => {
             elements: elementsAt([0, 0]),
             relations: [
               {
+                source: { id: 'a' },
+                target: { id: 'b' },
                 route: {
                   kind: '-|',
                   cornerRadius: 0,

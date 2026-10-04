@@ -38,6 +38,7 @@ const CAPABILITY_KEYS = new Set([
   'crossScopeRelations',
   'cycles',
   'selfLoops',
+  'endpointPlacement',
   'parallelRelations',
   'relationLabels',
   'relationDirections',

@@ -85,8 +85,8 @@ const artifactRelations = (
               }
             : { ...routing, points: routing.points.map(translatePoint) };
     return {
-      source: relation.source.source,
-      target: relation.source.target,
+      source: geometry.source,
+      target: geometry.target,
       route,
       ...(geometry.labelBounds === undefined
         ? {}

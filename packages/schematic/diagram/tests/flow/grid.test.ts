@@ -170,6 +170,9 @@ describe('Flow Grid', () => {
       name: 'observe-grid',
       layout: (input, context) =>
         LayeredFlowLayoutDefinition.layout(input, {
+          resolveEndpoint: () => {
+            throw new Error('Unexpected endpoint query');
+          },
           resolveRoutePoints: () => {
             throw new Error('Unexpected waypoint query');
           },
@@ -192,6 +195,9 @@ describe('Flow Grid', () => {
       name: 'change-cells',
       layout: (input, context) =>
         LayeredFlowLayoutDefinition.layout(input, {
+          resolveEndpoint: () => {
+            throw new Error('Unexpected endpoint query');
+          },
           resolveRoutePoints: () => {
             throw new Error('Unexpected waypoint query');
           },

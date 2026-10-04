@@ -6,13 +6,13 @@
 
 ## 重点功能
 
-| 重点能力    | 目标                                                         | 相关 ADR                                                                                                                                                                                   |
-| ----------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 外层表达    | 统一 Presentation、Frame、间距、外观与 Theme                 | [001](./001-diagram-assembly-presentation.md)、[002](./002-diagram-frame-spacing-appearance.md)、[008](./008-theme-source-fragments.md)                                                    |
-| Flow Source | 声明实体、关系、分组、布局意图与可复用目录                   | [003](./003-flow-source-model.md)、[007](./007-flow-catalog-source-layout-groups.md)、[009](./009-flow-graph-rules.md)、[014](./014-flow-group-graph-surface.md)                           |
-| 布局        | 建立开放布局接入，支持网格、边界计算与节点宽度               | [004](./004-flow-layout-definition-registry.md)、[010](./010-flow-grid-layout.md)、[012](./012-flow-layout-bounds.md)、[013](./013-flow-item-width.md)                                     |
-| 路由        | 支持正交折线、bend、贝塞尔有界自动 / 显式路由与过点曲线      | [011](./011-flow-elbow-routing.md)、[015](./015-flow-bend-routing.md)、[016](./016-flow-bezier-routing.md)、[017](./017-flow-smooth-routing.md)、[018](./018-flow-orthogonal-avoidance.md) |
-| 结果与绘图  | 编排布局结果和 artifact，复用 Graph materialization 与富文本 | [005](./005-flow-orchestration-result-artifact.md)、[006](./006-flow-entity-rich-text.md)                                                                                                  |
+| 重点能力    | 目标                                                         | 相关 ADR                                                                                                                                                                                                                            |
+| ----------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 外层表达    | 统一 Presentation、Frame、间距、外观与 Theme                 | [001](./001-diagram-assembly-presentation.md)、[002](./002-diagram-frame-spacing-appearance.md)、[008](./008-theme-source-fragments.md)                                                                                             |
+| Flow Source | 声明实体、关系、分组、布局意图与可复用目录                   | [003](./003-flow-source-model.md)、[007](./007-flow-catalog-source-layout-groups.md)、[009](./009-flow-graph-rules.md)、[014](./014-flow-group-graph-surface.md)                                                                    |
+| 布局        | 建立开放布局接入，支持网格、边界计算与节点宽度               | [004](./004-flow-layout-definition-registry.md)、[010](./010-flow-grid-layout.md)、[012](./012-flow-layout-bounds.md)、[013](./013-flow-item-width.md)                                                                              |
+| 路由        | 支持折线与曲线路由、端点选侧及自动分离                       | [011](./011-flow-elbow-routing.md)、[015](./015-flow-bend-routing.md)、[016](./016-flow-bezier-routing.md)、[017](./017-flow-smooth-routing.md)、[018](./018-flow-orthogonal-avoidance.md)、[019](./019-flow-endpoint-placement.md) |
+| 结果与绘图  | 编排布局结果和 artifact，复用 Graph materialization 与富文本 | [005](./005-flow-orchestration-result-artifact.md)、[006](./006-flow-entity-rich-text.md)                                                                                                                                           |
 
 ## 功能规划
 
@@ -75,6 +75,7 @@
 规划内容：
 
 - 提供正交折线路由及其 Flow 接入。
+- 支持 Relation 两端独立选择连接侧与自动分离，复用 Core 锚点精确定位，并让布局结果与实际绘制一致。
 - 提供可自动选侧的 bend、具有有界自动生成与显式配置的二次 / 三次贝塞尔，以及完整配置的过点曲线。
 - 常规曲线优先 bend；贝塞尔用于更灵活的局部自动或显式绕行，过点曲线用于多个有序绕行位置；不把有限搜索或曲线表达等同于完整自动避障。
 - 保持路径生成与关系语义分工，绘制继续消费下层 Path 能力。

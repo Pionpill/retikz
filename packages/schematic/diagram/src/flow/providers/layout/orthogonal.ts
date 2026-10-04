@@ -1,6 +1,7 @@
 import type { BoundsRect, Position } from '@retikz/math';
 import { DEFAULT_EPSILON } from '@retikz/math';
 
+import type { FlowLayoutExecutionContext } from '../../contract';
 import type {
   EffectiveFlowLayout,
   FlowLayoutInput,
@@ -9,6 +10,8 @@ import type {
   FlowLayoutRelationInput,
 } from '../../contract';
 import { doFlowBoundsOverlap } from '../../shared/geometry';
+import type { FlowRelationEndpoints } from './endpoints';
+import { resolveFlowEndpointPosition } from './endpoints';
 import type { flowRelationObstacles } from './geometry';
 import { flowRouteLabelBounds } from './geometry';
 
@@ -20,15 +23,21 @@ export const createFlowOrthogonalCandidates = (
   input: FlowLayoutInput,
   elements: FlowLayoutOutput['elements'],
   relationIndex: number,
+  endpoints?: FlowRelationEndpoints,
+  context?: FlowLayoutExecutionContext,
 ): Array<OrthogonalRoute> => {
   const relation = input.relations[relationIndex];
   if (relation.routing.kind !== 'orthogonal') return [];
   const routing = relation.routing;
   const bounds = new Map(elements.map(element => [element.id, element.bounds]));
-  const sourceBounds = bounds.get(relation.source)!,
-    targetBounds = bounds.get(relation.target)!;
-  const source: Position = [sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2];
-  const target: Position = [targetBounds.x + targetBounds.width / 2, targetBounds.y + targetBounds.height / 2];
+  const sourceBounds = bounds.get(relation.source.id)!,
+    targetBounds = bounds.get(relation.target.id)!;
+  const source: Position = [
+    ...resolveFlowEndpointPosition(endpoints?.source ?? { id: relation.source.id }, elements, context),
+  ];
+  const target: Position = [
+    ...resolveFlowEndpointPosition(endpoints?.target ?? { id: relation.target.id }, elements, context),
+  ];
   const route = (points: Array<Position>): OrthogonalRoute => ({
     ...routing,
     kind: 'orthogonal',
@@ -47,8 +56,8 @@ export const createFlowOrthogonalCandidates = (
   };
   visit(input.elements, []);
   let layout = input.layout;
-  const sourcePath = paths.get(relation.source) ?? [],
-    targetPath = paths.get(relation.target) ?? [];
+  const sourcePath = paths.get(relation.source.id) ?? [],
+    targetPath = paths.get(relation.target.id) ?? [];
   for (
     let index = 0;
     index < Math.min(sourcePath.length, targetPath.length) && sourcePath[index] === targetPath[index];
@@ -65,8 +74,8 @@ export const createFlowOrthogonalCandidates = (
     .map((other, index) => ({ other, index }))
     .filter(
       ({ other }) =>
-        (other.source === relation.source && other.target === relation.target) ||
-        (other.source === relation.target && other.target === relation.source),
+        (other.source.id === relation.source.id && other.target.id === relation.target.id) ||
+        (other.source.id === relation.target.id && other.target.id === relation.source.id),
     );
   const laneOffset = (pair.findIndex(entry => entry.index === relationIndex) - (pair.length - 1) / 2) * 12;
   const position = (middle: number): OrthogonalRoute =>
@@ -165,8 +174,8 @@ export const evaluateFlowOrthogonalConflicts = (
     const intervals = obstacleIntervals(
       route.points,
       obstacle.bounds,
-      obstacle.id === relation.source,
-      obstacle.id === relation.target,
+      obstacle.id === relation.source.id,
+      obstacle.id === relation.target.id,
     );
     if (intervals.length > 0) nodes++;
     penetration += intervals.reduce((total, [start, end]) => total + end - start, 0);

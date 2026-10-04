@@ -112,16 +112,16 @@ const materializeRelation = (
       : undefined;
   return {
     ...relation.graph,
-    source: { id: relation.source.source },
-    target: { id: relation.source.target },
+    source: output.source,
+    target: output.target,
     route: [
-      { type: 'step', kind: 'move', to: { id: relation.source.source } },
+      { type: 'step', kind: 'move', to: output.source },
       ...(routing.kind === 'smooth'
         ? [
             {
               type: 'step' as const,
               kind: 'smooth' as const,
-              points: [...innerPoints.map(point => [point[0], point[1]] as Position), { id: relation.source.target }],
+              points: [...innerPoints.map(point => [point[0], point[1]] as Position), output.target],
               tension: routing.tension,
             },
           ]
@@ -130,7 +130,7 @@ const materializeRelation = (
               {
                 type: 'step' as const,
                 kind: 'curve' as const,
-                to: { id: relation.source.target },
+                to: output.target,
                 control: [...routing.control] as [number, number],
               },
             ]
@@ -139,20 +139,20 @@ const materializeRelation = (
                 {
                   type: 'step' as const,
                   kind: 'cubic' as const,
-                  to: { id: relation.source.target },
+                  to: output.target,
                   control1: [...routing.control1] as [number, number],
                   control2: [...routing.control2] as [number, number],
                 },
               ]
             : bend !== undefined
-              ? [{ type: 'step' as const, kind: 'bend' as const, to: { id: relation.source.target }, ...bend }]
+              ? [{ type: 'step' as const, kind: 'bend' as const, to: output.target, ...bend }]
               : [
                   ...innerPoints.map(point => ({
                     type: 'step' as const,
                     kind: 'line' as const,
                     to: [point[0], point[1]] as [number, number],
                   })),
-                  { type: 'step' as const, kind: 'line' as const, to: { id: relation.source.target } },
+                  { type: 'step' as const, kind: 'line' as const, to: output.target },
                 ]),
     ],
     ...('cornerRadius' in routing && routing.cornerRadius > 0 ? { roundedCorners: routing.cornerRadius } : {}),

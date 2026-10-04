@@ -1,8 +1,8 @@
-import type { IRGeometryLabel, IRTarget } from '@retikz/core';
+import type { IRGeometryLabel, IRTarget, IRNodeTarget, SideValue } from '@retikz/core';
 import type { RelationDirectionValue } from '@retikz/graph';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
-import type { IRFlowLayout } from '../../schemas';
+import type { IRFlowLayout, FlowEndpointTarget } from '../../schemas';
 import type {
   FlowDirectionValue,
   FlowLayoutAlignmentValue,
@@ -261,6 +261,10 @@ export type FlowLayoutPlacementOutput = Readonly<{
 
 /** Flow Layout Definition 调用作者 placement 的同步执行边界 */
 export type FlowLayoutExecutionContext = Readonly<{
+  /** 以真实 Core 边界查询布局后的端点 */
+  resolveEndpoint: (
+    query: Readonly<{ target: FlowEndpointTarget; elements: ReadonlyArray<FlowLayoutElementOutput> }>,
+  ) => Readonly<Position>;
   /** 用真实 Graph 几何解析经过点，返回包含首尾的根局部点列 */
   resolveRoutePoints: (query: FlowRoutePointsQuery) => ReadonlyArray<Readonly<Position>>;
   /** 按已测量尺寸执行作者的固定排列，返回容器局部坐标中的边界和子项位置 */
@@ -292,19 +296,31 @@ export type FlowRoutePointsQuery = Readonly<{
   /** 与最终输出一致的全部根局部元素矩形 */
   elements: ReadonlyArray<FlowLayoutElementOutput>;
   /** 关系起点身份 */
-  source: string;
+  source: FlowEndpointTarget;
   /** 关系终点身份 */
-  target: string;
+  target: FlowEndpointTarget;
   /** 有序中间目标 */
   points: ReadonlyArray<IRTarget>;
 }>;
 
+/** 已补全默认的关系端点布局约束 */
+export type FlowLayoutEndpoint = Readonly<{
+  /** 目标 Entity 或 Group */
+  id: string;
+  /** 同侧落点许可 */
+  overlap: 'allow' | 'separate';
+  /** 自动分配的指定侧 */
+  side?: SideValue;
+  /** 作者固定的 Core 锚点 */
+  anchor?: IRNodeTarget['anchor'];
+}>;
+
 /** Flow layout relation 输入 */
 export type FlowLayoutRelationInput = Readonly<{
-  /** 起点 Entity 或 Group 的作者 id */
-  source: string;
-  /** 终点 Entity 或 Group 的作者 id */
-  target: string;
+  /** 起点 Entity 或 Group 的有效连接约束 */
+  source: FlowLayoutEndpoint;
+  /** 终点 Entity 或 Group 的有效连接约束 */
+  target: FlowLayoutEndpoint;
   /** 已解析的语义箭头方向 */
   direction: RelationDirectionValue;
   /** 已补全参数的关系路由 */
@@ -335,6 +351,10 @@ export type FlowLayoutElementOutput = Readonly<{
 
 /** 一条 Flow relation 的根坐标系布局输出 */
 export type FlowLayoutRelationOutput = Readonly<{
+  /** 已分配起点 */
+  source: FlowEndpointTarget;
+  /** 已分配终点 */
+  target: FlowEndpointTarget;
   /** 根坐标系中的有判别参考几何 */
   route: FlowLayoutRoute;
   /** 标签在 Flow 根坐标系中的预留矩形，倾斜标签使用旋转后的 AABB；有标签时必须提供，无标签时必须省略 */
@@ -363,6 +383,8 @@ export type FlowLayoutCapabilities = Readonly<{
   cycles: boolean;
   /** 是否支持起点与终点相同的关系 */
   selfLoops: boolean;
+  /** 支持端点选侧、固定锚点与自动分离 */
+  endpointPlacement: boolean;
   /** 是否支持相同起点和终点之间的多条关系 */
   parallelRelations: boolean;
   /** 是否支持关系标签的空间预留 */

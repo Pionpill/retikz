@@ -61,7 +61,7 @@ Prefer bend for simple curves. When its finite candidates are insufficient, use 
 
 Providing only one cubic control is rejected. Root and Group defaults cannot use Bezier routing. Controls use Flow root coordinates and usually do not lie on the curve. Subtract `regions.drawing.origin` when copying controls from an artifact. Layout changes do not move explicit controls.
 
-Automatic quadratics/cubics propose at most 13/49 candidates; collision checks bisect at most 8 levels. Candidates compare node-conflict count, label-conflict count, curve length, then lateral deviation, using each criterion only to break ties in the previous one. Penetration depth is not compared. If every candidate conflicts, the best finite route is retained with `FlowBezierSearchExhausted`. Checks concern the center reference curve; Core boundary connections can change its shape, so inspect the final drawing. See [automatic Bezier avoidance](/schematic/diagram/flow/mechanism#automatic-bezier-avoidance) for details.
+Automatic quadratics/cubics propose at most 13/49 candidates; collision checks bisect at most 8 levels. Candidates compare node-conflict count, label-conflict count, curve length, then lateral deviation, using each criterion only to break ties in the previous one. Penetration depth is not compared. If every candidate conflicts, the best finite route is retained with `FlowBezierSearchExhausted`. Checks concern the reference curve (using centers when anchors are absent); Core boundary connections can change its shape, so inspect the final drawing. See [automatic Bezier avoidance](/schematic/diagram/flow/mechanism#automatic-bezier-avoidance) for details.
 
 ### Through-point curves
 

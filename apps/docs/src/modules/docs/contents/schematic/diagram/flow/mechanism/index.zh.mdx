@@ -214,7 +214,7 @@ Flow 会检查布局结果是否完整、实体的大小是否与测量结果一
 
 ### 从经过点反求控制点
 
-- **P₀、P₁**：布局给出的两个节点中心，是参考曲线端点。
+- **P₀、P₁**：布局给出的两个参考端点：确定 anchor 时使用真实锚点，否则使用节点中心。
 - **Q**：希望曲线经过的绕行位置，取自冲突障碍包络的两侧。
 - **τ**：到达 Q 的曲线参数位置，候选为 `1/4、1/2、3/4`，不是弧长比例。
 - **C / C₁、C₂**：决定弯曲的控制点，曲线通常不经过它们。
@@ -266,9 +266,9 @@ Flow 会检查布局结果是否完整、实体的大小是否与测量结果一
 
 ### 参考路线与最终连接分开理解
 
-显式冲突发出 `FlowBezierObstacleConflict`，自动结果仍冲突则发出 `FlowBezierSearchExhausted`；两者都保留路线，不切换 bend 或 smooth。后者只表示有限搜索没有找到通过检测的路线，不表示不存在可行路线。自动模式端点中心重合、无法建立方向时，以 `FlowBezierRouteUnavailable` 失败。
+显式冲突发出 `FlowBezierObstacleConflict`，自动结果仍冲突则发出 `FlowBezierSearchExhausted`；两者都保留路线，不切换 bend 或 smooth。后者只表示有限搜索没有找到通过检测的路线，不表示不存在可行路线。自动模式参考端点重合、无法建立方向时，以 `FlowBezierRouteUnavailable` 失败。
 
-**检测和 artifact 记录的是中心参考曲线。** Core 按节点真实边界重新确定曲线首尾并保留控制点，之后还处理箭头缩短、标签中断；最终曲线形状和标签位置可能变化。没有 warning 不等于最终像素安全，仍需检查实际绘图。
+**检测和 artifact 记录的是参考曲线。** 有确定 anchor 时直接使用真实锚点；否则 Core 按节点真实边界重新确定曲线首尾并保留控制点，之后还处理箭头缩短、标签中断；最终曲线形状和标签位置可能变化。没有 warning 不等于最终像素安全，仍需检查实际绘图。
 
 artifact 中端点、控制点、标签盒统一处于完整 allocation-local 坐标；`regions.drawing.origin` 记录 Flow 根原点的实际平移。从同一次编译结果复制控制点时先减去 origin，再填回 Relation.routing。drawing 包围盒左上角不能代替 origin，尤其是曲线向负坐标溢出时。
 
@@ -301,6 +301,20 @@ smooth 的点是曲线必须经过的位置，不是贝塞尔控制点。图中�
   ]}
 />
 
+## 端点分配
+
+Relation 的 source/target 在布局输入中统一为含 id、有效 overlap 与可选 side 或 anchor 的对象。`endpointPlacement` 能力在布局回调前检查。布局输出只保留 `{ id, anchor? }`，不回写 Source。
+
+内置布局按同一元素汇总两端，先固定显式 anchor，再按侧把每个 separate 端点与一个 allow 共享槽排序，以 i/(n+1) 分配完整精度比例。顺序按对端中心的切向投影确定，同分保持关系输入顺序。固定点冲突时，自动槽尝试最近的空隙中点；固定点之间要求分离却重合则失败。
+
+下图保持矩形侧边长度不变，对照没有固定锚点、全部要求分离时的 1、2、3 个位置。蓝点是连接落点，左侧比例从上方 0 向下方 1 增加。
+
+<ComponentPreview files="flow-endpoint-allocation" hideCode type="illustration" size="lg" />
+
+两个位置的标签显示为 0.33 和 0.67，实际几何使用 1/3 和 2/3；位置数按槽位计算，多个自动 allow 端点只占一个共享槽。
+
+真实位置通过 `context.resolveEndpoint({ target, elements })` 查询 Core 边界，形状不会被布局矩形代替。所有路由、Graph 物化和 artifact 使用同一分配结果；自定义布局也须满足侧边、固定锚点与分离约束。分离约束只保证连接点不同，不测量箭头尺寸。
+
 ## 按布局绘图并保存结果
 
 位置和连线确定后，Flow 会把它们交给 Graph 来生成图形：实体绘制成节点，Group 绘制成分组，Layout 用 Scope 保留排列和层级。连线也按布局结果绘制，原来的包含关系保持不变。
@@ -320,7 +334,7 @@ smooth 的点是曲线必须经过的位置，不是贝塞尔控制点。图中�
   ]}
 />
 
-布局关系输出统一使用 `{ route, labelBounds? }`。`route.kind` 区分直线、三类轴对齐路线、bend 与二次/三次贝塞尔；bend 只保存两个中心参考端点和一个有效参数族，不保存重复的控制点或采样点。完整标签通过 `labelSize` 与 `labelPlacement` 进入布局，空几何投影仍使用 Core 默认；倾斜标签预留盒是旋转文字盒的 AABB。
+布局关系输出统一使用 `{ source, target, route, labelBounds? }`。`route.kind` 区分直线、三类轴对齐路线、bend 与二次/三次贝塞尔；bend 只保存两个已分配参考端点和一个有效参数族，不保存重复的控制点或采样点。完整标签通过 `labelSize` 与 `labelPlacement` 进入布局，空几何投影仍使用 Core 默认；倾斜标签预留盒是旋转文字盒的 AABB。
 
 Graph/Core 随后负责端点边界、箭头缩短、标签断线与最终绘制包络。artifact 的 route 和预留盒只平移坐标，不是最终裁剪后的描边或 glyph bounds。
 

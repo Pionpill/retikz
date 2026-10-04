@@ -885,3 +885,42 @@ it('preserves automatic, explicit Bezier and smooth routing through all authorin
     expected,
   );
 });
+
+it('keeps endpoint constraints and sparse defaults equal across React, Vanilla and JSON', () => {
+  const entities = [
+    { id: 'a', text: 'A' },
+    { id: 'b', text: 'B' },
+  ];
+  const relations = [
+    { source: { id: 'a', side: 'right' as const }, target: { id: 'b', overlap: 'separate' as const } },
+  ];
+  const flowDefaults = { relation: { source: { overlap: 'separate' as const } } };
+  const input = createInputScene(
+    <FlowReact.FlowDiagram flowDefaults={flowDefaults}>
+      <FlowReact.FlowEntities items={entities} />
+      <FlowReact.FlowRelations items={relations} />
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const vanilla = normalizeFlowDiagram({
+    entities,
+    relations,
+    flowDefaults,
+    groups: [],
+    layouts: [],
+    children: ['a', 'b'],
+  });
+  const direct = FlowDiagramSchema.parse({
+    namespace: 'diagram',
+    type: 'flow',
+    entities,
+    relations,
+    flowDefaults,
+    groups: [],
+    layouts: [],
+    children: ['a', 'b'],
+  });
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
+  expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
+  expect(direct.relations).toEqual(relations);
+});

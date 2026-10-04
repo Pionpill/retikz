@@ -18,7 +18,14 @@ const input = (): FlowLayoutInput => ({
     size: { width: 20, height: 20 },
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
   })),
-  relations: [{ source: 'a', target: 'b', direction: 'forward', routing: { kind: 'orthogonal', cornerRadius: 8 } }],
+  relations: [
+    {
+      source: { id: 'a', overlap: 'allow' },
+      target: { id: 'b', overlap: 'allow' },
+      direction: 'forward',
+      routing: { kind: 'orthogonal', cornerRadius: 8 },
+    },
+  ],
 });
 const elements: FlowLayoutOutput['elements'] = [
   { id: 'a', bounds: { x: 0, y: 0, width: 20, height: 20 } },
@@ -187,6 +194,8 @@ it('rejects a provider that echoes a locked fraction but returns another lane', 
       elements,
       relations: [
         {
+          source: { id: 'a' },
+          target: { id: 'b' },
           route: {
             kind: 'orthogonal' as const,
             cornerRadius: 8,

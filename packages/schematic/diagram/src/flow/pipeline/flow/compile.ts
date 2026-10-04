@@ -88,7 +88,9 @@ const drawingFailureContext = (
   if (diagram.relations.length > 0) {
     return {
       path: diagram.relations.length === 1 ? diagram.relations[0].path : [],
-      relatedIds: [...new Set(diagram.relations.flatMap(relation => [relation.source.source, relation.source.target]))],
+      relatedIds: [
+        ...new Set(diagram.relations.flatMap(relation => [relation.source.source.id, relation.source.target.id])),
+      ],
     };
   }
   const elements = (
@@ -119,6 +121,32 @@ export const createCompileFlowDiagram =
     const measurement = measureFlowDiagram(diagram, context, definition, options.graph);
     const output = executeFlowLayout(definition, measurement.input, {
       ...createFlowLayoutExecutionContext(context, measurement.input),
+      resolveEndpoint: query => {
+        try {
+          return context.resolvePathTargets({
+            child: {
+              type: 'scope',
+              localNamespace: true,
+              ...(source.transforms === undefined ? {} : { transforms: source.transforms }),
+              children: [materializeFlowElements(measurement, query.elements)],
+            },
+            source: query.target,
+            points: [],
+          }).source;
+        } catch (cause) {
+          const relationIndex = measurement.input.relations.findIndex(
+            relation => relation.source.id === query.target.id || relation.target.id === query.target.id,
+          );
+          const end =
+            relationIndex >= 0 && measurement.input.relations[relationIndex].source.id === query.target.id
+              ? 'source'
+              : 'target';
+          return materializationFailure(definition.name, 'materialize', 'Endpoint boundary query failed.', cause, {
+            path: relationIndex < 0 ? [] : ['relations', relationIndex, end],
+            relatedIds: [query.target.id],
+          });
+        }
+      },
       resolveRoutePoints: query => {
         try {
           const resolved = context.resolvePathTargets({
@@ -128,15 +156,15 @@ export const createCompileFlowDiagram =
               localNamespace: true,
               children: [materializeFlowElements(measurement, query.elements)],
             },
-            source: { id: query.source },
-            points: [...query.points, { id: query.target }],
+            source: query.source,
+            points: [...query.points, query.target],
           });
           return [resolved.source, ...resolved.points];
         } catch (cause) {
           const index = measurement.input.relations.findIndex(
             relation =>
-              relation.source === query.source &&
-              relation.target === query.target &&
+              relation.source.id === query.source.id &&
+              relation.target.id === query.target.id &&
               relation.routing.kind === 'smooth' &&
               JSON.stringify(relation.routing.points) === JSON.stringify(query.points),
           );
@@ -152,7 +180,7 @@ export const createCompileFlowDiagram =
                   : pointIndex === query.points.length
                     ? ['relations', index, 'target']
                     : ['relations', index, 'routing', 'points', ...(pointIndex === undefined ? [] : [pointIndex])],
-            relatedIds: [query.source, query.target],
+            relatedIds: [query.source.id, query.target.id],
           });
         }
       },

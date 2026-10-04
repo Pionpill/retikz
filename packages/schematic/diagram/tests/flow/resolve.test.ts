@@ -360,7 +360,7 @@ describe('Flow Source resolve', () => {
       ],
     });
 
-    expect(resolved.relations.map(relation => [relation.source.source, relation.source.target])).toEqual([
+    expect(resolved.relations.map(relation => [relation.source.source.id, relation.source.target.id])).toEqual([
       ['a', 'a'],
       ['a', 'b'],
       ['a', 'b'],

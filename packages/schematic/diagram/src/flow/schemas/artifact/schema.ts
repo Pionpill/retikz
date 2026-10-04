@@ -13,6 +13,7 @@ import type { infer as ZodInfer, ZodType } from 'zod';
 import { array, discriminatedUnion, lazy, literal, strictObject, union, tuple, enum as zodEnum } from 'zod';
 
 import { FlowRoutingKind } from '../../shared';
+import { FlowEndpointTargetSchema } from '../flow';
 import { FlowOrthogonalRoutingSchema } from '../flow';
 
 export const FlowArtifactBoundsSchema = strictObject({
@@ -125,8 +126,8 @@ export const FlowRouteArtifactSchema = union([
 );
 
 export const FlowRelationArtifactSchema = strictObject({
-  source: NonBlankStringSchema.describe('Authored source Flow element identity.'),
-  target: NonBlankStringSchema.describe('Authored target Flow element identity.'),
+  source: FlowEndpointTargetSchema.describe('Authored source Flow element identity.'),
+  target: FlowEndpointTargetSchema.describe('Authored target Flow element identity.'),
   route: FlowRouteArtifactSchema.describe('Final relation route in Flow-local coordinates.'),
   labelReservation: LayoutArtifactRectSchema.optional().describe('Optional reserved label rectangle.'),
 }).describe('Final renderer-neutral geometry for one authored Flow Relation.');

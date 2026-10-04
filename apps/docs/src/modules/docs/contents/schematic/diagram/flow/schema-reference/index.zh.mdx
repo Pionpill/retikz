@@ -116,6 +116,21 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
   }}
 />
 
+## FlowEndpointSchema
+
+关系端点接受 id 字符串或对象。`side` 只指定侧，`overlap: 'separate'` 自动等分；`anchor` 固定精确位置且与 `side` 互斥。
+
+<ZodSchema name="FlowEndpointSchema" />
+
+## FlowEndpointTargetSchema
+
+布局结果中的端点，只保留身份和已确定锚点。
+
+<ZodSchema
+  name="FlowEndpointTargetSchema"
+  descriptions={{ id: '引用的 Entity 或 Group id', anchor: '已确定的 Core 锚点；省略时保留自然边界裁剪' }}
+/>
+
 ## FlowRelationSchema
 
 <ZodSchema
@@ -123,8 +138,8 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
   description="连接 Flow 实体或分组的根级关系记录"
   shallow
   descriptions={{
-    source: '起点 Entity 或 Group 的作者 id',
-    target: '终点 Entity 或 Group 的作者 id',
+    source: '起点 Entity 或 Group：id 字符串或含 id、side / anchor、overlap 的端点对象',
+    target: '终点 Entity 或 Group：id 字符串或含 id、side / anchor、overlap 的端点对象',
     label: '非空 TextBlock，或保留 Core 全部几何与外观字段的 GeometryLabel',
     role: 'Graph Relation 的开放角色，省略使用 flow',
     kind: '当前 role 下的稳定子类型',
@@ -187,7 +202,7 @@ Source 省略由布局计算的位置和路径。运行时选择的 Definition �
     layout: 'Flow 自动排布的稀疏间距默认值',
     entity: 'Entity 样式和文字布局的稀疏默认值',
     group: 'Group 外壳与标题格式的稀疏默认值',
-    relation: 'Relation 路径、marker 与标签格式的稀疏默认值',
+    relation: 'Relation 路径、marker、标签格式以及 source/target.overlap 的稀疏默认值',
   }}
 />
 

@@ -64,8 +64,8 @@ export const flowSmoothConflicts = (
       }
       return intervals.some(
         ([start, end]) =>
-          !(obstacle.id === relation.source && start === 0) &&
-          !(obstacle.id === relation.target && end === segments.length),
+          !(obstacle.id === relation.source.id && start === 0) &&
+          !(obstacle.id === relation.target.id && end === segments.length),
       );
     })
     .map(obstacle => obstacle.id);
@@ -138,7 +138,8 @@ export const flowRelationObstacles = (
   const ancestors = new Set<string>();
   const visitAncestors = (elements: ReadonlyArray<FlowLayoutElementInput>, path: ReadonlyArray<string>): void => {
     for (const element of elements) {
-      if (element.id === relation.source || element.id === relation.target) for (const id of path) ancestors.add(id);
+      if (element.id === relation.source.id || element.id === relation.target.id)
+        for (const id of path) ancestors.add(id);
       if (element.kind !== 'leaf') visitAncestors(element.elements, [...path, element.id]);
     }
   };
@@ -181,8 +182,8 @@ export const scoreFlowBendNodes = (
     const intervals = findFlowCurveObstacleIntervals(
       segment,
       obstacle.bounds,
-      obstacle.id === relation.source,
-      obstacle.id === relation.target,
+      obstacle.id === relation.source.id,
+      obstacle.id === relation.target.id,
     );
     if (intervals.length > 0) count += 1;
     span += intervals.reduce((total, [start, end]) => total + end - start, 0);
@@ -202,7 +203,7 @@ export const flowBendGeometryFailure = (
     details: {
       stage: 'materialize',
       path: ['relations', relationIndex],
-      relatedIds: [relation.source, relation.target],
+      relatedIds: [relation.source.id, relation.target.id],
     },
     cause,
   });

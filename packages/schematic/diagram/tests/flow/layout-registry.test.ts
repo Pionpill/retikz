@@ -20,6 +20,7 @@ const customDefinition = (name = 'custom'): FlowLayoutDefinition =>
       cycles: false,
       selfLoops: false,
       parallelRelations: false,
+      endpointPlacement: false,
       relationLabels: false,
       relationDirections: ['forward'],
       routing: [{ kind: 'straight' }],

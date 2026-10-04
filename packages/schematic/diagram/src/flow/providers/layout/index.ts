@@ -5,3 +5,5 @@ export * from './layered';
 export * from './orthogonal';
 export * from './registry';
 export * from './routing';
+
+export * from './endpoints';

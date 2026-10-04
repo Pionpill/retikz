@@ -1,5 +1,20 @@
 /** Flow API 页经人工核对的英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '以真实 Core 边界查询布局后的端点': 'Query positioned endpoints against real Core boundaries',
+  已补全默认的关系端点布局约束: 'Relation endpoint layout constraints with effective defaults',
+  持久化关系端点约束: 'Persistent relation endpoint constraints',
+  '编译结果中可直接交给 Core 的端点目标': 'Compiled endpoint target ready for Core consumption',
+
+  '起点 Entity 或 Group 的有效连接约束': 'Effective connection constraints for the source Entity or Group',
+  '终点 Entity 或 Group 的有效连接约束': 'Effective connection constraints for the target Entity or Group',
+  已分配起点: 'Assigned source endpoint',
+  已分配终点: 'Assigned target endpoint',
+  '支持端点选侧、固定锚点与自动分离': 'Supports side selection, fixed anchors and automatic endpoint separation',
+  '目标 Entity 或 Group': 'Target Entity or Group',
+  同侧落点许可: 'Connection point overlap policy',
+  自动分配的指定侧: 'Required side for automatic placement',
+  '作者固定的 Core 锚点': 'Authored fixed Core anchor',
+
   '基于完整的根局部元素边界计算关系路线和标签预留，不改变输入或元素位置':
     'Compute routes and label reservations from complete root-local element bounds without mutating inputs or moving elements',
   '已测量的布局输入，关系输出保持输入顺序': 'Measured layout input; relation outputs retain input order',
