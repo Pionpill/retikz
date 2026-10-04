@@ -23,5 +23,3 @@ export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries'
         dataExpand?: input<typeof MapSchema>['dataExpand'];
       }
   );
-/** Map 类型化工厂输入 */
-export type MapInput = IRMap;

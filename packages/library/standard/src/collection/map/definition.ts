@@ -4,6 +4,7 @@ import { defineComposite } from '@retikz/core';
 import { compileMap } from './pipeline';
 import { MapSchema } from './schema';
 import type { IRMap } from './schema';
+
 /** Standard Map 的布局感知 Definition */
 export const MapDefinition: LayoutCompositeDefinition<IRMap, 'standard', 'map'> = defineComposite({
   namespace: 'standard',

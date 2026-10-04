@@ -43,5 +43,3 @@ export type IRList = Omit<
         dataExpand?: input<typeof ListSchema>['dataExpand'];
       }
   );
-/** List 类型化工厂输入 */
-export type ListInput = IRList;
