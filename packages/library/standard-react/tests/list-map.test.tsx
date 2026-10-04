@@ -1,4 +1,5 @@
 import { createInputScene, Node } from '@retikz/react';
+import { StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
 import { list, map, ListInputEmbedAdapter, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -276,16 +277,23 @@ it('passes mixed JSON data through React and Vanilla with identical contribution
   );
 });
 
-it('passes the data object text display mode through React and Vanilla without changing Source data', () => {
+it.each([false, [], ['map'], ['list']] as const)('preserves data expansion %j through React and Vanilla', selection => {
+  const dataExpand = typeof selection === 'boolean' ? selection : [...selection];
   const data = [{ a: 1 }, [{ b: true }]];
-  const reactInput = createInputScene(<List data={data} dataObjectDisplay="text" />);
-  const vanillaInput = scene({ children: [list({ data, dataObjectDisplay: 'text' })] });
+  const reactInput = createInputScene(
+    <>
+      <List data={data} dataExpand={dataExpand} />
+      <Map data={{ value: data }} dataExpand={dataExpand} />
+    </>,
+  );
+  const vanillaInput = scene({ children: [list({ data, dataExpand }), map({ data: { value: data }, dataExpand })] });
   const react = normalizeScene(reactInput.scene, { adapters: reactInput.adapters });
-  const vanilla = normalizeScene(vanillaInput, { adapters: [ListInputEmbedAdapter] });
+  const vanilla = normalizeScene(vanillaInput, { adapters: StandardInputEmbedAdapters });
   expect(react.ir).toEqual(vanilla.ir);
-  expect(react.ir.children[0]).toMatchObject({ data, dataObjectDisplay: 'text' });
+  expect(react.ir.children[0]).toMatchObject({ data, dataExpand });
+  expect(react.ir.children[1]).toMatchObject({ data: { value: data }, dataExpand });
   expect(renderToSvgString(reactInput.scene, { adapters: reactInput.adapters })).toEqual(
-    renderToSvgString(vanillaInput, { adapters: [ListInputEmbedAdapter] }),
+    renderToSvgString(vanillaInput, { adapters: StandardInputEmbedAdapters }),
   );
 });
 

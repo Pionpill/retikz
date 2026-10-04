@@ -194,9 +194,18 @@ Wrap multiple drawings in one `Scope` before putting them in a cell. React data 
 
 ### Display JSON data directly
 
-`data` accepts a JSON object, and the root object always remains a Map. Nonempty object values become nested Maps by default; set `dataObjectDisplay="text"` to render those values as compact JSON text. Nested arrays still become Lists and inherit this option. It applies only to `data`, not `entries` or JSX composition. The example uses text mode.
+`data` accepts a JSON object. `dataExpand` controls nested objects and arrays and defaults to `true`. It preserves the outer Map structure and applies only to `data`, not explicit cells or JSX composition.
 
-<ComponentPreview files="map-data" />
+| Setting                               | Nested objects | Nested arrays |
+| ------------------------------------- | -------------- | ------------- |
+| `true` (default) or `['map', 'list']` | Map            | List          |
+| `false` or `[]`                       | JSON text      | JSON text     |
+| `['map']`                             | Map            | JSON text     |
+| `['list']`                            | JSON text      | List          |
+
+Generated components recursively use the same selection. A structure displayed as text retains its entire subtree as compact JSON and stops expanding. Empty objects and arrays always appear as `{}` and `[]`. Selection order and duplicates do not affect the result. The example starts with arrays only; switch between the four modes.
+
+<ComponentPreview files={['map-data', 'map-data.preview.tsx']} defaultSourceFile="map-data.preview.tsx" />
 
 Object keys are displayed as plain text; string values use quoted, escaped JSON literals, distinguishing `"null"` from `null`. Numbers, booleans, and null retain their literal forms. Nested empty objects and arrays appear as `{}` and `[]`; an empty root has zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use Map `entries` for custom ordering or repeated keys.
 

@@ -3,7 +3,7 @@ import { List } from '@retikz/standard-react/collection';
 
 /** 图形参数 */
 export type ListDataPreviewValues = {
-  dataObjectDisplay: 'map' | 'text';
+  dataExpand: 'all' | 'none' | 'map' | 'list';
 };
 
 /** 绘制示例图形 */
@@ -11,7 +11,7 @@ export const renderListDataPreview = (values: ListDataPreviewValues) => (
   <Layout>
     <List
       data={['a', 'a', null, { ready: false }, [1, { active: true }]]}
-      dataObjectDisplay={values.dataObjectDisplay}
+      dataExpand={values.dataExpand === 'all' ? true : values.dataExpand === 'none' ? false : [values.dataExpand]}
       layout={{ width: 'content' }}
     />
   </Layout>

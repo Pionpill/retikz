@@ -19,7 +19,7 @@ describe('JSON data presentation', () => {
       namespace: 'standard',
       type: 'list',
       data: [{ a: 1, nested: { b: true } }, [{ c: 'x' }], {}],
-      dataObjectDisplay: 'text',
+      dataExpand: ['list'],
     };
     const before = JSON.stringify(source);
     const result = compile(source);
@@ -36,7 +36,7 @@ describe('JSON data presentation', () => {
       namespace: 'standard',
       type: 'map',
       data: { record: { a: 1 }, values: [{ b: 2 }] },
-      dataObjectDisplay: 'text',
+      dataExpand: ['list'],
     });
     expect(
       flat(result.scene.primitives)
@@ -44,6 +44,66 @@ describe('JSON data presentation', () => {
         .flatMap(node => node.lines.map(line => line.text)),
     ).toEqual(['record', '{"a":1}', 'values', '{"b":2}']);
   });
+  it.each([
+    { dataExpand: true, texts: ['a', '1', '2', 'b', '3'] },
+    { dataExpand: false, texts: ['{"a":[1]}', '[2,{"b":3}]'] },
+    { dataExpand: [], texts: ['{"a":[1]}', '[2,{"b":3}]'] },
+    { dataExpand: ['map'], texts: ['a', '[1]', '[2,{"b":3}]'] },
+    { dataExpand: ['list'], texts: ['{"a":[1]}', '2', '{"b":3}'] },
+    { dataExpand: ['map', 'list'], texts: ['a', '1', '2', 'b', '3'] },
+  ])('selects nested components for $dataExpand and stops at text subtrees', ({ dataExpand, texts }) => {
+    for (const width of ['auto', 'content']) {
+      const source = {
+        namespace: 'standard',
+        type: 'list',
+        id: 'values',
+        cellIdMode: 'index',
+        data: [{ a: [1] }, [2, { b: 3 }]],
+        dataExpand,
+        layout: { width },
+      };
+      const before = JSON.stringify(source);
+      const result = compile(source);
+      expect(
+        flat(result.scene.primitives)
+          .filter(node => node.type === 'text')
+          .flatMap(node => node.lines.map(line => line.text)),
+      ).toEqual(texts);
+      expect(result.spatialHandles.entries.filter(entry => entry.role === 'list-cell').map(entry => entry.id)).toEqual([
+        'cell:values-0',
+        'cell:values-1',
+      ]);
+      expect(JSON.stringify(source)).toBe(before);
+    }
+    const result = compile({
+      namespace: 'standard',
+      type: 'map',
+      data: { first: { a: [1] }, second: [2, { b: 3 }] },
+      dataExpand,
+    });
+    const rendered = flat(result.scene.primitives)
+      .filter(node => node.type === 'text')
+      .flatMap(node => node.lines.map(line => line.text));
+    expect(rendered.filter(text => text !== 'first' && text !== 'second')).toEqual(texts);
+    expect(rendered.filter(text => text === 'first' || text === 'second')).toEqual(['first', 'second']);
+  });
+
+  it('treats component choices as a set and leaves empty structures as text', () => {
+    const source = { namespace: 'standard', type: 'list', data: [{ a: [1] }, [2], {}, []] };
+    const expected = compile(source).scene;
+    for (const dataExpand of [true, ['map', 'list'], ['list', 'map', 'list']]) {
+      expect(compile({ ...source, dataExpand }).scene).toEqual(expected);
+    }
+    for (const dataExpand of [true, false, [], ['map'], ['list']]) {
+      const result = compile({ ...source, data: [{}, [], '', null, false, 0], dataExpand });
+      expect(
+        flat(result.scene.primitives)
+          .filter(node => node.type === 'text')
+          .flatMap(node => node.lines.map(line => line.text)),
+      ).toEqual(['{}', '[]', '""', 'null', 'false', '0']);
+    }
+  });
+
   it('preserves compact JSON Source through parsing and rejects mixed or missing inputs', () => {
     const data = {
       id: 'a',

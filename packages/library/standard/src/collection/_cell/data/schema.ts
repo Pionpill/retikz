@@ -1,7 +1,7 @@
-import { enum as zodEnum } from 'zod';
+import { array, boolean, enum as zodEnum, union } from 'zod';
 
-import { DataObjectDisplay } from './constants';
+import { DataExpandComponent } from './constants';
 
-export const DataObjectDisplaySchema = zodEnum(DataObjectDisplay)
-  .default(DataObjectDisplay.Map)
-  .describe('How nonempty object values in JSON data are displayed recursively.');
+export const DataExpandSchema = union([boolean(), array(zodEnum(DataExpandComponent))])
+  .default(true)
+  .describe('Expand nested nonempty JSON structures: true for all, false for text, or selected map/list components.');

@@ -14,7 +14,7 @@ import {
 } from '@retikz/foundation';
 import { array, boolean, enum as zodEnum, literal, never, strictObject, string, union } from 'zod';
 
-import { DataObjectDisplaySchema } from '../../_cell/data';
+import { DataExpandSchema } from '../../_cell/data';
 import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
 import { ListCellIdMode, ListDirection, ListIndexPosition } from '../constants';
 
@@ -80,7 +80,7 @@ export const ListSchema = union([
   ListBaseSchema.required({ items: true })
     .extend({
       data: never().optional().describe('Not accepted in this input branch.'),
-      dataObjectDisplay: never().optional().describe('Not accepted in this input branch.'),
+      dataExpand: never().optional().describe('Not accepted in this input branch.'),
     })
     .superRefine((node, context) => {
       if (node.cellIdMode === ListCellIdMode.Index && node.id === undefined) {
@@ -120,7 +120,7 @@ export const ListSchema = union([
   ListBaseSchema.required({ data: true })
     .extend({
       items: never().optional().describe('Not accepted in this input branch.'),
-      dataObjectDisplay: DataObjectDisplaySchema,
+      dataExpand: DataExpandSchema,
     })
     .superRefine((node, context) => {
       if (node.cellIdMode === ListCellIdMode.String)

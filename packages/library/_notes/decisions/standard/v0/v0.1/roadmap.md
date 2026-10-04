@@ -10,7 +10,7 @@
 | ------------------ | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 开放接入           | 官方与自定义能力通过 Definition 直接接入   | [021](./021-direct-definition-loading.md)、[023](./023-core-minimal-builtins-and-standard-provider-entrypoints.md)                                                                  |
 | 通用呈现           | 提供 Grid、Axes、Frame 与 Legend           | [001](./001-grid-composite.md)、[002](./002-axes-composite.md)、[003](./003-frame-composite.md)、[014](./014-generic-legend.md)                                                     |
-| Schema 原子组合      | 全包组合优先，保留各 owner 的领域契约       | [035](./035-path-schema-atomic-reuse.md)                                                                                                                                            |
+| Schema 原子组合    | 全包组合优先，保留各 owner 的领域契约      | [035](./035-path-schema-atomic-reuse.md)                                                                                                                                            |
 | Surface 与内容组合 | 让面板承载任意已有绘图内容                 | [015](./015-presentation-composite-reuse.md)、[022](./022-arbitrary-child-surface.md)                                                                                               |
 | 图形与端点         | 补齐可选 Shape、Ribbon、Clip 与端点 Marker | [024](./024-ribbon-as-standard-path-kind.md)、[025](./025-sector-shape-unification.md)、[027](./027-single-clip-definition.md)、[028](./028-diagram-shapes-and-endpoint-markers.md) |
 | 所有权收敛         | 排版布局归 Layout，关系图语义归 Graph      | —                                                                                                                                                                                   |
@@ -56,6 +56,7 @@ Core 保留基础预设和通用轨道工具，Standard 提供生长、循环与
 
 - 提供 Grid、Axes、Frame 与已解析的 Legend 呈现。
 - 提供可引用单元格的一维 List 与键值 Map 呈现，复用 Layout 与 Surface；见 [ADR-030](./030-list-map-presentation.md)。
+- 统一选择嵌套对象与数组的组件展开或 JSON 文本呈现；见 [036](./036-nested-data-expansion.md)。
 - 保留领域包的数据信息所有权，只接收通用绘图输入。
 
 预期效果：

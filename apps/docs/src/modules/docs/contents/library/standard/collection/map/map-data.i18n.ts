@@ -1,7 +1,7 @@
 import type { Lang } from '@/i18n';
 
 /** JSON 数据展开的双语面板文案 */
-export const listDataI18n = {
+export const mapDataI18n = {
   zh: {
     title: '嵌套数据展开',
     dataExpand: '展开结构',

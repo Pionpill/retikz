@@ -1,11 +1,11 @@
 import type { ValueOf } from '@retikz/foundation';
 
-/** JSON data 中非空对象值的展示方式 */
-export const DataObjectDisplay = {
+/** JSON data 中可按结构类型展开的组件 */
+export const DataExpandComponent = {
   /** 递归展示为 Map */
   Map: 'map',
-  /** 在当前单元格显示紧凑 JSON 文本 */
-  Text: 'text',
+  /** 递归展示为 List */
+  List: 'list',
 } as const;
 
-export type DataObjectDisplayValue = ValueOf<typeof DataObjectDisplay>;
+export type DataExpandComponentValue = ValueOf<typeof DataExpandComponent>;

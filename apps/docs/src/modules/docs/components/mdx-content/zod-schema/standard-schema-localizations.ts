@@ -116,7 +116,7 @@ const pageLocalizations = {
       '/union/0/field/"items"/array/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
       '/union/0/field/"items"/array/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
       '/union/0/field/"data"': '此分支禁止 data',
-      '/union/0/field/"dataObjectDisplay"': '此分支禁止 dataObjectDisplay',
+      '/union/0/field/"dataExpand"': '此分支禁止 dataExpand',
       '/union/0/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
       '/union/0/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/0/field/"style"/field/"stroke"': '描边颜色或绘制对象',
@@ -173,8 +173,8 @@ const pageLocalizations = {
         '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
       '/union/1/field/"items"': '此分支禁止显式单元格',
       '/union/1/field/"data"': '递归展示 JSON 数组，默认不推导单元格 id',
-      '/union/1/field/"dataObjectDisplay"':
-        '非空对象值的展示方式：map 递归绘制，text 显示紧凑 JSON 文本；默认 map，嵌套数组继承此设置',
+      '/union/1/field/"dataExpand"':
+        '嵌套非空 JSON 结构的展开选择：true 全部展开，false 全部显示文本，数组选择 map / list；默认 true',
       '/union/1/field/"cellIdMode"': '身份来源：explicit 默认不生成 id，index 由 List id 与零基下标生成；禁止 string',
       '/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
       '/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
@@ -307,7 +307,7 @@ const pageLocalizations = {
       '/union/0/field/"entries"/array/field/"value"/union/1/field/"layout"/field/"overflow"':
         '保留视觉溢出或裁切到单元格分配区域',
       '/union/0/field/"data"': '此分支禁止 data',
-      '/union/0/field/"dataObjectDisplay"': '此分支禁止 dataObjectDisplay',
+      '/union/0/field/"dataExpand"': '此分支禁止 dataExpand',
       '/union/0/field/"style"': '共同单元格样式及键值角色覆盖',
       '/union/0/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
       '/union/0/field/"style"/field/"stroke"': '描边颜色或绘制对象',
@@ -397,7 +397,7 @@ const pageLocalizations = {
         '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
       '/union/1/field/"entries"': '此分支禁止显式单元格',
       '/union/1/field/"data"': '递归展示 JSON 对象，不推导单元格 id',
-      '/union/1/field/"dataObjectDisplay"':
+      '/union/1/field/"dataExpand"':
         '非空对象值的展示方式：map 递归绘制，text 显示紧凑 JSON 文本；默认 map，根对象仍是 Map',
       '/union/1/field/"style"': '共同单元格样式及键值角色覆盖',
       '/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',

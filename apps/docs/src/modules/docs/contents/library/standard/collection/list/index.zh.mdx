@@ -216,7 +216,16 @@ List
 
 ### 直接展示 JSON 数据
 
-`data` 接受 JSON 数组。数组递归画成 List；非空对象默认递归画成 Map。若只想显示对象原文，设置 `dataObjectDisplay="text"`，对象值会显示为紧凑的 JSON 文本，例如 `{ "ready": false }` 显示为 `{"ready":false}`。该选项传递到嵌套数组，仅用于 `data`，不适用于 `items` 或 JSX 组合。下例使用文本模式，并用 `layout.width: 'content'` 让外层与自动生成的内层 List 都按各格内容定宽。
+`data` 接受 JSON 数组。`dataExpand` 控制嵌套对象和数组的展示方式，默认 `true`；它不改变外层 List 的结构，只用于 `data`，不适用于显式单元格或 JSX 组合。
+
+| 配置                               | 嵌套对象  | 嵌套数组  |
+| ---------------------------------- | --------- | --------- |
+| `true`（默认）或 `['map', 'list']` | Map       | List      |
+| `false` 或 `[]`                    | JSON 文本 | JSON 文本 |
+| `['map']`                          | Map       | JSON 文本 |
+| `['list']`                         | JSON 文本 | List      |
+
+展开的子组件递归沿用同一选择；结构转为文本后，其整个子树都保留在紧凑 JSON 文本中，不再继续展开。空对象与空数组始终显示为 `{}` 和 `[]`。数组选项的顺序和重复项不影响结果。下例默认仅展开数组，可切换四种展示方式。 `layout.width: 'content'` 让自动生成的 List 按各格内容定宽。
 
 <ComponentPreview files={['list-data', 'list-data.preview.tsx']} size="xs" defaultSourceFile="list-data.preview.tsx" />
 
