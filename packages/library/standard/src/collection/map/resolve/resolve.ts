@@ -3,6 +3,7 @@ import { resolveCell } from '../../_cell/resolve';
 import type { IRMap } from '../schema';
 import { MapLayoutSchema } from '../schema';
 import type { CanonicalMap } from './types';
+
 /** 解析 Map 的间距简写和键值角色，不改写稀疏 Source */
 export const resolveMap = (source: IRMap): CanonicalMap => {
   const { data, entries, dataExpand, ...input } = source;

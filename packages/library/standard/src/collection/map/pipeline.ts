@@ -15,8 +15,14 @@ export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext):
   const measured = entries
     .flatMap(entry => [entry.key, entry.value])
     .map((cell, index) => measureCell(cell, context, index, scope));
-  const keyWidth = Math.max(...measured.filter((_, index) => index % 2 === 0).map(cell => cell.width));
-  const valueWidth = Math.max(...measured.filter((_, index) => index % 2 === 1).map(cell => cell.width));
+  const { keyWidth, valueWidth } = measured.reduce(
+    (widths, cell, index) => {
+      if (index % 2 === 0) widths.keyWidth = Math.max(widths.keyWidth, cell.width);
+      else widths.valueWidth = Math.max(widths.valueWidth, cell.width);
+      return widths;
+    },
+    { keyWidth: 0, valueWidth: 0 },
+  );
   const cells: Array<CellPlacement> = [];
   let y = 0;
   for (let index = 0; index < entries.length; index++) {

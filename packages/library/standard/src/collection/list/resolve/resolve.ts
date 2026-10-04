@@ -4,6 +4,7 @@ import { ListCellIdMode } from '../constants';
 import type { IRList } from '../schema';
 import { ListIndexOptionsSchema, ListLayoutSchema } from '../schema';
 import type { CanonicalList } from './types';
+
 /** 解析 List 的结构默认与每格样式，不改写稀疏 Source */
 export const resolveList = (source: IRList): CanonicalList => {
   const { data, items, cellIdMode, dataExpand, ...input } = source;
