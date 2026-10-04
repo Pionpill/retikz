@@ -14,21 +14,21 @@ type CellWithLayout<TLayout extends CellLayoutSource> = Omit<IRCell, 'layout'> &
 export type CellProps<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
   CellWithLayout<TLayout>,
   'content'
-> & { content: string };
+> & { content?: string };
 
 /** 组合单元格的文本与 drawable 内容互斥 */
 export type CellMarkerProps<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
   CellWithLayout<TLayout>,
   'content'
 > &
-  ({ text: string; children?: never } | { text?: never; children: ReactNode });
+  ({ text?: string; children?: never } | { text?: never; children: ReactNode });
 
 /** 收集后的内部单元格，字符串由 Vanilla 统一归一 */
 export type DrawableCell<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
   CellWithLayout<TLayout>,
   'content'
 > & {
-  content: ReactNode;
+  content?: ReactNode;
 };
 
 /** 拒绝脱离直属容器的 marker 与非法 JSX 组合 */
@@ -71,6 +71,11 @@ export const createCellsInput = <TLayout extends CellLayoutSource>(
 ) => {
   const adapters: Array<AnyInputEmbedAdapter> = [];
   const inputs: Array<InputCell<CellWithLayout<TLayout>>> = cells.map((cell, index) => {
+    if (cell.content === undefined) {
+      const { content, ...empty } = cell;
+      void content;
+      return empty;
+    }
     if (typeof cell.content === 'string') return { ...cell, content: cell.content };
     const collected = createInputScene(cell.content, { embedIdPrefix: `${context.id}:cell:${index}` });
     const children = collected.scene.children;

@@ -4,7 +4,7 @@
 
 #### Map / MapProps
 
-- `Map`：<ApiSourceLink label={"Map"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={54}>Standard Map 呈现组件</ApiSourceLink>
+- `Map`：<ApiSourceLink label={"Map"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={58}>Standard Map 呈现组件</ApiSourceLink>
 - `MapProps`：<ApiSourceLink label={"MapProps"} path={"packages/library/standard-react/src/collection/map/Map.tsx"} startLine={14}>Map 的 React authoring 属性；键值角色覆盖统一位于 style.key/value 与 layout.key/value</ApiSourceLink>
 
 ```ts
@@ -12,15 +12,17 @@ export declare const Map: {
   (props: MapProps, context?: any): ReactNode;
 };
 
-export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand'> &
+export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
   (
     | {
+        skeleton?: never;
         data: NonNullable<IRMap['data']>;
         entries?: never;
         children?: never;
         dataExpand?: IRMap['dataExpand'];
       }
     | {
+        skeleton?: never;
         data?: never;
         entries: Array<{
           key: string | CellProps;
@@ -31,8 +33,16 @@ export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
       }
     | {
         data?: never;
+        skeleton?: never;
         entries?: never;
         children?: ReactNode;
+        dataExpand?: never;
+      }
+    | {
+        skeleton: NonNullable<IRMap['skeleton']>;
+        data?: never;
+        entries?: never;
+        children?: never;
         dataExpand?: never;
       }
   );
@@ -78,7 +88,7 @@ export type MapEntryProps = {
 
 <DocTabs defaultValue="text">
 
-<DocTab value="text" label="属性 · 文本">
+<DocTab value="text" label="属性 · 文本或空格">
 
 <ApiTable>
 
@@ -88,7 +98,7 @@ export type MapEntryProps = {
 | `id?`       | `string`                    | —      | 当前容器内唯一的可选单元格 id   |
 | `layout?`   | `CellMarkerProps['layout']` | —      | —                               |
 | `style?`    | `CellMarkerProps['style']`  | —      | List / Map 单元格的稀疏外观覆盖 |
-| `text`      | `string`                    | —      | —                               |
+| `text?`     | `string`                    | —      | —                               |
 
 </ApiTable>
 
@@ -129,7 +139,7 @@ export type MapKeyProps = CellMarkerProps;
 
 <DocTabs defaultValue="text">
 
-<DocTab value="text" label="属性 · 文本">
+<DocTab value="text" label="属性 · 文本或空格">
 
 <ApiTable>
 
@@ -139,7 +149,7 @@ export type MapKeyProps = CellMarkerProps;
 | `id?`       | `string`                    | —      | 当前容器内唯一的可选单元格 id   |
 | `layout?`   | `CellMarkerProps['layout']` | —      | —                               |
 | `style?`    | `CellMarkerProps['style']`  | —      | List / Map 单元格的稀疏外观覆盖 |
-| `text`      | `string`                    | —      | —                               |
+| `text?`     | `string`                    | —      | —                               |
 
 </ApiTable>
 
@@ -177,75 +187,13 @@ export type MapValueProps = CellMarkerProps;
 
 #### map / InputMap
 
-- `map`：<ApiSourceLink label={"map"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={54}>创建 Map embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
-- `InputMap`：<ApiSourceLink label={"InputMap"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={10}>Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 style.key/value 与 layout.key/value</ApiSourceLink>
-
-<DocTabs defaultValue="entries">
-
-<DocTab value="entries" label="属性 · 显式键值记录">
-
-<ApiTable>
-
-| 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `animations?`     | `IRMap['animations']`                                                                    | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-| `data?`           | `never`                                                                                  | —      | —                                                                                              |
-| `dataExpand?`     | `never`                                                                                  | —      | —                                                                                              |
-| `defaults?`       | `IRMap['defaults']`                                                                      | —      | 后代默认值通道及继承屏障                                                                       |
-| `entries`         | `Array<{`<br />`key: string \| InputCell;`<br />`value: string \| InputCell;`<br />`}>`  | —      | —                                                                                              |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
-| `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
-| `label?`          | `IRMap['label']`                                                                         | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRMap['layout']`                                                                        | —      | Map 双列布局与间距                                                                             |
-| `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
-| `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `placement?`      | `IRMap['placement']`                                                                     | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
-| `style?`          | `input<typeof MapSchema>['style']`                                                       | —      | —                                                                                              |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `IRMap['transforms']`                                                                    | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
-| `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="data" label="属性 · JSON 数据">
-
-<ApiTable>
-
-| 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `animations?`     | `IRMap['animations']`                                                                    | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-| `data`            | `NonNullable<IRMap['data']>`                                                             | —      | —                                                                                              |
-| `dataExpand?`     | `IRMap['dataExpand']`                                                                    | —      | —                                                                                              |
-| `defaults?`       | `IRMap['defaults']`                                                                      | —      | 后代默认值通道及继承屏障                                                                       |
-| `entries?`        | `never`                                                                                  | —      | —                                                                                              |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
-| `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
-| `label?`          | `IRMap['label']`                                                                         | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRMap['layout']`                                                                        | —      | Map 双列布局与间距                                                                             |
-| `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
-| `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `placement?`      | `IRMap['placement']`                                                                     | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
-| `style?`          | `input<typeof MapSchema>['style']`                                                       | —      | —                                                                                              |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `IRMap['transforms']`                                                                    | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
-| `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
+- `map`：<ApiSourceLink label={"map"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={62}>创建 Map embed；显式 input.id 同时用作领域与 embed 身份</ApiSourceLink>
+- `InputMap`：<ApiSourceLink label={"InputMap"} path={"packages/library/standard-vanilla/src/collection/map.ts"} startLine={11}>Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 style.key/value 与 layout.key/value</ApiSourceLink>
 
 ```ts
 export declare const map: (input: InputMap) => InputEmbed<InputMap>;
 
-export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand'> &
+export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
   (
     | {
         entries: Array<{
@@ -253,19 +201,23 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
           value: string | InputCell;
         }>;
         data?: never;
+        skeleton?: never;
         dataExpand?: never;
       }
     | {
         data: NonNullable<IRMap['data']>;
+        skeleton?: never;
         entries?: never;
         dataExpand?: IRMap['dataExpand'];
       }
+    | {
+        skeleton: NonNullable<IRMap['skeleton']>;
+        entries?: never;
+        data?: never;
+        dataExpand?: never;
+      }
   );
 ```
-
-</DocTab>
-
-</DocTabs>
 
 #### MapInputEmbedAdapter
 
@@ -273,7 +225,7 @@ export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
   <ApiSourceLink
     label={'MapInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/collection/map.ts'}
-    startLine={21}
+    startLine={24}
   >
     将 Map 输入与嵌套内容交给根级 traversal
   </ApiSourceLink>
@@ -293,74 +245,8 @@ export declare const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="entries">
-
-<DocTab value="entries" label="属性 · 显式键值记录">
-
-<ApiTable>
-
-| 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `animations?`     | `IRScopeProps['animations']`                                                             | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-| `data?`           | `never`                                                                                  | —      | —                                                                                              |
-| `dataExpand?`     | `never`                                                                                  | —      | —                                                                                              |
-| `defaults?`       | `IRScopeProps['defaults']`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
-| `entries`         | `Array<{`<br />`key: string \| IRCell;`<br />`value: string \| IRCell;`<br />`}>`        | —      | 显式键值单元格                                                                                 |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
-| `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
-| `label?`          | `IRMap["label"]`                                                                         | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRMap["layout"]`                                                                        | —      | Map 双列布局与间距                                                                             |
-| `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
-| `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `namespace`       | `"standard"`                                                                             | —      | 命名空间，固定为 standard                                                                      |
-| `placement?`      | `IRScopeProps['placement']`                                                              | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
-| `style?`          | `input<typeof MapSchema>['style']`                                                       | —      | —                                                                                              |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `IRScopeProps['transforms']`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
-| `type`            | `"map"`                                                                                  | —      | 组件类型判别字段                                                                               |
-| `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="data" label="属性 · JSON 数据">
-
-<ApiTable>
-
-| 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `animations?`     | `IRScopeProps['animations']`                                                             | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
-| `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
-| `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
-| `data`            | `NonNullable<input<typeof MapSchema>['data']>`                                           | —      | 递归展示 JSON 对象，不推导单元格 id                                                            |
-| `dataExpand?`     | `input<typeof MapSchema>['dataExpand']`                                                  | `true` | 嵌套对象与数组的展开选择；true 全部展开，false 全部显示为文本，数组选择 map / list             |
-| `defaults?`       | `IRScopeProps['defaults']`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
-| `entries?`        | `never`                                                                                  | —      | —                                                                                              |
-| `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
-| `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
-| `label?`          | `IRMap["label"]`                                                                         | —      | 容器附属标签，通过 position 与 distance 定位                                                   |
-| `layout?`         | `IRMap["layout"]`                                                                        | —      | Map 双列布局与间距                                                                             |
-| `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
-| `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
-| `namespace`       | `"standard"`                                                                             | —      | 命名空间，固定为 standard                                                                      |
-| `placement?`      | `IRScopeProps['placement']`                                                              | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
-| `style?`          | `input<typeof MapSchema>['style']`                                                       | —      | —                                                                                              |
-| `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
-| `transforms?`     | `IRScopeProps['transforms']`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
-| `type`            | `"map"`                                                                                  | —      | 组件类型判别字段                                                                               |
-| `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
-
-</ApiTable>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
 ```ts
-export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries' | 'data' | 'dataExpand'> &
+export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
   Omit<IRScopeProps, 'style'> & {
     style?: input<typeof MapSchema>['style'];
   } & (
@@ -370,19 +256,23 @@ export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries'
           value: string | IRCell;
         }>;
         data?: never;
+        skeleton?: never;
         dataExpand?: never;
       }
     | {
         data: NonNullable<input<typeof MapSchema>['data']>;
         entries?: never;
+        skeleton?: never;
         dataExpand?: input<typeof MapSchema>['dataExpand'];
+      }
+    | {
+        skeleton: NonNullable<input<typeof MapSchema>['skeleton']>;
+        entries?: never;
+        data?: never;
+        dataExpand?: never;
       }
   );
 ```
-
-</DocTab>
-
-</DocTabs>
 
 #### MapDefinition
 
@@ -390,7 +280,7 @@ export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries'
   <ApiSourceLink
     label={'MapDefinition'}
     path={'packages/library/standard/src/collection/map/definition.ts'}
-    startLine={8}
+    startLine={9}
   >
     Standard Map 的布局感知 Definition
   </ApiSourceLink>
@@ -408,7 +298,7 @@ export const MapDefinition: LayoutCompositeDefinition<IRMap, 'standard', 'map'> 
 #### MapProvider
 
 <p>
-  <ApiSourceLink label={'MapProvider'} path={'packages/library/standard/src/collection/map/provider.ts'} startLine={6}>
+  <ApiSourceLink label={'MapProvider'} path={'packages/library/standard/src/collection/map/provider.ts'} startLine={7}>
     Map 与单元格 lower target 的按需依赖声明
   </ApiSourceLink>
 </p>
@@ -420,7 +310,7 @@ export declare const MapProvider: CoreDependencyProvider;
 #### createMap
 
 <p>
-  <ApiSourceLink label={'createMap'} path={'packages/library/standard/src/collection/map/factory.ts'} startLine={3}>
+  <ApiSourceLink label={'createMap'} path={'packages/library/standard/src/collection/map/factory.ts'} startLine={4}>
     保留稀疏 Source 的类型化工厂
   </ApiSourceLink>
 </p>

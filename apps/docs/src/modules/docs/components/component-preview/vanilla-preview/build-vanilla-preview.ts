@@ -388,9 +388,10 @@ const convertStandardChild = (
       });
     }
     case 'list': {
-      const { namespace: _namespace, type: _type, data, items, dataExpand, ...input } = child as IRList;
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRList;
       void _namespace;
       void _type;
+      if (skeleton !== undefined) return list({ ...input, skeleton });
       if (data !== undefined) return list({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
       return list({
         ...input,
@@ -400,7 +401,7 @@ const convertStandardChild = (
             : {
                 ...cell,
                 content:
-                  typeof cell.content === 'string'
+                  cell.content === undefined || typeof cell.content === 'string'
                     ? cell.content
                     : convertPreviewChild(cell.content, state, graphState),
               },
@@ -408,7 +409,7 @@ const convertStandardChild = (
       });
     }
     case 'map': {
-      const { namespace: _namespace, type: _type, data, entries, dataExpand, ...input } = child as IRMap;
+      const { namespace: _namespace, type: _type, data, entries, skeleton, dataExpand, ...input } = child as IRMap;
       void _namespace;
       void _type;
       const convertCell = (cell: string | IRCell) =>
@@ -417,8 +418,11 @@ const convertStandardChild = (
           : {
               ...cell,
               content:
-                typeof cell.content === 'string' ? cell.content : convertPreviewChild(cell.content, state, graphState),
+                cell.content === undefined || typeof cell.content === 'string'
+                  ? cell.content
+                  : convertPreviewChild(cell.content, state, graphState),
             };
+      if (skeleton !== undefined) return map({ ...input, skeleton });
       if (data !== undefined) return map({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
       return map({
         ...input,

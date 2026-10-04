@@ -11,26 +11,30 @@ import { createCellsInput } from '../cell';
 import { collectMapEntries } from './convert-children';
 
 /** Map 的 React authoring 属性；键值角色覆盖统一位于 style.key/value 与 layout.key/value */
-export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand'> &
+export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
   (
     | {
+        skeleton?: never;
         data: NonNullable<IRMap['data']>;
         entries?: never;
         children?: never;
         dataExpand?: IRMap['dataExpand'];
       }
     | {
+        skeleton?: never;
         data?: never;
         entries: Array<{ key: string | CellProps; value: string | CellProps }>;
         children?: never;
         dataExpand?: never;
       }
-    | { data?: never; entries?: never; children?: ReactNode; dataExpand?: never }
+    | { data?: never; skeleton?: never; entries?: never; children?: ReactNode; dataExpand?: never }
+    | { skeleton: NonNullable<IRMap['skeleton']>; data?: never; entries?: never; children?: never; dataExpand?: never }
   );
 
 /** 保留单元格样式并收集每格的唯一 drawable */
 const createMapInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
-  const { data, entries: dataEntries, children, dataExpand, ...input } = props as MapProps;
+  const { data, entries: dataEntries, children, skeleton, dataExpand, ...input } = props as MapProps;
+  if (skeleton !== undefined) return { ...input, skeleton } satisfies InputMap;
   if (data !== undefined)
     return { ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) } satisfies InputMap;
   const entries = dataEntries ?? collectMapEntries(children);

@@ -10,22 +10,23 @@ const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const translations: Readonly<Record<string, string>> = {
   '嵌套对象与数组的展开选择；true 全部展开，false 全部显示为文本，数组选择 map / list':
     'Expansion of nested objects and arrays: true expands all, false displays text, and an array selects map/list',
-  '完整的 List Source，包含 namespace、type 及 items 或 data':
-    'Complete List Source including namespace, type, and either items or data',
+  '完整的 List Source，包含 namespace、type 及 items、data 或 skeleton':
+    'Complete List Source including namespace, type, and items, data, or skeleton',
   '输入的浅拷贝；不校验、不补默认值，嵌套对象与输入共享引用':
     'A shallow copy of the input; no validation or defaults are applied, and nested objects share references with the input',
   '由 listId、连字符与零基下标组成的单元格 id': 'A cell id composed of listId, a hyphen, and the zero-based index',
-  '启用索引带时的位置、显示起点与文本外观': 'Position, starting number, and text appearance of an enabled index strip',
+  '启用索引带时的位置、自动起点或显式标号与文本外观':
+    'Position, automatic starting number or explicit labels, and text appearance of an enabled index strip',
   '索引文本的稀疏外观覆盖，不受单格样式影响': 'Sparse index text overrides, unaffected by cell-level styles',
   '文字或唯一可绘制 child，支持已注册的第三方复合组件':
     'Text or one drawable child, including registered third-party composites',
-  'data、items 与 ListItem children 三种内容入口互斥；全部省略时生成空列表。dataExpand 仅用于 data 入口':
-    'The data, items, and ListItem children inputs are mutually exclusive; omitting all three creates an empty list. dataExpand applies only to data',
-  'text 与 children 二选一；children 必须产生恰好一个图形。id 标识单元格边框区域，style 与 layout 覆盖 List 的对应设置':
-    'Choose either text or children; children must produce exactly one drawable. id identifies the cell border box, while style and layout override the corresponding List settings',
-  'items 与 data 二选一；dataExpand 仅用于 data 入口。其余字段沿用 IRList，namespace 与 type 由 adapter 补齐':
-    'Choose either items or data; dataExpand applies only to data. Other fields follow IRList, and the adapter supplies namespace and type',
-  '使用显式单元格或 JSON 数组的 List 输入': 'List input using explicit cells or a JSON array',
+  'data、items、skeleton 与 ListItem children 内容入口互斥；全部省略时生成空列表。dataExpand 仅用于 data 入口':
+    'The data, items, skeleton, and ListItem children inputs are mutually exclusive; omitting all inputs creates an empty list. dataExpand applies only to data',
+  'text 与 children 互斥；同时省略表示空格，提供 children 时必须产生恰好一个图形。id 标识单元格边框区域，style 与 layout 覆盖 List 的对应设置':
+    'Text and children are mutually exclusive; omitting both leaves an empty cell, and provided children must produce exactly one drawable. id identifies the cell border box, while style and layout override the corresponding List settings',
+  'items、data 与 skeleton 三选一；dataExpand 仅用于 data 入口。其余字段沿用 IRList，namespace 与 type 由 adapter 补齐':
+    'Choose items, data, or skeleton; dataExpand applies only to data. Other fields follow IRList, and the adapter supplies namespace and type',
+  '使用显式单元格、JSON 数组或示意骨架的 List 输入': 'List input using explicit cells, a JSON array, or a skeleton',
   '持有原始 input 引用的 embed；内容归一与校验在后续 adapter 和编译阶段执行':
     'An embed retaining the original input reference; content normalization and validation occur during subsequent adaptation and compilation',
   可省略默认值的包络装饰: 'Envelope decoration with optional defaults',
@@ -72,6 +73,8 @@ const translations: Readonly<Record<string, string>> = {
     'Direct cell identity: explicit ids only, items strings, or zero-based ids derived from the List id',
   '递归展示 JSON 数组，不推导单元格 id': 'Render a JSON array recursively without inferring cell ids',
   '递归展示 JSON 对象，不推导单元格 id': 'Render a JSON object recursively without inferring cell ids',
+  '无真实数据的示意骨架，与 data 及显式结构互斥':
+    'Schematic skeleton without real data, mutually exclusive with data and explicit cells',
   显式键值单元格: 'Explicit key/value cells',
 };
 
@@ -134,10 +137,8 @@ export const writeStandardCollectionApiReferences = async (
               ...(name === 'List' && owner.suffix === ''
                 ? {
                     memberTypeLabels: {
-                      IRListIndexOptions: { style: 'IRListIndexStyle' },
                       IRListIndexStyle: { font: "IRListIndexStyle['font']" },
                     },
-                    memberValueSets: { IRListIndexOptions: { position: { name: 'ListIndexPosition' } } },
                   }
                 : {}),
             },

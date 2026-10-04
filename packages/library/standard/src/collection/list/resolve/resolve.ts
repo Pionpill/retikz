@@ -1,18 +1,22 @@
 import { createDataCell, DataExpandSchema } from '../../_cell/data';
 import { resolveCell } from '../../_cell/resolve';
 import { ListCellIdMode } from '../constants';
-import type { IRList } from '../schema';
+import type { IRList, IRListCell } from '../schema';
 import { ListIndexOptionsSchema, ListLayoutSchema } from '../schema';
 import type { CanonicalList } from './types';
 
 /** 解析 List 的结构默认与每格样式，不改写稀疏 Source */
 export const resolveList = (source: IRList): CanonicalList => {
-  const { data, items, cellIdMode, dataExpand, ...input } = source;
+  const { data, items, skeleton, cellIdMode, dataExpand, ...input } = source;
   const expansion = dataExpand ?? DataExpandSchema.parse(undefined);
-  const cells =
-    data === undefined
-      ? items
-      : data.map(value => createDataCell(value, expansion, source.layout?.width === 'content'));
+  const cells: Array<string | IRListCell> =
+    skeleton !== undefined
+      ? skeleton.labels !== undefined
+        ? skeleton.labels.map(content => (content === '' ? {} : { content }))
+        : Array.from({ length: skeleton.count }, () => ({}))
+      : data !== undefined
+        ? data.map(value => createDataCell(value, expansion, source.layout?.width === 'content'))
+        : items;
   const index = source.index === true ? {} : source.index;
   const indexStyle = index ? index.style : undefined;
   return {
@@ -41,8 +45,10 @@ export const resolveList = (source: IRList): CanonicalList => {
       index === undefined || index === false
         ? false
         : {
-            position: index.position ?? ListIndexOptionsSchema.shape.position.parse(undefined),
-            start: index.start ?? ListIndexOptionsSchema.shape.start.parse(undefined),
+            position: index.position ?? ListIndexOptionsSchema.options[0].shape.position.parse(undefined),
+            ...(index.labels === undefined
+              ? { start: index.start ?? ListIndexOptionsSchema.options[0].shape.start.parse(undefined) }
+              : { labels: index.labels }),
             style: {
               ...(source.style?.textColor === undefined ? {} : { textColor: source.style.textColor }),
               ...indexStyle,

@@ -433,12 +433,14 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
   }
   if (child.namespace === 'standard' && child.type === 'list')
     return ((child as IRList).items ?? []).flatMap(cell =>
-      typeof cell === 'string' || typeof cell.content === 'string' ? [] : [cell.content],
+      typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string' ? [] : [cell.content],
     );
   if (child.namespace === 'standard' && child.type === 'map')
     return ((child as IRMap).entries ?? []).flatMap(entry =>
       [entry.key, entry.value].flatMap(cell =>
-        typeof cell === 'string' || typeof cell.content === 'string' ? [] : [cell.content],
+        typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string'
+          ? []
+          : [cell.content],
       ),
     );
   if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
@@ -577,11 +579,12 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardHelpers.add(STANDARD_SHAPE_KINDS.includes(record.type) ? 'shape' : record.type);
   ctx.standardAdapters.add(adapterName);
   if (record.type === 'list' || record.type === 'map') {
-    if (record.data !== undefined)
+    if (record.data !== undefined || record.skeleton !== undefined)
       return `${record.type}(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
     const cellCode = (cell: string | IRCell | IRListCell) => {
       if (typeof cell === 'string') return formatString(cell);
       const { content, ...props } = cell;
+      if (content === undefined) return formatObject(props, indent + 2);
       return formatObject({ ...props, content: '__CELL_CONTENT__' }, indent + 2).replace(
         "'__CELL_CONTENT__'",
         typeof content === 'string' ? formatString(content) : childCode(content, indent + 3, ctx),

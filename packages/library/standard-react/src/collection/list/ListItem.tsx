@@ -6,7 +6,7 @@ import { invalidCellAuthoring } from '../cell';
 
 /**
  * List 单元格的文本或 drawable 输入，以及单格外观
- * @description text 与 children 二选一；children 必须产生恰好一个图形。id 标识单元格边框区域，style 与 layout 覆盖 List 的对应设置
+ * @description text 与 children 互斥；同时省略表示空格，提供 children 时必须产生恰好一个图形。id 标识单元格边框区域，style 与 layout 覆盖 List 的对应设置
  */
 export type ListItemProps = CellMarkerProps<IRListCell['layout']>;
 

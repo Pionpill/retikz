@@ -1,4 +1,4 @@
----
+﻿---
 title: List · 列表
 description: 使用 List 展示一维内容，配置单元格、组合图形并查询 API 与 Schema。
 ---
@@ -97,7 +97,7 @@ console.log(svg);
 
 ### 选择输入方式
 
-三种输入方式互斥，按内容的来源和编写方式选择：常规手写内容用 `items`，已有的持久化 JSON 数据用 `data`，在 React 中希望直接写子组件时用 JSX 简写。
+四种输入方式互斥，按内容的来源和编写方式选择：常规手写内容用 `items`，已有的持久化 JSON 数据用 `data`，在 React 中希望直接写子组件时用 JSX 简写，只需示意结构时用 `skeleton`。
 
 <DocTabs defaultValue="items">
 <DocTab value="items" label="items · 手写内容">
@@ -108,7 +108,7 @@ console.log(svg);
 <List items={['A', { content: 'B', id: 'selected', style: { fill: 'dodgerblue' } }]} />
 ```
 
-`items` 的字符串默认只提供文字，例如 `'A'` 等价于 `{ content: 'A' }`，可以重复或为空。需要逐格样式时使用 `{ content, id?, style?, layout? }`；对象省略 id 时不会从 content 推导身份。设置 `cellIdMode="string"` 后，字符串也会成为单元格 id，此时字符串必须非空白且在当前 List 中唯一，不能与对象项的显式 id 重复。该模式不能与 `data` 一起使用。
+`items` 的字符串默认只提供文字，例如 `'A'` 等价于 `{ content: 'A' }`，可以重复或为空。需要逐格样式时使用 `{ content?, id?, style?, layout? }`；对象省略 id 时不会从 content 推导身份。设置 `cellIdMode="string"` 后，字符串也会成为单元格 id，此时字符串必须非空白且在当前 List 中唯一，不能与对象项的显式 id 重复。该模式不能与 `data` 或 `skeleton` 一起使用。
 
 </DocTab>
 <DocTab value="data" label="data · 持久化数据">
@@ -147,6 +147,27 @@ import { List, ListItem } from '@retikz/standard-react/collection';
 </DocTab>
 </DocTabs>
 
+### 绘制示意骨架
+
+没有真实数据时使用 `skeleton`，组件、Vanilla `list()` 与 IR 使用同一配置。它与 `data`、`items`、JSX children 互斥，即使其他入口为空也不能混用。
+
+| 配置                           | 效果                                     |
+| ------------------------------ | ---------------------------------------- |
+| `{ count: 4 }`                 | 四个无内容格子                           |
+| `{ labels: ['x₁', '', 'xₙ'] }` | 三个格子，第一和第三格显示文字，中间为空 |
+
+`count` 与 `labels` 二选一。count 是非负安全整数；labels 的长度决定格数，重复文字有效，空字符串表示无内容，空数组或 count 为零表示空集合。格内文字是纯文本，不添加 JSON 引号、不解析公式。
+
+`skeleton.labels` 写在格内，`index.labels` 写在格外，两者可同时使用；也可用 `index: { start: 1 }` 在格外自动编号。index.labels 与 start 互斥，数量必须与格数相同；空标号不显示，全部为空时不占索引空间或额外间距。两套文字均不生成身份；骨架可用 `cellIdMode="index"` 配合 List id 生成直属格引用，不支持 string 模式。
+
+<ComponentPreview
+  files={['list-skeleton', 'list-skeleton.preview.tsx']}
+  defaultSourceFile="list-skeleton.preview.tsx"
+  caption="示例固定单格为 42 × 36；切换格内内容与格外标号，观察两者独立变化。连续两个分隔符表示一个空格。"
+/>
+
+无内容格仍保留背景、边框、内边距与引用区域；内容自然尺寸为零，默认 padding 仍会占空间。需要明确比例时设置 `layout.width` / `height`，需要逐格样式、id 或图形时改用 `items` 或 `ListItem`。显式单元格省略 content 表示无内容，`content: ''` 则仍是空文字。
+
 ### 样式与尺寸
 
 整体 `style` 设置共同外观，单格 `style` 覆盖同名字段。
@@ -167,6 +188,7 @@ import { List, ListItem } from '@retikz/standard-react/collection';
 `index` 省略或为 `false` 时隐藏索引，设为 `true` 或 `{}` 时显示默认索引。对象形式可设置：
 
 - `position`：`before`（默认）在横排上方、竖排左侧；`after` 在横排下方、竖排右侧。
+- `labels`：自定义格外标号，与 `start` 互斥；数量必须与格数一致，空字符串隐藏该标号。
 - `start`：起始值，默认为 `0`，必须是非负整数；索引仅用于展示，不是单元格 id。
 - `style`：通过 `font`、`textColor`、`color`、`opacity` 设置索引文本。`font` 按字段继承 List 的整体字体，`textColor` 默认继承整体文本颜色；单格样式不影响索引。
 
@@ -199,7 +221,7 @@ import { List, ListItem } from '@retikz/standard-react/collection';
 
 ### 组合图形内容
 
-用 `ListItem` 为每格设置 `text` 或唯一的 drawable child，二者互斥。
+用 `ListItem` 为每格设置 `text` 或唯一的 drawable child，二者互斥；两者均省略时保留空格。
 
 多个图元先用 `Scope` 包成一个 child，再放入单元格。React 的数据数组只放文字配置，不嵌 JSX；Vanilla 的单格 `content` 接受文字或一个 authoring child，直接 IR 的 `content` 接受文字或一个可序列化图元。
 
@@ -252,11 +274,11 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 
 `cellIdMode` 决定直属格子的身份来源，默认 `explicit`：
 
-| 模式       | 用途                                                                    |
-| ---------- | ----------------------------------------------------------------------- |
-| `explicit` | 只登记对象或 `ListItem` 显式设置的 id；文字不产生身份                   |
-| `string`   | 将 `items` 字符串同时作为文字和 id；不接受 `data`                       |
-| `index`    | 要求 List 设置 id，为 `items` / `data` 的直属格生成 `<list-id>-<index>` |
+| 模式       | 用途                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------ |
+| `explicit` | 只登记对象或 `ListItem` 显式设置的 id；文字不产生身份                                |
+| `string`   | 将 `items` 字符串同时作为文字和 id；不接受 `data` 或 `skeleton`                      |
+| `index`    | 要求 List 设置 id，为 `items` / `data` / `skeleton` 的直属格生成 `<list-id>-<index>` |
 
 例如 `<List id="queue" cellIdMode="index" data={['A', 'B']} />` 的第二格可用 `queue-1` 引用。也可从 `@retikz/standard/collection` 导入 `getListCellId`，通过 `getListCellId('queue', 1)` 得到同一名称；参数必须是非空白 List id 和非负整数，函数不检查该格是否存在。
 
@@ -289,7 +311,7 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 ## 错误与限制
 
 - 不混用输入方式；同一容器内显式单元格 id 必须唯一。重复文字应与身份分开配置。
-- 组合标记必须放在规定的直属父组件中，单格图形必须恰好一个；非法 JSX 组合会报错。
+- 组合标记必须放在规定的直属父组件中，单格可无内容，提供图形时必须恰好一个；非法 JSX 组合会报错。
 - `data` 只接受 JSON 值树，不传函数、运行时实例、循环引用或稀疏数组；展示前自行投影数据。
 - 固定单格尺寸可以小于内容，但父级分配若容纳不下整组单元格与间隙，会编译失败。父级给出多余空间时，单元格仍从起点排布，不拉伸填满。
 - 这是数据结构的绘制组件，不负责数据处理、任意矩阵或合并单元格。
@@ -349,11 +371,11 @@ React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `co
 
 ## Schema 参考
 
-`ListSchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'list'`；items 与 data 二选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
+`ListSchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'list'`；items、data 与 skeleton 三选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
 
 #### ListSchema
 
-<ZodSchema name="ListSchema" description="一维内容的单元格展示，支持显式单元格或 JSON 数组" expandNested />
+<ZodSchema name="ListSchema" description="一维内容的单元格展示，支持显式单元格、JSON 数组或示意骨架" expandNested />
 
 ## 延伸阅读
 

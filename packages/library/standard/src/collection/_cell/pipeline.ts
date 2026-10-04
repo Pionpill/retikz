@@ -15,7 +15,7 @@ import { surfaceBoundaryPath, surfaceClip } from '../../shared/surface-geometry'
 import type { CanonicalCell } from './resolve';
 
 /** 内容一次自然测量的结果与含 padding 的需求 */
-export type MeasuredCell = { cell: CanonicalCell; result: LayoutChildResult; width: number; height: number };
+export type MeasuredCell = { cell: CanonicalCell; result?: LayoutChildResult; width: number; height: number };
 /** 确定的单格边框位置及引用角色 */
 export type CellPlacement = {
   measured: MeasuredCell;
@@ -56,27 +56,32 @@ export const measureCell = (
 ): MeasuredCell => {
   const { font, textColor, color } = cell.style;
   const textStyle = { ...(font === undefined ? {} : { font }), ...(textColor === undefined ? {} : { textColor }) };
-  const result = measureCellChild(
-    context,
-    {
-      type: 'scope',
-      ...(color === undefined ? {} : { style: { color } }),
-      defaults: { node: { style: textStyle }, label: textStyle },
-      children: [cell.content],
-    },
-    occurrence,
-    scope,
-  );
+  const result =
+    cell.content === undefined
+      ? undefined
+      : measureCellChild(
+          context,
+          {
+            type: 'scope',
+            ...(color === undefined ? {} : { style: { color } }),
+            defaults: { node: { style: textStyle }, label: textStyle },
+            children: [cell.content],
+          },
+          occurrence,
+          scope,
+        );
   const { padding } = cell.layout;
   return {
     cell,
     result,
     width:
-      typeof cell.layout.width === 'number' ? cell.layout.width : result.slotSize.width + padding.left + padding.right,
+      typeof cell.layout.width === 'number'
+        ? cell.layout.width
+        : (result?.slotSize.width ?? 0) + padding.left + padding.right,
     height:
       typeof cell.layout.height === 'number'
         ? cell.layout.height
-        : result.slotSize.height + padding.top + padding.bottom,
+        : (result?.slotSize.height ?? 0) + padding.top + padding.bottom,
   };
 };
 
@@ -118,20 +123,24 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
     },
     [
       surfaceBoundaryPath(width, height, radius, { zIndex: -1, style: { fill, fillOpacity, stroke: 'none' } }),
-      context.scope(
-        { zIndex: 0, ...(cell.layout.overflow === 'clip' ? { clip: surfaceClip(width, height, radius) } : {}) },
-        [
-          context.replay(result, {
-            transforms: [
-              {
-                kind: 'translate',
-                x: cx - result.slotSize.width / 2 - result.allocationBounds.x,
-                y: cy - result.slotSize.height / 2 - result.allocationBounds.y,
-              },
-            ],
-          }),
-        ],
-      ),
+      ...(result === undefined
+        ? []
+        : [
+            context.scope(
+              { zIndex: 0, ...(cell.layout.overflow === 'clip' ? { clip: surfaceClip(width, height, radius) } : {}) },
+              [
+                context.replay(result, {
+                  transforms: [
+                    {
+                      kind: 'translate',
+                      x: cx - result.slotSize.width / 2 - result.allocationBounds.x,
+                      y: cy - result.slotSize.height / 2 - result.allocationBounds.y,
+                    },
+                  ],
+                }),
+              ],
+            ),
+          ]),
       surfaceBoundaryPath(width, height, radius, { zIndex: 1, style: { ...border, fill: 'none' } }),
     ],
   );

@@ -21,13 +21,21 @@ import ListData from '../../src/modules/docs/contents/library/standard/collectio
 import { previewSource as listDataPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/list/list-data';
 import ListLabels from '../../src/modules/docs/contents/library/standard/collection/list/list-labels';
 import { createPreviewControlContract as createListLabelContract } from '../../src/modules/docs/contents/library/standard/collection/list/list-labels.controls';
+import { previewSource as listSkeletonPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/list/list-skeleton';
+import { createPreviewControlContract as createListSkeletonContract } from '../../src/modules/docs/contents/library/standard/collection/list/list-skeleton.controls';
+import { renderListSkeletonPreview } from '../../src/modules/docs/contents/library/standard/collection/list/list-skeleton.preview';
 import { previewSource as listStylesPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/list/list-styles';
 import { createPreviewControlContract as createListStylesContract } from '../../src/modules/docs/contents/library/standard/collection/list/list-styles.controls';
 import MapBasic from '../../src/modules/docs/contents/library/standard/collection/map/map-basic';
 import MapComposition from '../../src/modules/docs/contents/library/standard/collection/map/map-composition';
 import { previewSource as mapDataPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/map/map-data';
+import { previewSource as mapSkeletonPreviewSource } from '../../src/modules/docs/contents/library/standard/collection/map/map-skeleton';
+import { createPreviewControlContract as createMapSkeletonContract } from '../../src/modules/docs/contents/library/standard/collection/map/map-skeleton.controls';
+import { renderMapSkeletonPreview } from '../../src/modules/docs/contents/library/standard/collection/map/map-skeleton.preview';
 import MapStyles from '../../src/modules/docs/contents/library/standard/collection/map/map-styles';
 
+const ListSkeletonCanonical: FC = () => listSkeletonPreviewSource.canonicalRender?.() ?? null;
+const MapSkeletonCanonical: FC = () => mapSkeletonPreviewSource.canonicalRender?.() ?? null;
 const ListStylesCanonical: FC = () => listStylesPreviewSource.canonicalRender?.() ?? null;
 const MapDataCanonical: FC = () => mapDataPreviewSource.canonicalRender?.() ?? null;
 const ListDataCanonical: FC = () => listDataPreviewSource.canonicalRender?.() ?? null;
@@ -48,6 +56,8 @@ describe('List / Map documentation consumers', () => {
     );
   });
   it.each([
+    ListSkeletonCanonical,
+    MapSkeletonCanonical,
     ListDataCanonical,
     MapDataCanonical,
     ListBasic,
@@ -212,4 +222,42 @@ describe('List container label controls', () => {
     expect(left).not.toBe(right);
     expect(left).not.toBe(centered);
   });
+});
+
+it('骨架在源码与可执行 Vanilla 预览中保留唯一入口', () => {
+  for (const Component of [ListSkeletonCanonical, MapSkeletonCanonical]) {
+    const preview = buildPreviewIR(Component);
+    const output = buildVanillaPreview(preview);
+    expect(output.code).toContain('skeleton:');
+    expect(output.code).not.toContain('items:');
+    expect(output.code).not.toContain('entries:');
+    expect(output.svg).toContain(Component === ListSkeletonCanonical ? 'x₁' : 'k₁');
+  }
+  const preview = buildPreviewIR(() => (
+    <Layout>
+      <Map entries={[{ key: {}, value: {} }]} />
+    </Layout>
+  ));
+  expect(buildVanillaPreview(preview).code).not.toContain('__CELL_CONTENT__');
+  expect(buildVanillaPreview(preview).svg).toContain('<svg');
+});
+it('骨架控件双语契约相同并覆盖空集合与最大数量', () => {
+  for (const createContract of [createListSkeletonContract, createMapSkeletonContract]) {
+    const zh = createContract('zh');
+    const en = createContract('en');
+    expect(zh.canonicalValues).toEqual(en.canonicalValues);
+    expect(getPreviewControlFields(zh.controls).map(field => field.id)).toEqual(
+      getPreviewControlFields(en.controls).map(field => field.id),
+    );
+  }
+  for (const count of [0, 6]) {
+    const output = buildVanillaPreview(
+      buildPreviewIR(() => renderListSkeletonPreview({ mode: 'count', count, labels: '', index: 'auto' })),
+    );
+    expect(output.svg).toContain('<svg');
+    expect(output.code).toContain(`count: ${count}`);
+  }
+  const empty = buildVanillaPreview(buildPreviewIR(() => renderMapSkeletonPreview({ keys: '', empty: true })));
+  expect(empty.svg).toContain('<svg');
+  expect(empty.code).toContain('keys: []');
 });

@@ -322,3 +322,54 @@ it('preserves container labels in data and marker inputs with matching Vanilla o
   expect(svg).toContain('Container title');
   expect(svg).toContain('Below');
 });
+
+it('骨架的格内外标号与 Map 键在 React 和 Vanilla 中等价', () => {
+  const skeleton = { labels: ['x₁', '', 'x₁'] };
+  const index = { labels: ['a', '', 'b'] };
+  const layout = { width: 40, height: 30 };
+  const react = createInputScene(
+    <>
+      <List id="v" cellIdMode="index" skeleton={skeleton} index={index} layout={layout} />
+      <Map skeleton={{ keys: ['k', '', 'k'] }} layout={layout} />
+    </>,
+  );
+  const vanilla = scene({
+    children: [
+      list({ id: 'v', cellIdMode: 'index', skeleton, index, layout }),
+      map({ skeleton: { keys: ['k', '', 'k'] }, layout }),
+    ],
+  });
+  const adapters = react.adapters.filter(adapter => adapter.lower !== undefined);
+  expect(adapters).toHaveLength(react.adapters.length);
+  const normalized = normalizeScene(react.scene, { adapters });
+  expect(normalized.ir).toEqual(normalizeScene(vanilla, { adapters: StandardInputEmbedAdapters }).ir);
+  expect(renderToSvgString(react.scene, { adapters })).toEqual(
+    renderToSvgString(vanilla, { adapters: StandardInputEmbedAdapters }),
+  );
+});
+it('空 marker 保留格子与 Map 角色，显式空文字仍然保留', () => {
+  const react = createInputScene(
+    <>
+      <List>
+        <ListItem id="slot" />
+        <ListItem text="" />
+      </List>
+      <Map>
+        <MapEntry>
+          <MapKey />
+          <MapValue />
+        </MapEntry>
+      </Map>
+    </>,
+  );
+  const vanilla = scene({
+    children: [list({ items: [{ id: 'slot' }, { content: '' }] }), map({ entries: [{ key: {}, value: {} }] })],
+  });
+  const adapters = react.adapters.filter(adapter => adapter.lower !== undefined);
+  expect(adapters).toHaveLength(react.adapters.length);
+  const normalized = normalizeScene(react.scene, { adapters });
+  expect(normalized.ir).toEqual(normalizeScene(vanilla, { adapters: StandardInputEmbedAdapters }).ir);
+  expect(renderToSvgString(react.scene, { adapters })).toEqual(
+    renderToSvgString(vanilla, { adapters: StandardInputEmbedAdapters }),
+  );
+});

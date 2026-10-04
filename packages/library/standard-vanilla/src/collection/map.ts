@@ -1,3 +1,4 @@
+import { PathClipProvider } from '@retikz/extension';
 import type { IRMap } from '@retikz/standard/collection';
 import { createMap, MapProvider } from '@retikz/standard/collection';
 import type { InputEmbed, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
@@ -7,20 +8,27 @@ import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCells } from './cell';
 
 /** Map 的 Vanilla authoring 输入；键值角色覆盖统一位于 style.key/value 与 layout.key/value */
-export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand'> &
+export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
   (
     | {
         entries: Array<{ key: string | InputCell; value: string | InputCell }>;
         data?: never;
+        skeleton?: never;
         dataExpand?: never;
       }
-    | { data: NonNullable<IRMap['data']>; entries?: never; dataExpand?: IRMap['dataExpand'] }
+    | { data: NonNullable<IRMap['data']>; skeleton?: never; entries?: never; dataExpand?: IRMap['dataExpand'] }
+    | { skeleton: NonNullable<IRMap['skeleton']>; entries?: never; data?: never; dataExpand?: never }
   );
 
 /** 将 Map 输入与嵌套内容交给根级 traversal */
 export const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
   kind: StandardMapEmbedKind,
   lower: (props, context) => {
+    if (props.skeleton !== undefined)
+      return {
+        node: createMap({ namespace: 'standard', type: 'map', ...props }),
+        providerDependencies: { roots: [MapProvider.key], providers: [MapProvider, PathClipProvider] },
+      };
     if (props.data !== undefined)
       return {
         node: createMap({ namespace: 'standard', type: 'map', ...props }),

@@ -75,3 +75,21 @@ it('assembles both data definitions and clipping from either root adapter', () =
     expect(normalized.ir.children[0]).not.toHaveProperty('items');
   }
 });
+
+it('骨架与空单元格通过公开 adapter 装配裁切依赖并保留输入', () => {
+  for (const child of [
+    list({ skeleton: { count: 2 }, layout: { width: 30 } }),
+    map({ skeleton: { keys: ['k'] }, layout: { height: 20 } }),
+    list({ items: [{}] }),
+  ]) {
+    const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
+    const result = compileToScene(
+      normalized.ir,
+      resolveCoreProviderDependencies({ contributions: normalized.contributions }),
+    );
+    expect(normalized.ir.children[0]).toMatchObject(child.props);
+    expect(
+      result.spatialHandles.entries.find(entry => entry.role === 'container')?.geometry.bounds.width,
+    ).toBeGreaterThan(0);
+  }
+});

@@ -5,8 +5,8 @@ import { ListProvider, MapProvider, RetikzStandardError, RetikzStandardErrorCode
 import type { InputChild, SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 /** 单元格接受纯文本或根 Scene 的统一 authoring 输入；字符串保留到 Standard IR */
-export type InputCell<TCell extends { content: string | IRChild } = IRCell> = Omit<TCell, 'content'> & {
-  content: string | InputChild;
+export type InputCell<TCell extends { content?: string | IRChild } = IRCell> = Omit<TCell, 'content'> & {
+  content?: string | InputChild;
 };
 
 /** JSON 数据可交替嵌套两种结构，根入口装配依赖而不使 provider 相互依赖 */
@@ -16,7 +16,7 @@ export const dataCellDependencies = {
 };
 
 /** 归一化每格的唯一 child，并保留其依赖与 authoring sites */
-export const normalizeCells = <TCell extends { content: string | InputChild }>(
+export const normalizeCells = <TCell extends { content?: string | InputChild }>(
   cells: Array<TCell>,
   context: Parameters<SynchronousInputEmbedAdapter<unknown>['lower']>[1],
   provider: CoreDependencyProvider,
@@ -29,10 +29,10 @@ export const normalizeCells = <TCell extends { content: string | InputChild }>(
       details: { operation: 'normalizeCells' },
     });
   const normalized = cells.map(cell =>
-    typeof cell.content === 'string' ? undefined : normalizeChildren([cell.content]),
+    cell.content === undefined || typeof cell.content === 'string' ? undefined : normalizeChildren([cell.content]),
   );
-  const output: Array<Omit<TCell, 'content'> & { content: string | IRChild }> = cells.map((cell, index) => {
-    if (typeof cell.content === 'string') return { ...cell, content: cell.content };
+  const output: Array<Omit<TCell, 'content'> & { content?: string | IRChild }> = cells.map((cell, index) => {
+    if (cell.content === undefined || typeof cell.content === 'string') return { ...cell, content: cell.content };
     const children = normalized[index]!.children;
     if (children.length !== 1)
       throw new RetikzStandardError({

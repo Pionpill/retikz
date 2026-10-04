@@ -27,7 +27,7 @@ export type CellResolveContext = {
 export type CanonicalCell = Omit<CellResolveSource, 'content' | 'style' | 'layout'> & {
   /** 与主 id 指向同一单元格的显式名称 */
   aliasIds?: Array<string>;
-  content: IRChild;
+  content?: IRChild;
   style: NonNullable<IRCell['style']> & {
     fill: NonNullable<NonNullable<IRCell['style']>['fill']>;
     fillOpacity: number;

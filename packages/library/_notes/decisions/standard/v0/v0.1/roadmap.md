@@ -57,6 +57,7 @@ Core 保留基础预设和通用轨道工具，Standard 提供生长、循环与
 - 提供 Grid、Axes、Frame 与已解析的 Legend 呈现。
 - 提供可引用单元格的一维 List 与键值 Map 呈现，复用 Layout 与 Surface；见 [ADR-030](./030-list-map-presentation.md)。
 - 统一选择嵌套对象与数组的组件展开或 JSON 文本呈现；见 [036](./036-nested-data-expansion.md)。
+- 为 List、Map 提供无真实数据的示意骨架、空单元格、格内符号和自定义索引标号；见 [037](./037-collection-skeleton.md)。
 - 保留领域包的数据信息所有权，只接收通用绘图输入。
 
 预期效果：

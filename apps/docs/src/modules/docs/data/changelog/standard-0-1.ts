@@ -13,6 +13,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · 集合示意骨架', en: 'Unreleased · Collection skeletons' },
+          content: {
+            zh: 'List / Map 新增 skeleton 入口：List 用 count 或 labels 描述空格和格内符号，Map 用 keys 描述符号键与空值格；与 data、显式结构及 JSX children 互斥。显式单元格可省略内容，Map 键值角色仍必填。List 的 index.labels 提供独立的格外标号，可与格内符号同时使用；显示文字不推导身份。',
+            en: 'List / Map add skeleton inputs: List uses count or labels for empty cells and inside symbols, while Map uses keys for symbolic keys and contentless values. Skeletons exclude data, explicit cells, and JSX children. Explicit cells may omit content; Map roles remain required. List index.labels provides independent outside labels alongside inside symbols, without inferring identities from display text.',
+          },
+        },
+        {
           label: { zh: '未发布 · BREAKING：嵌套数据展开', en: 'Unreleased · BREAKING: nested data expansion' },
           content: {
             zh: "List / Map 使用 dataExpand 统一选择嵌套对象与数组的呈现：true 默认全部展开，false 全部显示为 JSON 文本，数组选择 map / list。根结构不变，空结构保留字面量。移除 dataObjectDisplay；原 map 改用 true，原 text 改用 ['list']，不保留兼容字段。",

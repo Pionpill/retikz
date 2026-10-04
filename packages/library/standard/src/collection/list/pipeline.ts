@@ -39,15 +39,22 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
     width = Math.max(width, cell.width);
     height = Math.max(height, cell.height);
   }
-  const indices: Array<LayoutChildResult> = [];
+  const indices: Array<LayoutChildResult | undefined> = [];
+  let hasIndices = false;
   let indexWidth = 0;
   let indexHeight = 0;
   if (indexOptions) {
     for (let index = 0; index < items.length; index++) {
+      const text = indexOptions.labels === undefined ? String(indexOptions.start + index) : indexOptions.labels[index];
+      if (text === '') {
+        indices.push(undefined);
+        continue;
+      }
+      hasIndices = true;
       const child: IRNode = {
         type: 'node',
         position: [0, 0],
-        text: String(indexOptions.start + index),
+        text,
         style: {
           fill: 'none',
           stroke: 'none',
@@ -61,7 +68,7 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
       indexHeight = Math.max(indexHeight, result.slotSize.height);
     }
   }
-  const offset = indexOptions ? (horizontal ? indexHeight : indexWidth) + gap : 0;
+  const offset = hasIndices ? (horizontal ? indexHeight : indexWidth) + gap : 0;
   const isBefore = indexOptions && indexOptions.position === ListIndexPosition.Before;
   const cellOffset = isBefore ? offset : 0;
   const indexOffset = isBefore ? 0 : (horizontal ? height : width) + gap;
@@ -82,7 +89,7 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
       role: 'list-cell',
     };
     const indexResult = indices[index];
-    if (indexOptions)
+    if (indexResult !== undefined)
       extra.push(
         context.replay(indexResult, {
           transforms: [

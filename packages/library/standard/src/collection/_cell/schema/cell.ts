@@ -36,9 +36,9 @@ export const CellLayoutSchema = strictObject({
 
 export const CellSchema = strictObject({
   id: ScopePropsSchema.shape.id,
-  content: union([string(), ChildSchema]).describe(
-    'Text or one drawable child, including registered third-party composites.',
-  ),
+  content: union([string(), ChildSchema])
+    .optional()
+    .describe('Optional text or one drawable child; omitted content leaves an empty cell.'),
   style: CellStyleSchema.optional(),
   layout: CellLayoutSchema.optional(),
 }).describe('A drawable cell with optional allocation identity.');

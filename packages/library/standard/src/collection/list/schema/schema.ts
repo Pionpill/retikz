@@ -25,14 +25,38 @@ export const ListIndexStyleSchema = strictObject({
   ...GraphicElementOpacitySchema.shape,
 }).describe('Index text appearance; cell-level styles do not affect indices.');
 
-/** 索引条的位置、起点和文本样式 */
-export const ListIndexOptionsSchema = strictObject({
+const ListIndexBaseSchema = strictObject({
   position: zodEnum(ListIndexPosition)
     .default(ListIndexPosition.Before)
     .describe('Before means above a row or left of a column; after means below or right.'),
-  start: NonNegativeIntegerSchema.default(0).describe('First displayed index; not cell identity.'),
   style: ListIndexStyleSchema.optional().describe('Index text appearance; cell-level styles do not affect indices.'),
-}).describe('Index strip placement, numbering, and text appearance.');
+});
+
+export const ListIndexOptionsSchema = union([
+  ListIndexBaseSchema.extend({
+    start: NonNegativeIntegerSchema.default(0).describe('First displayed index; not cell identity.'),
+    labels: never().optional().describe('Not accepted in this input branch.'),
+  }),
+  ListIndexBaseSchema.extend({
+    labels: array(string()).describe(
+      'Outside labels in cell order; empty text hides a label. Length must match cells.',
+    ),
+    start: never().optional().describe('Not accepted in this input branch.'),
+  }),
+]).describe('Index strip placement and either automatic numbering or explicit labels.');
+
+export const ListSkeletonSchema = union([
+  strictObject({
+    count: NonNegativeIntegerSchema.describe('Number of contentless cells.'),
+    labels: never().optional().describe('Not accepted in this input branch.'),
+  }),
+  strictObject({
+    labels: array(string()).describe(
+      'Inside-cell plain text in order; empty text means absent content. Length determines cell count.',
+    ),
+    count: never().optional().describe('Not accepted in this input branch.'),
+  }),
+]).describe('Schematic cells from either a count or symbolic labels, without real data.');
 
 /** List 的逐格内容宽度模式，不改变 Map 共享单元格契约 */
 export const ListCellLayoutSchema = CellLayoutSchema.extend({
@@ -56,6 +80,9 @@ const ListBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('list').describe('Composite type for the list presentation.'),
   ...ScopePropsSchema.omit({ style: true }).shape,
+  skeleton: ListSkeletonSchema.optional().describe(
+    'Schematic structure without real data; excludes other content inputs.',
+  ),
   items: array(union([string(), ListCellSchema]))
     .optional()
     .describe('Cells in display order; a string supplies content and optionally an id. An empty array is valid.'),
@@ -79,6 +106,7 @@ const ListBaseSchema = CompositeBaseSchema.extend({
 export const ListSchema = union([
   ListBaseSchema.required({ items: true })
     .extend({
+      skeleton: never().optional().describe('Not accepted in this input branch.'),
       data: never().optional().describe('Not accepted in this input branch.'),
       dataExpand: never().optional().describe('Not accepted in this input branch.'),
     })
@@ -119,6 +147,7 @@ export const ListSchema = union([
     }),
   ListBaseSchema.required({ data: true })
     .extend({
+      skeleton: never().optional().describe('Not accepted in this input branch.'),
       items: never().optional().describe('Not accepted in this input branch.'),
       dataExpand: DataExpandSchema,
     })
@@ -132,4 +161,30 @@ export const ListSchema = union([
       if (node.cellIdMode === ListCellIdMode.Index && node.id === undefined)
         context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a List id.' });
     }),
-]).describe('One-dimensional array presentation with shared and per-cell dimensions.');
+  ListBaseSchema.required({ skeleton: true })
+    .extend({
+      items: never().optional().describe('Not accepted in this input branch.'),
+      data: never().optional().describe('Not accepted in this input branch.'),
+      dataExpand: never().optional().describe('Not accepted in this input branch.'),
+    })
+    .superRefine((node, context) => {
+      if (node.cellIdMode === ListCellIdMode.String)
+        context.addIssue({
+          code: 'custom',
+          path: ['cellIdMode'],
+          message: 'String cell identity only supports items.',
+        });
+      if (node.cellIdMode === ListCellIdMode.Index && node.id === undefined)
+        context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a List id.' });
+    }),
+])
+  .superRefine((node, context) => {
+    const count = node.items?.length ?? node.data?.length ?? node.skeleton?.count ?? node.skeleton?.labels?.length;
+    if (typeof node.index === 'object' && node.index.labels !== undefined && node.index.labels.length !== count)
+      context.addIssue({
+        code: 'custom',
+        path: ['index', 'labels'],
+        message: 'Index labels must match the direct cell count.',
+      });
+  })
+  .describe('One-dimensional presentation from items, JSON data, or a schematic skeleton.');
