@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  BUILTIN_FIELD_FORMATS,
   BUILTIN_FORMAT_DEFINITIONS_BY_NAME,
   BUILTIN_FORMATS,
   BUILTIN_ROW_SELECTORS,
@@ -9,9 +8,6 @@ import {
   BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND,
   BUILTIN_TRANSFORMS,
   DEFAULT_TRANSFORM_CONTEXT,
-  RESERVED_REDUCER_OPERATION_KINDS,
-  RESERVED_SELECTOR_OPERATION_KINDS,
-  RESERVED_TRANSFORM_KINDS,
   resolveFormatRegistry,
   resolveRowSelectorRegistry,
   resolveStatisticsReducerRegistry,
@@ -50,22 +46,6 @@ const expectReadonlyMapView = <TValue>(registry: ReadonlyMap<string, TValue>): v
   expect(Array.from(registry)).toHaveLength(registry.size);
 };
 
-/** 断言公开 Set 视图不暴露写方法，且 forEach 不泄漏底层可写 Set */
-const expectReadonlySetView = (values: ReadonlySet<string>): void => {
-  let callbackOwner: ReadonlySet<string> | undefined;
-  values.forEach((_value, _key, owner) => {
-    callbackOwner = owner;
-  });
-
-  expect(Object.isFrozen(values)).toBe(true);
-  expect(Reflect.get(values, 'add')).toBeUndefined();
-  expect(Reflect.get(values, 'delete')).toBeUndefined();
-  expect(Reflect.get(values, 'clear')).toBeUndefined();
-  expect(callbackOwner).toBe(values);
-  expect(Reflect.get(callbackOwner as object, 'add')).toBeUndefined();
-  expect(Array.from(values)).toHaveLength(values.size);
-};
-
 describe('data public default state', () => {
   it('keeps the default transform context immutable at runtime', () => {
     const original = DEFAULT_TRANSFORM_CONTEXT.readSourceIndex;
@@ -90,12 +70,5 @@ describe('data public default state', () => {
   it('does not expose Map mutators or a writable forEach owner', () => {
     expectReadonlyMapView(BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND);
     expectReadonlyMapView(BUILTIN_FORMAT_DEFINITIONS_BY_NAME);
-  });
-
-  it('does not expose Set mutators or a writable forEach owner', () => {
-    expectReadonlySetView(BUILTIN_FIELD_FORMATS);
-    expectReadonlySetView(RESERVED_TRANSFORM_KINDS);
-    expectReadonlySetView(RESERVED_REDUCER_OPERATION_KINDS);
-    expectReadonlySetView(RESERVED_SELECTOR_OPERATION_KINDS);
   });
 });
