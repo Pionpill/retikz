@@ -55,4 +55,6 @@ console.log(summary);
 
 ## Next
 
+When handing off canonical data with `createDataView(rows, model)`, `model` retains every logical field, while `fieldTypeMap` contains only fields with a determined type. Use `view.fieldTypeMap.has(name)` to check whether a type is known, and inspect `view.model` to check whether a field exists. Empty data preserves explicit model types without assigning a default type to untyped fields.
+
 Read [Data Model](/viz/data/model) for field mapping, formats, or validation, and [Data Transforms](/viz/data/transform) for more built-in operations. When handing the result to a view, continue to [Plot Grammar](/viz/plot) or the relevant Table documentation.

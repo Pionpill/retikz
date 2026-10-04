@@ -217,12 +217,7 @@ export const resolveSizeChannel = (
       return { resolver: () => radius };
     }
     const field = channel.value;
-    const hasAuthoritativeType =
-      ctx.fieldTypeEvidence?.has(field) ??
-      node.data.model?.some(
-        candidate => candidate.name === field && (candidate.type !== undefined || candidate.format !== undefined),
-      ) ??
-      false;
+    const hasAuthoritativeType = fieldTypeMap.has(field);
     const hasUsableObservation = rows.some(row => {
       const value = resolveFieldPath(row, field);
       return typeof value === 'number' ? isFiniteNumber(value) : value !== undefined && value !== null;

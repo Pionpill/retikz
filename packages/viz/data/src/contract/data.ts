@@ -11,10 +11,8 @@ export type DataView = Readonly<{
   rows: Array<ExternalRow>;
   /** 唯一字段事实源；未定类型字段仍存在，分类顺序随作用域保留 */
   model: DataTransformModel;
-  /** 从 model 派生的测量类型映射；修改此投影不改变模型 */
+  /** 从 model 派生的已确定测量类型映射；未定类型字段不进入映射，修改此投影不改变模型 */
   fieldTypeMap: DataFieldTypeMap;
-  /** 从 model 中已证明类型的字段派生 */
-  fieldTypeEvidence: ReadonlySet<string>;
 }>;
 
 /** 运行时字段规范值；不含 boolean / null，是 `coerceValue` 与自定义 `parse` 的输出域 */

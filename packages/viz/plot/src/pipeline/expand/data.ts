@@ -93,8 +93,6 @@ export const prepareRows = (
   /** 规范 rows 与完整逻辑字段模型 */
   dataView: DataView;
   fieldTypeMap: DataFieldTypeMap;
-  /** 最终字段类型具有 model、format、resolver 或有效观测依据的字段 */
-  fieldTypeEvidence: ReadonlySet<string>;
   normalized: Array<ExternalRow>;
   transformRegistry: Map<string, AnyTransformDefinition>;
   transformContext: TransformContext;
@@ -160,7 +158,6 @@ export const prepareRows = (
       }),
     ),
     fieldTypeMap,
-    fieldTypeEvidence,
     normalized,
     transformRegistry,
     transformContext,

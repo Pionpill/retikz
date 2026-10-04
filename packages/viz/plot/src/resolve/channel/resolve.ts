@@ -34,7 +34,6 @@ const definitionContextOf = (context: ChannelResolveContext): ChannelDefinitionR
   node: context.node,
   rows: context.rows,
   fieldTypeMap: context.fieldTypeMap,
-  ...(context.fieldTypeEvidence !== undefined ? { fieldTypeEvidence: context.fieldTypeEvidence } : {}),
   resolveChannelScale: context.resolveChannelScale,
   resolveCategoryDomain: context.resolveCategoryDomain,
   resolveColorScheme: context.resolveColorScheme,

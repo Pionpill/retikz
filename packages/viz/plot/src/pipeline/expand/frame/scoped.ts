@@ -114,7 +114,6 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     markPadding: context.markPadding,
     rows: dataView.rows,
     fieldTypeMap: dataView.fieldTypeMap,
-    fieldTypeEvidence: dataView.fieldTypeEvidence,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,

@@ -48,7 +48,6 @@ describe('applyTransforms (contract)', () => {
         ['y1', DataFieldType.Continuous],
       ]),
     );
-    expect(stacked.fieldTypeEvidence).toEqual(new Set(['month', 'product', 'revenue', 'y0', 'y1']));
 
     const binned = applyTransformsToDataView(baseView, [{ kind: 'bin', field: 'revenue' }], {
       registry: TRANSFORM_REGISTRY,
@@ -61,7 +60,6 @@ describe('applyTransforms (contract)', () => {
         ['binCount', DataFieldType.Continuous],
       ]),
     );
-    expect(binned.fieldTypeEvidence).toEqual(new Set(['revenue', 'binStart', 'binEnd', 'binCount']));
   });
 
   it('transform_empty_pipeline', () => {

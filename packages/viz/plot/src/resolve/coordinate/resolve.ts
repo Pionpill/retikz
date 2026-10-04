@@ -232,7 +232,6 @@ export const resolveCoordinateFrame = (
   const {
     rows,
     fieldTypeMap,
-    fieldTypeEvidence,
     width,
     height,
     fontSize,
@@ -252,7 +251,7 @@ export const resolveCoordinateFrame = (
     rows,
     [...fieldTypeMap].map(([name, type]) => {
       const order = node.data.model?.find(field => field.name === name)?.order;
-      return { name, ...(fieldTypeEvidence?.has(name) ? { type } : {}), ...(order === undefined ? {} : { order }) };
+      return { name, type, ...(order === undefined ? {} : { order }) };
     }),
   );
   const markDataViews =

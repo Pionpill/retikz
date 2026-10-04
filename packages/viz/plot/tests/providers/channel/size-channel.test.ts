@@ -116,7 +116,7 @@ const sizeResolutionOf = (
   const resolution = BUILTIN_NODE_CHANNELS.size.resolve({
     node,
     rows,
-    fieldTypeMap: new Map([[size.value, options.fieldType ?? DataFieldType.Continuous]]),
+    fieldTypeMap: new Map(options.fieldType === undefined ? [] : [[size.value, options.fieldType]]),
     resolveChannelScale: () => ({
       of: () => undefined,
       legendForm: 'swatch',
@@ -287,9 +287,7 @@ describe('size channel 边界输入', () => {
     ['empty', []],
     ['all-missing', [{ p: undefined }, { p: null }, { p: Number.NaN }]],
   ])('untyped_%s_rows_preserve_the_size_descriptor', (_label, rows) => {
-    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows, [], {
-      fieldType: DataFieldType.Categorical,
-    });
+    const resolution = sizeResolutionOf({ kind: 'field', value: 'p' }, rows);
 
     expect(resolution.descriptor).toMatchObject({
       channel: 'size',
@@ -298,6 +296,8 @@ describe('size channel 边界输入', () => {
       scaleType: 'sqrt',
     });
     expect(resolution.descriptor?.fieldType).toBeUndefined();
+    const data = rows.map(row => ({ x: 0, y: 0, ...row }));
+    expect(collectNodes(expandOf(pointSpec({ kind: 'field', value: 'p' }), { d: data }, cartOpts))).toEqual([]);
   });
 
   it('all_zero_data_uses_explicit_sqrt_range_in_resolver_and_descriptor', () => {
@@ -393,7 +393,6 @@ describe('size channel 错误输入', () => {
       node,
       rows: [{ derivedSize: 4 }],
       fieldTypeMap: new Map(),
-      fieldTypeEvidence: new Set(),
       resolveChannelScale: () => ({
         of: () => undefined,
         legendForm: 'swatch',

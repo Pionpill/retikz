@@ -40,7 +40,7 @@ export const collectChannelDescriptors = (
     channelCtx.rows,
     [...channelCtx.fieldTypeMap].map(([name, type]) => ({
       name,
-      ...(channelCtx.fieldTypeEvidence?.has(name) ? { type } : {}),
+      type,
     })),
   );
   for (const view of markDataViews ??
@@ -49,7 +49,6 @@ export const collectChannelDescriptors = (
       ...channelCtx,
       rows: view.dataView.rows,
       fieldTypeMap: view.dataView.fieldTypeMap,
-      fieldTypeEvidence: view.dataView.fieldTypeEvidence,
     });
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }

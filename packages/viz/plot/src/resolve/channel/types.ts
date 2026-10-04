@@ -11,10 +11,8 @@ export type ChannelResolveContext = {
   node: IRPlot;
   /** 当前 mark 实际消费的数据行 */
   rows: Array<ExternalRow>;
-  /** 已解析字段类型表 */
+  /** 已确定的字段类型映射；未定类型字段不进入映射 */
   fieldTypeMap: DataFieldTypeMap;
-  /** 字段类型证据集合，供 node channel 判断类型推断边界 */
-  fieldTypeEvidence?: ReadonlySet<string>;
   /** 已合并的 channel definitions */
   channelRegistry: ChannelRegistry;
   /** 已合并的 mark definitions，供 channel-kind selection 与 operation validation 使用 */

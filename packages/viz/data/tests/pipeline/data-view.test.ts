@@ -51,7 +51,6 @@ describe('resolved data view transforms', () => {
       ['stale', DataFieldType.Categorical],
       ['copy', DataFieldType.Continuous],
     ]);
-    expect([...result.fieldTypeEvidence]).toEqual(['source', 'stale', 'copy']);
   });
 
   it('rebuilds replace output maps without retaining stale input evidence', () => {
@@ -74,7 +73,6 @@ describe('resolved data view transforms', () => {
 
     expect(result.rows).toEqual([{ value: 7 }]);
     expect([...result.fieldTypeMap]).toEqual([['value', DataFieldType.Continuous]]);
-    expect([...result.fieldTypeEvidence]).toEqual(['value']);
   });
 
   it('rejects an unresolved descriptor source before executing the operation', () => {
@@ -123,7 +121,6 @@ describe('resolved data view transforms', () => {
 
     expect(result.rows).toEqual([{ derived: 1 }]);
     expect([...result.fieldTypeMap]).toEqual([['derived', 'continuous']]);
-    expect([...result.fieldTypeEvidence]).toEqual(['derived']);
   });
 
   it('rebuilds summarize fields from group keys and reducer descriptors', () => {
@@ -151,6 +148,5 @@ describe('resolved data view transforms', () => {
       ['month', DataFieldType.Categorical],
       ['totalRevenue', DataFieldType.Continuous],
     ]);
-    expect([...result.fieldTypeEvidence]).toEqual(['month', 'totalRevenue']);
   });
 });

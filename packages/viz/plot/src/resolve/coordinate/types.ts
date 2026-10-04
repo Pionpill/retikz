@@ -22,7 +22,7 @@ export type MarkDataView = {
   markIndex: number;
   /** 当前scope消费的mark operation */
   mark: IRPlotMarkOperation;
-  /** 当前scope完整rows、fieldTypes与fieldTypeEvidence */
+  /** 当前作用域的完整数据行与字段模型 */
   dataView: DataView;
 };
 
@@ -49,10 +49,8 @@ export type CoordinateResolveContext = {
   coordinate?: IRPlotCoordinateOperation;
   /** 当前 plot 绑定的数据行 */
   rows: Array<ExternalRow>;
-  /** 字段类型表 */
+  /** 已确定的字段类型映射；未定类型字段不进入映射 */
   fieldTypeMap: DataFieldTypeMap;
-  /** 已证明字段类型的字段集合 */
-  fieldTypeEvidence?: ReadonlySet<string>;
   /** 画布宽度 */
   width: number;
   /** 画布高度 */

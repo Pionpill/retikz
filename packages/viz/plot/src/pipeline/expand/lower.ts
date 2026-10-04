@@ -497,7 +497,6 @@ export const lowerPlotWithDataArtifact = (
     markPadding,
     rows: frameDataView.rows,
     fieldTypeMap: frameDataView.fieldTypeMap,
-    fieldTypeEvidence: frameDataView.fieldTypeEvidence,
     width,
     height,
     fontSize: options.fontSize ?? DEFAULT_FONT_SIZE,
@@ -522,7 +521,6 @@ export const lowerPlotWithDataArtifact = (
     node,
     rows: rootDataView.rows,
     fieldTypeMap: rootDataView.fieldTypeMap,
-    fieldTypeEvidence: rootDataView.fieldTypeEvidence,
     channelRegistry,
     markRegistry,
     defaultColor: categoricalColorAt(resolvedTheme.palette.series, 0),
@@ -629,7 +627,6 @@ export const lowerPlotWithDataArtifact = (
         ...channelCtx,
         rows: dataView.rows,
         fieldTypeMap: dataView.fieldTypeMap,
-        fieldTypeEvidence: dataView.fieldTypeEvidence,
         defaultColor: categoricalColorAt(
           resolvedTheme.palette.series,
           defaultColorPaletteIndices[markIndex] ?? markIndex,
@@ -1039,7 +1036,6 @@ export const lowerPlotWithDataArtifact = (
             ...channelCtx,
             rows: dataView.rows,
             fieldTypeMap: dataView.fieldTypeMap,
-            fieldTypeEvidence: dataView.fieldTypeEvidence,
             defaultColor: categoricalColorAt(
               resolvedTheme.palette.series,
               defaultColorPaletteIndices[markIndex] ?? markIndex,
@@ -1218,7 +1214,6 @@ export const lowerPlotWithDataArtifact = (
               ...channelCtx,
               rows: markRows,
               fieldTypeMap: markDataView.fieldTypeMap,
-              fieldTypeEvidence: markDataView.fieldTypeEvidence,
               defaultColor: categoricalColorAt(
                 resolvedTheme.palette.series,
                 defaultColorPaletteIndices[markIndex] ?? markIndex,
@@ -1324,7 +1319,6 @@ export const lowerPlotWithDataArtifact = (
         ...channelCtx,
         rows: markRows,
         fieldTypeMap: dataView.fieldTypeMap,
-        fieldTypeEvidence: dataView.fieldTypeEvidence,
         defaultColor: categoricalColorAt(
           resolvedTheme.palette.series,
           defaultColorPaletteIndices[markIndex] ?? markIndex,

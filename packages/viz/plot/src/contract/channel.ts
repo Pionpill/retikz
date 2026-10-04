@@ -193,9 +193,8 @@ export type ChannelOutputSpace =
 export type ChannelDefinitionResolveContext = {
   node: IRPlot;
   rows: Array<ExternalRow>;
+  /** 已确定的字段类型映射；不包含缺少依据的默认类型 */
   fieldTypeMap: DataFieldTypeMap;
-  /** 最终字段类型具有声明、resolver 或有效数据观测依据的字段；省略时由 definition 就地判断 */
-  fieldTypeEvidence?: ReadonlySet<string>;
   /** 解析 channel scale；由 resolve 层注入，provider 不直接依赖 scale resolver */
   resolveChannelScale: (
     operation: IRPlotScaleOperation,
