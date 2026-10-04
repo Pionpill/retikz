@@ -26,6 +26,12 @@ description: 查询持久化容器输入的字段与约束
   }}
 />
 
+## 公共间距 Schema
+
+`@retikz/layout` 导出 `LayoutGapSchema`，表示单个有限非负间距；`LayoutRowColumnGapSchema` 接受单个间距或 `{ row, column }`。对象形式要求两个字段齐全：`row` 表示垂直间距，`column` 表示水平间距。允许零，拒绝负数和额外对象字段。
+
+两个公共 Schema 均不设置默认值。FlexLayout 使用 `0`，Map 使用 `2`，Legend 图例项间距使用 `8`。这三个组件共用 `LayoutRowColumnGapSchema`；组合 Schema 时使用该导出，原 `MapGapSchema` 已移除。
+
 ## LayoutItem 联合
 
 ### LayoutItemSchema

@@ -12,6 +12,12 @@ This is the persistent input contract. Factories preserve omitted fields; parse(
   description="Canonical input for one-dimensional grow, shrink, wrap, and baseline layout."
 />
 
+## Shared gap schemas
+
+`@retikz/layout` exports `LayoutGapSchema` for a single finite non-negative gap and `LayoutRowColumnGapSchema` for either a single gap or `{ row, column }`. In the object form, both fields are required: `row` is the vertical gap and `column` is the horizontal gap. Zero is valid; negative values and unknown object fields are rejected.
+
+Neither shared schema supplies a default. FlexLayout uses `0`, Map uses `2`, and Legend item gaps use `8`. These components share `LayoutRowColumnGapSchema`; use that export instead of the removed `MapGapSchema` when composing a schema.
+
 ## LayoutItem union
 
 ### LayoutItemSchema

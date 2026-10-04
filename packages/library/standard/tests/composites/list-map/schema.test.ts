@@ -2,10 +2,15 @@ import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 
 import { ListSchema } from '../../../src/collection/list/schema';
-import { MapSchema } from '../../../src/collection/map/schema';
+import { MapLayoutSchema, MapSchema } from '../../../src/collection/map/schema';
 
 const content = { type: 'node', position: [0, 0], text: 'a' };
 const parseExternal = (schema: ZodType, source: unknown) => schema.safeParse(source);
+it('保留 Map 的默认间距以及显式零和独立行列间距', () => {
+  expect(MapLayoutSchema.parse({}).gap).toBe(2);
+  expect(MapLayoutSchema.parse({ gap: 0 }).gap).toBe(0);
+  expect(MapLayoutSchema.parse({ gap: { row: 0, column: 4 } }).gap).toEqual({ row: 0, column: 4 });
+});
 it('parses index shorthand, object defaults, and JSON text styles', () => {
   const base = { namespace: 'standard', type: 'list', items: ['A'] };
   expect(ListSchema.parse(base).index).toBe(false);
