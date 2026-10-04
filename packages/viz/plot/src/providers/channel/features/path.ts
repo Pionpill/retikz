@@ -1,7 +1,7 @@
 import type { IRPathScale } from '@retikz/core';
 import type { PathThicknessValue } from '@retikz/core';
 import { DropShadowSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
-import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
+import type { DataTransformModel, ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
@@ -59,7 +59,7 @@ const defineSimplePathChannel = <T extends JsonValue>(
     channel,
     output,
     resolve: ctx => mark =>
-      makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.fieldTypeMap, {
+      makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.model, {
         channelName: channel,
         parse,
       }),
@@ -69,7 +69,7 @@ const defineSimplePathChannel = <T extends JsonValue>(
 const makeNumericPathResolver = (
   node: IRPlot,
   rows: Array<ExternalRow>,
-  fieldTypeMap: DataFieldTypeMap,
+  model: DataTransformModel,
   pick: (mark: IRPlotMarkOperation) => MarkStyleValue<number> | undefined,
   channelName: string,
   options: NumericPathResolverOptions = {},
@@ -78,7 +78,7 @@ const makeNumericPathResolver = (
   return mark => {
     const channel = pick(mark);
     if (!channel) return undefined;
-    const source = makeMarkValueResolver<number>(channel, fieldTypeMap, {
+    const source = makeMarkValueResolver<number>(channel, model, {
       channelName,
       expectedFieldType: DataFieldType.Continuous,
       parse: value => (isFiniteNumber(value) ? value : undefined),
@@ -138,7 +138,7 @@ const pathNumericChannels: {
     channel: 'strokeWidth',
     output: { outputKind: 'number', range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
     resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypeMap, pickPathStrokeWidth, 'strokeWidth', {
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.model, pickPathStrokeWidth, 'strokeWidth', {
         range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX],
         clamp: true,
       }),
@@ -151,7 +151,7 @@ const pathNumericChannels: {
     output: { outputKind: 'number', range: [OPACITY_MIN, 1], clamp: true },
     legend: 'ramp',
     resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypeMap, pickPathOpacity, 'opacity', {
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.model, pickPathOpacity, 'opacity', {
         range: [OPACITY_MIN, 1],
         clamp: true,
       }),
@@ -163,7 +163,7 @@ const pathNumericChannels: {
     channel: 'fillOpacity',
     output: { outputKind: 'number', range: [0.2, 1], clamp: true },
     resolve: ctx =>
-      makeNumericPathResolver(ctx.node, ctx.rows, ctx.fieldTypeMap, pickPathFillOpacity, 'fillOpacity', {
+      makeNumericPathResolver(ctx.node, ctx.rows, ctx.model, pickPathFillOpacity, 'fillOpacity', {
         range: [0.2, 1],
         clamp: true,
       }),
@@ -178,7 +178,7 @@ const pathNumericChannels: {
       makeNumericPathResolver(
         ctx.node,
         ctx.rows,
-        ctx.fieldTypeMap,
+        ctx.model,
         mark => pickStyleChannel<number>(mark, 'roundedCorners'),
         'roundedCorners',
       ),
@@ -306,7 +306,7 @@ export const BUILTIN_PATH_CHANNELS = {
     resolve: ctx => mark => {
       return makeMarkValueResolver<'butt' | 'round' | 'square'>(
         pickStyleChannel<'butt' | 'round' | 'square'>(mark, 'lineCap'),
-        ctx.fieldTypeMap,
+        ctx.model,
         {
           channelName: 'lineCap',
           parse: value =>
@@ -324,7 +324,7 @@ export const BUILTIN_PATH_CHANNELS = {
     resolve: ctx => mark => {
       return makeMarkValueResolver<'miter' | 'round' | 'bevel'>(
         pickStyleChannel<'miter' | 'round' | 'bevel'>(mark, 'lineJoin'),
-        ctx.fieldTypeMap,
+        ctx.model,
         {
           channelName: 'lineJoin',
           parse: value =>

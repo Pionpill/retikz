@@ -76,7 +76,7 @@ describe('node channel registry', () => {
         marks: [],
       },
       rows: [],
-      fieldTypeMap: new Map(),
+      model: [],
       resolveChannelScale: () => ({
         of: () => undefined,
         legendForm: 'swatch',

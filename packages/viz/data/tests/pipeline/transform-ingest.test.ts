@@ -12,17 +12,13 @@ it('keeps untyped fields in empty models without assigning fallback types', () =
     { name: 'region', type: 'categorical' },
     { name: 'when', type: 'temporal' },
   ]);
-  expect([...view.fieldTypeMap]).toEqual([
-    ['region', 'categorical'],
-    ['when', 'temporal'],
-  ]);
 });
 
 it('retains complete empty output models and does not reinterpret canonical temporal values', () => {
   const model = [{ name: 'when', type: 'temporal' as const }];
   const resolution = resolveDataTransforms([], model);
   const empty = ingestDataTransformResult(resolution, { rows: [], model });
-  expect(empty.fieldTypeMap.get('when')).toBe('temporal');
+  expect(empty.model.find(field => field.name === 'when')?.type).toBe('temporal');
   const rows = [{ when: 1700000000000 }];
   expect(ingestDataTransformResult(resolution, { rows, model }).rows).toBe(rows);
 });
@@ -61,8 +57,7 @@ it('preserves group type evidence while leaving non-scalar extent untyped', () =
     rows: [{ group: 'A', range: [1, 4], payload: 'raw' }],
     model: resolution.stages[0].outputModel,
   });
-  expect([...view.fieldTypeMap]).toEqual([['group', 'categorical']]);
-  expect(view.fieldTypeMap.has('payload')).toBe(false);
+  expect(view.model.find(field => field.name === 'payload')).toBeUndefined();
   expect(view.model).toEqual(resolution.stages[0].outputModel);
   const sorted = applyTransformsToDataView(view, [{ kind: 'sort', field: 'group' }]);
   expect(sorted.model).toEqual(resolution.stages[0].outputModel);
@@ -77,16 +72,6 @@ it('retains unknown field existence across empty transformed scopes', () => {
   ]);
   const mark = applyTransformsToDataView(root, [{ kind: 'sort', field: 'range' }]);
   expect(mark.rows).toEqual([]);
-  expect(mark.fieldTypeMap.has('range')).toBe(false);
+  expect(mark.model.find(field => field.name === 'range')).toEqual({ name: 'range' });
   expect(mark.model).toEqual([{ name: 'value', type: 'continuous' }, { name: 'range' }]);
-});
-
-it('derives type projections from the authoritative model without retaining mutable copies', () => {
-  const model = [{ name: 'value', type: 'continuous' as const }];
-  const view = ingestDataTransformResult(resolveDataTransforms([], model), { rows: [], model });
-  view.fieldTypeMap.set('fake', 'categorical');
-  view.fieldTypeMap.delete('value');
-  expect([...view.fieldTypeMap]).toEqual([['value', 'continuous']]);
-  expect([...view.fieldTypeMap.keys()]).toEqual(['value']);
-  expect(view.model).toEqual(model);
 });

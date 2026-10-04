@@ -1,4 +1,10 @@
-import type { ExternalDatasets, IRDataReference, IRDataScalarValue, DataTransformResult } from '@retikz/data';
+import type {
+  DataFieldTypeMap,
+  ExternalDatasets,
+  IRDataReference,
+  IRDataScalarValue,
+  DataTransformResult,
+} from '@retikz/data';
 import { createDataView, resolveFieldPath, resolveFieldTypes, ScalarValueSchema } from '@retikz/data';
 
 import type { TableStructureContext } from '../../contract/structure';
@@ -54,7 +60,11 @@ export const createTableStructureContext = (
       const declared = new Set(preparedView.model.map(field => field.name));
       for (const field of sourceFields)
         if (!declared.has(field)) throw new RetikzTableError(`unknown field "${field}" in prepared Table data model`);
-      return new Map([...preparedView.fieldTypeMap].filter(([name]) => sourceFields.has(name)));
+      const types: DataFieldTypeMap = new Map();
+      for (const field of preparedView.model) {
+        if (sourceFields.has(field.name) && field.type !== undefined) types.set(field.name, field.type);
+      }
+      return types;
     },
     resolveField: resolveScalarField,
   });

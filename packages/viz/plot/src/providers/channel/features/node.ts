@@ -8,7 +8,7 @@ import {
   FontSchema,
   ShapeRefSchema,
 } from '@retikz/core';
-import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
+import type { DataTransformModel, ExternalRow } from '@retikz/data';
 import { inferCategoryDomain, inferFieldType, resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
@@ -118,7 +118,7 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
     channel,
     output,
     resolve: ctx => mark =>
-      makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.fieldTypeMap, {
+      makeMarkValueResolver<T>(pickStyleChannel<T>(mark, channel), ctx.model, {
         channelName: channel,
         parse,
       }),
@@ -133,7 +133,7 @@ const defineSimpleNodeChannel = <T extends JsonValue>(
 export const makeNumericNodeResolver = (
   node: IRPlot,
   rows: Array<ExternalRow>,
-  fieldTypeMap: DataFieldTypeMap,
+  model: DataTransformModel,
   pick: (mark: IRPlotMarkOperation) => MarkStyleValue<number> | undefined,
   channelName: string,
   options: NumericNodeResolverOptions = {},
@@ -142,7 +142,7 @@ export const makeNumericNodeResolver = (
   return (mark: IRPlotMarkOperation): ChannelResolution<number> | undefined => {
     const channel = pick(mark);
     if (!channel) return undefined;
-    const source = makeMarkValueResolver<number>(channel, fieldTypeMap, {
+    const source = makeMarkValueResolver<number>(channel, model, {
       channelName,
       expectedFieldType: DataFieldType.Continuous,
       parse: value => (isFiniteNumber(value) ? value : undefined),
@@ -207,7 +207,7 @@ export const makeNumericNodeResolver = (
 export const resolveSizeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
 ): ((mark: IRPlotMarkOperation) => ChannelResolution<number> | undefined) => {
-  const { node, rows, fieldTypeMap } = ctx;
+  const { node, rows, model } = ctx;
   const scaleByName = new Map(node.scales.map(scale => [scale.name, scale] as const));
   return (mark: IRPlotMarkOperation): ChannelResolution<number> | undefined => {
     const channel = pickStyleChannel<number>(mark, 'size');
@@ -217,16 +217,17 @@ export const resolveSizeChannel = (
       return { resolver: () => radius };
     }
     const field = channel.value;
-    const hasAuthoritativeType = fieldTypeMap.has(field);
+    const declaredFieldType = model.find(definition => definition.name === field)?.type;
     const hasUsableObservation = rows.some(row => {
       const value = resolveFieldPath(row, field);
       return typeof value === 'number' ? isFiniteNumber(value) : value !== undefined && value !== null;
     });
-    const effectiveFieldType = hasAuthoritativeType
-      ? fieldTypeMap.get(field)
-      : hasUsableObservation
-        ? inferFieldType(rows, field)
-        : undefined;
+    const effectiveFieldType =
+      declaredFieldType !== undefined
+        ? declaredFieldType
+        : hasUsableObservation
+          ? inferFieldType(rows, field)
+          : undefined;
     if (effectiveFieldType !== undefined && effectiveFieldType !== DataFieldType.Continuous) {
       throw new RetikzPlotError(
         `lowerPlots: size channel field "${field}" is ${effectiveFieldType}; size requires a continuous field`,
@@ -294,7 +295,7 @@ export const resolveSizeChannel = (
 export const resolveShapeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
 ): ((mark: IRPlotMarkOperation) => ChannelResolution<JsonValue> | undefined) => {
-  const { rows, fieldTypeMap } = ctx;
+  const { rows, model } = ctx;
   return (mark: IRPlotMarkOperation): ChannelResolution<JsonValue> | undefined => {
     const channel = pickStyleChannel<IRShapeValue>(mark, 'shape');
     if (!channel) return undefined;
@@ -304,7 +305,7 @@ export const resolveShapeChannel = (
       return { resolver: () => shape };
     }
     const field = channel.value;
-    const fieldType = fieldTypeMap.get(field);
+    const fieldType = model.find(definition => definition.name === field)?.type;
     if (fieldType !== undefined && fieldType !== DataFieldType.Categorical) {
       throw new RetikzPlotError(
         `lowerPlots: shape channel field "${field}" is ${fieldType}; shape requires a categorical field`,
@@ -342,7 +343,7 @@ const numericNodeChannels: {
       makeNumericNodeResolver(
         ctx.node,
         ctx.rows,
-        ctx.fieldTypeMap,
+        ctx.model,
         mark => pickStyleChannel<number>(mark, 'opacity'),
         'opacity',
         { range: [OPACITY_MIN, 1], clamp: true },
@@ -358,7 +359,7 @@ const numericNodeChannels: {
       makeNumericNodeResolver(
         ctx.node,
         ctx.rows,
-        ctx.fieldTypeMap,
+        ctx.model,
         mark => pickStyleChannel<number>(mark, 'fillOpacity'),
         'fillOpacity',
         { range: [0.2, 1], clamp: true },
@@ -374,7 +375,7 @@ const numericNodeChannels: {
       makeNumericNodeResolver(
         ctx.node,
         ctx.rows,
-        ctx.fieldTypeMap,
+        ctx.model,
         mark => pickStyleChannel<number>(mark, 'strokeOpacity'),
         'strokeOpacity',
         { range: [0.2, 1], clamp: true },
@@ -390,7 +391,7 @@ const numericNodeChannels: {
       makeNumericNodeResolver(
         ctx.node,
         ctx.rows,
-        ctx.fieldTypeMap,
+        ctx.model,
         mark => pickStyleChannel<number>(mark, 'rotate'),
         'rotate',
       ),
@@ -405,7 +406,7 @@ const numericNodeChannels: {
       makeNumericNodeResolver(
         ctx.node,
         ctx.rows,
-        ctx.fieldTypeMap,
+        ctx.model,
         mark => pickStyleChannel<number>(mark, 'zIndex'),
         'zIndex',
         { integer: true },
@@ -421,7 +422,7 @@ const numericNodeChannels: {
       makeNumericNodeResolver(
         ctx.node,
         ctx.rows,
-        ctx.fieldTypeMap,
+        ctx.model,
         mark => pickStyleChannel<number>(mark, 'strokeWidth'),
         'strokeWidth',
         { range: [STROKE_WIDTH_MIN, STROKE_WIDTH_MAX], clamp: true },
@@ -577,7 +578,7 @@ const textColorNodeChannel: NodeChannelDefinition<string> = defineNodeChannel<st
   channel: 'textColor',
   output: { outputKind: 'color' },
   resolve: ctx => mark =>
-    makeMarkValueResolver<string>(pickStyleChannel<string>(mark, 'textColor'), ctx.fieldTypeMap, {
+    makeMarkValueResolver<string>(pickStyleChannel<string>(mark, 'textColor'), ctx.model, {
       channelName: 'textColor',
       parse: value => (typeof value === 'string' ? value : undefined),
       constants: 'skip',

@@ -33,7 +33,7 @@ const assertChannelDelivery = (definition: AnyChannelDefinition): void => {
 const definitionContextOf = (context: ChannelResolveContext): ChannelDefinitionResolveContext => ({
   node: context.node,
   rows: context.rows,
-  fieldTypeMap: context.fieldTypeMap,
+  model: context.model,
   resolveChannelScale: context.resolveChannelScale,
   resolveCategoryDomain: context.resolveCategoryDomain,
   resolveColorScheme: context.resolveColorScheme,

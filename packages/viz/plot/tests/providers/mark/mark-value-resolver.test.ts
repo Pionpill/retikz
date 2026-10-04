@@ -7,7 +7,7 @@ import type { IRPlotPointNumberStyle } from '../../../src/schemas';
 describe('makeMarkValueResolver', () => {
   it('resolves_constant_mark_value', () => {
     const value: IRPlotPointNumberStyle = { kind: 'constant', value: 3 };
-    const resolver = makeMarkValueResolver<number>(value, new Map(), {
+    const resolver = makeMarkValueResolver<number>(value, [], {
       channelName: 'weight',
       parse: raw => (typeof raw === 'number' ? raw : undefined),
     });
@@ -18,7 +18,7 @@ describe('makeMarkValueResolver', () => {
 
   it('resolves_field_mark_value_per_row', () => {
     const value: IRPlotPointNumberStyle = { kind: 'field', value: 'weight' };
-    const resolver = makeMarkValueResolver<number>(value, new Map([['weight', DataFieldType.Continuous]]), {
+    const resolver = makeMarkValueResolver<number>(value, [{ name: 'weight', type: DataFieldType.Continuous }], {
       channelName: 'weight',
       expectedFieldType: DataFieldType.Continuous,
       parse: raw => (typeof raw === 'number' ? raw : undefined),
@@ -34,7 +34,7 @@ describe('makeMarkValueResolver', () => {
     const value: IRPlotPointNumberStyle = { kind: 'field', value: 'group' };
 
     expect(() =>
-      makeMarkValueResolver<number>(value, new Map([['group', DataFieldType.Categorical]]), {
+      makeMarkValueResolver<number>(value, [{ name: 'group', type: DataFieldType.Categorical }], {
         channelName: 'weight',
         expectedFieldType: DataFieldType.Continuous,
         parse: raw => (typeof raw === 'number' ? raw : undefined),

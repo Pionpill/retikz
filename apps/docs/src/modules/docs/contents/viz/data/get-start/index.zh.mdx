@@ -55,6 +55,6 @@ console.log(summary);
 
 ## 接下来
 
-使用 `createDataView(rows, model)` 交付规范数据时，`model` 保留全部逻辑字段，`fieldTypeMap` 只包含已确定类型的字段。通过 `view.fieldTypeMap.has(name)` 判断类型是否确定；字段是否存在则查看 `view.model`。空数据不会抹去模型中的显式类型，也不会为未定字段补入默认类型。
+使用 `createDataView(rows, model)` 交付规范数据时，视图只包含 `rows` 和完整字段模型 `model`。通过 `view.model.find(field => field.name === name)` 查找字段：结果为 `undefined` 表示字段不存在，字段存在但 `type` 为 `undefined` 表示类型尚未确定。空数据保留模型中的显式类型与分类顺序，不为未定字段补入默认类型。
 
 需要字段映射、格式或校验时阅读[数据模型](/viz/data/model)；需要更多内置操作时阅读[数据变换](/viz/data/transform)。将结果交给视图时，继续阅读[绘图语法](/viz/plot)或对应的 Table 文档。

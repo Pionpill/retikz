@@ -42,7 +42,7 @@ const intensityChannel = defineNodeChannel<number>({
         domain: [lo, hi],
         range: [0.3, 1],
         field,
-        fieldType: ctx.fieldTypeMap.get(field),
+        fieldType: ctx.model.find(definition => definition.name === field)?.type,
       },
     };
   },
@@ -71,7 +71,7 @@ const categoryColorChannel = defineNodeChannel<string>({
         domain,
         range,
         field,
-        fieldType: ctx.fieldTypeMap.get(field),
+        fieldType: ctx.model.find(definition => definition.name === field)?.type,
       },
     };
   },
@@ -102,7 +102,7 @@ const symbolLegendChannel = defineNodeChannel<IRShapeValue>({
         domain,
         range: shapes,
         field,
-        fieldType: ctx.fieldTypeMap.get(field),
+        fieldType: ctx.model.find(definition => definition.name === field)?.type,
       },
     };
   },
@@ -453,7 +453,7 @@ describe('custom node channel registry', () => {
             domain: [0, 1],
             range: [1, 2],
             field,
-            fieldType: ctx.fieldTypeMap.get(field),
+            fieldType: ctx.model.find(definition => definition.name === field)?.type,
           },
         };
       },

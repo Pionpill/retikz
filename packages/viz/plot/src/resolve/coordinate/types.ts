@@ -1,5 +1,5 @@
 import type { IRScope } from '@retikz/core';
-import type { DataFieldTypeMap, DataView, ExternalRow, IRDataScalarValue } from '@retikz/data';
+import type { DataTransformModel, DataView, ExternalRow, IRDataScalarValue } from '@retikz/data';
 
 import type {
   AnyCoordinateDefinition,
@@ -49,8 +49,8 @@ export type CoordinateResolveContext = {
   coordinate?: IRPlotCoordinateOperation;
   /** 当前 plot 绑定的数据行 */
   rows: Array<ExternalRow>;
-  /** 已确定的字段类型映射；未定类型字段不进入映射 */
-  fieldTypeMap: DataFieldTypeMap;
+  /** 当前数据的完整字段模型；未定类型字段仍保留 */
+  model: DataTransformModel;
   /** 画布宽度 */
   width: number;
   /** 画布高度 */

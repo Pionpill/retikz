@@ -1,4 +1,5 @@
 import type {
+  DataFieldTypeMap,
   DataTransformPreparation,
   DataTransformResult,
   DataTransformStageInput,
@@ -78,13 +79,19 @@ export const preparePlotData = async <TSource = never>(
         return copy;
       });
       const view = createDataView(provenance ? tagSourceIndex(rows) : rows, binding.result.model);
-      if (options.invalid === 'error') assertAllValuesValid(view.rows, view.fieldTypeMap);
-      if (options.validateData)
-        validateBoundData(
-          view.rows,
-          view.fieldTypeMap,
-          typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
-        );
+      if (options.invalid === 'error' || options.validateData) {
+        const fieldTypeMap: DataFieldTypeMap = new Map();
+        for (const field of view.model) {
+          if (field.type !== undefined) fieldTypeMap.set(field.name, field.type);
+        }
+        if (options.invalid === 'error') assertAllValuesValid(view.rows, fieldTypeMap);
+        if (options.validateData)
+          validateBoundData(
+            view.rows,
+            fieldTypeMap,
+            typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100,
+          );
+      }
       input = { kind: 'result', result: { ...binding.result, rows: view.rows, model: view.model } };
     }
   }

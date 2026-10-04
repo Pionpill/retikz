@@ -46,10 +46,10 @@ describe('resolved data view transforms', () => {
     });
 
     expect(result.rows).toEqual([{ source: 2, stale: 'old', copy: 2 }]);
-    expect([...result.fieldTypeMap]).toEqual([
-      ['source', DataFieldType.Continuous],
-      ['stale', DataFieldType.Categorical],
-      ['copy', DataFieldType.Continuous],
+    expect(result.model).toEqual([
+      { name: 'source', type: DataFieldType.Continuous },
+      { name: 'stale', type: DataFieldType.Categorical },
+      { name: 'copy', type: DataFieldType.Continuous },
     ]);
   });
 
@@ -72,7 +72,7 @@ describe('resolved data view transforms', () => {
     });
 
     expect(result.rows).toEqual([{ value: 7 }]);
-    expect([...result.fieldTypeMap]).toEqual([['value', DataFieldType.Continuous]]);
+    expect(result.model).toEqual([{ name: 'value', type: DataFieldType.Continuous }]);
   });
 
   it('rejects an unresolved descriptor source before executing the operation', () => {
@@ -120,7 +120,7 @@ describe('resolved data view transforms', () => {
     });
 
     expect(result.rows).toEqual([{ derived: 1 }]);
-    expect([...result.fieldTypeMap]).toEqual([['derived', 'continuous']]);
+    expect(result.model).toEqual([{ name: 'derived', type: 'continuous' }]);
   });
 
   it('rebuilds summarize fields from group keys and reducer descriptors', () => {
@@ -144,9 +144,9 @@ describe('resolved data view transforms', () => {
     ]);
 
     expect(result.rows).toEqual([{ month: 'Jan', totalRevenue: 5 }]);
-    expect([...result.fieldTypeMap]).toEqual([
-      ['month', DataFieldType.Categorical],
-      ['totalRevenue', DataFieldType.Continuous],
+    expect(result.model).toEqual([
+      { name: 'month', type: DataFieldType.Categorical },
+      { name: 'totalRevenue', type: DataFieldType.Continuous },
     ]);
   });
 });

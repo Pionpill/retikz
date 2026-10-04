@@ -77,7 +77,7 @@ Data transform Definition公开：
 - `schedule`：声明binding class、闭合`DataTransformPhase`、field effect与可选output选择规则
 - statistics `outputs`：声明scalar或multi-output reducer结果；compact aggregate只接受恰好一个完整scalar descriptor
 
-Data pipeline逐步产出`{ rows, model, fieldTypeMap }`。每一步先基于当前view解析input和output model，再执行operation并推进类型证据；Plot coordinate、scale、channel、guide、locator与lineage只读各自实际view。descriptor缺失的external operation仍可用于完整Plot transform，但不能进入type-dependent encoding transform。
+Data pipeline逐步产出`{ rows, model }`。每一步先基于当前view解析input和output model，再执行operation并推进类型证据；Plot coordinate、scale、channel、guide、locator与lineage只读各自实际view。descriptor缺失的external operation仍可用于完整Plot transform，但不能进入type-dependent encoding transform。
 
 多个aggregate mapping合并为一个summarize。每个`as`是对应consumer的字段；`groupBy`只包含summarize后仍被recipe-level direct role消费的字段，并按ordered `encodingSlots`筛选、去重。aggregate输入、临时字段、authored Chart mark与`plotExtension.marks`不能反向改变root aggregate粒度。
 

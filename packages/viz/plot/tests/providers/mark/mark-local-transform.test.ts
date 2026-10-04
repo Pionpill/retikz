@@ -129,7 +129,9 @@ describe('mark-local transform', () => {
     const expectedModel = [{ name: 'group', type: 'categorical', order: ['B', 'A'] }, { name: 'range' }];
     expect(dataArtifact.rootDataView.model).toEqual(expectedModel);
     expect(dataArtifact.markDataViews[0].dataView.model).toEqual(expectedModel);
-    expect(dataArtifact.markDataViews[0].dataView.fieldTypeMap.has('range')).toBe(false);
+    expect(dataArtifact.markDataViews[0].dataView.model.find(field => field.name === 'range')).toEqual({
+      name: 'range',
+    });
     expect(dataArtifact.markDataViews[0].dataView.rows).toEqual([]);
   });
   it('builtin_mark_uses_local_transform_rows_for_lowering', () => {
