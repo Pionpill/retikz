@@ -1,6 +1,6 @@
 ---
 title: 基础用法
-description: 用最小 Flow Source 描述实体与关系，并生成自动排布的逻辑图。
+description: 用最小 Flow Source 描述实体与关系，并生成自动排布的流程图。
 ---
 
 Flow 用实体表示步骤，用关系表示步骤间的连接，运行时自动计算位置。先看最小结果，再决定是否需要分组、路由或共享样式。
@@ -31,40 +31,63 @@ Flow Source 由下列成员组成。React 组件负责声明这些成员，运�
   caption="编辑主文本和副标题，观察多行文本的逐行样式与块级排版；role 改变语义形状，status 改变 Graph Theme 的状态外观。"
 />
 
+## 连接侧与自动分离
+
+需要多条连线在同一侧分开接入时，在关系的 `source` 或 `target` 上设置 `side` 和 `overlap: 'separate'`。属性属于每个关系端点，因此同一节点可以同时接收允许重合与要求分离的连线。
+
+<ComponentPreview
+  files={['flow-endpoints', 'flow-endpoints.preview.tsx']}
+  defaultSourceFile="flow-endpoints.preview.tsx"
+  size="md"
+  caption="切换左侧三个节点的显示开关，观察对应连线增减时，汇入位置如何自动重新等分。"
+/>
+
+同侧的每个 `separate` 端点独占一个位置；自动 `allow` 端点共用一个位置。共有 n 个位置时，按 `i / (n + 1)` 等分：一个为 0.5，两个约为 0.33、0.67，三个为 0.25、0.5、0.75。内部计算保留完整精度；上下侧从左到右、左右侧从上到下计数。位置按对端节点的空间顺序分配。
+
+| 字段      | 用法                                                                                           |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| `side`    | 仅在必须从某侧进入或离开时设置 `top`、`right`、`bottom` 或 `left`；省略时自动选择              |
+| `overlap` | 默认 `allow`；`separate` 自动分开连接落点，不保证箭头图形不重叠或路径不交叉                    |
+| `anchor`  | 最后才使用的精确约束，如 `{ side: 'left', fraction: 0.4 }`；与 `side` 互斥，自动分配不会移动它 |
+
+全图默认可通过 `flowDefaults.relation.source.overlap` 和 `flowDefaults.relation.target.overlap` 设置；字符串端点同样继承默认，局部 `allow` 可以覆盖 `separate`。指定 `anchor` 后，自动位置会避开需要分离的固定落点；两个固定落点冲突时会报错。没有端点约束时，保留原有自然边界连接。
+
+自动侧边比例要求底层形状支持 Core 的比例锚点。矩形可用；当前 gateway 菱形底层为 polygon，尚不支持该查询，会明确报错，可使用其已支持的命名或角度 anchor。
+
 ## 连线与路由
 
 关系的 routing 配置改变路径形状，不需要定义新布局。
 
-| `routing.kind` | 行为                               | 圆角                  |
-| -------------- | ---------------------------------- | --------------------- |
-| `bend`         | 常规曲线；省略方向和角度时自动选择 | 不接受 `cornerRadius` |
-| `straight`     | 直线；内置默认                     | 不接受 `cornerRadius` |
-| `orthogonal`   | 按布局方向生成正交折线             | 可选 `cornerRadius`   |
-| `-\|`          | 从 source 先水平后垂直             | 可选 `cornerRadius`   |
-| `\|-`          | 从 source 先垂直后水平             | 可选 `cornerRadius`   |
+| `routing.kind` | 行为                   | 备注                                                                           |
+| -------------- | ---------------------- | ------------------------------------------------------------------------------ |
+| `straight`     | 直接连接两端           | 内置默认；路径简洁，不自动绕开节点                                             |
+| `orthogonal`   | 按布局方向生成正交折线 | 中点优先比较三个折点避让，可锁定比例和设置圆角；两端对齐时直连、不避让         |
+| `-\|`          | 从 source 先水平后垂直 | 固定单折角；不随布局方向变化，可设置圆角，不自动避让                           |
+| `\|-`          | 从 source 先垂直后水平 | 固定单折角；不随布局方向变化，可设置圆角，不自动避让                           |
+| `bend`         | 按角度或端点切线弯曲   | 常规曲线优先选用；自动模式在有限候选中避让，也可指定方向、角度或切线           |
+| `curve`        | 一个控制点的二次贝塞尔 | 适合 bend 候选不足时的绕行；省略控制点自动生成，显式控制点通常不在曲线上       |
+| `cubic`        | 两个控制点的三次贝塞尔 | 可分别控制两端切线，适合更复杂的弯曲；省略全部控制点自动生成，显式时须成对提供 |
+| `smooth`       | 平滑经过有序中间点     | 已知必经位置时使用，通常设置 2～3 个点；只检查碰撞，不自动调整路线             |
 
-在固定的 A、B 之间切换五种 `routing.kind`，比较直线、正交折线与两种单折角路径。`-|` 先水平再垂直，`|-` 先垂直再水平；它们不受主布局方向或箭头方向影响，也不会为其它节点自动绕行。预览的 React 与 Vanilla 源码使用相同的 `routing` 配置。
+在固定的 A、B 之间切换八种 `routing.kind`，比较直线、折线、bend、贝塞尔与过点曲线。`-|` 先水平再垂直，`|-` 先垂直再水平；它们不受主布局方向或箭头方向影响，也不会为其它节点自动绕行。预览的 React 与 Vanilla 源码使用相同的 `routing` 配置。
 
 <ComponentPreview
   files={['flow-routing', 'flow-routing.preview.tsx']}
   defaultSourceFile="flow-routing.preview.tsx"
-  size="sm"
-  caption="切换路由模式观察同一对端点间的路径；bend 可逐步调整方向、角度或切线；折线模式可调整转角半径。"
+  size="md"
+  caption="切换路由模式观察同一对端点间的路径；bend 调整角度或切线，贝塞尔切换自动或显式控制点，过点曲线调整点位和张力；折线可调整圆角。"
 />
 
-单折角路由两端对齐时退化为直线；中心完全重合时会报路由错误。`cornerRadius: 0` 保留直角，正数使用圆角。平行边可能重叠；需要避开节点时应调整布局，而不是把单折角路由当作避障算法。
+- **straight**：最简单的直接连接，不自动避让。
+- **orthogonal**：适合横平竖直的流程图；默认比较三个折点位置避让，也可锁定比例。端点水平或垂直对齐时直连。
+- **`-|` / `|-`**：明确需要先横后竖或先竖后横时使用；单折角，可设圆角，不自动避让。
+- **bend**：常规曲线首选；按方向、角度或切线调整形状，默认用有限候选避让。
+- **curve / cubic**：bend 不够灵活时使用；分别支持一个、两个控制点，省略控制点时自动生成避让候选。
+- **smooth**：路线必须经过指定位置时使用；通常设置 2～3 个中间点，只检查碰撞，不自动调整路线。
 
-仅写 `routing: { kind: 'bend' }` 即可得到曲线。未指定且未继承角度时，布局比较左右各 `30° / 45° / 60°`，最多六条候选；也可以用 `bendDirection: 'left' | 'right'` 限定搜索方向，用 `bendAngle` 锁定角度。侧向始终相对 authored source → target，反向箭头不改变它。负角度翻侧，`0` 画成直线但仍是 bend；角度范围为开区间 `(-180, 180)`。
+自动避让不保证完全无碰撞；候选均有冲突时保留最佳路线并发出警告，也不会自动切换路由类型。
 
-任一 `outAngle` 或 `inAngle` 出现即进入切线模式，优先于对称角度和方向；另一角度先继承有效的切线祖先，否则分别补 `0` 或 `180`，`looseness` 默认 `1` 且只在切线模式生效。角度是屏幕绝对角度，`0` 向右、`90` 向下。面板的自动方向和自动角度分别代表省略对应字段，不是 Source 中的新枚举值。
-
-bend 与直线、折线并列，用于常规连接。自动选择优先减少节点穿越，标签只在节点评分相同时决胜，不比较路径重叠或交叉；同分优先小角度，再选左侧。显式或继承的角度与方向保持不变，也不移动节点。所有候选都穿越节点时仍绘图，并在对应关系上报告 `FlowBendObstacleConflict`。显式方向和切线也会检测冲突；平行边可能重叠，内置布局仍不支持自环。
-
-根和 Group 用独立 `routing` 设置路由意图，Relation 的 `routing` 优先。未指定时取两个 endpoint 最近公共 Group 的有效路由，再取根和布局 Definition 的默认路由；中间的 FlowLayout 不建立路由层。例如根为 straight、Group 为 orthogonal 时，嵌套 Layout 内的关系仍使用 orthogonal。
-
-三种轴对齐模式共享圆角继承：实例 `cornerRadius` 优先，其次祖先有效 routing 的半径，再取 Definition 的 `orthogonalCornerRadius`，内置值为 `8`。切换 `kind` 不丢失继承半径，显式 `0` 禁用圆角。
-
-bend 只继承同种路由的有效参数族。局部提供方向或角度而不提供切线角时，会退出祖先切线模式；祖先未生效的对称字段不会回流。
+参数配置见[扩展用法](/schematic/diagram/flow/extended)，候选生成与碰撞检测见[实现原理](/schematic/diagram/flow/mechanism)。
 
 ## 相关属性
 
@@ -108,10 +131,24 @@ bend 只继承同种路由的有效参数族。局部提供方向或角度而不
       description: '本页使用 align、lineHeight 与 maxTextWidth 调整整个文本块的排版，不改变 Flow 节点间的排布。',
     },
     {
+      name: 'FlowRelation.source',
+      kind: 'property',
+      type: 'IRFlowEndpoint',
+      required: true,
+      description: '起点或终点可用 id 字符串，或包含 id、side / anchor、overlap 的端点对象；side 与 anchor 互斥。',
+    },
+    {
+      name: 'FlowRelation.target',
+      kind: 'property',
+      type: 'IRFlowEndpoint',
+      required: true,
+      description: '起点或终点可用 id 字符串，或包含 id、side / anchor、overlap 的端点对象；side 与 anchor 互斥。',
+    },
+    {
       name: 'FlowRelation.routing',
       kind: 'property',
       type: 'IRFlowRouting',
-      description: '关系局部覆盖优先；支持直线、三种轴对齐模式与 bend 曲线，参数按有效模式继承。',
+      description: '关系局部覆盖优先；支持常规路由及关系专属 curve/cubic/smooth；控制点和经过点不继承。',
     },
   ]}
 />

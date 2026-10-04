@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning, IRScene } from '../../src';
+import type { CompileWarning, IRScene, IRTarget } from '../../src';
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
@@ -362,4 +362,61 @@ describe('smooth step：JSON round-trip', () => {
     const roundTripped = PathSchema.parse(JSON.parse(JSON.stringify(ir)));
     expect(roundTripped).toEqual(parsed);
   });
+});
+
+it('clips the final implicit smooth NodeTarget while keeping intermediate knots', () => {
+  const result = compileToScene(
+    scene([
+      {
+        type: 'node',
+        id: 'end',
+        position: [100, 0],
+        shape: 'rectangle',
+        layout: { width: 20, minimumSize: { height: 20 }, padding: 0 },
+        style: { stroke: 'none' },
+      },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'smooth', points: [[50, 0], { id: 'end' }] },
+        ],
+      },
+    ]),
+    silent,
+  );
+  const commands = findPathPrim(result.scene.primitives).commands.filter(command => command.kind === 'cubic');
+  expect(commands.map(command => command.to)).toEqual([
+    [50, 0],
+    [90, 0],
+  ]);
+  expect(commands.at(-1)!.control2[0]).toBeLessThanOrEqual(90);
+});
+
+it.each<{ target: IRTarget; expected: [number, number] }>([
+  { target: { id: 'end', anchor: 'right' }, expected: [110, 0] },
+  { target: { id: 'end', offset: [5, 4] }, expected: [105, 4] },
+])('keeps explicit terminal anchor or offset positions: $target', ({ target, expected }) => {
+  const result = compileToScene(
+    scene([
+      {
+        type: 'node',
+        id: 'end',
+        position: [100, 0],
+        shape: 'rectangle',
+        layout: { width: 20, minimumSize: { height: 20 }, padding: 0 },
+        style: { stroke: 'none' },
+      },
+      {
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'smooth', points: [[50, 0], target] },
+        ],
+      },
+    ]),
+    silent,
+  );
+  const commands = findPathPrim(result.scene.primitives).commands.filter(command => command.kind === 'cubic');
+  expect(commands.at(-1)?.to).toEqual(expected);
 });

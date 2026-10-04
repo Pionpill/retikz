@@ -12,19 +12,73 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/diagram#FlowBezierRoute': [
+    { value: 'curve', field: 'kind', type: "'curve'", label: { zh: '二次贝塞尔', en: 'Quadratic Bezier' } },
+    { value: 'cubic', field: 'kind', type: "'cubic'", label: { zh: '三次贝塞尔', en: 'Cubic Bezier' } },
+  ],
+  '@retikz/diagram#FlowBezierRouting': [
+    { value: 'curve', field: 'kind', type: "'curve'", label: { zh: '二次贝塞尔', en: 'Quadratic Bezier' } },
+    {
+      value: 'cubic-auto',
+      field: 'control1',
+      type: 'never',
+      label: { zh: '自动三次贝塞尔', en: 'Automatic cubic Bezier' },
+    },
+    {
+      value: 'cubic-explicit',
+      field: 'control1',
+      type: 'Readonly<Position>',
+      label: { zh: '显式三次贝塞尔', en: 'Explicit cubic Bezier' },
+    },
+  ],
+  '@retikz/diagram#FlowRoutingCapability': [
+    {
+      value: 'regular',
+      field: 'kind',
+      type: "Exclude<FlowRoutingKindValue, 'curve' | 'cubic'>",
+      label: { zh: '常规路由', en: 'Regular routing' },
+    },
+    {
+      value: 'bezier',
+      field: 'modes',
+      type: "ReadonlyArray<'auto' | 'explicit'>",
+      label: { zh: '贝塞尔能力', en: 'Bezier capabilities' },
+    },
+  ],
   '@retikz/diagram#FlowBendRoute': [
     { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
     { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
   ],
   '@retikz/diagram#FlowLayoutRouting': [
+    { value: 'smooth', field: 'kind', type: "'smooth'", label: { zh: '过点曲线', en: 'Through-point curve' } },
+    { value: 'curve', field: 'kind', type: "'curve'", label: { zh: '二次贝塞尔', en: 'Quadratic Bezier' } },
+    {
+      value: 'cubic-auto',
+      field: 'control1',
+      type: 'never',
+      label: { zh: '自动三次贝塞尔', en: 'Automatic cubic Bezier' },
+    },
+    {
+      value: 'cubic-explicit',
+      field: 'control1',
+      type: 'Readonly<Position>',
+      label: { zh: '显式三次贝塞尔', en: 'Explicit cubic Bezier' },
+    },
+
     { value: 'straight', field: 'kind', type: "'straight'", label: { zh: '直线', en: 'Straight' } },
-    { value: 'axis', field: 'cornerRadius', type: 'number', label: { zh: '轴对齐', en: 'Axis-aligned' } },
+    { value: 'axis', field: 'kind', type: "'-|' | '|-'", label: { zh: '单折角', en: 'Single elbow' } },
+    { value: 'orthogonal', field: 'kind', type: "'orthogonal'", label: { zh: '正交折线', en: 'Orthogonal' } },
     { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
     { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
   ],
   '@retikz/diagram#FlowLayoutRoute': [
+    { value: 'smooth', field: 'kind', type: "'smooth'", label: { zh: '过点曲线', en: 'Through-point curve' } },
+    { value: 'curve', field: 'kind', type: "'curve'", label: { zh: '二次贝塞尔', en: 'Quadratic Bezier' } },
+    { value: 'cubic', field: 'kind', type: "'cubic'", label: { zh: '三次贝塞尔', en: 'Cubic Bezier' } },
+
     { value: 'straight', field: 'kind', type: "'straight'", label: { zh: '直线', en: 'Straight' } },
-    { value: 'axis', field: 'cornerRadius', type: 'number', label: { zh: '轴对齐', en: 'Axis-aligned' } },
+    { value: 'axis', field: 'kind', type: "'-|' | '|-'", label: { zh: '单折角', en: 'Single elbow' } },
+    { value: 'orthogonal', field: 'kind', type: "'orthogonal'", label: { zh: '正交折线', en: 'Orthogonal' } },
     { value: 'symmetric', field: 'bendAngle', type: 'number', label: { zh: '对称弯曲', en: 'Symmetric bend' } },
     { value: 'tangent', field: 'outAngle', type: 'number', label: { zh: '切线弯曲', en: 'Tangent bend' } },
   ],

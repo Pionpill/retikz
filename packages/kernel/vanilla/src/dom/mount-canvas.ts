@@ -345,7 +345,7 @@ const mountStaticCanvas = (
   };
 };
 
-/** 把 IR / InputScene 挂成 retained Canvas Runtime session */
+/** 把 IR / InputScene 挂成 retained Canvas Runtime */
 const mountRetainedCanvas = (
   container: Element,
   input: RetainedRenderInput,

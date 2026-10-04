@@ -38,7 +38,8 @@ describe('usePreviewControlRuntime', () => {
       usePreviewControlContext: expect.any(Function),
       usePreviewControls: expect.any(Function),
     });
-    expect(Object.keys(previewContextExports)).toHaveLength(5);
+    expect(previewContextExports).not.toHaveProperty('usePreviewControlRuntime');
+    expect(previewContextExports).toHaveProperty('usePreviewDimensions');
   });
 
   it('提供 remount key、runtime 与 control state', () => {

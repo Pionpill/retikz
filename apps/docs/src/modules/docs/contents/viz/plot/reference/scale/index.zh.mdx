@@ -152,6 +152,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   name="BandScaleSchema"
   description="把分类集映射到等宽带区的比例尺。"
   descriptions={{
+    domainPadding: '分类间距之外的输出范围留白',
     type: '带状比例尺判别值。',
     name: '被坐标角色引用的比例尺名。',
     domain: '有序分类列表；省略时按数据出现顺序推断。',
@@ -167,6 +168,7 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   name="PointScaleSchema"
   description="把分类值放在等距零带宽位置的比例尺。"
   descriptions={{
+    domainPadding: '分类间距之外的输出范围留白',
     type: '点比例尺判别值。',
     name: '被坐标角色引用的比例尺名。',
     domain: '有序分类列表；省略时按数据出现顺序推断。',
@@ -183,6 +185,9 @@ mark 分支的 `clearance` 是图元外缘到自动边界的最小净空，使�
   name="OrdinalScaleSchema"
   description="离散 domain 到离散 range 的序数映射，常用于 series 颜色。"
   descriptions={{
+    rangeIndex: '分类索引到输出范围的循环映射',
+    'rangeIndex.step': '索引步长，正整数，默认 1',
+    'rangeIndex.offset': '索引偏移，非负整数，默认 0',
     type: '序数比例尺判别值。',
     name: '被非位置通道引用的比例尺名。',
     domain: '有序分类列表。',

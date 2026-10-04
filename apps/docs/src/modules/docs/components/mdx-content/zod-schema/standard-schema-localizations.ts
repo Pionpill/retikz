@@ -56,8 +56,6 @@ const pageLocalizations = {
       padding: '均匀或分侧的非负内边距',
       overflow: '内容溢出保持可见或裁剪',
       background: '覆盖分配区域的可选填充',
-      'background.fill': '背景填充',
-      'background.fillOpacity': '背景填充不透明度',
       border: '分配边界上的可选描边',
       cornerRadius: '背景、边框与内容裁剪共用的非负圆角半径',
     },

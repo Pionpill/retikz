@@ -8,6 +8,8 @@ export const ComparisonTarget = {
   Vega: 'vega',
   /** CSS 布局与样式 */
   CSS: 'css',
+  /** React 组件协调与更新 */
+  React: 'react',
 } as const;
 
 /** 可选对照对象。 */
@@ -18,16 +20,18 @@ export const ComparisonTargetList = [
   ComparisonTarget.TikZ,
   ComparisonTarget.Vega,
   ComparisonTarget.CSS,
+  ComparisonTarget.React,
 ] as const satisfies ReadonlyArray<ComparisonTargetValue>;
 
 /** 对照对象 i18n key。 */
-export type ComparisonTargetLabelKey = 'comparison.tikz' | 'comparison.vega' | 'comparison.css';
+export type ComparisonTargetLabelKey = 'comparison.tikz' | 'comparison.vega' | 'comparison.css' | 'comparison.react';
 
 /** 对照对象到 i18n key 的映射。 */
 export const ComparisonTargetLabelKeys: Record<ComparisonTargetValue, ComparisonTargetLabelKey> = {
   tikz: 'comparison.tikz',
   vega: 'comparison.vega',
   css: 'comparison.css',
+  react: 'comparison.react',
 };
 
 /** 判断未知值是否是受支持的对照对象。 */

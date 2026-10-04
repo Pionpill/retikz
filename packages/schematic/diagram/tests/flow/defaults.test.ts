@@ -378,7 +378,7 @@ describe('Flow defaults and formal Source fragments', () => {
     const straightOnly = Flow.defineFlowLayout({
       ...layout,
       name: 'straight-only',
-      capabilities: { ...layout.capabilities, routingKinds: ['straight'] },
+      capabilities: { ...layout.capabilities, routing: [{ kind: 'straight' }] },
     });
     expect(() => compileFlow(source, { flowLayouts: [straightOnly], defaultFlowLayout: straightOnly.name })).toThrow();
     expect(inputs).toHaveLength(1);

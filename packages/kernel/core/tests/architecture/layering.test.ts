@@ -71,7 +71,12 @@ const importsFromContractSubmodule = (file: string, declaration: string): boolea
 
   const target = resolveImportTarget(file, source);
   const contractRoot = join(SRC_ROOT, 'contract');
-  return target.startsWith(`${contractRoot}${sep}`) && target !== join(contractRoot, 'index.ts');
+  const targetOwner = ownerRef(target);
+  return (
+    target.startsWith(`${contractRoot}${sep}`) &&
+    target !== join(contractRoot, 'index.ts') &&
+    target !== (targetOwner === undefined ? undefined : join(targetOwner.rootPath, 'index.ts'))
+  );
 };
 
 const importsFlatProviderInternal = (file: string, declaration: string): boolean => {
@@ -121,7 +126,7 @@ describe('core layer import boundaries', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('source code outside contract imports contract through the contract barrel', () => {
+  it('source code outside contract imports through the root or capability owner barrel', () => {
     const offenders = tsFiles(SRC_ROOT).flatMap(file =>
       importDeclarations(file)
         .filter(line => importsFromContractSubmodule(file, line))

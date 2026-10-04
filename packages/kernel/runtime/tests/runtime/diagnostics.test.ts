@@ -1,0 +1,732 @@
+import { describe, expect, it } from 'vitest';
+
+import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
+import type { RuntimeCommitEvent, RuntimeComputationTraceReporter } from '../../src/computation';
+import { defineRuntimeComputation, RuntimeComputationKind, RuntimeComputationPhase } from '../../src/computation';
+import { RetikzRuntimeError } from '../../src/error';
+import { createRuntimeSourceRegistry, createRuntimeComputationRegistry } from '../../src/registry';
+import type { Runtime } from '../../src/runtime';
+import { createRuntime } from '../../src/runtime';
+import { defineRuntimeSource } from '../../src/source';
+import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
+import { createRuntimeSourceInput, createRuntimeSourceUpdate } from '../../src/transaction';
+
+const tracePhases = [
+  {
+    phase: PerformanceTracePhase.Update,
+    unit: PerformanceTraceUnit.Computation,
+    outcomes: [PerformanceTraceOutcome.Incremental],
+  },
+];
+
+describe('runtime runtime diagnostics', () => {
+  it('映射 trace diagnostic，并向所有 observer 提供同一 frozen commit-safe prefix', () => {
+    const observerCause = new Error('observer failed');
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const observedPrefixes: Array<RuntimeCommitEvent<number>['diagnostics']> = [];
+    const first = defineRuntimeComputation<number, number, number, number>({
+      id: { owner: 'counter', key: 'a' },
+      sources: [owner],
+      computations: [],
+      tracePhases,
+      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view, context) => {
+        const invalidRecord = {
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Computation,
+          outcome: PerformanceTraceOutcome.Incremental,
+          visited: 0,
+          reused: 1,
+          changed: 0,
+        } as const;
+        context.trace.report(invalidRecord);
+        context.trace.report(invalidRecord);
+        return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
+      },
+      observeCommit: event => {
+        if (event.phase === RuntimeComputationPhase.Initial) return;
+        observedPrefixes.push(event.diagnostics);
+        throw observerCause;
+      },
+    });
+    const second = defineRuntimeComputation<number, number, number, number>({
+      id: { owner: 'counter', key: 'b' },
+      sources: [owner],
+      computations: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view) => ({ kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value }),
+      observeCommit: event => {
+        if (event.phase === RuntimeComputationPhase.Update) observedPrefixes.push(event.diagnostics);
+      },
+    });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [second, first] });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+    });
+
+    const result = runtime.update({
+      baseRevision: runtime.revision(),
+      sources: [createRuntimeSourceUpdate(owner, 2)],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: RuntimeDiagnosticCode.TraceInvalidRecord,
+        phase: 'trace',
+        severity: 'error',
+        owner: 'counter',
+        computation: { owner: 'counter', key: 'a' },
+      }),
+      expect.objectContaining({
+        code: RuntimeDiagnosticCode.TraceInvalidRecord,
+        phase: 'trace',
+        severity: 'error',
+        owner: 'counter',
+        computation: { owner: 'counter', key: 'a' },
+      }),
+      expect.objectContaining({
+        code: RuntimeDiagnosticCode.ComputationObserverFailed,
+        phase: 'observe',
+        cause: observerCause,
+      }),
+    ]);
+    expect(observedPrefixes).toHaveLength(2);
+    expect(observedPrefixes[0]).toBe(observedPrefixes[1]);
+    expect(Object.isFrozen(observedPrefixes[0])).toBe(true);
+    expect(observedPrefixes[0]).toEqual([result.diagnostics[0], result.diagnostics[1]]);
+    expect(result.diagnostics[0]).toEqual(result.diagnostics[1]);
+    expect(result.diagnostics[0]).not.toBe(result.diagnostics[1]);
+    expect(Object.isFrozen(result.diagnostics)).toBe(true);
+    expect(result.diagnostics.every(Object.isFrozen)).toBe(true);
+    const queuedDiagnostics = runtime.diagnostics();
+    expect(queuedDiagnostics).toEqual(result.diagnostics);
+    expect(queuedDiagnostics).not.toBe(result.diagnostics);
+    expect(Object.isFrozen(queuedDiagnostics)).toBe(true);
+    expect(queuedDiagnostics.every(Object.isFrozen)).toBe(true);
+    for (const [index, diagnostic] of queuedDiagnostics.entries()) {
+      expect(diagnostic).toBe(result.diagnostics[index]);
+    }
+  });
+
+  it('失败 update 丢弃 product warning，保留 trace 与 rollback diagnostics 到 error/queue', () => {
+    const updateCause = new Error('downstream update failed');
+    const disposeCause = new Error('candidate dispose failed');
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    let artifactCaptureCount = 0;
+    const upstream = defineRuntimeComputation<number, Readonly<{ value: number; candidate: boolean }>, number, number>({
+      id: { owner: 'counter', key: 'a' },
+      sources: [owner],
+      computations: [],
+      tracePhases,
+      artifact: {
+        capture: value => {
+          artifactCaptureCount += 1;
+          return Object.freeze({ value, candidate: artifactCaptureCount > 1 });
+        },
+        readForComputation: value => value.value,
+        read: value => value.value,
+        dispose: value => {
+          if (value.candidate) throw disposeCause;
+        },
+      },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view, context) => {
+        const diagnose = context.diagnose as (diagnostic: unknown) => void;
+        diagnose({
+          code: RuntimeDiagnosticCode.TraceInvalidRecord,
+          phase: 'trace',
+          message: 'discard me',
+          severity: 'error',
+          owner: 'spoofed-owner',
+          computation: { owner: 'spoofed-owner', key: 'spoofed-computation' },
+        });
+        context.trace.report({
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Computation,
+          outcome: PerformanceTraceOutcome.Incremental,
+          visited: 0,
+          reused: 1,
+          changed: 0,
+        });
+        return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
+      },
+    });
+    const downstream = defineRuntimeComputation<number, number, number, number>({
+      id: { owner: 'counter', key: 'b' },
+      sources: [],
+      computations: [upstream],
+      tracePhases: [],
+      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.artifact(upstream).value }),
+      update: () => {
+        throw updateCause;
+      },
+    });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [downstream, upstream] });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+    });
+
+    let thrown: unknown;
+    try {
+      runtime.update({
+        baseRevision: runtime.revision(),
+        sources: [createRuntimeSourceUpdate(owner, 2)],
+      });
+    } catch (cause) {
+      thrown = cause;
+    }
+
+    expect(thrown).toEqual(
+      expect.objectContaining({
+        code: RetikzRuntimeErrorCode.ComputationUpdateFailed,
+        cause: updateCause,
+        diagnostics: [
+          expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord }),
+          expect.objectContaining({
+            code: RuntimeDiagnosticCode.ArtifactDisposeFailed,
+            cause: disposeCause,
+          }),
+        ],
+      }),
+    );
+    expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+    if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
+    expect(runtime.revision()).toBe(0);
+    expect(runtime.artifact(upstream)).toEqual({ revision: 0, value: 1 });
+    const queuedDiagnostics = runtime.diagnostics();
+    expect(queuedDiagnostics).toEqual(thrown.diagnostics);
+    expect(queuedDiagnostics).not.toBe(thrown.diagnostics);
+    expect(queuedDiagnostics).toHaveLength(2);
+    expect(queuedDiagnostics[0]).toBe(thrown.diagnostics[0]);
+    expect(queuedDiagnostics[1]).toBe(thrown.diagnostics[1]);
+    expect(runtime.diagnostics()).toEqual([]);
+  });
+
+  it('统一注入 context 与 fallback warning 归属，不接受 JavaScript spoof 字段', () => {
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    let updates = 0;
+    const computation = defineRuntimeComputation<number, number, number, number>({
+      id: { owner: 'counter', key: 'computation' },
+      sources: [owner],
+      computations: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view, context) => {
+        updates += 1;
+        const spoofedWarning = {
+          code: updates === 1 ? 'CONTEXT_WARNING' : 'FALLBACK_WARNING',
+          phase: RuntimeComputationPhase.Update,
+          message: 'Runtime must inject attribution',
+          severity: 'error',
+          owner: 'spoofed-owner',
+          computation: { owner: 'spoofed-owner', key: 'spoofed-computation' },
+        };
+        if (updates === 1) {
+          const diagnose = context.diagnose as (diagnostic: unknown) => void;
+          diagnose(spoofedWarning);
+          return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
+        }
+        return {
+          kind: RuntimeComputationKind.Fallback,
+          diagnostics: [spoofedWarning],
+        };
+      },
+    });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+    });
+
+    const contextResult = runtime.update({
+      baseRevision: runtime.revision(),
+      sources: [createRuntimeSourceUpdate(owner, 2)],
+    });
+    expect(contextResult.diagnostics).toEqual([
+      {
+        code: 'CONTEXT_WARNING',
+        phase: RuntimeComputationPhase.Update,
+        severity: 'warning',
+        message: 'Runtime must inject attribution',
+        owner: 'counter',
+        computation: { owner: 'counter', key: 'computation' },
+      },
+    ]);
+    runtime.diagnostics();
+
+    const fallbackResult = runtime.update({
+      baseRevision: runtime.revision(),
+      sources: [createRuntimeSourceUpdate(owner, 3)],
+    });
+    expect(fallbackResult.outcome).toBe(RuntimeComputationKind.Fallback);
+    expect(fallbackResult.diagnostics).toEqual([
+      {
+        code: 'FALLBACK_WARNING',
+        phase: RuntimeComputationPhase.Update,
+        severity: 'warning',
+        message: 'Runtime must inject attribution',
+        owner: 'counter',
+        computation: { owner: 'counter', key: 'computation' },
+      },
+    ]);
+  });
+
+  it('dispose 阶段阻止 reentry，并把 cleanup throw 留在 disposed runtime queue', () => {
+    const sessionRef: { current?: Runtime } = {};
+    const reentryErrors: Array<RetikzRuntimeError> = [];
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+        dispose: () => {
+          const activeRuntime = sessionRef.current;
+          if (activeRuntime === undefined) return;
+          const captureReentry = (action: () => unknown) => {
+            try {
+              action();
+            } catch (cause) {
+              if (!(cause instanceof RetikzRuntimeError)) throw cause;
+              reentryErrors.push(cause);
+            }
+          };
+          expect(activeRuntime.revision()).toBe(0);
+          captureReentry(() => activeRuntime.snapshot(owner));
+          captureReentry(() => activeRuntime.artifact(computation));
+          captureReentry(() =>
+            activeRuntime.update({
+              baseRevision: activeRuntime.revision(),
+              sources: [createRuntimeSourceUpdate(owner, 2)],
+            }),
+          );
+          captureReentry(() => activeRuntime.diagnostics());
+          captureReentry(() => activeRuntime.dispose());
+          throw reentryErrors[0];
+        },
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const computation = defineRuntimeComputation<number, number, number, number>({
+      id: { owner: 'counter', key: 'computation' },
+      sources: [owner],
+      computations: [],
+      tracePhases: [],
+      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+    });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+    });
+    sessionRef.current = runtime;
+
+    expect(() => runtime.dispose()).not.toThrow();
+    expect(reentryErrors.map(error => [error.code, error.phase])).toEqual([
+      [RetikzRuntimeErrorCode.Reentrant, 'snapshot'],
+      [RetikzRuntimeErrorCode.Reentrant, 'artifact'],
+      [RetikzRuntimeErrorCode.Reentrant, 'update'],
+      [RetikzRuntimeErrorCode.Reentrant, 'diagnostics'],
+      [RetikzRuntimeErrorCode.Reentrant, 'dispose'],
+    ]);
+    expect(runtime.diagnostics()).toEqual([
+      expect.objectContaining({
+        code: RuntimeDiagnosticCode.SourceDisposeFailed,
+        severity: 'error',
+        owner: 'counter',
+        cause: expect.objectContaining({ code: RetikzRuntimeErrorCode.Reentrant }),
+      }),
+    ]);
+  });
+
+  it('dispose 按反向 Computation/Source 顺序继续清理，重复调用不重复释放', () => {
+    const cleanupOrder: Array<string> = [];
+    const ownerA = defineRuntimeSource<number, Readonly<{ value: number }>, number, never>({
+      key: 'a',
+      value: {
+        capture: value => Object.freeze({ value }),
+        read: value => value.value,
+        equals: (left, right) => left.value === right.value,
+        dispose: () => {
+          cleanupOrder.push('owner:a');
+          throw new Error('owner a dispose failed');
+        },
+      },
+    });
+    const ownerB = defineRuntimeSource<number, Readonly<{ value: number }>, number, never>({
+      key: 'b',
+      value: {
+        capture: value => Object.freeze({ value }),
+        read: value => value.value,
+        equals: (left, right) => left.value === right.value,
+        dispose: () => {
+          cleanupOrder.push('owner:b');
+          throw new Error('owner b dispose failed');
+        },
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [ownerB, ownerA] });
+    const computationA = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
+      id: { owner: 'a', key: 'derive' },
+      sources: [ownerA],
+      computations: [],
+      tracePhases: [],
+      artifact: {
+        capture: value => Object.freeze({ value }),
+        readForComputation: value => value.value,
+        read: value => value.value,
+        dispose: () => {
+          cleanupOrder.push('computation:a');
+          throw new Error('computation a dispose failed');
+        },
+      },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(ownerA).value }),
+    });
+    const computationB = defineRuntimeComputation<number, Readonly<{ value: number }>, number, number>({
+      id: { owner: 'b', key: 'derive' },
+      sources: [ownerB],
+      computations: [computationA],
+      tracePhases: [],
+      artifact: {
+        capture: value => Object.freeze({ value }),
+        readForComputation: value => value.value,
+        read: value => value.value,
+        dispose: () => {
+          cleanupOrder.push('computation:b');
+          throw new Error('computation b dispose failed');
+        },
+      },
+      run: view => ({
+        kind: RuntimeComputationKind.Full,
+        artifact: view.artifact(computationA).value + view.snapshot(ownerB).value,
+      }),
+    });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [computationB, computationA] });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(ownerB, 2), createRuntimeSourceInput(ownerA, 1)],
+    });
+
+    runtime.dispose();
+    runtime.dispose();
+
+    expect(cleanupOrder).toEqual(['computation:b', 'computation:a', 'owner:b', 'owner:a']);
+    expect(runtime.diagnostics()).toEqual([
+      expect.objectContaining({
+        code: RuntimeDiagnosticCode.ArtifactDisposeFailed,
+        computation: { owner: 'b', key: 'derive' },
+      }),
+      expect.objectContaining({
+        code: RuntimeDiagnosticCode.ArtifactDisposeFailed,
+        computation: { owner: 'a', key: 'derive' },
+      }),
+      expect.objectContaining({ code: RuntimeDiagnosticCode.SourceDisposeFailed, owner: 'b' }),
+      expect.objectContaining({ code: RuntimeDiagnosticCode.SourceDisposeFailed, owner: 'a' }),
+    ]);
+    expect(runtime.diagnostics()).toEqual([]);
+  });
+
+  it.each([
+    {
+      name: 'sink throw',
+      expectedCode: RuntimeDiagnosticCode.TraceSinkFailed,
+      createSink: () => () => {
+        throw new Error('sink failed');
+      },
+    },
+    {
+      name: 'reentrant report',
+      expectedCode: RuntimeDiagnosticCode.TraceReentrant,
+      createSink: (readReporter: () => RuntimeComputationTraceReporter | undefined) => () => {
+        readReporter()?.report({
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Computation,
+          outcome: PerformanceTraceOutcome.Incremental,
+          visited: 1,
+          reused: 0,
+          changed: 1,
+        });
+      },
+    },
+  ])('映射 $name reporter diagnostic', testCase => {
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    let activeReporter: RuntimeComputationTraceReporter | undefined;
+    const computation = defineRuntimeComputation<number, number, number, number>({
+      id: { owner: 'counter', key: 'computation' },
+      sources: [owner],
+      computations: [],
+      tracePhases,
+      artifact: { capture: value => value, readForComputation: value => value, read: value => value },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view, context) => {
+        activeReporter = context.trace;
+        context.trace.report({
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Computation,
+          outcome: PerformanceTraceOutcome.Incremental,
+          visited: 1,
+          reused: 0,
+          changed: 1,
+        });
+        return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
+      },
+    });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+      trace: testCase.createSink(() => activeReporter),
+    });
+
+    const result = runtime.update({
+      baseRevision: runtime.revision(),
+      sources: [createRuntimeSourceUpdate(owner, 2)],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: testCase.expectedCode,
+        phase: 'trace',
+        computation: { owner: 'counter', key: 'computation' },
+      }),
+    ]);
+  });
+
+  it('semantic-equal candidate dispose failure 随 bailout result 与 queue 返回', () => {
+    const disposeCause = new Error('equal candidate dispose failed');
+    let captures = 0;
+    const owner = defineRuntimeSource<number, Readonly<{ value: number; candidate: boolean }>, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => {
+          captures += 1;
+          return Object.freeze({ value, candidate: captures > 1 });
+        },
+        read: value => value.value,
+        equals: (left, right) => left.value === right.value,
+        dispose: value => {
+          if (value.candidate) throw disposeCause;
+        },
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const computations = createRuntimeComputationRegistry({ sources });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+    });
+
+    const result = runtime.update({
+      baseRevision: runtime.revision(),
+      sources: [createRuntimeSourceUpdate(owner, 1)],
+    });
+
+    expect(result).toEqual({
+      revision: 0,
+      outcome: RuntimeComputationKind.Bailout,
+      diagnostics: [
+        expect.objectContaining({
+          code: RuntimeDiagnosticCode.SourceDisposeFailed,
+          cause: disposeCause,
+        }),
+      ],
+    });
+    expect(runtime.diagnostics()).toEqual(result.diagnostics);
+  });
+
+  it('后序 Source prepare 失败时保留此前 equal candidate cleanup diagnostic 到 error/queue', () => {
+    const disposeCause = new Error('equal candidate dispose failed');
+    const captureCause = new Error('later owner capture failed');
+    let firstCaptures = 0;
+    const first = defineRuntimeSource<number, Readonly<{ value: number; candidate: boolean }>, number, never>({
+      key: 'a',
+      value: {
+        capture: value => {
+          firstCaptures += 1;
+          return Object.freeze({ value, candidate: firstCaptures > 1 });
+        },
+        read: value => value.value,
+        equals: (left, right) => left.value === right.value,
+        dispose: value => {
+          if (value.candidate) throw disposeCause;
+        },
+      },
+    });
+    let secondCaptures = 0;
+    const second = defineRuntimeSource<number, number, number, never>({
+      key: 'b',
+      value: {
+        capture: value => {
+          secondCaptures += 1;
+          if (secondCaptures > 1) throw captureCause;
+          return value;
+        },
+        read: value => value,
+        equals: (left, right) => left === right,
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [second, first] });
+    const computations = createRuntimeComputationRegistry({ sources });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(second, 1), createRuntimeSourceInput(first, 1)],
+    });
+
+    let thrown: unknown;
+    try {
+      runtime.update({
+        baseRevision: runtime.revision(),
+        sources: [createRuntimeSourceUpdate(first, 1), createRuntimeSourceUpdate(second, 2)],
+      });
+    } catch (cause) {
+      thrown = cause;
+    }
+
+    expect(thrown).toEqual(
+      expect.objectContaining({
+        code: RetikzRuntimeErrorCode.CaptureFailed,
+        cause: captureCause,
+        diagnostics: [
+          expect.objectContaining({
+            code: RuntimeDiagnosticCode.SourceDisposeFailed,
+            owner: 'a',
+            cause: disposeCause,
+          }),
+        ],
+      }),
+    );
+    expect(thrown).toBeInstanceOf(RetikzRuntimeError);
+    if (!(thrown instanceof RetikzRuntimeError)) throw new Error('expected RetikzRuntimeError');
+    expect(runtime.revision()).toBe(0);
+    expect(runtime.snapshot(first)).toEqual({ revision: 0, value: 1 });
+    expect(runtime.snapshot(second)).toEqual({ revision: 0, value: 1 });
+    const queuedDiagnostics = runtime.diagnostics();
+    expect(queuedDiagnostics).toEqual([
+      expect.objectContaining({
+        code: RuntimeDiagnosticCode.SourceDisposeFailed,
+        owner: 'a',
+        cause: disposeCause,
+      }),
+    ]);
+    expect(thrown.diagnostics[0]).toBe(queuedDiagnostics[0]);
+    expect(Object.isFrozen(thrown.diagnostics)).toBe(true);
+    expect(Object.isFrozen(thrown.diagnostics[0])).toBe(true);
+    expect(runtime.diagnostics()).toEqual([]);
+  });
+
+  it('artifact prepare failure 保留同 callback 的 trace diagnostics', () => {
+    const captureCause = new Error('candidate artifact capture failed');
+    let captures = 0;
+    const owner = defineRuntimeSource<number, number, number, never>({
+      key: 'counter',
+      value: {
+        capture: value => value,
+        read: value => value,
+        equals: (left, right) => left === right,
+      },
+    });
+    const sources = createRuntimeSourceRegistry({ builtins: [owner] });
+    const computation = defineRuntimeComputation<number, number, number, number>({
+      id: { owner: 'counter', key: 'computation' },
+      sources: [owner],
+      computations: [],
+      tracePhases,
+      artifact: {
+        capture: value => {
+          captures += 1;
+          if (captures > 1) throw captureCause;
+          return value;
+        },
+        readForComputation: value => value,
+        read: value => value,
+      },
+      run: view => ({ kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value }),
+      update: (_previous, view, context) => {
+        context.trace.report({
+          phase: PerformanceTracePhase.Update,
+          unit: PerformanceTraceUnit.Computation,
+          outcome: PerformanceTraceOutcome.Incremental,
+          visited: 0,
+          reused: 1,
+          changed: 0,
+        });
+        return { kind: RuntimeComputationKind.Incremental, artifact: view.snapshot(owner).value };
+      },
+    });
+    const computations = createRuntimeComputationRegistry({ sources, builtins: [computation] });
+    const runtime = createRuntime({
+      sources,
+      computations,
+      initialSnapshots: [createRuntimeSourceInput(owner, 1)],
+    });
+
+    let thrown: unknown;
+    try {
+      runtime.update({
+        baseRevision: runtime.revision(),
+        sources: [createRuntimeSourceUpdate(owner, 2)],
+      });
+    } catch (cause) {
+      thrown = cause;
+    }
+
+    expect(thrown).toEqual(
+      expect.objectContaining({
+        code: RetikzRuntimeErrorCode.ArtifactCaptureFailed,
+        cause: captureCause,
+        diagnostics: [expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord })],
+      }),
+    );
+    expect(runtime.diagnostics()).toEqual([
+      expect.objectContaining({ code: RuntimeDiagnosticCode.TraceInvalidRecord }),
+    ]);
+  });
+});

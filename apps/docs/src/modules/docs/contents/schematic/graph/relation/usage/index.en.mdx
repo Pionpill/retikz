@@ -97,6 +97,8 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 
 ### Connect endpoints
 
+With an explicit `smooth` route, intermediate knots are visited in order. The last node Target without anchor / offset connects to the real boundary along the incoming direction. Explicit anchor / offset positions are preserved, and the path compiler applies arrow shortening.
+
 React and Vanilla accept `source="sender"`, normalized to `{ id: 'sender' }`. IR and `createRelation()` require full objects. Use `source={{ id: 'sender', anchor: 'right' }}` to select an anchor. Targets may be Core Nodes, Coordinates, resolved Scopes, or targets published by higher-level components. Core reports duplicate ids and unresolved references.
 
 Endpoints and direction are stored separately. `reverse` places a marker at the source without exchanging source / target identities. The selected direction must be allowed by the current role and kind.

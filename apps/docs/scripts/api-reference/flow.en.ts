@@ -1,5 +1,80 @@
 /** Flow API 页经人工核对的英文说明 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '以真实 Core 边界查询布局后的端点': 'Query positioned endpoints against real Core boundaries',
+  已补全默认的关系端点布局约束: 'Relation endpoint layout constraints with effective defaults',
+  持久化关系端点约束: 'Persistent relation endpoint constraints',
+  '编译结果中可直接交给 Core 的端点目标': 'Compiled endpoint target ready for Core consumption',
+
+  '起点 Entity 或 Group 的有效连接约束': 'Effective connection constraints for the source Entity or Group',
+  '终点 Entity 或 Group 的有效连接约束': 'Effective connection constraints for the target Entity or Group',
+  已分配起点: 'Assigned source endpoint',
+  已分配终点: 'Assigned target endpoint',
+  '支持端点选侧、固定锚点与自动分离': 'Supports side selection, fixed anchors and automatic endpoint separation',
+  '目标 Entity 或 Group': 'Target Entity or Group',
+  同侧落点许可: 'Connection point overlap policy',
+  自动分配的指定侧: 'Required side for automatic placement',
+  '作者固定的 Core 锚点': 'Authored fixed Core anchor',
+
+  '基于完整的根局部元素边界计算关系路线和标签预留，不改变输入或元素位置':
+    'Compute routes and label reservations from complete root-local element bounds without mutating inputs or moving elements',
+  '已测量的布局输入，关系输出保持输入顺序': 'Measured layout input; relation outputs retain input order',
+  '全部元素的最终根局部边界，与布局返回的元素一致':
+    'Final root-local bounds for all elements, identical to the returned layout elements',
+  '布局执行上下文，解析 smooth 经过点时必需': 'Layout execution context, required for resolving smooth waypoints',
+  '按输入关系顺序排列的路由输出，由调用方与元素一起返回并接受布局输出校验':
+    'Routes in input relation order, returned together with elements by the caller for layout output validation',
+  '显式折点比例 0.25、0.5 或 0.75；省略时继承或中点优先自动避让，对齐端点保持直连':
+    'Explicit turn fraction 0.25, 0.5 or 0.75; omission inherits or searches midpoint-first. Aligned endpoints stay straight',
+  '显式或继承的间隙比例，省略时自动选择': 'Explicit or inherited gap fraction; omitted for automatic selection',
+  '作者的有效比例；自动选择不重复存储': 'Effective authored fraction; automatic selection is not stored redundantly',
+
+  'Flow Layout Definition 调用作者 placement 的同步执行边界':
+    'Synchronous execution context for Flow placement and waypoint queries',
+  与最终输出一致的全部根局部元素矩形: 'All root-local element bounds, identical to the final output',
+  '作者指定或 Core 补全的控制臂倍率': 'Authored tangent multiplier or the Core default',
+  关系终点身份: 'Relation target identity',
+  关系起点身份: 'Relation source identity',
+  '包含 source 和 target 的完整数值点列': 'Complete numeric knot chain including source and target',
+  '已补全 tension 的经过点路由意图': 'Through-point routing intent with effective tension',
+  '已解析的样条参考点列，保留合法重复点': 'Resolved spline reference knots, retaining valid repeats',
+  '当前布局中的真实经过点查询，不持有跨编译缓存':
+    'Real waypoint query within this layout, with no cross-compilation cache',
+  '按已测量尺寸执行作者的固定排列，返回容器局部坐标中的边界和子项位置':
+    'Execute authored placement using measured sizes and return container-local bounds and child positions',
+  显式经过点样条: 'Explicit through-point spline',
+  有序中间目标: 'Ordered intermediate Targets',
+  '有序中间目标，不包括自动追加的关系终点':
+    'Ordered intermediate Targets, excluding the automatically appended relation target',
+  '正数控制臂倍率，使用 Core 默认值': 'Positive tangent multiplier using the Core default',
+  '用真实 Graph 几何解析经过点，返回包含首尾的根局部点列':
+    'Resolve waypoints against real Graph geometry, returning a root-local chain including endpoints',
+  经过点样条: 'Through-point spline',
+  二次贝塞尔输入: 'Quadratic Bezier input',
+  三次贝塞尔输入: 'Cubic Bezier input',
+  'Flow 根坐标控制点，省略时自动生成': 'Control in Flow root coordinates; omit for automatic generation',
+  自动三次必须同时省略两个控制点: 'Automatic cubic input must omit both controls',
+  'Flow 根坐标的起点切线控制点，显式值不可移动':
+    'Source tangent control in Flow root coordinates; explicit values must not move',
+  'Flow 根坐标的终点切线控制点，显式值不可移动':
+    'Target tangent control in Flow root coordinates; explicit values must not move',
+  '按 source 到 target 排列的中心参考端点': 'Center reference endpoints ordered from source to target',
+  二次贝塞尔参考几何: 'Quadratic Bezier reference geometry',
+  三次贝塞尔参考几何: 'Cubic Bezier reference geometry',
+  '已确定的二次控制点，不是曲线经过点': 'Resolved quadratic control, not a point on the curve',
+  已确定的起点切线控制点: 'Resolved source tangent control',
+  已确定的终点切线控制点: 'Resolved target tangent control',
+  支持既有完整输入语义的常规路由: 'Regular routing with its complete existing input semantics',
+  支持的贝塞尔种类: 'Supported Bezier kind',
+  '可消费的自动或显式输入，非空且无重复；Source 不填写 mode':
+    'Supported automatic or explicit inputs; nonempty and unique. Source has no mode field',
+
+  '自动或完整显式的贝塞尔输入，不存储可推导的 mode':
+    'Automatic or complete explicit Bezier input without a redundant mode field',
+  完整数值贝塞尔参考路线: 'Complete numeric Bezier reference route',
+  每种路由及其可消费的作者输入语义: 'Each routing kind and its supported authoring modes',
+  '默认路由种类，必须包含在 capabilities.routing 中':
+    'Default routing kind, which must be declared in capabilities.routing',
+
   'Flow layout provider 使用的有效路由': 'Effective routing consumed by the Flow layout provider',
   'Flow layout relation 输入': 'Measured Flow layout relation input',
   省略时由布局比较左右候选: 'Omission lets layout compare left and right candidates',

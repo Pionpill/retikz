@@ -167,7 +167,7 @@ export type LayoutExtensions = Readonly<{
 
 | Member                     | Type                                      | Default                      | Description                                                                                                                              |
 | -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                                                                       |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime                                                                                                               |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
 | `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
 | `readonly signal?`         | `AbortSignal`                             | —                            | Lifecycle signal for async preparation and the controller                                                                                |
@@ -245,7 +245,7 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 
 | Member                     | Type                                      | Default                      | Description                                                                                                                              |
 | -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                                                                       |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime                                                                                                               |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
 | `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
 | `readonly signal?`         | `AbortSignal`                             | —                            | Lifecycle signal for async preparation and the controller                                                                                |
@@ -259,13 +259,13 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 
 <ApiTable>
 
-| Member                     | Type                              | Default  | Description                                                                                  |
-| -------------------------- | --------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | Compiles and materializes the complete result directly, without creating a Runtime Session   |
-| `readonly onDiagnostic?`   | `never`                           | —        | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
-| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | Client authoring preparation mode; synchronous SSR continues to use synchronous lower        |
-| `readonly signal?`         | `AbortSignal`                     | —        | Lifecycle signal for async preparation and the controller                                    |
-| `readonly updateStrategy?` | `never`                           | —        | Static mode does not support a Program update strategy                                       |
+| Member                     | Type                              | Default  | Description                                                                           |
+| -------------------------- | --------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | Compiles and materializes the complete result directly, without creating a Runtime    |
+| `readonly onDiagnostic?`   | `never`                           | —        | Static mode creates no Runtime and therefore emits no structured Runtime diagnostics  |
+| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | Client authoring preparation mode; synchronous SSR continues to use synchronous lower |
+| `readonly signal?`         | `AbortSignal`                     | —        | Lifecycle signal for async preparation and the controller                             |
+| `readonly updateStrategy?` | `never`                           | —        | Static mode does not support a Computation update strategy                            |
 
 </ApiTable>
 
@@ -299,13 +299,13 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 
 <ApiTable>
 
-| Member                     | Type                              | Default  | Description                                                                                  |
-| -------------------------- | --------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | Compiles and materializes the complete result directly, without creating a Runtime Session   |
-| `readonly onDiagnostic?`   | `never`                           | —        | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
-| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | Client authoring preparation mode; synchronous SSR continues to use synchronous lower        |
-| `readonly signal?`         | `AbortSignal`                     | —        | Lifecycle signal for async preparation and the controller                                    |
-| `readonly updateStrategy?` | `never`                           | —        | Static mode does not support a Program update strategy                                       |
+| Member                     | Type                              | Default  | Description                                                                           |
+| -------------------------- | --------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —        | Compiles and materializes the complete result directly, without creating a Runtime    |
+| `readonly onDiagnostic?`   | `never`                           | —        | Static mode creates no Runtime and therefore emits no structured Runtime diagnostics  |
+| `readonly preparation?`    | `'sync' \| 'async'`               | `'sync'` | Client authoring preparation mode; synchronous SSR continues to use synchronous lower |
+| `readonly signal?`         | `AbortSignal`                     | —        | Lifecycle signal for async preparation and the controller                             |
+| `readonly updateStrategy?` | `never`                           | —        | Static mode does not support a Computation update strategy                            |
 
 </ApiTable>
 

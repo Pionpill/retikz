@@ -35,5 +35,5 @@ export const EntitySchema = strictObject({
   layout: NodeLayoutSchema.omit({ padding: true })
     .optional()
     .describe('Node layout overrides without role-owned padding.'),
-  position: EntityNodeShape.position.optional().describe('Optional Core Node placement.'),
+  position: EntityNodeShape.position.unwrap().optional().describe('Optional Core Node placement.'),
 }).describe('JSON-safe Graph Entity with role-owned structure and the non-structural Core Node surface.');

@@ -1,6 +1,6 @@
 import type { OpenString, ValueOf } from '@retikz/foundation';
 
-import type { RuntimeProgramId } from '../identity';
+import type { RuntimeComputationId } from '../identity';
 import type { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from './constants';
 
 /** Runtime 内置结构化诊断码取值 */
@@ -18,10 +18,10 @@ export type RuntimeDiagnostic = Readonly<{
   severity: 'warning' | 'error';
   /** 面向开发者的诊断信息 */
   message: string;
-  /** 关联的 owner key */
+  /** 来源归属，例如 Source key 或 participant key */
   owner?: string;
-  /** 关联的 Program identity */
-  program?: RuntimeProgramId;
+  /** 关联的 Computation identity */
+  computation?: RuntimeComputationId;
   /** 隔离的原始非致命错误 */
   cause?: unknown;
 }>;

@@ -27,7 +27,7 @@ Retikz 将领域语义、无框架 API 和框架适配分为三组。右侧包�
 | 核心能力包 | `@retikz/plot`         | Plot Source IR、Canonical、数据可视化 grammar、Plot pipeline / lowering                   | 通用 Core 语义、DOM、框架 props / JSX、独立 session                          |
 | API 基础包 | `@retikz/vanilla`      | Core authoring API、Input normalize、framework-neutral processing / retained runtime、SSR | Core schema、Core IR-to-Canonical resolve、Core lowering / Scene 语义        |
 | API 基础包 | `@retikz/plot-vanilla` | Plot authoring API、Plot Input builder、Plot 与 Vanilla 的实例组合                        | Plot grammar / schema / IR-to-Canonical resolve、lowering、DOM、框架生命周期 |
-| 框架包     | `@retikz/react`        | React JSX / props、hook、ref、生命周期与 Vanilla 处理结果的宿主接线                       | Core IR builder、compile driver、Runtime session、renderer 编排              |
+| 框架包     | `@retikz/react`        | React JSX / props、hook、ref、生命周期与 Vanilla 处理结果的宿主接线                       | Core IR builder、compile driver、Runtime、renderer 编排                      |
 | 框架包     | `@retikz/plot-react`   | Plot React JSX / props 与 Plot Vanilla 调度                                               | Plot IR builder、平行 Plot runtime、Plot pipeline                            |
 
 ## 2. 核心能力包
@@ -66,7 +66,7 @@ Plot Vanilla 是 Plot 的无框架 API 基础包。它定义 Plot `InputXxx`，�
 
 React 是 Core API 的框架适配包，必须直接依赖 `@retikz/vanilla`。它将 JSX、props、children、hook、ref 与 React 生命周期映射为 Vanilla `InputXxx` 和 Vanilla 公开处理调用，并把订阅到的只读处理结果接到 React 宿主输出。
 
-React 不直接实现 Core Source IR builder、compile driver、Program、Runtime Session、retained renderer 或图形更新协议。React 可以保留 JSX 解包、React 状态订阅和只读处理结果到 React 宿主的薄映射；这些接线不能成为通用处理逻辑的平行实现。React 不调用 Vanilla 的 DOM 挂载子入口，避免与 React 对宿主节点的所有权冲突。
+React 不直接实现 Core Source IR builder、compile driver、Computation、Runtime、retained renderer 或图形更新协议。React 可以保留 JSX 解包、React 状态订阅和只读处理结果到 React 宿主的薄映射；这些接线不能成为通用处理逻辑的平行实现。React 不调用 Vanilla 的 DOM 挂载子入口，避免与 React 对宿主节点的所有权冲突。
 
 ### 4.2 `@retikz/plot-react`
 
@@ -102,7 +102,7 @@ Vanilla API `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 
 ## 6. 跨包不变量
 
 1. 同一领域能力只能有一个 Source IR schema、一个 Vanilla API Input-to-IR normalize、一个 Core / Plot IR-and-context-to-Canonical resolve 与一个正式 compile / lowering 路径
-2. 所有框架包必须依赖相应 Vanilla 包，复用其 authoring 与 processing；框架包只能改变 authoring 语法、生命周期或宿主接线，订阅 Vanilla 只读处理结果，不能重建 Source IR、compile driver、Runtime session、retained renderer 或 renderer 编排
+2. 所有框架包必须依赖相应 Vanilla 包，复用其 authoring 与 processing；框架包只能改变 authoring 语法、生命周期或宿主接线，订阅 Vanilla 只读处理结果，不能重建 Source IR、compile driver、Runtime、retained renderer 或 renderer 编排
 3. `InputXxx` 的便利写法与 TypeScript 类型属于 Vanilla API 包；持久化 compact 写法属于 Source IR；`CanonicalXxx` 由 `IRXxx` 派生、结合当前 context 确定并定义在 Core / Plot domain `resolve/`。三者不得混为同一 schema 或平行真源
 4. Vanilla 根入口、Core、Plot 都不得反向依赖 DOM 或框架包；DOM 能力只进入明确子入口
 5. 领域默认值与 IR shorthand 由 Core / Plot resolve 决定，不得在 Vanilla、adapter 或每个下游 consumer 各自复制

@@ -9,6 +9,13 @@ import { describe, expect, it } from 'vitest';
 
 import * as FlowReact from '../src/flow';
 
+/** 本组验证同步 Flow authoring；遇到异步 adapter 时显式失败 */
+const synchronousAdapters = (adapters: ReturnType<typeof createInputScene>['adapters']) =>
+  adapters.map(adapter => {
+    if (adapter.lower === undefined) throw new Error('Expected a synchronous Flow adapter');
+    return adapter;
+  });
+
 it('preserves Graph Group captions, labels and local context through React and Vanilla equally', () => {
   const group = {
     id: 'service',
@@ -27,7 +34,7 @@ it('preserves Graph Group captions, labels and local context through React and V
       </FlowReact.FlowGroup>
     </FlowReact.FlowDiagram>,
   );
-  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeFlowDiagram({
     entities: [{ id: 'request', text: 'Request' }],
     groups: [{ ...group, children: ['request'] }],
@@ -46,7 +53,7 @@ it('preserves local Layout exclusion through React and Vanilla equally', () => {
       </FlowReact.FlowLayout>
     </FlowReact.FlowDiagram>,
   );
-  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeFlowDiagram({
     entities: [
       { id: 'canvas', text: 'canvas' },
@@ -82,7 +89,7 @@ const components = () => ({
 
 const flowSourceFromChildren = (FlowDiagram: FlowComponent, children: ReactNode) => {
   const input = createInputScene(createElement(FlowDiagram, null, children));
-  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   return normalized.ir.children[0];
 };
 
@@ -160,7 +167,9 @@ describe('@retikz/diagram-react/flow', () => {
       children: ['a', 'b'],
       relations: [relation],
     });
-    expect(normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0]).toEqual(vanilla);
+    expect(normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0]).toEqual(
+      vanilla,
+    );
     expect(FlowDiagramSchema.parse(vanilla).relations?.[0].routing).toEqual({ kind, cornerRadius: 3 });
     const markup = renderToStaticMarkup(
       createElement(
@@ -213,11 +222,11 @@ describe('@retikz/diagram-react/flow', () => {
           ),
         ),
       );
-      const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
+      const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0];
       expect(react).toEqual(direct);
       expect(normalizeFlowDiagram(source)).toEqual(direct);
       const result = processToStaticInputResult(input.scene, {
-        adapters: input.adapters,
+        adapters: synchronousAdapters(input.adapters),
         compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
       });
       expect(JSON.stringify(result)).toContain('A');
@@ -250,7 +259,7 @@ describe('@retikz/diagram-react/flow', () => {
         createElement(FlowReact.FlowRelation, relation),
       ),
     );
-    const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
+    const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0];
     const vanilla = normalizeFlowDiagram({
       ...props,
       entities: [entity],
@@ -448,7 +457,7 @@ describe('@retikz/diagram-react/flow', () => {
 
     expect(() =>
       processToStaticInputResult(input.scene, {
-        adapters: input.adapters,
+        adapters: synchronousAdapters(input.adapters),
         compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
       }),
     ).toThrowError(
@@ -625,7 +634,7 @@ describe('@retikz/diagram-react/flow', () => {
         flowChildren(FlowEntity, FlowGroup, FlowLayout, FlowRelation),
       ),
     );
-    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 
     expect(normalized.ir.children).toEqual([expectedSource]);
     expect(Object.keys(normalized.ir.children[0]).at(-1)).toBe('children');
@@ -648,7 +657,7 @@ describe('@retikz/diagram-react/flow', () => {
         }),
       ),
     );
-    const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+    const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 
     expect(normalized.ir.children).toEqual([
       {
@@ -730,7 +739,7 @@ describe('@retikz/diagram-react/flow', () => {
       createElement(FlowDiagram, null, createElement(FlowEntity, { id: 'only', text: 'Only' })),
     );
     const result = processToStaticInputResult(input.scene, {
-      adapters: input.adapters,
+      adapters: synchronousAdapters(input.adapters),
       compile: {
         padding: 0,
         measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
@@ -769,7 +778,7 @@ it('compiles bend and complete labels identically through React, Vanilla and dir
       <FlowReact.FlowRelations items={[relation]} />
     </FlowReact.FlowDiagram>,
   );
-  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeFlowDiagram({
     entities,
     groups: [],
@@ -788,7 +797,7 @@ it('compiles bend and complete labels identically through React, Vanilla and dir
   });
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
-  const providers = prepareProcessingInput(input.scene, { adapters: input.adapters }).coreOptions;
+  const providers = prepareProcessingInput(input.scene, { adapters: synchronousAdapters(input.adapters) }).coreOptions;
   const expected = processToStaticInputResult(
     { type: 'scene', version: 1, children: [direct] },
     { compile: providers },
@@ -796,5 +805,122 @@ it('compiles bend and complete labels identically through React, Vanilla and dir
   expect(
     processToStaticInputResult({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene,
   ).toEqual(expected);
-  expect(processToStaticInputResult(input.scene, { adapters: input.adapters }).scene).toEqual(expected);
+  expect(processToStaticInputResult(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene).toEqual(
+    expected,
+  );
+});
+
+it('preserves automatic, explicit Bezier and smooth routing through all authoring entries', () => {
+  const relations = [
+    {
+      source: 'a',
+      target: 'b',
+      routing: {
+        kind: 'smooth' as const,
+        points: [
+          [40, -50] as [number, number],
+          { relative: [20, 0] as [number, number] },
+          { id: 'a', anchor: 'right' },
+        ],
+        tension: 0.8,
+      },
+    },
+    {
+      source: 'a',
+      target: 'b',
+      routing: { kind: 'orthogonal' as const, turnPosition: 0.25 as const, cornerRadius: 8 },
+    },
+    { source: 'a', target: 'b', routing: { kind: 'curve' as const } },
+    {
+      source: 'a',
+      target: 'b',
+      routing: {
+        kind: 'cubic' as const,
+        control1: [20, -40] as [number, number],
+        control2: [120, 60] as [number, number],
+      },
+    },
+  ];
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowEntity id="a" text="A" />
+      <FlowReact.FlowEntity id="b" text="B" />
+      <FlowReact.FlowRelations items={relations} />
+    </FlowReact.FlowDiagram>,
+  );
+  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const vanilla = normalizeFlowDiagram({
+    entities: [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ],
+    groups: [],
+    layouts: [],
+    children: ['a', 'b'],
+    relations,
+  });
+  const direct = FlowDiagramSchema.parse({
+    namespace: 'diagram',
+    type: 'flow',
+    entities: [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ],
+    groups: [],
+    layouts: [],
+    children: ['a', 'b'],
+    relations,
+  });
+  expect(FlowDiagramSchema.parse(react.ir.children[0])).toEqual(direct);
+  expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
+  const providers = prepareProcessingInput(input.scene, { adapters: synchronousAdapters(input.adapters) }).coreOptions;
+  const expected = processToStaticInputResult(
+    { type: 'scene', version: 1, children: [direct] },
+    { compile: providers },
+  ).scene;
+  expect(
+    processToStaticInputResult({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene,
+  ).toEqual(expected);
+  expect(processToStaticInputResult(input.scene, { adapters: synchronousAdapters(input.adapters) }).scene).toEqual(
+    expected,
+  );
+});
+
+it('keeps endpoint constraints and sparse defaults equal across React, Vanilla and JSON', () => {
+  const entities = [
+    { id: 'a', text: 'A' },
+    { id: 'b', text: 'B' },
+  ];
+  const relations = [
+    { source: { id: 'a', side: 'right' as const }, target: { id: 'b', overlap: 'separate' as const } },
+  ];
+  const flowDefaults = { relation: { source: { overlap: 'separate' as const } } };
+  const input = createInputScene(
+    <FlowReact.FlowDiagram flowDefaults={flowDefaults}>
+      <FlowReact.FlowEntities items={entities} />
+      <FlowReact.FlowRelations items={relations} />
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const vanilla = normalizeFlowDiagram({
+    entities,
+    relations,
+    flowDefaults,
+    groups: [],
+    layouts: [],
+    children: ['a', 'b'],
+  });
+  const direct = FlowDiagramSchema.parse({
+    namespace: 'diagram',
+    type: 'flow',
+    entities,
+    relations,
+    flowDefaults,
+    groups: [],
+    layouts: [],
+    children: ['a', 'b'],
+  });
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
+  expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
+  expect(direct.relations).toEqual(relations);
 });

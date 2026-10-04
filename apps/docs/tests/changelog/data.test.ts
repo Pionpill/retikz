@@ -48,7 +48,7 @@ describe('changelog data', () => {
 
   it('Library 注册 Standard、Extension 与 Layout 独立分区', () => {
     expect(librarySection.map(section => section.id)).toEqual(['standard', 'extension', 'layout']);
-    expect(librarySection.every(section => section.document)).toBe(true);
+    expect(librarySection.every(section => section.pages.some(page => page.id === 'introduction'))).toBe(true);
   });
 
   it('当前 kernel 里程碑注册详情路由', () => {

@@ -125,7 +125,7 @@ const projectPlacementBounds = (
 export const createFlowLayoutExecutionContext = (
   context: LayoutCompositeCompileContext,
   flow: FlowLayoutInput,
-): FlowLayoutExecutionContext => ({
+): Pick<FlowLayoutExecutionContext, 'placeLayout'> => ({
   placeLayout: input => {
     try {
       if (input.layout.kind === 'grid') {
@@ -178,8 +178,8 @@ export const createFlowLayoutExecutionContext = (
         visit(flow.elements);
         for (const relation of flow.relations) {
           if (!layout.reserveLabelSpace || relation.labelSize === undefined) continue;
-          const sourceId = ownerById.get(relation.source);
-          const targetId = ownerById.get(relation.target);
+          const sourceId = ownerById.get(relation.source.id);
+          const targetId = ownerById.get(relation.target.id);
           if (sourceId === undefined || targetId === undefined || sourceId === targetId) continue;
           const sourceCell = cellsById.get(sourceId)!;
           const targetCell = cellsById.get(targetId)!;

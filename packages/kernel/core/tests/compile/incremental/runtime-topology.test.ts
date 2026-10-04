@@ -1,8 +1,8 @@
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeComputationRegistry,
+  createRuntime,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
@@ -20,7 +20,7 @@ import {
   compileToScene,
   CompileWarningCode,
   CompositeBaseSchema,
-  CoreOwnerDefinition,
+  CoreSourceDefinition,
   defineComposite,
   definePathKind,
   LayoutChildProbeKind,
@@ -54,12 +54,12 @@ const resolvedResultOf = (
 };
 
 const runtimeRevision = (() => {
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [] });
-  return createRuntimeSession({
-    owners,
-    programs,
-    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, { version: 1, type: 'scene', children: [] })],
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
+  return createRuntime({
+    sources,
+    computations,
+    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, { version: 1, type: 'scene', children: [] })],
   }).revision();
 })();
 

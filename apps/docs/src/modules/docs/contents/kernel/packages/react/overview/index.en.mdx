@@ -5,7 +5,7 @@ description: Author Kernel and Sugar components in JSX, construct a Vanilla Inpu
 
 `@retikz/react` is the primary entry for React applications. You declare figures with JSX components such as `<Layout>`, `<Node>`, `<Path>`, `<Scope>`, and `<Draw>`; its collector turns props and children into an `@retikz/vanilla` `InputScene`, then `<Layout>` hosts the processed SVG or Canvas result.
 
-It owns React authoring and result hosting rather than new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; Input normalization, composite dependency resolution, the Core Program, and retained processing state belong to `@retikz/vanilla`.
+It owns React authoring and result hosting rather than new drawing semantics. IR, schemas, geometry, and compilation belong to `@retikz/core`; Input normalization, composite dependency resolution, the Core Computation, and retained processing state belong to `@retikz/vanilla`.
 
 ## Install and usage
 
@@ -108,7 +108,7 @@ Marker components avoid intermediate DOM and duplicated drawing semantics, but J
 
 Frequently updated large figures can keep stable IR, children, and Core options outside the component or in `useMemo`, avoiding needless Input or processing-controller recreation. Passing the IR prop skips the JSX collector but still uses Vanilla processing for the subsequent compile.
 
-In retained mode, the Vanilla controller owns the Core Program, runtime session, and update strategy; static mode prepares one lifecycle-free processing result. React subscribes to the controller's read-only result, then uses `ProcessingResultHost` to present its same-revision Scene, artifacts, readonly layers, and event wiring.
+In retained mode, the Vanilla controller owns the Core Computation, runtime session, and update strategy; static mode prepares one lifecycle-free processing result. React subscribes to the controller's read-only result, then uses `ProcessingResultHost` to present its same-revision Scene, artifacts, readonly layers, and event wiring.
 
 Definition arrays are canonicalized by ordered element identity, so recreating an equivalent container such as `[shape]` does not rebuild the processing controller. Changing a Definition itself, the renderer backend, `idPrefix`, or processing options remounts it. Concurrent scheduling and progressive materialization remain outside the current public contract.
 
@@ -127,7 +127,7 @@ Definition arrays are canonicalized by ordered element identity, so recreating a
       endLine: 296,
     },
     {
-      label: 'Vanilla retained controller creating the Core Program and Runtime',
+      label: 'Vanilla retained controller creating the Core Computation and Runtime',
       path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
       startLine: 94,
       endLine: 149,
@@ -137,7 +137,7 @@ Definition arrays are canonicalized by ordered element identity, so recreating a
 
 ### Execution modes and update strategies
 
-`<Layout>` uses two orthogonal `runtime` fields to select the host lifecycle and Program update behavior. Omitting the option means `retained + auto`:
+`<Layout>` uses two orthogonal `runtime` fields to select the host lifecycle and Computation update behavior. Omitting the option means `retained + auto`:
 
 ```tsx
 <Layout /> {/* retained + auto */}
@@ -145,11 +145,11 @@ Definition arrays are canonicalized by ordered element identity, so recreating a
 <Layout runtime={{ mode: 'static' }} />
 ```
 
-| Configuration     | Update behavior                                           | Session, memory, and failure semantics                                                              |
-| ----------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `retained + auto` | Safe changes use local Patches; others fully fall back    | Keeps Snapshots, candidates, diagnostics, atomic commits, and rollback; this is the default         |
-| `retained + full` | Skips Program `update()` for affected work and runs fully | Retains the same Runtime state and transaction guarantees as auto; it is not a low-memory mode      |
-| `static`          | Fully compiles and directly materializes SVG / Canvas     | Creates no Session, Snapshot, diff, transaction, or rollback; less resident state, more update work |
+| Configuration     | Update behavior                                               | Session, memory, and failure semantics                                                              |
+| ----------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `retained + auto` | Safe changes use local Patches; others fully fall back        | Keeps Snapshots, candidates, diagnostics, atomic commits, and rollback; this is the default         |
+| `retained + full` | Skips Computation `update()` for affected work and runs fully | Retains the same Runtime state and transaction guarantees as auto; it is not a low-memory mode      |
+| `static`          | Fully compiles and directly materializes SVG / Canvas         | Creates no Session, Snapshot, diff, transaction, or rollback; less resident state, more update work |
 
 `mode: 'static'` cannot be combined with `updateStrategy` or `onDiagnostic`. The `LayoutRuntimeOptions` TypeScript union rejects those combinations, and JavaScript calls fail before a host is created. If static compilation fails before host writes, no new picture is published. Errors after materialization, animation, or hydration begins propagate without a guarantee that the old host state is restored.
 
@@ -170,7 +170,7 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
       endLine: 296,
     },
     {
-      label: 'Vanilla retained controller Core Program and update strategy',
+      label: 'Vanilla retained controller Core Computation and update strategy',
       path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
       startLine: 94,
       endLine: 174,
@@ -180,7 +180,7 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 
 ## From JSX to Scene
 
-`<Layout>` first calls the React collector to adapt JSX into Vanilla Input. Whenever the input or Core options change, React only prepares a static fallback; after the client commit, Vanilla processing creates or updates the Core Program. In the figure, blue nodes belong to `@retikz/react` authoring / hosting, green nodes are shared `@retikz/vanilla` processing, and orange nodes are the data contracts and compiler owned by `@retikz/core`.
+`<Layout>` first calls the React collector to adapt JSX into Vanilla Input. Whenever the input or Core options change, React only prepares a static fallback; after the client commit, Vanilla processing creates or updates the Core Computation. In the figure, blue nodes belong to `@retikz/react` authoring / hosting, green nodes are shared `@retikz/vanilla` processing, and orange nodes are the data contracts and compiler owned by `@retikz/core`.
 
 <ComponentPreview files="react-to-scene" size="xs" hideCode />
 
@@ -232,10 +232,10 @@ A `VanillaCompileDriver` may inject observers for the same compile, then resolve
 
 Scene no longer contains React component semantics. Vanilla processing obtains the result for a retained or static revision, while `@retikz/react` only subscribes to and hosts that result through React:
 
-| Target | `@retikz/vanilla`                                                 | `@retikz/react`                                                 |
-| ------ | ----------------------------------------------------------------- | --------------------------------------------------------------- |
-| SVG    | Manages the processing controller, Core Program, and Scene result | Maps the result with `ProcessingResultHost` and binds hydration |
-| Canvas | Manages the processing controller, Core Program, and Scene result | Maps the result with `ProcessingResultHost` to a Canvas host    |
+| Target | `@retikz/vanilla`                                                     | `@retikz/react`                                                 |
+| ------ | --------------------------------------------------------------------- | --------------------------------------------------------------- |
+| SVG    | Manages the processing controller, Core Computation, and Scene result | Maps the result with `ProcessingResultHost` and binds hydration |
+| Canvas | Manages the processing controller, Core Computation, and Scene result | Maps the result with `ProcessingResultHost` to a Canvas host    |
 
 Event handlers are functions and cannot enter JSON IR. In children mode, React separately runs `collectHydrationHandlers` to collect functions by primitive id, then binds them after rendering through SVG location or Canvas hit-testing. With the `ir` prop, the `handlers` prop supplies this runtime side channel instead.
 

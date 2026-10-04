@@ -479,9 +479,40 @@ export const lowerShapeStep = (step: StrokeShapeStep, index: number, context: Lo
   const fromClip = usedOverride ?? clipTarget(previous.step.to, resolvedPoints[0], { targetView, scopeChain });
   if (!fromClip) return false;
   const segments = curve.catmullRomToCubic([fromClip, ...resolvedPoints], step.tension);
+  const finalIndex = segments.length - 1;
+  const finalSegment = segments[finalIndex];
+  const finalTarget = step.points[step.points.length - 1];
+  if (isAutoBoundaryTarget(finalTarget)) {
+    // 端点重复 knot 可使一阶导数为零，沿首个非零控制差向量确定极限入射方向
+    const from = finalIndex === 0 ? fromClip : segments[finalIndex - 1].to;
+    const toward =
+      [finalSegment.control2, finalSegment.control1, from].find(point => !samePoint(point, finalSegment.to)) ??
+      finalSegment.to;
+    const distance = Math.hypot(toward[0] - finalSegment.to[0], toward[1] - finalSegment.to[1]);
+    const boundaryToward: IRPosition =
+      distance === 0
+        ? toward
+        : [
+            finalSegment.to[0] + (toward[0] - finalSegment.to[0]) / distance,
+            finalSegment.to[1] + (toward[1] - finalSegment.to[1]) / distance,
+          ];
+    const to = clipTarget(finalTarget, boundaryToward, { targetView, scopeChain });
+    if (!to) return false;
+    // 自动连接只平移终端控制臂，保持入射方向，避免端点裁剪后箭头反向
+    const control2: IRPosition = [
+      to[0] + finalSegment.control2[0] - finalSegment.to[0],
+      to[1] + finalSegment.control2[1] - finalSegment.to[1],
+    ];
+    segments[finalIndex] = { ...finalSegment, control2, to };
+  }
   startSegment(fromClip, usedOverride === null && isAutoBoundaryTarget(previous.step.to));
-  for (const segment of segments) {
-    emitCubic({ control1: segment.control1, control2: segment.control2, to: segment.to });
+  for (const [segmentIndex, segment] of segments.entries()) {
+    emitCubic({
+      control1: segment.control1,
+      control2: segment.control2,
+      to: segment.to,
+      sourceAutoBoundary: segmentIndex === finalIndex && isAutoBoundaryTarget(finalTarget),
+    });
   }
   sampling.collect(step, t => {
     const segmentCount = segments.length;

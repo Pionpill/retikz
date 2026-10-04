@@ -1,10 +1,10 @@
 import { isRetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
-import type { RuntimeDiagnostic, RuntimeProgramId } from '../../src';
-import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeDiagnosticCode, RuntimeOwnerPhase } from '../../src';
+import type { RuntimeDiagnostic, RuntimeComputationId } from '../../src';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeDiagnosticCode, RuntimeSourcePhase } from '../../src';
 
-const program: RuntimeProgramId = { owner: 'owner', key: 'program' };
+const computation: RuntimeComputationId = { owner: 'owner', key: 'computation' };
 const diagnostics: ReadonlyArray<RuntimeDiagnostic> = [
   {
     code: RuntimeDiagnosticCode.ChangeSetFallback,
@@ -24,36 +24,36 @@ describe('runtime structured errors', () => {
   it('preserves RetikzRuntimeError compatibility while exposing Runtime details', () => {
     const cause = { input: 'scene' };
     const error = new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.ProgramRunFailed,
+      code: RetikzRuntimeErrorCode.ComputationRunFailed,
       phase: 'run',
       owner: 'owner',
-      program,
+      computation,
       diagnostics,
       cause,
     });
 
     expect(error).toBeInstanceOf(RetikzRuntimeError);
     expect(error.name).toBe('RetikzRuntimeError');
-    expect(error.code).toBe(RetikzRuntimeErrorCode.ProgramRunFailed);
-    expect(error.message).toBe('RUNTIME_PROGRAM_RUN_FAILED: Runtime failed during run');
+    expect(error.code).toBe(RetikzRuntimeErrorCode.ComputationRunFailed);
+    expect(error.message).toBe('RUNTIME_COMPUTATION_RUN_FAILED: Runtime failed during run');
     expect(error.phase).toBe('run');
     expect(error.owner).toBe('owner');
-    expect(error.program).toBe(program);
+    expect(error.computation).toBe(computation);
     expect(error.diagnostics).toEqual(diagnostics);
     expect(error.diagnostics).not.toBe(diagnostics);
     expect(Object.isFrozen(error.diagnostics)).toBe(true);
-    expect(error.details).toEqual({ phase: 'run', owner: 'owner', program, diagnostics });
+    expect(error.details).toEqual({ phase: 'run', owner: 'owner', computation, diagnostics });
     expect(Object.isFrozen(error.details.diagnostics)).toBe(true);
     expect(error.details.diagnostics).toBe(error.diagnostics);
     expect(isRetikzError(error)).toBe(true);
     expectOwnCause(error, cause);
   });
 
-  it('omits optional owner and program from Runtime details while retaining diagnostics', () => {
+  it('omits optional owner and computation from Runtime details while retaining diagnostics', () => {
     const error = new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision' });
 
     expect(error.owner).toBeUndefined();
-    expect(error.program).toBeUndefined();
+    expect(error.computation).toBeUndefined();
     expect(error.diagnostics).toEqual([]);
     expect(error.details).toEqual({ phase: 'revision', diagnostics: [] });
     expect(Object.hasOwn(error, 'cause')).toBe(true);
@@ -67,7 +67,7 @@ describe('runtime structured errors', () => {
     const error = new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.InternalInvariant,
       message: 'missing internal state',
-      phase: 'session-update',
+      phase: 'runtime-update',
       cause,
     });
 
@@ -75,8 +75,8 @@ describe('runtime structured errors', () => {
     expect(error.name).toBe('RetikzRuntimeError');
     expect(error.code).toBe(RetikzRuntimeErrorCode.InternalInvariant);
     expect(error.message).toBe('missing internal state');
-    expect(error.phase).toBe('session-update');
-    expect(error.details).toEqual({ phase: 'session-update', diagnostics: [] });
+    expect(error.phase).toBe('runtime-update');
+    expect(error.details).toEqual({ phase: 'runtime-update', diagnostics: [] });
     expect(isRetikzError(error)).toBe(true);
     expectOwnCause(error, cause);
   });
@@ -85,9 +85,9 @@ describe('runtime structured errors', () => {
     const cause = new Error('dispose failed');
     const lifecycleDiagnostics = [
       {
-        code: RuntimeDiagnosticCode.OwnerDisposeFailed,
+        code: RuntimeDiagnosticCode.SourceDisposeFailed,
         owner: 'owner',
-        phase: RuntimeOwnerPhase.Retire,
+        phase: RuntimeSourcePhase.Retire,
         severity: 'error',
         message: 'cleanup failed',
         cause,
@@ -96,8 +96,8 @@ describe('runtime structured errors', () => {
     const error = new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.CaptureFailed,
       owner: 'owner',
-      phase: RuntimeOwnerPhase.Capture,
-      message: 'RUNTIME_OWNER_CAPTURE_FAILED: owner "owner" failed during capture',
+      phase: RuntimeSourcePhase.Capture,
+      message: 'RUNTIME_SOURCE_CAPTURE_FAILED: owner "owner" failed during capture',
       cause,
       diagnostics: lifecycleDiagnostics,
     });
@@ -105,7 +105,7 @@ describe('runtime structured errors', () => {
     expect(error).toBeInstanceOf(RetikzRuntimeError);
     expect(error.name).toBe('RetikzRuntimeError');
     expect(error.code).toBe(RetikzRuntimeErrorCode.CaptureFailed);
-    expect(error.message).toBe('RUNTIME_OWNER_CAPTURE_FAILED: owner "owner" failed during capture');
+    expect(error.message).toBe('RUNTIME_SOURCE_CAPTURE_FAILED: owner "owner" failed during capture');
     expect(error.owner).toBe('owner');
     expect(error.phase).toBe('capture');
     expect(error.diagnostics).toEqual(lifecycleDiagnostics);
@@ -118,20 +118,20 @@ describe('runtime structured errors', () => {
     expectOwnCause(error, cause);
   });
 
-  it('uses RetikzRuntimeError for owner registry failures', () => {
+  it('uses RetikzRuntimeError for source registry failures', () => {
     const error = new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.Unknown,
-      phase: 'owner-registry',
-      message: 'RUNTIME_OWNER_UNKNOWN: invalid runtime owner "owner"',
+      phase: 'source-registry',
+      message: 'RUNTIME_SOURCE_UNKNOWN: invalid runtime owner "owner"',
       owner: 'owner',
     });
 
     expect(error).toBeInstanceOf(RetikzRuntimeError);
     expect(error.name).toBe('RetikzRuntimeError');
     expect(error.code).toBe(RetikzRuntimeErrorCode.Unknown);
-    expect(error.message).toBe('RUNTIME_OWNER_UNKNOWN: invalid runtime owner "owner"');
+    expect(error.message).toBe('RUNTIME_SOURCE_UNKNOWN: invalid runtime owner "owner"');
     expect(error.owner).toBe('owner');
-    expect(error.details).toEqual({ owner: 'owner', phase: 'owner-registry', diagnostics: [] });
+    expect(error.details).toEqual({ owner: 'owner', phase: 'source-registry', diagnostics: [] });
     expect(isRetikzError(error)).toBe(true);
     expectOwnCause(error, undefined);
   });

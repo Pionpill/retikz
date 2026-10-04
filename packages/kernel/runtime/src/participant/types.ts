@@ -1,25 +1,25 @@
-import type { RuntimeDiagnosticPhaseValue } from '../diagnostic';
-import type { RuntimeOwnerDefinition, RuntimeOwnerToken, RuntimeRevision } from '../owner';
 import type {
-  RuntimeProgramDefinition,
-  RuntimeProgramPhase,
-  RuntimeProgramToken,
-  RuntimeProgramTraceReporter,
-} from '../program';
+  RuntimeComputationDefinition,
+  RuntimeComputationPhase,
+  RuntimeComputationToken,
+  RuntimeComputationTraceReporter,
+} from '../computation';
+import type { RuntimeDiagnosticPhaseValue } from '../diagnostic';
+import type { RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } from '../source';
 import type { RuntimeTracePhaseDefinition } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
 
 declare const RuntimeCommitParticipantTokenBrand: unique symbol;
 declare const RuntimeCommitParticipantReadBrand: unique symbol;
 
-/** 动态 session options 只暴露的 commit participant token */
+/** 动态 runtime options 只暴露的 commit participant token */
 export type RuntimeCommitParticipantToken = Readonly<{
   /** participant 的稳定唯一 key */
   key: string;
-  /** participant 声明读取的 owner tokens */
-  owners: ReadonlyArray<RuntimeOwnerToken>;
-  /** participant 声明读取的 Program tokens */
-  programs: ReadonlyArray<RuntimeProgramToken>;
+  /** participant 声明读取的 Source tokens */
+  sources: ReadonlyArray<RuntimeSourceToken>;
+  /** participant 声明读取的 Computation tokens */
+  computations: ReadonlyArray<RuntimeComputationToken>;
   /** participant 的 update 选择策略 */
   revisionPolicy: 'affected' | 'continuous';
   /** participant 允许发射的 trace phases */
@@ -56,7 +56,7 @@ export type RuntimeParticipantWarningInput = Readonly<{
 }>;
 
 /** participant callback 只能写入、不能 drain 的 trace facade */
-export type RuntimeParticipantTraceReporter = RuntimeProgramTraceReporter;
+export type RuntimeParticipantTraceReporter = RuntimeComputationTraceReporter;
 
 /** participant prepare callback 可用的 trace 与 warning context */
 export type RuntimeParticipantContext = Readonly<{
@@ -68,13 +68,13 @@ export type RuntimeParticipantContext = Readonly<{
 
 /** participant candidate 只允许读取已声明依赖 */
 export type RuntimeParticipantCandidateLookup = Readonly<{
-  /** 读取 owner candidate Snapshot */
+  /** 读取 Source candidate Snapshot */
   snapshot: <TInput, TValue, TRead, TChange>(
-    owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+    source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeSnapshot<TRead>;
-  /** 读取 Program candidate public artifact Snapshot */
-  artifact: <TArtifactInput, TArtifact, TProgramRead, TPublicRead>(
-    program: RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
+  /** 读取 Computation candidate public artifact Snapshot */
+  artifact: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
+    computation: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
   ) => RuntimeSnapshot<TPublicRead>;
 }>;
 
@@ -82,8 +82,8 @@ export type RuntimeParticipantCandidateLookup = Readonly<{
 export type RuntimeParticipantCandidateView =
   | (RuntimeParticipantCandidateLookup &
       Readonly<{
-        /** initial session candidate */
-        phase: typeof RuntimeProgramPhase.Initial;
+        /** initial runtime candidate */
+        phase: typeof RuntimeComputationPhase.Initial;
         /** initial candidate 不存在 base revision */
         baseRevision?: never;
         /** candidate 完整发布后使用的 revision */
@@ -91,8 +91,8 @@ export type RuntimeParticipantCandidateView =
       }>)
   | (RuntimeParticipantCandidateLookup &
       Readonly<{
-        /** update session candidate */
-        phase: typeof RuntimeProgramPhase.Update;
+        /** update runtime candidate */
+        phase: typeof RuntimeComputationPhase.Update;
         /** update 基于的 current revision */
         baseRevision: RuntimeRevision;
         /** candidate 完整发布后使用的 revision */
@@ -103,10 +103,10 @@ export type RuntimeParticipantCandidateView =
 export type RuntimeCommitParticipantDefinitionInput<TRead> = Readonly<{
   /** participant 的稳定唯一 key */
   key: string;
-  /** participant 声明读取的 owner tokens */
-  owners: ReadonlyArray<RuntimeOwnerToken>;
-  /** participant 声明读取的 Program tokens */
-  programs: ReadonlyArray<RuntimeProgramToken>;
+  /** participant 声明读取的 Source tokens */
+  sources: ReadonlyArray<RuntimeSourceToken>;
+  /** participant 声明读取的 Computation tokens */
+  computations: ReadonlyArray<RuntimeComputationToken>;
   /** participant 的 update 选择策略 */
   revisionPolicy: 'affected' | 'continuous';
   /** participant 允许发射的 trace phases */

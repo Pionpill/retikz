@@ -1,8 +1,8 @@
 import type { IRScene } from '@retikz/core';
-import { CORE_OWNER_KEY, CoreOwnerDefinition } from '@retikz/core';
+import { CORE_SOURCE_KEY, CoreSourceDefinition } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
-  createRuntimeOwnerUpdate,
+  createRuntimeSourceUpdate,
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,
   PerformanceTracePhase,
@@ -75,7 +75,7 @@ const resolveLabOutcome = (record: PerformanceTraceRecord): LabOutcomeValue => {
 /** 把公共 trace、Patch 与 timing 样本整理为 UI 稳定结果 */
 export const createLabPolicyResult = (input: CreateLabPolicyResultInput): LabPolicyResult => {
   const work =
-    input.trace.find(record => record.owner === CORE_OWNER_KEY && record.phase === PerformanceTracePhase.Update) ??
+    input.trace.find(record => record.owner === CORE_SOURCE_KEY && record.phase === PerformanceTracePhase.Update) ??
     input.trace.find(record => record.owner === '@retikz/core' && record.phase === PerformanceTracePhase.Compile) ??
     input.trace.at(0);
   if (work === undefined) throw new Error(`${input.policyId}: Kernel Lab trace is unavailable`);
@@ -251,10 +251,10 @@ const executeRetainedPolicy = (input: KernelLabPolicyInput, first: IRScene, seco
     records.length = 0;
     value.session.update({
       baseRevision: value.session.revision(),
-      owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, next)],
+      sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
   });
-  const artifact = value.session.artifact(value.coreProgram).value;
+  const artifact = value.session.artifact(value.coreComputation).value;
   const patchKinds = artifact.patch?.operations.map(operation => operation.kind) ?? [];
   const diagnostics = value.session.diagnostics().map(diagnostic => `${diagnostic.code}: ${diagnostic.message}`);
   value.session.dispose();

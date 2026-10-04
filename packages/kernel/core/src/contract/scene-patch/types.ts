@@ -11,7 +11,7 @@ export type RuntimeDeepReadonly<T> = T extends (...args: infer TArgs) => infer T
       ? { readonly [TKey in keyof T]: RuntimeDeepReadonly<T[TKey]> }
       : T;
 
-/** Runtime Session 持有的 deeply immutable Scene */
+/** Runtime 持有的 deeply immutable Scene */
 export type RuntimeScene = RuntimeDeepReadonly<Omit<Scene, 'resources' | 'animations'>> &
   Readonly<{
     /** 规范化后的有序资源表 */

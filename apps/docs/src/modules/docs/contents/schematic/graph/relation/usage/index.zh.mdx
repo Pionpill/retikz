@@ -97,6 +97,8 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 
 ### 连接端点
 
+使用显式 `smooth` route 时，中间点按顺序经过；最后一个无 anchor / offset 的节点 Target 沿入射方向接到真实边界。显式 anchor / offset 保持指定位置，箭头缩短仍由路径编译统一处理。
+
 React / Vanilla 支持 `source="sender"`，入口会归一为 `{ id: 'sender' }`。IR 和 `createRelation()` 只接受完整对象；需要指定锚点时使用 `source={{ id: 'sender', anchor: 'right' }}`。可引用 Core Node、Coordinate、已解析 Scope 或上层组件发布的 target；重复 id 或找不到目标由 Core 报错。
 
 端点和方向分别保存。`reverse` 把箭头放到 source 一端，不会交换 source / target 的语义身份。方向必须属于当前 role / kind 允许的集合。

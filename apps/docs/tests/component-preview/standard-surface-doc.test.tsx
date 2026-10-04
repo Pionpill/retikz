@@ -43,7 +43,7 @@ describe('Standard Surface documentation', () => {
 
     expect(ids.indexOf('surface')).toBe(ids.indexOf('frame') + 1);
     expect(readFileSync(resolve(process.cwd(), 'src/i18n/locales/zh.json'), 'utf8')).toContain(
-      '"standardSurface": "表面"',
+      '"standardSurface": "Surface · 表面"',
     );
     expect(readFileSync(resolve(process.cwd(), 'src/i18n/locales/en.json'), 'utf8')).toContain(
       '"standardSurface": "Surface"',

@@ -1,4 +1,4 @@
-import type { AnyCompositeDefinition, CompileObserverDefinition, CoreProgramOutput, IRScene } from '@retikz/core';
+import type { AnyCompositeDefinition, CompileObserverDefinition, CoreComputationOutput, IRScene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
@@ -89,7 +89,7 @@ describe('Vanilla compile driver', () => {
   });
 
   it('同 revision output 保留 Core primary/observerOutputs 并校验 readonly layers', () => {
-    const coreOutput: CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>> = Object.freeze({
+    const coreOutput: CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>> = Object.freeze({
       result: compileToScene(source, {}),
       diagnostics: Object.freeze([]),
       observerOutputs: Object.freeze([{ key: observer.key, value: 'same-revision' }]),
@@ -147,7 +147,7 @@ describe('Vanilla compile driver', () => {
   });
 
   it('非法 resolver output 统一抛出可由 retained host 回滚的结构化错误', () => {
-    const coreOutput: CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>> = Object.freeze({
+    const coreOutput: CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>> = Object.freeze({
       result: compileToScene(source, {}),
       diagnostics: Object.freeze([]),
       observerOutputs: Object.freeze([]),

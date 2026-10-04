@@ -6,6 +6,7 @@ import { normalizeScene, scene } from '@retikz/vanilla';
 import { expect, it } from 'vitest';
 
 import * as rootEntry from '../src';
+import { synchronousAdapters } from './helpers/synchronous-adapters';
 
 it('keeps the complete family equivalent across adapters with Path authoring conveniences', () => {
   const visual = {
@@ -25,7 +26,7 @@ it('keeps the complete family equivalent across adapters with Path authoring con
       <Sector id="w" center={[0, 0]} radius={20} innerRadius={10} startAngle={0} endAngle={90} {...visual} />
     </>,
   );
-  const react = normalizeScene(input.scene, { adapters: input.adapters });
+  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeScene(
     scene({
       children: [
@@ -49,7 +50,7 @@ it('keeps the complete family equivalent across adapters with Path authoring con
 
 it('shares the Circle Source and provider contribution across React and Vanilla', () => {
   const input = createInputScene(<Circle id="c1" center="origin" radius={20} />);
-  const react = normalizeScene(input.scene, { adapters: input.adapters });
+  const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }), {
     adapters: StandardInputEmbedAdapters,
   });
@@ -59,7 +60,7 @@ it('shares the Circle Source and provider contribution across React and Vanilla'
 
 it('does not persist a generated occurrence id when React omits the authored id', () => {
   const input = createInputScene(<Circle center={[0, 0]} radius={20} />);
-  const result = normalizeScene(input.scene, { adapters: input.adapters });
+  const result = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   expect(result.ir.children[0]).not.toHaveProperty('id');
 });
 

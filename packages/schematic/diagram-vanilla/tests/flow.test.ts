@@ -260,7 +260,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
         },
         { id: 'kernel', kind: 'entity' },
       ],
-      relations: [{ source: 'jsx', target: 'kernel', route: { kind: 'orthogonal', cornerRadius: 0 } }],
+      relations: [{ source: { id: 'jsx' }, target: { id: 'kernel' }, route: { kind: 'orthogonal', cornerRadius: 0 } }],
     });
   });
 });

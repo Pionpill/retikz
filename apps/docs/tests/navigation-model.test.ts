@@ -112,7 +112,7 @@ describe('layout utils', () => {
   });
 
   it('在 Chart 下并列组织点图组件与共享图形模型', () => {
-    expect(vizSection.map(section => section.id).filter(Boolean)).toEqual(['data', 'chart', 'table', 'plot']);
+    expect(vizSection.map(section => section.id).filter(Boolean)).toEqual(['data', 'table', 'chart', 'plot']);
 
     const chart = vizSection.find(section => section.id === 'chart');
     const points = chart?.pages.find(page => page.id === 'points');

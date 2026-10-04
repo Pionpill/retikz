@@ -12,6 +12,12 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     title: copy.title,
     sections: [
       {
+        controls: [
+          { kind: 'range', id: 'obstacleX', label: copy.obstacleX, defaultValue: 260, min: 180, max: 340, step: 10 },
+          { kind: 'range', id: 'obstacleY', label: copy.obstacleY, defaultValue: 100, min: -20, max: 180, step: 10 },
+        ],
+      },
+      {
         label: copy.route,
         controls: [
           { kind: 'switch', id: 'autoAngle', label: copy.autoAngle, defaultValue: true },
@@ -33,27 +39,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
           { kind: 'range', id: 'position', label: copy.position, defaultValue: 0.5, min: 0, max: 1, step: 0.1 },
           { kind: 'switch', id: 'sloped', label: copy.sloped, defaultValue: true },
           { kind: 'switch', id: 'interrupt', label: copy.interrupt, defaultValue: true },
-          {
-            kind: 'range',
-            id: 'gap',
-            label: copy.gap,
-            defaultValue: 4,
-            min: 0,
-            max: 12,
-            step: 2,
-            visibleWhen: { controlId: 'interrupt', oneOf: [true] },
-          },
-          {
-            kind: 'range',
-            id: 'distance',
-            label: copy.distance,
-            defaultValue: 4,
-            min: 0,
-            max: 20,
-            step: 2,
-            visibleWhen: { controlId: 'sloped', oneOf: [false] },
-          },
-          { kind: 'range', id: 'fontSize', label: copy.size, defaultValue: 14, min: 10, max: 20, step: 2 },
         ],
       },
     ],
@@ -61,14 +46,13 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
   return {
     controls,
     canonicalValues: {
+      obstacleX: 260,
+      obstacleY: 100,
       autoAngle: true,
       angle: 60,
       position: 0.5,
       sloped: true,
       interrupt: true,
-      gap: 4,
-      distance: 4,
-      fontSize: 14,
     },
     relatedApis: ['FlowRelation.routing.bendAngle', 'FlowRelation.label'],
   } satisfies PreviewControlContract;

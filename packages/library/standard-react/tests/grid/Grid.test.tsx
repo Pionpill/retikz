@@ -5,11 +5,12 @@ import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { Grid } from '../../src/presentation';
+import { synchronousAdapters } from '../helpers/synchronous-adapters';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
 const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {
   const input = createInputScene(children);
-  return normalizeScene(input.scene, { adapters: input.adapters });
+  return normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
 };
 
 describe('<Grid>', () => {

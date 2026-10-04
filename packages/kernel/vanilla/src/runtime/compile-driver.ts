@@ -3,7 +3,7 @@ import type {
   CompileObserverDefinition,
   CompileObserverOutput,
   CompileOptions,
-  CoreProgramOutput,
+  CoreComputationOutput,
   IRScene,
 } from '@retikz/core';
 import { compileToScene, observeCompileToScene } from '@retikz/core';
@@ -13,7 +13,7 @@ import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/ru
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputAuthoringSite } from '../normalize';
 
-type VanillaCoreProgramOutput = CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>;
+type VanillaCoreComputationOutput = CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>>;
 
 const EMPTY_OBSERVERS: ReadonlyArray<CompileObserverDefinition> = Object.freeze([]);
 const EMPTY_OBSERVER_OUTPUTS: ReadonlyArray<CompileObserverOutput> = Object.freeze([]);
@@ -36,14 +36,14 @@ export type VanillaCompileDriverInput = Readonly<{
   source: IRScene;
   /** normalizer 按 authored 顺序报告的运行时 sites */
   authoringSites: ReadonlyArray<InputAuthoringSite>;
-  /** 普通 Core compile 与 retained Program 共用的固定配置 */
+  /** 普通 Core compile 与 retained Computation 共用的固定配置 */
   coreOptions: CompileOptions;
 }>;
 
 /** 同 revision 的 Core primary、observer outputs、只读图层与扩展诊断 */
 export type VanillaCompileOutput = Readonly<{
   /** Core 同次 compile 的 primary result */
-  primary: VanillaCoreProgramOutput['result'];
+  primary: VanillaCoreComputationOutput['result'];
   /** Core 同次 compile 的完整 observer outputs */
   observerOutputs: ReadonlyArray<CompileObserverOutput>;
   /** 在 primary 后执行的领域中立只读图层 */
@@ -54,10 +54,10 @@ export type VanillaCompileOutput = Readonly<{
 
 /** 一次 source/authoring 配置独占的 Vanilla 编译驱动 session */
 export type VanillaCompileDriverSession = Readonly<{
-  /** 注入 retained Core Program 或 static observed compile 的 observers */
+  /** 注入 retained Core Computation 或 static observed compile 的 observers */
   observers: ReadonlyArray<CompileObserverDefinition>;
   /** 从同一 Core output 原子解析 primary、图层与扩展诊断 */
-  resolve: (coreOutput: VanillaCoreProgramOutput) => VanillaCompileOutput;
+  resolve: (coreOutput: VanillaCoreComputationOutput) => VanillaCompileOutput;
   /** 整帧成功提交后的可选通知 */
   commit?: (output: VanillaCompileOutput) => void;
 }>;
@@ -72,7 +72,7 @@ export type VanillaCompileDriver = Readonly<{
 const NORMALIZED_VANILLA_COMPILE_SESSIONS = new WeakMap<object, VanillaCompileDriverSession>();
 const RESOLVED_VANILLA_COMPILE_OUTPUTS = new WeakMap<
   VanillaCompileDriverSession,
-  WeakMap<VanillaCoreProgramOutput, VanillaCompileOutput>
+  WeakMap<VanillaCoreComputationOutput, VanillaCompileOutput>
 >();
 
 /** 校验并脱离驱动返回的 session */
@@ -122,7 +122,7 @@ export const createVanillaCompileDriverSession = (
 /** 规范化并校验驱动对同 revision Core output 的解析结果 */
 export const resolveVanillaCompileOutput = (
   session: VanillaCompileDriverSession,
-  coreOutput: VanillaCoreProgramOutput,
+  coreOutput: VanillaCoreComputationOutput,
 ): VanillaCompileOutput => {
   const cached = RESOLVED_VANILLA_COMPILE_OUTPUTS.get(session)?.get(coreOutput);
   if (cached !== undefined) return cached;
@@ -162,12 +162,12 @@ export const resolveVanillaCompileOutput = (
   }
 };
 
-/** 为 static/SSR 执行与 retained Program 同构的一次驱动编译 */
+/** 为 static/SSR 执行与 retained Computation 同构的一次驱动编译 */
 export const compileVanillaWithDriver = (
   input: VanillaCompileDriverInput,
   session: VanillaCompileDriverSession,
 ): VanillaCompileOutput => {
-  const coreOutput: VanillaCoreProgramOutput =
+  const coreOutput: VanillaCoreComputationOutput =
     session.observers.length === 0
       ? Object.freeze({
           result: compileToScene(input.source, input.coreOptions),
