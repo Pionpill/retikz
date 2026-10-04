@@ -25,9 +25,9 @@ export type RuntimeProgramToken = Readonly<{
 /** 保留 artifact 四组泛型关系的 typed Program token */
 export type RuntimeProgramDefinition<
   TArtifactInput,
-  TArtifact,
-  TProgramRead,
-  TPublicRead = TProgramRead,
+  TArtifact = TArtifactInput,
+  TProgramRead = TArtifact,
+  TPublicRead = TArtifact,
 > = RuntimeProgramToken &
   Readonly<{
     /** phantom 函数只承载泛型关系，不存在于运行时 token */
@@ -129,16 +129,54 @@ export type RuntimeUpdateResult<TArtifactInput> =
     }>;
 
 /** Program artifact 的 capture、双层 read 与释放契约 */
-export type RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead> = Readonly<{
-  /** 捕获 session-owned artifact */
-  capture: (input: TArtifactInput) => TArtifact;
-  /** 产生只供本 Program update 使用的 private read */
-  readForProgram: (artifact: TArtifact) => TProgramRead;
-  /** 产生依赖 Program 与宿主可见的 public read */
-  read: (artifact: TArtifact) => TPublicRead;
+export type RuntimeProgramArtifactDefinitionInput<
+  TArtifactInput,
+  TArtifact = TArtifactInput,
+  TProgramRead = TArtifact,
+  TPublicRead = TArtifact,
+> = Readonly<{
+  /**
+   * 捕获 session-owned artifact；同类型时可省略，不复制或冻结
+   * @default (input) => input
+   */
+  capture?: (input: TArtifactInput) => TArtifact;
+  /**
+   * 产生只供本 Program update 使用的 private read；同类型时可省略
+   * @default (artifact) => artifact
+   */
+  readForProgram?: (artifact: TArtifact) => TProgramRead;
+  /**
+   * 产生依赖 Program 与宿主可见的 public read；同类型时可省略
+   * @default (artifact) => artifact
+   */
+  read?: (artifact: TArtifact) => TPublicRead;
   /** 释放未发布或已替换的 artifact */
   dispose?: (artifact: TArtifact) => void;
-}>;
+}> &
+  RuntimeRequiredArtifactTransform<'capture', TArtifactInput, TArtifact> &
+  RuntimeRequiredArtifactTransform<'readForProgram', TArtifact, TProgramRead> &
+  RuntimeRequiredArtifactTransform<'read', TArtifact, TPublicRead>;
+
+/** 仅输入与输出类型一致时允许省略恒等转换 */
+type RuntimeRequiredArtifactTransform<TKey extends string, TInput, TOutput> = [TInput, TOutput] extends [
+  TOutput,
+  TInput,
+]
+  ? unknown
+  : Readonly<Record<TKey, (input: TInput) => TOutput>>;
+
+/** 三层转换均可省略时允许省略整个 artifact 配置 */
+type RuntimeRequiredProgramArtifact<TArtifactInput, TArtifact, TProgramRead, TPublicRead> =
+  Record<never, never> extends RuntimeProgramArtifactDefinitionInput<
+    TArtifactInput,
+    TArtifact,
+    TProgramRead,
+    TPublicRead
+  >
+    ? unknown
+    : Readonly<{
+        artifact: RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>;
+      }>;
 
 /** Program commit observer 接收的 revision-bound 事件 */
 export type RuntimeCommitEvent<TPublicRead> =
@@ -172,17 +210,28 @@ export type RuntimeCommitEvent<TPublicRead> =
     }>;
 
 /** Runtime Program Definition 的作者侧输入 */
-export type RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead> = Readonly<{
+export type RuntimeProgramDefinitionInput<
+  TArtifactInput,
+  TArtifact = TArtifactInput,
+  TProgramRead = TArtifact,
+  TPublicRead = TArtifact,
+> = Readonly<{
   /** Program 的结构化 identity */
   id: RuntimeProgramId;
   /** Program 声明读取的 owner tokens */
   owners: ReadonlyArray<RuntimeOwnerToken>;
-  /** Program 声明读取的 upstream Program tokens */
-  programs: ReadonlyArray<RuntimeProgramToken>;
-  /** Program callback 允许发出的 trace phases */
-  tracePhases: ReadonlyArray<RuntimeTracePhaseDefinition>;
-  /** Program artifact 生命周期 */
-  artifact: RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>;
+  /**
+   * Program 声明读取的 upstream Program tokens
+   * @default []
+   */
+  programs?: ReadonlyArray<RuntimeProgramToken>;
+  /**
+   * Program callback 允许发出的 trace phases
+   * @default []
+   */
+  tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
+  /** Program artifact 生命周期；三层转换类型相同且无需释放资源时可整体省略 */
+  artifact?: RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>;
   /** full 执行入口 */
   run: (view: RuntimeCandidateView, context: RuntimeProgramContext) => RuntimeRunResult<TArtifactInput>;
   /** 可选 incremental 执行入口 */
@@ -193,4 +242,5 @@ export type RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRea
   ) => RuntimeUpdateResult<TArtifactInput>;
   /** 成功发布新 artifact 后的隔离 observer */
   observeCommit?: (event: RuntimeCommitEvent<TPublicRead>) => void;
-}>;
+}> &
+  RuntimeRequiredProgramArtifact<TArtifactInput, TArtifact, TProgramRead, TPublicRead>;

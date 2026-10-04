@@ -12,6 +12,7 @@ export const DEFAULT_COMPARISON_TARGET_VISIBILITY: ComparisonTargetVisibility = 
   [ComparisonTarget.TikZ]: true,
   [ComparisonTarget.Vega]: true,
   [ComparisonTarget.CSS]: true,
+  [ComparisonTarget.React]: true,
 };
 
 /** Comparison store：托管文档站中所有可选对照内容的显示开关。 */

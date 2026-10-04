@@ -18,6 +18,10 @@ alpha.2 只交付同步 transaction；它仍必须从第一天隔离 candidate�
 
 ## 决策：只读 Candidate、无 Fork Program Artifact、必填 Base Revision
 
+Program 作者输入中的 `programs` 与 `tracePhases` 默认为空数组。`capture`、`readForProgram` 与 `read` 在各自输入和输出类型相同时可以独立省略，默认直接返回入参；类型转换仍必须显式提供对应回调。所有转换均可省略且无需资源释放时，整个 `artifact` 配置也可省略。
+
+泛型默认沿 artifact 输入到内部 artifact 推导；private read 与 public read 分别默认采用内部 artifact 类型，公开读取不经过 private read。恒等默认不复制、冻结或接管外部可变引用的安全性，作者仍须履行 candidate/current 隔离、不可变共享与资源释放契约。
+
 ```ts
 type RuntimeProgramId = Readonly<{ owner: string; key: string }>;
 declare const RuntimeProgramTokenBrand: unique symbol;
@@ -48,31 +52,57 @@ type RuntimeProgramContext = Readonly<{
   diagnose: (diagnostic: RuntimeProgramWarningInput) => void;
 }>;
 
-type RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead> = Readonly<{
-  capture: (input: TArtifactInput) => TArtifact;
-  readForProgram: (artifact: TArtifact) => TProgramRead;
-  read: (artifact: TArtifact) => TPublicRead;
+type RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact = TArtifactInput, TProgramRead = TArtifact, TPublicRead = TArtifact> = Readonly<{
+  /** 捕获 session-owned artifact；同类型时可省略，默认原样返回，不复制或冻结 */
+  capture?: (input: TArtifactInput) => TArtifact;
+  /** 产生只供本 Program update 使用的 private read；同类型时可省略，默认返回内部 artifact */
+  readForProgram?: (artifact: TArtifact) => TProgramRead;
+  /** 产生依赖 Program 与宿主可见的 public read；同类型时可省略，默认返回内部 artifact */
+  read?: (artifact: TArtifact) => TPublicRead;
+  /** 释放未发布或已替换的 artifact */
   dispose?: (artifact: TArtifact) => void;
-}>;
+}> & RuntimeRequiredArtifactTransform<'capture', TArtifactInput, TArtifact>
+  & RuntimeRequiredArtifactTransform<'readForProgram', TArtifact, TProgramRead>
+  & RuntimeRequiredArtifactTransform<'read', TArtifact, TPublicRead>;
 
-type RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead> = Readonly<{
+/** 仅输入与输出类型一致时允许省略恒等转换 */
+type RuntimeRequiredArtifactTransform<TKey extends string, TInput, TOutput> =
+  [TInput, TOutput] extends [TOutput, TInput]
+    ? unknown
+    : Readonly<Record<TKey, (input: TInput) => TOutput>>;
+
+/** 三层转换均可省略时允许省略整个 artifact 配置 */
+type RuntimeRequiredProgramArtifact<TArtifactInput, TArtifact, TProgramRead, TPublicRead> =
+  Record<never, never> extends RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>
+    ? unknown
+    : Readonly<{ artifact: RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead> }>;
+
+type RuntimeProgramDefinitionInput<TArtifactInput, TArtifact = TArtifactInput, TProgramRead = TArtifact, TPublicRead = TArtifact> = Readonly<{
+  /** Program 的结构化 identity */
   id: RuntimeProgramId;
+  /** Program 声明读取的 owner tokens */
   owners: ReadonlyArray<RuntimeOwnerToken>;
-  programs: ReadonlyArray<RuntimeProgramToken>;
-  tracePhases: ReadonlyArray<RuntimeTracePhaseDefinition>;
-  artifact: RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>;
+  /** Program 声明读取的 upstream Program tokens，默认为空数组 */
+  programs?: ReadonlyArray<RuntimeProgramToken>;
+  /** Program callback 允许发出的 trace phases，默认为空数组 */
+  tracePhases?: ReadonlyArray<RuntimeTracePhaseDefinition>;
+  /** Program artifact 生命周期；三层转换类型相同且无需释放资源时可整体省略 */
+  artifact?: RuntimeProgramArtifactDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>;
+  /** full 执行入口 */
   run: (view: RuntimeCandidateView, context: RuntimeProgramContext) => RuntimeRunResult<TArtifactInput>;
+  /** 可选 incremental 执行入口 */
   update?: (
     previous: TProgramRead,
     view: RuntimeCandidateView,
     context: RuntimeProgramContext,
   ) => RuntimeUpdateResult<TArtifactInput>;
+  /** 成功发布新 artifact 后的隔离 observer */
   observeCommit?: (event: RuntimeCommitEvent<TPublicRead>) => void;
-}>;
+}> & RuntimeRequiredProgramArtifact<TArtifactInput, TArtifact, TProgramRead, TPublicRead>;
 
 declare const RuntimeProgramType: unique symbol;
 
-type RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead = TProgramRead> = RuntimeProgramToken &
+type RuntimeProgramDefinition<TArtifactInput, TArtifact = TArtifactInput, TProgramRead = TArtifact, TPublicRead = TArtifact> = RuntimeProgramToken &
   Readonly<{
     [RuntimeProgramType]: (
       input: TArtifactInput,
@@ -82,7 +112,7 @@ type RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRe
     ) => void;
   }>;
 
-const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TPublicRead>(
+const defineRuntimeProgram = <TArtifactInput, TArtifact = TArtifactInput, TProgramRead = TArtifact, TPublicRead = TArtifact>(
   input: RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
 ): RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead>;
 

@@ -116,19 +116,28 @@ const copyTracePhases = (
 };
 
 /** 创建不暴露 author callbacks 的 typed Program token */
-export const defineRuntimeProgram = <TArtifactInput, TArtifact, TProgramRead, TPublicRead = TProgramRead>(
+export const defineRuntimeProgram = <
+  TArtifactInput,
+  TArtifact = TArtifactInput,
+  TProgramRead = TArtifact,
+  TPublicRead = TArtifact,
+>(
   input: RuntimeProgramDefinitionInput<TArtifactInput, TArtifact, TProgramRead, TPublicRead>,
 ): RuntimeProgramDefinition<TArtifactInput, TArtifact, TProgramRead, TPublicRead> => {
   const { owner, key } = input.id;
   if (owner.length === 0 || key.length === 0) {
     throw invalidProgram(RetikzRuntimeErrorCode.ProgramIdInvalid, input.id);
   }
-  const { capture, readForProgram, read, dispose } = input.artifact;
+  // 公开条件类型保证只有同类型转换可省略；在定义入口恢复完整执行契约
+  const capture = input.artifact?.capture ?? ((value: TArtifactInput) => value as unknown as TArtifact);
+  const readForProgram = input.artifact?.readForProgram ?? ((value: TArtifact) => value as unknown as TProgramRead);
+  const read = input.artifact?.read ?? ((value: TArtifact) => value as unknown as TPublicRead);
+  const dispose = input.artifact?.dispose;
   const { run, update, observeCommit } = input;
   const copiedId = Object.freeze({ owner, key });
   const copiedOwners = Object.freeze([...input.owners]);
-  const copiedPrograms = Object.freeze([...input.programs]);
-  const copiedTracePhases = copyTracePhases(input.tracePhases);
+  const copiedPrograms = Object.freeze([...(input.programs ?? [])]);
+  const copiedTracePhases = copyTracePhases(input.tracePhases ?? []);
   const token = Object.freeze({ id: copiedId }) as RuntimeProgramDefinition<
     TArtifactInput,
     TArtifact,
