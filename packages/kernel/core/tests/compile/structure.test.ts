@@ -24,6 +24,7 @@ describe('compile source structure', () => {
       'isNodeLayoutCompileArtifact',
       'lowerIRToKernel',
       'observeCompileToScene',
+      'samplePathRoute',
     ]);
   });
 
