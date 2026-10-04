@@ -344,8 +344,18 @@ const FlowLayoutBaseSchema = strictObject({
 });
 
 const FlowLinearLayoutSchema = strictObject({
+  containerWidth: literal('match-largest')
+    .optional()
+    .describe(
+      'Equalize direct horizontal Layout or single-row Group widths to their natural maximum in an up/down linear Layout. Does not stretch descendants without itemWidth fill.',
+    ),
   kind: literal(FlowPlacementKind.Linear).describe('One-dimensional placement discriminator.'),
   ...FlowLayoutBaseSchema.shape,
+  itemWidth: PositiveNumberSchema.or(literal(['match-largest', 'fill']))
+    .optional()
+    .describe(
+      'Direct Entity visible-width strategy: a number fixes width, match-largest equalizes natural widths, and fill shares positive free width over non-fixed Entities in a horizontal row receiving containerWidth allocation while preserving natural width differences.',
+    ),
   direction: zodEnum(FlowDirection).describe('Required authored direction for direct children placement.'),
   gap: NonNegativeNumberSchema.optional().describe('Optional gap between direct children in user units.'),
   align: zodEnum(FlowLayoutAlignment)

@@ -185,7 +185,7 @@ const sizeElement = (
   input: FlowLayoutElementInput,
   relations: ReadonlyArray<FlowLayoutRelationInput>,
   index: LayeredInputIndex,
-  context: FlowLayoutExecutionContext,
+  context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
 ): SizedElement => {
   if (input.kind === 'leaf') {
     return { input, width: input.size.width, height: input.size.height, margin: input.margin };
@@ -209,7 +209,7 @@ const sizeElement = (
     });
     const placementById = new Map(placement.elements.map(element => [element.id, element.bounds]));
     const children: ScopeLayoutResult = {
-      width: placement.bounds.width,
+      width: input.allocatedWidth ?? placement.bounds.width,
       height: placement.bounds.height,
       elements: childrenWithLabelMargins.map(element => ({
         input: element.input,
@@ -219,7 +219,7 @@ const sizeElement = (
     };
     return {
       input,
-      width: placement.bounds.width,
+      width: input.allocatedWidth ?? placement.bounds.width,
       height: placement.bounds.height,
       margin: ZERO_INSETS,
       children,
@@ -228,7 +228,9 @@ const sizeElement = (
   const children = encloseGroupContent(layoutScope(input.elements, input.layout, relations, index, input.id, context));
   return {
     input,
-    width: Math.max(input.minimumSize.width, input.contentInsets.left + children.width + input.contentInsets.right),
+    width:
+      input.allocatedWidth ??
+      Math.max(input.minimumSize.width, input.contentInsets.left + children.width + input.contentInsets.right),
     height: Math.max(input.minimumSize.height, input.contentInsets.top + children.height + input.contentInsets.bottom),
     margin: ZERO_INSETS,
     children,
@@ -322,7 +324,7 @@ const layoutScope = (
   relations: ReadonlyArray<FlowLayoutRelationInput>,
   index: LayeredInputIndex,
   scopeId: string | undefined,
-  context: FlowLayoutExecutionContext,
+  context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
 ): ScopeLayoutResult => {
   const sized = inputs.map(input =>
     projectSizedElementToCanonicalAxes(sizeElement(input, relations, index, context), layout.direction),
@@ -433,4 +435,14 @@ export const layoutLayeredFlow = (input: FlowLayoutInput, context: FlowLayoutExe
     elements: [...index.kinds.keys()].map(id => byId.get(id)!),
     relations: routeFlowRelations(input, elements, context),
   };
+};
+
+/** 测量作者布局子树的自然占位，复用正式排列与标签预留规则 */
+export const measureFlowLayoutElement = (
+  element: FlowLayoutElementInput,
+  input: FlowLayoutInput,
+  context: Pick<FlowLayoutExecutionContext, 'placeLayout'>,
+): Readonly<{ width: number; height: number }> => {
+  const measured = sizeElement(element, input.relations, buildInputIndex(input.elements), context);
+  return { width: measured.width, height: measured.height };
 };

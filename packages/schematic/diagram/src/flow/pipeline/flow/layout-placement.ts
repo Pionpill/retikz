@@ -127,6 +127,16 @@ export const createFlowLayoutExecutionContext = (
   flow: FlowLayoutInput,
 ): Pick<FlowLayoutExecutionContext, 'placeLayout'> => ({
   placeLayout: input => {
+    const findWidth = (elements: ReadonlyArray<FlowLayoutElementInput>): number | undefined => {
+      for (const element of elements) {
+        if (element.kind === 'leaf') continue;
+        if (element.id === input.layout.id) return element.allocatedWidth;
+        const width = findWidth(element.elements);
+        if (width !== undefined) return width;
+      }
+      return undefined;
+    };
+    const allocatedWidth = findWidth(flow.elements);
     try {
       if (input.layout.kind === 'grid') {
         const layout = input.layout;
@@ -204,6 +214,7 @@ export const createFlowLayoutExecutionContext = (
         );
       }
       const flex = createFlexLayout({
+        ...(allocatedWidth === undefined ? {} : { size: { x: { kind: 'fixed' as const, value: allocatedWidth } } }),
         direction: flexDirection(input.layout.direction),
         gap: input.layout.gap,
         alignItems: flexAlignment(input.layout.align),

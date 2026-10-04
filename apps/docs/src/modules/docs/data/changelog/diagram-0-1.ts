@@ -10,6 +10,13 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '待发布 · 同级容器等宽', en: 'Unreleased · Equal-width sibling containers' },
+        content: {
+          zh: 'FlowLayout 增加 containerWidth: match-largest，为同级横向行或单内容根 Group 分配相同宽度；内部 itemWidth: fill 在自然宽度上均分增量，固定宽度节点不增长。',
+          en: 'FlowLayout adds containerWidth: match-largest for sibling horizontal rows or single-root Groups. Inner itemWidth: fill shares extra space over natural widths while fixed-width nodes remain unchanged.',
+        },
+      },
+      {
         label: { zh: '待发布 · 端点选侧与自动等分', en: 'Unreleased · Endpoint sides and automatic spacing' },
         content: {
           zh: 'Relation source/target 支持 { id, side?, overlap? } 或固定 anchor；separate 在同侧按 i/(n+1) 分配独立位置，allow 共用位置，固定锚点不移动。BREAKING：自定义布局输入端点改为对象并声明 endpointPlacement，输出及 artifact 的 source/target 改为 { id, anchor? }；用 resolveEndpoint 查询真实边界。自动比例要求形状支持 Core side anchor，当前 polygon 不支持；不保证箭头图形或路径无重叠。',

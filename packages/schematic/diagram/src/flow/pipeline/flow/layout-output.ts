@@ -147,6 +147,13 @@ const validateElementGeometry = (
       continue;
     }
     if (
+      element.allocatedWidth !== undefined &&
+      Math.abs(bounds.width - element.allocatedWidth) >
+        Number.EPSILON * 64 * Math.max(1, bounds.width, element.allocatedWidth)
+    ) {
+      invalidOutput(definition, ['elements'], 'Container bounds must preserve allocated width.', [element.id]);
+    }
+    if (
       element.kind === 'group' &&
       (bounds.width < element.minimumSize.width || bounds.height < element.minimumSize.height)
     ) {
