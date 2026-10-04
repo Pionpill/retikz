@@ -8,7 +8,6 @@ import type {
   LayoutCompositeCompileResult,
   SpatialHandleDeclaration,
 } from '@retikz/core';
-import { resolveBoxSpacing } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe, resolveLayoutAxisSize } from '@retikz/layout/compose';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
@@ -68,7 +67,7 @@ export const measureCell = (
     occurrence,
     scope,
   );
-  const padding = resolveBoxSpacing(cell.layout.padding, 0);
+  const { padding } = cell.layout;
   return {
     cell,
     result,
@@ -109,7 +108,7 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
   void font;
   void textColor;
   const radius = Math.min(cornerRadius, width / 2, height / 2);
-  const padding = resolveBoxSpacing(cell.layout.padding, 0);
+  const { padding } = cell.layout;
   const cx = Math.max(0, Math.min(width, (width + padding.left - padding.right) / 2));
   const cy = Math.max(0, Math.min(height, (height + padding.top - padding.bottom) / 2));
   return context.scope(
@@ -138,16 +137,27 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
   );
 };
 
+/** 已排布单元格的整体输出配置 */
+export type CompileCellsOptions = {
+  /** 集合排布需要的宽度 */
+  width: number;
+  /** 集合排布需要的高度 */
+  height: number;
+  /** 集合整体作用域配置 */
+  scope: CompositeCompileScopeProps;
+  /** 单元格之外的额外编译子项 */
+  extra?: Array<CompositeCompileChild>;
+  /** 集合整体标签及其样式 */
+  decoration?: Pick<IRNode, 'label' | 'style'>;
+};
+
 /** 简单排布只解析一次父级尺寸，直接发布单格与引用结果 */
 export const compileCells = (
   cells: Array<CellPlacement>,
-  width: number,
-  height: number,
-  scope: CompositeCompileScopeProps,
+  options: CompileCellsOptions,
   context: LayoutCompositeCompileContext,
-  extra: Array<CompositeCompileChild> = [],
-  decoration: Pick<IRNode, 'label' | 'style'> = {},
 ): LayoutCompositeCompileResult => {
+  const { width, height, scope, extra = [], decoration = {} } = options;
   const axisSize = (axis: 'x' | 'y', natural: number) =>
     resolveLayoutAxisSize({
       axis,

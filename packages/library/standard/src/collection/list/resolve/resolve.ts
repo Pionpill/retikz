@@ -21,9 +21,7 @@ export const resolveList = (source: IRList): CanonicalList => {
         typeof cell === 'string'
           ? { content: cell, ...(cellIdMode === ListCellIdMode.String ? { id: cell } : {}) }
           : cell,
-        source.style,
-        undefined,
-        source.layout,
+        { overallStyle: source.style, overallLayout: source.layout },
       );
       if (cellIdMode !== ListCellIdMode.Index) return resolved;
       const id = `${source.id}-${cellIndex}`;

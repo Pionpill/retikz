@@ -25,7 +25,8 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
   } = resolveList(node);
   void _namespace;
   void _type;
-  if (items.length === 0) return compileCells([], 0, 0, scope, context, [], { label, style });
+  if (items.length === 0)
+    return compileCells([], { width: 0, height: 0, scope, decoration: { label, style } }, context);
   const { direction, gap } = layout;
   const horizontal = direction === ListDirection.Row;
   const measured = items.map((cell, index) => measureCell(cell, context, index, scope));
@@ -91,11 +92,13 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
   });
   return compileCells(
     cells,
-    horizontal ? cursor - gap : width + offset,
-    horizontal ? height + offset : cursor - gap,
-    scope,
+    {
+      width: horizontal ? cursor - gap : width + offset,
+      height: horizontal ? height + offset : cursor - gap,
+      scope,
+      extra,
+      decoration: { label, style },
+    },
     context,
-    extra,
-    { label, style },
   );
 };

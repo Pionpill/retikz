@@ -1,6 +1,8 @@
-import type { IRCellStyle, IRCellLayout } from '../schema';
+import { resolveBoxSpacing } from '@retikz/core';
+
+import type { IRCellStyle } from '../schema';
 import { CellDefaultsSchema, CellLayoutDefaultsSchema, KeyCellDefaultsSchema } from '../schema';
-import type { CanonicalCell, CellResolveSource } from './types';
+import type { CanonicalCell, CellResolveContext, CellResolveSource } from './types';
 
 /** 只合并显式字段；字体子字段保留先前继承值 */
 const mergeStyle = (styles: Array<IRCellStyle | undefined>): IRCellStyle => {
@@ -24,18 +26,12 @@ const mergeStyle = (styles: Array<IRCellStyle | undefined>): IRCellStyle => {
 };
 
 /** 在整体、角色、单元格合并后才应用权威字段默认 */
-export const resolveCell = (
-  source: string | CellResolveSource,
-  overallStyle?: IRCellStyle,
-  roleStyle?: IRCellStyle,
-  layout?: CellResolveSource['layout'],
-  isKey = false,
-  roleLayout?: IRCellLayout,
-): CanonicalCell => {
+export const resolveCell = (source: string | CellResolveSource, context: CellResolveContext): CanonicalCell => {
+  const { overallStyle, overallLayout, roleStyle, roleLayout, isKey = false } = context;
   const cell = typeof source === 'string' ? { content: source } : source;
   const style = mergeStyle([overallStyle, roleStyle, cell.style]);
-  const width = cell.layout?.width ?? roleLayout?.width ?? layout?.width;
-  const height = cell.layout?.height ?? roleLayout?.height ?? layout?.height;
+  const width = cell.layout?.width ?? roleLayout?.width ?? overallLayout?.width;
+  const height = cell.layout?.height ?? roleLayout?.height ?? overallLayout?.height;
   const fixed = typeof width === 'number' || typeof height === 'number';
   return {
     ...cell,
@@ -60,15 +56,17 @@ export const resolveCell = (
     layout: {
       ...(width === undefined ? {} : { width }),
       ...(height === undefined ? {} : { height }),
-      padding:
+      padding: resolveBoxSpacing(
         cell.layout?.padding ??
-        roleLayout?.padding ??
-        layout?.padding ??
-        CellLayoutDefaultsSchema.shape.padding.parse(undefined),
+          roleLayout?.padding ??
+          overallLayout?.padding ??
+          CellLayoutDefaultsSchema.shape.padding.parse(undefined),
+        0,
+      ),
       overflow:
         cell.layout?.overflow ??
         roleLayout?.overflow ??
-        layout?.overflow ??
+        overallLayout?.overflow ??
         (fixed ? 'clip' : CellLayoutDefaultsSchema.shape.overflow.parse(undefined)),
     },
   };

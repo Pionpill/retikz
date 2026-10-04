@@ -20,8 +20,19 @@ export const resolveMap = (source: IRMap): CanonicalMap => {
   return {
     ...input,
     entries: cells.map(entry => ({
-      key: resolveCell(entry.key, style, keyStyle, layout, true, keyLayout),
-      value: resolveCell(entry.value, style, valueStyle, layout, false, valueLayout),
+      key: resolveCell(entry.key, {
+        overallStyle: style,
+        overallLayout: layout,
+        roleStyle: keyStyle,
+        roleLayout: keyLayout,
+        isKey: true,
+      }),
+      value: resolveCell(entry.value, {
+        overallStyle: style,
+        overallLayout: layout,
+        roleStyle: valueStyle,
+        roleLayout: valueLayout,
+      }),
     })),
     layout: { ...source.layout, gap: typeof gap === 'number' ? { row: gap, column: gap } : gap },
   };
