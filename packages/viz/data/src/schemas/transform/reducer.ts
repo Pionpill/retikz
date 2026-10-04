@@ -1,5 +1,10 @@
-import { JsonValueSchema, NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
-import { array, discriminatedUnion, literal, looseObject, number, strictObject, union } from 'zod';
+import {
+  JsonValueSchema,
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+} from '@retikz/foundation';
+import { array, discriminatedUnion, literal, looseObject, strictObject, union } from 'zod';
 
 import { ReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
 import { ReducerOperationKindSchema } from './kind';
@@ -23,13 +28,13 @@ const createFieldReducerOperationSchema = <TKind extends string>(kind: TKind) =>
 const QuantileReducerOperationSchema = strictObject({
   kind: literal(ReducerOperationKind.Quantile).describe('Discriminator: quantile reducer'),
   field: NonBlankStringSchema.describe('Numeric source field'),
-  p: number().min(0).max(1).describe('Quantile probability'),
+  p: NormalizedFractionSchema.describe('Quantile probability'),
   as: NonBlankStringSchema.describe('Output field'),
 }).describe('Quantile reducer operation');
 
 /** quantile-band reducer 额外分位点输出 schema */
 export const QuantileBandPointOutputSchema = strictObject({
-  p: number().min(0).max(1).describe('Quantile probability'),
+  p: NormalizedFractionSchema.describe('Quantile probability'),
   as: NonBlankStringSchema.describe('Output field'),
 }).describe('Quantile-band point output');
 
@@ -94,8 +99,8 @@ export const QuantileBandOutputsSchema = strictObject({
 export const QuantileBandReducerOperationSchema = strictObject({
   kind: literal(ReducerOperationKind.QuantileBand).describe('Discriminator: quantile-band reducer'),
   field: NonBlankStringSchema.describe('Numeric source field'),
-  lowerP: number().min(0).max(1).describe('Lower quantile probability'),
-  upperP: number().min(0).max(1).describe('Upper quantile probability'),
+  lowerP: NormalizedFractionSchema.describe('Lower quantile probability'),
+  upperP: NormalizedFractionSchema.describe('Upper quantile probability'),
   outputs: QuantileBandOutputsSchema.describe('Output field names'),
   whisker: QuantileBandWhiskerSchema.optional().describe('Whisker strategy'),
 })

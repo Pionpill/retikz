@@ -9,6 +9,8 @@ import type {
   MixedLineSchema,
   TextBlockSchema,
   TextRunSchema,
+  TextVisualSchema,
+  TextLayoutSchema,
 } from './schema';
 
 /** 混排文字段 IR 类型 */
@@ -31,3 +33,6 @@ export type IRLine = ZodInfer<typeof LineSchema>;
 export type IRTextBlock = ZodInfer<typeof TextBlockSchema>;
 
 export type IRBoundaryLabel = ZodInput<typeof BoundaryLabelSchema>;
+
+export type IRTextVisual = ZodInfer<typeof TextVisualSchema>;
+export type IRTextLayout = ZodInfer<typeof TextLayoutSchema>;

@@ -4,7 +4,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { flowRoutingI18n } from './flow-routing.i18n';
 
-/** 当前语言的折线路由面板 */
+/** 当前语言的连线路由面板 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const copy = flowRoutingI18n[lang];
   const controls = definePreviewControls({
@@ -15,6 +15,14 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
         label: copy.section,
         controls: [
           { kind: 'select', id: 'kind', label: copy.kind, defaultValue: 'bend', options: copy.kindOptions },
+          {
+            kind: 'select',
+            id: 'turnPosition',
+            label: copy.turnPosition,
+            defaultValue: 'auto',
+            options: copy.turnOptions,
+            visibleWhen: { controlId: 'kind', oneOf: ['orthogonal'] },
+          },
           {
             kind: 'range',
             id: 'cornerRadius',
@@ -88,12 +96,42 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
           },
         ],
       },
+      {
+        label: copy.bezier,
+        visibleWhen: { controlId: 'kind', oneOf: ['curve', 'cubic'] },
+        controls: [
+          { kind: 'switch', id: 'automatic', label: copy.automatic, defaultValue: true },
+          {
+            kind: 'range',
+            id: 'controlHeight',
+            label: copy.controlHeight,
+            defaultValue: 60,
+            min: 0,
+            max: 100,
+            step: 10,
+            visibleWhen: { controlId: 'automatic', oneOf: [false] },
+          },
+        ],
+      },
+      {
+        label: copy.smooth,
+        visibleWhen: { controlId: 'kind', oneOf: ['smooth'] },
+        controls: [
+          { kind: 'range', id: 'height', label: copy.height, defaultValue: 60, min: 0, max: 100, step: 10 },
+          { kind: 'range', id: 'tension', label: copy.tension, defaultValue: 1, min: 0.2, max: 2, step: 0.2 },
+        ],
+      },
     ],
   });
   return {
     controls,
     canonicalValues: {
       kind: 'bend',
+      turnPosition: 'auto',
+      automatic: true,
+      controlHeight: 60,
+      height: 60,
+      tension: 1,
       cornerRadius: 0,
       configuration: 'auto',
       side: 'auto',
@@ -104,6 +142,12 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     } as const,
     relatedApis: [
       'FlowRelation.routing.kind',
+      'FlowRelation.routing.turnPosition',
+      'FlowRelation.routing.control',
+      'FlowRelation.routing.control1',
+      'FlowRelation.routing.control2',
+      'FlowRelation.routing.points',
+      'FlowRelation.routing.tension',
       'FlowRelation.routing.cornerRadius',
       'FlowRelation.routing.bendDirection',
       'FlowRelation.routing.bendAngle',

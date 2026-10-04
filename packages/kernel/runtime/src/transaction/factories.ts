@@ -1,58 +1,58 @@
-import type { RuntimeOwnerExecutionResult } from '../error';
+import type { RuntimeSourceExecutionResult } from '../error';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type {
   RuntimeChangeSet,
-  RuntimeOwnerDefinition,
-  RuntimeOwnerExecutor,
-  RuntimeOwnerToken,
-  RuntimePreparedOwnerValue,
+  RuntimeSourceDefinition,
+  RuntimeSourceExecutor,
+  RuntimeSourceToken,
+  RuntimePreparedSourceValue,
   RuntimeRevision,
-} from '../owner';
-import type { RuntimeOwnerInput, RuntimeOwnerUpdate, RuntimeSnapshot } from './types';
+} from '../source';
+import type { RuntimeSourceInput, RuntimeSourceUpdate, RuntimeSnapshot } from './types';
 
-/** command 私有保存的 owner 输入与 lifecycle 入口 */
-export type RuntimeOwnerCommandExecutor = Readonly<{
-  /** command 关联的具体 owner token */
-  owner: RuntimeOwnerToken;
-  /** 使用 registry-bound executor 捕获 concrete owner input */
+/** command 私有保存的 source 输入与 lifecycle 入口 */
+export type RuntimeSourceCommandExecutor = Readonly<{
+  /** command 关联的具体 source token */
+  source: RuntimeSourceToken;
+  /** 使用 registry-bound executor 捕获 concrete source input */
   prepare: (
-    executor: RuntimeOwnerExecutor,
-    current?: RuntimePreparedOwnerValue<unknown, unknown>,
-  ) => RuntimeOwnerExecutionResult<RuntimePreparedOwnerValue<unknown, unknown>>;
+    executor: RuntimeSourceExecutor,
+    current?: RuntimePreparedSourceValue<unknown, unknown>,
+  ) => RuntimeSourceExecutionResult<RuntimePreparedSourceValue<unknown, unknown>>;
   /** 比较 previous 与 candidate 的完整 captured value */
   compare: (
-    executor: RuntimeOwnerExecutor,
-    previous: RuntimePreparedOwnerValue<unknown, unknown>,
-    candidate: RuntimePreparedOwnerValue<unknown, unknown>,
-  ) => RuntimeOwnerExecutionResult<boolean>;
+    executor: RuntimeSourceExecutor,
+    previous: RuntimePreparedSourceValue<unknown, unknown>,
+    candidate: RuntimePreparedSourceValue<unknown, unknown>,
+  ) => RuntimeSourceExecutionResult<boolean>;
   /** 校验 concrete change hint，缺少 hint 时不存在 */
   validateChangeSet?: (
-    executor: RuntimeOwnerExecutor,
-    previous: RuntimePreparedOwnerValue<unknown, unknown>,
-    candidate: RuntimePreparedOwnerValue<unknown, unknown>,
-  ) => RuntimeOwnerExecutionResult<'valid' | 'fallback'>;
-  /** 释放一个 prepared owner value */
+    executor: RuntimeSourceExecutor,
+    previous: RuntimePreparedSourceValue<unknown, unknown>,
+    candidate: RuntimePreparedSourceValue<unknown, unknown>,
+  ) => RuntimeSourceExecutionResult<'valid' | 'fallback'>;
+  /** 释放一个 prepared source value */
   retire: (
-    executor: RuntimeOwnerExecutor,
-    prepared: RuntimePreparedOwnerValue<unknown, unknown>,
-  ) => RuntimeOwnerExecutionResult<void>;
+    executor: RuntimeSourceExecutor,
+    prepared: RuntimePreparedSourceValue<unknown, unknown>,
+  ) => RuntimeSourceExecutionResult<void>;
   /** update 携带的 change hint base revision */
   changeSetBaseRevision?: RuntimeRevision;
-  /** 以 concrete owner read 类型创建 revision-bound Snapshot */
+  /** 以 concrete source read 类型创建 revision-bound Snapshot */
   snapshot: <TInput, TValue, TRead, TChange>(
-    owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
-    prepared: RuntimePreparedOwnerValue<unknown, unknown>,
+    source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+    prepared: RuntimePreparedSourceValue<unknown, unknown>,
     revision: RuntimeRevision,
   ) => RuntimeSnapshot<TRead>;
-  /** 读取 concrete owner change hint */
+  /** 读取 concrete source change hint */
   changeSet: <TInput, TValue, TRead, TChange>(
-    owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+    source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeChangeSet<TChange> | undefined;
 }>;
 
 const runtimeChangeSets = new WeakSet<object>();
-const runtimeOwnerCommands = new WeakSet<object>();
-const runtimeOwnerCommandExecutors = new WeakMap<object, RuntimeOwnerCommandExecutor>();
+const runtimeSourceCommands = new WeakSet<object>();
+const runtimeSourceCommandExecutors = new WeakMap<object, RuntimeSourceCommandExecutor>();
 
 /** 判断一个值是否是合法 Runtime revision number */
 export const isRuntimeRevision = (value: unknown): value is RuntimeRevision =>
@@ -101,114 +101,114 @@ export const createRuntimeChangeSet = <TChange>(
   return changeSet;
 };
 
-/** 在 concrete owner 泛型作用域内封装 lifecycle 与 change hint callback */
-const createRuntimeOwnerCommandExecutor = <TInput, TValue, TRead, TChange>(
-  owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+/** 在 concrete source 泛型作用域内封装 lifecycle 与 change hint callback */
+const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
   changeSet?: RuntimeChangeSet<TChange>,
-): RuntimeOwnerCommandExecutor => {
+): RuntimeSourceCommandExecutor => {
   const typedExecutor = Object.freeze({
-    owner,
-    prepare: (runtimeExecutor: RuntimeOwnerExecutor, current?: RuntimePreparedOwnerValue<TValue, TRead>) =>
-      runtimeExecutor.prepare(owner, value, current),
+    source,
+    prepare: (runtimeExecutor: RuntimeSourceExecutor, current?: RuntimePreparedSourceValue<TValue, TRead>) =>
+      runtimeExecutor.prepare(source, value, current),
     compare: (
-      runtimeExecutor: RuntimeOwnerExecutor,
-      previous: RuntimePreparedOwnerValue<TValue, TRead>,
-      candidate: RuntimePreparedOwnerValue<TValue, TRead>,
-    ) => runtimeExecutor.compare(owner, previous, candidate),
+      runtimeExecutor: RuntimeSourceExecutor,
+      previous: RuntimePreparedSourceValue<TValue, TRead>,
+      candidate: RuntimePreparedSourceValue<TValue, TRead>,
+    ) => runtimeExecutor.compare(source, previous, candidate),
     validateChangeSet:
       changeSet === undefined
         ? undefined
         : (
-            runtimeExecutor: RuntimeOwnerExecutor,
-            previous: RuntimePreparedOwnerValue<TValue, TRead>,
-            candidate: RuntimePreparedOwnerValue<TValue, TRead>,
-          ) => runtimeExecutor.validateChangeSet(owner, previous, candidate, changeSet),
-    retire: (runtimeExecutor: RuntimeOwnerExecutor, prepared: RuntimePreparedOwnerValue<TValue, TRead>) =>
-      runtimeExecutor.retire(owner, prepared),
+            runtimeExecutor: RuntimeSourceExecutor,
+            previous: RuntimePreparedSourceValue<TValue, TRead>,
+            candidate: RuntimePreparedSourceValue<TValue, TRead>,
+          ) => runtimeExecutor.validateChangeSet(source, previous, candidate, changeSet),
+    retire: (runtimeExecutor: RuntimeSourceExecutor, prepared: RuntimePreparedSourceValue<TValue, TRead>) =>
+      runtimeExecutor.retire(source, prepared),
     changeSetBaseRevision: changeSet?.baseRevision,
     snapshot: (
-      requestedOwner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
-      prepared: RuntimePreparedOwnerValue<TValue, TRead>,
+      requestedSource: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
+      prepared: RuntimePreparedSourceValue<TValue, TRead>,
       revision: RuntimeRevision,
     ): RuntimeSnapshot<TRead> => {
-      if (requestedOwner !== owner) {
+      if (requestedSource !== source) {
         throw new RetikzRuntimeError({
-          code: RetikzRuntimeErrorCode.OwnerCommandInvalid,
+          code: RetikzRuntimeErrorCode.SourceCommandInvalid,
           phase: 'snapshot',
-          owner: requestedOwner.key,
-          cause: requestedOwner,
+          owner: requestedSource.key,
+          cause: requestedSource,
         });
       }
       return Object.freeze({ revision, value: prepared.read });
     },
     changeSet: (
-      requestedOwner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+      requestedSource: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
     ): RuntimeChangeSet<TChange> | undefined => {
-      if (requestedOwner !== owner) {
+      if (requestedSource !== source) {
         throw new RetikzRuntimeError({
-          code: RetikzRuntimeErrorCode.OwnerCommandInvalid,
+          code: RetikzRuntimeErrorCode.SourceCommandInvalid,
           phase: 'change-set',
-          owner: requestedOwner.key,
-          cause: requestedOwner,
+          owner: requestedSource.key,
+          cause: requestedSource,
         });
       }
       return changeSet;
     },
   });
-  return typedExecutor as unknown as RuntimeOwnerCommandExecutor;
+  return typedExecutor as unknown as RuntimeSourceCommandExecutor;
 };
 
-/** 在 concrete owner 泛型仍可见时创建初始 Snapshot command */
-export const createRuntimeOwnerInput = <TInput, TValue, TRead, TChange>(
-  owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+/** 在 concrete source 泛型仍可见时创建初始 Snapshot command */
+export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
-): RuntimeOwnerInput => {
-  const command = Object.freeze({ owner, kind: 'initial' as const }) as unknown as RuntimeOwnerInput;
-  const executor = createRuntimeOwnerCommandExecutor(owner, value);
-  runtimeOwnerCommands.add(command);
-  runtimeOwnerCommandExecutors.set(command, executor);
+): RuntimeSourceInput => {
+  const command = Object.freeze({ source, kind: 'initial' as const }) as unknown as RuntimeSourceInput;
+  const executor = createRuntimeSourceCommandExecutor(source, value);
+  runtimeSourceCommands.add(command);
+  runtimeSourceCommandExecutors.set(command, executor);
   return command;
 };
 
-/** 在 concrete owner 泛型仍可见时创建更新 Snapshot command */
-export const createRuntimeOwnerUpdate = <TInput, TValue, TRead, TChange>(
-  owner: RuntimeOwnerDefinition<TInput, TValue, TRead, TChange>,
+/** 在 concrete source 泛型仍可见时创建更新 Snapshot command */
+export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
+  source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
   changeSet?: RuntimeChangeSet<TChange>,
-): RuntimeOwnerUpdate => {
+): RuntimeSourceUpdate => {
   if (changeSet !== undefined && !isRuntimeChangeSet(changeSet)) {
     throw new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.ChangeSetInvalid,
       phase: 'change-set',
-      owner: owner.key,
+      owner: source.key,
       cause: changeSet,
     });
   }
-  const command = Object.freeze({ owner, kind: 'update' as const }) as unknown as RuntimeOwnerUpdate;
-  const executor = createRuntimeOwnerCommandExecutor(owner, value, changeSet);
-  runtimeOwnerCommands.add(command);
-  runtimeOwnerCommandExecutors.set(command, executor);
+  const command = Object.freeze({ source, kind: 'update' as const }) as unknown as RuntimeSourceUpdate;
+  const executor = createRuntimeSourceCommandExecutor(source, value, changeSet);
+  runtimeSourceCommands.add(command);
+  runtimeSourceCommandExecutors.set(command, executor);
   return command;
 };
 
-/** 读取 opaque owner command 的私有执行入口 */
-export const getRuntimeOwnerCommandExecutor = (
-  command: RuntimeOwnerInput | RuntimeOwnerUpdate,
-): RuntimeOwnerCommandExecutor => {
-  if (!runtimeOwnerCommands.has(command)) {
+/** 读取 opaque source command 的私有执行入口 */
+export const getRuntimeSourceCommandExecutor = (
+  command: RuntimeSourceInput | RuntimeSourceUpdate,
+): RuntimeSourceCommandExecutor => {
+  if (!runtimeSourceCommands.has(command)) {
     throw new RetikzRuntimeError({
-      code: RetikzRuntimeErrorCode.OwnerCommandInvalid,
+      code: RetikzRuntimeErrorCode.SourceCommandInvalid,
       phase: 'command',
       cause: command,
     });
   }
-  const executor = runtimeOwnerCommandExecutors.get(command);
+  const executor = runtimeSourceCommandExecutors.get(command);
   if (executor === undefined) {
     throw new RetikzRuntimeError({
       code: RetikzRuntimeErrorCode.InternalInvariant,
-      message: 'runtime owner command: missing executor',
-      phase: 'owner-command',
+      message: 'runtime source command: missing executor',
+      phase: 'source-command',
       cause: command,
     });
   }

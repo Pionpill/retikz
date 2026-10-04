@@ -11,7 +11,7 @@ import {
   LayoutContainerBoxSchema,
   LayoutDistribution,
   LayoutDistributionSchema,
-  LayoutGapSchema,
+  LayoutRowColumnGapSchema,
   LayoutItemBaseSchema,
   LayoutItemKind,
   LayoutSpacingArtifactSchema,
@@ -19,16 +19,6 @@ import {
 import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 
 const FLEX_LAYOUT_CONTENT_BASIS = 'content' as const;
-
-const FlexLayoutGapSchema = union([
-  LayoutGapSchema.describe('Uniform physical gap applied to both columns and rows.'),
-  strictObject({
-    column: LayoutGapSchema.describe('Physical horizontal gap between items or lines.'),
-    row: LayoutGapSchema.describe('Physical vertical gap between items or lines.'),
-  }).describe('Independent physical column and row gaps.'),
-])
-  .default(0)
-  .describe('Physical gaps between items and lines; a number applies uniformly to both axes.');
 
 export const FlexMainDistributionSchema = zodEnum([
   LayoutDistribution.Start,
@@ -69,7 +59,9 @@ const FlexLayoutBaseSchema = CompositeBaseSchema.extend({
   ...LayoutContainerBoxSchema.shape,
   direction: zodEnum(FlexLayoutDirection).default(FlexLayoutDirection.Row).describe('Physical main-axis direction.'),
   wrap: zodEnum(FlexLayoutWrap).default(FlexLayoutWrap.NoWrap).describe('Line wrapping and cross traversal policy.'),
-  gap: FlexLayoutGapSchema,
+  gap: LayoutRowColumnGapSchema.default(0).describe(
+    'Physical gaps between items and lines; a number applies uniformly to both axes.',
+  ),
   justifyContent: FlexMainDistributionSchema.default(LayoutDistribution.Start).describe(
     'Distribution of remaining main-axis space within each line.',
   ),

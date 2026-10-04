@@ -266,8 +266,8 @@ describe('PreviewControlFieldInput', () => {
     expect(compactRange.container.firstElementChild?.classList.contains('w-full')).toBe(true);
     for (const range of [defaultRange, compactRange]) {
       const value = range.container.querySelector('.tabular-nums');
-      expect(value?.classList.contains('w-6')).toBe(true);
-      expect(value?.classList.contains('w-10')).toBe(false);
+      expect(value?.textContent).toBe('1');
+      expect(value?.classList.contains('shrink-0')).toBe(true);
     }
   });
 

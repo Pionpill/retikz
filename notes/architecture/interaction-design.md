@@ -46,7 +46,7 @@ v0.5 不应分别建设“性能系统”和“交互系统”，而应先建立
 
 ```text
 Domain Snapshot
-  → Incremental Program
+  → Incremental Computation
   → Core Contribution
   → Core Compiler
   → Scene
@@ -102,7 +102,7 @@ Change 描述领域输入变化，Patch 描述两个稳定 snapshot 之间的执
 
 每个被接受的 Change 都必须在候选 transaction 内确定性地产生下一份完整 owner snapshot；Patch 只由前后 snapshot 派生。Patch 不是新的 IR，也不是新的 Scene 真源。任何增量缓存都必须能够丢弃并从完整 snapshot 重建。
 
-### Incremental Program
+### Incremental Computation
 
 Data、Plot、Table、Core 和未来 Tier 2 都以 program 形式参与运行时。program 必须支持从完整输入生成完整输出，并可以选择支持从 change 生成 patch。
 

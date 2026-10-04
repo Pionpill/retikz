@@ -1,3 +1,3 @@
-export * from './owner-registry';
-export * from './program-registry';
+export * from './computation-registry';
+export * from './source-registry';
 export * from './types';

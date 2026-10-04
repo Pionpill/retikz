@@ -32,7 +32,7 @@ describe('Legend schema and factory', () => {
       LegendSchema.parse({ namespace: 'standard', type: 'legend', content: { kind: 'items', items: [] } }),
     ).toMatchObject({
       titleGap: 8,
-      content: { direction: 'vertical', sampleGap: 8 },
+      content: { direction: 'vertical', sampleGap: 8, gap: 8 },
     });
   });
   it('reuses the complete Core Scope authored surface', () => {

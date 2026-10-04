@@ -9,6 +9,43 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentPreviewProps } from '@/modules/docs/components/component-preview';
 import { ShowcaseTabs } from '@/modules/docs/components/showcase';
+import type * as DocsData from '@/modules/docs/data';
+import type { Section } from '@/modules/docs/data';
+
+vi.mock('@/modules/docs/data', async importOriginal => {
+  const actual = await importOriginal<typeof DocsData>();
+  const sections = [
+    {
+      id: 'chart',
+      label: 'viz.chart',
+      pages: [
+        {
+          id: 'points',
+          label: 'viz.chartScatterPoints',
+          children: [
+            {
+              id: 'scatter',
+              label: 'viz.chartScatter',
+              meta: {
+                layout: 'showcase',
+                showcase: { family: 'point', role: 'primary', order: 0, preview: 'scatter-minimal' },
+              },
+            },
+            {
+              id: 'bubble',
+              label: 'viz.chartBubble',
+              meta: {
+                layout: 'showcase',
+                showcase: { family: 'point', role: 'primary', order: 1, preview: 'bubble-minimal' },
+              },
+            },
+          ],
+        },
+      ],
+    },
+  ] satisfies Array<Section>;
+  return { ...actual, getSectionsByArea: () => sections };
+});
 
 vi.mock('@/modules/docs/components/component-preview', async () => {
   const { DemoLocationContext } = await vi.importActual<{ DemoLocationContext: Context<Array<string> | null> }>(
@@ -131,7 +168,7 @@ describe('<ShowcaseTabs>', () => {
     expect(scatterContainer.querySelector('[data-slot="showcase-family-preview"]')).toBeNull();
     await vi.waitFor(() => {
       expect(scatterContainer.textContent).toContain(
-        'Compare two continuous variables by position and use a required third field for the magnitude represented by bubble area.',
+        'A bubble chart adds a third numeric variable through bubble size.',
       );
     });
   });

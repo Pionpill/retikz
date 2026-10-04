@@ -14,7 +14,7 @@ import {
   LayeredFlowLayoutDefinition,
 } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
-import { routeLayeredRelations } from '../../src/flow/providers/layout/layered/routing';
+import { routeFlowRelations } from '../../src/flow/providers/layout/routing';
 import { resolveEffectiveFlowLayout } from '../../src/flow/resolve';
 
 const inputFor = (kind: '-|' | '|-'): FlowLayoutInput => ({
@@ -25,7 +25,14 @@ const inputFor = (kind: '-|' | '|-'): FlowLayoutInput => ({
     size: { width: 20, height: 20 },
     margin: { top: 0, right: 0, bottom: 0, left: 0 },
   })),
-  relations: [{ source: 'a', target: 'b', direction: 'forward', routing: { kind, cornerRadius: 0 } }],
+  relations: [
+    {
+      source: { id: 'a', overlap: 'allow' },
+      target: { id: 'b', overlap: 'allow' },
+      direction: 'forward',
+      routing: { kind, cornerRadius: 0 },
+    },
+  ],
 });
 
 const elementsAt = (target: Position): FlowLayoutOutput['elements'] => [
@@ -92,7 +99,10 @@ describe('Flow single-elbow routing', () => {
       expect(() =>
         compile({
           ...provider,
-          capabilities: { ...provider.capabilities, routingKinds: ['straight', 'orthogonal', 'bend'] },
+          capabilities: {
+            ...provider.capabilities,
+            routing: [{ kind: 'straight' }, { kind: 'orthogonal' }, { kind: 'bend' }],
+          },
         }),
       ).toThrow(
         expect.objectContaining({
@@ -170,7 +180,7 @@ describe('Flow single-elbow routing', () => {
     const provider = {
       ...LayeredFlowLayoutDefinition,
       name: 'elbow',
-      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routingKinds: [kind] },
+      capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routing: [{ kind }] },
       defaults: { ...LayeredFlowLayoutDefinition.defaults, routing: { kind, orthogonalCornerRadius: 5 } },
     };
     expect(
@@ -301,14 +311,14 @@ describe('Flow single-elbow routing', () => {
     (kind, target, expected) => {
       const input = inputFor(kind);
       const elements = elementsAt(target);
-      const relations = routeLayeredRelations(input, elements);
+      const relations = routeFlowRelations(input, elements);
       expect(relations[0].route.points).toEqual(expected);
       expect(
         executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => ({ elements, relations }) }, input)
           .relations[0].route.points,
       ).toEqual(expected);
       expect(
-        routeLayeredRelations({ ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] }, elements)[0]
+        routeFlowRelations({ ...input, relations: [{ ...input.relations[0], direction: 'reverse' }] }, elements)[0]
           .route.points,
       ).toEqual(expected);
     },
@@ -349,7 +359,7 @@ describe('Flow single-elbow routing', () => {
             ...LayeredFlowLayoutDefinition,
             layout: () => ({
               elements: elementsAt([100, 80]),
-              relations: [{ route: { kind, cornerRadius: 0, points } }],
+              relations: [{ source: { id: 'a' }, target: { id: 'b' }, route: { kind, cornerRadius: 0, points } }],
             }),
           },
           inputFor(kind),
@@ -364,6 +374,8 @@ describe('Flow single-elbow routing', () => {
             elements: elementsAt([0, 0]),
             relations: [
               {
+                source: { id: 'a' },
+                target: { id: 'b' },
                 route: {
                   kind: '-|',
                   cornerRadius: 0,

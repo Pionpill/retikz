@@ -34,7 +34,15 @@ const mergeGraphFlowDefaults = (
   );
   return {
     ...(merged?.entity === undefined ? {} : { entity: merged.entity }),
-    ...(merged?.relation === undefined ? {} : { relation: merged.relation }),
+    ...(merged?.relation === undefined && base?.relation === undefined && override?.relation === undefined
+      ? {}
+      : {
+          relation: {
+            ...merged?.relation,
+            source: mergeFields(base?.relation?.source, override?.relation?.source),
+            target: mergeFields(base?.relation?.target, override?.relation?.target),
+          },
+        }),
   };
 };
 

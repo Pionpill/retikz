@@ -1,7 +1,7 @@
 import type { RuntimeIdentity } from '@retikz/runtime';
 
 /** Core document Snapshot 的固定 owner key */
-export const CORE_OWNER_KEY = '@retikz/core/document' as const;
+export const CORE_SOURCE_KEY = '@retikz/core/document' as const;
 
 /** Core Snapshot change hint，不携带局部 IR value */
 export type CoreChange =

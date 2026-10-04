@@ -14,7 +14,7 @@ export { VanillaViewMode } from './constants';
 /** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla InputScene */
 export type RenderInput = Scene | IRScene | InputScene;
 
-/** 可进入 retained Runtime session 的未编译输入 */
+/** 可进入 retained Runtime 的未编译输入 */
 export type RetainedRenderInput = IRScene | InputScene;
 
 /** 输出资源与显示尺寸选项 */
@@ -78,15 +78,15 @@ export type RetainedCanvasUpdateOptions = RetainedAnimationUpdateOptions &
 /** 所有 Vanilla retained view 可接受的 update 配置 */
 export type RetainedVanillaUpdateOptions = RetainedSvgUpdateOptions | RetainedCanvasUpdateOptions;
 
-/** Vanilla retained Runtime session 配置 */
+/** Vanilla retained Runtime 配置 */
 export type VanillaRetainedRuntimeOptions = Readonly<{
   /**
-   * 创建保留式 Runtime Session
+   * 创建保留式 Runtime
    * @default VanillaViewMode.Retained
    */
   mode?: typeof VanillaViewMode.Retained;
   /**
-   * Program 更新策略
+   * Computation 更新策略
    * @default RuntimeUpdateStrategy.Auto
    */
   updateStrategy?: RuntimeUpdateStrategyValue;
@@ -96,9 +96,9 @@ export type VanillaRetainedRuntimeOptions = Readonly<{
 
 /** Vanilla raw-input static 配置 */
 export type VanillaStaticRuntimeOptions = Readonly<{
-  /** 不创建 Runtime Session，直接完整编译与物化 */
+  /** 不创建 Runtime，直接完整编译与物化 */
   mode: typeof VanillaViewMode.Static;
-  /** static 不支持 Program 更新策略 */
+  /** static 不支持 Computation 更新策略 */
   updateStrategy?: never;
   /** static 不支持 retained renderer factory */
   rendererFactory?: never;
@@ -137,7 +137,7 @@ export type StaticMountOptions = CommonOptions & Readonly<{ runtime?: never }>;
 
 /** IR / InputScene retained DOM mount options；可注入 renderer factory */
 export type RetainedMountOptions = CommonOptions & {
-  /** retained Runtime session 配置；仅 IR / InputScene mount 使用 */
+  /** retained Runtime 配置；仅 IR / InputScene mount 使用 */
   runtime?: VanillaRetainedRuntimeOptions;
 };
 
@@ -179,7 +179,7 @@ export type RetainedSvgView = VanillaViewState<SVGSVGElement> &
     mode: typeof VanillaViewMode.Retained;
     /** 原子提交下一份未编译输入与可变 renderer config */
     update: (next: RetainedRenderInput, options?: RetainedSvgUpdateOptions) => void;
-    /** 返回并清空 Runtime session diagnostics */
+    /** 返回并清空 Runtime diagnostics */
     diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
   }>;
 
@@ -253,7 +253,7 @@ export type RetainedCanvasView = CanvasViewState &
     mode: typeof VanillaViewMode.Retained;
     /** 原子提交下一份未编译输入与可变 renderer config */
     update: (next: RetainedRenderInput, options?: RetainedCanvasUpdateOptions) => void;
-    /** 返回并清空 Runtime session diagnostics */
+    /** 返回并清空 Runtime diagnostics */
     diagnostics: () => ReadonlyArray<RuntimeDiagnostic>;
   }>;
 

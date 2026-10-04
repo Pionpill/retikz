@@ -1,13 +1,13 @@
-import type { AnyCompositeDefinition, CoreProgramOutput } from '@retikz/core';
-import { CoreOwnerDefinition, CoreCompositeInputOwnerDefinition, createCoreProgram } from '@retikz/core';
+import type { AnyCompositeDefinition, CoreComputationOutput } from '@retikz/core';
+import { CoreSourceDefinition, CoreCompositeInputSourceDefinition, createCoreComputation } from '@retikz/core';
 import {
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
   defineRuntimeCommitParticipant,
-  defineRuntimeOwner,
+  defineRuntimeSource,
   RetikzRuntimeError,
 } from '@retikz/runtime';
 
@@ -23,7 +23,7 @@ import {
   defaultVanillaCompileDriver,
   resolveVanillaCompileOutput,
 } from '../../runtime/compile-driver';
-import { createRetainedCompositeDefinitions, VanillaCompositeRevisionOwnerDefinition } from '../composites';
+import { createRetainedCompositeDefinitions, VanillaCompositeRevisionSourceDefinition } from '../composites';
 import { prepareProcessingInput } from '../prepare';
 import type { PreparedProcessingInput, ProcessingOptions, ProcessingResult, ProcessingSource } from '../types';
 import type {
@@ -33,7 +33,7 @@ import type {
 } from './types';
 
 /** 自定义编译驱动下一 revision 的领域中立失效标识 */
-const VanillaCompileDriverRevisionOwnerDefinition = defineRuntimeOwner<number, number, number, never>({
+const VanillaCompileDriverRevisionSourceDefinition = defineRuntimeSource<number, number, number, never>({
   key: '@retikz/vanilla:compile-driver-revision',
   value: {
     capture: value => {
@@ -95,7 +95,7 @@ const restoreVanillaCompileDriverSession = (
 const createProcessingResult = (
   revision: number,
   prepared: PreparedProcessingInput,
-  output: CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>,
+  output: CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>>,
   compileSession: VanillaCompileDriverSession,
 ): ProcessingResult => {
   const resolved = resolveVanillaCompileOutput(compileSession, output);
@@ -110,9 +110,9 @@ const createProcessingResult = (
   });
 };
 
-/** 单条 Runtime session 持有的 Core Program、Definitions 与 committed processing result */
+/** 单条 Runtime 持有的 Core Computation、Definitions 与 committed processing result */
 type RetainedProcessingState = Readonly<{
-  /** 当前 Program 可接受的 definition topology */
+  /** 当前 Computation 可接受的 definition topology */
   compositeDefinitions: ReturnType<typeof createRetainedCompositeDefinitions>;
   /** 当前编译驱动输入，用于失败后恢复驱动状态 */
   driverInput: () => VanillaCompileDriverInput;
@@ -128,9 +128,9 @@ type RetainedProcessingState = Readonly<{
   updateParticipant: (revision: number) => ProcessingResult;
   /** 提交当前已准备 Core 输出的 compile driver 通知 */
   commitDriver: () => void;
-  /** 读取并清空当前 Runtime session 的诊断 */
+  /** 读取并清空当前 Runtime 的诊断 */
   diagnostics: () => ReadonlyArray<unknown>;
-  /** 释放当前 Runtime session */
+  /** 释放当前 Runtime */
   dispose: () => void;
 }>;
 
@@ -148,45 +148,45 @@ const createRetainedProcessingState = (
 ): RetainedProcessingState => {
   const compositeDefinitions = createRetainedCompositeDefinitions(initial.coreOptions.composites);
   let driverInput = initialDriverInput;
-  const coreProgram = createCoreProgram(
+  const coreComputation = createCoreComputation(
     { ...initial.coreOptions, compositeInputs: undefined, composites: compositeDefinitions.definitions },
     {
-      compositeInputOwner: CoreCompositeInputOwnerDefinition,
-      invalidationOwners: [
-        VanillaCompositeRevisionOwnerDefinition,
-        ...(hasCustomCompileDriver ? [VanillaCompileDriverRevisionOwnerDefinition] : []),
+      compositeInputSource: CoreCompositeInputSourceDefinition,
+      invalidationSources: [
+        VanillaCompositeRevisionSourceDefinition,
+        ...(hasCustomCompileDriver ? [VanillaCompileDriverRevisionSourceDefinition] : []),
       ],
       observers: compileSession.observers,
     },
   );
-  const resolveReadonlyLayers = (output: CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>) =>
+  const resolveReadonlyLayers = (output: CoreComputationOutput<ReadonlyArray<AnyCompositeDefinition>>) =>
     resolveVanillaCompileOutput(compileSession, output).layers;
   const transactionParticipant = transactionParticipantFactory?.({
     initial,
-    coreProgram,
+    coreComputation,
     resolveReadonlyLayers,
   });
-  const owners = createRuntimeOwnerRegistry({
+  const sources = createRuntimeSourceRegistry({
     builtins: [
-      CoreOwnerDefinition,
-      CoreCompositeInputOwnerDefinition,
-      VanillaCompositeRevisionOwnerDefinition,
-      VanillaCompileDriverRevisionOwnerDefinition,
-      ...(transactionParticipant?.owners ?? []),
+      CoreSourceDefinition,
+      CoreCompositeInputSourceDefinition,
+      VanillaCompositeRevisionSourceDefinition,
+      VanillaCompileDriverRevisionSourceDefinition,
+      ...(transactionParticipant?.sources ?? []),
     ],
   });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [coreProgram] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [coreComputation] });
   let participantResult: ProcessingResult | undefined;
   let participantPrepared = initial;
   let participantRevision = initialRevision;
   const resultParticipant = defineRuntimeCommitParticipant<ProcessingResult>({
     key: PROCESSING_RESULT_PARTICIPANT_KEY,
-    owners: [],
-    programs: [coreProgram],
+    sources: [],
+    computations: [coreComputation],
     revisionPolicy: 'continuous',
     tracePhases: [],
     prepare: candidate => {
-      const output = candidate.artifact(coreProgram).value.output;
+      const output = candidate.artifact(coreComputation).value.output;
       const next = createProcessingResult(participantRevision, participantPrepared, output, compileSession);
       assertCurrent();
       const previous = participantResult;
@@ -210,38 +210,38 @@ const createRetainedProcessingState = (
       participantResult = undefined;
     },
   });
-  let session: ReturnType<typeof createRuntimeSession>;
+  let runtime: ReturnType<typeof createRuntime>;
   try {
-    session = createRuntimeSession({
-      owners,
-      programs,
+    runtime = createRuntime({
+      sources,
+      computations,
       updateStrategy: fixedOptions.updateStrategy,
       participants: [
         resultParticipant,
         ...(transactionParticipant === undefined ? [] : [transactionParticipant.participant]),
       ],
       initialSnapshots: [
-        createRuntimeOwnerInput(CoreOwnerDefinition, initial.source),
-        createRuntimeOwnerInput(CoreCompositeInputOwnerDefinition, initial.coreOptions.compositeInputs),
-        createRuntimeOwnerInput(VanillaCompositeRevisionOwnerDefinition, 0),
-        createRuntimeOwnerInput(VanillaCompileDriverRevisionOwnerDefinition, 0),
+        createRuntimeSourceInput(CoreSourceDefinition, initial.source),
+        createRuntimeSourceInput(CoreCompositeInputSourceDefinition, initial.coreOptions.compositeInputs),
+        createRuntimeSourceInput(VanillaCompositeRevisionSourceDefinition, 0),
+        createRuntimeSourceInput(VanillaCompileDriverRevisionSourceDefinition, 0),
         ...(transactionParticipant?.initialSnapshots ?? []),
       ],
     });
   } catch (cause) {
     throw processingCause(cause);
   }
-  transactionParticipant?.connect?.(session);
+  transactionParticipant?.connect?.(runtime);
   let prepared = initial;
   let compositeRevision = 0;
   let compileDriverRevision = 0;
-  let current = session.participant(resultParticipant);
+  let current = runtime.participant(resultParticipant);
 
   /** 在本 session 的当前 Core 输出上提交 compile driver 通知 */
   const commitDriver = (): void => {
     commitVanillaCompileOutput(
       compileSession,
-      resolveVanillaCompileOutput(compileSession, session.artifact(coreProgram).value.output),
+      resolveVanillaCompileOutput(compileSession, runtime.artifact(coreComputation).value.output),
     );
   };
 
@@ -265,16 +265,16 @@ const createRetainedProcessingState = (
         const nextCompileDriverRevision = hasCustomCompileDriver ? compileDriverRevision + 1 : compileDriverRevision;
         participantPrepared = next;
         participantRevision = revision;
-        session.update({
-          baseRevision: session.revision(),
-          owners: [
-            createRuntimeOwnerUpdate(CoreOwnerDefinition, next.source),
-            createRuntimeOwnerUpdate(CoreCompositeInputOwnerDefinition, next.coreOptions.compositeInputs),
+        runtime.update({
+          baseRevision: runtime.revision(),
+          sources: [
+            createRuntimeSourceUpdate(CoreSourceDefinition, next.source),
+            createRuntimeSourceUpdate(CoreCompositeInputSourceDefinition, next.coreOptions.compositeInputs),
             ...(definitions.changed
-              ? [createRuntimeOwnerUpdate(VanillaCompositeRevisionOwnerDefinition, nextCompositeRevision)]
+              ? [createRuntimeSourceUpdate(VanillaCompositeRevisionSourceDefinition, nextCompositeRevision)]
               : []),
             ...(hasCustomCompileDriver
-              ? [createRuntimeOwnerUpdate(VanillaCompileDriverRevisionOwnerDefinition, nextCompileDriverRevision)]
+              ? [createRuntimeSourceUpdate(VanillaCompileDriverRevisionSourceDefinition, nextCompileDriverRevision)]
               : []),
             ...(transactionParticipant?.update({ prepared: next, revision, kind: 'source' }) ?? []),
           ],
@@ -284,7 +284,7 @@ const createRetainedProcessingState = (
         compileDriverRevision = nextCompileDriverRevision;
         driverInput = nextDriverInput;
         prepared = next;
-        current = session.participant(resultParticipant);
+        current = runtime.participant(resultParticipant);
         commitDriver();
         return current;
       } catch (cause) {
@@ -315,11 +315,11 @@ const createRetainedProcessingState = (
       participantPrepared = prepared;
       participantRevision = revision;
       try {
-        session.update({
-          baseRevision: session.revision(),
-          owners: transactionParticipant.updateParticipant(revision),
+        runtime.update({
+          baseRevision: runtime.revision(),
+          sources: transactionParticipant.updateParticipant(revision),
         });
-        current = session.participant(resultParticipant);
+        current = runtime.participant(resultParticipant);
         commitDriver();
         return current;
       } catch (cause) {
@@ -328,8 +328,8 @@ const createRetainedProcessingState = (
       }
     },
     commitDriver,
-    diagnostics: session.diagnostics,
-    dispose: () => session.dispose(),
+    diagnostics: runtime.diagnostics,
+    dispose: () => runtime.dispose(),
   });
 };
 

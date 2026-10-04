@@ -161,7 +161,7 @@ Vanilla 顶层 `inspect` 是唯一公开根入口；`compile` 明确排除 `insp
 
 预编译 Scene 缺少 artifact、definition 与 authored occurrence，React / Vanilla 在配合 `inspect` 使用时同步 fail-loud，不从 Scene 反推布局。
 
-retained 中修改 inspection options 可以完整重新 compile，但单次 compile 只运行一轮布局求解。React 重建使用新 frame 的 session；Vanilla 原子建立新 session 后再退休旧 session。新 session 失败时保留旧 committed frame；旧 session cleanup 失败会保留并重试，诊断独立排队消费。
+retained 中修改 inspection options 可以完整重新 compile，但单次 compile 只运行一轮布局求解。React 重建使用新 frame 的 runtime；Vanilla 原子建立新 runtime 后再退休旧 runtime。新 runtime 失败时保留旧 committed frame；旧 runtime cleanup 失败会保留并重试，诊断独立排队消费。
 
 ## 公开 API 与兼容性
 

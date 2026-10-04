@@ -1,12 +1,12 @@
 import type { IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import { CoreSourceDefinition, createCoreComputation } from '@retikz/core';
 import {
   createRuntimeIdentity,
-  createRuntimeOwnerInput,
-  createRuntimeOwnerRegistry,
-  createRuntimeOwnerUpdate,
-  createRuntimeProgramRegistry,
-  createRuntimeSession,
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
 } from '@retikz/runtime';
 import { describe, expect, it } from 'vitest';
 
@@ -36,18 +36,18 @@ const source = (fill: string): IRScene => ({
 });
 
 const createIncrementalPair = () => {
-  const program = createCoreProgram({ onWarn: () => undefined });
-  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
-  const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
-  const session = createRuntimeSession({
-    owners,
-    programs,
-    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, source('#ef4444'))],
+  const program = createCoreComputation({ onWarn: () => undefined });
+  const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
+  const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+  const session = createRuntime({
+    sources,
+    computations,
+    initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, source('#ef4444'))],
   });
   const current = session.artifact(program).value.snapshot;
   session.update({
     baseRevision: session.revision(),
-    owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source('#22c55e'))],
+    sources: [createRuntimeSourceUpdate(CoreSourceDefinition, source('#22c55e'))],
   });
   const artifact = session.artifact(program).value;
   if (artifact.patch === undefined) throw new Error('expected incremental patch');

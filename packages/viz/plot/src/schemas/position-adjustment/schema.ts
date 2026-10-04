@@ -1,4 +1,10 @@
-import { JsonValueSchema, NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import {
+  JsonValueSchema,
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { array, literal, looseObject, number, strictObject, union } from 'zod';
 
 import { BUILTIN_POSITION_ADJUSTMENT_KINDS, PlotPositionAdjustment } from './constants';
@@ -6,7 +12,7 @@ import { BUILTIN_POSITION_ADJUSTMENT_KINDS, PlotPositionAdjustment } from './con
 /** 离散刻度间距比例形式的 jitter 总宽 */
 export const JitterRatioSpanSchema = strictObject({
   kind: literal('ratio'),
-  value: number().min(0).max(1).describe('Fraction of the resolved discrete position scale step'),
+  value: NormalizedFractionSchema.describe('Fraction of the resolved discrete position scale step'),
 }).describe('Jitter span expressed as a 0..1 fraction of the resolved discrete scale step');
 
 /** jitter 总散布宽度：role 输出单位数值或离散 step 比例 */
@@ -20,7 +26,9 @@ const UniformRandomDistributionSchema = strictObject({
 
 const NormalRandomDistributionSchema = strictObject({
   kind: literal('normal'),
-  sigma: number().positive().optional().describe('Standard deviation relative to half of the jitter span; default 0.5'),
+  sigma: PositiveNumberSchema.optional().describe(
+    'Standard deviation relative to half of the jitter span; default 0.5',
+  ),
 }).describe('Zero-mean normal jitter distribution truncated to the normalized -1..1 support');
 
 /** jitter 使用的内置随机分布契约 */

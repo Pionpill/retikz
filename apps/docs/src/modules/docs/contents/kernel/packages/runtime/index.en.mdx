@@ -1,30 +1,79 @@
 ---
-title: Incremental Execution · runtime
-description: Browse @retikz/runtime state ownership, Programs, and synchronous Sessions
+title: runtime
+description: Manage complete state, derived computations, and consistent publication with the framework-neutral @retikz/runtime execution layer
 ---
 
-`@retikz/runtime` gives domain packages state management and incremental execution across revisions.
+When an input changes, computations that depend on it need to update too. `@retikz/runtime` organizes state and derived results in one Runtime, exposes data from a consistent published revision, and manages the disposal of replaced resources.
 
-## Responsibilities
+It is intended for authors of domain packages, processing pipelines, and host integrations. Drawing applications normally use React or Vanilla entry points, which organize Runtime on their behalf.
 
-| Document                          | Responsibility                             | Reach for it when                         |
-| --------------------------------- | ------------------------------------------ | ----------------------------------------- |
-| Overview                          | Owners, Programs, and execution boundaries | Integrating incremental runtime execution |
-| Programs and synchronous Sessions | Atomic publication of graphs and state     | Managing related state together           |
+## Responsibilities at a glance
 
-## Documentation
+The table below uses a counter to show how these objects work together: it stores the current count and computes twice its value. When the count changes, the new count and its corresponding result must be published together so readers always see data from the same revision.
 
-<LinkedSections
-  items={[
-    {
-      title: 'Overview',
-      description: 'State ownership and incremental execution',
-      url: '/kernel/packages/runtime/overview',
-    },
-    {
-      title: 'Programs and synchronous Sessions',
-      description: 'Atomic transactions and revisions',
-      url: '/kernel/packages/runtime/session',
-    },
-  ]}
-/>
+| Object      | Responsibility                                                      | Counter example                                 |
+| ----------- | ------------------------------------------------------------------- | ----------------------------------------------- |
+| Source      | Define how complete state is captured, read, compared, and disposed | Hold the current count                          |
+| Computation | Declare dependencies and compute a derived artifact                 | Compute twice the count                         |
+| Registry    | Register definitions and validate identities and dependencies       | Register the counter Source and its Computation |
+| Runtime     | Prepare updates and publish a consistent revision                   | Publish the new count and result together       |
+
+A Snapshot is a read-only value paired with a revision. Sources provide source state and Computations produce derived artifacts; Runtime exposes both through their respective Snapshots.
+
+## From complete input to consistent results
+
+When the count changes from 1 to 2, its doubled result changes from 2 to 4. The caller submits the complete next count. Runtime prepares the related results and then publishes a new revision; unfinished results never become public reads.
+
+The figure relates complete inputs, registries, Runtime, and published results. Solid lines represent input and execution dependencies; the dashed line represents observation.
+
+<ComponentPreview files="runtime-architecture" size="xl" hideCode type="flow" />
+
+Domain definitions interpret data and perform computations. Runtime organizes lifecycle and publication. Incremental computation is optional: a Computation can provide only full computation, or add incremental updates. A ChangeSet is a hint, never a replacement for complete next state.
+
+<Comparison target="react" title="Similarities and differences with the React reconciler">
+
+Both prepare a new result when inputs change, then commit that result for consumers. This shared idea helps explain Runtime, but the objects they manage and their update contracts differ:
+
+| Aspect                                   | Runtime                                                                                                         | React reconciler                                                                                                                                    |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared: update derived results           | Run Computations that depend on Source state to produce artifacts                                               | Compute the next UI tree from props, state, and context                                                                                             |
+| Shared: separate computation from commit | Prepare candidate state and artifacts, then publish a revision on success                                       | Compute the next UI during render and apply host updates during commit                                                                              |
+| Shared: reuse existing results           | Skip unaffected Computations, or reuse artifacts when an incremental update returns bailout                     | Skip some component computations through bailout, memo, and related mechanisms                                                                      |
+| Different: organization and identity     | Explicitly register Sources and Computations, forming a computation graph from declared dependencies            | Reconcile a component tree, identifying components by tree position, component type, and key                                                        |
+| Different: scheduling                    | Complete each Runtime update synchronously, without UI priorities or time slicing                               | Support updates with different priorities; more urgent updates can interrupt and restart Transition rendering                                       |
+| Different: published results             | Expose state and artifacts at the same published revision; integrate external state through commit participants | Update a host tree such as the DOM through a renderer, without a domain Snapshot API tied to a shared revision                                      |
+| Different: resource lifecycle            | Sources, Computations, and participants explicitly define disposal, which Runtime organizes                     | Manage component mounting, updates, and unmounting; Effect cleanup runs on dependency changes or unmounting and is not general transaction rollback |
+
+For example, React determines how a counter component appears. Runtime can store its count, compute twice that value, and publish both consistently. Runtime does not interpret JSX, Hooks, or component trees, and does not replace the React reconciler.
+
+</Comparison>
+
+## Installation and usage
+
+<PackageManagerInstall packages="@retikz/runtime" />
+
+Runtime exposes one framework-neutral TypeScript entry point. For example, create stable structured identities in a state domain:
+
+```ts
+import { createRuntimeIdentity, runtimeIdentityEquals } from '@retikz/runtime';
+
+const first = createRuntimeIdentity('example/counter', ['value']);
+const second = createRuntimeIdentity('example/counter', ['value']);
+
+runtimeIdentityEquals(first, second); // true
+```
+
+See [Starter example](/kernel/packages/runtime/usage) for a complete example that creates, updates, and disposes a Runtime.
+
+## Package boundaries
+
+Runtime's only production dependency is `@retikz/foundation`. Core consumes Runtime's public capabilities. Runtime does not depend on Core or interpret Core IR or Scene.
+
+| Runtime manages                                              | Consumers provide                                                     |
+| ------------------------------------------------------------ | --------------------------------------------------------------------- |
+| State identity, ownership, and complete Snapshot lifecycles  | Domain meaning, capture behavior, and equality                        |
+| Computation dependencies and execution                       | Computation, domain change hints, and their validation                |
+| Synchronous transactions, revisions, and commit participants | Drawing compilation, backend execution, and external state operations |
+| Trace and diagnostic collection and isolation                | Observation consumers                                                 |
+
+Runtime provides no drawing syntax, geometry algorithms, DOM rendering, or React lifecycle. Core, Render, and the relevant adapters provide those capabilities within their respective boundaries.

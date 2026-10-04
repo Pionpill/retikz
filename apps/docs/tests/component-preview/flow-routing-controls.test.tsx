@@ -32,8 +32,8 @@ describe('Flow routing controls', () => {
     });
     expect(buildVanillaPreview(preview).svg).toMatch(/d="M[^"]*C /);
   });
-  it.each(['zh', 'en'] as const)('forwards complete label controls in %s', lang => {
-    const values = { ...createBendControls(lang).canonicalValues, position: 0.2, sloped: false, gap: 8, fontSize: 20 };
+  it.each(['zh', 'en'] as const)('forwards exposed label controls in %s', lang => {
+    const values = { ...createBendControls(lang).canonicalValues, position: 0.2, sloped: false, interrupt: false };
     const preview = buildPreviewIR(() => renderFlowBendPreview(values, lang));
     expect(FlowDiagramSchema.parse(preview.sourceIr.children[0]).relations?.[0].routing).toEqual({ kind: 'bend' });
     const manual = buildPreviewIR(() => renderFlowBendPreview({ ...values, autoAngle: false, angle: 0 }, lang));
@@ -44,8 +44,7 @@ describe('Flow routing controls', () => {
     expect(FlowDiagramSchema.parse(preview.sourceIr.children[0]).relations?.[0].label).toMatchObject({
       position: 0.2,
       sloped: false,
-      gap: 8,
-      font: { size: 20 },
+      interrupt: false,
     });
     expect(buildVanillaPreview(preview).svg).toContain('<svg');
   });

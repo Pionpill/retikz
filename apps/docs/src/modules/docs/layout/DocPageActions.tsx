@@ -18,8 +18,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DocDifficultyIndicator } from '@/modules/docs/components';
 import type { DocDifficultyValue } from '@/modules/docs/data';
-import { getDocDifficultyReadingCoefficient } from '@/modules/docs/data';
-import { buildAiUrl, buildDocPageLinks } from '@/modules/docs/lib';
+import { buildAiUrl, buildDocPageLinks, computeDocStats } from '@/modules/docs/lib';
 
 import { useDocLocation } from './useDocLocation';
 import { usePageNavigation } from './usePageNavigation';
@@ -29,54 +28,6 @@ export type DocPageActionsProps = {
   source: string;
   /** 当前页面的可选阅读难度。 */
   difficulty?: DocDifficultyValue;
-};
-
-type DocStats = {
-  /** 去除标记后的正文字符数 */
-  chars: number;
-  /** 正文中可交互 / 可视化组件数量 */
-  components: number;
-  /** 估算完整阅读分钟数 */
-  readingMinutes: number;
-};
-
-/** 中文技术文档估算阅读速度：每分钟字符数 */
-const ZH_CHARS_PER_MINUTE = 500;
-/** 英文技术文档估算阅读速度：每分钟字符数 */
-const EN_CHARS_PER_MINUTE = 900;
-/** 未知语言估算阅读速度：每分钟字符数 */
-const FALLBACK_CHARS_PER_MINUTE = 650;
-/** 每个文档组件额外估算阅读时间 */
-const COMPONENT_READING_MINUTES = 0.5;
-
-const getCharsPerMinute = (lang: string): number => {
-  if (lang.startsWith('zh')) return ZH_CHARS_PER_MINUTE;
-  if (lang.startsWith('en')) return EN_CHARS_PER_MINUTE;
-  return FALLBACK_CHARS_PER_MINUTE;
-};
-
-/**
- * 估算文档统计
- * @description chars 剥掉 frontmatter / 代码块 / md 标记后的非空白字符数；components 计大写开头 JSX 开标签数量（先剥代码块避免 ``` 里的伪组件计入）
- */
-const computeDocStats = (mdx: string, lang: string, difficulty?: DocDifficultyValue): DocStats => {
-  let s = mdx.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
-  s = s.replace(/```[\s\S]*?```/g, '');
-  s = s.replace(/`[^`\n]*`/g, '');
-  const components = s.match(/<[A-Z][A-Za-z0-9_]*\b/g)?.length ?? 0;
-  s = s.replace(/<\/?[A-Za-z][^>]*>/g, '');
-  s = s.replace(/!\[[^\]]*\]\([^)]*\)/g, '');
-  s = s.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
-  s = s.replace(/[#*_~>`-]/g, '');
-  const chars = s.replace(/\s/g, '').length;
-  const readingMinutes = Math.max(
-    1,
-    Math.ceil(
-      (chars / getCharsPerMinute(lang) + components * COMPONENT_READING_MINUTES) *
-        getDocDifficultyReadingCoefficient(difficulty),
-    ),
-  );
-  return { chars, components, readingMinutes };
 };
 
 /**
@@ -118,13 +69,18 @@ export const DocPageActions: FC<DocPageActionsProps> = props => {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex items-center gap-1">
-        <span className="hidden whitespace-nowrap pr-1 text-xs text-muted-foreground md:inline">
-          {t('page.docStats', {
-            minutes: stats.readingMinutes,
-            chars: stats.chars.toLocaleString(),
-            components: stats.components,
-          })}
-        </span>
+        {stats && (
+          <span
+            title={t('page.docStatsDetails', { chars: stats.referenceChars.toLocaleString() })}
+            className="hidden whitespace-nowrap pr-1 text-xs text-muted-foreground md:inline"
+          >
+            {t('page.docStats', {
+              minutes: stats.readingMinutes,
+              chars: stats.chars.toLocaleString(),
+              examples: stats.examples,
+            })}
+          </span>
+        )}
         <DocDifficultyIndicator difficulty={difficulty} />
         <ButtonGroup className="flex items-center">
           <Button variant="secondary" size="sm" className="h-8 cursor-pointer gap-1.5" onClick={handleCopyMarkdown}>

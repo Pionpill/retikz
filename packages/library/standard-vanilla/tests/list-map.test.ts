@@ -8,13 +8,13 @@ import { list, map } from '../src/collection';
 describe('List / Map provider assembly', () => {
   it('keeps object text display in List and Map data inputs', () => {
     for (const child of [
-      list({ data: [{ value: 1 }], dataObjectDisplay: 'text' }),
-      map({ data: { item: { value: 1 } }, dataObjectDisplay: 'text' }),
+      list({ data: [{ value: 1 }], dataExpand: ['list'] }),
+      map({ data: { item: { value: 1 } }, dataExpand: ['list'] }),
     ]) {
       const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
       const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
       const result = compileToScene(normalized.ir, options);
-      expect(normalized.ir.children[0]).toMatchObject({ dataObjectDisplay: 'text' });
+      expect(normalized.ir.children[0]).toMatchObject({ dataExpand: ['list'] });
       expect(JSON.stringify(result.scene.primitives)).toContain('value');
     }
   });

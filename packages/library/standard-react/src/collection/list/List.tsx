@@ -12,30 +12,30 @@ import { ListItem } from './ListItem';
 
 /**
  * List 的 React authoring 属性
- * @description data、items 与 ListItem children 三种内容入口互斥；全部省略时生成空列表。dataObjectDisplay 仅用于 data 入口
+ * @description data、items 与 ListItem children 三种内容入口互斥；全部省略时生成空列表。dataExpand 仅用于 data 入口
  */
-export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
+export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataExpand'> &
   (
     | {
         data: NonNullable<IRList['data']>;
         items?: never;
         children?: never;
-        dataObjectDisplay?: IRList['dataObjectDisplay'];
+        dataExpand?: IRList['dataExpand'];
       }
     | {
         data?: never;
         items: Array<string | CellProps<IRListCell['layout']>>;
         children?: never;
-        dataObjectDisplay?: never;
+        dataExpand?: never;
       }
-    | { data?: never; items?: never; children?: ReactNode; dataObjectDisplay?: never }
+    | { data?: never; items?: never; children?: ReactNode; dataExpand?: never }
   );
 
 /** 保留单元格样式并收集每格的唯一 drawable */
 const createListInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
-  const { data, items, children, dataObjectDisplay, ...input } = props as ListProps;
+  const { data, items, children, dataExpand, ...input } = props as ListProps;
   if (data !== undefined)
-    return { ...input, data, ...(dataObjectDisplay === undefined ? {} : { dataObjectDisplay }) } satisfies InputList;
+    return { ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) } satisfies InputList;
   const cells = items ?? collectCellMarkers(children, ListItem, 'List').map(markerCell<IRListCell['layout']>);
   const collected = createCellsInput(
     cells.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),

@@ -10,7 +10,7 @@ import type {
   ShapeDefinition,
 } from '@retikz/core';
 import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
-import { defineRuntimeOwner } from '@retikz/runtime';
+import { defineRuntimeSource } from '@retikz/runtime';
 
 type ProviderDefinition =
   | ShapeDefinition
@@ -61,7 +61,7 @@ export const captureCoreProviderDefinitions = (
   );
 };
 
-export const VanillaProviderRevisionOwnerDefinition = defineRuntimeOwner<number, number, number, never>({
+export const VanillaProviderRevisionSourceDefinition = defineRuntimeSource<number, number, number, never>({
   key: '@retikz/vanilla:provider-revision',
   value: {
     capture: value => {

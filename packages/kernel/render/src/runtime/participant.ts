@@ -1,27 +1,27 @@
 import type {
   AnyCompositeDefinition,
-  CoreProgramDefinition,
-  CoreProgramOutput,
+  CoreComputationDefinition,
+  CoreComputationOutput,
   RuntimeScenePrimitive,
   Scene,
   ScenePatch,
   ScenePatchOperation,
   SceneRuntimeSnapshot,
 } from '@retikz/core';
-import type { RuntimeCommitParticipant, RuntimePreparedCommit, RuntimeSession } from '@retikz/runtime';
+import type { RuntimeCommitParticipant, RuntimePreparedCommit, Runtime } from '@retikz/runtime';
 import {
   createRuntimeRevision,
   defineRuntimeCommitParticipant,
   PerformanceTraceOutcome,
   PerformanceTracePhase,
   PerformanceTraceUnit,
-  RuntimeProgramPhase,
+  RuntimeComputationPhase,
 } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { RenderRuntimeConfig } from './config';
-import { RenderRuntimeOwnerDefinition } from './config';
+import { RenderRuntimeSourceDefinition } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
 import type { RenderReadonlyLayer } from './readonly-layer';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
@@ -43,19 +43,19 @@ export const RETAINED_SVG_PARTICIPANT_KEY = '@retikz/render:svg' as const;
 /** Canvas retained participant 的固定 key */
 export const RETAINED_CANVAS_PARTICIPANT_KEY = '@retikz/render:canvas' as const;
 
-/** Adapter 持有的 session-bound retained renderer handle */
+/** Adapter 持有的 runtime-bound retained renderer handle */
 export type RetainedRenderParticipantHandle = Readonly<{
-  /** 注入 Runtime session 的 typed participant */
+  /** 注入 Runtime 的 typed participant */
   participant: RuntimeCommitParticipant<RetainedRendererRead>;
-  /** 通过 Runtime session gate 读取 committed renderer state */
-  read: (session: RuntimeSession) => RetainedRendererRead;
+  /** 通过 Runtime gate 读取 committed renderer state */
+  read: (runtime: Runtime) => RetainedRendererRead;
   /** 在 topology 重建时保持同一 renderer 的私有交接租约 */
   lease: RetainedRenderParticipantLease;
 }>;
 
 declare const RetainedRenderParticipantLeaseBrand: unique symbol;
 
-/** 在新的 Runtime session 接管前保持 retained renderer 所有权的私有租约 */
+/** 在新的 Runtime 接管前保持 retained renderer 所有权的私有租约 */
 export type RetainedRenderParticipantLease = Readonly<{
   [RetainedRenderParticipantLeaseBrand]: true;
 }>;
@@ -72,13 +72,13 @@ type RetainedRenderParticipantOptionsBase<TComposites extends ReadonlyArray<AnyC
   rendererFactory: RetainedRendererFactory;
   /** 接管同一宿主上已提交 renderer 的内部租约 */
   rendererLease?: RetainedRenderParticipantLease;
-  /** 同一 session 使用的 Core Program */
-  coreProgram: CoreProgramDefinition<TComposites>;
+  /** 同一 runtime 使用的 Core Computation */
+  coreComputation: CoreComputationDefinition<TComposites>;
   /**
    * 从同一 candidate 的 Core 输出解析有序只读 Scene 图层
    * @default 冻结空数组
    */
-  resolveReadonlyLayers?: (coreOutput: CoreProgramOutput<TComposites>) => ReadonlyArray<RenderReadonlyLayer>;
+  resolveReadonlyLayers?: (coreOutput: CoreComputationOutput<TComposites>) => ReadonlyArray<RenderReadonlyLayer>;
   /**
    * 首次 mount 策略；SSR handoff 使用 adopt
    * @default create
@@ -371,7 +371,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
   const rendererLease = Reflect.get(candidate, 'rendererLease');
   const immutableOptions = Reflect.get(candidate, 'immutableOptions');
   const mountMode = Reflect.get(candidate, 'mountMode');
-  const coreProgram = Reflect.get(candidate, 'coreProgram');
+  const coreComputation = Reflect.get(candidate, 'coreComputation');
   const expectedInitialFrame = Reflect.get(candidate, 'expectedInitialFrame');
   const resolveReadonlyLayers = Reflect.get(candidate, 'resolveReadonlyLayers');
   if (typeof immutableOptions !== 'object' || immutableOptions === null || !isPlainObject(immutableOptions)) {
@@ -391,8 +391,8 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
     immutableBackend !== backend ||
     typeof idPrefix !== 'string' ||
     idPrefix.length === 0 ||
-    (typeof coreProgram !== 'object' && typeof coreProgram !== 'function') ||
-    coreProgram === null ||
+    (typeof coreComputation !== 'object' && typeof coreComputation !== 'function') ||
+    coreComputation === null ||
     (expectedInitialFrame !== undefined &&
       (typeof expectedInitialFrame !== 'object' || expectedInitialFrame === null)) ||
     (mountMode !== undefined && mountMode !== 'create' && mountMode !== 'adopt') ||
@@ -418,12 +418,12 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
         idPrefix,
         ...(devicePixelRatio === undefined ? {} : { devicePixelRatio }),
       }),
-      coreProgram: coreProgram as CoreProgramDefinition<TComposites>,
+      coreComputation: coreComputation as CoreComputationDefinition<TComposites>,
       ...(resolveReadonlyLayers === undefined
         ? {}
         : {
             resolveReadonlyLayers: resolveReadonlyLayers as (
-              coreOutput: CoreProgramOutput<TComposites>,
+              coreOutput: CoreComputationOutput<TComposites>,
             ) => ReadonlyArray<RenderReadonlyLayer>,
           }),
       ...(mountMode === undefined ? {} : { mountMode }),
@@ -435,12 +435,12 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
     rendererFactory,
     ...(rendererLease === undefined ? {} : { rendererLease: rendererLease as RetainedRenderParticipantLease }),
     immutableOptions: Object.freeze({ backend, idPrefix }),
-    coreProgram: coreProgram as CoreProgramDefinition<TComposites>,
+    coreComputation: coreComputation as CoreComputationDefinition<TComposites>,
     ...(resolveReadonlyLayers === undefined
       ? {}
       : {
           resolveReadonlyLayers: resolveReadonlyLayers as (
-            coreOutput: CoreProgramOutput<TComposites>,
+            coreOutput: CoreComputationOutput<TComposites>,
           ) => ReadonlyArray<RenderReadonlyLayer>,
         }),
     ...(expectedInitialFrame === undefined ? {} : { expectedInitialFrame: expectedInitialFrame as StaticRenderFrame }),
@@ -459,7 +459,7 @@ const captureOptions = <TComposites extends ReadonlyArray<AnyCompositeDefinition
   }
 };
 
-/** 创建连接 Core Program、Render config owner 与 retained renderer 的 Runtime participant */
+/** 创建连接 Core Computation、Render config owner 与 retained renderer 的 Runtime participant */
 export const createRetainedRenderParticipant = <TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
   options: CreateRetainedRenderParticipantOptions<TComposites>,
 ): RetainedRenderParticipantHandle => {
@@ -553,7 +553,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         });
   let committedFrame: RenderFrameSnapshot | undefined = previousFrame;
   const animationControlsCache = new WeakMap<object, AnimationControls>();
-  const resolveReadonlyLayers = (output: CoreProgramOutput<TComposites>): ReadonlyArray<RenderReadonlyLayer> =>
+  const resolveReadonlyLayers = (output: CoreComputationOutput<TComposites>): ReadonlyArray<RenderReadonlyLayer> =>
     validateReadonlyLayers(captured.resolveReadonlyLayers?.(output) ?? EMPTY_READONLY_LAYERS);
   const assertReadonlyLayersSupported = (frame: RenderFrameSnapshot): void => {
     if (frame.layers.length === 0 || renderer.readonlyLayerCapability === 'supported') return;
@@ -563,8 +563,8 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
   };
   const participant = defineRuntimeCommitParticipant<RetainedRendererRead>({
     key: captured.backend === 'svg' ? RETAINED_SVG_PARTICIPANT_KEY : RETAINED_CANVAS_PARTICIPANT_KEY,
-    owners: [RenderRuntimeOwnerDefinition],
-    programs: [captured.coreProgram],
+    sources: [RenderRuntimeSourceDefinition],
+    computations: [captured.coreComputation],
     revisionPolicy: 'continuous',
     tracePhases: [
       {
@@ -579,9 +579,9 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       },
     ],
     prepare: (candidate, context) => {
-      const core = candidate.artifact(captured.coreProgram).value;
-      const config: RenderRuntimeConfig = candidate.snapshot(RenderRuntimeOwnerDefinition).value;
-      if (candidate.phase === RuntimeProgramPhase.Initial) {
+      const core = candidate.artifact(captured.coreComputation).value;
+      const config: RenderRuntimeConfig = candidate.snapshot(RenderRuntimeSourceDefinition).value;
+      if (candidate.phase === RuntimeComputationPhase.Initial) {
         validateSceneRuntimeSnapshot(core.snapshot);
         const frame = Object.freeze({
           primary: rebaseSnapshot(core.snapshot),
@@ -702,7 +702,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
   });
   return Object.freeze({
     participant,
-    read: session => session.participant(participant),
+    read: runtime => runtime.participant(participant),
     lease,
   });
 };

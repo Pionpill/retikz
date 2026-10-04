@@ -101,3 +101,22 @@ export const BoundaryLabelSchema = strictObject({
     .describe('Text rotation: none, outward radial, radial plus 90 degrees, or an explicit angle.'),
   keepUpright: boolean().default(false).describe('Flip upside-down text in host-local coordinates.'),
 }).describe('Shared label attached to a host-provided boundary frame.');
+
+export const TextVisualSchema = strictObject({
+  textColor: ContextualColorSchema.optional().describe(
+    'Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`.',
+  ),
+  font: FontSchema.optional().describe('Font spec for the inner text label. Missing fields use text defaults.'),
+}).describe('Text color and font for a primary text-bearing element.');
+
+export const TextLayoutSchema = strictObject({
+  align: TextAlignSchema.optional().describe(
+    'Multi-line text alignment within the text block. Omitted fields use middle.',
+  ),
+  lineHeight: LineHeightSchema.optional().describe(
+    'Line height in user units; falls back to `font.size × 1.2` when omitted.',
+  ),
+  maxTextWidth: PositiveNumberSchema.optional().describe(
+    'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
+  ),
+}).describe('Text block alignment, line height, and wrapping width.');

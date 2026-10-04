@@ -16,7 +16,10 @@ import {
 } from '../../src/modules/docs/contents/viz/plot/scale/position/scale-band.en.controls';
 
 const scaleBandRoot = resolve('src/modules/docs/contents/viz/plot/scale/position');
-const demoSource = readFileSync(resolve(scaleBandRoot, 'scale-band.demo.tsx'), 'utf8');
+const demoSource = [
+  readFileSync(resolve(scaleBandRoot, 'scale-band.demo.tsx'), 'utf8'),
+  readFileSync(resolve(scaleBandRoot, 'scale-band.preview.tsx'), 'utf8'),
+].join('\n');
 const chinesePage = readFileSync(resolve(scaleBandRoot, 'index.zh.mdx'), 'utf8');
 const englishPage = readFileSync(resolve(scaleBandRoot, 'index.en.mdx'), 'utf8');
 

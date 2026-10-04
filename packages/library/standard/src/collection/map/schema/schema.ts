@@ -1,13 +1,11 @@
 import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
-import { JsonObjectSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import { JsonObjectSchema } from '@retikz/foundation';
+import { LayoutRowColumnGapSchema } from '@retikz/layout';
 import { array, literal, never, strictObject, string, union } from 'zod';
 
-import { DataObjectDisplaySchema } from '../../shared/cell/data';
-import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../shared/cell/schema';
+import { DataExpandSchema } from '../../_cell/data';
+import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
 
-export const MapGapSchema = strictObject({ row: NonNegativeNumberSchema, column: NonNegativeNumberSchema }).describe(
-  'Separate row and column gaps.',
-);
 /** Map 共用单元格样式及键值角色覆盖 */
 export const MapStyleSchema = CellStyleSchema.extend({
   key: CellStyleSchema.optional().describe('Key cell visual overrides over shared style fields.'),
@@ -16,16 +14,16 @@ export const MapStyleSchema = CellStyleSchema.extend({
 
 /** Map 共用单元格布局、间距及键值角色覆盖 */
 export const MapLayoutSchema = CellLayoutSchema.extend({
-  gap: union([NonNegativeNumberSchema, MapGapSchema])
-    .default(2)
-    .describe('Uniform or separate row and column gaps between cells.'),
+  gap: LayoutRowColumnGapSchema.default(2).describe('Uniform or separate row and column gaps between cells.'),
   key: CellLayoutSchema.optional().describe('Key cell layout overrides over shared layout fields.'),
   value: CellLayoutSchema.optional().describe('Value cell layout overrides over shared layout fields.'),
 }).describe('Map two-column allocation and spacing.');
+
 export const MapEntrySchema = strictObject({
   key: union([string(), CellSchema]).describe('Text or drawable content for the key cell.'),
   value: union([string(), CellSchema]).describe('Text or drawable content for the value cell.'),
 }).describe('One key/value display pair; displayed keys may repeat.');
+
 const MapBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('map').describe('Composite type for the map presentation.'),
@@ -43,7 +41,7 @@ export const MapSchema = union([
   MapBaseSchema.required({ entries: true })
     .extend({
       data: never().optional().describe('Not accepted in this input branch.'),
-      dataObjectDisplay: never().optional().describe('Not accepted in this input branch.'),
+      dataExpand: never().optional().describe('Not accepted in this input branch.'),
     })
     .superRefine((node, context) => {
       const seen = new Set<string>();
@@ -64,6 +62,6 @@ export const MapSchema = union([
     }),
   MapBaseSchema.required({ data: true }).extend({
     entries: never().optional().describe('Not accepted in this input branch.'),
-    dataObjectDisplay: DataObjectDisplaySchema,
+    dataExpand: DataExpandSchema,
   }),
 ]).describe('Two-column ordered key/value presentation.');

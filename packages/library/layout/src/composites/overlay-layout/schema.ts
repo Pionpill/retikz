@@ -1,4 +1,4 @@
-import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import { NonBlankStringSchema, NonNegativeNumberSchema, NormalizedFractionSchema } from '@retikz/foundation';
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject } from 'zod';
 
@@ -21,8 +21,8 @@ const OverlayAtPointSchema = strictObject({
 });
 
 const OverlayAnchorPointSchema = strictObject({
-  x: number().min(0).max(1).default(0.5).describe('Normalized horizontal slot anchor.'),
-  y: number().min(0).max(1).default(0.5).describe('Normalized vertical slot anchor.'),
+  x: NormalizedFractionSchema.default(0.5).describe('Normalized horizontal slot anchor.'),
+  y: NormalizedFractionSchema.default(0.5).describe('Normalized vertical slot anchor.'),
 });
 
 const OverlayOffsetPointSchema = strictObject({

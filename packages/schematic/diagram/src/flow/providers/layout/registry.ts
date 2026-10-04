@@ -38,10 +38,11 @@ const CAPABILITY_KEYS = new Set([
   'crossScopeRelations',
   'cycles',
   'selfLoops',
+  'endpointPlacement',
   'parallelRelations',
   'relationLabels',
   'relationDirections',
-  'routingKinds',
+  'routing',
 ]);
 const DEFAULT_KEYS = new Set(['direction', 'nodeGap', 'rankGap', 'placementGap', 'routing']);
 const PLACEMENT_GAP_KEYS = new Set(['horizontal', 'vertical']);
@@ -126,7 +127,18 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
     invalidDefinition(definition, 'crossScopeRelations requires compoundScopes.');
   }
   validateUniqueValues(capabilities.relationDirections, RELATION_DIRECTIONS, 'relationDirections', definition);
-  validateUniqueValues(capabilities.routingKinds, ROUTING_KINDS, 'routingKinds', definition);
+  validateUniqueValues(
+    capabilities.routing.map(item => item.kind),
+    ROUTING_KINDS,
+    'routing',
+    definition,
+  );
+  for (const item of capabilities.routing) {
+    if (item.kind === 'curve' || item.kind === 'cubic') {
+      validateExactKeys(item, new Set(['kind', 'modes']), 'routing capability', definition);
+      validateUniqueValues(item.modes, new Set(['auto', 'explicit']), 'routing modes', definition);
+    } else validateExactKeys(item, new Set(['kind']), 'routing capability', definition);
+  }
   validateUniqueValues(
     capabilities.placementKinds,
     new Set(Object.values(FlowPlacementKind)),
@@ -138,11 +150,11 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   validateFiniteNonNegative(defaults.rankGap, 'defaults.rankGap', definition);
   validateFiniteNonNegative(defaults.placementGap.horizontal, 'defaults.placementGap.horizontal', definition);
   validateFiniteNonNegative(defaults.placementGap.vertical, 'defaults.placementGap.vertical', definition);
-  if (!capabilities.routingKinds.includes(defaults.routing.kind)) {
-    invalidDefinition(definition, 'defaults.routing.kind is not declared by routingKinds.');
+  if (!capabilities.routing.some(item => item.kind === defaults.routing.kind)) {
+    invalidDefinition(definition, 'defaults.routing.kind is not declared by routing.');
   }
-  const supportsOrthogonal = capabilities.routingKinds.some(
-    kind => kind === 'orthogonal' || kind === '-|' || kind === '|-',
+  const supportsOrthogonal = capabilities.routing.some(
+    ({ kind }) => kind === 'orthogonal' || kind === '-|' || kind === '|-',
   );
   const radius = defaults.routing.orthogonalCornerRadius;
   if (supportsOrthogonal !== (radius !== undefined)) {

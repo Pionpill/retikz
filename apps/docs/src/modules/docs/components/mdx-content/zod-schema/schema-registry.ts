@@ -956,6 +956,14 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'NodeTarget',
   },
 
+  GraphicColorSchema: { schema: IR.GraphicColorSchema, label: 'GraphicColor' },
+  GraphicElementOpacitySchema: { schema: IR.GraphicElementOpacitySchema, label: 'GraphicElementOpacity' },
+  GraphicFillSchema: { schema: IR.GraphicFillSchema, label: 'GraphicFill' },
+  GraphicStrokeSchema: { schema: IR.GraphicStrokeSchema, label: 'GraphicStroke' },
+  StrokeCapJoinSchema: { schema: IR.StrokeCapJoinSchema, label: 'StrokeCapJoin' },
+  TextVisualSchema: { schema: IR.TextVisualSchema, label: 'TextVisual' },
+  TextLayoutSchema: { schema: IR.TextLayoutSchema, label: 'TextLayout' },
+  PathTransformSchema: { schema: IR.PathTransformSchema, label: 'PathTransform' },
   GraphicPaintSchema: {
     schema: IR.GraphicPaintSchema,
     label: 'GraphicPaint',
@@ -1193,32 +1201,32 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LayoutInspectBoundsOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
     label: 'LayoutInspectBoundsOptions',
-    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
+    url: '/library/layout/flex-layout/schema-reference#layoutinspectboundsoptionsschema',
   },
   LayoutInspectSpacingOptionsSchema: {
     schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
     label: 'LayoutInspectSpacingOptions',
-    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
+    url: '/library/layout/flex-layout/schema-reference#layoutinspectspacingoptionsschema',
   },
   BaseLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
     label: 'BaseLayoutInspectOptions',
-    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
+    url: '/library/layout/flex-layout/schema-reference#baselayoutinspectoptionsschema',
   },
   FlexLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
     label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/flex-layout/api-reference#flexlayoutinspectoptions',
+    url: '/library/layout/flex-layout/schema-reference#flexlayoutinspectoptionsschema',
   },
   GridLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
     label: 'GridLayoutInspectOptions',
-    url: '/library/layout/grid-layout/extended#gridlayoutinspectoptionsschema',
+    url: '/library/layout/grid-layout/schema-reference#gridlayoutinspectoptionsschema',
   },
   OverlayLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
     label: 'OverlayLayoutInspectOptions',
-    url: '/library/layout/overlay-layout/extended#overlaylayoutinspectoptionsschema',
+    url: '/library/layout/overlay-layout/schema-reference#overlaylayoutinspectoptionsschema',
   },
 
   FlexLayoutSchema: {
@@ -1350,6 +1358,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: DiagramIR.FlowLayoutSchema,
     label: 'FlowLayout',
     url: '/schematic/diagram/flow/schema-reference#flowlayoutschema',
+  },
+  FlowEndpointSchema: {
+    schema: DiagramIR.FlowEndpointSchema,
+    label: 'FlowEndpoint',
+    url: '/schematic/diagram/flow/schema-reference#flowendpointschema',
+  },
+  FlowEndpointTargetSchema: {
+    schema: DiagramIR.FlowEndpointTargetSchema,
+    label: 'FlowEndpointTarget',
+    url: '/schematic/diagram/flow/schema-reference#flowendpointtargetschema',
   },
   FlowRelationSchema: {
     schema: DiagramIR.FlowRelationSchema,

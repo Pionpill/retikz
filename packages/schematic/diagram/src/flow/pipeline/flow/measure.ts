@@ -69,7 +69,7 @@ const applyLayoutItemWidth = (
 
 const measureFailure = (element: CanonicalFlowElement | CanonicalFlowRelation, cause: unknown): never => {
   const isElement = 'type' in element;
-  const relatedIds = isElement ? [element.id] : [element.source.source, element.source.target];
+  const relatedIds = isElement ? [element.id] : [element.source.source.id, element.source.target.id];
   const label = isElement ? `${element.type} '${element.id}'` : `relation at ${element.path.join('.')}`;
   throw new RetikzDiagramError({
     code: RetikzDiagramErrorCode.FlowMeasurementFailed,
@@ -233,8 +233,8 @@ const relationInputs = (
   state: MeasurementState,
 ): ReadonlyArray<FlowLayoutRelationInput> =>
   diagram.relations.map(relation => {
-    const sourceScopes = state.scopePaths.get(relation.source.source) ?? [];
-    const targetScopes = state.scopePaths.get(relation.source.target) ?? [];
+    const sourceScopes = state.scopePaths.get(relation.source.source.id) ?? [];
+    const targetScopes = state.scopePaths.get(relation.source.target.id) ?? [];
     const scopeId = commonScopeId(sourceScopes, targetScopes);
     const scopeLayout = scopeId === undefined ? rootLayout : (state.effectiveLayouts.get(scopeId) ?? rootLayout);
     const routing = resolveEffectiveFlowLayout(definition, {}, scopeLayout, relation.routing).routing;

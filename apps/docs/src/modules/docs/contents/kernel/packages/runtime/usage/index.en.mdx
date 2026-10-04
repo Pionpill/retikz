@@ -1,0 +1,103 @@
+---
+title: Starter example
+description: Define counter state and a derived computation, create a Runtime, then update, read, and dispose it
+---
+
+This page completes a minimal Runtime workflow. The initial count is 1 and a Computation computes twice that value, 2. After submitting a count of 2, read the count 2 and result 4 from the same revision.
+
+## Using this topic
+
+Adjust the initial and next counts to inspect the Snapshots, artifacts, and revision returned by Runtime. Each interaction creates a fresh Runtime and performs one update. Set both counts to the same value to observe a bailout when no update is needed.
+
+<ComponentPreview
+  files={['counter-result', 'counter-result.preview.tsx']}
+  defaultSourceFile="counter-result.preview.tsx"
+  caption="Each interaction runs one independent update. Reset restores initial count 1 and next count 2."
+/>
+
+Import definitions, registries, input commands, and the Runtime factory from the `@retikz/runtime` root entry. The complete example creates, updates, reads, and disposes a Runtime:
+
+```ts
+import {
+  createRuntimeSourceInput,
+  createRuntimeSourceRegistry,
+  createRuntimeSourceUpdate,
+  createRuntimeComputationRegistry,
+  createRuntime,
+  defineRuntimeSource,
+  defineRuntimeComputation,
+} from '@retikz/runtime';
+
+const counter = defineRuntimeSource<number, number, number, never>({
+  key: 'example/counter',
+  value: {
+    capture: value => value,
+    read: value => value,
+    equals: (left, right) => left === right,
+  },
+});
+
+const doubled = defineRuntimeComputation({
+  id: { owner: 'example/counter', key: 'doubled' },
+  sources: [counter],
+  run: view => ({
+    kind: 'full',
+    artifact: view.snapshot(counter).value * 2,
+  }),
+});
+
+const sources = createRuntimeSourceRegistry({ custom: [counter] });
+const computations = createRuntimeComputationRegistry({ sources, custom: [doubled] });
+const runtime = createRuntime({
+  sources,
+  computations,
+  initialSnapshots: [createRuntimeSourceInput(counter, 1)],
+});
+
+try {
+  console.log(runtime.snapshot(counter)); // { revision: 0, value: 1 }
+  console.log(runtime.artifact(doubled)); // { revision: 0, value: 2 }
+
+  const result = runtime.update({
+    baseRevision: runtime.revision(),
+    sources: [createRuntimeSourceUpdate(counter, 2)],
+  });
+
+  console.log(result.outcome); // 'full'
+  console.log(runtime.snapshot(counter)); // { revision: 1, value: 2 }
+  console.log(runtime.artifact(doubled)); // { revision: 1, value: 4 }
+} finally {
+  runtime.dispose();
+}
+```
+
+This example implements only `run`, so the update outcome is `full`. Using Runtime does not require an incremental algorithm. Numbers are immutable, so capture and read can return them directly.
+
+> On your first read, a general impression of these concepts is enough; the following sections will explain the underlying principles in detail, step by step.
+
+## Understanding the example
+
+| Step                 | Purpose in this example                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| Define an Source     | `capture` receives the complete count, `read` exposes its immutable value, and `equals` compares counts |
+| Define a Computation | `sources: [counter]` declares read access, and `run` produces twice the count                           |
+| Register definitions | The Computation registry binds to the same Source registry used by Runtime                              |
+| Create a Runtime     | Initial commands exactly cover registered Sources, creating revision 0 and the initial artifact         |
+| Update and read      | Submit the complete next count and read state and results with their revision                           |
+| Dispose the Runtime  | Release Runtime-owned resources in `finally`                                                            |
+
+The four Source type parameters describe input, internal value, public read, and change type. The first three are `number`; no change hints are used, so the fourth is `never`.
+
+The four Computation type parameters describe artifact input, internal artifact, the read used by its own incremental update, and the public read. Here they are inferred as `number` from `run`, so no explicit type arguments are needed. With no upstream Computations or observation phases, omit `computations` and `tracePhases`; both default to empty arrays.
+
+You can independently omit `artifact.capture`, `artifact.readForComputation`, and `artifact.read` when each callback's input and output types match. Each defaults to returning its argument. This example also needs no resource cleanup, so it omits the entire `artifact` object. Type conversions still require the corresponding callback, and resource cleanup still requires `artifact.dispose`. The default public read returns the internal artifact directly, without passing through `readForComputation`.
+
+These defaults do not copy or freeze objects. Definition authors remain responsible for ownership and immutability of candidates and published values.
+
+## Errors and limitations
+
+- Each Source update supplies complete next input. The `2` here means the new count, not “add 2”.
+- Obtain `baseRevision` from the current Runtime. Stale revisions are rejected; do not invent revisions or reuse an outdated one.
+- Computations may read only declared dependencies. Keep the same Definition tokens when registering and calling APIs.
+- Arrays, Maps, and resource objects cannot blindly reuse this example's capture/read callbacks. Definition authors must prevent unsafe mutable sharing between callers, candidates, and published state.
+- This example owns no external resources and needs no value-level `dispose`. For resource-bearing values, provide cleanup in the owning Source or artifact definition and call Runtime's `dispose()` when finished.

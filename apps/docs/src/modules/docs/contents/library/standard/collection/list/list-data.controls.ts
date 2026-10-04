@@ -15,12 +15,14 @@ const createControls = (lang: Lang) => {
         controls: [
           {
             kind: 'select',
-            id: 'dataObjectDisplay',
-            label: t.dataObjectDisplay,
-            defaultValue: 'text',
+            id: 'dataExpand',
+            label: t.dataExpand,
+            defaultValue: 'list',
             options: [
+              { value: 'all', label: t.all },
+              { value: 'none', label: t.none },
               { value: 'map', label: t.map },
-              { value: 'text', label: t.text },
+              { value: 'list', label: t.list },
             ],
           },
         ],
@@ -33,8 +35,8 @@ const createControls = (lang: Lang) => {
 export const createPreviewControlContract = (lang: Lang) =>
   ({
     controls: createControls(lang),
-    canonicalValues: { dataObjectDisplay: 'text' },
-    relatedApis: ['List.dataObjectDisplay'],
+    canonicalValues: { dataExpand: 'list' },
+    relatedApis: ['List.dataExpand'],
   }) satisfies PreviewControlContract;
 
 /** 注册与源码派生使用的默认契约 */
