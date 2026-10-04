@@ -105,7 +105,14 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import { array, ArrayInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import {
+  matrix,
+  MatrixInputEmbedAdapter,
+  array,
+  ArrayInputEmbedAdapter,
+  map,
+  MapInputEmbedAdapter,
+} from '@retikz/standard-vanilla/collection';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -129,8 +136,8 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
-import type { IRCell, IRArray, IRMap } from '@retikz/standard/collection';
-import { ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
+import type { IRCell, IRMatrix, IRArray, IRMap } from '@retikz/standard/collection';
+import { MatrixDefinition, ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
 import {
   AxesDefinition,
   AxesSchema,
@@ -270,6 +277,7 @@ type StandardKind =
   | 'frame'
   | 'surface'
   | 'legend'
+  | 'matrix'
   | 'array'
   | 'map';
 
@@ -385,6 +393,29 @@ const convertStandardChild = (
         ...input,
         ...(title === undefined ? {} : { title: convertPreviewChild(title, state, graphState) }),
         content: normalizedContent,
+      });
+    }
+    case 'matrix': {
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRMatrix;
+      void _namespace;
+      void _type;
+      if (skeleton !== undefined) return matrix({ ...input, skeleton });
+      if (data !== undefined) return matrix({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+      return matrix({
+        ...input,
+        items: items.map(row =>
+          row.map(cell =>
+            typeof cell === 'string'
+              ? cell
+              : {
+                  ...cell,
+                  content:
+                    cell.content === undefined || typeof cell.content === 'string'
+                      ? cell.content
+                      : convertPreviewChild(cell.content, state, graphState),
+                },
+          ),
+        ),
       });
     }
     case 'array': {
@@ -639,6 +670,7 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<Synchron
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('matrix') ? [MatrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('array') ? [ArrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('map') ? [MapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
@@ -676,6 +708,7 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
+  MatrixDefinition,
   ArrayDefinition,
   MapDefinition,
   SurfaceDefinition,
@@ -722,6 +755,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'frame',
           'surface',
           'legend',
+          'matrix',
           'array',
           'map',
           'circle',

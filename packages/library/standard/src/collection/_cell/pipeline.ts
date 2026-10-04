@@ -23,7 +23,7 @@ export type CellPlacement = {
   y: number;
   width: number;
   height: number;
-  role: 'array-cell' | 'map-key' | 'map-value';
+  role: 'array-cell' | 'matrix-cell' | 'map-key' | 'map-value';
 };
 
 /** 在当前组件的样式环境下探测内容，保留结果供最终 replay */
@@ -179,7 +179,7 @@ export const compileCells = (
   if (width > allocationBounds.width + 1e-8 || height > allocationBounds.height + 1e-8)
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.PipelineInvariant,
-      message: 'Array / Map allocation cannot fit its cells and gaps.',
+      message: 'Collection allocation cannot fit its cells and gaps.',
       details: { width, height, allocation: allocationBounds },
     });
   const handles: Array<SpatialHandleDeclaration> = [{ id: 'container', role: 'container', bounds: allocationBounds }];

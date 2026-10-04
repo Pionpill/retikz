@@ -1,11 +1,4 @@
-import {
-  CompositeBaseSchema,
-  NodeSchema,
-  GraphicColorSchema,
-  GraphicElementOpacitySchema,
-  TextVisualSchema,
-  ScopePropsSchema,
-} from '@retikz/core';
+import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import {
   JsonValueSchema,
   NonBlankStringSchema,
@@ -16,34 +9,11 @@ import { array, boolean, enum as zodEnum, literal, never, strictObject, string, 
 
 import { DataExpandSchema } from '../../_cell/data';
 import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schema';
-import { ArrayCellIdMode, ArrayDirection, ArrayIndexPosition } from '../constants';
+import { CollectionIndexOptionsSchema, CollectionIndexStyleSchema } from '../../_index';
+import { ArrayCellIdMode, ArrayDirection } from '../constants';
 
-/** 索引文本外观，复用 Node 样式字段，不继承单格覆盖 */
-export const ArrayIndexStyleSchema = strictObject({
-  ...TextVisualSchema.shape,
-  ...GraphicColorSchema.shape,
-  ...GraphicElementOpacitySchema.shape,
-}).describe('Index text appearance; cell-level styles do not affect indices.');
-
-const ArrayIndexBaseSchema = strictObject({
-  position: zodEnum(ArrayIndexPosition)
-    .default(ArrayIndexPosition.Before)
-    .describe('Before means above a row or left of a column; after means below or right.'),
-  style: ArrayIndexStyleSchema.optional().describe('Index text appearance; cell-level styles do not affect indices.'),
-});
-
-export const ArrayIndexOptionsSchema = union([
-  ArrayIndexBaseSchema.extend({
-    start: NonNegativeIntegerSchema.default(0).describe('First displayed index; not cell identity.'),
-    labels: never().optional().describe('Not accepted in this input branch.'),
-  }),
-  ArrayIndexBaseSchema.extend({
-    labels: array(string()).describe(
-      'Outside labels in cell order; empty text hides a label. Length must match cells.',
-    ),
-    start: never().optional().describe('Not accepted in this input branch.'),
-  }),
-]).describe('Index strip placement and either automatic numbering or explicit labels.');
+export const ArrayIndexStyleSchema = CollectionIndexStyleSchema;
+export const ArrayIndexOptionsSchema = CollectionIndexOptionsSchema;
 
 export const ArraySkeletonSchema = union([
   strictObject({

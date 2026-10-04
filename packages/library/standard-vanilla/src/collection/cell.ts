@@ -25,14 +25,19 @@ export const normalizeCells = <TCell extends { content?: string | InputChild }>(
   if (normalizeChildren === undefined)
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.AuthoringInvalid,
-      message: 'Array / Map requires Kernel Vanilla normalizeScene.',
+      message: 'Collection cells require Kernel Vanilla normalizeScene.',
       details: { operation: 'normalizeCells' },
     });
   const normalized = cells.map(cell =>
     cell.content === undefined || typeof cell.content === 'string' ? undefined : normalizeChildren([cell.content]),
   );
   const output: Array<Omit<TCell, 'content'> & { content?: string | IRChild }> = cells.map((cell, index) => {
-    if (cell.content === undefined || typeof cell.content === 'string') return { ...cell, content: cell.content };
+    if (cell.content === undefined) {
+      const { content, ...empty } = cell;
+      void content;
+      return empty;
+    }
+    if (typeof cell.content === 'string') return { ...cell, content: cell.content };
     const children = normalized[index]!.children;
     if (children.length !== 1)
       throw new RetikzStandardError({

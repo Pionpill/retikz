@@ -1,9 +1,9 @@
 ---
 title: Collections
-description: Visualize ordered collections, key-value records, and nested structures with Array and Map.
+description: Visualize ordered collections, key-value records, and nested structures with Array, Map, and Matrix.
 ---
 
-Collection components draw structured content as identifiable cells. Array organizes items in sequence; Map organizes entries as keys and values. A cell can also contain another component to represent nested structures.
+Collection components draw structured content as identifiable cells. Array organizes items in sequence; Map organizes entries as keys and values; Matrix aligns two-dimensional cells on shared row and column tracks. A cell can also contain another component to represent nested structures.
 
 ## Responsibilities at a glance
 
@@ -11,6 +11,8 @@ Collection components draw structured content as identifiable cells. Array organ
 | --------- | --------------------------------------------------------- | --------------------------------------------------- |
 | Array     | Arrange sequential items with direction and index options | Show arrays, queues, or other ordered structures    |
 | Map       | Organize entries into keys and values                     | Show records, property tables, or keyed collections |
+
+| Matrix | Arrange cells on shared row/column tracks | Show two-dimensional arrays and schematic matrices |
 
 ## Show a record inside a sequence
 
@@ -34,6 +36,11 @@ These collection components visualize structures; they are not runtime data stru
       title: 'Array',
       description: 'Arrange sequential items with direction and index options',
       url: '/library/standard/collection/array',
+    },
+    {
+      title: 'Matrix',
+      description: 'Two-dimensional cells on shared row and column tracks',
+      url: '/library/standard/collection/matrix',
     },
     { title: 'Map', description: 'Organize entries into keys and values', url: '/library/standard/collection/map' },
   ]}

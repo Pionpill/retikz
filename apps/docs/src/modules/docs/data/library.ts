@@ -85,6 +85,11 @@ export const librarySection: Array<Section> = [
             difficulty: 'beginner',
           },
           {
+            id: 'matrix',
+            label: 'library.standardMatrix',
+            difficulty: 'beginner',
+          },
+          {
             id: 'map',
             label: 'library.standardMap',
             difficulty: 'beginner',

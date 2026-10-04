@@ -27,7 +27,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
-import type { IRCell, IRArray, IRArrayCell, IRMap } from '@retikz/standard/collection';
+import type { IRCell, IRMatrix, IRArray, IRArrayCell, IRMap } from '@retikz/standard/collection';
 
 import {
   entityPreviewAuthoringInput,
@@ -302,6 +302,7 @@ const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
   'frame',
   'surface',
   'surfaceChild',
+  'matrix',
   'array',
   'map',
   'legend',
@@ -319,6 +320,7 @@ const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
   'AxesInputEmbedAdapter',
   'FrameInputEmbedAdapter',
   'SurfaceInputEmbedAdapter',
+  'MatrixInputEmbedAdapter',
   'ArrayInputEmbedAdapter',
   'MapInputEmbedAdapter',
   'LegendInputEmbedAdapter',
@@ -362,6 +364,7 @@ export type StandardPreviewDefinitionName =
   | 'GridDefinition'
   | 'AxesDefinition'
   | 'FrameDefinition'
+  | 'MatrixDefinition'
   | 'ArrayDefinition'
   | 'MapDefinition'
   | 'SurfaceDefinition'
@@ -392,6 +395,7 @@ const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefini
   grid: 'GridDefinition',
   axes: 'AxesDefinition',
   frame: 'FrameDefinition',
+  matrix: 'MatrixDefinition',
   array: 'ArrayDefinition',
   map: 'MapDefinition',
   surface: 'SurfaceDefinition',
@@ -431,6 +435,14 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const row = BlockRowSchema.parse(child);
     return 'children' in row ? [...(row.children ?? [])] : [];
   }
+  if (child.namespace === 'standard' && child.type === 'matrix')
+    return ((child as IRMatrix).items ?? []).flatMap(row =>
+      row.flatMap(cell =>
+        typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string'
+          ? []
+          : [cell.content],
+      ),
+    );
   if (child.namespace === 'standard' && child.type === 'array')
     return ((child as IRArray).items ?? []).flatMap(cell =>
       typeof cell === 'string' || cell.content === undefined || typeof cell.content === 'string' ? [] : [cell.content],
@@ -516,7 +528,10 @@ export const collectPreviewDefinitions = (
         }
         if (!standardAdapterKinds.has(child.type)) {
           standard.add(definitionName);
-          if ((child.type === 'array' || child.type === 'map') && (child as IRArray | IRMap).data !== undefined) {
+          if (
+            (child.type === 'array' || child.type === 'map' || child.type === 'matrix') &&
+            (child as IRArray | IRMap | IRMatrix).data !== undefined
+          ) {
             standard.add('ArrayDefinition');
             standard.add('MapDefinition');
           }
@@ -578,7 +593,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardCounts.set(record.type, count);
   ctx.standardHelpers.add(STANDARD_SHAPE_KINDS.includes(record.type) ? 'shape' : record.type);
   ctx.standardAdapters.add(adapterName);
-  if (record.type === 'array' || record.type === 'map') {
+  if (record.type === 'array' || record.type === 'map' || record.type === 'matrix') {
     if (record.data !== undefined || record.skeleton !== undefined)
       return `${record.type}(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
     const cellCode = (cell: string | IRCell | IRArrayCell) => {
@@ -591,13 +606,15 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
       );
     };
     const input = stripKeys(record, ['namespace', 'type', 'items', 'entries']);
-    const field = record.type === 'array' ? 'items' : 'entries';
+    const field = record.type === 'map' ? 'entries' : 'items';
     const values =
-      record.type === 'array'
-        ? ((child as IRArray).items ?? []).map(cellCode)
-        : ((child as IRMap).entries ?? []).map(
-            entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
-          );
+      record.type === 'matrix'
+        ? ((child as IRMatrix).items ?? []).map(row => `[${row.map(cellCode).join(', ')}]`)
+        : record.type === 'array'
+          ? ((child as IRArray).items ?? []).map(cellCode)
+          : ((child as IRMap).entries ?? []).map(
+              entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
+            );
     return `${record.type}(${formatObject({ ...input, [field]: '__CELLS__' }, indent).replace("'__CELLS__'", `[${values.join(', ')}]`)})`;
   }
   if (record.type === 'surface') {
@@ -913,7 +930,14 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     );
     const members = [...standardHelpers, ...standardAdapters];
     const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
-    const collectionMemberNames = new Set<string>(['array', 'map', 'ArrayInputEmbedAdapter', 'MapInputEmbedAdapter']);
+    const collectionMemberNames = new Set<string>([
+      'matrix',
+      'MatrixInputEmbedAdapter',
+      'array',
+      'map',
+      'ArrayInputEmbedAdapter',
+      'MapInputEmbedAdapter',
+    ]);
     const collectionMembers = members.filter(name => collectionMemberNames.has(name));
     const presentationMembers = members.filter(
       name => !shapeMembers.includes(name) && !collectionMemberNames.has(name),
@@ -942,7 +966,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     const shapeDefinitions = definitions.standard.filter(name =>
       STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0].toUpperCase()}${kind.slice(1)}`)),
     );
-    const collectionDefinitionNames = new Set<string>(['ArrayDefinition', 'MapDefinition']);
+    const collectionDefinitionNames = new Set<string>(['MatrixDefinition', 'ArrayDefinition', 'MapDefinition']);
     const collectionDefinitions = definitions.standard.filter(name => collectionDefinitionNames.has(name));
     const presentationDefinitions = definitions.standard.filter(
       name => !shapeDefinitions.includes(name) && !collectionDefinitionNames.has(name),

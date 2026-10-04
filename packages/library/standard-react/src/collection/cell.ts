@@ -80,7 +80,7 @@ export const createCellsInput = <TLayout extends CellLayoutSource>(
     const collected = createInputScene(cell.content, { embedIdPrefix: `${context.id}:cell:${index}` });
     const children = collected.scene.children;
     if (children === undefined || children.length !== 1) {
-      return invalidCellAuthoring('Each Array / Map cell requires exactly one authoring child.');
+      return invalidCellAuthoring('Each collection cell requires exactly one authoring child.');
     }
     adapters.push(...collected.adapters);
     return { ...cell, content: children[0] };

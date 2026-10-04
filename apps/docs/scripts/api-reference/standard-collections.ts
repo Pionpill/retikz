@@ -8,6 +8,37 @@ import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const translations: Readonly<Record<string, string>> = {
+  '非空白 Matrix id': 'Nonblank Matrix id',
+  非负安全整数行坐标: 'Nonnegative safe integer row coordinate',
+  非负安全整数列坐标: 'Nonnegative safe integer column coordinate',
+  '由 Matrix id 和零基行列坐标组成的单元格 id':
+    'A cell id composed of the Matrix id and zero-based row and column coordinates',
+  显式二维单元格: 'Explicit two-dimensional cells',
+  '二维 JSON 数据，格内结构按 dataExpand 展示': 'Two-dimensional JSON data; nested cell structures follow dataExpand',
+  选择格内对象与数组的展开形式: 'Select expansion of objects and arrays inside cells',
+  无真实数据的矩形或格内符号: 'An empty rectangle or inside-cell symbols without real data',
+  '当前行的 MatrixCell 声明': 'MatrixCell declarations in this row',
+
+  'Matrix 的 React 输入；省略所有入口时生成空矩阵':
+    'React inputs for Matrix; omitting all inputs creates an empty matrix',
+  'Standard Matrix 呈现组件': 'Standard Matrix presentation component',
+  'Matrix 行分组，不生成图元或附加布局': 'Matrix row grouping without primitives or additional layout',
+  'Matrix 的直属行声明': 'Direct row declaration for Matrix',
+  'Matrix 单格的文本或唯一 drawable；同时省略表示空格':
+    'Text or one drawable in a Matrix cell; omitting both leaves an empty cell',
+  'MatrixRow 的直属格子声明': 'Direct cell declaration for MatrixRow',
+  'Matrix 的三种互斥 Vanilla 输入；items 接受嵌套 drawable':
+    'Three mutually exclusive Vanilla inputs for Matrix; items accepts nested drawables',
+  '收集矩阵及格内 drawable 的依赖': 'Collect Matrix and nested drawable dependencies',
+  '创建保留原始输入的 Matrix embed': 'Create a Matrix embed retaining its original input',
+  '三种入口互斥的 Matrix Source；单元格内容沿用共享绘图契约':
+    'Matrix Source with three mutually exclusive inputs and shared drawable cell content',
+  '返回直属格子的零基行列 id，不检查位置是否存在': 'Return a zero-based row/column cell id without checking existence',
+  'Standard Matrix 的布局感知 Definition': 'Layout-aware Definition for Standard Matrix',
+  'Matrix 与单元格 lower target 的按需依赖声明': 'On-demand dependencies of Matrix and its cell lowering targets',
+  '完整的 Matrix Source，包含 namespace、type 及 items、data 或 skeleton':
+    'Complete Matrix Source including namespace, type, and items, data, or skeleton',
+
   '嵌套对象与数组的展开选择；true 全部展开，false 全部显示为文本，数组选择 map / array':
     'Expansion of nested objects and arrays: true expands all, false displays text, and an array selects map/array',
   '完整的 Array Source，包含 namespace、type 及 items、data 或 skeleton':
@@ -85,11 +116,16 @@ const translateCollectionApiReference = (source: string): string =>
 /** 从三个公开 collection 入口生成组件局部参考，嵌入合页 API 小节 */
 export const writeStandardCollectionApiReferences = async (
   outputRoot: string,
-  names: ReadonlyArray<'Array' | 'Map'> = ['Array', 'Map'],
+  names: ReadonlyArray<'Array' | 'Map' | 'Matrix'> = ['Array', 'Map', 'Matrix'],
 ): Promise<void> => {
   for (const name of names) {
     const slug = name.toLowerCase();
-    const markers = name === 'Array' ? ['ArrayItem'] : ['MapEntry', 'MapKey', 'MapValue'];
+    const markers =
+      name === 'Array'
+        ? ['ArrayItem']
+        : name === 'Matrix'
+          ? ['MatrixRow', 'MatrixCell']
+          : ['MapEntry', 'MapKey', 'MapValue'];
     const owners = [
       {
         suffix: '-react',
@@ -107,6 +143,7 @@ export const writeStandardCollectionApiReferences = async (
         symbols: [
           `IR${name}`,
           ...(name === 'Array' ? ['IRArrayCell', 'IRArrayIndexOptions', 'IRArrayIndexStyle', 'getArrayCellId'] : []),
+          ...(name === 'Matrix' ? ['IRMatrixAxisIndex', 'getMatrixCellId'] : []),
           `create${name}`,
           `${name}Definition`,
           `${name}Provider`,

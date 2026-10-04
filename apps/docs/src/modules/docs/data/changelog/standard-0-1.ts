@@ -13,6 +13,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          content: {
+            zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+            en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+          },
+        },
+        {
           label: { zh: '未发布 · BREAKING：Array 统一命名', en: 'Unreleased · BREAKING: Array naming' },
           content: {
             zh: 'List 更名为 Array，配套组件、工厂、类型、Schema 和定义同步更名。IR type 与 dataExpand 选项由 list 改为 array，文档路由改为 /library/standard/collection/array；不保留旧名或旧路由。绘制与布局行为不变。',
@@ -333,6 +340,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          content: {
+            zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+            en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+          },
+        },
+        {
           label: { zh: '显式 Vanilla 接线', en: 'Explicit Vanilla wiring' },
           content: {
             zh: '所有 builders 都构造由 Standard schema 约束的输入；`StandardVanillaAdapters` 是浅冻结的当前呈现能力便利数组。',
@@ -462,6 +476,13 @@ export const standardV01: Release = {
         en: 'React authoring for Standard presentation composites backed by static Tier 2 adapters.',
       },
       highlights: [
+        {
+          label: { zh: '未发布 · Matrix 矩阵', en: 'Unreleased · Matrix' },
+          content: {
+            zh: '新增 Matrix：二维 items、JSON data 与 skeleton 三种输入，按行列共享轨道尺寸，支持独立索引、单格引用、嵌套内容与 React / Vanilla 入口。',
+            en: 'Adds Matrix with rectangular items, JSON data and skeleton inputs, shared row/column tracks, independent indices, cell references, nested content, and React/Vanilla APIs.',
+          },
+        },
         {
           label: { zh: '按使用项贡献', en: 'Per-use contribution' },
           content: {

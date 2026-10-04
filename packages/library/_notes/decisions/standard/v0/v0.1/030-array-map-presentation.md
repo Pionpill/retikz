@@ -14,7 +14,7 @@ keywords: Array、Map、JSON、data、数据结构、presentation、cell、ancho
 
 ## 背景与决策
 
-数组、队列、命名表与对象记录需要可复用的槽位、键值配对及单元格引用。Standard 提供独立的 `standard.array`、`standard.map` composite：Array 横向或纵向排列一维内容，Map 按行排列两列键值。两者共享单元格契约，不合并为万能容器，不新增 JSON / Record 组件；任意矩阵、合并格及领域数据处理仍归 Table 等领域能力。
+数组、队列、命名表与对象记录需要可复用的槽位、键值配对及单元格引用。Standard 提供独立的 `standard.array`、`standard.map` composite：Array 横向或纵向排列一维内容，Map 按行排列两列键值。两者共享单元格契约，不合并为万能容器，不新增 JSON / Record 组件；通用矩形单元格由 [038](./038-matrix-presentation.md) 的 Matrix 承接，合并格、数据表语义及领域数据处理仍归 Table 等领域能力。
 
 Standard 拥有结构、默认呈现和 lowering，直接计算简单行列位置，复用 Core 自然测量与 replay、Layout 的 proposal 尺寸契约及 Surface 盒模型和几何。每格复用测量结果，不嵌套 Grid / OverlayLayout 来完成简单排布，也不建立平行 IR、布局引擎或 renderer。命名、主题、变换、注册与空间结果由 Core 拥有。
 

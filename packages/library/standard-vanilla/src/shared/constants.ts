@@ -18,3 +18,6 @@ export const StandardArrayEmbedKind = 'standard.array';
 
 /** Standard Map embed 的稳定 kind */
 export const StandardMapEmbedKind = 'standard.map';
+
+/** Standard Matrix embed 的稳定 kind */
+export const StandardMatrixEmbedKind = 'standard.matrix';

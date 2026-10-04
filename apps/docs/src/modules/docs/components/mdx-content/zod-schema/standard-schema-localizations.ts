@@ -1,4 +1,5 @@
 import { LegendSchemaZhLocalization, LegendArtifactSchemaZhLocalization } from './legend-schema-localizations';
+import { matrixSchemaLocalization } from './matrix-schema-localizations';
 import {
   GridSchemaZhLocalization,
   GridLineSchemaZhLocalization,
@@ -829,3 +830,5 @@ const summaries: Record<string, string> = {
 for (const [name, description] of Object.entries(summaries)) {
   standardSchemaLocalizations[name] = { ...standardSchemaLocalizations[name], description };
 }
+
+standardSchemaLocalizations.MatrixSchema = matrixSchemaLocalization;
