@@ -23,7 +23,7 @@ export const InputLayerCache = {
 } as const;
 
 /** 输入分层缓存提示取值 */
-export type InputLayerCacheValue = ValueOf<typeof InputLayerCache>;
+export type InputLayerCache = ValueOf<typeof InputLayerCache>;
 
 /** 作者侧 Layer 输入 */
 export type InputLayer = {
@@ -34,7 +34,7 @@ export type InputLayer = {
   /** 运行时缓存提示
    * @default InputLayerCache.Auto
    */
-  cache?: InputLayerCacheValue;
+  cache?: InputLayerCache;
   /** 同值保持声明顺序的分层排序值
    * @default 0
    */
@@ -105,7 +105,7 @@ export type InputAuthoringSite = Readonly<{
 /** 运行时记录的单个 Layer metadata */
 export type InputLayerMeta = Readonly<{
   id: string;
-  cache: InputLayerCacheValue;
+  cache: InputLayerCache;
   order: number;
   zIndex: number;
   childIds: ReadonlyArray<string>;

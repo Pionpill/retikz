@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** Cell plan 来源的判别值 */
 export const TableCellPlanSourceKind = {
   /** 内置默认值 */
@@ -171,3 +172,9 @@ export const TableCellAppearanceTracePath = {
   /** Cell 左侧边框 */
   BorderLeft: '/borders/left',
 } as const;
+
+/** Cell plan 来源判别值 */
+export type TableCellPlanSourceKind = ValueOf<typeof TableCellPlanSourceKind>;
+
+/** Cell appearance winner trace 的规范叶路径 */
+export type TableCellAppearanceTracePath = ValueOf<typeof TableCellAppearanceTracePath>;

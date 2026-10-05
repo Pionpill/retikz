@@ -1,6 +1,5 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { DataFieldTypeValue } from '../../schemas';
 import { DataFieldType } from '../../schemas';
 import { isIsoDateString } from './field';
 
@@ -60,7 +59,7 @@ export const coerceTimestamp = (value: unknown): number | null => {
  * 按字段测量类型把原始 JS 值转成运行时规范值。
  * @description continuous -> number；temporal -> epoch ms；categorical -> string|number。非法值返回 NaN / undefined
  */
-export const coerceValue = (value: unknown, type: DataFieldTypeValue): string | number | undefined => {
+export const coerceValue = (value: unknown, type: DataFieldType): string | number | undefined => {
   if (type === DataFieldType.Temporal) {
     const stamp = coerceTimestamp(value);
     return stamp === null ? NaN : stamp;

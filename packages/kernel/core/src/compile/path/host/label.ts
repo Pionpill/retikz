@@ -6,9 +6,9 @@ import { resolveFont, resolveTextLine } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
 import { RAD_TO_DEG } from '../../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../../constants';
+import type { CompileWarningCode } from '../../constants';
 import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
 import { combineOpacity, layoutInlineLine, normalizeTextMetrics, toAlphabeticBaselineY } from '../../text';
-import type { CompileWarningCodeValue } from '../../warning';
 
 /** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;
@@ -19,7 +19,7 @@ export type LabelTexContext = {
   lowerTex?: LowerTex;
   /** `$...$` 解析门控 */
   gatingOn: boolean;
-  warn: (code: CompileWarningCodeValue, message: string) => void;
+  warn: (code: CompileWarningCode, message: string) => void;
 };
 
 /** step label 放置时额外需要的宿主几何信息 */

@@ -2,13 +2,12 @@ import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } f
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RetainedRendererFactory } from '@retikz/render/runtime';
-import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runtime';
+import type { RuntimeDiagnostic, RuntimeUpdateStrategy } from '@retikz/runtime';
 
 import type { SynchronousInputEmbedAdapter, InputRuntimeMeta, InputScene } from '../normalize';
 import type { VanillaCompileDriver } from './compile-driver';
 import type { VanillaViewMode } from './constants';
 
-export type { VanillaViewModeValue } from './constants';
 export { VanillaViewMode } from './constants';
 
 /** mount / renderToSvgString 的入参：已编译 `Scene`、待编译 `IRScene` 或 Vanilla InputScene */
@@ -89,7 +88,7 @@ export type VanillaRetainedRuntimeOptions = Readonly<{
    * Computation 更新策略
    * @default RuntimeUpdateStrategy.Auto
    */
-  updateStrategy?: RuntimeUpdateStrategyValue;
+  updateStrategy?: RuntimeUpdateStrategy;
   /** 可选第三方 retained renderer factory；缺省使用内置实现 */
   rendererFactory?: RetainedRendererFactory;
 }>;

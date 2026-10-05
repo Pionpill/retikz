@@ -16,11 +16,11 @@
 
 <ApiTable variant="methods">
 
-| Member        | Signature                                                                                                                                                                                                                              | Description                                                                                                                                                                                                                                                         |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `constructor` | `(message: string)`                                                                                                                                                                                                                    | Creates an Inspect error with the default error code<br />`message`: Error message for callers; the error code is INSPECTION_ERROR                                                                                                                                  |
-|               | `(options: RetikzInspectErrorOptions)`                                                                                                                                                                                                 | Creates an Inspect error from structured options<br />`options`: Error code, message, optional details and original cause; omitted details use a readonly object containing code                                                                                    |
-|               | `(code: RetikzInspectErrorCodeValue, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCodeValue; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>)` | Creates an Inspect error with an explicit error code<br />`code`: Stable error code for caller-side branching<br />`message`: Error message for callers<br />`options?`: Optional details and original cause; omitted details use a readonly object containing code |
+| Member        | Signature                                                                                                                                                                                                                    | Description                                                                                                                                                                                                                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `constructor` | `(message: string)`                                                                                                                                                                                                          | Creates an Inspect error with the default error code<br />`message`: Error message for callers; the error code is INSPECTION_ERROR                                                                                                                                  |
+|               | `(options: RetikzInspectErrorOptions)`                                                                                                                                                                                       | Creates an Inspect error from structured options<br />`options`: Error code, message, optional details and original cause; omitted details use a readonly object containing code                                                                                    |
+|               | `(code: RetikzInspectErrorCode, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCode; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>)` | Creates an Inspect error with an explicit error code<br />`code`: Stable error code for caller-side branching<br />`message`: Error message for callers<br />`options?`: Optional details and original cause; omitted details use a readonly object containing code |
 
 </ApiTable>
 
@@ -29,10 +29,10 @@
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzInspectError extends RetikzError<RetikzInspectErrorCode, Readonly<Record<string, unknown>>> {
   constructor(message: string);
   constructor(options: RetikzInspectErrorOptions);
-  constructor(code: RetikzInspectErrorCodeValue, message: string, options?: RetikzInspectErrorCauseOptions);
+  constructor(code: RetikzInspectErrorCode, message: string, options?: RetikzInspectErrorCauseOptions);
 }
 ```
 
@@ -801,40 +801,6 @@ export type InspectorRegistry = Readonly<{
 }>;
 ```
 
-### RetikzInspectErrorCodeValue
-
-<p>
-  <ApiSourceLink label={'RetikzInspectErrorCodeValue'} path={'packages/kernel/inspect/src/error.ts'} startLine={21}>
-    Stable error code values for the Inspect package
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type RetikzInspectErrorCodeValue =
-  | 'INSPECTION_ERROR'
-  | 'INSPECTION_COMPILE_ERROR'
-  | 'INSPECTION_COMPILE_FAILED'
-  | 'INSPECTION_CONTRACT_ERROR'
-  | 'INSPECTION_REGISTRY_ERROR'
-  | 'INSPECTION_VANILLA_ERROR';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### RetikzInspectErrorOptions
 
 <p>
@@ -852,7 +818,7 @@ export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>
 | Member              | Type                                | Default | Description                                          |
 | ------------------- | ----------------------------------- | ------- | ---------------------------------------------------- |
 | `readonly cause?`   | `unknown`                           | —       | Original exception or value that caused this failure |
-| `readonly code`     | `RetikzInspectErrorCodeValue`       | —       | Stable error code                                    |
+| `readonly code`     | `RetikzInspectErrorCode`            | —       | Stable error code                                    |
 | `readonly details?` | `Readonly<Record<string, unknown>>` | —       | Structured details of the failure context            |
 | `readonly message`  | `string`                            | —       | Original error message for the caller                |
 
@@ -864,7 +830,7 @@ export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>
 
 ```ts
 export type RetikzInspectErrorOptions = Readonly<{
-  code: RetikzInspectErrorCodeValue;
+  code: RetikzInspectErrorCode;
   message: string;
   details?: Readonly<Record<string, unknown>>;
   cause?: unknown;
@@ -895,6 +861,8 @@ export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip
   </ApiSourceLink>
 </p>
 
+[Schema reference](/kernel/packages/inspect/schema-reference#clipinspectoptionsschema)
+
 ### COORDINATE_INSPECTOR_KEY
 
 <p>
@@ -923,6 +891,8 @@ export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type:
   </ApiSourceLink>
 </p>
 
+[Schema reference](/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema)
+
 ### NODE_INSPECTOR_KEY
 
 <p>
@@ -942,6 +912,8 @@ export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node
     Options and defaults for the built-in Node Inspector
   </ApiSourceLink>
 </p>
+
+[Schema reference](/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema)
 
 ### PATH_INSPECTOR_KEY
 
@@ -963,6 +935,8 @@ export const PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'path
   </ApiSourceLink>
 </p>
 
+[Schema reference](/kernel/packages/inspect/schema-reference#pathinspectoptionsschema)
+
 ### RetikzInspectErrorCode
 
 <p>
@@ -980,6 +954,8 @@ export const RetikzInspectErrorCode = {
   Registry: 'INSPECTION_REGISTRY_ERROR',
   Vanilla: 'INSPECTION_VANILLA_ERROR',
 } as const;
+
+export type RetikzInspectErrorCode = ValueOf<typeof RetikzInspectErrorCode>;
 ```
 
 ### SCOPE_INSPECTOR_KEY
@@ -1001,6 +977,8 @@ export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'sco
     Options and defaults for the built-in Scope Inspector
   </ApiSourceLink>
 </p>
+
+[Schema reference](/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema)
 
 ### compileInspectionToScene
 

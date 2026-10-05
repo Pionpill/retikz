@@ -51,7 +51,7 @@ describe('TeX API Reference MDX', () => {
 
     expect(source).toContain('`base` 仅启用基础 TeX 配置，`math` 额外启用常用数学扩展集合');
     expect(source).toContain('| 成员 | 类型 | 默认值 | 说明 |');
-    expect(source).toContain("| `profile?` | `MathJaxProfileValue` | `'base'` | 选择基础或数学扩展集合的内置配置档 |");
+    expect(source).toContain("| `profile?` | `MathJaxProfile` | `'base'` | 选择基础或数学扩展集合的内置配置档 |");
     expect(source).toContain('> **备注：** 使用字面量 dynamic import 支持打包器分包');
     expect(source).toContain('| 类别 | 名称 | 类型 / 签名 | 说明 |');
     expect(source).not.toContain('#### 参数');

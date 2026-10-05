@@ -30,11 +30,11 @@ Array 用 `cellIdMode` 选择身份来源：`explicit` 为默认，只使用单�
 ## 基础公开契约
 
 ```ts
-type ArrayCellIdModeValue = 'explicit' | 'string' | 'index';
+type ArrayCellIdMode = 'explicit' | 'string' | 'index';
 
 type IRArray = {
   id?: string;
-  cellIdMode?: ArrayCellIdModeValue; // 默认 explicit
+  cellIdMode?: ArrayCellIdMode; // 默认 explicit
   items?: Array<string | IRCell>;
   data?: ReadonlyArray<JsonValue>;
   // 其余 Array 字段不变

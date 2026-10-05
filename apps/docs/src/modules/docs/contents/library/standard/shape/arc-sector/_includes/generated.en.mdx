@@ -16,11 +16,11 @@
 | Member            | Type                                  | Default  | Description                                                                                                                                                                  |
 | ----------------- | ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputArc['animations']`              | —        | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —        | Path-level arrow direction                                                                                                                                                   |
+| `arrow?`          | `InputPathArrowDirection`             | —        | Path-level arrow direction                                                                                                                                                   |
 | `arrowDetail?`    | `IRArrowDetail`                       | —        | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —        | Shared and per-end arrow placement settings                                                                                                                                  |
 | `center`          | `InputTarget`                         | —        | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
-| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
+| `close?`          | `"open" \| "chord" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
 | `endAngle?`       | `number`                              | —        | End angle in degrees.                                                                                                                                                        |
 | `id?`             | `string`                              | —        | —                                                                                                                                                                            |
 | `label?`          | `InputArc['label']`                   | —        | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |
@@ -42,7 +42,7 @@
 | `startAngle?`     | `number`                              | —        | Start angle in degrees.                                                                                                                                                      |
 | `style?`          | `InputArc['style']`                   | —        | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
 | `sweepAngle?`     | `number`                              | —        | Signed sweep in degrees; supply exactly two angle fields.                                                                                                                    |
-| `thickness?`      | `PathThicknessValue`                  | —        | Path stroke-width shorthand                                                                                                                                                  |
+| `thickness?`      | `PathThickness`                       | —        | Path stroke-width shorthand                                                                                                                                                  |
 | `zIndex?`         | `number`                              | —        | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
@@ -101,11 +101,11 @@ export type SectorProps = InputSector &
 | Member            | Type                                  | Default  | Description                                                                                                                                                                  |
 | ----------------- | ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputArc["animations"]`              | —        | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —        | Path-level arrow direction                                                                                                                                                   |
+| `arrow?`          | `InputPathArrowDirection`             | —        | Path-level arrow direction                                                                                                                                                   |
 | `arrowDetail?`    | `IRArrowDetail`                       | —        | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —        | Shared and per-end arrow placement settings                                                                                                                                  |
 | `center`          | `InputTarget`                         | —        | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
-| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
+| `close?`          | `"open" \| "chord" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
 | `endAngle?`       | `number`                              | —        | End angle in degrees.                                                                                                                                                        |
 | `id?`             | `string`                              | —        | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
 | `label?`          | `InputArc["label"]`                   | —        | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |
@@ -118,7 +118,7 @@ export type SectorProps = InputSector &
 | `startAngle?`     | `number`                              | —        | Start angle in degrees.                                                                                                                                                      |
 | `style?`          | `InputArc["style"]`                   | —        | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
 | `sweepAngle?`     | `number`                              | —        | Signed sweep in degrees; supply exactly two angle fields.                                                                                                                    |
-| `thickness?`      | `PathThicknessValue`                  | —        | Path stroke-width shorthand                                                                                                                                                  |
+| `thickness?`      | `PathThickness`                       | —        | Path stroke-width shorthand                                                                                                                                                  |
 | `zIndex?`         | `number`                              | —        | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
@@ -160,7 +160,7 @@ export type InputSector = InputShape<IRSector>;
 </p>
 
 ```ts
-export declare const ArcInputEmbedAdapter: InputEmbedAdapter<InputArc & { id?: string }>;
+export declare const ArcInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArc & { id?: string }>;
 ```
 
 #### SectorInputEmbedAdapter
@@ -176,7 +176,7 @@ export declare const ArcInputEmbedAdapter: InputEmbedAdapter<InputArc & { id?: s
 </p>
 
 ```ts
-export declare const SectorInputEmbedAdapter: InputEmbedAdapter<InputSector & { id?: string }>;
+export declare const SectorInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSector & { id?: string }>;
 ```
 
 **`@retikz/standard`**
@@ -199,7 +199,7 @@ export declare const SectorInputEmbedAdapter: InputEmbedAdapter<InputSector & { 
 | ----------------- | ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `IRArc["animations"]`                 | —        | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
 | `center`          | `IRArc["center"]`                     | —        | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
-| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
+| `close?`          | `"open" \| "chord" \| "sector"`       | `"open"` | Arc closure: open, chord, or sector.                                                                                                                                         |
 | `endAngle?`       | `number`                              | —        | End angle in degrees.                                                                                                                                                        |
 | `id?`             | `string`                              | —        | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
 | `label?`          | `IRArc["label"]`                      | —        | Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.                                                            |

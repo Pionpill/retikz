@@ -1,5 +1,4 @@
 import { compileToScene } from '@retikz/core';
-import type { DataFieldTypeValue } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
@@ -14,12 +13,8 @@ import { PlotSchema } from '../../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();
-const assertScaleFieldCompatible = (
-  role: string,
-  scaleType: string,
-  fieldType: DataFieldTypeValue,
-  scaleName: string,
-) => assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, { registry: scaleRegistry });
+const assertScaleFieldCompatible = (role: string, scaleType: string, fieldType: DataFieldType, scaleName: string) =>
+  assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, { registry: scaleRegistry });
 
 const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets) }).scene;
@@ -39,7 +34,7 @@ const spec = (
     marks: [{ type: 'point', encoding: { x: { field: 'a' }, y: { field: 'b' } } }],
   });
 
-describe('derivePositionScale — 按 DataFieldTypeValue 派生默认 scale', () => {
+describe('derivePositionScale — 按 DataFieldType 派生默认 scale', () => {
   it('continuous_to_linear', () => {
     expect(derivePositionScale(DataFieldType.Continuous, 'x').type).toBe('linear');
   });

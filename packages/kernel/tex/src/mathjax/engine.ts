@@ -1,6 +1,7 @@
 import { RetikzTexError, RetikzTexErrorCode } from '../error';
+import type { MathJaxExtension } from './constants';
 import { loadMathJaxConfigurations, resolveMathJaxExtensions } from './profiles';
-import type { MathJaxEngineOptions, MathJaxExtensionValue, MathJaxSvgEngine } from './types';
+import type { MathJaxEngineOptions, MathJaxSvgEngine } from './types';
 
 type LiteAdaptor = { outerHTML: (node: unknown) => string };
 type MathDocument = { convert: (tex: string, options: { display: boolean }) => unknown };
@@ -15,7 +16,7 @@ type AdaptorModule = { liteAdaptor: () => LiteAdaptor };
 type HandlerModule = { RegisterHTMLHandler: (adaptor: LiteAdaptor) => void };
 
 /** 根据有效 extension 集合生成 MathJax TeX package 顺序 */
-const getMathJaxPackages = (extensions: Array<MathJaxExtensionValue>): Array<string> => {
+const getMathJaxPackages = (extensions: Array<MathJaxExtension>): Array<string> => {
   const packages = ['base'];
   for (const extension of extensions) {
     if (extension === 'cases') packages.push('empheq');

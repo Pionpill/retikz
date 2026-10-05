@@ -1,6 +1,6 @@
 ---
 description: 建立 Box、LayoutItem 与共享布局词汇；背景：Flex、Grid、Overlay 都需要表达容器尺寸、padding、item margin、alignment、overflow 和稳定 item identity
-keywords: 'Box、LayoutItem、LayoutAlignment、LayoutEdgeAlignmentValue、LayoutDistribution、LayoutOverflow'
+keywords: 'Box、LayoutItem、LayoutAlignment、LayoutEdgeAlignment、LayoutDistribution、LayoutOverflow'
 ---
 
 # ADR-007：建立 Box、LayoutItem 与共享布局词汇
@@ -63,7 +63,7 @@ export type IRLayoutItemBase = Readonly<{
 另公开以下 const object enum 与派生 value type：
 
 - `LayoutAlignment`：`start | center | end | stretch | first-baseline | last-baseline`
-- `LayoutEdgeAlignmentValue`：从 LayoutAlignment 排除 baseline 的派生类型，供 x 轴和不支持 guide 的字段使用
+- `LayoutEdgeAlignment`：从 LayoutAlignment 排除 baseline 的派生类型，供 x 轴和不支持 guide 的字段使用
 - `LayoutDistribution`：`start | center | end | stretch | space-between | space-around | space-evenly`
 - `LayoutOverflow`：`visible | clip`
 
@@ -73,8 +73,8 @@ baseline 只在对应维度具有 Core guide 时成立。具体容器 schema 必
 
 - schema：`LayoutAxisSizeSchema`、`LayoutSizeSchema`、`LayoutContainerBoxSchema`、`LayoutItemBaseSchema`、`LayoutAlignmentSchema`、`LayoutEdgeAlignmentSchema`、`LayoutDistributionSchema`、`LayoutOverflowSchema`
 - parsed output / input type：`IRLayoutAxisSize` / `LayoutAxisSizeInput`、`IRLayoutSize` / `LayoutSizeInput`、`IRLayoutContainerBox` / `LayoutContainerBoxInput`、`IRLayoutItemBase` / `LayoutItemBaseInput`
-- const object enum / value type：`LayoutAxisSizeKind` / `LayoutAxisSizeKindValue`、`LayoutItemKind` / `LayoutItemKindValue`、`LayoutAlignment` / `LayoutAlignmentValue`、`LayoutDistribution` / `LayoutDistributionValue`、`LayoutOverflow` / `LayoutOverflowValue`
-- 派生收窄类型：`LayoutEdgeAlignmentValue`；其 schema 为上述公开 `LayoutEdgeAlignmentSchema`
+- const object enum / value type：`LayoutAxisSizeKind` / `LayoutAxisSizeKind`、`LayoutItemKind` / `LayoutItemKind`、`LayoutAlignment` / `LayoutAlignment`、`LayoutDistribution` / `LayoutDistribution`、`LayoutOverflow` / `LayoutOverflow`
+- 派生收窄类型：`LayoutEdgeAlignment`；其 schema 为上述公开 `LayoutEdgeAlignmentSchema`
 
 除此之外的 resolver、rect、axis mapping、weighted water-fill DTO 与 helper 均只存在于 internal barrel，不从 `composites/shared/layout/index.ts` 或包根导出。
 

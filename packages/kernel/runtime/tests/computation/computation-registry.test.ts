@@ -20,7 +20,6 @@ import {
 } from '../../src/registry';
 import type { RuntimeSourceToken, RuntimeRevision } from '../../src/source';
 import { defineRuntimeSource } from '../../src/source';
-import type { PerformanceTraceOutcomeValue } from '../../src/trace';
 import {
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,
@@ -77,7 +76,7 @@ describe('runtime computation definition and registry', () => {
     const id = { owner: 'counter', key: 'stable' };
     const sources: Array<RuntimeSourceToken> = [owner];
     const computations: Array<RuntimeComputationToken> = [];
-    const outcomes: Array<PerformanceTraceOutcomeValue> = [PerformanceTraceOutcome.Full];
+    const outcomes: Array<PerformanceTraceOutcome> = [PerformanceTraceOutcome.Full];
     const tracePhases = [
       {
         phase: PerformanceTracePhase.Update,

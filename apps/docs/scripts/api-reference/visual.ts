@@ -32,8 +32,8 @@ export const visualApiSymbols = {
     'PatternEmitResult',
     'PatternEmitOutput',
   ],
-  shadow: ['ShadowPreset', 'ShadowPresetValue', 'IRDropShadow'],
-  blend: ['BlendMode', 'BlendModeValue'],
+  shadow: ['ShadowPreset', 'IRDropShadow'],
+  blend: ['BlendMode'],
   animation: [
     'IRAnimationTrack',
     'IRKeyframe',
@@ -80,6 +80,7 @@ export const createVisualApiConfig = (
           en: renderer ? 'Playback and extensions' : presets ? 'Presets and orchestration' : 'Public contracts',
         },
         symbols: [...symbols],
+        declarationOnlySymbols: ['PatternEmitOutput'],
       },
     ],
     translate: translateVisualApiReference,

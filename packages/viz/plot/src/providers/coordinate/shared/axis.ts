@@ -1,5 +1,5 @@
 import { RetikzPlotError } from '../../../error';
-import type { AxisCardinalSideValue, IRPlotAxisGuide } from '../../../schemas';
+import type { IRPlotAxisGuide } from '../../../schemas';
 import { AxisCardinalSide, AxisPlacementKind } from '../../../schemas';
 
 /**
@@ -10,7 +10,7 @@ import { AxisCardinalSide, AxisPlacementKind } from '../../../schemas';
 export type AxisRoleOf = (dimension: string) => string;
 
 /** origin axis 未显式 tickSide 时按维度归一到实际下沉默认值 */
-export const defaultOriginAxisTickSideOf = (dimension: string): AxisCardinalSideValue =>
+export const defaultOriginAxisTickSideOf = (dimension: string): AxisCardinalSide =>
   dimension === 'x' ? AxisCardinalSide.Bottom : AxisCardinalSide.Left;
 
 /**

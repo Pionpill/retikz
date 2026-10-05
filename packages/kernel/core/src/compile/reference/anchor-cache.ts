@@ -3,7 +3,7 @@ import type { Position } from '@retikz/math';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
-import type { SideValue } from '../../shared';
+import type { Side } from '../../shared';
 import type { NodeLayout } from '../node';
 
 type AnchorLayout = NodeLayout | NodeReferenceView;
@@ -36,7 +36,7 @@ const computeAnchor = (
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
-const computeEdgePoint = (layout: AnchorLayout, side: SideValue, fraction: number): IRPosition => {
+const computeEdgePoint = (layout: AnchorLayout, side: Side, fraction: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
     throw new RetikzCoreError(
@@ -90,7 +90,7 @@ export const resolveAnchor = (
 };
 
 /** 取节点边上比例点的全局坐标 */
-export const resolveEdgePoint = (layout: AnchorLayout, side: SideValue, t: number): IRPosition => {
+export const resolveEdgePoint = (layout: AnchorLayout, side: Side, t: number): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
     layoutCache = new Map<string, IRPosition>();

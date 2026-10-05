@@ -1,4 +1,4 @@
-import type { DataFieldTypeValue, IRDataFieldDefinition } from '@retikz/data';
+import type { IRDataFieldDefinition } from '@retikz/data';
 import { coerceTimestamp, DataFieldType, FieldOrderMode, inferCategoryDomain } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
@@ -7,7 +7,7 @@ import type {
   ChannelScaleResolution,
   ChannelScaleResolveContext,
   PositionScale,
-  PositionScaleContinuityValue,
+  PositionScaleContinuity,
 } from '../../contract';
 import { isBuiltinScaleOperation } from '../../contract';
 import { RetikzPlotError } from '../../error';
@@ -183,7 +183,7 @@ export const resolvePositionScale = (
 export const resolvePositionScaleContinuity = (
   operation: IRPlotScaleOperation,
   context: ScaleResolveContext,
-): PositionScaleContinuityValue => {
+): PositionScaleContinuity => {
   const def = resolveScaleDefinition(operation, context);
   if (def.family !== 'position') {
     throw new RetikzPlotError(
@@ -225,7 +225,7 @@ export const resolveChannelScale = (
 export const assertScaleFieldCompatible = (
   role: string,
   scaleType: string,
-  fieldType: DataFieldTypeValue,
+  fieldType: DataFieldType,
   scaleName: string,
   context: ScaleResolveContext,
 ): void => {
@@ -267,7 +267,7 @@ export const assertBaselineScaleCompatible = (
  * 按字段类型派生默认 position scale operation
  * @description continuous→linear、temporal→time、categorical→band；无字段绑定时使用 linear
  */
-export const derivePositionScale = (fieldType: DataFieldTypeValue | undefined, name: string): IRPlotScale => {
+export const derivePositionScale = (fieldType: DataFieldType | undefined, name: string): IRPlotScale => {
   switch (fieldType) {
     case DataFieldType.Temporal:
       return { type: PlotScale.Time, name };

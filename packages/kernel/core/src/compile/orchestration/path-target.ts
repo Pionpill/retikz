@@ -1,14 +1,7 @@
 import type { NodeReferenceView, PathTargetView, TargetResolution } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePositionTarget } from '../../resolve/position';
-import type {
-  FoldStepViaValue,
-  IRNodeTarget,
-  IRPosition,
-  IRRelativeAccumulateTarget,
-  IRRelativeTarget,
-  IRTarget,
-} from '../../schemas';
+import type { IRNodeTarget, IRPosition, IRRelativeAccumulateTarget, IRRelativeTarget, IRTarget } from '../../schemas';
 import { FoldStepVia } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { point } from '../../shared/geometry';
@@ -38,7 +31,7 @@ const addOffset = (base: IRPosition, offset: IRNodeTarget['offset']): IRPosition
 export const foldCornersOf = (
   prev: IRPosition,
   curr: IRPosition,
-  via: FoldStepViaValue,
+  via: FoldStepVia,
   fraction = 0.5,
 ): Array<IRPosition> => {
   if (via === FoldStepVia.HorizontalThenVertical) return [[curr[0], prev[1]]];

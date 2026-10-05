@@ -1,10 +1,5 @@
 import { RuntimeDiagnosticCode } from '../diagnostic';
-import type {
-  RetikzRuntimeErrorCodeValue,
-  RuntimeSourceExecutionResult,
-  RuntimeSourceLifecycleDiagnostic,
-  RuntimeSourcePhaseValue,
-} from '../error';
+import type { RuntimeSourceExecutionResult, RuntimeSourceLifecycleDiagnostic } from '../error';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeSourcePhase } from '../error';
 import type { RuntimeIdentityLookup } from '../identity';
 import { createRuntimeIdentityLookup } from '../identity';
@@ -79,7 +74,7 @@ const disposeValue = <TInput, TValue, TRead, TChange>(
 /** 创建保留 primary cause 与 cleanup diagnostics 的 lifecycle error */
 const createLifecycleError = (
   code: Extract<
-    RetikzRuntimeErrorCodeValue,
+    RetikzRuntimeErrorCode,
     | typeof RetikzRuntimeErrorCode.CaptureFailed
     | typeof RetikzRuntimeErrorCode.CollectIdentitiesFailed
     | typeof RetikzRuntimeErrorCode.ReadFailed
@@ -87,7 +82,7 @@ const createLifecycleError = (
     | typeof RetikzRuntimeErrorCode.ChangeSetValidationFailed
   >,
   source: string,
-  phase: RuntimeSourcePhaseValue,
+  phase: RuntimeSourcePhase,
   cause: unknown,
   diagnostics: ReadonlyArray<RuntimeSourceLifecycleDiagnostic> = [],
 ): RetikzRuntimeError =>

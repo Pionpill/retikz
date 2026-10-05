@@ -1,4 +1,5 @@
 import type { RuntimeDeepReadonly } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { RuntimeSourceDefinition } from '@retikz/runtime';
 import { defineRuntimeSource } from '@retikz/runtime';
 
@@ -19,7 +20,7 @@ export const RenderCachePolicy = {
 } as const;
 
 /** Retained renderer layer cache 策略取值 */
-export type RenderCachePolicyValue = (typeof RenderCachePolicy)[keyof typeof RenderCachePolicy];
+export type RenderCachePolicy = ValueOf<typeof RenderCachePolicy>;
 
 /** 一份按注册顺序叠加的 hydration handlers */
 export type RenderHandlerContribution = Readonly<{
@@ -52,7 +53,7 @@ export type RenderRuntimeConfigInput = Readonly<{
     height?: number;
   }>;
   /** layer cache 策略 */
-  cachePolicy?: RenderCachePolicyValue;
+  cachePolicy?: RenderCachePolicy;
 }>;
 
 /** Session-owned deeply immutable renderer 配置 */
@@ -212,10 +213,7 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
     const cachePolicy = Object.hasOwn(candidate, 'cachePolicy')
       ? readDataProperty(candidate, 'cachePolicy')
       : undefined;
-    if (
-      cachePolicy !== undefined &&
-      !Object.values(RenderCachePolicy).includes(cachePolicy as RenderCachePolicyValue)
-    ) {
+    if (cachePolicy !== undefined && !Object.values(RenderCachePolicy).includes(cachePolicy as RenderCachePolicy)) {
       return invalidRuntimeInput(input);
     }
     const contributions = normalizeContributions(
@@ -274,7 +272,7 @@ const captureRuntimeConfig = (input: RenderRuntimeConfigInput): RenderRuntimeCon
       ...(contributions === undefined ? {} : { handlerContributions: contributions }),
       ...(normalizedAnimation === undefined ? {} : { animation: normalizedAnimation }),
       ...(normalizedCanvas === undefined ? {} : { canvas: normalizedCanvas }),
-      ...(cachePolicy === undefined ? {} : { cachePolicy: cachePolicy as RenderCachePolicyValue }),
+      ...(cachePolicy === undefined ? {} : { cachePolicy: cachePolicy as RenderCachePolicy }),
     };
     return cloneAndFreezeRuntimeValue(normalized);
   } catch (cause) {

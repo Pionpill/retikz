@@ -1,5 +1,5 @@
 ---
-description: type-driven scale 默认选型 + guide 格式化；背景：数据模型提供「用户源字段 → DataFieldTypeValue」类型映射
+description: type-driven scale 默认选型 + guide 格式化；背景：数据模型提供「用户源字段 → DataFieldType」类型映射
 keywords: 'type-driven、scale、guide、continuous、categorical、temporal、scales'
 ---
 
@@ -13,7 +13,7 @@ keywords: 'type-driven、scale、guide、continuous、categorical、temporal、s
 
 现状：scale **类型必须显式声明**——spec 列 `scales`（每个 `{ type, name, … }`），coordinate 按名绑定（cartesian `x`/`y`、polar `angle`/`radius`，非位置 `encoding.color.scale`）。即便最简单的「数值 x + 数值 y」也得手写两个 linear scale + 绑定。
 
-数据模型提供「用户源字段 → `DataFieldTypeValue`」类型映射。本 ADR 用它**按字段类型派生默认 scale**：channel 没有显式 scale 时，从绑定字段的 `continuous` / `categorical` / `temporal` 类型推出 scale 类型与缺省 domain/range，让最小 spec 可省 scale 声明。
+数据模型提供「用户源字段 → `DataFieldType`」类型映射。本 ADR 用它**按字段类型派生默认 scale**：channel 没有显式 scale 时，从绑定字段的 `continuous` / `categorical` / `temporal` 类型推出 scale 类型与缺省 domain/range，让最小 spec 可省 scale 声明。
 
 同类库通常按字段测量类型给默认 scale，用户只在需要时显式覆盖。
 
@@ -22,7 +22,7 @@ keywords: 'type-driven、scale、guide、continuous、categorical、temporal、s
 **(1) spec 表面放宽**：coordinate 的 scale 绑定（cartesian `x`/`y`、polar `angle`/`radius`）与非位置 `encoding.color.scale` 从「必填名引用」放宽为**可选**。解析时：
 
 - 该 channel **有**显式 scale（绑定名 + `scales` 里有同名声明）→ 使用声明的 scale，并校验字段类型兼容性；
-- **无**显式 scale → 按绑定字段的 `DataFieldTypeValue` 派生 scale（类型 + 缺省 domain/range），并使用内部稳定 identity。
+- **无**显式 scale → 按绑定字段的 `DataFieldType` 派生 scale（类型 + 缺省 domain/range），并使用内部稳定 identity。
 
 **(2) 默认映射（字段类型 → scale type）**：
 

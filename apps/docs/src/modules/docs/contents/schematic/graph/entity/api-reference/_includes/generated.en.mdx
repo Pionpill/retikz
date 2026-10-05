@@ -53,26 +53,26 @@ export type EntityProps = Omit<InputEntity, 'type'> &
 
 <ApiTable grouped>
 
-| Group     | Member              | Type                                                                                             | Default | Description                                                                                     |
-| --------- | ------------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
-| Main      | `group?`            | `string`                                                                                         | —       | —                                                                                               |
-|           | `id?`               | `string`                                                                                         | —       | —                                                                                               |
-|           | `kind?`             | `string`                                                                                         | —       | —                                                                                               |
-|           | `label?`            | `EntityInputEmbedProps["label"]`                                                                 | —       | —                                                                                               |
-|           | `predicate?`        | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | —                                                                                               |
-|           | `role`              | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | —                                                                                               |
-|           | `text?`             | `EntityInputEmbedProps["text"]`                                                                  | —       | —                                                                                               |
-| Geometry  | `position?`         | `EntityInputEmbedProps["position"]`                                                              | —       | —                                                                                               |
-|           | `rotate?`           | `number`                                                                                         | —       | —                                                                                               |
-|           | `scale?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —                                                                                               |
-| Layout    | `layout?`           | `EntityInputEmbedProps["layout"]`                                                                | —       | —                                                                                               |
-| Style     | `status?`           | <ApiValues name="GraphStatus" />                                                                 | —       | —                                                                                               |
-|           | `style?`            | `EntityInputEmbedProps["style"]`                                                                 | —       | —                                                                                               |
-|           | `zIndex?`           | `number`                                                                                         | —       | —                                                                                               |
-| Animation | `animations?`       | `Array<IRAnimationTrack>`                                                                        | —       | —                                                                                               |
-| Data      | `meta?`             | `Record<string, JsonValue>`                                                                      | —       | —                                                                                               |
-|           | `input` (Parameter) | `EntityInputEmbedProps`                                                                          | —       | Entity authoring fields; custom semantics reference only keys registered through Graph          |
-|           | Returns             | `InputEmbed<Omit<InputEntity, 'type'>>`                                                          | —       | An embed node for a Vanilla content tree, converted to Entity Source by EntityInputEmbedAdapter |
+| Group     | Member              | Type                                                                                             | Default | Description                                                                                                                                                                 |
+| --------- | ------------------- | ------------------------------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `group?`            | `string`                                                                                         | —       | Optional semantic group key for Entities within a Graph; members share a categorical color by default.                                                                      |
+|           | `id?`               | `string`                                                                                         | —       | Optional unique id; required if any path needs to reference this node by string                                                                                             |
+|           | `kind?`             | `string`                                                                                         | —       | Open stable subtype key whose registration identity is the selected Entity role and kind.                                                                                   |
+|           | `label?`            | `EntityInputEmbedProps["label"]`                                                                 | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                               |
+|           | `predicate?`        | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | Optional precise semantic predicate reference.                                                                                                                              |
+|           | `role`              | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
+|           | `text?`             | `EntityInputEmbedProps["text"]`                                                                  | —       | Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex. |
+| Geometry  | `position?`         | `EntityInputEmbedProps["position"]`                                                              | —       | Optional Core Node placement.                                                                                                                                               |
+|           | `rotate?`           | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                 |
+|           | `scale?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                           |
+| Layout    | `layout?`           | `EntityInputEmbedProps["layout"]`                                                                | —       | Node layout overrides without role-owned padding.                                                                                                                           |
+| Style     | `status?`           | <ApiValues name="GraphStatus" />                                                                 | —       | Optional closed Graph semantic status.                                                                                                                                      |
+|           | `style?`            | `EntityInputEmbedProps["style"]`                                                                 | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                    |
+|           | `zIndex?`           | `number`                                                                                         | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                 |
+| Animation | `animations?`       | `Array<IRAnimationTrack>`                                                                        | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                    |
+| Data      | `meta?`             | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                             |
+|           | `input` (Parameter) | `EntityInputEmbedProps`                                                                          | —       | Entity authoring fields; custom semantics reference only keys registered through Graph                                                                                      |
+|           | Returns             | `InputEmbed<Omit<InputEntity, 'type'>>`                                                          | —       | An embed node for a Vanilla content tree, converted to Entity Source by EntityInputEmbedAdapter                                                                             |
 
 </ApiTable>
 
@@ -155,7 +155,7 @@ export type InputEntity = EntityCreateOptions &
 </p>
 
 ```ts
-export declare const EntityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbedProps>;
+export declare const EntityInputEmbedAdapter: SynchronousInputEmbedAdapter<EntityInputEmbedProps>;
 ```
 
 ### createGraphVanillaAdapters
@@ -164,7 +164,7 @@ export declare const EntityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbed
   <ApiSourceLink
     label={'createGraphVanillaAdapters'}
     path={'packages/schematic/graph-vanilla/src/adapters.ts'}
-    startLine={22}
+    startLine={24}
   >
     Create the Graph adapters passed together to Vanilla normalization
   </ApiSourceLink>
@@ -176,9 +176,9 @@ export declare const EntityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbed
 
 <ApiTable variant="parameters">
 
-| Category | Name | Type / signature                    | Description                                                                         |
-| -------- | ---- | ----------------------------------- | ----------------------------------------------------------------------------------- |
-| Returns  | —    | `Array<InputEmbedAdapter<unknown>>` | A new adapter array containing Graph, Group, the Block family, Entity, and Relation |
+| Category | Name | Type / signature                               | Description                                                                         |
+| -------- | ---- | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Returns  | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | A new adapter array containing Graph, Group, the Block family, Entity, and Relation |
 
 </ApiTable>
 
@@ -187,7 +187,7 @@ export declare const EntityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbed
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createGraphVanillaAdapters: () => Array<InputEmbedAdapter<unknown>>;
+export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
 ```
 
 </DocTab>
@@ -407,34 +407,6 @@ export type EntityRoleDefinition = Readonly<{
 
 </DocTabs>
 
-### EntityRoleValue
-
-<p>
-  <ApiSourceLink label={'EntityRoleValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={9}>
-    Built-in Entity role values
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | 'gateway' | 'resource' | 'concept';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type EntityRoleValue = ValueOf<typeof EntityRole>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### GraphDefinitionOptions
 
 <p>
@@ -455,13 +427,13 @@ export type EntityRoleValue = ValueOf<typeof EntityRole>;
 
 | Member                         | Type                                         | Default | Description                                                               |
 | ------------------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | —       | Custom Entity kind definitions                                            |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | —       | Custom Entity predicate definitions                                       |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | —       | Custom Entity role definitions                                            |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | —       | Graph Theme definitions named after their corresponding Core Theme styles |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | —       | Custom Relation kind definitions                                          |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | —       | Custom Relation predicate definitions                                     |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | —       | Custom Relation role definitions                                          |
+| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`    | Custom Entity kind definitions                                            |
+| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`    | Custom Entity predicate definitions                                       |
+| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`    | Custom Entity role definitions                                            |
+| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`    | Graph Theme definitions named after their corresponding Core Theme styles |
+| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`    | Custom Relation kind definitions                                          |
+| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`    | Custom Relation predicate definitions                                     |
+| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`    | Custom Relation role definitions                                          |
 
 </ApiTable>
 
@@ -479,34 +451,6 @@ export type GraphDefinitionOptions = Readonly<{
   relationPredicates?: ReadonlyArray<RelationPredicateDefinition>;
   graphThemeStyles?: ReadonlyArray<GraphThemeStyleDefinition>;
 }>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### GraphStatusValue
-
-<p>
-  <ApiSourceLink label={'GraphStatusValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={15}>
-    Built-in Graph semantic status values
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type GraphStatusValue = ValueOf<typeof GraphStatus>;
 ```
 
 </DocTab>
@@ -565,7 +509,7 @@ export type IRGraphEntity = ZodInfer<typeof EntitySchema>;
 ### EntityRole
 
 <p>
-  <ApiSourceLink label={'EntityRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={25}>
+  <ApiSourceLink label={'EntityRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={26}>
     Built-in high-level semantic roles of Entity
   </ApiSourceLink>
 </p>
@@ -580,12 +524,14 @@ export const EntityRole = {
   Resource: 'resource',
   Concept: 'concept',
 } as const;
+
+export type EntityRole = ValueOf<typeof EntityRole>;
 ```
 
 ### GraphStatus
 
 <p>
-  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={57}>
+  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={58}>
     Diagram semantic statuses shared by Graph Entity and Relation
   </ApiSourceLink>
 </p>
@@ -597,6 +543,8 @@ export const GraphStatus = {
   Warning: 'warning',
   Disabled: 'disabled',
 } as const;
+
+export type GraphStatus = ValueOf<typeof GraphStatus>;
 ```
 
 ### createGraphDefinitions

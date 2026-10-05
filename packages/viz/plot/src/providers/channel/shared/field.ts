@@ -1,4 +1,4 @@
-﻿import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
+﻿import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -20,11 +20,7 @@ export const channelValue = (channel: IRPlotChannel | undefined, row: ExternalRo
  * 把字段值按展示格式串格式化。
  * @description temporal 使用 d3-time-format，其余使用 d3-format；非法格式或非法值回退到 String(value)
  */
-const applyDisplayFormat = (
-  value: unknown,
-  displayFormat: string,
-  fieldType: DataFieldTypeValue | undefined,
-): string => {
+const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: DataFieldType | undefined): string => {
   try {
     if (fieldType === DataFieldType.Temporal) {
       if (!isFiniteNumber(value)) return String(value);
@@ -44,7 +40,7 @@ const applyDisplayFormat = (
 export const labelOf = (
   content: IRPlotTextChannel | IRPlotMarkLabelContent,
   row: ExternalRow,
-  fieldType?: DataFieldTypeValue,
+  fieldType?: DataFieldType,
   resolveLabel?: ResolveLabel,
 ): IRPlotMarkLabelContent['value'] | string | undefined => {
   if (resolveLabel !== undefined) return String(resolveLabel(row));

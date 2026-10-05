@@ -1,5 +1,5 @@
 import { assertNonEmptyString, assertPlainDataContainers } from '@retikz/foundation';
-import type { RelationDirectionValue } from '@retikz/graph';
+import type { RelationDirection } from '@retikz/graph';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutCatalogEntry, FlowLayoutDefinition } from '../../contract';
@@ -27,7 +27,7 @@ export type ResolvedFlowLayoutRegistry = Readonly<{
   defaultLayout: FlowLayoutDefinition;
 }>;
 
-const RELATION_DIRECTIONS = new Set<RelationDirectionValue>(['none', 'forward', 'reverse', 'both']);
+const RELATION_DIRECTIONS = new Set<RelationDirection>(['none', 'forward', 'reverse', 'both']);
 const ROUTING_KINDS = new Set(Object.values(FlowRoutingKind));
 const FLOW_DIRECTIONS = new Set(Object.values(FlowDirection));
 const DEFINITION_KEYS = new Set(['name', 'description', 'capabilities', 'defaults', 'layout']);

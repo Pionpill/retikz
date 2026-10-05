@@ -1,5 +1,5 @@
 import { FlowEntities, FlowLayout } from '@retikz/diagram-react/flow';
-import type { FlowDirectionValue } from '@retikz/diagram/flow';
+import type { FlowDirection } from '@retikz/diagram/flow';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -11,10 +11,10 @@ import { flowLinearI18n } from './flow-linear.i18n';
 
 export { previewControls };
 
-const directions: ReadonlyArray<FlowDirectionValue> = ['right', 'left'];
+const directions: ReadonlyArray<FlowDirection> = ['right', 'left'];
 
 /** 将面板值收窄为公开的 Flow 排列方向 */
-const directionOf = (value: string): FlowDirectionValue => {
+const directionOf = (value: string): FlowDirection => {
   const direction = directions.find(candidate => candidate === value);
   if (direction === undefined) throw new Error(`Unsupported Flow direction: ${value}`);
   return direction;

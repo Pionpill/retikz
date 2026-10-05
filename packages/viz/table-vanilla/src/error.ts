@@ -8,7 +8,7 @@ export const RetikzTableVanillaErrorCode = {
 } as const;
 
 /** Table Vanilla 包稳定错误码取值 */
-export type RetikzTableVanillaErrorCodeValue = ValueOf<typeof RetikzTableVanillaErrorCode>;
+export type RetikzTableVanillaErrorCode = ValueOf<typeof RetikzTableVanillaErrorCode>;
 
 /** Table Vanilla 包运行时错误的可选构造参数 */
 type RetikzTableVanillaErrorOptions = Readonly<{
@@ -17,10 +17,7 @@ type RetikzTableVanillaErrorOptions = Readonly<{
 }>;
 
 /** Table Vanilla 包未细分领域错误的统一结构化错误 */
-export class RetikzTableVanillaError extends RetikzError<
-  RetikzTableVanillaErrorCodeValue,
-  Readonly<{ message: string }>
-> {
+export class RetikzTableVanillaError extends RetikzError<RetikzTableVanillaErrorCode, Readonly<{ message: string }>> {
   /** 创建保留原始消息与 cause 的 Table Vanilla 包错误 */
   constructor(message: string, options?: RetikzTableVanillaErrorOptions) {
     super({

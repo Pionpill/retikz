@@ -4,10 +4,10 @@ import type { BoundsInsets, Position } from '@retikz/math';
 import type { ConnectionEnvelopeKind, PathCommand, ShapeDefinition, TextLine } from '../../contract';
 import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve';
 import type { PaintResolutionInput } from '../../resolve/resource';
-import type { BlendModeValue, IRAnimationTrack, IRBoundary, IRFont, IRPaint, ResolvedDropShadow } from '../../schemas';
+import type { BlendMode, IRAnimationTrack, IRBoundary, IRFont, IRPaint, ResolvedDropShadow } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
+import type { CompileWarningCode } from '../constants';
 import type { LaidLine, LowerTex, TextFont, TextMeasurer } from '../text';
-import type { CompileWarningCodeValue } from '../warning';
 
 /** 节点文本布局消费的字重，沿用 IR font weight 契约 */
 export type NodeFontWeight = NonNullable<IRFont['weight']>;
@@ -49,7 +49,7 @@ export type BoundaryGeometryResolveContext = {
   /** tight fallback warning 去重集合 */
   connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
   /** compile warning 分发函数 */
-  warn?: (code: CompileWarningCodeValue, message: string) => void;
+  warn?: (code: CompileWarningCode, message: string) => void;
 };
 
 /** 节点正文与附属 label 共享的文本布局上下文 */
@@ -174,7 +174,7 @@ export type NodeLayout = {
    * 主形状混合模式
    * @default 'normal'
    */
-  blendMode?: BlendModeValue;
+  blendMode?: BlendMode;
   /** 已解析的 label 列表 */
   labels?: Array<NodeLabelLayout>;
   /**
@@ -193,7 +193,7 @@ export type NodeLayout = {
   /** tight fallback warning 去重集合 */
   connectionEnvelopeWarnings?: Set<ConnectionEnvelopeKind>;
   /** 当前 node 的 compile warning 分发函数 */
-  warn?: (code: CompileWarningCodeValue, message: string) => void;
+  warn?: (code: CompileWarningCode, message: string) => void;
 };
 
 /** 已完成内容与视觉盒测量、尚未绑定 Node rect 的附属标签 */
@@ -272,5 +272,5 @@ export type NodeLabelLayout = MeasuredNodeLabel & {
 /** 公式渲染上下文 */
 export type TexLoweringContext = {
   lowerTex?: LowerTex;
-  warn: (code: CompileWarningCodeValue, message: string) => void;
+  warn: (code: CompileWarningCode, message: string) => void;
 };

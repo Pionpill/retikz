@@ -114,7 +114,7 @@ export type OverlayLayoutItemProps = Omit<OverlayLayoutItemInput, 'child' | 'key
 
 ### overlayLayout / InputOverlayLayout
 
-- `overlayLayout`: <ApiSourceLink label={"overlayLayout"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={33}>Create a OverlayLayout embed</ApiSourceLink>
+- `overlayLayout`: <ApiSourceLink label={"overlayLayout"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={53}>Create a OverlayLayout embed</ApiSourceLink>
 - `InputOverlayLayout`: <ApiSourceLink label={"InputOverlayLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={43}>Vanilla authoring input for OverlayLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -211,7 +211,8 @@ export type InputOverlayLayoutItem = InputLayoutItem<OverlayLayoutItemInput>;
 </p>
 
 ```ts
-export declare const OverlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayout>;
+export declare const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>>;
 ```
 
 ## `@retikz/layout`
@@ -219,7 +220,7 @@ export declare const OverlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOver
 ### createOverlayLayout / OverlayLayoutInput
 
 - `createOverlayLayout`: <ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/factory.ts"} startLine={8}>Create persistent OverlayLayout input preserving omitted fields and shorthand</ApiSourceLink>
-- `OverlayLayoutInput`: <ApiSourceLink label={"OverlayLayoutInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={40}>Authoring input accepted by the OverlayLayout factory</ApiSourceLink>
+- `OverlayLayoutInput`: <ApiSourceLink label={"OverlayLayoutInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={32}>Authoring input accepted by the OverlayLayout factory</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -260,7 +261,7 @@ export type OverlayLayoutInput = Omit<IROverlayLayout, 'namespace' | 'type'>;
   <ApiSourceLink
     label={'IROverlayLayout'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={32}
+    startLine={24}
   >
     Persistent JSON input for OverlayLayout
   </ApiSourceLink>
@@ -305,7 +306,7 @@ export type IROverlayLayout = Omit<ZodInput<typeof OverlayLayoutSchema>, 'childr
   <ApiSourceLink
     label={'IROverlayLayoutItem'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={25}
+    startLine={17}
   >
     Persistent JSON input for a OverlayLayout item
   </ApiSourceLink>
@@ -316,45 +317,13 @@ export type IROverlayLayoutItem = Omit<ZodInput<typeof OverlayLayoutItemSchema>,
   Pick<ZodInfer<typeof OverlayLayoutItemSchema>, 'child'>;
 ```
 
-### LayoutSizeParticipationValue
-
-<p>
-  <ApiSourceLink
-    label={'LayoutSizeParticipationValue'}
-    path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={16}
-  >
-    Overlay intrinsic-size participation policy values
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type LayoutSizeParticipationValue = 'include' | 'exclude';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type LayoutSizeParticipationValue = ValueOf<typeof LayoutSizeParticipation>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### OverlayLayoutArtifact
 
 <p>
   <ApiSourceLink
     label={'OverlayLayoutArtifact'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={43}
+    startLine={35}
   >
     JSON-safe compilation artifact payload for OverlayLayout
   </ApiSourceLink>
@@ -393,7 +362,7 @@ export type OverlayLayoutArtifact = ZodInfer<typeof OverlayLayoutArtifactSchema>
   <ApiSourceLink
     label={'OverlayLayoutItemInput'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={29}
+    startLine={21}
   >
     Authoring input for a OverlayLayout item
   </ApiSourceLink>
@@ -438,7 +407,7 @@ export type OverlayLayoutItemInput = IROverlayLayoutItem;
   <ApiSourceLink
     label={'OverlayPlacementInput'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={22}
+    startLine={14}
   >
     Authoring input for Overlay placement
   </ApiSourceLink>
@@ -475,45 +444,13 @@ export type OverlayPlacementInput = ZodInput<typeof OverlayPlacementSchema>;
 
 </DocTabs>
 
-### OverlayPlacementKindValue
-
-<p>
-  <ApiSourceLink
-    label={'OverlayPlacementKindValue'}
-    path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={13}
-  >
-    Overlay placement discriminator values
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type OverlayPlacementKindValue = 'aligned' | 'positioned';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type OverlayPlacementKindValue = ValueOf<typeof OverlayPlacementKind>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### LayoutSizeParticipation
 
 <p>
   <ApiSourceLink
     label={'LayoutSizeParticipation'}
     path={'packages/library/layout/src/composites/overlay-layout/constants.ts'}
-    startLine={8}
+    startLine={9}
   >
     Whether an Overlay item contributes to intrinsic container size
   </ApiSourceLink>
@@ -524,6 +461,8 @@ export const LayoutSizeParticipation = {
   Include: 'include',
   Exclude: 'exclude',
 } as const;
+
+export type LayoutSizeParticipation = ValueOf<typeof LayoutSizeParticipation>;
 ```
 
 ### OverlayLayoutDefinition
@@ -584,7 +523,7 @@ export const OverlayLayoutProvider: CoreDependencyProvider = Object.freeze({
   <ApiSourceLink
     label={'OverlayPlacementKind'}
     path={'packages/library/layout/src/composites/overlay-layout/constants.ts'}
-    startLine={2}
+    startLine={3}
   >
     Overlay item placement mode
   </ApiSourceLink>
@@ -595,4 +534,6 @@ export const OverlayPlacementKind = {
   Aligned: 'aligned',
   Positioned: 'positioned',
 } as const;
+
+export type OverlayPlacementKind = ValueOf<typeof OverlayPlacementKind>;
 ```

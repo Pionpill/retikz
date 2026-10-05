@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import type { AnchorValue, SideValue } from '../anchor';
+import type { Side } from '../anchor';
 import { Anchor } from '../anchor';
 import { DEG_TO_RAD } from './angle';
 import { edgeAngleDeg } from './edge';
@@ -31,7 +31,7 @@ export const circle = {
     return lx * lx + ly * ly <= c.radius * c.radius;
   },
   /** 8 个标准方位 anchor 之一的世界坐标；center 请用 `circle.center()` */
-  anchor: (c: Circle, name: AnchorValue): Position => {
+  anchor: (c: Circle, name: Anchor): Position => {
     const r = c.radius;
     let lx = 0;
     let ly = 0;
@@ -76,7 +76,7 @@ export const circle = {
     return localToWorld(c, [lx * t, ly * t]);
   },
   /** 边上比例点：side 的 90° 周长弧段 t∈[0,1] 处（等角，落真实圆周；含旋转） */
-  edgePoint: (c: Circle, side: SideValue, t: number): Position => {
+  edgePoint: (c: Circle, side: Side, t: number): Position => {
     const rad = edgeAngleDeg(side, t) * DEG_TO_RAD;
     return localToWorld(c, [c.radius * Math.cos(rad), c.radius * Math.sin(rad)]);
   },

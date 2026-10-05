@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** Relation 有向性词汇 */
 export const RelationDirection = {
   /** 无向关系 */
@@ -9,3 +10,5 @@ export const RelationDirection = {
   /** 双向关系 */
   Both: 'both',
 } as const;
+
+export type RelationDirection = ValueOf<typeof RelationDirection>;

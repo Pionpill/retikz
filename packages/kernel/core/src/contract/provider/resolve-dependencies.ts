@@ -10,7 +10,6 @@ import type { ShapeDefinition } from '../shape';
 import type {
   AnyCoreProviderDefinition,
   CoreDependencyProvider,
-  CoreProviderCapabilityValue,
   CoreProviderDefinitions,
   CoreProviderKey,
   ResolveCoreProviderDependenciesOptions,
@@ -24,7 +23,7 @@ type ProviderEntry = {
   makeDefinition: CoreDependencyProvider['makeDefinition'];
 };
 
-type NamedProviderCapability = Exclude<CoreProviderCapabilityValue, typeof CoreProviderCapability.Composite>;
+type NamedProviderCapability = Exclude<CoreProviderCapability, typeof CoreProviderCapability.Composite>;
 
 /** 提供者索引将复合定义的命名空间/类型标识保存在独立映射维度中 */
 type ProviderIndex = Readonly<{
@@ -256,7 +255,7 @@ type DefinitionIdentity =
   | Readonly<{ capability: typeof CoreProviderCapability.Composite; namespace: string; type: string }>;
 
 /** 在接受创建函数输出前推断被擦除定义所属的能力 */
-const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProviderCapabilityValue => {
+const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProviderCapability => {
   if ('namespace' in definition && 'type' in definition) return CoreProviderCapability.Composite;
   if ('circumscribe' in definition && 'boundaryPoint' in definition) return CoreProviderCapability.Shape;
   if ('lineContactX' in definition && 'emit' in definition) return CoreProviderCapability.Arrow;
@@ -280,7 +279,7 @@ const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProv
 
 /** 从定义读取指定能力的注册表标识 */
 const definitionIdentity = (
-  capability: CoreProviderCapabilityValue,
+  capability: CoreProviderCapability,
   definition: AnyCoreProviderDefinition,
 ): DefinitionIdentity => {
   if (definitionCapabilityOf(definition) !== capability) {
@@ -324,7 +323,7 @@ const definitionMatchesKey = (key: CoreProviderKey, definition: AnyCoreProviderD
 /** 把定义放入其所属的编译选项集合 */
 const appendByCapability = (
   definitions: MutableCoreProviderDefinitions,
-  capability: CoreProviderCapabilityValue,
+  capability: CoreProviderCapability,
   definition: AnyCoreProviderDefinition,
 ): void => {
   switch (capability) {
@@ -358,7 +357,7 @@ const appendByCapability = (
 const appendDefinition = (
   definitions: MutableCoreProviderDefinitions,
   definitionIndex: DefinitionIndex,
-  capability: CoreProviderCapabilityValue,
+  capability: CoreProviderCapability,
   definition: AnyCoreProviderDefinition,
 ): void => {
   const identity = definitionIdentity(capability, definition);
@@ -405,7 +404,7 @@ const appendExplicitDefinitions = (
   definitionIndex: DefinitionIndex,
   explicit: CoreProviderDefinitions,
 ): void => {
-  const collections: ReadonlyArray<readonly [CoreProviderCapabilityValue, CoreDefinitionCollection]> = [
+  const collections: ReadonlyArray<readonly [CoreProviderCapability, CoreDefinitionCollection]> = [
     [CoreProviderCapability.Shape, explicit.shapes],
     [CoreProviderCapability.Boundary, explicit.boundaries],
     [CoreProviderCapability.Clip, explicit.clips],

@@ -1,4 +1,4 @@
-import type { JsonValue, ValueOf } from '@retikz/foundation';
+import type { JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 import type { ZodType } from 'zod';
 
@@ -8,18 +8,11 @@ import type { Transform } from '../scene';
 import type { SpatialHandleDeclaration } from '../spatial-handle';
 import type {
   LayoutAlignmentGuideDimension,
-  LayoutAlignmentGuideName,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
 } from './constants';
 import type { CompositeBoundChild, CompositeRuntimeInputContext } from './input';
-
-/** 单轴 layout proposal 的判别值 */
-export type LayoutAxisProposalKindValue = ValueOf<typeof LayoutAxisProposalKind>;
-
-/** intrinsic contribution 查询模式 */
-export type LayoutIntrinsicModeValue = ValueOf<typeof LayoutIntrinsicMode>;
 
 /** 父布局传给 child 单轴的上下文化尺寸 proposal */
 export type LayoutAxisProposal =
@@ -27,7 +20,7 @@ export type LayoutAxisProposal =
       /** 查询 child 的 intrinsic contribution */
       kind: typeof LayoutAxisProposalKind.Intrinsic;
       /** 查询最小或自然 contribution */
-      mode: LayoutIntrinsicModeValue;
+      mode: LayoutIntrinsicMode;
     }>
   | Readonly<{
       /** 在可用区间内解析 allocation slot */
@@ -52,18 +45,12 @@ export type LayoutProposal = Readonly<{
   y: LayoutAxisProposal;
 }>;
 
-/** alignment guide 所属维度的判别值 */
-export type LayoutAlignmentGuideDimensionValue = ValueOf<typeof LayoutAlignmentGuideDimension>;
-
-/** Core 内置 alignment guide 的稳定名称 */
-export type LayoutAlignmentGuideNameValue = ValueOf<typeof LayoutAlignmentGuideName>;
-
 /** child-local allocation coordinate 中的一维 alignment guide */
 export type LayoutAlignmentGuide = Readonly<{
   /** 开放的 guide 名称 */
   name: string;
   /** guide 所属的一维坐标轴 */
-  dimension: LayoutAlignmentGuideDimensionValue;
+  dimension: LayoutAlignmentGuideDimension;
   /** child-local allocation coordinate 中的有限位置 */
   position: number;
 }>;
@@ -103,9 +90,6 @@ declare const layoutChildFailureBrand: unique symbol;
 export type LayoutChildFailure = Readonly<{
   [layoutChildFailureBrand]: never;
 }>;
-
-/** child probe 的结果判别值 */
-export type LayoutChildProbeKindValue = ValueOf<typeof LayoutChildProbeKind>;
 
 /** layoutChild 的 resolved 或 failed outcome */
 export type LayoutChildProbe =

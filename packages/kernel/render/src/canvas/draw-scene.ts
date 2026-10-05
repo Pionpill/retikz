@@ -1,5 +1,5 @@
 import type {
-  BlendModeValue,
+  BlendMode,
   IRDropShadow,
   IRPaint,
   MarkerFill,
@@ -176,7 +176,7 @@ const withShadow = (
  * 用 blendMode 包裹一段绘制：set `globalCompositeOperation`、draw、restore（回 `source-over`）
  * @description `normal` / 省略 → 直接 draw（逐字不变）；其余 W3C 分离模式名直接是 canvas GCO 值
  */
-const withBlend = (ctx: CanvasRenderingContext2D, blendMode: BlendModeValue | undefined, draw: () => void): void => {
+const withBlend = (ctx: CanvasRenderingContext2D, blendMode: BlendMode | undefined, draw: () => void): void => {
   if (blendMode === undefined || blendMode === 'normal') {
     draw();
     return;

@@ -2,7 +2,7 @@ import { RetikzError } from '@retikz/foundation';
 
 import type { RuntimeDiagnostic } from '../diagnostic';
 import type { RuntimeComputationId } from '../identity';
-import type { RetikzRuntimeErrorCodeValue } from './types';
+import type { RetikzRuntimeErrorCode } from './constants';
 
 type RetikzRuntimeErrorDetails = Readonly<{
   phase: string;
@@ -12,9 +12,9 @@ type RetikzRuntimeErrorDetails = Readonly<{
 }>;
 
 /** Runtime 公共契约或 transaction 失败的结构化错误 */
-export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCodeValue, RetikzRuntimeErrorDetails> {
+export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCode, RetikzRuntimeErrorDetails> {
   /** 稳定错误分类 */
-  readonly code: RetikzRuntimeErrorCodeValue;
+  readonly code: RetikzRuntimeErrorCode;
   /** 发生失败的 Runtime 阶段 */
   readonly phase: string;
   /** 原始错误或无效输入 */
@@ -28,7 +28,7 @@ export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCodeValue,
 
   /** 创建保留稳定 code、context 与 secondary diagnostics 的 Runtime 错误 */
   constructor(input: {
-    code: RetikzRuntimeErrorCodeValue;
+    code: RetikzRuntimeErrorCode;
     phase: string;
     message?: string;
     cause?: unknown;

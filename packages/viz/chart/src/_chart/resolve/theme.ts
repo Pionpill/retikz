@@ -1,4 +1,4 @@
-import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
+import type { ResolvedTheme } from '@retikz/core';
 import { ThemeMode } from '@retikz/core';
 import type { IRPlotDefaults } from '@retikz/plot';
 import { mergePlotDefaults } from '@retikz/plot';
@@ -7,7 +7,7 @@ import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/the
 import type { IRChartDefaults, IRChartSource } from '../schemas';
 
 /** 构造 Core mode 对应的 Chart Neutral defaults */
-const neutralChartDefaultsOf = (mode: ThemeModeValue): IRChartDefaults => {
+const neutralChartDefaultsOf = (mode: ThemeMode): IRChartDefaults => {
   const isDark = mode === ThemeMode.Dark;
   return {
     background: { fill: isDark ? '#09090B' : '#FFFFFF' },

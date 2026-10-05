@@ -27,7 +27,6 @@ import {
 
 import type { TickSet } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { PlotColorSchemeValue } from '../../../schemas';
 import { PlotColorScheme } from '../../../schemas';
 import { BUILTIN_COLOR_SCHEMES } from './constants';
 
@@ -62,7 +61,7 @@ export const scaleTicks = (
 export type ColorSchemeResolver = (name: string) => (t: number) => string;
 
 /** 配色方案名 → d3-scale-chromatic interpolator（t∈[0,1] → 颜色串）；命名 scheme 进 IR、求值期映射到函数（函数不进 IR） */
-export const SCHEME_INTERPOLATORS: Record<PlotColorSchemeValue, (t: number) => string> = {
+export const SCHEME_INTERPOLATORS: Record<PlotColorScheme, (t: number) => string> = {
   [PlotColorScheme.Blues]: d3InterpolateBlues,
   [PlotColorScheme.Greens]: d3InterpolateGreens,
   [PlotColorScheme.Greys]: d3InterpolateGreys,
@@ -91,7 +90,7 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
   if (!BUILTIN_COLOR_SCHEMES.has(name)) {
     throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
   }
-  return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
+  return SCHEME_INTERPOLATORS[name as PlotColorScheme];
 };
 
 /**
@@ -101,7 +100,7 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
 export const makeColorSchemeResolver =
   (custom?: Record<string, (t: number) => string>): ColorSchemeResolver =>
   name => {
-    if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorSchemeValue];
+    if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorScheme];
     const customInterpolator = custom?.[name];
     if (customInterpolator !== undefined) return customInterpolator;
     throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);

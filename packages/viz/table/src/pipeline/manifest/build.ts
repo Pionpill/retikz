@@ -1,10 +1,10 @@
-import type { ThemeModeValue, ThemeStyleValue } from '@retikz/core';
+import type { ThemeMode, ThemeStyleValue } from '@retikz/core';
 import type { output as ZodOutput } from 'zod';
 
 import type {
   PresentedTableModel,
   SemanticTableModel,
-  TableCellAppearanceTracePathValue,
+  TableCellAppearanceTracePath,
   TableLayoutManifestSchema,
   TableLegendDescriptor,
 } from '../../contract';
@@ -17,7 +17,7 @@ export type BuildTableManifestContext = Readonly<{
   /** 当前有效 Core Theme 的 style */
   style?: ThemeStyleValue;
   /** 当前有效 Core Theme 的 mode */
-  themeMode: ThemeModeValue;
+  themeMode: ThemeMode;
   /** 同次 resolved Table defaults */
   tableDefaults: ResolvedTableDefaults;
   /** 同次 presented model */
@@ -84,7 +84,7 @@ export const buildTableLayoutManifest = (
         matchedRuleIndices: [...(plan?.trace.matchedRuleIndices ?? [])],
         encodingIds: [...(plan?.kind === 'value' ? (plan.trace.encodingIds ?? []) : [])],
         appearance: structuredClone(presented.appearance),
-        appearanceTrace: (Object.keys(trace) as Array<TableCellAppearanceTracePathValue>)
+        appearanceTrace: (Object.keys(trace) as Array<TableCellAppearanceTracePath>)
           .sort((left, right) => left.localeCompare(right))
           .flatMap(path => {
             const source = trace[path];

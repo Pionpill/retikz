@@ -30,8 +30,6 @@ import type {
   IRPlotRelationRouting,
   IRPlotRelationStepLabel,
   IRPlotTargetRef,
-  PolarInterpolationValue,
-  RelationOrthogonalLabelStepValue,
 } from '../../../schemas';
 import {
   MarkValueKind,
@@ -310,10 +308,7 @@ const defaultRoute = (
  * 计算 Relation path 在当前坐标帧下可消费的 Polar 插值
  * @description 仅默认 path 且 source、target、全部 via 都由 coordinate projection 提供时继承；显式覆盖落到排除形态时 fail-loud
  */
-const relationInterpolationOf = (
-  mark: IRPlotRelationMark,
-  frame: CoordinateFrame,
-): PolarInterpolationValue | undefined => {
+const relationInterpolationOf = (mark: IRPlotRelationMark, frame: CoordinateFrame): PolarInterpolation | undefined => {
   const interpolation = mark.path?.interpolation;
   const kind = mark.kind ?? RelationGeometryKind.Path;
   if (interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
@@ -439,7 +434,7 @@ const applyOrthogonalLabel = (
   steps: Array<IRStep>,
   label: IRStepLabel | undefined,
   candidates: Array<{ stepIndex: number; length: number }>,
-  labelStep: RelationOrthogonalLabelStepValue | undefined,
+  labelStep: RelationOrthogonalLabelStep | undefined,
 ): Array<IRStep> => {
   if (label === undefined || steps.some(step => 'label' in step && step.label !== undefined)) return steps;
   if (labelStep === RelationOrthogonalLabelStep.Last || candidates.length === 0) return applyStepLabel(steps, label);

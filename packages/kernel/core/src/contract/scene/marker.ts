@@ -1,4 +1,4 @@
-﻿import type { IRGraphicStyle, IRPathBase, PathFillRuleValue, PathLineCapValue, PathLineJoinValue } from '../../schemas';
+﻿import type { IRGraphicStyle, IRPathBase, PathFillRule, PathLineCap, PathLineJoin } from '../../schemas';
 import type { Transform } from './group';
 import type { PathCommand } from './path';
 
@@ -28,7 +28,7 @@ export type MarkerPathPrim = {
    * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
    * @default 'nonzero'
    */
-  fillRule?: PathFillRuleValue;
+  fillRule?: PathFillRule;
   /** 描边色：纯色 CSS 或 `{ kind: 'contextStroke' }`（继承所在元素描边）；与 fill 同词汇，core 不持 SVG 裸关键字 */
   stroke?: MarkerFill;
   /**
@@ -46,12 +46,12 @@ export type MarkerPathPrim = {
    * 端点形状
    * @default 'butt'
    */
-  strokeLinecap?: PathLineCapValue;
+  strokeLinecap?: PathLineCap;
   /**
    * 拐点形状
    * @default 'miter'
    */
-  strokeLinejoin?: PathLineJoinValue;
+  strokeLinejoin?: PathLineJoin;
 };
 
 /**

@@ -14,7 +14,7 @@ import type {
 } from '../../../contract';
 import { cellInterval, PositionScaleContinuity, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotCoordinate, IRPlotPolar1DCoordinate, PolarInterpolationValue } from '../../../schemas';
+import type { IRPlotCoordinate, IRPlotPolar1DCoordinate } from '../../../schemas';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema, PolarInterpolation } from '../../../schemas';
 import { computePolarCoordinate } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
@@ -62,7 +62,7 @@ export type PolarCoordinateInput = {
   /** 角向终止角（度） */
   endAngle: number;
   /** 固定半径边界与插值敏感 mark 共用的已解析连接空间 */
-  interpolation: PolarInterpolationValue;
+  interpolation: PolarInterpolation;
   /** 固定半径 chord 边界使用的有序角向结构骨架，单位为度 */
   angularSkeleton: ReadonlyArray<number>;
   /** angle 位置 scale */
@@ -348,7 +348,7 @@ const projectPolarChord = (input: PolarCoordinateInput, thetaDeg: number, radius
 export const polarFixedRadiusSteps = (
   frame: PolarCoordinateFrame,
   radius: number,
-  interpolation: PolarInterpolationValue = frame.interpolation,
+  interpolation: PolarInterpolation = frame.interpolation,
   angleSpan: readonly [number, number] = [frame.startAngle, frame.endAngle],
 ): Array<IRStep> | null => {
   const [startAngle, endAngle] = angleSpan;

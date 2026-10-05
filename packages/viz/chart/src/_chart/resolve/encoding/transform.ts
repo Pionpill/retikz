@@ -1,7 +1,6 @@
 import type {
   DataTransformOutputDescriptor,
   DataTransformOutputModel,
-  DataTransformPhaseValue,
   IRDataReducerOperation,
   TransformSemanticContext,
   IRDataTransform,
@@ -16,7 +15,7 @@ import type { IRChartSource } from '../../schemas';
 import { directFieldsOf, invalidEncoding, mappingKindOf, mappingPathOf, objectValueOf } from './shared';
 import type { ChartEncodingFieldConsumer, FieldConsumer, FieldProducer, TransformOperationRecord } from './types';
 
-const transformPhaseOrder: ReadonlyArray<DataTransformPhaseValue> = [
+const transformPhaseOrder: ReadonlyArray<DataTransformPhase> = [
   DataTransformPhase.RowShape,
   DataTransformPhase.FieldDerive,
   DataTransformPhase.RowOrder,

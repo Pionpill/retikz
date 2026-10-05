@@ -5,8 +5,8 @@ import type {
   IRStep,
   IRStepLabel,
   IRTarget,
-  PathThicknessValue,
-  SideValue,
+  PathThickness,
+  Side,
   WayDSL,
 } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
@@ -20,7 +20,7 @@ export const InputPathArrowDirection = {
 } as const;
 
 /** 作者侧路径箭头方向取值 */
-export type InputPathArrowDirectionValue = ValueOf<typeof InputPathArrowDirection>;
+export type InputPathArrowDirection = ValueOf<typeof InputPathArrowDirection>;
 
 /** 作者侧单个路径箭头端点的放置配置 */
 export type InputPathArrowEndpointPlacement = {
@@ -40,7 +40,7 @@ export type InputPathArrowPlacement = {
 
 /** 作者侧路径步骤标签 */
 export type InputStepLabel = Omit<IRStepLabel, 'side'> & {
-  side?: SideValue;
+  side?: Side;
 };
 
 /** 作者侧路径 target */
@@ -148,9 +148,9 @@ type InputPathBase = Omit<IRPath, 'type' | 'children'> & {
   /** TikZ 风格的路径走向简写 */
   way?: WayDSL;
   /** 路径描边宽度语法糖 */
-  thickness?: PathThicknessValue;
+  thickness?: PathThickness;
   /** 路径级箭头方向 */
-  arrow?: InputPathArrowDirectionValue;
+  arrow?: InputPathArrowDirection;
   /** 箭头的顶层默认与端点覆盖配置 */
   arrowDetail?: IRArrowDetail;
   /** 箭头端点的共享与逐端放置配置 */

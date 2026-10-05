@@ -1,15 +1,15 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type {
-  ArrowShapeValue,
-  BlendModeValue,
+  ArrowShape,
+  BlendMode,
   IRAnimationTrack,
   IRGraphicStyle,
   IRPathBase,
   IRPosition,
-  PathFillRuleValue,
-  PathLineCapValue,
-  PathLineJoinValue,
+  PathFillRule,
+  PathLineCap,
+  PathLineJoin,
   ResolvedDropShadow,
 } from '../../schemas';
 import type { MarkerPrimitive } from './marker';
@@ -123,7 +123,7 @@ export type PathCommand =
  */
 export type ResolvedArrowEnd = {
   /** 形状名：内置或经 `CompileOptions.arrows` 注册的扩展名，供标识 / 调试使用 */
-  shape: ArrowShapeValue;
+  shape: ArrowShape;
   /** marker 局部坐标系的基准边长 */
   baseSize: number;
   /** 线接触点 */
@@ -166,7 +166,7 @@ export type PathPrim = {
    * 填充规则：`nonzero`（默认）/ `evenodd`（环形 / 孔洞场景）
    * @default 'nonzero'
    */
-  fillRule?: PathFillRuleValue;
+  fillRule?: PathFillRule;
   /** 描边：纯色 / 资源表 paint server（gradient）/ contextStroke */
   stroke?: PaintValue;
   /**
@@ -184,12 +184,12 @@ export type PathPrim = {
    * 端点形状
    * @default 'butt'
    */
-  strokeLinecap?: PathLineCapValue;
+  strokeLinecap?: PathLineCap;
   /**
    * 拐点形状
    * @default 'miter'
    */
-  strokeLinejoin?: PathLineJoinValue;
+  strokeLinejoin?: PathLineJoin;
   /** 起点箭头视觉规格；undefined = 无箭头 */
   arrowStart?: ResolvedArrowEnd;
   /** 终点箭头视觉规格；undefined = 无箭头 */
@@ -205,5 +205,5 @@ export type PathPrim = {
    * 混合模式：解析后值；undefined / normal = 普通 source-over
    * @default 'normal'
    */
-  blendMode?: BlendModeValue;
+  blendMode?: BlendMode;
 };

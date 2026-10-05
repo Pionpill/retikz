@@ -1,7 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { TableTrackSizeKind } from './constants';
 import type {
   TableAutoTrackSizeSchema,
   TableFixedTrackSizeSchema,
@@ -12,9 +10,6 @@ import type {
   TableTrackOverridesSchema,
   TableTrackSizeSchema,
 } from './schema';
-
-/** Table 轨道尺寸判别值 */
-export type TableTrackSizeKindValue = ValueOf<typeof TableTrackSizeKind>;
 
 /** 固定轨道尺寸 IR */
 export type IRTableFixedTrackSize = ZodInfer<typeof TableFixedTrackSizeSchema>;

@@ -2,7 +2,6 @@ import type { GroupPrim, PathPrim, ScenePrimitive, TextPrim } from '../../contra
 import type { CanonicalInlineRun } from '../../resolve';
 import { isMathRun } from '../../resolve';
 import { CompileWarningCode } from '../constants';
-import type { CompileWarningCodeValue } from '../warning';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
 import type { TextFont, TextMeasurer } from './metrics';
 import { normalizeTextMetrics } from './metrics';
@@ -31,7 +30,7 @@ export type LineLayoutContext = {
    * @default 1
    */
   opacity?: number;
-  warn: (code: CompileWarningCodeValue, message: string) => void;
+  warn: (code: CompileWarningCode, message: string) => void;
 };
 
 /** run 自身 opacity 与宿主 opacity 相乘（任一缺省取另一个） */

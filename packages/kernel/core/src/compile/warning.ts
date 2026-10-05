@@ -1,10 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
-
 import type { CompileObservationOwner, CompileOccurrenceLocator } from '../contract';
 import type { CompileWarningCode } from './constants';
-
-/** 编译期 warning code：包含内置 code，并允许扩展能力提供自定义字符串 code */
-export type CompileWarningCodeValue = ValueOf<typeof CompileWarningCode> | (string & {});
 
 /** 编译 warning 的领域中立结构化来源 */
 export type CompileWarningOrigin =
@@ -19,7 +14,7 @@ export type CompileWarningOrigin =
 /** 编译内部创建 warning 时使用的未完成输入 */
 export type CompileWarningInput = {
   /** 机器可读 warning code */
-  code: CompileWarningCodeValue;
+  code: CompileWarningCode;
   /** 人类可读消息（英文） */
   message: string;
   /** IR locator 路径（jq-like），如 `children[3].path.children[1].to` */

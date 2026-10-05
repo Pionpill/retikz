@@ -1,7 +1,7 @@
 import type {
   SemanticTableCell,
   SemanticTableModel,
-  TableCellAppearanceTracePathValue,
+  TableCellAppearanceTracePath,
   TableCellPlanSource,
   TableLegendDescriptor,
 } from '../../contract';
@@ -96,7 +96,7 @@ const traceAppearanceLeaves = (
   appearancePath: ReadonlyArray<string>,
   defaultsPath: ReadonlyArray<string>,
   options: ResolveTableCellPlansOptions,
-  trace: Partial<Record<TableCellAppearanceTracePathValue, TableCellPlanSource>>,
+  trace: Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>>,
 ): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     const path = '/' + appearancePath.join('/');
@@ -116,7 +116,7 @@ const styleAppearanceOf = (
 ): Readonly<{ appearance: IRTableCellAppearance; trace: TableCellAppearanceTrace }> => {
   const location = cell.location === TableCellLocation.ColumnHeader ? 'columnHeader' : 'body';
   const defaults = options.tableDefaults?.defaults.appearanceDefaults?.[location];
-  const trace: Partial<Record<TableCellAppearanceTracePathValue, TableCellPlanSource>> = {};
+  const trace: Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>> = {};
   const appearance: IRTableCellAppearance = {};
 
   if (defaults?.background?.fill !== undefined) {

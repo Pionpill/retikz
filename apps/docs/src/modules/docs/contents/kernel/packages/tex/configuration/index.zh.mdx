@@ -75,11 +75,11 @@ const lowerTex = await createMathJaxLowerTex({ profile: 'base', extensions: ['am
 
 ## 配置 API
 
-| 字段                                       | 类型、默认值与说明                                                                                   |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `MathJaxEngineOptions`<br />`.profile?`    | `MathJaxProfileValue`，默认 `'base'`。选择内置语法集合                                               |
-| `MathJaxEngineOptions`<br />`.extensions?` | `Array<MathJaxExtensionValue>`，默认 `[]`。在 profile 后追加公开扩展，规范化时会去重并按稳定顺序排列 |
-| `MathJaxLowerTexOptions`                   | `MathJaxEngineOptions & LowerTexOptions`。供 `createMathJaxLowerTex` 与 `useLowerTex` 使用           |
+| 字段                                       | 类型、默认值与说明                                                                              |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `MathJaxEngineOptions`<br />`.profile?`    | `MathJaxProfile`，默认 `'base'`。选择内置语法集合                                               |
+| `MathJaxEngineOptions`<br />`.extensions?` | `Array<MathJaxExtension>`，默认 `[]`。在 profile 后追加公开扩展，规范化时会去重并按稳定顺序排列 |
+| `MathJaxLowerTexOptions`                   | `MathJaxEngineOptions & LowerTexOptions`。供 `createMathJaxLowerTex` 与 `useLowerTex` 使用      |
 
 React 中，`useLowerTex(options)` 会按最终生效的 extension 集合共享异步 engine。它在首次初始化或切换配置时返回 `loading`，就绪时返回可注入的 `lowerTex`，初始化失败时返回 `error`。接入代码和状态渲染见 [安装与接入](/kernel/packages/tex)。
 

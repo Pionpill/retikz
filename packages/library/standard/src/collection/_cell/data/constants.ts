@@ -8,4 +8,4 @@ export const DataExpandComponent = {
   Array: 'array',
 } as const;
 
-export type DataExpandComponentValue = ValueOf<typeof DataExpandComponent>;
+export type DataExpandComponent = ValueOf<typeof DataExpandComponent>;

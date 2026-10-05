@@ -1,4 +1,4 @@
-import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
+import type { ResolvedTheme, ThemeMode } from '@retikz/core';
 import type { IRPlotAxisRule, IRPlotDefaults } from '@retikz/plot';
 import { definePlotThemeStyle, PlotColorScheme, PlotDefaultsSchema, PlotShapePaletteSchema } from '@retikz/plot';
 
@@ -80,14 +80,14 @@ const styles = {
   },
 } as const;
 
-const gridDefaultsOf = (mode: ThemeModeValue) => ({
+const gridDefaultsOf = (mode: ThemeMode) => ({
   stroke: mode === 'light' ? '#FFFFFF' : '#000000',
   strokeWidth: 1,
   drawOpacity: 1,
   includeDomain: false,
 });
 
-const rulesOf = (style: ReferenceStyle, mode: ThemeModeValue): ReadonlyArray<IRPlotAxisRule> => {
+const rulesOf = (style: ReferenceStyle, mode: ThemeMode): ReadonlyArray<IRPlotAxisRule> => {
   if (style === PreviewThemeStyle.Academic) {
     return [{ select: { dimension: ['x', 'y'] }, axis: { grid: false } }];
   }

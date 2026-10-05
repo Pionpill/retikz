@@ -4,7 +4,7 @@ import type {
   RuntimeComputationToken,
   RuntimeComputationTraceReporter,
 } from '../computation';
-import type { RuntimeDiagnosticPhaseValue } from '../diagnostic';
+import type { RuntimeDiagnosticPhase } from '../diagnostic';
 import type { RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } from '../source';
 import type { RuntimeTracePhaseDefinition } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
@@ -50,7 +50,7 @@ export type RuntimeParticipantWarningInput = Readonly<{
   /** 稳定 warning 分类 */
   code: string;
   /** 产生 warning 的领域阶段 */
-  phase: RuntimeDiagnosticPhaseValue;
+  phase: RuntimeDiagnosticPhase;
   /** 面向开发者的 warning 信息 */
   message: string;
 }>;

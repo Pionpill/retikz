@@ -41,7 +41,7 @@ export type LowerTexOptions = {
 ### MathJaxEngineOptions
 
 <p>
-  <ApiSourceLink label={'MathJaxEngineOptions'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={34}>
+  <ApiSourceLink label={'MathJaxEngineOptions'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={18}>
     MathJax 引擎配置
   </ApiSourceLink>
 </p>
@@ -54,10 +54,10 @@ export type LowerTexOptions = {
 
 <ApiTable>
 
-| 成员          | 类型                           | 默认值   | 说明                                           |
-| ------------- | ------------------------------ | -------- | ---------------------------------------------- |
-| `extensions?` | `Array<MathJaxExtensionValue>` | `[]`     | 在配置档之后追加的扩展，重复项会在初始化前去重 |
-| `profile?`    | `MathJaxProfileValue`          | `'base'` | 选择基础或数学扩展集合的内置配置档             |
+| 成员          | 类型                      | 默认值   | 说明                                           |
+| ------------- | ------------------------- | -------- | ---------------------------------------------- |
+| `extensions?` | `Array<MathJaxExtension>` | `[]`     | 在配置档之后追加的扩展，重复项会在初始化前去重 |
+| `profile?`    | `MathJaxProfile`          | `'base'` | 选择基础或数学扩展集合的内置配置档             |
 
 </ApiTable>
 
@@ -67,28 +67,14 @@ export type LowerTexOptions = {
 
 ```ts
 export type MathJaxEngineOptions = {
-  profile?: MathJaxProfileValue;
-  extensions?: Array<MathJaxExtensionValue>;
+  profile?: MathJaxProfile;
+  extensions?: Array<MathJaxExtension>;
 };
 ```
 
 </DocTab>
 
 </DocTabs>
-
-### MathJaxExtensionValue
-
-<p>
-  <ApiSourceLink label={'MathJaxExtensionValue'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={17}>
-    MathJax 扩展取值
-  </ApiSourceLink>
-</p>
-
-由 `MathJaxExtension` 派生的受限字符串集合，可在内置配置档之后追加。配置解析会去重并按稳定顺序加载，调用方无需自行处理 package 顺序
-
-```ts
-export type MathJaxExtensionValue = ValueOf<typeof MathJaxExtension>;
-```
 
 ### MathJaxLowerTexOptions
 
@@ -112,9 +98,9 @@ export type MathJaxExtensionValue = ValueOf<typeof MathJaxExtension>;
 
 | 成员            | 类型                                          | 默认值   | 说明                                                         |
 | --------------- | --------------------------------------------- | -------- | ------------------------------------------------------------ |
-| `extensions?`   | `Array<MathJaxExtensionValue>`                | `[]`     | 在配置档之后追加的扩展，重复项会在初始化前去重               |
+| `extensions?`   | `Array<MathJaxExtension>`                     | `[]`     | 在配置档之后追加的扩展，重复项会在初始化前去重               |
 | `onDiagnostic?` | `(diagnostic: TexLoweringDiagnostic) => void` | —        | 每次公开 lowering 失败时接收一次诊断，供应用记录、提示或上报 |
-| `profile?`      | `MathJaxProfileValue`                         | `'base'` | 选择基础或数学扩展集合的内置配置档                           |
+| `profile?`      | `MathJaxProfile`                              | `'base'` | 选择基础或数学扩展集合的内置配置档                           |
 
 </ApiTable>
 
@@ -130,40 +116,10 @@ export type MathJaxLowerTexOptions = MathJaxEngineOptions & LowerTexOptions;
 
 </DocTabs>
 
-### MathJaxProfileValue
-
-<p>
-  <ApiSourceLink label={'MathJaxProfileValue'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={10}>
-    MathJax 配置档取值
-  </ApiSourceLink>
-</p>
-
-由 `MathJaxProfile` 派生的受限字符串集合，用于选择内置扩展组合；它只描述配置值，实际扩展加载由 MathJax 工厂负责
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type MathJaxProfileValue = 'base' | 'math';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type MathJaxProfileValue = ValueOf<typeof MathJaxProfile>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### MathJaxSvgEngine
 
 <p>
-  <ApiSourceLink label={'MathJaxSvgEngine'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={24}>
+  <ApiSourceLink label={'MathJaxSvgEngine'} path={'packages/kernel/tex/src/mathjax/types.ts'} startLine={8}>
     同步 TeX → SVG 引擎接口
   </ApiSourceLink>
 </p>
@@ -302,7 +258,7 @@ export type TexLoweringDiagnostic =
 ### MathJaxExtension
 
 <p>
-  <ApiSourceLink label={'MathJaxExtension'} path={'packages/kernel/tex/src/mathjax/constants.ts'} startLine={16}>
+  <ApiSourceLink label={'MathJaxExtension'} path={'packages/kernel/tex/src/mathjax/constants.ts'} startLine={17}>
     可按需加载的 MathJax TeX 扩展
   </ApiSourceLink>
 </p>
@@ -321,12 +277,14 @@ export const MathJaxExtension = {
   Mathtools: 'mathtools',
   Color: 'color',
 } as const;
+
+export type MathJaxExtension = ValueOf<typeof MathJaxExtension>;
 ```
 
 ### MathJaxProfile
 
 <p>
-  <ApiSourceLink label={'MathJaxProfile'} path={'packages/kernel/tex/src/mathjax/constants.ts'} startLine={5}>
+  <ApiSourceLink label={'MathJaxProfile'} path={'packages/kernel/tex/src/mathjax/constants.ts'} startLine={6}>
     内置 MathJax 配置档
   </ApiSourceLink>
 </p>
@@ -338,6 +296,8 @@ export const MathJaxProfile = {
   Base: 'base',
   Math: 'math',
 } as const;
+
+export type MathJaxProfile = ValueOf<typeof MathJaxProfile>;
 ```
 
 ### createLowerTex
@@ -390,7 +350,7 @@ export declare const createLowerTex: (engine: MathJaxSvgEngine, options?: LowerT
 ### createMathJaxEngine
 
 <p>
-  <ApiSourceLink label={'createMathJaxEngine'} path={'packages/kernel/tex/src/mathjax/engine.ts'} startLine={42}>
+  <ApiSourceLink label={'createMathJaxEngine'} path={'packages/kernel/tex/src/mathjax/engine.ts'} startLine={43}>
     创建基于可选 `mathjax-full` peer 的同步 TeX → SVG 引擎
   </ApiSourceLink>
 </p>

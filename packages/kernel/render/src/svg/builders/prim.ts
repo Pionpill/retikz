@@ -1,4 +1,4 @@
-import type { BlendModeValue, IRDropShadow, PaintValue, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
+import type { BlendMode, IRDropShadow, PaintValue, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
 
 import { firstLineDy } from '../../shared';
 import { buildPathD } from '../path-d-builder';
@@ -84,7 +84,7 @@ const withStyle = (node: SvgNode, style: SvgStyle | undefined): SvgNode => (styl
  * 把可选 blendMode 合进（可能已含 fill/stroke 的）几何图元 style
  * @description `normal` / 省略不出 `mix-blend-mode`（逐字不变）；其余 emit CSS `mix-blend-mode`，与 var() 颜色共存
  */
-const mergeBlendStyle = (style: SvgStyle | undefined, blendMode: BlendModeValue | undefined): SvgStyle | undefined => {
+const mergeBlendStyle = (style: SvgStyle | undefined, blendMode: BlendMode | undefined): SvgStyle | undefined => {
   if (blendMode === undefined || blendMode === 'normal') return style;
   return { ...(style ?? {}), 'mix-blend-mode': blendMode };
 };

@@ -1,5 +1,4 @@
 import type { IRPathScale } from '@retikz/core';
-import type { PathThicknessValue } from '@retikz/core';
 import { DropShadowSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
 import type { DataTransformModel, ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
@@ -191,11 +190,9 @@ const pathNumericChannels: {
 const lineCapValues = new Set(['butt', 'round', 'square']);
 const lineJoinValues = new Set(['miter', 'round', 'bevel']);
 const fillRuleValues = new Set(['nonzero', 'evenodd']);
-const thicknessValues = new Set<PathThicknessValue>(Object.values(PathThickness));
-const pathThicknessValue = (value: unknown): PathThicknessValue | undefined =>
-  typeof value === 'string' && thicknessValues.has(value as PathThicknessValue)
-    ? (value as PathThicknessValue)
-    : undefined;
+const thicknessValues = new Set<PathThickness>(Object.values(PathThickness));
+const pathThicknessValue = (value: unknown): PathThickness | undefined =>
+  typeof value === 'string' && thicknessValues.has(value as PathThickness) ? (value as PathThickness) : undefined;
 const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
 const blendModeValues = new Set([
   'normal',
@@ -257,7 +254,7 @@ const directPathChannels = {
       path.style = { ...path.style, fillRule: value };
     },
   ),
-  thickness: defineSimplePathChannel<PathThicknessValue>(
+  thickness: defineSimplePathChannel<PathThickness>(
     'thickness',
     { outputKind: 'symbol', palette: [...thicknessValues] },
     pathThicknessValue,

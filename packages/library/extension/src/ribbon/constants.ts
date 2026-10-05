@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 export const RibbonMode = {
   Centerline: 'centerline',
   Boundary: 'boundary',
@@ -43,3 +45,17 @@ export const RibbonTaperInterpolation = {
 export const RibbonWidthProfile = {
   Bulge: 'bulge',
 } as const;
+
+export type RibbonMode = ValueOf<typeof RibbonMode>;
+
+export type RibbonAlignment = ValueOf<typeof RibbonAlignment>;
+
+export type RibbonCap = ValueOf<typeof RibbonCap>;
+
+export type RibbonArcCapSweep = ValueOf<typeof RibbonArcCapSweep>;
+
+/** ribbon 多 stop 宽度插值方式取值 */
+export type RibbonWidthInterpolation = ValueOf<typeof RibbonWidthInterpolation>;
+
+/** ribbon 起止宽度渐变插值方式取值 */
+export type RibbonTaperInterpolation = ValueOf<typeof RibbonTaperInterpolation>;

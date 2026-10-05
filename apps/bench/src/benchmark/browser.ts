@@ -12,7 +12,7 @@ import type {
 } from '@retikz/render/runtime';
 import { builtinRetainedRendererFactory, defineRetainedRenderer } from '@retikz/render/runtime';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
-import type { PerformanceTraceOutcomeValue, PerformanceTraceRecord } from '@retikz/runtime';
+import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeSourceUpdate,
   createRuntimeTraceReporter,
@@ -229,7 +229,7 @@ const readRetainedUpdateRecord = (
   id: string,
   backend: 'svg' | 'canvas',
   records: ReadonlyArray<PerformanceTraceRecord>,
-  outcome: PerformanceTraceOutcomeValue,
+  outcome: PerformanceTraceOutcome,
 ): PerformanceTraceRecord => {
   return assertSingleTraceRecord(id, records, {
     owner: `@retikz/render:${backend}`,

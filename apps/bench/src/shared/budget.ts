@@ -1,9 +1,8 @@
-import type { PerformanceTraceOutcomeValue } from '@retikz/runtime';
 import type { PerformanceTraceOutcome } from '@retikz/runtime';
 
 /** Benchmark execution 允许展示的 trace 结果取值类型 */
 export type BenchmarkExecutionOutcomeValue = Extract<
-  PerformanceTraceOutcomeValue,
+  PerformanceTraceOutcome,
   | typeof PerformanceTraceOutcome.Full
   | typeof PerformanceTraceOutcome.Incremental
   | typeof PerformanceTraceOutcome.Fallback

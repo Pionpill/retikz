@@ -36,13 +36,13 @@ const AxisCardinalSide = {
   Left: 'left',
 } as const;
 
-type AxisCardinalSideValue = ValueOf<typeof AxisCardinalSide>;
+type AxisCardinalSide = ValueOf<typeof AxisCardinalSide>;
 
 type CoordinateScopePlacement = { kind: 'overlay'; target: string; zIndex?: number };
 
 type AxisPlacement =
   | { kind: 'auto' }
-  | { kind: 'side'; side: AxisCardinalSideValue; offset?: number }
+  | { kind: 'side'; side: AxisCardinalSide; offset?: number }
   | { kind: 'edge'; edge: string; offset?: number };
 
 type IRPlotAxisGuide = {

@@ -1,7 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { TableBorderKind, TableBorderMode } from './constants';
 import type {
   TableBorderSchema,
   TableBordersDefaultsSchema,
@@ -11,12 +9,6 @@ import type {
   TableOuterBordersDefaultsSchema,
   TableOuterBordersSchema,
 } from './schema';
-
-/** Table border 候选判别值 */
-export type TableBorderKindValue = ValueOf<typeof TableBorderKind>;
-
-/** Table border 拓扑模式 */
-export type TableBorderModeValue = ValueOf<typeof TableBorderMode>;
 
 /** 单个 Table border 候选 IR */
 export type IRTableBorder = ZodInfer<typeof TableBorderSchema>;

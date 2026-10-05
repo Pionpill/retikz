@@ -16,11 +16,11 @@ import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../constants';
+import type { CompileWarningCode } from '../constants';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
 import type { TextMeasurer } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
-import type { CompileWarningCodeValue } from '../warning';
 import { layoutNodeContent } from './content/layout';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
 import type { NodeLayout, TexLoweringContext } from './types';
@@ -116,7 +116,7 @@ export type LayoutNodeContext = {
   /** TeX 降级上下文 */
   texLowering?: TexLoweringContext;
   /** 当前 node 的 compile warning 分发函数 */
-  warn?: (code: CompileWarningCodeValue, message: string) => void;
+  warn?: (code: CompileWarningCode, message: string) => void;
   /** 父级给 allocation box 的水平 proposal */
   allocationWidthProposal?: LayoutAxisProposal;
 };

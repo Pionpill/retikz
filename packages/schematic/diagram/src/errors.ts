@@ -27,7 +27,7 @@ export const RetikzDiagramErrorCode = {
 } as const;
 
 /** Diagram package 稳定错误码取值 */
-export type RetikzDiagramErrorCodeValue = ValueOf<typeof RetikzDiagramErrorCode>;
+export type RetikzDiagramErrorCode = ValueOf<typeof RetikzDiagramErrorCode>;
 
 /** Diagram package 错误的结构化详情 */
 export type RetikzDiagramErrorDetails = Readonly<{
@@ -46,15 +46,15 @@ export type RetikzDiagramErrorDetails = Readonly<{
 
 /** 创建 Diagram package 错误所需的参数 */
 export type RetikzDiagramErrorOptions = Readonly<{
-  code: RetikzDiagramErrorCodeValue;
+  code: RetikzDiagramErrorCode;
   message: string;
   details: RetikzDiagramErrorDetails;
   cause?: unknown;
 }>;
 
 /** Diagram package 的统一结构化错误 */
-export class RetikzDiagramError extends RetikzError<RetikzDiagramErrorCodeValue, RetikzDiagramErrorDetails> {
-  readonly code: RetikzDiagramErrorCodeValue;
+export class RetikzDiagramError extends RetikzError<RetikzDiagramErrorCode, RetikzDiagramErrorDetails> {
+  readonly code: RetikzDiagramErrorCode;
   readonly details: RetikzDiagramErrorDetails;
   override readonly cause: unknown;
 

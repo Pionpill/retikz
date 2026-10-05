@@ -61,13 +61,12 @@ describe('Layout API 公开范围', () => {
       /```ts\n(?:(?!```)[\s\S])*export declare const Layout: FC<LayoutProps>;(?:(?!```)[\s\S])*export type LayoutProps = \{/,
     );
     expect(layoutProps).toContain('`computeDisplaySize`');
-    const runtimeModeValue = source.split('### LayoutRuntimeModeValue\n')[1]?.split('\n### ')[0] ?? '';
-    expect(runtimeModeValue.match(/<DocTabs\b/g)).toHaveLength(1);
-    expect(runtimeModeValue).toContain('<DocTabs defaultValue="expanded">');
-    expect(runtimeModeValue).toContain('<DocTab value="expanded" label="Expanded type">');
-    expect(runtimeModeValue).toContain('<DocTab value="definition" label="Type definition">');
-    expect(runtimeModeValue).toContain('export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;');
-    expect(runtimeModeValue).toContain('export type LayoutRuntimeModeValue =\n  | "retained"\n  | "static";');
+    const runtimeMode = source.split('### LayoutRuntimeMode\n')[1]?.split('\n### ')[0] ?? '';
+    expect(headings.filter(name => name === 'LayoutRuntimeMode')).toHaveLength(1);
+    expect(runtimeMode).toContain('export const LayoutRuntimeMode = Object.freeze({');
+    expect(runtimeMode).toContain("Retained: 'retained'");
+    expect(runtimeMode).toContain("Static: 'static'");
+    expect(runtimeMode).toContain('export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;');
     const runtimeOptions = source.split('### LayoutRuntimeOptions\n')[1]?.split('\n### ')[0] ?? '';
     expect(runtimeOptions.match(/<DocTabs\b/g)).toHaveLength(1);
     expect(runtimeOptions).toContain('<DocTabs defaultValue="retained">');

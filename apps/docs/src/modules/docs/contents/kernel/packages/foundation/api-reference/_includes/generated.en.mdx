@@ -63,7 +63,7 @@ export class RetikzError<
 
 | Member                      | Signature                                                                       | Description                                                    |
 | --------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `TCode` (Type parameter)    | `extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue`       | Concrete literal type of a Foundation error code               |
+| `TCode` (Type parameter)    | `extends RetikzFoundationErrorCode = RetikzFoundationErrorCode`                 | Concrete literal type of a Foundation error code               |
 | `TDetails` (Type parameter) | `extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>` | Structured detail type associated with a Foundation error code |
 | `constructor`               | `(message: string)`                                                             | Creates a Foundation error with the default error code         |
 |                             | `(options: RetikzErrorOptions<TCode, TDetails>)`                                | Creates a Foundation error from structured options             |
@@ -76,7 +76,7 @@ export class RetikzError<
 
 ```ts
 export class RetikzFoundationError<
-  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TCode extends RetikzFoundationErrorCode = RetikzFoundationErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > extends RetikzError<TCode, TDetails> {
   constructor(message: string);
@@ -358,43 +358,6 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
 
 </DocTabs>
 
-### RetikzFoundationErrorCodeValue
-
-<p>
-  <ApiSourceLink
-    label={'RetikzFoundationErrorCodeValue'}
-    path={'packages/kernel/foundation/src/error.ts'}
-    startLine={71}
-  >
-    Stable Foundation package error-code values
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type RetikzFoundationErrorCodeValue =
-  | 'FOUNDATION_ERROR'
-  | 'FOUNDATION_NON_EMPTY_STRING_REQUIRED'
-  | 'FOUNDATION_POSITIVE_NUMBER_REQUIRED'
-  | 'FOUNDATION_JSON_ERROR'
-  | 'FOUNDATION_COLOR_ERROR';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### ValueOf
 
 <p>
@@ -509,6 +472,8 @@ export const RetikzFoundationErrorCode = {
   Json: 'FOUNDATION_JSON_ERROR',
   Color: 'FOUNDATION_COLOR_ERROR',
 } as const;
+
+export type RetikzFoundationErrorCode = ValueOf<typeof RetikzFoundationErrorCode>;
 ```
 
 ### StaticCssNamedColorHexByName
@@ -769,12 +734,12 @@ Copies input entries into independent storage while preserving native Map iterat
 
 <ApiTable variant="parameters">
 
-| Category        | Name      | Type / signature                    | Description                                                                                                  |
-| --------------- | --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Type parameters | `TKey`    | —                                   | Map key type                                                                                                 |
-|                 | `TValue`  | —                                   | Map value type                                                                                               |
-| Parameters      | `entries` | `Iterable<readonly [TKey, TValue]>` | Key-value entries used to create the snapshot                                                                |
-| Returns         | —         | `ReadonlyMap<TKey, TValue>`         | Independent readonly Map wrapper; keys and values retain their original references and are not deeply frozen |
+| Category        | Name      | Type / signature                                           | Description                                                                                                  |
+| --------------- | --------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Type parameters | `TKey`    | —                                                          | Map key type                                                                                                 |
+|                 | `TValue`  | —                                                          | Map value type                                                                                               |
+| Parameters      | `entries` | `Iterable<readonly [`<br />`TKey,`<br />`TValue`<br />`]>` | Key-value entries used to create the snapshot                                                                |
+| Returns         | —         | `ReadonlyMap<TKey, TValue>`                                | Independent readonly Map wrapper; keys and values retain their original references and are not deeply frozen |
 
 </ApiTable>
 

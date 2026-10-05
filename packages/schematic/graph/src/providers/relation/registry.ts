@@ -2,7 +2,7 @@ import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { RelationKindDefinition, RelationPredicateDefinition, RelationRoleDefinition } from '../../contract';
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
-import type { RelationDirectionValue } from '../../schemas';
+import type { RelationDirection } from '../../schemas';
 import { BUILTIN_RELATION_ROLE_DEFINITIONS } from './definitions';
 
 const duplicateDefinition = (capability: string, key: string): RetikzGraphError =>
@@ -32,8 +32,8 @@ const invalidDefinition = (label: string, value: string): RetikzGraphError =>
 const uniqueDirections = (
   capability: string,
   key: string,
-  directions: ReadonlyArray<RelationDirectionValue>,
-): ReadonlySet<RelationDirectionValue> => {
+  directions: ReadonlyArray<RelationDirection>,
+): ReadonlySet<RelationDirection> => {
   if (directions.length === 0) throw conflictingDefinition(capability, key, 'requires at least one direction.');
   const unique = new Set(directions);
   if (unique.size !== directions.length) throw duplicateDefinition(`${capability} direction`, key);
@@ -66,7 +66,7 @@ export const resolveRelationRoleRegistry = (
         throw conflictingDefinition('Relation role', definition.role, `does not define direction '${direction}'.`);
       }
     }
-    for (const direction of Object.keys(definition.directions) as Array<RelationDirectionValue>) {
+    for (const direction of Object.keys(definition.directions) as Array<RelationDirection>) {
       if (!allowed.has(direction)) {
         throw conflictingDefinition('Relation role', definition.role, `defines unsupported direction '${direction}'.`);
       }
@@ -119,7 +119,7 @@ export const resolveRelationKindRegistry = (
         `default direction '${defaultDirection}' is not allowed.`,
       );
     }
-    for (const direction of Object.keys(definition.directions ?? {}) as Array<RelationDirectionValue>) {
+    for (const direction of Object.keys(definition.directions ?? {}) as Array<RelationDirection>) {
       if (!allowed.has(direction)) {
         throw conflictingDefinition('Relation kind', definition.kind, `defines unsupported direction '${direction}'.`);
       }

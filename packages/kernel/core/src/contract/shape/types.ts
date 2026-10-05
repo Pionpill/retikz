@@ -3,7 +3,7 @@ import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
 import type { IRGraphicStyle, IRPathBase, ResolvedDropShadow } from '../../schemas';
-import type { AnchorValue, Rect, SideValue } from '../../shared';
+import type { Anchor, Rect, Side } from '../../shared';
 import type { PaintValue, PathCommand, ScenePrimitive } from '../scene';
 
 /** 从 IR graphic style 复用的已解析 shape 样式字段 */
@@ -13,7 +13,7 @@ type ResolvedShapeStyleFields = Pick<
 >;
 
 /** Shape provider 接收到的命名 anchor：标准方位名或 shape 自定义扩展名 */
-export type ShapeAnchorName = AnchorValue | (string & {});
+export type ShapeAnchorName = Anchor | (string & {});
 
 /** Shape 可为之提供安全包络的规则连接面种类 */
 export type ConnectionEnvelopeKind = 'circle' | 'ellipse' | 'rectangle';
@@ -148,7 +148,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
    * @description `rect` 可包含旋转；未实现表示该 shape 不支持 side anchor
    * @default undefined
    */
-  edgePoint?: (rect: Rect, side: SideValue, t: number, params: TParams) => Position;
+  edgePoint?: (rect: Rect, side: Side, t: number, params: TParams) => Position;
   /**
    * 生成轴对齐 rect 内的视觉 primitive
    */

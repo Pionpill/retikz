@@ -1,4 +1,4 @@
-import type { CoreDependencyProvider, SideValue } from '@retikz/core';
+import type { CoreDependencyProvider, Side } from '@retikz/core';
 import { defineShape, SideValues } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
@@ -23,7 +23,7 @@ const TrapezoidShapeParamsSchema = strictObject({
 /** Trapezoid 形状参数 */
 export type TrapezoidShapeParams = ZodInfer<typeof TrapezoidShapeParamsSchema>;
 
-const shortSideOf = (params: TrapezoidShapeParams): SideValue => params.shortSide ?? 'top';
+const shortSideOf = (params: TrapezoidShapeParams): Side => params.shortSide ?? 'top';
 const shortSideRatioOf = (params: TrapezoidShapeParams): number => params.shortSideRatio ?? 0.72;
 
 /** 根据最终外接矩形生成 Trapezoid 局部顶点 */

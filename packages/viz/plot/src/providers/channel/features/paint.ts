@@ -1,6 +1,5 @@
 import type { IRPaint } from '@retikz/core';
 import { PaintSchema } from '@retikz/core';
-import type { DataFieldTypeValue } from '@retikz/data';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
 import { DataFieldType, FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
@@ -108,7 +107,7 @@ export const makeColorChannelDefinition = (
 });
 
 const colorResolveContext = (
-  fieldType: DataFieldTypeValue | undefined,
+  fieldType: DataFieldType | undefined,
   resolveColorScheme: (name: string) => (t: number) => string,
   palette: ChannelPaletteContext | undefined,
 ): ChannelScaleResolveContext => ({

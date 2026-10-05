@@ -73,7 +73,7 @@ export type InputEllipse = InputShape<IREllipse>;
 </p>
 
 ```ts
-export declare const CircleInputEmbedAdapter: InputEmbedAdapter<InputCircle & { id?: string }>;
+export declare const CircleInputEmbedAdapter: SynchronousInputEmbedAdapter<InputCircle & { id?: string }>;
 ```
 
 #### EllipseInputEmbedAdapter
@@ -89,7 +89,7 @@ export declare const CircleInputEmbedAdapter: InputEmbedAdapter<InputCircle & { 
 </p>
 
 ```ts
-export declare const EllipseInputEmbedAdapter: InputEmbedAdapter<InputEllipse & { id?: string }>;
+export declare const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<InputEllipse & { id?: string }>;
 ```
 
 **`@retikz/standard`**

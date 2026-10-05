@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** GridLayout 自动放置的流向 */
 export const GridAutoFlow = {
   Row: 'row',
@@ -26,3 +27,12 @@ export const LayoutTrackSourceKind = {
 
 /** GridLayout 单轴最多解析的显式与隐式 track 数 */
 export const GRID_LAYOUT_MAX_TRACKS_PER_AXIS = 10_000;
+
+/** GridLayout 自动放置流向取值 */
+export type GridAutoFlow = ValueOf<typeof GridAutoFlow>;
+
+/** GridLayout fully explicit overlap 策略取值 */
+export type GridOverlap = ValueOf<typeof GridOverlap>;
+
+/** GridLayout 轨道产物来源取值 */
+export type LayoutTrackSourceKind = ValueOf<typeof LayoutTrackSourceKind>;

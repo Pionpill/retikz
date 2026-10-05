@@ -1,7 +1,6 @@
 import type { Position } from '@retikz/math';
 import { DEFAULT_EPSILON } from '@retikz/math';
 
-import type { AnchorValue, SideValue } from '../anchor';
 import { Anchor, Side } from '../anchor';
 import { polylineViaVertex } from './edge';
 import { localToWorld, worldToLocal } from './transform';
@@ -12,7 +11,7 @@ const DIAMOND_EDGE = {
   [Side.Bottom]: [Anchor.BottomLeft, Anchor.Bottom, Anchor.BottomRight],
   [Side.Right]: [Anchor.TopRight, Anchor.Right, Anchor.BottomRight],
   [Side.Left]: [Anchor.TopLeft, Anchor.Left, Anchor.BottomLeft],
-} as const satisfies Record<SideValue, readonly [AnchorValue, AnchorValue, AnchorValue]>;
+} as const satisfies Record<Side, readonly [Anchor, Anchor, Anchor]>;
 
 /** 菱形：中心 + halfA/halfB 半轴长 + 可选旋转；顶点在 (±halfA,0) 与 (0,±halfB) */
 export type Diamond = {
@@ -46,7 +45,7 @@ export const diamond = {
     return Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB <= 1 + DEFAULT_EPSILON;
   },
   /** 8 个标准方位 anchor：top/bottom/right/left=顶点，四个 corner=边中点；center 请用 `diamond.center()` */
-  anchor: (d: Diamond, name: AnchorValue): Position => {
+  anchor: (d: Diamond, name: Anchor): Position => {
     let lx = 0;
     let ly = 0;
     switch (name) {
@@ -94,7 +93,7 @@ export const diamond = {
     return localToWorld(d, [lx * t, ly * t]);
   },
   /** 边上比例点：side 过 cardinal 顶点的两段折线 t∈[0,1] 处（落真实斜边；含旋转） */
-  edgePoint: (d: Diamond, side: SideValue, t: number): Position => {
+  edgePoint: (d: Diamond, side: Side, t: number): Position => {
     const [mid0, vertex, mid1] = DIAMOND_EDGE[side];
     return polylineViaVertex(diamond.anchor(d, mid0), diamond.anchor(d, vertex), diamond.anchor(d, mid1), t);
   },

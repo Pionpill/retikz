@@ -33,9 +33,7 @@ export const entityApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
     owner: 'graph',
     symbols: [
       'EntityRole',
-      'EntityRoleValue',
       'GraphStatus',
-      'GraphStatusValue',
       'IRGraphEntity',
       'createEntity',
       'EntityCreateOptions',

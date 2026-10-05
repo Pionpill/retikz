@@ -1,4 +1,4 @@
-import type { IRNode, ThemeModeValue } from '@retikz/core';
+import type { IRNode } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
 import { z } from 'zod';
 
@@ -27,7 +27,7 @@ const cardFills = {
 const isCardFillStyle = (style: string | undefined): style is keyof typeof cardFills =>
   style !== undefined && style in cardFills;
 
-const resolveCardFill = (style: string | undefined, mode: ThemeModeValue): string => {
+const resolveCardFill = (style: string | undefined, mode: ThemeMode): string => {
   const fills = isCardFillStyle(style) ? cardFills[style] : cardFills.default;
   return fills[mode];
 };

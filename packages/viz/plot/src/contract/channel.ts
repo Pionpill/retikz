@@ -1,7 +1,7 @@
 import type { IRNode, IRPath, IRScope, IRShapeValue } from '@retikz/core';
 import type {
   DataTransformModel,
-  DataFieldTypeValue,
+  DataFieldType,
   ExternalRow,
   IRDataFieldDefinition,
   IRDataScalarValue,
@@ -57,7 +57,7 @@ export const ChannelDefinitionKind = {
 } as const;
 
 /** 通道 definition 类型值 */
-export type ChannelDefinitionKindValue = ValueOf<typeof ChannelDefinitionKind>;
+export type ChannelDefinitionKind = ValueOf<typeof ChannelDefinitionKind>;
 
 /** Node 通道交付上下文：definition 可据 mark / row / point 形态决定是否落值 */
 export type NodeChannelDeliveryContext = {
@@ -161,7 +161,7 @@ export type ScaleDescriptor = {
   /** 绑定字段名；常量通道无字段 */
   field?: string;
   /** 绑定字段类型；常量 / 类型未知时省略 */
-  fieldType?: DataFieldTypeValue;
+  fieldType?: DataFieldType;
   /** 绑定 scale 名；legend.scale 据此在同通道多 scale 时消歧 */
   scaleName?: string;
   /** color scale 的 legend 解析结果；仅 color-like mark 通道需要 */
@@ -241,7 +241,7 @@ export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
 export type ChannelBindingResolver = (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
 
 /** 通道 definition 的公共基座 */
-export type BaseChannelDefinition<TKind extends ChannelDefinitionKindValue> = {
+export type BaseChannelDefinition<TKind extends ChannelDefinitionKind> = {
   /** 通道注册键 */
   channel: string;
   /** 通道类型：position / mark / node / path */

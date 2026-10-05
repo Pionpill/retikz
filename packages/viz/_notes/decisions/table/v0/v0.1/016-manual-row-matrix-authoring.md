@@ -24,7 +24,7 @@ manual Table 的持久化真源就是显式二维内容。矩形行数组已经�
 type IRManualTableStructure = {
   kind: 'manual';
   rows: Array<Array<IRManualTableCell | null>>;
-  rowKinds?: Array<TableRowKindValue>;
+  rowKinds?: Array<TableRowKind>;
 };
 ```
 

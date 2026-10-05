@@ -8,7 +8,7 @@ import type {
 } from '@retikz/core';
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
 
-import type { LayoutArtifactItemBase, LayoutOverflowValue } from '../shared';
+import type { LayoutArtifactItemBase } from '../shared';
 import { LayoutOverflow } from '../shared';
 import { createLayoutArtifactItem } from './artifact';
 import type { LayoutRect } from './geometry';
@@ -79,7 +79,7 @@ export const placeLayoutChild = (
     key: string;
     sourceIndex: number;
     containerAllocation: LayoutRect;
-    overflow: LayoutOverflowValue;
+    overflow: LayoutOverflow;
     existingResult?: LayoutChildResult;
   }>,
 ): PlacedLayoutChild => {
@@ -112,7 +112,7 @@ export const replayLayoutChildren = (
   context: LayoutCompositeCompileContext,
   children: ReadonlyArray<PlacedLayoutChild>,
   allocation: LayoutRect,
-  overflow: LayoutOverflowValue,
+  overflow: LayoutOverflow,
 ): CompositeCompileChild => {
   const replayed = children.map(child =>
     context.replay(child.result, {

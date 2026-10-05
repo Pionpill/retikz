@@ -9,7 +9,7 @@ export const RuntimeComputationPhase = {
 } as const;
 
 /** Runtime Computation 执行阶段取值类型 */
-export type RuntimeComputationPhaseValue = ValueOf<typeof RuntimeComputationPhase>;
+export type RuntimeComputationPhase = ValueOf<typeof RuntimeComputationPhase>;
 
 /** Runtime Computation callback 结果的 kind 常量 */
 export const RuntimeComputationKind = {
@@ -24,7 +24,7 @@ export const RuntimeComputationKind = {
 } as const;
 
 /** Runtime Computation callback 结果的 kind 取值类型 */
-export type RuntimeComputationKindValue = ValueOf<typeof RuntimeComputationKind>;
+export type RuntimeComputationKind = ValueOf<typeof RuntimeComputationKind>;
 
 /** Runtime Computation callback 的实际执行方式常量 */
 export const RuntimeComputationExecution = {
@@ -37,4 +37,4 @@ export const RuntimeComputationExecution = {
 } as const;
 
 /** Runtime Computation callback 的实际执行方式取值类型 */
-export type RuntimeComputationExecutionValue = ValueOf<typeof RuntimeComputationExecution>;
+export type RuntimeComputationExecution = ValueOf<typeof RuntimeComputationExecution>;

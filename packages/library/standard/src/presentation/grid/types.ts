@@ -1,12 +1,7 @@
 import type { IRScopeProps } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type { GridBorderOrder } from './constants';
 import type { GridLineInputSchema, GridSchema } from './schema';
-
-/** Grid 边框 sibling 绘制顺序取值 */
-export type GridBorderOrderValue = ValueOf<typeof GridBorderOrder>;
 
 /** 单个 Grid 方向的线条输入配置 */
 export type GridLineInput = ZodInput<typeof GridLineInputSchema>;

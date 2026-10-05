@@ -31,7 +31,7 @@ This component does not render DOM itself; `<Layout>` produces the final path fr
 |           | `roundedCorners?` | `IRPath['roundedCorners']`    | —          | Geometric rounding radius at polyline corners (TikZ `rounded corners=`)<br />Insert a tangent arc at each line-to-line joint, changing geometry rather than only stroke appearance. Curve, arc, Bézier, and fold joints stay sharp; the radius is clamped to adjacent segment lengths. Omission keeps sharp corners |
 |           | `scale?`          | `IRPath['scale']`             | —          | Scale the whole path around its bounding-box center: a number for uniform scaling or `{ x, y }` for independent axes                                                                                                                                                                                                |
 | Style     | `style?`          | `InputPath['style']`          | —          | Instance visual overrides, replacing inherited defaults field by field                                                                                                                                                                                                                                              |
-|           | `thickness?`      | `PathThicknessValue`          | —          | Semantic stroke-width shorthand (TikZ `ultra thin` through `ultra thick`), normalized to `strokeWidth`; explicit `strokeWidth` takes precedence                                                                                                                                                                     |
+|           | `thickness?`      | `PathThickness`               | —          | Semantic stroke-width shorthand (TikZ `ultra thin` through `ultra thick`), normalized to `strokeWidth`; explicit `strokeWidth` takes precedence                                                                                                                                                                     |
 |           | `zIndex?`         | `IRPath['zIndex']`            | `0`        | Explicit stack order: larger values are above; defaults to 0, equal values preserve declaration order, and comparison is limited to siblings                                                                                                                                                                        |
 | Callbacks | `onClick?`        | `HydrationHandler`            | —          | Click on this element (DOM `click`)                                                                                                                                                                                                                                                                                 |
 |           | `onDoubleClick?`  | `HydrationHandler`            | —          | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                                                                       |
@@ -65,7 +65,7 @@ export type PathProps = HydrationEventProps & {
   meta?: IRPath['meta'];
   animations?: IRPath['animations'];
   roundedCorners?: IRPath['roundedCorners'];
-  thickness?: PathThicknessValue;
+  thickness?: PathThickness;
   arrow?: InputPath['arrow'];
   arrowDetail?: InputPath['arrowDetail'];
   arrowPlacement?: InputPath['arrowPlacement'];
@@ -102,7 +102,7 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 | `readonly arrowPlacement?` | `PathProps['arrowPlacement']` | —       | Endpoint arrow placement                                               |
 | `readonly roundedCorners?` | `IRPath['roundedCorners']`    | —       | Geometric rounding radius at polyline corners                          |
 | `readonly style?`          | `InputPath['style']`          | —       | Instance visual overrides, replacing inherited defaults field by field |
-| `readonly thickness?`      | `PathThicknessValue`          | —       | Semantic stroke-width shorthand                                        |
+| `readonly thickness?`      | `PathThickness`               | —       | Semantic stroke-width shorthand                                        |
 | `readonly way`             | `WayDSL`                      | —       | TikZ-style route shorthand                                             |
 | `readonly zIndex?`         | `IRPath['zIndex']`            | —       | Stack order among siblings                                             |
 
@@ -119,7 +119,7 @@ export type DrawProps = Readonly<{
   style?: InputPath['style'];
   way: WayDSL;
   roundedCorners?: IRPath['roundedCorners'];
-  thickness?: PathThicknessValue;
+  thickness?: PathThickness;
   arrow?: PathProps['arrow'];
   arrowDetail?: PathProps['arrowDetail'];
   arrowPlacement?: PathProps['arrowPlacement'];
@@ -830,7 +830,7 @@ export type SmoothStepProps = {
 |           | `label?`          | `InputPath["label"]`                  | —       | Host label attached to this path-like relation.                                                                                                                              |
 |           | `type?`           | `'path'`                              | —       | Explicit path category when authoring fields cannot identify it uniquely                                                                                                     |
 |           | `way?`            | `WayDSL`                              | —       | TikZ-style route shorthand                                                                                                                                                   |
-| Geometry  | `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| Geometry  | `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
 |           | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 |           | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
 |           | `marks?`          | `InputPath["marks"]`                  | —       | Marks placed along the path at normalized positions; direction follows the path tangent.                                                                                     |
@@ -838,7 +838,7 @@ export type SmoothStepProps = {
 |           | `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
 |           | `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
 | Style     | `style?`          | `InputPath["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
-|           | `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+|           | `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
 |           | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 | Animation | `animations?`     | `InputPath["animations"]`             | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
 | Runtime   | `authoring?`      | `unknown`                             | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                              |

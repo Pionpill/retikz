@@ -11,13 +11,13 @@ import type {
   IRNodeLayout,
   IRNodeStyle,
   IRPaint,
-  NodeLabelPlacementValue,
-  NodeLabelPositionValue,
-  NodeTextAlignValue,
+  NodeLabelPlacement,
+  NodeLabelPosition,
+  NodeTextAlign,
   ResolvedDropShadow,
   StrokeDashPattern,
 } from '../../schemas';
-import type { ThemeModeValue } from '../../shared';
+import type { ThemeMode } from '../../shared';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
@@ -62,11 +62,11 @@ export type CanonicalNodeLabel = Omit<
   'align' | 'position' | 'placement' | 'distance' | 'textColor' | 'text' | 'pin'
 > & {
   /** 标签视觉盒沿附着切线的对齐方式 */
-  align: NodeTextAlignValue;
+  align: NodeTextAlign;
   /** 标签附着位置 */
-  position: NodeLabelPositionValue | number | CanonicalNodeLabelBoundaryPosition;
+  position: NodeLabelPosition | number | CanonicalNodeLabelBoundaryPosition;
   /** 标签相对附着点的放置方向 */
-  placement: NodeLabelPlacementValue;
+  placement: NodeLabelPlacement;
   /** 标签到节点边界的距离 */
   distance: number;
   /** 已确定的标签文字主色 */
@@ -109,7 +109,7 @@ export type CanonicalNode = Omit<
   /** 已按数组形态展开的附属标签 */
   label?: Array<CanonicalNodeLabel>;
   /** 正文对齐 */
-  align: NodeTextAlignValue;
+  align: NodeTextAlign;
   /** 节点旋转角度 */
   rotate: number;
   /** 已解析的边框虚线样式 */
@@ -193,7 +193,7 @@ export type NodeResolveContext = {
   /** 当前节点所在 scope 的样式 frame */
   styleFrames: ReadonlyArray<StyleResolveFrame>;
   /** 当前节点所在位置的 Theme 明暗模式 */
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   /** shape provider 注册表 */
   shapes: ProviderCollection<ShapeDefinition>;
   /** boundary provider 注册表 */

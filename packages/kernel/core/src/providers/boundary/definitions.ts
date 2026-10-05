@@ -4,7 +4,6 @@ import { enum as zodEnum, number, strictObject } from 'zod';
 import type { BoundaryDefinition, PathCommand, ShapeDefinition } from '../../contract';
 import { defineBoundary } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { BuiltinShapeValue } from '../../schemas';
 import { BoundaryFit, BuiltinShape } from '../../schemas';
 import type { Rect } from '../../shared';
 import { defineBuiltinProviderArray } from '../registry/index';
@@ -56,7 +55,7 @@ const outlineFromShape = (shape: ShapeDefinition, rect: Rect): ReadonlyArray<Pat
 };
 
 export type BuiltinBoundaryProviderName = Extract<
-  BuiltinShapeValue,
+  BuiltinShape,
   typeof BuiltinShape.Circle | typeof BuiltinShape.Rectangle | typeof BuiltinShape.Ellipse
 >;
 

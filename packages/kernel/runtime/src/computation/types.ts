@@ -1,15 +1,10 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
-import type { RuntimeDiagnosticPhaseValue } from '../diagnostic';
+import type { RuntimeDiagnosticPhase } from '../diagnostic';
 import type { RuntimeComputationId } from '../identity';
 import type { RuntimeChangeSet, RuntimeSourceDefinition, RuntimeSourceToken, RuntimeRevision } from '../source';
 import type { RuntimeTracePhaseDefinition, RuntimeTraceReporter } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
-import type {
-  RuntimeComputationExecutionValue,
-  RuntimeComputationKind,
-  RuntimeComputationKindValue,
-  RuntimeComputationPhase,
-} from './constants';
+import type { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from './constants';
 
 declare const RuntimeComputationTokenBrand: unique symbol;
 declare const RuntimeComputationType: unique symbol;
@@ -44,7 +39,7 @@ export type RuntimeComputationWarningInput = Readonly<{
   /** 稳定 warning 分类 */
   code: string;
   /** 产生 warning 的领域阶段 */
-  phase: RuntimeDiagnosticPhaseValue;
+  phase: RuntimeDiagnosticPhase;
   /** 面向开发者的 warning 信息 */
   message: string;
 }>;
@@ -55,7 +50,7 @@ export type RuntimeComputationTraceReporter = Pick<RuntimeTraceReporter, 'owner'
 /** Computation callback 可用的 trace 与 warning context */
 export type RuntimeComputationContext = Readonly<{
   /** 当前 callback 的实际执行方式 */
-  execution: RuntimeComputationExecutionValue;
+  execution: RuntimeComputationExecution;
   /** 固定绑定 Computation Source 的 trace reporter */
   trace: RuntimeComputationTraceReporter;
   /** 追加由 Runtime 统一归属的 commit-safe warning */
@@ -202,7 +197,7 @@ export type RuntimeCommitEvent<TPublicRead> =
       /** 已发布的 next revision */
       revision: RuntimeRevision;
       /** 当前 Computation 的实际执行结果 */
-      outcome: Exclude<RuntimeComputationKindValue, typeof RuntimeComputationKind.Bailout>;
+      outcome: Exclude<RuntimeComputationKind, typeof RuntimeComputationKind.Bailout>;
       /** 已发布 artifact 的 public Snapshot */
       artifact: RuntimeSnapshot<TPublicRead>;
       /** publish 前冻结的 commit-safe diagnostics */

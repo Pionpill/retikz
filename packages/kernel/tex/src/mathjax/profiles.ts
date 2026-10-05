@@ -1,12 +1,11 @@
 import { MATHJAX_EXTENSION_ORDER, MathJaxProfile } from './constants';
-import type { MathJaxEngineOptions, MathJaxExtensionValue } from './types';
+import type { MathJaxExtension } from './constants';
+import type { MathJaxEngineOptions } from './types';
 
 /** 将 profile 与追加项展开为按稳定顺序去重的有效扩展 */
-export const resolveMathJaxExtensions = (options?: MathJaxEngineOptions): Array<MathJaxExtensionValue> => {
+export const resolveMathJaxExtensions = (options?: MathJaxEngineOptions): Array<MathJaxExtension> => {
   const profile = options?.profile ?? MathJaxProfile.Base;
-  const requested = new Set<MathJaxExtensionValue>(
-    profile === MathJaxProfile.Math ? MATHJAX_EXTENSION_ORDER : undefined,
-  );
+  const requested = new Set<MathJaxExtension>(profile === MathJaxProfile.Math ? MATHJAX_EXTENSION_ORDER : undefined);
   for (const extension of options?.extensions ?? []) requested.add(extension);
   return MATHJAX_EXTENSION_ORDER.filter(extension => requested.has(extension));
 };
@@ -24,10 +23,10 @@ const configurationLoaders = {
   centernot: () => import('mathjax-full/js/input/tex/centernot/CenternotConfiguration.js'),
   mathtools: () => import('mathjax-full/js/input/tex/mathtools/MathtoolsConfiguration.js'),
   color: () => import('mathjax-full/js/input/tex/color/ColorConfiguration.js'),
-} satisfies Record<MathJaxExtensionValue, () => Promise<unknown>>;
+} satisfies Record<MathJaxExtension, () => Promise<unknown>>;
 
 /** 以字面量 dynamic import 加载选中扩展的 MathJax configuration */
-export const loadMathJaxConfigurations = async (extensions: Array<MathJaxExtensionValue>): Promise<void> => {
+export const loadMathJaxConfigurations = async (extensions: Array<MathJaxExtension>): Promise<void> => {
   for (const extension of extensions) {
     await configurationLoaders[extension]();
   }

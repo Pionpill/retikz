@@ -3,7 +3,7 @@ import type { CurveSegmentSample, Vector2 } from '@retikz/math';
 import { isFinitePoint, vector2 } from '@retikz/math';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../../errors';
-import type { RibbonAlignmentValue } from '../../types';
+import type { RibbonAlignment } from '../../constants';
 import type { RibbonCrossSection } from '../types';
 
 export type RibbonCrossSectionInput = {
@@ -11,7 +11,7 @@ export type RibbonCrossSectionInput = {
   offset: number;
   widthAt: (offset: number) => number;
   endpointAxes: { start?: Vector2; end?: Vector2 };
-  align: RibbonAlignmentValue;
+  align: RibbonAlignment;
   round: (n: number) => number;
 };
 

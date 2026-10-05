@@ -52,7 +52,7 @@ export const ChartEncodingSpatialKind = {
 } as const;
 
 /** encoding驱动的Chart composition类别取值 */
-export type ChartEncodingSpatialKindValue = ValueOf<typeof ChartEncodingSpatialKind>;
+export type ChartEncodingSpatialKind = ValueOf<typeof ChartEncodingSpatialKind>;
 
 /** encoding驱动的Chart composition消费态 */
 export type ChartEncodingSpatialResolution = Readonly<{

@@ -1,14 +1,11 @@
-import type { JsonObject, ValueOf } from '@retikz/foundation';
+import type { JsonObject } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
 import type { ClipFillRule } from './constants';
 import type { RectClipSchema } from './schema';
 
-/** 裁切路径填充规则取值 */
-export type ClipFillRuleValue = ValueOf<typeof ClipFillRule>;
-
 /** 裁切路径填充规则 IR 类型 */
-export type IRClipFillRule = ClipFillRuleValue;
+export type IRClipFillRule = ClipFillRule;
 
 /** 矩形裁切 IR 类型 */
 export type IRRectClip = ZodInfer<typeof RectClipSchema>;

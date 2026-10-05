@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** Table value predicate 的判别值 */
 export const TableValuePredicateKind = {
   /** 严格标量相等 */
@@ -23,3 +24,9 @@ export const TableValueCompareOperator = {
   /** 大于或等于 */
   GreaterThanOrEqual: 'gte',
 } as const;
+
+/** Table value predicate 判别值 */
+export type TableValuePredicateKind = ValueOf<typeof TableValuePredicateKind>;
+
+/** Table value compare 运算符 */
+export type TableValueCompareOperator = ValueOf<typeof TableValueCompareOperator>;

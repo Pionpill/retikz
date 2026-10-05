@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { MathJaxLowerTexOptions, TexLoweringDiagnostic } from '../lower';
 import { createLowerTex } from '../lower';
-import type { MathJaxExtensionValue, MathJaxSvgEngine } from '../mathjax';
+import type { MathJaxExtension, MathJaxSvgEngine } from '../mathjax';
 import { createMathJaxEngine, resolveMathJaxExtensions } from '../mathjax';
 
 type EngineEntry = {
@@ -42,10 +42,10 @@ type LowerTexStateEntry = {
 const engineEntries = new Map<string, EngineEntry>();
 
 /** 根据规范化配置生成 React engine 缓存键 */
-const formatEngineCacheKey = (extensions: ReadonlyArray<MathJaxExtensionValue>): string => extensions.join(',');
+const formatEngineCacheKey = (extensions: ReadonlyArray<MathJaxExtension>): string => extensions.join(',');
 
 /** 获取或创建按有效 extension 集合分桶的共享 MathJax 引擎条目 */
-const getOrCreateEngineEntry = (extensions: Array<MathJaxExtensionValue>, engineKey: string): EngineEntry => {
+const getOrCreateEngineEntry = (extensions: Array<MathJaxExtension>, engineKey: string): EngineEntry => {
   const cachedEntry = engineEntries.get(engineKey);
   if (cachedEntry) return cachedEntry;
   const engineEntry: EngineEntry = {

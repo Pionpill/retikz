@@ -1,6 +1,6 @@
-import type { FontSizePresetValue, IRLine, IRTextBlock } from '@retikz/core';
+import type { WebFontSizePreset, IRLine, IRTextBlock } from '@retikz/core';
 import { FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
-import type { GraphStatusValue } from '@retikz/graph';
+import type { GraphStatus } from '@retikz/graph';
 import type { FC, ReactElement } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -16,10 +16,10 @@ export const previewControls = flowBasicControls;
 
 const subtitleFontSizes = ['xs', 'sm', 'base', 'lg'] as const;
 const textAlignValues = ['start', 'middle', 'end'] as const;
-const graphStatusValues: ReadonlyArray<GraphStatusValue> = ['error', 'success', 'warning', 'disabled'];
+const graphStatusValues: ReadonlyArray<GraphStatus> = ['error', 'success', 'warning', 'disabled'];
 
 /** 判断副标题字号是否来自当前面板公开选项 */
-const isSubtitleFontSize = (value: string): value is FontSizePresetValue =>
+const isSubtitleFontSize = (value: string): value is WebFontSizePreset =>
   subtitleFontSizes.some(size => size === value);
 
 /** 判断文本对齐是否来自当前面板公开选项 */
@@ -27,16 +27,16 @@ const isTextAlign = (value: string): value is (typeof textAlignValues)[number] =
   textAlignValues.some(align => align === value);
 
 /** 将面板状态映射为可选 Graph status */
-const isGraphStatus = (value: string): value is GraphStatusValue => graphStatusValues.some(status => status === value);
+const isGraphStatus = (value: string): value is GraphStatus => graphStatusValues.some(status => status === value);
 
-const statusOf = (value: string): GraphStatusValue | undefined => {
+const statusOf = (value: string): GraphStatus | undefined => {
   if (value === 'none') return undefined;
   if (isGraphStatus(value)) return value;
   throw new Error(`Unsupported Flow status: ${value}`);
 };
 
 /** 只在已选择状态时传入 Flow Source 字段 */
-const statusProps = (value: string): Readonly<{ status?: GraphStatusValue }> => {
+const statusProps = (value: string): Readonly<{ status?: GraphStatus }> => {
   const status = statusOf(value);
   return status === undefined ? {} : { status };
 };

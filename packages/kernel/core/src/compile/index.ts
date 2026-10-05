@@ -34,5 +34,6 @@ export type {
   NodeLayoutCompileArtifact,
   ObservedCompileResult,
 } from './types';
-export type { CompileWarning, CompileWarningCodeValue } from './warning';
+export type { CompileWarning } from './warning';
+
 export { formatCompileWarning } from './warning';

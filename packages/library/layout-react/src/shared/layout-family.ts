@@ -1,4 +1,4 @@
-import type { LayoutItemKindValue } from '@retikz/layout';
+import type { LayoutItemKind } from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type { InputFlexLayoutItem, InputGridLayoutItem, InputOverlayLayoutItem } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
@@ -62,7 +62,7 @@ const resolveLayoutItemChild = (
 };
 
 /** 将 React 直属布局子项组装为匹配 Vanilla adapter 的 typed Input */
-export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
+export const createInputLayoutItems = <TKind extends LayoutItemKind>(
   children: ReactNode,
   expectedKind: TKind,
   context: ReactInputEmbedContext,

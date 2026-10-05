@@ -14,12 +14,16 @@
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员        | 类型                          | 默认值 | 说明                                                              |
 | ----------- | ----------------------------- | ------ | ----------------------------------------------------------------- |
 | `delay?`    | `number`                      | —      | 首次迭代前延迟（毫秒）                                            |
 | `duration?` | `number`                      | —      | 单次迭代时长（毫秒）；缺省由各 preset 给                          |
 | `easing?`   | `IRAnimationTrack['easing']`  | —      | 缓动：具名预设 / cubic-bezier 四元组 / 注册名；缺省由各 preset 给 |
 | `trigger?`  | `IRAnimationTrack['trigger']` | —      | 播放触发器；缺省 load                                             |
+
+</ApiTable>
 
 </DocTab>
 
@@ -50,14 +54,18 @@ export type AnimationPresetOptions = {
 
 <DocTab value="members" label="属性">
 
-| 成员        | 类型                               | 默认值 | 说明                                                              |
-| ----------- | ---------------------------------- | ------ | ----------------------------------------------------------------- |
-| `delay?`    | `number`                           | —      | 首次迭代前延迟（毫秒）                                            |
-| `duration?` | `number`                           | —      | 单次迭代时长（毫秒）；缺省由各 preset 给                          |
-| `easing?`   | `IRAnimationTrack['easing']`       | —      | 缓动：具名预设 / cubic-bezier 四元组 / 注册名；缺省由各 preset 给 |
-| `from`      | `[number, number, number, number]` | —      | 起始取景 `[x, y, w, h]`（必填）                                   |
-| `to`        | `[number, number, number, number]` | —      | 终止取景 `[x, y, w, h]`（必填）                                   |
-| `trigger?`  | `IRAnimationTrack['trigger']`      | —      | 播放触发器；缺省 load                                             |
+<ApiTable>
+
+| 成员        | 类型                                                                    | 默认值 | 说明                                                              |
+| ----------- | ----------------------------------------------------------------------- | ------ | ----------------------------------------------------------------- |
+| `delay?`    | `number`                                                                | —      | 首次迭代前延迟（毫秒）                                            |
+| `duration?` | `number`                                                                | —      | 单次迭代时长（毫秒）；缺省由各 preset 给                          |
+| `easing?`   | `IRAnimationTrack['easing']`                                            | —      | 缓动：具名预设 / cubic-bezier 四元组 / 注册名；缺省由各 preset 给 |
+| `from`      | `[`<br />`number,`<br />`number,`<br />`number,`<br />`number`<br />`]` | —      | 起始取景 `[x, y, w, h]`（必填）                                   |
+| `to`        | `[`<br />`number,`<br />`number,`<br />`number,`<br />`number`<br />`]` | —      | 终止取景 `[x, y, w, h]`（必填）                                   |
+| `trigger?`  | `IRAnimationTrack['trigger']`                                           | —      | 播放触发器；缺省 load                                             |
+
+</ApiTable>
 
 </DocTab>
 
@@ -86,6 +94,8 @@ export type CameraToOptions = AnimationPresetOptions & {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员        | 类型                          | 默认值 | 说明                                                              |
 | ----------- | ----------------------------- | ------ | ----------------------------------------------------------------- |
 | `channel?`  | `'fill' \| 'stroke'`          | —      | 变色通道；缺省 'fill'                                             |
@@ -95,6 +105,8 @@ export type CameraToOptions = AnimationPresetOptions & {
 | `from`      | `string`                      | —      | 起始颜色（必填）                                                  |
 | `to`        | `string`                      | —      | 终止颜色（必填）                                                  |
 | `trigger?`  | `IRAnimationTrack['trigger']` | —      | 播放触发器；缺省 load                                             |
+
+</ApiTable>
 
 </DocTab>
 
@@ -115,7 +127,7 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 ### IRAnimationTrack
 
 <p>
-  <ApiSourceLink label={'IRAnimationTrack'} path={'packages/kernel/core/src/schemas/animation/types.ts'} startLine={14}>
+  <ApiSourceLink label={'IRAnimationTrack'} path={'packages/kernel/core/src/schemas/animation/types.ts'} startLine={7}>
     时间轴动画 track（renderer 无关、JSON 可序列化、无函数；keyframe 给绝对展示值、末帧 = 元素 base 终态）
   </ApiSourceLink>
 </p>
@@ -123,6 +135,8 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
+
+<ApiTable>
 
 | 成员          | 类型                                                                                                                                                                                                                                                                          | 默认值 | 说明 |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
@@ -134,8 +148,10 @@ export type ColorShiftOptions = AnimationPresetOptions & {
 | `iterations?` | `number \| "infinite"`                                                                                                                                                                                                                                                        | —      | —    |
 | `keyframes`   | `Array<{ at: number; value: JsonValue; easing?: OpenString<ValueOf<{ readonly Linear: "linear"; readonly Ease: "ease"; readonly EaseIn: "ease-in"; readonly EaseOut: "ease-out"; readonly EaseInOut: "ease-in-out"; }>> \| [number, number, number, number] \| undefined; }>` | —      | —    |
 | `origin?`     | `"center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number]`                                                                                                                                      | —      | —    |
-| `property`    | `…`                                                                                                                                                                                                                                                                           | —      | —    |
+| `property`    | `ZodInfer<typeof AnimationTrackSchema.shape["property"]>`                                                                                                                                                                                                                     | —      | —    |
 | `trigger?`    | `"load" \| "visible" \| "manual" \| { onEvent: string; }`                                                                                                                                                                                                                     | —      | —    |
+
+</ApiTable>
 
 </DocTab>
 
@@ -152,7 +168,7 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 ### IRKeyframe
 
 <p>
-  <ApiSourceLink label={'IRKeyframe'} path={'packages/kernel/core/src/schemas/animation/types.ts'} startLine={17}>
+  <ApiSourceLink label={'IRKeyframe'} path={'packages/kernel/core/src/schemas/animation/types.ts'} startLine={10}>
     单个动画关键帧
   </ApiSourceLink>
 </p>
@@ -161,11 +177,15 @@ export type IRAnimationTrack = ZodInfer<typeof AnimationTrackSchema>;
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员      | 类型                                                                                                                | 默认值 | 说明 |
 | --------- | ------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
 | `at`      | `number`                                                                                                            | —      | —    |
 | `easing?` | `string & {} \| "linear" \| "ease" \| "ease-in" \| "ease-out" \| "ease-in-out" \| [number, number, number, number]` | —      | —    |
 | `value`   | `JsonValue`                                                                                                         | —      | —    |
+
+</ApiTable>
 
 </DocTab>
 
@@ -191,10 +211,14 @@ export type IRKeyframe = ZodInfer<typeof KeyframeSchema>;
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员          | 类型                             | 默认值 | 说明                           |
 | ------------- | -------------------------------- | ------ | ------------------------------ |
 | `direction?`  | `IRAnimationTrack['direction']`  | —      | 每次迭代方向（如 'alternate'） |
 | `iterations?` | `IRAnimationTrack['iterations']` | —      | 循环次数；缺省 'infinite'      |
+
+</ApiTable>
 
 </DocTab>
 
@@ -223,6 +247,8 @@ export type LoopOptions = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员        | 类型                          | 默认值 | 说明                                                              |
 | ----------- | ----------------------------- | ------ | ----------------------------------------------------------------- |
 | `delay?`    | `number`                      | —      | 首次迭代前延迟（毫秒）                                            |
@@ -231,6 +257,8 @@ export type LoopOptions = {
 | `from?`     | `number`                      | —      | 起始缩放（末帧恒为 1 = base）；缺省 0.8                           |
 | `origin?`   | `IRAnimationOrigin`           | —      | 缩放支点（缺省几何中心）                                          |
 | `trigger?`  | `IRAnimationTrack['trigger']` | —      | 播放触发器；缺省 load                                             |
+
+</ApiTable>
 
 </DocTab>
 
@@ -259,6 +287,8 @@ export type ScaleInOptions = AnimationPresetOptions & {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员        | 类型                          | 默认值 | 说明                                                              |
 | ----------- | ----------------------------- | ------ | ----------------------------------------------------------------- |
 | `axis?`     | `'x' \| 'y'`                  | —      | 滑入轴向；缺省 'x'                                                |
@@ -267,6 +297,8 @@ export type ScaleInOptions = AnimationPresetOptions & {
 | `easing?`   | `IRAnimationTrack['easing']`  | —      | 缓动：具名预设 / cubic-bezier 四元组 / 注册名；缺省由各 preset 给 |
 | `offset?`   | `number`                      | —      | 起始位移（末帧恒为 0 = base）；缺省 −20                           |
 | `trigger?`  | `IRAnimationTrack['trigger']` | —      | 播放触发器；缺省 load                                             |
+
+</ApiTable>
 
 </DocTab>
 
@@ -289,7 +321,7 @@ export type SlideInOptions = AnimationPresetOptions & {
   <ApiSourceLink
     label={'AnimationDirection'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={33}
+    startLine={34}
   >
     每次迭代的播放方向（抄 WAAPI / CSS animation-direction）
   </ApiSourceLink>
@@ -302,6 +334,8 @@ export const AnimationDirection = {
   Alternate: 'alternate',
   AlternateReverse: 'alternate-reverse',
 } as const;
+
+export type AnimationDirection = ValueOf<typeof AnimationDirection>;
 ```
 
 ### AnimationEasing
@@ -310,7 +344,7 @@ export const AnimationDirection = {
   <ApiSourceLink
     label={'AnimationEasing'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={24}
+    startLine={25}
   >
     缓动具名预设（与 CSS 同名）；track / keyframe 亦可改用 cubic-bezier 四元组
   </ApiSourceLink>
@@ -324,6 +358,8 @@ export const AnimationEasing = {
   EaseOut: 'ease-out',
   EaseInOut: 'ease-in-out',
 } as const;
+
+export type AnimationEasing = ValueOf<typeof AnimationEasing>;
 ```
 
 ### AnimationFill
@@ -332,7 +368,7 @@ export const AnimationEasing = {
   <ApiSourceLink
     label={'AnimationFill'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={41}
+    startLine={42}
   >
     活动区间外取值（抄 WAAPI / CSS animation-fill-mode）
   </ApiSourceLink>
@@ -345,6 +381,8 @@ export const AnimationFill = {
   Backwards: 'backwards',
   Both: 'both',
 } as const;
+
+export type AnimationFill = ValueOf<typeof AnimationFill>;
 ```
 
 ### AnimationProperty
@@ -353,7 +391,7 @@ export const AnimationFill = {
   <ApiSourceLink
     label={'AnimationProperty'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={8}
+    startLine={9}
   >
     可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
   </ApiSourceLink>
@@ -379,6 +417,8 @@ export const AnimationProperty = {
   PathDraw: 'pathDraw',
   ViewBox: 'viewBox',
 } as const;
+
+export type AnimationProperty = ValueOf<typeof AnimationProperty>;
 ```
 
 ### AnimationTrigger
@@ -387,7 +427,7 @@ export const AnimationProperty = {
   <ApiSourceLink
     label={'AnimationTrigger'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={49}
+    startLine={50}
   >
     播放触发器关键字（runtime 落地；DrawWay 风格 const + 派生类型，与其它 Animation 枚举单一真源一致）
   </ApiSourceLink>
@@ -395,6 +435,8 @@ export const AnimationProperty = {
 
 ```ts
 export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'manual' } as const;
+
+export type AnimationTrigger = ValueOf<typeof AnimationTrigger>;
 ```
 
 ## 预设与编排
@@ -403,63 +445,30 @@ export const AnimationTrigger = { Load: 'load', Visible: 'visible', Manual: 'man
 
 <p><ApiSourceLink label={"cameraTo"} path={"packages/kernel/core/src/parse/animation.ts"} startLine={115}>镜头：scene 根 `viewBox` from→to（挂 `<Layout animations>` / IR 根 `animations`）</ApiSourceLink></p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称   | 类型 / 签名        | 说明 |
+| ------ | ------ | ------------------ | ---- |
+| 参数   | `opts` | `CameraToOptions`  | —    |
+| 返回值 | —      | `IRAnimationTrack` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const cameraTo: (opts: CameraToOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const cameraTo: (opts: CameraToOptions) => IRAnimationTrack;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数   | 类型              | 说明 |
-| ------ | ----------------- | ---- |
-| `opts` | `CameraToOptions` | —    |
+</DocTabs>
 
 ### colorShift
 
@@ -469,63 +478,30 @@ export declare const cameraTo: (opts: CameraToOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称   | 类型 / 签名         | 说明 |
+| ------ | ------ | ------------------- | ---- |
+| 参数   | `opts` | `ColorShiftOptions` | —    |
+| 返回值 | —      | `IRAnimationTrack`  | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const colorShift: (opts: ColorShiftOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const colorShift: (opts: ColorShiftOptions) => IRAnimationTrack;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数   | 类型                | 说明 |
-| ------ | ------------------- | ---- |
-| `opts` | `ColorShiftOptions` | —    |
+</DocTabs>
 
 ### drawOn
 
@@ -535,63 +511,30 @@ export declare const colorShift: (opts: ColorShiftOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名              | 说明 |
+| ------ | ------- | ------------------------ | ---- |
+| 参数   | `opts?` | `AnimationPresetOptions` | —    |
+| 返回值 | —       | `IRAnimationTrack`       | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const drawOn: (opts: AnimationPresetOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const drawOn: (opts?: AnimationPresetOptions) => IRAnimationTrack;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数   | 类型                     | 说明 |
-| ------ | ------------------------ | ---- |
-| `opts` | `AnimationPresetOptions` | —    |
+</DocTabs>
 
 ### fadeIn
 
@@ -601,63 +544,30 @@ export declare const drawOn: (opts: AnimationPresetOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名              | 说明 |
+| ------ | ------- | ------------------------ | ---- |
+| 参数   | `opts?` | `AnimationPresetOptions` | —    |
+| 返回值 | —       | `IRAnimationTrack`       | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const fadeIn: (opts: AnimationPresetOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const fadeIn: (opts?: AnimationPresetOptions) => IRAnimationTrack;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数   | 类型                     | 说明 |
-| ------ | ------------------------ | ---- |
-| `opts` | `AnimationPresetOptions` | —    |
+</DocTabs>
 
 ### loop
 
@@ -667,121 +577,31 @@ export declare const fadeIn: (opts: AnimationPresetOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名        | 说明 |
+| ------ | ------- | ------------------ | ---- |
+| 参数   | `track` | `IRAnimationTrack` | —    |
+|        | `opts?` | `LoopOptions`      | —    |
+| 返回值 | —       | `IRAnimationTrack` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const loop: (
-  track: {
-    delay?: number;
-    direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-    duration: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    fill?: 'none' | 'forwards' | 'backwards' | 'both';
-    iterations?: number | 'infinite';
-    keyframes: Array<{
-      at: number;
-      easing?:
-        | OpenString<
-            ValueOf<{
-              Ease: 'ease';
-              EaseIn: 'ease-in';
-              EaseInOut: 'ease-in-out';
-              EaseOut: 'ease-out';
-              Linear: 'linear';
-            }>
-          >
-        | [number, number, number, number];
-      value: JsonValue;
-    }>;
-    origin?:
-      | 'center'
-      | 'top'
-      | 'right'
-      | 'bottom'
-      | 'left'
-      | 'top-right'
-      | 'top-left'
-      | 'bottom-right'
-      | 'bottom-left'
-      | [number, number];
-    property: OpenString<
-      ValueOf<{
-        Fill: 'fill';
-        Opacity: 'opacity';
-        PathDraw: 'pathDraw';
-        Rotate: 'rotate';
-        Scale: 'scale';
-        ScaleX: 'scaleX';
-        ScaleY: 'scaleY';
-        Stroke: 'stroke';
-        StrokeWidth: 'strokeWidth';
-        TranslateX: 'translateX';
-        TranslateY: 'translateY';
-        ViewBox: 'viewBox';
-      }>
-    >;
-    trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-  },
-  opts: LoopOptions,
-) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const loop: (track: IRAnimationTrack, opts?: LoopOptions) => IRAnimationTrack;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数    | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 说明 |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| `track` | `{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left' \| [number, number]; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }` | —    |
-| `opts`  | `LoopOptions`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | —    |
+</DocTabs>
 
 ### scaleIn
 
@@ -791,63 +611,30 @@ export declare const loop: (
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名        | 说明 |
+| ------ | ------- | ------------------ | ---- |
+| 参数   | `opts?` | `ScaleInOptions`   | —    |
+| 返回值 | —       | `IRAnimationTrack` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const scaleIn: (opts: ScaleInOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const scaleIn: (opts?: ScaleInOptions) => IRAnimationTrack;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数   | 类型             | 说明 |
-| ------ | ---------------- | ---- |
-| `opts` | `ScaleInOptions` | —    |
+</DocTabs>
 
 ### slideIn
 
@@ -857,63 +644,30 @@ export declare const scaleIn: (opts: ScaleInOptions) => {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名        | 说明 |
+| ------ | ------- | ------------------ | ---- |
+| 参数   | `opts?` | `SlideInOptions`   | —    |
+| 返回值 | —       | `IRAnimationTrack` | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const slideIn: (opts: SlideInOptions) => {
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-};
+export declare const slideIn: (opts?: SlideInOptions) => IRAnimationTrack;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数   | 类型             | 说明 |
-| ------ | ---------------- | ---- |
-| `opts` | `SlideInOptions` | —    |
+</DocTabs>
 
 ### stagger
 
@@ -925,123 +679,36 @@ export declare const slideIn: (opts: SlideInOptions) => {
 
 覆盖各 track 原有 delay（错峰编排以本 helper 为准）
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称       | 类型 / 签名                       | 说明 |
+| ------ | ---------- | --------------------------------- | ---- |
+| 参数   | `tracks`   | `ReadonlyArray<IRAnimationTrack>` | —    |
+|        | `stepMs`   | `number`                          | —    |
+|        | `startMs?` | `number`                          | —    |
+| 返回值 | —          | `Array<IRAnimationTrack>`         | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const stagger: (
-  tracks: readonly Array<{
-    delay?: number;
-    direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-    duration: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    fill?: 'none' | 'forwards' | 'backwards' | 'both';
-    iterations?: number | 'infinite';
-    keyframes: Array<{
-      at: number;
-      easing?:
-        | OpenString<
-            ValueOf<{
-              Ease: 'ease';
-              EaseIn: 'ease-in';
-              EaseInOut: 'ease-in-out';
-              EaseOut: 'ease-out';
-              Linear: 'linear';
-            }>
-          >
-        | [number, number, number, number];
-      value: JsonValue;
-    }>;
-    origin?:
-      | 'center'
-      | 'top'
-      | 'right'
-      | 'bottom'
-      | 'left'
-      | 'top-right'
-      | 'top-left'
-      | 'bottom-right'
-      | 'bottom-left'
-      | [number, number];
-    property: OpenString<
-      ValueOf<{
-        Fill: 'fill';
-        Opacity: 'opacity';
-        PathDraw: 'pathDraw';
-        Rotate: 'rotate';
-        Scale: 'scale';
-        ScaleX: 'scaleX';
-        ScaleY: 'scaleY';
-        Stroke: 'stroke';
-        StrokeWidth: 'strokeWidth';
-        TranslateX: 'translateX';
-        TranslateY: 'translateY';
-        ViewBox: 'viewBox';
-      }>
-    >;
-    trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-  }>,
+  tracks: ReadonlyArray<IRAnimationTrack>,
   stepMs: number,
-  startMs: number,
-) => Array<{
-  delay?: number;
-  direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-  duration: number;
-  easing?:
-    | OpenString<
-        ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-      >
-    | [number, number, number, number];
-  fill?: 'none' | 'forwards' | 'backwards' | 'both';
-  iterations?: number | 'infinite';
-  keyframes: Array<{
-    at: number;
-    easing?:
-      | OpenString<
-          ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>
-        >
-      | [number, number, number, number];
-    value: JsonValue;
-  }>;
-  origin?:
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | [number, number];
-  property: OpenString<
-    ValueOf<{
-      Fill: 'fill';
-      Opacity: 'opacity';
-      PathDraw: 'pathDraw';
-      Rotate: 'rotate';
-      Scale: 'scale';
-      ScaleX: 'scaleX';
-      ScaleY: 'scaleY';
-      Stroke: 'stroke';
-      StrokeWidth: 'strokeWidth';
-      TranslateX: 'translateX';
-      TranslateY: 'translateY';
-      ViewBox: 'viewBox';
-    }>
-  >;
-  trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-}>;
+  startMs?: number,
+) => Array<IRAnimationTrack>;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数      | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 说明 |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| `tracks`  | `readonly Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left' \| [number, number]; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>` | —    |
-| `stepMs`  | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | —    |
-| `startMs` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | —    |
+</DocTabs>
 
 ## 播放与扩展
 
@@ -1057,6 +724,8 @@ export declare const stagger: (
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员               | 类型                       | 默认值 | 说明                                    |
 | ------------------ | -------------------------- | ------ | --------------------------------------- |
 | `dispose`          | `() => void`               | —      | 停止并释放（rAF / observer / listener） |
@@ -1065,6 +734,8 @@ export declare const stagger: (
 | `readonly running` | `boolean`                  | —      | 是否在播放                              |
 | `seek`             | `(timeMs: number) => void` | —      | 跳到指定时刻（毫秒）并渲染该帧          |
 | `readonly time`    | `number`                   | —      | 当前时刻（毫秒）                        |
+
+</ApiTable>
 
 </DocTab>
 
@@ -1101,10 +772,14 @@ export type AnimationControls = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员          | 类型                                                                            | 默认值 | 说明                                                                              |
 | ------------- | ------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------- |
 | `applyCanvas` | `(ctx: CanvasRenderingContext2D, prim: ScenePrimitive, value: unknown) => void` | —      | 把当下值应用到 Canvas context（绘制该 prim 前调用；在 ctx.save/restore 作用域内） |
 | `interpolate` | `(from: unknown, to: unknown, t: number) => unknown`                            | —      | 两关键帧值 + 段进度 → 当下值（喂给 evaluateTrack 的 interpolateCustom）           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -1133,15 +808,29 @@ export type AnimationPropertyDefinition = {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型                                         | 默认值 | 说明 |
+| -------- | -------------------------------------------- | ------ | ---- |
+| 索引签名 | `[key: string]: AnimationPropertyDefinition` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type AnimationPropertyRegistry = Record<string, AnimationPropertyDefinition>;
 ```
 
-#### 索引签名
+</DocTab>
 
-```ts
-[key: string]: AnimationPropertyDefinition
-```
+</DocTabs>
 
 ### EasingRegistry
 
@@ -1151,12 +840,26 @@ export type AnimationPropertyRegistry = Record<string, AnimationPropertyDefiniti
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型                                     | 默认值 | 说明 |
+| -------- | ---------------------------------------- | ------ | ---- |
+| 索引签名 | `[key: string]: CubicBezier \| EasingFn` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type EasingRegistry = Record<string, CubicBezier | EasingFn>;
 ```
 
-#### 索引签名
+</DocTab>
 
-```ts
-[key: string]: CubicBezier | EasingFn
-```
+</DocTabs>

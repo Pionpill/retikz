@@ -1,8 +1,8 @@
-import type { CoreSemanticColors, CssColorValue, NonEmptyReadonlyArray, ThemeModeValue } from '../../shared';
+import type { CoreSemanticColors, CssColorValue, NonEmptyReadonlyArray, ThemeMode } from '../../shared';
 
 /** Theme style resolver 接收的闭合环境 */
 export type ThemeStyleResolveContext = Readonly<{
-  mode: ThemeModeValue;
+  mode: ThemeMode;
 }>;
 
 /** Core Theme style 相对当前 mode 默认 shared colors 的稀疏覆盖 */

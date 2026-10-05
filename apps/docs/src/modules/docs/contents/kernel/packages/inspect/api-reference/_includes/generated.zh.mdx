@@ -16,11 +16,11 @@
 
 <ApiTable variant="methods">
 
-| 成员          | 签名                                                                                                                                                                                                                                   | 说明                                                                                                                                                                                          |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `constructor` | `(message: string)`                                                                                                                                                                                                                    | 使用默认错误码创建 Inspect 错误<br />`message`: 面向调用方的错误消息，错误码为 INSPECTION_ERROR                                                                                               |
-|               | `(options: RetikzInspectErrorOptions)`                                                                                                                                                                                                 | 使用结构化参数创建 Inspect 错误<br />`options`: 错误码、消息与可选详情、原始原因；省略 details 时使用包含 code 的只读对象                                                                     |
-|               | `(code: RetikzInspectErrorCodeValue, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCodeValue; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>)` | 使用显式错误码创建 Inspect 错误<br />`code`: 用于调用方分支处理的稳定错误码<br />`message`: 面向调用方的错误消息<br />`options?`: 可选详情与原始原因；省略 details 时使用包含 code 的只读对象 |
+| 成员          | 签名                                                                                                                                                                                                                         | 说明                                                                                                                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `constructor` | `(message: string)`                                                                                                                                                                                                          | 使用默认错误码创建 Inspect 错误<br />`message`: 面向调用方的错误消息，错误码为 INSPECTION_ERROR                                                                                               |
+|               | `(options: RetikzInspectErrorOptions)`                                                                                                                                                                                       | 使用结构化参数创建 Inspect 错误<br />`options`: 错误码、消息与可选详情、原始原因；省略 details 时使用包含 code 的只读对象                                                                     |
+|               | `(code: RetikzInspectErrorCode, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCode; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>)` | 使用显式错误码创建 Inspect 错误<br />`code`: 用于调用方分支处理的稳定错误码<br />`message`: 面向调用方的错误消息<br />`options?`: 可选详情与原始原因；省略 details 时使用包含 code 的只读对象 |
 
 </ApiTable>
 
@@ -29,10 +29,10 @@
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzInspectError extends RetikzError<RetikzInspectErrorCode, Readonly<Record<string, unknown>>> {
   constructor(message: string);
   constructor(options: RetikzInspectErrorOptions);
-  constructor(code: RetikzInspectErrorCodeValue, message: string, options?: RetikzInspectErrorCauseOptions);
+  constructor(code: RetikzInspectErrorCode, message: string, options?: RetikzInspectErrorCauseOptions);
 }
 ```
 
@@ -799,40 +799,6 @@ export type InspectorRegistry = Readonly<{
 }>;
 ```
 
-### RetikzInspectErrorCodeValue
-
-<p>
-  <ApiSourceLink label={'RetikzInspectErrorCodeValue'} path={'packages/kernel/inspect/src/error.ts'} startLine={21}>
-    Inspect 包稳定错误码取值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type RetikzInspectErrorCodeValue =
-  | 'INSPECTION_ERROR'
-  | 'INSPECTION_COMPILE_ERROR'
-  | 'INSPECTION_COMPILE_FAILED'
-  | 'INSPECTION_CONTRACT_ERROR'
-  | 'INSPECTION_REGISTRY_ERROR'
-  | 'INSPECTION_VANILLA_ERROR';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### RetikzInspectErrorOptions
 
 <p>
@@ -850,7 +816,7 @@ export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>
 | 成员                | 类型                                | 默认值 | 说明                       |
 | ------------------- | ----------------------------------- | ------ | -------------------------- |
 | `readonly cause?`   | `unknown`                           | —      | 导致当前失败的原始异常或值 |
-| `readonly code`     | `RetikzInspectErrorCodeValue`       | —      | 稳定错误码                 |
+| `readonly code`     | `RetikzInspectErrorCode`            | —      | 稳定错误码                 |
 | `readonly details?` | `Readonly<Record<string, unknown>>` | —      | 失败上下文的结构化详情     |
 | `readonly message`  | `string`                            | —      | 面向调用方的原始错误消息   |
 
@@ -862,7 +828,7 @@ export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>
 
 ```ts
 export type RetikzInspectErrorOptions = Readonly<{
-  code: RetikzInspectErrorCodeValue;
+  code: RetikzInspectErrorCode;
   message: string;
   details?: Readonly<Record<string, unknown>>;
   cause?: unknown;
@@ -893,6 +859,8 @@ export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip
   </ApiSourceLink>
 </p>
 
+[Schema 参考](/kernel/packages/inspect/schema-reference#clipinspectoptionsschema)
+
 ### COORDINATE_INSPECTOR_KEY
 
 <p>
@@ -921,6 +889,8 @@ export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type:
   </ApiSourceLink>
 </p>
 
+[Schema 参考](/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema)
+
 ### NODE_INSPECTOR_KEY
 
 <p>
@@ -940,6 +910,8 @@ export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node
     内置 Node Inspector 选项及默认值
   </ApiSourceLink>
 </p>
+
+[Schema 参考](/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema)
 
 ### PATH_INSPECTOR_KEY
 
@@ -961,6 +933,8 @@ export const PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'path
   </ApiSourceLink>
 </p>
 
+[Schema 参考](/kernel/packages/inspect/schema-reference#pathinspectoptionsschema)
+
 ### RetikzInspectErrorCode
 
 <p>
@@ -978,6 +952,8 @@ export const RetikzInspectErrorCode = {
   Registry: 'INSPECTION_REGISTRY_ERROR',
   Vanilla: 'INSPECTION_VANILLA_ERROR',
 } as const;
+
+export type RetikzInspectErrorCode = ValueOf<typeof RetikzInspectErrorCode>;
 ```
 
 ### SCOPE_INSPECTOR_KEY
@@ -999,6 +975,8 @@ export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'sco
     内置 Scope Inspector 选项及默认值
   </ApiSourceLink>
 </p>
+
+[Schema 参考](/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema)
 
 ### compileInspectionToScene
 

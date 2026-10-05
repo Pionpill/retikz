@@ -24,7 +24,7 @@ export const ReactTableRuntimeKind = {
 } as const;
 
 /** React Table runtime 入口类型取值 */
-export type ReactTableRuntimeKindValue = ValueOf<typeof ReactTableRuntimeKind>;
+export type ReactTableRuntimeKind = ValueOf<typeof ReactTableRuntimeKind>;
 
 /** Table standalone 入口允许透传给 Layout 的宿主字段 */
 export const TABLE_LAYOUT_HOST_PROP_KEYS = [
@@ -191,7 +191,7 @@ const manualTableOf = (props: ManualTableProps): InputManualTable => {
 
 /** 解析三种 React Table props 为同一 standalone / embedded runtime 输入 */
 export const resolveReactTableRuntime = (
-  kind: ReactTableRuntimeKindValue,
+  kind: ReactTableRuntimeKind,
   props: AnyTableProps,
   options: Readonly<{ embedded?: boolean }> = {},
 ): ReactTableRuntime => {
@@ -262,7 +262,7 @@ export const resolveReactTableRuntime = (
 };
 
 /** 将 React Table props 转换为唯一的 Table Vanilla 输入 */
-export const createReactTableInput = (kind: ReactTableRuntimeKindValue, props: AnyTableProps): InputTable<unknown> => {
+export const createReactTableInput = (kind: ReactTableRuntimeKind, props: AnyTableProps): InputTable<unknown> => {
   const runtime = resolveReactTableRuntime(kind, props, { embedded: true });
   return {
     table: runtime.table,

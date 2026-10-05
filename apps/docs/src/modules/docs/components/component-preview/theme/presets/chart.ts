@@ -1,6 +1,6 @@
 import type { IRChartDefaults } from '@retikz/chart';
 import { ChartDefaultsSchema, defineChartTheme } from '@retikz/chart';
-import type { NodeTextAlignValue } from '@retikz/core';
+import type { NodeTextAlign } from '@retikz/core';
 import { NodeTextAlign as TextAlign } from '@retikz/core';
 
 import { PreviewThemeStyle } from '../constants';
@@ -61,7 +61,7 @@ const defaultsOf = (style: ReferenceStyle): IRChartDefaults => {
     (typeof slots)[number],
     {
       style: { font: { family: string; size: number; weight: number } };
-      layout: { align: NodeTextAlignValue; lineHeight: number };
+      layout: { align: NodeTextAlign; lineHeight: number };
     }
   >;
   return ChartDefaultsSchema.parse({

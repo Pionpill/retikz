@@ -32,11 +32,11 @@ export const RetikzCoreErrorCode = {
 } as const;
 
 /** Core 包稳定错误码取值 */
-export type RetikzCoreErrorCodeValue = ValueOf<typeof RetikzCoreErrorCode>;
+export type RetikzCoreErrorCode = ValueOf<typeof RetikzCoreErrorCode>;
 
 /** Core 包错误的结构化构造参数 */
 export type RetikzCoreErrorOptions<
-  TCode extends RetikzCoreErrorCodeValue = RetikzCoreErrorCodeValue,
+  TCode extends RetikzCoreErrorCode = RetikzCoreErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > = Readonly<{
   /** 稳定错误码 */
@@ -50,12 +50,12 @@ export type RetikzCoreErrorOptions<
 }>;
 
 type RetikzCoreErrorCauseOptions<TDetails extends Readonly<Record<string, unknown>>> = Readonly<
-  Pick<RetikzCoreErrorOptions<RetikzCoreErrorCodeValue, TDetails>, 'details' | 'cause'>
+  Pick<RetikzCoreErrorOptions<RetikzCoreErrorCode, TDetails>, 'details' | 'cause'>
 >;
 
 /** Core 包统一的结构化错误 */
 export class RetikzCoreError<
-  TCode extends RetikzCoreErrorCodeValue = RetikzCoreErrorCodeValue,
+  TCode extends RetikzCoreErrorCode = RetikzCoreErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > extends RetikzError<TCode, TDetails> {
   /** 使用默认错误码创建 Core 错误 */

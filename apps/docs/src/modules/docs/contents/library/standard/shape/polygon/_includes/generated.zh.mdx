@@ -37,7 +37,7 @@ export type PolygonProps = InputPolygon &
 | 成员              | 类型                                  | 默认值 | 说明                                               |
 | ----------------- | ------------------------------------- | ------ | -------------------------------------------------- |
 | `animations?`     | `InputPolygon["animations"]`          | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承 |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —      | 路径级箭头方向                                     |
+| `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                     |
 | `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                       |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                       |
 | `center`          | `[number, number]`                    | —      | 形状中心，坐标形式由几何分支决定                   |
@@ -51,7 +51,7 @@ export type PolygonProps = InputPolygon &
 | `scale?`          | `number \| { x: number; y: number; }` | —      | 绕图形包络中心缩放                                 |
 | `sides`           | `number`                              | —      | 正多边形边数，至少为 3                             |
 | `style?`          | `InputPolygon["style"]`               | —      | 路径的稀疏视觉覆盖                                 |
-| `thickness?`      | `PathThicknessValue`                  | —      | 路径描边宽度语法糖                                 |
+| `thickness?`      | `PathThickness`                       | —      | 路径描边宽度语法糖                                 |
 | `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                 |
 
 </ApiTable>
@@ -65,7 +65,7 @@ export type PolygonProps = InputPolygon &
 | 成员              | 类型                                  | 默认值 | 说明                                               |
 | ----------------- | ------------------------------------- | ------ | -------------------------------------------------- |
 | `animations?`     | `InputPolygon["animations"]`          | —      | 作用于图形的声明式动画，不参与布局且不跨作用域继承 |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —      | 路径级箭头方向                                     |
+| `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                     |
 | `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                       |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                       |
 | `center`          | `[number, number]`                    | —      | 形状中心，坐标形式由几何分支决定                   |
@@ -79,7 +79,7 @@ export type PolygonProps = InputPolygon &
 | `sideLength`      | `number`                              | —      | 正多边形边长                                       |
 | `sides`           | `number`                              | —      | 正多边形边数，至少为 3                             |
 | `style?`          | `InputPolygon["style"]`               | —      | 路径的稀疏视觉覆盖                                 |
-| `thickness?`      | `PathThicknessValue`                  | —      | 路径描边宽度语法糖                                 |
+| `thickness?`      | `PathThickness`                       | —      | 路径描边宽度语法糖                                 |
 | `zIndex?`         | `number`                              | —      | 同级图形的绘制层级，数值越大越靠上                 |
 
 </ApiTable>
@@ -109,7 +109,7 @@ export type InputPolygon = InputShape<IRPolygon>;
 </p>
 
 ```ts
-export declare const PolygonInputEmbedAdapter: InputEmbedAdapter<InputPolygon & { id?: string }>;
+export declare const PolygonInputEmbedAdapter: SynchronousInputEmbedAdapter<InputPolygon & { id?: string }>;
 ```
 
 **`@retikz/standard`**

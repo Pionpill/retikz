@@ -3,7 +3,7 @@ import { resolveBoxSpacing } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
-import type { IRLayoutAxisSize, LayoutAlignmentValue } from '../shared';
+import type { IRLayoutAxisSize } from '../shared';
 import { LayoutAlignment, LayoutAxisSizeKind } from '../shared';
 
 /** Layout solver 使用的有限非负矩形 */
@@ -166,7 +166,7 @@ export const alignAllocationInSlot = (
   slot: LayoutRect,
   allocation: LayoutRect,
   axis: 'x' | 'y',
-  alignment: LayoutAlignmentValue,
+  alignment: LayoutAlignment,
 ): number => {
   const slotStart = axis === 'x' ? slot.x : slot.y;
   const slotSize = axis === 'x' ? slot.width : slot.height;

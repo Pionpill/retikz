@@ -141,7 +141,7 @@ describe('public export + remaining quadrants', () => {
     expect(core.BoundaryKeyword.Self).toBe('shape');
     expect(core.BoundaryKeyword.Circle).toBe('circle');
     expect(core.BoundarySchema).toBeDefined();
-    // BoundaryKeywordValue / IRBoundary 是类型，仅编译时可见，此处不再 runtime 断言
+    // BoundaryKeyword / IRBoundary 是类型，仅编译时可见，此处不再 runtime 断言
   });
 
   it('boundary_unregistered_throws: boundary 指向未注册 shape 且有 path 连到该节点时编译抛错', () => {

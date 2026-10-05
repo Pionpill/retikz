@@ -53,31 +53,31 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 
 <ApiTable>
 
-| Member               | Type                                                                                                                                                                                                               | Default | Description |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `animations?`        | `GroupInputEmbedProps["animations"]`                                                                                                                                                                               | —       | —           |
-| `background?`        | `GroupInputEmbedProps["background"]`                                                                                                                                                                               | —       | —           |
-| `border?`            | `GroupInputEmbedProps["border"]`                                                                                                                                                                                   | —       | —           |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | —           |
-| `caption?`           | `GroupInputEmbedProps["caption"]`                                                                                                                                                                                  | —       | —           |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | —           |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | —           |
-| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | —           |
-| `defaults?`          | `GroupInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | —           |
-| `frame?`             | `GroupInputEmbedProps["frame"]`                                                                                                                                                                                    | —       | —           |
-| `graphDefaults?`     | `GroupInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —       | —           |
-| `graphRules?`        | `GroupInputEmbedProps["graphRules"]`                                                                                                                                                                               | —       | —           |
-| `id?`                | `string`                                                                                                                                                                                                           | —       | —           |
-| `labels?`            | `GroupInputEmbedProps["labels"]`                                                                                                                                                                                   | —       | —           |
-| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —       | —           |
-| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | —           |
-| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —       | —           |
-| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | —           |
-| `placement?`         | `GroupInputEmbedProps["placement"]`                                                                                                                                                                                | —       | —           |
-| `style?`             | `GroupInputEmbedProps["style"]`                                                                                                                                                                                    | —       | —           |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | —           |
-| `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —       | —           |
-| `zIndex?`            | `number`                                                                                                                                                                                                           | —       | —           |
+| Member               | Type                                                                                                                                                                                                               | Default | Description                                                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`        | `GroupInputEmbedProps["animations"]`                                                                                                                                                                               | —       | Declarative animation tracks for this scope as a group. They do not affect layout and are not propagated to child elements.                     |
+| `background?`        | `GroupInputEmbedProps["background"]`                                                                                                                                                                               | —       | Explicit shell background override.                                                                                                             |
+| `border?`            | `GroupInputEmbedProps["border"]`                                                                                                                                                                                   | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
+| `caption?`           | `GroupInputEmbedProps["caption"]`                                                                                                                                                                                  | —       | Structured caption placed inside the shell.                                                                                                     |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | —                                                                                                                                               |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
+| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
+| `defaults?`          | `GroupInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
+| `frame?`             | `GroupInputEmbedProps["frame"]`                                                                                                                                                                                    | —       | Optional intrinsic-envelope decoration drawn beneath all scope children.                                                                        |
+| `graphDefaults?`     | `GroupInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —       | Optional sparse Graph defaults for visible descendants.                                                                                         |
+| `graphRules?`        | `GroupInputEmbedProps["graphRules"]`                                                                                                                                                                               | —       | Optional ordered Graph rules for visible descendants.                                                                                           |
+| `id?`                | `string`                                                                                                                                                                                                           | —       | Optional reference id for targeting the scope as a whole. Always registers in the parent namespace.                                             |
+| `labels?`            | `GroupInputEmbedProps["labels"]`                                                                                                                                                                                   | —       | Non-empty Core Node labels attached to the Group boundary.                                                                                      |
+| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —       | When true, child node, coordinate, and nested-scope ids stay local to this scope. The scope id itself still registers in the parent namespace.  |
+| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
+| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Surface content overflow; does not clip boundary labels.                                                                                        |
+| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing around the caption and body; compilation defaults to 10.                                                                                |
+| `placement?`         | `GroupInputEmbedProps["placement"]`                                                                                                                                                                                | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
+| `style?`             | `GroupInputEmbedProps["style"]`                                                                                                                                                                                    | —       | Cascading graphic overrides for descendants.                                                                                                    |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
+| `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
+| `zIndex?`            | `number`                                                                                                                                                                                                           | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
 
 </ApiTable>
 
@@ -142,7 +142,7 @@ export type InputGroup = Omit<GroupCreateOptions, 'children'> &
 </p>
 
 ```ts
-export declare const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedProps>;
+export declare const GroupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps>;
 ```
 
 #### createGraphVanillaAdapters
@@ -151,7 +151,7 @@ export declare const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedPr
   <ApiSourceLink
     label={'createGraphVanillaAdapters'}
     path={'packages/schematic/graph-vanilla/src/adapters.ts'}
-    startLine={22}
+    startLine={24}
   >
     Create the Graph adapters passed together to Vanilla normalization
   </ApiSourceLink>
@@ -163,9 +163,9 @@ export declare const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedPr
 
 <ApiTable variant="parameters">
 
-| Category | Name | Type / signature                    | Description                                                                         |
-| -------- | ---- | ----------------------------------- | ----------------------------------------------------------------------------------- |
-| Returns  | —    | `Array<InputEmbedAdapter<unknown>>` | A new adapter array containing Graph, Group, the Block family, Entity, and Relation |
+| Category | Name | Type / signature                               | Description                                                                         |
+| -------- | ---- | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Returns  | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | A new adapter array containing Graph, Group, the Block family, Entity, and Relation |
 
 </ApiTable>
 
@@ -174,7 +174,7 @@ export declare const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedPr
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export declare const createGraphVanillaAdapters: () => Array<InputEmbedAdapter<unknown>>;
+export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
 ```
 
 </DocTab>
@@ -214,13 +214,13 @@ export type GroupCreateOptions = Omit<ZodInfer<typeof GroupSchema>, 'namespace' 
 
 | Member                         | Type                                         | Default | Description                                                               |
 | ------------------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | —       | Custom Entity kind definitions                                            |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | —       | Custom Entity predicate definitions                                       |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | —       | Custom Entity role definitions                                            |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | —       | Graph Theme definitions named after their corresponding Core Theme styles |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | —       | Custom Relation kind definitions                                          |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | —       | Custom Relation predicate definitions                                     |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | —       | Custom Relation role definitions                                          |
+| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`    | Custom Entity kind definitions                                            |
+| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`    | Custom Entity predicate definitions                                       |
+| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`    | Custom Entity role definitions                                            |
+| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`    | Graph Theme definitions named after their corresponding Core Theme styles |
+| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`    | Custom Relation kind definitions                                          |
+| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`    | Custom Relation predicate definitions                                     |
+| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`    | Custom Relation role definitions                                          |
 
 </ApiTable>
 

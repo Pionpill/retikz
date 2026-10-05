@@ -2,14 +2,13 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { DataFieldTypeMap, ParsedFieldValue } from '../../contract';
 import { RetikzDataError } from '../../error';
-import type { DataFieldTypeValue } from '../../schemas';
 import { DataFieldType } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { coerceValue } from './coerce';
 import { resolveFieldPath } from './field';
 
 /** 按最终字段类型把自定义 parser 输出收窄到 canonical 值域 */
-const asParsedValue = (value: ParsedFieldValue, type: DataFieldTypeValue): ParsedFieldValue => {
+const asParsedValue = (value: ParsedFieldValue, type: DataFieldType): ParsedFieldValue => {
   if (type === DataFieldType.Categorical) {
     return typeof value === 'string' || isFiniteNumber(value) ? value : undefined;
   }
@@ -18,7 +17,7 @@ const asParsedValue = (value: ParsedFieldValue, type: DataFieldTypeValue): Parse
 };
 
 /** 判断 coercion / parser 结果是否满足指定字段测量类型的有效值域 */
-const isCoercedValid = (value: unknown, type: DataFieldTypeValue): boolean => {
+const isCoercedValid = (value: unknown, type: DataFieldType): boolean => {
   if (type === DataFieldType.Categorical) return value !== undefined && value !== null;
   return isFiniteNumber(value);
 };

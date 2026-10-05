@@ -1,5 +1,5 @@
 import { FlowEntity, FlowGroup, FlowRelation } from '@retikz/diagram-react/flow';
-import type { FlowDirectionValue } from '@retikz/diagram/flow';
+import type { FlowDirection } from '@retikz/diagram/flow';
 import type { ReactElement } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -9,10 +9,10 @@ import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import type { previewControls } from './flow-group.controls';
 import { flowGroupI18n } from './flow-group.i18n';
 
-const directions: ReadonlyArray<FlowDirectionValue> = ['up', 'right', 'down', 'left'];
+const directions: ReadonlyArray<FlowDirection> = ['up', 'right', 'down', 'left'];
 
 /** 将面板值收窄为公开的 Flow 排布方向 */
-const directionOf = (value: string): FlowDirectionValue => {
+const directionOf = (value: string): FlowDirection => {
   const direction = directions.find(candidate => candidate === value);
   if (direction === undefined) throw new Error(`Unsupported Flow direction: ${value}`);
   return direction;

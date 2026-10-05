@@ -183,7 +183,7 @@ type FlowLayoutExecutionContext = Readonly<{
 type FlowLayoutRelationInput = Readonly<{
   source: string;
   target: string;
-  direction: RelationDirectionValue;
+  direction: RelationDirection;
   routing: FlowLayoutRouting;
   labelSize?: FlowLayoutSize;
 }>;
@@ -217,7 +217,7 @@ type FlowLayoutCapabilities = Readonly<{
   selfLoops: boolean;
   parallelRelations: boolean;
   relationLabels: boolean;
-  relationDirections: ReadonlyArray<RelationDirectionValue>;
+  relationDirections: ReadonlyArray<RelationDirection>;
   routingKinds: ReadonlyArray<'straight' | 'orthogonal' | '-|' | '|-'>;
   placementKinds: ReadonlyArray<'linear' | 'grid'>;
 }>;

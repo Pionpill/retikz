@@ -2,7 +2,7 @@ import { isFiniteNumber } from '@retikz/math';
 
 import type { DataFieldTypeMap } from '../../contract';
 import { RetikzDataError } from '../../error';
-import type { DataFieldTypeValue, DataSortOrderValue, IRDataModel } from '../../schemas';
+import type { IRDataModel } from '../../schemas';
 import { DataFieldType, DataSortOrder } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 
@@ -33,7 +33,7 @@ export const compareRowsByFieldPath = (
   a: ExternalRow,
   b: ExternalRow,
   path: string,
-  order: DataSortOrderValue = DataSortOrder.Ascending,
+  order: DataSortOrder = DataSortOrder.Ascending,
 ): number => {
   const va = resolveFieldPath(a, path);
   const vb = resolveFieldPath(b, path);
@@ -84,7 +84,7 @@ export const inferCategoryDomain = (values: Array<unknown>): Array<string | numb
 };
 
 /** 单个字段样本值的测量类型推断策略：Date/string ISO -> temporal，bigint/finite number -> continuous，boolean/string -> categorical */
-const classifyFieldType = (value: unknown): DataFieldTypeValue | undefined => {
+const classifyFieldType = (value: unknown): DataFieldType | undefined => {
   if (value instanceof Date) return DataFieldType.Temporal;
   if (typeof value === 'bigint') return DataFieldType.Continuous;
   if (typeof value === 'number') return isFiniteNumber(value) ? DataFieldType.Continuous : undefined;
@@ -94,8 +94,8 @@ const classifyFieldType = (value: unknown): DataFieldTypeValue | undefined => {
 };
 
 /** 从绑定数据推断某字段的测量类型；仅在没有 data.model 或 model 缺省 type 时使用 */
-export const inferFieldType = (rows: Array<ExternalRow>, path: string): DataFieldTypeValue => {
-  const observedTypes = new Set<DataFieldTypeValue>();
+export const inferFieldType = (rows: Array<ExternalRow>, path: string): DataFieldType => {
+  const observedTypes = new Set<DataFieldType>();
   let sampleCount = 0;
   const scanLimit = Math.min(rows.length, MAX_SCAN_ROWS);
   for (let index = 0; index < scanLimit && sampleCount < MAX_SAMPLE_VALUES; index++) {

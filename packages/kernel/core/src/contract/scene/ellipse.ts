@@ -1,6 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 
-import type { BlendModeValue, IRAnimationTrack, IRGraphicStyle, IRPathBase, ResolvedDropShadow } from '../../schemas';
+import type { BlendMode, IRAnimationTrack, IRGraphicStyle, IRPathBase, ResolvedDropShadow } from '../../schemas';
 import type { PaintValue } from './paint';
 
 /** 椭圆原语，圆形复用 rx=ry 的同一 Scene 分支 */
@@ -52,5 +52,5 @@ export type EllipsePrim = {
    * 混合模式：解析后值；undefined / normal = 普通 source-over
    * @default 'normal'
    */
-  blendMode?: BlendModeValue;
+  blendMode?: BlendMode;
 };

@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 
 import type { RelationKindDefinition, RelationPredicateDefinition, RelationRoleDefinition } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import type { IRGraphRelation, IRGraphRelationDefaults, RelationDirectionValue } from '../../schemas';
+import type { IRGraphRelation, IRGraphRelationDefaults, RelationDirection } from '../../schemas';
 import type { IRGraphRelationRoleTokenRecipe } from '../../schemas';
 import type { GraphAuthorLayer, GraphMemberAppearanceResolveContext } from '../theme';
 
@@ -24,7 +24,7 @@ export type CanonicalRelation = Readonly<{
   roleDefinition: RelationRoleDefinition;
   kindDefinition?: RelationKindDefinition;
   predicate?: CanonicalRelationPredicate;
-  effectiveDirection: RelationDirectionValue;
+  effectiveDirection: RelationDirection;
 }>;
 
 /** Relation appearance resolver 的 Theme 与 definition 上下文 */

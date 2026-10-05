@@ -1,4 +1,4 @@
-import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
+import type { ResolvedTheme, ThemeMode } from '@retikz/core';
 
 import type { IRTableDefaults } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
@@ -24,7 +24,7 @@ export type TableThemeDefaultsResolution = DeepReadonly<{
   /** 可选的有效 Core style 名称 */
   style?: string;
   /** 有效 Core Theme mode */
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   /** baseline 与 style definition 合并后的 defaults */
   defaults: IRTableDefaults;
   /** 按实际级联顺序排列的 defaults 来源 */

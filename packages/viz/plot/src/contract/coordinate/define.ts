@@ -13,7 +13,7 @@ import type { LegendReserve, Margins } from '../../shared';
 import type { CoordinateDomainPaddingCapability } from '../domain-padding';
 import type { GuideContext, LoweredGuide } from '../guide';
 import type { ProvenanceContext } from '../provenance';
-import type { PositionScale, PositionScaleContinuityValue, TickSet } from '../scale';
+import type { PositionScale, PositionScaleContinuity, TickSet } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 import type { AxisFrame, CoordinateFrame, DimensionRole } from './types';
 
@@ -115,7 +115,7 @@ export type CoordinateDefinitionResolveContext = {
     values: Array<unknown>,
   ) => IRPlotScaleOperation;
   /** 读取已注册 position scale definition 的拓扑连续性；channel scale 与未注册 type 会 fail-loud */
-  resolvePositionScaleContinuity: (operation: IRPlotScaleOperation) => PositionScaleContinuityValue;
+  resolvePositionScaleContinuity: (operation: IRPlotScaleOperation) => PositionScaleContinuity;
   /** 把 scale operation 与数据域、屏幕 range 组合成可投影的位置 scale */
   buildPositionScale: (
     def: IRPlotScaleOperation,

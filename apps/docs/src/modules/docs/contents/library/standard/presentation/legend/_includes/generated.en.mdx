@@ -212,7 +212,7 @@ export type InputLegend = Omit<LegendInput, 'title' | 'content'> & {
 </p>
 
 ```ts
-export declare const LegendInputEmbedAdapter: InputEmbedAdapter<InputLegend>;
+export declare const LegendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend>;
 ```
 
 #### legend
@@ -253,7 +253,7 @@ export declare const legend: (input: InputLegend) => InputEmbed<InputLegend>;
 #### IRLegend
 
 <p>
-  <ApiSourceLink label={'IRLegend'} path={'packages/library/standard/src/presentation/legend/types.ts'} startLine={47}>
+  <ApiSourceLink label={'IRLegend'} path={'packages/library/standard/src/presentation/legend/types.ts'} startLine={33}>
     Persistent Standard Legend composite
   </ApiSourceLink>
 </p>
@@ -294,7 +294,7 @@ export type IRLegend = Omit<ZodInput<typeof LegendSchema>, keyof IRScopeProps | 
   <ApiSourceLink
     label={'IRLegendItem'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={32}
+    startLine={18}
   >
     Persistent discrete Legend item
   </ApiSourceLink>
@@ -332,7 +332,7 @@ export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;
   <ApiSourceLink
     label={'IRLegendItemsContent'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={35}
+    startLine={21}
   >
     Persistent discrete Legend content
   </ApiSourceLink>
@@ -376,7 +376,7 @@ export type IRLegendItemsContent = Omit<ZodInput<typeof LegendItemsContentSchema
   <ApiSourceLink
     label={'IRLegendRampContent'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={43}
+    startLine={29}
   >
     Persistent continuous Legend sample content
   </ApiSourceLink>
@@ -417,7 +417,7 @@ export type IRLegendRampContent = Omit<ZodInput<typeof LegendRampContentSchema>,
   <ApiSourceLink
     label={'IRLegendTick'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={40}
+    startLine={26}
   >
     Persistent continuous Legend tick
   </ApiSourceLink>
@@ -455,7 +455,7 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
   <ApiSourceLink
     label={'LegendArtifact'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={67}
+    startLine={53}
   >
     Typed artifact of Standard Legend
   </ApiSourceLink>
@@ -552,7 +552,7 @@ export type LegendCompileArtifact = CompositeArtifactOf<typeof LegendDefinition>
   <ApiSourceLink
     label={'LegendInput'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={52}
+    startLine={38}
   >
     Legend input allowing fixed discriminators and schema defaults to be omitted
   </ApiSourceLink>

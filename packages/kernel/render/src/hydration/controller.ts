@@ -2,7 +2,7 @@ import { runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { BuildContext, HydrationContext } from './context';
 import { noopAnimationControls } from './context';
-import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventValue } from './events';
+import type { ElementHandlers, HydrationHandlers, Locate } from './events';
 import type { HydrationTarget } from './events';
 import { EVENT_DOM_TYPE, RetikzEvent } from './events';
 import { createHydrationSetupError } from './setup-failure';
@@ -13,11 +13,11 @@ export type HydrationController = {
   dispose: () => void;
 };
 
-/** 收集 handlers 注册表中实际用到的 RetikzEventValue 集合（决定要在 root 上挂哪些 DOM listener） */
-const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEventValue> => {
-  const used = new Set<RetikzEventValue>();
+/** 收集 handlers 注册表中实际用到的 RetikzEvent 集合（决定要在 root 上挂哪些 DOM listener） */
+const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEvent> => {
+  const used = new Set<RetikzEvent>();
   for (const id of Object.keys(handlers)) {
-    for (const name of Object.keys(handlers[id]) as Array<RetikzEventValue>) {
+    for (const name of Object.keys(handlers[id]) as Array<RetikzEvent>) {
       if (handlers[id][name] !== undefined) used.add(name);
     }
   }
@@ -38,14 +38,14 @@ const minimalContext = (root: EventTarget, id: string, renderer: 'svg' | 'canvas
 const invoke = (
   handlers: HydrationHandlers,
   id: string | null,
-  name: RetikzEventValue,
+  name: RetikzEvent,
   event: Event,
   root: EventTarget,
   buildContext: BuildContext | undefined,
   renderer: 'svg' | 'canvas',
 ): void => {
   if (id === null || !Object.hasOwn(handlers, id)) return;
-  const handler: ElementHandlers[RetikzEventValue] = handlers[id][name];
+  const handler: ElementHandlers[RetikzEvent] = handlers[id][name];
   if (handler === undefined) return;
   const context = buildContext ? buildContext(event, id) : minimalContext(root, id, renderer);
   handler(event, context);
@@ -88,7 +88,7 @@ const hasContains = (target: EventTarget): target is Node => typeof (target as P
 
 /**
  * 创建水合控制器：在 root 上挂根级委托，把命中图元 id 的事件分发给 handlers
- * @description renderer 无关上层。直接委托的事件（click / rightClick / pointerMove 等）对每个用到的 RetikzEventValue 在
+ * @description renderer 无关上层。直接委托的事件（click / rightClick / pointerMove 等）对每个用到的 RetikzEvent 在
  *   root 注册一个 EVENT_DOM_TYPE 监听器，事件到来时经 locate 定位到图元 id、查 handlers 触发。
  *   pointerEnter / pointerLeave 不直接监听、由 pointermove + 「上一帧命中 id」状态机合成（renderer 无关、经
  *   同一 locate）：仅当 handlers 含任一 enter/leave 时才在 root 挂 pointermove；每次 move 解析 current target，

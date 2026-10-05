@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 import { literal, number, object, string, union } from 'zod';
 
-import type { IRScene, RetikzCoreErrorCodeValue } from '../../src';
+import type { IRScene } from '../../src';
 import {
   BUILTIN_PATH_KINDS,
   BUILTIN_SHAPES,
@@ -17,7 +17,7 @@ import {
   RetikzCoreErrorCode,
 } from '../../src';
 
-const expectCoreNonEmptyError = (action: () => unknown, code: RetikzCoreErrorCodeValue, label: string): void => {
+const expectCoreNonEmptyError = (action: () => unknown, code: RetikzCoreErrorCode, label: string): void => {
   let caught: unknown;
   try {
     action();

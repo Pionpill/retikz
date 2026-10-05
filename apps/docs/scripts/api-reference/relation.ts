@@ -45,11 +45,8 @@ export const relationApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
     owner: 'graph',
     symbols: [
       'RelationRole',
-      'RelationRoleValue',
       'RelationDirection',
-      'RelationDirectionValue',
       'GraphStatus',
-      'GraphStatusValue',
       'IRGraphRelation',
       'IRGraphRelationRouteStep',
       'IRGraphRelationMarkerAppearance',

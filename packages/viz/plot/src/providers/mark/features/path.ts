@@ -13,7 +13,7 @@ import type {
 } from '../../../contract';
 import { seriesPathMeta, slug } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
-import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark, PathCurveValue } from '../../../schemas';
+import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark } from '../../../schemas';
 import {
   PathClosureKind,
   PathCurve,
@@ -79,7 +79,7 @@ const withClosingPoint = (points: ReadonlyArray<[number, number]>, closed: boole
 const pointsToStepCurveSteps = (
   points: ReadonlyArray<[number, number]>,
   closed: boolean,
-  curve: PathCurveValue,
+  curve: PathCurve,
 ): Array<IRStep> | null => {
   const pathPoints = withClosingPoint(points, closed);
   if (pathPoints.length < 2) return null;
@@ -257,7 +257,7 @@ const naturalSegments = (points: ReadonlyArray<[number, number]>): Array<Extract
 const pointsToCurveSteps = (
   points: ReadonlyArray<[number, number]>,
   closed: boolean,
-  curve: PathCurveValue = PathCurve.Linear,
+  curve: PathCurve = PathCurve.Linear,
 ): Array<IRStep> | null => {
   if (curve === PathCurve.Linear) return pointsToSteps(points, closed);
   if (curve === PathCurve.Step || curve === PathCurve.StepBefore || curve === PathCurve.StepAfter) {
@@ -290,7 +290,7 @@ const pointsToCurveSteps = (
 };
 
 /** 按 order / 数据序排好一组行（path 共用连接顺序） */
-const effectivePathCurve = (curve: PathCurveValue | undefined, frame: CoordinateFrame): PathCurveValue => {
+const effectivePathCurve = (curve: PathCurve | undefined, frame: CoordinateFrame): PathCurve => {
   if (isPolarCoordinateFrame(frame) && (curve === PathCurve.MonotoneX || curve === PathCurve.MonotoneY)) {
     return PathCurve.Linear;
   }
@@ -506,7 +506,7 @@ const applyNullConnectionStyle = (path: IRPath, segment: PathStepSegment, mark: 
   return { ...path, style: { ...path.style, ...defaultNullConnectionStyle, ...overrides } };
 };
 
-const returnCurveSteps = (points: ReadonlyArray<[number, number]>, curve: PathCurveValue): Array<IRStep> | null => {
+const returnCurveSteps = (points: ReadonlyArray<[number, number]>, curve: PathCurve): Array<IRStep> | null => {
   const steps = pointsToCurveSteps(points, false, curve);
   if (steps === null) return null;
   const [, ...rest] = steps;

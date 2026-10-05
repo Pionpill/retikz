@@ -6,7 +6,7 @@ import type {
   CompileObservationContext,
   CompileObserverDefinition,
   IRScene,
-  LayoutChildProbeKindValue,
+  LayoutChildProbeKind,
 } from '../../src';
 import * as core from '../../src';
 
@@ -209,4 +209,4 @@ describe('Core observed compile', () => {
   });
 });
 
-void (undefined as unknown as LayoutChildProbeKindValue);
+void (undefined as unknown as LayoutChildProbeKind);

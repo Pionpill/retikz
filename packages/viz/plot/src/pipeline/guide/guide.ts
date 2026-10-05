@@ -19,7 +19,7 @@ import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf, polarFixedRadiusSteps } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
-import type { IRPlotAxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
+import type { IRPlotAxisGuide, LegendChannelValue, LegendOrient, LegendPosition } from '../../schemas';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,
@@ -153,8 +153,8 @@ type AxisTickEndpointPolicyToken = Exclude<NonNullable<AxisTicksToken['endpoint'
 type AxisGuideValue = IRDataScalarValue;
 type AxisTitleToken = Exclude<NonNullable<IRPlotAxisGuide['title']>, string>;
 type AxisTitlePlacementValue = NonNullable<AxisTitleToken['placement']>;
-type AxisTitleOrientationValue = NonNullable<AxisTitleToken['orientation']>;
-type AxisTitleAnchorValue = NonNullable<AxisTitleToken['anchor']>;
+type AxisTitleTokenOrientation = NonNullable<AxisTitleToken['orientation']>;
+type AxisTitleTokenAnchor = NonNullable<AxisTitleToken['anchor']>;
 type AxisTitleShiftValue = NonNullable<AxisTitleToken['shift']>;
 type AxisTitleLayoutValue = NonNullable<AxisTitleToken['layout']>;
 
@@ -316,7 +316,7 @@ const shiftedAxisTitlePosition = (
 };
 
 const axisTitleAnchorAlignTokenOf = (
-  anchor: AxisTitleAnchorValue | undefined,
+  anchor: AxisTitleTokenAnchor | undefined,
 ): 'start' | 'center' | 'end' | undefined => {
   if (anchor === undefined || anchor === AxisTitleAnchor.Auto) return undefined;
   if (typeof anchor === 'string') return anchor;
@@ -667,8 +667,8 @@ const axisTitleOf = (
       text: IRNode['text'];
       padding?: number;
       placement?: AxisTitlePlacementValue;
-      orientation?: AxisTitleOrientationValue;
-      anchor?: AxisTitleAnchorValue;
+      orientation?: AxisTitleTokenOrientation;
+      anchor?: AxisTitleTokenAnchor;
       shift?: AxisTitleShiftValue;
       layout?: AxisTitleLayoutValue;
     } & GuideTextStyle)
@@ -1698,9 +1698,9 @@ export type LowerLegendOptions = {
   /** 连续色带（form==='ramp'） */
   ramp?: LegendRamp;
   /** 摆放位置（预留带所在边） */
-  position: LegendPositionValue;
+  position: LegendPosition;
   /** 条目排布方向 */
-  orient: LegendOrientValue;
+  orient: LegendOrient;
   /** label 字号 */
   fontSize: number;
   /** 预留带矩形（plotArea 旁的 legend 带；条目从带左上角起摆） */

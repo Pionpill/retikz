@@ -1,4 +1,4 @@
-import type { IRManualTableCell, ManualTableInput, TableRowKindValue } from '@retikz/table';
+import type { IRManualTableCell, ManualTableInput } from '@retikz/table';
 import { TableRowKind } from '@retikz/table';
 import type { ReactElement, ReactNode } from 'react';
 import { isValidElement } from 'react';
@@ -51,7 +51,7 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
     throw new RetikzTableReactError('table react: ManualTable children require at least one Row');
 
   const hasExplicitRowKind = rowElements.some(rowElement => rowElement.props.kind !== undefined);
-  const rowKinds: Array<TableRowKindValue> = rowElements.map(rowElement => rowElement.props.kind ?? TableRowKind.Body);
+  const rowKinds: Array<TableRowKind> = rowElements.map(rowElement => rowElement.props.kind ?? TableRowKind.Body);
   const occupancy = Array.from({ length: rowElements.length }, () => [] as Array<boolean>);
   const entries: Array<{ row: number; column: number; cell: IRManualTableCell }> = [];
   let columnCount = 0;

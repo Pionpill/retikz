@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** 中心 anchor 独立于各方向 anchor 词汇，由消费方按场景单独处理 */
 export const CenterAnchor = {
   Center: 'center',
@@ -24,3 +25,11 @@ export const Anchor = {
   ...Side,
   ...Corner,
 } as const;
+
+export type CenterAnchor = ValueOf<typeof CenterAnchor>;
+
+export type Side = ValueOf<typeof Side>;
+
+export type Corner = ValueOf<typeof Corner>;
+
+export type Anchor = ValueOf<typeof Anchor>;

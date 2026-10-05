@@ -6,7 +6,7 @@ export const ChartFamily = {
 } as const;
 
 /** Point family key 取值 */
-export type ChartFamilyValue = ValueOf<typeof ChartFamily>;
+export type ChartFamily = ValueOf<typeof ChartFamily>;
 
 /** Point family 的全局唯一 recipe key */
 export const ChartType = {
@@ -19,4 +19,4 @@ export const ChartType = {
 } as const;
 
 /** Point recipe key 取值 */
-export type ChartTypeValue = ValueOf<typeof ChartType>;
+export type ChartType = ValueOf<typeof ChartType>;

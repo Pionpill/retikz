@@ -18,10 +18,10 @@ export const layoutComponentApiReferenceConfigs = (
     name === 'FlexLayout'
       ? [
           'FlexLayoutDirection',
-          'FlexLayoutDirectionValue',
+          'FlexLayoutDirection',
           'FlexLayoutWrap',
-          'FlexLayoutWrapValue',
-          'FlexMainDistributionValue',
+          'FlexLayoutWrap',
+          'FlexMainDistribution',
           'LayoutAxisSizeKind',
           'LayoutAxisSizeInput',
           'LayoutSizeInput',
@@ -33,23 +33,23 @@ export const layoutComponentApiReferenceConfigs = (
       : name === 'GridLayout'
         ? [
             'GridAutoFlow',
-            'GridAutoFlowValue',
+            'GridAutoFlow',
             'GridOverlap',
-            'GridOverlapValue',
+            'GridOverlap',
             'GridTrackInput',
             'GridTrackBreadthInput',
             'GridPlacementInput',
             'LayoutTrackArtifact',
             'LayoutTrackSourceKind',
-            'LayoutTrackSourceKindValue',
+            'LayoutTrackSourceKind',
             'GRID_LAYOUT_MAX_TRACKS_PER_AXIS',
           ]
         : [
             'OverlayPlacementKind',
-            'OverlayPlacementKindValue',
+            'OverlayPlacementKind',
             'OverlayPlacementInput',
             'LayoutSizeParticipation',
-            'LayoutSizeParticipationValue',
+            'LayoutSizeParticipation',
           ];
   const owners = [
     {

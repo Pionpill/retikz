@@ -125,7 +125,7 @@ Registry 自身不执行 lifecycle。Runtime 包内唯一的 source executor 负
 Source executor的跨 ADR envelope固定为：
 
 ```ts
-type RuntimeSourcePhaseValue = 'capture' | 'collect-identities' | 'read' | 'compare' | 'validate-change-set' | 'retire';
+type RuntimeSourcePhase = 'capture' | 'collect-identities' | 'read' | 'compare' | 'validate-change-set' | 'retire';
 type RuntimeSourceLifecycleDiagnostic = Readonly<{
   code: 'RUNTIME_SOURCE_DISPOSE_FAILED';
   owner: string;

@@ -1,10 +1,9 @@
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
-import type { LayoutAlignmentValue, LayoutDistributionValue } from '../shared';
 import { LayoutAlignment, LayoutDistribution } from '../shared';
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from './distribution';
 
 /** Flex engine 支持的顺序流换行策略 */
-export type FlexEngineWrapValue = 'nowrap' | 'wrap' | 'wrap-reverse';
+export type FlexEngineWrap = 'nowrap' | 'wrap' | 'wrap-reverse';
 
 /** Flex 主轴求解所需的稳定有限 item 输入 */
 export type FlexMainItem = Readonly<{
@@ -21,7 +20,7 @@ export type FlexMainItem = Readonly<{
 
 /** Flex line formation 的有限空间选项 */
 export type FlexLineFormationOptions = Readonly<{
-  wrap: FlexEngineWrapValue;
+  wrap: FlexEngineWrap;
   availableMainSize?: number;
   gap: number;
 }>;
@@ -43,7 +42,7 @@ export type FlexCrossItem = Readonly<{
   slotSize: number;
   marginStart: number;
   marginEnd: number;
-  alignment: LayoutAlignmentValue;
+  alignment: LayoutAlignment;
   firstBaselineOffset?: number;
   lastBaselineOffset?: number;
 }>;
@@ -227,7 +226,7 @@ export const resolveFlexLineMainSizes = (
 
 /** 把 line 剩余 main space 解析为确定的起始偏移和附加 item 间距 */
 export const resolveFlexSpaceDistribution = (
-  distribution: LayoutDistributionValue,
+  distribution: LayoutDistribution,
   remaining: number,
   itemCount: number,
 ): FlexSpaceDistribution => {
@@ -300,7 +299,7 @@ export const resolveFlexLineCrossMetrics = (items: ReadonlyArray<FlexCrossItem>)
 
 /** 把 alignContent 剩余空间解析为 line slot 扩张、起始偏移与附加 gap */
 export const resolveFlexLineDistribution = (
-  distribution: LayoutDistributionValue,
+  distribution: LayoutDistribution,
   remaining: number,
   lineCount: number,
 ): Readonly<{ leading: number; between: number; stretch: number }> => {
@@ -316,7 +315,7 @@ export const resolveFlexItemCrossSlotStart = (
   line: FlexCrossLine,
   slotSize: number,
   margins: Readonly<{ start: number; end: number }>,
-  alignment: LayoutAlignmentValue,
+  alignment: LayoutAlignment,
   guideOffset: number,
 ): number => {
   if (alignment === LayoutAlignment.End) return line.crossStart + line.finalCrossSize - margins.end - slotSize;

@@ -5,7 +5,7 @@
 ### IRPatternLineStyle
 
 <p>
-  <ApiSourceLink label={'IRPatternLineStyle'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={23}>
+  <ApiSourceLink label={'IRPatternLineStyle'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={22}>
     Pattern 单条线 motif 的可序列化样式覆盖
   </ApiSourceLink>
 </p>
@@ -13,6 +13,8 @@
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
+
+<ApiTable>
 
 | 成员           | 类型                            | 默认值 | 说明 |
 | -------------- | ------------------------------- | ------ | ---- |
@@ -24,6 +26,8 @@
 | `lineCap?`     | `"butt" \| "round" \| "square"` | —      | —    |
 | `lineJoin?`    | `"round" \| "miter" \| "bevel"` | —      | —    |
 | `lineWidth?`   | `number`                        | —      | —    |
+
+</ApiTable>
 
 </DocTab>
 
@@ -43,7 +47,7 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
   <ApiSourceLink
     label={'IRPatternLineStyleCycle'}
     path={'packages/kernel/core/src/schemas/paint/types.ts'}
-    startLine={26}
+    startLine={25}
   >
     Pattern 相邻线条的稀疏周期样式
   </ApiSourceLink>
@@ -53,10 +57,14 @@ export type IRPatternLineStyle = ZodInfer<typeof PatternLineStyleSchema>;
 
 <DocTab value="members" label="属性">
 
-| 成员        | 类型     | 默认值 | 说明 |
-| ----------- | -------- | ------ | ---- |
-| `overrides` | `…`      | —      | —    |
-| `period`    | `number` | —      | —    |
+<ApiTable>
+
+| 成员        | 类型                                                              | 默认值 | 说明 |
+| ----------- | ----------------------------------------------------------------- | ------ | ---- |
+| `overrides` | `ZodInfer<typeof PatternLineStyleCycleSchema.shape["overrides"]>` | —      | —    |
+| `period`    | `number`                                                          | —      | —    |
+
+</ApiTable>
 
 </DocTab>
 
@@ -73,7 +81,7 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 ### IRPatternPaint
 
 <p>
-  <ApiSourceLink label={'IRPatternPaint'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={20}>
+  <ApiSourceLink label={'IRPatternPaint'} path={'packages/kernel/core/src/schemas/paint/types.ts'} startLine={19}>
     Pattern paint 的可序列化实例参数
   </ApiSourceLink>
 </p>
@@ -81,6 +89,8 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
+
+<ApiTable>
 
 | 成员               | 类型                                                                                                                                                                                                                                                                                                                       | 默认值 | 说明 |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
@@ -94,12 +104,14 @@ export type IRPatternLineStyleCycle = ZodInfer<typeof PatternLineStyleCycleSchem
 | `kind`             | `"pattern"`                                                                                                                                                                                                                                                                                                                | —      | —    |
 | `lineCap?`         | `"butt" \| "round" \| "square"`                                                                                                                                                                                                                                                                                            | —      | —    |
 | `lineJoin?`        | `"round" \| "miter" \| "bevel"`                                                                                                                                                                                                                                                                                            | —      | —    |
-| `lineStyleCycle?`  | `…`                                                                                                                                                                                                                                                                                                                        | —      | —    |
+| `lineStyleCycle?`  | `IRPatternPaint["lineStyleCycle"]`                                                                                                                                                                                                                                                                                         | —      | —    |
 | `lineWidth?`       | `number`                                                                                                                                                                                                                                                                                                                   | —      | —    |
 | `rotation?`        | `number`                                                                                                                                                                                                                                                                                                                   | —      | —    |
 | `shape`            | `OpenString<ValueOf<{ readonly Lines: "lines"; readonly Dots: "dots"; readonly Grid: "grid"; }>>`                                                                                                                                                                                                                          | —      | —    |
 | `size?`            | `number`                                                                                                                                                                                                                                                                                                                   | —      | —    |
 | `verticalStyle?`   | `{ color?: string \| undefined; dashed?: boolean \| undefined; dashOffset?: number \| undefined; dashPattern?: Array<number> \| undefined; dotted?: boolean \| undefined; lineCap?: "butt" \| "round" \| "square" \| undefined; lineJoin?: "round" \| "miter" \| "bevel" \| undefined; lineWidth?: number \| undefined; }` | —      | —    |
+
+</ApiTable>
 
 </DocTab>
 
@@ -132,11 +144,15 @@ export type IRPatternPaint = Extract<
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员           | 类型                                             | 默认值 | 说明                                                                            |
 | -------------- | ------------------------------------------------ | ------ | ------------------------------------------------------------------------------- |
 | `defaultSize?` | `number`                                         | `8`    | `pattern.size` 省略时的基础尺寸（user units）；最终 tile 周期可由 emit 结果改写 |
 | `emit`         | `(ctx: PatternEmitContext) => PatternEmitOutput` | —      | 局部 tile 坐标中的 motif 几何                                                   |
 | `name`         | `string`                                         | —      | pattern 名称，由 IR pattern paint 的 `shape` 引用                               |
+
+</ApiTable>
 
 </DocTab>
 
@@ -172,6 +188,8 @@ export type PatternDefinition = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员               | 类型                            | 默认值               | 说明                                                                                                                   |
 | ------------------ | ------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `background?`      | `string`                        | `透明背景`           | tile 背景填充（CSS 串）；缺省透明（字段缺省）                                                                          |
@@ -186,6 +204,8 @@ export type PatternDefinition = {
 | `round`            | `(n: number) => number`         | —                    | 精度取整函数（与 compile/render 同一 round，保几何一致）                                                               |
 | `size`             | `number`                        | —                    | 解析后的基础尺寸或间距（user units）；最终 tile 周期可由 PatternEmitResult.tileSize 覆盖                               |
 | `verticalStyle?`   | `ResolvedPatternLineStyle`      | —                    | 已继承基础字段并解析 preset 的纵向线条样式                                                                             |
+
+</ApiTable>
 
 </DocTab>
 
@@ -238,10 +258,14 @@ export type PatternEmitOutput = Iterable<MarkerPrimitive> | PatternEmitResult;
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员       | 类型                        | 默认值 | 说明                                             |
 | ---------- | --------------------------- | ------ | ------------------------------------------------ |
 | `motif`    | `Iterable<MarkerPrimitive>` | —      | 局部 tile 坐标中的 motif 几何                    |
 | `tileSize` | `number`                    | —      | 最终 tile 周期（user units），必须为 finite 正数 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -261,7 +285,7 @@ export type PatternEmitResult = {
 ### PatternShape
 
 <p>
-  <ApiSourceLink label={'PatternShape'} path={'packages/kernel/core/src/schemas/paint/constants.ts'} startLine={6}>
+  <ApiSourceLink label={'PatternShape'} path={'packages/kernel/core/src/schemas/paint/constants.ts'} startLine={7}>
     内置 pattern motif 名常量（用 const + ValueOf 派生，不用 TS enum）
   </ApiSourceLink>
 </p>
@@ -275,6 +299,8 @@ export const PatternShape = {
   Dots: 'dots',
   Grid: 'grid',
 } as const;
+
+export type PatternShape = ValueOf<typeof PatternShape>;
 ```
 
 ### definePattern
@@ -285,24 +311,39 @@ export const PatternShape = {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称  | 类型 / 签名         | 说明 |
+| ------ | ----- | ------------------- | ---- |
+| 参数   | `def` | `PatternDefinition` | —    |
+| 返回值 | —     | `PatternDefinition` | —    |
+
+</ApiTable>
+
+> **备注：** 当前是 typed identity；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const definePattern: (def: PatternDefinition) => PatternDefinition;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数  | 类型                | 说明 |
-| ----- | ------------------- | ---- |
-| `def` | `PatternDefinition` | —    |
-
-> **备注：** 当前是 typed identity；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
+</DocTabs>
 
 ## shadow · 阴影
 
 ### IRDropShadow
 
 <p>
-  <ApiSourceLink label={'IRDropShadow'} path={'packages/kernel/core/src/schemas/effects/types.ts'} startLine={8}>
+  <ApiSourceLink label={'IRDropShadow'} path={'packages/kernel/core/src/schemas/effects/types.ts'} startLine={6}>
     IR shadow 对象分支（可带 preset 与显式字段覆盖）
   </ApiSourceLink>
 </p>
@@ -310,6 +351,8 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
+
+<ApiTable>
 
 | 成员       | 类型                                              | 默认值 | 说明 |
 | ---------- | ------------------------------------------------- | ------ | ---- |
@@ -319,6 +362,8 @@ export declare const definePattern: (def: PatternDefinition) => PatternDefinitio
 | `offsetY?` | `number`                                          | —      | —    |
 | `opacity?` | `number`                                          | —      | —    |
 | `preset?`  | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md"` | —      | —    |
+
+</ApiTable>
 
 </DocTab>
 
@@ -332,28 +377,10 @@ export type IRDropShadow = ZodInfer<typeof DropShadowSchema>;
 
 </DocTabs>
 
-### ShadowPresetValue
-
-<p>
-  <ApiSourceLink label={'ShadowPresetValue'} path={'packages/kernel/core/src/schemas/effects/types.ts'} startLine={15}>
-    阴影预设档位值联合
-  </ApiSourceLink>
-</p>
-
-```ts
-export type ShadowPresetValue = ValueOf<typeof ShadowPreset>;
-```
-
-#### 展开类型
-
-```ts
-export type ShadowPresetValue = 'none' | 'sm' | 'lg' | 'xl' | '2xl' | 'md';
-```
-
 ### ShadowPreset
 
 <p>
-  <ApiSourceLink label={'ShadowPreset'} path={'packages/kernel/core/src/schemas/effects/constants.ts'} startLine={8}>
+  <ApiSourceLink label={'ShadowPreset'} path={'packages/kernel/core/src/schemas/effects/constants.ts'} startLine={10}>
     阴影预设档位关键字（Tailwind 风格刻度）
   </ApiSourceLink>
 </p>
@@ -370,26 +397,16 @@ export const ShadowPreset = {
   Xl: 'xl',
   Xxl: '2xl',
 } as const;
+
+export type ShadowPreset = ValueOf<typeof ShadowPreset>;
 ```
 
 ## blend · 混合
 
-### BlendModeValue
-
-<p>
-  <ApiSourceLink label={'BlendModeValue'} path={'packages/kernel/core/src/schemas/effects/types.ts'} startLine={18}>
-    混合模式值联合
-  </ApiSourceLink>
-</p>
-
-```ts
-export type BlendModeValue = ValueOf<typeof BlendMode>;
-```
-
 ### BlendMode
 
 <p>
-  <ApiSourceLink label={'BlendMode'} path={'packages/kernel/core/src/schemas/effects/constants.ts'} startLine={36}>
+  <ApiSourceLink label={'BlendMode'} path={'packages/kernel/core/src/schemas/effects/constants.ts'} startLine={38}>
     W3C 分离式混合模式集（16 个）
   </ApiSourceLink>
 </p>
@@ -416,4 +433,6 @@ export const BlendMode = {
   Color: 'color',
   Luminosity: 'luminosity',
 } as const;
+
+export type BlendMode = ValueOf<typeof BlendMode>;
 ```

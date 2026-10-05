@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /**
  * mark 类型关键字（暴露给用户；成员值即 IR 判别串，裸字面量 `'point'` 同样可用）
  * @description discriminated union 判别字段，成员里写 z.literal(PlotMark.x)（不用 z.enum）。
@@ -129,3 +130,33 @@ export const MarkValueKind = {
 
 /** 内置 mark type 集合；自定义 mark 的 type 不能与之冲突 */
 export const BUILTIN_MARK_TYPES = new Set<string>(Object.values(PlotMark));
+
+/** mark 类型 */
+export type PlotMark = ValueOf<typeof PlotMark>;
+
+/** mark 值来源变体 */
+export type MarkValueKind = ValueOf<typeof MarkValueKind>;
+
+/** PathMark 相邻点连接方式 */
+export type PathCurve = ValueOf<typeof PathCurve>;
+
+/** PathMark 闭合策略 */
+export type PathClosureKind = ValueOf<typeof PathClosureKind>;
+
+/** interval 单维区间来源 */
+export type IntervalBoundKind = ValueOf<typeof IntervalBoundKind>;
+
+/** RelationMark 几何子类型值 */
+export type RelationGeometryKind = ValueOf<typeof RelationGeometryKind>;
+
+/** relation 显式路由支持的 core step 类型取值 */
+export type RelationRouteStepKind = ValueOf<typeof RelationRouteStepKind>;
+
+/** relation 自动路由策略类型取值 */
+export type RelationRoutingKind = ValueOf<typeof RelationRoutingKind>;
+
+/** relation 正交路由标签落点策略取值 */
+export type RelationOrthogonalLabelStep = ValueOf<typeof RelationOrthogonalLabelStep>;
+
+/** reference mark 显式形态取值 */
+export type ReferenceMarkKind = ValueOf<typeof ReferenceMarkKind>;

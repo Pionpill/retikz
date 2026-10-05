@@ -1,6 +1,6 @@
 import type { IRArrowDetail, IRArrowMark, IRPathBase } from '../../src';
 
-type PathArrowDirectionValue = 'none' | '->' | '<-' | '<->';
+type PathArrowDirection = 'none' | '->' | '<-' | '<->';
 type TestArrowDetail = Record<string, unknown> & {
   start?: Record<string, unknown>;
   end?: Record<string, unknown>;
@@ -16,7 +16,7 @@ const arrowMark = (detail: TestArrowDetail | undefined, endpoint: 'start' | 'end
 };
 
 export const arrowMarks = (
-  arrow: PathArrowDirectionValue,
+  arrow: PathArrowDirection,
   detail?: IRArrowDetail | TestArrowDetail,
 ): NonNullable<IRPathBase['marks']> => {
   if (arrow === 'none') return [];

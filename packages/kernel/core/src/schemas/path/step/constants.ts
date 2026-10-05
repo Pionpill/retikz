@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 export const GeometryLabelPlacement = {
   Outside: 'outside',
   Inside: 'inside',
@@ -51,3 +53,16 @@ export const PathCloseMode = {
   /** 连接到圆心形成扇形 */
   Sector: 'sector',
 } as const;
+
+export type GeometryLabelPlacement = ValueOf<typeof GeometryLabelPlacement>;
+
+/** path-like 几何标签沿段的位置关键字取值 */
+export type GeometryLabelPosition = ValueOf<typeof GeometryLabelPosition>;
+
+export type FoldStepVia = ValueOf<typeof FoldStepVia>;
+
+/** bend step 弯曲侧取值 */
+export type BendDirection = ValueOf<typeof BendDirection>;
+
+/** 圆 / 椭圆 path 局部弧段闭合方式取值 */
+export type PathCloseMode = ValueOf<typeof PathCloseMode>;

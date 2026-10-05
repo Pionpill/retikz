@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** Table composite namespace */
 export const TABLE_NAMESPACE = 'table';
 
@@ -6,3 +7,6 @@ export const TableComposite = {
   /** 顶层 Table spec 节点 */
   Table: 'table',
 } as const;
+
+/** Table composite 类型 */
+export type TableComposite = ValueOf<typeof TableComposite>;

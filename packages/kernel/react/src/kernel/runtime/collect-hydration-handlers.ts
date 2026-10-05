@@ -7,7 +7,7 @@ import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } fro
 import { resolveInputEmbedAdapter } from '../protocol';
 import { EVENT_PROP_TO_NAME } from '../protocol';
 
-/** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEventValue → handler 的 ElementHandlers（无 handler 返回空对象） */
+/** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEvent → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {
   const handlers: ElementHandlers = {};
   for (const propName of Object.keys(EVENT_PROP_TO_NAME) as Array<HydrationEventPropName>) {

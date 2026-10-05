@@ -14,7 +14,7 @@ export const InputTableKind = {
 } as const;
 
 /** Table authoring 输入变体的取值 */
-export type InputTableKindValue = ValueOf<typeof InputTableKind>;
+export type InputTableKind = ValueOf<typeof InputTableKind>;
 
 /** Detail Table 的无框架 authoring 输入 */
 export type InputDetailTable = Readonly<{

@@ -48,7 +48,7 @@ import {
 } from './solve';
 import type { GridTrackConstraint } from './tracks';
 import { solveGridTracks } from './tracks';
-import type { GridLayoutArtifact, LayoutTrackSourceKindValue } from './types';
+import type { GridLayoutArtifact } from './types';
 import type { IRGridLayout } from './types';
 
 type MeasuredGridItem = Readonly<{
@@ -75,7 +75,7 @@ type PlacedGridItem = Readonly<{
 }>;
 
 /** 把 Grid track 定义归一为公开 artifact 的稳定来源类别 */
-const trackSourceKindOf = (track: CanonicalGridLayout['columns'][number]): LayoutTrackSourceKindValue => {
+const trackSourceKindOf = (track: CanonicalGridLayout['columns'][number]): LayoutTrackSourceKind => {
   if (track.kind === 'fixed') return LayoutTrackSourceKind.Fixed;
   if (track.kind === 'fraction') return LayoutTrackSourceKind.Fraction;
   if (track.kind === 'minmax') return LayoutTrackSourceKind.Minmax;

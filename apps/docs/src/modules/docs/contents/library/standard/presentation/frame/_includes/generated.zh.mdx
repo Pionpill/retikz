@@ -69,7 +69,7 @@ export type FrameDescriptionProps = Omit<NodeProps, 'position' | keyof Hydration
   <ApiSourceLink
     label={'InputFrame'}
     path={'packages/library/standard-vanilla/src/presentation/frame.ts'}
-    startLine={27}
+    startLine={33}
   >
     Vanilla Frame 输入可显式指定持久化 Scope id
   </ApiSourceLink>
@@ -113,20 +113,20 @@ export type InputFrame = Omit<FrameInput, 'id' | 'children'> & {
   <ApiSourceLink
     label={'FrameInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/presentation/frame.ts'}
-    startLine={56}
+    startLine={62}
   >
     Standard Frame 的 InputEmbed adapter
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame>;
+export declare const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFrame>;
 ```
 
 #### frame
 
 <p>
-  <ApiSourceLink label={'frame'} path={'packages/library/standard-vanilla/src/presentation/frame.ts'} startLine={123}>
+  <ApiSourceLink label={'frame'} path={'packages/library/standard-vanilla/src/presentation/frame.ts'} startLine={129}>
     创建由 FrameInputEmbedAdapter 下沉的 Standard Frame embed
   </ApiSourceLink>
 </p>
@@ -162,7 +162,7 @@ export declare const frame: (input: InputFrame) => InputEmbed<InputFrame>;
   <ApiSourceLink
     label={'frameDescription'}
     path={'packages/library/standard-vanilla/src/presentation/frame.ts'}
-    startLine={53}
+    startLine={59}
   >
     创建 JSON-safe 的 Frame 辅助说明输入
   </ApiSourceLink>
@@ -199,7 +199,7 @@ export declare const frameDescription: (input: FrameDescriptionInput) => IRFrame
   <ApiSourceLink
     label={'frameTitle'}
     path={'packages/library/standard-vanilla/src/presentation/frame.ts'}
-    startLine={50}
+    startLine={56}
   >
     创建 JSON-safe 的 Frame 主标题输入
   </ApiSourceLink>
@@ -238,7 +238,7 @@ export declare const frameTitle: (input: FrameTitleInput) => IRFrameTitle;
   <ApiSourceLink
     label={'FrameDescriptionInput'}
     path={'packages/library/standard/src/presentation/frame/types.ts'}
-    startLine={21}
+    startLine={16}
   >
     创建 Frame 辅助说明时接受的输入
   </ApiSourceLink>
@@ -283,7 +283,7 @@ export type FrameDescriptionInput = ZodInfer<typeof FrameDescriptionSchema>;
 #### FrameInput
 
 <p>
-  <ApiSourceLink label={'FrameInput'} path={'packages/library/standard/src/presentation/frame/types.ts'} startLine={32}>
+  <ApiSourceLink label={'FrameInput'} path={'packages/library/standard/src/presentation/frame/types.ts'} startLine={27}>
     创建 Frame 时允许省略固定 discriminator 与 schema 默认字段的输入
   </ApiSourceLink>
 </p>
@@ -298,7 +298,7 @@ export type FrameInput = Omit<IRFrame, 'namespace' | 'type'>;
   <ApiSourceLink
     label={'FrameTitleInput'}
     path={'packages/library/standard/src/presentation/frame/types.ts'}
-    startLine={15}
+    startLine={10}
   >
     创建 Frame 主标题时接受的输入
   </ApiSourceLink>
@@ -343,7 +343,7 @@ export type FrameTitleInput = ZodInfer<typeof FrameTitleSchema>;
 #### IRFrame
 
 <p>
-  <ApiSourceLink label={'IRFrame'} path={'packages/library/standard/src/presentation/frame/types.ts'} startLine={24}>
+  <ApiSourceLink label={'IRFrame'} path={'packages/library/standard/src/presentation/frame/types.ts'} startLine={19}>
     持久化的 Standard Frame composite
   </ApiSourceLink>
 </p>

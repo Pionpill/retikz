@@ -1,6 +1,5 @@
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from '../internal/distribution';
-import type { LayoutDistributionValue } from '../shared';
 import { LayoutDistribution } from '../shared';
 import type { IRGridTrack } from './types';
 
@@ -217,7 +216,7 @@ const resolveFractionTracks = (
 
 /** 把剩余空间转换为稳定 leading 与 track 间距 */
 const distributionOffsets = (
-  distribution: LayoutDistributionValue,
+  distribution: LayoutDistribution,
   free: number,
   count: number,
   gap: number,
@@ -248,7 +247,7 @@ const distributionOffsets = (
 export const solveGridTracks = (
   tracks: ReadonlyArray<IRGridTrack>,
   constraints: ReadonlyArray<GridTrackConstraint>,
-  options: Readonly<{ gap: number; availableSize?: number; distribution: LayoutDistributionValue }>,
+  options: Readonly<{ gap: number; availableSize?: number; distribution: LayoutDistribution }>,
 ): SolvedGridTracks => {
   if (!Number.isFinite(options.gap) || options.gap < 0) {
     throw new RetikzLayoutError({

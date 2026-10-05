@@ -1,4 +1,5 @@
 import type { ScenePatch } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
@@ -14,8 +15,7 @@ export const RetainedRendererCapability = {
 } as const;
 
 /** Retained renderer 增量能力等级取值 */
-export type RetainedRendererCapabilityValue =
-  (typeof RetainedRendererCapability)[keyof typeof RetainedRendererCapability];
+export type RetainedRendererCapability = ValueOf<typeof RetainedRendererCapability>;
 
 /** Retained renderer 对只读 Scene 图层的支持等级 */
 export const RetainedRendererReadonlyLayerCapability = {
@@ -24,8 +24,7 @@ export const RetainedRendererReadonlyLayerCapability = {
 } as const;
 
 /** Retained renderer 只读 Scene 图层支持等级取值 */
-export type RetainedRendererReadonlyLayerCapabilityValue =
-  (typeof RetainedRendererReadonlyLayerCapability)[keyof typeof RetainedRendererReadonlyLayerCapability];
+export type RetainedRendererReadonlyLayerCapability = ValueOf<typeof RetainedRendererReadonlyLayerCapability>;
 
 /** Retained renderer 支持的宿主元素 */
 export type RetainedRendererHost = SVGSVGElement | HTMLCanvasElement;
@@ -64,9 +63,9 @@ export type RetainedRendererRead = Readonly<{
 /** Retained renderer 私有 executor 公共作者契约 */
 export type RetainedRendererDefinitionBase = Readonly<{
   /** renderer 支持的最大增量粒度 */
-  capability: RetainedRendererCapabilityValue;
+  capability: RetainedRendererCapability;
   /** renderer 是否能物化只读 Scene 图层 */
-  readonlyLayerCapability: RetainedRendererReadonlyLayerCapabilityValue;
+  readonlyLayerCapability: RetainedRendererReadonlyLayerCapability;
   /** staging 首次 materialization */
   prepareMount: (
     frame: RenderFrameSnapshot,
@@ -99,9 +98,9 @@ declare const RetainedRendererBrand: unique symbol;
 /** Retained renderer nominal token 的共享字段 */
 export type RetainedRendererTokenBase = Readonly<{
   /** renderer 增量能力 */
-  capability: RetainedRendererCapabilityValue;
+  capability: RetainedRendererCapability;
   /** renderer 只读 Scene 图层支持等级 */
-  readonlyLayerCapability: RetainedRendererReadonlyLayerCapabilityValue;
+  readonlyLayerCapability: RetainedRendererReadonlyLayerCapability;
   /** nominal brand */
   [RetainedRendererBrand]: true;
 }>;

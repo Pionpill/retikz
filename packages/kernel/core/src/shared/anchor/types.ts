@@ -1,17 +1,7 @@
-import type { ValueOf } from '@retikz/foundation';
+import type { Anchor, CenterAnchor, Side } from './constants';
 
-import type { Anchor, CenterAnchor, Corner, Side } from './constants';
+export type SideInput = Side;
 
-export type CenterAnchorValue = ValueOf<typeof CenterAnchor>;
+export type AnchorInput = CenterAnchor | Anchor;
 
-export type SideValue = ValueOf<typeof Side>;
-
-export type CornerValue = ValueOf<typeof Corner>;
-
-export type AnchorValue = ValueOf<typeof Anchor>;
-
-export type SideInput = SideValue;
-
-export type AnchorInput = CenterAnchorValue | AnchorValue;
-
-export type DirectionalAnchorInput = AnchorValue;
+export type DirectionalAnchorInput = Anchor;

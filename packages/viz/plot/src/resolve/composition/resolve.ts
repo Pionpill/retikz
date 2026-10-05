@@ -5,7 +5,7 @@ import type { IRPlot, IRPlotAxisGuide, IRPlotFacetConfiguration, IRPlotGuide } f
 import { AxisGridApplyTo, CoordinateArrangementKind, CoordinateViewPlacementKind, PlotGuide } from '../../schemas';
 import type { Margins } from '../../shared';
 import type {
-  CompositionAxisPolicyValue,
+  CompositionAxisPolicy,
   CompositionLayout,
   CompositionPolicyContext,
   CompositionResolution,
@@ -141,7 +141,7 @@ export const compositionAxisPolicyOf = (
   resolve: CompositionResolve | undefined,
   context: CompositionPolicyContext,
   dimension: DimensionRole,
-): CompositionAxisPolicyValue => {
+): CompositionAxisPolicy => {
   const mode = resolve?.axis?.[dimension];
   if (mode === 'none') return 'none';
   if (mode === 'outer') return 'outerShared';

@@ -7,11 +7,11 @@ import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
 import type { ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
-import type { BuiltinShapeValue } from '../../src/schemas';
+import type { BuiltinShape } from '../../src/schemas';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */
 const makeLayout = (
-  shape: BuiltinShapeValue = 'rectangle',
+  shape: BuiltinShape = 'rectangle',
   width = 40,
   height = 30,
   cx = 0,

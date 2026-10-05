@@ -43,7 +43,7 @@ export type CompositionPolicyContext = {
 };
 
 /** composition axis 输出策略消费值 */
-export type CompositionAxisPolicyValue = 'perScope' | 'outerShared' | 'none';
+export type CompositionAxisPolicy = 'perScope' | 'outerShared' | 'none';
 
 /** axis grid object 配置 */
 export type AxisGridConfig = Exclude<NonNullable<IRPlotAxisGuide['grid']>, boolean>;

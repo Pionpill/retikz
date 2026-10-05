@@ -1,5 +1,5 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import type { FontSizePresetValue, IRFont } from '../../schemas';
+import type { WebFontSizePreset, IRFont } from '../../schemas';
 import { WebFontSizeRatio } from '../../schemas';
 import type { CanonicalFont, FontResolveContext, FontSizeResolveContext } from './types';
 
@@ -24,7 +24,7 @@ export const resolveFontSize = (size: IRFont['size'] | undefined, context: FontS
   if (size === undefined) return inheritedFontSize;
   if (typeof size === 'number') return size;
   if (Object.hasOwn(WebFontSizeRatio, size)) {
-    return rootFontSize * WebFontSizeRatio[size as FontSizePresetValue];
+    return rootFontSize * WebFontSizeRatio[size as WebFontSizePreset];
   }
   if (size.endsWith('rem')) return Number.parseFloat(size) * rootFontSize;
   if (size.endsWith('em')) return Number.parseFloat(size) * inheritedFontSize;

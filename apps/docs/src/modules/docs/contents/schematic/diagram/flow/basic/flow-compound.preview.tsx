@@ -1,5 +1,5 @@
 import { FlowEntity, FlowGroup, FlowLayout, FlowRelation } from '@retikz/diagram-react/flow';
-import type { FlowDirectionValue, FlowLayoutAlignmentValue } from '@retikz/diagram/flow';
+import type { FlowDirection, FlowLayoutAlignment } from '@retikz/diagram/flow';
 
 import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
@@ -16,18 +16,18 @@ export type FlowCompoundPreviewValues = {
   layoutAlign: string;
 };
 
-const flowDirections: ReadonlyArray<FlowDirectionValue> = ['up', 'right', 'down', 'left'];
-const flowLayoutAlignments: ReadonlyArray<FlowLayoutAlignmentValue> = ['start', 'center', 'end'];
+const flowDirections: ReadonlyArray<FlowDirection> = ['up', 'right', 'down', 'left'];
+const flowLayoutAlignments: ReadonlyArray<FlowLayoutAlignment> = ['start', 'center', 'end'];
 
 /** 将 controls 值收窄为公开 Flow direction */
-const flowDirectionOf = (value: string): FlowDirectionValue => {
+const flowDirectionOf = (value: string): FlowDirection => {
   const direction = flowDirections.find(candidate => candidate === value);
   if (direction === undefined) throw new Error(`Unsupported Flow direction: ${value}`);
   return direction;
 };
 
 /** 将 controls 值收窄为公开 Flow Layout alignment */
-const flowLayoutAlignmentOf = (value: string): FlowLayoutAlignmentValue => {
+const flowLayoutAlignmentOf = (value: string): FlowLayoutAlignment => {
   const alignment = flowLayoutAlignments.find(candidate => candidate === value);
   if (alignment === undefined) throw new Error(`Unsupported Flow Layout alignment: ${value}`);
   return alignment;

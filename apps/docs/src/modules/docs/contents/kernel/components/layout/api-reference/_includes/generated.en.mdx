@@ -171,7 +171,7 @@ export type LayoutExtensions = Readonly<{
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
 | `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
 | `readonly signal?`         | `AbortSignal`                             | —                            | Lifecycle signal for async preparation and the controller                                                                                |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </ApiTable>
 
@@ -183,41 +183,9 @@ export type LayoutExtensions = Readonly<{
 export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
   Readonly<{
     mode?: typeof LayoutRuntimeMode.Retained;
-    updateStrategy?: RuntimeUpdateStrategyValue;
+    updateStrategy?: RuntimeUpdateStrategy;
     onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
   }>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### LayoutRuntimeModeValue
-
-<p>
-  <ApiSourceLink
-    label={'LayoutRuntimeModeValue'}
-    path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
-    startLine={11}
-  >
-    React Layout host execution mode value
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type LayoutRuntimeModeValue = 'retained' | 'static';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
 </DocTab>
@@ -249,7 +217,7 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
 | `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | Client authoring preparation mode; synchronous SSR continues to use synchronous lower                                                    |
 | `readonly signal?`         | `AbortSignal`                             | —                            | Lifecycle signal for async preparation and the controller                                                                                |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </ApiTable>
 
@@ -343,6 +311,8 @@ export const LayoutRuntimeMode = Object.freeze({
   Retained: 'retained',
   Static: 'static',
 } as const);
+
+export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
 ## `@retikz/vanilla`
@@ -363,7 +333,7 @@ export const LayoutRuntimeMode = Object.freeze({
 
 | Member     | Type                        | Default                | Description                                                   |
 | ---------- | --------------------------- | ---------------------- | ------------------------------------------------------------- |
-| `cache?`   | `InputLayerCacheValue`      | `InputLayerCache.Auto` | Runtime cache hint                                            |
+| `cache?`   | `InputLayerCache`           | `InputLayerCache.Auto` | Runtime cache hint                                            |
 | `children` | `ReadonlyArray<InputChild>` | —                      | Children normalized in declaration order                      |
 | `id`       | `string`                    | —                      | Layer identity                                                |
 | `type`     | `'layer'`                   | —                      | Authoring layer discriminator, fixed to layer                 |
@@ -379,7 +349,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type InputLayer = {
   type: 'layer';
   id: string;
-  cache?: InputLayerCacheValue;
+  cache?: InputLayerCache;
   zIndex?: number;
   children: ReadonlyArray<InputChild>;
 };

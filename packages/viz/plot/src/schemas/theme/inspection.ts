@@ -1,4 +1,5 @@
 import { ThemeMode } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { array, enum as zodEnum, strictObject } from 'zod';
 
@@ -69,3 +70,6 @@ export const PlotThemeResolutionSchema = strictObject({
     });
   })
   .describe('Stable JSON-safe Plot defaults resolution and inspection result');
+
+/** Plot defaults inspection 来源分类 */
+export type PlotThemeLayerKind = ValueOf<typeof PlotThemeLayerKind>;

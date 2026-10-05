@@ -7,7 +7,7 @@ import type { ProvenanceContext } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import { resolveCoordinateRegistry } from '../../../providers';
 import type {
-  CompositionAxisPolicyValue,
+  CompositionAxisPolicy,
   CompositionLayout,
   CompositionResolve,
   CoordinateArrangement,
@@ -75,7 +75,7 @@ export type ScopedFramesResolution = {
     resolve: CompositionResolve | undefined,
     context: { hasFacets: boolean; hasScaffolds: boolean },
     dimension: DimensionRole,
-  ) => CompositionAxisPolicyValue;
+  ) => CompositionAxisPolicy;
   frameByScope: Map<string, CoordinateFrame>;
   gridLayers: Array<IRScope>;
   axisLayers: Array<IRScope>;
@@ -152,7 +152,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     resolve: CompositionResolve | undefined,
     compositionState: { hasFacets: boolean; hasScaffolds: boolean },
     dimension: DimensionRole,
-  ): CompositionAxisPolicyValue => compositionAxisPolicyOf(resolve, compositionState, dimension);
+  ): CompositionAxisPolicy => compositionAxisPolicyOf(resolve, compositionState, dimension);
   const rolesOf = (coordinate: IRPlotCoordinateOperation): ReadonlySet<DimensionRole> => {
     return new Set(resolveCoordinateDefinition(coordinate, { coordinateRegistry }).roles);
   };

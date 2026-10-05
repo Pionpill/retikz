@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** Table Cell 视觉编码可写入的闭合颜色通道 */
 export const TableVisualChannel = {
   /** Cell 背景填充 */
@@ -12,3 +13,6 @@ export const TableCellVisualScale = {
   SequentialColor: 'sequential-color',
   ThresholdColor: 'threshold-color',
 } as const;
+
+/** Table Cell 视觉编码通道 */
+export type TableVisualChannel = ValueOf<typeof TableVisualChannel>;

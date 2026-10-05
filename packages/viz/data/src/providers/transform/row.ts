@@ -7,7 +7,6 @@ import type {
   IRDataJitterTransform,
   IRDataNormalizeTransform,
   IRDataStackTransform,
-  StackOffsetValue,
 } from '../../schemas';
 import { JitterAxis, NormalizeBasis, StackOffset } from '../../schemas';
 import type { ExternalRow } from '../../shared';
@@ -40,7 +39,7 @@ export const DEFAULT_JITTER_Y_FIELD = 'y';
 export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTransform): Array<ExternalRow> => {
   const startField = operation.startField ?? DEFAULT_START_FIELD;
   const endField = operation.endField ?? DEFAULT_END_FIELD;
-  const offset: StackOffsetValue = operation.offset ?? StackOffset.Zero;
+  const offset: StackOffset = operation.offset ?? StackOffset.Zero;
   const groupByField = operation.groupBy;
   const seriesOrder =
     groupByField === undefined ? [] : inferCategoryDomain(rows.map(row => resolveFieldPath(row, groupByField)));

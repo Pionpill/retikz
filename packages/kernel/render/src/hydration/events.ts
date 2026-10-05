@@ -30,15 +30,15 @@ export const RetikzEvent = {
 } as const;
 
 /** 水合事件名联合 */
-export type RetikzEventValue = ValueOf<typeof RetikzEvent>;
+export type RetikzEvent = ValueOf<typeof RetikzEvent>;
 
 /**
- * RetikzEventValue → 真实 DOM 事件类型（根级 addEventListener 用）
+ * RetikzEvent → 真实 DOM 事件类型（根级 addEventListener 用）
  * @description doubleClick→dblclick、rightClick→contextmenu。pointerEnter / pointerLeave 不在表内、不直接
  *   addEventListener——它们由控制器经 pointermove + 「上一帧命中 id」状态机合成（renderer 无关，经 locate），
  *   故类型用 Exclude 把这两个排除掉
  */
-export const EVENT_DOM_TYPE: Record<Exclude<RetikzEventValue, 'pointerEnter' | 'pointerLeave'>, string> = {
+export const EVENT_DOM_TYPE: Record<Exclude<RetikzEvent, 'pointerEnter' | 'pointerLeave'>, string> = {
   click: 'click',
   doubleClick: 'dblclick',
   rightClick: 'contextmenu',
@@ -56,7 +56,7 @@ export const EVENT_DOM_TYPE: Record<Exclude<RetikzEventValue, 'pointerEnter' | '
 export type HydrationHandler = (event: Event, context: HydrationContext) => void;
 
 /** 单个图元 id 的事件 → handler 映射 */
-export type ElementHandlers = Partial<Record<RetikzEventValue, HydrationHandler>>;
+export type ElementHandlers = Partial<Record<RetikzEvent, HydrationHandler>>;
 
 /** 水合 handler 注册表：id → 事件名 → handler */
 export type HydrationHandlers = Record<string, ElementHandlers>;

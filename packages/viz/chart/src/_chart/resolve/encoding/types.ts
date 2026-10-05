@@ -1,15 +1,15 @@
 import type {
-  DataFieldTypeValue,
-  DataTransformFieldEffectValue,
+  DataFieldType,
+  DataTransformFieldEffect,
   DataTransformOutputDescriptor,
-  DataTransformPhaseValue,
+  DataTransformPhase,
   IRDataTransform,
   IRDataExecution,
 } from '@retikz/data';
 /** Chart encoding mapping 允许消费的 transform capability */
 export type ChartTransformCapability = Readonly<{
-  phase: DataTransformPhaseValue;
-  fieldEffect: DataTransformFieldEffectValue;
+  phase: DataTransformPhase;
+  fieldEffect: DataTransformFieldEffect;
 }>;
 
 /** Chart encoding mapping 允许连接的 scale capability */
@@ -27,7 +27,7 @@ export type ChartEncodingScaleConsumer = Readonly<{
 export type ChartEncodingFieldConsumer<TSlot extends string = string> = Readonly<{
   slot: TSlot;
   transforms?: ReadonlyArray<ChartTransformCapability>;
-  outputType?: DataFieldTypeValue;
+  outputType?: DataFieldType;
   scale?: ChartEncodingScaleConsumer;
 }>;
 
@@ -42,10 +42,10 @@ export type TransformOperationRecord = Readonly<{
   id: string;
   slot: string;
   slotIndex: number;
-  phase: DataTransformPhaseValue;
+  phase: DataTransformPhase;
   operation: IRDataTransform;
   dataExecution?: IRDataExecution;
-  fieldEffect: DataTransformFieldEffectValue;
+  fieldEffect: DataTransformFieldEffect;
   inputs: ReadonlyArray<string>;
   outputs: ReadonlyArray<DataTransformOutputDescriptor>;
   producedFields: ReadonlyArray<string>;
@@ -56,7 +56,7 @@ export type TransformOperationRecord = Readonly<{
 export type FieldProducer = Readonly<{
   id: string;
   slot: string;
-  phase: DataTransformPhaseValue;
+  phase: DataTransformPhase;
   slotIndex: number;
 }>;
 
@@ -64,7 +64,7 @@ export type FieldProducer = Readonly<{
 export type FieldConsumer = Readonly<{
   id: string;
   slot: string;
-  phase: DataTransformPhaseValue;
+  phase: DataTransformPhase;
   slotIndex: number;
   fields: ReadonlyArray<string>;
   allowsSelfOutput: boolean;

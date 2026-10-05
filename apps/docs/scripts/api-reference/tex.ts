@@ -910,6 +910,11 @@ const resolveSourceSignature = (
   const printer = ts.createPrinter({ removeComments: true });
   const print = (node: ts.Node): string =>
     printer.printNode(ts.EmitHint.Unspecified, node, declaration.getSourceFile());
+  const valueDeclaration = symbol.declarations?.find(ts.isVariableDeclaration);
+  const typeDeclaration = symbol.declarations?.find(ts.isTypeAliasDeclaration);
+  if (valueDeclaration && typeDeclaration && ts.isVariableStatement(valueDeclaration.parent.parent)) {
+    return [print(valueDeclaration.parent.parent), print(typeDeclaration)].join('\n\n');
+  }
   if (ts.isVariableDeclaration(declaration)) {
     const statement = declaration.parent.parent;
     if (!ts.isVariableStatement(statement)) return undefined;
@@ -1911,7 +1916,7 @@ export const createApiReferenceMdx = async (
           .filter(
             symbol =>
               !(
-                symbol.kind === ReflectionKind.Namespace &&
+                (symbol.kind === ReflectionKind.Namespace || symbol.kind === ReflectionKind.TypeAlias) &&
                 exported.some(other => other.name === symbol.name && other.kind === ReflectionKind.Variable)
               ),
           )
@@ -1984,7 +1989,7 @@ export const createApiReferenceMdx = async (
                 }));
                 symbol.signature = resolved.signature;
                 symbol.expandedSignature = resolved.expandedSignature;
-                if (resolved.branches) {
+                if (resolved.branches && !declarationOnly) {
                   const key = `${config.packageName}#${symbol.name}`;
                   const labels = apiReferenceBranchLabels[key];
                   if (!labels || labels.length !== resolved.branches.length)

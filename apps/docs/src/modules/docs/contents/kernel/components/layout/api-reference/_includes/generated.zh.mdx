@@ -171,7 +171,7 @@ export type LayoutExtensions = Readonly<{
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
 | `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
 | `readonly signal?`         | `AbortSignal`                             | —                            | 异步 preparation 与 controller 的生命周期信号                            |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
 
 </ApiTable>
 
@@ -183,41 +183,9 @@ export type LayoutExtensions = Readonly<{
 export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
   Readonly<{
     mode?: typeof LayoutRuntimeMode.Retained;
-    updateStrategy?: RuntimeUpdateStrategyValue;
+    updateStrategy?: RuntimeUpdateStrategy;
     onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
   }>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### LayoutRuntimeModeValue
-
-<p>
-  <ApiSourceLink
-    label={'LayoutRuntimeModeValue'}
-    path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
-    startLine={11}
-  >
-    React Layout 宿主执行模式取值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type LayoutRuntimeModeValue = 'retained' | 'static';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
 </DocTab>
@@ -248,7 +216,7 @@ export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 |
 | `readonly preparation?`    | `'sync' \| 'async'`                       | `'sync'`                     | 客户端作者准备方式；同步 SSR 仍消费同步 lower                            |
 | `readonly signal?`         | `AbortSignal`                             | —                            | 异步 preparation 与 controller 的生命周期信号                            |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategy`                   | `RuntimeUpdateStrategy.Auto` | 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行   |
 
 </ApiTable>
 
@@ -342,6 +310,8 @@ export const LayoutRuntimeMode = Object.freeze({
   Retained: 'retained',
   Static: 'static',
 } as const);
+
+export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 ```
 
 ## `@retikz/vanilla`
@@ -362,7 +332,7 @@ export const LayoutRuntimeMode = Object.freeze({
 
 | 成员       | 类型                        | 默认值                 | 说明                         |
 | ---------- | --------------------------- | ---------------------- | ---------------------------- |
-| `cache?`   | `InputLayerCacheValue`      | `InputLayerCache.Auto` | 运行时缓存提示               |
+| `cache?`   | `InputLayerCache`           | `InputLayerCache.Auto` | 运行时缓存提示               |
 | `children` | `ReadonlyArray<InputChild>` | —                      | 按声明顺序归一的子节点       |
 | `id`       | `string`                    | —                      | 分层身份标识                 |
 | `type`     | `'layer'`                   | —                      | 固定为 layer 的作者分层标识  |
@@ -378,7 +348,7 @@ export const LayoutRuntimeMode = Object.freeze({
 export type InputLayer = {
   type: 'layer';
   id: string;
-  cache?: InputLayerCacheValue;
+  cache?: InputLayerCache;
   zIndex?: number;
   children: ReadonlyArray<InputChild>;
 };

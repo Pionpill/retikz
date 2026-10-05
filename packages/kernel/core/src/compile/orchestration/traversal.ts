@@ -117,7 +117,7 @@ import {
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
 import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } from '../transform';
 import type { CompositeCompileArtifact } from '../types';
-import type { CompileWarningCodeValue, CompileWarningInput } from '../warning';
+import type { CompileWarningInput } from '../warning';
 import { cloneAlignmentGuides, resolveStructuralAlignmentGuides, transformAlignmentGuides } from './alignment-guide';
 import { filterAnimations } from './animation';
 import { freezeCompileArtifact, freezeOccurrence, orderCompileArtifacts } from './artifact';
@@ -722,7 +722,7 @@ export const compileChildrenToPrimitives = (
   ): void => {
     const { scopeChain, primitiveSink, locatorPrefix, layoutSink, styleStack } = frame;
     const nodeIrPath = `${locatorPrefix}children[${index}].node`;
-    const warn = (code: CompileWarningCodeValue, message: string): void =>
+    const warn = (code: CompileWarningCode, message: string): void =>
       runtime.context.onWarn({ code, message, path: nodeIrPath });
     const resolvedNode = resolveNode(child, {
       styleFrames: styleStack,

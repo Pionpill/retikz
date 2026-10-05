@@ -1,6 +1,6 @@
 import type { Position } from '@retikz/math';
 
-import type { AnchorValue, SideValue } from '../anchor';
+import type { Side } from '../anchor';
 import { Anchor } from '../anchor';
 import { EDGE_ENDS, lerpPoint } from './edge';
 import { localToWorld, worldToLocal } from './transform';
@@ -30,7 +30,7 @@ export const rect = {
     return lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH;
   },
   /** 8 个标准方位 anchor 之一的世界坐标（含旋转）；center 请用 `rect.center()` */
-  anchor: (r: Rect, name: AnchorValue): Position => {
+  anchor: (r: Rect, name: Anchor): Position => {
     const halfW = r.width / 2;
     const halfH = r.height / 2;
     let lx = 0;
@@ -79,7 +79,7 @@ export const rect = {
     return localToWorld(r, [localX * t, localY * t]);
   },
   /** 边上比例点：side 直边 t∈[0,1] 处（两角 anchor 线性插值，含旋转）；方向见 EDGE_ENDS */
-  edgePoint: (r: Rect, side: SideValue, t: number): Position => {
+  edgePoint: (r: Rect, side: Side, t: number): Position => {
     const [a, b] = EDGE_ENDS[side];
     return lerpPoint(rect.anchor(r, a), rect.anchor(r, b), t);
   },

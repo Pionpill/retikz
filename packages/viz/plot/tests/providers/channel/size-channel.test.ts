@@ -1,6 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import { defineTransformImplementation } from '@retikz/data';
-import type { DataFieldTypeValue } from '@retikz/data';
 import { DataFieldType, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -72,7 +71,7 @@ const radiusOf = (node: IRNode): number | undefined => {
 const pointSpec = (
   size: { kind: 'field'; value: string; scale?: string } | { kind: 'constant'; value: number } | undefined,
   extraScales: Array<Record<string, unknown>> = [],
-  model?: Array<{ name: string; type?: DataFieldTypeValue; format?: string }>,
+  model?: Array<{ name: string; type?: DataFieldType; format?: string }>,
 ): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -108,8 +107,8 @@ const sizeResolutionOf = (
   rows: Array<Record<string, unknown>>,
   extraScales: Array<Record<string, unknown>> = [],
   options: {
-    fieldType?: DataFieldTypeValue;
-    model?: Array<{ name: string; type?: DataFieldTypeValue }>;
+    fieldType?: DataFieldType;
+    model?: Array<{ name: string; type?: DataFieldType }>;
   } = {},
 ) => {
   const node = pointSpec(size, extraScales, options.model);
@@ -415,7 +414,7 @@ describe('size channel 错误输入', () => {
       { name: 'y', type: DataFieldType.Continuous },
     ];
     const resolver =
-      (type: DataFieldTypeValue): LowerPlotsOptions['resolveField'] =>
+      (type: DataFieldType): LowerPlotsOptions['resolveField'] =>
       field =>
         field === 'p' ? { type } : undefined;
 

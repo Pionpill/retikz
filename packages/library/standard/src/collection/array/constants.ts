@@ -9,4 +9,4 @@ export const ArrayIndexPosition = { Before: 'before', After: 'after' } as const;
 /** 直属单元格身份来源 */
 export const ArrayCellIdMode = { Explicit: 'explicit', String: 'string', Index: 'index' } as const;
 
-export type ArrayCellIdModeValue = ValueOf<typeof ArrayCellIdMode>;
+export type ArrayCellIdMode = ValueOf<typeof ArrayCellIdMode>;

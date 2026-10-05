@@ -53,31 +53,31 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 
 <ApiTable>
 
-| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---- |
-| `animations?`        | `GroupInputEmbedProps["animations"]`                                                                                                                                                                               | —      | —    |
-| `background?`        | `GroupInputEmbedProps["background"]`                                                                                                                                                                               | —      | —    |
-| `border?`            | `GroupInputEmbedProps["border"]`                                                                                                                                                                                   | —      | —    |
-| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | —    |
-| `caption?`           | `GroupInputEmbedProps["caption"]`                                                                                                                                                                                  | —      | —    |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —      | —    |
-| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | —    |
-| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —      | —    |
-| `defaults?`          | `GroupInputEmbedProps["defaults"]`                                                                                                                                                                                 | —      | —    |
-| `frame?`             | `GroupInputEmbedProps["frame"]`                                                                                                                                                                                    | —      | —    |
-| `graphDefaults?`     | `GroupInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —      | —    |
-| `graphRules?`        | `GroupInputEmbedProps["graphRules"]`                                                                                                                                                                               | —      | —    |
-| `id?`                | `string`                                                                                                                                                                                                           | —      | —    |
-| `labels?`            | `GroupInputEmbedProps["labels"]`                                                                                                                                                                                   | —      | —    |
-| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —      | —    |
-| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | —    |
-| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —      | —    |
-| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | —    |
-| `placement?`         | `GroupInputEmbedProps["placement"]`                                                                                                                                                                                | —      | —    |
-| `style?`             | `GroupInputEmbedProps["style"]`                                                                                                                                                                                    | —      | —    |
-| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | —    |
-| `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —      | —    |
-| `zIndex?`            | `number`                                                                                                                                                                                                           | —      | —    |
+| 成员                 | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------ |
+| `animations?`        | `GroupInputEmbedProps["animations"]`                                                                                                                                                                               | —      | 作用于整体的动画轨道，不参与布局或向后代继承           |
+| `background?`        | `GroupInputEmbedProps["background"]`                                                                                                                                                                               | —      | 外框背景覆盖                                           |
+| `border?`            | `GroupInputEmbedProps["border"]`                                                                                                                                                                                   | —      | 外框描边覆盖，整体替换主题值                           |
+| `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —      | 引用 id 的合成包络形状                                 |
+| `caption?`           | `GroupInputEmbedProps["caption"]`                                                                                                                                                                                  | —      | 外框内部的标题说明区                                   |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —      | —                                                      |
+| `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —      | 局部坐标系中的裁剪区域                                 |
+| `cornerRadius?`      | `number`                                                                                                                                                                                                           | —      | 外框圆角                                               |
+| `defaults?`          | `GroupInputEmbedProps["defaults"]`                                                                                                                                                                                 | —      | 后代默认样式及继承屏障                                 |
+| `frame?`             | `GroupInputEmbedProps["frame"]`                                                                                                                                                                                    | —      | 固有包络装饰，不参与布局                               |
+| `graphDefaults?`     | `GroupInputEmbedProps["graphDefaults"]`                                                                                                                                                                            | —      | 可见后代的稀疏默认值                                   |
+| `graphRules?`        | `GroupInputEmbedProps["graphRules"]`                                                                                                                                                                               | —      | 可见 Entity / Relation 后代的有序规则                  |
+| `id?`                | `string`                                                                                                                                                                                                           | —      | 可选引用 id，注册到父命名空间                          |
+| `labels?`            | `GroupInputEmbedProps["labels"]`                                                                                                                                                                                   | —      | 非空外围标签数组，只扩展视觉边界                       |
+| `localNamespace?`    | `false \| true`                                                                                                                                                                                                    | —      | 使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级 |
+| `meta?`              | `Record<string, JsonValue>`                                                                                                                                                                                        | —      | 透传的 JSON 元信息                                     |
+| `overflow?`          | `"clip" \| "visible"`                                                                                                                                                                                              | —      | 内容溢出行为，外围标签不受此项裁剪                     |
+| `padding?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 内容与外框内边距，编译时默认 10                        |
+| `placement?`         | `GroupInputEmbedProps["placement"]`                                                                                                                                                                                | —      | 布局与局部变换后的最终对齐放置                         |
+| `style?`             | `GroupInputEmbedProps["style"]`                                                                                                                                                                                    | —      | 后代的级联视觉覆盖                                     |
+| `theme?`             | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —      | 子树的稀疏主题覆盖                                     |
+| `transforms?`        | `GroupInputEmbedProps["transforms"]`                                                                                                                                                                               | —      | 局部变换，数组最后一项先作用于局部点                   |
+| `zIndex?`            | `number`                                                                                                                                                                                                           | —      | 容器整体在同级中的绘制顺序                             |
 
 </ApiTable>
 
@@ -142,7 +142,7 @@ export type InputGroup = Omit<GroupCreateOptions, 'children'> &
 </p>
 
 ```ts
-export declare const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedProps>;
+export declare const GroupInputEmbedAdapter: SynchronousInputEmbedAdapter<GroupInputEmbedProps>;
 ```
 
 #### createGraphVanillaAdapters
@@ -151,7 +151,7 @@ export declare const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedPr
   <ApiSourceLink
     label={'createGraphVanillaAdapters'}
     path={'packages/schematic/graph-vanilla/src/adapters.ts'}
-    startLine={22}
+    startLine={24}
   >
     创建可一次性传给 Vanilla normalize 的 Graph adapter 集合
   </ApiSourceLink>
@@ -163,9 +163,9 @@ export declare const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedPr
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称 | 类型 / 签名                         | 说明                                                                |
-| ------ | ---- | ----------------------------------- | ------------------------------------------------------------------- |
-| 返回值 | —    | `Array<InputEmbedAdapter<unknown>>` | 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组 |
+| 类别   | 名称 | 类型 / 签名                                    | 说明                                                                |
+| ------ | ---- | ---------------------------------------------- | ------------------------------------------------------------------- |
+| 返回值 | —    | `Array<SynchronousInputEmbedAdapter<unknown>>` | 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组 |
 
 </ApiTable>
 
@@ -174,7 +174,7 @@ export declare const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedPr
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export declare const createGraphVanillaAdapters: () => Array<InputEmbedAdapter<unknown>>;
+export declare const createGraphVanillaAdapters: () => Array<SynchronousInputEmbedAdapter<unknown>>;
 ```
 
 </DocTab>
@@ -214,13 +214,13 @@ export type GroupCreateOptions = Omit<ZodInfer<typeof GroupSchema>, 'namespace' 
 
 | 成员                           | 类型                                         | 默认值 | 说明                                               |
 | ------------------------------ | -------------------------------------------- | ------ | -------------------------------------------------- |
-| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | —      | 自定义 Entity kind definitions                     |
-| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | —      | 自定义 Entity predicate definitions                |
-| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | —      | 自定义 Entity role definitions                     |
-| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | —      | 与 Core Theme style 同名的 Graph Theme definitions |
-| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | —      | 自定义 Relation kind definitions                   |
-| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | —      | 自定义 Relation predicate definitions              |
-| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | —      | 自定义 Relation role definitions                   |
+| `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | `[]`   | 自定义 Entity kind definitions                     |
+| `readonly entityPredicates?`   | `ReadonlyArray<EntityPredicateDefinition>`   | `[]`   | 自定义 Entity predicate definitions                |
+| `readonly entityRoles?`        | `ReadonlyArray<EntityRoleDefinition>`        | `[]`   | 自定义 Entity role definitions                     |
+| `readonly graphThemeStyles?`   | `ReadonlyArray<GraphThemeStyleDefinition>`   | `[]`   | 与 Core Theme style 同名的 Graph Theme definitions |
+| `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | `[]`   | 自定义 Relation kind definitions                   |
+| `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | `[]`   | 自定义 Relation predicate definitions              |
+| `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | `[]`   | 自定义 Relation role definitions                   |
 
 </ApiTable>
 

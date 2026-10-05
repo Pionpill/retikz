@@ -1,6 +1,6 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
-import type { DataSortOrderValue, IRDataOrderBy } from '../../schemas';
+import type { IRDataOrderBy } from '../../schemas';
 import { DataSortOrder } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { compareRowsByFieldPath, resolveFieldPath } from '../data';
@@ -131,7 +131,7 @@ export const orderRows = (rows: Array<ExternalRow>, orderBy?: Array<IRDataOrderB
 export const rankedByNumericField = (
   rows: Array<ExternalRow>,
   field: string,
-  direction: DataSortOrderValue,
+  direction: DataSortOrder,
 ): Array<ExternalRow> =>
   rows
     .map((row, index) => ({ row, index, value: resolveFieldPath(row, field) }))

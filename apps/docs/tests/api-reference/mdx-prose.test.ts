@@ -35,7 +35,13 @@ export const configured = (options: Readonly<{
    * @default 3
    */
   retries?: number;
-}> = {}): number => options.retries ?? 3;`,
+}> = {}): number => options.retries ?? 3;
+/** Available directions */
+export const Direction = { Row: 'row', Column: 'column' } as const;
+/** A selected direction */
+export type Direction = (typeof Direction)[keyof typeof Direction];
+/** Content alternatives */
+export type Content = { text: string } | { count: number };`,
       'utf8',
     );
     for (const lang of ['zh', 'en'] as const) {
@@ -44,7 +50,7 @@ export const configured = (options: Readonly<{
           packageName: 'mdx-prose-fixture',
           packageDirectory: directory,
           tsconfigPath,
-          entries: [{ source: entry, title: { zh: 'Options', en: 'Options' } }],
+          entries: [{ source: entry, title: { zh: 'Options', en: 'Options' }, declarationOnlySymbols: ['Content'] }],
           translate: text => text,
         },
         lang,
@@ -58,6 +64,10 @@ export const configured = (options: Readonly<{
       expect(source).toContain('Configuration, defaulting to &#123;&#125;; retries defaults to 3');
       expect(source).not.toContain('重试次数');
       expect(source).not.toContain('@default');
+      expect(source.match(/^### Direction$/gm)).toHaveLength(1);
+      expect(source).toContain('export const Direction');
+      expect(source).toContain('export type Direction = (typeof Direction)[keyof typeof Direction];');
+      expect(source).toContain('export type Content =');
       await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeDefined();
     }
   } finally {

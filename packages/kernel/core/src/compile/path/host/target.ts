@@ -1,6 +1,6 @@
 import type { Transform } from '../../../contract';
 import type { PathTargetView } from '../../../resolve';
-import type { FoldStepViaValue, IRPosition, IRTarget } from '../../../schemas';
+import type { IRPosition, IRTarget } from '../../../schemas';
 import { FoldStepVia } from '../../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { point } from '../../../shared/geometry';
@@ -38,7 +38,7 @@ export const clipTarget = (
 export const foldCornersOf = (
   prev: IRPosition,
   curr: IRPosition,
-  via: FoldStepViaValue,
+  via: FoldStepVia,
   fraction = 0.5,
 ): Array<IRPosition> => {
   if (via === FoldStepVia.HorizontalThenVertical) return [[curr[0], prev[1]]];

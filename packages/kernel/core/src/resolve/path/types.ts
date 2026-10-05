@@ -18,7 +18,7 @@ import type {
   IRTarget,
   ResolvedDropShadow,
 } from '../../schemas';
-import type { ThemeModeValue } from '../../shared';
+import type { ThemeMode } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
@@ -219,7 +219,7 @@ export type PathResolveContext = Readonly<{
   /** 当前样式级联栈 */
   styleStack?: ReadonlyArray<StyleResolveFrame>;
   /** 当前 path 所在位置的 Theme 明暗模式 */
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   /** target/reference 解析能力 */
   targetResolver?: PathTargetResolver;
   /** path kind provider registry */

@@ -47,7 +47,7 @@ export type SurfaceProps = Omit<SurfaceInput, 'namespace' | 'type' | 'child'> & 
   <ApiSourceLink
     label={'InputSurface'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={17}
+    startLine={22}
   >
     Surface 输入可显式指定持久化 Scope id
   </ApiSourceLink>
@@ -89,7 +89,7 @@ export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | '
   <ApiSourceLink
     label={'InputSurfaceChild'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={14}
+    startLine={19}
   >
     Surface 唯一 child 的作者侧输入
   </ApiSourceLink>
@@ -105,14 +105,15 @@ export type InputSurfaceChild = InputChild;
   <ApiSourceLink
     label={'SurfaceInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={28}
+    startLine={63}
   >
-    Standard Surface 的 InputEmbed adapter
+    Standard Surface 的同步与异步 InputEmbed adapter
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface>;
+export declare const SurfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>>;
 ```
 
 #### surface
@@ -121,7 +122,7 @@ export declare const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface>;
   <ApiSourceLink
     label={'surface'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={66}
+    startLine={86}
   >
     创建由 SurfaceInputEmbedAdapter 下沉的 Standard Surface embed
   </ApiSourceLink>
@@ -158,7 +159,7 @@ export declare const surface: (input: InputSurface) => InputEmbed<InputSurface>;
   <ApiSourceLink
     label={'surfaceChild'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={25}
+    startLine={30}
   >
     创建由 Surface adapter 在根 Scene traversal 中归一化的唯一 child 输入
   </ApiSourceLink>

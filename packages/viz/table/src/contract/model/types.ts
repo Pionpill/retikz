@@ -6,13 +6,13 @@ import type {
   IRTableCellAppearance,
   IRTableCellBorders,
   IRTableCellPayload,
-  TableCellFitValue,
-  TableCellLocationValue,
-  TableCellOverflowValue,
-  TableCellRoleValue,
-  TableHorizontalAlignmentValue,
-  TableRowKindValue,
-  TableVerticalAlignmentValue,
+  TableCellFit,
+  TableCellLocation,
+  TableCellOverflow,
+  TableCellRole,
+  TableHorizontalAlignment,
+  TableRowKind,
+  TableVerticalAlignment,
 } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { TableCellSource } from '../structure';
@@ -24,7 +24,7 @@ export type SemanticTableRow = Readonly<{
   /** canonical 声明顺序 */
   index: number;
   /** row 语义类型 */
-  kind: TableRowKindValue;
+  kind: TableRowKind;
   /** detail row 对应的外部数据索引 */
   sourceIndex?: number;
 }>;
@@ -52,15 +52,15 @@ export type ResolvedTableCellLayout = Readonly<{
   /** Core 同源的四边 padding */
   padding: Readonly<BoundsInsets>;
   /** content box 内横向对齐 */
-  horizontalAlign: TableHorizontalAlignmentValue;
+  horizontalAlign: TableHorizontalAlignment;
   /** content box 内纵向对齐 */
-  verticalAlign: TableVerticalAlignmentValue;
+  verticalAlign: TableVerticalAlignment;
   /** 是否请求宽度约束重排 */
   wrap: boolean;
   /** 最终内容缩放策略 */
-  fit: TableCellFitValue;
+  fit: TableCellFit;
   /** 最终内容溢出策略 */
-  overflow: TableCellOverflowValue;
+  overflow: TableCellOverflow;
   /** 可选 Cell 四侧 border 候选 */
   borders?: DeepReadonly<IRTableCellBorders>;
 }>;
@@ -78,9 +78,9 @@ export type SemanticTableCell = Readonly<{
   /** 所属 column 的 canonical index */
   columnIndex: number;
   /** Cell 语义位置 */
-  location: TableCellLocationValue;
+  location: TableCellLocation;
   /** Cell 语义角色 */
-  roles: ReadonlyArray<TableCellRoleValue>;
+  roles: ReadonlyArray<TableCellRole>;
   /** Cell value 或直接内容 */
   payload: DeepReadonly<IRTableCellPayload>;
   /** 已解析的矩形跨度 */
@@ -114,9 +114,9 @@ export type TableCellContext = Readonly<{
   /** canonical column index */
   columnIndex: number;
   /** Cell 语义位置 */
-  location: TableCellLocationValue;
+  location: TableCellLocation;
   /** Cell 语义角色 */
-  roles: ReadonlyArray<TableCellRoleValue>;
+  roles: ReadonlyArray<TableCellRole>;
   /** 可选最小来源信息 */
   source?: TableCellSource;
 }>;

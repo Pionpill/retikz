@@ -1,7 +1,6 @@
 import type { infer as ZodInfer } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
-import type { TableBorderContributionOrigin } from './constants';
 import type {
   ResolvedTableBorderLineSchema,
   TableBorderContributionSchema,
@@ -14,10 +13,6 @@ import type {
   TableLayoutManifestSchema,
   TableTrackManifestEntrySchema,
 } from './schema';
-
-/** Table border contribution 的闭合来源类型值 */
-export type TableBorderContributionOriginValue =
-  (typeof TableBorderContributionOrigin)[keyof typeof TableBorderContributionOrigin];
 
 /** Border Graph candidate 的几何来源 */
 export type TableBorderSource = DeepReadonly<ZodInfer<typeof TableBorderSourceSchema>>;

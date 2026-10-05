@@ -1,6 +1,5 @@
 import type { Position } from '@retikz/math';
 
-import type { AnchorValue } from './anchor';
 import { Anchor } from './anchor';
 
 /**
@@ -22,7 +21,7 @@ export type SharedPolarPosition = {
 /** 结构化相对定位对象 */
 export type SharedAtPositionLike = {
   /** 相对方向 */
-  direction: AnchorValue;
+  direction: Anchor;
   /** 被引用的节点或坐标 id */
   of: string;
   /** 可选距离 */
@@ -74,8 +73,8 @@ const isRecord = (value: unknown): value is Record<PropertyKey, unknown> =>
 
 const isNumber = (value: unknown): value is number => typeof value === 'number';
 
-const isAnchorValue = (value: unknown): value is AnchorValue =>
-  typeof value === 'string' && Object.values(Anchor).includes(value as AnchorValue);
+const isAnchorValue = (value: unknown): value is Anchor =>
+  typeof value === 'string' && Object.values(Anchor).includes(value as Anchor);
 
 /** 判断输入是否为笛卡尔坐标元组 */
 export const isPositionTuple = (value: unknown): value is Position =>

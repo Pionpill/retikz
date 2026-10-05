@@ -2,7 +2,6 @@ import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import type { GridTrackConstraint } from '../grid-layout/tracks';
 import { solveGridTracks } from '../grid-layout/tracks';
 import type { IRGridTrack } from '../grid-layout/types';
-import type { LayoutAlignmentValue } from '../shared';
 import { LayoutAlignment, LayoutDistribution } from '../shared';
 import { compensatedLayoutSum } from './distribution';
 import type { FlexMainItem } from './flex-engine';
@@ -37,7 +36,7 @@ export type PairedFlowDirection = 'horizontal' | 'vertical';
 export type PairedFlowWrap = 'nowrap' | 'wrap';
 
 /** paired flow 支持的次 child 交叉轴对齐方式 */
-export type PairedFlowAlignment = Extract<LayoutAlignmentValue, 'start' | 'center' | 'end'>;
+export type PairedFlowAlignment = Extract<LayoutAlignment, 'start' | 'center' | 'end'>;
 
 /** paired flow 的输入参数 */
 export type PairedFlowOptions = Readonly<{

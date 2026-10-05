@@ -40,13 +40,13 @@ type ThemeTokenNamespaceBag = Readonly<Record<string, IRJsonObject>>;
 
 type IRTheme = Readonly<{
   style?: ThemeStyleValue;
-  mode?: ThemeModeValue;
+  mode?: ThemeMode;
   tokens?: ThemeTokenNamespaceBag;
 }>;
 
 type ResolvedTheme = Readonly<{
   style: ThemeStyleValue;
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   tokens: Readonly<Record<string, Readonly<IRJsonObject>>>;
   colors: ResolvedThemeColors;
 }>;

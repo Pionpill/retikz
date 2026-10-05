@@ -1,8 +1,6 @@
 import type { IRScopeProps } from '@retikz/core';
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 import type {
   LegendArtifactGeometrySchema,
   LegendArtifactSchema,
@@ -15,18 +13,6 @@ import type {
   LegendSchema,
   LegendTickSchema,
 } from './schema';
-
-/** Legend 内容形态取值 */
-export type LegendContentKindValue = ValueOf<typeof LegendContentKind>;
-
-/** Legend 物理排列方向取值 */
-export type LegendDirectionValue = ValueOf<typeof LegendDirection>;
-
-/** Legend 离散条目换行策略取值 */
-export type LegendWrapValue = ValueOf<typeof LegendWrap>;
-
-/** Legend 样本物理 y 轴对齐方式取值 */
-export type LegendSampleAlignmentValue = ValueOf<typeof LegendSampleAlignment>;
 
 /** 持久化的 Legend 离散条目 */
 export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;

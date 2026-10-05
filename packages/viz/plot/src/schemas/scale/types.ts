@@ -1,7 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { PlotColorScheme, PlotDomainPaddingKind, PlotScale } from './constants';
 import type {
   BandScaleSchema,
   CategoryValueSchema,
@@ -26,23 +24,14 @@ import type {
   TimeScaleSchema,
 } from './schema';
 
-/** scale 类型 */
-export type PlotScaleValue = ValueOf<typeof PlotScale>;
-
 /** Plot可接受的开放scale type */
-export type PlotScaleTypeValue = ZodInfer<typeof PlotScaleTypeSchema>;
-
-/** 内置命名配色方案名 */
-export type PlotColorSchemeValue = ValueOf<typeof PlotColorScheme>;
+export type PlotScaleType = ZodInfer<typeof PlotScaleTypeSchema>;
 
 /** 分类标量：类别取值 */
 export type IRPlotCategoryValue = ZodInfer<typeof CategoryValueSchema>;
 
 /** position scale 的 domain padding */
 export type IRPlotDomainPadding = ZodInfer<typeof DomainPaddingSchema>;
-
-/** position scale 的 domain padding 单位 */
-export type PlotDomainPaddingKindValue = ValueOf<typeof PlotDomainPaddingKind>;
 
 /** 线性 scale */
 export type IRPlotLinearScale = ZodInfer<typeof LinearScaleSchema>;

@@ -1,4 +1,5 @@
 import type { ExternalRow } from '@retikz/data';
+import type { ValueOf } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
@@ -18,7 +19,7 @@ export const PositionAdjustmentSpace = {
 } as const;
 
 /** Position Adjustment 的执行空间值 */
-export type PositionAdjustmentSpaceValue = (typeof PositionAdjustmentSpace)[keyof typeof PositionAdjustmentSpace];
+export type PositionAdjustmentSpace = ValueOf<typeof PositionAdjustmentSpace>;
 
 /** Mark 暴露给 placement pipeline 的稳定目标 */
 export type MarkPlacementTarget = {

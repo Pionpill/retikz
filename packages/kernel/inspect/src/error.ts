@@ -18,12 +18,12 @@ export const RetikzInspectErrorCode = {
 } as const;
 
 /** Inspect 包稳定错误码取值 */
-export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>;
+export type RetikzInspectErrorCode = ValueOf<typeof RetikzInspectErrorCode>;
 
 /** Inspect 包错误的结构化构造参数 */
 export type RetikzInspectErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzInspectErrorCodeValue;
+  code: RetikzInspectErrorCode;
   /** 面向调用方的原始错误消息 */
   message: string;
   /** 失败上下文的结构化详情 */
@@ -35,7 +35,7 @@ export type RetikzInspectErrorOptions = Readonly<{
 type RetikzInspectErrorCauseOptions = Readonly<Pick<RetikzInspectErrorOptions, 'details' | 'cause'>>;
 
 /** Inspect 包统一的结构化错误 */
-export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzInspectError extends RetikzError<RetikzInspectErrorCode, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 Inspect 错误
    *
    * @param message 面向调用方的错误消息，错误码为 INSPECTION_ERROR
@@ -52,7 +52,7 @@ export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue,
    * @param message 面向调用方的错误消息
    * @param options 可选详情与原始原因；省略 details 时使用包含 code 的只读对象
    */
-  constructor(code: RetikzInspectErrorCodeValue, message: string, options?: RetikzInspectErrorCauseOptions);
+  constructor(code: RetikzInspectErrorCode, message: string, options?: RetikzInspectErrorCauseOptions);
   constructor(
     optionsOrMessageOrCode: RetikzInspectErrorOptions | string,
     message?: string,
@@ -63,7 +63,7 @@ export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue,
         ? optionsOrMessageOrCode
         : message === undefined
           ? { code: RetikzInspectErrorCode.Default, message: optionsOrMessageOrCode }
-          : { code: optionsOrMessageOrCode as RetikzInspectErrorCodeValue, message, ...causeOptions };
+          : { code: optionsOrMessageOrCode as RetikzInspectErrorCode, message, ...causeOptions };
     super({
       code: options.code,
       message: options.message,

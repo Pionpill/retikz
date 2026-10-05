@@ -15,10 +15,10 @@
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `readonly authoring?` | `unknown` | — | 交给可选编译驱动解释的不透明声明数据 |
-| `readonly children?` | `ReactNode` | `[]` | 必须由 Flex 类型布局项目组成的子元素；省略时容器为空 |
+| 成员                  | 类型        | 默认值 | 说明                                                 |
+| --------------------- | ----------- | ------ | ---------------------------------------------------- |
+| `readonly authoring?` | `unknown`   | —      | 交给可选编译驱动解释的不透明声明数据                 |
+| `readonly children?`  | `ReactNode` | `[]`   | 必须由 Flex 类型布局项目组成的子元素；省略时容器为空 |
 
 </ApiTable>
 
@@ -31,10 +31,11 @@ export declare const FlexLayout: {
   (props: FlexLayoutProps, context?: any): ReactNode;
 };
 
-export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> & Readonly<{
+export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
+  Readonly<{
     authoring?: unknown;
     children?: ReactNode;
-}>;
+  }>;
 ```
 
 </DocTab>
@@ -52,18 +53,18 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> & Readonly<{
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖当前子项的交叉轴对齐 |
-| `basis?` | `number \| "content"` | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸 |
-| `readonly children` | `ReactNode` | — | 提供恰好一个可绘制 JSX 子元素；不能同时传 ir |
-| `grow?` | `number` | `0` | 接收正剩余空间的有限非负系数 |
-| `readonly ir?` | `never` | — | JSX 分支不接受 IR 输入 |
-| `readonly itemKey?` | `string` | — | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 分配区域外边距；不进入子图形的空间提案 |
-| `max?` | `number` | — | 作者给出的主轴分配尺寸硬上限 |
-| `min?` | `number` | — | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
-| `shrink?` | `number` | `1` | 与未约束基础尺寸相乘，用于回收负剩余空间 |
+| 成员                | 类型                                                                                                                                                                                                               | 默认值      | 说明                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------ |
+| `alignSelf?`        | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | 覆盖当前子项的交叉轴对齐                               |
+| `basis?`            | `number \| "content"`                                                                                                                                                                                              | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸         |
+| `readonly children` | `ReactNode`                                                                                                                                                                                                        | —           | 提供恰好一个可绘制 JSX 子元素；不能同时传 ir           |
+| `grow?`             | `number`                                                                                                                                                                                                           | `0`         | 接收正剩余空间的有限非负系数                           |
+| `readonly ir?`      | `never`                                                                                                                                                                                                            | —           | JSX 分支不接受 IR 输入                                 |
+| `readonly itemKey?` | `string`                                                                                                                                                                                                           | —           | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
+| `margin?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | 分配区域外边距；不进入子图形的空间提案                 |
+| `max?`              | `number`                                                                                                                                                                                                           | —           | 作者给出的主轴分配尺寸硬上限                           |
+| `min?`              | `number`                                                                                                                                                                                                           | —           | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达   |
+| `shrink?`           | `number`                                                                                                                                                                                                           | `1`         | 与未约束基础尺寸相乘，用于回收负剩余空间               |
 
 </ApiTable>
 
@@ -73,18 +74,18 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> & Readonly<{
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖当前子项的交叉轴对齐 |
-| `basis?` | `number \| "content"` | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸 |
-| `readonly children?` | `never` | — | IR 分支不接受 JSX 子元素 |
-| `grow?` | `number` | `0` | 接收正剩余空间的有限非负系数 |
-| `readonly ir` | `InputEmbedContribution['node']` | — | 已声明的可序列化子图形；不能同时传 children |
-| `readonly itemKey?` | `string` | — | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 分配区域外边距；不进入子图形的空间提案 |
-| `max?` | `number` | — | 作者给出的主轴分配尺寸硬上限 |
-| `min?` | `number` | — | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
-| `shrink?` | `number` | `1` | 与未约束基础尺寸相乘，用于回收负剩余空间 |
+| 成员                 | 类型                                                                                                                                                                                                               | 默认值      | 说明                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ------------------------------------------------------ |
+| `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | 覆盖当前子项的交叉轴对齐                               |
+| `basis?`             | `number \| "content"`                                                                                                                                                                                              | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸         |
+| `readonly children?` | `never`                                                                                                                                                                                                            | —           | IR 分支不接受 JSX 子元素                               |
+| `grow?`              | `number`                                                                                                                                                                                                           | `0`         | 接收正剩余空间的有限非负系数                           |
+| `readonly ir`        | `InputEmbedContribution['node']`                                                                                                                                                                                   | —           | 已声明的可序列化子图形；不能同时传 children            |
+| `readonly itemKey?`  | `string`                                                                                                                                                                                                           | —           | 容器内稳定身份；省略时内部按位置生成，不读取 React key |
+| `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | 分配区域外边距；不进入子图形的空间提案                 |
+| `max?`               | `number`                                                                                                                                                                                                           | —           | 作者给出的主轴分配尺寸硬上限                           |
+| `min?`               | `number`                                                                                                                                                                                                           | —           | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达   |
+| `shrink?`            | `number`                                                                                                                                                                                                           | `1`         | 与未约束基础尺寸相乘，用于回收负剩余空间               |
 
 </ApiTable>
 
@@ -95,9 +96,11 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> & Readonly<{
 ```ts
 export declare const FlexLayoutItem: FC<FlexLayoutItemProps>;
 
-export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'kind'> & Readonly<{
+export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'kind'> &
+  Readonly<{
     itemKey?: string;
-}> & LayoutItemChildSource;
+  }> &
+  LayoutItemChildSource;
 ```
 
 </DocTab>
@@ -108,7 +111,7 @@ export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'k
 
 ### flexLayout / InputFlexLayout
 
-- `flexLayout`：<ApiSourceLink label={"flexLayout"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={33}>创建FlexLayout 嵌入项</ApiSourceLink>
+- `flexLayout`：<ApiSourceLink label={"flexLayout"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={53}>创建FlexLayout 嵌入项</ApiSourceLink>
 - `InputFlexLayout`：<ApiSourceLink label={"InputFlexLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={27}>Vanilla FlexLayout authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -119,12 +122,12 @@ export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'k
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `children?` | `ReadonlyArray<InputFlexLayoutItem>` | `[]` | 作者声明的直属子项，省略时按空列表处理 |
-| `input` (参数) | `InputFlexLayout` | — | 容器与子项输入，保留传入对象引用 |
-| `authoring?` (参数) | `unknown` | — | 交给编译驱动的不透明声明数据；省略时不附加声明 |
-| 返回值 | `InputEmbed<InputFlexLayout>` | — | 由布局适配器消费的 InputEmbed，不在创建时求解布局 |
+| 成员                | 类型                                 | 默认值 | 说明                                              |
+| ------------------- | ------------------------------------ | ------ | ------------------------------------------------- |
+| `children?`         | `ReadonlyArray<InputFlexLayoutItem>` | `[]`   | 作者声明的直属子项，省略时按空列表处理            |
+| `input` (参数)      | `InputFlexLayout`                    | —      | 容器与子项输入，保留传入对象引用                  |
+| `authoring?` (参数) | `unknown`                            | —      | 交给编译驱动的不透明声明数据；省略时不附加声明    |
+| 返回值              | `InputEmbed<InputFlexLayout>`        | —      | 由布局适配器消费的 InputEmbed，不在创建时求解布局 |
 
 </ApiTable>
 
@@ -136,7 +139,7 @@ export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'k
 export declare const flexLayout: (input: InputFlexLayout, authoring?: unknown) => InputEmbed<InputFlexLayout>;
 
 export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
-    children?: ReadonlyArray<InputFlexLayoutItem>;
+  children?: ReadonlyArray<InputFlexLayoutItem>;
 };
 ```
 
@@ -146,28 +149,34 @@ export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
 
 ### InputFlexLayoutItem
 
-<p><ApiSourceLink label={"InputFlexLayoutItem"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={18}>Vanilla FlexLayout item 输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'InputFlexLayoutItem'}
+    path={'packages/library/layout-vanilla/src/normalize/types.ts'}
+    startLine={18}
+  >
+    Vanilla FlexLayout item 输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖当前子项的交叉轴对齐 |
-| `basis?` | `number \| "content"` | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸 |
-| `child` | `InputChild` | — | 直属布局 child 的作者侧输入 |
-| `grow?` | `number` | `0` | 接收正剩余空间的有限非负系数 |
-| `key?` | `string` | — | 可选的容器局部稳定身份；省略时按 source index 生成 |
-| `kind` | `"flex"` | — | 子项判别字段；可使用 `LayoutItemKind.Flex` |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 分配区域外边距；不进入子图形的空间提案 |
-| `max?` | `number` | — | 作者给出的主轴分配尺寸硬上限 |
-| `min?` | `number` | — | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
-| `shrink?` | `number` | `1` | 与未约束基础尺寸相乘，用于回收负剩余空间 |
+| 成员         | 类型                                                                                                                                                                                                               | 默认值      | 说明                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ---------------------------------------------------- |
+| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | 覆盖当前子项的交叉轴对齐                             |
+| `basis?`     | `number \| "content"`                                                                                                                                                                                              | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸       |
+| `child`      | `InputChild`                                                                                                                                                                                                       | —           | 直属布局 child 的作者侧输入                          |
+| `grow?`      | `number`                                                                                                                                                                                                           | `0`         | 接收正剩余空间的有限非负系数                         |
+| `key?`       | `string`                                                                                                                                                                                                           | —           | 可选的容器局部稳定身份；省略时按 source index 生成   |
+| `kind`       | `"flex"`                                                                                                                                                                                                           | —           | 子项判别字段；可使用 `LayoutItemKind.Flex`           |
+| `margin?`    | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | 分配区域外边距；不进入子图形的空间提案               |
+| `max?`       | `number`                                                                                                                                                                                                           | —           | 作者给出的主轴分配尺寸硬上限                         |
+| `min?`       | `number`                                                                                                                                                                                                           | —           | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
+| `shrink?`    | `number`                                                                                                                                                                                                           | `1`         | 与未约束基础尺寸相乘，用于回收负剩余空间             |
 
 </ApiTable>
 
@@ -185,22 +194,37 @@ export type InputFlexLayoutItem = InputLayoutItem<FlexLayoutItemInput>;
 
 ### FlexLayoutInputEmbedAdapter
 
-<p><ApiSourceLink label={"FlexLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={12}>Layout Flex 布局的 InputEmbed adapter</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutInputEmbedAdapter'}
+    path={'packages/library/layout-vanilla/src/flex-layout.ts'}
+    startLine={12}
+  >
+    Layout Flex 布局的 InputEmbed adapter
+  </ApiSourceLink>
+</p>
 
 ```ts
-export declare const FlexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout>;
+export declare const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputFlexLayout>, 'prepare'>>;
 ```
 
 ### LayoutInputEmbedAdapters
 
-<p><ApiSourceLink label={"LayoutInputEmbedAdapters"} path={"packages/library/layout-vanilla/src/preset/index.ts"} startLine={8}>三种 Layout 容器的 InputEmbed adapter catalog</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutInputEmbedAdapters'}
+    path={'packages/library/layout-vanilla/src/preset/index.ts'}
+    startLine={8}
+  >
+    三种 Layout 容器的 InputEmbed adapter catalog
+  </ApiSourceLink>
+</p>
 
 ```ts
-export const LayoutInputEmbedAdapters: ReadonlyArray<AnyInputEmbedAdapter> = Object.freeze([
-    FlexLayoutInputEmbedAdapter,
-    GridLayoutInputEmbedAdapter,
-    OverlayLayoutInputEmbedAdapter,
-]);
+export const LayoutInputEmbedAdapters: ReadonlyArray<
+  AnyInputEmbedAdapter & Required<Pick<AnyInputEmbedAdapter, 'lower' | 'prepare'>>
+> = Object.freeze([FlexLayoutInputEmbedAdapter, GridLayoutInputEmbedAdapter, OverlayLayoutInputEmbedAdapter]);
 ```
 
 ## `@retikz/layout`
@@ -208,7 +232,7 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<AnyInputEmbedAdapter> = Obj
 ### createFlexLayout / FlexLayoutInput
 
 - `createFlexLayout`：<ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/factory.ts"} startLine={8}>创建保留省略字段与简写的 FlexLayout 持久化输入</ApiSourceLink>
-- `FlexLayoutInput`：<ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={37}>创建 FlexLayout 时允许省略固定 discriminator 与 可选字段的输入</ApiSourceLink>
+- `FlexLayoutInput`：<ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={29}>创建 FlexLayout 时允许省略固定 discriminator 与 可选字段的输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -216,10 +240,10 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<AnyInputEmbedAdapter> = Obj
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `input` (参数) | `FlexLayoutInput` | — | 容器与子项配置；静态默认值由 Schema 解析时应用 |
-| 返回值 | `IRFlexLayout` | — | 带 layout 命名空间与容器类型的 Source IR，不修改 input |
+| 成员           | 类型              | 默认值 | 说明                                                   |
+| -------------- | ----------------- | ------ | ------------------------------------------------------ |
+| `input` (参数) | `FlexLayoutInput` | —      | 容器与子项配置；静态默认值由 Schema 解析时应用         |
+| 返回值         | `IRFlexLayout`    | —      | 带 layout 命名空间与容器类型的 Source IR，不修改 input |
 
 </ApiTable>
 
@@ -239,23 +263,29 @@ export type FlexLayoutInput = Omit<IRFlexLayout, 'namespace' | 'type'>;
 
 ### FlexLayoutArtifact
 
-<p><ApiSourceLink label={"FlexLayoutArtifact"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={40}>FlexLayout 的 JSON-safe compile artifact payload</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutArtifact'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={32}
+  >
+    FlexLayout 的 JSON-safe compile artifact payload
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `container` | `ZodInfer<typeof FlexLayoutArtifactSchema.shape["container"]>` | — | 已求解的容器几何。 |
-| `items` | `ZodInfer<typeof FlexLayoutArtifactSchema.shape["items"]>` | — | 按作者声明顺序排列的子项结果。 |
-| `kind` | `"flex"` | — | FlexLayout 产物的判别字段。 |
-| `lines` | `Array<{ index: number; itemKeys: Array<string>; mainAxis: "x" \| "y"; mainStart: number; mainSize: number; crossStart: number; crossSize: number; }>` | — | 按最终物理交叉轴顺序排列的布局行。 |
-| `spacing` | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>` | — | 按 canonical 物理顺序排列的固定 gap 与自由空间分布区域。 |
+| 成员        | 类型                                                                                                                                                   | 默认值 | 说明                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------- |
+| `container` | `ZodInfer<typeof FlexLayoutArtifactSchema.shape["container"]>`                                                                                         | —      | 已求解的容器几何。                                       |
+| `items`     | `ZodInfer<typeof FlexLayoutArtifactSchema.shape["items"]>`                                                                                             | —      | 按作者声明顺序排列的子项结果。                           |
+| `kind`      | `"flex"`                                                                                                                                               | —      | FlexLayout 产物的判别字段。                              |
+| `lines`     | `Array<{ index: number; itemKeys: Array<string>; mainAxis: "x" \| "y"; mainStart: number; mainSize: number; crossStart: number; crossSize: number; }>` | —      | 按最终物理交叉轴顺序排列的布局行。                       |
+| `spacing`   | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>`                         | —      | 按 canonical 物理顺序排列的固定 gap 与自由空间分布区域。 |
 
 </ApiTable>
 
@@ -271,58 +301,36 @@ export type FlexLayoutArtifact = ZodInfer<typeof FlexLayoutArtifactSchema>;
 
 </DocTabs>
 
-### FlexLayoutDirectionValue
-
-<p><ApiSourceLink label={"FlexLayoutDirectionValue"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={13}>FlexLayout 主轴方向取值</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type FlexLayoutDirectionValue =
-  | "row"
-  | "row-reverse"
-  | "column"
-  | "column-reverse";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type FlexLayoutDirectionValue = ValueOf<typeof FlexLayoutDirection>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### FlexLayoutItemInput
 
-<p><ApiSourceLink label={"FlexLayoutItemInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={26}>创建 FlexLayout item 时允许省略默认字段的输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutItemInput'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={18}
+  >
+    创建 FlexLayout item 时允许省略默认字段的输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖当前子项的交叉轴对齐 |
-| `basis?` | `number \| "content"` | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸 |
-| `child` | `IRChild` | — | 参与布局的任意可 JSON 序列化 Core 子图形 |
-| `grow?` | `number` | `0` | 接收正剩余空间的有限非负系数 |
-| `key?` | `string` | — | 可选的容器局部稳定身份；省略时按 source index 生成 |
-| `kind` | `"flex"` | — | 子项判别字段；可使用 `LayoutItemKind.Flex` |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 分配区域外边距；不进入子图形的空间提案 |
-| `max?` | `number` | — | 作者给出的主轴分配尺寸硬上限 |
-| `min?` | `number` | — | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
-| `shrink?` | `number` | `1` | 与未约束基础尺寸相乘，用于回收负剩余空间 |
+| 成员         | 类型                                                                                                                                                                                                               | 默认值      | 说明                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ---------------------------------------------------- |
+| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | 覆盖当前子项的交叉轴对齐                             |
+| `basis?`     | `number \| "content"`                                                                                                                                                                                              | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸       |
+| `child`      | `IRChild`                                                                                                                                                                                                          | —           | 参与布局的任意可 JSON 序列化 Core 子图形             |
+| `grow?`      | `number`                                                                                                                                                                                                           | `0`         | 接收正剩余空间的有限非负系数                         |
+| `key?`       | `string`                                                                                                                                                                                                           | —           | 可选的容器局部稳定身份；省略时按 source index 生成   |
+| `kind`       | `"flex"`                                                                                                                                                                                                           | —           | 子项判别字段；可使用 `LayoutItemKind.Flex`           |
+| `margin?`    | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | 分配区域外边距；不进入子图形的空间提案               |
+| `max?`       | `number`                                                                                                                                                                                                           | —           | 作者给出的主轴分配尺寸硬上限                         |
+| `min?`       | `number`                                                                                                                                                                                                           | —           | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
+| `shrink?`    | `number`                                                                                                                                                                                                           | `1`         | 与未约束基础尺寸相乘，用于回收负剩余空间             |
 
 </ApiTable>
 
@@ -338,19 +346,24 @@ export type FlexLayoutItemInput = IRFlexLayoutItem;
 
 </DocTabs>
 
-### FlexLayoutWrapValue
+### FlexMainDistribution
 
-<p><ApiSourceLink label={"FlexLayoutWrapValue"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={16}>FlexLayout 换行策略取值</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexMainDistribution'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={11}
+  >
+    FlexLayout 主轴剩余空间分布取值
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="expanded">
 
 <DocTab value="expanded" label="展开类型">
 
 ```ts
-export type FlexLayoutWrapValue =
-  | "nowrap"
-  | "wrap"
-  | "wrap-reverse";
+export type FlexMainDistribution = 'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly';
 ```
 
 </DocTab>
@@ -358,37 +371,7 @@ export type FlexLayoutWrapValue =
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type FlexLayoutWrapValue = ValueOf<typeof FlexLayoutWrap>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### FlexMainDistributionValue
-
-<p><ApiSourceLink label={"FlexMainDistributionValue"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={19}>FlexLayout 主轴剩余空间分布取值</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type FlexMainDistributionValue =
-  | "start"
-  | "center"
-  | "end"
-  | "space-between"
-  | "space-around"
-  | "space-evenly";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSchema>;
+export type FlexMainDistribution = ZodInfer<typeof FlexMainDistributionSchema>;
 ```
 
 </DocTab>
@@ -397,7 +380,15 @@ export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSche
 
 ### IRFlexLayout
 
-<p><ApiSourceLink label={"IRFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={29}>持久化的 Layout FlexLayout composite</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'IRFlexLayout'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={21}
+  >
+    持久化的 Layout FlexLayout composite
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
@@ -407,9 +398,9 @@ export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSche
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `children?` | `Array<IRFlexLayoutItem>` | `[]` | 作者声明的直属子项，省略时按空列表处理 |
+| 成员        | 类型                      | 默认值 | 说明                                   |
+| ----------- | ------------------------- | ------ | -------------------------------------- |
+| `children?` | `Array<IRFlexLayoutItem>` | `[]`   | 作者声明的直属子项，省略时按空列表处理 |
 
 </ApiTable>
 
@@ -419,7 +410,7 @@ export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSche
 
 ```ts
 export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> & {
-    children?: Array<IRFlexLayoutItem>;
+  children?: Array<IRFlexLayoutItem>;
 };
 ```
 
@@ -429,28 +420,34 @@ export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> &
 
 ### IRFlexLayoutItem
 
-<p><ApiSourceLink label={"IRFlexLayoutItem"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={22}>持久化的 FlexLayout item</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'IRFlexLayoutItem'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={14}
+  >
+    持久化的 FlexLayout item
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-
-
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | 覆盖当前子项的交叉轴对齐 |
-| `basis?` | `number \| "content"` | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸 |
-| `child` | `IRChild` | — | 参与布局的任意可 JSON 序列化 Core 子图形 |
-| `grow?` | `number` | `0` | 接收正剩余空间的有限非负系数 |
-| `key?` | `string` | — | 可选的容器局部稳定身份；省略时按 source index 生成 |
-| `kind` | `"flex"` | — | 子项判别字段；可使用 `LayoutItemKind.Flex` |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | 分配区域外边距；不进入子图形的空间提案 |
-| `max?` | `number` | — | 作者给出的主轴分配尺寸硬上限 |
-| `min?` | `number` | — | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
-| `shrink?` | `number` | `1` | 与未约束基础尺寸相乘，用于回收负剩余空间 |
+| 成员         | 类型                                                                                                                                                                                                               | 默认值      | 说明                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ---------------------------------------------------- |
+| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | 覆盖当前子项的交叉轴对齐                             |
+| `basis?`     | `number \| "content"`                                                                                                                                                                                              | `"content"` | 自然主轴贡献，或作者给出的有限非负基础分配尺寸       |
+| `child`      | `IRChild`                                                                                                                                                                                                          | —           | 参与布局的任意可 JSON 序列化 Core 子图形             |
+| `grow?`      | `number`                                                                                                                                                                                                           | `0`         | 接收正剩余空间的有限非负系数                         |
+| `key?`       | `string`                                                                                                                                                                                                           | —           | 可选的容器局部稳定身份；省略时按 source index 生成   |
+| `kind`       | `"flex"`                                                                                                                                                                                                           | —           | 子项判别字段；可使用 `LayoutItemKind.Flex`           |
+| `margin?`    | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | 分配区域外边距；不进入子图形的空间提案               |
+| `max?`       | `number`                                                                                                                                                                                                           | —           | 作者给出的主轴分配尺寸硬上限                         |
+| `min?`       | `number`                                                                                                                                                                                                           | —           | 显式值替代自动最小值；子图形拒绝时以真实占用溢出表达 |
+| `shrink?`    | `number`                                                                                                                                                                                                           | `1`         | 与未约束基础尺寸相乘，用于回收负剩余空间             |
 
 </ApiTable>
 
@@ -459,7 +456,8 @@ export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> &
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'child'> & Pick<ZodInfer<typeof FlexLayoutItemSchema>, 'child'>;
+export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'child'> &
+  Pick<ZodInfer<typeof FlexLayoutItemSchema>, 'child'>;
 ```
 
 </DocTab>
@@ -468,7 +466,15 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 
 ### LayoutAxisSizeInput
 
-<p><ApiSourceLink label={"LayoutAxisSizeInput"} path={"packages/library/layout/src/composites/shared/types.ts"} startLine={32}>创建单轴尺寸策略时允许的 schema 输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutAxisSizeInput'}
+    path={'packages/library/layout/src/composites/shared/types.ts'}
+    startLine={21}
+  >
+    创建单轴尺寸策略时允许的 schema 输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="content">
 
@@ -476,11 +482,11 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `kind` | `"content"` | — | 尺寸或放置形式的判别字段 |
-| `max?` | `number` | — | 可选最大尺寸，不小于 min |
-| `min?` | `number` | — | 可选最小尺寸，不大于 max |
+| 成员   | 类型        | 默认值 | 说明                     |
+| ------ | ----------- | ------ | ------------------------ |
+| `kind` | `"content"` | —      | 尺寸或放置形式的判别字段 |
+| `max?` | `number`    | —      | 可选最大尺寸，不小于 min |
+| `min?` | `number`    | —      | 可选最小尺寸，不大于 max |
 
 </ApiTable>
 
@@ -490,10 +496,10 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `kind` | `"fixed"` | — | 尺寸或放置形式的判别字段 |
-| `value` | `number` | — | 固定非负尺寸 |
+| 成员    | 类型      | 默认值 | 说明                     |
+| ------- | --------- | ------ | ------------------------ |
+| `kind`  | `"fixed"` | —      | 尺寸或放置形式的判别字段 |
+| `value` | `number`  | —      | 固定非负尺寸             |
 
 </ApiTable>
 
@@ -503,11 +509,11 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 
 <ApiTable>
 
-| 成员 | 类型 | 默认值 | 说明 |
-| --- | --- | --- | --- |
-| `kind` | `"fill"` | — | 尺寸或放置形式的判别字段 |
-| `max?` | `number` | — | 可选最大尺寸，不小于 min |
-| `min?` | `number` | — | 可选最小尺寸，不大于 max |
+| 成员   | 类型     | 默认值 | 说明                     |
+| ------ | -------- | ------ | ------------------------ |
+| `kind` | `"fill"` | —      | 尺寸或放置形式的判别字段 |
+| `max?` | `number` | —      | 可选最大尺寸，不小于 min |
+| `min?` | `number` | —      | 可选最小尺寸，不大于 max |
 
 </ApiTable>
 
@@ -525,7 +531,15 @@ export type LayoutAxisSizeInput = ZodInput<typeof LayoutAxisSizeSchema>;
 
 ### LayoutSizeInput
 
-<p><ApiSourceLink label={"LayoutSizeInput"} path={"packages/library/layout/src/composites/shared/types.ts"} startLine={38}>创建双轴尺寸策略时允许省略默认轴的输入</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutSizeInput'}
+    path={'packages/library/layout/src/composites/shared/types.ts'}
+    startLine={27}
+  >
+    创建双轴尺寸策略时允许省略默认轴的输入
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="expanded">
 
@@ -535,9 +549,17 @@ export type LayoutAxisSizeInput = ZodInput<typeof LayoutAxisSizeSchema>;
 export type LayoutSizeInput =
   | undefined
   | {
-    x?: { kind: "content"; max?: number | undefined; min?: number | undefined; } | { kind: "fixed"; value: number; } | { kind: "fill"; max?: number | undefined; min?: number | undefined; } | undefined;
-    y?: { kind: "content"; max?: number | undefined; min?: number | undefined; } | { kind: "fixed"; value: number; } | { kind: "fill"; max?: number | undefined; min?: number | undefined; } | undefined;
-  };
+      x?:
+        | { kind: 'content'; max?: number | undefined; min?: number | undefined }
+        | { kind: 'fixed'; value: number }
+        | { kind: 'fill'; max?: number | undefined; min?: number | undefined }
+        | undefined;
+      y?:
+        | { kind: 'content'; max?: number | undefined; min?: number | undefined }
+        | { kind: 'fixed'; value: number }
+        | { kind: 'fill'; max?: number | undefined; min?: number | undefined }
+        | undefined;
+    };
 ```
 
 </DocTab>
@@ -554,122 +576,213 @@ export type LayoutSizeInput = ZodInput<typeof LayoutSizeSchema>;
 
 ### FlexLayoutDefinition
 
-<p><ApiSourceLink label={"FlexLayoutDefinition"} path={"packages/library/layout/src/composites/flex-layout/definition.ts"} startLine={10}>Layout FlexLayout 的官方 Core layout-aware composite definition</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutDefinition'}
+    path={'packages/library/layout/src/composites/flex-layout/definition.ts'}
+    startLine={10}
+  >
+    Layout FlexLayout 的官方 Core layout-aware composite definition
+  </ApiSourceLink>
+</p>
 
 ```ts
-export const FlexLayoutDefinition: LayoutCompositeDefinition<IRFlexLayout, typeof LAYOUT_NAMESPACE, 'flexLayout', FlexLayoutArtifact> = defineComposite({
-    namespace: LAYOUT_NAMESPACE,
-    type: 'flexLayout',
-    schema: FlexLayoutSchema,
-    compile: compileFlexLayout,
-    artifactSchema: FlexLayoutArtifactSchema,
+export const FlexLayoutDefinition: LayoutCompositeDefinition<
+  IRFlexLayout,
+  typeof LAYOUT_NAMESPACE,
+  'flexLayout',
+  FlexLayoutArtifact
+> = defineComposite({
+  namespace: LAYOUT_NAMESPACE,
+  type: 'flexLayout',
+  schema: FlexLayoutSchema,
+  compile: compileFlexLayout,
+  artifactSchema: FlexLayoutArtifactSchema,
 });
 ```
 
 ### FlexLayoutDirection
 
-<p><ApiSourceLink label={"FlexLayoutDirection"} path={"packages/library/layout/src/composites/flex-layout/constants.ts"} startLine={2}>FlexLayout 的主轴方向</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutDirection'}
+    path={'packages/library/layout/src/composites/flex-layout/constants.ts'}
+    startLine={3}
+  >
+    FlexLayout 的主轴方向
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const FlexLayoutDirection = {
-    Row: 'row',
-    RowReverse: 'row-reverse',
-    Column: 'column',
-    ColumnReverse: 'column-reverse',
+  Row: 'row',
+  RowReverse: 'row-reverse',
+  Column: 'column',
+  ColumnReverse: 'column-reverse',
 } as const;
+
+export type FlexLayoutDirection = ValueOf<typeof FlexLayoutDirection>;
 ```
 
 ### FlexLayoutProvider
 
-<p><ApiSourceLink label={"FlexLayoutProvider"} path={"packages/library/layout/src/composites/flex-layout/provider.ts"} startLine={8}>FlexLayout 的 Core Composite dependency provider</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutProvider'}
+    path={'packages/library/layout/src/composites/flex-layout/provider.ts'}
+    startLine={8}
+  >
+    FlexLayout 的 Core Composite dependency provider
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const FlexLayoutProvider: CoreDependencyProvider = Object.freeze({
-    key: Object.freeze({
-        capability: 'composite',
-        namespace: FlexLayoutDefinition.namespace,
-        type: FlexLayoutDefinition.type,
-    }),
-    dependencies: Object.freeze([]),
-    datasets: Object.freeze({}),
-    makeDefinition: makeFlexLayoutDefinition,
+  key: Object.freeze({
+    capability: 'composite',
+    namespace: FlexLayoutDefinition.namespace,
+    type: FlexLayoutDefinition.type,
+  }),
+  dependencies: Object.freeze([]),
+  datasets: Object.freeze({}),
+  makeDefinition: makeFlexLayoutDefinition,
 });
 ```
 
 ### FlexLayoutWrap
 
-<p><ApiSourceLink label={"FlexLayoutWrap"} path={"packages/library/layout/src/composites/flex-layout/constants.ts"} startLine={10}>FlexLayout 的换行策略</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutWrap'}
+    path={'packages/library/layout/src/composites/flex-layout/constants.ts'}
+    startLine={11}
+  >
+    FlexLayout 的换行策略
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const FlexLayoutWrap = {
-    NoWrap: 'nowrap',
-    Wrap: 'wrap',
-    WrapReverse: 'wrap-reverse',
+  NoWrap: 'nowrap',
+  Wrap: 'wrap',
+  WrapReverse: 'wrap-reverse',
 } as const;
+
+export type FlexLayoutWrap = ValueOf<typeof FlexLayoutWrap>;
 ```
 
 ### LayoutAlignment
 
-<p><ApiSourceLink label={"LayoutAlignment"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={22}>物理轴上的项目对齐方式</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutAlignment'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={23}
+  >
+    物理轴上的项目对齐方式
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutAlignment = {
-    Start: 'start',
-    Center: 'center',
-    End: 'end',
-    Stretch: 'stretch',
-    FirstBaseline: 'first-baseline',
-    LastBaseline: 'last-baseline',
+  Start: 'start',
+  Center: 'center',
+  End: 'end',
+  Stretch: 'stretch',
+  FirstBaseline: 'first-baseline',
+  LastBaseline: 'last-baseline',
 } as const;
+
+export type LayoutAlignment = ValueOf<typeof LayoutAlignment>;
 ```
 
 ### LayoutAxisSizeKind
 
-<p><ApiSourceLink label={"LayoutAxisSizeKind"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={2}>单轴容器尺寸策略</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutAxisSizeKind'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={3}
+  >
+    单轴容器尺寸策略
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutAxisSizeKind = {
-    Content: 'content',
-    Fixed: 'fixed',
-    Fill: 'fill',
+  Content: 'content',
+  Fixed: 'fixed',
+  Fill: 'fill',
 } as const;
+
+export type LayoutAxisSizeKind = ValueOf<typeof LayoutAxisSizeKind>;
 ```
 
 ### LayoutDistribution
 
-<p><ApiSourceLink label={"LayoutDistribution"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={38}>剩余空间分布方式</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutDistribution'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={39}
+  >
+    剩余空间分布方式
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutDistribution = {
-    Start: 'start',
-    Center: 'center',
-    End: 'end',
-    Stretch: 'stretch',
-    SpaceBetween: 'space-between',
-    SpaceAround: 'space-around',
-    SpaceEvenly: 'space-evenly',
+  Start: 'start',
+  Center: 'center',
+  End: 'end',
+  Stretch: 'stretch',
+  SpaceBetween: 'space-between',
+  SpaceAround: 'space-around',
+  SpaceEvenly: 'space-evenly',
 } as const;
+
+export type LayoutDistribution = ValueOf<typeof LayoutDistribution>;
 ```
 
 ### LayoutItemKind
 
-<p><ApiSourceLink label={"LayoutItemKind"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={12}>布局项目所属的容器种类</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutItemKind'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={13}
+  >
+    布局项目所属的容器种类
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutItemKind = {
-    Flex: 'flex',
-    Grid: 'grid',
-    Overlay: 'overlay',
+  Flex: 'flex',
+  Grid: 'grid',
+  Overlay: 'overlay',
 } as const;
+
+export type LayoutItemKind = ValueOf<typeof LayoutItemKind>;
 ```
 
 ### LayoutOverflow
 
-<p><ApiSourceLink label={"LayoutOverflow"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={56}>容器视觉溢出策略</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutOverflow'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={57}
+  >
+    容器视觉溢出策略
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutOverflow = {
-    Visible: 'visible',
-    Clip: 'clip',
+  Visible: 'visible',
+  Clip: 'clip',
 } as const;
+
+export type LayoutOverflow = ValueOf<typeof LayoutOverflow>;
 ```

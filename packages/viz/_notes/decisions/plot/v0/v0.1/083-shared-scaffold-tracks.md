@@ -28,7 +28,7 @@ type SharedScaffold = {
   coordinate: IRPlotCoordinateOperation;
   sharedRoles: Array<string>;
   tracks: Array<ScaffoldTrack>;
-  frame?: ScaffoldFrameModeValue;
+  frame?: ScaffoldFrameMode;
 };
 
 const ScaffoldFrameMode = {
@@ -36,7 +36,7 @@ const ScaffoldFrameMode = {
   Independent: 'independent',
 } as const;
 
-type ScaffoldFrameModeValue = ValueOf<typeof ScaffoldFrameMode>;
+type ScaffoldFrameMode = ValueOf<typeof ScaffoldFrameMode>;
 
 type ScaffoldTrack = {
   id: string;

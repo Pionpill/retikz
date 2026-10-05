@@ -1,7 +1,6 @@
 import type { IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
 import { categoricalColorAt } from '@retikz/core';
-import type { DataFieldTypeValue } from '@retikz/data';
 import { createDataView, DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 
@@ -154,7 +153,7 @@ const niceNumericTicks = (
 
 const legendRampTickScale = (
   domain: readonly [number, number],
-  fieldType: DataFieldTypeValue | undefined,
+  fieldType: DataFieldType | undefined,
 ): PositionScale => {
   const scale = resolveLinearScale(
     { type: PlotScale.Linear, name: '__legend_ramp_ticks', domain: [domain[0], domain[1]] },

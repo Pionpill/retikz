@@ -1,7 +1,7 @@
 import type {
-  PerformanceTracePhaseValue,
+  PerformanceTracePhase,
   PerformanceTraceRecord,
-  PerformanceTraceUnitValue,
+  PerformanceTraceUnit,
   RuntimeTraceReporter,
 } from '@retikz/runtime';
 import { PerformanceTraceOutcome } from '@retikz/runtime';
@@ -12,8 +12,8 @@ export const assertFullTrace = (
   reporter: RuntimeTraceReporter,
   records: ReadonlyArray<PerformanceTraceRecord>,
   expected: Readonly<{
-    phase: PerformanceTracePhaseValue;
-    unit: PerformanceTraceUnitValue;
+    phase: PerformanceTracePhase;
+    unit: PerformanceTraceUnit;
     visited: number;
   }>,
 ): PerformanceTraceRecord => {

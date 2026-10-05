@@ -63,7 +63,7 @@ export class RetikzError<
 
 | 成员              | 签名                                                                            | 说明                                     |
 | ----------------- | ------------------------------------------------------------------------------- | ---------------------------------------- |
-| `TCode` (泛型)    | `extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue`       | Foundation 错误码的具体字面量类型        |
+| `TCode` (泛型)    | `extends RetikzFoundationErrorCode = RetikzFoundationErrorCode`                 | Foundation 错误码的具体字面量类型        |
 | `TDetails` (泛型) | `extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>` | 与 Foundation 错误码关联的结构化详情类型 |
 | `constructor`     | `(message: string)`                                                             | 使用默认错误码创建 Foundation 错误       |
 |                   | `(options: RetikzErrorOptions<TCode, TDetails>)`                                | 使用结构化参数创建 Foundation 错误       |
@@ -76,7 +76,7 @@ export class RetikzError<
 
 ```ts
 export class RetikzFoundationError<
-  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TCode extends RetikzFoundationErrorCode = RetikzFoundationErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > extends RetikzError<TCode, TDetails> {
   constructor(message: string);
@@ -358,43 +358,6 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
 
 </DocTabs>
 
-### RetikzFoundationErrorCodeValue
-
-<p>
-  <ApiSourceLink
-    label={'RetikzFoundationErrorCodeValue'}
-    path={'packages/kernel/foundation/src/error.ts'}
-    startLine={71}
-  >
-    Foundation 包稳定错误码取值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type RetikzFoundationErrorCodeValue =
-  | 'FOUNDATION_ERROR'
-  | 'FOUNDATION_NON_EMPTY_STRING_REQUIRED'
-  | 'FOUNDATION_POSITIVE_NUMBER_REQUIRED'
-  | 'FOUNDATION_JSON_ERROR'
-  | 'FOUNDATION_COLOR_ERROR';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### ValueOf
 
 <p>
@@ -509,6 +472,8 @@ export const RetikzFoundationErrorCode = {
   Json: 'FOUNDATION_JSON_ERROR',
   Color: 'FOUNDATION_COLOR_ERROR',
 } as const;
+
+export type RetikzFoundationErrorCode = ValueOf<typeof RetikzFoundationErrorCode>;
 ```
 
 ### StaticCssNamedColorHexByName
@@ -769,12 +734,12 @@ export declare const createOpenStringSchema: <const TValues extends Readonly<Rec
 
 <ApiTable variant="parameters">
 
-| 类别   | 名称      | 类型 / 签名                         | 说明                                                  |
-| ------ | --------- | ----------------------------------- | ----------------------------------------------------- |
-| 泛型   | `TKey`    | —                                   | Map 键类型                                            |
-|        | `TValue`  | —                                   | Map 值类型                                            |
-| 参数   | `entries` | `Iterable<readonly [TKey, TValue]>` | 用于创建快照的键值对                                  |
-| 返回值 | —         | `ReadonlyMap<TKey, TValue>`         | 独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结 |
+| 类别   | 名称      | 类型 / 签名                                                | 说明                                                  |
+| ------ | --------- | ---------------------------------------------------------- | ----------------------------------------------------- |
+| 泛型   | `TKey`    | —                                                          | Map 键类型                                            |
+|        | `TValue`  | —                                                          | Map 值类型                                            |
+| 参数   | `entries` | `Iterable<readonly [`<br />`TKey,`<br />`TValue`<br />`]>` | 用于创建快照的键值对                                  |
+| 返回值 | —         | `ReadonlyMap<TKey, TValue>`                                | 独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结 |
 
 </ApiTable>
 

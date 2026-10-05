@@ -1,4 +1,4 @@
-import type { CssColorValue, NonEmptyReadonlyArray, ThemeModeValue, ThemeStyleColorOverrides } from '@retikz/core';
+import type { CssColorValue, NonEmptyReadonlyArray, ThemeMode, ThemeStyleColorOverrides } from '@retikz/core';
 import { defineThemeStyle } from '@retikz/core';
 
 import { PreviewThemeStyle } from '../constants';
@@ -8,7 +8,7 @@ type Tone = readonly [saturation: number, lightness: number];
 
 const hues = [210, 30, 150, 330, 190, 10, 50, 270, 100, 240, 300, 350, 75, 125, 170, 225] as const;
 
-const tonePresets: Record<ReferenceStyle, Record<ThemeModeValue, ReadonlyArray<Tone>>> = {
+const tonePresets: Record<ReferenceStyle, Record<ThemeMode, ReadonlyArray<Tone>>> = {
   academic: {
     light: [
       [44, 49],
@@ -125,10 +125,7 @@ const tonePresets: Record<ReferenceStyle, Record<ThemeModeValue, ReadonlyArray<T
   },
 };
 
-const semanticPresets: Record<
-  ReferenceStyle,
-  Record<ThemeModeValue, NonNullable<ThemeStyleColorOverrides['semantic']>>
-> = {
+const semanticPresets: Record<ReferenceStyle, Record<ThemeMode, NonNullable<ThemeStyleColorOverrides['semantic']>>> = {
   academic: {
     light: {
       error: 'hsl(0, 68%, 42%)',
@@ -167,7 +164,7 @@ const semanticPresets: Record<
   },
 };
 
-const resolveColors = (style: ReferenceStyle, mode: ThemeModeValue): ThemeStyleColorOverrides => {
+const resolveColors = (style: ReferenceStyle, mode: ThemeMode): ThemeStyleColorOverrides => {
   const categorical = hues.map((hue, index) => {
     const [saturation, lightness] = tonePresets[style][mode][index];
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;

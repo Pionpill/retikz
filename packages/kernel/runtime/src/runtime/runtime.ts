@@ -6,13 +6,10 @@ import type {
   RuntimeComputationContext,
   RuntimeComputationDefinition,
   RuntimeComputationErasedExecutor,
-  RuntimeComputationExecutionValue,
-  RuntimeComputationKindValue,
-  RuntimeComputationPhaseValue,
   RuntimeComputationToken,
 } from '../computation';
 import { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from '../computation';
-import type { RuntimeDiagnostic, RuntimeDiagnosticPhaseValue } from '../diagnostic';
+import type { RuntimeDiagnostic } from '../diagnostic';
 import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
 import type { RuntimeSourceLifecycleDiagnostic } from '../error';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
@@ -63,7 +60,7 @@ type RuntimeComputationState = Readonly<{
   prepared: RuntimePreparedComputationArtifact<unknown, unknown, unknown>;
 }>;
 
-type RuntimeComputationOutcome = Exclude<RuntimeComputationKindValue, typeof RuntimeComputationKind.Bailout>;
+type RuntimeComputationOutcome = Exclude<RuntimeComputationKind, typeof RuntimeComputationKind.Bailout>;
 
 type RuntimePreparedParticipantState = Readonly<{
   executor: RuntimeCommitParticipantExecutor;
@@ -78,7 +75,7 @@ type NormalizedUpdateResult =
   | Readonly<{ kind: typeof RuntimeComputationKind.Incremental; artifact: unknown }>
   | Readonly<{
       kind: typeof RuntimeComputationKind.Fallback;
-      diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>>;
+      diagnostics?: ReadonlyArray<Readonly<{ code: string; phase: RuntimeDiagnosticPhase; message: string }>>;
     }>;
 
 type RuntimeState =
@@ -91,10 +88,10 @@ type RuntimeState =
   | 'dispose-pending'
   | 'disposed';
 
-const runtimeDiagnosticPhases = new Set<RuntimeDiagnosticPhaseValue>(Object.values(RuntimeDiagnosticPhase));
+const runtimeDiagnosticPhases = new Set<RuntimeDiagnosticPhase>(Object.values(RuntimeDiagnosticPhase));
 
-const isRuntimeDiagnosticPhase = (value: unknown): value is RuntimeDiagnosticPhaseValue =>
-  typeof value === 'string' && runtimeDiagnosticPhases.has(value as RuntimeDiagnosticPhaseValue);
+const isRuntimeDiagnosticPhase = (value: unknown): value is RuntimeDiagnosticPhase =>
+  typeof value === 'string' && runtimeDiagnosticPhases.has(value as RuntimeDiagnosticPhase);
 
 /** 创建 runtime contract 错误 */
 const runtimeError = (
@@ -410,7 +407,7 @@ const normalizeUpdateResult = (result: unknown, definition: RuntimeComputationTo
     }
     if (fallbackDiagnostics === undefined) return Object.freeze({ kind });
     if (Array.isArray(fallbackDiagnostics)) {
-      const diagnostics: Array<Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>> = [];
+      const diagnostics: Array<Readonly<{ code: string; phase: RuntimeDiagnosticPhase; message: string }>> = [];
       let invalidDiagnostic = false;
       try {
         for (const diagnostic of fallbackDiagnostics) {
@@ -508,7 +505,7 @@ const prepareInitialSources = (
 
 /** 为当前 Computation 构造只允许已声明依赖的 typed candidate view */
 const createCandidateView = (
-  phase: RuntimeComputationPhaseValue,
+  phase: RuntimeComputationPhase,
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   sourceStates: ReadonlyMap<RuntimeSourceToken, RuntimeSourceState>,
@@ -578,7 +575,7 @@ const createCandidateView = (
 
 /** 运行一个 Computation callback 并捕获 artifact 双层 read */
 const runComputation = (
-  phase: RuntimeComputationPhaseValue,
+  phase: RuntimeComputationPhase,
   baseRevision: RuntimeRevision | undefined,
   candidateRevision: RuntimeRevision,
   sourceStates: ReadonlyMap<RuntimeSourceToken, RuntimeSourceState>,
@@ -588,7 +585,7 @@ const runComputation = (
   definition: RuntimeComputationToken,
   executor: RuntimeComputationErasedExecutor,
   trace: RuntimeOptions['trace'],
-  mode: RuntimeComputationExecutionValue,
+  mode: RuntimeComputationExecution,
   previous?: RuntimeComputationState,
 ): Readonly<{
   state?: RuntimeComputationState;
@@ -627,7 +624,7 @@ const runComputation = (
     Object.freeze({
       execution,
       trace: Object.freeze({ owner: traceReporter.owner, report: traceReporter.report }),
-      diagnose: (diagnostic: Readonly<{ code: string; phase: RuntimeDiagnosticPhaseValue; message: string }>) => {
+      diagnose: (diagnostic: Readonly<{ code: string; phase: RuntimeDiagnosticPhase; message: string }>) => {
         drainTraceDiagnostics();
         const candidate: unknown = diagnostic;
         if (typeof candidate !== 'object' || candidate === null) {

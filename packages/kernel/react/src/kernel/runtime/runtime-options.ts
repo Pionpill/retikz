@@ -1,5 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
-import type { RuntimeDiagnostic, RuntimeUpdateStrategyValue } from '@retikz/runtime';
+import type { RuntimeDiagnostic, RuntimeUpdateStrategy } from '@retikz/runtime';
 
 /** React Layout 的宿主执行模式 */
 export const LayoutRuntimeMode = Object.freeze({
@@ -8,7 +8,7 @@ export const LayoutRuntimeMode = Object.freeze({
 } as const);
 
 /** React Layout 宿主执行模式取值 */
-export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
+export type LayoutRuntimeMode = ValueOf<typeof LayoutRuntimeMode>;
 
 /** 作者贡献准备方式，独立于 Runtime 的更新策略 */
 type LayoutPreparationOptions = Readonly<{
@@ -32,7 +32,7 @@ export type LayoutRetainedRuntimeOptions = LayoutPreparationOptions &
      * 更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行
      * @default RuntimeUpdateStrategy.Auto
      */
-    updateStrategy?: RuntimeUpdateStrategyValue;
+    updateStrategy?: RuntimeUpdateStrategy;
     /** 接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面 */
     onDiagnostic?: (diagnostic: RuntimeDiagnostic) => void;
   }>;

@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** 路径填充规则关键字 */
 export const PathFillRule = {
   /** 非零环绕规则：子路径方向决定嵌套区域是否抵消 */
@@ -11,3 +12,9 @@ export const PathKind = {
   /** 标准描边路径 */
   Stroke: 'stroke',
 } as const;
+
+/** 路径填充规则关键字类型 */
+export type PathFillRule = ValueOf<typeof PathFillRule>;
+
+/** 路径编译 kind 关键字类型 */
+export type PathKind = ValueOf<typeof PathKind>;

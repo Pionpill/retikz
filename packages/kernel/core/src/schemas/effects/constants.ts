@@ -1,4 +1,6 @@
-import type { ResolvedDropShadow, ShadowPresetValue } from './types';
+import type { ValueOf } from '@retikz/foundation';
+
+import type { ResolvedDropShadow } from './types';
 
 /**
  * 阴影预设档位关键字（Tailwind 风格刻度）
@@ -19,7 +21,7 @@ export const ShadowPreset = {
  * @description compile 用本表把预设字符串 / `{ preset }` 展开成解析后对象；`none` → null（不产阴影，等价省略）。
  *   单层近似 Tailwind 阴影刻度：`offsetX=0`、暗化半透明黑；exact 值实现期按快照微调
  */
-export const SHADOW_PRESETS: Record<ShadowPresetValue, ResolvedDropShadow | null> = {
+export const SHADOW_PRESETS: Record<ShadowPreset, ResolvedDropShadow | null> = {
   none: null,
   sm: { offsetX: 0, offsetY: 1, blur: 2, color: 'rgba(0,0,0,0.10)' },
   md: { offsetX: 0, offsetY: 3, blur: 6, color: 'rgba(0,0,0,0.12)' },
@@ -51,3 +53,9 @@ export const BlendMode = {
   Color: 'color',
   Luminosity: 'luminosity',
 } as const;
+
+/** 阴影预设档位值联合 */
+export type ShadowPreset = ValueOf<typeof ShadowPreset>;
+
+/** 混合模式值联合 */
+export type BlendMode = ValueOf<typeof BlendMode>;

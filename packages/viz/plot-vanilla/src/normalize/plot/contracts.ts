@@ -14,7 +14,7 @@ import type {
   IRPlotMark,
   IRPlotMarkOperation,
   IRPlotScaleOperation,
-  PolarInterpolationValue,
+  PolarInterpolation,
 } from '@retikz/plot';
 
 import type { InputPlotFacet, InputPlotMark } from './input';
@@ -40,7 +40,7 @@ export type InputPlotCoordinate =
        */
       endAngle?: number;
       /** 固定半径边界与插值敏感图元的连接空间；省略时按角向比例尺连续性推断 */
-      interpolation?: PolarInterpolationValue;
+      interpolation?: PolarInterpolation;
     }
   | {
       /** 1D 笛卡尔直线 */

@@ -40,7 +40,7 @@ export const SceneAnimationOccurrenceChangeKind = {
 } as const;
 
 /** Animated occurrence descriptor 变化类型取值 */
-export type SceneAnimationOccurrenceChangeKindValue = ValueOf<typeof SceneAnimationOccurrenceChangeKind>;
+export type SceneAnimationOccurrenceChangeKind = ValueOf<typeof SceneAnimationOccurrenceChangeKind>;
 
 /** 单个 animated occurrence 在相邻 lineage 间的 descriptor/public id 变化 */
 export type SceneAnimationOccurrenceChange = Readonly<{
@@ -51,7 +51,7 @@ export type SceneAnimationOccurrenceChange = Readonly<{
   /** 下一 lineage 的 public id */
   nextPublicId?: string;
   /** descriptor 相对变化 */
-  kind: SceneAnimationOccurrenceChangeKindValue;
+  kind: SceneAnimationOccurrenceChangeKind;
 }>;
 
 /** Scene root 与各 RuntimeIdentity 动画 descriptor 的结构化 diff */

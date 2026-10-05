@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** Graph 复合元素的命名空间 */
 export const GRAPH_NAMESPACE = 'graph' as const;
 
@@ -64,3 +65,15 @@ export const GraphStatus = {
   /** 被显式禁用、不可用或不参与 */
   Disabled: 'disabled',
 } as const;
+
+/** Graph 复合元素类型的取值 */
+export type GraphType = ValueOf<typeof GraphType>;
+
+/** Entity 内置角色词汇值 */
+export type EntityRole = ValueOf<typeof EntityRole>;
+
+/** Relation 内置角色词汇值 */
+export type RelationRole = ValueOf<typeof RelationRole>;
+
+/** Graph 内置语义状态词汇值 */
+export type GraphStatus = ValueOf<typeof GraphStatus>;

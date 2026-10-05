@@ -1,4 +1,4 @@
-import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
+import type { ExternalRow } from '@retikz/data';
 import { createDataView, DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
 import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
@@ -339,8 +339,8 @@ export const resolveCoordinateFrame = (
   const roleFieldTypes = (
     role: DimensionRole,
     pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
-  ): Array<DataFieldTypeValue> => {
-    const types: Array<DataFieldTypeValue> = [];
+  ): Array<DataFieldType> => {
+    const types: Array<DataFieldType> = [];
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
         continue;

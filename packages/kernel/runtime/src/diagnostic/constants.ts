@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** Runtime 内置结构化诊断码 */
 export const RuntimeDiagnosticCode = {
   /** change set 触发 full fallback */
@@ -87,3 +88,9 @@ export const RuntimeDiagnosticPhase = {
   /** change set 校验阶段 */
   ValidateChangeSet: 'validate-change-set',
 } as const;
+
+/** Runtime 内置结构化诊断码取值 */
+export type RuntimeDiagnosticCode = ValueOf<typeof RuntimeDiagnosticCode>;
+
+/** Runtime 结构化诊断阶段取值 */
+export type RuntimeDiagnosticPhase = ValueOf<typeof RuntimeDiagnosticPhase>;

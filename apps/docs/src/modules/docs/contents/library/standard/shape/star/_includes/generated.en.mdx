@@ -37,7 +37,7 @@ export type StarProps = InputStar &
 | Member            | Type                                  | Default | Description                                                                                                                                                                  |
 | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputStar["animations"]`             | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
 | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
 | `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
@@ -52,7 +52,7 @@ export type StarProps = InputStar &
 | `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
 | `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
 | `style?`          | `InputStar["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
 | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
@@ -66,7 +66,7 @@ export type StarProps = InputStar &
 | Member            | Type                                  | Default | Description                                                                                                                                                                  |
 | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputStar["animations"]`             | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
 | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
 | `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
@@ -81,7 +81,7 @@ export type StarProps = InputStar &
 | `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
 | `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
 | `style?`          | `InputStar["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
 | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
@@ -111,7 +111,7 @@ export type InputStar = InputShape<IRStar>;
 </p>
 
 ```ts
-export declare const StarInputEmbedAdapter: InputEmbedAdapter<InputStar & { id?: string }>;
+export declare const StarInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStar & { id?: string }>;
 ```
 
 **`@retikz/standard`**

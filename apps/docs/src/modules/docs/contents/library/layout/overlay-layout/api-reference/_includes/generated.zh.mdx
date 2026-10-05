@@ -114,7 +114,7 @@ export type OverlayLayoutItemProps = Omit<OverlayLayoutItemInput, 'child' | 'key
 
 ### overlayLayout / InputOverlayLayout
 
-- `overlayLayout`：<ApiSourceLink label={"overlayLayout"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={33}>创建OverlayLayout 嵌入项</ApiSourceLink>
+- `overlayLayout`：<ApiSourceLink label={"overlayLayout"} path={"packages/library/layout-vanilla/src/overlay-layout.ts"} startLine={53}>创建OverlayLayout 嵌入项</ApiSourceLink>
 - `InputOverlayLayout`：<ApiSourceLink label={"InputOverlayLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={43}>Vanilla OverlayLayout authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -211,7 +211,8 @@ export type InputOverlayLayoutItem = InputLayoutItem<OverlayLayoutItemInput>;
 </p>
 
 ```ts
-export declare const OverlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayout>;
+export declare const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputOverlayLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputOverlayLayout>, 'prepare'>>;
 ```
 
 ## `@retikz/layout`
@@ -219,7 +220,7 @@ export declare const OverlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOver
 ### createOverlayLayout / OverlayLayoutInput
 
 - `createOverlayLayout`：<ApiSourceLink label={"createOverlayLayout"} path={"packages/library/layout/src/composites/overlay-layout/factory.ts"} startLine={8}>创建保留省略字段与简写的 OverlayLayout 持久化输入</ApiSourceLink>
-- `OverlayLayoutInput`：<ApiSourceLink label={"OverlayLayoutInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={40}>OverlayLayout factory 接受的作者输入</ApiSourceLink>
+- `OverlayLayoutInput`：<ApiSourceLink label={"OverlayLayoutInput"} path={"packages/library/layout/src/composites/overlay-layout/types.ts"} startLine={32}>OverlayLayout factory 接受的作者输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -260,7 +261,7 @@ export type OverlayLayoutInput = Omit<IROverlayLayout, 'namespace' | 'type'>;
   <ApiSourceLink
     label={'IROverlayLayout'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={32}
+    startLine={24}
   >
     OverlayLayout 的 canonical JSON IR
   </ApiSourceLink>
@@ -305,7 +306,7 @@ export type IROverlayLayout = Omit<ZodInput<typeof OverlayLayoutSchema>, 'childr
   <ApiSourceLink
     label={'IROverlayLayoutItem'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={25}
+    startLine={17}
   >
     OverlayLayout item 的 canonical JSON IR
   </ApiSourceLink>
@@ -316,45 +317,13 @@ export type IROverlayLayoutItem = Omit<ZodInput<typeof OverlayLayoutItemSchema>,
   Pick<ZodInfer<typeof OverlayLayoutItemSchema>, 'child'>;
 ```
 
-### LayoutSizeParticipationValue
-
-<p>
-  <ApiSourceLink
-    label={'LayoutSizeParticipationValue'}
-    path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={16}
-  >
-    Overlay 结构尺寸参与策略值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type LayoutSizeParticipationValue = 'include' | 'exclude';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type LayoutSizeParticipationValue = ValueOf<typeof LayoutSizeParticipation>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### OverlayLayoutArtifact
 
 <p>
   <ApiSourceLink
     label={'OverlayLayoutArtifact'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={43}
+    startLine={35}
   >
     OverlayLayout 的 JSON-safe compile artifact payload
   </ApiSourceLink>
@@ -393,7 +362,7 @@ export type OverlayLayoutArtifact = ZodInfer<typeof OverlayLayoutArtifactSchema>
   <ApiSourceLink
     label={'OverlayLayoutItemInput'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={29}
+    startLine={21}
   >
     OverlayLayout item 的作者输入
   </ApiSourceLink>
@@ -438,7 +407,7 @@ export type OverlayLayoutItemInput = IROverlayLayoutItem;
   <ApiSourceLink
     label={'OverlayPlacementInput'}
     path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={22}
+    startLine={14}
   >
     Overlay placement 的作者输入
   </ApiSourceLink>
@@ -475,45 +444,13 @@ export type OverlayPlacementInput = ZodInput<typeof OverlayPlacementSchema>;
 
 </DocTabs>
 
-### OverlayPlacementKindValue
-
-<p>
-  <ApiSourceLink
-    label={'OverlayPlacementKindValue'}
-    path={'packages/library/layout/src/composites/overlay-layout/types.ts'}
-    startLine={13}
-  >
-    Overlay placement 判别值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type OverlayPlacementKindValue = 'aligned' | 'positioned';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type OverlayPlacementKindValue = ValueOf<typeof OverlayPlacementKind>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### LayoutSizeParticipation
 
 <p>
   <ApiSourceLink
     label={'LayoutSizeParticipation'}
     path={'packages/library/layout/src/composites/overlay-layout/constants.ts'}
-    startLine={8}
+    startLine={9}
   >
     Overlay item 是否参与 container intrinsic size
   </ApiSourceLink>
@@ -524,6 +461,8 @@ export const LayoutSizeParticipation = {
   Include: 'include',
   Exclude: 'exclude',
 } as const;
+
+export type LayoutSizeParticipation = ValueOf<typeof LayoutSizeParticipation>;
 ```
 
 ### OverlayLayoutDefinition
@@ -584,7 +523,7 @@ export const OverlayLayoutProvider: CoreDependencyProvider = Object.freeze({
   <ApiSourceLink
     label={'OverlayPlacementKind'}
     path={'packages/library/layout/src/composites/overlay-layout/constants.ts'}
-    startLine={2}
+    startLine={3}
   >
     Overlay item 的 placement 模式
   </ApiSourceLink>
@@ -595,4 +534,6 @@ export const OverlayPlacementKind = {
   Aligned: 'aligned',
   Positioned: 'positioned',
 } as const;
+
+export type OverlayPlacementKind = ValueOf<typeof OverlayPlacementKind>;
 ```

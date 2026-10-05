@@ -2,12 +2,10 @@ import type { LayoutChildResult } from '@retikz/core';
 import { LayoutAlignmentGuideDimension } from '@retikz/core';
 
 import type {
-  LayoutAlignmentValue,
   LayoutArtifactAlignmentGuide,
   LayoutArtifactContainer,
   LayoutArtifactItemBase,
   LayoutArtifactRect,
-  LayoutOverflowValue,
   LayoutSpacingArtifact,
 } from '../shared';
 import { LayoutAlignment, LayoutOverflow, LayoutSpacingKind } from '../shared';
@@ -24,7 +22,7 @@ export type CreateLayoutArtifactItemInput = Readonly<{
   result: LayoutChildResult;
   translation: Readonly<{ x: number; y: number }>;
   containerAllocation: LayoutRect;
-  overflow: LayoutOverflowValue;
+  overflow: LayoutOverflow;
   alignmentGuide?: LayoutArtifactAlignmentGuide;
 }>;
 
@@ -149,15 +147,10 @@ export const intersectLayoutArtifactRects = (
 export const alignResolvedLayoutSlot = (
   available: LayoutRect,
   result: LayoutChildResult,
-  horizontal: LayoutAlignmentValue,
-  vertical: LayoutAlignmentValue,
+  horizontal: LayoutAlignment,
+  vertical: LayoutAlignment,
 ): LayoutRect => {
-  const alignedStart = (
-    start: number,
-    availableSize: number,
-    slotSize: number,
-    alignment: LayoutAlignmentValue,
-  ): number => {
+  const alignedStart = (start: number, availableSize: number, slotSize: number, alignment: LayoutAlignment): number => {
     if (alignment === LayoutAlignment.End || alignment === LayoutAlignment.LastBaseline) {
       return start + availableSize - slotSize;
     }

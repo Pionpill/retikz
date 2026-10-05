@@ -10,7 +10,7 @@ import type {
   FlowLayoutOutput,
   FlowLayoutRelationInput,
 } from '../../../contract';
-import type { FlowDirectionValue } from '../../../shared';
+import type { FlowDirection } from '../../../shared';
 import { routeFlowRelations } from '../routing';
 import type { LayeredRankEdge } from './topology';
 import { resolveLayeredRanks } from './topology';
@@ -238,7 +238,7 @@ const sizeElement = (
 };
 
 /** 把物理尺寸与margin投影到统一向右的canonical主轴 */
-const projectSizedElementToCanonicalAxes = (element: SizedElement, direction: FlowDirectionValue): SizedElement => {
+const projectSizedElementToCanonicalAxes = (element: SizedElement, direction: FlowDirection): SizedElement => {
   if (direction === 'right') return element;
   if (direction === 'left') {
     return {
@@ -269,7 +269,7 @@ const projectSizedElementToCanonicalAxes = (element: SizedElement, direction: Fl
 
 const transformBounds = (
   bounds: Readonly<BoundsRect>,
-  direction: FlowDirectionValue,
+  direction: FlowDirection,
   width: number,
 ): Readonly<BoundsRect> => {
   if (direction === 'right') return bounds;
@@ -292,7 +292,7 @@ const rankGapsForScope = (
   scopeId: string | undefined,
   ranks: ReadonlyMap<string, number>,
   rankValues: ReadonlyArray<number>,
-  direction: FlowDirectionValue,
+  direction: FlowDirection,
   defaultGap: number,
 ): ReadonlyArray<number> => {
   const gaps = rankValues.slice(1).map(() => defaultGap);

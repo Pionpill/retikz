@@ -12,7 +12,7 @@ export const RetikzGraphVanillaErrorCode = {
 } as const;
 
 /** Graph Vanilla package 稳定错误码取值 */
-export type RetikzGraphVanillaErrorCodeValue = ValueOf<typeof RetikzGraphVanillaErrorCode>;
+export type RetikzGraphVanillaErrorCode = ValueOf<typeof RetikzGraphVanillaErrorCode>;
 
 /** Graph Vanilla package 错误的结构化详情 */
 export type RetikzGraphVanillaErrorDetails = Readonly<{
@@ -35,7 +35,7 @@ export type RetikzGraphVanillaErrorDetails = Readonly<{
 /** 创建 Graph Vanilla package 错误所需的参数 */
 export type RetikzGraphVanillaErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzGraphVanillaErrorCodeValue;
+  code: RetikzGraphVanillaErrorCode;
   /** 面向调用方的错误消息 */
   message: string;
   /** 与错误码关联的结构化详情 */
@@ -45,12 +45,9 @@ export type RetikzGraphVanillaErrorOptions = Readonly<{
 }>;
 
 /** Graph Vanilla package 的统一结构化错误 */
-export class RetikzGraphVanillaError extends RetikzError<
-  RetikzGraphVanillaErrorCodeValue,
-  RetikzGraphVanillaErrorDetails
-> {
+export class RetikzGraphVanillaError extends RetikzError<RetikzGraphVanillaErrorCode, RetikzGraphVanillaErrorDetails> {
   /** 稳定错误码 */
-  readonly code: RetikzGraphVanillaErrorCodeValue;
+  readonly code: RetikzGraphVanillaErrorCode;
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzGraphVanillaErrorDetails;
   /** 原始错误或无效输入 */

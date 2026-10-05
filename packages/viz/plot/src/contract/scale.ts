@@ -1,4 +1,4 @@
-import type { DataFieldTypeValue, IRDataScalarValue } from '@retikz/data';
+import type { DataFieldType, IRDataScalarValue } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
@@ -23,7 +23,7 @@ export const PositionScaleContinuity = {
 } as const;
 
 /** position scale 拓扑连续性值 */
-export type PositionScaleContinuityValue = ValueOf<typeof PositionScaleContinuity>;
+export type PositionScaleContinuity = ValueOf<typeof PositionScaleContinuity>;
 
 /**
  * 归一化位置 scale：连续 / band / point 对 projector & guide 暴露同一形态
@@ -57,7 +57,7 @@ export type PositionScale = {
  */
 export type ChannelScaleResolveContext = {
   /** 绑定字段类型（continuous / temporal / categorical / undefined）；definition 据此选强转方式 */
-  fieldType?: DataFieldTypeValue;
+  fieldType?: DataFieldType;
   /** 原始值 → 有限数（非有限 → null）；复用内置数值强转 */
   toNumber: (value: unknown) => number | null;
   /** 原始值 → epoch ms（temporal 字段；非法 → null）；复用内置 coerceTimestamp */
@@ -98,11 +98,11 @@ export type PositionScaleDefinition<TScaleOperation extends IRPlotScaleOperation
   /** 在基准域上提供不钳位归一化与留白后的最终映射 */
   domainPadding?: (operation: TScaleOperation, values: Array<unknown>) => DomainPaddingScale;
   /** 位置域是否在相邻值之间连续，用于 coordinate 选择空间插值默认 */
-  continuity: PositionScaleContinuityValue;
+  continuity: PositionScaleContinuity;
   /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
   schema: ZodType<TScaleOperation>;
   /** 字段兼容谓词（连续 scale 仅拒 categorical、band/point 仅拒 temporal）；undefined 字段类型放行 */
-  isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;
+  isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
   /** 能否作 interval / area 值轴（baseline 含 0）；默认 true，log/pow/sqrt → false */
   allowsBaseline?: boolean;
   /** 建 PositionScale（coordinate / bandwidth / ticks / range / setRange 全实现）；guide 经 ticks() 自动适配 */
@@ -116,7 +116,7 @@ export type ChannelScaleDefinition<TScaleOperation extends IRPlotScaleOperation 
   /** 完整 scale operation schema；必须含非空 z.literal('type') 供 registry 提取注册键 */
   schema: ZodType<TScaleOperation>;
   /** 字段兼容谓词（sequential 接 continuous + temporal、ordinal 接 categorical / 未知） */
-  isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;
+  isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
   /** 单次建 ChannelScaleResolution：实绘 evaluator + legend 同源数据（不拆 resolve / legend 两函数，守实绘 / legend 同源） */
   resolve: (def: TScaleOperation, values: Array<unknown>, ctx: ChannelScaleResolveContext) => ChannelScaleResolution;
 };
@@ -148,16 +148,16 @@ export type AnyScaleDefinition =
       family: 'position';
       /** 注册定义提供的仿射域留白能力 */
       domainPadding?: (operation: never, values: Array<unknown>) => DomainPaddingScale;
-      continuity: PositionScaleContinuityValue;
+      continuity: PositionScaleContinuity;
       schema: ZodType;
-      isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;
+      isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
       allowsBaseline?: boolean;
       resolve: (def: never, values: Array<unknown>, fallbackRange: readonly [number, number]) => PositionScale;
     }
   | {
       family: 'channel';
       schema: ZodType;
-      isFieldCompatible: (fieldType: DataFieldTypeValue | undefined) => boolean;
+      isFieldCompatible: (fieldType: DataFieldType | undefined) => boolean;
       resolve: (def: never, values: Array<unknown>, ctx: ChannelScaleResolveContext) => ChannelScaleResolution;
     };
 

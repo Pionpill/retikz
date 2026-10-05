@@ -4,7 +4,8 @@ import { curve, point } from '@retikz/math';
 
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../../errors';
 import type { RibbonCapDefinition } from '../../cap-types';
-import type { IRRibbonCap, RibbonAlignmentValue } from '../../types';
+import type { RibbonAlignment } from '../../constants';
+import type { IRRibbonCap } from '../../types';
 import type { RibbonEndpointGeometry } from '../caps';
 import { resolveEndpointCap } from '../caps';
 import { sampleAtDistance } from '../centerline';
@@ -19,7 +20,7 @@ export type OutlineCommandsInput = {
   sampleCount: number;
   widthAt: (offset: number) => number;
   endpointAxes: { start?: Vector2; end?: Vector2 };
-  align: RibbonAlignmentValue;
+  align: RibbonAlignment;
   startEndpointCap: IRRibbonCap;
   endEndpointCap: IRRibbonCap;
   capRegistry: ReadonlyMap<string, RibbonCapDefinition>;

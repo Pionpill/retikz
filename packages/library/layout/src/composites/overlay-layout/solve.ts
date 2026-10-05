@@ -4,9 +4,8 @@ import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz
 import type { CanonicalOverlayPlacement } from '../../resolve/overlay-layout';
 import type { LayoutInsets, LayoutRect } from '../internal';
 import { alignAllocationInSlot, compensatedLayoutSum, positionedLayoutSlotOf } from '../internal';
-import type { LayoutAlignmentValue } from '../shared';
+import type { LayoutAlignment } from '../shared';
 import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
-import type { LayoutSizeParticipationValue } from './types';
 
 /** Overlay 单个 profile 的结构输入 */
 export type OverlayProfileItem = Readonly<{
@@ -14,8 +13,8 @@ export type OverlayProfileItem = Readonly<{
   placement: CanonicalOverlayPlacement;
   margin: LayoutInsets;
   offset: Readonly<{ x: number; y: number }>;
-  alignment: LayoutAlignmentValue;
-  sizeParticipation: LayoutSizeParticipationValue;
+  alignment: LayoutAlignment;
+  sizeParticipation: LayoutSizeParticipation;
   xResult: LayoutChildResult;
   yResult: LayoutChildResult;
 }>;
@@ -39,8 +38,8 @@ export type PlaceOverlayItemInput = Readonly<{
   content: LayoutRect;
   margin: LayoutInsets;
   offset: Readonly<{ x: number; y: number }>;
-  justify: LayoutAlignmentValue;
-  align: LayoutAlignmentValue;
+  justify: LayoutAlignment;
+  align: LayoutAlignment;
   result: LayoutChildResult;
 }>;
 

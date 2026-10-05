@@ -5,7 +5,7 @@ import type { RuntimeSourceRegistry, RuntimeComputationRegistry } from '../regis
 import type { RuntimeSourceDefinition, RuntimeRevision } from '../source';
 import type { PerformanceTraceSink } from '../trace';
 import type { RuntimeSourceInput, RuntimeResult, RuntimeUpdate, RuntimeSnapshot } from '../transaction';
-import type { RuntimeUpdateStrategyValue } from './constants';
+import type { RuntimeUpdateStrategy } from './constants';
 
 /** 同步 Runtime runtime 的创建配置 */
 export type RuntimeOptions = Readonly<{
@@ -19,7 +19,7 @@ export type RuntimeOptions = Readonly<{
    * Computation 更新策略
    * @default RuntimeUpdateStrategy.Auto
    */
-  updateStrategy?: RuntimeUpdateStrategyValue;
+  updateStrategy?: RuntimeUpdateStrategy;
   /** 可选性能 trace sink */
   trace?: PerformanceTraceSink;
   /** 可选的领域中立 commit participants */

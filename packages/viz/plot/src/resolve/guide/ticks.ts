@@ -6,12 +6,7 @@ import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
 import type { PositionScale, TickSet } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import type {
-  GuideTickTimeUnitValue,
-  IRPlotAxisGuide,
-  IRPlotGuideTickLabelFormat,
-  IRPlotGuideTickSource,
-} from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotGuideTickLabelFormat, IRPlotGuideTickSource } from '../../schemas';
 import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../schemas';
 
 const MAX_INTERVAL_TICKS = 10_000;
@@ -105,7 +100,7 @@ const addUtcMonths = (stamp: number, months: number): number => {
   );
 };
 
-const addTimeInterval = (stamp: number, unit: GuideTickTimeUnitValue, step: number): number => {
+const addTimeInterval = (stamp: number, unit: GuideTickTimeUnit, step: number): number => {
   if (unit in TIME_UNIT_MS) return stamp + TIME_UNIT_MS[unit as keyof typeof TIME_UNIT_MS] * step;
   if (unit === GuideTickTimeUnit.Month) return addUtcMonths(stamp, step);
   if (unit === GuideTickTimeUnit.Quarter) return addUtcMonths(stamp, step * 3);
@@ -114,7 +109,7 @@ const addTimeInterval = (stamp: number, unit: GuideTickTimeUnitValue, step: numb
 
 const timeIntervalTicks = (
   scale: PositionScale,
-  unit: GuideTickTimeUnitValue,
+  unit: GuideTickTimeUnit,
   step: number,
   anchor: string | number | undefined,
 ): Array<number> => {

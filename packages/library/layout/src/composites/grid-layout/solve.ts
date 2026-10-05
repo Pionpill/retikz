@@ -4,7 +4,6 @@ import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import type { LayoutInsets, LayoutRect } from '../internal';
 import { compensatedLayoutSum } from '../internal';
-import type { LayoutAlignmentValue } from '../shared';
 import { LayoutAlignment } from '../shared';
 import type { IRGridTrack } from './types';
 
@@ -17,7 +16,7 @@ export type PositionedGridTrack = Readonly<{
 /** 单行 baseline 求解所需的 child 结构量 */
 export type GridBaselineParticipant = Readonly<{
   sourceIndex: number;
-  alignment: LayoutAlignmentValue;
+  alignment: LayoutAlignment;
   margin: LayoutInsets;
   result: LayoutChildResult;
 }>;

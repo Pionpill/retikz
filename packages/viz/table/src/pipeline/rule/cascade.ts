@@ -1,4 +1,4 @@
-import type { TableCellAppearanceTracePathValue, TableCellPlanSource } from '../../contract';
+import type { TableCellAppearanceTracePath, TableCellPlanSource } from '../../contract';
 import { TableCellAppearanceTracePathSchema } from '../../contract';
 import type { IRTableCellAppearance } from '../../schemas';
 import { TableCellAppearanceSchema, TableCellContentStyleSchema } from '../../schemas';
@@ -19,15 +19,15 @@ const DEFAULT_FIELDS = ['node', 'path', 'label', 'arrow'] as const;
 const FONT_FIELDS = ['family', 'size', 'weight', 'style'] as const;
 const BORDER_SIDES = ['top', 'right', 'bottom', 'left'] as const;
 
-type MutableAppearanceTrace = Partial<Record<TableCellAppearanceTracePathValue, TableCellPlanSource>>;
+type MutableAppearanceTrace = Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>>;
 
 /** 把 trace path 收窄到公开闭合枚举 */
-const tracePathOf = (path: string): TableCellAppearanceTracePathValue => TableCellAppearanceTracePathSchema.parse(path);
+const tracePathOf = (path: string): TableCellAppearanceTracePath => TableCellAppearanceTracePathSchema.parse(path);
 
 /** 删除被整体 replacement 覆盖的旧 winner 路径 */
 const removeTraceSubtree = (trace: MutableAppearanceTrace, path: string): void => {
   Object.keys(trace).forEach(key => {
-    if (key === path || key.startsWith(`${path}/`)) delete trace[key as TableCellAppearanceTracePathValue];
+    if (key === path || key.startsWith(`${path}/`)) delete trace[key as TableCellAppearanceTracePath];
   });
 };
 

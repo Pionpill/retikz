@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** Runtime Source 生命周期阶段 */
 export const RuntimeSourcePhase = {
   /** Source value capture 阶段 */
@@ -109,3 +110,9 @@ export const RetikzRuntimeErrorCode = {
   /** participant dispose 失败 */
   ParticipantDisposeFailed: 'RUNTIME_PARTICIPANT_DISPOSE_FAILED',
 } as const;
+
+/** Runtime Source 执行阶段 */
+export type RuntimeSourcePhase = ValueOf<typeof RuntimeSourcePhase>;
+
+/** Runtime transaction、Computation 与 registry 的稳定错误分类 */
+export type RetikzRuntimeErrorCode = ValueOf<typeof RetikzRuntimeErrorCode>;

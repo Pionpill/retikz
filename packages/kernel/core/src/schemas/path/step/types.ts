@@ -1,13 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type {
-  BendDirection,
-  FoldStepVia,
-  GeometryLabelPlacement,
-  GeometryLabelPosition,
-  PathCloseMode,
-} from './constants';
 import type {
   ArcStepSchema,
   AxisLineStepSchema,
@@ -96,16 +88,3 @@ export type IRGeneratorStep = ZodInfer<typeof GeneratorStepSchema>;
  * @description 十四种 kind：move / line / axis-line（单轴投影连接）/ fold（折角）/ cycle / curve / cubic / bend / arc / circlePath / ellipsePath / rectangle（矩形）/ smooth（过点平滑曲线）/ generator（注册生成器）；普通 `to` 字段支持 relative / relativeAccumulate 变体，axis-line 的 `to` 仅支持笛卡尔坐标 / NodeTarget；除 move/cycle/rectangle/smooth 外可挂 `label?` 边标注（smooth 用 `points` 而非 `to`，自身亦可挂 `label?`）
  */
 export type IRStep = ZodInfer<typeof StepSchema>;
-
-export type GeometryLabelPlacementValue = ValueOf<typeof GeometryLabelPlacement>;
-
-/** path-like 几何标签沿段的位置关键字取值 */
-export type GeometryLabelPositionValue = ValueOf<typeof GeometryLabelPosition>;
-
-export type FoldStepViaValue = ValueOf<typeof FoldStepVia>;
-
-/** bend step 弯曲侧取值 */
-export type BendDirectionValue = ValueOf<typeof BendDirection>;
-
-/** 圆 / 椭圆 path 局部弧段闭合方式取值 */
-export type PathCloseModeValue = ValueOf<typeof PathCloseMode>;

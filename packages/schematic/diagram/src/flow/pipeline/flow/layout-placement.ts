@@ -19,16 +19,16 @@ import type {
   FlowLayoutPlacementInput,
   FlowLayoutPlacementOutput,
 } from '../../contract';
-import type { FlowDirectionValue, FlowLayoutAlignmentValue } from '../../shared';
+import type { FlowDirection, FlowLayoutAlignment } from '../../shared';
 
-const flexDirection = (direction: FlowDirectionValue) => {
+const flexDirection = (direction: FlowDirection) => {
   if (direction === 'right') return FlexLayoutDirection.Row;
   if (direction === 'left') return FlexLayoutDirection.RowReverse;
   if (direction === 'down') return FlexLayoutDirection.Column;
   return FlexLayoutDirection.ColumnReverse;
 };
 
-const flexAlignment = (alignment: FlowLayoutAlignmentValue) => {
+const flexAlignment = (alignment: FlowLayoutAlignment) => {
   if (alignment === 'start') return LayoutAlignment.Start;
   if (alignment === 'end') return LayoutAlignment.End;
   return LayoutAlignment.Center;

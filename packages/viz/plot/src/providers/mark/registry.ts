@@ -10,7 +10,7 @@ import type {
 } from '../../contract';
 import { extractMarkType } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import type { IRPlotMarkOperation, PlotMarkValue } from '../../schemas';
+import type { IRPlotMarkOperation } from '../../schemas';
 import { PlotMark } from '../../schemas';
 import {
   intervalMarkDefinition,
@@ -27,7 +27,7 @@ const asAnyMarkDefinition = <T extends IRPlotMarkOperation>(def: MarkDefinition<
  * @description 对齐仓库已有 composite / coordinate 工厂注册范式；新增内置 mark = 加一条注册项，不改 lowerMark。
  *   Plot mark schema 仍是静态单一真源，不由此表组装
  */
-export const MARK_REGISTRY: Record<PlotMarkValue, AnyMarkDefinition> = {
+export const MARK_REGISTRY: Record<PlotMark, AnyMarkDefinition> = {
   [PlotMark.Point]: asAnyMarkDefinition(pointMarkDefinition),
   [PlotMark.Path]: asAnyMarkDefinition(pathMarkDefinition),
   [PlotMark.Interval]: asAnyMarkDefinition(intervalMarkDefinition),

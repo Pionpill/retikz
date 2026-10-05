@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
 
 import { RetikzDataError } from '../error';
-import type { DataFieldTypeValue, IRDataTransform } from '../schemas';
+import type { DataFieldType, IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataTransformDependency, DataTransformModel } from './execution';
 import type { DataLineageRecorder } from './lineage';
@@ -30,7 +30,7 @@ export const DataTransformPhase = {
 } as const;
 
 /** transform调度阶段取值 */
-export type DataTransformPhaseValue = ValueOf<typeof DataTransformPhase>;
+export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
 
 /** transform调度允许绑定的结构类别 */
 export const DataTransformBindingClass = {
@@ -41,7 +41,7 @@ export const DataTransformBindingClass = {
 } as const;
 
 /** transform调度结构类别取值 */
-export type DataTransformBindingClassValue = ValueOf<typeof DataTransformBindingClass>;
+export type DataTransformBindingClass = ValueOf<typeof DataTransformBindingClass>;
 
 /** transform调度对行和字段结构的闭合影响 */
 export const DataTransformFieldEffect = {
@@ -54,16 +54,16 @@ export const DataTransformFieldEffect = {
 } as const;
 
 /** transform调度字段影响取值 */
-export type DataTransformFieldEffectValue = ValueOf<typeof DataTransformFieldEffect>;
+export type DataTransformFieldEffect = ValueOf<typeof DataTransformFieldEffect>;
 
 /** Definition声明的闭合调度描述 */
 export type DataTransformSchedule = Readonly<{
   /** 固定调度阶段 */
-  phase: DataTransformPhaseValue;
+  phase: DataTransformPhase;
   /** 当前Definition允许的mapping binding类别 */
-  bindingClass: DataTransformBindingClassValue;
+  bindingClass: DataTransformBindingClass;
   /** operation对行和字段结构的影响 */
-  fieldEffect: DataTransformFieldEffectValue;
+  fieldEffect: DataTransformFieldEffect;
 }>;
 
 /** transform输出字段的运行时类型描述 */
@@ -71,7 +71,7 @@ export type DataTransformOutputDescriptor = Readonly<{
   /** operation输出的逻辑字段名 */
   field: string;
   /** 固定字段类型，或复用当前DataView中另一个字段的类型 */
-  type?: DataFieldTypeValue | Readonly<{ from: string }>;
+  type?: DataFieldType | Readonly<{ from: string }>;
 }>;
 
 /** transform对字段类型图的完整影响 */

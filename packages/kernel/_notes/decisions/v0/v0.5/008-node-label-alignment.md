@@ -55,7 +55,7 @@ type IRNodeLabel = {
 };
 ```
 
-`align` 省略时由 Core resolve 为 `middle`。字段使用 Core 已有的 `TextAlignSchema` / `NodeTextAlignValue`；Graph、Standard 与 adapter 不复制该值类型
+`align` 省略时由 Core resolve 为 `middle`。字段使用 Core 已有的 `TextAlignSchema` / `NodeTextAlign`；Graph、Standard 与 adapter 不复制该值类型
 
 ## 行为、失败语义与兼容性
 

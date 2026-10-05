@@ -3,13 +3,7 @@ import { array, strictObject } from 'zod';
 import type { ThemeStyleColorOverrides } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { CssColorSchema } from '../../schemas';
-import type {
-  CoreSemanticColors,
-  CssColorValue,
-  NonEmptyReadonlyArray,
-  ResolvedThemeColors,
-  ThemeModeValue,
-} from '../../shared';
+import type { CoreSemanticColors, CssColorValue, NonEmptyReadonlyArray, ResolvedThemeColors } from '../../shared';
 import { ThemeMode } from '../../shared';
 
 type CategoricalTone = Readonly<{
@@ -24,7 +18,7 @@ const tones = (...values: Array<readonly [saturation: number, lightness: number]
   values.map(([saturation, lightness]) => ({ saturation, lightness }));
 
 /** 默认 baseline 按公共 Hue 索引维护独立色调，并为明暗模式分别适配 */
-const categoricalTones: Readonly<Record<ThemeModeValue, ReadonlyArray<CategoricalTone>>> = {
+const categoricalTones: Readonly<Record<ThemeMode, ReadonlyArray<CategoricalTone>>> = {
   [ThemeMode.Light]: tones(
     [38, 48],
     [78, 55],
@@ -78,7 +72,7 @@ const freezeColorView = (
     categorical: freezeCategorical(categorical),
   });
 
-const createCategoricalPalette = (mode: ThemeModeValue): NonEmptyReadonlyArray<CssColorValue> => {
+const createCategoricalPalette = (mode: ThemeMode): NonEmptyReadonlyArray<CssColorValue> => {
   const toneVector = categoricalTones[mode];
   return freezeCategorical(
     categoricalHues.map((hue, index) => {
@@ -88,7 +82,7 @@ const createCategoricalPalette = (mode: ThemeModeValue): NonEmptyReadonlyArray<C
   );
 };
 
-const CORE_COLOR_PRESETS: Readonly<Record<ThemeModeValue, ResolvedThemeColors>> = Object.freeze({
+const CORE_COLOR_PRESETS: Readonly<Record<ThemeMode, ResolvedThemeColors>> = Object.freeze({
   [ThemeMode.Light]: freezeColorView(
     {
       error: 'hsl(0, 60%, 53%)',
@@ -120,14 +114,14 @@ const ThemeStyleColorOverridesSchema = strictObject({
 });
 
 /** 解析默认 baseline 的完整 shared colors */
-export const resolveDefaultCoreThemeColors = (mode: ThemeModeValue): ResolvedThemeColors => {
+export const resolveDefaultCoreThemeColors = (mode: ThemeMode): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[mode];
   return freezeColorView(preset.semantic, preset.categorical);
 };
 
 /** 按当前 mode 的默认 shared colors 补全一层 Theme style 稀疏覆盖 */
 export const resolveCoreThemeStyleColors = (
-  mode: ThemeModeValue,
+  mode: ThemeMode,
   overrides: ThemeStyleColorOverrides,
 ): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[mode];

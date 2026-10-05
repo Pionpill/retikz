@@ -1,10 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
-
 import type { RuntimeDiagnosticCode } from '../diagnostic';
-import type { RetikzRuntimeErrorCode, RuntimeSourcePhase } from './constants';
-
-/** Runtime Source 执行阶段 */
-export type RuntimeSourcePhaseValue = ValueOf<typeof RuntimeSourcePhase>;
+import type { RuntimeSourcePhase } from './constants';
 
 /** Runtime Source value 释放失败的非致命诊断 */
 export type RuntimeSourceLifecycleDiagnostic = Readonly<{
@@ -29,6 +24,3 @@ export type RuntimeSourceExecutionResult<T> = Readonly<{
   /** 执行过程中隔离的非致命诊断 */
   diagnostics: ReadonlyArray<RuntimeSourceLifecycleDiagnostic>;
 }>;
-
-/** Runtime transaction、Computation 与 registry 的稳定错误分类 */
-export type RetikzRuntimeErrorCodeValue = ValueOf<typeof RetikzRuntimeErrorCode>;

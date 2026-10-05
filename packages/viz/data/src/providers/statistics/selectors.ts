@@ -2,7 +2,6 @@ import { defineRowSelectorImplementation } from '../../contract';
 import type { AnySynchronousRowSelectorImplementation } from '../../contract';
 import type { AnyRowSelectorDefinition } from '../../contract';
 import { defineRowSelector } from '../../contract';
-import type { RowSelectorTieValue } from '../../schemas';
 import { BuiltinSelectorOperationSchemas, DataSortOrder, RowSelectorTie } from '../../schemas';
 import type { ExternalRow } from '../../shared';
 import { resolveFieldPath } from '../data';
@@ -12,7 +11,7 @@ import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } 
 /** 按 top/bottom 的第 N 名阈值处理边界并列行，支持 first / last / all tie 策略 */
 const selectTopBottomRows = (
   ranked: Array<ExternalRow>,
-  operation: { by: string; n: number; tie?: RowSelectorTieValue },
+  operation: { by: string; n: number; tie?: RowSelectorTie },
 ): Array<ExternalRow> => {
   const selected = ranked.slice(0, operation.n);
   if (selected.length === 0 || ranked.length <= selected.length) return selected;

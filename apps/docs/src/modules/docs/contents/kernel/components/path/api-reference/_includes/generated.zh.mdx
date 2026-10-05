@@ -31,7 +31,7 @@
 |        | `roundedCorners?` | `IRPath['roundedCorners']`    | —          | 折线拐角几何圆角半径（TikZ `rounded corners=`）<br />对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角 |
 |        | `scale?`          | `IRPath['scale']`             | —          | 整条 path 缩放（绕包围盒中心）：number 等比，或 `{ x, y }` 非等比                                                                                                                               |
 | 样式   | `style?`          | `InputPath['style']`          | —          | 实例视觉覆盖，逐字段覆盖继承默认值                                                                                                                                                              |
-|        | `thickness?`      | `PathThicknessValue`          | —          | 语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；构造 IR 时解析为 `strokeWidth`，显式 `strokeWidth` 始终优先                                                                            |
+|        | `thickness?`      | `PathThickness`               | —          | 语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；构造 IR 时解析为 `strokeWidth`，显式 `strokeWidth` 始终优先                                                                            |
 |        | `zIndex?`         | `IRPath['zIndex']`            | `0`        | 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效                                                                                                                       |
 | 回调   | `onClick?`        | `HydrationHandler`            | —          | 单击该图元（DOM `click`）                                                                                                                                                                       |
 |        | `onDoubleClick?`  | `HydrationHandler`            | —          | 双击该图元（DOM `dblclick`）                                                                                                                                                                    |
@@ -65,7 +65,7 @@ export type PathProps = HydrationEventProps & {
   meta?: IRPath['meta'];
   animations?: IRPath['animations'];
   roundedCorners?: IRPath['roundedCorners'];
-  thickness?: PathThicknessValue;
+  thickness?: PathThickness;
   arrow?: InputPath['arrow'];
   arrowDetail?: InputPath['arrowDetail'];
   arrowPlacement?: InputPath['arrowPlacement'];
@@ -102,7 +102,7 @@ React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位
 | `readonly arrowPlacement?` | `PathProps['arrowPlacement']` | —      | 箭头端点放置配置                   |
 | `readonly roundedCorners?` | `IRPath['roundedCorners']`    | —      | 折线拐角几何圆角半径               |
 | `readonly style?`          | `InputPath['style']`          | —      | 实例视觉覆盖，逐字段覆盖继承默认值 |
-| `readonly thickness?`      | `PathThicknessValue`          | —      | 语义 stroke 档位糖                 |
+| `readonly thickness?`      | `PathThickness`               | —      | 语义 stroke 档位糖                 |
 | `readonly way`             | `WayDSL`                      | —      | TikZ 风格的路径走向简写            |
 | `readonly zIndex?`         | `IRPath['zIndex']`            | —      | 同层 stack 顺序                    |
 
@@ -119,7 +119,7 @@ export type DrawProps = Readonly<{
   style?: InputPath['style'];
   way: WayDSL;
   roundedCorners?: IRPath['roundedCorners'];
-  thickness?: PathThicknessValue;
+  thickness?: PathThickness;
   arrow?: PathProps['arrow'];
   arrowDetail?: PathProps['arrowDetail'];
   arrowPlacement?: PathProps['arrowPlacement'];
@@ -830,7 +830,7 @@ export type SmoothStepProps = {
 |        | `label?`          | `InputPath["label"]`                  | —      | 附着在 Path 或其它 path-like 宿主上的几何标签                                                                                                                                           |
 |        | `type?`           | `'path'`                              | —      | 无法由 authoring 字段唯一识别时显式指定路径类别                                                                                                                                         |
 |        | `way?`            | `WayDSL`                              | —      | TikZ 风格的路径走向简写                                                                                                                                                                 |
-| 几何   | `arrow?`          | `InputPathArrowDirectionValue`        | —      | 路径级箭头方向                                                                                                                                                                          |
+| 几何   | `arrow?`          | `InputPathArrowDirection`             | —      | 路径级箭头方向                                                                                                                                                                          |
 |        | `arrowDetail?`    | `IRArrowDetail`                       | —      | 箭头的顶层默认与端点覆盖配置                                                                                                                                                            |
 |        | `arrowPlacement?` | `InputPathArrowPlacement`             | —      | 箭头端点的共享与逐端放置配置                                                                                                                                                            |
 |        | `marks?`          | `InputPath["marks"]`                  | —      | 沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark |
@@ -838,7 +838,7 @@ export type SmoothStepProps = {
 |        | `roundedCorners?` | `number`                              | —      | 线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同                                                                                                                            |
 |        | `scale?`          | `number \| { x: number; y: number; }` | —      | 整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）                                                                                                                          |
 | 样式   | `style?`          | `InputPath["style"]`                  | —      | 当前实例的视觉覆盖，按字段继承与覆盖                                                                                                                                                    |
-|        | `thickness?`      | `PathThicknessValue`                  | —      | 路径描边宽度语法糖                                                                                                                                                                      |
+|        | `thickness?`      | `PathThickness`                       | —      | 路径描边宽度语法糖                                                                                                                                                                      |
 |        | `zIndex?`         | `number`                              | —      | 显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效                                                                                                                      |
 | 动画   | `animations?`     | `InputPath["animations"]`             | —      | 声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档                                                                                                    |
 | 运行时 | `authoring?`      | `unknown`                             | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR                                                                                                                                        |

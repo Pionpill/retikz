@@ -1,19 +1,14 @@
-import type { OpenString, ValueOf } from '@retikz/foundation';
+import type { OpenString } from '@retikz/foundation';
 
 import type { RuntimeComputationId } from '../identity';
 import type { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from './constants';
 
-/** Runtime 内置结构化诊断码取值 */
-export type RuntimeDiagnosticCodeValue = ValueOf<typeof RuntimeDiagnosticCode>;
-/** Runtime 结构化诊断阶段取值 */
-export type RuntimeDiagnosticPhaseValue = ValueOf<typeof RuntimeDiagnosticPhase>;
-
 /** Runtime 提交或执行阶段产生的结构化诊断 */
 export type RuntimeDiagnostic = Readonly<{
   /** 稳定诊断分类 */
-  code: OpenString<RuntimeDiagnosticCodeValue>;
+  code: OpenString<RuntimeDiagnosticCode>;
   /** 产生诊断的执行阶段 */
-  phase: RuntimeDiagnosticPhaseValue;
+  phase: RuntimeDiagnosticPhase;
   /** 诊断严重级别 */
   severity: 'warning' | 'error';
   /** 面向开发者的诊断信息 */

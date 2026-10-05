@@ -1,9 +1,6 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { PathLineCap, PathLineJoin } from '../../stroke';
 import type { StepSchema } from '../step';
-import type { PathFillRule, PathKind } from './constants';
 import type {
   ArrowMarkSchema,
   PathBaseSchema,
@@ -16,18 +13,6 @@ import type {
   PathStyleSchema,
   PathTransformSchema,
 } from './schema';
-
-/** 路径填充规则关键字类型 */
-export type PathFillRuleValue = ValueOf<typeof PathFillRule>;
-
-/** 路径端点线帽关键字类型 */
-export type PathLineCapValue = ValueOf<typeof PathLineCap>;
-
-/** 路径拐角连接关键字类型 */
-export type PathLineJoinValue = ValueOf<typeof PathLineJoin>;
-
-/** 路径编译 kind 关键字类型 */
-export type PathKindValue = ValueOf<typeof PathKind>;
 
 /** 路径整条缩放类型：number（等比）或 {x,y}（非等比） */
 export type IRPathScale = ZodInfer<typeof PathScaleSchema>;

@@ -1,3 +1,4 @@
+import type { ValueOf } from '@retikz/foundation';
 /** 路径端点线帽关键字 */
 export const PathLineCap = {
   /** 平切端点：描边精确停在路径端点，不向外延伸 */
@@ -17,3 +18,9 @@ export const PathLineJoin = {
   /** 斜切连接：削平尖角，避免锐角处产生过长尖峰 */
   Bevel: 'bevel',
 } as const;
+
+/** 路径端点线帽关键字类型 */
+export type PathLineCap = ValueOf<typeof PathLineCap>;
+
+/** 路径拐角连接关键字类型 */
+export type PathLineJoin = ValueOf<typeof PathLineJoin>;

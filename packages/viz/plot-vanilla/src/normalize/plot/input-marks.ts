@@ -1,5 +1,5 @@
 import type {
-  BlendModeValue,
+  BlendMode,
   IRAxisScale,
   IRBoundary,
   IRBoxSize,
@@ -12,8 +12,8 @@ import type {
   IRPathScale,
   IRShapeRef,
   IRStepLabel,
-  NodeTextAlignValue,
-  ShadowPresetValue,
+  NodeTextAlign,
+  ShadowPreset,
 } from '@retikz/core';
 import type { ExternalRow, IRDataTransformDeclaration } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
@@ -57,9 +57,9 @@ import type {
   IRPlotRelationStepLabel,
   IRPlotShadowStyle,
   IRPlotTargetRef,
-  PathCurveValue,
-  PolarInterpolationValue,
-  RelationGeometryKindValue,
+  PathCurve,
+  PolarInterpolation,
+  RelationGeometryKind,
   MarkValueKind,
 } from '@retikz/plot';
 /** 数据字段名或字段路径；例如 `month` / `user.age`，用于 Plot authoring 输入 */
@@ -74,23 +74,16 @@ type InputPlotMarkValue<T> =
 export type InputPlotMarkValueProp<T> = InputPlotFieldName | T | InputPlotMarkValue<T>;
 
 /** 路径端点样式 */
-export type InputPlotLineCapValue = 'butt' | 'round' | 'square';
+export type InputPlotLineCap = 'butt' | 'round' | 'square';
 
 /** 路径折点连接样式 */
-export type InputPlotLineJoinValue = 'miter' | 'round' | 'bevel';
+export type InputPlotLineJoin = 'miter' | 'round' | 'bevel';
 
 /** 路径填充规则 */
-export type InputPlotFillRuleValue = 'nonzero' | 'evenodd';
+export type InputPlotFillRule = 'nonzero' | 'evenodd';
 
 /** 路径预设粗细 */
-export type InputPlotThicknessValue =
-  | 'ultraThin'
-  | 'veryThin'
-  | 'thin'
-  | 'semithick'
-  | 'thick'
-  | 'veryThick'
-  | 'ultraThick';
+export type InputPlotThickness = 'ultraThin' | 'veryThin' | 'thin' | 'semithick' | 'thick' | 'veryThick' | 'ultraThick';
 
 /** 节点形状通道值：内置 / 自定义形状名或完整形状引用 */
 export type InputPlotNodeShapeChannelValue = string | IRShapeRef;
@@ -119,7 +112,7 @@ export type InputPlotCoordinateScope = {
 /** 可通过通道逐 datum 下发到 core Node 的样式属性 */
 export type InputPlotCoreNodeChannels = {
   /** 文本水平对齐方式 */
-  align?: InputPlotMarkValueProp<NodeTextAlignValue> | IRPlotNodeTextAlignStyle;
+  align?: InputPlotMarkValueProp<NodeTextAlign> | IRPlotNodeTextAlignStyle;
   /** 文本行高 */
   lineHeight?: InputPlotMarkValueProp<number> | IRPlotNodePositiveNumberStyle;
   /** 文本最大宽度 */
@@ -143,9 +136,9 @@ export type InputPlotCoreNodeChannels = {
   /** 节点边界策略 */
   boundary?: InputPlotMarkValueProp<IRBoundary> | IRPlotNodeBoundaryStyle;
   /** 节点阴影 */
-  shadow?: InputPlotMarkValueProp<ShadowPresetValue | IRDropShadow> | IRPlotShadowStyle;
+  shadow?: InputPlotMarkValueProp<ShadowPreset | IRDropShadow> | IRPlotShadowStyle;
   /** 节点混合模式 */
-  blendMode?: InputPlotMarkValueProp<BlendModeValue> | IRPlotBlendModeStyle;
+  blendMode?: InputPlotMarkValueProp<BlendMode> | IRPlotBlendModeStyle;
 };
 
 /** 可通过通道逐 datum 下发到 core Path 的样式属性 */
@@ -163,17 +156,17 @@ export type InputPlotCorePathChannels = {
   /** 路径缩放配置 */
   scale?: InputPlotMarkValueProp<IRPathScale> | IRPlotPathScaleStyle;
   /** 路径填充规则 */
-  fillRule?: InputPlotMarkValueProp<InputPlotFillRuleValue> | IRPlotPathFillRuleStyle;
+  fillRule?: InputPlotMarkValueProp<InputPlotFillRule> | IRPlotPathFillRuleStyle;
   /** 路径预设粗细 */
-  thickness?: InputPlotMarkValueProp<InputPlotThicknessValue> | IRPlotPathThicknessStyle;
+  thickness?: InputPlotMarkValueProp<InputPlotThickness> | IRPlotPathThicknessStyle;
   /** 路径上的标记配置 */
   marks?: IRPlotRelationPathSpecificOptions['marks'];
   /** 自定义描边间隔 */
   dashPattern?: InputPlotMarkValueProp<Array<number>> | IRPlotNodeDashPatternStyle;
   /** 路径阴影 */
-  shadow?: InputPlotMarkValueProp<ShadowPresetValue | IRDropShadow> | IRPlotShadowStyle;
+  shadow?: InputPlotMarkValueProp<ShadowPreset | IRDropShadow> | IRPlotShadowStyle;
   /** 路径混合模式 */
-  blendMode?: InputPlotMarkValueProp<BlendModeValue> | IRPlotBlendModeStyle;
+  blendMode?: InputPlotMarkValueProp<BlendMode> | IRPlotBlendModeStyle;
 };
 
 /** Plot Node 宿主标签的 framework-neutral authoring 输入 */
@@ -256,8 +249,8 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     resolveLabel?: (row: ExternalRow) => string;
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
     opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
-    lineCap?: InputPlotFieldName | InputPlotLineCapValue | InputPlotMarkValue<InputPlotLineCapValue>;
-    lineJoin?: InputPlotFieldName | InputPlotLineJoinValue | InputPlotMarkValue<InputPlotLineJoinValue>;
+    lineCap?: InputPlotFieldName | InputPlotLineCap | InputPlotMarkValue<InputPlotLineCap>;
+    lineJoin?: InputPlotFieldName | InputPlotLineJoin | InputPlotMarkValue<InputPlotLineJoin>;
     roundedCorners?: InputPlotMarkValueProp<number> | IRPlotPointNonnegativeNumberStyle;
     /** 末点回连首点闭合成多边形（polar 下即雷达轮廓）；cartesian 缺省 false，polar2D 缺省 true */
     closed?: boolean;
@@ -266,9 +259,9 @@ export type InputPlotPathMark = InputPlotMarkTransform &
     /** 构建闭合路径：cycle 首尾闭合，baseline 回到基线，stack 回到逐行基线字段；是否填充由 fill 控制 */
     closure?: IRPlotPathClosure;
     /** 相邻点连接方式；缺省 linear */
-    curve?: PathCurveValue;
+    curve?: PathCurve;
     /** Polar2D 连接空间局部覆盖；省略时继承坐标系 */
-    interpolation?: PolarInterpolationValue;
+    interpolation?: PolarInterpolation;
     /** 可选 mark 句柄（预留 scope/anchor） */
     id?: string;
     anchorId?: IRPlotAnchorId;
@@ -380,7 +373,7 @@ export type InputPlotIntervalMark = InputPlotMarkTransform &
     /** 显式 per-role 区间来源（高级 / heatmap 双 band）：给定则直接落 IR bounds，便捷 props 之外的逃生舱 */
     bounds?: IRPlotIntervalBounds;
     /** Polar2D cell 边界局部覆盖；省略时继承坐标系 */
-    interpolation?: PolarInterpolationValue;
+    interpolation?: PolarInterpolation;
     fill?: InputPlotFieldName | IRPaint | IRPlotPointFillStyle;
     stroke?: InputPlotFieldName | IRPaint | IRPlotPointStrokeStyle;
     strokeWidth?: InputPlotMarkValueProp<number> | IRPlotPointStrokeWidthStyle;
@@ -401,7 +394,7 @@ export type InputPlotRelationMark = InputPlotMarkTransform &
     /** 可选 mark 句柄，用于生成稳定的关系图层 id */
     id?: string;
     /** 关系几何类型 */
-    kind?: RelationGeometryKindValue;
+    kind?: RelationGeometryKind;
     /** 关系起点引用 */
     source: IRPlotTargetRef;
     /** 关系终点引用 */
@@ -439,7 +432,7 @@ export type InputPlotReferenceMark = InputPlotMarkTransform &
     /** 参考形态覆写；设为 region 时 x/xTo/y/yTo 四个边界共同围出二维区域 */
     kind?: 'region';
     /** Polar2D band / region 边界局部覆盖；line 保持直线 */
-    interpolation?: PolarInterpolationValue;
+    interpolation?: PolarInterpolation;
     /** 竖直参考的常量轴绑定（x=const 跨满 y 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
     x?: number | InputPlotFieldName;
     /** 水平参考的常量轴绑定（y=const 跨满 x 域）：数字 → 常量 value、字符串 → 字段 field（每行一条） */
