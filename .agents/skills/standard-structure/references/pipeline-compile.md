@@ -30,7 +30,7 @@
 
 ## 命名
 
-目录、文件和符号名以 `standard-name` 为唯一真源。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在纵向领域 `resolve/<domain>/types.ts`，由 `resolveXxx` 产出。pipeline / compile 只创建 context、维护动态状态并决定调用时机。若 context 产生独立概念，使用 `EffectiveXxx`、`XxxResolution` 或准确领域名，不使用泛化 `ResolvedXxx`。warning code 仍用 const object enum + `XxxValue` 派生，message 写当前契约。
+目录、文件和符号名以 `standard-name` 为唯一真源。`CanonicalXxx`、`XxxResolveContext` 与必要的 `XxxResolution` 定义在纵向领域 `resolve/<domain>/types.ts`，由 `resolveXxx` 产出。pipeline / compile 只创建 context、维护动态状态并决定调用时机。若 context 产生独立概念，使用 `EffectiveXxx`、`XxxResolution` 或准确领域名，不使用泛化 `ResolvedXxx`。warning code 使用 const object enum 与同名 `ValueOf` 派生类型，message 写当前契约。
 
 函数动词按 [阶段命名](../../standard-name/references/functions.md)；compileXxx 只用于跨阶段编排，不作为所有 helper 的前缀。
 
