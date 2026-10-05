@@ -42,7 +42,7 @@ const isContinuousAngleScale = (scaleType: string): boolean =>
   scaleType === PlotScale.Radial;
 
 /**
- * 极坐标输出空间点 → 屏幕点。
+ * 极坐标输出空间点 → 屏幕点
  * @description 角度约定由 `@retikz/math` 的 pointAtArcAngle 统一维护；plot 侧只保留坐标帧的 nullable 契约，
  *   让 mark lowering 可以跳过非有限输入点
  */
@@ -72,7 +72,7 @@ export type PolarCoordinateInput = {
 };
 
 /**
- * 建二维极坐标运行时坐标帧。
+ * 建二维极坐标运行时坐标帧
  * @description θ=primary.coordinate(angleValue)（度）、r=secondary.coordinate(radiusValue)；
  *   返回 [cx + r·cos(θ°), cy + r·sin(θ°)]，屏幕 y 向下、0°=+x、90°=+y（与 core polar 约定一致）。
  *   frame 同时提供 projectCell，将 x/y 输出区间闭式投影为 sector，供 interval / reference band 使用
@@ -458,7 +458,7 @@ const polarAngularLayoutLabelsOf = (
   ticks?.values.map((value, index) => ({ angle: scale.coordinate(value), text: ticks.labels[index] ?? '' })) ?? [];
 
 /**
- * 一维极坐标运行时坐标帧。
+ * 一维极坐标运行时坐标帧
  * @description 用单一角向 scale 把 x 角色投影到固定半径的圆周上；它不提供 cell 几何投影能力
  */
 export type Polar1DCoordinateFrame = {
@@ -511,7 +511,7 @@ export type Polar1DCoordinateInput = {
 };
 
 /**
- * 建一维极坐标运行时坐标帧。
+ * 建一维极坐标运行时坐标帧
  * @description 单一 x 角色被解释为角向值，并投影到固定 radius 的圆周上。该 frame 只表达点/路径位置，
  *   不提供 projectCell；需要面积 cell 时必须使用 polar2D 或自定义带 projectCell 的 frame
  */
@@ -562,10 +562,15 @@ export const createPolar1DCoordinate = (input: Polar1DCoordinateInput): Polar1DC
 };
 
 /** 一行数据在极坐标 scale 输出空间中的顶点：θ（度）+ r（user units） */
-export type PolarVertex = { theta: number; radius: number };
+export type PolarVertex = {
+  /** 尺度映射后的极角，单位为度 */
+  theta: number;
+  /** 尺度映射后的径向距离 */
+  radius: number;
+};
 
 /**
- * 把一行的角向 / 径向原始值映射成 PolarVertex。
+ * 把一行的角向 / 径向原始值映射成 PolarVertex
  * @description PolarVertex 保留的是 scale 输出空间的 θ（度）和 r（user units），还不是屏幕点；
  *   path 会先收集顶点，再决定是否按连续角轴 densify 成弧线。非有限值返回 null
  */

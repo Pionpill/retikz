@@ -163,5 +163,6 @@ export const resolveBoundary = (
   return { def: asGeometryDefinition(boundaryDef), rect, params: resolution.params };
 };
 
+/** 将标准方向锚点退回到矩形边界求解；非标准名称返回 undefined */
 export const fallbackBoundaryAnchor = (rect: BoundaryGeometryResolution['rect'], name: string): Position | undefined =>
   isDirectionalAnchor(name) ? rectOps.anchor(rect, name) : undefined;

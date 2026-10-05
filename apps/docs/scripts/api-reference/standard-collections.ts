@@ -9,6 +9,14 @@ import type { ApiReferencePackageConfig } from './tex';
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 const translations: Readonly<Record<string, string>> = {
+  '单元格文本，与绘制子内容互斥': 'Cell text, mutually exclusive with drawing content',
+  '恰好一个可编译的绘制子内容，与 text 互斥': 'Exactly one compilable drawing child, mutually exclusive with text',
+  '当前条目的 MapKey 与 MapValue 声明': 'MapKey and MapValue declarations for this entry',
+  '单元格允许的布局覆盖类型，默认使用 IRCell 的布局字段类型':
+    'Allowed cell layout override type; defaults to the layout field type of IRCell',
+  收集前后保持一致的单元格布局覆盖类型: 'Cell layout override type preserved during collection',
+  '原始单元格类型，除 content 外的字段保持不变；默认使用 IRCell':
+    'Original cell type whose fields other than content are preserved; defaults to IRCell',
   串并联内容容器: 'Container for sequential and parallel content',
   'Chain 的属性入口与 JSX 入口互斥': 'Chain props inputs and JSX children are mutually exclusive',
   'Chain 或 ChainBranch 的直属单元': 'Direct cell of Chain or ChainBranch',

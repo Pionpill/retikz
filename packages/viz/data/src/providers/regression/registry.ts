@@ -11,7 +11,10 @@ import type { IRRegressionMethod } from '../../schemas';
 import { resolveImplementationRegistry } from '../shared';
 import { BUILTIN_REGRESSIONS, BUILTIN_REGRESSION_IMPLEMENTATIONS } from './definitions';
 
-/** 注册独立拟合计算 */
+/**
+ * 注册独立拟合计算
+ * @template TImplementation 自定义拟合实现类型，默认限定同步模型结果
+ */
 export const resolveRegressionImplementationRegistry = <
   TImplementation extends AnyRegressionImplementation = AnySynchronousRegressionImplementation,
 >(

@@ -490,14 +490,14 @@ const BUILTIN_TRANSFORM_REGISTRY = new Map(
 );
 
 /**
- * 按 kind 索引的内置 transform definition。
+ * 按 kind 索引的内置 transform definition
  * @description 主要供诊断与测试确认内置覆盖；自定义 definition 不写入此表，而是在每次 lowering 时合并
  */
 export const BUILTIN_TRANSFORM_DEFINITIONS_BY_KIND: ReadonlyMap<string, AnyTransformDefinition> =
   createReadonlyMap(BUILTIN_TRANSFORM_REGISTRY);
 
 /**
- * 解析 transform registry。
+ * 解析 transform registry
  * @description 内置 transform 总是先注册；用户自定义 definition 不能覆盖内置 kind，也不能彼此重复
  */
 export const resolveTransformRegistry = (
@@ -534,7 +534,10 @@ export const BUILTIN_TRANSFORM_IMPLEMENTATIONS: ReadonlyArray<AnySynchronousTran
     smoothTransformImplementation,
   ]);
 
-/** 独立计算 registry；内置和自定义引用同一语义身份 */
+/**
+ * 独立计算 registry；内置和自定义引用同一语义身份
+ * @template TImplementation 自定义变换实现类型，默认限定同步数据行数组结果
+ */
 export const resolveTransformImplementationRegistry = <
   TImplementation extends AnyTransformImplementation = AnySynchronousTransformImplementation,
 >(

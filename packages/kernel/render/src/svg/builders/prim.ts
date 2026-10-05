@@ -106,7 +106,7 @@ const shadowFilterRef = (
   shadow ? `url(#${shadowIdFor ? shadowIdFor(shadow) : `retikz-shadow-${shadowHash(shadow)}`})` : undefined;
 
 /**
- * Scene primitive → `SvgNode`
+ * 将场景图元转换为 SVG 描述节点
  * @description 不读 IR，只读 Scene。属性名一律 SVG 真名（呈现属性 kebab、结构属性规范拼写）；含 `var()` 的
  *   颜色值落 `style`、其余落 `attrs`。group 递归并跳过 undefined 子槽位（防御非法 Scene）
  */

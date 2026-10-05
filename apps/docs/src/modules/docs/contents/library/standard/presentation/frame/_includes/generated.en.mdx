@@ -4,7 +4,7 @@
 
 #### Frame / FrameProps
 
-- `Frame`: <ApiSourceLink label={"Frame"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={129}>React Tier 2 authoring component for Standard Frame</ApiSourceLink>
+- `Frame`: <ApiSourceLink label={"Frame"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={144}>React Tier 2 authoring component for Standard Frame</ApiSourceLink>
 - `FrameProps`: <ApiSourceLink label={"FrameProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={14}>Standard authoring input accepted by React Frame</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -41,7 +41,7 @@ export type FrameProps = Omit<FrameInput, 'children' | 'title' | 'description'> 
 
 #### FrameTitle / FrameTitleProps
 
-- `FrameTitle`: <ApiSourceLink label={"FrameTitle"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={137}>Declare a Node-like Frame title as a direct Frame child</ApiSourceLink>
+- `FrameTitle`: <ApiSourceLink label={"FrameTitle"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={152}>Declare a Node-like Frame title as a direct Frame child</ApiSourceLink>
 - `FrameTitleProps`: <ApiSourceLink label={"FrameTitleProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={20}>JSON-safe Node authoring fields for the Frame title</ApiSourceLink>
 
 ```ts
@@ -52,7 +52,7 @@ export type FrameTitleProps = Omit<NodeProps, 'position' | keyof HydrationEventP
 
 #### FrameDescription / FrameDescriptionProps
 
-- `FrameDescription`: <ApiSourceLink label={"FrameDescription"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={148}>Declare a Node-like Frame description as a direct Frame child</ApiSourceLink>
+- `FrameDescription`: <ApiSourceLink label={"FrameDescription"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={163}>Declare a Node-like Frame description as a direct Frame child</ApiSourceLink>
 - `FrameDescriptionProps`: <ApiSourceLink label={"FrameDescriptionProps"} path={"packages/library/standard-react/src/presentation/frame/Frame.tsx"} startLine={23}>JSON-safe Node authoring fields for the Frame description</ApiSourceLink>
 
 ```ts
@@ -113,7 +113,7 @@ export type InputFrame = Omit<FrameInput, 'id' | 'children'> & {
   <ApiSourceLink
     label={'FrameInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/presentation/frame.ts'}
-    startLine={62}
+    startLine={63}
   >
     InputEmbed adapter for Standard Frame
   </ApiSourceLink>
@@ -126,7 +126,7 @@ export declare const FrameInputEmbedAdapter: SynchronousInputEmbedAdapter<InputF
 #### frame
 
 <p>
-  <ApiSourceLink label={'frame'} path={'packages/library/standard-vanilla/src/presentation/frame.ts'} startLine={129}>
+  <ApiSourceLink label={'frame'} path={'packages/library/standard-vanilla/src/presentation/frame.ts'} startLine={135}>
     Create a Standard Frame embed lowered by FrameInputEmbedAdapter
   </ApiSourceLink>
 </p>
@@ -162,7 +162,7 @@ export declare const frame: (input: InputFrame) => InputEmbed<InputFrame>;
   <ApiSourceLink
     label={'frameDescription'}
     path={'packages/library/standard-vanilla/src/presentation/frame.ts'}
-    startLine={59}
+    startLine={60}
   >
     Create JSON-safe Frame description input
   </ApiSourceLink>
@@ -199,7 +199,7 @@ export declare const frameDescription: (input: FrameDescriptionInput) => IRFrame
   <ApiSourceLink
     label={'frameTitle'}
     path={'packages/library/standard-vanilla/src/presentation/frame.ts'}
-    startLine={56}
+    startLine={57}
   >
     Create JSON-safe Frame title input
   </ApiSourceLink>

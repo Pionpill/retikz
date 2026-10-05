@@ -67,7 +67,10 @@ export type InputPlotCoordinate =
        */
       endAngle?: number;
     }
-  | ({ type: string } & JsonObject)
+  | ({
+      /** 匹配坐标系定义的注册类型 */
+      type: string;
+    } & JsonObject)
   | IRPlotCoordinateOperation;
 
 /** 2D 极坐标入口配置 */
@@ -131,7 +134,10 @@ export type PlotComposition = NonNullable<IRPlot['composition']>;
 /** React declaration 的结构化来源路径 */
 export type PlotDeclarationPath = ReadonlyArray<string | number>;
 
-/** 带来源路径的显式 Plot declaration 值 */
+/**
+ * 带来源路径的显式 Plot declaration 值
+ * @template T 携带作者路径的具体声明值类型
+ */
 export type PlotDeclarationSource<T> = {
   /** declaration 值 */
   value: T;
@@ -203,13 +209,13 @@ export type AxisBoundGuide = IRPlotGuide & {
   trackId?: string;
 };
 
-/** Plot composition arrangement */
+/** 绘图组合的排列方式 */
 export type Arrangement = NonNullable<PlotComposition['arrangements']>[number];
 
-/** tracks arrangement */
+/** 轨道排列方式 */
 export type SharedScaffold = Extract<Arrangement, { kind: 'tracks' }>;
 
-/** scaffold track */
+/** 布局骨架中的轨道 */
 export type ScaffoldTrack = SharedScaffold['tracks'][number];
 
 /** normalization 中暂存的 facet */
@@ -217,11 +223,11 @@ export type CollectedFacet = InputPlotFacet;
 
 /** normalization 中暂存的 scaffold */
 export type CollectedScaffold = Omit<SharedScaffold, 'coordinate'> & {
-  /** scaffold coordinate */
+  /** 布局骨架使用的坐标系 */
   coordinate?: SharedScaffold['coordinate'];
-  /** composition spacing */
+  /** 组合布局的间距 */
   spacing?: PlotComposition['spacing'];
-  /** composition resolve */
+  /** 组合布局的解析选项 */
   resolve?: PlotComposition['resolve'];
 };
 
@@ -261,11 +267,11 @@ export type NormalizationState = {
 
 /** PlotFacet、PlotScaffold 与 PlotTrack 提供的声明作用域 */
 export type CollectionContext = {
-  /** facet id */
+  /** 分面的标识 */
   facetId?: string;
-  /** scaffold id */
+  /** 布局骨架的标识 */
   scaffoldId?: string;
-  /** track id */
+  /** 轨道的标识 */
   trackId?: string;
 };
 
@@ -302,19 +308,19 @@ export type PlotAuthoringDeclarations = Array<PlotAuthoringDeclaration>;
 
 /** 从 declaration props 分离出的 runtime-only source */
 export type PlotAuthoringRuntimeSource = {
-  /** runtime source kind */
+  /** 运行时数据源种类 */
   kind: 'resolve-label';
   /** 原始 callback prop 路径 */
   path: PlotDeclarationPath;
   /** callback 绑定的 mark id */
   markId?: string;
-  /** runtime-only label resolver */
+  /** 仅在运行时使用的标签解析函数 */
   resolveLabel: (row: ExternalRow) => string;
 };
 
 /** raw ReactNode collector 的完整输出 */
 export type PlotDeclarationCollection = {
-  /** JSON-safe declarations */
+  /** 可 JSON 序列化的声明集合 */
   declarations: PlotAuthoringDeclarations;
   /** 与 declarations 分离的 runtime-only sources */
   runtimeSources: Array<PlotAuthoringRuntimeSource>;

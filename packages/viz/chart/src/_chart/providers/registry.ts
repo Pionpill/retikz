@@ -236,7 +236,10 @@ const resolveEncodingRuntime = (definitions: ChartRuntimeDefinitionOptions): Cha
   }
 };
 
-/** 合并当前 Core provider 实际贡献的 recipe 与主题 Definition */
+/**
+ * 合并当前 Core provider 实际贡献的 recipe 与主题 Definition
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
   contributions: ReadonlyArray<ChartRecipeProviderContributionInput<TSource>>,
 ): ChartProviderRegistry => {

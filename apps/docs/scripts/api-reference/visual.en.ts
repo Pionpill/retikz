@@ -1,4 +1,5 @@
 const translations: Partial<Record<string, string>> = {
+  缓动能力注册表: 'easing registry',
   'Pattern 单条线 motif 的可序列化样式覆盖': 'Serializable style overrides for a pattern line motif',
   'Pattern 相邻线条的稀疏周期样式': 'Sparse repeating styles for adjacent pattern lines',
   'Pattern paint 的可序列化实例参数': 'Serializable pattern paint parameters',

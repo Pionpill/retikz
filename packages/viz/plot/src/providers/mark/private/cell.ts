@@ -65,7 +65,7 @@ export const cellLayer = (
 };
 
 /**
- * CellGeometry → core Node（统一装配）。
+ * CellGeometry → core Node（统一装配）
  * @description rect → Node{position, minimumSize}；sector → Node{position:center, shape:sector}
  *   （半径 swap 保 outer>inner）；contour → Node{position: 顶点 AABB 中心, shape:contour{points}}；不可锚定 contour 返回 null
  */

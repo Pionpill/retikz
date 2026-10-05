@@ -4,8 +4,8 @@
 
 #### Rectangle / RectangleProps
 
-- `Rectangle`：<ApiSourceLink label={"Rectangle"} path={"packages/library/standard-react/src/shape/Rectangle.tsx"} startLine={12}>通过 Vanilla adapter 声明 Standard Rectangle</ApiSourceLink>
-- `RectangleProps`：<ApiSourceLink label={"RectangleProps"} path={"packages/library/standard-react/src/shape/Rectangle.tsx"} startLine={9}>React Rectangle 的作者输入与宿主事件</ApiSourceLink>
+- `Rectangle`：<ApiSourceLink label={"Rectangle"} path={"packages/library/standard-react/src/shape/Rectangle.tsx"} startLine={19}>通过 Vanilla adapter 声明 Standard Rectangle</ApiSourceLink>
+- `RectangleProps`：<ApiSourceLink label={"RectangleProps"} path={"packages/library/standard-react/src/shape/Rectangle.tsx"} startLine={10}>React Rectangle 的作者输入与宿主事件</ApiSourceLink>
 
 ```ts
 export declare const Rectangle: {
@@ -26,7 +26,7 @@ export type RectangleProps = InputRectangle &
   <ApiSourceLink
     label={'InputRectangle'}
     path={'packages/library/standard-vanilla/src/shape/rectangle.ts'}
-    startLine={8}
+    startLine={9}
   >
     Rectangle 的 Vanilla 作者输入
   </ApiSourceLink>
@@ -42,7 +42,7 @@ export type InputRectangle = InputShape<IRRectangle>;
   <ApiSourceLink
     label={'RectangleInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/shape/rectangle.ts'}
-    startLine={10}
+    startLine={12}
   >
     将 Rectangle 作者输入归一为持久化的 Standard 意图
   </ApiSourceLink>
@@ -57,7 +57,7 @@ export declare const RectangleInputEmbedAdapter: SynchronousInputEmbedAdapter<In
 #### IRRectangle
 
 <p>
-  <ApiSourceLink label={'IRRectangle'} path={'packages/library/standard/src/shape/rectangle/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRRectangle'} path={'packages/library/standard/src/shape/rectangle/types.ts'} startLine={7}>
     持久化的 Rectangle 形状
   </ApiSourceLink>
 </p>
@@ -72,7 +72,7 @@ export type IRRectangle = ShapeSource<ZodInput<typeof RectangleSchema>>;
   <ApiSourceLink
     label={'RectangleDefinition'}
     path={'packages/library/standard/src/shape/rectangle/definition.ts'}
-    startLine={7}
+    startLine={8}
   >
     Rectangle 的 Core composite 注册项
   </ApiSourceLink>
@@ -116,7 +116,7 @@ export const RectangleDefinition = defineComposite({
   <ApiSourceLink
     label={'RectangleProvider'}
     path={'packages/library/standard/src/shape/rectangle/provider.ts'}
-    startLine={5}
+    startLine={6}
   >
     Rectangle 的按需依赖贡献
   </ApiSourceLink>
@@ -137,7 +137,7 @@ export const RectangleProvider: CoreDependencyProvider = Object.freeze({
   <ApiSourceLink
     label={'createRectangle'}
     path={'packages/library/standard/src/shape/rectangle/factory.ts'}
-    startLine={4}
+    startLine={5}
   >
     创建保留几何意图的 Rectangle Source
   </ApiSourceLink>

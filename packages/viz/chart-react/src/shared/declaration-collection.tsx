@@ -15,17 +15,26 @@ import { ChartLayout } from './ChartLayout';
 /** Chart declaration 在原始 children 中的稳定 slot 路径 */
 export type ChartDeclarationPath = ReadonlyArray<string | number>;
 
-/** 携带原始 slot 路径的 Chart declaration */
+/**
+ * 携带原始 slot 路径的 Chart declaration
+ * @template TProps 具体图表 React 组件或声明组件接受的属性类型
+ */
 export type CollectedChartDeclaration<TProps> = Readonly<{
+  /** 当前声明组件的原始属性 */
   props: TProps;
+  /** 用于定位重复或非法声明的 JSX 来源路径 */
   path: ChartDeclarationPath;
 }>;
 
 /** Chart 公共 declaration 收集结果 */
 export type CollectedChartDeclarations = Readonly<{
+  /** 唯一数据声明及其来源路径 */
   data?: CollectedChartDeclaration<ChartDataProps>;
+  /** 唯一坐标系声明及其来源路径 */
   coordinate?: CollectedChartDeclaration<ChartCoordinateProps>;
+  /** 唯一布局声明及其来源路径 */
   layout?: CollectedChartDeclaration<ChartLayoutProps>;
+  /** 唯一 Plot 扩展声明及其来源路径 */
   extension?: CollectedChartDeclaration<ChartExtensionProps>;
 }>;
 
@@ -124,7 +133,9 @@ const sourceLayoutOf = (props: ChartLayoutProps): ChartLayoutProps['layout'] => 
 
 /** standalone Chart 交给 Layout host 的尺寸与已移除 host dimensions 的 children */
 export type StandaloneChartDeclarations = Readonly<{
+  /** 交给独立图表内容收集器的 JSX 声明 */
   children: ReactNode;
+  /** 独立 Layout 宿主采用的宽、高与取景范围 */
   host: Pick<LayoutProps, 'width' | 'height' | 'viewBox'>;
 }>;
 

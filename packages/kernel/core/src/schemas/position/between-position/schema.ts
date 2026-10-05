@@ -8,10 +8,12 @@ import { PolarPositionSchema } from '../polar-position';
 import { PositionSchema } from '../position';
 import type { IRAbsoluteTarget, IRBetweenPosition } from './types';
 
+/** 递归校验不依赖路径相对游标的绝对目标 */
 export const AbsoluteTargetSchema: ZodType<IRAbsoluteTarget> = lazy(() =>
   union([PositionSchema, PolarPositionSchema, NodeTargetSchema, OffsetPositionSchema, BetweenPositionSchema]),
 );
 
+/** 校验编译时从两端点按归一化比例求得的位置 */
 export const BetweenPositionSchema: ZodType<IRBetweenPosition> = lazy(() =>
   object({
     between: tuple([AbsoluteTargetSchema, AbsoluteTargetSchema]).describe(

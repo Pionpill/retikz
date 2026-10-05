@@ -19,6 +19,7 @@ export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;
 
 /** 持久化的 Legend 离散内容 */
 export type IRLegendItemsContent = Omit<ZodInput<typeof LegendItemsContentSchema>, 'items'> & {
+  /** 按作者顺序排列的样本与标签项 */
   items: Array<IRLegendItem>;
 };
 
@@ -32,7 +33,10 @@ export type IRLegendRampContent = Omit<ZodInput<typeof LegendRampContentSchema>,
 /** 持久化的 Standard Legend composite */
 export type IRLegend = Omit<ZodInput<typeof LegendSchema>, keyof IRScopeProps | 'title' | 'content'> &
   IRScopeProps &
-  Pick<ZodInfer<typeof LegendSchema>, 'title'> & { content: IRLegendItemsContent | IRLegendRampContent };
+  Pick<ZodInfer<typeof LegendSchema>, 'title'> & {
+    /** 选择离散项列表或连续样本刻度的互斥内容分支 */
+    content: IRLegendItemsContent | IRLegendRampContent;
+  };
 
 /** 创建 Legend 时允许省略固定 discriminator 与 schema 默认字段的输入 */
 export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;

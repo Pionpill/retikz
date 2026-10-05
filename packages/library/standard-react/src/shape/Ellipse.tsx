@@ -7,7 +7,11 @@ import type { StandardEmbeddableComponent } from '../shared';
 import { shapeEmbedProps } from './shared';
 
 /** React Ellipse 的作者输入与宿主事件 */
-export type EllipseProps = InputEllipse & HydrationEventProps & { /** 显式路径身份 */ id?: string };
+export type EllipseProps = InputEllipse &
+  HydrationEventProps & {
+    /** 显式路径身份 */
+    id?: string;
+  };
 
 const EllipseComponent: FC<EllipseProps> = () => null;
 

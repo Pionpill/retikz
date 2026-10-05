@@ -37,7 +37,10 @@ export type RelationKindDefinition = Readonly<{
   directions?: Readonly<Partial<Record<RelationDirection, IRGraphRelationStructureTokenOverrides>>>;
 }>;
 
-/** Relation predicate 作者侧的类型安全定义 */
+/**
+ * Relation predicate 作者侧的类型安全定义
+ * @template TSchema 校验 predicate 参数的 JSON 对象 schema，其输出类型传给结构解析回调
+ */
 export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
   /** 全局唯一的 predicate definition name */
   name: string;

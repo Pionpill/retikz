@@ -14,16 +14,39 @@ import { MatrixRow } from './MatrixRow';
 /** Matrix 的 React 输入；省略所有入口时生成空矩阵 */
 export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand'> &
   (
-    | { items: Array<Array<string | CellProps>>; data?: never; skeleton?: never; children?: never; dataExpand?: never }
     | {
+        /** 按行排列的显式二维单元格，每格接受文本或带样式的单元格 */
+        items: Array<Array<string | CellProps>>;
+        data?: never;
+        skeleton?: never;
+        children?: never;
+        dataExpand?: never;
+      }
+    | {
+        /** 用于展开矩阵单元格的二维数据，与其它内容入口互斥 */
         data: NonNullable<IRMatrix['data']>;
         items?: never;
         skeleton?: never;
         children?: never;
+        /** 仅对 data 入口生效的数据展开策略 */
         dataExpand?: IRMatrix['dataExpand'];
       }
-    | { skeleton: NonNullable<IRMatrix['skeleton']>; items?: never; data?: never; children?: never; dataExpand?: never }
-    | { children?: ReactNode; items?: never; data?: never; skeleton?: never; dataExpand?: never }
+    | {
+        /** 用于构造空矩阵的行列结构，与其它内容入口互斥 */
+        skeleton: NonNullable<IRMatrix['skeleton']>;
+        items?: never;
+        data?: never;
+        children?: never;
+        dataExpand?: never;
+      }
+    | {
+        /** 由 MatrixRow 及其 MatrixCell 组成的矩阵行列声明 */
+        children?: ReactNode;
+        items?: never;
+        data?: never;
+        skeleton?: never;
+        dataExpand?: never;
+      }
   );
 
 /** 收集行格 marker，并将 drawable 交给统一输入适配 */

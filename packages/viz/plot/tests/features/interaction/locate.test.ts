@@ -13,7 +13,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /**
- * datum locator：逻辑地址 → 位置/元素的确定性解析函数。
+ * datum locator：逻辑地址 → 位置/元素的确定性解析函数
  * @description createPlotLocator 与 lowerPlots 同参，locator.datum(i).position 应与 lowering 实际摆放一致。
  *   sector/polar 锚点取扇片 centroid，断言落在渲染扇区内
  */

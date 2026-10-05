@@ -15,6 +15,7 @@ type Round = (n: number) => number;
 
 /** 混排行布局上下文：注入的度量 / 降解 + 块级字体 / 色 + warn 发射器 */
 export type LineLayoutContext = {
+  /** 测量每个文本片段在指定字体下的尺寸 */
   measureText: TextMeasurer;
   /** TeX 降解能力 */
   lowerTex?: LowerTex;
@@ -30,6 +31,7 @@ export type LineLayoutContext = {
    * @default 1
    */
   opacity?: number;
+  /** 接收混排行布局与公式降解产生的诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };
 

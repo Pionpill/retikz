@@ -3,11 +3,14 @@ import { ZodError } from 'zod';
 
 import { createLayoutProbeRecoverableError, safeThrownDetail } from './diagnostics';
 
-/** provider payload 校验输入 */
+/**
+ * provider payload 校验输入
+ * @template TOutput provider schema 解析后的输出类型
+ */
 export type ParseProviderPayloadInput<TOutput> = {
   /** 能力名称，用于错误诊断 */
   capability: string;
-  /** provider key */
+  /** 能力提供者的注册键 */
   providerName: string;
   /** 用户应修改的 IR 路径 */
   irPath: string;
@@ -44,7 +47,10 @@ const appendPathKindIssuePath = (capability: string, payloadName: string, irPath
   return `${irPath}${issuePath.startsWith('[') ? '' : '.'}${issuePath}`;
 };
 
-/** 用统一错误上下文解析 provider payload，并保留原始 ZodError cause */
+/**
+ * 用统一错误上下文解析 provider payload，并保留原始 ZodError cause
+ * @template TOutput provider schema 解析后的输出类型
+ */
 export const parseProviderPayload = <TOutput>({
   capability,
   providerName,

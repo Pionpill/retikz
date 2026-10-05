@@ -47,7 +47,7 @@ import {
 } from '../shared';
 
 /**
- * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）。
+ * 取一行的位置通道值 → [xValue, yValue]（坐标系无关；投影交给 frame.project，frame 把 x/y 重解释为对应角色）
  * @description x/y 是唯一位置通道（坐标系决定其含义）
  */
 export const resolveRolePosition = (mark: IRPlotPathMark, row: ExternalRow): [unknown, unknown] => [
@@ -335,7 +335,7 @@ export const orderRows = (rows: Array<ExternalRow>, order: string | undefined): 
   order ? [...rows].sort((a, b) => compareRowsByFieldPath(a, b, order)) : rows;
 
 /**
- * 把一组有序行投影成上沿屏幕点（坐标系无关）。
+ * 把一组有序行投影成上沿屏幕点（坐标系无关）
  * @description cartesian / polar 分类角轴 / closed 走弦（顶点直连）；polar 连续角轴段内采样弯弧
  */
 export const buildOutlinePoints = (
@@ -691,7 +691,7 @@ export const buildSeriesPathScopes = (
   return scopes;
 };
 
-/** 解析 path 图元在当前通道与默认值下使用的 paint。 */
+/** 解析 path 图元在当前通道与默认值下使用的 paint */
 export const markPaintOf = (
   mark: IRPlotMark,
   channels: MarkChannels,
@@ -705,7 +705,7 @@ export const markPaintOf = (
 };
 
 /**
- * 显式 series + color 字段并存时，校验 color 在每个 series 组内恒定（否则 fail-loud）。
+ * 显式 series + color 字段并存时，校验 color 在每个 series 组内恒定（否则 fail-loud）
  */
 const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: string, colorField: string): void => {
   const colorsBySeries = new Map<unknown, Set<unknown>>();
@@ -728,9 +728,9 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
 };
 
 /**
- * path mark（path）的有效 series 字段。
+ * path mark（path）的有效 series 字段
  * @description 显式 mark.series 优先；无显式 series 但有 categorical color 字段 → 隐式按 color 拆系列。
- *   显式 series 与 color 字段并存且 color 在 series 内不恒定 → fail-loud。
+ *   显式 series 与 color 字段并存且 color 在 series 内不恒定 → fail-loud
  */
 export const pathSeriesField = (mark: IRPlotMark, rows: Array<ExternalRow>): string | undefined => {
   if (mark.type !== PlotMark.Path) return undefined;
@@ -744,7 +744,7 @@ export const pathSeriesField = (mark: IRPlotMark, rows: Array<ExternalRow>): str
   return colorField;
 };
 
-/** 折线（path mark）：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关）。 */
+/** 折线（path mark）：单线（常量 color → stroke）或多系列（series 拆多线、各取系列色）（坐标系无关） */
 const lowerPath = (
   mark: IRPlotMark,
   rows: Array<ExternalRow>,
@@ -920,7 +920,7 @@ export const lowerPathLayer = (
   return attachMarkLayer(anchoredLayer, mark, ctx);
 };
 
-/** 收集 path mark 独有字段：连接顺序与 series 拆分。 */
+/** 收集 path mark 独有字段：连接顺序与 series 拆分 */
 const collectPathMarkChannelFields = (mark: IRPlotPathMark, fields: FieldCollector): void => {
   fields.addFields(
     mark.order,
@@ -929,7 +929,7 @@ const collectPathMarkChannelFields = (mark: IRPlotPathMark, fields: FieldCollect
   );
 };
 
-/** 内置 path mark definition。 */
+/** 内置 path mark definition */
 export const pathMarkDefinition: MarkDefinition<IRPlotPathMark> = {
   schema: PathMarkSchema,
   channelKinds: pathChannelKinds,

@@ -39,7 +39,10 @@ export const resolveBaseLayoutInspectOptions = (
   };
 };
 
-/** 合并共享与布局专属字段；只有两个对象简写才逐字段合并 */
+/**
+ * 合并共享与布局专属字段；只有两个对象简写才逐字段合并
+ * @template T 父级与局部共用的检查选项类型，保留具体检查器字段
+ */
 export const mergeLayoutInspectOptionsInput = <T extends BaseLayoutInspectOptions>(inherited: T, local: T): T => {
   const merged = { ...inherited, ...mergeProperties([local], { shouldOverride: value => value !== undefined }) };
   if (typeof inherited.bounds === 'object' && typeof local.bounds === 'object') {

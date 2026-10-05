@@ -1,7 +1,10 @@
 import type { ScenePrimitive } from '../../contract';
 
 /** path 延迟解析时使用的内部占位 primitive */
-export type PathPlaceholder = { type: 'path-placeholder' };
+export type PathPlaceholder = {
+  /** 标识等待路径编译结果回填的内部占位项 */
+  type: 'path-placeholder';
+};
 
 /** compile 内部 sink 元素类型：真 Scene primitive 或编译期占位 */
 export type InternalScenePrimitive = ScenePrimitive | PathPlaceholder;
@@ -9,6 +12,7 @@ export type InternalScenePrimitive = ScenePrimitive | PathPlaceholder;
 /** zIndex 只作为编译期旁路信息，不写入 Scene primitive */
 export type PrimitiveZIndexTable = WeakMap<ScenePrimitive, number>;
 
+/** 创建遍历占位项，使路径可以在节点及目标位置确定后按原顺序替换 */
 export const makePathPlaceholder = (): PathPlaceholder => ({ type: 'path-placeholder' });
 
 /** 把占位已回填的内部 sink 收窄回公开 ScenePrimitive[] */

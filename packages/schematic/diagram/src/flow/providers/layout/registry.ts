@@ -23,7 +23,9 @@ export type FlowLayoutRegistryOptions = Readonly<{
 
 /** 已验证的 Flow Layout registry 与当前默认项 */
 export type ResolvedFlowLayoutRegistry = Readonly<{
+  /** 按名称索引的可用布局定义 */
   layouts: ReadonlyMap<string, FlowLayoutDefinition>;
+  /** 未显式选择布局名称时使用的定义 */
   defaultLayout: FlowLayoutDefinition;
 }>;
 

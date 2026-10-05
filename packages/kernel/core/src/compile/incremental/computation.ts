@@ -35,7 +35,10 @@ const dispatchDefaultWarning = (warning: CompileWarning): void => {
   console.warn(formatCompileWarning(warning));
 };
 
-/** 创建保留 full oracle 语义的 Core Runtime Computation */
+/**
+ * 创建保留 full oracle 语义的 Core Runtime Computation
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export const createCoreComputation = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   options: CoreComputationOptions<TComposites>,
   runtimeOptions: CoreComputationRuntimeOptions = {},

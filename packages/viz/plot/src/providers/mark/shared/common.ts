@@ -43,18 +43,24 @@ export const DEFAULT_FILL = 'currentColor';
 /** mark lowering 可使用的字符串颜色或 core paint */
 export type MarkPaint = string | IRPaint;
 
-/** 按通道名读取逐行值 resolver */
+/**
+ * 按通道名读取逐行值 resolver
+ * @template T 调用方按已知通道契约读取的视觉值类型
+ */
 export const channelValueOf = <T extends ChannelValue>(
   channels: MarkChannels,
   channel: string,
 ): ChannelValueResolver<T> | undefined => channels.values?.[channel] as ChannelValueResolver<T> | undefined;
 
-/** 按通道名读取已解析的默认值 */
+/**
+ * 按通道名读取已解析的默认值
+ * @template T 调用方按已知通道契约读取的默认视觉值类型
+ */
 export const channelDefaultOf = <T extends ChannelValue>(channels: MarkChannels, channel: string): T | undefined =>
   channels.defaults?.[channel] as T | undefined;
 
 /**
- * 把若干「已就位 node + 其颜色」按颜色分组，每色一子 Scope（fill 上提到子 Scope 的 nodeDefault）。
+ * 把若干「已就位 node + 其颜色」按颜色分组，每色一子 Scope（fill 上提到子 Scope 的 nodeDefault）
  * @description 颜色不逐 node 写：N 行同色 → 一个子 Scope 设 fill，IR 体积 O(色数) 而非 O(行数)
  */
 export const colorGroupedScope = (
@@ -99,7 +105,7 @@ export const constantNodeStyleOverrides = (mark: IRPlotMark): Partial<IRNodeDefa
 };
 
 /**
- * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）。
+ * datum node 装饰器：provenance 开时给 node 挂 per-datum meta（datumProvenance）+ datum id（datumIdField）
  * @description 关 provenance / 无 markProvenance → 原样返回，不写 id/meta
  */
 export const decorateDatum = (
@@ -244,7 +250,7 @@ export const resolveGeometryMarkLabels = (
 };
 
 /**
- * priority-1 宿主 label：若位置 mark 带 `label` 且该行解析出内容，给 datum Node 填 core NodeLabelSchema。
+ * priority-1 宿主 label：若位置 mark 带 `label` 且该行解析出内容，给 datum Node 填 core NodeLabelSchema
  * @description 零新建 Node：position / distance / pin 直接落 core label（边框相对定位 + 引线由 core 负责）
  */
 export const attachDatumLabel = (
@@ -339,7 +345,7 @@ const anchorOwnerOf = (
   ...(role !== undefined ? { role } : {}),
 });
 
-/** 按图元锚点配置为 datum 图元注册稳定 id。 */
+/** 按图元锚点配置为 datum 图元注册稳定 id */
 export const attachDatumAnchor = (
   node: IRNode,
   mark: PositionEncodedMark,
@@ -358,14 +364,14 @@ export const attachDatumAnchor = (
 };
 
 /**
- * shared encoding 中保留给非位置语义的 key。
- * @description 其它 encoding key 一律视为 coordinate role，避免把位置收集写死成 x/y/z 后漏掉自定义坐标系 role。
+ * shared encoding 中保留给非位置语义的 key
+ * @description 其它 encoding key 一律视为 coordinate role，避免把位置收集写死成 x/y/z 后漏掉自定义坐标系 role
  */
 const nonPositionEncodingKeys = new Set(['color', 'text', 'channels']);
 
 /**
- * 收集坐标 role 字段。
- * @description 不写死 x/y/z：自定义 coordinate 可以声明自己的 role，mark.encoding 中除内置非位置槽位外都按 position role 处理。
+ * 收集坐标 role 字段
+ * @description 不写死 x/y/z：自定义 coordinate 可以声明自己的 role，mark.encoding 中除内置非位置槽位外都按 position role 处理
  */
 export const collectPositionRoleFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   for (const [key, channel] of Object.entries(mark.encoding)) {
@@ -375,8 +381,8 @@ export const collectPositionRoleFields = (mark: PositionEncodedMark, fields: Fie
 };
 
 /**
- * 收集 encoding 中的非位置通道字段。
- * @description `encoding.color` 是内置 paint 的兼容入口；`encoding.channels` 是自定义通道入口。二者都不参与 coordinate role 投影。
+ * 收集 encoding 中的非位置通道字段
+ * @description `encoding.color` 是内置 paint 的兼容入口；`encoding.channels` 是自定义通道入口。二者都不参与 coordinate role 投影
  */
 export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   if ('color' in mark.encoding) fields.addChannel(mark.encoding.color);
@@ -387,19 +393,19 @@ export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: 
 };
 
 /**
- * 收集 datum label 引用的字段。
- * @description label 挂在 mark 顶层，但内容仍可能绑定数据字段；它不是位置 role，也不是 channel delivery。
+ * 收集 datum label 引用的字段
+ * @description label 挂在 mark 顶层，但内容仍可能绑定数据字段；它不是位置 role，也不是 channel delivery
  */
 export const collectDatumLabelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   for (const label of normalizeLabelFieldEntries(mark.label)) fields.addChannel(label.content);
 };
 
-/** 收集 plot label 内容绑定引用的源字段。 */
+/** 收集 plot label 内容绑定引用的源字段 */
 export const collectMarkLabelFields = (label: MarkLabelFieldSource, fields: FieldCollector): void => {
   for (const entry of normalizeLabelFieldEntries(label)) fields.addChannel(entry.content);
 };
 
-/** 收集锚点 id 配置引用的源字段。 */
+/** 收集锚点 id 配置引用的源字段 */
 export const collectAnchorIdFields = (anchorId: IRPlotAnchorId | undefined, fields: FieldCollector): void => {
   if (anchorId === undefined) return;
 
@@ -410,8 +416,8 @@ export const collectAnchorIdFields = (anchorId: IRPlotAnchorId | undefined, fiel
 };
 
 /**
- * 位置类 mark 的通用 encoding 字段收集入口。
- * @description point / path / interval 共用 shared encoding；具体样式字段再由 node/path channel definition 派生收集。
+ * 位置类 mark 的通用 encoding 字段收集入口
+ * @description point / path / interval 共用 shared encoding；具体样式字段再由 node/path channel definition 派生收集
  */
 export const collectCommonEncodingFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   collectPositionRoleFields(mark, fields);
@@ -423,8 +429,8 @@ export const collectCommonEncodingFields = (mark: PositionEncodedMark, fields: F
 type ChannelDefinitionMap = Readonly<Record<string, { channel: string }>>;
 
 /**
- * 根据 channel definition 的注册名收集 mark 顶层同名字段。
- * @description node/path 内置通道名由 channel 层单一维护；mark 侧只声明自己消费哪类 channel，避免再维护一份平行字段列表。
+ * 根据 channel definition 的注册名收集 mark 顶层同名字段
+ * @description node/path 内置通道名由 channel 层单一维护；mark 侧只声明自己消费哪类 channel，避免再维护一份平行字段列表
  */
 const collectChannelDefinitionFields = (
   mark: IRPlotMarkOperation,
@@ -435,18 +441,18 @@ const collectChannelDefinitionFields = (
   for (const def of Object.values(definitions)) fields.addChannel(record[def.channel]);
 };
 
-/** 收集当前 mark 消费的内置 Node channel 字段。 */
+/** 收集当前 mark 消费的内置 Node channel 字段 */
 export const collectNodeChannelFields = (mark: IRPlotMarkOperation, fields: FieldCollector): void =>
   collectChannelDefinitionFields(mark, fields, BUILTIN_NODE_CHANNELS);
 
-/** 收集当前 mark 消费的内置 Path channel 字段。 */
+/** 收集当前 mark 消费的内置 Path channel 字段 */
 export const collectPathChannelFields = (mark: IRPlotMarkOperation, fields: FieldCollector): void =>
   collectChannelDefinitionFields(mark, fields, BUILTIN_PATH_CHANNELS);
 
-/** Node 类 mark 默认可消费的通道类型集合。 */
+/** Node 类 mark 默认可消费的通道类型集合 */
 export const nodeChannelKinds = (): ReturnType<NonNullable<MarkDefinition['channelKinds']>> =>
   new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Node]);
 
-/** Path 类 mark 默认可消费的通道类型集合。 */
+/** Path 类 mark 默认可消费的通道类型集合 */
 export const pathChannelKinds = (): ReturnType<NonNullable<MarkDefinition['channelKinds']>> =>
   new Set([ChannelDefinitionKind.Mark, ChannelDefinitionKind.Scope, ChannelDefinitionKind.Path]);

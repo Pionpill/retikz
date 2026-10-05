@@ -4,7 +4,10 @@ import type { CellMarkerProps } from '../cell';
 import { invalidCellAuthoring } from '../cell';
 
 /** Map 的一条键值记录，包含一个 MapKey 和一个 MapValue */
-export type MapEntryProps = { children: ReactNode };
+export type MapEntryProps = {
+  /** 当前条目的 MapKey 与 MapValue 声明 */
+  children: ReactNode;
+};
 
 /** Map 键单元格的文本或 drawable 输入 */
 export type MapKeyProps = CellMarkerProps;

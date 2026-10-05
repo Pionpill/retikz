@@ -12,6 +12,7 @@ import { ScopeSchema } from '../scope';
 import { ThemeSchema } from '../theme';
 import type { IRChild } from './types';
 
+/** 递归校验内核图元或组合节点；领域扩展字段由注册定义继续校验 */
 export const ChildSchema: ZodType<IRChild> = lazy(() =>
   union([
     discriminatedUnion('type', [NodeSchema, PathSchema, CoordinateSchema, ScopeSchema]).describe(
@@ -25,6 +26,7 @@ export const ChildSchema: ZodType<IRChild> = lazy(() =>
 
 registerRecursiveChildSchema(ChildSchema);
 
+/** 校验场景可见矩形的左上角与正数宽高 */
 export const ViewBoxSchema = strictObject({
   x: number().describe('Left edge in scene coordinate units; must be finite and may be negative.'),
   y: number().describe('Top edge in scene coordinate units; must be finite and may be negative.'),
@@ -32,6 +34,7 @@ export const ViewBoxSchema = strictObject({
   height: PositiveNumberSchema.describe('Height in scene coordinate units; must be finite and greater than zero.'),
 }).describe('Visible scene rectangle, specified by its top-left corner, width, and height.');
 
+/** 校验可序列化的绘图根场景及有序子项、主题和可选取景范围 */
 export const SceneSchema = strictObject({
   type: literal('scene').describe('Discriminator marking this object as the root scene'),
   version: literal(1).describe('Scene data format version; currently must be 1, independent of the package version.'),

@@ -41,7 +41,10 @@ export type RuntimeTracePhaseDefinition = Readonly<{
   outcomes: ReadonlyArray<PerformanceTraceOutcome>;
 }>;
 
-/** 由 Runtime 固定 owner 的同步 trace reporter */
+/**
+ * 由 Runtime 固定 owner 的同步 trace reporter
+ * @template TOwner 报告器固定绑定的来源名称类型，保留 owner 的字面量信息；默认沿用 string
+ */
 export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
   /** reporter 绑定的 owner */
   owner: TOwner;
@@ -51,7 +54,10 @@ export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
   diagnostics: () => ReadonlyArray<PerformanceTraceDiagnostic>;
 }>;
 
-/** 创建 trace reporter 的配置 */
+/**
+ * 创建 trace reporter 的配置
+ * @template TOwner 报告器固定绑定的来源名称类型，保留 owner 的字面量信息；默认沿用 string
+ */
 export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Readonly<{
   /** reporter 固定绑定的 owner */
   owner: TOwner;

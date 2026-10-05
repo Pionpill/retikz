@@ -2,7 +2,7 @@ import type { ExternalRow } from '@retikz/data';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 /**
- * provenance 下沉上下文：贯穿 expand -> mark -> guide，承载 plotId / dataReference / 各开关。
+ * provenance 下沉上下文：贯穿 expand -> mark -> guide，承载 plotId / dataReference / 各开关
  * @description provenance 关时不构造此对象（传 undefined），mark / guide 据此决定是否写 id / meta
  */
 export type ProvenanceContext = {
@@ -20,7 +20,7 @@ export type ProvenanceContext = {
 export type DatumIdRegistrar = (row: ExternalRow) => string;
 
 /**
- * 单个 mark 下沉时的 provenance 上下文。
+ * 单个 mark 下沉时的 provenance 上下文
  * @description contract 层定义该形状，provider 只消费它，避免 contract 反向依赖 provider 实现
  */
 export type MarkProvenance = {
@@ -33,7 +33,7 @@ export type MarkProvenance = {
 };
 
 /**
- * 把任意值转成 id 路径段。
+ * 把任意值转成 id 路径段
  * @description 非字符串走 String()；点号会与 plot-local 命名层级冲突，因此替换为下划线
  */
 export const slug = (value: unknown): string => String(value).replace(/\./g, '_');

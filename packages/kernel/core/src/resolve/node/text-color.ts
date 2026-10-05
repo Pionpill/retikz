@@ -70,7 +70,10 @@ const contrastingBlackOrWhite = (color: ParsedCssColor): '#000000' | '#ffffff' =
   return chooseBlackOrWhiteForLuminance(luminance);
 };
 
-/** 解析 Node auto-contrast 关键字，供 layout 消费具体 CSS color */
+/**
+ * 解析 Node auto-contrast 关键字，供 layout 消费具体 CSS color
+ * @template TNode 需要解析对比文字色的节点类型，保留其它节点字段
+ */
 export const resolveNodeTextColor = <TNode extends PrimaryColorResolvedNode>(
   node: TNode,
   labelDefault: EffectiveLabelDefault,

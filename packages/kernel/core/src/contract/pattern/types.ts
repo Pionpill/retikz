@@ -36,13 +36,13 @@ export type PatternEmitContext = {
   color: string;
   /**
    * tile 背景填充（CSS 串）；缺省透明（字段缺省）
-   * @default 透明背景
+   * @default undefined
    */
   background?: string;
   /**
    * 线 / 网格描边宽；dots motif 用作半径
    * @description 仅当用户在 `pattern.lineWidth` 显式给值时存在；缺省时由 motif 自行决定默认值
-   * @default motif 自定义默认值
+   * @default undefined
    */
   lineWidth?: IRPatternPaint['lineWidth'];
   /** 解析后的描边 dash pattern；已应用显式值与 dashed / dotted 预设优先级 */

@@ -32,6 +32,7 @@ import {
 } from '../text';
 import { NodeLabelPlacement, NodeLabelPosition } from './constants';
 
+/** 校验标签在矩形类节点指定边上的归一化附着位置 */
 export const NodeLabelBoundaryPositionSchema = object({
   boundary: zodEnum(Side).describe('Canonical box-like node boundary side used as the label attachment line.'),
   fraction: NormalizedFractionSchema.optional().describe(
@@ -41,6 +42,7 @@ export const NodeLabelBoundaryPositionSchema = object({
   .strict()
   .describe('Label position on a box-like node boundary.');
 
+/** 校验按边、轴或统一值指定的盒间距；具体边优先于轴，轴优先于统一值 */
 export const BoxSpacingSchema = object({
   default: NonNegativeNumberSchema.optional().describe('Fallback spacing for all sides.'),
   x: NonNegativeNumberSchema.optional().describe('Horizontal spacing for left and right sides.'),
@@ -55,6 +57,7 @@ export const BoxSpacingSchema = object({
 
 const BoxSpacingValueSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]);
 
+/** 校验双轴缩放覆盖值；指定轴优先于统一倍率 */
 export const AxisScaleSchema = object({
   default: PositiveNumberSchema.optional().describe('Fallback scale factor for both axes.'),
   x: PositiveNumberSchema.optional().describe('Horizontal scale factor.'),
@@ -65,6 +68,7 @@ export const AxisScaleSchema = object({
 
 const AxisScaleValueSchema = union([PositiveNumberSchema, AxisScaleSchema]);
 
+/** 校验宽高覆盖值；单独指定的宽或高优先于统一尺寸 */
 export const BoxSizeSchema = object({
   default: NonNegativeNumberSchema.optional().describe('Fallback size for width and height.'),
   width: NonNegativeNumberSchema.optional().describe('Width size.'),
@@ -75,6 +79,7 @@ export const BoxSizeSchema = object({
 
 const BoxSizeValueSchema = union([NonNegativeNumberSchema, BoxSizeSchema]);
 
+/** 校验节点外侧标签引线的颜色、线宽与虚线样式 */
 export const NodeLabelPinSchema = object({
   stroke: ContextualColorSchema.optional().describe(
     'Leader line color; an exact CSS color or a weight derived from the effective label color.',
@@ -86,6 +91,7 @@ export const NodeLabelPinSchema = object({
     .describe('Leader dash offset in user units. Positive and negative finite values are allowed.'),
 }).describe('Leader line style overrides for an outside node label.');
 
+/** 校验附属标签的文本、附着位置、视觉样式与引线描述 */
 export const NodeLabelSchema = object({
   ...createLabelVisualStyleShape({
     textColor: 'Label text color; falls back to currentColor.',
@@ -250,6 +256,7 @@ const NodeBaseSchema = strictObject({
   layout: NodeLayoutSchema.optional().describe('Node size, spacing, and text layout overrides.'),
 });
 
+/** 校验可定位的节点，并要求别名依附主标识且在节点内不重复 */
 export const NodeSchema = NodeBaseSchema.superRefine((node, context) => {
   if (node.aliasIds === undefined) return;
   if (node.id === undefined) {

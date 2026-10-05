@@ -18,5 +18,6 @@ export type GraphAuthorLayer = Readonly<{
 /** 单成员 appearance resolver 共享的 Theme 与 definition 上下文 */
 export type GraphMemberAppearanceResolveContext = ResolvedGraphDefinitionOptions &
   Readonly<{
+    /** 当前位置已解析的 Core 主题上下文 */
     theme: ResolvedTheme;
   }>;

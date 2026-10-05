@@ -133,8 +133,8 @@ export type ResolvedArrowEnd = {
   /** 已解析箭头宽度 */
   markerHeight: number;
   /**
-   * marker 元素级不透明度 0..1；缺省继承 path opacity
-   * @default 继承 `path.opacity`
+   * marker 元素级不透明度 0..1，与路径整体不透明度相乘；省略时不额外降低不透明度
+   * @default 1
    */
   opacity?: number;
   /** 局部 baseSize 坐标系下的内部几何 */

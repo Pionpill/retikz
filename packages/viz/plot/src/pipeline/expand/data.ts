@@ -52,7 +52,7 @@ export const applyMarkTransforms = (
 };
 
 /**
- * 校验 fieldMaps 中的数据集与逻辑字段引用。
+ * 校验 fieldMaps 中的数据集与逻辑字段引用
  * @description 供 lowering 与 locator 共用，保证两条入口采用相同的 fail-loud 契约
  */
 export const validateFieldMaps = (
@@ -88,7 +88,7 @@ export const validateFieldMaps = (
 };
 
 /**
- * 准备绑定数据、字段类型及 lowering 所需 registry。
+ * 准备绑定数据、字段类型及 lowering 所需 registry
  * @description 先校验 fieldMaps，再解析 model / format / resolver 并恒归一化；transform 由调用方在本函数之后执行
  */
 export const prepareRows = (

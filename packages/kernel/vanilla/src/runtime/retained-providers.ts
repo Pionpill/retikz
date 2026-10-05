@@ -24,14 +24,21 @@ type ProviderDefinition =
 
 type ProviderSlot = { current: ProviderDefinition };
 
+/** 一次已应用但尚未确认的 provider 回调更新 */
 type PreparedProviderDefinitions = Readonly<{
+  /** 新旧定义是否至少有一个字段引用不同 */
   changed: boolean;
+  /** 确认当前回调更新，使后续 rollback 不再恢复旧定义 */
   commit: () => void;
+  /** 尚未确认时恢复旧定义；重复调用或确认后调用不产生变化 */
   rollback: () => void;
 }>;
 
+/** 在挂载生命周期内保持稳定定义代理，并为回调更新提供提交与回滚 */
 export type RetainedProviderDefinitions = Readonly<{
+  /** 供编译器持有的稳定代理集合，函数调用转发到当前定义 */
   definitions: CoreProviderDefinitions;
+  /** 先验证全部定义兼容性，再立即切换回调；返回的事务可确认更新或恢复旧回调 */
   prepare: (next: CoreProviderDefinitions) => PreparedProviderDefinitions;
 }>;
 
@@ -62,6 +69,7 @@ export const captureCoreProviderDefinitions = (
   );
 };
 
+/** 以非负安全整数记录 provider 回调版本，用于触发运行时重新计算 */
 export const VanillaProviderRevisionSourceDefinition = defineRuntimeSource<number, number, number, never>({
   key: '@retikz/vanilla:provider-revision',
   value: {
@@ -198,6 +206,11 @@ const definitionsEqual = (initial: ProviderDefinition, next: ProviderDefinition)
   );
 };
 
+/**
+ * 建立稳定 provider 代理及可回滚的回调更新入口
+ * @description 更新必须保持集合长度、注册键、schema、非函数字段及执行分支一致；prepare 会立即应用通过校验的回调
+ * @throws RetikzRenderError 定义改变挂载期固定的编译能力时抛出
+ */
 export const createRetainedProviderDefinitions = (
   initialDefinitions: CoreProviderDefinitions = {},
 ): RetainedProviderDefinitions => {

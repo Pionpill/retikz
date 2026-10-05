@@ -81,6 +81,7 @@ export type PresentedTableTransactionInput = Readonly<{
   presented: PresentedTableModel;
   /** 同次 style resolution 与选择值 */
   theme?: LayoutCompositeCompileContext['theme'];
+  /** 当前表格布局与呈现共同采用的已解析默认值 */
   tableDefaults?: ResolvedTableDefaults;
   /** 同次 Cell/encoding plan bundle */
   plan?: ResolvedTablePlan;
@@ -99,9 +100,9 @@ type TableTransactionStage = 'intrinsic Cell layout' | 'constrained Cell layout'
 type TableTransactionCellLocator = Readonly<{
   /** 用户显式提供的可选 Cell identity */
   id?: string;
-  /** canonical row index */
+  /** 规范行下标 */
   rowIndex: number;
-  /** canonical column index */
+  /** 规范列下标 */
   columnIndex: number;
 }>;
 

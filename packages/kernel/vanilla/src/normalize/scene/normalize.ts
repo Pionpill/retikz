@@ -70,21 +70,29 @@ type AdapterOutputContext = NormalizeContext & {
 
 /** 准备 traversal 只描述作者位置，不执行 adapter 或构造占位贡献 */
 export type InputEmbedSite = Readonly<{
+  /** 当前作者位置的原始嵌入声明 */
   input: AnyInputEmbed;
+  /** 用于准备该嵌入的身份、分层及主题上下文 */
   context: Omit<InputEmbedContext, 'normalizeChildren'>;
+  /** 该嵌入在最终 Source 结构中的诊断路径 */
   sourcePath: string;
+  /** 为当前嵌入的子内容创建独立遍历入口 */
   children: (children: ReadonlyArray<InputChild>) => InputChildrenTraversal;
 }>;
 
 /** 子项完整贡献就绪后，复用同步 normalizer */
 export type InputChildrenTraversal = Readonly<{
+  /** 按归一化遍历顺序收集的待准备嵌入位置 */
   sites: ReadonlyArray<InputEmbedSite>;
+  /** 将与 sites 顺序对应的已完成贡献交给同步归一化流程 */
   normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => NormalizedInputEmbedChildren;
 }>;
 
 /** 根 traversal 与唯一 Source 归一化的衔接 */
 export type InputSceneTraversal = Readonly<{
+  /** 整张场景按归一化遍历顺序收集的嵌入位置 */
   sites: ReadonlyArray<InputEmbedSite>;
+  /** 将与 sites 顺序对应的已完成贡献组装为唯一场景 Source */
   normalize: (contributions: ReadonlyArray<InputEmbedContribution>) => NormalizedInputScene;
 }>;
 

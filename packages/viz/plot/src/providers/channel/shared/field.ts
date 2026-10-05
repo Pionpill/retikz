@@ -18,7 +18,7 @@ export const channelValue = (channel: IRPlotChannel | undefined, row: ExternalRo
 };
 
 /**
- * 把字段值按展示格式串格式化。
+ * 把字段值按展示格式串格式化
  * @description temporal 使用 d3-time-format，其余使用 d3-format；非法格式或非法值回退到 String(value)
  */
 const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: DataFieldType | undefined): string => {
@@ -37,7 +37,7 @@ const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: Da
 };
 
 /**
- * text 内容通道某行解析为标签串。
+ * text 内容通道某行解析为标签串
  * @description resolveLabel 最高优先；其次 field 解析值；再次 value 常量
  */
 export const labelOf = (

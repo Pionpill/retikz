@@ -5,7 +5,10 @@ import { cloneAndFreezeJson } from '@retikz/foundation';
 import type { InspectorFragment, InspectorOutput } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
-/** 校验、脱离并深冻结 JSON-safe plain data */
+/**
+ * 校验、脱离并深冻结 JSON-safe plain data
+ * @template T JSON 输入与冻结副本共享的结构类型
+ */
 export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
   try {
     return cloneAndFreezeJson(value, label);

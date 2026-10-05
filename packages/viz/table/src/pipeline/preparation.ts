@@ -253,7 +253,10 @@ export const resolveTableData = (
   }
 };
 
-/** 全阶段预检完成后提供单次执行，失败保留原始cause */
+/**
+ * 全阶段预检完成后提供单次执行，失败保留原始cause
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const prepareTableData = async <TSource = never>(
   spec: IRTable,
   request: TableDataPreparationOptions<TSource>,

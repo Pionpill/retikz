@@ -36,7 +36,7 @@ export const DEFAULT_JITTER_X_FIELD = 'x';
 export const DEFAULT_JITTER_Y_FIELD = 'y';
 
 /**
- * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]。
+ * 堆叠：每个 x 分组内按系列顺序累加 y，给每行派生 [y0, y1]
  * @description 系列顺序取 groupBy 值的全局出现序；缺 y / 非有限值按 0 计入；normalize offset 拒绝有限负值
  */
 export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTransform): Array<ExternalRow> => {
@@ -133,7 +133,7 @@ export const applyStack = (rows: Array<ExternalRow>, operation: IRDataStackTrans
 };
 
 /**
- * normalize：同组内各行 field / 组总和 -> 组内占比，保持行数。
+ * normalize：同组内各行 field / 组总和 -> 组内占比，保持行数
  * @description groupBy 缺省时全行单组；有限负值会报错，缺失 / 非有限值按 0；basis percent 输出 0..100，组和为 0 时输出 0
  */
 export const applyNormalize = (rows: Array<ExternalRow>, operation: IRDataNormalizeTransform): Array<ExternalRow> => {
@@ -169,7 +169,7 @@ export const applyNormalize = (rows: Array<ExternalRow>, operation: IRDataNormal
 };
 
 /**
- * derive-interval：每行独立算 [start, end]，保持行数。
+ * derive-interval：每行独立算 [start, end]，保持行数
  * @description 两字段模式 startFrom + endFrom 优先；否则 from 模式派生 [baseline, fromValue]
  */
 export const applyDeriveInterval = (
@@ -216,7 +216,7 @@ const mulberry32 = (seed: number): (() => number) => {
 };
 
 /**
- * jitter：给连续数值位置字段加确定性伪随机偏移，保持行数。
+ * jitter：给连续数值位置字段加确定性伪随机偏移，保持行数
  * @description 偏移发生在数据空间 pre-scale；非有限值保留原值，但仍消耗一次随机数保持行序确定性
  */
 export const applyJitter = (rows: Array<ExternalRow>, operation: IRDataJitterTransform): Array<ExternalRow> => {

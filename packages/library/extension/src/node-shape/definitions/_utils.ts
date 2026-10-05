@@ -16,7 +16,12 @@ import type { Position } from '@retikz/math';
 import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../errors';
 
 /** Shape 外接矩形半轴 */
-export type ShapeHalfAxes = { halfWidth: number; halfHeight: number };
+export type ShapeHalfAxes = {
+  /** 形状外接矩形的半宽 */
+  halfWidth: number;
+  /** 形状外接矩形的半高 */
+  halfHeight: number;
+};
 
 /** 根据最终外接半轴生成局部顶点 */
 export type PolygonVertices = (halfWidth: number, halfHeight: number) => Array<Position>;

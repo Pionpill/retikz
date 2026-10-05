@@ -16,7 +16,7 @@ import { readSourceIndicesOf } from './provenance';
 const DEFAULT_SOURCE_IDENTITY_LIMIT = 20;
 
 /**
- * data lineage recorder 的归一化消费选项。
+ * data lineage recorder 的归一化消费选项
  * @description 已补齐公开开关默认值，并把需要记录 row 值的选项收敛为显式白名单形态
  */
 type ResolvedDataLineageOptions = {
@@ -63,7 +63,7 @@ const normalizeSampleOptions = (
   return { maxRows: value.maxRows, fields: [...value.fields] };
 };
 
-/** 解析 source identity 开关；默认 summary + 固定上限。 */
+/** 解析 source identity 开关；默认 summary + 固定上限 */
 const normalizeSourceIdentityOptions = (
   value: DataLineageOptions['sourceIdentity'],
 ): false | Required<DataSourceIdentityOptions> => {
@@ -81,7 +81,7 @@ const normalizeSourceIdentityOptions = (
   return { mode, maxIndices };
 };
 
-/** 归一化 lineage 开关默认值。 */
+/** 归一化 lineage 开关默认值 */
 const normalizeLineageOptions = (options: DataLineageOptions = {}): ResolvedDataLineageOptions => ({
   sourceIdentity: normalizeSourceIdentityOptions(options.sourceIdentity),
   transformSteps: options.transformSteps ?? true,
@@ -94,7 +94,7 @@ const normalizeLineageOptions = (options: DataLineageOptions = {}): ResolvedData
   retainEvents: options.sink === undefined || options.retainEvents === true,
 });
 
-/** 按字段白名单裁剪 row 样本。 */
+/** 按字段白名单裁剪 row 样本 */
 const sampleRows = (rows: Array<ExternalRow>, options: DataValueSampleOptions): Array<ExternalRow> =>
   rows.slice(0, options.maxRows).map(row => {
     const out: ExternalRow = {};
@@ -102,7 +102,7 @@ const sampleRows = (rows: Array<ExternalRow>, options: DataValueSampleOptions): 
     return out;
   });
 
-/** 生成来源索引摘要。 */
+/** 生成来源索引摘要 */
 const sourceIdentityOf = (
   rows: Array<ExternalRow>,
   options: false | Required<DataSourceIdentityOptions>,
@@ -121,7 +121,7 @@ const sourceIdentityOf = (
   };
 };
 
-/** 创建 data lineage recorder。 */
+/** 创建 data lineage recorder */
 export const createDataLineageRecorder = (options: DataLineageOptions = {}): DataLineageRecorder & DataLineageRun => {
   const resolved = normalizeLineageOptions(options);
   const events: Array<DataLineageEvent> = [];

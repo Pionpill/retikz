@@ -10,7 +10,12 @@ import type {
 import type { FlowEndpointTarget } from '../../schemas';
 
 /** 同一关系两端的唯一分配结果 */
-export type FlowRelationEndpoints = Readonly<{ source: FlowEndpointTarget; target: FlowEndpointTarget }>;
+export type FlowRelationEndpoints = Readonly<{
+  /** 关系起点的元素、锚点或边界目标 */
+  source: FlowEndpointTarget;
+  /** 关系终点的元素、锚点或边界目标 */
+  target: FlowEndpointTarget;
+}>;
 
 /** 端点实际坐标比较，避免浮点查询误差产生虚假的分离 */
 export const coincidentFlowEndpoints = (a: Readonly<Position>, b: Readonly<Position>): boolean =>

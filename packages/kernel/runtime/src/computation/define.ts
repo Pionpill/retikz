@@ -16,9 +16,14 @@ import type {
   RuntimeUpdateResult,
 } from './types';
 
-/** Computation prepare 完成但尚未发布的 artifact 与双层 read cache */
+/**
+ * Computation prepare 完成但尚未发布的 artifact 与双层 read cache
+ * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
+ * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型
+ * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+ */
 export type RuntimePreparedComputationArtifact<TArtifact, TComputationRead, TPublicRead> = Readonly<{
-  /** runtime-owned captured artifact */
+  /** 运行时捕获并持有的计算产物 */
   artifact: TArtifact;
   /** 只供本 Computation update 使用的 private read */
   computationRead: TComputationRead;
@@ -34,20 +39,41 @@ export type RuntimeComputationErasedExecutor = Readonly<{
   computations: ReadonlyArray<RuntimeComputationToken>;
   /** 已复制冻结的 trace declarations */
   tracePhases: ReadonlyArray<RuntimeTracePhaseDefinition>;
-  /** 捕获具体 Definition 的 artifact */
+  /**
+   * 捕获具体 Definition 的 artifact
+   * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
+   */
   capture: <TArtifactInput, TArtifact>(input: TArtifactInput) => TArtifact;
-  /** 读取具体 Definition 的 private Computation view */
+  /**
+   * 读取具体 Definition 的 private Computation view
+   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
+   * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型
+   */
   readForComputation: <TArtifact, TComputationRead>(artifact: TArtifact) => TComputationRead;
-  /** 读取具体 Definition 的 public artifact view */
+  /**
+   * 读取具体 Definition 的 public artifact view
+   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
+   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+   */
   read: <TArtifact, TPublicRead>(artifact: TArtifact) => TPublicRead;
-  /** 释放具体 Definition 捕获的 artifact */
+  /**
+   * 释放具体 Definition 捕获的 artifact
+   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
+   */
   dispose?: <TArtifact>(artifact: TArtifact) => void;
   /** capture、拒绝 current alias 并缓存 concrete artifact 的双层 read */
   prepareArtifact: (
     input: unknown,
     current?: RuntimePreparedComputationArtifact<unknown, unknown, unknown>,
   ) => RuntimePreparedComputationArtifact<unknown, unknown, unknown>;
-  /** 以 concrete public read 类型创建 revision-bound artifact Snapshot */
+  /**
+   * 以 concrete public read 类型创建 revision-bound artifact Snapshot
+   * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+   * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型
+   * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型
+   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+   */
   snapshot: <TArtifactInput, TArtifact, TComputationRead, TPublicRead>(
     definition: RuntimeComputationDefinition<TArtifactInput, TArtifact, TComputationRead, TPublicRead>,
     prepared: RuntimePreparedComputationArtifact<unknown, unknown, unknown>,
@@ -61,18 +87,28 @@ export type RuntimeComputationErasedExecutor = Readonly<{
   ) => RuntimeSnapshot<unknown>;
   /** 释放 concrete prepared artifact，并隔离 dispose throw */
   retire: (prepared: RuntimePreparedComputationArtifact<unknown, unknown, unknown>) => ReadonlyArray<RuntimeDiagnostic>;
-  /** 执行 full Computation callback */
+  /**
+   * 执行 full Computation callback
+   * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+   */
   run: <TArtifactInput>(
     view: RuntimeCandidateView,
     context: RuntimeComputationContext,
   ) => RuntimeRunResult<TArtifactInput>;
-  /** 执行 incremental Computation callback */
+  /**
+   * 执行 incremental Computation callback
+   * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+   * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型
+   */
   update?: <TArtifactInput, TComputationRead>(
     previous: TComputationRead,
     view: RuntimeCandidateView,
     context: RuntimeComputationContext,
   ) => RuntimeUpdateResult<TArtifactInput>;
-  /** 通知成功发布的 artifact */
+  /**
+   * 通知成功发布的 artifact
+   * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型
+   */
   observeCommit?: <TPublicRead>(event: RuntimeCommitEvent<TPublicRead>) => void;
 }>;
 
@@ -122,7 +158,13 @@ const copyTracePhases = (
   return Object.freeze(copied);
 };
 
-/** 创建不暴露 author callbacks 的 typed Computation token */
+/**
+ * 创建不暴露 author callbacks 的 typed Computation token
+ * @template TArtifactInput run 或 update 产生、交给 artifact capture 的产物输入类型
+ * @template TArtifact capture 产生并由运行时持有和释放的计算产物类型；默认沿用 TArtifactInput
+ * @template TComputationRead 仅供当前计算的 update 读取旧产物的私有视图类型；默认沿用 TArtifact
+ * @template TPublicRead 依赖计算、提交观察者和宿主可读取的公开产物视图类型；默认沿用 TArtifact
+ */
 export const defineRuntimeComputation = <
   TArtifactInput,
   TArtifact = TArtifactInput,

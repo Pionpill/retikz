@@ -34,11 +34,22 @@ export type PlotSource =
       input?: never;
     }>;
 
-/** Plot InputEmbed 交给 adapter 的属性 */
+/**
+ * Plot InputEmbed 交给 adapter 的属性
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type InputPlotEmbed<TSource = never> = PlotSource &
   (
-    | Readonly<{ datasets: ExternalDatasets; dataBindings?: never }>
-    | Readonly<{ dataBindings: DataInputBindings<TSource>; datasets?: never }>
+    | Readonly<{
+        /** 以数据引用名索引的外部行数据集，与 dataBindings 互斥 */
+        datasets: ExternalDatasets;
+        dataBindings?: never;
+      }>
+    | Readonly<{
+        /** 行数据或原生数据源的运行时绑定，与 datasets 互斥 */
+        dataBindings: DataInputBindings<TSource>;
+        datasets?: never;
+      }>
   ) &
   Readonly<{
     /** 通用异步 transform 执行器，不进入 Source IR */
@@ -51,7 +62,7 @@ export type InputPlotEmbed<TSource = never> = PlotSource &
     hostLineageMetadata?: PlotHostLineageMetadata;
     /** 同次完整帧提交后通知，不在 preparation 中调用 */
     onLineage?: (lineage: PlotLineageRun) => void;
-    /** Plot lowering runtime options */
+    /** 将绘图描述降低为 Core 图元时的运行时选项 */
     lowerOptions?: LowerPlotsOptions;
     /** 作用于 Plot 根节点的可选 Core Scope */
     panel?: InputPlotPanel;

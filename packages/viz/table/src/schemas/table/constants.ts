@@ -1,6 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 
-/** Table composite namespace */
+/** 表格组合节点的命名空间 */
 export const TABLE_NAMESPACE = 'table';
 
 /** Table namespace 内的 composite 类型关键字 */

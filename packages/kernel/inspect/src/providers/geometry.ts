@@ -5,13 +5,21 @@ import { applyAffine, DEFAULT_EPSILON, localToWorld } from '@retikz/math';
 
 /** 由 Inspector 生成的普通 Path 子项样式 */
 export type InspectionPathStyle = Readonly<{
+  /** 辅助轮廓固定不填充内部区域 */
   fill: 'none';
+  /** 辅助轮廓使用的 CSS 描边颜色 */
   stroke: string;
+  /** 辅助轮廓的描边宽度，单位与场景坐标一致 */
   strokeWidth: number;
+  /** 仅作用于辅助轮廓描边的不透明度 */
   strokeOpacity?: number;
+  /** 填充通道的不透明度；无填充时不产生可见区域 */
   fillOpacity?: number;
+  /** 辅助路径整体的不透明度 */
   opacity?: number;
+  /** 辅助轮廓的虚线段长序列，采用场景单位 */
   dashPattern?: Array<number>;
+  /** 辅助轮廓虚线序列的相位偏移 */
   dashOffset?: number;
 }>;
 

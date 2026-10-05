@@ -132,6 +132,7 @@ const jitterDefinition = {
   },
 } satisfies RolePositionAdjustmentDefinition<IRPlotJitterPositionAdjustment>;
 
+/** 在角色空间生成确定性随机位移的 jitter 定义，保留具体操作参数类型 */
 export const jitterPositionAdjustmentDefinition =
   definePositionAdjustment<IRPlotJitterPositionAdjustment>(jitterDefinition);
 

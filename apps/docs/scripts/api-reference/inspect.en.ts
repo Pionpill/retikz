@@ -1,4 +1,21 @@
 const translations: Record<string, string> = {
+  检查器的注册键: 'Inspector key',
+  '规范化后可 JSON 序列化的选项': 'canonical JSON-safe options',
+  注册项的命名空间: 'registry namespace',
+  注册项的类型: 'registry type',
+  '经 subjectSchema 校验后交给 inspect 的观察对象类型':
+    'Observed subject type validated by subjectSchema and passed to inspect',
+  'optionsSchema 应用默认与变换后的选项类型': 'Options type after optionsSchema applies defaults and transforms',
+  'resolveOptions 输出、供 inspect 上下文消费的选项类型':
+    'Options type returned by resolveOptions and consumed by the inspect context',
+  '合并前的原始选项输入类型，默认与 TParsedOptions 相同':
+    'Raw options input type before merging; defaults to TParsedOptions',
+  探测或重放前产生被观察结果的位置: 'Location where the observed result originated before probing or replay',
+  重放映射后被观察结果在最终逻辑树中的位置:
+    'Location of the observed result in the final logical tree after replay remapping',
+  '校验被观察值并恢复可序列化的 subject': 'Validate the observed value and recover a serializable subject',
+  '校验合并后的原始选项并应用 schema 默认值与变换':
+    'Validate merged raw options and apply schema defaults and transforms',
   '要操作的 Inspector key': 'Inspector key targeted by the rule',
   '针对指定 Inspector 的启用、关闭或 options 请求': 'Enables, disables, or configures the specified Inspector',
   'false 关闭该 Inspector，true 使用默认 options，对象提供 sparse options':

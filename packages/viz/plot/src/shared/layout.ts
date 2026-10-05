@@ -55,7 +55,7 @@ export type LegendReserve = {
 };
 
 /**
- * 估算一段文字的像素宽。
+ * 估算一段文字的像素宽
  * @description plot lowering 在 core compile 前运行、无 measureText，按字符数 * 字号 * 经验系数估算。
  *   作为 margin 估算与 guide label 偏移的单一来源，避免多处各算一份
  */
@@ -224,7 +224,7 @@ export type PolarLayout = {
  * 由整图尺寸与角向标签包围盒计算极坐标布局
  * @description 圆心位于显式留白后的可用区域中心；外半径取圆与各角向标签都不越界时的最大值。
  *   标签宽度沿实际角度参与对应边界约束，不把最长标签宽度重复扣在四边；调用方只消费本 frame、不回写 layout。
- *   margin 之大 → 外半径 ≤ 0 → 抛清晰错误，不静默出退化坏图。
+ *   margin 之大 → 外半径 ≤ 0 → 抛清晰错误，不静默出退化坏图
  */
 export const computePolarCoordinate = (
   width: number,

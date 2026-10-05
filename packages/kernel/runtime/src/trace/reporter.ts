@@ -63,7 +63,10 @@ const normalizePhaseDefinitions = (
   return byKey;
 };
 
-/** 创建一个固定 owner 且失败隔离的同步 trace reporter */
+/**
+ * 创建一个固定 owner 且失败隔离的同步 trace reporter
+ * @template TOwner 报告器固定绑定的来源名称类型，保留 owner 的字面量信息
+ */
 export const createRuntimeTraceReporter = <const TOwner extends string>(
   input: CreateRuntimeTraceReporterInput<TOwner>,
 ): RuntimeTraceReporter<TOwner> => {

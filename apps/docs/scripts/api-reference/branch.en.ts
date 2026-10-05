@@ -1,4 +1,12 @@
 const translations: Partial<Record<string, string>> = {
+  '分支方向与净间距覆盖值，由布局解析补齐缺省项':
+    'Overrides for branch direction and clear gaps; layout resolution fills omitted values',
+  '共享节点目录，保留各节点可省略的尺寸与外观字段':
+    'Shared node catalog preserving optional size and appearance fields on each node',
+  保留节点与布局缺省值尚未物化的分支图作者输入:
+    'Branch authoring input with node and layout defaults not yet materialized',
+  能力提供者的注册键: 'provider key',
+  'Core 节点的位置': 'Core Node position',
   平级节点与有序分支声明: 'Flat node and ordered branch declarations',
   '将 BranchDiagram Source root 接入 React 编写与 Layout 宿主':
     'Connect a BranchDiagram Source root to React authoring and the Layout host',

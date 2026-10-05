@@ -4,7 +4,7 @@
 
 ### GridLayout / GridLayoutProps
 
-- `GridLayout`：<ApiSourceLink label={"GridLayout"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={34}>Layout Grid 布局的 React 声明组件</ApiSourceLink>
+- `GridLayout`：<ApiSourceLink label={"GridLayout"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={35}>Layout Grid 布局的 React 声明组件</ApiSourceLink>
 - `GridLayoutProps`：<ApiSourceLink label={"GridLayoutProps"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={13}>Grid 布局的 React 属性</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -107,7 +107,7 @@ export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'k
 
 ### gridLayout / InputGridLayout
 
-- `gridLayout`：<ApiSourceLink label={"gridLayout"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={53}>创建GridLayout 嵌入项</ApiSourceLink>
+- `gridLayout`：<ApiSourceLink label={"gridLayout"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={55}>创建GridLayout 嵌入项</ApiSourceLink>
 - `InputGridLayout`：<ApiSourceLink label={"InputGridLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={35}>Vanilla GridLayout authoring 输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -628,7 +628,7 @@ export type LayoutTrackArtifact = ZodInfer<typeof LayoutTrackArtifactSchema>;
   <ApiSourceLink
     label={'GRID_LAYOUT_MAX_TRACKS_PER_AXIS'}
     path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
-    startLine={29}
+    startLine={30}
   >
     GridLayout 单轴最多解析的显式与隐式 track 数
   </ApiSourceLink>
@@ -644,7 +644,7 @@ export const GRID_LAYOUT_MAX_TRACKS_PER_AXIS = 10000;
   <ApiSourceLink
     label={'GridAutoFlow'}
     path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
-    startLine={3}
+    startLine={4}
   >
     GridLayout 自动放置的流向
   </ApiSourceLink>
@@ -717,7 +717,7 @@ export const GridLayoutProvider: CoreDependencyProvider = Object.freeze({
   <ApiSourceLink
     label={'GridOverlap'}
     path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
-    startLine={9}
+    startLine={10}
   >
     GridLayout 显式区域重叠策略
   </ApiSourceLink>
@@ -738,7 +738,7 @@ export type GridOverlap = ValueOf<typeof GridOverlap>;
   <ApiSourceLink
     label={'LayoutTrackSourceKind'}
     path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
-    startLine={15}
+    startLine={16}
   >
     GridLayout 布局产物中轨道的定义尺寸来源
   </ApiSourceLink>

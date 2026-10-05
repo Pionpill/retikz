@@ -321,7 +321,7 @@ export type SlideInOptions = AnimationPresetOptions & {
   <ApiSourceLink
     label={'AnimationDirection'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={34}
+    startLine={35}
   >
     每次迭代的播放方向（抄 WAAPI / CSS animation-direction）
   </ApiSourceLink>
@@ -344,7 +344,7 @@ export type AnimationDirection = ValueOf<typeof AnimationDirection>;
   <ApiSourceLink
     label={'AnimationEasing'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={25}
+    startLine={26}
   >
     缓动具名预设（与 CSS 同名）；track / keyframe 亦可改用 cubic-bezier 四元组
   </ApiSourceLink>
@@ -368,7 +368,7 @@ export type AnimationEasing = ValueOf<typeof AnimationEasing>;
   <ApiSourceLink
     label={'AnimationFill'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={42}
+    startLine={43}
   >
     活动区间外取值（抄 WAAPI / CSS animation-fill-mode）
   </ApiSourceLink>
@@ -391,7 +391,7 @@ export type AnimationFill = ValueOf<typeof AnimationFill>;
   <ApiSourceLink
     label={'AnimationProperty'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={9}
+    startLine={10}
   >
     可动画属性通道（renderer 无关；DrawWay 风格 const + 派生类型，裸字面量 'opacity' 仍第一形态）
   </ApiSourceLink>
@@ -427,7 +427,7 @@ export type AnimationProperty = ValueOf<typeof AnimationProperty>;
   <ApiSourceLink
     label={'AnimationTrigger'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={50}
+    startLine={51}
   >
     播放触发器关键字（runtime 落地；DrawWay 风格 const + 派生类型，与其它 Animation 枚举单一真源一致）
   </ApiSourceLink>
@@ -715,7 +715,7 @@ export declare const stagger: (
 ### AnimationControls
 
 <p>
-  <ApiSourceLink label={'AnimationControls'} path={'packages/kernel/render/src/animation/runtime.ts'} startLine={27}>
+  <ApiSourceLink label={'AnimationControls'} path={'packages/kernel/render/src/animation/runtime.ts'} startLine={28}>
     播放控制句柄（manual trigger / runtime 暴露给调用方）
   </ApiSourceLink>
 </p>
@@ -835,7 +835,7 @@ export type AnimationPropertyRegistry = Record<string, AnimationPropertyDefiniti
 ### EasingRegistry
 
 <p>
-  <ApiSourceLink label={'EasingRegistry'} path={'packages/kernel/render/src/animation/types.ts'} startLine={12}>
+  <ApiSourceLink label={'EasingRegistry'} path={'packages/kernel/render/src/animation/types.ts'} startLine={14}>
     自定义缓动注册表：名 → cubic-bezier 四元组（CSS / WAAPI 通用）或函数（仅 Canvas / JS）
   </ApiSourceLink>
 </p>

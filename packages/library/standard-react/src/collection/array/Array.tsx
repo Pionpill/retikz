@@ -18,20 +18,37 @@ export type ArrayProps = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' |
   (
     | {
         skeleton?: never;
+        /** 从数据值展开单元格；与 items、skeleton 和 children 互斥 */
         data: NonNullable<IRArray['data']>;
         items?: never;
         children?: never;
+        /** 仅对 data 入口生效的数据展开策略 */
         dataExpand?: IRArray['dataExpand'];
       }
     | {
         skeleton?: never;
         data?: never;
+        /** 按顺序提供文本或带样式的单元格；与其它内容入口互斥 */
         items: Array<string | CellProps<IRArrayCell['layout']>>;
         children?: never;
         dataExpand?: never;
       }
-    | { data?: never; skeleton?: never; items?: never; children?: ReactNode; dataExpand?: never }
-    | { skeleton: NonNullable<IRArray['skeleton']>; data?: never; items?: never; children?: never; dataExpand?: never }
+    | {
+        data?: never;
+        skeleton?: never;
+        items?: never;
+        /** 直接使用 ArrayItem 声明单元格；不接受其它直属 marker */
+        children?: ReactNode;
+        dataExpand?: never;
+      }
+    | {
+        /** 只声明空单元格结构；与数据、显式单元格和 JSX 内容互斥 */
+        skeleton: NonNullable<IRArray['skeleton']>;
+        data?: never;
+        items?: never;
+        children?: never;
+        dataExpand?: never;
+      }
   );
 
 /** 保留单元格样式并收集每格的唯一 drawable */

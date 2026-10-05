@@ -23,7 +23,9 @@ import { groupRowsByFields, finiteFieldValuesOf } from './shared';
 
 /** 分组算法共享的计算调度，语义与实际同步/异步实现分离 */
 export type GroupComputation = Readonly<{
+  /** 对当前分组执行统计归约，允许同步或异步结果 */
   reduce: (rows: Array<ExternalRow>, operation: IRDataReducerOperation) => ExternalRow | Promise<ExternalRow>;
+  /** 对当前分组执行行选择，允许同步或异步结果 */
   select: (
     rows: Array<ExternalRow>,
     operation: IRDataSelectorOperation,
@@ -152,6 +154,7 @@ export function* computeSummarize(
   return output;
 }
 
+/** 同步执行分组归约，为每组生成聚合结果行 */
 export const applySummarize = (
   rows: Array<ExternalRow>,
   operation: IRDataSummarizeTransform,
@@ -183,6 +186,7 @@ export function* computeSelect(
   return output;
 }
 
+/** 同步执行分组行选择，复制所选行并按需写入排名字段 */
 export const applySelect = (
   rows: Array<ExternalRow>,
   operation: IRDataSelectTransform,
@@ -223,6 +227,7 @@ export function* computeAnnotate(
   return output;
 }
 
+/** 同步计算分组统计与选择结果，并回填到组内每行的副本 */
 export const applyAnnotate = (
   rows: Array<ExternalRow>,
   operation: IRDataAnnotateTransform,
@@ -313,7 +318,7 @@ function* computeBinMetrics(
 }
 
 /**
- * bin：连续 field 分箱，输出每箱一行，包含空箱。
+ * bin：连续 field 分箱，输出每箱一行，包含空箱
  * @description 半开区间 [edge_i, edge_{i+1})，末箱包含上界；metrics 缺省输出 binCount
  */
 export function* computeBin(
@@ -366,6 +371,7 @@ export function* computeBin(
   return output;
 }
 
+/** 同步按指定策略分箱并计算每个箱的统计指标 */
 export const applyBin = (
   rows: Array<ExternalRow>,
   operation: IRDataBinTransform,
@@ -375,7 +381,7 @@ export const applyBin = (
 
 const capitalize = (value: string): string => `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 
-/** 返回 relation endpoint 投影写出的目标字段名。 */
+/** 返回 relation endpoint 投影写出的目标字段名 */
 export const relationEndpointOutputField = (prefix: 'source' | 'target', suffix: string): string =>
   `${prefix}${capitalize(suffix)}`;
 
@@ -414,7 +420,7 @@ const pairMeasureFieldsOf = (
   return out;
 };
 
-/** relate：按 groupBy 选择 source / target 行并输出 relation rows。 */
+/** relate：按 groupBy 选择 source / target 行并输出 relation rows */
 export function* computeRelate(
   rows: Array<ExternalRow>,
   operation: IRDataRelateTransform,
@@ -446,6 +452,7 @@ export function* computeRelate(
   return output;
 }
 
+/** 同步选取每组的首个源、目标结果，生成带端点字段、差值及来源的关系行 */
 export const applyRelate = (
   rows: Array<ExternalRow>,
   operation: IRDataRelateTransform,

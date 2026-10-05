@@ -37,7 +37,9 @@ type InputLegendRampContent = Omit<Extract<LegendInput['content'], { kind: 'ramp
 
 /** Standard Legend 的 framework-neutral authoring 输入 */
 export type InputLegend = Omit<LegendInput, 'title' | 'content'> & {
+  /** 可选的图例标题，接受文本或绘制子内容 */
   title?: InputLegendChild;
+  /** 互斥的离散图例项或连续色带内容 */
   content: InputLegendItemsContent | InputLegendRampContent;
 };
 

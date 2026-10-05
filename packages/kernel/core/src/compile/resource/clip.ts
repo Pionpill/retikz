@@ -17,6 +17,7 @@ import {
   withProviderOutputValidationBoundary,
 } from '../scene-primitive';
 
+/** 解析裁剪形状、登记可复用资源并接收隔离布局探测结果的编译期接口 */
 export type ClipRegistry = {
   /** 调用已绑定 operation provider 生成开放 ClipShape */
   resolve: (clip: ClipResolution) => ClipShape;

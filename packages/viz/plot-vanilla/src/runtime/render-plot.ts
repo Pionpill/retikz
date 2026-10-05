@@ -15,7 +15,7 @@ import { renderToSvgString } from '@retikz/vanilla';
 type RenderPlotThemeOptions = {
   /** 在根 Scene 的 Core effective Theme 位置生效 */
   theme?: IRScene['theme'];
-  /** Core Theme style definitions */
+  /** Core 主题风格定义 */
   themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
 };
 

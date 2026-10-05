@@ -10,9 +10,28 @@ import { dataCellDependencies, normalizeCells } from './cell';
 /** Matrix 的三种互斥 Vanilla 输入；items 接受嵌套 drawable */
 export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand'> &
   (
-    | { items: Array<Array<string | InputCell>>; data?: never; skeleton?: never; dataExpand?: never }
-    | { data: NonNullable<IRMatrix['data']>; items?: never; skeleton?: never; dataExpand?: IRMatrix['dataExpand'] }
-    | { skeleton: NonNullable<IRMatrix['skeleton']>; items?: never; data?: never; dataExpand?: never }
+    | {
+        /** 按行排列的二维单元格，与数据和骨架入口互斥 */
+        items: Array<Array<string | InputCell>>;
+        data?: never;
+        skeleton?: never;
+        dataExpand?: never;
+      }
+    | {
+        /** 用于展开矩阵的二维数据，与其它内容入口互斥 */
+        data: NonNullable<IRMatrix['data']>;
+        items?: never;
+        skeleton?: never;
+        /** 仅用于数据入口的展开策略 */
+        dataExpand?: IRMatrix['dataExpand'];
+      }
+    | {
+        /** 用于构造空矩阵的行列结构，与其它内容入口互斥 */
+        skeleton: NonNullable<IRMatrix['skeleton']>;
+        items?: never;
+        data?: never;
+        dataExpand?: never;
+      }
   );
 
 /** 收集矩阵及格内 drawable 的依赖 */

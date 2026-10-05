@@ -23,7 +23,7 @@ import type {
   VanillaView,
 } from './types';
 
-/** Vanilla mount renderer selector. */
+/** Vanilla 挂载时使用的渲染器选择器 */
 export type MountRenderer = 'svg' | 'canvas';
 
 /** 统一 mount 入口选项 */

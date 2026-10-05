@@ -8,17 +8,28 @@ import { collectPlotDeclarations } from './adapter';
 import { RetikzPlotReactError } from './error';
 import type { PlotProps } from './Plot';
 
-/** `Plot` props 的完整 authoring 结果 */
+/**
+ * `Plot` props 的完整 authoring 结果
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type ResolvedPlotAuthoring<TSource = never> = Readonly<{
   /** 完整 Plot Source IR */
   spec: IRPlot;
-  /** runtime-only dataset table */
-  /** Plot lowering runtime options */
+
+  /** 将绘图描述降低为 Core 图元时的运行时选项 */
   lowerOptions: LowerPlotsOptions;
 }> &
   (
-    | Readonly<{ datasets: ExternalDatasets; dataBindings?: never }>
-    | Readonly<{ dataBindings: DataInputBindings<TSource>; datasets?: never }>
+    | Readonly<{
+        /** 传给 Plot 下沉阶段的外部行数据集 */
+        datasets: ExternalDatasets;
+        dataBindings?: never;
+      }>
+    | Readonly<{
+        /** 传给数据执行阶段的运行时源绑定 */
+        dataBindings: DataInputBindings<TSource>;
+        datasets?: never;
+      }>
   );
 
 /** `resolvePlotAuthoring` 的可选嵌入与默认数据引用配置 */
@@ -166,7 +177,10 @@ const applyPlotPropsToSpec = <TSource>(
   };
 };
 
-/** 解析 `<Plot>` props 为下沉运行时输入。 */
+/**
+ * 解析 `<Plot>` props 为下沉运行时输入
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const resolvePlotAuthoring = <TSource = never>(
   props: PlotProps<TSource>,
   options: ResolvePlotAuthoringOptions = {},
@@ -219,7 +233,10 @@ export const resolvePlotAuthoring = <TSource = never>(
   };
 };
 
-/** 解析一组 `<Plot>` props 对应的 runtime-only 图元链路。 */
+/**
+ * 解析一组 `<Plot>` props 对应的 runtime-only 图元链路
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const resolvePlotLineage = <TSource = never>(
   props: PlotProps<TSource>,
   options: { embedded?: boolean } = {},

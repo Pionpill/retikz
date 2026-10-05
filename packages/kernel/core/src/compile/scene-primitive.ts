@@ -17,7 +17,10 @@ import {
 /** provider output runtime validation 使用的 marker 子集验证入口 */
 export type MarkerPrimitiveValidator = (owner: string, marker: unknown) => ReadonlyArray<MarkerPrimitive>;
 
-/** 在 provider 返回后的统一边界把未知 validation failure 分类为 fatal contract error */
+/**
+ * 在 provider 返回后的统一边界把未知 validation failure 分类为 fatal contract error
+ * @template T 校验回调成功时返回的值类型
+ */
 export const withProviderOutputValidationBoundary = <T>(owner: string, validate: () => T): T =>
   validateProviderOutput(owner, validate);
 
@@ -43,7 +46,10 @@ export const failProviderOutput = (owner: string, detail: string): never => {
   throw createCompositeContractError(`${owner} emit produced ${detail}.`);
 };
 
-/** 物化 provider plain JSON 输出，并保留对象 undefined 字段供完整契约校验 */
+/**
+ * 物化 provider plain JSON 输出，并保留对象 undefined 字段供完整契约校验
+ * @template T 校验并复制为 JSON 快照的提供者输出类型
+ */
 export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: string): T => {
   const active = new WeakSet<object>();
 
@@ -141,7 +147,10 @@ export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: str
   return snapshot(value, path) as T;
 };
 
-/** 从已验证且归 Core 所有的 provider snapshot 递归省略对象 undefined 字段 */
+/**
+ * 从已验证且归 Core 所有的 provider snapshot 递归省略对象 undefined 字段
+ * @template T 原地移除 undefined 属性并原样返回的对象类型
+ */
 export const omitProviderOutputUndefined = <T>(value: T): T => {
   if (value === null || typeof value !== 'object') return value;
   if (Array.isArray(value)) {

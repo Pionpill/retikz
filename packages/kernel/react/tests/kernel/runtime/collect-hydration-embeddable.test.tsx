@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { collectHydrationHandlers, Node, Scope } from '../../../src';
 
-/**
+/*
  * 水合：collectHydrationHandlers 对可嵌入 Tier2 子组件的处理
  * @description 可嵌入子组件先捕获其自身挂点的 id + on<Event>，但绝不被调用 / 递归（其内部由 composite lowering 管理）——
  *   这正是本特性要修的崩溃：collect 阶段同步调用组件会在 re-render / 语言切换时触发其 hook。

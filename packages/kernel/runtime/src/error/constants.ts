@@ -74,9 +74,9 @@ export const RetikzRuntimeErrorCode = {
   ArtifactComputationReadFailed: 'RUNTIME_ARTIFACT_COMPUTATION_READ_FAILED',
   /** artifact public read 失败 */
   ArtifactPublicReadFailed: 'RUNTIME_ARTIFACT_PUBLIC_READ_FAILED',
-  /** Source value ownership alias */
+  /** 数据源持有值的所有权别名 */
   SourceOwnershipAlias: 'RUNTIME_SOURCE_OWNERSHIP_ALIAS',
-  /** artifact ownership alias */
+  /** 计算产物的所有权别名 */
   ArtifactOwnershipAlias: 'RUNTIME_ARTIFACT_OWNERSHIP_ALIAS',
   /** runtime 重入 */
   Reentrant: 'RUNTIME_REENTRANT',

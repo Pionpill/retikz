@@ -8,9 +8,13 @@ import { getRuntimeSourceRegistryExecutor } from '../registry';
 import type { RuntimeSourceErasedExecutor } from './define';
 import type { RuntimeChangeSet, RuntimeSourceDefinition, RuntimeSourceToken } from './types';
 
-/** executor 准备完成但尚未发布的 source value */
+/**
+ * executor 准备完成但尚未发布的 source value
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ */
 export type RuntimePreparedSourceValue<TValue, TRead> = Readonly<{
-  /** runtime-owned captured value */
+  /** 运行时捕获并持有的值 */
   value: TValue;
   /** 可安全共享的 immutable read view */
   read: TRead;
@@ -20,26 +24,50 @@ export type RuntimePreparedSourceValue<TValue, TRead> = Readonly<{
 
 /** Runtime 包内唯一消费 source author callbacks 的 lifecycle executor */
 export type RuntimeSourceExecutor = Readonly<{
-  /** capture、identity validation 与 read candidate view */
+  /**
+   * capture、identity validation 与 read candidate view
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   prepare: <TInput, TValue, TRead, TChange>(
     definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
     input: TInput,
     current?: RuntimePreparedSourceValue<TValue, TRead>,
   ) => RuntimeSourceExecutionResult<RuntimePreparedSourceValue<TValue, TRead>>;
-  /** 比较两个完整 captured value */
+  /**
+   * 比较两个完整 captured value
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   compare: <TInput, TValue, TRead, TChange>(
     definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
     left: RuntimePreparedSourceValue<TValue, TRead>,
     right: RuntimePreparedSourceValue<TValue, TRead>,
   ) => RuntimeSourceExecutionResult<boolean>;
-  /** 校验 change hint；validator throw 时立即 retire candidate */
+  /**
+   * 校验 change hint；validator throw 时立即 retire candidate
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   validateChangeSet: <TInput, TValue, TRead, TChange>(
     definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
     previous: RuntimePreparedSourceValue<TValue, TRead>,
     candidate: RuntimePreparedSourceValue<TValue, TRead>,
     changeSet: RuntimeChangeSet<TChange>,
   ) => RuntimeSourceExecutionResult<'valid' | 'fallback'>;
-  /** exactly-once 释放一个 prepared source value */
+  /**
+   * exactly-once 释放一个 prepared source value
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   retire: <TInput, TValue, TRead, TChange>(
     definition: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
     prepared: RuntimePreparedSourceValue<TValue, TRead>,

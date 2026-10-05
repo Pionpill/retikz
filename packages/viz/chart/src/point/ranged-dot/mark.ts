@@ -118,7 +118,7 @@ const mergedPropertiesOf = (context: ChartMarkResolveContext, source: IRRangedDo
   };
 };
 
-/** Ranged Dot authored mark Definition */
+/** 范围点标记的作者定义 */
 export const RangedDotMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'ranged-dot',
   schema: RangedDotChartMarkSchema,

@@ -28,10 +28,12 @@ export const PlotScaleTypeSchema = createOpenStringSchema(PlotScale).describe(
   'Built-in scale type or a custom registered scale type',
 );
 
+/** 校验非空配色名称，具体内置或自定义名称在降低阶段解析 */
 export const ColorSchemeNameSchema = createOpenStringSchema(PlotColorScheme).describe(
   'Color scheme name: a built-in scheme (e.g. viridis / rdbu) or a custom name registered via options.colorSchemes. Validated as a non-blank string here; an unknown name fails loud at lowering. Interpolator functions never enter the IR — only the name string',
 );
 
+/** 校验离散比例尺接受的字符串或数值类别 */
 export const CategoryValueSchema = union([string(), number()]).describe(
   'A category value: string or number (the leaf a band / point scale domain element resolves to)',
 );
@@ -95,6 +97,7 @@ export const MarkDomainPaddingSchema = strictObject({
   'Use range padding when both ends are fixed',
 );
 
+/** 校验位置比例尺按输出单位、定义域比例或标记范围扩展边界的策略 */
 export const DomainPaddingSchema = union([
   NonNegativeNumberSchema,
   DomainPaddingObjectSchema,
@@ -112,6 +115,7 @@ const ContinuousPositionDomainShape = {
   ),
 } as const;
 
+/** 校验从数值定义域连续线性映射到输出范围的比例尺 */
 export const LinearScaleSchema = object({
   type: literal(PlotScale.Linear).describe('Discriminator: continuous linear scale'),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
@@ -126,6 +130,7 @@ export const LinearScaleSchema = object({
   ...ContinuousPositionDomainShape,
 }).describe('Linear scale: a continuous numeric mapping from domain to range');
 
+/** 校验将离散类别映射为等宽区间的带状比例尺 */
 export const BandScaleSchema = object({
   domainPadding: DomainPaddingSchema.optional().describe(
     'Output range padding beyond existing categorical spacing; mark padding protects individual glyphs',
@@ -148,6 +153,7 @@ export const BandScaleSchema = object({
   ),
 }).describe('Band scale: maps a discrete category set to equal-width bands across the range');
 
+/** 校验将离散类别映射为等距零宽位置的点比例尺 */
 export const PointScaleSchema = object({
   domainPadding: DomainPaddingSchema.optional().describe(
     'Output range padding beyond existing categorical spacing; mark padding protects individual glyphs',
@@ -163,6 +169,7 @@ export const PointScaleSchema = object({
   align: NormalizedFractionSchema.optional().describe('How padding is distributed, 0..1; default 0.5 (centered)'),
 }).describe('Point scale: degenerate band (zero width) placing categories on evenly spaced positions');
 
+/** 校验离散类别到离散视觉输出范围的顺序比例尺 */
 export const OrdinalScaleSchema = object({
   type: literal(PlotScale.Ordinal).describe(
     'Discriminator: ordinal scale mapping a discrete domain to a discrete output range (typically colors)',
@@ -184,6 +191,7 @@ export const OrdinalScaleSchema = object({
     ),
 }).describe('Ordinal scale: discrete domain to discrete output range (colors); the workhorse for series color');
 
+/** 校验以毫秒时间戳为输入、按可读时间边界生成刻度的时间比例尺 */
 export const TimeScaleSchema = object({
   type: literal(PlotScale.Time).describe('Discriminator: continuous time scale over epoch-millisecond instants'),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
@@ -201,6 +209,7 @@ export const TimeScaleSchema = object({
   'Time scale: continuous mapping from time instants (epoch ms) to range; ticks land on human-readable time boundaries',
 );
 
+/** 校验连续对数映射的位置比例尺 */
 export const LogScaleSchema = object({
   type: literal(PlotScale.Log).describe(
     'Discriminator: continuous logarithmic scale (domain must be strictly positive)',
@@ -222,6 +231,7 @@ export const LogScaleSchema = object({
   'Log scale: continuous logarithmic mapping; valid only on point / line marks (interval / area baseline includes 0)',
 );
 
+/** 校验按指定指数进行连续幂映射的位置比例尺 */
 export const PowScaleSchema = object({
   type: literal(PlotScale.Pow).describe('Discriminator: continuous power scale'),
   name: NonBlankStringSchema.describe('Scale name; referenced by coordinate.x / coordinate.y'),
@@ -239,6 +249,7 @@ export const PowScaleSchema = object({
   ...ContinuousPositionDomainShape,
 }).describe('Pow scale: continuous power mapping y = m·x^exponent + b; valid only on point / line marks');
 
+/** 校验按平方根映射数值的位置比例尺，可用于面积感知的尺寸编码 */
 export const SqrtScaleSchema = object({
   type: literal(PlotScale.Sqrt).describe(
     'Discriminator: continuous square-root scale (pow with exponent 0.5; area-perceptual)',
@@ -261,6 +272,7 @@ export const SqrtScaleSchema = object({
   'Sqrt scale: continuous square-root mapping (area-perceptual); valid only on point / line marks; also the default derivation target for the size channel',
 );
 
+/** 校验近零线性、两端对数且支持跨零数据的对称对数比例尺 */
 export const SymlogScaleSchema = object({
   type: literal(PlotScale.Symlog).describe(
     'Discriminator: continuous symmetric-log scale (linear near zero, logarithmic in the tails; admits zero and negative values)',
@@ -287,6 +299,7 @@ export const SymlogScaleSchema = object({
   'Symlog scale: continuous bi-symmetric-log mapping, linear near zero and logarithmic in the tails, so it handles wide-range data that crosses or includes zero (unlike log); valid only on point / line marks',
 );
 
+/** 校验使面积与输入值成比例的半径映射比例尺 */
 export const RadialScaleSchema = object({
   type: literal(PlotScale.Radial).describe(
     'Discriminator: continuous radial scale whose output radius is area-true (the square-root mapping that makes encoded area proportional to value)',
@@ -307,6 +320,7 @@ export const RadialScaleSchema = object({
   'Radial scale: continuous mapping whose output radius is area-true (encoded area is proportional to value); the natural value scale for polar / rose (Nightingale) charts',
 );
 
+/** 校验连续单调定义域到单向色带的颜色映射 */
 export const SequentialColorScaleSchema = object({
   type: literal(PlotScale.Sequential).describe(
     'Discriminator: continuous sequential color scale (monotone quantity to a one-directional color band)',
@@ -331,6 +345,7 @@ export const SequentialColorScaleSchema = object({
   'Sequential color scale: a continuous monotone domain mapped to a one-directional color band; the workhorse for continuous / temporal color',
 );
 
+/** 校验围绕有意义中点向两侧发散的连续颜色映射 */
 export const DivergingColorScaleSchema = object({
   type: literal(PlotScale.Diverging).describe(
     'Discriminator: continuous diverging color scale (a quantity with a meaningful midpoint to a two-sided color band)',
@@ -355,6 +370,7 @@ export const DivergingColorScaleSchema = object({
   'Diverging color scale: a continuous domain with a meaningful midpoint mapped to a two-sided color band (distinct hues either side, pale center); for profit / loss or deviation-from-mean quantities',
 );
 
+/** 校验将连续定义域等宽分箱并赋予离散颜色的比例尺 */
 export const QuantizeColorScaleSchema = object({
   type: literal(PlotScale.Quantize).describe(
     'Discriminator: quantize color scale (a continuous domain cut into equal-width bins, each bin a discrete color)',
@@ -383,6 +399,7 @@ export const QuantizeColorScaleSchema = object({
   'Quantize color scale: a continuous domain cut into equal-width bins, each bin mapped to one discrete color sampled from a scheme or taken from range',
 );
 
+/** 校验按显式升序断点分箱并赋予离散颜色的比例尺 */
 export const ThresholdColorScaleSchema = object({
   type: literal(PlotScale.Threshold).describe(
     'Discriminator: threshold color scale (user-defined breakpoints cut the domain into bins, each bin a discrete color)',
@@ -406,6 +423,7 @@ export const ThresholdColorScaleSchema = object({
   'Threshold color scale: user-defined ascending breakpoints cut the domain into bins, each bin mapped to one discrete color sampled from a scheme or taken from range',
 );
 
+/** 校验按数据分位数分箱并赋予离散颜色的比例尺 */
 export const QuantileColorScaleSchema = object({
   type: literal(PlotScale.Quantile).describe(
     'Discriminator: quantile color scale (the data is cut at quantiles into bins of roughly equal sample count, each bin a discrete color)',
@@ -429,6 +447,7 @@ export const QuantileColorScaleSchema = object({
   'Quantile color scale: the bound data is cut at quantiles into bins of roughly equal sample count, each bin mapped to one discrete color; the quantile boundaries come from the data, so this scale takes no explicit numeric domain',
 );
 
+/** 校验内置连续、离散、时间、颜色与分箱比例尺 */
 export const ScaleSchema = discriminatedUnion('type', [
   LinearScaleSchema,
   BandScaleSchema,
@@ -449,6 +468,7 @@ export const ScaleSchema = discriminatedUnion('type', [
   'Scale union: linear / band / point / ordinal / time / log / pow / sqrt / symlog / radial / sequential / diverging / quantize / threshold / quantile',
 );
 
+/** 校验带名称的自定义比例尺开放配置，具体结构由运行时定义校验 */
 export const CustomScaleSchema = looseObject({
   type: PlotScaleTypeSchema.refine(type => !BUILTIN_SCALE_TYPES.has(type), {
     message: 'custom scale type must not collide with a built-in scale type',
@@ -462,6 +482,7 @@ export const CustomScaleSchema = looseObject({
   'Custom scale op: type is any non-built-in identifier plus a name; its config is validated at lowering time against the matching ScaleDefinition supplied via options.scaleDefinitions',
 );
 
+/** 校验内置或自定义比例尺操作 */
 export const ScaleOperationSchema = union([ScaleSchema, CustomScaleSchema]).describe(
   'Scale operation union: built-in scale configs plus custom type open config operations validated by a runtime ScaleDefinition at lowering',
 );

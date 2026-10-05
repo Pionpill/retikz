@@ -16,7 +16,21 @@ import {
 } from '../scene-primitive';
 
 /** TeX 字形路径的绘制通道 */
-export type LoweredTexPaint = { kind: 'none' } | { kind: 'currentColor' } | { kind: 'color'; value: string };
+export type LoweredTexPaint =
+  | {
+      /** 区分无绘制、继承当前颜色与显式颜色 */
+      kind: 'none';
+    }
+  | {
+      /** 区分无绘制、继承当前颜色与显式颜色 */
+      kind: 'currentColor';
+    }
+  | {
+      /** 区分无绘制、继承当前颜色与显式颜色 */
+      kind: 'color';
+      /** 显式颜色分支使用的颜色字符串 */
+      value: string;
+    };
 
 /** renderer-agnostic 的单条 TeX 绘制路径 */
 export type LoweredTexPath = {

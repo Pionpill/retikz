@@ -46,7 +46,7 @@ export class RetikzInspectError extends RetikzError<RetikzInspectErrorCode, Read
   <ApiSourceLink
     label={'AnyInspectorDefinitionInput'}
     path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={167}
+    startLine={184}
   >
     registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver
   </ApiSourceLink>
@@ -62,12 +62,12 @@ export class RetikzInspectError extends RetikzError<RetikzInspectErrorCode, Read
 | ----------------------------- | ------------------------------------------------------------------------ | ------ | ---------------------------------------------------- |
 | `readonly inspect`            | `(subject: never, context: never) => InspectorOutput`                    | —      | 具体 subject/context 类型由调用前的 schema 恢复      |
 | `readonly mergeOptionsInput?` | `(inheritedOptionsInput: never, localOptionsInput: never) => JsonObject` | —      | 合并已准入的原始 options，不消费 schema 变换后的结果 |
-| `readonly namespace`          | `string`                                                                 | —      | registry namespace                                   |
+| `readonly namespace`          | `string`                                                                 | —      | 注册项的命名空间                                     |
 | `readonly optionsSchema?`     | `Readonly<{`<br />`parse: (value: unknown) => JsonObject;`<br />`}>`     | —      | 擦除后仍产出已应用默认值与变换的 JSON object options |
 | `readonly owner`              | `CompileObservationOwner`                                                | —      | 被观察的 Core owner                                  |
 | `readonly resolveOptions?`    | `(options: never) => JsonObject`                                         | —      | 具体 options 类型由准入 schema 恢复                  |
 | `readonly subjectSchema`      | `Readonly<{`<br />`parse: (value: unknown) => JsonValue;`<br />`}>`      | —      | 擦除后仍恢复 JSON-safe subject                       |
-| `readonly type`               | `string`                                                                 | —      | registry type                                        |
+| `readonly type`               | `string`                                                                 | —      | 注册项的类型                                         |
 
 </ApiTable>
 
@@ -134,7 +134,7 @@ export type InspectionAppearanceContext = Readonly<{
   <ApiSourceLink
     label={'InspectionCompileResult'}
     path={'packages/kernel/inspect/src/compile/types.ts'}
-    startLine={148}
+    startLine={159}
   >
     primary 与辅助结果的原子 compile 输出
   </ApiSourceLink>
@@ -173,7 +173,7 @@ export type InspectionCompileResult = Readonly<{
 ### InspectionDiagnostic
 
 <p>
-  <ApiSourceLink label={'InspectionDiagnostic'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={140}>
+  <ApiSourceLink label={'InspectionDiagnostic'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={151}>
     一条回调或 fragment warning 的 Inspect-owned diagnostic
   </ApiSourceLink>
 </p>
@@ -212,7 +212,7 @@ export type InspectionDiagnostic = Readonly<{
   <ApiSourceLink
     label={'InspectionDiagnosticOrigin'}
     path={'packages/kernel/inspect/src/compile/types.ts'}
-    startLine={103}
+    startLine={114}
   >
     Inspect 失败、回调警告及 fragment diagnostic 的结构化来源
   </ApiSourceLink>
@@ -311,7 +311,7 @@ export type InspectionDiagnosticOrigin =
 ### InspectionPlane
 
 <p>
-  <ApiSourceLink label={'InspectionPlane'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={97}>
+  <ApiSourceLink label={'InspectionPlane'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={108}>
     有序、只读的 Inspector 辅助平面
   </ApiSourceLink>
 </p>
@@ -345,7 +345,7 @@ export type InspectionPlane = Readonly<{
 ### InspectionPlaneEntry
 
 <p>
-  <ApiSourceLink label={'InspectionPlaneEntry'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={81}>
+  <ApiSourceLink label={'InspectionPlaneEntry'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={92}>
     一个辅助 Scene plane entry
   </ApiSourceLink>
 </p>
@@ -389,7 +389,7 @@ export type InspectionPlaneEntry = Readonly<{
 ### InspectionSelection
 
 <p>
-  <ApiSourceLink label={'InspectionSelection'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={59}>
+  <ApiSourceLink label={'InspectionSelection'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={65}>
     一次 compile 的 runtime-only Inspector selection
   </ApiSourceLink>
 </p>
@@ -581,7 +581,7 @@ export type InspectionSelectionTarget =
 | `readonly appearance`   | `InspectionAppearanceContext`                                                                           | —      | callback 前分配的外观上下文                 |
 | `readonly inspectorKey` | `InspectorKey`                                                                                          | —      | 当前 Inspector key                          |
 | `readonly occurrence`   | `CompileOccurrenceLocator`                                                                              | —      | 当前最终 occurrence                         |
-| `readonly options`      | `TOptions`                                                                                              | —      | canonical JSON-safe options                 |
+| `readonly options`      | `TOptions`                                                                                              | —      | 规范化后可 JSON 序列化的选项                |
 | `readonly owner`        | `CompileObservationOwner`                                                                               | —      | 当前被观察的 Core owner                     |
 | `readonly provenance`   | `Readonly<{`<br />`origin: CompileOccurrenceLocator;`<br />`final: CompileOccurrenceLocator;`<br />`}>` | —      | probe/replay 来源                           |
 | `readonly round`        | `(value: number) => number`                                                                             | —      | 按本次主图编译精度舍入数值                  |
@@ -638,7 +638,7 @@ export type InspectorCoordinateSpace = 'local' | 'scene';
   <ApiSourceLink
     label={'InspectorDefinitionInput'}
     path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={108}
+    startLine={119}
   >
     作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段
   </ApiSourceLink>
@@ -984,7 +984,7 @@ export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'sco
   <ApiSourceLink
     label={'compileInspectionToScene'}
     path={'packages/kernel/inspect/src/compile/driver.ts'}
-    startLine={259}
+    startLine={276}
   >
     基于 Core observed compile 执行一次原子 Inspector compile
   </ApiSourceLink>
@@ -1033,7 +1033,7 @@ export declare const compileInspectionToScene: <
   <ApiSourceLink
     label={'createDefaultInspectorRegistry'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={85}
+    startLine={89}
   >
     创建内置优先、第三方同路的默认 Inspector registry
   </ApiSourceLink>
@@ -1110,7 +1110,7 @@ export declare const createInspectorRegistry: (
 ### defineInspector
 
 <p>
-  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={69}>
+  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={72}>
     以保留作者输入类型的方式定义 Inspector
   </ApiSourceLink>
 </p>
@@ -1158,7 +1158,7 @@ export declare const defineInspector: <
   <ApiSourceLink
     label={'mergeInspectorRegistries'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={72}
+    startLine={76}
   >
     合并多个已创建的 registry，保持各 registry 的定义顺序
   </ApiSourceLink>
@@ -1410,7 +1410,7 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
   <ApiSourceLink
     label={'CreateInspectionVanillaDriverOptions'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={66}
+    startLine={71}
   >
     Inspect Vanilla 编译驱动的固定配置
   </ApiSourceLink>
@@ -1550,7 +1550,7 @@ export declare const createInspectionVanillaAuthoring: (
   <ApiSourceLink
     label={'createInspectionVanillaDriver'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={147}
+    startLine={159}
   >
     创建绑定 Inspector registry、selection 与 committed callbacks 的 Vanilla 编译驱动
   </ApiSourceLink>

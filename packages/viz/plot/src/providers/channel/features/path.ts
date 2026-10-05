@@ -307,7 +307,7 @@ const directPathChannels = {
   ),
 };
 
-/** 允许直接交付到 core Path 的内置通道名集合。 */
+/** 允许直接交付到 core Path 的内置通道名集合 */
 export const BUILTIN_PATH_CHANNELS = {
   ...pathNumericChannels,
   ...directPathChannels,
@@ -351,7 +351,7 @@ export const BUILTIN_PATH_CHANNELS = {
 
 const erasePathChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
-/** 内置 Path 通道 definition 集合。 */
+/** 内置 Path 通道 definition 集合 */
 export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_PATH_CHANNELS).map(def =>
   erasePathChannelDefinition(def),
 );

@@ -12,16 +12,19 @@ const FrameHeaderShape = {
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text rendered as Frame header content.'),
 };
 
+/** 校验由 Frame 布局定位的主标题，不接受调用者指定标题位置 */
 export const FrameTitleSchema = strictObject(FrameHeaderShape).describe(
   'Node-like primary title authored without an explicit position.',
 );
 
+/** 校验由 Frame 布局定位的辅助说明，不接受调用者指定说明位置 */
 export const FrameDescriptionSchema = strictObject(FrameHeaderShape).describe(
   'Node-like supporting description authored without an explicit position.',
 );
 
 const FramePaddingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]);
 
+/** 校验 Frame 的边框样式与圆角，并提供默认描边 */
 export const FrameBorderSchema = strictObject({
   style: StandardPathBorderStyleSchema.default({ stroke: 'currentColor', strokeWidth: 1 }),
   cornerRadius: RectangleStepSchema.shape.cornerRadius,
@@ -87,4 +90,5 @@ const refineReservedIds = (frame: FrameRefinementInput, ctx: RefinementCtx): voi
   });
 };
 
+/** 校验带标题和说明的内容框，并检查内部保留标识与作者输入的冲突 */
 export const FrameSchema = FrameBaseSchema.superRefine(refineReservedIds);

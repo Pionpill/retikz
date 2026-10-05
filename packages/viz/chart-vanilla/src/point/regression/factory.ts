@@ -31,7 +31,10 @@ export const RegressionChartInputEmbedAdapter = createChartInputEmbedAdapter(
   },
 );
 
-/** 创建可直接组合到 Vanilla Scene 的 Regression 节点 */
+/**
+ * 创建可直接组合到 Vanilla Scene 的 Regression 节点
+ * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const regressionChart = <TNative = never>(
   input: RegressionChartInputEmbedProps<TNative>,
 ): InputEmbed<RegressionChartInputEmbedProps<TNative>> => ({

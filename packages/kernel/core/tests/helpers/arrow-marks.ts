@@ -17,6 +17,7 @@ const arrowMark = (detail: TestArrowDetail | undefined, endpoint: 'start' | 'end
   return { kind: 'arrow', ...topFields, ...side };
 };
 
+/** 按测试方向生成起终点箭头标记，端点专属属性覆盖共享属性 */
 export const arrowMarks = (
   arrow: PathArrowDirection,
   detail?: IRArrowDetail | TestArrowDetail,

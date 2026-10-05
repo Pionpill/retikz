@@ -129,14 +129,14 @@ export const BUILTIN_FORMATS: ReadonlyArray<FieldFormatDefinition> = freezeDefin
 const BUILTIN_FORMAT_REGISTRY = new Map(BUILTIN_FORMATS.map(def => [def.name, def] as const));
 
 /**
- * 按 name 索引的内置格式 definition 只读视图。
+ * 按 name 索引的内置格式 definition 只读视图
  * @description 供诊断与测试确认内置覆盖；默认 resolver 使用私有稳定索引，自定义 definition 不写入此视图
  */
 export const BUILTIN_FORMAT_DEFINITIONS_BY_NAME: ReadonlyMap<string, FieldFormatDefinition> =
   createReadonlyMap(BUILTIN_FORMAT_REGISTRY);
 
 /**
- * 解析字段格式 registry。
+ * 解析字段格式 registry
  * @description 内置格式总是先注册；用户自定义 definition 不能覆盖内置格式名，也不能彼此重复
  */
 export const resolveFormatRegistry = (

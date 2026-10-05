@@ -11,7 +11,10 @@ declare const RuntimeSourceType: unique symbol;
 /** 单调递增且不超过 safe integer 的 Runtime revision */
 export type RuntimeRevision = number & Readonly<{ [RuntimeRevisionType]: true }>;
 
-/** 绑定 base revision 的领域 change hint */
+/**
+ * 绑定 base revision 的领域 change hint
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export type RuntimeChangeSet<TChange> = Readonly<{
   /** change hint 对应的 current revision */
   baseRevision: RuntimeRevision;
@@ -21,7 +24,12 @@ export type RuntimeChangeSet<TChange> = Readonly<{
   [RuntimeChangeSetType]: true;
 }>;
 
-/** source value 的 capture、read、semantic equality 与释放契约 */
+/**
+ * source value 的 capture、read、semantic equality 与释放契约
+ * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ */
 export type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<{
   /** 从完整输入捕获 runtime-owned value */
   capture: (input: TInput) => TValue;
@@ -33,7 +41,13 @@ export type RuntimeSourceValueDefinitionInput<TInput, TValue, TRead> = Readonly<
   dispose?: (value: TValue) => void;
 }>;
 
-/** Runtime source Definition 的作者侧输入 */
+/**
+ * Runtime source Definition 的作者侧输入
+ * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export type RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange> = Readonly<{
   /** 全局精确匹配的非空 source key */
   key: string;
@@ -47,13 +61,19 @@ export type RuntimeSourceDefinitionInput<TInput, TValue, TRead, TChange> = Reado
 
 /** 动态 registry lookup 只暴露的 opaque source token */
 export type RuntimeSourceToken = Readonly<{
-  /** source key */
+  /** 数据源的注册键 */
   key: string;
   /** 只允许 defineRuntimeSource() 构造 token */
   [RuntimeSourceTokenBrand]: true;
 }>;
 
-/** 保留 input/value/read/change 泛型的 typed source token */
+/**
+ * 保留 input/value/read/change 泛型的 typed source token
+ * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export type RuntimeSourceDefinition<TInput, TValue, TRead, TChange> = RuntimeSourceToken &
   Readonly<{
     /** phantom 函数只承载泛型关系，不存在于运行时 token */

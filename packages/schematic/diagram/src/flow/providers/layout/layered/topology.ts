@@ -1,15 +1,22 @@
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../../errors';
 
+/** 参与层级分配的元素身份与可选显式层号 */
 export type LayeredRankElement = Readonly<{
+  /** 拓扑中的元素唯一标识 */
   id: string;
+  /** 作者指定的层号，缺省时由拓扑约束推导 */
   rank?: number;
 }>;
 
+/** 用于层级分配的源到目标拓扑约束 */
 export type LayeredRankEdge = Readonly<{
+  /** 约束起点的元素标识 */
   source: string;
+  /** 约束终点的元素标识 */
   target: string;
 }>;
 
+/** 用 Tarjan 算法给强连通分量编号，供分层时将环内元素视为整体 */
 const getStronglyConnectedComponents = (
   elements: ReadonlyArray<LayeredRankElement>,
   edges: ReadonlyArray<LayeredRankEdge>,

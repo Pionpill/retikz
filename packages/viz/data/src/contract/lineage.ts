@@ -80,7 +80,7 @@ export type DataLineageTransformStepEvent = {
   kind: 'transformStep';
   /** transform 在声明数组中的下标 */
   operationIndex: number;
-  /** transform kind */
+  /** 数据变换种类 */
   operationKind: string;
   /** 输入行数 */
   inputRowCount: number;
@@ -102,7 +102,7 @@ export type DataLineageFieldFlowEvent = {
   kind: 'fieldFlow';
   /** transform 在声明数组中的下标 */
   operationIndex: number;
-  /** transform kind */
+  /** 数据变换种类 */
   operationKind: string;
   /** definition 声明的输入字段 */
   inputFields: Array<string>;
@@ -114,7 +114,7 @@ export type DataLineageFieldFlowEvent = {
 export type DataLineageReducerEvent = {
   /** 事件类型 */
   kind: 'reducerOperation';
-  /** reducer kind */
+  /** 聚合归约种类 */
   operationKind: string;
   /** reducer operation 配置摘要；只包含 JSON-safe operation 字段，不包含行值 */
   operation: IRDataReducerOperation;
@@ -134,7 +134,7 @@ export type DataLineageReducerEvent = {
 export type DataLineageSelectorEvent = {
   /** 事件类型 */
   kind: 'selectorOperation';
-  /** selector kind */
+  /** 选择器种类 */
   operationKind: string;
   /** selector operation 配置摘要；只包含 JSON-safe operation 字段，不包含行值 */
   operation: IRDataSelectorOperation;
@@ -156,7 +156,7 @@ export type DataLineageSampleEvent = {
   kind: 'rowSample';
   /** transform 在声明数组中的下标 */
   operationIndex: number;
-  /** transform kind */
+  /** 数据变换种类 */
   operationKind: string;
   /** 样本来自 transform 输入还是输出 */
   phase: 'input' | 'output';
@@ -180,7 +180,7 @@ export type DataLineageSink = (event: DataLineageEvent) => void;
 export type DataLineageTransformStepInput = {
   /** transform 在声明数组中的下标 */
   operationIndex: number;
-  /** transform operation */
+  /** 数据变换操作 */
   operation: IRDataTransform;
   /** 输入行 */
   inputRows: Array<ExternalRow>;
@@ -194,7 +194,7 @@ export type DataLineageTransformStepInput = {
 
 /** reducer 记录输入 */
 export type DataLineageReducerInput = {
-  /** reducer operation */
+  /** 聚合归约操作 */
   operation: IRDataReducerOperation;
   /** reducer 本次消费的行 */
   rows: Array<ExternalRow>;
@@ -206,7 +206,7 @@ export type DataLineageReducerInput = {
 
 /** selector 记录输入 */
 export type DataLineageSelectorInput = {
-  /** selector operation */
+  /** 数据选择操作 */
   operation: IRDataSelectorOperation;
   /** selector 本次消费的行 */
   rows: Array<ExternalRow>;

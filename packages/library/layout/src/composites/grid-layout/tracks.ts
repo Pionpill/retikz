@@ -5,18 +5,27 @@ import type { IRGridTrack } from './types';
 
 /** 同一 Grid track span 的 minimum 与 natural contribution */
 export type GridTrackConstraint = Readonly<{
+  /** 受约束的首个轨道零基索引 */
   start: number;
+  /** 共同承载此约束的连续轨道数 */
   span: number;
+  /** 跨轨道内容要求的最小尺寸 */
   minimum: number;
+  /** 跨轨道内容要求的自然尺寸 */
   natural: number;
 }>;
 
 /** Grid 单轴 intrinsic profiles 与最终物理分布 */
 export type SolvedGridTracks = Readonly<{
+  /** 每条轨道的最小内容尺寸，保持轨道顺序 */
   minimumProfile: ReadonlyArray<number>;
+  /** 每条轨道的自然内容尺寸，保持轨道顺序 */
   naturalProfile: ReadonlyArray<number>;
+  /** 空间分配后每条轨道的最终尺寸 */
   sizes: ReadonlyArray<number>;
+  /** 第一条轨道之前的分布留白 */
   leading: number;
+  /** 相邻轨道之间的最终间距，包含固定 gap */
   between: number;
 }>;
 

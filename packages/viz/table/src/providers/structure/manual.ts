@@ -24,7 +24,7 @@ const payloadOf = (cell: IRManualTableCell): IRTableCellPayload => {
   return { kind: TableCellPayloadKind.Content, content: cell.content };
 };
 
-/** manual Table structure definition */
+/** 生成显式编写表格结构的能力定义 */
 export const MANUAL_TABLE_STRUCTURE = defineTableStructure({
   schema: ManualTableStructureSchema,
   build: spec => {

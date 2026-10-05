@@ -23,7 +23,12 @@ export type EffectiveFlowPlacement =
       /** 按物理行列排列 */
       kind: 'grid';
       /** 已补全的行列最小间距，使用用户单位 */
-      gap: Readonly<{ row: number; column: number }>;
+      gap: Readonly<{
+        /** 相邻物理行之间的最小净间距 */
+        row: number;
+        /** 相邻物理列之间的最小净间距 */
+        column: number;
+      }>;
       /** 是否用关系标签的测量尺寸扩大对应轨道间距 */
       reserveLabelSpace: boolean;
       /** 每个直接子项对应的物理行列位置 */
@@ -96,41 +101,93 @@ export type FlowRoutingCapability =
 export type FlowLayoutRouting =
   | FlowSmoothRouting
   | FlowBezierRouting
-  | Readonly<{ kind: 'straight' }>
-  | Readonly<{ kind: '-|' | '|-'; cornerRadius: number }>
   | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
+      kind: 'straight';
+    }>
+  | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
+      kind: '-|' | '|-';
+      /** 轴对齐折线转角的圆角半径 */
+      cornerRadius: number;
+    }>
+  | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
       kind: 'orthogonal';
+      /** 轴对齐折线转角的圆角半径 */
       cornerRadius: number;
       /** 显式或继承的间隙比例，省略时自动选择 */
       turnPosition?: 0.25 | 0.5 | 0.75;
     }>
   | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
       kind: 'bend';
       /** 省略时由布局比较左右候选 */
       bendDirection?: 'left' | 'right';
       /** 省略时由布局比较 30、45、60 度；显式及继承值必须保留 */
       bendAngle?: number;
     }>
-  | Readonly<{ kind: 'bend'; outAngle: number; inAngle: number; looseness: number }>;
+  | Readonly<{
+      /** 选择直线、折线或曲线的路由参数族 */
+      kind: 'bend';
+      /** 从起点出发的切线角，单位为度 */
+      outAngle: number;
+      /** 终点一侧控制方向的角度，单位为度 */
+      inAngle: number;
+      /** 控制曲线控制臂长度的松紧系数 */
+      looseness: number;
+    }>;
 
 /** 完整标签提供给布局的几何配置，不包含文字或外观 */
 export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | 'textColor' | 'font' | 'opacity'>>;
 
 /** bend 参考几何，仅保留一个生效参数族 */
-export type FlowBendRoute = Readonly<{ kind: 'bend'; points: readonly [Readonly<Position>, Readonly<Position>] }> &
+export type FlowBendRoute = Readonly<{
+  /** 标识已经确定参数的弯曲参考路线 */
+  kind: 'bend';
+  /** 按 source 到 target 排列的根局部参考端点 */
+  points: readonly [Readonly<Position>, Readonly<Position>];
+}> &
   (
-    | Readonly<{ bendDirection: 'left' | 'right'; bendAngle: number }>
-    | Readonly<{ outAngle: number; inAngle: number; looseness: number }>
+    | Readonly<{
+        /** 相对源到目标方向的弯曲侧 */
+        bendDirection: 'left' | 'right';
+        /** 弯曲角度，单位为度 */
+        bendAngle: number;
+      }>
+    | Readonly<{
+        /** 从起点出发的切线角，单位为度 */
+        outAngle: number;
+        /** 终点一侧控制方向的角度，单位为度 */
+        inAngle: number;
+        /** 控制曲线控制臂长度的松紧系数 */
+        looseness: number;
+      }>
   );
 
 /** 布局已确定的参考路由，实际端点裁剪与箭头缩短由 Core 执行 */
 export type FlowLayoutRoute =
   | FlowSmoothRoute
-  | Readonly<{ kind: 'straight'; points: ReadonlyArray<Readonly<Position>> }>
-  | Readonly<{ kind: '-|' | '|-'; points: ReadonlyArray<Readonly<Position>>; cornerRadius: number }>
   | Readonly<{
-      kind: 'orthogonal';
+      /** 选择布局已确定的参考路线种类 */
+      kind: 'straight';
+      /** 按源到目标顺序排列的 Flow 根局部参考点 */
       points: ReadonlyArray<Readonly<Position>>;
+    }>
+  | Readonly<{
+      /** 选择布局已确定的参考路线种类 */
+      kind: '-|' | '|-';
+      /** 按源到目标顺序排列的 Flow 根局部参考点 */
+      points: ReadonlyArray<Readonly<Position>>;
+      /** 轴对齐折线转角的圆角半径 */
+      cornerRadius: number;
+    }>
+  | Readonly<{
+      /** 选择布局已确定的参考路线种类 */
+      kind: 'orthogonal';
+      /** 按源到目标顺序排列的 Flow 根局部参考点 */
+      points: ReadonlyArray<Readonly<Position>>;
+      /** 轴对齐折线转角的圆角半径 */
       cornerRadius: number;
       /** 作者的有效比例；自动选择不重复存储 */
       turnPosition?: 0.25 | 0.5 | 0.75;
@@ -245,7 +302,11 @@ export type FlowLayoutPlacementElementInput = Readonly<{
 /** Flow Layout 固定 placement 的完整输入 */
 export type FlowLayoutPlacementInput = Readonly<{
   /** 待排列容器的 id 与有效固定排列配置 */
-  layout: EffectiveFlowPlacement & Readonly<{ id: string }>;
+  layout: EffectiveFlowPlacement &
+    Readonly<{
+      /** 用于关联布局输出的当前容器身份 */
+      id: string;
+    }>;
   /** 该容器全部直接子项的尺寸与外边距 */
   elements: ReadonlyArray<FlowLayoutPlacementElementInput>;
 }>;

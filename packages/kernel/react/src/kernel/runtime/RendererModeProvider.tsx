@@ -3,6 +3,7 @@ import type { FC, ReactNode } from 'react';
 import type { RendererMode } from './renderer-context';
 import { RendererModeContext } from './renderer-context';
 
+/** 为子树中未显式指定渲染目标的 Layout 提供默认模式 */
 export type RendererModeProviderProps = {
   /** 注入给子树 <Layout>（未显式写 `renderer` 时生效）的渲染目标 */
   mode: RendererMode;

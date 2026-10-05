@@ -101,9 +101,19 @@ export type CanonicalNode = Omit<
   /** 完整外边距 */
   margin: BoundsInsets;
   /** 完整最小尺寸 */
-  minimumSize: { width: number; height: number };
+  minimumSize: {
+    /** 节点边界的最小宽度 */
+    width: number;
+    /** 节点边界的最小高度 */
+    height: number;
+  };
   /** 完整轴向缩放 */
-  scale: { x: number; y: number };
+  scale: {
+    /** 水平方向缩放系数 */
+    x: number;
+    /** 垂直方向缩放系数 */
+    y: number;
+  };
   /** 多行正文 */
   text?: Array<ResolvedTextLine>;
   /** 已按数组形态展开的附属标签 */
@@ -185,7 +195,12 @@ export type NodeResolution = {
   /** 节点默认连接面引用 */
   boundary: BoundaryReferenceResolution;
   /** 已按有效 pattern registry 解析的节点 paint */
-  paint: Readonly<{ fill?: PaintResolutionInput; stroke?: PaintResolutionInput }>;
+  paint: Readonly<{
+    /** 节点填充的已解析绘制输入 */
+    fill?: PaintResolutionInput;
+    /** 节点描边的已解析绘制输入 */
+    stroke?: PaintResolutionInput;
+  }>;
 };
 
 /** Node resolve 阶段需要的样式、provider 与诊断上下文 */

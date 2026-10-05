@@ -15,12 +15,14 @@ import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObje
 import { STANDARD_NAMESPACE } from '../../shared';
 import { LegendContentKind, LegendDirection, LegendSampleAlignment, LegendWrap } from './constants';
 
+/** 校验离散图例项的容器内标识、视觉样本与可选说明子项 */
 export const LegendItemSchema = strictObject({
   key: NonBlankStringSchema.describe('Container-local stable identity for this discrete legend item.'),
   sample: ChildSchema.describe('JSON-safe Core child that visually demonstrates the item.'),
   label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the sample.'),
 }).describe('Canonical discrete item in a Standard Legend.');
 
+/** 校验离散样本与标签的有序布局，包括方向、换行与间距 */
 export const LegendItemsContentSchema = strictObject({
   kind: literal(LegendContentKind.Items).describe('Discriminator for a list of discrete sample-label items.'),
   direction: zodEnum(LegendDirection)
@@ -39,12 +41,14 @@ export const LegendItemsContentSchema = strictObject({
   items: array(LegendItemSchema).describe('Discrete legend items in stable authored order.'),
 }).describe('Canonical discrete-items content for a Standard Legend.');
 
+/** 校验连续图例刻度的容器内标识、归一化位置与可选标签 */
 export const LegendTickSchema = strictObject({
   key: NonBlankStringSchema.describe('Container-local stable identity for this continuous legend tick.'),
   offset: NormalizedFractionSchema.describe('Normalized authored position along the sample main axis.'),
   label: ChildSchema.optional().describe('Optional JSON-safe Core child explaining the tick position.'),
 }).describe('Canonical normalized tick in a continuous Standard Legend.');
 
+/** 校验连续图例的单个样本、排列方向及归一化刻度列表 */
 export const LegendRampContentSchema = strictObject({
   kind: literal(LegendContentKind.Ramp).describe('Discriminator for one continuous sample with normalized ticks.'),
   direction: zodEnum(LegendDirection)
@@ -115,6 +119,7 @@ const refineLegend = (legend: LegendRefinementInput, context: RefinementCtx): vo
   });
 };
 
+/** 校验离散或连续图例的可序列化输入，并检查内容相关约束 */
 export const LegendSchema = LegendBaseSchema.superRefine(refineLegend).describe(
   'Canonical JSON-safe Standard Legend composite.',
 );
@@ -153,6 +158,7 @@ const refineLegendAuthoredArtifactEntries = (
   });
 };
 
+/** 校验图例子项聚合后的分配边界、视觉边界与可见边界 */
 export const LegendArtifactGeometrySchema = strictObject({
   allocationBounds: LayoutArtifactRectSchema.describe('Union of translated real child allocation bounds.'),
   visualBounds: LayoutArtifactRectSchema.describe('Union of translated conservative child visual bounds.'),
@@ -161,6 +167,7 @@ export const LegendArtifactGeometrySchema = strictObject({
   ),
 }).describe('Observable geometry shared by one Legend presentation region.');
 
+/** 校验单个图例子项的槽位、实际放置、边界与溢出观测结果 */
 export const LegendPlacedChildArtifactSchema = LayoutArtifactItemBaseSchema.omit({
   key: true,
   sourceIndex: true,
@@ -176,6 +183,7 @@ const LegendItemArtifactSchema = strictObject({
   label: LegendPlacedChildArtifactSchema.nullable().describe('Resolved label placement, or null when omitted.'),
 }).describe('Resolved identity, geometry, and child placements for one discrete Legend item.');
 
+/** 校验离散图例编译产物中的容器、行布局与各项放置结果 */
 export const LegendItemsArtifactSchema = strictObject({
   kind: literal(LegendContentKind.Items).describe('Discriminator for a discrete-items Legend artifact.'),
   container: LayoutArtifactContainerSchema.describe('Resolved Legend container geometry.'),
@@ -198,6 +206,7 @@ const LegendTickArtifactSchema = strictObject({
   label: LegendPlacedChildArtifactSchema.nullable().describe('Resolved tick label placement, or null when omitted.'),
 }).describe('Resolved identity, anchor, and optional label placement for one continuous Legend tick.');
 
+/** 校验连续图例编译产物中的样本、刻度与标签放置结果 */
 export const LegendRampArtifactSchema = strictObject({
   kind: literal(LegendContentKind.Ramp).describe('Discriminator for a continuous-ramp Legend artifact.'),
   container: LayoutArtifactContainerSchema.describe('Resolved Legend container geometry.'),
@@ -209,6 +218,7 @@ export const LegendRampArtifactSchema = strictObject({
   .superRefine((artifact, context) => refineLegendAuthoredArtifactEntries(artifact.ticks, 'ticks', context))
   .describe('Typed artifact for a resolved continuous-ramp Standard Legend.');
 
+/** 按 kind 校验离散图例或连续图例的编译观测产物 */
 export const LegendArtifactSchema = discriminatedUnion('kind', [
   LegendItemsArtifactSchema,
   LegendRampArtifactSchema,

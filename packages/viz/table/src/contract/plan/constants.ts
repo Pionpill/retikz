@@ -8,7 +8,7 @@ export const TableCellPlanSourceKind = {
   Defaults: 'defaults',
   /** Structure 显式 Cell 值 */
   Structure: 'structure',
-  /** Ordered visual encoding */
+  /** 按顺序应用的视觉编码 */
   Encoding: 'encoding',
   /** 按声明顺序应用的 root rule */
   RootRule: 'rootRule',

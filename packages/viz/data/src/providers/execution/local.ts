@@ -36,7 +36,10 @@ const indexImplementations = <T extends { definition: { schema: Parameters<typeo
   return registry;
 };
 
-/** 固定本地阶段及全部统计依赖；只有执行时才计算 */
+/**
+ * 固定本地阶段及全部统计依赖；只有执行时才计算
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
+ */
 export const prepareLocalDataTransform = <TSource>(
   stage: DataTransformStage,
   options: DataTransformExecutionOptions<TSource>,

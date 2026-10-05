@@ -55,7 +55,7 @@ import { DEFAULT_TICK_COUNT, safeExtent, scaleTicks } from '../shared';
  *   返回 d3 ScaleLinear：可作 `(value) => number` 投影，也可 `.ticks()` / `.tickFormat()` / `.range([...])` 后续设值。
  *   单值 domain（d0=d1）d3 归一化返回 0.5 → 映射到 range 中点，与早期自写 linear 行为一致
  */
-/** 解析线性位置比例尺的 domain、range 与映射函数 */
+
 export const resolveLinearScale = (
   def: IRPlotLinearScale,
   values: Array<number>,
@@ -76,7 +76,7 @@ export const resolveLinearScale = (
  * @description 显式 domain 含 0 / 负值 → fail-loud；缺省从正值 extent 推断（空集回退 [1, 10]）。
  *   非正数据值不在此拦截——由 continuousPositionScale 的 isValidInput 跳过（NaN），与连续 scale 跳过非有限值同理
  */
-/** 解析对数位置比例尺的 domain、range 与映射函数 */
+
 export const resolveLogScale = (
   def: IRPlotLogScale,
   values: Array<number>,

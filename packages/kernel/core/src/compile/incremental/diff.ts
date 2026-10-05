@@ -14,7 +14,7 @@ export type CoreSnapshotScopeValue = Readonly<Omit<IRScope, 'children'>>;
 
 /** Snapshot Diff 可稳定比较的 Core entity */
 export type CoreSnapshotIndexEntry = Readonly<{
-  /** canonical Core identity */
+  /** Core 解析后的规范身份 */
   identity: RuntimeIdentity;
   /** document root 之外实体的稳定父 boundary */
   parent?: RuntimeIdentity;

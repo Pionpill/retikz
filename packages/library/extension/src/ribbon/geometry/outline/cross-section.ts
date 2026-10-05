@@ -6,12 +6,24 @@ import { RetikzExtensionError, RetikzExtensionErrorCode } from '../../../errors'
 import type { RibbonAlignment } from '../../constants';
 import type { RibbonCrossSection } from '../types';
 
+/** 计算带状路径单个横截面所需的中心线采样、宽度函数与端点轴向 */
 export type RibbonCrossSectionInput = {
+  /** 中心线当前位置及单位切向量 */
   sample: CurveSegmentSample;
+  /** 沿中心线累计长度归一化后的采样位置，范围为 0 到 1 */
   offset: number;
+  /** 接收归一化位置并返回有限非负宽度的已解析函数 */
   widthAt: (offset: number) => number;
-  endpointAxes: { start?: Vector2; end?: Vector2 };
+  /** 已归一化的显式端面轴向，仅在起点或终点使用 */
+  endpointAxes: {
+    /** 起点横截面的显式轴向 */
+    start?: Vector2;
+    /** 终点横截面的显式轴向 */
+    end?: Vector2;
+  };
+  /** 宽度相对中心线分配到左侧、右侧或两侧的方式 */
   align: RibbonAlignment;
+  /** 统一处理输出坐标精度的函数 */
   round: (n: number) => number;
 };
 

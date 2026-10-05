@@ -2,21 +2,55 @@ import type { MeasuredCell } from '../_cell';
 import type { CanonicalChainConnection, CanonicalChainLayout } from './resolve';
 
 /** 主轴坐标中的单元位置 */
-export type ChainCellPlacement = { measured: MeasuredCell; x: number; y: number; width: number; height: number };
+export type ChainCellPlacement = {
+  /** 用于最终内容回放的单格测量结果 */
+  measured: MeasuredCell;
+
+  /** 格子左上角沿链主轴的坐标 */
+  x: number;
+
+  /** 格子左上角沿链交叉轴的坐标 */
+  y: number;
+
+  /** 格子沿链主轴占用的尺寸 */
+  width: number;
+
+  /** 格子沿链交叉轴占用的尺寸 */
+  height: number;
+};
 
 /** 连线的主轴点列与呈现 */
-export type ChainEdge = { points: Array<[number, number]>; connection: CanonicalChainConnection };
+export type ChainEdge = {
+  /** 按连线行进顺序排列的主轴坐标点 */
+  points: Array<[number, number]>;
+
+  /** 此连线采用的已解析路由与路径样式 */
+  connection: CanonicalChainConnection;
+};
 
 /** 保留主轴基线的完整布局块 */
 export type ChainBlock = {
+  /** 布局块沿主轴占用的总尺寸 */
   width: number;
+  /** 布局块沿交叉轴占用的总尺寸 */
   height: number;
+  /** 块顶边到主轴对齐基线的交叉轴偏移 */
   baseline: number;
+  /** 块内已放置的格子，端点列表引用其中的同一对象 */
   cells: Array<ChainCellPlacement>;
+  /** 块内连接格子或分支的有序连线 */
   edges: Array<ChainEdge>;
+  /** 供前一串行块连接的入口格子 */
   entries: Array<ChainCellPlacement>;
+  /** 供后一串行块连接的出口格子 */
   exits: Array<ChainCellPlacement>;
-  parallel?: { layout: CanonicalChainLayout; connection: CanonicalChainConnection };
+  /** 并行块自身的布局与连接配置；普通格子或序列块不设置 */
+  parallel?: {
+    /** 当前并行块已解析的分支排布参数 */
+    layout: CanonicalChainLayout;
+    /** 当前并行块已解析的连接线参数 */
+    connection: CanonicalChainConnection;
+  };
 };
 
 /** 平移块内坐标，保持端点引用一致 */

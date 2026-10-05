@@ -47,18 +47,29 @@ export type LowerTexOptions = {
   onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void;
 };
 
-/** 内部 lowering 成功结果 */
+/**
+ * 内部 lowering 成功结果
+ * @template T 成功分支 value 承载的转换产物类型
+ */
 export type TexLoweringSuccess<T> = {
+  /** 标识已成功产出转换结果 */
   ok: true;
+  /** 当前转换阶段产出的有效载荷 */
   value: T;
 };
 
 /** 内部 lowering 失败结果 */
 export type TexLoweringFailure = {
+  /** 标识转换失败，应读取诊断而非产物 */
   ok: false;
+  /** 可向调用方报告的失败类别、源码与原因 */
   diagnostic: TexLoweringDiagnostic;
+  /** 是否允许缓存此次失败，避免重复执行确定性失败的转换 */
   cacheable: boolean;
 };
 
-/** 保留失败分类与缓存策略的内部 lowering 结果 */
+/**
+ * 保留失败分类与缓存策略的内部 lowering 结果
+ * @template T 成功转换的产物类型，失败分支仍使用统一诊断与缓存策略
+ */
 export type TexLoweringResult<T> = TexLoweringSuccess<T> | TexLoweringFailure;

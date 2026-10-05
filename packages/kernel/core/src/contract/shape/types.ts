@@ -87,7 +87,7 @@ export type ResolvedShapeStyle = {
   opacity?: ResolvedShapeStyleFields['opacity'];
   /**
    * 投影：解析后对象（compile 已把预设展开 + 显式字段覆盖合并；缺省无投影）
-   * @default 无投影
+   * @default undefined
    */
   shadow?: ResolvedDropShadow;
   /**

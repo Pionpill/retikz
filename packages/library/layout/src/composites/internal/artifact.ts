@@ -15,14 +15,28 @@ import { outsetLayoutRect } from './geometry';
 
 /** Layout item artifact 基础字段的构造输入 */
 export type CreateLayoutArtifactItemInput = Readonly<{
+  /** 布局项的稳定身份键 */
   key: string;
+  /** 对应作者输入数组的零基索引 */
   sourceIndex: number;
+  /** 布局项的四边外边距 */
   margin: LayoutInsets;
+  /** 布局为子项分配的槽位边界 */
   slotBounds: LayoutRect;
+  /** 子项已完成的布局测量结果 */
   result: LayoutChildResult;
-  translation: Readonly<{ x: number; y: number }>;
+  /** 子项分配坐标到容器局部坐标的平移 */
+  translation: Readonly<{
+    /** 映射到容器局部坐标的水平平移量 */
+    x: number;
+    /** 映射到容器局部坐标的垂直平移量 */
+    y: number;
+  }>;
+  /** 用于计算可见范围的容器分配边界 */
   containerAllocation: LayoutRect;
+  /** 超出容器时的可见或裁剪策略 */
   overflow: LayoutOverflow;
+  /** 当前子项参与的可选对齐线说明 */
   alignmentGuide?: LayoutArtifactAlignmentGuide;
 }>;
 

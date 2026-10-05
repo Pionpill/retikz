@@ -45,7 +45,7 @@ import {
   layoutPolarAngularLabel,
 } from '../../shared';
 
-/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 @retikz/math 的 pointAtArcAngle */
+/** 度 → 弧度；仅用于 polar radial 轴切向量，点投影统一走 `@retikz/math` 的 pointAtArcAngle */
 const DEG_TO_RAD = Math.PI / 180;
 
 /** 一段直线（首尾两点） */
@@ -914,7 +914,7 @@ const axisPlacementOffsetOf = (guide: IRPlotAxisGuide): number =>
 const cartesianYAxisTitleRotateOf = (side: CartesianAxisSide): number => (side === AxisCardinalSide.Right ? -90 : 90);
 
 /**
- * 极坐标点投影的窄返回值 helper。
+ * 极坐标点投影的窄返回值 helper
  * @description guide lowering 的 IR step 需要确定 Position；若上游 scale/tick 契约被破坏，则返回 [NaN, NaN] 让问题显性暴露
  */
 const finitePolarPoint = (center: Position, angleDeg: number, radius: number): Position =>
@@ -1796,7 +1796,12 @@ export const LEGEND_RAMP_THICKNESS = 12;
  */
 export type LegendEntry = {
   /** 按声明顺序叠加的分类图例符号 */
-  symbols?: Array<{ kind: 'point' | 'line'; paint: NonNullable<NonNullable<IRNode['style']>['fill']> }>;
+  symbols?: Array<{
+    /** 选择点状或线状图例符号 */
+    kind: 'point' | 'line';
+    /** 该符号与实际图元共用的绘制输入 */
+    paint: NonNullable<NonNullable<IRNode['style']>['fill']>;
+  }>;
   /** 条目标签（类别串 / 代表值 / 区间） */
   label: string;
   /** 色块填充色（color / 分箱 swatch） */
@@ -1816,7 +1821,12 @@ export type LegendRamp = {
   /** 渐变 stop（喂 core linearGradient paint server） */
   stops: Array<IRGradientStop>;
   /** 沿带刻度标签（offset 0..1） */
-  ticks: Array<{ offset: number; label: string }>;
+  ticks: Array<{
+    /** 刻度在连续色带上的归一化位置 */
+    offset: number;
+    /** 该刻度显示的格式化文字 */
+    label: string;
+  }>;
 };
 
 /**

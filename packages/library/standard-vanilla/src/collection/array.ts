@@ -13,9 +13,28 @@ import { dataCellDependencies, normalizeCells } from './cell';
  */
 export type InputArray = Omit<IRArray, 'namespace' | 'type' | 'items' | 'data' | 'dataExpand' | 'skeleton'> &
   (
-    | { items: Array<string | InputCell<IRArrayCell>>; data?: never; skeleton?: never; dataExpand?: never }
-    | { data: NonNullable<IRArray['data']>; skeleton?: never; items?: never; dataExpand?: IRArray['dataExpand'] }
-    | { skeleton: NonNullable<IRArray['skeleton']>; items?: never; data?: never; dataExpand?: never }
+    | {
+        /** 按顺序提供的文本或单元格，与数据和骨架入口互斥 */
+        items: Array<string | InputCell<IRArrayCell>>;
+        data?: never;
+        skeleton?: never;
+        dataExpand?: never;
+      }
+    | {
+        /** 用于展开单元格的数据，与显式单元格和骨架入口互斥 */
+        data: NonNullable<IRArray['data']>;
+        skeleton?: never;
+        items?: never;
+        /** 仅用于数据入口的展开策略 */
+        dataExpand?: IRArray['dataExpand'];
+      }
+    | {
+        /** 用于构造空单元格的结构声明，与其它内容入口互斥 */
+        skeleton: NonNullable<IRArray['skeleton']>;
+        items?: never;
+        data?: never;
+        dataExpand?: never;
+      }
   );
 
 /** 将 Array 输入与嵌套内容交给根级 traversal */

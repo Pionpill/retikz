@@ -4,8 +4,8 @@
 
 #### Polygon / PolygonProps
 
-- `Polygon`: <ApiSourceLink label={"Polygon"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={12}>Declare a Standard Polygon through its Vanilla adapter</ApiSourceLink>
-- `PolygonProps`: <ApiSourceLink label={"PolygonProps"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={9}>React Polygon authoring input and host events</ApiSourceLink>
+- `Polygon`: <ApiSourceLink label={"Polygon"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={19}>Declare a Standard Polygon through its Vanilla adapter</ApiSourceLink>
+- `PolygonProps`: <ApiSourceLink label={"PolygonProps"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={10}>React Polygon authoring input and host events</ApiSourceLink>
 
 ```ts
 export declare const Polygon: {
@@ -23,7 +23,7 @@ export type PolygonProps = InputPolygon &
 #### InputPolygon
 
 <p>
-  <ApiSourceLink label={'InputPolygon'} path={'packages/library/standard-vanilla/src/shape/polygon.ts'} startLine={8}>
+  <ApiSourceLink label={'InputPolygon'} path={'packages/library/standard-vanilla/src/shape/polygon.ts'} startLine={9}>
     Polygon Vanilla authoring input
   </ApiSourceLink>
 </p>
@@ -102,7 +102,7 @@ export type InputPolygon = InputShape<IRPolygon>;
   <ApiSourceLink
     label={'PolygonInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/shape/polygon.ts'}
-    startLine={10}
+    startLine={12}
   >
     Normalize Polygon authoring input into persistent Standard intent
   </ApiSourceLink>
@@ -117,7 +117,7 @@ export declare const PolygonInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
 #### IRPolygon
 
 <p>
-  <ApiSourceLink label={'IRPolygon'} path={'packages/library/standard/src/shape/polygon/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRPolygon'} path={'packages/library/standard/src/shape/polygon/types.ts'} startLine={7}>
     Persistent Polygon shape
   </ApiSourceLink>
 </p>
@@ -192,7 +192,7 @@ export type IRPolygon = ShapeSource<ZodInput<typeof PolygonSchema>>;
   <ApiSourceLink
     label={'PolygonDefinition'}
     path={'packages/library/standard/src/shape/polygon/definition.ts'}
-    startLine={7}
+    startLine={8}
   >
     Polygon Core composite registration
   </ApiSourceLink>
@@ -236,7 +236,7 @@ export const PolygonDefinition = defineComposite({
   <ApiSourceLink
     label={'PolygonProvider'}
     path={'packages/library/standard/src/shape/polygon/provider.ts'}
-    startLine={5}
+    startLine={6}
   >
     Polygon on-demand dependency contribution
   </ApiSourceLink>
@@ -254,7 +254,7 @@ export const PolygonProvider: CoreDependencyProvider = Object.freeze({
 #### createPolygon
 
 <p>
-  <ApiSourceLink label={'createPolygon'} path={'packages/library/standard/src/shape/polygon/factory.ts'} startLine={4}>
+  <ApiSourceLink label={'createPolygon'} path={'packages/library/standard/src/shape/polygon/factory.ts'} startLine={5}>
     Create a Polygon Source preserving geometry intent
   </ApiSourceLink>
 </p>

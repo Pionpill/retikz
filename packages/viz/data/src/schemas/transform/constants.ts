@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 
 /**
- * transform operation kind 关键字。
+ * transform operation kind 关键字
  * @description 数据变换 operation 的判别字段；schema、provider definition 与 registry 诊断共用这些稳定取值
  */
 export const DataTransform = {

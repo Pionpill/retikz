@@ -2,7 +2,10 @@ import { assertNonEmptyString } from '@retikz/foundation';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
-/** provider registry 解析输入：内置项、自定义项和 key 提取规则 */
+/**
+ * 提供内置项、自定义项与键提取规则以建立能力定义索引
+ * @template TDefinition 内置项、自定义项和键提取回调共享的定义类型
+ */
 export type ProviderRegistryOptions<TDefinition> = {
   /** 能力名称，用于错误信息 */
   capability: string;
@@ -31,28 +34,51 @@ export type NamedProviderDefinition = {
   name: string;
 };
 
-/** 带同名属性索引的内置 provider 数组 */
+/**
+ * 可按数组顺序或注册名称读取的能力定义集合
+ * @template TDefinition 数组元素与名称索引对应的定义类型
+ * @template TName 可通过属性访问的注册名；默认不限制名称集合
+ */
 export type NamedProviderArray<
   TDefinition extends NamedProviderDefinition,
   TName extends string = string,
 > = ReadonlyArray<TDefinition> & Readonly<Record<TName, TDefinition>>;
 
-/** 带 key 属性索引的内置 provider 数组 */
+/**
+ * 可按数组顺序或指定键读取的能力定义集合
+ * @template TDefinition 数组元素与键索引对应的定义类型
+ * @template TKey 可通过属性访问的键；默认不限制键集合
+ */
 export type IndexedProviderArray<TDefinition, TKey extends string = string> = ReadonlyArray<TDefinition> &
   Readonly<Record<TKey, TDefinition>>;
 
-/** provider lookup 可消费的 registry 形态 */
+/**
+ * 支持按键查找的映射或按 name 查找的能力定义数组
+ * @template TDefinition 查找返回的定义类型；数组元素额外要求 name 字段
+ */
 export type ProviderCollection<TDefinition> =
   | ReadonlyMap<string, TDefinition>
   | ReadonlyArray<TDefinition & NamedProviderDefinition>;
 
-/** 为使用 `name` 作为 key 的内置 provider 数组补同名属性索引 */
+/**
+ * 在原能力定义数组上添加以 name 为键的属性索引
+ * @template TDefinition 含注册名称的定义类型，保留在数组和属性索引中
+ * @template TKey 属性索引的键类型，需与实际 name 集合一致
+ * @returns 传入数组的原引用；重复 name 的属性索引指向最后一项
+ */
 export const defineBuiltinProviderArray = <TDefinition extends NamedProviderDefinition, TKey extends string = string>(
   definitions: ReadonlyArray<TDefinition>,
 ): NamedProviderArray<TDefinition, TKey> =>
   defineKeyedProviderArray(definitions, definition => definition.name as TKey);
 
-/** 为使用自定义 key 的内置 provider 数组补属性索引 */
+/**
+ * 在原能力定义数组上添加由 keyOf 计算的属性索引
+ * @template TDefinition 数组元素及属性索引值的类型
+ * @template TKey keyOf 返回的键类型，保留在返回值的属性索引中
+ * @param definitions 可添加属性的数组；函数会原位写入索引属性
+ * @param keyOf 为每项计算属性键；重复键由最后一项覆盖
+ * @returns 传入数组的原引用
+ */
 export const defineKeyedProviderArray = <TDefinition, TKey extends string = string>(
   definitions: ReadonlyArray<TDefinition>,
   keyOf: (definition: TDefinition) => TKey,
@@ -77,6 +103,11 @@ const registeredNames = <TDefinition>(registry: ProviderCollection<TDefinition>)
   return names.sort().join(', ') || '(none registered)';
 };
 
+/**
+ * 按内置项、自定义项顺序建立新的能力定义索引
+ * @template TDefinition 注册项的完整类型，原样保留在返回索引中
+ * @throws RetikzCoreError 注册键为空或重复时抛出；自定义项不能覆盖内置项
+ */
 export const resolveProviderRegistry = <TDefinition>({
   capability,
   builtins,
@@ -108,6 +139,11 @@ export const resolveProviderRegistry = <TDefinition>({
   return registry;
 };
 
+/**
+ * 按注册键查找能力定义；数组形式匹配首个同名项
+ * @template TDefinition 注册项及返回定义的类型
+ * @throws RetikzCoreError 未找到定义时抛出，并提供已注册名称和注入入口
+ */
 export const providerDefinitionOf = <TDefinition>(
   registry: ProviderCollection<TDefinition>,
   key: string,

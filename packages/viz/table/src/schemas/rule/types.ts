@@ -2,11 +2,11 @@ import type { infer as ZodInfer } from 'zod';
 
 import type { TableCellRuleSchema, TableCellSelectorSchema, TableValuePredicateSchema } from './schema';
 
-/** Table Cell selector IR */
+/** 表格单元格选择器 IR */
 export type IRTableCellSelector = ZodInfer<typeof TableCellSelectorSchema>;
 
-/** Table raw scalar predicate IR */
+/** 基于表格原始标量值的谓词 IR */
 export type IRTableValuePredicate = ZodInfer<typeof TableValuePredicateSchema>;
 
-/** Ordered Table Cell rule IR */
+/** 按顺序应用的表格单元格规则 IR */
 export type IRTableCellRule = ZodInfer<typeof TableCellRuleSchema>;

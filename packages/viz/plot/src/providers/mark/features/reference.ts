@@ -186,7 +186,7 @@ const referenceRegionScale = (role: string, frame: CoordinateFrame): PositionSca
 };
 
 /**
- * reference 是否完全常量（单条 full-span line / band / region，不逐行）：边界均为 value/number、无 extent field。
+ * reference 是否完全常量（单条 full-span line / band / region，不逐行）：边界均为 value/number、无 extent field
  */
 const isReferenceConstant = (mark: IRPlotReferenceMark, shape: ReferenceShape, frame: CoordinateFrame): boolean => {
   if (shape.kind === ReferenceMarkKind.Region) {
@@ -209,7 +209,7 @@ const isReferenceConstant = (mark: IRPlotReferenceMark, shape: ReferenceShape, f
   return mark.extentField === undefined && mark.extentToField === undefined;
 };
 
-/** reference 的有效迭代行：全常量 → 单行代表（任取首行，无行则空对象）；per-datum → 原数据行。 */
+/** reference 的有效迭代行：全常量 → 单行代表（任取首行，无行则空对象）；per-datum → 原数据行 */
 const referenceRows = (
   mark: IRPlotReferenceMark,
   rows: Array<ExternalRow>,
@@ -217,7 +217,7 @@ const referenceRows = (
   frame: CoordinateFrame,
 ): Array<ExternalRow> => (isReferenceConstant(mark, shape, frame) ? [rows[0] ?? {}] : rows);
 
-/** reference line 某行 → core Path steps（cartesian 直连两端点；polar 竖直径向线直连、水平常半径环段采样）；退化 → null。 */
+/** reference line 某行 → core Path steps（cartesian 直连两端点；polar 竖直径向线直连、水平常半径环段采样）；退化 → null */
 const referenceLineSteps = (
   mark: IRPlotReferenceMark,
   row: ExternalRow,
@@ -261,7 +261,7 @@ const referenceLineSteps = (
   return polarFixedRadiusSteps(frame, radius, mark.interpolation ?? frame.interpolation, angleSpan);
 };
 
-/** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null。 */
+/** reference band 某行 → 正交 Cell（cartesian primary/secondary 为像素带、polar primary 为角度带 / secondary 为半径带）；退化 → null */
 const referenceAxisBandCell = (
   mark: IRPlotReferenceMark,
   row: ExternalRow,
@@ -327,7 +327,7 @@ const referenceRegionCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame:
   return { intervals };
 };
 
-/** reference cell 形态（axis band / region）某行 → 正交 Cell；line 形态返回 null。 */
+/** reference cell 形态（axis band / region）某行 → 正交 Cell；line 形态返回 null */
 export const referenceCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame: CoordinateFrame): Cell | null => {
   const shape = referenceShape(mark);
   if (shape.kind === ReferenceMarkKind.Region) return referenceRegionCell(mark, row, frame);
@@ -337,7 +337,7 @@ export const referenceCell = (mark: IRPlotReferenceMark, row: ExternalRow, frame
 };
 
 /**
- * 参考标注（reference mark）下沉：line → core Path（每行一条）、band / region → projectCell Node（每行一个）。
+ * 参考标注（reference mark）下沉：line → core Path（每行一条）、band / region → projectCell Node（每行一个）
  */
 const lowerReference = (
   mark: IRPlotReferenceMark,
@@ -518,7 +518,7 @@ const lowerReference = (
   };
 };
 
-/** reference 图层下沉：line 走 core Path、band 走 projectCell；本轮仅 cartesian2D / polar2D，其余坐标系 fail-loud + attachMarkLayer。 */
+/** reference 图层下沉：line 走 core Path、band 走 projectCell；本轮仅 cartesian2D / polar2D，其余坐标系 fail-loud + attachMarkLayer */
 export const lowerReferenceLayer = (
   mark: IRPlotMark,
   rows: Array<ExternalRow>,
@@ -550,7 +550,7 @@ export const lowerReferenceLayer = (
   return layer === null ? null : attachMarkLayer(layer, mark, ctx);
 };
 
-/** 收集 reference mark 的位置 / color / 扩展 encoding 字段。 */
+/** 收集 reference mark 的位置 / color / 扩展 encoding 字段 */
 const collectReferenceEncodingFields = (mark: IRPlotReferenceMark, fields: FieldCollector): void => {
   fields.addChannel(mark.encoding.x);
   fields.addChannel(mark.encoding.y);
@@ -561,7 +561,7 @@ const collectReferenceEncodingFields = (mark: IRPlotReferenceMark, fields: Field
   }
 };
 
-/** 收集 reference mark 独有字段：band 上界与部分 span 范围。 */
+/** 收集 reference mark 独有字段：band 上界与部分 span 范围 */
 const collectReferenceChannelFields = (mark: IRPlotReferenceMark, fields: FieldCollector): void => {
   fields.addFields(
     typeof mark.xTo === 'string' ? mark.xTo : undefined,
@@ -571,7 +571,7 @@ const collectReferenceChannelFields = (mark: IRPlotReferenceMark, fields: FieldC
   );
 };
 
-/** 内置 reference mark definition。 */
+/** 内置 reference mark definition */
 export const referenceMarkDefinition: MarkDefinition<IRPlotReferenceMark> = {
   schema: ReferenceMarkSchema,
   channelKinds: () =>

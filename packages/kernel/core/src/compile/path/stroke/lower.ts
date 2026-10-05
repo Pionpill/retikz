@@ -98,6 +98,7 @@ const snapshotGeneratedCommand = (name: string, command: PathCommand): PathComma
   }
 };
 
+/** 解析生成器声明的目标参数，调用生成器并校验、复制其路径命令输出 */
 export const lowerGeneratorStepToCommands = (args: {
   resolution: PathGeneratorResolution;
   from: IRPosition;

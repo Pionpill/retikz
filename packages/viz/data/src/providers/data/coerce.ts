@@ -62,7 +62,7 @@ export const coerceTimestamp = (value: unknown): number | null => {
 };
 
 /**
- * 按字段测量类型把原始 JS 值转成运行时规范值。
+ * 按字段测量类型把原始 JS 值转成运行时规范值
  * @description continuous -> number；temporal -> epoch ms；categorical -> string|number。非法值返回 NaN / undefined
  */
 export const coerceValue = (value: unknown, type: DataFieldType): string | number | undefined => {

@@ -7,8 +7,11 @@ import type { CanonicalRibbonOptions, CanonicalRibbonWidth } from './types';
 
 /** Ribbon 宽度在 compile 阶段绑定的 profile 与参数 */
 export type RibbonWidthResolution = Readonly<{
+  /** 已确定模式的带宽声明 */
   width: CanonicalRibbonWidth;
+  /** profile 模式匹配的宽度定义，其它模式省略 */
   definition?: RibbonWidthProfileDefinition;
+  /** profile 参数经定义 schema 或 JSON 对象校验后的值，其它模式省略 */
   params?: JsonObject;
 }>;
 

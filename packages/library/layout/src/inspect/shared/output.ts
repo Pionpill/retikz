@@ -34,6 +34,7 @@ type LayoutInspectionMarkBase = Readonly<{
 /** 一段布局辅助边界 */
 export type LayoutInspectionLineMark = LayoutInspectionMarkBase &
   Readonly<{
+    /** 标识检查覆盖层中的线段 */
     kind: 'line';
     /** 起点横坐标 */
     x1: number;
@@ -52,6 +53,7 @@ export type LayoutInspectionLineMark = LayoutInspectionMarkBase &
 /** 一块尚未展开为四条边界的矩形轮廓 */
 export type LayoutInspectionOutlineMark = LayoutInspectionMarkBase &
   Readonly<{
+    /** 标识检查覆盖层中的轮廓 */
     kind: 'outline';
     /** 轮廓矩形 */
     rect: LayoutArtifactRect;

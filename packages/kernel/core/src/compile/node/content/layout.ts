@@ -27,7 +27,15 @@ export type NodeContentLayout = {
   /** 普通文本行 */
   lines?: Array<TextLine>;
   /** 行内公式混排块 */
-  inlineBlock?: { lines: Array<{ laid: LaidLine; baselineOffset: number }> };
+  inlineBlock?: {
+    /** 按正文顺序排列的混排行及其基线位置 */
+    lines: Array<{
+      /** 该行的测量结果与图元生成函数 */
+      laid: LaidLine;
+      /** 相对正文块顶部的基线垂直偏移 */
+      baselineOffset: number;
+    }>;
+  };
   /** 内容文本宽度 */
   textWidth: number;
   /** 内容文本高度 */

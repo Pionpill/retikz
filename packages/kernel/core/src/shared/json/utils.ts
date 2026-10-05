@@ -2,7 +2,10 @@ import { cloneAndFreezeJson as cloneAndFreezeFoundationJson } from '@retikz/foun
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
-/** 校验并复制 JSON-safe plain data，返回 detached deeply immutable value */
+/**
+ * 校验并复制 JSON-safe plain data，返回 detached deeply immutable value
+ * @template T 要校验、复制并冻结的 JSON 值类型
+ */
 export const cloneAndFreezeJson = <T>(value: T, path = 'value'): T => {
   try {
     return cloneAndFreezeFoundationJson(value, path);

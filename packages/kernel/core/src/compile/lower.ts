@@ -5,7 +5,7 @@ import { lowerComposites } from './orchestration';
 import type { LoweredIRScene, LowerIRToKernelOptions } from './types';
 
 /**
- * 把完整 IR 中的 composite 递归展开成可由 Kernel 直接消费的 Tier 1 IR。
+ * 把完整 IR 中的 composite 递归展开成可由 Kernel 直接消费的 Tier 1 IR
  *
  * @description 未注册 composite 会携带 provider key 与 IR path 直接抛错，避免返回静默缺失节点的结果
  */

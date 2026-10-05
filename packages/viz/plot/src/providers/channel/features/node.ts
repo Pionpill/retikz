@@ -52,8 +52,11 @@ export const SIZE_MAX_RADIUS = 20;
 
 /** 数值 Node 通道 resolver 的 range、clamp 与整数化选项 */
 export type NumericNodeResolverOptions = {
+  /** 数值尺度的默认输出范围，可由命名尺度覆盖 */
   range?: readonly [number, number];
+  /** 数值尺度的默认钳位策略，可由命名尺度覆盖 */
   clamp?: boolean;
+  /** 是否将最终数值取整 */
   integer?: boolean;
 };
 
@@ -222,7 +225,7 @@ export const makeNumericNodeResolver = (
  * size 通道解析：行 → 半径（px）
  * @description 读取 mark 上结构化的 size 字段。常量 value 直接作最终半径（绕过 scale）；字段过 sqrt 半径 scale
  *   （显式 sqrt scale 引用或自动合成），domain 默认 [0, maxPositive]、range [SIZE_MIN_RADIUS, SIZE_MAX_RADIUS]。
- *   边界：无正值 → 全 SIZE_MIN_RADIUS；单正值 → range 上界；负值 fail-loud。
+ *   边界：无正值 → 全 SIZE_MIN_RADIUS；单正值 → range 上界；负值 fail-loud
  */
 export const resolveSizeChannel = (
   ctx: NodeChannelDefinitionResolveContext,
@@ -640,22 +643,31 @@ const shapeNodeChannel: NodeChannelDefinition<JsonValue> = defineNodeChannel<Jso
   },
 });
 
-/** 内置 Node 通道 definition 的按名称索引类型。 */
+/** 内置 Node 通道 definition 的按名称索引类型 */
 export type BuiltinNodeChannels = {
+  /** 映射 Node 整体透明度 */
   opacity: NodeChannelDefinition<number>;
+  /** 映射 Node 填充透明度 */
   fillOpacity: NodeChannelDefinition<number>;
+  /** 映射 Node 描边透明度 */
   strokeOpacity: NodeChannelDefinition<number>;
+  /** 映射 Node 旋转角度 */
   rotate: NodeChannelDefinition<number>;
+  /** 映射 Node 的绘制排序层级 */
   zIndex: NodeChannelDefinition<number>;
+  /** 映射 Node 文字颜色 */
   textColor: NodeChannelDefinition<string>;
+  /** 映射点图元尺寸 */
   size: NodeChannelDefinition<number>;
+  /** 映射点图元形状 */
   shape: NodeChannelDefinition<JsonValue>;
+  /** 映射 Node 描边宽度 */
   strokeWidth: NodeChannelDefinition<number>;
 } & typeof directNodeChannels;
 
 /**
- * 内置 Node 通道定义：scale 管数学、node channel 管输出空间 + 默认范围 + legend 形态。
- * @description 内置和自定义通道在 lowering 前合并进同一个 registry；差别只在 definition 来源。
+ * 内置 Node 通道定义：scale 管数学、node channel 管输出空间 + 默认范围 + legend 形态
+ * @description 内置和自定义通道在 lowering 前合并进同一个 registry；差别只在 definition 来源
  */
 export const BUILTIN_NODE_CHANNELS: BuiltinNodeChannels = {
   ...numericNodeChannels,
@@ -667,7 +679,7 @@ export const BUILTIN_NODE_CHANNELS: BuiltinNodeChannels = {
 
 const eraseNodeChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
-/** 内置 Node 通道 definition 集合。 */
+/** 内置 Node 通道 definition 集合 */
 export const NODE_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_NODE_CHANNELS).map(def =>
   eraseNodeChannelDefinition(def),
 );

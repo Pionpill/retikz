@@ -40,6 +40,7 @@ export type InputPathArrowPlacement = {
 
 /** 作者侧路径步骤标签 */
 export type InputStepLabel = Omit<IRStepLabel, 'side'> & {
+  /** 标签相对于路径段的放置侧 */
   side?: Side;
 };
 
@@ -51,76 +52,99 @@ export type InputAxisLineTarget = IRAxisLineTarget | string;
 
 /** 以作者侧 target 组装的 move 步骤 */
 export type InputMoveStep = Omit<Extract<IRStep, { kind: 'move' }>, 'to'> & {
+  /** 移动后的目标位置，可使用目标标识字符串简写 */
   to: InputTarget;
 };
 
 /** 以作者侧 target 组装的 line 步骤 */
 export type InputLineStep = Omit<Extract<IRStep, { kind: 'line' }>, 'to' | 'label'> & {
+  /** 直线终点，可使用目标标识字符串简写 */
   to: InputTarget;
+  /** 附着在当前直线段上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧 target 组装的 axis-line 步骤 */
 export type InputAxisLineStep = Omit<Extract<IRStep, { kind: 'axis-line' }>, 'to' | 'label'> & {
+  /** 仅决定指定轴分量的目标，可使用目标标识字符串简写 */
   to: InputAxisLineTarget;
+  /** 附着在当前单轴线段上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧 target 组装的 fold 步骤 */
 export type InputFoldStep = Omit<Extract<IRStep, { kind: 'fold' }>, 'to' | 'label'> & {
+  /** 折线终点，可使用目标标识字符串简写 */
   to: InputTarget;
+  /** 附着在当前折线步骤上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧 target 组装的 curve 步骤 */
 export type InputCurveStep = Omit<Extract<IRStep, { kind: 'curve' }>, 'to' | 'label'> & {
+  /** 二次贝塞尔曲线终点，可使用目标标识字符串简写 */
   to: InputTarget;
+  /** 附着在当前二次曲线上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧 target 组装的 cubic 步骤 */
 export type InputCubicStep = Omit<Extract<IRStep, { kind: 'cubic' }>, 'to' | 'label'> & {
+  /** 三次贝塞尔曲线终点，可使用目标标识字符串简写 */
   to: InputTarget;
+  /** 附着在当前三次曲线上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧 target 组装的 bend 步骤 */
 export type InputBendStep = Omit<Extract<IRStep, { kind: 'bend' }>, 'to' | 'label'> & {
+  /** 弯曲路径的终点，可使用目标标识字符串简写 */
   to: InputTarget;
+  /** 附着在当前弯曲路径上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧标签组装的 circlePath 步骤 */
 export type InputCirclePathStep = Omit<Extract<IRStep, { kind: 'circlePath' }>, 'label'> & {
+  /** 附着在圆形路径上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧标签组装的 ellipsePath 步骤 */
 export type InputEllipsePathStep = Omit<Extract<IRStep, { kind: 'ellipsePath' }>, 'label'> & {
+  /** 附着在椭圆路径上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧 target 组装的 arc 步骤 */
 export type InputArcStep = Omit<Extract<IRStep, { kind: 'arc' }>, 'center' | 'label'> & {
+  /** 显式圆心目标，省略时沿用 Core 弧段的圆心推导语义 */
   center?: InputTarget;
+  /** 附着在当前弧段上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧 target 组装的 rectangle 步骤 */
 export type InputRectangleStep = Omit<Extract<IRStep, { kind: 'rectangle' }>, 'from' | 'to'> & {
+  /** 矩形的一个对角点，可使用目标标识字符串简写 */
   from: InputTarget;
+  /** 矩形的另一个对角点，可使用目标标识字符串简写 */
   to: InputTarget;
 };
 
 /** 以作者侧 target 组装的 smooth 步骤 */
 export type InputSmoothStep = Omit<Extract<IRStep, { kind: 'smooth' }>, 'points' | 'label'> & {
+  /** 平滑曲线按顺序经过的目标列表 */
   points: ReadonlyArray<InputTarget>;
+  /** 附着在当前平滑曲线上的可选标签 */
   label?: InputStepLabel;
 };
 
 /** 以作者侧 target 组装的 generator 步骤 */
 export type InputGeneratorStep = Omit<Extract<IRStep, { kind: 'generator' }>, 'to' | 'label'> & {
+  /** 交给路径生成器的可选终点目标 */
   to?: InputTarget;
+  /** 附着在生成路径上的可选标签 */
   label?: InputStepLabel;
 };
 

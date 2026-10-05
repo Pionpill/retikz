@@ -17,7 +17,7 @@ import type {
 import type { DeepReadonly } from '../../shared';
 import type { TableCellSource } from '../structure';
 
-/** canonical Table row */
+/** 规范化后的表格行 */
 export type SemanticTableRow = Readonly<{
   /** 可选稳定 row id */
   id?: string;
@@ -29,7 +29,7 @@ export type SemanticTableRow = Readonly<{
   sourceIndex?: number;
 }>;
 
-/** canonical Table column */
+/** 规范化后的表格列 */
 export type SemanticTableColumn = Readonly<{
   /** 可选稳定 column id */
   id?: string;
@@ -65,7 +65,7 @@ export type ResolvedTableCellLayout = Readonly<{
   borders?: DeepReadonly<IRTableCellBorders>;
 }>;
 
-/** canonical Table Cell */
+/** 规范化后的表格单元格 */
 export type SemanticTableCell = Readonly<{
   /** 可选稳定 Cell id */
   id?: string;
@@ -93,11 +93,11 @@ export type SemanticTableCell = Readonly<{
 
 /** 所有 structure 共同输出的 canonical Table 语义模型 */
 export type SemanticTableModel = Readonly<{
-  /** canonical rows */
+  /** 规范化后的行集合 */
   rows: ReadonlyArray<SemanticTableRow>;
-  /** canonical columns */
+  /** 规范化后的列集合 */
   columns: ReadonlyArray<SemanticTableColumn>;
-  /** canonical Cells */
+  /** 规范化后的单元格集合 */
   cells: ReadonlyArray<SemanticTableCell>;
 }>;
 
@@ -109,9 +109,9 @@ export type TableCellContext = Readonly<{
   rowId?: string;
   /** 可选所属 column id */
   columnId?: string;
-  /** canonical row index */
+  /** 规范行下标 */
   rowIndex: number;
-  /** canonical column index */
+  /** 规范列下标 */
   columnIndex: number;
   /** Cell 语义位置 */
   location: TableCellLocation;

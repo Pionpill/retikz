@@ -239,7 +239,7 @@ type LegendLoweringBase = {
  * color legend 解析：消费 channel definition 产出的 colorScale descriptor → 按 legendForm 选 swatch / ramp / 分箱
  * @description legendForm='ramp'（sequential / diverging）→ core linearGradient 连续色带 + nice 刻度；
  *   legendForm='swatch' + edges（quantize/threshold/quantile）→ 每档区间 swatch（区间标签闭开口契约）；
- *   legendForm='swatch' 无 edges（ordinal）→ 逐类别色块 swatch。evaluator / domain / range 来自实绘解析结果。
+ *   legendForm='swatch' 无 edges（ordinal）→ 逐类别色块 swatch。evaluator / domain / range 来自实绘解析结果
  */
 const resolveColorLegend = (
   descriptor: ScaleDescriptor,
@@ -318,7 +318,7 @@ const LEGEND_CONTENT_GAP = 24;
 
 /**
  * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
- * @description 喂 computePlotArea 在对应边收窄 plotArea；估算式占位、不测量。
+ * @description 喂 computePlotArea 在对应边收窄 plotArea；估算式占位、不测量
  */
 export const legendReserveOf = (legendGuides: Array<IRPlotLegendGuide>): LegendReserve => {
   const reserve: { right: number; left: number; top: number; bottom: number } = {
@@ -337,7 +337,7 @@ export const legendReserveOf = (legendGuides: Array<IRPlotLegendGuide>): LegendR
 
 /**
  * 为每个 legend 计算预留带矩形（落在 plotArea 旁的预留 gutter 内；同侧按声明序堆叠）
- * @description gutter 由 computePlotArea 在对应边按 legendReserveOf 让出；此处把每个 legend 摆进其所在边的带。
+ * @description gutter 由 computePlotArea 在对应边按 legendReserveOf 让出；此处把每个 legend 摆进其所在边的带
  */
 export const reserveLegendBands = (
   legendGuides: Array<IRPlotLegendGuide>,
@@ -392,7 +392,7 @@ const legendLayerId = (plotId: string | undefined, channel: string, index: numbe
  * 解析所有 legend guide → core legend scope（据通道 + 绑定 scale 类型选 swatch / ramp / 分箱 / 梯度符号）
  * @description color descriptor 从 IRPlot.scales 具名 color scale 取（多于一个且未消歧 → fail-loud）；
  *   其它通道从 resolver descriptor 与 channel definition 取值。形态由 definition.legend 决定，标签复用 axis formatter 链。
- *   每个 legend 下沉成归属当前 plot owner 的稳定 id 独立 scope，落在传入的预留带内。
+ *   每个 legend 下沉成归属当前 plot owner 的稳定 id 独立 scope，落在传入的预留带内
  */
 export const buildLegendLayers = (
   node: IRPlot,

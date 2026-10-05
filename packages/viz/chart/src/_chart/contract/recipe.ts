@@ -27,9 +27,10 @@ import type { ChartMarkBinding } from './mark';
 export type ChartEncodingRuntime = Readonly<{
   /** Data / Plot transform Definition注册表 */
   transforms: ReadonlyMap<string, AnyTransformDefinition>;
-  /** Data statistics reducer Definition注册表 */
+
   /** 当前编译的拟合 registry */
   regressions: ReadonlyMap<string, AnyRegressionDefinition>;
+  /** 字段聚合映射可引用的统计归约语义定义 */
   reducers: ReadonlyMap<string, AnyStatisticsReducerDefinition>;
   /** Data row selector Definition注册表 */
   selectors: ReadonlyMap<string, AnyRowSelectorDefinition>;
@@ -57,11 +58,17 @@ export type ChartEncodingSpatialKind = ValueOf<typeof ChartEncodingSpatialKind>;
 
 /** encoding驱动的Chart composition消费态 */
 export type ChartEncodingSpatialResolution = Readonly<{
+  /** 标识由字段映射生成的分面组合 */
   kind: typeof ChartEncodingSpatialKind.Facet;
+  /** 分面组合的稳定标识 */
   id: string;
+  /** 分面引用的子视图名称 */
   view: string;
+  /** 生成分面行的单个或多个维度 */
   row?: IRPlotPartitionDimension | Array<IRPlotPartitionDimension>;
+  /** 生成分面列的单个或多个维度 */
   column?: IRPlotPartitionDimension | Array<IRPlotPartitionDimension>;
+  /** 控制分面排列及共享行为的 Plot 选项 */
   options: IRPlotFacetOptions;
 }>;
 
@@ -83,7 +90,10 @@ export type ChartEncodingResolution = Readonly<{
   spatial?: ChartEncodingSpatialResolution;
 }>;
 
-/** 一个recipe解析exact encoding mapping所需的窄上下文 */
+/**
+ * 一个recipe解析exact encoding mapping所需的窄上下文
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export type ChartEncodingResolveContext<TSource extends IRChartSource = IRChartSource> = Readonly<{
   /** 当前exact schema已经parse的Chart Source */
   source: TSource;
@@ -135,7 +145,7 @@ export type ChartRecipeScaffold = Readonly<{
   /** Recipe 生成的 Plot scale 及其可覆盖策略 */
   scales: ReadonlyArray<
     Readonly<{
-      /** Plot scale operation */
+      /** 绘图比例尺操作 */
       value: IRPlotScaleOperation;
       /** 是否允许 plotExtension 覆盖该 scale */
       replaceable: boolean;
@@ -144,7 +154,7 @@ export type ChartRecipeScaffold = Readonly<{
   /** Recipe 生成的唯一 coordinate 或 composition 及其可覆盖策略 */
   spatial: Readonly<
     | Readonly<{
-        /** Plot coordinate operation */
+        /** 绘图坐标系操作 */
         coordinate: IRPlotCoordinateOperation;
         /** 是否允许 plotExtension 覆盖该 coordinate */
         replaceable: boolean;
@@ -193,7 +203,10 @@ export type ChartRecipeResolveContext = Readonly<{
   properties: JsonObject;
 }>;
 
-/** Chart resolver 消费的根级 encoding / property slots */
+/**
+ * Chart resolver 消费的根级 encoding / property slots
+ * @template TEncodingSlot 当前 recipe 允许的字段映射槽位名称
+ */
 export type ChartSlotConsumption<TEncodingSlot extends string = string> = Readonly<{
   /** 被消费的 encoding slot 名称 */
   encodings: ReadonlyArray<TEncodingSlot>;
@@ -203,7 +216,10 @@ export type ChartSlotConsumption<TEncodingSlot extends string = string> = Readon
 
 type ChartEncodingSlot<TSource extends IRChartSource> = Extract<keyof TSource['recipe']['encodings'], string>;
 
-/** 一个 chartType 的精确 recipe Definition */
+/**
+ * 一个 chartType 的精确 recipe Definition
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export type ChartRecipeDefinition<TSource extends IRChartSource = IRChartSource> = Readonly<{
   /** 全局唯一的 recipe 判别值 */
   chartType: string;
@@ -228,12 +244,18 @@ export type ChartRecipeDefinition<TSource extends IRChartSource = IRChartSource>
 /** 异构 registry 保存的 Chart recipe Definition */
 export type AnyChartRecipeDefinition = ChartRecipeDefinition<IRChartSource>;
 
-/** 定义一个 Chart recipe；内置与自定义使用同一 identity-preserving contract */
+/**
+ * 定义一个 Chart recipe；内置与自定义使用同一 identity-preserving contract
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export const defineChartRecipe = <TSource extends IRChartSource>(
   definition: ChartRecipeDefinition<TSource>,
 ): ChartRecipeDefinition<TSource> => definition;
 
-/** 在异构 registry 边界擦除 recipe 的精确 Source 泛型 */
+/**
+ * 在异构 registry 边界擦除 recipe 的精确 Source 泛型
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export const eraseChartRecipeDefinition = <TSource extends IRChartSource>(
   definition: ChartRecipeDefinition<TSource>,
 ): AnyChartRecipeDefinition => definition as unknown as AnyChartRecipeDefinition;

@@ -22,7 +22,10 @@ import type { CoreComputationOptions } from './public';
 import { createFullSceneRuntimeSnapshot, freezeComputationOutput } from './snapshot';
 import type { CoreComputationArtifactInput, CoreComputationRead } from './types';
 
-/** 单个 root Node 样式更新产生的 private incremental candidate */
+/**
+ * 单个 root Node 样式更新产生的 private incremental candidate
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreRootNodeStyleCandidate<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 交给 Runtime capture 的完整 candidate artifact */
   artifact: CoreComputationArtifactInput<TComposites>;
@@ -93,6 +96,7 @@ const createPrimitiveSubtree = (
 /**
  * 尝试复用 committed root Node contribution，只重编一个 fill string 变化的稳定 Node
  * @description 任何引用、资源、artifact、diagnostic、结构或多 owner 变化都会返回 undefined 交由 full fallback
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
  */
 export const tryCompileRootNodeStyleUpdate = <
   const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly [],

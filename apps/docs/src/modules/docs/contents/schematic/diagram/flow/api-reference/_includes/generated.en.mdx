@@ -4,8 +4,8 @@
 
 ### FlowDiagram / FlowDiagramProps
 
-- `FlowDiagram`: <ApiSourceLink label={"FlowDiagram"} path={"packages/schematic/diagram-react/src/flow/FlowDiagram.tsx"} startLine={46}>Connect a FlowDiagram Source root to React authoring and the Layout host</ApiSourceLink>
-- `FlowDiagramProps`: <ApiSourceLink label={"FlowDiagramProps"} path={"packages/schematic/diagram-react/src/flow/authoring.ts"} startLine={269}>React authoring props for FlowDiagram</ApiSourceLink>
+- `FlowDiagram`: <ApiSourceLink label={"FlowDiagram"} path={"packages/schematic/diagram-react/src/flow/FlowDiagram.tsx"} startLine={61}>Connect a FlowDiagram Source root to React authoring and the Layout host</ApiSourceLink>
+- `FlowDiagramProps`: <ApiSourceLink label={"FlowDiagramProps"} path={"packages/schematic/diagram-react/src/flow/authoring.ts"} startLine={295}>React authoring props for FlowDiagram</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1042,7 +1042,7 @@ export type FlowRelationsProps = Readonly<{
 
 ### flowDiagram / FlowDiagramInputEmbedProps
 
-- `flowDiagram`: <ApiSourceLink label={"flowDiagram"} path={"packages/schematic/diagram-vanilla/src/flow/flow-diagram.ts"} startLine={56}>Create an authoring embed for a Flow Diagram Source root</ApiSourceLink>
+- `flowDiagram`: <ApiSourceLink label={"flowDiagram"} path={"packages/schematic/diagram-vanilla/src/flow/flow-diagram.ts"} startLine={57}>Create an authoring embed for a Flow Diagram Source root</ApiSourceLink>
 - `FlowDiagramInputEmbedProps`: <ApiSourceLink label={"FlowDiagramInputEmbedProps"} path={"packages/schematic/diagram-vanilla/src/flow/flow-diagram.ts"} startLine={11}>A Flow Diagram embed carries Source authoring input and definitions together</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -1145,7 +1145,7 @@ export type InputFlowDiagram = Omit<IRFlowDiagram, 'namespace' | 'type'>;
   <ApiSourceLink
     label={'FlowDiagramInputEmbedAdapter'}
     path={'packages/schematic/diagram-vanilla/src/flow/flow-diagram.ts'}
-    startLine={43}
+    startLine={44}
   >
     InputEmbed adapter for a Flow Diagram Source root
   </ApiSourceLink>
@@ -1163,7 +1163,7 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
   <ApiSourceLink
     label={'FlowBendRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={120}
+    startLine={145}
   >
     Bend reference geometry containing only the active parameter family
   </ApiSourceLink>
@@ -1175,12 +1175,12 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
 
 <ApiTable>
 
-| Member                   | Type                                                                       | Default | Description |
-| ------------------------ | -------------------------------------------------------------------------- | ------- | ----------- |
-| `readonly bendAngle`     | `number`                                                                   | —       | —           |
-| `readonly bendDirection` | `'left' \| 'right'`                                                        | —       | —           |
-| `readonly kind`          | `'bend'`                                                                   | —       | —           |
-| `readonly points`        | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | —           |
+| Member                   | Type                                                                       | Default | Description                                                                  |
+| ------------------------ | -------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `readonly bendAngle`     | `number`                                                                   | —       | Bend angle in degrees                                                        |
+| `readonly bendDirection` | `'left' \| 'right'`                                                        | —       | Bend side relative to the source-to-target direction                         |
+| `readonly kind`          | `'bend'`                                                                   | —       | Identifies a bend reference route with resolved parameters                   |
+| `readonly points`        | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Reference endpoints in root-local coordinates, ordered from source to target |
 
 </ApiTable>
 
@@ -1190,13 +1190,13 @@ export declare const FlowDiagramInputEmbedAdapter: SynchronousInputEmbedAdapter<
 
 <ApiTable>
 
-| Member               | Type                                                                       | Default | Description |
-| -------------------- | -------------------------------------------------------------------------- | ------- | ----------- |
-| `readonly inAngle`   | `number`                                                                   | —       | —           |
-| `readonly kind`      | `'bend'`                                                                   | —       | —           |
-| `readonly looseness` | `number`                                                                   | —       | —           |
-| `readonly outAngle`  | `number`                                                                   | —       | —           |
-| `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | —           |
+| Member               | Type                                                                       | Default | Description                                                                  |
+| -------------------- | -------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `readonly inAngle`   | `number`                                                                   | —       | Control direction at the target endpoint, in degrees                         |
+| `readonly kind`      | `'bend'`                                                                   | —       | Identifies a bend reference route with resolved parameters                   |
+| `readonly looseness` | `number`                                                                   | —       | Looseness factor controlling curve control-arm lengths                       |
+| `readonly outAngle`  | `number`                                                                   | —       | Outgoing tangent angle at the source endpoint, in degrees                    |
+| `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Reference endpoints in root-local coordinates, ordered from source to target |
 
 </ApiTable>
 
@@ -1232,7 +1232,7 @@ export type FlowBendRoute = Readonly<{
   <ApiSourceLink
     label={'FlowBezierRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={61}
+    startLine={66}
   >
     Complete numeric Bezier reference route
   </ApiSourceLink>
@@ -1298,7 +1298,7 @@ export type FlowBezierRoute = Readonly<{
   <ApiSourceLink
     label={'FlowBezierRouting'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={36}
+    startLine={41}
   >
     Automatic or complete explicit Bezier input without a redundant mode field
   </ApiSourceLink>
@@ -1469,7 +1469,7 @@ export type FlowDiagramDefinitionOptions = DiagramDefinitionOptions &
   <ApiSourceLink
     label={'FlowEndpointTarget'}
     path={'packages/schematic/diagram/src/flow/schemas/flow/types.ts'}
-    startLine={78}
+    startLine={79}
   >
     Compiled endpoint target ready for Core consumption
   </ApiSourceLink>
@@ -1506,7 +1506,7 @@ export type FlowEndpointTarget = ZodInfer<typeof FlowEndpointTargetSchema>;
   <ApiSourceLink
     label={'FlowLayoutDefinition'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={398}
+    startLine={459}
   >
     Layout definition that synchronously determines Flow element bounds, relation routes, and label reservations
   </ApiSourceLink>
@@ -1552,7 +1552,7 @@ export type FlowLayoutDefinition = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutEndpoint'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={306}
+    startLine={367}
   >
     Relation endpoint layout constraints with effective defaults
   </ApiSourceLink>
@@ -1596,7 +1596,7 @@ export type FlowLayoutEndpoint = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutExecutionContext'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={262}
+    startLine={323}
   >
     Synchronous execution context for Flow placement and waypoint queries
   </ApiSourceLink>
@@ -1643,7 +1643,7 @@ export type FlowLayoutExecutionContext = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutLabelPlacement'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={117}
+    startLine={142}
   >
     Complete-label geometry provided to layout, excluding text and appearance
   </ApiSourceLink>
@@ -1685,7 +1685,7 @@ export type FlowLayoutLabelPlacement = Readonly<Omit<IRGeometryLabel, 'text' | '
   <ApiSourceLink
     label={'FlowLayoutRelationInput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={318}
+    startLine={379}
   >
     Measured Flow layout relation input
   </ApiSourceLink>
@@ -1733,7 +1733,7 @@ export type FlowLayoutRelationInput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRelationOutput'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={352}
+    startLine={413}
   >
     Layout output for one Flow relation in root coordinates
   </ApiSourceLink>
@@ -1777,7 +1777,7 @@ export type FlowLayoutRelationOutput = Readonly<{
   <ApiSourceLink
     label={'FlowLayoutRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={127}
+    startLine={169}
   >
     Reference route determined by layout; Core performs actual endpoint clipping and arrow shortening
   </ApiSourceLink>
@@ -1803,12 +1803,12 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 <ApiTable>
 
-| Member                   | Type                                                                       | Default | Description |
-| ------------------------ | -------------------------------------------------------------------------- | ------- | ----------- |
-| `readonly bendAngle`     | `number`                                                                   | —       | —           |
-| `readonly bendDirection` | `'left' \| 'right'`                                                        | —       | —           |
-| `readonly kind`          | `'bend'`                                                                   | —       | —           |
-| `readonly points`        | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | —           |
+| Member                   | Type                                                                       | Default | Description                                                                  |
+| ------------------------ | -------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `readonly bendAngle`     | `number`                                                                   | —       | Bend angle in degrees                                                        |
+| `readonly bendDirection` | `'left' \| 'right'`                                                        | —       | Bend side relative to the source-to-target direction                         |
+| `readonly kind`          | `'bend'`                                                                   | —       | Identifies a bend reference route with resolved parameters                   |
+| `readonly points`        | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Reference endpoints in root-local coordinates, ordered from source to target |
 
 </ApiTable>
 
@@ -1818,13 +1818,13 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 <ApiTable>
 
-| Member               | Type                                                                       | Default | Description |
-| -------------------- | -------------------------------------------------------------------------- | ------- | ----------- |
-| `readonly inAngle`   | `number`                                                                   | —       | —           |
-| `readonly kind`      | `'bend'`                                                                   | —       | —           |
-| `readonly looseness` | `number`                                                                   | —       | —           |
-| `readonly outAngle`  | `number`                                                                   | —       | —           |
-| `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | —           |
+| Member               | Type                                                                       | Default | Description                                                                  |
+| -------------------- | -------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `readonly inAngle`   | `number`                                                                   | —       | Control direction at the target endpoint, in degrees                         |
+| `readonly kind`      | `'bend'`                                                                   | —       | Identifies a bend reference route with resolved parameters                   |
+| `readonly looseness` | `number`                                                                   | —       | Looseness factor controlling curve control-arm lengths                       |
+| `readonly outAngle`  | `number`                                                                   | —       | Outgoing tangent angle at the source endpoint, in degrees                    |
+| `readonly points`    | `readonly [`<br />`Readonly<Position>,`<br />`Readonly<Position>`<br />`]` | —       | Reference endpoints in root-local coordinates, ordered from source to target |
 
 </ApiTable>
 
@@ -1863,10 +1863,10 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 <ApiTable>
 
-| Member            | Type                                | Default | Description |
-| ----------------- | ----------------------------------- | ------- | ----------- |
-| `readonly kind`   | `'straight'`                        | —       | —           |
-| `readonly points` | `ReadonlyArray<Readonly<Position>>` | —       | —           |
+| Member            | Type                                | Default | Description                                                                    |
+| ----------------- | ----------------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly kind`   | `'straight'`                        | —       | Selects the reference route kind resolved by layout                            |
+| `readonly points` | `ReadonlyArray<Readonly<Position>>` | —       | Reference points in Flow root-local coordinates, ordered from source to target |
 
 </ApiTable>
 
@@ -1876,11 +1876,11 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 <ApiTable>
 
-| Member                  | Type                                | Default | Description |
-| ----------------------- | ----------------------------------- | ------- | ----------- |
-| `readonly cornerRadius` | `number`                            | —       | —           |
-| `readonly kind`         | `'-\|' \| '\|-'`                    | —       | —           |
-| `readonly points`       | `ReadonlyArray<Readonly<Position>>` | —       | —           |
+| Member                  | Type                                | Default | Description                                                                    |
+| ----------------------- | ----------------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly cornerRadius` | `number`                            | —       | Corner radius for axis-aligned polyline turns                                  |
+| `readonly kind`         | `'-\|' \| '\|-'`                    | —       | Selects the reference route kind resolved by layout                            |
+| `readonly points`       | `ReadonlyArray<Readonly<Position>>` | —       | Reference points in Flow root-local coordinates, ordered from source to target |
 
 </ApiTable>
 
@@ -1890,12 +1890,12 @@ export type FlowLayoutRelationOutput = Readonly<{
 
 <ApiTable>
 
-| Member                   | Type                                | Default | Description                                                                |
-| ------------------------ | ----------------------------------- | ------- | -------------------------------------------------------------------------- |
-| `readonly cornerRadius`  | `number`                            | —       | —                                                                          |
-| `readonly kind`          | `'orthogonal'`                      | —       | —                                                                          |
-| `readonly points`        | `ReadonlyArray<Readonly<Position>>` | —       | —                                                                          |
-| `readonly turnPosition?` | `0.25 \| 0.5 \| 0.75`               | —       | Effective authored fraction; automatic selection is not stored redundantly |
+| Member                   | Type                                | Default | Description                                                                    |
+| ------------------------ | ----------------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly cornerRadius`  | `number`                            | —       | Corner radius for axis-aligned polyline turns                                  |
+| `readonly kind`          | `'orthogonal'`                      | —       | Selects the reference route kind resolved by layout                            |
+| `readonly points`        | `ReadonlyArray<Readonly<Position>>` | —       | Reference points in Flow root-local coordinates, ordered from source to target |
+| `readonly turnPosition?` | `0.25 \| 0.5 \| 0.75`               | —       | Effective authored fraction; automatic selection is not stored redundantly     |
 
 </ApiTable>
 
@@ -1935,7 +1935,7 @@ export type FlowLayoutRoute =
   <ApiSourceLink
     label={'FlowLayoutRouting'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={96}
+    startLine={101}
   >
     Effective routing consumed by the Flow layout provider
   </ApiSourceLink>
@@ -1976,7 +1976,7 @@ export type FlowLayoutRouting =
   <ApiSourceLink
     label={'FlowRoutePointsQuery'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={294}
+    startLine={355}
   >
     Real waypoint query within this layout, with no cross-compilation cache
   </ApiSourceLink>
@@ -2020,7 +2020,7 @@ export type FlowRoutePointsQuery = Readonly<{
   <ApiSourceLink
     label={'FlowRoutingCapability'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={83}
+    startLine={88}
   >
     Each routing kind and its supported authoring modes
   </ApiSourceLink>
@@ -2076,7 +2076,7 @@ export type FlowRoutingCapability =
   <ApiSourceLink
     label={'FlowSmoothRoute'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={284}
+    startLine={345}
   >
     Resolved spline reference knots, retaining valid repeats
   </ApiSourceLink>
@@ -2118,7 +2118,7 @@ export type FlowSmoothRoute = Readonly<{
   <ApiSourceLink
     label={'FlowSmoothRouting'}
     path={'packages/schematic/diagram/src/flow/contract/layout/types.ts'}
-    startLine={274}
+    startLine={335}
   >
     Through-point routing intent with effective tension
   </ApiSourceLink>
@@ -2315,7 +2315,7 @@ export declare const defineFlowLayout: (definition: FlowLayoutDefinition) => Flo
   <ApiSourceLink
     label={'getFlowLayoutCatalog'}
     path={'packages/schematic/diagram/src/flow/providers/layout/registry.ts'}
-    startLine={205}
+    startLine={227}
   >
     Project a stable JSON-safe catalog from the live registry
   </ApiSourceLink>
@@ -2355,7 +2355,7 @@ export declare const getFlowLayoutCatalog: (
   <ApiSourceLink
     label={'routeFlowRelations'}
     path={'packages/schematic/diagram/src/flow/providers/layout/routing.ts'}
-    startLine={107}
+    startLine={117}
   >
     Compute routes and label reservations from complete root-local element bounds without mutating inputs or moving
     elements

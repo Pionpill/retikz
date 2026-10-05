@@ -36,7 +36,16 @@ export type HydrationAnimationControls = {
 /** 语义元素聚合几何（scene user units） */
 export type HydrationGeometry = {
   /** 同 id 全部图元的并集轴对齐包围盒 */
-  bbox: { x: number; y: number; width: number; height: number };
+  bbox: {
+    /** 聚合包围盒左边界的场景横坐标 */
+    x: number;
+    /** 聚合包围盒上边界的场景纵坐标 */
+    y: number;
+    /** 聚合包围盒宽度，采用场景单位 */
+    width: number;
+    /** 聚合包围盒高度，采用场景单位 */
+    height: number;
+  };
   /** 并集 bbox 中心 */
   center: [number, number];
 };
@@ -58,7 +67,12 @@ export type HydrationContext = {
   /** figure 根（svg root 或 canvas） */
   root: Element;
   /** 指针在 scene user units 的坐标（逆 meet-fit）；非指针事件 → null */
-  point: { x: number; y: number } | null;
+  point: {
+    /** 指针逆映射到场景后的横坐标 */
+    x: number;
+    /** 指针逆映射到场景后的纵坐标 */
+    y: number;
+  } | null;
   /** 语义元素聚合几何（scene user units）：同 id 全部图元的并集 bbox + 中心；无 scene 时 undefined */
   geometry?: HydrationGeometry;
   /** 动画控制（缺省作用于命中元素；传 id 控别的元素）；无 runtime / scene 时各方法为 no-op */

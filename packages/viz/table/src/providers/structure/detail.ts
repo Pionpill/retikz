@@ -10,7 +10,7 @@ import {
 } from '../../schemas';
 import { TableCellSourceKind } from '../../shared';
 
-/** detail Table structure definition */
+/** 生成明细表格结构的能力定义 */
 export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
   schema: DetailTableStructureSchema,
   build: (spec, context) => {

@@ -10,7 +10,10 @@ import type { CodeBlockDefinition } from '../contract';
 import { resolveCodeBlockSurface } from '../resolve';
 import type { IRCodeBlock } from '../schemas';
 
-/** 为实体建立主题边界；领域内容留待边界内展开 */
+/**
+ * 为实体建立主题边界；领域内容留待边界内展开
+ * @template TSource 代码块定义 schema 接受并展开的精确输入类型
+ */
 export const createCodeBlockDefinition = <TSource extends IRCodeBlock>(
   definition: CodeBlockDefinition<TSource>,
   contentKey: CompositeCoreProviderKey,
@@ -26,7 +29,10 @@ export const createCodeBlockDefinition = <TSource extends IRCodeBlock>(
     },
   });
 
-/** 在有效 Core Theme 下组合内容与唯一 Block 根 */
+/**
+ * 在有效 Core Theme 下组合内容与唯一 Block 根
+ * @template TSource 代码块定义 schema 校验后交给内容组合回调的类型
+ */
 export const createCodeBlockContentDefinition = <TSource extends IRCodeBlock>(
   definition: CodeBlockDefinition<TSource>,
   key: CompositeCoreProviderKey,

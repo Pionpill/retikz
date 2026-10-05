@@ -38,9 +38,9 @@ export type ProcessingResultHostProps = Readonly<{
   animate: boolean;
   /** 静态动画采样时刻 */
   snapshotAt?: number;
-  /** easing registry */
+  /** 缓动能力注册表 */
   easings?: EasingRegistry;
-  /** animation property registry */
+  /** 动画属性能力注册表 */
   animationProperties?: AnimationPropertyRegistry;
   /** 动画控制器出口 */
   animationRef?: Ref<AnimationControls | null>;

@@ -8,6 +8,7 @@ import { ChartThemeDefinitionsContext, useChartThemeDefinitions } from '../share
 export type ChartThemeProviderProps = Readonly<{
   /** 注入当前具体 chartType provider 可见的 named Theme definitions */
   themeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
+  /** 在当前 Chart 主题定义上下文中呈现的子内容 */
   children?: ReactNode;
 }>;
 

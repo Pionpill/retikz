@@ -76,6 +76,7 @@ export type EndpointArrowMarkEmission = {
   boundaryOuterInset: number;
 };
 
+/** 物化端点箭头，并按重叠比例插值路径收缩量与边界外缘内缩量 */
 export const emitEndpointArrowMark = (
   resolution: ArrowMarkResolution,
   endpointOverlap: number,
@@ -175,9 +176,13 @@ const precedingMoveIndex = (commands: ReadonlyArray<PathCommand>, commandIndex: 
 
 /** 箭头收缩改写所需上下文 */
 export type ApplyArrowShrinksContext = {
+  /** 起点收缩系数，乘 strokeWidth 得到实际距离 */
   shrinkStart: number;
+  /** 终点收缩系数，乘 strokeWidth 得到实际距离 */
   shrinkEnd: number;
+  /** 宿主描边宽度，用于换算箭头收缩距离 */
   strokeWidth: number;
+  /** 统一改写端点的坐标精度 */
   round: (n: number) => number;
 };
 

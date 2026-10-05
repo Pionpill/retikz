@@ -25,9 +25,9 @@ export type TableCellTranslation = Readonly<{
 
 /** 由 canonical tracks 计算 spanning Cell box 的输入 */
 export type ComputeTableCellBoxInput = Readonly<{
-  /** canonical row tracks */
+  /** 规范化后的行轨道 */
   rows: ReadonlyArray<TableTrackLayout>;
-  /** canonical column tracks */
+  /** 规范化后的列轨道 */
   columns: ReadonlyArray<TableTrackLayout>;
   /** 起始 canonical row index */
   rowIndex: number;

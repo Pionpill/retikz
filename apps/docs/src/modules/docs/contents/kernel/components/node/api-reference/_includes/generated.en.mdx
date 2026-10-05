@@ -175,7 +175,7 @@ export type CoordinateProps = {
 ### node / InputNode
 
 - `node`: <ApiSourceLink label={"node"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={13}>Create node authoring input with identity declared by id in the configuration</ApiSourceLink>
-- `InputNode`: <ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={52}>Node authoring input</ApiSourceLink>
+- `InputNode`: <ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={53}>Node authoring input</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -267,7 +267,7 @@ export type InputCoordinate = IRCoordinate & {
 ### InputNodeLabel
 
 <p>
-  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={46}>
+  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={47}>
     Node label authoring input
   </ApiSourceLink>
 </p>
@@ -306,7 +306,7 @@ export type InputNodeLabel = Omit<IRNodeLabel, 'position'> & {
   <ApiSourceLink
     label={'InputNodeLabelBoundaryPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={32}
+    startLine={33}
   >
     Node label boundary-position authoring input
   </ApiSourceLink>
@@ -355,7 +355,7 @@ export type InputNodeLabelBoundaryPosition = Omit<
   <ApiSourceLink
     label={'InputNodeLabelPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={41}
+    startLine={42}
   >
     Node label position authoring input
   </ApiSourceLink>
@@ -646,7 +646,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 ### IRNodeLayout
 
 <p>
-  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={46}>
+  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={47}>
     View source
   </ApiSourceLink>
 </p>
@@ -853,7 +853,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   <ApiSourceLink
     label={'BUILTIN_BOUNDARIES'}
     path={'packages/kernel/core/src/providers/boundary/definitions.ts'}
-    startLine={115}
+    startLine={119}
   >
     Built-in boundary provider definitions
   </ApiSourceLink>

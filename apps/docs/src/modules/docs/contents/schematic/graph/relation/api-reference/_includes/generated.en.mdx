@@ -77,7 +77,7 @@ export type RelationInputEmbedProps = WithoutInputType<InputRelation>;
 ### normalizeRelation / InputRelation
 
 - `normalizeRelation`: <ApiSourceLink label={"normalizeRelation"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={57}>Normalize endpoints and optional Way sugar into a Relation Source record with a direct route</ApiSourceLink>
-- `InputRelation`: <ApiSourceLink label={"InputRelation"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={53}>Vanilla authoring input for Relation</ApiSourceLink>
+- `InputRelation`: <ApiSourceLink label={"InputRelation"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={56}>Vanilla authoring input for Relation</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -112,7 +112,7 @@ export type InputRelation = InputRelationFields & (InputRelationRoute | InputRel
   <ApiSourceLink
     label={'InputRelationEndpoint'}
     path={'packages/schematic/graph-vanilla/src/normalize/graph/types.ts'}
-    startLine={24}
+    startLine={27}
   >
     Vanilla endpoint input: an id string or a complete NodeTarget
   </ApiSourceLink>
@@ -128,7 +128,7 @@ export type InputRelationEndpoint = string | RelationCreateOptions['source'];
   <ApiSourceLink
     label={'InputRelationRoute'}
     path={'packages/schematic/graph-vanilla/src/normalize/graph/types.ts'}
-    startLine={33}
+    startLine={36}
   >
     Relation authoring input using canonical Core route steps
   </ApiSourceLink>
@@ -170,7 +170,7 @@ export type InputRelationRoute = Readonly<{
   <ApiSourceLink
     label={'InputRelationWay'}
     path={'packages/schematic/graph-vanilla/src/normalize/graph/types.ts'}
-    startLine={43}
+    startLine={46}
   >
     Relation authoring input using Core Way DSL, converted to route during Vanilla normalization
   </ApiSourceLink>
@@ -626,7 +626,7 @@ export type RelationKindDefinition = Readonly<{
   <ApiSourceLink
     label={'RelationPredicateDefinition'}
     path={'packages/schematic/graph/src/contract/relation/types.ts'}
-    startLine={57}
+    startLine={60}
   >
     Parameter-erased definition stored by the Relation predicate registry
   </ApiSourceLink>
@@ -667,7 +667,7 @@ export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodTy
   <ApiSourceLink
     label={'RelationPredicateDefinitionInput'}
     path={'packages/schematic/graph/src/contract/relation/types.ts'}
-    startLine={41}
+    startLine={44}
   >
     Type-safe authoring definition for a Relation predicate
   </ApiSourceLink>
@@ -679,15 +679,15 @@ export type RelationPredicateDefinition = RelationPredicateDefinitionInput<ZodTy
 
 <ApiTable>
 
-| Member                       | Type                                                                     | Default | Description                                                                |
-| ---------------------------- | ------------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------- |
-| `TSchema` (Type parameter)   | `extends ZodType<JsonObject>`                                            | —       | —                                                                          |
-| `readonly description`       | `string`                                                                 | —       | Stable semantic description for authors and tools                          |
-| `readonly kinds?`            | `ReadonlyArray<string>`                                                  | —       | Optional allowed Relation kind keys; omission allows all kinds of the role |
-| `readonly name`              | `string`                                                                 | —       | Globally unique predicate definition name                                  |
-| `readonly paramsSchema`      | `TSchema`                                                                | —       | JSON object schema for Source params                                       |
-| `readonly resolveStructure?` | `(params: ZodOutput<TSchema>) => IRGraphRelationStructureTokenOverrides` | —       | Resolve sparse structure overrides from validated canonical parameters     |
-| `readonly role`              | `string`                                                                 | —       | Relation role owning this predicate                                        |
+| Member                       | Type                                                                     | Default | Description                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `TSchema` (Type parameter)   | `extends ZodType<JsonObject>`                                            | —       | JSON object schema validating predicate arguments; its output type is passed to the structure resolution callback |
+| `readonly description`       | `string`                                                                 | —       | Stable semantic description for authors and tools                                                                 |
+| `readonly kinds?`            | `ReadonlyArray<string>`                                                  | —       | Optional allowed Relation kind keys; omission allows all kinds of the role                                        |
+| `readonly name`              | `string`                                                                 | —       | Globally unique predicate definition name                                                                         |
+| `readonly paramsSchema`      | `TSchema`                                                                | —       | JSON object schema for Source params                                                                              |
+| `readonly resolveStructure?` | `(params: ZodOutput<TSchema>) => IRGraphRelationStructureTokenOverrides` | —       | Resolve sparse structure overrides from validated canonical parameters                                            |
+| `readonly role`              | `string`                                                                 | —       | Relation role owning this predicate                                                                               |
 
 </ApiTable>
 
@@ -759,7 +759,7 @@ export type RelationRoleDefinition = Readonly<{
 ### GraphStatus
 
 <p>
-  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={58}>
+  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={59}>
     Diagram semantic statuses shared by Graph Entity and Relation
   </ApiSourceLink>
 </p>
@@ -781,7 +781,7 @@ export type GraphStatus = ValueOf<typeof GraphStatus>;
   <ApiSourceLink
     label={'RelationDirection'}
     path={'packages/schematic/graph/src/schemas/relation/constants.ts'}
-    startLine={3}
+    startLine={4}
   >
     Relation direction vocabulary
   </ApiSourceLink>
@@ -801,7 +801,7 @@ export type RelationDirection = ValueOf<typeof RelationDirection>;
 ### RelationRole
 
 <p>
-  <ApiSourceLink label={'RelationRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={44}>
+  <ApiSourceLink label={'RelationRole'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={45}>
     Built-in Relation semantic roles
   </ApiSourceLink>
 </p>

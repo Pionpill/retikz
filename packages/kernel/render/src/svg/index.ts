@@ -1,4 +1,4 @@
-/**
+/*
  * @retikz/render/svg 公开 API —— framework-neutral SVG descriptor
  *
  * 纯函数，零框架运行时：Scene → `SvgNode` 描述树（`buildSvgDocument` / `buildSvgFragment`）

@@ -32,7 +32,10 @@ import type { LowerPlotsOptions } from './types';
 export const plotMarkTransformsOf = (mark: IRPlotMarkOperation): Array<IRDataTransformDeclaration> =>
   (mark as { transform?: Array<IRDataTransformDeclaration> }).transform ?? [];
 
-/** 全部作用域先固定实现，再绑定本次根与实际分区进行单次计算 */
+/**
+ * 全部作用域先固定实现，再绑定本次根与实际分区进行单次计算
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const preparePlotData = async <TSource = never>(
   spec: IRPlot,
   request: PlotDataPreparationOptions<TSource>,

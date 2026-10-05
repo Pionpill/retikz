@@ -25,7 +25,10 @@ export { BUILTIN_ROW_SELECTORS } from './selectors';
 export { BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS } from './reducers';
 export { BUILTIN_ROW_SELECTOR_IMPLEMENTATIONS } from './selectors';
 
-/** 注册独立统计计算，不以 kind 猜测语义等价 */
+/**
+ * 注册独立统计计算，不以 kind 猜测语义等价
+ * @template TImplementation 自定义归约实现类型，默认限定同步数据行结果
+ */
 export const resolveStatisticsReducerImplementationRegistry = <
   TImplementation extends AnyStatisticsReducerImplementation = AnySynchronousStatisticsReducerImplementation,
 >(
@@ -38,7 +41,10 @@ export const resolveStatisticsReducerImplementationRegistry = <
     extractStatisticOperation,
   );
 
-/** 注册独立选择计算 */
+/**
+ * 注册独立选择计算
+ * @template TImplementation 自定义行选择实现类型，默认限定同步选择结果
+ */
 export const resolveRowSelectorImplementationRegistry = <
   TImplementation extends AnyRowSelectorImplementation = AnySynchronousRowSelectorImplementation,
 >(

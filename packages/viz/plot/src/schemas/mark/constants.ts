@@ -11,7 +11,7 @@ export const PlotMark = {
   Point: 'point',
   /** 维度 mark / 1D：有序点连成的一维轨迹（折线 / 闭合轮廓） */
   Path: 'path',
-  /** 维度 mark / 2D：边界围出的可填充区域（面积 / 填充雷达 / 置信带） */
+
   /** 维度 mark / 区间积：各位置 role 正交区间积，经坐标系投影成段 / 矩形 / 扇区 / cell（柱 / histogram / heatmap / 径向柱 / 饼环） */
   Interval: 'interval',
   /** 特殊 mark / relation：source→target 关系路径，降低为 core Path */
@@ -21,7 +21,7 @@ export const PlotMark = {
 } as const;
 
 /**
- * PathMark 相邻点连接方式。
+ * PathMark 相邻点连接方式
  * @description 面向图表层的曲线类型；底层会下沉为 core Path 的 line / cubic / smooth steps
  */
 export const PathCurve = {
@@ -48,7 +48,7 @@ export const PathCurve = {
 } as const;
 
 /**
- * PathMark 闭合策略关键字。
+ * PathMark 闭合策略关键字
  * @description cycle 首尾闭合；baseline 回到常量基线；stack 回到逐行基线字段，适合堆叠面积
  */
 export const PathClosureKind = {
@@ -60,6 +60,7 @@ export const PathClosureKind = {
   Stack: 'stack',
 } as const;
 
+/** 关系图元采用的路径或带状几何形态 */
 export const RelationGeometryKind = {
   Path: 'path',
   Ribbon: 'ribbon',
@@ -122,6 +123,7 @@ export const IntervalBoundKind = {
   Full: 'full',
 } as const;
 
+/** 视觉值来自字段、常量或其它显式映射的判别方式 */
 export const MarkValueKind = {
   /** 从数据字段解析视觉值 */
   Field: 'field',

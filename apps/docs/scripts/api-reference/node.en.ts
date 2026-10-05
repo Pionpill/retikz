@@ -1,5 +1,6 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  能力提供者的注册键: 'provider key',
   '节点中心位置；省略时在 Core 解析为当前局部坐标系的原点':
     'Node center position; Core resolves an omitted value to the origin of the current local coordinate system',
   '结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning':

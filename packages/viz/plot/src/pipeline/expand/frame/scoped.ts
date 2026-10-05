@@ -46,21 +46,42 @@ import type { LowerPlotsOptions } from '../types';
 export type ScopedFramesResolveContext = {
   /** 一次 lowering 内的共享留白状态 */
   markPadding?: MarkPaddingContext;
+  /** 当前待下沉的 Plot 源描述 */
   node: IRPlot;
+  /** 根级变换后的数据行与字段模型 */
   dataView: DataView;
+  /** 当前 Plot 的绘制宽度 */
   width: number;
+  /** 当前 Plot 的绘制高度 */
   height: number;
+  /** 当前下沉使用的运行时能力与覆盖选项 */
   options: LowerPlotsOptions;
+  /** 本次下沉的数据来源追踪上下文 */
   provenance?: ProvenanceContext;
+  /** 按类型索引的有效尺度定义 */
   scaleRegistry: Map<string, AnyScaleDefinition>;
+  /** 各 mark 局部变换后的有效数据视图 */
   markDataViews: Array<MarkDataView>;
+  /** 组合区域间距与外边距配置 */
   compositionLayout?: CompositionLayout;
+  /** 各维度的共享尺度与坐标轴策略 */
   compositionResolve?: CompositionResolve;
+  /** 需要展开的分面排列声明 */
   compositionFacets: Array<FacetGrid>;
+  /** 需要装配的共享轨道排列声明 */
   compositionScaffolds: Array<SharedScaffold>;
-  compositionPolicyContext: { hasFacets: boolean; hasScaffolds: boolean };
+  /** 影响组合默认策略的排列存在性 */
+  compositionPolicyContext: {
+    /** 组合中是否存在分面排列 */
+    hasFacets: boolean;
+    /** 组合中是否存在共享轨道排列 */
+    hasScaffolds: boolean;
+  };
+  /** 已确定的坐标视图及默认选择 */
   coordinateScopes: CoordinateScopeRegistry;
+  /** 当前 Plot 的完整辅助图元声明 */
   allGuides: Array<IRPlotGuide>;
+  /** 已应用组合间距偏移的辅助图元声明 */
   allGuidesWithCompositionGap: Array<IRPlotGuide>;
   /** placement containment 对各 coordinate scope 提出的 role range 收窄 */
   placementRoleRangeOverridesByScope?: ReadonlyMap<string, Partial<Record<DimensionRole, readonly [number, number]>>>;
@@ -68,17 +89,25 @@ export type ScopedFramesResolveContext = {
 
 /** scoped/scaffold frame 解析结果及后续 facet/mark lowering 需要的 scope 查询 */
 export type ScopedFramesResolution = {
+  /** 完成解析的坐标视图注册表 */
   coordinateScopes: CoordinateScopeRegistry;
+  /** 按视图身份索引的坐标作用域 */
   scopeById: Map<string, CoordinateScopeRegistryEntry>;
+  /** 生成写入输出图元的坐标作用域上下文 */
   scopeContextOf: (scope: CoordinateScopeRegistryEntry) => JsonObject;
+  /** 结合显式配置与组合种类确定指定维度的轴展示策略 */
   axisPolicyFor: (
     resolve: CompositionResolve | undefined,
     context: { hasFacets: boolean; hasScaffolds: boolean },
     dimension: DimensionRole,
   ) => CompositionAxisPolicy;
+  /** 按坐标视图身份索引的有效坐标帧 */
   frameByScope: Map<string, CoordinateFrame>;
+  /** 下沉后承载网格线的场景作用域 */
   gridLayers: Array<IRScope>;
+  /** 下沉后承载坐标轴的场景作用域 */
   axisLayers: Array<IRScope>;
+  /** 布局计算得到的绘图区矩形 */
   plotArea: Rect;
 };
 

@@ -14,8 +14,11 @@ export type RibbonEndpointGeometry = {
   center: IRPosition;
   /** 端面外向单位轴 */
   outward: Vector2;
+  /** 应用端帽延伸后与左侧边连接的端点 */
   left: IRPosition;
+  /** 应用端帽延伸后与右侧边连接的端点 */
   right: IRPosition;
+  /** 连接两侧边并形成端帽的有序路径命令 */
   commands: Array<PathCommand>;
 };
 

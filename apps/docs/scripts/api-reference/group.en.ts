@@ -2,6 +2,9 @@ import { translateEntityApiReference } from './entity.en';
 
 /** Group 专属说明译文 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  可见分组包含的有序绘制子内容: 'Ordered drawing content contained in the visible group',
+  '可省略的 Group 作者输入判别值': 'Optional discriminator for Group authoring input',
+  '可 JSON 序列化的图分组组合节点输入': 'JSON-safe Graph Group Source composite',
   '将 Group Source 接入 React 编写流程': 'Integrate Group Source into React authoring',
   'Group Source 的 React 编写参数': 'React authoring props for Group Source',
   '任意 Kernel 或 Tier 2 semantic children': 'Arbitrary Kernel or Tier 2 semantic children',

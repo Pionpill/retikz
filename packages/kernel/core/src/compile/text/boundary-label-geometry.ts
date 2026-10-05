@@ -35,12 +35,19 @@ export const labelProjectedHalfExtent = (vector: Position, width: number, height
 
 /** 共享边界标签布局输入，向量均为宿主局部单位轴 */
 export type BoundaryLabelBoxInput = {
+  /** 决定内外放置、对齐及旋转的边界标签配置 */
   label: IRBoundaryLabel;
+  /** 宿主局部坐标中的边界采样点 */
   point: Position;
+  /** 采样点处朝外的单位法向量 */
   outward: Position;
+  /** 采样点处沿边界的单位切向量 */
   tangent: Position;
+  /** 已测量的标签文字框宽度 */
   width: number;
+  /** 已测量的标签文字框高度 */
   height: number;
+  /** 标签文字框与宿主边界之间的净距离 */
   distance: number;
 };
 

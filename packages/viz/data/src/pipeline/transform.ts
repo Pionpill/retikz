@@ -242,13 +242,27 @@ export const collectTransformFields = (
 };
 
 /** 同步来源执行选项 */
-export type ApplyTransformsWithLineageOptions = ApplyTransformsOptions & Readonly<{ lineage?: DataLineageOptions }>;
+export type ApplyTransformsWithLineageOptions = ApplyTransformsOptions &
+  Readonly<{
+    /** 控制变换事件记录的启用方式、预算与接收器 */
+    lineage?: DataLineageOptions;
+  }>;
 
 /** 同步行执行的事件记录 */
-export type ApplyTransformsWithLineageResult = Readonly<{ rows: Array<ExternalRow>; lineage: DataLineageRun }>;
+export type ApplyTransformsWithLineageResult = Readonly<{
+  /** 完成变换后的数据行 */
+  rows: Array<ExternalRow>;
+  /** 本次变换执行产生的事件记录 */
+  lineage: DataLineageRun;
+}>;
 
 /** 同步完整视图与事件记录 */
-export type ApplyTransformsToDataViewWithLineageResult = Readonly<{ dataView: DataView; lineage: DataLineageRun }>;
+export type ApplyTransformsToDataViewWithLineageResult = Readonly<{
+  /** 完成变换后的数据视图 */
+  dataView: DataView;
+  /** 本次变换执行产生的事件记录 */
+  lineage: DataLineageRun;
+}>;
 
 /** 一次同步执行并返回实际来源事件 */
 export const applyTransformsToDataViewWithLineage = (

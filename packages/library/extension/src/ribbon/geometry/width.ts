@@ -19,12 +19,17 @@ export const assertFiniteWidth = (width: number, source: string): number => {
 
 /** 按指定插值模式在两个宽度值之间取样 */
 export type InterpolateInput = {
+  /** 区间起点的宽度值 */
   from: number;
+  /** 区间终点的宽度值 */
   to: number;
+  /** 调用者提供的区间内比例，本函数不裁剪到 0 到 1 */
   t: number;
+  /** 线性、三次平滑或保持起点值的阶梯插值方式 */
   mode: 'linear' | 'smooth' | 'step';
 };
 
+/** 按给定区间比例插值宽度；step 始终取起点值，其他模式不裁剪比例 */
 export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => {
   if (mode === 'step') return from;
   const u = mode === 'smooth' ? smoothstep(t) : t;

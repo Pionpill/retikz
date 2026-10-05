@@ -622,7 +622,7 @@ const explicitRoute = (
   return { steps: applyStepLabel(steps, resolveLabel(mark.path?.label, row)), coordinates };
 };
 
-/** 把 relation mark 下沉为 path 或 ribbon core IR。 */
+/** 把 relation mark 下沉为 path 或 ribbon core IR */
 export const lowerRelation = (
   mark: IRPlotRelationMark,
   rows: Array<ExternalRow>,
@@ -770,7 +770,7 @@ const collectRelationStyleFields = (style: IRPlotRelationPrimitiveStyle | undefi
   for (const value of Object.values(style ?? {})) fields.addChannel(value);
 };
 
-/** 内置 relation mark definition。 */
+/** 内置 relation mark definition */
 export const relationMarkDefinition: MarkDefinition<IRPlotRelationMark> = {
   schema: RelationMarkSchema,
   domainPadding: (mark, rows, roles) =>

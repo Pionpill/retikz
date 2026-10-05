@@ -39,7 +39,10 @@ export type IRArrowMark = ZodInfer<typeof ArrowMarkSchema>;
 export type IRPathBase = ZodInfer<typeof PathBaseSchema>;
 
 /** 路径：由若干 step 动作（move/line/...）组成并携带 children */
-export type IRPath = Omit<IRPathBase, 'children'> & { children: Array<ZodInfer<typeof StepSchema>> };
+export type IRPath = Omit<IRPathBase, 'children'> & {
+  /** 按执行顺序排列的路径步骤 */
+  children: Array<ZodInfer<typeof StepSchema>>;
+};
 
 export type IRPathStyle = ZodInfer<typeof PathStyleSchema>;
 

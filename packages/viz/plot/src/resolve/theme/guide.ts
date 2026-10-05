@@ -194,7 +194,7 @@ const mergeAxisGrid = (
 };
 
 /**
- * 合并 axis guide 的 Plot defaults。
+ * 合并 axis guide 的 Plot defaults
  * @description 合并 line/tick line/tick label/title 的视觉字段，以及 grid 视觉与 domain endpoint 默认；ticks.values、ticks.count、tickLabels.format、title.text 和 grid projection 保持 local 语义
  */
 export const resolveAxisGuideTokens = (theme: EffectivePlotGuideTheme, guide: IRPlotAxisGuide): IRPlotAxisGuide => ({
@@ -240,7 +240,7 @@ export const resolveAxisGuideTokens = (theme: EffectivePlotGuideTheme, guide: IR
 });
 
 /**
- * 合并 legend guide 的 Plot defaults。
+ * 合并 legend guide 的 Plot defaults
  * @description position、orient、channel、scale、ticks、tickLabels.format 等语义字段不参与合并
  */
 export const resolveLegendGuideTokens = (

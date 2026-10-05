@@ -132,10 +132,10 @@ export const RegressionChartSchema = createChartSourceSchema(ChartFamily.Point, 
 /** Regression Chart 精确 Source IR */
 export type IRRegressionChart = ZodInfer<typeof RegressionChartSchema>;
 
-/** Regression recipe Source IR */
+/** 回归配方的输入 IR */
 export type IRRegressionChartRecipe = ZodInfer<typeof RegressionChartRecipeSchema>;
 
-/** Regression exact encoding plan */
+/** 回归标记的精确编码计划 */
 export type IRRegressionChartEncodings = ZodInfer<typeof RegressionChartEncodingsSchema>;
 
 /** Regression 拟合与外观 properties */
@@ -147,7 +147,7 @@ export type IRRegressionPointProperties = ZodInfer<typeof RegressionPointPropert
 /** Regression 趋势 Path properties */
 export type IRRegressionTrendProperties = ZodInfer<typeof RegressionTrendPropertiesSchema>;
 
-/** Regression authored mark Source IR */
+/** 回归标记的作者输入 IR */
 export type IRRegressionMark = ZodInfer<typeof RegressionChartMarkSchema>;
 
 /** Regression 额外趋势配置 */

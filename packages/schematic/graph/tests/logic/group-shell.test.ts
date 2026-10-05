@@ -10,7 +10,9 @@ import * as Graph from '../../src';
 import { compileInHarness, naturalProposal, primitivesOf } from './test-utils';
 
 type GroupShellMetrics = Readonly<{
+  /** 分组外壳要求的最小宽高 */
   minimumSize: Readonly<Pick<BoundsRect, 'width' | 'height'>>;
+  /** 正文到分组外壳四边的内缩量 */
   contentInsets: Readonly<BoundsInsets>;
 }>;
 

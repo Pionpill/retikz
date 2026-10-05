@@ -18,7 +18,11 @@ export type RegressionModel = Readonly<{
   predict: (x: number) => number;
 }>;
 
-/** 内置与外部拟合共享的运行时契约 */
+/**
+ * 内置与外部拟合共享的运行时契约
+ * @template TSource 拟合方法 schema 接受的原始声明类型
+ * @template TOperation schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致
+ */
 export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressionMethod, TOperation = TSource> = {
   /** 精确参数 schema，kind 必须是非空字面量 */
   schema: ZodType<TOperation, TSource>;
@@ -26,7 +30,11 @@ export type RegressionDefinition<TSource extends IRRegressionMethod = IRRegressi
   validateExtent?: (operation: TOperation, extent: readonly [number, number]) => void;
 };
 
-/** 保留 schema 与回调的参数推断 */
+/**
+ * 保留 schema 与回调的参数推断
+ * @template TSource 拟合方法 schema 接受的原始声明类型
+ * @template TOperation schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致
+ */
 export const defineRegression = <TSource extends IRRegressionMethod, TOperation = TSource>(
   definition: RegressionDefinition<TSource, TOperation>,
 ): RegressionDefinition<TSource, TOperation> => definition;
@@ -39,7 +47,12 @@ export type AnyRegressionDefinition = {
   validateExtent?: (operation: never, extent: readonly [number, number]) => void;
 };
 
-/** 拟合的独立计算实现 */
+/**
+ * 拟合的独立计算实现
+ * @template TSource 拟合方法 schema 接受的原始声明类型
+ * @template TOperation schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致
+ * @template TResult 拟合回调返回的模型或模型 Promise 类型
+ */
 export type RegressionImplementation<
   TSource extends IRRegressionMethod = IRRegressionMethod,
   TOperation = TSource,
@@ -51,7 +64,12 @@ export type RegressionImplementation<
   fit: (pairs: ReadonlyArray<RegressionPair>, operation: TOperation) => TResult;
 }>;
 
-/** 保留 schema 与拟合参数关联 */
+/**
+ * 保留 schema 与拟合参数关联
+ * @template TSource 拟合方法 schema 接受的原始声明类型
+ * @template TOperation schema 解析后传给拟合及范围校验回调的参数类型，默认与输入声明一致
+ * @template TResult 拟合回调返回的模型或模型 Promise 类型
+ */
 export const defineRegressionImplementation = <
   TSource extends IRRegressionMethod,
   TOperation,

@@ -11,7 +11,10 @@ export type IRClipFillRule = ClipFillRule;
 export type IRRectClip = ZodInfer<typeof RectClipSchema>;
 
 /** 自定义裁切 IR 类型：`kind` 对应 compile options 中注册的 clip provider */
-export type IRCustomClip = JsonObject & { kind: string };
+export type IRCustomClip = JsonObject & {
+  /** 选择编译选项中注册的裁剪 provider */
+  kind: string;
+};
 
 /** 裁切 IR 类型：Core 仅提供基础分支，其余 kind 通过 provider 扩展 */
 export type IRClip = IRRectClip | IRCustomClip;

@@ -50,7 +50,7 @@ const allScopes = (root: IRScope): Array<IRScope> => {
 };
 
 /**
- * 辨认 legend 内的 swatch / glyph Node（色块 / ramp 条 / size 圆点 / shape glyph）与标签 Node。
+ * 辨认 legend 内的 swatch / glyph Node（色块 / ramp 条 / size 圆点 / shape glyph）与标签 Node
  * @description legend 矩形改用 core Node（shape rectangle，修 PathSchema.min(2) 违规），不再是 Path。
  *   swatch Node 自带 shape 且无 text；label Node 有 text
  */

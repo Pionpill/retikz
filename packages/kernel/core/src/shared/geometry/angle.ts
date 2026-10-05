@@ -27,7 +27,7 @@ export const normalizeSignedDegrees = (degrees: number): number => {
 };
 
 /**
- * 规范化起止角：保证 start <= end <= start + 360，并给出中分角。
+ * 规范化起止角：保证 start <= end <= start + 360，并给出中分角
  *
  * @description 角度沿屏幕系（角度递增 = 顺时针）从 start 扫到 end；end < start 视为跨过 360 度
  */

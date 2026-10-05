@@ -95,7 +95,7 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
 };
 
 /**
- * 建 scheme 解析器：先查内置 SCHEME_INTERPOLATORS、再查自定义 options.colorSchemes，未命中 throw。
+ * 建 scheme 解析器：先查内置 SCHEME_INTERPOLATORS、再查自定义 options.colorSchemes，未命中 throw
  * @description interpolator 函数不进 IR；IR 只存 scheme 名串，求值期经此解析为函数（含自定义命名配色）
  */
 export const makeColorSchemeResolver =
@@ -132,7 +132,7 @@ const DEFAULT_DISCRETE_SCHEME = PlotColorScheme.Viridis;
 /**
  * 从命名 scheme 等距采样 count 个离散色（[0,1] 上均匀取点喂 interpolator，归一化为 hex）
  * @description 离散化 scale（quantize / threshold / quantile）的档色单一来源：count 档 → count 个色。
- *   count==1 取 scheme 中点（0.5）；count≥2 端点含 0 与 1（首末档取 scheme 两端）。与 sequential 连续采样同源 interpolator。
+ *   count==1 取 scheme 中点（0.5）；count≥2 端点含 0 与 1（首末档取 scheme 两端）。与 sequential 连续采样同源 interpolator
  */
 export const sampleSchemeColors = (
   scheme: string | undefined,

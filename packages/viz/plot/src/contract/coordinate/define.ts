@@ -30,7 +30,7 @@ export type CoordinatePlotArea = {
 };
 
 /**
- * 坐标系 definition 的解析结果。
+ * 坐标系 definition 的解析结果
  * @description frame 负责 mark 投影；plotArea 供布局 / clipping / locator 使用；gridLayers 与 axisLayers
  *   是坐标系在解析阶段同步下沉出的 guide 层，避免 mark 与 guide 使用不同的临时投影状态
  */
@@ -49,9 +49,10 @@ export type CoordinateResolution = {
 export type CoordinateScaleNames = Readonly<Partial<Record<DimensionRole, string>>>;
 
 /**
- * 坐标 Definition 的位置 scale binding 契约。
+ * 坐标 Definition 的位置 scale binding 契约
  * @description read 把 operation 自有字段投影为统一 role；bind 将统一 role 写回 operation 自有字段。
  *   省略该契约时，Plot 默认读取和写入与 role 同名的 operation 字段
+ * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
  */
 export type CoordinateScaleBinding<TCoordinateOperation extends IRPlotCoordinateOperation> = Readonly<{
   /** 从坐标 operation 读取按 role 命名的 scale */
@@ -61,11 +62,11 @@ export type CoordinateScaleBinding<TCoordinateOperation extends IRPlotCoordinate
 }>;
 
 /**
- * 坐标系 definition.resolve 的共享上下文。
+ * 坐标系 definition.resolve 的共享上下文
  * @description 这里暴露的是坐标系无关的能力：画布尺寸、数据取值、scale 解析、guide 下沉与 provenance。
  *   definition 不应该绕过这些 helper 另建平行数据 / scale 语义
  */
-/** 坐标 definition 由 provider 消费的窄运行时上下文 */
+
 export type CoordinateDefinitionResolveContext = {
   /** 画布宽度 */
   width: number;
@@ -94,7 +95,7 @@ export type CoordinateDefinitionResolveContext = {
     role: DimensionRole,
     opts?: { axis?: 'primary' | 'secondary'; includeBaseline?: boolean },
   ) => Array<unknown>;
-  /** Override axis ticks for marks whose role position is derived from interval bounds. */
+  /** 为角色位置由区间边界推导的标记覆盖坐标轴刻度 */
   collectAxisTicks: (role: DimensionRole) => TickSet | undefined;
   /** 解析轴 / 网格候选刻度；由 resolve 层注入，provider 不直接依赖 guide resolver */
   resolveGuideTicks: (
@@ -142,8 +143,9 @@ export type CoordinateDefinitionResolveContext = {
 };
 
 /**
- * 坐标系运行时定义。
+ * 坐标系运行时定义
  * @description definition 是含函数的运行时对象，不进入 JSON IR；IR 只保存 `{ type, ...config }` 形态的 coordinate operation
+ * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
  */
 export type CoordinateDefinition<TCoordinateOperation extends IRPlotCoordinateOperation = IRPlotCoordinateOperation> = {
   /** 位置角色的输出空间边界度量能力 */
@@ -167,7 +169,10 @@ type CoordinateScaleBindingDefinition = Readonly<{
   }>;
 }>;
 
-/** 按 Definition 契约读取 coordinate operation 的位置 scale 名称 */
+/**
+ * 按 Definition 契约读取 coordinate operation 的位置 scale 名称
+ * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
+ */
 export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   definition: CoordinateScaleBindingDefinition,
   operation: TCoordinateOperation,
@@ -185,8 +190,9 @@ export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
 };
 
 /**
- * 按 Definition 契约把位置 scale 名称写回 coordinate operation。
+ * 按 Definition 契约把位置 scale 名称写回 coordinate operation
  * @description 自定义 hook 与默认同名字段路径都必须再次通过 Definition schema，避免 Chart 组装出 Plot 无法消费的 operation
+ * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
  */
 export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   definition: CoordinateScaleBindingDefinition,
@@ -210,11 +216,12 @@ export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
 };
 
 /**
- * 定义一个坐标系 definition。
+ * 定义一个坐标系 definition
  * @description 这是坐标系扩展的唯一注册单元：schema 决定 IR 中允许的 coordinate operation，
  *   roles 决定 mark 必填位置通道，resolve 把 JSON operation 解析成运行时 frame 与 guide 层。内置坐标系和
- *   自定义坐标系都应通过这个对象进入 registry，避免内置白名单与扩展补丁接口分叉。
+ *   自定义坐标系都应通过这个对象进入 registry，避免内置白名单与扩展补丁接口分叉
  * @remarks 当前 helper 只做 `CoordinateDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook
+ * @template TCoordinateOperation 坐标系 schema 解析的操作类型，关联尺度绑定与坐标解析
  */
 export const defineCoordinate = <TCoordinateOperation extends IRPlotCoordinateOperation>(
   def: CoordinateDefinition<TCoordinateOperation>,
@@ -237,7 +244,7 @@ export type CreateCoordinateFrameOptions = {
 };
 
 /**
- * 建通用坐标帧。
+ * 建通用坐标帧
  * @description 把 definition 注册 type、roles 与 projectRoles 包成 CoordinateFrame。`type` 会保留调用方注册的真实判别值，
  *   不会压成 `custom`；point/path/region 等按 `projectRoles` 投影。第三参 options 逐项声明额外能力：
  *   roleScales 允许 guide / interval 构造读取 scale，mapRoles / projectMappedRoles 开启两段 position projection，
@@ -263,7 +270,7 @@ export const createCoordinateFrame = (
 });
 
 /**
- * registry 内部使用的宽类型。
+ * registry 内部使用的宽类型
  * @description registry 需要存放不同 operation 泛型的 definition；取出后由具体 schema parse 收窄，因此 resolve 入参在表内用 never 防止误调
  */
 export type AnyCoordinateDefinition = Omit<
@@ -274,7 +281,9 @@ export type AnyCoordinateDefinition = Omit<
   schema: ZodType;
   /** 泛型擦除后的可选 scale binding；调用前必须先由 schema 收窄 operation */
   scaleBinding?: Readonly<{
+    /** 读取坐标操作当前声明的位置尺度名称 */
     read: (operation: never) => CoordinateScaleNames;
+    /** 把选中的位置尺度名称写入坐标操作并返回新描述 */
     bind: (operation: never, scaleNames: CoordinateScaleNames) => IRPlotCoordinateOperation;
   }>;
   /** 内部宽类型占位；真正调用前必须用该 definition.schema 解析 operation */

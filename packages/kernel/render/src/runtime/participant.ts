@@ -75,8 +75,8 @@ type RetainedRenderParticipantOptionsBase<TComposites extends ReadonlyArray<AnyC
   /** 同一 runtime 使用的 Core Computation */
   coreComputation: CoreComputationDefinition<TComposites>;
   /**
-   * 从同一 candidate 的 Core 输出解析有序只读 Scene 图层
-   * @default 冻结空数组
+   * 从同一 candidate 的 Core 输出解析有序只读 Scene 图层；省略回调时使用冻结的空图层集合
+   * @default EMPTY_READONLY_LAYERS
    */
   resolveReadonlyLayers?: (coreOutput: CoreComputationOutput<TComposites>) => ReadonlyArray<RenderReadonlyLayer>;
   /**
@@ -86,20 +86,29 @@ type RetainedRenderParticipantOptionsBase<TComposites extends ReadonlyArray<AnyC
   mountMode?: 'create' | 'adopt';
 }>;
 
-/** Retained render participant 的判别输入 */
+/**
+ * Retained render participant 的判别输入
+ * @template TComposites Core 计算注册的组合定义集合，决定只读图层回调可读取的产物类型
+ */
 export type CreateRetainedRenderParticipantOptions<TComposites extends ReadonlyArray<AnyCompositeDefinition>> =
   | (RetainedRenderParticipantOptionsBase<TComposites> &
       Readonly<{
+        /** 选择与宿主元素匹配的 SVG 或 Canvas 后端 */
         backend: 'svg';
+        /** 当前保留式渲染参与方拥有的稳定宿主根元素 */
         host: SVGSVGElement;
+        /** 当前挂载生命周期内固定的渲染选项 */
         immutableOptions: RetainedSvgRendererImmutableOptions;
         /** SSR/create seed 与首次 Core frame 的预期值 */
         expectedInitialFrame?: StaticRenderFrame;
       }>)
   | (RetainedRenderParticipantOptionsBase<TComposites> &
       Readonly<{
+        /** 选择与宿主元素匹配的 SVG 或 Canvas 后端 */
         backend: 'canvas';
+        /** 当前保留式渲染参与方拥有的稳定宿主根元素 */
         host: HTMLCanvasElement;
+        /** 当前挂载生命周期内固定的渲染选项 */
         immutableOptions: RetainedCanvasRendererImmutableOptions;
       }>);
 
@@ -486,7 +495,10 @@ const captureOptions = <TComposites extends ReadonlyArray<AnyCompositeDefinition
   }
 };
 
-/** 创建连接 Core Computation、Render config owner 与 retained renderer 的 Runtime participant */
+/**
+ * 创建连接 Core Computation、Render config owner 与 retained renderer 的 Runtime participant
+ * @template TComposites Core 计算注册的组合定义集合，贯穿计算输出与只读图层解析
+ */
 export const createRetainedRenderParticipant = <TComposites extends ReadonlyArray<AnyCompositeDefinition>>(
   options: CreateRetainedRenderParticipantOptions<TComposites>,
 ): RetainedRenderParticipantHandle => {

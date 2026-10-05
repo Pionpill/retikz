@@ -2,7 +2,11 @@ import type { ZodType } from 'zod';
 
 import { RetikzDataError } from '../../error';
 
-/** 合并计算实现，并校验其引用当前 registry 的唯一语义身份 */
+/**
+ * 合并计算实现，并校验其引用当前 registry 的唯一语义身份
+ * @template TDefinition 提供语义 schema 的定义类型
+ * @template TImplementation 引用同一语义定义对象的计算实现类型
+ */
 export const resolveImplementationRegistry = <
   TDefinition extends { schema: ZodType },
   TImplementation extends { definition: TDefinition },

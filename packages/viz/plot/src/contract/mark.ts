@@ -41,6 +41,7 @@ export type IntervalContext = {
  * mark lowering 行为注册项（按 type 查找分发；行为函数不进 IR）
  * @description Plot mark schema 仍是 JSON IR 的静态单一真源；本接口只承载「某 mark type 怎么下沉成 core IR」的行为，
  *   对齐仓库已有的 composite / coordinate / transform / scale 工厂注册范式。内置与自定义 mark 都经同一 registry 分派
+ * @template T schema 校验并交给字段收集、通道选择与下沉回调的 mark 类型
  */
 export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
   /** 完整 mark operation schema；必须含非空 `z.literal('type')` 供 registry 提取注册键 */
@@ -48,7 +49,7 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
   /** 收集该 mark 额外引用的用户源字段；通用 encoding / label 字段由 data 层统一处理 */
   collectFields?: (mark: T, fields: FieldCollector) => void;
   /**
-   * 声明该 mark 能消费哪些通道交付面。
+   * 声明该 mark 能消费哪些通道交付面
    * @description channel registry 会据此只解析 mark 实际会下沉的 channel definition。比如 point 可消费 mark / scope / node
    *   通道，path 可消费 mark / scope / path 通道；自定义 mark 应按自己的 lowering 产物声明，避免 channel 层写死 mark type
    */
@@ -80,15 +81,16 @@ export type MarkDefinition<T extends IRPlotMarkOperation = IRPlotMark> = {
 };
 
 /**
- * 定义一个 mark definition。
- * @description 保留 collectFields / buildCell / lower 之间对 mark 子类型的强类型关联；内置与自定义 mark 都经同一 registry 入口分派。
+ * 定义一个 mark definition
+ * @description 保留 collectFields / buildCell / lower 之间对 mark 子类型的强类型关联；内置与自定义 mark 都经同一 registry 入口分派
  * @remarks 当前 helper 只做 `MarkDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook
+ * @template T schema 校验并交给 mark 回调的操作类型
  */
 export const defineMark = <T extends IRPlotMarkOperation = IRPlotMark>(def: MarkDefinition<T>): MarkDefinition<T> =>
   def;
 
 /**
- * 从 mark definition schema 中提取 registry key。
+ * 从 mark definition schema 中提取 registry key
  * @description schema 必须是含 `type: z.literal('<mark-type>')` 的 ZodObject；literal 值同时是 IR 判别串与 registry 唯一键
  */
 export const extractMarkType = (schema: ZodType): string => {
@@ -105,7 +107,7 @@ export const extractMarkType = (schema: ZodType): string => {
 };
 
 /**
- * registry 内部使用的宽类型。
+ * registry 内部使用的宽类型
  * @description registry 需要存放不同 mark 子类型的 definition；真正调用前由 lowerMark 按 type 取出，行为函数入参用 never 防误调
  */
 export type AnyMarkDefinition = {
@@ -121,7 +123,9 @@ export type AnyMarkDefinition = {
   buildCell?: (mark: never, row: ExternalRow, frame: CoordinateFrame, ctx?: IntervalContext) => Cell | null;
   /** 内部宽类型占位；语义同 MarkDefinition.placement */
   placement?: {
+    /** 从有效数据行提取具有稳定键和角色值的待定位目标 */
     targets: (mark: never, rows: Array<ExternalRow>, frame: CoordinateFrame) => Array<MarkPlacementTarget>;
+    /** 计算目标沿给定单位法向的视觉外延，无法确定时返回 undefined */
     normalExtent?: (
       mark: never,
       target: MarkPlacementTarget,

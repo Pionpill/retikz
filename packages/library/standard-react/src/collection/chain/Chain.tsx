@@ -17,30 +17,54 @@ import type { ChainParallelProps } from './ChainParallel';
 /** 属性 items 不接受 React drawable，复杂内容使用 children */
 export type ChainItemProps =
   | string
-  | (Omit<Extract<InputChainItem, { kind: 'cell' }>, 'content'> & { content?: string })
+  | (Omit<Extract<InputChainItem, { kind: 'cell' }>, 'content'> & {
+      /** 串行链单元格的文本内容 */
+      content?: string;
+    })
   | (Omit<Extract<InputChainItem, { kind: 'parallel' }>, 'branches'> & {
-      branches: Array<{ items: Array<ChainItemProps> }>;
+      /** 并行部分的有序分支，每个分支递归包含串行项 */
+      branches: Array<{
+        /** 当前并行分支中按顺序连接的链项 */
+        items: Array<ChainItemProps>;
+      }>;
     });
 
 /** Chain 的属性入口与 JSX 入口互斥 */
 export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataExpand'> &
   (
-    | { items: Array<ChainItemProps>; data?: never; skeleton?: never; children?: never; dataExpand?: never }
     | {
+        /** 显式串行项及嵌套并行分支，与其它内容入口互斥 */
+        items: Array<ChainItemProps>;
+        data?: never;
+        skeleton?: never;
+        children?: never;
+        dataExpand?: never;
+      }
+    | {
+        /** 用于展开链单元格的数据，与 items、skeleton 和 children 互斥 */
         data: NonNullable<InputChain['data']>;
         items?: never;
         skeleton?: never;
         children?: never;
+        /** 仅对 data 入口生效的数据展开策略 */
         dataExpand?: InputChain['dataExpand'];
       }
     | {
+        /** 用于构造空链项的结构声明，与其它内容入口互斥 */
         skeleton: NonNullable<InputChain['skeleton']>;
         items?: never;
         data?: never;
         children?: never;
         dataExpand?: never;
       }
-    | { children?: ReactNode; items?: never; data?: never; skeleton?: never; dataExpand?: never }
+    | {
+        /** 由 ChainCell、ChainParallel 与 ChainBranch 组成的链结构声明 */
+        children?: ReactNode;
+        items?: never;
+        data?: never;
+        skeleton?: never;
+        dataExpand?: never;
+      }
   );
 
 /** 展开结构 marker，先统一收集内容以保证 occurrence 唯一 */

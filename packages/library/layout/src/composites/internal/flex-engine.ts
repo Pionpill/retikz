@@ -7,58 +7,87 @@ export type FlexEngineWrap = 'nowrap' | 'wrap' | 'wrap-reverse';
 
 /** Flex 主轴求解所需的稳定有限 item 输入 */
 export type FlexMainItem = Readonly<{
+  /** 布局项的稳定身份键 */
   key: string;
+  /** 对应作者输入数组的零基索引 */
   sourceIndex: number;
+  /** 应用弹性增减前的主轴槽位尺寸 */
   flexBaseSlot: number;
+  /** 主轴槽位允许的最小尺寸 */
   min: number;
+  /** 主轴槽位可选的最大尺寸 */
   max?: number;
+  /** 主轴剩余空间的增长权重 */
   grow: number;
+  /** 主轴空间不足时的收缩系数 */
   shrink: number;
+  /** 主轴起始侧外边距 */
   marginStart: number;
+  /** 主轴结束侧外边距 */
   marginEnd: number;
 }>;
 
 /** Flex line formation 的有限空间选项 */
 export type FlexLineFormationOptions = Readonly<{
+  /** 是否换行及交叉轴行序方向 */
   wrap: FlexEngineWrap;
+  /** 有限的主轴可用空间，省略时不以宽度触发换行 */
   availableMainSize?: number;
+  /** 同一行相邻项目之间的固定间距 */
   gap: number;
 }>;
 
 /** 主轴 distribution 产生的起始偏移与附加 item 间距 */
 export type FlexSpaceDistribution = Readonly<{
+  /** 首项之前分配的附加空间 */
   leading: number;
+  /** 相邻项之间分配的附加空间，不包含固定 gap */
   between: number;
 }>;
 
 /** Flex line 的 minimum / natural 主轴结构 profile */
 export type FlexLineMainProfile = Readonly<{
+  /** 包含外边距和间距的最小主轴尺寸 */
   minimum: number;
+  /** 包含外边距和间距的自然主轴尺寸 */
   natural: number;
 }>;
 
 /** 参与单条 line 交叉轴求值的纯贡献输入 */
 export type FlexCrossItem = Readonly<{
+  /** 当前子项的交叉轴槽位尺寸 */
   slotSize: number;
+  /** 交叉轴起始侧外边距 */
   marginStart: number;
+  /** 交叉轴结束侧外边距 */
   marginEnd: number;
+  /** 子项在当前行内的交叉轴对齐方式 */
   alignment: LayoutAlignment;
+  /** 首基线相对槽位起始边的偏移 */
   firstBaselineOffset?: number;
+  /** 末基线相对槽位起始边的偏移 */
   lastBaselineOffset?: number;
 }>;
 
 /** Flex line 的结构交叉轴指标 */
 export type FlexLineCrossMetrics = Readonly<{
+  /** 满足子项尺寸与基线约束的行交叉轴尺寸 */
   size: number;
+  /** 首基线对齐目标相对行起始边的偏移 */
   firstTarget?: number;
+  /** 末基线对齐目标相对行起始边的偏移 */
   lastTarget?: number;
 }>;
 
 /** 已确定交叉轴尺寸的 line slot */
 export type FlexCrossLine = Readonly<{
+  /** 行槽位在交叉轴上的起始位置 */
   crossStart: number;
+  /** 行槽位最终分配的交叉轴尺寸 */
   finalCrossSize: number;
+  /** 该行首基线对齐目标的局部偏移 */
   firstTarget?: number;
+  /** 该行末基线对齐目标的局部偏移 */
   lastTarget?: number;
 }>;
 

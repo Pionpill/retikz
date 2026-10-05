@@ -6,7 +6,12 @@ import type { PathCommand } from './path';
  * marker-local 填充取值
  * @description 只允许纯色或 `contextStroke`，不允许引用外部 paint resource
  */
-export type MarkerFill = string | { kind: 'contextStroke' };
+export type MarkerFill =
+  | string
+  | {
+      /** 从宿主路径描边继承 marker 填充的标记 */
+      kind: 'contextStroke';
+    };
 
 /**
  * marker-local path 原语：`PathPrim` 去掉 arrowStart / arrowEnd（禁递归箭头），fill 收窄到 `MarkerFill`

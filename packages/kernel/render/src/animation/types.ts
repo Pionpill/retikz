@@ -1,4 +1,4 @@
-/**
+/*
  * renderer 无关的动画播放共享类型（`@retikz/render/animation`）
  * @description 缓动自定义注册表；SVG 用其 cubic-bezier 形式（函数进不了 CSS），
  *   Canvas / WAAPI fallback 用函数形式。本子路径另含 evaluateTrack / 插值器注册表

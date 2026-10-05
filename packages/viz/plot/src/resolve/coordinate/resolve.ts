@@ -147,7 +147,7 @@ const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotChannel |
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
 
 /**
- * 校验内置 mark 的 encoding key 是否属于当前坐标系角色。
+ * 校验内置 mark 的 encoding key 是否属于当前坐标系角色
  * @description schema 允许未知 key 承载自定义坐标系位置角色；lowering 必须按 active CoordinateDefinition.roles
  *   fail-loud，避免把 `size` / `opacity` 这类拼错或误放进 encoding 的字段静默当成无效位置角色
  */
@@ -177,7 +177,7 @@ const assertKnownPositionEncodingRoles = (
 
 /**
  * 按坐标系合法集校验每根 axis guide 的 dimension
- * @description 非法 dimension（如 cartesian 下 'angle'）fail-loud，给出清晰错误。
+ * @description 非法 dimension（如 cartesian 下 'angle'）fail-loud，给出清晰错误
  */
 const assertValidGuideDimensions = (
   coordinateType: string,
@@ -197,7 +197,7 @@ const assertValidGuideDimensions = (
 
 /**
  * 按坐标系必填角色集校验每个位置 mark 的 encoding
- * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud。
+ * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud
  */
 const assertRequiredPositionChannels = (
   coordinateType: string,
@@ -244,7 +244,7 @@ const assertRequiredPositionChannels = (
 /**
  * 按坐标系解析出 mark / guide 共用的投影帧 + 下沉 guide 层
  * @description cartesian：x/y 角色绑 x/y scale、走 plotArea + 直线轴；polar：angle/radius 角色、走 polar layout + 弧 / 辐条轴。
- *   抽成纯函数使 mark 下沉与 locator 共用同一投影，杜绝两套投影漂移。
+ *   抽成纯函数使 mark 下沉与 locator 共用同一投影，杜绝两套投影漂移
  */
 export const resolveCoordinateFrame = (
   source: IRPlot,
@@ -393,7 +393,7 @@ export const resolveCoordinateFrame = (
   /**
    * 解析某 role 的有效 order（解析 + 三道判定的两道：非分类 throw / 冲突 throw）
    * @description 收集该 role 各绑定字段的非默认 order（!=='appearance'）：非分类字段配 order → throw；
-   *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
+   *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）
    */
   const resolveRoleOrder = (
     role: DimensionRole,

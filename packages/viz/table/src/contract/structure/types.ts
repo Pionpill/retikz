@@ -22,7 +22,10 @@ export type TableStructureContext = Readonly<{
   resolveField: (sourceIndex: number, field: string) => IRDataScalarValue | undefined;
 }>;
 
-/** Table structure provider 定义 */
+/**
+ * Table structure provider 定义
+ * @template TStructure 结构 schema 解析后的精确操作类型，决定 build 接收的结构字段；默认 IRTableStructureOperation
+ */
 export type TableStructureDefinition<TStructure extends IRTableStructureOperation = IRTableStructureOperation> = {
   /** operation 的精确 runtime schema，kind 必须是非空 literal */
   schema: ZodType<TStructure>;

@@ -73,7 +73,7 @@ export const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): num
 };
 
 /**
- * PathCommand → RibbonSegmentInput
+ * 将路径命令转换为带状几何的分段输入
  * @description ribbon 只支持单条开放子路径；零长度段会被丢弃，close / 多 move 会立即报错
  */
 export const commandsToSegmentInputs = (
@@ -249,8 +249,11 @@ export const sampleAtDistance = (
   return segments[segments.length - 1].sampleAt(1);
 };
 
+/** 把一条开放路径转换为可采样中心线时所需的命令及错误来源标识 */
 export type SegmentsFromCommandsInput = {
+  /** 用于提取中心线段的结构化路径命令 */
   commands: ReadonlyArray<PathCommand>;
+  /** 错误诊断中标识中心线来源的名称 */
   source: string;
 };
 

@@ -7,7 +7,9 @@ import { describe, expect, it } from 'vitest';
 import { DetailTable, ManualTable, Table } from '../../src';
 
 type InputEmbeddableTableComponent = {
+  /** 将 Table 输入接入 Core 的领域 adapter */
   inputEmbedAdapter?: InputEmbedAdapter<InputTable<unknown>>;
+  /** 将作者属性转换为 Vanilla Table 输入 */
   createInputEmbedProps?: (props: Readonly<Record<string, unknown>>) => InputTable<unknown>;
 };
 

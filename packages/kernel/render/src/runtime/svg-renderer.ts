@@ -76,7 +76,7 @@ type SvgAnimationBinding = SvgAnimationControl &
 type SvgAnimationState = Readonly<{
   /** 聚合 root 与 occurrence controls 的公开控制器 */
   controls: AnimationControls;
-  /** Scene root camera descriptor controls */
+  /** 场景根镜头动画描述的控制接口 */
   root?: SvgAnimationControl;
   /** 各 animated occurrence 的独立 controls */
   bindings: ReadonlyArray<SvgAnimationBinding>;

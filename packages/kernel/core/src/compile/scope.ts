@@ -47,7 +47,7 @@ export const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: 
 };
 
 /**
- * 将已确定的 Scope transform lowered 为 Scene transform。
+ * 将已确定的 Scope transform lowered 为 Scene transform
  *
  * @description 该步骤依赖当前 namespace，因此保留在 traversal 编译过程中执行；输出只包含 renderer
  * 可直接消费的 `translate` / `rotate` / `scale` 形态。引用解析失败时返回 null

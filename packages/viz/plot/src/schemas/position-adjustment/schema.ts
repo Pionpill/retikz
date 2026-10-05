@@ -55,6 +55,7 @@ const CustomPositionAdjustmentObjectSchema = looseObject({
   }).describe('Custom adjustment discriminator resolved through LowerPlotsOptions.positionAdjustmentDefinitions'),
 });
 
+/** 校验由运行时能力定义进一步解析的自定义位置调整操作 */
 export const CustomPositionAdjustmentSchema = CustomPositionAdjustmentObjectSchema.catchall(JsonValueSchema).describe(
   'Custom JSON-safe position adjustment operation validated by a runtime definition',
 );

@@ -15,15 +15,21 @@ import { join } from 'node:path';
 
 /** 隔离 consumer 中一次模块导入的进程结果 */
 export type IsolatedImportResult = Readonly<{
+  /** 隔离进程退出码；未正常退出时为 null */
   status: number | null;
+  /** 隔离导入进程的标准输出 */
   stdout: string;
+  /** 隔离导入进程的错误输出 */
   stderr: string;
 }>;
 
 /** Layout 发布包的隔离 consumer 三态结果 */
 export type LayoutPackageBoundaryResult = Readonly<{
+  /** 未安装可选 peer 时导入包根的结果 */
   rootWithoutPeer: IsolatedImportResult;
+  /** 未安装可选 peer 时导入 inspect 子入口的结果 */
   inspectWithoutPeer: IsolatedImportResult;
+  /** 安装可选 peer 后导入 inspect 子入口的结果 */
   inspectWithPeer: IsolatedImportResult;
 }>;
 

@@ -4,8 +4,8 @@
 
 ### Layout / LayoutProps
 
-- `Layout`：<ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={397}>将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画</ApiSourceLink>
-- `LayoutProps`：<ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={227}>React Layout 的公开属性</ApiSourceLink>
+- `Layout`：<ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={423}>将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画</ApiSourceLink>
+- `LayoutProps`：<ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={242}>React Layout 的公开属性</ApiSourceLink>
 
 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
 
@@ -97,7 +97,7 @@ export type LayoutProps = {
   <ApiSourceLink
     label={'LayoutExtensions'}
     path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'}
-    startLine={178}
+    startLine={193}
   >
     为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展
   </ApiSourceLink>
@@ -515,7 +515,7 @@ export type InputSceneLayers = InputSceneBase & {
 ### scene
 
 <p>
-  <ApiSourceLink label={'scene'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={103}>
+  <ApiSourceLink label={'scene'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={108}>
     创建作者侧 Scene 输入
   </ApiSourceLink>
 </p>

@@ -6,8 +6,10 @@ import { TableFormatterRefSchema } from '../formatter';
 import { TablePresentationRefSchema } from '../presentation';
 import { RESERVED_TABLE_STRUCTURE_KINDS, TableRowKind, TableStructureKind } from './constants';
 
+/** 校验规范表格行的语义种类 */
 export const TableRowKindSchema = zodEnum(TableRowKind).describe('Semantic kind of a canonical Table row.');
 
+/** 校验可 JSON 序列化的自定义结构操作，并拒绝内置保留种类 */
 export const CustomTableStructureSchema = object({
   kind: NonBlankStringSchema.describe('Custom Table structure provider kind.'),
 })
@@ -24,6 +26,7 @@ export const CustomTableStructureSchema = object({
   })
   .describe('JSON-safe custom Table structure operation resolved by a registered definition.');
 
+/** 校验绑定单个外部数据字段的明细列及其标题与呈现选项 */
 export const TableDetailColumnSchema = strictObject({
   id: NonBlankStringSchema.describe('Stable detail column id.'),
   field: NonBlankStringSchema.describe('Data field name or dotted path read from each source row.'),
@@ -40,6 +43,7 @@ export const TableDetailColumnSchema = strictObject({
   bodyLayout: TableCellLayoutSchema.optional().describe('Optional layout applied to body Cells in this column.'),
 }).describe('Detail Table column bound to one external data field.');
 
+/** 校验将每条数据记录映射为表体行的明细结构，列标识必须唯一 */
 export const DetailTableStructureSchema = strictObject({
   kind: literal(TableStructureKind.Detail).describe('Discriminator for a record-per-row detail Table structure.'),
   columns: array(TableDetailColumnSchema).min(1).describe('Ordered detail columns.'),
@@ -67,6 +71,7 @@ const ManualTableRowSchema = array(union([ManualTableCellSchema, zodNull()]))
   .min(1)
   .describe('Nonempty row of manual Cell entries; null marks an unoccupied coordinate.');
 
+/** 校验按行优先编写的矩形单元格矩阵与对应行种类 */
 export const ManualTableStructureSchema = strictObject({
   kind: literal(TableStructureKind.Manual).describe('Discriminator for an explicit manual Table structure.'),
   rows: array(ManualTableRowSchema).min(1).describe('Nonempty rectangular matrix of manual Table Cell entries.'),
@@ -96,6 +101,7 @@ export const ManualTableStructureSchema = strictObject({
   })
   .describe('Manual Table structure whose dimensions and Cell addresses derive from a row-major matrix.');
 
+/** 校验内置显式结构、明细结构或自定义结构操作 */
 export const TableStructureSchema = union([
   ManualTableStructureSchema,
   DetailTableStructureSchema,

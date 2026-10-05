@@ -61,7 +61,10 @@ type ReactInputEmbedProps<TInput> = Readonly<{
   adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 
-/** 将嵌入 props 与其递归 authoring 子项使用的 Vanilla adapter 一并交给根 traversal */
+/**
+ * 将嵌入 props 与其递归 authoring 子项使用的 Vanilla adapter 一并交给根 traversal
+ * @template TInput 被适配器集合伴随传递的作者输入类型，包装后仍原样保留
+ */
 export const withInputEmbedAdapters = <TInput>(
   input: TInput,
   adapters: ReadonlyArray<AnyInputEmbedAdapter>,

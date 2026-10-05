@@ -17,7 +17,10 @@ export type RuntimeSourceLifecycleDiagnostic = Readonly<{
   cause: unknown;
 }>;
 
-/** Source executor 的成功结果与非致命诊断 */
+/**
+ * Source executor 的成功结果与非致命诊断
+ * @template T Source 执行成功时 value 字段承载的结果类型
+ */
 export type RuntimeSourceExecutionResult<T> = Readonly<{
   /** 成功产物 */
   value: T;

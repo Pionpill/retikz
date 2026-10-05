@@ -7,9 +7,13 @@ import { localToWorld, worldToLocal } from './transform';
 
 /** 轴对齐矩形：几何中心 + 宽高 + 可选绕中心旋转 */
 export type Rect = {
+  /** 矩形中心的横坐标 */
   x: number;
+  /** 矩形中心的纵坐标 */
   y: number;
+  /** 旋转前沿水平轴的完整宽度 */
   width: number;
+  /** 旋转前沿垂直轴的完整高度 */
   height: number;
   /**
    * 绕中心旋转弧度
@@ -92,16 +96,40 @@ export const rect = {
 
 /** rectOutline 的命令算子（供 compile 翻译为 PathCommand；几何在 core 下沉，便于未来 rectangle node shape 复用） */
 export type RectOutlineOp =
-  | { kind: 'move'; to: Position }
-  | { kind: 'line'; to: Position }
-  | { kind: 'arc'; center: Position; radius: number; startAngle: number; endAngle: number }
-  | { kind: 'close' };
+  | {
+      /** 选择移动、直线、圆弧或闭合轮廓操作 */
+      kind: 'move';
+      /** 移动或直线操作的目标坐标 */
+      to: Position;
+    }
+  | {
+      /** 选择移动、直线、圆弧或闭合轮廓操作 */
+      kind: 'line';
+      /** 移动或直线操作的目标坐标 */
+      to: Position;
+    }
+  | {
+      /** 选择移动、直线、圆弧或闭合轮廓操作 */
+      kind: 'arc';
+      /** 圆角所在圆的中心坐标 */
+      center: Position;
+      /** 矩形圆角的实际半径 */
+      radius: number;
+      /** 圆角起始角，单位为度；0 指向水平正向 */
+      startAngle: number;
+      /** 圆角终止角，单位为度 */
+      endAngle: number;
+    }
+  | {
+      /** 选择移动、直线、圆弧或闭合轮廓操作 */
+      kind: 'close';
+    };
 
 /**
  * 矩形 outline：两对角 → 顺时针 path 算子序列
  * @description from/to 任意顺序，归一化 (x0,y0)=min、(x1,y1)=max。直角 = 4 line + close（起点左上 (x0,y0)）；
  *   圆角 = 4 line + 4 quarter-arc + close（起点 (x0+r, y0)）。cornerRadius clamp 到 min(w,h)/2。
- *   角度约定同 @retikz/math arc（y-down：0=+x, 90=+y/下, 180=-x, 270=-y/上）
+ *   角度约定同 `@retikz/math` arc（y-down：0=+x, 90=+y/下, 180=-x, 270=-y/上）
  */
 export const rectOutline = (from: Position, to: Position, cornerRadius?: number): Array<RectOutlineOp> => {
   const x0 = Math.min(from[0], to[0]);

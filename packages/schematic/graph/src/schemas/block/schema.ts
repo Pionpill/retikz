@@ -18,6 +18,7 @@ const BlockTextObjectSchema = strictObject({
   opacity: NodeSchema.shape.style.unwrap().shape.opacity.describe('Text opacity.'),
 });
 
+/** 校验块结构文本的字符串简写或兼容 Core 的文本字段 */
 export const BlockTextSchema = union([string(), BlockTextObjectSchema]).describe(
   'Block structure text as a string shorthand or Core-compatible text fields.',
 );
@@ -35,6 +36,7 @@ const BlockSurfaceFields = {
   overflow: SurfaceSchema.shape.overflow.unwrap().optional().describe('Content overflow: visible or clip.'),
 };
 
+/** 校验排列图标、文本区域与尾部子项的独立块标题组合节点 */
 export const BlockHeaderSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.BlockHeader).describe('Block Header Source composite discriminator.'),
@@ -53,6 +55,7 @@ export const BlockHeaderSchema = strictObject({
   trail: ChildSchema.optional().describe('Optional arbitrary child placed after the Header text region.'),
 }).describe('Independent Graph composite arranging an icon, text region and trail child.');
 
+/** 校验将任意子项纵向排列的独立块分节组合节点 */
 export const BlockSectionSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.BlockSection).describe('Block Section Source composite discriminator.'),
@@ -83,10 +86,12 @@ const BlockRowChildrenSchema = strictObject({
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
 });
 
+/** 校验横向排列块文本内容或任意直属子项的独立块行组合节点 */
 export const BlockRowSchema = union([BlockRowContentSchema, BlockRowChildrenSchema]).describe(
   'Independent Graph composite arranging Block text content or direct arbitrary children horizontally.',
 );
 
+/** 校验组合完整 Scope、Surface 与有序子项的可序列化块节点 */
 export const BlockSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Block).describe('Block Source composite discriminator.'),

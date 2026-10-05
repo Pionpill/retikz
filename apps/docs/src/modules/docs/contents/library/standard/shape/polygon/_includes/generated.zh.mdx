@@ -4,8 +4,8 @@
 
 #### Polygon / PolygonProps
 
-- `Polygon`：<ApiSourceLink label={"Polygon"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={12}>通过 Vanilla adapter 声明 Standard Polygon</ApiSourceLink>
-- `PolygonProps`：<ApiSourceLink label={"PolygonProps"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={9}>React Polygon 的作者输入与宿主事件</ApiSourceLink>
+- `Polygon`：<ApiSourceLink label={"Polygon"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={19}>通过 Vanilla adapter 声明 Standard Polygon</ApiSourceLink>
+- `PolygonProps`：<ApiSourceLink label={"PolygonProps"} path={"packages/library/standard-react/src/shape/Polygon.tsx"} startLine={10}>React Polygon 的作者输入与宿主事件</ApiSourceLink>
 
 ```ts
 export declare const Polygon: {
@@ -23,7 +23,7 @@ export type PolygonProps = InputPolygon &
 #### InputPolygon
 
 <p>
-  <ApiSourceLink label={'InputPolygon'} path={'packages/library/standard-vanilla/src/shape/polygon.ts'} startLine={8}>
+  <ApiSourceLink label={'InputPolygon'} path={'packages/library/standard-vanilla/src/shape/polygon.ts'} startLine={9}>
     Polygon 的 Vanilla 作者输入
   </ApiSourceLink>
 </p>
@@ -102,7 +102,7 @@ export type InputPolygon = InputShape<IRPolygon>;
   <ApiSourceLink
     label={'PolygonInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/shape/polygon.ts'}
-    startLine={10}
+    startLine={12}
   >
     将 Polygon 作者输入归一为持久化的 Standard 意图
   </ApiSourceLink>
@@ -117,7 +117,7 @@ export declare const PolygonInputEmbedAdapter: SynchronousInputEmbedAdapter<Inpu
 #### IRPolygon
 
 <p>
-  <ApiSourceLink label={'IRPolygon'} path={'packages/library/standard/src/shape/polygon/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRPolygon'} path={'packages/library/standard/src/shape/polygon/types.ts'} startLine={7}>
     持久化的 Polygon 形状
   </ApiSourceLink>
 </p>
@@ -192,7 +192,7 @@ export type IRPolygon = ShapeSource<ZodInput<typeof PolygonSchema>>;
   <ApiSourceLink
     label={'PolygonDefinition'}
     path={'packages/library/standard/src/shape/polygon/definition.ts'}
-    startLine={7}
+    startLine={8}
   >
     Polygon 的 Core composite 注册项
   </ApiSourceLink>
@@ -236,7 +236,7 @@ export const PolygonDefinition = defineComposite({
   <ApiSourceLink
     label={'PolygonProvider'}
     path={'packages/library/standard/src/shape/polygon/provider.ts'}
-    startLine={5}
+    startLine={6}
   >
     Polygon 的按需依赖贡献
   </ApiSourceLink>
@@ -254,7 +254,7 @@ export const PolygonProvider: CoreDependencyProvider = Object.freeze({
 #### createPolygon
 
 <p>
-  <ApiSourceLink label={'createPolygon'} path={'packages/library/standard/src/shape/polygon/factory.ts'} startLine={4}>
+  <ApiSourceLink label={'createPolygon'} path={'packages/library/standard/src/shape/polygon/factory.ts'} startLine={5}>
     创建保留几何意图的 Polygon Source
   </ApiSourceLink>
 </p>

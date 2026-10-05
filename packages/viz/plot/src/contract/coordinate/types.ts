@@ -5,14 +5,14 @@ import type { PositionScale } from '../scale';
 import type { Cell, CellGeometry } from './cell';
 
 /**
- * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles。
+ * 坐标系位置角色：mark 按 frame.roles 序从 encoding 取对应通道值喂 projectRoles
  * @description 内置坐标系使用 x / y；自定义 CoordinateDefinition 可声明任意非空字符串角色。
  *   schema 只保留 JSON 形状，角色是否被坐标系支持由 definition.roles 在 lowering 阶段校验
  */
 export type DimensionRole = string;
 
 /**
- * 运行时坐标帧的能力契约（抽象基座）。
+ * 运行时坐标帧的能力契约（抽象基座）
  * @description grammar of graphics 的 coordinate 层：scale 把值归一化后，frame 负责归一化→2D 点。
  *   内置坐标系（cartesian / polar）与自定义注册坐标系都满足这一契约——内置帧是它的结构子类型，
  *   带各自专属字段（如 primary/secondary scale），需要时由 providers 的 `isXxxCoordinateFrame` 守卫收窄。
@@ -56,7 +56,7 @@ export type CoordinateFrame = {
    */
   frameAlong?: (role: DimensionRole, values: ReadonlyArray<unknown>) => AxisFrame | null;
   /**
-   * 正交 cell → CellGeometry（可选）：实现了才支持 cell 类 mark（interval / sector / rect）。
+   * 正交 cell → CellGeometry（可选）：实现了才支持 cell 类 mark（interval / sector / rect）
    * @description 曲线 / 自定义 frame 自行把 cell 四边经自身几何投影密采样成 contour（用引擎 helper densifyCellContour）；
    *   不回传 → cell 类 mark 在该坐标系 fail-loud（无引擎自动兜底——「输出空间→屏幕」后段映射只有 frame 自己有）
    */
@@ -64,7 +64,7 @@ export type CoordinateFrame = {
 };
 
 /**
- * 二维极坐标运行时坐标帧。
+ * 二维极坐标运行时坐标帧
  * @description x 角色解释为角向、y 角色解释为径向；scale 输出先落到 [theta, radius]，再投影为屏幕坐标。
  *   该结构由内置 provider 创建，但作为 mark / guide / locator 共用的运行时契约暴露在 contract 层
  */
@@ -111,11 +111,12 @@ export type PolarCoordinateFrame = {
 
 /** 具备 cell 几何投影能力的运行时坐标帧 */
 export type CellProjectableCoordinate = CoordinateFrame & {
+  /** 将各角色的尺度输出区间投影为可绘制单元几何 */
   projectCell: (cell: Cell) => CellGeometry;
 };
 
 /**
- * 某角色轴曲线在某参数点的局部标架：原点 + 切向，均在屏幕空间。
+ * 某角色轴曲线在某参数点的局部标架：原点 + 切向，均在屏幕空间
  * @description 固定其余角色、只让某 role 变化得到一条 1D 轴曲线；`tangent`
  *   是屏幕空间原始幅值，消费方需要方向时自行归一化
  */

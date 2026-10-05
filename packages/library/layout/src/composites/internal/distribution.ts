@@ -2,15 +2,21 @@ import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 
 /** 可参与稳定加权分配的数值项 */
 export type WeightedLayoutSize = Readonly<{
+  /** 参与加权增减前的基础尺寸 */
   base: number;
+  /** 分配后允许的最小尺寸 */
   min: number;
+  /** 可选最大尺寸，省略时不设上限 */
   max?: number;
+  /** 吸收剩余空间的相对权重，零表示不参与分配 */
   weight: number;
 }>;
 
 /** 加权分配后的数值与无法吸收的剩余空间 */
 export type WeightedLayoutDistribution = Readonly<{
+  /** 与输入顺序一致的最终尺寸 */
   values: ReadonlyArray<number>;
+  /** 尺寸上下限约束后仍未被吸收的空间 */
   remaining: number;
 }>;
 

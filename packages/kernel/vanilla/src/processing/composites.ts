@@ -89,7 +89,6 @@ const createDelegate = (slot: CompositeSlot): AnyCompositeDefinition => {
     : createLayoutDelegate(initial, slot);
 };
 
-/** 校验 next normalization 没有热改 Core Computation 的固定 definition 拓扑 */
 /** 判断 candidate 是否保持当前 Core Computation 的 definition topology */
 const isCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompositeDefinition): boolean => {
   const initialExpand = typeof initial.expand === 'function';

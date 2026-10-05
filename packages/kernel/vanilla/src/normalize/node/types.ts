@@ -13,6 +13,7 @@ import type {
 
 /** 作者侧相对定位输入 */
 export type InputAtPosition = Omit<IRAtPosition, 'direction'> & {
+  /** 相对于目标的放置方向，接受 Anchor 枚举值 */
   direction: Anchor;
 };
 

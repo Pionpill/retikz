@@ -44,7 +44,7 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 
 #### group / GroupInputEmbedProps
 
-- `group`: <ApiSourceLink label={"group"} path={"packages/schematic/graph-vanilla/src/group.ts"} startLine={44}>Create a Group Source authoring embed</ApiSourceLink>
+- `group`: <ApiSourceLink label={"group"} path={"packages/schematic/graph-vanilla/src/group.ts"} startLine={45}>Create a Group Source authoring embed</ApiSourceLink>
 - `GroupInputEmbedProps`: <ApiSourceLink label={"GroupInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/group.ts"} startLine={12}>Source authoring input for a Group embed</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -60,7 +60,7 @@ export type GroupProps = Omit<InputGroup, 'children'> &
 | `border?`            | `GroupInputEmbedProps["border"]`                                                                                                                                                                                   | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
 | `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
 | `caption?`           | `GroupInputEmbedProps["caption"]`                                                                                                                                                                                  | —       | Structured caption placed inside the shell.                                                                                                     |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | —                                                                                                                                               |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | Ordered drawing content contained in the visible group                                                                                          |
 | `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
 | `defaults?`          | `GroupInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
@@ -97,8 +97,8 @@ export type GroupInputEmbedProps = WithoutInputType<InputGroup>;
 
 #### normalizeGroup / InputGroup
 
-- `normalizeGroup`: <ApiSourceLink label={"normalizeGroup"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={160}>Assemble Group authoring input into one Source composite</ApiSourceLink>
-- `InputGroup`: <ApiSourceLink label={"InputGroup"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={89}>Input aligned with Group Source, allowing Vanilla child authoring sugar</ApiSourceLink>
+- `normalizeGroup`: <ApiSourceLink label={"normalizeGroup"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={169}>Assemble Group authoring input into one Source composite</ApiSourceLink>
+- `InputGroup`: <ApiSourceLink label={"InputGroup"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={107}>Input aligned with Group Source, allowing Vanilla child authoring sugar</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -108,10 +108,10 @@ The remaining members are inherited from `GroupCreateOptions`, with `'children'`
 
 <ApiTable>
 
-| Member               | Type                             | Default | Description |
-| -------------------- | -------------------------------- | ------- | ----------- |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —       | —           |
-| `readonly type?`     | `'group'`                        | —       | —           |
+| Member               | Type                             | Default | Description                                            |
+| -------------------- | -------------------------------- | ------- | ------------------------------------------------------ |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —       | Ordered drawing content contained in the visible group |
+| `readonly type?`     | `'group'`                        | —       | Optional discriminator for Group authoring input       |
 
 </ApiTable>
 

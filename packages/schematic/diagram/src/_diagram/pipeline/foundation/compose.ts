@@ -11,18 +11,27 @@ import { lowerDiagramFoundation } from './lower';
 
 /** Diagram Foundation 中一个实际 authored region 的几何 */
 export type DiagramFoundationRegionGeometry = Readonly<{
+  /** 区域在 Foundation 框架坐标中的布局分配范围 */
   allocationBounds: Readonly<BoundsRect>;
+  /** 区域在 Foundation 框架坐标中的可见几何范围 */
   visualBounds: Readonly<BoundsRect>;
 }>;
 
 /** 同一次 Foundation probe 产生的完整 frame、regions 与drawing平移 */
 export type DiagramFoundationComposition = Readonly<{
+  /** 完整框架的布局探测结果，供最终放置时重放 */
   frame: LayoutChildResult;
+  /** 将绘图区局部坐标转换为 Foundation 框架坐标的平移 */
   drawingOffset: Readonly<Position>;
+  /** 实际存在的标题、说明、绘图和图例区域几何 */
   regions: Readonly<{
+    /** 存在标题时的标题区域几何 */
     title?: DiagramFoundationRegionGeometry;
+    /** 存在说明时的说明区域几何 */
     description?: DiagramFoundationRegionGeometry;
+    /** 必需绘图区的布局与可见范围 */
     drawing: DiagramFoundationRegionGeometry;
+    /** 存在显式图例时的图例区域几何 */
     legend?: DiagramFoundationRegionGeometry;
   }>;
 }>;

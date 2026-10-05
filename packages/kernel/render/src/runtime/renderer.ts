@@ -31,7 +31,7 @@ export type RetainedRendererHost = SVGSVGElement | HTMLCanvasElement;
 
 /** SVG renderer 的 session-lifetime immutable options */
 export type RetainedSvgRendererImmutableOptions = Readonly<{
-  /** renderer backend */
+  /** 渲染后端种类 */
   backend: 'svg';
   /** 资源与 descriptor id 前缀 */
   idPrefix: string;
@@ -39,7 +39,7 @@ export type RetainedSvgRendererImmutableOptions = Readonly<{
 
 /** Canvas renderer 的 session-lifetime immutable options */
 export type RetainedCanvasRendererImmutableOptions = Readonly<{
-  /** renderer backend */
+  /** 渲染后端种类 */
   backend: 'canvas';
   /** 资源与 descriptor id 前缀 */
   idPrefix: string;
@@ -82,11 +82,21 @@ export type RetainedRendererDefinitionBase = Readonly<{
 
 /** SVG retained renderer 作者输入 */
 export type RetainedSvgRendererDefinitionInput = RetainedRendererDefinitionBase &
-  Readonly<{ backend: 'svg'; host: SVGSVGElement }>;
+  Readonly<{
+    /** 标识 SVG 渲染后端 */
+    backend: 'svg';
+    /** 当前渲染器持有的 SVG 根元素 */
+    host: SVGSVGElement;
+  }>;
 
 /** Canvas retained renderer 作者输入 */
 export type RetainedCanvasRendererDefinitionInput = RetainedRendererDefinitionBase &
-  Readonly<{ backend: 'canvas'; host: HTMLCanvasElement }>;
+  Readonly<{
+    /** 标识 Canvas 渲染后端 */
+    backend: 'canvas';
+    /** 当前渲染器持有的 Canvas 根元素 */
+    host: HTMLCanvasElement;
+  }>;
 
 /** Retained renderer 作者输入 */
 export type RetainedRendererDefinitionInput =
@@ -101,30 +111,47 @@ export type RetainedRendererTokenBase = Readonly<{
   capability: RetainedRendererCapability;
   /** renderer 只读 Scene 图层支持等级 */
   readonlyLayerCapability: RetainedRendererReadonlyLayerCapability;
-  /** nominal brand */
+  /** 用于区分名义类型的不透明标记 */
   [RetainedRendererBrand]: true;
 }>;
 
-/** SVG retained renderer nominal token */
-export type RetainedSvgRenderer = RetainedRendererTokenBase & Readonly<{ backend: 'svg'; host: SVGSVGElement }>;
+/** 保留式 SVG 渲染器的名义类型令牌 */
+export type RetainedSvgRenderer = RetainedRendererTokenBase &
+  Readonly<{
+    /** 标识 SVG 渲染后端 */
+    backend: 'svg';
+    /** 当前渲染器关联的稳定 SVG 根元素 */
+    host: SVGSVGElement;
+  }>;
 
-/** Canvas retained renderer nominal token */
+/** 保留式 Canvas 渲染器的名义类型令牌 */
 export type RetainedCanvasRenderer = RetainedRendererTokenBase &
-  Readonly<{ backend: 'canvas'; host: HTMLCanvasElement }>;
+  Readonly<{
+    /** 标识 Canvas 渲染后端 */
+    backend: 'canvas';
+    /** 当前渲染器关联的稳定 Canvas 根元素 */
+    host: HTMLCanvasElement;
+  }>;
 
-/** Retained renderer nominal token */
+/** 保留式渲染器的名义类型令牌 */
 export type RetainedRenderer = RetainedSvgRenderer | RetainedCanvasRenderer;
 
 /** Retained renderer factory 的判别输入 */
 export type RetainedRendererFactoryInput =
   | Readonly<{
+      /** 选择与宿主元素匹配的渲染后端 */
       backend: 'svg';
+      /** 工厂创建的渲染器所关联的根元素 */
       host: SVGSVGElement;
+      /** 该挂载生命周期内固定的后端参数 */
       immutableOptions: RetainedSvgRendererImmutableOptions;
     }>
   | Readonly<{
+      /** 选择与宿主元素匹配的渲染后端 */
       backend: 'canvas';
+      /** 工厂创建的渲染器所关联的根元素 */
       host: HTMLCanvasElement;
+      /** 该挂载生命周期内固定的后端参数 */
       immutableOptions: RetainedCanvasRendererImmutableOptions;
     }>;
 
@@ -138,9 +165,13 @@ export type RetainedRendererFactory = {
 
 /** Render 私有 renderer executor */
 export type RetainedRendererExecutor = Readonly<{
+  /** 准备首次场景挂载，返回可提交和回滚的事务 */
   prepareMount: RetainedRendererDefinitionBase['prepareMount'];
+  /** 准备场景补丁与运行时配置的原子更新 */
   prepare: RetainedRendererDefinitionBase['prepare'];
+  /** 读取已提交的渲染帧与动画状态 */
   read: RetainedRendererDefinitionBase['read'];
+  /** 释放渲染器持有的宿主资源 */
   dispose: RetainedRendererDefinitionBase['dispose'];
 }>;
 

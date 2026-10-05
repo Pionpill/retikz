@@ -231,8 +231,8 @@ const resolveIntervalValues = (
 };
 
 /**
- * 解析 axis guide 使用的刻度值和标签。
- * @description 优先消费显式 ticks.values；否则委托 PositionScale.ticks。格式化按 tickKind 选择数字 / 时间 formatter，分类和未知 tickKind 保留原标签。
+ * 解析 axis guide 使用的刻度值和标签
+ * @description 优先消费显式 ticks.values；否则委托 PositionScale.ticks。格式化按 tickKind 选择数字 / 时间 formatter，分类和未知 tickKind 保留原标签
  */
 export const resolveGuideTicks = (
   scale: PositionScale,
@@ -283,7 +283,7 @@ const pickSampleIndices = (indices: ReadonlyArray<number>, maxCount: number, pre
   return [...picked].sort((a, b) => a - b).slice(0, maxCount);
 };
 
-/** 按 density 把候选 tick set 抽样成 visible tick set。 */
+/** 按 density 把候选 tick set 抽样成 visible tick set */
 export const resolveVisibleGuideTicks = (
   ticks: TickSet,
   source: GuideTickVisibilitySource | undefined,

@@ -108,7 +108,9 @@ export const graphLayoutHostPropsOf = (props: GraphLayoutHostProps): GraphLayout
 
 /** Graph JSX children 的通用 Kernel authoring 收集结果 */
 export type GraphChildCollection = Readonly<{
+  /** 按作者顺序收集的 Vanilla 图形输入 */
   children: ReadonlyArray<InputChild>;
+  /** 嵌套内容需要的领域 adapter 集合 */
   adapters: ReadonlyArray<AnyInputEmbedAdapter>;
 }>;
 

@@ -65,7 +65,10 @@ export const mergePlotDefaults = (
   override: IRPlotDefaults | undefined,
 ): IRPlotDefaults => mergeSourceValue(base ?? {}, override) ?? {};
 
-/** 合并一个 guide 文本样式；非空 font 作为一个原子字段替换 */
+/**
+ * 合并一个 guide 文本样式；非空 font 作为一个原子字段替换
+ * @template T 合并后保留的参考线文本样式结构类型
+ */
 export const mergeGuideTextStyle = <T extends object>(base: T | undefined, override: object | undefined): T =>
   (mergeSourceValue(base ?? {}, override) ?? {}) as T;
 

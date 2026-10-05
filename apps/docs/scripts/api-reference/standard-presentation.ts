@@ -70,6 +70,15 @@ const pages = {
 } as const;
 
 const translations: Readonly<Partial<Record<string, string>>> = {
+  互斥的离散图例项或连续色带内容: 'Mutually exclusive discrete legend entries or continuous color-ramp content',
+  '可选的图例标题，接受文本或绘制子内容': 'Optional legend title accepting text or drawing content',
+  标识复合组件领域产物: 'Identifies a composite component domain artifact',
+  产物所属复合组件的注册命名空间: 'Registered namespace of the composite component that owns the artifact',
+  产生该产物的最终编译出现位置: 'Final compilation occurrence that produced this artifact',
+  产物所属复合组件的注册类型: 'Registered type of the composite component that owns the artifact',
+  '通过组件产物 schema 校验的领域结果': 'Domain result validated by the component artifact schema',
+  选择离散项列表或连续样本刻度的互斥内容分支: 'Select either discrete entries or a continuous sample with ticks',
+  按作者顺序排列的样本与标签项: 'Samples and labels in authored order',
   'Frame 正文使用 Core Node Source，保留可省略的位置': 'Frame body uses Core Node Source with optional positions',
   'Standard Legend 的 React Tier 2 无头 authoring 组件':
     'React Tier 2 headless authoring component for Standard Legend',

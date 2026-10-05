@@ -15,6 +15,7 @@ const AnimationEasingNameSchema = createOpenStringSchema(AnimationEasing);
 
 const AnimationPropertySchema = createOpenStringSchema(AnimationProperty);
 
+/** 校验缓动曲线名称或三次贝塞尔控制点四元组 */
 export const EasingSchema = union([
   AnimationEasingNameSchema,
   tuple([number(), number(), number(), number()]),
@@ -22,6 +23,7 @@ export const EasingSchema = union([
   'Easing curve: built-in easing name, custom easing name, or cubic-bezier tuple [x1, y1, x2, y2]. Omitted fields use linear easing.',
 );
 
+/** 校验归一化时间点上的绝对属性值及到下一帧的可选缓动 */
 export const KeyframeSchema = object({
   at: NormalizedFractionSchema.describe(
     'Normalized keyframe time. Keyframes in one track must be sorted by this field.',
@@ -34,14 +36,17 @@ export const KeyframeSchema = object({
   ),
 }).describe('One animation keyframe: normalized time, absolute value, and optional segment easing.');
 
+/** 校验通过运行时事件名称启动播放的触发描述 */
 export const EventTriggerSchema = object({
   onEvent: NonBlankStringSchema.describe('Runtime event name that starts playback. Only the event name enters the IR.'),
 }).describe('Runtime event trigger descriptor.');
 
+/** 校验加载、可见、手动或命名事件触发方式 */
 export const TriggerSchema = union([zodEnum(AnimationTrigger), EventTriggerSchema]).describe(
   'Playback trigger: load, visible, manual, or a named runtime event. Omitted fields use load.',
 );
 
+/** 校验变换动画使用的命名锚点或元素局部坐标原点 */
 export const OriginSchema = union([
   zodEnum({ ...CenterAnchor, ...Anchor }).describe(
     'Named transform pivot using the canonical node anchor vocabulary, resolved against the animated element.',
@@ -51,6 +56,7 @@ export const OriginSchema = union([
   'Transform pivot for scale, scaleX, scaleY, and rotate. Non-transform properties ignore it; omitted fields use the element center.',
 );
 
+/** 校验单属性动画轨道及按时间升序排列的绝对值关键帧 */
 export const AnimationTrackSchema = object({
   property: AnimationPropertySchema.describe(
     'Animated property name. Built-ins have refined value types; custom names accept JSON values. viewBox is scene-root only.',

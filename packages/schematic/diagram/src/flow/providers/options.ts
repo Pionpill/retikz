@@ -62,9 +62,13 @@ const graphOptionsOf = (options: FlowDiagramDefinitionOptions): GraphDefinitionO
 
 /** Flow Diagram compile 共享的已解析 registries 与默认 Definition */
 export type ResolvedFlowDiagramDefinitionOptions = Readonly<{
+  /** 有效的 Diagram 外框与呈现主题定义 */
   diagramThemeStyles: ReadonlyMap<string, DiagramThemeStyleDefinition>;
+  /** 有效的 Flow 元素与关系主题定义 */
   flowThemeStyles: ReadonlyMap<string, FlowThemeStyleDefinition>;
+  /** 可用布局定义及其默认选择 */
   flowLayouts: ResolvedFlowLayoutRegistry;
+  /** 交给 Graph 投影与编译的扩展定义 */
   graph: GraphDefinitionOptions;
 }>;
 

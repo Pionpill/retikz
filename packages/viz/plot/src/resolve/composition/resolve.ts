@@ -255,7 +255,7 @@ const axisGapKeyOf = (guide: IRPlotAxisGuide): string | null => {
   return `edge:${placement.edge}`;
 };
 
-/** 为同侧或同 edge 的多根 axis 累加 composition axis gap。 */
+/** 为同侧或同 edge 的多根 axis 累加 composition axis gap */
 export const withAxisGapOffsets = (
   guides: ReadonlyArray<IRPlotGuide>,
   axisGap: number | undefined,
@@ -292,7 +292,7 @@ export const withAxisGapOffsets = (
   });
 };
 
-/** 把 composition padding 作为默认 margin，并让 runtime margin 覆盖。 */
+/** 把 composition padding 作为默认 margin，并让 runtime margin 覆盖 */
 export const mergeCompositionMargin = (
   padding: CompositionLayout['padding'] | undefined,
   margin: Partial<Margins> | undefined,

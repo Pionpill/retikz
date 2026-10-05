@@ -6,7 +6,7 @@ import { literal, number, strictObject } from 'zod';
 
 import { renderToSvgString } from '../../src';
 
-/**
+/*
  * @retikz/vanilla renderToSvgString（SSR / 构建期，node 环境，无 DOM）
  */
 const nodeIr: IRScene = {

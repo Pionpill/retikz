@@ -46,7 +46,7 @@ export class RetikzInspectError extends RetikzError<RetikzInspectErrorCode, Read
   <ApiSourceLink
     label={'AnyInspectorDefinitionInput'}
     path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={167}
+    startLine={184}
   >
     Heterogeneous author definitions accepted by registries, with options schemas and resolvers completed at
     registration
@@ -135,7 +135,7 @@ export type InspectionAppearanceContext = Readonly<{
   <ApiSourceLink
     label={'InspectionCompileResult'}
     path={'packages/kernel/inspect/src/compile/types.ts'}
-    startLine={148}
+    startLine={159}
   >
     Atomic compilation output containing primary and auxiliary results
   </ApiSourceLink>
@@ -174,7 +174,7 @@ export type InspectionCompileResult = Readonly<{
 ### InspectionDiagnostic
 
 <p>
-  <ApiSourceLink label={'InspectionDiagnostic'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={140}>
+  <ApiSourceLink label={'InspectionDiagnostic'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={151}>
     An Inspect-owned diagnostic for a callback or fragment warning
   </ApiSourceLink>
 </p>
@@ -213,7 +213,7 @@ export type InspectionDiagnostic = Readonly<{
   <ApiSourceLink
     label={'InspectionDiagnosticOrigin'}
     path={'packages/kernel/inspect/src/compile/types.ts'}
-    startLine={103}
+    startLine={114}
   >
     Structured origins of Inspect failures, callback warnings, and fragment diagnostics
   </ApiSourceLink>
@@ -312,7 +312,7 @@ export type InspectionDiagnosticOrigin =
 ### InspectionPlane
 
 <p>
-  <ApiSourceLink label={'InspectionPlane'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={97}>
+  <ApiSourceLink label={'InspectionPlane'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={108}>
     An ordered, read-only Inspector auxiliary plane
   </ApiSourceLink>
 </p>
@@ -346,7 +346,7 @@ export type InspectionPlane = Readonly<{
 ### InspectionPlaneEntry
 
 <p>
-  <ApiSourceLink label={'InspectionPlaneEntry'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={81}>
+  <ApiSourceLink label={'InspectionPlaneEntry'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={92}>
     An auxiliary Scene plane entry
   </ApiSourceLink>
 </p>
@@ -390,7 +390,7 @@ export type InspectionPlaneEntry = Readonly<{
 ### InspectionSelection
 
 <p>
-  <ApiSourceLink label={'InspectionSelection'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={59}>
+  <ApiSourceLink label={'InspectionSelection'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={65}>
     Runtime-only Inspector selection for one compilation
   </ApiSourceLink>
 </p>
@@ -639,7 +639,7 @@ export type InspectorCoordinateSpace = 'local' | 'scene';
   <ApiSourceLink
     label={'InspectorDefinitionInput'}
     path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={108}
+    startLine={119}
   >
     Author-facing Inspector definition; options fields may be omitted only when defaults satisfy their input and output
     types
@@ -986,7 +986,7 @@ export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'sco
   <ApiSourceLink
     label={'compileInspectionToScene'}
     path={'packages/kernel/inspect/src/compile/driver.ts'}
-    startLine={259}
+    startLine={276}
   >
     Runs an atomic Inspector compilation using Core observed compilation
   </ApiSourceLink>
@@ -1035,7 +1035,7 @@ export declare const compileInspectionToScene: <
   <ApiSourceLink
     label={'createDefaultInspectorRegistry'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={85}
+    startLine={89}
   >
     Creates the default Inspector registry with built-ins first and the same path for third-party definitions
   </ApiSourceLink>
@@ -1112,7 +1112,7 @@ export declare const createInspectorRegistry: (
 ### defineInspector
 
 <p>
-  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={69}>
+  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={72}>
     Defines an Inspector while preserving its author-input type
   </ApiSourceLink>
 </p>
@@ -1160,7 +1160,7 @@ export declare const defineInspector: <
   <ApiSourceLink
     label={'mergeInspectorRegistries'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={72}
+    startLine={76}
   >
     Merges created registries while preserving the definition order of each registry
   </ApiSourceLink>
@@ -1412,7 +1412,7 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
   <ApiSourceLink
     label={'CreateInspectionVanillaDriverOptions'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={66}
+    startLine={71}
   >
     Fixed configuration for the Inspect Vanilla compilation driver
   </ApiSourceLink>
@@ -1552,7 +1552,7 @@ export declare const createInspectionVanillaAuthoring: (
   <ApiSourceLink
     label={'createInspectionVanillaDriver'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={147}
+    startLine={159}
   >
     Creates a Vanilla compilation driver binding an Inspector registry, selection, and committed callbacks
   </ApiSourceLink>

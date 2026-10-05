@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../src/canvas/draw-scene';
 
-/**
+/*
  * canvas 文本 fill 基线：缺省 fill 的文本必须用确定黑色（与 SVG 省略 fill 的默认一致），
  * 不能继承 ctx 上残留的 fillStyle（上一帧 / 上个 prim）。锁定 drawText 的确定基线修复
  */

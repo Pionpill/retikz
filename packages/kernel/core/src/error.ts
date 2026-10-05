@@ -34,7 +34,11 @@ export const RetikzCoreErrorCode = {
 /** Core 包稳定错误码取值 */
 export type RetikzCoreErrorCode = ValueOf<typeof RetikzCoreErrorCode>;
 
-/** Core 包错误的结构化构造参数 */
+/**
+ * Core 包错误的结构化构造参数
+ * @template TCode 调用方用于错误分支判断的稳定错误码类型
+ * @template TDetails 随错误携带的结构化上下文类型
+ */
 export type RetikzCoreErrorOptions<
   TCode extends RetikzCoreErrorCode = RetikzCoreErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
@@ -53,7 +57,11 @@ type RetikzCoreErrorCauseOptions<TDetails extends Readonly<Record<string, unknow
   Pick<RetikzCoreErrorOptions<RetikzCoreErrorCode, TDetails>, 'details' | 'cause'>
 >;
 
-/** Core 包统一的结构化错误 */
+/**
+ * Core 包统一的结构化错误
+ * @template TCode 调用方用于错误分支判断的稳定错误码类型
+ * @template TDetails 随错误携带的结构化上下文类型
+ */
 export class RetikzCoreError<
   TCode extends RetikzCoreErrorCode = RetikzCoreErrorCode,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,

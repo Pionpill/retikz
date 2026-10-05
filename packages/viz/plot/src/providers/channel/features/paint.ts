@@ -13,8 +13,14 @@ import { PlotScale } from '../../../schemas';
 
 /** 颜色通道 definition 的名称、取值与图例配置 */
 export type ColorChannelDefinitionOptions = {
+  /** 创建的颜色类通道名称 */
   channel: string;
+  /** 从 mark 中读取该通道的绑定 */
   pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
+  /**
+   * 是否允许常量分支使用颜色以外的 paint 输入
+   * @default false
+   */
   constantPaint?: boolean;
 };
 
@@ -34,8 +40,8 @@ const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec:
 };
 
 /**
- * 创建 color-like mark 通道（color / fill / stroke）。
- * @description 常量 value 直返；字段值经 channel scale registry 取色。连续 / temporal 字段必须显式引用 color scale。
+ * 创建 color-like mark 通道（color / fill / stroke）
+ * @description 常量 value 直返；字段值经 channel scale registry 取色。连续 / temporal 字段必须显式引用 color scale
  */
 export const makeColorChannelDefinition = (
   options: ColorChannelDefinitionOptions,
@@ -128,10 +134,13 @@ const colorResolveContext = (
   defaultDivergingScheme: palette?.diverging,
 });
 
-/** 内置 paint 通道 definition 的按名称索引类型。 */
+/** 内置 paint 通道 definition 的按名称索引类型 */
 export type BuiltinPaintChannels = {
+  /** 供 mark 消费的主颜色通道 */
   color: MarkChannelDefinition<PlotPaint>;
+  /** 供 mark 消费的填充通道 */
   fill: MarkChannelDefinition<PlotPaint>;
+  /** 供 mark 消费的描边通道 */
   stroke: MarkChannelDefinition<PlotPaint>;
 };
 
@@ -154,7 +163,7 @@ const markValueChannel = (value: unknown): IRPlotChannel | undefined => {
 const encodingChannel = (mark: IRPlotMarkOperation, channel: string): IRPlotChannel | undefined =>
   (mark as { encoding?: Record<string, IRPlotChannel | undefined> }).encoding?.[channel];
 
-/** 创建内置 paint channel definitions。 */
+/** 创建内置 paint channel definitions */
 export const createBuiltinPaintChannels = (): BuiltinPaintChannels => ({
   color: makeColorChannelDefinition({
     channel: 'color',

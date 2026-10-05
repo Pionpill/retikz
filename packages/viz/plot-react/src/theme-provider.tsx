@@ -4,9 +4,11 @@ import { useMemo } from 'react';
 
 import { PlotThemeStylesContext, usePlotThemeStyles } from './theme-context';
 
-/** Plot-owned ambient Theme definitions Provider props */
+/** Plot 主题定义上下文组件的属性 */
 export type PlotThemeProviderProps = {
+  /** 追加到父上下文定义之后的 Plot 主题样式定义；省略时沿用父上下文 */
   plotThemeStyles?: ReadonlyArray<PlotThemeStyleDefinition>;
+  /** 可读取该 Plot 主题定义上下文的 React 子树 */
   children?: ReactNode;
 };
 

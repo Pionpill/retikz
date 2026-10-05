@@ -13,7 +13,13 @@ export type IRMatrix = Omit<
 > &
   Omit<IRScopeProps, 'style'> &
   (
-    | { /** 显式二维单元格 */ items: Array<Array<string | IRCell>>; data?: never; skeleton?: never; dataExpand?: never }
+    | {
+        /** 显式二维单元格 */
+        items: Array<Array<string | IRCell>>;
+        data?: never;
+        skeleton?: never;
+        dataExpand?: never;
+      }
     | {
         /** 二维 JSON 数据，格内结构按 dataExpand 展示 */
         data: NonNullable<input<typeof MatrixSchema>['data']>;

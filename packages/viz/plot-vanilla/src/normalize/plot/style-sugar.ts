@@ -138,7 +138,10 @@ export const extensionChannelEncoding = (
 
 type PaintStyleInput = string | IRPaint | PlotMarkValue<string | IRPaint> | undefined;
 
-/** 把 paint 样式解析为字段绑定或常量值 */
+/**
+ * 把 paint 样式解析为字段绑定或常量值
+ * @template T 归一化后保留的填充或描边样式类型
+ */
 export const paintStyleOf = <T extends IRPlotPointFillStyle | IRPlotPointStrokeStyle>(
   value: PaintStyleInput,
   prop: 'fill' | 'stroke',
@@ -193,7 +196,10 @@ export const strokeWidthStyleOf = (
   return undefined;
 };
 
-/** 把数值样式解析为字段绑定或常量值 */
+/**
+ * 把数值样式解析为字段绑定或常量值
+ * @template T 归一化后保留的数值视觉映射类型
+ */
 export const numberStyleOf = <T extends PlotMarkValue<number>>(
   value: string | number | PlotMarkValue<number> | undefined,
   prop: string,
@@ -218,7 +224,10 @@ export const intervalPullStyleOf = (
   return typeof value === 'number' ? { kind: 'constant', value } : { kind: 'field', value };
 };
 
-/** 把枚举样式解析为字段绑定或允许的常量值 */
+/**
+ * 把枚举样式解析为字段绑定或允许的常量值
+ * @template T 当前属性允许的字符串枚举值类型
+ */
 export const enumStyleOf = <T extends string>(
   value: string | PlotMarkValue<T> | undefined,
   prop: string,

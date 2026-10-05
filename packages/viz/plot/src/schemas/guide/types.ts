@@ -9,13 +9,13 @@ import type {
 } from './schema';
 
 /**
- * 图例绑定的非位置通道名。
+ * 图例绑定的非位置通道名
  * @description schema 只要求非空字符串；该通道是否存在、是否产出 legend descriptor，由 channel registry 在 lowering 时解析
  */
 export type LegendChannelValue = string;
 
 /**
- * guide 绑定的坐标系定位维度名。
+ * guide 绑定的坐标系定位维度名
  * @description schema 只要求非空字符串；该维度是否被坐标系支持，由 CoordinateDefinition.roles 在 lowering 时校验
  */
 export type GuideDimensionValue = string;

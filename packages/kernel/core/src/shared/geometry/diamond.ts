@@ -15,7 +15,9 @@ const DIAMOND_EDGE = {
 
 /** 菱形：中心 + halfA/halfB 半轴长 + 可选旋转；顶点在 (±halfA,0) 与 (0,±halfB) */
 export type Diamond = {
+  /** 菱形中心的横坐标 */
   x: number;
+  /** 菱形中心的纵坐标 */
   y: number;
   /** 中心到 east/west 顶点距离 */
   halfA: number;

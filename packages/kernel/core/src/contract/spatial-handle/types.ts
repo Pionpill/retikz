@@ -21,9 +21,9 @@ export type SpatialHandleDeclaration = Readonly<{
 
 /** qualified handle path 中的单层 composite owner */
 export type SpatialHandleOwner = Readonly<{
-  /** provider namespace */
+  /** 能力提供者的命名空间 */
   namespace: string;
-  /** provider type */
+  /** 能力提供者的类型 */
   type: string;
   /** authored composite 的显式 id */
   instanceId?: string;
@@ -35,20 +35,22 @@ export type SpatialHandleOwner = Readonly<{
 export type QualifiedSpatialHandle = Readonly<{
   /** 从外到内的 composite owner path，声明者位于最后 */
   ownerPath: ReadonlyArray<SpatialHandleOwner>;
-  /** owner-local id */
+  /** 所属者内部的局部标识 */
   id: string;
   /** 与主 id 查询同一条记录的 owner-local 别名 */
   aliasIds?: ReadonlyArray<string>;
-  /** owner-defined role */
+  /** 由所属者定义的语义角色 */
   role: string;
-  /** renderer-neutral world-space geometry */
+  /** 不绑定渲染后端的世界坐标几何 */
   geometry: Readonly<{
+    /** 标识矩形空间几何 */
     kind: 'rect';
+    /** 当前空间句柄在世界坐标中的矩形边界 */
     bounds: Readonly<BoundsRect>;
   }>;
   /** 冻结的 authored tags */
   tags: ReadonlyArray<string>;
-  /** owner-defined JSON-safe payload */
+  /** 所属者定义的可 JSON 序列化载荷 */
   payload?: Readonly<JsonObject>;
   /** replay / remap 后的最终 declaration occurrence */
   finalOccurrence: CompileOccurrenceLocator;
@@ -58,7 +60,7 @@ export type QualifiedSpatialHandle = Readonly<{
 
 /** owner path 的精确查询条件 */
 export type SpatialOwnerSelector = Readonly<{
-  /** provider namespace */
+  /** 能力提供者的命名空间 */
   namespace: string;
   /** 可选 provider type */
   type?: string;
@@ -74,9 +76,9 @@ export type SpatialHandleSelector = Readonly<{
   within?: ReadonlyArray<SpatialOwnerSelector>;
   /** declaration owner 的精确条件 */
   owner?: SpatialOwnerSelector;
-  /** owner-local id */
+  /** 所属者内部的局部标识 */
   id?: string;
-  /** owner-defined role */
+  /** 由所属者定义的语义角色 */
   role?: string;
   /** 结果必须全部包含的 tags */
   tags?: ReadonlyArray<string>;

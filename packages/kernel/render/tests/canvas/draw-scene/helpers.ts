@@ -1,17 +1,28 @@
 import type { Scene } from '@retikz/core';
 
+/** 记录绘制方法调用及断言需要的部分样式快照 */
 export type CanvasCall = {
+  /** 记录的 Canvas API 方法名 */
   name: string;
+  /** 调用时按顺序传入的参数 */
   args: Array<unknown>;
+  /** 调用时的字体状态快照 */
   font?: string;
+  /** 调用时的填充样式快照 */
   fillStyle?: string | CanvasGradient | CanvasPattern;
+  /** 调用时的线帽样式快照 */
   lineCap?: CanvasLineCap;
+  /** 调用时的线段连接样式快照 */
   lineJoin?: CanvasLineJoin;
+  /** 调用时的线宽快照 */
   lineWidth?: number;
+  /** 调用时的虚线起始偏移快照 */
   lineDashOffset?: number;
+  /** 调用时的描边样式快照 */
   strokeStyle?: string | CanvasGradient | CanvasPattern;
 };
 
+/** 供绘制测试记录调用、样式与变换状态的 Canvas 上下文替身 */
 export type SpyCanvasContext = Pick<
   CanvasRenderingContext2D,
   | 'arc'
@@ -43,18 +54,31 @@ export type SpyCanvasContext = Pick<
   | 'transform'
   | 'translate'
 > & {
+  /** 该测试上下文关联的 Canvas 元素 */
   canvas: HTMLCanvasElement;
+  /** 按调用顺序记录的绘制 API 及状态快照 */
   calls: Array<CanvasCall>;
+  /** 当前模拟填充样式 */
   fillStyle: string | CanvasGradient | CanvasPattern;
+  /** 当前模拟字体状态 */
   font: string;
+  /** 当前模拟全局不透明度 */
   globalAlpha: number;
+  /** 当前模拟线帽样式 */
   lineCap: CanvasLineCap;
+  /** 当前模拟虚线起始偏移 */
   lineDashOffset: number;
+  /** 当前模拟线段连接样式 */
   lineJoin: CanvasLineJoin;
+  /** 当前模拟线宽 */
   lineWidth: number;
+  /** 当前模拟描边样式 */
   strokeStyle: string | CanvasGradient | CanvasPattern;
+  /** 当前模拟文本水平对齐方式 */
   textAlign: CanvasTextAlign;
+  /** 当前模拟文本基线方式 */
   textBaseline: CanvasTextBaseline;
+  /** 读取测试上下文的当前变换矩阵 */
   getTransform: () => DOMMatrix;
 };
 
@@ -69,6 +93,11 @@ const multiplyMatrix = (left: MatrixValues, right: MatrixValues): MatrixValues =
   f: left.b * right.e + left.d * right.f + left.f,
 });
 
+/**
+ * 创建记录方法调用并模拟状态栈和仿射变换的测试上下文
+ * @param width 测试画布宽度，默认 300
+ * @param height 测试画布高度，默认 150
+ */
 export const createSpyCanvasContext = (width = 300, height = 150): SpyCanvasContext => {
   const calls: Array<CanvasCall> = [];
   let matrix: MatrixValues = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
@@ -212,6 +241,7 @@ export const createSpyCanvasContext = (width = 300, height = 150): SpyCanvasCont
   return context;
 };
 
+/** 覆盖基本图元、路径命令、文本与分组变换的共享绘制样例 */
 export const scene: Scene = {
   layout: { x: 0, y: 0, width: 120, height: 80 },
   primitives: [

@@ -63,7 +63,7 @@ export type HydrationHandlers = Record<string, ElementHandlers>;
 
 /** Retained hydration 命中的 runtime occurrence 与语义 owner */
 export type HydrationTarget = Readonly<{
-  /** primitive occurrence identity */
+  /** 图元在逻辑树中当前出现位置的身份 */
   identity: RuntimeIdentity;
   /** 聚合多个 primitive 的 semantic owner identity */
   semanticOwner: RuntimeIdentity;

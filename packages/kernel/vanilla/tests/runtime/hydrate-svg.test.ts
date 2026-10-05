@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToSvgString } from '../../src';
 import { hydrate, mountSvg } from '../../src/dom';
 
-/**
+/*
  * @retikz/vanilla hydrate（SVG 水合，jsdom 环境）
  * @description mountSvg / SSR 先渲染出含 data-retikz-id 的图，hydrate 再把 handler 经根级 closest 委托绑回图元。
  *   触发类断言验证命中图元后 handler 被调用；dispose 后再触发不再调用

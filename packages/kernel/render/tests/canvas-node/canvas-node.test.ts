@@ -4,7 +4,9 @@ import type { Scene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 type CanvasCall = {
+  /** 记录的 Canvas API 方法名 */
   name: string;
+  /** 调用时按顺序传入的参数 */
   args: Array<unknown>;
 };
 
@@ -22,10 +24,15 @@ type SpyCanvasContext = Pick<
   | 'setTransform'
   | 'stroke'
 > & {
+  /** 按调用顺序记录的绘制 API 及状态快照 */
   calls: Array<CanvasCall>;
+  /** 当前模拟填充样式 */
   fillStyle: string | CanvasGradient | CanvasPattern;
+  /** 当前模拟全局不透明度 */
   globalAlpha: number;
+  /** 当前模拟线宽 */
   lineWidth: number;
+  /** 当前模拟描边样式 */
   strokeStyle: string | CanvasGradient | CanvasPattern;
 };
 

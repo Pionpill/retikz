@@ -111,8 +111,14 @@ export const flowDiagramLayoutHostPropsOf = (props: FlowDiagramLayoutHostProps):
 /** Flow JSX marker 的稳定语义类别 */
 export type FlowMarkerKind = 'entity' | 'entities' | 'group' | 'layout' | 'relation' | 'relations';
 
-/** 只参与 FlowDiagram authoring 收集的 JSX marker */
-export type FlowMarkerComponent<TProps> = FC<TProps> & { flowMarkerKind: FlowMarkerKind };
+/**
+ * 只参与 FlowDiagram authoring 收集的 JSX marker
+ * @template TProps 流程标记组件接受的作者属性类型
+ */
+export type FlowMarkerComponent<TProps> = FC<TProps> & {
+  /** 供 Flow 作者输入收集器识别该声明组件的种类 */
+  flowMarkerKind: FlowMarkerKind;
+};
 
 type FlowGroupMarkerProps<TGroup extends InputFlowGroup = InputFlowGroup> = TGroup extends InputFlowGroup
   ? Omit<TGroup, 'children'>

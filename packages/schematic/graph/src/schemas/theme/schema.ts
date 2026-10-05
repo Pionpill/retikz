@@ -40,6 +40,7 @@ const GraphPredicateThemeSelectorSchema = strictObject({
   params: JsonObjectSchema.optional().describe('Recursive subset matched against Canonical predicate params.'),
 }).describe('Predicate name and optional Canonical params subset selector.');
 
+/** 校验根据完整规范实体语义匹配的主题选择器 */
 export const GraphEntityThemeSelectorSchema = strictObject({
   role: selectorKeySchema(EntityRoleSchema, 'Entity role')
     .optional()
@@ -55,6 +56,7 @@ export const GraphEntityThemeSelectorSchema = strictObject({
   .superRefine(requireAtLeastOneField('Entity Graph selector'))
   .describe('Entity selector over complete Canonical semantics.');
 
+/** 校验根据完整规范关系语义及有效方向匹配的主题选择器 */
 export const GraphRelationThemeSelectorSchema = strictObject({
   role: selectorKeySchema(RelationRoleSchema, 'Relation role')
     .optional()
@@ -73,6 +75,7 @@ export const GraphRelationThemeSelectorSchema = strictObject({
   .superRefine(requireAtLeastOneField('Relation Graph selector'))
   .describe('Relation selector over complete Canonical semantics and effective direction.');
 
+/** 校验实体输入可继承的稀疏视觉默认值 */
 export const GraphEntityDefaultsStyleSchema = EntitySchema.shape.style
   .unwrap()
   .pick({
@@ -94,10 +97,12 @@ export const GraphEntityDefaultsStyleSchema = EntitySchema.shape.style
   })
   .describe('Sparse Entity Source style defaults.');
 
+/** 校验实体规则可覆盖的稀疏样式，排除字体字段 */
 export const GraphEntityRuleStyleSchema = GraphEntityDefaultsStyleSchema.omit({ font: true }).describe(
   'Sparse Entity Source style rule fields without font.',
 );
 
+/** 校验实体的稀疏布局默认值，排除角色拥有的内边距 */
 export const GraphEntityDefaultsLayoutSchema = EntitySchema.shape.layout
   .unwrap()
   .pick({
@@ -109,6 +114,7 @@ export const GraphEntityDefaultsLayoutSchema = EntitySchema.shape.layout
   })
   .describe('Sparse Entity Source layout defaults without role-owned padding.');
 
+/** 校验关系的稀疏路径样式默认值，排除结构虚线与填充字段 */
 export const GraphRelationDefaultsStyleSchema = RelationSchema.shape.style
   .unwrap()
   .pick({
@@ -133,11 +139,13 @@ const GraphRelationDefaultsRootSchema = RelationSchema.pick({
   labelOpacity: true,
 });
 
+/** 校验关系输入可继承的稀疏默认值 */
 export const GraphRelationDefaultsSchema = strictObject({
   style: GraphRelationDefaultsStyleSchema.optional(),
   ...GraphRelationDefaultsRootSchema.shape,
 }).describe('Sparse Relation Source defaults.');
 
+/** 校验关系规则仅针对虚线配方的结构覆盖 */
 export const GraphRelationRuleStructureSchema = strictObject({
   dashPattern: RelationSchema.shape.style
     .unwrap()
@@ -145,17 +153,20 @@ export const GraphRelationRuleStructureSchema = strictObject({
     .describe('Complete Relation dash pattern.'),
 }).describe('Relation rule structural override limited to the dash recipe.');
 
+/** 校验分组或块的 Surface 背景、边框与圆角默认值 */
 export const GraphSurfaceDefaultsSchema = strictObject({
   background: SurfaceSchema.shape.background,
   border: SurfaceSchema.shape.border,
   cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
 }).describe('Sparse Group or Block Surface root defaults.');
 
+/** 校验实体样式与布局的稀疏默认值 */
 export const GraphEntityDefaultsSchema = strictObject({
   style: GraphEntityDefaultsStyleSchema.optional(),
   layout: GraphEntityDefaultsLayoutSchema.optional(),
 }).describe('Sparse Entity Source defaults.');
 
+/** 校验按实体、关系、分组与块组织的图默认值 */
 export const GraphDefaultsSchema = strictObject({
   entity: GraphEntityDefaultsSchema.optional(),
   relation: GraphRelationDefaultsSchema.optional(),
@@ -163,12 +174,14 @@ export const GraphDefaultsSchema = strictObject({
   block: GraphSurfaceDefaultsSchema.optional(),
 }).describe('Sparse Graph defaults grouped by semantic target.');
 
+/** 校验单条按顺序匹配并覆盖实体输入的规则 */
 export const GraphEntityRuleSchema = strictObject({
   type: literal(GraphType.Entity).describe('Entity Graph rule discriminator.'),
   selector: GraphEntityThemeSelectorSchema.optional().describe('Optional Entity selector; omission matches all.'),
   style: GraphEntityRuleStyleSchema.optional().describe('Entity Source style rule fields.'),
 }).describe('One ordered Entity Source rule.');
 
+/** 校验单条按顺序匹配并覆盖关系结构的规则 */
 export const GraphRelationRuleSchema = strictObject({
   type: literal(GraphType.Relation).describe('Relation Graph rule discriminator.'),
   selector: GraphRelationThemeSelectorSchema.optional().describe('Optional Relation selector; omission matches all.'),
@@ -176,6 +189,7 @@ export const GraphRelationRuleSchema = strictObject({
   ...GraphRelationDefaultsSchema.shape,
 }).describe('One ordered Relation Source rule.');
 
+/** 校验面向实体或关系的有序图规则 */
 export const GraphRuleSchema = discriminatedUnion('type', [GraphEntityRuleSchema, GraphRelationRuleSchema]).describe(
   'Ordered Graph Source rules for Entity and Relation targets.',
 );

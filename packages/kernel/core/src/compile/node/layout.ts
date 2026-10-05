@@ -127,6 +127,7 @@ export type LayoutNodeContext = {
   allocationWidthProposal?: LayoutAxisProposal;
 };
 
+/** 按文本测量、节点缩放与父级宽度提案计算正文、形状和边界布局 */
 export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContext): NodeLayout => {
   const { node, shape: shapeResolution, boundary: boundaryResolution } = resolution;
   const {

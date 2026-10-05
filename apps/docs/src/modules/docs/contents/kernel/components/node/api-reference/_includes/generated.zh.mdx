@@ -176,7 +176,7 @@ export type CoordinateProps = {
 ### node / InputNode
 
 - `node`：<ApiSourceLink label={"node"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={13}>创建作者侧节点输入，身份由配置中的 id 声明</ApiSourceLink>
-- `InputNode`：<ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={52}>作者侧节点输入</ApiSourceLink>
+- `InputNode`：<ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={53}>作者侧节点输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -268,7 +268,7 @@ export type InputCoordinate = IRCoordinate & {
 ### InputNodeLabel
 
 <p>
-  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={46}>
+  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={47}>
     作者侧节点标签
   </ApiSourceLink>
 </p>
@@ -307,7 +307,7 @@ export type InputNodeLabel = Omit<IRNodeLabel, 'position'> & {
   <ApiSourceLink
     label={'InputNodeLabelBoundaryPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={32}
+    startLine={33}
   >
     作者侧节点标签边界位置
   </ApiSourceLink>
@@ -356,7 +356,7 @@ export type InputNodeLabelBoundaryPosition = Omit<
   <ApiSourceLink
     label={'InputNodeLabelPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={41}
+    startLine={42}
   >
     作者侧节点标签位置
   </ApiSourceLink>
@@ -647,7 +647,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 ### IRNodeLayout
 
 <p>
-  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={46}>
+  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={47}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -856,7 +856,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   <ApiSourceLink
     label={'BUILTIN_BOUNDARIES'}
     path={'packages/kernel/core/src/providers/boundary/definitions.ts'}
-    startLine={115}
+    startLine={119}
   >
     内置 boundary provider 注册项
   </ApiSourceLink>

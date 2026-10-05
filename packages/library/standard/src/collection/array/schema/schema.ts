@@ -12,10 +12,13 @@ import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../_cell/schem
 import { CollectionIndexOptionsSchema, CollectionIndexStyleSchema } from '../../_index';
 import { ArrayCellIdMode, ArrayDirection } from '../constants';
 
+/** 复用集合格外索引的文本样式约束 */
 export const ArrayIndexStyleSchema = CollectionIndexStyleSchema;
 
+/** 复用集合格外索引的编号、标签与位置约束 */
 export const ArrayIndexOptionsSchema = CollectionIndexOptionsSchema;
 
+/** 校验无真实数据的数组骨架：指定空格数量或按顺序提供格内标签 */
 export const ArraySkeletonSchema = union([
   strictObject({
     count: NonNegativeIntegerSchema.describe('Number of contentless cells.'),
@@ -42,6 +45,7 @@ export const ArrayCellSchema = CellSchema.extend({
   style: CellStyleSchema.optional().describe('Sparse visual overrides for a Array or Map cell.'),
 });
 
+/** 校验不换行的单轴格子布局，并补齐排列方向与相邻间距 */
 export const ArrayLayoutSchema = ArrayCellLayoutSchema.extend({
   direction: zodEnum(ArrayDirection).default(ArrayDirection.Row).describe('Single-axis cell order without wrapping.'),
   gap: NonNegativeNumberSchema.default(2).describe('Distance between adjacent cells and the index strip.'),
@@ -74,6 +78,7 @@ const ArrayBaseSchema = CompositeBaseSchema.extend({
     .describe('False hides indices; true or an object enables the index strip.'),
 });
 
+/** 校验数组集合的显式格子、JSON 数据或骨架输入，并拒绝混用互斥来源 */
 export const ArraySchema = union([
   ArrayBaseSchema.required({ items: true })
     .extend({

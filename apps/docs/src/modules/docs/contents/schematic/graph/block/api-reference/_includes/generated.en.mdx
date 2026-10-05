@@ -4,7 +4,7 @@
 
 ### Block / BlockProps
 
-- `Block`: <ApiSourceLink label={"Block"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={101}>Integrate open-content Block Source into React authoring</ApiSourceLink>
+- `Block`: <ApiSourceLink label={"Block"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={103}>Integrate open-content Block Source into React authoring</ApiSourceLink>
 - `BlockProps`: <ApiSourceLink label={"BlockProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={23}>React authoring props for Block Source</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -42,7 +42,7 @@ export type BlockProps = Omit<BlockInputEmbedProps, 'type' | 'children'> &
 
 ### BlockHeader / BlockHeaderProps
 
-- `BlockHeader`: <ApiSourceLink label={"BlockHeader"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={125}>Integrate independent Block Header Source into React authoring</ApiSourceLink>
+- `BlockHeader`: <ApiSourceLink label={"BlockHeader"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={128}>Integrate independent Block Header Source into React authoring</ApiSourceLink>
 - `BlockHeaderProps`: <ApiSourceLink label={"BlockHeaderProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={30}>React authoring props for Block Header</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -85,7 +85,7 @@ export type BlockHeaderProps = Omit<BlockHeaderInputEmbedProps, 'type' | 'icon' 
 
 ### BlockSection / BlockSectionProps
 
-- `BlockSection`: <ApiSourceLink label={"BlockSection"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={147}>Integrate independent Block Section Source into React authoring</ApiSourceLink>
+- `BlockSection`: <ApiSourceLink label={"BlockSection"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={151}>Integrate independent Block Section Source into React authoring</ApiSourceLink>
 - `BlockSectionProps`: <ApiSourceLink label={"BlockSectionProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={39}>React authoring props for Block Section</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -123,7 +123,7 @@ export type BlockSectionProps = Omit<BlockSectionInputEmbedProps, 'type' | 'chil
 
 ### BlockRow / BlockRowProps
 
-- `BlockRow`: <ApiSourceLink label={"BlockRow"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={178}>Integrate independent Block Row Source into React authoring</ApiSourceLink>
+- `BlockRow`: <ApiSourceLink label={"BlockRow"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={185}>Integrate independent Block Row Source into React authoring</ApiSourceLink>
 - `BlockRowProps`: <ApiSourceLink label={"BlockRowProps"} path={"packages/schematic/graph-react/src/graph/Block.tsx"} startLine={56}>React authoring props for Block Row</ApiSourceLink>
 
 ```ts
@@ -138,7 +138,7 @@ export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 
 ### block / BlockInputEmbedProps
 
-- `block`: <ApiSourceLink label={"block"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={44}>Create a Block Source authoring embed</ApiSourceLink>
+- `block`: <ApiSourceLink label={"block"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={45}>Create a Block Source authoring embed</ApiSourceLink>
 - `BlockInputEmbedProps`: <ApiSourceLink label={"BlockInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block.ts"} startLine={12}>Source authoring input for a Block embed</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -153,7 +153,7 @@ export type BlockRowProps = BlockRowPropsVariant<BlockRowInputEmbedProps>;
 | `background?`        | `BlockInputEmbedProps["background"]`                                                                                                                                                                               | —       | Explicit shell background override.                                                                                                             |
 | `border?`            | `BlockInputEmbedProps["border"]`                                                                                                                                                                                   | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
 | `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | —                                                                                                                                               |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | Drawing content in the block container, in authoring order                                                                                      |
 | `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
 | `defaults?`          | `BlockInputEmbedProps["defaults"]`                                                                                                                                                                                 | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
@@ -192,7 +192,7 @@ export type BlockInputEmbedProps = WithoutInputType<InputBlock>;
 
 ### blockHeader / BlockHeaderInputEmbedProps
 
-- `blockHeader`: <ApiSourceLink label={"blockHeader"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={49}>Create a Block Header Source authoring embed</ApiSourceLink>
+- `blockHeader`: <ApiSourceLink label={"blockHeader"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={50}>Create a Block Header Source authoring embed</ApiSourceLink>
 - `BlockHeaderInputEmbedProps`: <ApiSourceLink label={"BlockHeaderInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block-header.ts"} startLine={12}>Source authoring input for a Block Header embed</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -205,11 +205,11 @@ export type BlockInputEmbedProps = WithoutInputType<InputBlock>;
 | ----------------- | ------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
 | `description?`    | `BlockHeaderInputEmbedProps["description"]`                                           | —       | Optional secondary Header description.                                                |
 | `direction?`      | `"horizontal" \| "vertical"`                                                          | —       | Optional direction for the title and description text region; omitted means vertical. |
-| `readonly icon?`  | `InputGraphChild`                                                                     | —       | —                                                                                     |
+| `readonly icon?`  | `InputGraphChild`                                                                     | —       | Optional drawing content before the title                                             |
 | `itemGap?`        | `number`                                                                              | —       | Optional minimum physical gap between the Header title and description.               |
 | `justifyContent?` | `"center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | —       | Optional main-axis distribution within the Header title and description text region.  |
 | `title`           | `BlockHeaderInputEmbedProps["title"]`                                                 | —       | Required primary Header title.                                                        |
-| `readonly trail?` | `InputGraphChild`                                                                     | —       | —                                                                                     |
+| `readonly trail?` | `InputGraphChild`                                                                     | —       | Optional drawing content after the title                                              |
 
 </ApiTable>
 
@@ -229,7 +229,7 @@ export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 
 ### blockSection / BlockSectionInputEmbedProps
 
-- `blockSection`: <ApiSourceLink label={"blockSection"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={44}>Create a Block Section Source authoring embed</ApiSourceLink>
+- `blockSection`: <ApiSourceLink label={"blockSection"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={45}>Create a Block Section Source authoring embed</ApiSourceLink>
 - `BlockSectionInputEmbedProps`: <ApiSourceLink label={"BlockSectionInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block-section.ts"} startLine={12}>Source authoring input for a Block Section embed</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -244,7 +244,7 @@ export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 | `background?`        | `BlockSectionInputEmbedProps["background"]`                                                                                                                                                                        | —       | Explicit shell background override.                                                                                                             |
 | `border?`            | `BlockSectionInputEmbedProps["border"]`                                                                                                                                                                            | —       | Explicit shell border; replaces the entire theme border field.                                                                                  |
 | `boundingShape?`     | `"rectangle" \| "circle"`                                                                                                                                                                                          | —       | Synthetic bounding envelope for this scope's id: rectangle or circle.                                                                           |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | —                                                                                                                                               |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>`                                                                                                                                                                                   | —       | Drawing content in this section, in authoring order                                                                                             |
 | `clip?`              | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip`                                                                                                                           | —       | Clip region for this scope in scope-local coordinates. Applies to clipped children through the emitted scope group.                             |
 | `cornerRadius?`      | `number`                                                                                                                                                                                                           | —       | Shell corner radius.                                                                                                                            |
 | `defaults?`          | `BlockSectionInputEmbedProps["defaults"]`                                                                                                                                                                          | —       | Named descendant defaults and their inheritance barrier.                                                                                        |
@@ -280,7 +280,7 @@ export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 
 ### blockRow / BlockRowInputEmbedProps
 
-- `blockRow`: <ApiSourceLink label={"blockRow"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={53}>Create a Block Row Source authoring embed</ApiSourceLink>
+- `blockRow`: <ApiSourceLink label={"blockRow"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={54}>Create a Block Row Source authoring embed</ApiSourceLink>
 - `BlockRowInputEmbedProps`: <ApiSourceLink label={"BlockRowInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/block-row.ts"} startLine={12}>Source authoring input for a Block Row embed</ApiSourceLink>
 
 ```ts
@@ -291,8 +291,8 @@ export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow>;
 
 ### normalizeBlock / InputBlock
 
-- `normalizeBlock`: <ApiSourceLink label={"normalizeBlock"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={150}>Assemble open-content Block authoring input into one Source composite</ApiSourceLink>
-- `InputBlock`: <ApiSourceLink label={"InputBlock"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={82}>Input aligned with Block Source, allowing Vanilla child authoring sugar</ApiSourceLink>
+- `normalizeBlock`: <ApiSourceLink label={"normalizeBlock"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={158}>Assemble open-content Block authoring input into one Source composite</ApiSourceLink>
+- `InputBlock`: <ApiSourceLink label={"InputBlock"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={98}>Input aligned with Block Source, allowing Vanilla child authoring sugar</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -302,10 +302,10 @@ The remaining members are inherited from `BlockCreateOptions`, with `'children'`
 
 <ApiTable>
 
-| Member               | Type                             | Default | Description |
-| -------------------- | -------------------------------- | ------- | ----------- |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —       | —           |
-| `readonly type?`     | `'block'`                        | —       | —           |
+| Member               | Type                             | Default | Description                                                |
+| -------------------- | -------------------------------- | ------- | ---------------------------------------------------------- |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —       | Drawing content in the block container, in authoring order |
+| `readonly type?`     | `'block'`                        | —       | Optional discriminator for Block authoring input           |
 
 </ApiTable>
 
@@ -329,8 +329,8 @@ export type InputBlock = Omit<BlockCreateOptions, 'children'> &
 
 ### normalizeBlockHeader / InputBlockHeader
 
-- `normalizeBlockHeader`: <ApiSourceLink label={"normalizeBlockHeader"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={108}>Assemble Block Header authoring input into an independent Source composite</ApiSourceLink>
-- `InputBlockHeader`: <ApiSourceLink label={"InputBlockHeader"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={74}>Input aligned with Block Header Source, allowing Vanilla child sugar in icon / trail</ApiSourceLink>
+- `normalizeBlockHeader`: <ApiSourceLink label={"normalizeBlockHeader"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={111}>Assemble Block Header authoring input into an independent Source composite</ApiSourceLink>
+- `InputBlockHeader`: <ApiSourceLink label={"InputBlockHeader"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={87}>Input aligned with Block Header Source, allowing Vanilla child sugar in icon / trail</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -342,12 +342,12 @@ export type InputBlock = Omit<BlockCreateOptions, 'children'> &
 | ----------------- | ------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
 | `description?`    | `BlockHeaderCreateOptions['description']`                                             | —       | Optional secondary Header description.                                                |
 | `direction?`      | `"horizontal" \| "vertical"`                                                          | —       | Optional direction for the title and description text region; omitted means vertical. |
-| `readonly icon?`  | `InputGraphChild`                                                                     | —       | —                                                                                     |
+| `readonly icon?`  | `InputGraphChild`                                                                     | —       | Optional drawing content before the title                                             |
 | `itemGap?`        | `number`                                                                              | —       | Optional minimum physical gap between the Header title and description.               |
 | `justifyContent?` | `"center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly"` | —       | Optional main-axis distribution within the Header title and description text region.  |
 | `title`           | `BlockHeaderCreateOptions['title']`                                                   | —       | Required primary Header title.                                                        |
-| `readonly trail?` | `InputGraphChild`                                                                     | —       | —                                                                                     |
-| `readonly type?`  | `'blockHeader'`                                                                       | —       | —                                                                                     |
+| `readonly trail?` | `InputGraphChild`                                                                     | —       | Optional drawing content after the title                                              |
+| `readonly type?`  | `'blockHeader'`                                                                       | —       | Optional discriminator for BlockHeader authoring input                                |
 
 </ApiTable>
 
@@ -372,8 +372,8 @@ export type InputBlockHeader = Omit<BlockHeaderCreateOptions, 'icon' | 'trail'> 
 
 ### normalizeBlockSection / InputBlockSection
 
-- `normalizeBlockSection`: <ApiSourceLink label={"normalizeBlockSection"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={119}>Assemble Block Section authoring input into an independent Source composite</ApiSourceLink>
-- `InputBlockSection`: <ApiSourceLink label={"InputBlockSection"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={67}>Input aligned with Block Section Source, allowing arbitrary Vanilla child authoring sugar</ApiSourceLink>
+- `normalizeBlockSection`: <ApiSourceLink label={"normalizeBlockSection"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={123}>Assemble Block Section authoring input into an independent Source composite</ApiSourceLink>
+- `InputBlockSection`: <ApiSourceLink label={"InputBlockSection"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={78}>Input aligned with Block Section Source, allowing arbitrary Vanilla child authoring sugar</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -383,10 +383,10 @@ The remaining members are inherited from `BlockSectionCreateOptions`, with `'chi
 
 <ApiTable>
 
-| Member               | Type                             | Default | Description |
-| -------------------- | -------------------------------- | ------- | ----------- |
-| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —       | —           |
-| `readonly type?`     | `'blockSection'`                 | —       | —           |
+| Member               | Type                             | Default | Description                                             |
+| -------------------- | -------------------------------- | ------- | ------------------------------------------------------- |
+| `readonly children?` | `ReadonlyArray<InputGraphChild>` | —       | Drawing content in this section, in authoring order     |
+| `readonly type?`     | `'blockSection'`                 | —       | Optional discriminator for BlockSection authoring input |
 
 </ApiTable>
 
@@ -410,8 +410,8 @@ export type InputBlockSection = Omit<BlockSectionCreateOptions, 'children'> &
 
 ### normalizeBlockRow / InputBlockRow
 
-- `normalizeBlockRow`: <ApiSourceLink label={"normalizeBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={129}>Assemble Block Row authoring input into an independent Source composite</ApiSourceLink>
-- `InputBlockRow`: <ApiSourceLink label={"InputBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={60}>Input aligned with Block Row Source, allowing Vanilla child authoring sugar</ApiSourceLink>
+- `normalizeBlockRow`: <ApiSourceLink label={"normalizeBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={134}>Assemble Block Row authoring input into an independent Source composite</ApiSourceLink>
+- `InputBlockRow`: <ApiSourceLink label={"InputBlockRow"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={63}>Input aligned with Block Row Source, allowing Vanilla child authoring sugar</ApiSourceLink>
 
 ```ts
 export declare const normalizeBlockRow: (input: InputBlockRow) => IRBlockRow;
@@ -1022,7 +1022,7 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 ### IRCodeBlock
 
 <p>
-  <ApiSourceLink label={'IRCodeBlock'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={20}>
+  <ApiSourceLink label={'IRCodeBlock'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={25}>
     Shared code entity facts and open composite identity; concrete entities derive from independent schemas
   </ApiSourceLink>
 </p>
@@ -1053,7 +1053,7 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 | `meta?`           | `Record<string, JsonValue>`                                                                                                                                                                                        | —       | Opaque JSON metadata carried by this scope. Preserved into emitted Scene primitives and ignored by the compiler.                                |
 | `minWidth?`       | `number`                                                                                                                                                                                                           | —       | Optional minimum outer Block width including horizontal padding; omitted Source resolves to 240.                                                |
 | `name`            | `string`                                                                                                                                                                                                           | —       | Code entity name.                                                                                                                               |
-| `namespace`       | `string`                                                                                                                                                                                                           | —       | —                                                                                                                                               |
+| `namespace`       | `string`                                                                                                                                                                                                           | —       | Registered namespace of the code-block component definition                                                                                     |
 | `overflow?`       | `"clip" \| "visible"`                                                                                                                                                                                              | —       | Content overflow: visible or clip.                                                                                                              |
 | `padding?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Spacing between the content and outer shell.                                                                                                    |
 | `placement?`      | `IRCodeBlockProps['placement']`                                                                                                                                                                                    | —       | Optional final placement applied after intrinsic layout and local transforms.                                                                   |
@@ -1061,7 +1061,7 @@ export type IRBlockText = ZodInfer<typeof BlockTextSchema>;
 | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                                                                                                                                          | —       | Sparse Theme override inherited by this Scope descendants.                                                                                      |
 | `trail?`          | `IRCodeBlockProps['trail']`                                                                                                                                                                                        | —       | Header trail; omitted uses the entity marker, null hides it.                                                                                    |
 | `transforms?`     | `IRCodeBlockProps['transforms']`                                                                                                                                                                                   | —       | Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time. |
-| `type`            | `string`                                                                                                                                                                                                           | —       | —                                                                                                                                               |
+| `type`            | `string`                                                                                                                                                                                                           | —       | Registered type of the code-block component definition                                                                                          |
 | `width?`          | `number`                                                                                                                                                                                                           | —       | Optional fixed outer Block width including horizontal padding.                                                                                  |
 | `zIndex?`         | `number`                                                                                                                                                                                                           | —       | Stacking order of this scope among sibling IR children. Applies to the scope group as one unit, not to children inside it.                      |
 
@@ -1143,7 +1143,7 @@ export type IRCodeBlockProps = ZodInfer<typeof CodeBlockPropsSchema>;
 ### IRCodeLogic
 
 <p>
-  <ApiSourceLink label={'IRCodeLogic'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={16}>
+  <ApiSourceLink label={'IRCodeLogic'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={20}>
     View source
   </ApiSourceLink>
 </p>
@@ -1177,7 +1177,7 @@ export type IRCodeLogic = ZodInfer<typeof CodeLogicSchema>;
 ### IRCodeMethod
 
 <p>
-  <ApiSourceLink label={'IRCodeMethod'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={17}>
+  <ApiSourceLink label={'IRCodeMethod'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={22}>
     View source
   </ApiSourceLink>
 </p>
@@ -1212,7 +1212,7 @@ export type IRCodeMethod = ZodInfer<typeof CodeMethodSchema>;
 ### IRCodeParameter
 
 <p>
-  <ApiSourceLink label={'IRCodeParameter'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={13}>
+  <ApiSourceLink label={'IRCodeParameter'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={14}>
     View source
   </ApiSourceLink>
 </p>
@@ -1247,7 +1247,7 @@ export type IRCodeParameter = ZodInfer<typeof CodeParameterSchema>;
 ### IRCodeProperty
 
 <p>
-  <ApiSourceLink label={'IRCodeProperty'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={15}>
+  <ApiSourceLink label={'IRCodeProperty'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={18}>
     View source
   </ApiSourceLink>
 </p>
@@ -1284,7 +1284,7 @@ export type IRCodeProperty = ZodInfer<typeof CodePropertySchema>;
 ### IRCodeSignature
 
 <p>
-  <ApiSourceLink label={'IRCodeSignature'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={14}>
+  <ApiSourceLink label={'IRCodeSignature'} path={'packages/schematic/graph/src/code/schemas/types.ts'} startLine={16}>
     View source
   </ApiSourceLink>
 </p>

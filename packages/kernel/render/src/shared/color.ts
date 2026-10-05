@@ -1,7 +1,14 @@
 import { parseStaticCssColor } from '@retikz/foundation';
 
 /** sRGB 字节通道（各 0..255） */
-export type RgbBytes = { r: number; g: number; b: number };
+export type RgbBytes = {
+  /** 红色通道字节值，范围为 0 到 255 */
+  r: number;
+  /** 绿色通道字节值，范围为 0 到 255 */
+  g: number;
+  /** 蓝色通道字节值，范围为 0 到 255 */
+  b: number;
+};
 
 /**
  * 解析 `#rgb` / `#rrggbb` hex 颜色串 → sRGB 字节通道（0..255）；非 hex（rgb()/命名色/oklch 等）返回 null

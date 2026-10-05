@@ -11,7 +11,10 @@ type MarkStyleValue<T> =
   | Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Field }>
   | (Omit<Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Constant }>, 'value'> & { value: T });
 
-/** mark 样式值解析出的逐行 resolver 与字段元数据 */
+/**
+ * mark 样式值解析出的逐行 resolver 与字段元数据
+ * @template T 逐行解析后交给 mark 的视觉值类型
+ */
 export type MarkValueResolution<T> = ChannelResolution<T> & {
   /** 绑定的数据字段名；常量值没有字段名 */
   field?: string;
@@ -19,7 +22,10 @@ export type MarkValueResolution<T> = ChannelResolution<T> & {
   fieldType?: DataFieldType;
 };
 
-/** 创建 mark 样式值 resolver 时的字段类型与常量处理策略 */
+/**
+ * 创建 mark 样式值 resolver 时的字段类型与常量处理策略
+ * @template T 原始字段解析成功时返回的视觉值类型
+ */
 export type MarkValueResolverOptions<T> = {
   /** 用于错误信息的属性 / 通道名 */
   channelName: string;
@@ -31,7 +37,10 @@ export type MarkValueResolverOptions<T> = {
   constants?: 'resolve' | 'skip';
 };
 
-/** 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用 */
+/**
+ * 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用
+ * @template T 常量或字段解析器产出的视觉值类型
+ */
 export const makeMarkValueResolver = <T>(
   value: MarkStyleValue<T> | undefined,
   model: DataTransformModel,

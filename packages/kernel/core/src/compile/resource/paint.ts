@@ -21,9 +21,11 @@ export type PaintResolver = (paint: PaintInput | undefined) => PaintValue | unde
 
 /** paint 资源注册表：仅负责 cache、去重和 Scene resource materialization */
 export type PaintRegistry = {
+  /** 解析颜色或登记可复用绘制资源，返回场景可引用的 paint */
   register: PaintResolver;
   /** 提交 probe 已解析的 paint resource，不再调用 pattern provider */
   importResolved: (resource: Extract<SceneResource, { kind: 'paint' }>) => PaintValue;
+  /** 读取当前已登记的绘制资源 */
   resources: () => Array<SceneResource>;
 };
 

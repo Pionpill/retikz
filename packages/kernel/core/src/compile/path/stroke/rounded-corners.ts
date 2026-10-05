@@ -51,16 +51,23 @@ type LineRun = {
 
 /** line-step 圆角改写输入 */
 export type ApplyRoundedCornersInput = {
+  /** 需要应用圆角的路径命令序列 */
   commands: Array<PathCommand>;
+  /** 与命令对应的生成来源，用于识别可圆角连接 */
   provenance: Array<CommandProvenance>;
+  /** 每条命令对应的原始步骤索引 */
   sourceStepIndexes: Array<number>;
+  /** 连接处的圆角半径 */
   radius: number;
+  /** 统一新增几何数值精度的函数 */
   round: (n: number) => number;
 };
 
 /** 圆角改写后的 command 与其 source step 映射 */
 export type RoundedCommandsResult = {
+  /** 应用圆角后的路径命令序列 */
   commands: Array<PathCommand>;
+  /** 与输出命令逐项对应的原始步骤索引 */
   sourceStepIndexes: Array<number>;
 };
 

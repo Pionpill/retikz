@@ -64,6 +64,7 @@ const loadImage = (href: string, onReady: () => void): HTMLImageElement | null =
   return entry.loaded ? img : null;
 };
 
+/** 将编译后的静态帧接入 Canvas 宿主，并配置事件水合与动画播放 */
 export type CanvasHostProps = {
   /** 已编译主图与只读辅助层 */
   frame: StaticRenderFrame;

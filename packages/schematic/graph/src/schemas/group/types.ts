@@ -11,5 +11,5 @@ export type GroupCaptionDirection = ZodInfer<typeof GroupCaptionDirectionSchema>
 /** Group 结构化 caption */
 export type IRGroupCaption = ZodInfer<typeof GroupCaptionSchema>;
 
-/** JSON-safe Graph Group Source composite */
+/** 可 JSON 序列化的图分组组合节点输入 */
 export type IRGroup = ZodInfer<typeof GroupSchema>;

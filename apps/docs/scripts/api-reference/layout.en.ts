@@ -1,5 +1,10 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  缓动能力注册表: 'easing registry',
+  '基线以上的高度；省略时由 normalizeTextMetrics 根据总高度与 descent 补齐，两者均省略时各取总高度的一半':
+    'Height above the baseline; normalizeTextMetrics derives an omitted value from total height and descent, or assigns half the total height when both are omitted',
+  '基线以下的深度；省略时由 normalizeTextMetrics 根据总高度与 ascent 补齐，两者均省略时各取总高度的一半':
+    'Depth below the baseline; normalizeTextMetrics derives an omitted value from total height and ascent, or assigns half the total height when both are omitted',
   '客户端作者准备方式；同步 SSR 仍消费同步 lower':
     'Client authoring preparation mode; synchronous SSR continues to use synchronous lower',
   '异步 preparation 与 controller 的生命周期信号': 'Lifecycle signal for async preparation and the controller',

@@ -17,12 +17,14 @@ export const PatternShapeNameSchema = createOpenStringSchema(PatternShape).descr
   'Pattern motif provider name: a Core built-in or a custom name registered via CompileOptions.patterns.',
 );
 
+/** 校验渐变色标的归一化位置、CSS 颜色与可选透明度 */
 export const GradientStopSchema = object({
   offset: NormalizedFractionSchema.describe('Stop position along the gradient axis.'),
   color: CssColorSchema.describe('CSS color for this stop.'),
   opacity: OpacitySchema.optional().describe('Stop opacity. Omitted fields are fully opaque.'),
 }).describe('A single gradient color stop');
 
+/** 校验至少含两个色标的线性渐变及可选方向角 */
 export const LinearGradientPaintSchema = object({
   kind: literal('linearGradient').describe('Discriminator for linear gradient paint.'),
   stops: array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
@@ -31,6 +33,7 @@ export const LinearGradientPaintSchema = object({
   ),
 }).describe('Linear gradient paint server');
 
+/** 校验径向渐变；中心与半径采用对象包围盒坐标 */
 export const RadialGradientPaintSchema = object({
   kind: literal('radialGradient').describe('Discriminator for radial gradient paint.'),
   stops: array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
@@ -40,6 +43,7 @@ export const RadialGradientPaintSchema = object({
   radius: PositiveNumberSchema.optional().describe('Radius in object-bounding-box units. Omitted fields use 0.5.'),
 }).describe('Radial gradient paint server');
 
+/** 校验锥形渐变的色标、中心及起始角 */
 export const ConicGradientPaintSchema = object({
   kind: literal('conicGradient').describe('Discriminator for conic gradient paint.'),
   stops: array(GradientStopSchema).min(2).describe('Gradient stops, at least 2'),
@@ -49,6 +53,7 @@ export const ConicGradientPaintSchema = object({
   angle: AngleDegreesSchema.optional().describe('Start angle in degrees. Omitted fields use 0.'),
 }).describe('Conic gradient paint server');
 
+/** 校验线状图案的局部样式覆盖；显式虚线序列优先于预设 */
 export const PatternLineStyleSchema = strictObject({
   color: CssColorSchema.optional().describe('Line motif color override.'),
   lineWidth: PositiveNumberSchema.optional().describe('Line motif stroke width override in user units.'),
@@ -62,6 +67,7 @@ export const PatternLineStyleSchema = strictObject({
   lineJoin: PathLineJoinSchema.optional().describe('Line motif corner join override.'),
 });
 
+/** 校验图案样式周期中某个零基槽位的局部覆盖 */
 export const PatternLineStyleOverrideSchema = strictObject({
   index: NonNegativeIntegerSchema.describe('Zero-based line index within the style cycle.'),
   style: PatternLineStyleSchema.describe('Partial line style applied at this cycle index.'),
@@ -70,6 +76,7 @@ export const PatternLineStyleOverrideSchema = strictObject({
 /** 单个 Pattern tile 允许展开的最大线型周期，限制 motif 数量与编译期内存 */
 const MAX_PATTERN_LINE_STYLE_PERIOD = 512;
 
+/** 校验重复线样式周期，拒绝重复或超出周期的槽位下标 */
 export const PatternLineStyleCycleSchema = strictObject({
   period: number()
     .int()
@@ -104,6 +111,7 @@ export const PatternLineStyleCycleSchema = strictObject({
   })
   .describe('Sparse repeating line-style cycle.');
 
+/** 校验图案填充的提供者名称、基础尺寸及样式覆盖 */
 export const PatternPaintSchema = object({
   kind: literal('pattern').describe('Discriminator for pattern paint.'),
   shape: PatternShapeNameSchema.describe(
@@ -139,6 +147,7 @@ export const PatternPaintSchema = object({
   rotation: AngleDegreesSchema.optional().describe('Rotate the whole pattern, in degrees'),
 }).describe('Pattern paint server (hatching / dots / grid)');
 
+/** 校验以图片填充形状的资源地址与适配方式 */
 export const ImagePaintSchema = object({
   kind: literal('image').describe('Discriminator for image paint.'),
   href: NonBlankStringSchema.describe('Image URL (http(s) or data URI)'),
@@ -147,6 +156,7 @@ export const ImagePaintSchema = object({
     .describe('How the image maps to the shape: `fill` (stretch) / `contain` / `cover`. Default `cover`'),
 }).describe('Image paint server (fills the shape with an image)');
 
+/** 校验渐变、图案或图片资源描述；纯色由填充或描边字符串表达 */
 export const PaintSchema = discriminatedUnion('kind', [
   LinearGradientPaintSchema,
   RadialGradientPaintSchema,

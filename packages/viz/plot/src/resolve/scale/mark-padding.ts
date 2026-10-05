@@ -11,7 +11,12 @@ export type MarkPaddingSample = {
 };
 
 /** 求解结果为两端相对于有效 range 长度的留白 */
-export type MarkPaddingResolution = { lower: number; upper: number };
+export type MarkPaddingResolution = {
+  /** 尺度低端占总输出跨度的留白比例 */
+  lower: number;
+  /** 尺度高端占总输出跨度的留白比例 */
+  upper: number;
+};
 
 /** 在固定范围内有界收紧留白，始终保留通过所有外缘约束的可行解 */
 export const solveMarkPadding = (

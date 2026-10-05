@@ -15,15 +15,33 @@ import { surfaceBoundaryPath, surfaceClip } from '../../shared/surface-geometry'
 import type { CanonicalCell } from './resolve';
 
 /** 内容一次自然测量的结果与含 padding 的需求 */
-export type MeasuredCell = { cell: CanonicalCell; result?: LayoutChildResult; width: number; height: number };
+export type MeasuredCell = {
+  /** 已完成样式与布局继承的单元格 */
+  cell: CanonicalCell;
+
+  /** 内容的自然尺寸探测结果；无内容时省略 */
+  result?: LayoutChildResult;
+
+  /** 格子所需宽度；显式宽度优先，否则为内容宽度加左右内边距 */
+  width: number;
+
+  /** 格子所需高度；显式高度优先，否则为内容高度加上下内边距 */
+  height: number;
+};
 
 /** 确定的单格边框位置及引用角色 */
 export type CellPlacement = {
+  /** 此次放置复用的单格测量结果 */
   measured: MeasuredCell;
+  /** 格子左上角在集合局部坐标中的横坐标 */
   x: number;
+  /** 格子左上角在集合局部坐标中的纵坐标 */
   y: number;
+  /** 分配给格子边框区域的最终宽度 */
   width: number;
+  /** 分配给格子边框区域的最终高度 */
   height: number;
+  /** 空间引用中标识格子所属集合及键值角色的类别 */
   role: 'chain-cell' | 'array-cell' | 'matrix-cell' | 'map-key' | 'map-value';
 };
 

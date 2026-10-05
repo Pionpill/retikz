@@ -33,7 +33,7 @@ const renderTemplate = (template: string, row: ExternalRow, owner: AnchorOwner, 
 
 const defaultPrefix = (owner: AnchorOwner): string => owner.markId ?? `mark.${owner.markIndex}`;
 
-/** 创建一次 plot lowering 使用的锚点注册表。 */
+/** 创建一次 plot lowering 使用的锚点注册表 */
 export const createAnchorRegistry = (options: {
   plotId?: string;
   generators?: Record<string, AnchorIdGenerator>;

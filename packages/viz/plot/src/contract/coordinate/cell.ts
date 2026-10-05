@@ -25,12 +25,39 @@ export type Cell = {
  *   contour→contour shape），不再按坐标系分叉
  */
 export type CellGeometry =
-  | { kind: 'rect'; position: Position; width: number; height: number }
-  | { kind: 'sector'; center: Position; innerRadius: number; outerRadius: number; startAngle: number; endAngle: number }
-  | { kind: 'contour'; points: Array<Position> };
+  | {
+      /** 区分矩形、环形扇区与一般轮廓投影 */
+      kind: 'rect';
+      /** 投影后矩形中心的屏幕坐标 */
+      position: Position;
+      /** 投影后矩形的完整宽度 */
+      width: number;
+      /** 投影后矩形的完整高度 */
+      height: number;
+    }
+  | {
+      /** 区分矩形、环形扇区与一般轮廓投影 */
+      kind: 'sector';
+      /** 环形扇区圆心的屏幕坐标 */
+      center: Position;
+      /** 环形扇区的内侧半径 */
+      innerRadius: number;
+      /** 环形扇区的外侧半径 */
+      outerRadius: number;
+      /** 扇区起始角，单位为度 */
+      startAngle: number;
+      /** 扇区终止角，单位为度 */
+      endAngle: number;
+    }
+  | {
+      /** 区分矩形、环形扇区与一般轮廓投影 */
+      kind: 'contour';
+      /** 按边界顺序排列的屏幕坐标顶点 */
+      points: Array<Position>;
+    };
 
 /**
- * 读取 cell 在指定位置角色上的输出空间区间。
+ * 读取 cell 在指定位置角色上的输出空间区间
  * @description Cell 是按 coordinate role 存区间的稀疏对象；坐标帧只能读取自己声明的 roles。
  *   缺少对应 role 说明 mark 侧 cell 构造和 frame.projectCell 契约不一致，必须 fail-loud
  */
@@ -41,7 +68,7 @@ export const cellInterval = (cell: Cell, role: DimensionRole): [number, number] 
 };
 
 /**
- * 计算 contour 顶点集的 AABB 中心。
+ * 计算 contour 顶点集的 AABB 中心
  * @description core contour Node 使用 position + 相对点集装配；plot 侧用同一个 AABB 中心作为 Node.position 与 locator anchor。
  *   少于 3 点无法形成可填充轮廓，返回 null，让 lowering 和 locator 走同一条跳过规则
  */
@@ -64,7 +91,7 @@ export const contourAabbCenter = (points: ReadonlyArray<Position>): Position | n
 };
 
 /**
- * CellGeometry → 锚点屏幕位置；不可渲染的 contour 返回 null。
+ * CellGeometry → 锚点屏幕位置；不可渲染的 contour 返回 null
  * @description lowering 与 locator 共用这一判断，避免空 contour 在渲染侧被跳过、locator 侧却返回 NaN
  */
 export const cellGeometryAnchor = (geometry: CellGeometry): Position | null => {
@@ -81,7 +108,7 @@ export const cellGeometryAnchor = (geometry: CellGeometry): Position | null => {
 };
 
 /**
- * 判断 CellGeometry 是否能产出实际图元。
+ * 判断 CellGeometry 是否能产出实际图元
  * @description rect / sector 总能装配成 Node；contour 必须至少有 3 个点。所有 cell lowering 入口都应复用该判断，
  *   避免渲染侧跳过退化 contour、locator 或 reference 侧仍返回锚点
  */

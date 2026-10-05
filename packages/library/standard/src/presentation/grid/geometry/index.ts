@@ -2,10 +2,15 @@ import type { IRGrid } from '../types';
 
 /** Grid 在局部坐标中的数值边界 */
 export type GridNumericBounds = {
+  /** 网格局部范围的最小横坐标 */
   minX: number;
+  /** 网格局部范围的最小纵坐标 */
   minY: number;
+  /** 网格局部范围的最大横坐标 */
   maxX: number;
+  /** 网格局部范围的最大纵坐标 */
   maxY: number;
+  /** 宽高形式输入的整体定位目标；双端点形式不单独设置 */
   position?: Extract<IRGrid['bounds'], { position: unknown }>['position'];
 };
 

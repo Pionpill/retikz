@@ -6,6 +6,7 @@ import type { InputChild } from '../scene';
 export type InputTransform =
   | Exclude<IRTransform, { kind: 'at-translate' }>
   | (Omit<Extract<IRTransform, { kind: 'at-translate' }>, 'direction'> & {
+      /** 相对平移的目标方向，接受 Anchor 枚举值 */
       direction: Anchor;
     });
 

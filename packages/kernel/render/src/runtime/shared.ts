@@ -16,7 +16,10 @@ type RuntimeIdentityMapNode<TValue> = {
   entry?: Readonly<{ identity: RuntimeIdentity; value: TValue }>;
 };
 
-/** 以结构化 identity path 建立经 Runtime contract 校验的值索引 */
+/**
+ * 以结构化 identity path 建立经 Runtime contract 校验的值索引
+ * @template TValue 与精确运行时标识关联的值类型，供 set 写入和 get 读取
+ */
 export type RuntimeIdentityMap<TValue> = Readonly<{
   /** 查询 exact identity 对应的值 */
   get: (identity: RuntimeIdentity) => TValue | undefined;
@@ -28,7 +31,10 @@ export type RuntimeIdentityMap<TValue> = Readonly<{
   delete: (identity: RuntimeIdentity) => boolean;
 }>;
 
-/** 创建不拼接 identity key 的 Runtime identity 值索引 */
+/**
+ * 创建不拼接 identity key 的 Runtime identity 值索引
+ * @template TValue 初始条目与后续索引读写使用的值类型
+ */
 export const createRuntimeIdentityMap = <TValue>(
   entries: ReadonlyArray<readonly [RuntimeIdentity, TValue]>,
 ): RuntimeIdentityMap<TValue> => {
@@ -153,7 +159,10 @@ export const createPublicIdPrimitivePathMap = (
   return new Map(Array.from(pathsByPublicId, ([publicId, paths]) => [publicId, Object.freeze(paths.slice())] as const));
 };
 
-/** 复制并递归冻结 JSON-like 容器，函数与非普通对象保留稳定 identity */
+/**
+ * 复制并递归冻结 JSON-like 容器，函数与非普通对象保留稳定 identity
+ * @template T 输入与复制结果共享的结构类型；非普通对象保持原引用
+ */
 export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<object>()): T => {
   if (typeof value !== 'object' || value === null) return value;
   if (!Array.isArray(value) && !isPlainObject(value)) return value;

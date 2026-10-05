@@ -3,11 +3,18 @@ import type { CompileWarningCode } from './constants';
 
 /** 编译 warning 的领域中立结构化来源 */
 export type CompileWarningOrigin =
-  | Readonly<{ kind: 'primary' }>
   | Readonly<{
+      /** 区分主编译诊断与观测辅助编译诊断 */
+      kind: 'primary';
+    }>
+  | Readonly<{
+      /** 区分主编译诊断与观测辅助编译诊断 */
       kind: 'observation';
+      /** 产生观测诊断的所属者 */
       owner: CompileObservationOwner;
+      /** 观测目标在编译树中的完整位置 */
       occurrence: CompileOccurrenceLocator;
+      /** 诊断发生于所属者编译还是辅助片段编译 */
       stage: 'owner' | 'fragment';
     }>;
 

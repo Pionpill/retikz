@@ -21,7 +21,10 @@ const invalidParticipant = (cause: unknown) =>
     cause,
   });
 
-/** 定义 nominal Runtime commit participant */
+/**
+ * 定义 nominal Runtime commit participant
+ * @template TRead 提交参与者对宿主暴露的已提交只读视图类型
+ */
 export const defineRuntimeCommitParticipant = <TRead>(
   input: RuntimeCommitParticipantDefinitionInput<TRead>,
 ): RuntimeCommitParticipant<TRead> => {

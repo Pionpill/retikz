@@ -28,7 +28,7 @@ const isLoadTrigger = (track: IRAnimationTrack): boolean => track.trigger === un
 /** 百分比保留至多 4 位小数（offset 升序、确定性） */
 const pct = (offset: number): string => `${Math.round(offset * 1e6) / 1e4}%`;
 
-/** ExpandedTrack → `@keyframes name { ... }` */
+/** 将展开轨道转换为 CSS 关键帧规则 */
 const buildKeyframesRule = (name: string, expanded: ExpandedTrack): string => {
   const blocks = expanded.frames
     .map(frame => {

@@ -64,7 +64,10 @@ const resolveLayoutItemChild = (
   return Object.freeze({ child: children[0], adapters: input.adapters });
 };
 
-/** 将 React 直属布局子项组装为匹配 Vanilla adapter 的 typed Input */
+/**
+ * 将 React 直属布局子项组装为匹配 Vanilla adapter 的 typed Input
+ * @template TKind 预期的布局项种类，同时决定返回 items 的输入类型
+ */
 export const createInputLayoutItems = <TKind extends LayoutItemKind>(
   children: ReactNode,
   expectedKind: TKind,

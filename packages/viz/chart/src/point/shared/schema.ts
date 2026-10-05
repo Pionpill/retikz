@@ -54,6 +54,7 @@ const PointPositionDomainPaddingObjectSchema = strictObject({
     }
   });
 
+/** 校验位置尺度的共享或按轴分别设置的连续定义域留白 */
 export const PointPositionDomainPaddingSchema = union([
   NonNegativeNumberSchema,
   PointPositionDomainPaddingObjectSchema,
@@ -143,7 +144,12 @@ export const PointRecipeGuidesSchema = strictObject({
   legend: boolean().optional().describe('Whether the recipe generates default legend guides'),
 }).describe('Sparse Point recipe guide generation controls');
 
-/** 为具体 chartType 创建精确的 Point authored mark schema */
+/**
+ * 为具体 chartType 创建精确的 Point authored mark schema
+ * @template TKind mark kind 判别字段的字面量类型
+ * @template TEncodingsSchema 校验该 mark 字段映射的 schema 类型
+ * @template TPropertiesSchema 校验该 mark 视觉属性的 schema 类型
+ */
 export const createPointChartMarkSchema = <
   TKind extends string,
   TEncodingsSchema extends ZodType,

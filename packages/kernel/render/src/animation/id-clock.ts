@@ -1,4 +1,4 @@
-/**
+/*
  * 按 id 的虚拟时钟登记表：在单条 scene 级 rAF 共享时钟之上，给每个元素 id 叠加独立的时间偏移 / 暂停 / 激活态
  * @description Canvas 后端无逐元素 DOM，per-id 动画控制（`ctx.animation.restart(id)` 等）靠此把全局时间 `globalTime`
  *   折算成该 id 的「有效时刻」。纯数据 / 纯数学（无 DOM）。自动播（load）track 不依赖 `active`，

@@ -134,6 +134,7 @@ const ExternalReducerOperationObjectSchema = looseObject({
   }).describe('Discriminator: custom reducer kind'),
 });
 
+/** 校验带 JSON 配置的自定义聚合归约操作 */
 export const ExternalReducerOperationSchema = ExternalReducerOperationObjectSchema.catchall(JsonValueSchema).describe(
   'Custom reducer operation with JSON config',
 );

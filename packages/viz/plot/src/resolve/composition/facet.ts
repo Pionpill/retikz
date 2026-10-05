@@ -133,7 +133,7 @@ const facetPanelId = (facet: FacetGrid, row: FacetTuple | undefined, column: Fac
     .replaceAll('{panel}', panel);
 };
 
-/** 按 facet 维度、顺序与 empty 策略生成 panel。 */
+/** 按 facet 维度、顺序与 empty 策略生成 panel */
 export const resolveFacetPanels = (
   facet: FacetGrid,
   rows: ReadonlyArray<ExternalRow>,
@@ -194,7 +194,7 @@ const orderedFacetPanelValuesByIndex = (
 
 const facetLabelGroupKey = (tuple: FacetTuple, level: number): string => JSON.stringify(tuple.slice(0, level + 1));
 
-/** 把连续且同前缀的 facet 值归并为 header label span。 */
+/** 把连续且同前缀的 facet 值归并为 header label span */
 export const buildFacetLabelGroups = (
   panels: ReadonlyArray<FacetPanel>,
   dimension: FacetLabelDimension,
@@ -231,7 +231,7 @@ const facetDimensionItemOf = (
   return dimensions[level];
 };
 
-/** 解析 facet header label 文本。 */
+/** 解析 facet header label 文本 */
 export const facetLabelTextOf = (
   facet: FacetGrid,
   dimension: FacetLabelDimension,

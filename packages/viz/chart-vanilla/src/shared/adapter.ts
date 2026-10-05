@@ -7,7 +7,10 @@ import { buildChartProviderContribution } from './contribution';
 import { wrapChartPanel } from './scope';
 import type { ChartRuntimeInput } from './types';
 
-/** 具体 chartType 共享的同步贡献与异步数据准备 */
+/**
+ * 具体 chartType 共享的同步贡献与异步数据准备
+ * @template TInput 交给 Vanilla factory 与嵌入 adapter 的领域输入类型
+ */
 export const createChartInputEmbedAdapter = <TInput>(
   kind: string,
   createRuntime: (input: TInput) => ChartRuntimeInput<IRChartSource, unknown>,

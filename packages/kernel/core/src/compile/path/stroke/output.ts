@@ -17,7 +17,12 @@ export type EmitPathBasePropsContext = {
   /** IRPaint 物化器 */
   resolvePaint: PaintResolver;
   /** resolve 阶段已绑定的 paint */
-  paint?: Readonly<{ fill?: PaintInput; stroke?: PaintInput }>;
+  paint?: Readonly<{
+    /** 解析后的路径填充输入 */
+    fill?: PaintInput;
+    /** 解析后的路径描边输入 */
+    stroke?: PaintInput;
+  }>;
   /** resolve 阶段已确定的 path 静态样式默认值 */
   style: PathStyleResolution;
 };

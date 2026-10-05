@@ -21,6 +21,7 @@ import { createLabelVisualStyleShape, TextBlockSchema } from '../../text';
 import { NodeTargetSchema, TargetSchema } from '../target';
 import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 
+/** 校验附着于路径类宿主、由中心线采样确定位置的文本标签 */
 export const GeometryLabelSchema = strictObject({
   ...createLabelVisualStyleShape({
     textColor: 'Label text color; falls back to label defaults, path color, then currentColor.',
@@ -59,14 +60,17 @@ export const GeometryLabelSchema = strictObject({
   'Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.',
 );
 
+/** 复用几何标签规则，校验路径步骤附属标签 */
 export const StepLabelSchema = GeometryLabelSchema;
 
+/** 校验只移动路径游标、不绘制线段的动作 */
 export const MoveStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('move').describe('Move the cursor to the target without drawing.'),
   to: TargetSchema.describe('Destination point of the move'),
 }).describe('Move action: relocate the path cursor without drawing');
 
+/** 校验从当前游标向目标绘制直线的动作 */
 export const LineStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('line').describe('Draw a straight line from the current cursor to the target.'),
@@ -74,10 +78,12 @@ export const LineStepSchema = strictObject({
   label: StepLabelSchema.optional().describe('Edge label attached to this line segment'),
 }).describe('Line action: straight-line segment from cursor to target');
 
+/** 校验轴向直线支持的笛卡尔位置或节点目标 */
 export const AxisLineTargetSchema = union([PositionSchema, NodeTargetSchema]).describe(
   'Axis-line target. Supports only a Cartesian position or a node target.',
 );
 
+/** 校验将目标投影到宿主局部单轴后绘制直线的动作 */
 export const AxisLineStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('axis-line').describe('Draw one horizontal or vertical segment by projecting a target.'),
@@ -112,17 +118,21 @@ const ThreeLegFoldStepSchema = strictObject({
   ),
 });
 
+/** 校验由 via 选择两段或三段结构的正交折线动作 */
 export const FoldStepSchema = discriminatedUnion('via', [TwoLegFoldStepSchema, ThreeLegFoldStepSchema]).describe(
   'Fold action: a strict two-leg or three-leg orthogonal segment selected by `via`.',
 );
 
+/** 校验闭合当前子路径至起点的动作，不接受终点字段 */
 export const CycleStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('cycle').describe('Close the path back to the most recent move target.'),
 }).describe('Cycle action: close the current sub-path back to its starting point; carries no `to` field');
 
+/** 校验贝塞尔曲线控制点的位置 */
 export const ControlPointSchema = PositionSchema.describe('Bezier control point position.');
 
+/** 校验由一个控制点决定弯曲形状的二次贝塞尔动作 */
 export const CurveStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('curve').describe('Quadratic Bezier curve from cursor to target with one control point.'),
@@ -131,6 +141,7 @@ export const CurveStepSchema = strictObject({
   label: StepLabelSchema.optional().describe('Edge label attached to this quadratic Bezier'),
 }).describe('Curve action: quadratic Bezier; one control point shapes the bend');
 
+/** 校验由两个控制点分别控制两端切线的三次贝塞尔动作 */
 export const CubicStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('cubic').describe('Cubic Bezier curve from cursor to target with two control points.'),
@@ -161,6 +172,7 @@ export const BendLoosenessSchema = PositiveNumberSchema.describe(
   'Control-point distance multiplier used only in tangent mode; does not activate tangent mode by itself. Defaults to 1.',
 ).default(DEFAULT_BEND_LOOSENESS);
 
+/** 校验在编译时计算控制点的弯曲路径简写 */
 export const BendStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('bend').describe(
@@ -177,11 +189,13 @@ export const BendStepSchema = strictObject({
   label: StepLabelSchema.optional().describe('Edge label attached to this bend segment'),
 }).describe('Bend action: shorthand for an arc-like cubic; control points computed at compile time');
 
+/** 校验分别指定 x 与 y 方向半径的对象 */
 export const StepAnisotropicRadiusSchema = strictObject({
   x: PositiveNumberSchema.describe('Horizontal radius in user units.'),
   y: PositiveNumberSchema.describe('Vertical radius in user units.'),
 }).describe('Anisotropic radius object.');
 
+/** 校验圆形统一半径或椭圆双轴半径 */
 export const StepRadiusSchema = union([PositiveNumberSchema, StepAnisotropicRadiusSchema]).describe(
   'Circular radius number or anisotropic radius object.',
 );
@@ -228,6 +242,7 @@ const ArcStepBaseSchema = strictObject({
   'Arc action: circular or elliptical arc around a center (cursor by default, or explicit). Pen is left at the arc endpoint.',
 );
 
+/** 校验从路径游标出发的圆弧或椭圆弧动作 */
 export const ArcStepSchema = ArcStepBaseSchema;
 
 const CirclePathStepBaseSchema = strictObject({
@@ -250,6 +265,7 @@ const CirclePathStepBaseSchema = strictObject({
   'CirclePath action: full circle (no angles, pen returns to center) or partial arc (with angles, closed per chord/open).',
 );
 
+/** 校验以游标为圆心的圆路径；局部圆弧必须同时给出起止角 */
 export const CirclePathStepSchema = CirclePathStepBaseSchema.superRefine((step, ctx) =>
   refinePartialAngles(step, ctx, 'circlePath'),
 );
@@ -274,10 +290,12 @@ const EllipsePathStepBaseSchema = strictObject({
   'EllipsePath action: full ellipse (no angles, pen returns to center) or partial elliptical arc (with angles, closed per chord/open).',
 );
 
+/** 校验以游标为中心的椭圆路径；局部椭圆弧必须同时给出起止角 */
 export const EllipsePathStepSchema = EllipsePathStepBaseSchema.superRefine((step, ctx) =>
   refinePartialAngles(step, ctx, 'ellipsePath'),
 );
 
+/** 校验由相对两角确定的闭合轴对齐矩形与可选圆角 */
 export const RectangleStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('rectangle').describe(
@@ -290,10 +308,12 @@ export const RectangleStepSchema = strictObject({
   ),
 }).describe('Rectangle action: closed axis-aligned rectangle (optionally rounded) drawn between two opposite corners.');
 
+/** 校验控制平滑曲线松弛程度的切线长度倍率 */
 export const SmoothTensionSchema = PositiveNumberSchema.default(1).describe(
   'Tangent-length multiplier controlling curve slackness; defaults to 1.',
 );
 
+/** 校验经过当前游标与给定点列、编译为三次贝塞尔段的平滑曲线 */
 export const SmoothStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('smooth').describe(
@@ -310,6 +330,7 @@ export const SmoothStepSchema = strictObject({
   ),
 }).describe('Smooth action: a curve passing through the cursor and the given points, compiled to cubic Beziers.');
 
+/** 校验调用内置或注册生成器产出子路径的动作 */
 export const GeneratorStepSchema = strictObject({
   type: literal('step').describe('Discriminator marking this as a path step node'),
   kind: literal('generator').describe(
@@ -327,6 +348,7 @@ export const GeneratorStepSchema = strictObject({
   ),
 }).describe('Generator action: produce a sub-path by invoking a built-in or registered path generator.');
 
+/** 校验按 kind 区分的单个路径动作 */
 export const StepSchema = discriminatedUnion('kind', [
   MoveStepSchema,
   LineStepSchema,

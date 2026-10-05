@@ -3,7 +3,10 @@ import { assertNonEmptyString } from '@retikz/foundation';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { CompileObserverDefinition } from './types';
 
-/** 定义一次显式 observed compile observer */
+/**
+ * 定义一次显式 observed compile observer
+ * @template TOutput 观察会话完成时产生的结果类型
+ */
 export const defineCompileObserver = <TOutput>(
   definition: CompileObserverDefinition<TOutput>,
 ): CompileObserverDefinition<TOutput> => {

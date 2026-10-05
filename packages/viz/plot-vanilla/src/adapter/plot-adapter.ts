@@ -46,9 +46,9 @@ const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
 export type PlotContributionRequest = Readonly<{
   /** 已完成的 IRPlot */
   spec: IRPlot;
-  /** runtime-only dataset table */
+  /** 仅在运行时持有的数据集表 */
   datasets: ExternalDatasets;
-  /** Plot lowering runtime options */
+  /** 将绘图描述降低为 Core 图元时的运行时选项 */
   lowerOptions?: LowerPlotsOptions;
 }>;
 

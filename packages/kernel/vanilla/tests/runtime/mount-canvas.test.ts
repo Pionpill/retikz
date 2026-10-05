@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mountCanvas } from '../../src/dom';
 
-/**
+/*
  * @retikz/vanilla mountCanvas（无框架 canvas 直挂，jsdom 环境）
  * @description jsdom 的 `<canvas>.getContext('2d')` 默认返回 null（无真实 2D backend），故 spy
  *   `HTMLCanvasElement.prototype.getContext` 返回一个「录制型」proxy context 充当原生 canvas 原语——

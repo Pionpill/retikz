@@ -12,7 +12,10 @@ import { CORE_SOURCE_KEY } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { RuntimePrimitiveMetadataTable } from '../orchestration';
 
-/** 递归冻结 Computation 新创建且尚未对外暴露的 plain output */
+/**
+ * 递归冻结 Computation 新创建且尚未对外暴露的 plain output
+ * @template T 递归冻结且原样返回的计算输出类型
+ */
 export const freezeComputationOutput = <T>(value: T): T => {
   if (value === null || typeof value !== 'object') return value;
   if (Array.isArray(value)) {

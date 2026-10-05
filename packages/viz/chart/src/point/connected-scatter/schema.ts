@@ -24,12 +24,12 @@ import {
 } from '../shared';
 import { ConnectedScatterChartEncodingsSchema } from './encoding-schema';
 
-/** Connected Scatter Point member constants without layer ownership */
+/** 连接散点中不携带图层归属的点成员常量 */
 export const ConnectedScatterPointPropertiesSchema = PointPropertiesSchema.omit({ zIndex: true }).describe(
   'Connected Scatter Point constant properties without zIndex',
 );
 
-/** Connected Scatter Path member constants */
+/** 连接散点中的路径成员常量 */
 export const ConnectedScatterPathPropertiesSchema = strictObject({
   /** 相邻观测点的连接方式，省略时使用直线 */
   curve: PathMarkSchema.shape.curve,
@@ -45,13 +45,13 @@ export const ConnectedScatterPathPropertiesSchema = strictObject({
   connectNulls: PathMarkSchema.shape.connectNulls,
 }).describe('Connected Scatter open Path constant properties');
 
-/** Connected Scatter authored mark member properties */
+/** 连接散点标记的作者侧成员属性 */
 const ConnectedScatterMarkPropertiesSchema = strictObject({
   point: ConnectedScatterPointPropertiesSchema.optional(),
   path: ConnectedScatterPathPropertiesSchema.optional(),
 }).describe('Connected Scatter member properties');
 
-/** Connected Scatter recipe properties */
+/** 连接散点配方的属性 */
 export const ConnectedScatterChartPropertiesSchema = ConnectedScatterMarkPropertiesSchema.extend({
   /** 按序列同色、点线分色或淡化连接线 */
   colorMode: zodEnum(['series', 'mark', 'muted'])
@@ -64,14 +64,14 @@ export const ConnectedScatterChartPropertiesSchema = ConnectedScatterMarkPropert
   domainPadding: PointPositionDomainPaddingSchema.optional(),
 }).describe('Connected Scatter recipe properties');
 
-/** Connected Scatter authored mark direct field overrides */
+/** 连接散点标记的作者侧字段直接覆盖 */
 export const ConnectedScatterMarkEncodingsSchema = strictObject({
   x: NonBlankStringSchema.optional(),
   y: NonBlankStringSchema.optional(),
   order: NonBlankStringSchema.optional(),
 }).describe('Connected Scatter authored mark direct encodings');
 
-/** Connected Scatter authored mark payload */
+/** 连接散点标记的作者侧载荷 */
 export const ConnectedScatterChartMarkSchema = strictObject({
   kind: literal(ChartType.ConnectedScatter),
   override: boolean().optional(),
@@ -79,7 +79,7 @@ export const ConnectedScatterChartMarkSchema = strictObject({
   properties: ConnectedScatterMarkPropertiesSchema.optional(),
 }).describe('Connected Scatter Chart mark payload');
 
-/** Connected Scatter recipe envelope */
+/** 连接散点配方的封装结构 */
 export const ConnectedScatterChartRecipeSchema = strictObject({
   chartType: literal(ChartType.ConnectedScatter),
   encodings: ConnectedScatterChartEncodingsSchema,
@@ -88,13 +88,13 @@ export const ConnectedScatterChartRecipeSchema = strictObject({
   marks: array(ConnectedScatterChartMarkSchema).optional(),
 }).describe('Connected Scatter Chart recipe payload');
 
-/** Connected Scatter exact Source schema */
+/** 校验连接散点图精确输入结构的 schema */
 export const ConnectedScatterChartSchema = createChartSourceSchema(
   ChartFamily.Point,
   ConnectedScatterChartRecipeSchema,
 ).describe('Connected Scatter Chart Source IR');
 
-/** Connected Scatter exact Source IR */
+/** 连接散点图的精确输入 IR */
 export type IRConnectedScatterChart = ZodInfer<typeof ConnectedScatterChartSchema>;
 
 /** Connected Scatter recipe 字段映射 */
@@ -109,5 +109,5 @@ export type IRConnectedScatterPathProperties = ZodInfer<typeof ConnectedScatterP
 /** Connected Scatter recipe 与 mark 共用的 member 属性 */
 export type IRConnectedScatterChartProperties = ZodInfer<typeof ConnectedScatterChartPropertiesSchema>;
 
-/** Connected Scatter authored mark IR */
+/** 连接散点标记的作者侧 IR */
 export type IRConnectedScatterMark = ZodInfer<typeof ConnectedScatterChartMarkSchema>;

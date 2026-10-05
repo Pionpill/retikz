@@ -32,6 +32,7 @@ const GridLineMajorSchema = strictObject({
   style: StandardPathStrokeStyleSchema.optional().describe('Style fields overriding ordinary grid-line style.'),
 });
 
+/** 校验单个方向的网格线间距、格点原点与边界线策略 */
 export const GridLineInputSchema = strictObject({
   spacing: PositiveNumberSchema.default(DEFAULT_GRID_LINE_SPACING).describe(
     'Positive distance between adjacent grid lines in this direction.',
@@ -47,6 +48,7 @@ const GridLinePairSchema = strictObject({
   horizontal: GridLineInputSchema.describe('Configuration for horizontal grid lines.'),
 });
 
+/** 校验关闭网格线、共用配置或分别配置两个方向的输入 */
 export const GridLineSchema = union([boolean(), GridLineInputSchema, GridLinePairSchema])
   .default(true)
   .describe('Disabled, shared, or direction-specific grid-line configuration.');
@@ -133,4 +135,5 @@ const getGridLineSpacingPath = (
   return ['line', 'spacing'];
 };
 
+/** 校验网格范围、线条与边框配置，并检查格点范围是否合法 */
 export const GridSchema = GridBaseSchema.superRefine(refineGrid);

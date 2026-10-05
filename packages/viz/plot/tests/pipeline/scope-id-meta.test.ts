@@ -10,7 +10,7 @@ import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 /**
- * scope-aware id 绑定 + meta 透传。
+ * scope-aware id 绑定 + meta 透传
  * @description 断言 lowerPlots 产物中 core IR Scope / Node / Path 的 id 与 meta。
  *   这些字段由 provenance、datumProvenance、datumIdField 控制；provenance 关闭时不写合成 id/meta
  */
@@ -22,7 +22,7 @@ const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions)
 };
 
 /**
- * plot lowered 的内容 scope：承载 mark/guide 层与 provenance meta 的 localNamespace scope。
+ * plot lowered 的内容 scope：承载 mark/guide 层与 provenance meta 的 localNamespace scope
  * @description 带 id 的 plot 会生成外层 panel scope；无 id 时 outer 自身就是内容 scope
  */
 const contentScope = (outer: IRScope): IRScope =>

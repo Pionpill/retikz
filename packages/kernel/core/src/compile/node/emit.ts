@@ -286,7 +286,7 @@ const wrapNodeGroupPrimitive = (layout: NodeLayout, children: Array<ScenePrimiti
 };
 
 /**
- * NodeLayout → Scene primitives
+ * 将节点布局转换为场景图元
  * @description shape 主体走 `shapeDef.emit`；文本和 label 追加为附属 primitive
  */
 export const emitNodePrimitives = (

@@ -17,8 +17,8 @@ const isCjk = (ch: string): boolean => {
 };
 
 /**
- * 按 maxWidth 贪心折行：西文按词（空白分割）、CJK 按字；长不可断 token 溢出不硬断
- * @description 用注入的 measureText 度量；连续空白归一为单空格分隔。空文本返回 [''].
+ * 文本折行使用的字体、行宽上限与测量能力
+ * @description 行宽与测量结果使用同一绘图单位；此对象只提供折行条件，不保存中间行内容
  */
 export type WrapTextContext = {
   /** 文本字体 */
@@ -73,6 +73,13 @@ export const measureMinimumTextWidth = (
   );
 };
 
+/**
+ * 按测量宽度贪心折行，西文按词、CJK 按字寻找可断位置
+ * @description 连续空白归一为单空格；单个不可断片段超宽时允许溢出，不强行截断
+ * @param text 待折行文本
+ * @param context 字体、最大行宽和使用同一坐标单位的文本测量器
+ * @returns 按原文顺序排列的文本行；空白文本返回仅含空字符串的一行
+ */
 export const wrapText = (text: string, context: WrapTextContext): Array<string> => {
   const { font, maxWidth, measureText } = context;
   const units = tokenizeText(text);

@@ -31,7 +31,10 @@ const assertActive = (signal?: AbortSignal): void => {
 const inputModelOf = <TSource>(input: DataTransformStageInput<TSource>): DataTransformModel =>
   input.kind === 'source' ? input.model : input.result.model;
 
-/** 将实际输入投影为无行数据的能力描述 */
+/**
+ * 将实际输入投影为无行数据的能力描述
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
+ */
 export const describeDataTransformInput = <TSource>(
   input: DataTransformStageInput<TSource>,
 ): DataTransformInputDescriptor<TSource> =>
@@ -42,7 +45,10 @@ const hasProvenance = <TSource>(input: DataTransformStageInput<TSource>): boolea
   input.kind === 'result' &&
   input.result.rows.some(row => readSourceIndex(row) !== undefined || readSourceIndices(row) !== undefined);
 
-/** 创建有作用域的执行策略；所有支持检查完成后才绑定并计算 */
+/**
+ * 创建有作用域的执行策略；所有支持检查完成后才绑定并计算
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const createDataTransformExecutor = <TSource = never>(
   options: DataTransformExecutionOptions<TSource> = {},
 ): DataTransformExecutor<TSource> => {
@@ -353,7 +359,10 @@ export const createDataTransformExecutor = <TSource = never>(
   };
 };
 
-/** 统一异步入口；准备不支持时不计算，绑定后的执行只消费一次 */
+/**
+ * 统一异步入口；准备不支持时不计算，绑定后的执行只消费一次
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源
+ */
 export const executeDataTransforms = async <TSource>(
   input: DataTransformStageInput<TSource>,
   resolution: DataTransformResolution,

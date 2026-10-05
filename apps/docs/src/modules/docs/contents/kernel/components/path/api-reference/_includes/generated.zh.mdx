@@ -813,7 +813,7 @@ export type SmoothStepProps = {
 ### path / InputPath
 
 - `path`：<ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>创建作者侧路径输入，身份由配置中的 id 声明</ApiSourceLink>
-- `InputPath`：<ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={163}>作者侧路径输入</ApiSourceLink>
+- `InputPath`：<ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={187}>作者侧路径输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -865,7 +865,7 @@ export type InputPath = InputPathBase & {
 ### InputStep
 
 <p>
-  <ApiSourceLink label={'InputStep'} path={'packages/kernel/vanilla/src/normalize/path/types.ts'} startLine={128}>
+  <ApiSourceLink label={'InputStep'} path={'packages/kernel/vanilla/src/normalize/path/types.ts'} startLine={152}>
     作者侧路径步骤
   </ApiSourceLink>
 </p>
@@ -1184,7 +1184,7 @@ export type PathGeneratorGenerateContext = {
   <ApiSourceLink
     label={'PathKindBoundaryLabelInput'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={111}
+    startLine={130}
   >
     由宿主几何确定边界基点的标签请求
   </ApiSourceLink>
@@ -1228,7 +1228,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
   <ApiSourceLink
     label={'PathKindCompileContext'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={128}
+    startLine={147}
   >
     path kind 编译上下文
   </ApiSourceLink>
@@ -1333,7 +1333,7 @@ export type PathKindCompileResult = {
   <ApiSourceLink
     label={'PathKindDefinition'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={167}
+    startLine={187}
   >
     注册路径种类的解析、编译与可选所属者产物契约
   </ApiSourceLink>
@@ -1370,7 +1370,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 ### WayDSL
 
-<p><ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={141}>way DSL 数组：sugar `<Draw way={...}>` 输入形态</ApiSourceLink></p>
+<p><ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={182}>way DSL 数组：sugar `<Draw way={...}>` 输入形态</ApiSourceLink></p>
 
 ```ts
 export type WayDSL = Array<WayItem>;
@@ -1379,7 +1379,7 @@ export type WayDSL = Array<WayItem>;
 ### WayItem
 
 <p>
-  <ApiSourceLink label={'WayItem'} path={'packages/kernel/core/src/parse/way.ts'} startLine={123}>
+  <ApiSourceLink label={'WayItem'} path={'packages/kernel/core/src/parse/way.ts'} startLine={164}>
     Sugar 层 way 数组 DSL 元素
   </ApiSourceLink>
 </p>
@@ -1407,7 +1407,7 @@ export type WayItem =
 ### definePathKind
 
 <p>
-  <ApiSourceLink label={'definePathKind'} path={'packages/kernel/core/src/contract/path-kind/define.ts'} startLine={68}>
+  <ApiSourceLink label={'definePathKind'} path={'packages/kernel/core/src/contract/path-kind/define.ts'} startLine={70}>
     定义路径种类，保留路径及所属者产物的类型关联
   </ApiSourceLink>
 </p>
@@ -1563,7 +1563,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   <ApiSourceLink
     label={'resolveGeometryLabelPlacement'}
     path={'packages/kernel/core/src/resolve/path/resolve.ts'}
-    startLine={118}
+    startLine={122}
   >
     展开位置、方向、距离、interruption 与断口留白的默认值
   </ApiSourceLink>

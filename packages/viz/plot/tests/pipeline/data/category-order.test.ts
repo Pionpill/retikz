@@ -43,7 +43,7 @@ const bandSpec = (model: Array<Record<string, unknown>>, scales: Array<unknown> 
   });
 
 /**
- * 读出 band 域的实际类别顺序（左→右）。
+ * 读出 band 域的实际类别顺序（左→右）
  * @description point 下沉逐行保序：layer.children[i] ↔ rows[i]。把每行的 cat 与对应 node 的 x 配对，
  *   按 x 升序去重 → 得到 band 域里类别从左到右的真实顺序（而非仅断言「band 等距」这种对任意域都真的废断言）
  */

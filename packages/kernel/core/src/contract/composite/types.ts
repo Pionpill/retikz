@@ -58,7 +58,7 @@ export type LayoutAlignmentGuide = Readonly<{
 declare const replayBrand: unique symbol;
 
 /**
- * compile-local replay token
+ * 仅在当前编译内有效的重放令牌
  * @description 只能在创建它的同一次 compile 中放置一次，不能序列化或伪造
  */
 export type CompositeReplay = Readonly<{
@@ -210,7 +210,10 @@ export type CompositeExpandResult = Readonly<{
   spatialHandles?: ReadonlyArray<SpatialHandleDeclaration>;
 }>;
 
-/** layout-aware composite 的最终输出 */
+/**
+ * layout-aware composite 的最终输出
+ * @template TArtifact 组件可返回的 JSON 产物类型，默认 never 禁止提供产物
+ */
 export type LayoutCompositeCompileResult<TArtifact extends JsonValue = never> = Readonly<{
   /** 普通 child 继续编译，opaque child 在当前 callback 的 runtime output tree 中解析 */
   children: ReadonlyArray<IRChild | CompositeCompileChild | CompositeBoundChild>;
@@ -236,6 +239,10 @@ type LayoutCompositeBranch<TNode, TArtifact extends JsonValue> = [TArtifact] ext
 /**
  * Tier 2 composite 注册项
  * @description 精确描述单个 composite 的 schema，以及互斥的轻量 expand 或完整编译期 compile 分支
+ * @template TNode schema 解析后传入组件执行回调的节点类型
+ * @template TNamespace 复合组件注册命名空间的字面量类型
+ * @template TType 复合组件注册类型的字面量类型
+ * @template TArtifact 完整编译分支的 JSON 产物类型，默认 never 表示不声明产物
  */
 export type CompositeDefinition<
   TNode,
@@ -276,9 +283,13 @@ export type LayoutCompositeDefinition<
 
 /** 异构 registry 中擦除后的轻量 expand composite */
 export type AnyExpandCompositeDefinition = {
+  /** 复合组件的注册命名空间 */
   namespace: string;
+  /** 复合组件的注册类型 */
   type: string;
+  /** 调用展开回调前校验完整节点的 schema */
   schema: ZodType;
+  /** 将经 schema 校验的节点展开为下一层 IR；调用前需恢复节点类型关联 */
   expand: (node: never, context: CompositeExpandContext) => CompositeExpandResult;
   compile?: never;
   artifactSchema?: never;
@@ -287,19 +298,28 @@ export type AnyExpandCompositeDefinition = {
 /** 异构 registry 中擦除后的 layout-aware composite */
 export type AnyLayoutCompositeDefinition =
   | {
+      /** 复合组件的注册命名空间 */
       namespace: string;
+      /** 复合组件的注册类型 */
       type: string;
+      /** 调用编译回调前校验完整节点的 schema */
       schema: ZodType;
       expand?: never;
+      /** 在布局上下文中编译已校验节点；调用前需恢复节点类型关联 */
       compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<never>;
       artifactSchema?: never;
     }
   | {
+      /** 复合组件的注册命名空间 */
       namespace: string;
+      /** 复合组件的注册类型 */
       type: string;
+      /** 调用编译回调前校验完整节点的 schema */
       schema: ZodType;
       expand?: never;
+      /** 在布局上下文中编译已校验节点；调用前需恢复节点类型关联 */
       compile: (node: never, context: LayoutCompositeCompileContext) => LayoutCompositeCompileResult<JsonValue>;
+      /** 校验组件返回的 JSON 领域产物 */
       artifactSchema: ZodType<JsonValue>;
     };
 

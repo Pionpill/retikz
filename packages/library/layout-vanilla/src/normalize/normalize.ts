@@ -60,7 +60,10 @@ const collectLayoutItems = <TItem extends LayoutItem>(
   });
 };
 
-/** 将 Vanilla Layout items 收敛为持久化输入与向外转发的 Layout provider contribution */
+/**
+ * 将 Vanilla Layout items 收敛为持久化输入与向外转发的 Layout provider contribution
+ * @template TItem 保留布局字段的目标项类型，child 由作者输入转换为 IR
+ */
 export const normalizeLayoutItems = <TItem extends LayoutItem>(
   inputs: ReadonlyArray<Omit<TItem, 'child'> & { child: InputChild }> | undefined,
   context: InputEmbedContext,
@@ -81,7 +84,10 @@ export const normalizeLayoutItems = <TItem extends LayoutItem>(
   );
 };
 
-/** 在全树准备阶段登记 Layout child；执行阶段复用同一字段组装 */
+/**
+ * 在全树准备阶段登记 Layout child；执行阶段复用同一字段组装
+ * @template TItem 异步准备完成后输出的布局项类型，保留输入的布局约束字段
+ */
 export const prepareLayoutItems = async <TItem extends LayoutItem>(
   inputs: ReadonlyArray<Omit<TItem, 'child'> & { child: InputChild }> | undefined,
   context: InputEmbedPreparationContext,

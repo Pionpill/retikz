@@ -27,19 +27,22 @@ export type ChannelPaletteContext = {
 };
 
 /**
- * 通道解析器的输出值。
+ * 通道解析器的输出值
  * @description 通道 definition 只产运行时值，不进入 IRPlot / core IR；对象值若需要支持，必须先明确 JSON 契约与落点
  */
 export type ChannelValue = JsonValue;
 
-/** 逐行通道值解析器；返回 undefined 表示该行不应用该通道 */
+/**
+ * 逐行通道值解析器；返回 undefined 表示该行不应用该通道
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export type ChannelValueResolver<T extends ChannelValue = ChannelValue> = (row: ExternalRow) => T | undefined;
 
 /** 运行时 label 解析逃生舱，不进 IR */
 export type ResolveLabel = (row: ExternalRow) => string;
 
 /**
- * 通道 definition 类型。
+ * 通道 definition 类型
  * @description 按最终消费面分类：position 由坐标系 role 消费，mark 由 mark lowering 按图元语义消费，
  *   scope / node / path 直接落到 core IRScope / IRNode / IRPath
  */
@@ -116,22 +119,35 @@ export type ScopeChannelDelivery = {
 };
 
 /**
- * 一个 mark 下沉时消费的通道集合。
+ * 一个 mark 下沉时消费的通道集合
  * @description `values` 存放按名字索引的求值器（如 color / label 这种 mark 需要特殊消费的通道）；
  *   `defaults` 存放同名默认值；`scopeDeliveries` / `nodeDeliveries` / `pathDeliveries`
  *   存放直接落到 core IRScope / IRNode / IRPath 的通道交付项
  */
 export type MarkChannels = {
+  /** 按通道名称索引的逐行视觉值解析函数 */
   values?: Readonly<Record<string, ChannelValueResolver>>;
+  /** 未应用逐行编码时由 mark 消费的通道默认值 */
   defaults?: Readonly<Record<string, ChannelValue>>;
+  /** 应用于整层 Scope 的共享通道交付项 */
   scopeDeliveries?: ReadonlyArray<ScopeChannelDelivery>;
+  /** 应用于各 Node 图元的逐行通道交付项 */
   nodeDeliveries?: ReadonlyArray<NodeChannelDelivery>;
+  /** 应用于各 Path 图元的逐行通道交付项 */
   pathDeliveries?: ReadonlyArray<PathChannelDelivery>;
+  /** 与实际通道映射同源的图例尺度描述 */
   descriptors?: ReadonlyArray<ScaleDescriptor>;
 };
 
 /** addChannel 接受的通道形态：普通 channel 或 mark 样式字段 / 常量引用 */
-export type FieldChannel = IRPlotChannel | { kind: 'field' | 'constant'; value: unknown };
+export type FieldChannel =
+  | IRPlotChannel
+  | {
+      /** 区分数据字段引用与不依赖数据的常量 */
+      kind: 'field' | 'constant';
+      /** 字段名称或常量值，由 kind 决定解释方式 */
+      value: unknown;
+    };
 
 /** 字段收集器：把 mark / transform 声明中引用外部数据源的字段加入集合 */
 export type FieldCollector = {
@@ -144,7 +160,7 @@ export type FieldCollector = {
 };
 
 /**
- * 通道 scale 描述符：legend 据此画 swatch / ramp / 分箱 / 梯度符号。
+ * 通道 scale 描述符：legend 据此画 swatch / ramp / 分箱 / 梯度符号
  * @description lowering 内部类型，不进 IR。resolver 与 legend 共读同一 descriptor，保证图例与实绘同源
  */
 export type ScaleDescriptor = {
@@ -168,7 +184,10 @@ export type ScaleDescriptor = {
   colorScale?: ChannelScaleResolution;
 };
 
-/** 单通道解析结果：逐行通道值函数 + 供 legend 的可复用 descriptor */
+/**
+ * 单通道解析结果：逐行通道值函数 + 供 legend 的可复用 descriptor
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export type ChannelResolution<T> = {
   /** 逐行通道值解析器 */
   resolver: (row: ExternalRow) => T | undefined;
@@ -177,21 +196,50 @@ export type ChannelResolution<T> = {
 };
 
 /**
- * 通道的输出空间。
+ * 通道的输出空间
  * @description 用判别 union 描述 range / palette，避免 number 通道配 symbol 调色板这类非法组合
  */
 export type ChannelOutputSpace =
-  | { outputKind: 'color' }
-  | { outputKind: 'number'; range: readonly [number, number]; clamp?: boolean }
-  | { outputKind: 'symbol'; palette: ReadonlyArray<IRShapeValue> }
-  | { outputKind: 'boolean' }
-  | { outputKind: 'array' }
-  | { outputKind: 'object' }
-  | { outputKind: 'json' };
+  | {
+      /** 区分颜色、数值、符号及其他 JSON 视觉值 */
+      outputKind: 'color';
+    }
+  | {
+      /** 区分颜色、数值、符号及其他 JSON 视觉值 */
+      outputKind: 'number';
+      /** 数值通道缺省的输出区间 */
+      range: readonly [number, number];
+      /** 是否把连续映射结果限制在输出区间内 */
+      clamp?: boolean;
+    }
+  | {
+      /** 区分颜色、数值、符号及其他 JSON 视觉值 */
+      outputKind: 'symbol';
+      /** 符号通道可选用的形状序列 */
+      palette: ReadonlyArray<IRShapeValue>;
+    }
+  | {
+      /** 区分颜色、数值、符号及其他 JSON 视觉值 */
+      outputKind: 'boolean';
+    }
+  | {
+      /** 区分颜色、数值、符号及其他 JSON 视觉值 */
+      outputKind: 'array';
+    }
+  | {
+      /** 区分颜色、数值、符号及其他 JSON 视觉值 */
+      outputKind: 'object';
+    }
+  | {
+      /** 区分颜色、数值、符号及其他 JSON 视觉值 */
+      outputKind: 'json';
+    };
 
 /** 通道解析上下文：spec + 规整后的数据行 + 字段类型表 */
 export type ChannelDefinitionResolveContext = {
+  /** 当前通道所属的完整 Plot 源描述 */
   node: IRPlot;
+  /** 当前解析作用域内的有效数据行 */
   rows: Array<ExternalRow>;
   /** 当前数据的完整字段模型；未定类型字段仍保留 */
   model: DataTransformModel;
@@ -206,7 +254,9 @@ export type ChannelDefinitionResolveContext = {
     values: Array<unknown>,
     order?: NonNullable<IRDataFieldDefinition['order']>,
   ) => Array<string | number>;
+  /** 按注册名称取得从归一化位置到颜色的插值函数 */
   resolveColorScheme: (name: string) => (t: number) => string;
+  /** 当前主题提供的分类与连续颜色上下文 */
   palette?: ChannelPaletteContext;
 };
 
@@ -219,7 +269,10 @@ export type PathChannelDefinitionResolveContext = ChannelDefinitionResolveContex
 /** Scope 通道 definition 使用的窄运行时上下文 */
 export type ScopeChannelDefinitionResolveContext = ChannelDefinitionResolveContext;
 
-/** Mark 通道解析结果：塞入 MarkChannels.values，由 mark definition 自行消费 */
+/**
+ * Mark 通道解析结果：塞入 MarkChannels.values，由 mark definition 自行消费
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export type MarkChannelResolution<T extends ChannelValue = ChannelValue> = {
   /** 逐行通道值解析器 */
   resolver: ChannelValueResolver<T>;
@@ -229,7 +282,10 @@ export type MarkChannelResolution<T extends ChannelValue = ChannelValue> = {
   descriptor?: ScaleDescriptor;
 };
 
-/** Scope 通道解析结果：整层共享值 + 可选 legend descriptor */
+/**
+ * Scope 通道解析结果：整层共享值 + 可选 legend descriptor
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
   /** 整层共享的通道值 */
   value: T;
@@ -240,7 +296,10 @@ export type ScopeChannelResolution<T extends ChannelValue = ChannelValue> = {
 /** 读取某 mark 上某通道绑定的统一入口 */
 export type ChannelBindingResolver = (mark: IRPlotMarkOperation) => IRPlotChannel | undefined;
 
-/** 通道 definition 的公共基座 */
+/**
+ * 通道 definition 的公共基座
+ * @template TKind 决定通道消费方式的类型判别值
+ */
 export type BaseChannelDefinition<TKind extends ChannelDefinitionKind> = {
   /** 通道注册键 */
   channel: string;
@@ -256,7 +315,10 @@ export type PositionChannelDefinition = BaseChannelDefinition<typeof ChannelDefi
   pick: ChannelBindingResolver;
 };
 
-/** Mark 通道定义：解析成 MarkChannels.values/defaults，供 mark definition 消费 */
+/**
+ * Mark 通道定义：解析成 MarkChannels.values/defaults，供 mark definition 消费
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
   typeof ChannelDefinitionKind.Mark
 > & {
@@ -267,8 +329,9 @@ export type MarkChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
 };
 
 /**
- * Node 通道定义（运行时对象，不进 IR）。
+ * Node 通道定义（运行时对象，不进 IR）
  * @description 解析通道值后直接落到 core IRNode 既有属性。`size`、`shape`、`opacity` 这类点图元属性属于这一类
+ * @template T 通道解析、传递或整层共享的视觉值类型
  */
 export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
   typeof ChannelDefinitionKind.Node
@@ -282,16 +345,17 @@ export type NodeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
     ctx: NodeChannelDefinitionResolveContext,
   ) => (mark: IRPlotMarkOperation) => ChannelResolution<T> | undefined;
   /**
-   * 把逐行解析值落到 core IRNode 的既有属性。
+   * 把逐行解析值落到 core IRNode 的既有属性
    * @description 不写 position / 几何；新渲染能力应先下沉到 core
    */
   deliver: (node: IRNode, value: T, context: NodeChannelDeliveryContext) => void;
 };
 
 /**
- * Scope 通道定义（运行时对象，不进 IR）。
+ * Scope 通道定义（运行时对象，不进 IR）
  * @description 用于一一落到 core IRScope 既有属性，或写入 `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`。
  *   它表达“这一层共享默认值”；逐 datum 的属性应使用 NodeChannelDefinition / PathChannelDefinition
+ * @template T 通道解析、传递或整层共享的视觉值类型
  */
 export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
   typeof ChannelDefinitionKind.Scope
@@ -309,9 +373,10 @@ export type ScopeChannelDefinition<T extends ChannelValue = ChannelValue> = Base
 };
 
 /**
- * Path 通道定义（运行时对象，不进 IR）。
+ * Path 通道定义（运行时对象，不进 IR）
  * @description 用于一一落到 core IRPath 既有标量属性的通道，例如 strokeWidth / opacity 这类路径级属性。
  *   `color` 这种不同 mark 会映射到 node fill、path stroke 或 path fill 的通道应保持为 MarkChannelDefinition
+ * @template T 通道解析、传递或整层共享的视觉值类型
  */
 export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseChannelDefinition<
   typeof ChannelDefinitionKind.Path
@@ -328,7 +393,10 @@ export type PathChannelDefinition<T extends ChannelValue = ChannelValue> = BaseC
   deliver: (path: IRPath, value: T, context: PathChannelDeliveryContext) => void;
 };
 
-/** 通道定义：所有通道类型共用的 registry 元素 */
+/**
+ * 通道定义：所有通道类型共用的 registry 元素
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
   | PositionChannelDefinition
   | MarkChannelDefinition<T>
@@ -337,22 +405,32 @@ export type ChannelDefinition<T extends ChannelValue = ChannelValue> =
   | PathChannelDefinition<T>;
 
 /**
- * 定义一个通道（统一入口）；具体 kind 决定解析后进入 position / mark / scope / node / path 哪条消费路径。
+ * 定义一个通道（统一入口）；具体 kind 决定解析后进入 position / mark / scope / node / path 哪条消费路径
  * @remarks 当前 helper 只做 `ChannelDefinition` 类型约束并原样返回定义对象；保留稳定入口是为了与其它 registry API 对齐，并为后续运行时校验、默认值归一或泛型收敛预留 contract hook
+ * @template T 原样返回的具体通道定义类型
  */
 export const defineChannel = <T extends ChannelDefinition>(def: T): T => def;
 
-/** 定义一个 Scope 通道（保留 resolve / deliver 的输出强类型） */
+/**
+ * 定义一个 Scope 通道（保留 resolve / deliver 的输出强类型）
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export const defineScopeChannel = <T extends ChannelValue>(
   def: WithOptionalProperties<ScopeChannelDefinition<T>, 'kind'>,
 ): ScopeChannelDefinition<T> => ({ ...def, kind: ChannelDefinitionKind.Scope });
 
-/** 定义一个 Node 通道（对齐 defineScale / defineCoordinate / defineTransform；保留 resolve / deliver 的输出强类型） */
+/**
+ * 定义一个 Node 通道（对齐 defineScale / defineCoordinate / defineTransform；保留 resolve / deliver 的输出强类型）
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export const defineNodeChannel = <T extends ChannelValue>(
   def: WithOptionalProperties<NodeChannelDefinition<T>, 'kind'>,
 ): NodeChannelDefinition<T> => ({ ...def, kind: ChannelDefinitionKind.Node });
 
-/** 定义一个 Path 通道（对齐 defineNodeChannel；保留 resolve / deliver 的输出强类型） */
+/**
+ * 定义一个 Path 通道（对齐 defineNodeChannel；保留 resolve / deliver 的输出强类型）
+ * @template T 通道解析、传递或整层共享的视觉值类型
+ */
 export const definePathChannel = <T extends ChannelValue>(
   def: WithOptionalProperties<PathChannelDefinition<T>, 'kind'>,
 ): PathChannelDefinition<T> => ({ ...def, kind: ChannelDefinitionKind.Path });
@@ -361,39 +439,60 @@ export const definePathChannel = <T extends ChannelValue>(
 export type AnyChannelDefinition =
   | PositionChannelDefinition
   | {
+      /** 在通道注册表中唯一的名称 */
       channel: string;
+      /** 决定通道由 mark 消费还是交付给 Node、Scope 或 Path */
       kind: typeof ChannelDefinitionKind.Mark;
+      /** 结合数据上下文创建逐 mark 解析器；无绑定时可返回 undefined */
       resolve: (
         ctx: ChannelDefinitionResolveContext,
       ) => (mark: IRPlotMarkOperation) => MarkChannelResolution<ChannelValue> | undefined;
     }
   | {
+      /** 在通道注册表中唯一的名称 */
       channel: string;
+      /** 决定通道由 mark 消费还是交付给 Node、Scope 或 Path */
       kind: typeof ChannelDefinitionKind.Node;
+      /** 视觉值的输出种类与数值范围或符号候选 */
       output: ChannelOutputSpace;
+      /** 该通道用于图例展示的视觉形式 */
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+      /** 结合数据上下文创建逐 mark 解析器；无绑定时可返回 undefined */
       resolve: (
         ctx: NodeChannelDefinitionResolveContext,
       ) => (mark: IRPlotMarkOperation) => ChannelResolution<ChannelValue> | undefined;
+      /** 把已解析的视觉值写入对应 Core 宿主的已有属性 */
       deliver: (node: IRNode, value: never, context: NodeChannelDeliveryContext) => void;
     }
   | {
+      /** 在通道注册表中唯一的名称 */
       channel: string;
+      /** 决定通道由 mark 消费还是交付给 Node、Scope 或 Path */
       kind: typeof ChannelDefinitionKind.Scope;
+      /** 视觉值的输出种类与数值范围或符号候选 */
       output: ChannelOutputSpace;
+      /** 该通道用于图例展示的视觉形式 */
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+      /** 结合数据上下文创建逐 mark 解析器；无绑定时可返回 undefined */
       resolve: (
         ctx: ScopeChannelDefinitionResolveContext,
       ) => (mark: IRPlotMarkOperation) => ScopeChannelResolution<ChannelValue> | undefined;
+      /** 把已解析的视觉值写入对应 Core 宿主的已有属性 */
       deliver: (scope: IRScope, value: never, context: ScopeChannelDeliveryContext) => void;
     }
   | {
+      /** 在通道注册表中唯一的名称 */
       channel: string;
+      /** 决定通道由 mark 消费还是交付给 Node、Scope 或 Path */
       kind: typeof ChannelDefinitionKind.Path;
+      /** 视觉值的输出种类与数值范围或符号候选 */
       output: ChannelOutputSpace;
+      /** 该通道用于图例展示的视觉形式 */
       legend?: 'swatch' | 'ramp' | 'size' | 'symbol';
+      /** 结合数据上下文创建逐 mark 解析器；无绑定时可返回 undefined */
       resolve: (
         ctx: PathChannelDefinitionResolveContext,
       ) => (mark: IRPlotMarkOperation) => ChannelResolution<ChannelValue> | undefined;
+      /** 把已解析的视觉值写入对应 Core 宿主的已有属性 */
       deliver: (path: IRPath, value: never, context: PathChannelDeliveryContext) => void;
     };

@@ -54,13 +54,21 @@ const assertScaleCompatible = (
 
 /** exact encoding scale declaration、reference 与 recipe fallback 的连接结果 */
 export type ChartEncodingScaleResolution = Readonly<{
+  /** 字段映射显式产生的尺度操作 */
   scales: ReadonlyArray<IRPlotScaleOperation>;
+  /** 解析并补齐后的 Plot 扩展尺度 */
   extensionScales: ReadonlyArray<IRPlotScaleOperation>;
+  /** 位置角色到实际采用尺度名称的映射 */
   positionScales: Readonly<Record<string, string>>;
+  /** 已被显式尺度替代、需移除的 recipe 缺省尺度名称 */
   removedRecipeScales: ReadonlySet<string>;
 }>;
 
-/** 解析 exact field mappings 的 scale declaration 与 reference */
+/**
+ * 解析 exact field mappings 的 scale declaration 与 reference
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ * @template TEncodingSlot 当前 recipe 允许的字段映射槽位名称
+ */
 export const resolveChartEncodingScales = <
   TSource extends IRChartSource,
   TEncodingSlot extends Extract<keyof TSource['recipe']['encodings'], string>,

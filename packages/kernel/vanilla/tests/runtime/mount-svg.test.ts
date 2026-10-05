@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToSvgString } from '../../src';
 import { mountSvg } from '../../src/dom';
 
-/**
+/*
  * @retikz/vanilla mountSvg（无框架浏览器 DOM，jsdom 环境）
  */
 const sceneOf = (text = 'A'): ReturnType<typeof compileToScene>['scene'] => {

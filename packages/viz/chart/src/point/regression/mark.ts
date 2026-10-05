@@ -146,7 +146,7 @@ export const resolveRegressionMarkGroup = (
     : [series === undefined ? { ...point, defaultColorGroup: 'observation' } : point, ...trends];
 };
 
-/** Regression authored mark Definition */
+/** 回归标记的作者定义 */
 export const RegressionMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'regression',
   schema: RegressionChartMarkSchema,

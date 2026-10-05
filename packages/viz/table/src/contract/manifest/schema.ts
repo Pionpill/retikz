@@ -33,6 +33,7 @@ const TableBorderVertexSchema = strictObject({
   y: number().describe('Finite Table-local y coordinate.'),
 });
 
+/** 校验最终边框线样式，包括颜色、非负线宽、虚线与固定线帽连接方式 */
 export const ResolvedTableBorderLineSchema = strictObject({
   color: CssColorSchema.describe('Master color used to resolve contextual border paint.'),
   stroke: PaintValueSchema.refine(value => value !== 'none', {
@@ -69,6 +70,7 @@ const TableGridBorderSourceSchema = strictObject({
   boundaryIndex: NonNegativeIntegerSchema.describe('Canonical internal boundary index.'),
 });
 
+/** 校验边框贡献来自单元格、外边框或内部网格的来源描述 */
 export const TableBorderSourceSchema = union([
   TableCellBorderSourceSchema,
   TableOuterBorderSourceSchema,
@@ -84,6 +86,7 @@ const TableBorderContributionBaseShape = {
   sourceOrderKey: NonBlankStringSchema.describe('Canonical source ordering key independent of Cell id.'),
 };
 
+/** 校验显式隐藏某段边框的候选贡献 */
 export const TableNoBorderContributionSchema = strictObject({
   kind: literal('none').describe('Discriminator for an explicit hidden border candidate.'),
   origin: literal(TableBorderContributionOrigin.Explicit).describe('Explicit Table, Cell, or rule border origin.'),
@@ -114,23 +117,27 @@ const TableDefaultsLineBorderContributionSchema = strictObject({
   defaults: TableDefaultsProvenanceSchema.describe('Required Source defaults provenance.'),
 });
 
+/** 校验来自显式声明或输入默认层的已解析线边框贡献 */
 export const TableLineBorderContributionSchema = discriminatedUnion('origin', [
   TableExplicitLineBorderContributionSchema,
   TableDefaultsLineBorderContributionSchema,
 ]).describe('Explicit or Source-defaults-origin resolved line contribution.');
 
+/** 校验边框竞争中的隐藏或线条候选贡献 */
 export const TableBorderContributionSchema = union([
   TableNoBorderContributionSchema,
   TableDefaultsNoBorderContributionSchema,
   TableLineBorderContributionSchema,
 ]);
 
+/** 校验原子边段的规范键、胜出项与有序贡献来源 */
 export const TableBorderManifestAtomSchema = strictObject({
   key: NonBlankStringSchema.describe('Canonical atomic border key.'),
   winner: TableBorderContributionSchema.describe('Resolved atom winner.'),
   contributors: array(TableBorderContributionSchema).min(1).describe('Canonical ordered atom contributors.'),
 });
 
+/** 校验合并边段的局部几何、最终线样式及原子边段溯源 */
 export const TableBorderManifestEntrySchema = strictObject({
   edgeKey: NonBlankStringSchema.describe('Canonical merged edge key.'),
   orientation: TableBorderOrientationSchema.describe('Edge orientation.'),
@@ -141,6 +148,7 @@ export const TableBorderManifestEntrySchema = strictObject({
   pathId: NonBlankStringSchema.optional().describe('Optional emitted Core Path id.'),
 });
 
+/** 校验输出边框路径关联的表格标识、合并边键与原子边键 */
 export const TableBorderPathMetaSchema = strictObject({
   kind: literal('tableBorder').describe('Discriminator for emitted Table border Path metadata.'),
   tableId: NonBlankStringSchema.optional().describe('Optional owning Table id.'),
@@ -148,6 +156,7 @@ export const TableBorderPathMetaSchema = strictObject({
   atomicKeys: array(NonBlankStringSchema).min(1).describe('Canonical atomic keys represented by the Path.'),
 });
 
+/** 校验合并边键与输出路径标识之间的定位记录 */
 export const TableBorderLocatorEntrySchema = strictObject({
   edgeKey: NonBlankStringSchema.describe('Canonical merged edge key.'),
   pathId: NonBlankStringSchema.optional().describe('Optional emitted Core Path id.'),
@@ -160,6 +169,7 @@ const TableManifestBoundsSchema = strictObject({
   height: NonNegativeNumberSchema.describe('Finite nonnegative bounds height.'),
 }).describe('Detached Table-local axis-aligned bounds.');
 
+/** 校验已解析行列轨道的标识、下标、局部偏移和尺寸 */
 export const TableTrackManifestEntrySchema = strictObject({
   id: NonBlankStringSchema.optional().describe('Optional stable semantic track id.'),
   index: NonNegativeIntegerSchema.describe('Canonical track index.'),
@@ -167,6 +177,7 @@ export const TableTrackManifestEntrySchema = strictObject({
   size: NonNegativeNumberSchema.describe('Finite nonnegative track size.'),
 }).describe('Resolved Table row or column track geometry.');
 
+/** 校验已完成布局的单元格几何、身份、样式与溯源记录 */
 export const TableCellManifestEntrySchema = strictObject({
   cellId: NonBlankStringSchema.optional().describe('Optional stable semantic Cell id.'),
   rowId: NonBlankStringSchema.optional().describe('Optional stable semantic row id.'),
@@ -203,6 +214,7 @@ const TableDefaultsLayerKindSchema = zodEnum(['neutral', 'style', 'source']).des
   'Kind of Table Source defaults layer.',
 );
 
+/** 校验按有效级联顺序保留的单层表格默认值来源 */
 export const TableDefaultsSourceRecordSchema = strictObject({
   kind: TableDefaultsLayerKindSchema.describe('Resolved Table defaults source kind.'),
   path: NonBlankStringSchema.describe('Stable resolved Table defaults source path.'),

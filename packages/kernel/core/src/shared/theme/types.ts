@@ -6,7 +6,10 @@ export type ThemeStyleValue = string;
 /** CSS 颜色在 Core shared color contract 中的 JSON-safe 字符串形态 */
 export type CssColorValue = string;
 
-/** 只允许非空颜色数组的通用 tuple 形态 */
+/**
+ * 只允许非空颜色数组的通用 tuple 形态
+ * @template T 至少包含一个成员的只读数组元素类型
+ */
 export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
 
 /** Core 跨领域共享的语义颜色角色集合 */

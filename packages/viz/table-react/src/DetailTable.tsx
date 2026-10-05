@@ -24,7 +24,10 @@ type DetailTableColumnChildrenMode = {
   children: ReactNode;
 };
 
-/** 明细表 React 组件的 props */
+/**
+ * 明细表 React 组件的 props
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type DetailTableProps<TSource = never> = DetailTableRootProps<TSource> &
   (DetailTableColumnPropsMode | DetailTableColumnChildrenMode);
 

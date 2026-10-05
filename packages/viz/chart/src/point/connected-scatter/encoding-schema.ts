@@ -9,7 +9,7 @@ const SeriesScaleBindingSchema = createChartScaleBindingSchema(OrdinalScaleSchem
 
 const DirectFieldSchema = union([NonBlankStringSchema, createChartDirectMappingSchema()]);
 
-/** Connected Scatter exact encoding plan */
+/** 连接散点图的精确编码计划 */
 export const ConnectedScatterChartEncodingsSchema = strictObject({
   x: createPointPositionEncodingSchema('x', 'Connected Scatter'),
   y: createPointPositionEncodingSchema('y', 'Connected Scatter'),

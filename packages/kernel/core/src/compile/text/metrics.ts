@@ -34,13 +34,13 @@ export type TextMetrics = {
   /** 文本高度（user units） */
   height: number;
   /**
-   * 基线以上的高度
-   * @default 由调用方按字体估算
+   * 基线以上的高度；省略时由 normalizeTextMetrics 根据总高度与 descent 补齐，两者均省略时各取总高度的一半
+   * @default normalizeTextMetrics
    */
   ascent?: number;
   /**
-   * 基线以下的深度
-   * @default 由调用方按字体估算
+   * 基线以下的深度；省略时由 normalizeTextMetrics 根据总高度与 ascent 补齐，两者均省略时各取总高度的一半
+   * @default normalizeTextMetrics
    */
   descent?: number;
 };

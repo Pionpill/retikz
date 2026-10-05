@@ -160,7 +160,7 @@ const hasExplicitContinuousRange = (def: IRPlotScaleOperation): boolean =>
   def.range !== undefined;
 
 /**
- * 二维笛卡尔运行时坐标帧。
+ * 二维笛卡尔运行时坐标帧
  * @description 由 IR 坐标配置和 x/y scale 解析得到，lowering 阶段通过它把数据通道值投影成屏幕坐标。
  *   该类型描述可执行的投影能力，不等同于 schemas 层的 JSON IR 类型
  */
@@ -190,7 +190,7 @@ export type CartesianCoordinateFrame = {
 };
 
 /**
- * 建二维笛卡尔运行时坐标帧。
+ * 建二维笛卡尔运行时坐标帧
  * @description primary 是 x 角色位置 scale，secondary 是 y 角色位置 scale；返回的 frame 同时提供点投影与 rect cell 快路。
  *   这是 lowering 内部的运行时对象，不进入 JSON IR，也不从根入口暴露给用户作为构造公共坐标系的主路径
  */
@@ -246,7 +246,7 @@ export const createCartesianCoordinate = (
 };
 
 /**
- * 一维笛卡尔运行时坐标帧。
+ * 一维笛卡尔运行时坐标帧
  * @description 用单一位置 scale 沿 horizontal/vertical 方向投影，另一屏幕维度固定在 baseline。
  *   适用于单轴图形或 1D 坐标语法解析后的 lowering；它仍然产出二维屏幕坐标
  */
@@ -276,7 +276,7 @@ export type Cartesian1DCoordinateFrame = {
 };
 
 /**
- * 建一维笛卡尔运行时坐标帧。
+ * 建一维笛卡尔运行时坐标帧
  * @description 单 scale 沿 orientation 指定的轴投影，另一屏幕维度固定在 baseline。
  *   1D 坐标没有面积 cell 语义，因此不提供 projectCell，interval / reference band 等 cell 类 mark 会 fail-loud
  */

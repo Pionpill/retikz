@@ -9,44 +9,86 @@ import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
 
 /** Overlay 单个 profile 的结构输入 */
 export type OverlayProfileItem = Readonly<{
+  /** 对应作者输入数组的零基索引 */
   sourceIndex: number;
+  /** 已解析的对齐式或坐标式放置策略 */
   placement: CanonicalOverlayPlacement;
+  /** 子项的四边外边距 */
   margin: LayoutInsets;
-  offset: Readonly<{ x: number; y: number }>;
+  /** 在放置结果上应用的物理坐标偏移 */
+  offset: Readonly<{
+    /** 水平偏移量 */
+    x: number;
+    /** 垂直偏移量 */
+    y: number;
+  }>;
+  /** 垂直方向对齐方式，可参与首末基线组 */
   alignment: LayoutAlignment;
+  /** 该子项是否贡献容器的固有尺寸 */
   sizeParticipation: LayoutSizeParticipation;
+  /** 用于水平尺寸贡献计算的测量结果 */
   xResult: LayoutChildResult;
+  /** 用于垂直尺寸及基线计算的测量结果 */
   yResult: LayoutChildResult;
 }>;
 
 /** Overlay baseline group 的结构 ascent/descent */
 export type OverlayBaselineMetric = Readonly<{
+  /** 包含外边距的基线上方最大结构高度 */
   ascent: number;
+  /** 包含外边距的基线下方最大结构高度 */
   descent: number;
 }>;
 
 /** Overlay 单个 intrinsic profile 的 content-box contribution */
 export type OverlayProfile = Readonly<{
-  contentSize: Readonly<{ width: number; height: number }>;
+  /** 参与固有尺寸计算的内容总尺寸 */
+  contentSize: Readonly<{
+    /** 容器内容区域所需的宽度 */
+    width: number;
+    /** 容器内容区域所需的高度 */
+    height: number;
+  }>;
+  /** 首基线对齐组的结构上下高度，无参与项时省略 */
   firstBaseline?: OverlayBaselineMetric;
+  /** 末基线对齐组的结构上下高度，无参与项时省略 */
   lastBaseline?: OverlayBaselineMetric;
 }>;
 
 /** Overlay item placement 的纯求解输入 */
 export type PlaceOverlayItemInput = Readonly<{
+  /** 已解析的对齐式或坐标式放置策略 */
   placement: CanonicalOverlayPlacement;
+  /** 容器中可用于放置子项的内容矩形 */
   content: LayoutRect;
+  /** 子项的四边外边距 */
   margin: LayoutInsets;
-  offset: Readonly<{ x: number; y: number }>;
+  /** 应用到最终放置结果的物理坐标偏移 */
+  offset: Readonly<{
+    /** 水平偏移量 */
+    x: number;
+    /** 垂直偏移量 */
+    y: number;
+  }>;
+  /** 子项在水平槽位中的对齐方式 */
   justify: LayoutAlignment;
+  /** 子项在垂直槽位中的对齐方式 */
   align: LayoutAlignment;
+  /** 用于真实分配边界定位的子项测量结果 */
   result: LayoutChildResult;
 }>;
 
 /** Overlay item 的无 margin slot 与真实 allocation translation */
 export type PlacedOverlayGeometry = Readonly<{
+  /** 已扣除外边距的结构槽位 */
   slot: LayoutRect;
-  translation: Readonly<{ x: number; y: number }>;
+  /** 把子项真实分配边界定位到槽位的平移量 */
+  translation: Readonly<{
+    /** 水平平移量 */
+    x: number;
+    /** 垂直平移量 */
+    y: number;
+  }>;
 }>;
 
 /** 读取 child guide 相对结构 slot 起点的钳制 offset */

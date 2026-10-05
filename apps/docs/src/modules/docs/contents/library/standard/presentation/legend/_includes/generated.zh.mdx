@@ -4,8 +4,8 @@
 
 #### Legend / LegendProps
 
-- `Legend`：<ApiSourceLink label={"Legend"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={93}>Standard Legend 的 React Tier 2 无头 authoring 组件</ApiSourceLink>
-- `LegendProps`：<ApiSourceLink label={"LegendProps"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={37}>React Legend 的两个显式无头 authoring form</ApiSourceLink>
+- `Legend`：<ApiSourceLink label={"Legend"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={97}>Standard Legend 的 React Tier 2 无头 authoring 组件</ApiSourceLink>
+- `LegendProps`：<ApiSourceLink label={"LegendProps"} path={"packages/library/standard-react/src/presentation/legend/Legend.tsx"} startLine={39}>React Legend 的两个显式无头 authoring form</ApiSourceLink>
 
 ```ts
 export declare const Legend: {
@@ -163,7 +163,7 @@ export type LegendTickProps = Readonly<{
   <ApiSourceLink
     label={'InputLegend'}
     path={'packages/library/standard-vanilla/src/presentation/legend.ts'}
-    startLine={37}
+    startLine={39}
   >
     Standard Legend 的 framework-neutral authoring 输入
   </ApiSourceLink>
@@ -177,10 +177,10 @@ export type LegendTickProps = Readonly<{
 
 <ApiTable>
 
-| 成员      | 类型                                                | 默认值 | 说明 |
-| --------- | --------------------------------------------------- | ------ | ---- |
-| `content` | `InputLegendItemsContent \| InputLegendRampContent` | —      | —    |
-| `title?`  | `InputLegendChild`                                  | —      | —    |
+| 成员      | 类型                                                | 默认值 | 说明                                 |
+| --------- | --------------------------------------------------- | ------ | ------------------------------------ |
+| `content` | `InputLegendItemsContent \| InputLegendRampContent` | —      | 互斥的离散图例项或连续色带内容       |
+| `title?`  | `InputLegendChild`                                  | —      | 可选的图例标题，接受文本或绘制子内容 |
 
 </ApiTable>
 
@@ -205,7 +205,7 @@ export type InputLegend = Omit<LegendInput, 'title' | 'content'> & {
   <ApiSourceLink
     label={'LegendInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/presentation/legend.ts'}
-    startLine={78}
+    startLine={85}
   >
     Standard Legend 的 InputEmbed adapter
   </ApiSourceLink>
@@ -218,7 +218,7 @@ export declare const LegendInputEmbedAdapter: SynchronousInputEmbedAdapter<Input
 #### legend
 
 <p>
-  <ApiSourceLink label={'legend'} path={'packages/library/standard-vanilla/src/presentation/legend.ts'} startLine={131}>
+  <ApiSourceLink label={'legend'} path={'packages/library/standard-vanilla/src/presentation/legend.ts'} startLine={140}>
     创建由 LegendInputEmbedAdapter 下沉的 Standard Legend embed
   </ApiSourceLink>
 </p>
@@ -253,7 +253,7 @@ export declare const legend: (input: InputLegend) => InputEmbed<InputLegend>;
 #### IRLegend
 
 <p>
-  <ApiSourceLink label={'IRLegend'} path={'packages/library/standard/src/presentation/legend/types.ts'} startLine={33}>
+  <ApiSourceLink label={'IRLegend'} path={'packages/library/standard/src/presentation/legend/types.ts'} startLine={34}>
     持久化的 Standard Legend composite
   </ApiSourceLink>
 </p>
@@ -266,9 +266,9 @@ export declare const legend: (input: InputLegend) => InputEmbed<InputLegend>;
 
 <ApiTable>
 
-| 成员      | 类型                                          | 默认值 | 说明 |
-| --------- | --------------------------------------------- | ------ | ---- |
-| `content` | `IRLegendItemsContent \| IRLegendRampContent` | —      | —    |
+| 成员      | 类型                                          | 默认值 | 说明                                       |
+| --------- | --------------------------------------------- | ------ | ------------------------------------------ |
+| `content` | `IRLegendItemsContent \| IRLegendRampContent` | —      | 选择离散项列表或连续样本刻度的互斥内容分支 |
 
 </ApiTable>
 
@@ -348,7 +348,7 @@ export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;
 | -------------- | -------------------------------------------- | ------------ | ------------------------------------------ |
 | `direction?`   | `"horizontal" \| "vertical"`                 | `"vertical"` | 按编写顺序放置条目的物理主轴方向           |
 | `gap?`         | `number \| { row: number; column: number; }` | `8`          | 相邻行列之间的物理间距；标量同时应用于两轴 |
-| `items`        | `Array<IRLegendItem>`                        | —            | —                                          |
+| `items`        | `Array<IRLegendItem>`                        | —            | 按作者顺序排列的样本与标签项               |
 | `kind`         | `"items"`                                    | —            | 离散样本与标签列表的判别字段               |
 | `sampleAlign?` | `"center" \| "start" \| "end"`               | `"center"`   | 单个条目中样本与标签在 y 轴上的对齐方式    |
 | `sampleGap?`   | `number`                                     | `8`          | 单个条目中样本与标签的水平间距             |
@@ -376,7 +376,7 @@ export type IRLegendItemsContent = Omit<ZodInput<typeof LegendItemsContentSchema
   <ApiSourceLink
     label={'IRLegendRampContent'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={29}
+    startLine={30}
   >
     持久化的 Legend 连续样本内容
   </ApiSourceLink>
@@ -417,7 +417,7 @@ export type IRLegendRampContent = Omit<ZodInput<typeof LegendRampContentSchema>,
   <ApiSourceLink
     label={'IRLegendTick'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={26}
+    startLine={27}
   >
     持久化的 Legend 连续刻度
   </ApiSourceLink>
@@ -455,7 +455,7 @@ export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
   <ApiSourceLink
     label={'LegendArtifact'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={53}
+    startLine={57}
   >
     Standard Legend 的 typed artifact
   </ApiSourceLink>
@@ -524,13 +524,13 @@ export type LegendArtifact = ZodInfer<typeof LegendArtifactSchema>;
 
 <ApiTable>
 
-| 成员                  | 类型                                                                                       | 默认值 | 说明 |
-| --------------------- | ------------------------------------------------------------------------------------------ | ------ | ---- |
-| `readonly kind`       | `'composite'`                                                                              | —      | —    |
-| `readonly namespace`  | `"standard"`                                                                               | —      | —    |
-| `readonly occurrence` | `Readonly<{ sourcePath: string; expansionPath: ReadonlyArray<CompileExpansionSegment>; }>` | —      | —    |
-| `readonly type`       | `"legend"`                                                                                 | —      | —    |
-| `readonly value`      | `LegendCompileArtifact["value"]`                                                           | —      | —    |
+| 成员                  | 类型                                                                                       | 默认值 | 说明                               |
+| --------------------- | ------------------------------------------------------------------------------------------ | ------ | ---------------------------------- |
+| `readonly kind`       | `'composite'`                                                                              | —      | 标识复合组件领域产物               |
+| `readonly namespace`  | `"standard"`                                                                               | —      | 产物所属复合组件的注册命名空间     |
+| `readonly occurrence` | `Readonly<{ sourcePath: string; expansionPath: ReadonlyArray<CompileExpansionSegment>; }>` | —      | 产生该产物的最终编译出现位置       |
+| `readonly type`       | `"legend"`                                                                                 | —      | 产物所属复合组件的注册类型         |
+| `readonly value`      | `LegendCompileArtifact["value"]`                                                           | —      | 通过组件产物 schema 校验的领域结果 |
 
 </ApiTable>
 
@@ -552,7 +552,7 @@ export type LegendCompileArtifact = CompositeArtifactOf<typeof LegendDefinition>
   <ApiSourceLink
     label={'LegendInput'}
     path={'packages/library/standard/src/presentation/legend/types.ts'}
-    startLine={38}
+    startLine={42}
   >
     创建 Legend 时允许省略固定 discriminator 与 schema 默认字段的输入
   </ApiSourceLink>

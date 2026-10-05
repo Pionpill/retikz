@@ -1,7 +1,7 @@
 import type { ExternalRow } from '../shared';
 
 /**
- * 行级源序标记。
+ * 行级源序标记
  * @description 数据进入 pipeline 时给每行打 `row[SOURCE_INDEX]=i`；Symbol 键不进 JSON.stringify，也不会被字符串路径解析读取
  */
 export const SOURCE_INDEX = Symbol('retikz.data.sourceIndex');
@@ -13,7 +13,7 @@ export const readSourceIndex = (row: ExternalRow): number | undefined => {
 };
 
 /**
- * 组级源序标记：改行数 transform 给每个输出行打 `row[SOURCE_INDICES]=[...]`。
+ * 组级源序标记：改行数 transform 给每个输出行打 `row[SOURCE_INDICES]=[...]`
  * @description 聚合 / 分箱等输出行可代表一组源行，故 provenance 记录源行索引集合
  */
 export const SOURCE_INDICES = Symbol('retikz.data.sourceIndices');
@@ -43,7 +43,7 @@ export const readSourceIndicesOf = (rows: Array<ExternalRow>): Array<number> => 
 };
 
 /**
- * 给改行数 transform 的输出行打组级源序标记。
+ * 给改行数 transform 的输出行打组级源序标记
  * @description 成员行没有 sourceIndex 时原样返回；Symbol 键不会进入 JSON IR
  */
 export const withGroupProvenance = (row: ExternalRow, members: Array<ExternalRow>): ExternalRow => {
@@ -52,7 +52,7 @@ export const withGroupProvenance = (row: ExternalRow, members: Array<ExternalRow
 };
 
 /**
- * 给每行打源序标记。
+ * 给每行打源序标记
  * @description 已有行级或组级来源身份保持不变；未标记行才使用当前数组下标。object spread 会保留可枚举 symbol 属性，resolveFieldPath / JSON 都忽略它
  */
 export const tagSourceIndex = (rows: Array<ExternalRow>): Array<ExternalRow> =>

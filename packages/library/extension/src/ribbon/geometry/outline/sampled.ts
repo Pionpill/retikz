@@ -15,17 +15,34 @@ import { ribbonCrossSection } from './cross-section';
 
 /** 采样边界构造输入 */
 export type OutlineCommandsInput = {
+  /** 按路径顺序连接的可采样中心线段 */
   segments: ReadonlyArray<RibbonSegment>;
+  /** 全部中心线段的总弧长 */
   totalLength: number;
+  /** 均匀弧长采样的目标点数，包含两个端点 */
   sampleCount: number;
+  /** 按归一化弧长位置读取带宽 */
   widthAt: (offset: number) => number;
-  endpointAxes: { start?: Vector2; end?: Vector2 };
+  /** 可选的起终点横截面轴向覆盖 */
+  endpointAxes: {
+    /** 起点横截面的显式轴向 */
+    start?: Vector2;
+    /** 终点横截面的显式轴向 */
+    end?: Vector2;
+  };
+  /** 带状区域相对中心线的对齐方式 */
   align: RibbonAlignment;
+  /** 起点采用的端帽定义名称与参数 */
   startEndpointCap: IRRibbonCap;
+  /** 终点采用的端帽定义名称与参数 */
   endEndpointCap: IRRibbonCap;
+  /** 当前编译可用的端帽定义注册表 */
   capRegistry: ReadonlyMap<string, RibbonCapDefinition>;
+  /** 必须加入采样的归一化弧长特征位置 */
   featureOffsets: ReadonlyArray<number>;
+  /** 宽度发生跳变时必须切断平滑的归一化弧长位置 */
   jumpOffsets: ReadonlyArray<number>;
+  /** 用于输出路径坐标的精度取整函数 */
   round: (n: number) => number;
 };
 

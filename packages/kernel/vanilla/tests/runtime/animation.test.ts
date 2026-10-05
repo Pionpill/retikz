@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToSvgString } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 
-/**
+/*
  * runtime 播放控制（jsdom）：mountSvg load→CSS 自播 / 交互→WAAPI 桥；mountCanvas rAF 时钟 + trigger；
  *   {animation:{enabled:false}} + prefers-reduced-motion 降级；view.animation 句柄
  */

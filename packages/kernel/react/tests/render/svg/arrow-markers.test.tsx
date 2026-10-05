@@ -6,7 +6,7 @@ import { ArrowMarker } from '../../../src/render/svg';
 
 type AnyEl = ReactElement<Record<string, unknown> & { children?: unknown }>;
 
-/**
+/*
  * ArrowMarker 物化测试（emit-in-compile 契约）
  * @description ArrowMarker 不再 switch shape / 算几何——只**物化**已解析的 `ResolvedArrowEnd`：
  *   wrapper 参数（viewBox `0 0 baseSize baseSize` / refX / refY=baseSize/2 / markerWidth / markerHeight）来自

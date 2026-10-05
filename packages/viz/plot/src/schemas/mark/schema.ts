@@ -76,10 +76,12 @@ import {
   RelationRoutingKind,
 } from './constants';
 
+/** 校验根变换之后执行、仅供当前标记消费的数据变换序列 */
 export const MarkTransformSchema = array(DataTransformDeclarationSchema).describe(
   'Mark-local transform pipeline applied after the plot root transform to derive rows consumed only by this mark',
 );
 
+/** 复用标记局部变换规则，校验关系标记的数据变换序列 */
 export const RelationTransformSchema = MarkTransformSchema;
 
 const markBase = {
@@ -103,6 +105,7 @@ const markBase = {
   ),
 };
 
+/** 校验生成 Core 节点或坐标标识的标记局部稳定锚点规则 */
 export const AnchorIdSchema = strictObject({
   prefix: NonBlankStringSchema.optional().describe(
     'Optional id namespace under the current plot; defaults to the mark id, or mark.<index> when the mark has no id',
@@ -152,6 +155,7 @@ const ProjectedPlotTargetRefSchema = strictObject({
   ...anchorTargetFields,
 }).describe('Projected coordinate target from the current relation row');
 
+/** 校验关系或注解使用的直接标识、生成锚点或投影坐标目标 */
 export const PlotTargetRefSchema = union([
   DirectPlotTargetRefSchema,
   GeneratedAnchorPlotTargetRefSchema,
@@ -167,10 +171,12 @@ const relationLabelTextSchema = union([
   }),
 ]);
 
+/** 校验完成字段绑定后降低为 Core 步骤标签的关系标签 */
 export const RelationStepLabelSchema = StepLabelSchema.extend({
   text: relationLabelTextSchema.describe('Constant core step label text, mixed text, or a data-field binding'),
 }).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
 
+/** 校验仅供普通路径关系使用的 Core Path 选项 */
 export const RelationPathSpecificOptionsSchema = strictObject({
   style: strictObject({
     dashPattern: PathStrokeSchema.shape.dashPattern,
@@ -188,6 +194,7 @@ export const RelationPathSpecificOptionsSchema = strictObject({
   .partial()
   .describe('Core Path options used only when RelationMark kind is path');
 
+/** 校验可降低为 Core 路径步骤的关系路由动作 */
 export const RelationRouteStepSchema = strictObject({
   kind: zodEnum(RelationRouteStepKind).describe('Core path step kind for this relation route segment'),
   to: PlotTargetRefSchema.optional().describe(
@@ -248,6 +255,7 @@ const RelationOrthogonalRoutingSchema = strictObject({
   })
   .describe('Orthogonal relation routing strategy');
 
+/** 校验端点引用解析后生成 Core 步骤的关系路由策略 */
 export const RelationRoutingSchema = discriminatedUnion('kind', [
   RelationLineRoutingSchema,
   RelationBendRoutingSchema,
@@ -305,6 +313,7 @@ const StyleAxisScaleSchema = union([PositiveNumberSchema, AxisScaleSchema]);
 
 const StyleBoxSizeSchema = union([NonNegativeNumberSchema, BoxSizeSchema]);
 
+/** 校验点填充的字段绑定或固定颜色、结构化填充 */
 export const PointFillStyleSchema = markValueSchema(
   StylePaintSchema,
   'Data field path bound to point fill paint',
@@ -312,6 +321,7 @@ export const PointFillStyleSchema = markValueSchema(
   'point fill style value',
 );
 
+/** 校验点主色的字段绑定或固定 CSS 颜色 */
 export const PointColorStyleSchema = markValueSchema(
   CssColorSchema,
   'Data field path bound to point color',
@@ -319,6 +329,7 @@ export const PointColorStyleSchema = markValueSchema(
   'point color value',
 );
 
+/** 校验点尺寸的字段绑定或非负常量半径 */
 export const PointSizeStyleSchema = markValueSchema(
   NonNegativeNumberSchema,
   'Data field path bound to point size',
@@ -326,6 +337,7 @@ export const PointSizeStyleSchema = markValueSchema(
   'point size value',
 );
 
+/** 校验点形状的字段绑定或固定 Core 形状引用 */
 export const PointShapeStyleSchema = markValueSchema(
   ShapeValueSchema,
   'Data field path bound to point shape',
@@ -333,6 +345,7 @@ export const PointShapeStyleSchema = markValueSchema(
   'point shape value',
 );
 
+/** 校验点描边的字段绑定或固定颜色、结构化填充 */
 export const PointStrokeStyleSchema = markValueSchema(
   StylePaintSchema,
   'Data field path bound to point stroke paint',
@@ -340,6 +353,7 @@ export const PointStrokeStyleSchema = markValueSchema(
   'point stroke style value',
 );
 
+/** 校验数值样式的字段绑定或有限常量 */
 export const PointNumberStyleSchema = markValueSchema(
   StyleNumberSchema,
   'Data field path bound to a numeric point style value',
@@ -347,6 +361,7 @@ export const PointNumberStyleSchema = markValueSchema(
   'point numeric style value',
 );
 
+/** 校验非负数值样式的字段绑定或常量 */
 export const PointNonnegativeNumberStyleSchema = markValueSchema(
   NonNegativeNumberSchema,
   'Data field path bound to a non-negative point style value',
@@ -354,6 +369,7 @@ export const PointNonnegativeNumberStyleSchema = markValueSchema(
   'point non-negative numeric style value',
 );
 
+/** 校验透明度样式的字段绑定或 0 到 1 常量 */
 export const PointOpacityStyleSchema = markValueSchema(
   OpacitySchema,
   'Data field path bound to an opacity style value',
@@ -361,6 +377,7 @@ export const PointOpacityStyleSchema = markValueSchema(
   'point opacity style value',
 );
 
+/** 校验堆叠次序的字段绑定或整数常量 */
 export const PointZIndexStyleSchema = markValueSchema(
   number().int(),
   'Data field path bound to zIndex',
@@ -368,6 +385,7 @@ export const PointZIndexStyleSchema = markValueSchema(
   'point zIndex style value',
 );
 
+/** 校验节点正数样式的字段绑定或常量 */
 export const NodePositiveNumberStyleSchema = markValueSchema(
   PositiveNumberSchema,
   'Data field path bound to a positive node style value',
@@ -375,6 +393,7 @@ export const NodePositiveNumberStyleSchema = markValueSchema(
   'node positive numeric style value',
 );
 
+/** 校验节点文本对齐的字段绑定或固定关键字 */
 export const NodeTextAlignStyleSchema = markValueSchema(
   zodEnum(NodeTextAlign),
   'Data field path bound to node text align',
@@ -382,6 +401,7 @@ export const NodeTextAlignStyleSchema = markValueSchema(
   'node text align style value',
 );
 
+/** 校验节点布尔样式的字段绑定或常量 */
 export const NodeBooleanStyleSchema = markValueSchema(
   boolean(),
   'Data field path bound to a boolean node style value',
@@ -389,6 +409,7 @@ export const NodeBooleanStyleSchema = markValueSchema(
   'node boolean style value',
 );
 
+/** 校验节点虚线样式的字段绑定或固定长度序列 */
 export const NodeDashPatternStyleSchema = markValueSchema(
   StrokeDashPatternSchema,
   'Data field path bound to node dashPattern',
@@ -396,6 +417,7 @@ export const NodeDashPatternStyleSchema = markValueSchema(
   'node dashPattern style value',
 );
 
+/** 校验节点字体的字段绑定或固定字体对象 */
 export const NodeFontStyleSchema = markValueSchema(
   FontSchema,
   'Data field path bound to node font',
@@ -403,6 +425,7 @@ export const NodeFontStyleSchema = markValueSchema(
   'node font style value',
 );
 
+/** 校验节点连接面的字段绑定或固定连接面引用 */
 export const NodeBoundaryStyleSchema = markValueSchema(
   BoundarySchema,
   'Data field path bound to node boundary',
@@ -410,6 +433,7 @@ export const NodeBoundaryStyleSchema = markValueSchema(
   'node boundary style value',
 );
 
+/** 校验节点盒间距的字段绑定或固定数值与四边覆盖 */
 export const NodeBoxSpacingStyleSchema = markValueSchema(
   StyleBoxSpacingSchema,
   'Data field path bound to node box spacing',
@@ -417,6 +441,7 @@ export const NodeBoxSpacingStyleSchema = markValueSchema(
   'node box spacing style value',
 );
 
+/** 校验节点缩放的字段绑定或固定统一与双轴倍率 */
 export const NodeAxisScaleStyleSchema = markValueSchema(
   StyleAxisScaleSchema,
   'Data field path bound to node scale',
@@ -424,6 +449,7 @@ export const NodeAxisScaleStyleSchema = markValueSchema(
   'node scale style value',
 );
 
+/** 校验节点盒尺寸的字段绑定或固定统一与宽高覆盖 */
 export const NodeBoxSizeStyleSchema = markValueSchema(
   StyleBoxSizeSchema,
   'Data field path bound to node box size',
@@ -431,6 +457,7 @@ export const NodeBoxSizeStyleSchema = markValueSchema(
   'node box size style value',
 );
 
+/** 校验投影样式的字段绑定或固定预设与对象 */
 export const ShadowStyleSchema = markValueSchema(
   StyleShadowSchema,
   'Data field path bound to shadow',
@@ -438,6 +465,7 @@ export const ShadowStyleSchema = markValueSchema(
   'shadow style value',
 );
 
+/** 校验混合模式的字段绑定或固定关键字 */
 export const BlendModeStyleSchema = markValueSchema(
   StyleBlendModeSchema,
   'Data field path bound to blendMode',
@@ -445,6 +473,7 @@ export const BlendModeStyleSchema = markValueSchema(
   'blendMode style value',
 );
 
+/** 校验路径线帽的字段绑定或固定形状 */
 export const PathLineCapStyleSchema = markValueSchema(
   PathLineCapSchema,
   'Data field path bound to a path lineCap value',
@@ -452,6 +481,7 @@ export const PathLineCapStyleSchema = markValueSchema(
   'path lineCap style value',
 );
 
+/** 校验路径拐角连接的字段绑定或固定形状 */
 export const PathLineJoinStyleSchema = markValueSchema(
   PathLineJoinSchema,
   'Data field path bound to a path lineJoin value',
@@ -459,6 +489,7 @@ export const PathLineJoinStyleSchema = markValueSchema(
   'path lineJoin style value',
 );
 
+/** 校验路径圆角的字段绑定或固定非负半径 */
 export const PathRoundedCornersStyleSchema = markValueSchema(
   NonNegativeNumberSchema,
   'Data field path bound to path roundedCorners',
@@ -466,6 +497,7 @@ export const PathRoundedCornersStyleSchema = markValueSchema(
   'path roundedCorners style value',
 );
 
+/** 校验路径填充规则的字段绑定或固定环绕规则 */
 export const PathFillRuleStyleSchema = markValueSchema(
   PathFillRuleSchema,
   'Data field path bound to path fillRule',
@@ -473,6 +505,7 @@ export const PathFillRuleStyleSchema = markValueSchema(
   'path fillRule style value',
 );
 
+/** 校验路径粗细的字段绑定或固定预设 */
 export const PathThicknessStyleSchema = markValueSchema(
   zodEnum(PathThickness),
   'Data field path bound to path thickness',
@@ -480,6 +513,7 @@ export const PathThicknessStyleSchema = markValueSchema(
   'path thickness style value',
 );
 
+/** 校验路径缩放的字段绑定或固定统一与双轴倍率 */
 export const PathScaleStyleSchema = markValueSchema(
   PathScaleSchema,
   'Data field path bound to path scale',
@@ -487,6 +521,7 @@ export const PathScaleStyleSchema = markValueSchema(
   'path scale style value',
 );
 
+/** 校验各关系路径种类共用的图元视觉样式 */
 export const RelationPrimitiveStyleSchema = strictObject({
   color: PointColorStyleSchema.optional().describe(
     'Shared relation master color: field-bound datum channel or constant color',
@@ -546,6 +581,7 @@ const PathStackClosureSchema = object({
   'Path stack closure: closes the upper outline against a per-row lower-bound field; set fill to render an area',
 );
 
+/** 校验循环、基线或逐行堆叠基线闭合策略；几何闭合不自动开启填充 */
 export const PathClosureSchema = discriminatedUnion('kind', [
   PathCycleClosureSchema,
   PathBaselineClosureSchema,
@@ -628,6 +664,7 @@ const corePathStyle = {
   ),
 };
 
+/** 校验逐记录生成点图形或文本节点的点标记 */
 export const PointMarkSchema = strictObject({
   type: literal(PlotMark.Point).describe('Discriminator: one glyph or text label per record'),
   color: PointColorStyleSchema.optional().describe(
@@ -739,6 +776,7 @@ export const PlotPathConnectNullsStyleSchema = PathStrokeSchema.extend({
   dashPattern: PathStrokeSchema.shape.dashPattern.unwrap().default([6, 4]).optional(),
 }).describe('Stroke overrides for bridges across missing projected points in an open unfilled path');
 
+/** 校验按记录顺序连接为一维轨迹的路径标记 */
 export const PathMarkSchema = object({
   type: literal(PlotMark.Path).describe('Discriminator: ordered points connected into a 1D path'),
   order: NonBlankStringSchema.optional().describe(
@@ -825,6 +863,7 @@ const FullBoundSchema = object({
   kind: literal(IntervalBoundKind.Full).describe('Full bound: span the whole coordinate domain of this role'),
 }).describe('Full bound: spans the role coordinate domain (pie / donut radius, inner→outer)');
 
+/** 校验单个位置角色的带宽、跨度、显式边界、比例或全范围区间来源 */
 export const IntervalBoundSchema = discriminatedUnion('kind', [
   BandBoundSchema,
   SpanBoundSchema,
@@ -842,12 +881,14 @@ const IntervalBoundsObjectSchema = object({
   ),
 }).catchall(IntervalBoundSchema);
 
+/** 校验按坐标角色组织的区间边界 */
 export const IntervalBoundsSchema = record(NonBlankStringSchema, unknown())
   .pipe(IntervalBoundsObjectSchema)
   .describe(
     'Per-role interval bounds keyed by coordinate role; built-ins use x / y, custom coordinates may add role keys',
   );
 
+/** 校验由各角色区间与坐标系共同确定几何的区间标记 */
 export const IntervalMarkSchema = object({
   type: literal(PlotMark.Interval).describe(
     'Discriminator: an orthogonal interval product projected to a segment / rectangle / sector / cell by the coordinate system',
@@ -893,6 +934,7 @@ export const IntervalMarkSchema = object({
   'Interval mark: orthogonal interval product realized per bounds × coordinate (bar / histogram / heatmap cell / radial bar / pie-donut sector)',
 );
 
+/** 校验常量或逐记录参考线、单轴带与多角色区域约束 */
 export const ReferenceMarkSchema = strictObject({
   type: literal(PlotMark.Reference).describe(
     'Discriminator: a constant-position reference mark (line for a single value, band for a [lo,hi] interval, or region for a bounded coordinate cell)',
@@ -961,6 +1003,7 @@ export const ReferenceMarkSchema = strictObject({
     'Reference mark: a constant-position reference constraint. Bind x (vertical) or y (horizontal) for a line or one-axis band; set kind=region with lower/upper bounds for the active coordinate roles. Field → per-datum, value → constant. Use extentField / extentToField for partial-length one-axis spans',
   );
 
+/** 校验普通路径关系的插值、路由、标签与路径选项 */
 export const RelationPathGeometrySchema = strictObject({
   interpolation: zodEnum(PolarInterpolation)
     .optional()
@@ -1000,12 +1043,14 @@ export const RelationPathGeometrySchema = strictObject({
   })
   .describe('Path geometry configuration for RelationMark');
 
+/** 校验仅供带状关系使用的插值、对齐和采样选项 */
 export const RelationRibbonSpecificOptionsSchema = strictObject({
   interpolation: TaperRibbonWidthSchema.shape.interpolation.unwrap().optional(),
   align: CenterlineRibbonPathOptionsSchema.shape.align.unwrap().optional(),
   sampling: CenterlineRibbonPathOptionsSchema.shape.sampling.unwrap().optional(),
 }).describe('Extension Ribbon options used only by ribbon relations');
 
+/** 校验带状关系的起止宽度及专属几何选项 */
 export const RelationRibbonOptionsSchema = strictObject({
   width: PointNonnegativeNumberStyleSchema.describe(
     'Ribbon width at the source side, or the whole width when endWidth is omitted',
@@ -1028,6 +1073,7 @@ export const RelationRibbonOptionsSchema = strictObject({
   })
   .describe('Ribbon geometry configuration for RelationMark');
 
+/** 校验连接源与目标的关系标记，kind 决定普通描边或带状路径语义 */
 export const RelationMarkSchema = strictObject({
   type: literal(PlotMark.Relation).describe('Discriminator: source-target relation lowered to a core Path'),
   kind: zodEnum(RelationGeometryKind).optional().describe('Relation geometry kind; omitted means path'),
@@ -1134,6 +1180,7 @@ export const RelationMarkSchema = strictObject({
     'Relation mark: connects source and target targets through a core Path; kind selects stroke or ribbon path semantics',
   );
 
+/** 校验内置点、路径、区间、参考与关系标记 */
 export const MarkSchema = discriminatedUnion('type', [
   PointMarkSchema,
   PathMarkSchema,
@@ -1168,10 +1215,12 @@ const CustomMarkObjectSchema = looseObject({
   ),
 });
 
+/** 校验自定义标记的开放配置，具体结构由运行时标记定义校验 */
 export const CustomMarkSchema = CustomMarkObjectSchema.catchall(JsonValueSchema).describe(
   'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.markDefinitions',
 );
 
+/** 校验内置或自定义标记操作 */
 export const MarkOperationSchema = union([MarkSchema, CustomMarkSchema]).describe(
   'Mark operation union: built-in mark configs plus custom type open config operations validated by a runtime MarkDefinition',
 );

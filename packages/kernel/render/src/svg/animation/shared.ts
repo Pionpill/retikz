@@ -70,7 +70,14 @@ export const iterationsToCss = (iterations: number | 'infinite' | undefined): st
 const COLOR_SAMPLES = 8;
 
 /** 单帧归一化形态：offset∈[0,1] + 该通道 CSS 值（+ 可选段内 easing） */
-export type ExpandedFrame = { offset: number; value: string; easing?: string };
+export type ExpandedFrame = {
+  /** 展开帧在单次轨道周期内的归一化位置 */
+  offset: number;
+  /** 当前 CSS 属性在此帧的序列化值 */
+  value: string;
+  /** 从此帧到下一帧的 CSS 缓动表达式 */
+  easing?: string;
+};
 
 /** track 展开结果：CSS 属性名 + 帧列表 + 可选 transform 支点 / 一次性 setup 属性 */
 export type ExpandedTrack = {
@@ -85,7 +92,10 @@ export type ExpandedTrack = {
 };
 
 /** 跳过原因（caller 据此 warn 并降级到 base） */
-export type ExpandSkip = { skip: string };
+export type ExpandSkip = {
+  /** 当前轨道无法展开为 CSS 动画时的诊断原因 */
+  skip: string;
+};
 
 const asNumber = (value: unknown): number => (typeof value === 'number' ? value : Number(value));
 

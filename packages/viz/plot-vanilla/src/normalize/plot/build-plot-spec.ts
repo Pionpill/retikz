@@ -34,7 +34,7 @@ export const resolveLabelOf = (spec: IRPlot): ResolveLabelMap | undefined => res
 
 /** Chart typed extension 的 Plot-owned declaration 归一化结果 */
 export type ResolvedPlotExtensionAuthoring = Readonly<{
-  /** JSON-safe Plot member fragment */
+  /** 可 JSON 序列化的绘图成员片段 */
   fragment: PlotMemberFragment;
   /** 不进入 IR 的 Plot runtime sidecar */
   runtime: PlotAuthoringRuntime;

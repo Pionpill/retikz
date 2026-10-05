@@ -7,7 +7,11 @@ import type { StandardEmbeddableComponent } from '../shared';
 import { shapeEmbedProps } from './shared';
 
 /** React Rectangle 的作者输入与宿主事件 */
-export type RectangleProps = InputRectangle & HydrationEventProps & { /** 显式路径身份 */ id?: string };
+export type RectangleProps = InputRectangle &
+  HydrationEventProps & {
+    /** 显式路径身份 */
+    id?: string;
+  };
 
 const RectangleComponent: FC<RectangleProps> = () => null;
 

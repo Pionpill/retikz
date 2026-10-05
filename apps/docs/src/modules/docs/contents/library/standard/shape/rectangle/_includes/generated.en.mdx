@@ -4,8 +4,8 @@
 
 #### Rectangle / RectangleProps
 
-- `Rectangle`: <ApiSourceLink label={"Rectangle"} path={"packages/library/standard-react/src/shape/Rectangle.tsx"} startLine={12}>Declare a Standard Rectangle through its Vanilla adapter</ApiSourceLink>
-- `RectangleProps`: <ApiSourceLink label={"RectangleProps"} path={"packages/library/standard-react/src/shape/Rectangle.tsx"} startLine={9}>React Rectangle authoring input and host events</ApiSourceLink>
+- `Rectangle`: <ApiSourceLink label={"Rectangle"} path={"packages/library/standard-react/src/shape/Rectangle.tsx"} startLine={19}>Declare a Standard Rectangle through its Vanilla adapter</ApiSourceLink>
+- `RectangleProps`: <ApiSourceLink label={"RectangleProps"} path={"packages/library/standard-react/src/shape/Rectangle.tsx"} startLine={10}>React Rectangle authoring input and host events</ApiSourceLink>
 
 ```ts
 export declare const Rectangle: {
@@ -26,7 +26,7 @@ export type RectangleProps = InputRectangle &
   <ApiSourceLink
     label={'InputRectangle'}
     path={'packages/library/standard-vanilla/src/shape/rectangle.ts'}
-    startLine={8}
+    startLine={9}
   >
     Rectangle Vanilla authoring input
   </ApiSourceLink>
@@ -42,7 +42,7 @@ export type InputRectangle = InputShape<IRRectangle>;
   <ApiSourceLink
     label={'RectangleInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/shape/rectangle.ts'}
-    startLine={10}
+    startLine={12}
   >
     Normalize Rectangle authoring input into persistent Standard intent
   </ApiSourceLink>
@@ -57,7 +57,7 @@ export declare const RectangleInputEmbedAdapter: SynchronousInputEmbedAdapter<In
 #### IRRectangle
 
 <p>
-  <ApiSourceLink label={'IRRectangle'} path={'packages/library/standard/src/shape/rectangle/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRRectangle'} path={'packages/library/standard/src/shape/rectangle/types.ts'} startLine={7}>
     Persistent Rectangle shape
   </ApiSourceLink>
 </p>
@@ -72,7 +72,7 @@ export type IRRectangle = ShapeSource<ZodInput<typeof RectangleSchema>>;
   <ApiSourceLink
     label={'RectangleDefinition'}
     path={'packages/library/standard/src/shape/rectangle/definition.ts'}
-    startLine={7}
+    startLine={8}
   >
     Rectangle Core composite registration
   </ApiSourceLink>
@@ -116,7 +116,7 @@ export const RectangleDefinition = defineComposite({
   <ApiSourceLink
     label={'RectangleProvider'}
     path={'packages/library/standard/src/shape/rectangle/provider.ts'}
-    startLine={5}
+    startLine={6}
   >
     Rectangle on-demand dependency contribution
   </ApiSourceLink>
@@ -137,7 +137,7 @@ export const RectangleProvider: CoreDependencyProvider = Object.freeze({
   <ApiSourceLink
     label={'createRectangle'}
     path={'packages/library/standard/src/shape/rectangle/factory.ts'}
-    startLine={4}
+    startLine={5}
   >
     Create a Rectangle Source preserving geometry intent
   </ApiSourceLink>

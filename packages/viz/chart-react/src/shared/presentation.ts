@@ -104,7 +104,9 @@ const textBlockOf = (children: ReactNode): IRTextBlock => {
 
 /** React children 中提取出的固定 presentation slots 与剩余 children */
 export type ChartPresentationMarkerSplit = Readonly<{
+  /** 已从子元素中提取的固定展示槽位 */
   presentation: Partial<Record<ChartPresentationMarkerSlot, IRTextBlock>>;
+  /** 移除展示 marker 后继续收集的图表子声明 */
   chartChildren: ReactNode;
 }>;
 

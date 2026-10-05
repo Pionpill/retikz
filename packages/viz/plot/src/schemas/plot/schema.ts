@@ -29,6 +29,7 @@ import {
 } from './constants';
 import { PlotPartitionDimensionsSchema } from './partition';
 
+/** 校验绘图组合中面板、轨道、坐标轴、标签及外缘间距 */
 export const CompositionSpacingSchema = strictObject({
   panelGap: NonNegativeNumberSchema.optional().describe('Gap between generated facet panels in user units'),
   trackGap: NonNegativeNumberSchema.optional().describe('Gap between tracks in a track arrangement in user units'),
@@ -39,6 +40,7 @@ export const CompositionSpacingSchema = strictObject({
   padding: BoxPaddingSchema.optional().describe('Optional outer padding applied to composition frame calculation'),
 }).describe('Plot composition spacing configuration');
 
+/** 校验组合层级的比例尺、坐标轴与网格解析策略 */
 export const CompositionResolveSchema = strictObject({
   scale: record(NonBlankStringSchema, zodEnum(CompositionScaleResolve))
     .optional()
@@ -73,12 +75,14 @@ const CoordinateViewOverlayPlacementSchema = strictObject({
     .describe('Relative mark-layer z-order hint inside the shared overlay panel; omit to use view declaration order'),
 }).describe('Overlay coordinate view placement');
 
+/** 校验坐标视图的放置种类与对应载荷 */
 export const CoordinateViewPlacementSchema = discriminatedUnion('kind', [
   CoordinateViewRootPlacementSchema,
   CoordinateViewSlotPlacementSchema,
   CoordinateViewOverlayPlacementSchema,
 ]).describe('Coordinate view placement kind and payload');
 
+/** 校验组合内注册的坐标视图、放置方式与元数据 */
 export const CoordinateViewSchema = strictObject({
   id: NonBlankStringSchema.describe('Stable coordinate view id referenced by marks and axis guides'),
   coordinate: CoordinateOperationSchema.describe('Coordinate operation owned by this view'),
@@ -102,6 +106,7 @@ const FacetHeaderSchema = strictObject({
   column: FacetHeaderLabelValueSchema.optional().describe('Whether generated column labels are visible or styled'),
 }).describe('Facet header visibility and text style');
 
+/** 校验分面空值、标题、解析与间距选项，不包含排列身份或分区维度 */
 export const PlotFacetOptionsSchema = strictObject({
   empty: zodEnum(FacetEmptyPolicy)
     .optional()
@@ -135,10 +140,12 @@ const refinePlotFacetConfiguration = (
   }
 };
 
+/** 校验 Plot 与上层分面编写入口共用的可序列化事实 */
 export const PlotFacetConfigurationSchema = PlotFacetConfigurationBaseSchema.superRefine(
   refinePlotFacetConfiguration,
 ).describe('JSON-safe authored facts shared by Plot and higher-level facet authoring');
 
+/** 校验从数据行派生面板坐标视图的分面排列 */
 export const FacetArrangementSchema = strictObject({
   kind: literal(CoordinateArrangementKind.Facet).describe('Arrangement discriminator: data-driven facet panels'),
   ...PlotFacetConfigurationBaseSchema.shape,
@@ -159,6 +166,7 @@ const ScaffoldTrackBandSchema = strictObject({
   end: NormalizedFractionSchema.describe('Track band end fraction in arrangement-local coordinates'),
 }).describe('Fractional role band occupied by one track arrangement lane');
 
+/** 校验共享轨道排列中的单条轨道定义 */
 export const TrackArrangementTrackSchema = strictObject({
   id: NonBlankStringSchema.describe('Stable track id within its track arrangement'),
   view: NonBlankStringSchema.optional().describe('Explicit coordinate view id for this track; omit to derive one'),
@@ -172,6 +180,7 @@ const TrackHeaderSchema = strictObject({
   track: boolean().optional().describe('Whether generated track labels are visible'),
 }).describe('Track arrangement header visibility');
 
+/** 校验为共享轨道派生坐标视图的排列配置 */
 export const TrackArrangementSchema = strictObject({
   kind: literal(CoordinateArrangementKind.Tracks).describe('Arrangement discriminator: shared coordinate tracks'),
   id: NonBlankStringSchema.describe('Stable track arrangement id used to derive track view ids and provenance'),
@@ -191,11 +200,13 @@ export const TrackArrangementSchema = strictObject({
   ),
 }).describe('Shared track arrangement that derives coordinate views for tracks');
 
+/** 校验分面或共享轨道两类坐标排列生成配置 */
 export const CoordinateArrangementSchema = discriminatedUnion('kind', [
   FacetArrangementSchema,
   TrackArrangementSchema,
 ]).describe('Coordinate arrangement generator for facets or shared tracks');
 
+/** 校验供标记与坐标轴共同使用的坐标视图注册集合与排列 */
 export const CoordinateCompositionSchema = strictObject({
   defaultView: NonBlankStringSchema.describe('Coordinate view id used when a mark or axis guide omits coordinateView'),
   views: array(CoordinateViewSchema)
@@ -400,6 +411,7 @@ export const CoordinateCompositionSchema = strictObject({
   })
   .describe('Plot-level coordinate view registry used by marks and axis guides');
 
+/** 校验不携带实际数据的可序列化绘图组合节点，编译时绑定外部数据并降低为 Core 图元 */
 export const PlotSchema = CompositeBaseSchema.extend({
   namespace: literal(PLOT_NAMESPACE).describe(
     'Tier 2 domain namespace; routes this node to the plot lowering registered via CompileOptions.composites',

@@ -253,4 +253,5 @@ const refineAxes = (axes: AxesRefinementInput, ctx: RefinementCtx): void => {
   refineAxis(axes.y, 'y', ctx);
 };
 
+/** 校验坐标轴、刻度与网格配置，并检查跨字段的坐标范围约束 */
 export const AxesSchema = AxesBaseSchema.superRefine(refineAxes);

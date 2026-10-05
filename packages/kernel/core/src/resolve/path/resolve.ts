@@ -545,6 +545,7 @@ const resolveSteps = (
   return out;
 };
 
+/** 合并路径级联样式，解析路径种类、目标与绘制样式，产出编译消费的确定化路径 */
 export const resolvePath = (path: IRPathBase, context: PathResolveContext): PathResolution => {
   const styled = context.styleStack === undefined ? path : resolveEffectivePath(path, context.styleStack);
   const irPath = context.irPath ?? 'path';

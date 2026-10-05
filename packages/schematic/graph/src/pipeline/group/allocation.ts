@@ -27,6 +27,7 @@ const compileGroupBodyAllocation = (source: IRGroupBodyAllocation) => ({
   children: [],
 });
 
+/** 只声明 Group 正文分配边界、不生成绘制子元素的内部组件定义 */
 export const GroupBodyAllocationDefinition: LayoutCompositeDefinition<
   IRGroupBodyAllocation,
   typeof GRAPH_NAMESPACE,
@@ -38,12 +39,14 @@ export const GroupBodyAllocationDefinition: LayoutCompositeDefinition<
   compile: compileGroupBodyAllocation,
 });
 
+/** 定位仅贡献 Group 正文分配边界的内部组件能力 */
 export const GroupBodyAllocationProviderKey: CompositeCoreProviderKey = Object.freeze({
   capability: 'composite',
   namespace: GRAPH_NAMESPACE,
   type: GROUP_BODY_ALLOCATION_TYPE,
 });
 
+/** 为 Group 提供不依赖其它 provider 的正文分配边界组件 */
 export const GroupBodyAllocationProvider: CoreDependencyProvider = Object.freeze({
   key: GroupBodyAllocationProviderKey,
   dependencies: Object.freeze([]),

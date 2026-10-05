@@ -54,7 +54,10 @@ export const bindComposite = (source: IRComposite, composites: CompositeRegistry
   };
 };
 
-/** 按已绑定 provider schema 解析 composite payload */
+/**
+ * 按已绑定 provider schema 解析 composite payload
+ * @template TBinding 关联已注册定义、输入与执行分支的组件绑定类型
+ */
 export const resolveComposite = <TBinding extends RegisteredCompositeBinding>(
   binding: TBinding,
   irPath: string,

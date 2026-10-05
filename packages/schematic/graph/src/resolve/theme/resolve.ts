@@ -207,9 +207,13 @@ export const matchesGraphThemeSelector = (
 
 /** Theme selector 校验所需的成员专属 definitions */
 export type GraphThemeSelectorRegistryContext = Readonly<{
+  /** 正在校验的实体或关系主题选择器类别 */
   member: 'Entity' | 'Relation';
+  /** 选择器可引用的角色定义 */
   roles: ReadonlyMap<string, unknown>;
+  /** 选择器可引用的种类键或定义 */
   kinds: ReadonlySet<string> | ReadonlyMap<string, unknown>;
+  /** 选择器可引用的 predicate 定义 */
   predicates: ReadonlyMap<string, unknown>;
 }>;
 

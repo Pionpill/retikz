@@ -38,13 +38,25 @@ export type RuntimeSourceCommandExecutor = Readonly<{
   ) => RuntimeSourceExecutionResult<void>;
   /** update 携带的 change hint base revision */
   changeSetBaseRevision?: RuntimeRevision;
-  /** 以 concrete source read 类型创建 revision-bound Snapshot */
+  /**
+   * 以 concrete source read 类型创建 revision-bound Snapshot
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   snapshot: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
     prepared: RuntimePreparedSourceValue<unknown, unknown>,
     revision: RuntimeRevision,
   ) => RuntimeSnapshot<TRead>;
-  /** 读取 concrete source change hint */
+  /**
+   * 读取 concrete source change hint
+   * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+   * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+   * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+   * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+   */
   changeSet: <TInput, TValue, TRead, TChange>(
     source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   ) => RuntimeChangeSet<TChange> | undefined;
@@ -86,7 +98,10 @@ export const createNextRuntimeRevision = (current: RuntimeRevision): RuntimeRevi
 export const isRuntimeChangeSet = (value: unknown): value is RuntimeChangeSet<unknown> =>
   typeof value === 'object' && value !== null && runtimeChangeSets.has(value);
 
-/** 创建复制并冻结 changes 容器的 revision-bound change hint */
+/**
+ * 创建复制并冻结 changes 容器的 revision-bound change hint
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export const createRuntimeChangeSet = <TChange>(
   baseRevision: RuntimeRevision,
   changes: ReadonlyArray<TChange>,
@@ -168,7 +183,13 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
   return typedExecutor as unknown as RuntimeSourceCommandExecutor;
 };
 
-/** 在 concrete source 泛型仍可见时创建初始 Snapshot command */
+/**
+ * 在 concrete source 泛型仍可见时创建初始 Snapshot command
+ * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,
@@ -181,7 +202,13 @@ export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
   return command;
 };
 
-/** 在 concrete source 泛型仍可见时创建更新 Snapshot command */
+/**
+ * 在 concrete source 泛型仍可见时创建更新 Snapshot command
+ * @template TInput Source 接收的完整作者输入，由 capture 转为运行时持有值
+ * @template TValue Source 经 capture 产生并由运行时持有、比较和释放的值
+ * @template TRead Source 的只读视图类型，由 read 从持有值生成并通过快照暴露
+ * @template TChange 领域变更提示的单项类型，由 Source 校验并供增量计算消费
+ */
 export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
   source: RuntimeSourceDefinition<TInput, TValue, TRead, TChange>,
   value: TInput,

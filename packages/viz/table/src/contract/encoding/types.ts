@@ -27,7 +27,10 @@ export type CellVisualScaleResolution = Readonly<{
   edges?: ReadonlyArray<number>;
 }>;
 
-/** Table Cell visual scale 作者契约 */
+/**
+ * Table Cell visual scale 作者契约
+ * @template TOptions optionsSchema 解析后交给能力回调的 JSON 选项类型；默认 JsonObject
+ */
 export type CellVisualScaleDefinition<TOptions extends JsonObject = JsonObject> = Readonly<{
   /** 稳定 registry 名称 */
   name: string;

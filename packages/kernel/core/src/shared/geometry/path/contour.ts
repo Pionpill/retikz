@@ -59,13 +59,28 @@ export type ContourSegment = LineSegment | ArcSegment;
 
 /** fillet 后用于 emit 的路径命令（与 primitive/path PathCommand 的 move/line/arc/close 子集对齐） */
 export type ContourCommand =
-  | { kind: 'move'; to: Position }
-  | { kind: 'line'; to: Position }
   | {
+      /** 选择移动、直线、圆弧或闭合操作 */
+      kind: 'move';
+      /** 移动或直线操作的目标坐标 */
+      to: Position;
+    }
+  | {
+      /** 选择移动、直线、圆弧或闭合操作 */
+      kind: 'line';
+      /** 移动或直线操作的目标坐标 */
+      to: Position;
+    }
+  | {
+      /** 选择移动、直线、圆弧或闭合操作 */
       kind: 'arc';
+      /** 圆弧中心坐标 */
       center: Position;
+      /** 圆弧半径，使用绘图坐标单位 */
       radius: number;
+      /** 圆弧起始角，单位为度；0 指向水平正向 */
       startAngle: number;
+      /** 圆弧终止角，单位为度 */
       endAngle: number;
       /**
        * 是否逆时针扫描；缺省 / false = CW
@@ -73,7 +88,10 @@ export type ContourCommand =
        */
       counterClockwise?: boolean;
     }
-  | { kind: 'close' };
+  | {
+      /** 选择移动、直线、圆弧或闭合操作 */
+      kind: 'close';
+    };
 
 /** 二维叉积 a × b */
 const cross = (a: Position, b: Position): number => a[0] * b[1] - a[1] * b[0];

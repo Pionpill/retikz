@@ -190,20 +190,20 @@ Provides base size, base style, optional directional/cyclic styles, and rounding
 
 <ApiTable>
 
-| Member             | Type                            | Default                       | Description                                                                                                                                        |
-| ------------------ | ------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `background?`      | `string`                        | `Transparent background`      | Tile background fill as a CSS string; omitted means transparent                                                                                    |
-| `color`            | `string`                        | —                             | Motif primary color as a CSS string; defaults to `currentColor`                                                                                    |
-| `dashOffset?`      | `IRPatternPaint['dashOffset']`  | —                             | Stroke dash offset                                                                                                                                 |
-| `dashPattern?`     | `IRPatternPaint['dashPattern']` | —                             | Resolved stroke dash pattern after applying explicit values and dashed/dotted preset precedence                                                    |
-| `horizontalStyle?` | `ResolvedPatternLineStyle`      | —                             | Horizontal line style with inherited base fields and resolved presets                                                                              |
-| `lineCap?`         | `IRPatternPaint['lineCap']`     | —                             | Stroke endpoint cap                                                                                                                                |
-| `lineJoin?`        | `IRPatternPaint['lineJoin']`    | —                             | Stroke corner join                                                                                                                                 |
-| `lineStyleCycle?`  | `ResolvedPatternLineStyleCycle` | —                             | Line-style cycle expanded by index with inheritance resolved                                                                                       |
-| `lineWidth?`       | `IRPatternPaint['lineWidth']`   | `Default chosen by the motif` | Line/grid stroke width; used as radius by dots<br />Present only when `pattern.lineWidth` is explicit; otherwise the motif chooses its own default |
-| `round`            | `(n: number) => number`         | —                             | Precision rounding function shared with compile/render for consistent geometry                                                                     |
-| `size`             | `number`                        | —                             | Resolved base size or spacing in user units; PatternEmitResult.tileSize may override the final period                                              |
-| `verticalStyle?`   | `ResolvedPatternLineStyle`      | —                             | Vertical line style with inherited base fields and resolved presets                                                                                |
+| Member             | Type                            | Default     | Description                                                                                                                                        |
+| ------------------ | ------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `background?`      | `string`                        | `undefined` | Tile background fill as a CSS string; omitted means transparent                                                                                    |
+| `color`            | `string`                        | —           | Motif primary color as a CSS string; defaults to `currentColor`                                                                                    |
+| `dashOffset?`      | `IRPatternPaint['dashOffset']`  | —           | Stroke dash offset                                                                                                                                 |
+| `dashPattern?`     | `IRPatternPaint['dashPattern']` | —           | Resolved stroke dash pattern after applying explicit values and dashed/dotted preset precedence                                                    |
+| `horizontalStyle?` | `ResolvedPatternLineStyle`      | —           | Horizontal line style with inherited base fields and resolved presets                                                                              |
+| `lineCap?`         | `IRPatternPaint['lineCap']`     | —           | Stroke endpoint cap                                                                                                                                |
+| `lineJoin?`        | `IRPatternPaint['lineJoin']`    | —           | Stroke corner join                                                                                                                                 |
+| `lineStyleCycle?`  | `ResolvedPatternLineStyleCycle` | —           | Line-style cycle expanded by index with inheritance resolved                                                                                       |
+| `lineWidth?`       | `IRPatternPaint['lineWidth']`   | `undefined` | Line/grid stroke width; used as radius by dots<br />Present only when `pattern.lineWidth` is explicit; otherwise the motif chooses its own default |
+| `round`            | `(n: number) => number`         | —           | Precision rounding function shared with compile/render for consistent geometry                                                                     |
+| `size`             | `number`                        | —           | Resolved base size or spacing in user units; PatternEmitResult.tileSize may override the final period                                              |
+| `verticalStyle?`   | `ResolvedPatternLineStyle`      | —           | Vertical line style with inherited base fields and resolved presets                                                                                |
 
 </ApiTable>
 
@@ -285,7 +285,7 @@ export type PatternEmitResult = {
 ### PatternShape
 
 <p>
-  <ApiSourceLink label={'PatternShape'} path={'packages/kernel/core/src/schemas/paint/constants.ts'} startLine={7}>
+  <ApiSourceLink label={'PatternShape'} path={'packages/kernel/core/src/schemas/paint/constants.ts'} startLine={8}>
     Built-in pattern motif names, using a const object and ValueOf rather than a TypeScript enum
   </ApiSourceLink>
 </p>

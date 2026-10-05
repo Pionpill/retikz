@@ -29,7 +29,11 @@ import {
 } from '../../shared';
 import { lowerOptionsWithAmbientThemeOf, lowerOptionsWithPlotRuntimeOf } from './helpers';
 
-/** Point family concrete Chart 共用的 React 根属性 */
+/**
+ * Point family concrete Chart 共用的 React 根属性
+ * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export type TypedChartCommonProps<TSource extends IRChartSource, TNative = never> = ChartPanelProps &
   ChartThemeDefinitionsProps &
   Pick<TSource, 'id' | 'background' | 'chartDefaults' | 'dataExecution'> &
@@ -180,7 +184,12 @@ const presentationOf = <TSource extends IRChartSource>(
   return presentation;
 };
 
-/** 从 typed Point declarations 组装 Vanilla 精确输入 */
+/**
+ * 从 typed Point declarations 组装 Vanilla 精确输入
+ * @template TProps 具体图表 React 组件或声明组件接受的属性类型
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ * @template TInput 交给 Vanilla factory 与嵌入 adapter 的领域输入类型
+ */
 export const createTypedChartInput = <
   TProps extends TypedChartCommonProps<TSource, unknown>,
   TSource extends IRChartSource,
@@ -332,7 +341,12 @@ export const createTypedChartInput = <
   return factory(input).props;
 };
 
-/** 创建共享 InputEmbed 生命周期接线的 concrete Chart 组件 */
+/**
+ * 创建共享 InputEmbed 生命周期接线的 concrete Chart 组件
+ * @template TProps 具体图表 React 组件或声明组件接受的属性类型
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ * @template TInput 交给 Vanilla factory 与嵌入 adapter 的领域输入类型
+ */
 export const createTypedChartComponent = <
   TProps extends TypedChartCommonProps<TSource, unknown>,
   TSource extends IRChartSource,

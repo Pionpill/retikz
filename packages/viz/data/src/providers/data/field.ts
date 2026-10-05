@@ -29,7 +29,7 @@ const isMissingSortValue = (value: unknown): boolean =>
   value === undefined || value === null || (typeof value === 'number' && !isFiniteNumber(value));
 
 /**
- * 按字段路径和方向比较两行。
+ * 按字段路径和方向比较两行
  * @description missing / 非有限数值始终排在有效值之后；有限数值按数值比较，其余按稳定字符串序比较
  */
 export const compareRowsByFieldPath = (
@@ -60,7 +60,7 @@ export const compareRowsByFieldPath = (
 };
 
 /**
- * 字段类型自动推断的内部采样上限。
+ * 字段类型自动推断的内部采样上限
  * @description 采样上限保证推断成本有界；需要稳定语义时应在 data.model 显式声明字段 type
  */
 const MAX_SCAN_ROWS = 1000;
@@ -78,7 +78,7 @@ const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+
 export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(value) || ISO_DATETIME_RE.test(value);
 
 /**
- * 分类域推断：按数据出现顺序去重（非排序、非 extent）。
+ * 分类域推断：按数据出现顺序去重（非排序、非 extent）
  * @description band / point / ordinal 共用。分类顺序属于 data domain 语义；排序是 transform 的显式职责
  */
 export const inferCategoryDomain = (values: Array<unknown>): Array<string | number> => {
@@ -131,7 +131,7 @@ export const inferFieldType = (rows: Array<ExternalRow>, path: string): DataFiel
 };
 
 /**
- * 解析源字段测量类型映射。
+ * 解析源字段测量类型映射
  * @description data.model 声明时执行 strict 字段引用校验；字段未声明 type 时仍从绑定数据采样推断
  */
 export const resolveFieldTypes = (

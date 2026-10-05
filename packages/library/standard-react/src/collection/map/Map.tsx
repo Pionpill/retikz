@@ -15,20 +15,42 @@ export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | '
   (
     | {
         skeleton?: never;
+        /** 用于展开键值对的数据，与 entries、skeleton 和 children 互斥 */
         data: NonNullable<IRMap['data']>;
         entries?: never;
         children?: never;
+        /** 仅对 data 入口生效的数据展开策略 */
         dataExpand?: IRMap['dataExpand'];
       }
     | {
         skeleton?: never;
         data?: never;
-        entries: Array<{ key: string | CellProps; value: string | CellProps }>;
+        /** 显式键值对序列，各侧接受文本或带样式的单元格 */
+        entries: Array<{
+          /** 当前条目的键侧文本或单元格 */
+          key: string | CellProps;
+          /** 当前条目的值侧文本或单元格 */
+          value: string | CellProps;
+        }>;
         children?: never;
         dataExpand?: never;
       }
-    | { data?: never; skeleton?: never; entries?: never; children?: ReactNode; dataExpand?: never }
-    | { skeleton: NonNullable<IRMap['skeleton']>; data?: never; entries?: never; children?: never; dataExpand?: never }
+    | {
+        data?: never;
+        skeleton?: never;
+        entries?: never;
+        /** 由 MapEntry 及其键、值 marker 组成的映射条目 */
+        children?: ReactNode;
+        dataExpand?: never;
+      }
+    | {
+        /** 用于构造空键值对的结构声明，与其它内容入口互斥 */
+        skeleton: NonNullable<IRMap['skeleton']>;
+        data?: never;
+        entries?: never;
+        children?: never;
+        dataExpand?: never;
+      }
   );
 
 /** 保留单元格样式并收集每格的唯一 drawable */

@@ -19,8 +19,11 @@ const DEFAULT_CAPTION_GAP = 4;
 
 /** Group caption 与 body 组合所需的 canonical child、方位和间距 */
 export type GroupCaptionComposition = Readonly<{
+  /** 标题区组合后的绘制子内容 */
   child: IRChild;
+  /** 标题区位于正文上方或下方 */
   side: 'top' | 'bottom';
+  /** 标题区与正文之间的净间距 */
   bodyGap: number;
 }>;
 

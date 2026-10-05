@@ -17,7 +17,7 @@ export type DataView = Readonly<{
 export type ParsedFieldValue = string | number | undefined;
 
 /**
- * 单字段解析结果，运行时使用，不进 IR。
+ * 单字段解析结果，运行时使用，不进 IR
  * @description `type` 覆盖最终字段测量类型；`parse` 覆盖内置 coercion，返回 undefined 表示该值不可用
  */
 export type FieldResolution = {
@@ -28,7 +28,7 @@ export type FieldResolution = {
 };
 
 /**
- * 程序化字段解析逃生舱，运行时函数，不进 IR。
+ * 程序化字段解析逃生舱，运行时函数，不进 IR
  * @description 按字段名返回类型覆盖与可选自定义解析；返回 undefined 时回退到 data.model / 自动推断与内置 coercion
  */
 export type ResolveField = (

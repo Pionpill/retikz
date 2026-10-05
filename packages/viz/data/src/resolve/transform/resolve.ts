@@ -16,7 +16,9 @@ import type { IRDataExecution, IRDataTransformDeclaration } from '../../schemas'
 
 /** 已经由各 Definition 唯一解析的声明；仅在当前请求内消费 */
 export type ParsedDataTransformDeclaration = Readonly<{
+  /** 与声明匹配的数据变换语义定义 */
   definition: AnyTransformDefinition;
+  /** 已通过精确 schema 解析的数据变换声明 */
   declaration: IRDataTransformDeclaration;
 }>;
 

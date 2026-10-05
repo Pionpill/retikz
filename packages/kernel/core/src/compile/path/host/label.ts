@@ -19,6 +19,7 @@ export type LabelTexContext = {
   lowerTex?: LowerTex;
   /** `$...$` 解析门控 */
   gatingOn: boolean;
+  /** 接收公式解析与排版产生的编译诊断 */
   warn: (code: CompileWarningCode, message: string) => void;
 };
 
@@ -33,11 +34,20 @@ export type LabelPlacementContext = {
 
 /** step label emit 所需上下文 */
 export type EmitLabelPrimitiveContext = {
+  /** 按实际字体测量标签文字 */
   measureText: TextMeasurer;
+  /** 统一输出坐标与尺寸的数值精度 */
   round: (n: number) => number;
+  /**
+   * 解析预设与 rem 字号时使用的根字号
+   * @default DEFAULT_FONT_SIZE
+   */
   rootFontSize?: number;
+  /** 与标签自身透明度合成的宿主透明度 */
   hostOpacity?: number;
+  /** 公式识别、降解和诊断能力；省略时不启用公式识别 */
   tex?: LabelTexContext;
+  /** 面状宿主的边界偏移，用于计算标签内外放置位置 */
   placement?: LabelPlacementContext;
 };
 

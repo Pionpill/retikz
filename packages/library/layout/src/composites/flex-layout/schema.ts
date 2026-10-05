@@ -20,6 +20,7 @@ import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 
 const FLEX_LAYOUT_CONTENT_BASIS = 'content' as const;
 
+/** 校验 Flex 主轴的剩余空间分配方式，不包含拉伸轨道模式 */
 export const FlexMainDistributionSchema = zodEnum([
   LayoutDistribution.Start,
   LayoutDistribution.Center,
@@ -29,6 +30,7 @@ export const FlexMainDistributionSchema = zodEnum([
   LayoutDistribution.SpaceEvenly,
 ]).describe('Distribution of remaining main-axis space between flex items.');
 
+/** 校验 Flex 子项的基础尺寸、伸缩权重、尺寸限制与交叉轴对齐 */
 export const FlexLayoutItemSchema = LayoutItemBaseSchema.extend({
   kind: literal(LayoutItemKind.Flex).describe('Discriminator for a FlexLayout item.'),
   basis: union([literal(FLEX_LAYOUT_CONTENT_BASIS), NonNegativeNumberSchema])
@@ -112,6 +114,7 @@ const refineFlexLayout = (layout: FlexLayoutRefinementInput, context: Refinement
   });
 };
 
+/** 校验 Flex 容器的稀疏输入及跨字段布局约束 */
 export const FlexLayoutSchema = FlexLayoutBaseSchema.superRefine(refineFlexLayout).describe(
   'Sparse JSON-safe Layout FlexLayout composite.',
 );
@@ -195,6 +198,7 @@ const refineFlexLayoutArtifact = (artifact: ZodInfer<typeof FlexLayoutArtifactBa
   });
 };
 
+/** 校验 Flex 编译产物中子项顺序、行归属与布局观测结果的一致性 */
 export const FlexLayoutArtifactSchema = FlexLayoutArtifactBaseSchema.superRefine(refineFlexLayoutArtifact).describe(
   'Canonical JSON-safe FlexLayout compile artifact payload.',
 );

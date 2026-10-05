@@ -25,7 +25,7 @@ const isCoercedValid = (value: unknown, type: DataFieldType): boolean => {
 };
 
 /**
- * 归一化绑定数据行。
+ * 归一化绑定数据行
  * @description 每个逻辑字段先经 fieldMap 映射到物理路径，再通过自定义 parser 或内置 coercion 写回规范化字段；下游 transform / scale / mark / locator 统一读取规范化字段，避免二次 coercion
  */
 export const normalizeRows = (
@@ -51,7 +51,7 @@ export const normalizeRows = (
 const isMissingRaw = (raw: unknown): boolean => raw === undefined || raw === null;
 
 /**
- * 抽样校验绑定数据：每个用户源字段在样本里至少有一个可 coercion 的值，否则 fail-loud。
+ * 抽样校验绑定数据：每个用户源字段在样本里至少有一个可 coercion 的值，否则 fail-loud
  * @description validateData 开启时调用，用字段级 invalid / missing 计数解释空图原因；该阶段读取原始绑定数据
  */
 export const validateBoundData = (
@@ -87,7 +87,7 @@ export const validateBoundData = (
 };
 
 /**
- * 全量严格校验规范化字段值，任一坏值即 fail-loud。
+ * 全量严格校验规范化字段值，任一坏值即 fail-loud
  * @description invalid:'error' 使用；该阶段读取已过 parser / coercion 的规范化字段
  */
 export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypeMap: DataFieldTypeMap): void => {

@@ -13,9 +13,13 @@ export type StrokeSegmentSampler = (t: number) => CurveSegmentSample;
 
 /** stroke 整体路径采样输入 */
 export type SampleStrokePathInput = {
+  /** 圆角处理后的最终路径命令 */
   commands: ReadonlyArray<PathCommand>;
+  /** 按声明顺序排列的绘制段采样函数 */
   segmentSamplers: ReadonlyArray<StrokeSegmentSampler>;
+  /** 是否按最终命令弧长采样；否则按绘制段数量均分 */
   roundedCommands: boolean;
+  /** 从路径起点 0 到终点 1 的归一化采样位置 */
   position: number;
 };
 

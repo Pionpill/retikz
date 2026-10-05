@@ -36,10 +36,10 @@ export type IRPlotDomainPadding = ZodInfer<typeof DomainPaddingSchema>;
 /** 线性 scale */
 export type IRPlotLinearScale = ZodInfer<typeof LinearScaleSchema>;
 
-/** band scale */
+/** 将离散类别映射为带宽区间的比例尺 */
 export type IRPlotBandScale = ZodInfer<typeof BandScaleSchema>;
 
-/** point scale */
+/** 将离散类别映射为等距点的比例尺 */
 export type IRPlotPointScale = ZodInfer<typeof PointScaleSchema>;
 
 /** ordinal scale（分类 → 离散输出，颜色） */
@@ -78,7 +78,7 @@ export type IRPlotThresholdColorScale = ZodInfer<typeof ThresholdColorScaleSchem
 /** quantile color scale（分位离散化；按数据分位切档 → 离散色，无显式数值 domain） */
 export type IRPlotQuantileColorScale = ZodInfer<typeof QuantileColorScaleSchema>;
 
-/** scale（linear / band / point / ordinal / time / log / pow / sqrt / symlog / radial / sequential / diverging / quantize / threshold / quantile） */
+/** 比例尺联合，包含连续、离散、时间、颜色及分段映射类型 */
 export type IRPlotScale = ZodInfer<typeof ScaleSchema>;
 
 /** 自定义 scale operation（运行时由 ScaleDefinition 精确校验并解析；type 排除内置） */

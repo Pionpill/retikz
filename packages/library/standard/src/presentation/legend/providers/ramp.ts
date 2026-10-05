@@ -25,7 +25,12 @@ export type LegendRampTickStructure = Readonly<{
   /** tick 在 authored ticks 数组中的来源索引 */
   sourceIndex: number;
   /** tick 在 sample 边缘上的结构锚点 */
-  anchor: Readonly<{ x: number; y: number }>;
+  anchor: Readonly<{
+    /** 刻度结构锚点在图例正文局部坐标中的 x */
+    x: number;
+    /** 刻度结构锚点在图例正文局部坐标中的 y */
+    y: number;
+  }>;
   /** tick label 的结构 slot，缺少 label 时为 null */
   labelSlot: LayoutRect | null;
 }>;

@@ -13,7 +13,7 @@ export const PlotGuide = {
 } as const;
 
 /**
- * 坐标轴摆放方式关键字。
+ * 坐标轴摆放方式关键字
  * @description auto 由坐标系按维度推断；side 使用笛卡尔式四边；edge 使用坐标系原生边
  */
 export const AxisPlacementKind = {
@@ -28,7 +28,7 @@ export const AxisPlacementKind = {
 } as const;
 
 /**
- * 笛卡尔式四方向轴位置。
+ * 笛卡尔式四方向轴位置
  * @description 只表达 top/right/bottom/left；非四边形坐标系应使用 auto 或 edge
  */
 export const AxisCardinalSide = {
@@ -49,7 +49,7 @@ export const AxisLineExtentTarget = {
 } as const;
 
 /**
- * 坐标轴网格投放模式。
+ * 坐标轴网格投放模式
  * @description `local` 只投放到坐标轴绑定的坐标视图；`all` 投放到组合结构选中的坐标视图；`selected` 使用显式选择器
  */
 export const AxisGridApplyTo = {
@@ -240,7 +240,7 @@ export const LegendOrient = {
 } as const;
 
 /**
- * 图例符号尺寸适配策略。
+ * 图例符号尺寸适配策略
  * @description fit 会把 size legend 的符号压入 symbolSize 盒子；preserve 保留通道 descriptor 的原始半径
  */
 export const LegendSymbolFit = {

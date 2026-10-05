@@ -8,7 +8,9 @@ import { localToWorld, worldToLocal } from './transform';
 
 /** 圆形：几何中心 + 半径，预留旋转字段保持与 Rect 同形 API */
 export type Circle = {
+  /** 圆心的横坐标 */
   x: number;
+  /** 圆心的纵坐标 */
   y: number;
   /** 半径 */
   radius: number;

@@ -813,7 +813,7 @@ export type SmoothStepProps = {
 ### path / InputPath
 
 - `path`: <ApiSourceLink label={"path"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={30}>Create path authoring input, with identity declared by the configuration id</ApiSourceLink>
-- `InputPath`: <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={163}>Authoring input for a path</ApiSourceLink>
+- `InputPath`: <ApiSourceLink label={"InputPath"} path={"packages/kernel/vanilla/src/normalize/path/types.ts"} startLine={187}>Authoring input for a path</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -865,7 +865,7 @@ export type InputPath = InputPathBase & {
 ### InputStep
 
 <p>
-  <ApiSourceLink label={'InputStep'} path={'packages/kernel/vanilla/src/normalize/path/types.ts'} startLine={128}>
+  <ApiSourceLink label={'InputStep'} path={'packages/kernel/vanilla/src/normalize/path/types.ts'} startLine={152}>
     Authoring path step
   </ApiSourceLink>
 </p>
@@ -1184,7 +1184,7 @@ export type PathGeneratorGenerateContext = {
   <ApiSourceLink
     label={'PathKindBoundaryLabelInput'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={111}
+    startLine={130}
   >
     Label request with its boundary anchor determined by host geometry
   </ApiSourceLink>
@@ -1228,7 +1228,7 @@ export type PathKindBoundaryLabelInput = Readonly<{
   <ApiSourceLink
     label={'PathKindCompileContext'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={128}
+    startLine={147}
   >
     Path-kind compilation context
   </ApiSourceLink>
@@ -1332,7 +1332,7 @@ export type PathKindCompileResult = {
   <ApiSourceLink
     label={'PathKindDefinition'}
     path={'packages/kernel/core/src/contract/path-kind/types.ts'}
-    startLine={167}
+    startLine={187}
   >
     Contract for registering path kind parsing, compilation, and optional owner output
   </ApiSourceLink>
@@ -1369,7 +1369,7 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 
 ### WayDSL
 
-<p><ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={141}>Way DSL array accepted by sugar `<Draw way={...}>`</ApiSourceLink></p>
+<p><ApiSourceLink label={"WayDSL"} path={"packages/kernel/core/src/parse/way.ts"} startLine={182}>Way DSL array accepted by sugar `<Draw way={...}>`</ApiSourceLink></p>
 
 ```ts
 export type WayDSL = Array<WayItem>;
@@ -1378,7 +1378,7 @@ export type WayDSL = Array<WayItem>;
 ### WayItem
 
 <p>
-  <ApiSourceLink label={'WayItem'} path={'packages/kernel/core/src/parse/way.ts'} startLine={123}>
+  <ApiSourceLink label={'WayItem'} path={'packages/kernel/core/src/parse/way.ts'} startLine={164}>
     An element of the sugar way-array DSL
   </ApiSourceLink>
 </p>
@@ -1406,7 +1406,7 @@ export type WayItem =
 ### definePathKind
 
 <p>
-  <ApiSourceLink label={'definePathKind'} path={'packages/kernel/core/src/contract/path-kind/define.ts'} startLine={68}>
+  <ApiSourceLink label={'definePathKind'} path={'packages/kernel/core/src/contract/path-kind/define.ts'} startLine={70}>
     Define a path kind while preserving the relationship between path and owner output types
   </ApiSourceLink>
 </p>
@@ -1562,7 +1562,7 @@ export declare const definePathGenerator: (def: PathGeneratorDefinition) => Path
   <ApiSourceLink
     label={'resolveGeometryLabelPlacement'}
     path={'packages/kernel/core/src/resolve/path/resolve.ts'}
-    startLine={118}
+    startLine={122}
   >
     Resolves defaults for position, side, distance, interruption and gap
   </ApiSourceLink>

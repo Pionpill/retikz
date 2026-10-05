@@ -1,7 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
 
 /**
- * 逻辑地址解析结果。
+ * 逻辑地址解析结果
  * @description position 与 lowering 摆放一致；meta 与 per-datum meta 同构；id 仅在 datumIdField 命中并已绑定具名 id 时回填
  */
 export type PlotAnchorResolution = {
@@ -15,11 +15,11 @@ export type PlotAnchorResolution = {
 
 /** facet 定位过滤条件 */
 export type PlotFacetLocatorOptions = {
-  /** facet id */
+  /** 分面的标识 */
   id: string;
-  /** facet row key */
+  /** 分面行的标识键 */
   row?: string | number | boolean | null | Array<string | number | boolean | null>;
-  /** facet column key */
+  /** 分面列的标识键 */
   column?: string | number | boolean | null | Array<string | number | boolean | null>;
 };
 
@@ -27,11 +27,11 @@ export type PlotFacetLocatorOptions = {
 export type PlotLocatorOptions = {
   /** mark 序号；省略时取首个 mark */
   markIndex?: number;
-  /** coordinate view id */
+  /** 坐标视图的标识 */
   coordinateView?: string;
   /** facet 过滤条件 */
   facet?: PlotFacetLocatorOptions;
-  /** track id */
+  /** 轨道的标识 */
   track?: string;
 };
 

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mountCanvas } from '../../src/dom';
 
-/**
+/*
  * @retikz/vanilla mountCanvas 的 canvas 水合（client 坐标 → 逆 meet-fit → hitTest 命中 → handler）
  * @description canvas 无逐图元 DOM，水合靠 client px 经 view.clientToScene 逆 meet-fit 成 Scene units，再 hitTest 命中 id。
  *   jsdom 无真实 canvas backend，故沿用 render 层 canvas-hittest 的做法——spy getContext 返回「几何忠实」的 2D

@@ -1,7 +1,10 @@
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { CssColorValue } from './types';
 
-/** 从非空 categorical palette 按稳定的非负整数索引循环取色 */
+/**
+ * 从非空 categorical palette 按稳定的非负整数索引循环取色
+ * @template TColor 分类调色板的颜色成员类型，返回值保持该类型
+ */
 export const categoricalColorAt = <TColor extends CssColorValue>(
   palette: ReadonlyArray<TColor>,
   index: number,

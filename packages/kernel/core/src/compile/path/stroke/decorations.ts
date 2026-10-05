@@ -14,11 +14,17 @@ import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
 export type PathEndpointDecorations = {
   /** 起点 / 终点箭头规格与 shrink 信息 */
   arrows: {
+    /** 选中的起点箭头规格 */
     arrowStart?: ResolvedArrowEnd;
+    /** 选中的终点箭头规格 */
     arrowEnd?: ResolvedArrowEnd;
+    /** 起点沿路径收缩的线宽倍数 */
     shrinkStart: number;
+    /** 终点沿路径收缩的线宽倍数 */
     shrinkEnd: number;
+    /** 起点箭头相对边界的外侧内缩系数，以线宽为单位 */
     boundaryOuterInsetStart: number;
+    /** 终点箭头相对边界的外侧内缩系数，以线宽为单位 */
     boundaryOuterInsetEnd: number;
   };
   /** 非端点 marks，稍后按 path 采样点 emit 成 Scene primitive */

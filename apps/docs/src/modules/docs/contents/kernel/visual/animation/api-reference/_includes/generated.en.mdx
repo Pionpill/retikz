@@ -322,7 +322,7 @@ export type SlideInOptions = AnimationPresetOptions & {
   <ApiSourceLink
     label={'AnimationDirection'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={34}
+    startLine={35}
   >
     Playback direction per iteration, following WAAPI/CSS animation-direction
   </ApiSourceLink>
@@ -345,7 +345,7 @@ export type AnimationDirection = ValueOf<typeof AnimationDirection>;
   <ApiSourceLink
     label={'AnimationEasing'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={25}
+    startLine={26}
   >
     Named easing presets matching CSS; tracks and keyframes can instead use a cubic-bezier tuple
   </ApiSourceLink>
@@ -369,7 +369,7 @@ export type AnimationEasing = ValueOf<typeof AnimationEasing>;
   <ApiSourceLink
     label={'AnimationFill'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={42}
+    startLine={43}
   >
     Values outside the active interval, following WAAPI/CSS animation-fill-mode
   </ApiSourceLink>
@@ -392,7 +392,7 @@ export type AnimationFill = ValueOf<typeof AnimationFill>;
   <ApiSourceLink
     label={'AnimationProperty'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={9}
+    startLine={10}
   >
     Renderer-independent animation channels represented by const names and derived types; literals such as opacity
     remain supported
@@ -426,7 +426,7 @@ export type AnimationProperty = ValueOf<typeof AnimationProperty>;
   <ApiSourceLink
     label={'AnimationTrigger'}
     path={'packages/kernel/core/src/schemas/animation/constants.ts'}
-    startLine={50}
+    startLine={51}
   >
     Playback trigger names implemented by the runtime, using the same const-and-derived-type convention as other
     animation enums
@@ -719,7 +719,7 @@ export declare const stagger: (
 ### AnimationControls
 
 <p>
-  <ApiSourceLink label={'AnimationControls'} path={'packages/kernel/render/src/animation/runtime.ts'} startLine={27}>
+  <ApiSourceLink label={'AnimationControls'} path={'packages/kernel/render/src/animation/runtime.ts'} startLine={28}>
     Playback handle exposed for manual triggers and runtime control
   </ApiSourceLink>
 </p>
@@ -839,7 +839,7 @@ export type AnimationPropertyRegistry = Record<string, AnimationPropertyDefiniti
 ### EasingRegistry
 
 <p>
-  <ApiSourceLink label={'EasingRegistry'} path={'packages/kernel/render/src/animation/types.ts'} startLine={12}>
+  <ApiSourceLink label={'EasingRegistry'} path={'packages/kernel/render/src/animation/types.ts'} startLine={14}>
     Custom easing registry mapping names to cubic-bezier tuples (CSS/WAAPI) or functions (Canvas/JavaScript only)
   </ApiSourceLink>
 </p>

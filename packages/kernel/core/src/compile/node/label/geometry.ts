@@ -88,20 +88,29 @@ export const labelBorderPoint = (layout: NodeLayout, label: Pick<MeasuredNodeLab
   return anchorOf(aaLayout, label.position);
 };
 
+/** 将标签相对节点中心的偏移换算为当前布局坐标中的中心点 */
 export const labelCenter = (layout: NodeLayout, label: NodeLabelLayout): Position => {
   return [layout.rect.x + label.centerOffset[0], layout.rect.y + label.centerOffset[1]];
 };
 
 /** 从 label 中心朝 border 方向，求 label 框边界交点 */
 export type LabelBoxEdgeTowardInput = {
+  /** 标签视觉盒的中心，与 border 使用同一坐标系 */
   center: Position;
+  /** 用于确定从标签中心向外求交方向的目标点 */
   border: Position;
+  /** 标签未旋转视觉盒的半宽 */
   halfWidth: number;
+  /** 标签未旋转视觉盒的半高 */
   halfHeight: number;
   /** label 视觉盒自旋角 */
   rotateDeg: number;
 };
 
+/**
+ * 从标签中心朝目标点求旋转矩形的边界交点
+ * @returns 射线与视觉盒的首次交点；两点距离小于几何容差时返回原 center 引用
+ */
 export const labelBoxEdgeToward = ({
   center,
   border,

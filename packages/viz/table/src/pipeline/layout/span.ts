@@ -6,7 +6,7 @@ import type { ResolvedTableTrackSize, TableTrackContribution } from './types';
 
 /** 单个 spanning Cell 对一个 canonical 轴的自然尺寸要求 */
 export type TableSpanConstraint = Readonly<{
-  /** optional semantic Cell id */
+  /** 可选的单元格语义标识 */
   cellId?: string;
   /** span 起始 canonical track index */
   startIndex: number;
@@ -30,7 +30,7 @@ export type PropagateTableSpanContributionsInput = Readonly<{
 
 /** 单个 Cell 仍未被轨道自然尺寸覆盖的外部尺寸 */
 export type TableSpanUnmetSize = Readonly<{
-  /** optional semantic Cell id */
+  /** 可选的单元格语义标识 */
   cellId?: string;
   /** finite nonnegative 未满足尺寸 */
   size: number;
@@ -46,7 +46,7 @@ export type TableSpanContributionResult = Readonly<{
 
 /** span natural-size growth 阶段中的单轨候选 */
 type SpanGrowthCandidate = Readonly<{
-  /** canonical track index */
+  /** 规范轨道下标 */
   index: number;
   /** natural size 增长上限 */
   limit: number;

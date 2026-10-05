@@ -329,11 +329,18 @@ const assertRowShapeAvailability = (
 
 /** transform mapping 解析、依赖检查与 phase 调度结果 */
 export type ChartEncodingTransformResolution = Readonly<{
+  /** 已改写为直接字段消费形式的映射 */
   encodings: JsonObject;
+  /** 满足阶段与依赖顺序的派生变换记录 */
   records: ReadonlyArray<TransformOperationRecord>;
 }>;
 
-/** 解析 exact field mappings 中的 direct、aggregate 与 derived transform */
+/**
+ * 解析 exact field mappings 中的 direct、aggregate 与 derived transform
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ * @template TEncodingSlot 当前 recipe 允许的字段映射槽位名称
+ * @template TConsumerSlot 当前消费方实际使用的字段映射槽位子集
+ */
 export const resolveChartEncodingTransforms = <
   TSource extends IRChartSource,
   TEncodingSlot extends Extract<keyof TSource['recipe']['encodings'], string>,

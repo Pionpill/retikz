@@ -1,5 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 
+/** 几何标签相对于宿主内部或外部的放置方式 */
 export const GeometryLabelPlacement = {
   Outside: 'outside',
   Inside: 'inside',
@@ -23,6 +24,7 @@ export const GeometryLabelPosition = {
   AtEnd: 'at-end',
 } as const;
 
+/** 折线路径采用的水平与垂直分段顺序 */
 export const FoldStepVia = {
   /** 先水平后垂直 */
   HorizontalThenVertical: '-|',

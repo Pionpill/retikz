@@ -11,13 +11,32 @@ import { dataCellDependencies, normalizeCells } from './cell';
 export type InputMap = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataExpand' | 'skeleton'> &
   (
     | {
-        entries: Array<{ key: string | InputCell; value: string | InputCell }>;
+        /** 按顺序提供的显式键值对，与数据和骨架入口互斥 */
+        entries: Array<{
+          /** 键侧文本或可包含绘制内容的单元格 */
+          key: string | InputCell;
+          /** 值侧文本或可包含绘制内容的单元格 */
+          value: string | InputCell;
+        }>;
         data?: never;
         skeleton?: never;
         dataExpand?: never;
       }
-    | { data: NonNullable<IRMap['data']>; skeleton?: never; entries?: never; dataExpand?: IRMap['dataExpand'] }
-    | { skeleton: NonNullable<IRMap['skeleton']>; entries?: never; data?: never; dataExpand?: never }
+    | {
+        /** 用于展开键值对的数据，与其它内容入口互斥 */
+        data: NonNullable<IRMap['data']>;
+        skeleton?: never;
+        entries?: never;
+        /** 仅用于数据入口的展开策略 */
+        dataExpand?: IRMap['dataExpand'];
+      }
+    | {
+        /** 用于构造空键值对的结构声明，与其它内容入口互斥 */
+        skeleton: NonNullable<IRMap['skeleton']>;
+        entries?: never;
+        data?: never;
+        dataExpand?: never;
+      }
   );
 
 /** 将 Map 输入与嵌套内容交给根级 traversal */

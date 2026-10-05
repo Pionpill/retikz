@@ -10,15 +10,24 @@ import type { InputCell } from './cell';
 
 /** 连接输入只增加 Kernel 箭头语法糖 */
 export type InputChainConnection = Omit<IRChainConnection, 'path'> & {
+  /** 连接线路径配置，额外接受 Vanilla 箭头简写与端点放置参数 */
   path?: NonNullable<IRChainConnection['path']> & Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement'>;
 };
 
 /** 递归单元支持 Vanilla drawable */
 export type InputChainItem =
   | string
-  | (InputCell & { kind: 'cell' })
+  | (InputCell & {
+      /** 标识单个链式单元，与并行分支区分 */
+      kind: 'cell';
+    })
   | (Omit<IRChainParallel, 'branches' | 'connection'> & {
-      branches: Array<{ items: Array<InputChainItem> }>;
+      /** 当前并行部分的有序分支 */
+      branches: Array<{
+        /** 当前分支中按顺序连接的递归链项 */
+        items: Array<InputChainItem>;
+      }>;
+      /** 当前并行部分的连接线覆盖 */
       connection?: InputChainConnection;
     });
 
@@ -26,10 +35,32 @@ export type InputChainItem =
 export type InputChain = Omit<
   IRChain,
   'namespace' | 'type' | 'items' | 'data' | 'skeleton' | 'dataExpand' | 'connection'
-> & { connection?: InputChainConnection } & (
-    | { items: Array<InputChainItem>; data?: never; skeleton?: never; dataExpand?: never }
-    | { data: NonNullable<IRChain['data']>; items?: never; skeleton?: never; dataExpand?: IRChain['dataExpand'] }
-    | { skeleton: NonNullable<IRChain['skeleton']>; items?: never; data?: never; dataExpand?: never }
+> & {
+  /** 链整体的连接线默认配置 */
+  connection?: InputChainConnection;
+} & (
+    | {
+        /** 显式串行项与并行分支，与数据和骨架入口互斥 */
+        items: Array<InputChainItem>;
+        data?: never;
+        skeleton?: never;
+        dataExpand?: never;
+      }
+    | {
+        /** 用于展开链项的数据，与其它内容入口互斥 */
+        data: NonNullable<IRChain['data']>;
+        items?: never;
+        skeleton?: never;
+        /** 仅用于数据入口的展开策略 */
+        dataExpand?: IRChain['dataExpand'];
+      }
+    | {
+        /** 用于构造空链项的结构声明，与其它内容入口互斥 */
+        skeleton: NonNullable<IRChain['skeleton']>;
+        items?: never;
+        data?: never;
+        dataExpand?: never;
+      }
   );
 
 /** 复用路径归一化，只保留呈现字段和显式空 marks */
