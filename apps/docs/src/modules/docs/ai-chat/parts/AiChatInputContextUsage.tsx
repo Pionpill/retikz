@@ -10,6 +10,7 @@ import { FALLBACK_CONTEXT_LIMIT, MODEL_CONTEXT_LIMIT } from '../constants';
 import { useAiChatStore } from '../useAiChatStore';
 
 const CIRCLE_RADIUS = 4.5;
+
 const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 
 /**
@@ -33,6 +34,7 @@ export const AiChatInputContextUsage: FC = () => {
     const knownLimit = (MODEL_CONTEXT_LIMIT as Record<string, number | undefined>)[model];
     const maxTokens = knownLimit ?? FALLBACK_CONTEXT_LIMIT;
     const ratio = maxTokens > 0 ? Math.min(1, usedTokens / maxTokens) : 0;
+
     return {
       percent: Math.round(ratio * 100),
       used: Math.round(usedTokens / 1000),

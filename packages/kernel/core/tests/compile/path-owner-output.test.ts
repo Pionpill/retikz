@@ -33,6 +33,7 @@ describe('Core Path owner output', () => {
         requested = context.ownerOutput.requested;
         context.ownerOutput.publish({ label: 'path-output' });
         publishCount += 1;
+
         return {
           primitives: [{ type: 'rect', x: 0, y: 0, width: 10, height: 1 }],
           boundsPoints: [
@@ -51,7 +52,9 @@ describe('Core Path owner output', () => {
           observerOutputs: ReadonlyArray<{ key: string; value: unknown }>;
         })
       | undefined;
+
     expect(compile).toBeTypeOf('function');
+
     if (compile === undefined) throw new Error('observeCompileToScene is not available');
 
     const result = compile(
@@ -78,6 +81,7 @@ describe('Core Path owner output', () => {
           context.ownerOutput.publish({ value: 1 });
           published += 1;
         }
+
         return { primitives: [], boundsPoints: [] };
       },
     });
@@ -86,6 +90,7 @@ describe('Core Path owner output', () => {
       pathKinds: [kind],
       padding: 0,
     });
+
     expect(result.scene.primitives).toEqual([]);
     expect(requested).toBe(false);
     expect(published).toBe(0);
@@ -123,8 +128,11 @@ describe('Core Path owner output', () => {
           observers: ReadonlyArray<CompileObserverDefinition>,
         ) => unknown)
       | undefined;
+
     expect(compile).toBeTypeOf('function');
+
     if (compile === undefined) throw new Error('observeCompileToScene is not available');
+
     expect(() =>
       compile(scene([{ type: 'path', kind: kind.name, children: steps }]), { pathKinds: [kind], padding: 0 }, [
         observe(),
@@ -149,7 +157,9 @@ describe('Core Path owner output', () => {
           observers: ReadonlyArray<CompileObserverDefinition>,
         ) => unknown)
       | undefined;
+
     expect(compile).toBeTypeOf('function');
+
     if (compile === undefined) throw new Error('observeCompileToScene is not available');
 
     expect(() =>

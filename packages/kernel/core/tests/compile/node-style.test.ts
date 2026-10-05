@@ -35,6 +35,7 @@ describe('Node 颜色 / 不透明度', () => {
         },
       ],
     };
+
     expect(findText(ir)?.fill).toBe('red');
   });
 
@@ -44,6 +45,7 @@ describe('Node 颜色 / 不透明度', () => {
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'A' }],
     };
+
     expect(findText(ir)?.fill).toBe('currentColor');
   });
 
@@ -60,6 +62,7 @@ describe('Node 颜色 / 不透明度', () => {
         },
       ],
     };
+
     expect(findRect(ir)?.opacity).toBe(0.5);
     expect(findText(ir)?.opacity).toBe(0.5);
   });
@@ -76,6 +79,7 @@ describe('Node 颜色 / 不透明度', () => {
         },
       ],
     };
+
     expect(findRect(rectIR)?.fillOpacity).toBe(0.4);
 
     const circleIR: IRScene = {
@@ -90,6 +94,7 @@ describe('Node 颜色 / 不透明度', () => {
         },
       ],
     };
+
     expect(findEllipse(circleIR)?.fillOpacity).toBe(0.4);
 
     const diamondIR: IRScene = {
@@ -104,6 +109,7 @@ describe('Node 颜色 / 不透明度', () => {
         },
       ],
     };
+
     expect(findShapePath(diamondIR)?.fillOpacity).toBe(0.4);
   });
 
@@ -119,6 +125,7 @@ describe('Node 颜色 / 不透明度', () => {
         },
       ],
     };
+
     expect(findRect(ir)?.strokeOpacity).toBe(0.3);
   });
 });
@@ -136,6 +143,7 @@ describe('Node 描边样式', () => {
         },
       ],
     };
+
     expect(findRect(ir)?.dashPattern).toEqual([4, 2]);
   });
 
@@ -151,6 +159,7 @@ describe('Node 描边样式', () => {
         },
       ],
     };
+
     expect(findRect(ir)?.dashPattern).toEqual([1, 2]);
   });
 
@@ -166,6 +175,7 @@ describe('Node 描边样式', () => {
         },
       ],
     };
+
     expect(findRect(ir)?.dashPattern).toEqual([8, 3, 2, 3]);
   });
 
@@ -181,6 +191,7 @@ describe('Node 描边样式', () => {
         },
       ],
     };
+
     expect(findRect(ir)?.dashPattern).toEqual([4, 2]);
   });
 });
@@ -192,6 +203,7 @@ describe('Node 尺寸约束', () => {
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], cornerRadius: 8 }],
     };
+
     expect(findRect(ir)?.cornerRadius).toBe(8);
   });
 
@@ -212,8 +224,10 @@ describe('Node 尺寸约束', () => {
         },
       ],
     };
+
     expect(findRect(small)?.width).toBe(16);
     expect(findRect(wide)?.width).toBe(100);
+
     // 高度不受影响
     expect(findRect(wide)?.height).toBe(16);
   });
@@ -230,6 +244,7 @@ describe('Node 尺寸约束', () => {
         },
       ],
     };
+
     expect(findRect(ir)?.height).toBe(60);
     expect(findRect(ir)?.width).toBe(16);
   });
@@ -246,6 +261,7 @@ describe('Node 尺寸约束', () => {
         },
       ],
     };
+
     expect(findRect(sym)?.width).toBe(50);
     expect(findRect(sym)?.height).toBe(50);
   });
@@ -262,6 +278,7 @@ describe('Node 尺寸约束', () => {
         },
       ],
     };
+
     expect(findRect(ir)?.width).toBe(80);
     expect(findRect(ir)?.height).toBe(30);
   });
@@ -281,6 +298,7 @@ describe('Node 尺寸约束', () => {
       ],
     };
     const r = findRect(ir);
+
     expect(r!.width).toBeGreaterThan(10);
   });
 
@@ -298,6 +316,7 @@ describe('Node 尺寸约束', () => {
         },
       ],
     };
+
     // 旧实现 minimum 不乘 scale → 仍 50；现 50×2 = 100
     expect(findRect(ir)?.width).toBe(100);
     expect(findRect(ir)?.height).toBe(100);
@@ -317,6 +336,7 @@ describe('Node 尺寸约束', () => {
       ],
     };
     const e = findEllipse(ir);
+
     // 旧实现把 100 floor 进内框半轴(50)，circumscribe 再 ×√2 → rx≈70.7（直径≈141）；
     // 现 floor 外接框 → rx=ry=50（直径 100）
     expect(e?.rx).toBeCloseTo(50, 6);
@@ -355,12 +375,15 @@ describe('Node 缩放', () => {
     };
     const rb = findRect(base)!;
     const rB = findRect(big)!;
+
     // scale=2 → bbox 各方向都翻倍
     expect(rB.width).toBeCloseTo(rb.width * 2, 1);
     expect(rB.height).toBeCloseTo(rb.height * 2, 1);
+
     // text 同步放大
     const tb = findText(base)!;
     const tB = findText(big)!;
+
     expect(tB.fontSize).toBeCloseTo(tb.fontSize * 2, 1);
   });
 
@@ -371,6 +394,7 @@ describe('Node 缩放', () => {
       children: [{ type: 'node', position: [0, 0], scale: { x: 3, y: 1 } }],
     };
     const r = findRect(ir)!;
+
     // 默认 16x16；scale.x=3 → 宽 48，高 16
     expect(r.width).toBeCloseTo(48, 1);
     expect(r.height).toBeCloseTo(16, 1);
@@ -383,6 +407,7 @@ describe('Node 缩放', () => {
       children: [{ type: 'node', position: [0, 0], scale: { default: 2, x: 4 } }],
     };
     const r = findRect(ir)!;
+
     // scale.x=4 覆盖 scale.default=2 影响 X；Y 仍走 scale.default=2
     expect(r.width).toBeCloseTo(64, 1);
     expect(r.height).toBeCloseTo(32, 1);

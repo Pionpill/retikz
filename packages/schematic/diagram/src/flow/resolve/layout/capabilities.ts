@@ -15,6 +15,7 @@ type ElementScopeIndex = Readonly<{
 const indexElementScopes = (diagram: CanonicalFlowDiagram): ElementScopeIndex => {
   const scopes = new Map<string, ReadonlyArray<string>>();
   const elementsById = new Map<string, CanonicalFlowElement>();
+
   const visit = (elements: ReadonlyArray<CanonicalFlowElement>, ancestors: ReadonlyArray<string>): void => {
     for (const element of elements) {
       scopes.set(element.id, ancestors);
@@ -22,45 +23,58 @@ const indexElementScopes = (diagram: CanonicalFlowDiagram): ElementScopeIndex =>
       if (element.type !== 'entity') visit(element.elements, [...ancestors, element.id]);
     }
   };
+
   visit(diagram.elements, []);
+
   return { scopes, elementsById };
 };
 
 const commonScope = (sourceScopes: ReadonlyArray<string>, targetScopes: ReadonlyArray<string>): string | undefined => {
   let result: string | undefined;
   const length = Math.min(sourceScopes.length, targetScopes.length);
+
   for (let index = 0; index < length; index += 1) {
     if (sourceScopes[index] !== targetScopes[index]) break;
     result = sourceScopes[index];
   }
+
   return result;
 };
 
 const hasDirectedCycle = (diagram: CanonicalFlowDiagram): boolean => {
   const edges = new Map<string, Array<string>>();
+
   const addEdge = (source: string, target: string): void => {
     const targets = edges.get(source) ?? [];
     targets.push(target);
     edges.set(source, targets);
   };
+
   for (const relation of diagram.relations) {
     const direction = relation.graph.direction;
     if (direction === 'forward') addEdge(relation.source.source.id, relation.source.target.id);
     if (direction === 'reverse') addEdge(relation.source.target.id, relation.source.source.id);
   }
+
   const visiting = new Set<string>();
   const visited = new Set<string>();
+
   const visit = (id: string): boolean => {
     if (visiting.has(id)) return true;
     if (visited.has(id)) return false;
+
     visiting.add(id);
+
     for (const target of edges.get(id) ?? []) {
       if (visit(target)) return true;
     }
+
     visiting.delete(id);
     visited.add(id);
+
     return false;
   };
+
   return [...edges.keys()].some(visit);
 };
 
@@ -76,11 +90,14 @@ const inheritedRoutingForScope = (
   elementsById: ReadonlyMap<string, CanonicalFlowElement>,
 ) => {
   if (scopeId === undefined) return diagram.routing;
+
   const scopeIndex = sourceScopes.indexOf(scopeId);
+
   for (let index = scopeIndex; index >= 0; index -= 1) {
     const element = elementsById.get(sourceScopes[index]);
     if (element?.type === 'group' && element.routing !== undefined) return element.routing;
   }
+
   return diagram.routing;
 };
 
@@ -93,6 +110,7 @@ export const deriveFlowLayoutCapabilities = (
   const index = indexElementScopes(diagram);
   const scopeIds = [...index.elementsById].filter(([, element]) => element.type !== 'entity').map(([id]) => id);
   if (scopeIds.length > 0) pushEvidence(evidence, 'compoundScopes', scopeIds);
+
   for (const element of index.elementsById.values()) {
     if (element.type === 'layout' && !definition.capabilities.placementKinds.includes(element.source.kind)) {
       pushEvidence(evidence, `placement:${element.source.kind}`, [element.id]);
@@ -100,6 +118,7 @@ export const deriveFlowLayoutCapabilities = (
   }
 
   const unorderedPairs = new Map<string, Readonly<{ count: number; relatedIds: ReadonlyArray<string> }>>();
+
   for (const relation of diagram.relations) {
     if (
       [relation.source.source, relation.source.target].some(
@@ -107,6 +126,7 @@ export const deriveFlowLayoutCapabilities = (
       )
     )
       pushEvidence(evidence, 'endpointPlacement', [relation.source.source.id, relation.source.target.id]);
+
     const relationEndpointIds = [relation.source.source.id, relation.source.target.id];
     const sourceScopes = index.scopes.get(relation.source.source.id) ?? [];
     const targetScopes = index.scopes.get(relation.source.target.id) ?? [];
@@ -115,19 +135,23 @@ export const deriveFlowLayoutCapabilities = (
     if (sourceElement?.type === 'group' || targetElement?.type === 'group') {
       pushEvidence(evidence, 'groupEndpoints', relationEndpointIds);
     }
+
     const sourceOwner = sourceScopes.at(-1);
     const targetOwner = targetScopes.at(-1);
     if (sourceOwner !== targetOwner) {
       pushEvidence(evidence, 'crossScopeRelations', relationEndpointIds);
     }
+
     if (relation.source.source.id === relation.source.target.id) {
       pushEvidence(evidence, 'selfLoops', relationEndpointIds);
     }
+
     if (relation.source.label !== undefined) pushEvidence(evidence, 'relationLabels', relationEndpointIds);
     const direction = relation.graph.direction ?? 'forward';
     if (!definition.capabilities.relationDirections.includes(direction)) {
       pushEvidence(evidence, `direction:${direction}`, relationEndpointIds);
     }
+
     const scopeId = commonScope(sourceScopes, targetScopes);
     const scopeRouting = inheritedRoutingForScope(diagram, scopeId, sourceScopes, index.elementsById);
     const routingKind = relation.routing?.kind ?? scopeRouting?.kind ?? definition.defaults.routing.kind;
@@ -135,12 +159,14 @@ export const deriveFlowLayoutCapabilities = (
     if (routingCapability === undefined) {
       pushEvidence(evidence, `routing:${routingKind}`, relationEndpointIds);
     }
+
     if (routingCapability !== undefined && 'modes' in routingCapability) {
       const authored = relation.routing;
       const mode = authored !== undefined && ('control' in authored || 'control1' in authored) ? 'explicit' : 'auto';
       if (!routingCapability.modes.includes(mode))
         pushEvidence(evidence, `routing:${routingKind}:${mode}`, relationEndpointIds);
     }
+
     const pair = [relation.source.source.id, relation.source.target.id].sort().join('\u0000');
     const pairRelations = unorderedPairs.get(pair);
     unorderedPairs.set(pair, { count: (pairRelations?.count ?? 0) + 1, relatedIds: relationEndpointIds });
@@ -157,6 +183,7 @@ export const deriveFlowLayoutCapabilities = (
         .flatMap(relation => [relation.source.source.id, relation.source.target.id]),
     );
   }
+
   return evidence;
 };
 
@@ -167,11 +194,13 @@ export const assertFlowLayoutCapabilities = (definition: FlowLayoutDefinition, d
     const capability = requirement.name;
     if (capability.startsWith('direction:') || capability.startsWith('routing:') || capability.startsWith('placement:'))
       return true;
+
     return !definition.capabilities[
       capability as keyof Omit<typeof definition.capabilities, 'relationDirections' | 'routing' | 'placementKinds'>
     ];
   });
   if (unsupported.length === 0) return;
+
   throw new RetikzDiagramError({
     code: RetikzDiagramErrorCode.FlowLayoutCapabilityUnsupported,
     message: `Flow Layout '${definition.name}' does not support the required capabilities.`,

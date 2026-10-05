@@ -103,6 +103,7 @@ const elementChildren = (element: AnyElement): Array<AnyElement> =>
 
 const findChild = (element: AnyElement, type: string): AnyElement => {
   const child = elementChildren(element).find(c => c.type === type);
+
   expect(child).toBeDefined();
   return child as AnyElement;
 };
@@ -118,7 +119,9 @@ describe('string-react-parity', () => {
 
     expect(svgString).toContain('stroke-width="2"');
     expect(svgString).toContain('style="fill:var(--brand);stroke:var(--outline)"');
+
     const varRect = findChild(svgElement, 'rect');
+
     expect(varRect.props.strokeWidth).toBe(2);
     expect(varRect.props.fill).toBeUndefined();
     expect(varRect.props.stroke).toBeUndefined();
@@ -130,6 +133,7 @@ describe('string-react-parity', () => {
     const gradient = defsChildren.find(c => c.type === 'linearGradient');
     const clipPath = defsChildren.find(c => c.type === 'clipPath');
     const filter = defsChildren.find(c => c.type === 'filter');
+
     expect(marker).toBeDefined();
     expect(gradient?.props.id).toBe('retikz-paint-parity-paint-1');
     expect(clipPath?.props.id).toBe('retikz-clip-parity-clip-1');
@@ -140,19 +144,24 @@ describe('string-react-parity', () => {
     expect(svgString).toContain('flood-opacity="0.25"');
 
     const dropShadow = elementChildren(filter as AnyElement)[0];
+
     expect(dropShadow.type).toBe('feDropShadow');
     expect(dropShadow.props.floodColor).toBe('#000');
     expect(dropShadow.props.floodOpacity).toBe(0.25);
 
     const group = findChild(svgElement, 'g');
+
     expect(group.props.clipPath).toBe('url(#retikz-clip-parity-clip-1)');
     expect(svgString).toContain('clip-path="url(#retikz-clip-parity-clip-1)"');
+
     const paintedRect = elementChildren(group)[0];
+
     expect(paintedRect.props.fill).toBe('url(#retikz-paint-parity-paint-1)');
     expect(svgString).toContain('fill="url(#retikz-paint-parity-paint-1)"');
 
     const path = findChild(svgElement, 'path');
     const markerUrl = `url(#${String(marker?.props.id)})`;
+
     expect(path.props.markerStart).toBe(markerUrl);
     expect(path.props.markerEnd).toBe(markerUrl);
     expect(svgString).toContain(`marker-start="${markerUrl}"`);

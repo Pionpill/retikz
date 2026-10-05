@@ -32,7 +32,7 @@ const MathJaxExtension = {
 
 type MathJaxEngineOptions = {
   profile?: 'base' | 'math';
-  extensions?: Array<MathJaxExtensionValue>;
+  extensions?: Array<MathJaxExtension>;
 };
 ```
 

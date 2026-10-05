@@ -20,8 +20,15 @@ const Demo: FC<TexConversionFlowI18nFigureProps> = props => {
       layout={{ direction: 'down' }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <FlowLayout kind="linear" id="tex-conversion" direction="down" align="center" gap={48}>
-        <FlowLayout kind="linear" id="input-row" direction="right" align="center" gap={48}>
+      <FlowLayout
+        kind="linear"
+        id="tex-conversion"
+        direction="down"
+        containerWidth="match-largest"
+        align="center"
+        gap={48}
+      >
+        <FlowLayout kind="linear" id="input-row" direction="right" itemWidth="fill" align="center" gap={48}>
           <FlowEntities
             items={[
               { id: 'core-text', text: i18n.label1, role: 'participant' },
@@ -35,7 +42,7 @@ const Demo: FC<TexConversionFlowI18nFigureProps> = props => {
             ]}
           />
         </FlowLayout>
-        <FlowLayout kind="linear" id="output-row" direction="right" align="center" gap={48}>
+        <FlowLayout kind="linear" id="output-row" direction="right" itemWidth="fill" align="center" gap={48}>
           <FlowEntities
             items={[
               { id: 'svg-lowerer', text: i18n.label4, role: 'activity', kind: LogicFigureEntityKind.Important },

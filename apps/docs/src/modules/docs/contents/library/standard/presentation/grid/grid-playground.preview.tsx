@@ -42,6 +42,7 @@ export const renderGridPlaygroundPreview = (values: GridPlaygroundPreviewValues)
     start: values.boundsStart,
     end: values.boundsEnd,
   };
+
   const lineStyle = {
     stroke: values.lineStroke,
     strokeWidth: values.lineStrokeWidth,
@@ -60,6 +61,7 @@ export const renderGridPlaygroundPreview = (values: GridPlaygroundPreviewValues)
         },
       }
     : undefined;
+
   const border = values.borderEnabled
     ? {
         padding: values.borderPadding,
@@ -75,6 +77,7 @@ export const renderGridPlaygroundPreview = (values: GridPlaygroundPreviewValues)
         },
       }
     : undefined;
+
   const line = {
     vertical: {
       spacing: values.spacingMode === 'uniform' ? values.spacing : values.spacingX,
@@ -91,6 +94,7 @@ export const renderGridPlaygroundPreview = (values: GridPlaygroundPreviewValues)
       ...(major === undefined ? {} : { major }),
     },
   };
+
   const gridInput = {
     bounds,
     line,

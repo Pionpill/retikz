@@ -25,3 +25,9 @@ export const TableRowKind = {
   /** 明细数据行 */
   Body: 'body',
 } as const;
+
+/** Table structure 判别值 */
+export type TableStructureKind = ValueOf<typeof TableStructureKind>;
+
+/** canonical Table row 类型取值 */
+export type TableRowKind = ValueOf<typeof TableRowKind>;

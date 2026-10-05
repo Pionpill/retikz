@@ -96,6 +96,7 @@ describe('Chart Vanilla normalization', () => {
       properties: { endPoint: { shape: 'diamond' } },
     });
   });
+
   it('normalizes Bubble input to its exact family and recipe Source', () => {
     const source = normalizeBubbleChart({
       id: 'countries',

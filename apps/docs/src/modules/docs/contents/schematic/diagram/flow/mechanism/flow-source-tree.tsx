@@ -1,6 +1,6 @@
 import { FlowEntities, FlowGroup, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import { Layout, Node, Path, Scope } from '@retikz/react';
-import { List, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/collection';
+import { Array, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -15,6 +15,7 @@ export type FlowSourceTreeProps = Readonly<{ lang?: Lang }>;
 const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
   const { lang = 'zh' } = props;
   const t = flowSourceTreeI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Map
@@ -27,19 +28,19 @@ const FlowSourceTree: FC<FlowSourceTreeProps> = props => {
         <MapEntry>
           <MapKey text="children" />
           <MapValue>
-            <List data={['pipeline']} />
+            <Array data={['pipeline']} />
           </MapValue>
         </MapEntry>
         <MapEntry>
           <MapKey text="groups[0].children" />
           <MapValue>
-            <List data={['steps']} />
+            <Array data={['steps']} />
           </MapValue>
         </MapEntry>
         <MapEntry>
           <MapKey text="layouts[0].children" />
           <MapValue>
-            <List data={['receive', 'verify']} />
+            <Array data={['receive', 'verify']} />
           </MapValue>
         </MapEntry>
       </Map>

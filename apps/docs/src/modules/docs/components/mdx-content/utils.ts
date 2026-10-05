@@ -3,7 +3,9 @@ import GithubSlugger from 'github-slugger';
 import type { TocItem } from './types';
 
 const FRONTMATTER_REGEX = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
+
 const FENCED_CODE_REGEX = /```[\s\S]*?```/g;
+
 const HEADING_REGEX = /^(#{1,3})[ \t]+(.+)$/gm;
 
 const stripInlineMarkdown = (text: string): string =>
@@ -28,14 +30,17 @@ export const parseHeadings = (source: string): Array<TocItem> => {
   const slugger = new GithubSlugger();
   HEADING_REGEX.lastIndex = 0;
   let match: RegExpExecArray | null;
+
   while ((match = HEADING_REGEX.exec(cleaned)) !== null) {
     const hashes = match[1];
     const raw = match[2];
     if (!hashes || !raw) continue;
+
     const level = hashes.length;
     const text = stripInlineMarkdown(raw.trim());
     items.push({ id: slugger.slug(text), text, level });
   }
+
   return items;
 };
 

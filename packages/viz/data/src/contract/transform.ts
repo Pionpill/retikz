@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject } from 'zod';
 
 import { RetikzDataError } from '../error';
-import type { DataFieldTypeValue, IRDataTransform } from '../schemas';
+import type { DataFieldType, IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataTransformDependency, DataTransformModel } from './execution';
 import type { DataLineageRecorder } from './lineage';
@@ -30,7 +30,7 @@ export const DataTransformPhase = {
 } as const;
 
 /** transform调度阶段取值 */
-export type DataTransformPhaseValue = ValueOf<typeof DataTransformPhase>;
+export type DataTransformPhase = ValueOf<typeof DataTransformPhase>;
 
 /** transform调度允许绑定的结构类别 */
 export const DataTransformBindingClass = {
@@ -41,7 +41,7 @@ export const DataTransformBindingClass = {
 } as const;
 
 /** transform调度结构类别取值 */
-export type DataTransformBindingClassValue = ValueOf<typeof DataTransformBindingClass>;
+export type DataTransformBindingClass = ValueOf<typeof DataTransformBindingClass>;
 
 /** transform调度对行和字段结构的闭合影响 */
 export const DataTransformFieldEffect = {
@@ -54,16 +54,16 @@ export const DataTransformFieldEffect = {
 } as const;
 
 /** transform调度字段影响取值 */
-export type DataTransformFieldEffectValue = ValueOf<typeof DataTransformFieldEffect>;
+export type DataTransformFieldEffect = ValueOf<typeof DataTransformFieldEffect>;
 
 /** Definition声明的闭合调度描述 */
 export type DataTransformSchedule = Readonly<{
   /** 固定调度阶段 */
-  phase: DataTransformPhaseValue;
+  phase: DataTransformPhase;
   /** 当前Definition允许的mapping binding类别 */
-  bindingClass: DataTransformBindingClassValue;
+  bindingClass: DataTransformBindingClass;
   /** operation对行和字段结构的影响 */
-  fieldEffect: DataTransformFieldEffectValue;
+  fieldEffect: DataTransformFieldEffect;
 }>;
 
 /** transform输出字段的运行时类型描述 */
@@ -71,7 +71,12 @@ export type DataTransformOutputDescriptor = Readonly<{
   /** operation输出的逻辑字段名 */
   field: string;
   /** 固定字段类型，或复用当前DataView中另一个字段的类型 */
-  type?: DataFieldTypeValue | Readonly<{ from: string }>;
+  type?:
+    | DataFieldType
+    | Readonly<{
+        /** 继承其字段类型的已有输入字段名 */
+        from: string;
+      }>;
 }>;
 
 /** transform对字段类型图的完整影响 */
@@ -90,7 +95,7 @@ export type DataTransformOutputModel =
     }>;
 
 /**
- * transform apply 上下文。
+ * transform apply 上下文
  * @description 自定义 transform 用它读取 / 写入数据来源标记：保行数 transform 通常透传行对象即可保留 sourceIndex；
  *   改行数 transform 若输出行代表一组源行，必须用 groupProvenance 给输出行挂 sourceIndices，避免 locator / datum meta 丢失组级来源；
  *   生成行没有源行时可自然降级
@@ -133,8 +138,9 @@ export type TransformSemanticContext = Readonly<{
 }>;
 
 /**
- * transform runtime definition。
+ * 数据变换的运行时定义
  * @description definition 是运行时对象，不进入 JSON IR；IR 只保存 `{ kind, ...config }` 形态的 IRDataTransform
+ * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
  */
 export type TransformDefinition<TTransform extends IRDataTransform = IRDataTransform> = {
   /** 完整 transform operation schema；必须含非空 z.literal('kind') 供 registry 提取注册键 */
@@ -152,16 +158,17 @@ export type TransformDefinition<TTransform extends IRDataTransform = IRDataTrans
 };
 
 /**
- * 定义一个 transform definition。
+ * 定义一个 transform definition
  * @description 保留 schema、字段影响与依赖声明之间的泛型关联；内置与自定义 transform 都经同一 registry 入口解析
  * @remarks 该入口是 typed identity：在保持定义对象原样的同时，为后续运行时校验、默认值归一或泛型收敛预留稳定 contract hook
+ * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
  */
 export const defineTransform = <TTransform extends IRDataTransform>(
   def: TransformDefinition<TTransform>,
 ): TransformDefinition<TTransform> => def;
 
 /**
- * registry 内部使用的宽类型。
+ * registry 内部使用的宽类型
  * @description registry 需要存放不同 operation 泛型的 definition；真正调用前必须用对应 schema parse 收窄
  */
 export type AnyTransformDefinition = Omit<
@@ -180,7 +187,11 @@ export type AnyTransformDefinition = Omit<
   dependencies?: (operation: never, context: TransformSemanticContext) => Array<DataTransformDependency>;
 };
 
-/** 引用唯一语义 Definition 的独立计算实现 */
+/**
+ * 引用唯一语义 Definition 的独立计算实现
+ * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
+ * @template TResult 变换计算返回的数据行数组或其 Promise 类型
+ */
 export type TransformImplementation<
   TTransform extends IRDataTransform = IRDataTransform,
   TResult extends Array<ExternalRow> | Promise<Array<ExternalRow>> = Array<ExternalRow> | Promise<Array<ExternalRow>>,
@@ -191,7 +202,11 @@ export type TransformImplementation<
   apply: (rows: Array<ExternalRow>, operation: TTransform, context: TransformContext) => TResult;
 }>;
 
-/** 保留语义定义与实际计算参数之间的泛型关联 */
+/**
+ * 保留语义定义与实际计算参数之间的泛型关联
+ * @template TTransform schema 校验后用于字段分析、依赖声明和执行的数据变换类型
+ * @template TResult 变换计算返回的数据行数组或其 Promise 类型
+ */
 export const defineTransformImplementation = <
   TTransform extends IRDataTransform,
   TResult extends Array<ExternalRow> | Promise<Array<ExternalRow>>,
@@ -219,16 +234,18 @@ export type AnySynchronousTransformImplementation = Readonly<Omit<AnyTransformIm
   }>;
 
 /**
- * 从 transform definition schema 中提取 registry key。
+ * 从 transform definition schema 中提取 registry key
  * @description definition schema 必须是包含 `kind: z.literal('<transform-kind>')` 的 ZodObject；该 literal 值就是 registry 唯一键
  */
 export const extractTransformKind = (schema: ZodType): string => {
   if (!(schema instanceof ZodObject)) {
     throw new RetikzDataError('data: transform registration schema must be a ZodObject with a literal kind field');
   }
+
   const kindSchema = schema.shape.kind;
   if (!(kindSchema instanceof ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
     throw new RetikzDataError('data: transform registration schema must declare kind as a non-empty z.literal string');
   }
+
   return kindSchema.value;
 };

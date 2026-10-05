@@ -33,6 +33,7 @@ const renderAtRoute = (path: string, node: ReactNode): string =>
 describe('ComponentPreview demo 目录解析（切页失步回归）', () => {
   it('无 DemoLocationContext 时按实时路由目录解析（基线）', () => {
     const html = renderAtRoute('/kernel/components/pageA', <ComponentPreview files={MISSING} />);
+
     expect(html).toContain(`contents/kernel/components/pageA/${MISSING}.demo.tsx`);
   });
 
@@ -43,6 +44,7 @@ describe('ComponentPreview demo 目录解析（切页失步回归）', () => {
         <ComponentPreview files={MISSING} />
       </DemoLocationContext.Provider>,
     );
+
     // 内容属于 pageB、路由已切到 pageA：目录必须取 context 的 pageB
     expect(html).toContain(`contents/kernel/components/pageB/${MISSING}.demo.tsx`);
     expect(html).not.toContain(`contents/kernel/components/pageA/${MISSING}.demo.tsx`);

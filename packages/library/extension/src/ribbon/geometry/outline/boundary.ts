@@ -18,5 +18,6 @@ export const boundaryOutlineCommands = ({
   const commands: Array<PathCommand> = [...upper];
   if (first.kind === 'move') commands.push({ kind: 'line', to: first.to });
   commands.push(...reversed.slice(1), { kind: 'close' });
+
   return { commands, points: commandBoundsPoints(commands) };
 };

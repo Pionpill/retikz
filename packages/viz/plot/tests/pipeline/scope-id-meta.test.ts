@@ -10,7 +10,7 @@ import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 /**
- * scope-aware id 绑定 + meta 透传。
+ * scope-aware id 绑定 + meta 透传
  * @description 断言 lowerPlots 产物中 core IR Scope / Node / Path 的 id 与 meta。
  *   这些字段由 provenance、datumProvenance、datumIdField 控制；provenance 关闭时不写合成 id/meta
  */
@@ -22,7 +22,7 @@ const expandOf = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOptions)
 };
 
 /**
- * plot lowered 的内容 scope：承载 mark/guide 层与 provenance meta 的 localNamespace scope。
+ * plot lowered 的内容 scope：承载 mark/guide 层与 provenance meta 的 localNamespace scope
  * @description 带 id 的 plot 会生成外层 panel scope；无 id 时 outer 自身就是内容 scope
  */
 const contentScope = (outer: IRScope): IRScope =>
@@ -40,6 +40,7 @@ const collectMeta = (
   const anyChild = child as { type: string; id?: string; meta?: unknown; children?: Array<IRChild> };
   if (anyChild.meta !== undefined) out.push({ type: anyChild.type, id: anyChild.id, meta: anyChild.meta });
   if (Array.isArray(anyChild.children)) for (const c of anyChild.children) collectMeta(c, out);
+
   return out;
 };
 
@@ -48,6 +49,7 @@ const collectIds = (child: IRChild, out: Array<string> = []): Array<string> => {
   const anyChild = child as { id?: string; children?: Array<IRChild> };
   if (typeof anyChild.id === 'string') out.push(anyChild.id);
   if (Array.isArray(anyChild.children)) for (const c of anyChild.children) collectIds(c, out);
+
   return out;
 };
 
@@ -121,12 +123,16 @@ describe('scope id/meta — happy path', () => {
   it('root_id_to_scope_id', () => {
     // <Plot id="sales"> + provenance:true → 外层 panel scope.id='sales'，内层 localNamespace 承载内容 meta
     const outer = expandOf(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
+
     expect(outer.type).toBe('scope');
     expect(outer.id).toBe('sales');
     expect(outer.localNamespace).toBeUndefined();
+
     const inner = outer.children[0] as IRScope;
+
     expect(inner.localNamespace).toBe(true);
     expect(inner.meta).toEqual({ source: 'plot', dataReference: 'sales' });
+
     // plotArea carrier 句柄外部可见（localNamespace 之外）
     expect(outer.children.some(c => (c as { id?: string }).id === 'sales.plotArea')).toBe(true);
   });
@@ -134,6 +140,7 @@ describe('scope id/meta — happy path', () => {
   it('mark_layer_id_meta', () => {
     // bar mark[0] → 图层 scope.id='sales.mark.0'、meta {source:'plot',layer:'mark',mark:'interval',markIndex:0}
     const layer = firstLayer(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
+
     expect(layer.type).toBe('scope');
     expect(layer.id).toBe('sales.mark.0');
     expect(layer.meta).toEqual({ source: 'plot', layer: 'mark', mark: 'interval', markIndex: 0 });
@@ -142,12 +149,14 @@ describe('scope id/meta — happy path', () => {
   it('mark_layer_uses_user_mark_id', () => {
     // 用户给 mark.id='bars' → 用户句柄优先，layer scope.id='sales.bars'
     const layer = firstLayer(barSpec({ id: 'sales', markId: 'bars' }), { sales: SALES }, { ...opts, provenance: true });
+
     expect(layer.id).toBe('sales.bars');
     expect((layer.meta as { markIndex?: number }).markIndex).toBe(0);
   });
 
   it('mark_layer_uses_user_mark_id_without_provenance', () => {
     const layer = firstLayer(barSpec({ id: 'sales', markId: 'bars' }), { sales: SALES }, opts);
+
     expect(layer.id).toBe('sales.bars');
     expect(layer.meta).toBeUndefined();
   });
@@ -182,6 +191,7 @@ describe('scope id/meta — happy path', () => {
     });
     const layer = firstLayer(spec, { t: TREND }, { ...opts, provenance: true });
     const [seriesX, seriesY] = layer.children as Array<IRScope>;
+
     expect(seriesX.type).toBe('scope');
     expect(seriesX.id).toBe('trend.series.X');
     expect((seriesX.meta as { series?: unknown }).series).toBe('X');
@@ -199,7 +209,9 @@ describe('scope id/meta — happy path', () => {
       { ...opts, provenance: true, datumProvenance: true },
     );
     const nodes = layer.children as Array<IRNode>;
+
     expect(nodes).toHaveLength(3);
+
     for (let index = 0; index < nodes.length; index++) {
       const meta = nodes[index].meta as {
         source?: string;
@@ -209,11 +221,13 @@ describe('scope id/meta — happy path', () => {
         transformedIndex?: number;
         sourceIndex?: number;
       };
+
       expect(meta.source).toBe('plot');
       expect(meta.dataReference).toBe('sales');
       expect(meta.mark).toBe('interval');
       expect(meta.markIndex).toBe(0);
       expect(meta.transformedIndex).toBe(index);
+
       // 无 transform → sourceIndex 可回指、等于 transformedIndex
       expect(meta.sourceIndex).toBe(index);
     }
@@ -230,8 +244,10 @@ describe('scope id/meta — boundary', () => {
     for (const spec of [pointSpec(), barSpec()]) {
       const withoutOptions = expandOf(spec, { sales: SALES }, opts);
       const explicitOff = expandOf(spec, { sales: SALES }, { ...opts, provenance: false, datumProvenance: false });
+
       // 两路完全一致（开关默认/显式关皆同一产物）
       expect(withoutOptions).toEqual(explicitOff);
+
       // 整棵树不得出现任何 meta 或合成 id
       expect(collectMeta(withoutOptions)).toEqual([]);
       expect(collectIds(withoutOptions)).toEqual([]);
@@ -263,6 +279,7 @@ describe('scope id/meta — boundary', () => {
       { k: 'B', v: 7 },
     ];
     const off = expandOf(pieSpec, { d: rows }, opts);
+
     expect(collectMeta(off)).toEqual([]);
     expect(collectIds(off)).toEqual([]);
   });
@@ -270,11 +287,15 @@ describe('scope id/meta — boundary', () => {
   it('no_root_id_anonymous', () => {
     // provenance:true 但 root 无 id → 内部 scope 匿名（无合成 id）；meta 省 plotId（无 dataReference 之外的 plotId 字段）
     const outer = expandOf(barSpec(), { sales: SALES }, { ...opts, provenance: true, datumProvenance: true });
+
     // 无任何合成 id（root 没 id → 内部不带前缀、不合成）
     expect(collectIds(outer)).toEqual([]);
+
     // meta 仍写（provenance 开），但不含 plotId key
     const metas = collectMeta(outer);
+
     expect(metas.length).toBeGreaterThan(0);
+
     for (const { meta } of metas) {
       expect((meta as { plotId?: unknown }).plotId).toBeUndefined();
     }
@@ -303,14 +324,19 @@ describe('scope id/meta — boundary', () => {
     const layer = firstLayer(spec, { t: TREND }, { ...opts, provenance: true });
     const seriesScopes = layer.children as Array<IRScope>;
     const ids = seriesScopes.map(scope => scope.id);
+
     // 每条 series 一个 id，全部以 trend.series. 前缀、不含裸 '.' 在 value 段（'.' 已被 slug 掉）
     expect(ids.every(id => typeof id === 'string' && id.startsWith('trend.series.'))).toBe(true);
+
     for (const id of ids) {
       const valueSegment = id!.slice('trend.series.'.length);
+
       expect(valueSegment).not.toContain('.');
     }
+
     // id 稳定唯一（无冲突）
     expect(new Set(ids).size).toBe(ids.length);
+
     // 但 series Scope.meta.series 保留原始值（未 slug）
     expect((seriesScopes[0].meta as { series?: unknown }).series).toBe('north.west');
   });
@@ -335,6 +361,7 @@ describe('scope id/meta — boundary', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'y' },
       marks: [{ type: 'path', series: 'region', order: 't', encoding: { x: { field: 't' }, y: { field: 'v' } } }],
     });
+
     expect(() => expandOf(spec, { t: TREND }, { ...opts, provenance: true })).toThrow();
   });
 
@@ -360,11 +387,15 @@ describe('scope id/meta — boundary', () => {
     });
     const layer = firstLayer(spec, { sales: rows }, { ...opts, provenance: true, datumProvenance: true });
     const nodes = layer.children as Array<IRNode>;
+
     expect(nodes).toHaveLength(3);
+
     // sort by month ascending → 渲染序 month 0,1,2 = source 行 1,2,0
     const seen = nodes.map(n => n.meta as { transformedIndex: number; sourceIndex?: number });
+
     expect(seen.map(m => m.transformedIndex)).toEqual([0, 1, 2]);
     expect(seen.map(m => m.sourceIndex)).toEqual([1, 2, 0]);
+
     // transformedIndex ≠ sourceIndex（至少有一行错位）
     expect(seen.some(m => m.transformedIndex !== m.sourceIndex)).toBe(true);
   });
@@ -381,6 +412,7 @@ describe('scope id/meta — errors', () => {
       { month: 1, revenue: 14 }, // 缺 key
       { month: 2, revenue: 9, key: 'c' },
     ];
+
     expect(() =>
       expandOf(
         barSpec({ id: 'sales' }),
@@ -397,6 +429,7 @@ describe('scope id/meta — errors', () => {
       { month: 1, revenue: 14, key: 'dup' },
       { month: 2, revenue: 9, key: 'c' },
     ];
+
     expect(() =>
       expandOf(
         barSpec({ id: 'sales' }),
@@ -431,6 +464,7 @@ describe('scope id/meta — interaction', () => {
       { cat: 'C', value: 2 },
     ];
     const layer = firstLayer(spec, { d: rows }, { ...opts, provenance: true });
+
     expect(layer.id).toBe('rose.mark.0');
     expect(layer.meta).toEqual({ source: 'plot', layer: 'mark', mark: 'interval', markIndex: 0 });
   });
@@ -461,9 +495,12 @@ describe('scope id/meta — interaction', () => {
       { k: 'B', v: 7 },
     ];
     const layer = firstLayer(spec, { d: rows }, { ...opts, provenance: true, datumProvenance: true });
+
     // sector layer：有 color → 分子 scope；收集所有带 meta 的 node
     const metas = collectMeta(layer).filter(m => m.type === 'node');
+
     expect(metas.length).toBe(2);
+
     for (const { meta } of metas) {
       expect((meta as { source?: string }).source).toBe('plot');
       expect((meta as { mark?: string }).mark).toBe('interval');
@@ -479,12 +516,14 @@ describe('scope id/meta — interaction', () => {
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true, datumProvenance: true }) },
     ).scene;
     const sceneMetas = scene.primitives.flatMap(p => collectSceneMeta(p as ScenePrimLike));
+
     // 至少 datum node 的 meta 被 stamp 进 Scene 图元
     const datumMetas = sceneMetas.filter(
       m =>
         (m.meta as { mark?: string }).mark === 'interval' &&
         typeof (m.meta as { transformedIndex?: number }).transformedIndex === 'number',
     );
+
     expect(datumMetas.length).toBeGreaterThanOrEqual(3);
     expect((datumMetas[0].meta as { source?: string }).source).toBe('plot');
     expect((datumMetas[0].meta as { dataReference?: string }).dataReference).toBe('sales');
@@ -501,9 +540,11 @@ describe('scope id/meta — interaction', () => {
       { version: 1, type: 'scene', children: [spec()] },
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true, datumProvenance: true }) },
     ).scene;
+
     // 图元数量与 viewBox 不因 meta 改变
     const countPrims = (prims: Array<ScenePrimLike>): number =>
       prims.reduce((n, p) => n + 1 + (Array.isArray(p.children) ? countPrims(p.children) : 0), 0);
+
     expect(countPrims(sceneOn.primitives as Array<ScenePrimLike>)).toBe(
       countPrims(sceneOff.primitives as Array<ScenePrimLike>),
     );
@@ -513,20 +554,25 @@ describe('scope id/meta — interaction', () => {
   it('id_meta_coexist', () => {
     // root+mark id 与 meta 共存、互不影响：layer scope 同时带 id 与 meta
     const layer = firstLayer(barSpec({ id: 'sales' }), { sales: SALES }, { ...opts, provenance: true });
+
     expect(layer.id).toBe('sales.mark.0');
     expect(layer.meta).toBeTruthy();
+
     // compile 后 scope group 同时带 id（hit-test 挂点）与 meta
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [barSpec({ id: 'sales' })] },
       { composites: lowerPlots({ sales: SALES }, { ...opts, provenance: true }) },
     ).scene;
     const groups: Array<ScenePrimLike> = [];
+
     const walk = (p: ScenePrimLike): void => {
       if (p.type === 'group') groups.push(p);
       if (Array.isArray(p.children)) for (const c of p.children) walk(c);
     };
+
     for (const p of scene.primitives as Array<ScenePrimLike>) walk(p);
     const markGroup = groups.find(g => g.id === 'sales.mark.0');
+
     expect(markGroup).toBeTruthy();
     expect((markGroup!.meta as { layer?: string }).layer).toBe('mark');
   });
@@ -544,6 +590,7 @@ describe('scope id/meta — interaction', () => {
       { ...opts, provenance: true, datumProvenance: true, datumIdField: 'q' },
     );
     const ids = (layer.children as Array<IRNode>).map(n => n.id);
+
     expect(ids).toEqual(['sales.datum.Q1', 'sales.datum.Q2', 'sales.datum.Q3']);
   });
 
@@ -563,11 +610,14 @@ describe('scope id/meta — interaction', () => {
       guides: [{ type: 'axis', dimension: 'x', id: 'xaxis' }],
     });
     const outer = expandOf(spec, { sales: SALES }, { ...opts, provenance: true });
+
     // 找带 layer:'axis' 的 scope（其 id 应带 plotId 前缀）
     const axisMeta = collectMeta(outer).find(m => (m.meta as { layer?: string }).layer === 'axis');
+
     expect(axisMeta).toBeTruthy();
     expect((axisMeta!.meta as { source?: string }).source).toBe('plot');
     expect((axisMeta!.meta as { dimension?: string }).dimension).toBe('x');
+
     // guide.id='xaxis' → 加前缀 'sales.xaxis'
     expect(axisMeta!.id).toBe('sales.xaxis');
   });
@@ -604,6 +654,7 @@ describe('scope id/meta — interaction', () => {
       { composites: lowerPlots(datasets, { ...opts, provenance: true }) },
     ).scene;
     const ids = scene.primitives.flatMap(primitive => collectSceneIds(primitive as ScenePrimLike));
+
     expect(ids.filter(id => id.endsWith('legend.color'))).toEqual(['left.legend.color', 'right.legend.color']);
   });
 });
@@ -626,8 +677,11 @@ describe('scope id/meta — bug hunter regressions', () => {
       { ...opts, provenance: true, datumProvenance: true },
     );
     const nodes = layer.children as Array<IRNode>;
+
     expect(nodes).toHaveLength(2); // 中间行被跳过
+
     const idx = nodes.map(n => n.meta as { transformedIndex: number; sourceIndex?: number });
+
     expect(idx.map(m => m.transformedIndex)).toEqual([0, 2]); // 不压缩成 [0,1]
     expect(idx.map(m => m.sourceIndex)).toEqual([0, 2]);
   });
@@ -639,13 +693,17 @@ describe('scope id/meta — bug hunter regressions', () => {
       { month: 0, revenue: 10, q: 'Q1' },
       { month: 1, revenue: 14, q: 'Q2' },
     ];
+
     // 只开 datumProvenance（不传 provenance）→ datum Node 仍带 meta
     const layerMeta = firstLayer(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, datumProvenance: true });
     const metaNodes = (layerMeta.children as Array<IRNode>).filter(n => n.meta !== undefined);
+
     expect(metaNodes).toHaveLength(2);
+
     // 只设 datumIdField（不传 provenance）→ datum Node 仍绑 id
     const layerId = firstLayer(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, datumIdField: 'q' });
     const ids = (layerId.children as Array<IRNode>).map(n => n.id);
+
     expect(ids).toEqual(['sales.datum.Q1', 'sales.datum.Q2']);
   });
 
@@ -656,6 +714,7 @@ describe('scope id/meta — bug hunter regressions', () => {
       { month: 1, revenue: 14 },
     ];
     expandOf(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, provenance: true, datumProvenance: true });
+
     for (const row of rows) {
       expect(Object.getOwnPropertySymbols(row)).not.toContain(SOURCE_INDEX);
     }

@@ -14,8 +14,11 @@ export type RibbonEndpointGeometry = {
   center: IRPosition;
   /** 端面外向单位轴 */
   outward: Vector2;
+  /** 应用端帽延伸后与左侧边连接的端点 */
   left: IRPosition;
+  /** 应用端帽延伸后与右侧边连接的端点 */
   right: IRPosition;
+  /** 连接两侧边并形成端帽的有序路径命令 */
   commands: Array<PathCommand>;
 };
 
@@ -35,11 +38,13 @@ export const resolveEndpointCap = (input: {
       message: `Unknown Ribbon cap '${cap.name}' at ${endpoint}.cap.`,
       details: { endpoint, name: cap.name },
     });
+
   const center: IRPosition = [(section.left[0] + section.right[0]) / 2, (section.left[1] + section.right[1]) / 2];
   const sectionAxis = section.axis;
   let outward: Vector2 = vector2.normal(sectionAxis);
   const dot = outward[0] * section.tangent[0] + outward[1] * section.tangent[1];
   if ((endpoint === 'start' && dot > 0) || (endpoint === 'end' && dot < 0)) outward = [-outward[0], -outward[1]];
+
   try {
     const params = definition.paramsSchema.parse(cap.params ?? {});
     const geometry = definition.resolve({ endpoint, center, sectionAxis, outward, width: section.width, params });
@@ -49,6 +54,7 @@ export const resolveEndpointCap = (input: {
         message: 'Ribbon cap extension must be finite.',
         details: {},
       });
+
     const shift = (position: IRPosition): IRPosition => [
       round(position[0] + outward[0] * geometry.extension),
       round(position[1] + outward[1] * geometry.extension),
@@ -76,8 +82,10 @@ export const resolveEndpointCap = (input: {
         details: {},
       });
     }
+
     commandBoundsPoints(commands);
     let cursor = first.to;
+
     for (const command of commands.slice(1)) {
       if (command.kind === 'arc' || command.kind === 'ellipseArc') {
         const start = commandEndpoint({ ...command, endAngle: command.startAngle });
@@ -88,8 +96,10 @@ export const resolveEndpointCap = (input: {
             details: {},
           });
       }
+
       cursor = commandEndpoint(command) ?? cursor;
     }
+
     return { center, outward, left, right, commands };
   } catch (cause) {
     throw new RetikzExtensionError({

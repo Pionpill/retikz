@@ -31,6 +31,7 @@ export const classifyProperty = (property: string): PropertyClass => {
   ) {
     return 'css';
   }
+
   return 'custom';
 };
 
@@ -52,6 +53,7 @@ const anchorOnBBox = (
   const right = bbox.x + bbox.w;
   const top = bbox.y;
   const bottom = bbox.y + bbox.h;
+
   switch (name) {
     case CenterAnchor.Center:
       return [cx, cy];
@@ -86,9 +88,11 @@ export const resolveTransformOrigin = (
   origin: IRAnimationOrigin | undefined,
 ): [number, number] | undefined => {
   if (Array.isArray(origin)) return [origin[0], origin[1]];
+
   const bbox = primBBox(prim);
   if (!bbox) return undefined;
   if (origin === undefined) return [bbox.x + bbox.w / 2, bbox.y + bbox.h / 2];
+
   return anchorOnBBox(origin, bbox);
 };
 

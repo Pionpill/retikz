@@ -7,7 +7,7 @@ import type {
   Scene,
 } from '@retikz/core';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-import type { RuntimeUpdateStrategyValue } from '@retikz/runtime';
+import type { RuntimeUpdateStrategy } from '@retikz/runtime';
 
 import type { InputAuthoringSite, InputNormalizeOptions, InputRuntimeMeta, InputScene } from '../normalize';
 import type { AnyInputEmbedAdapter } from '../normalize';
@@ -25,7 +25,7 @@ export type ProcessingOptions = Readonly<{
   /** 领域中立的同 revision compile observer driver */
   compileDriver?: VanillaCompileDriver;
   /** Core Computation 的 retained 更新策略 */
-  updateStrategy?: RuntimeUpdateStrategyValue;
+  updateStrategy?: RuntimeUpdateStrategy;
 }>;
 
 /** 已完成作者侧归一与 Composite dependency 解析的 processing 输入 */
@@ -54,11 +54,11 @@ export type ProcessingResult = Readonly<{
   layers: ReadonlyArray<RenderReadonlyLayer>;
   /** processing 收集的诊断 */
   diagnostics: ReadonlyArray<unknown>;
-  /** framework-neutral runtime metadata */
+  /** 不绑定框架的运行时元数据 */
   runtimeMeta: InputRuntimeMeta;
 }>;
 
-/** framework-neutral retained processing controller */
+/** 不绑定框架的保留式处理控制器 */
 export type ProcessingController = Readonly<{
   /** 原子提交下一份 InputScene 或已归一的 IRScene */
   update: (source: ProcessingSource) => void;
@@ -93,8 +93,16 @@ export type PreparedAsyncStaticProcessing = Readonly<{
 
 /** 单次作者更新最终是否仍拥有发布权 */
 export type ProcessingUpdateOutcome =
-  | Readonly<{ kind: 'committed'; result: ProcessingResult }>
-  | Readonly<{ kind: 'superseded' }>;
+  | Readonly<{
+      /** 更新已提交或被后续请求取代的结果判别 */
+      kind: 'committed';
+      /** 本次成功提交后可见的完整处理结果 */
+      result: ProcessingResult;
+    }>
+  | Readonly<{
+      /** 更新已提交或被后续请求取代的结果判别 */
+      kind: 'superseded';
+    }>;
 
 /** 异步准备后复用唯一的同步 retained 提交 */
 export type AsyncProcessingController = Readonly<Omit<ProcessingController, 'update'>> &

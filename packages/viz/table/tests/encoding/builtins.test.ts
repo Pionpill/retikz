@@ -20,6 +20,7 @@ const resolve = (name: string, options: JsonObject, values: ReadonlyArray<string
 describe('built-in Cell visual scales', () => {
   it('uses first occurrence ordinal domains and rejects insufficient ranges', () => {
     const scale = resolve('ordinal-color', {}, ['b', 'a', 'b']);
+
     expect(scale).toMatchObject({ legendForm: 'swatch', domain: ['b', 'a'], range: ['red', 'green'] });
     expect(scale?.of('b')).toBe('red');
     expect(scale?.of('a')).toBe('green');
@@ -42,11 +43,13 @@ describe('built-in Cell visual scales', () => {
 
   it('uses numeric extent, clamps, and maps equal sequential domains to the interpolated midpoint', () => {
     const extent = resolve('sequential-color', {}, [10, -5, 20]);
+
     expect(extent).toMatchObject({ legendForm: 'ramp', domain: [-5, 20], range: ['#ffffff', '#000000'] });
     expect(extent?.of(-100)).toBe('rgb(255, 255, 255)');
     expect(extent?.of(100)).toBe('rgb(0, 0, 0)');
 
     const equal = resolve('sequential-color', { domain: [5, 5] }, []);
+
     expect(equal?.of(5)).toBe('rgb(128, 128, 128)');
     expect(() => resolve('sequential-color', { domain: [2, 1] }, [])).toThrow(/domain/i);
     expect(() => resolve('sequential-color', {}, [1, '2'])).toThrow(/number/i);
@@ -57,6 +60,7 @@ describe('built-in Cell visual scales', () => {
 
   it('uses d3 threshold endpoint semantics and token fallback', () => {
     const scale = resolve('threshold-color', { thresholds: [10, 20] }, [9, 10, 20]);
+
     expect(scale).toMatchObject({
       legendForm: 'swatch',
       domain: [10, 20],

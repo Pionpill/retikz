@@ -29,6 +29,7 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
 
   it('encoding_xy_valid', () => {
     const e = { x: { field: 'month' }, y: { value: 0 } };
+
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 
@@ -44,6 +45,7 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
   // 交互：value 复用 JSON literal 约束，允许对象常量用于 font / boundary 等内置通道
   it('channel_value_uses_json_literal', () => {
     const value = { a: 1, nested: [true, null] };
+
     expect(ChannelSchema.parse({ value })).toEqual({ value });
     expect(() => ChannelSchema.parse({ value: () => 1 })).toThrow();
   });
@@ -51,16 +53,19 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
   // contract：color 通道 + scale 引用
   it('channel_with_scale_ref_valid', () => {
     const c = { field: 'continent', scale: 'col' };
+
     expect(ChannelSchema.parse(c)).toEqual(c);
   });
 
   it('encoding_color_channel_valid', () => {
     const e = { x: { field: 'gdp' }, y: { field: 'life' }, color: { field: 'continent', scale: 'col' } };
+
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 
   it('encoding_color_constant_valid', () => {
     const e = { x: { field: 'gdp' }, y: { field: 'life' }, color: { value: '#e4572e' } };
+
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 
@@ -89,11 +94,13 @@ describe('ChannelSchema / EncodingSchema (contract)', () => {
       y: { field: 'value' },
       color: { field: 'g', scale: 'col' },
     });
+
     expect(EncodingSchema.parse(JSON.parse(JSON.stringify(e)))).toEqual(e);
   });
 
   it('custom_role_channels_preserved_for_coordinate_definition', () => {
     const e = { u: { field: 'longitude' }, v: { field: 'latitude' } };
+
     expect(EncodingSchema.parse(e)).toEqual(e);
   });
 
@@ -130,6 +137,7 @@ describe('SizeChannelSchema / PointEncodingSchema (contract)', () => {
 
   it('point_encoding_with_size_valid', () => {
     const e = { x: { field: 'lng' }, y: { field: 'lat' } };
+
     expect(PointEncodingSchema.parse(e)).toEqual(e);
   });
 
@@ -150,6 +158,7 @@ describe('SizeChannelSchema / PointEncodingSchema (contract)', () => {
   // 未知 encoding key 在 schema 层保留，是否是合法位置角色由 active CoordinateDefinition.roles 在 lowering 校验
   it('shared_encoding_preserves_unknown_role_key', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, size: { field: 'p' } });
+
     expect((e as { size?: unknown }).size).toEqual({ field: 'p' });
   });
 });
@@ -166,6 +175,7 @@ describe('ShapeChannelSchema (contract)', () => {
 
   it('point_encoding_with_shape_valid', () => {
     const e = { x: { field: 'x' }, y: { field: 'y' } };
+
     expect(PointEncodingSchema.parse(e)).toEqual(e);
   });
 
@@ -178,11 +188,13 @@ describe('ShapeChannelSchema (contract)', () => {
   it('shape_has_no_scale_field', () => {
     // 本轮 shape 不开放显式 scale 引用：多余的 scale key 被剥离（非 strict）
     const parsed = ShapeChannelSchema.parse({ field: 'c', scale: 'whatever' });
+
     expect((parsed as { scale?: unknown }).scale).toBeUndefined();
   });
 
   it('shared_encoding_preserves_unknown_role_key_shape', () => {
     const e = EncodingSchema.parse({ x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'c' } });
+
     expect((e as { shape?: unknown }).shape).toEqual({ field: 'c' });
   });
 });

@@ -8,6 +8,7 @@ export const fixedSlopeFit = defineRegression({
     slope: number().default(1),
   }),
 });
+
 /** fixedSlopeFit的本地计算实现 */
 export const fixedSlopeFitImplementation = defineRegressionImplementation({
   definition: fixedSlopeFit,

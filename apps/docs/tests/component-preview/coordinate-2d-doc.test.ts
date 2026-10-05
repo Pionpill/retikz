@@ -83,6 +83,7 @@ const horizontalAxisOf = (markup: string) =>
 describe('二维坐标系文档 playground', () => {
   it('自定义 coordinate definition 用 scaleBinding 映射非 role 同名字段', () => {
     const operation = { type: 'bridge' as const, archHeight: 48, horizontalScale: 'horizontal' };
+
     expect(bridgeCoordinate.scaleBinding?.read(operation)).toEqual({ x: 'horizontal', y: undefined });
     expect(bridgeCoordinate.scaleBinding?.bind(operation, { x: 'x', y: 'y' })).toEqual({
       type: 'bridge',
@@ -290,6 +291,7 @@ describe('二维坐标系文档 playground', () => {
 
     expect(horizontalAxis).toBeDefined();
     expect(barBottoms).toHaveLength(6);
+
     for (const bottom of barBottoms) expect(bottom).toBeCloseTo(horizontalAxis?.[1] ?? Number.NaN, 5);
   });
 });

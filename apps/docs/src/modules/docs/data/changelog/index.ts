@@ -123,17 +123,21 @@ export const changelogForModule = (moduleId: string, sectionId?: string): Array<
     moduleId === 'library' && sectionId ? LIBRARY_SECTION_PACKAGES.get(sectionId) : undefined;
   if (moduleId === 'library' && sectionId && !librarySectionPackages) return [];
   if (!group && !librarySectionPackages) return [];
+
   const vizSectionPackages = moduleId === 'viz' && sectionId ? VIZ_SECTION_PACKAGES.get(sectionId) : undefined;
   if (moduleId === 'viz' && sectionId && !vizSectionPackages) return [];
+
   const schematicSectionPackages =
     moduleId === 'schematic' && sectionId ? SCHEMATIC_SECTION_PACKAGES.get(sectionId) : undefined;
   if (moduleId === 'schematic' && sectionId && !schematicSectionPackages) return [];
+
   return changelog
     .map(release => {
       const packages = release.packages.filter(block => {
         if (librarySectionPackages) return librarySectionPackages.has(block.pkg);
         if (vizSectionPackages) return vizSectionPackages.has(block.pkg);
         if (schematicSectionPackages) return schematicSectionPackages.has(block.pkg);
+
         return groupOfPackage(block.pkg) === group;
       });
       return {

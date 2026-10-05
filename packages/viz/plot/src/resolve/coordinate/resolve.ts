@@ -1,4 +1,4 @@
-import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
+import type { ExternalRow } from '@retikz/data';
 import { createDataView, DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
 import type { CoordinateFrame, DomainPaddingScale, PositionScale } from '../../contract';
@@ -47,6 +47,7 @@ export const resolveCoordinateDefinition = (
       `lowerPlots: coordinate type "${operation.type}" is not registered; pass a CoordinateDefinition via options.coordinates`,
     );
   }
+
   return definition;
 };
 
@@ -66,8 +67,10 @@ const intervalRoleValues = (
     return rows.flatMap(row => [resolveFieldPath(row, bound.from), resolveFieldPath(row, bound.to)]);
   if (bound.kind === IntervalBoundKind.Proportional) return proportionalIntervalDomainValues(bound.field, rows);
   if (bound.kind === IntervalBoundKind.Full) return [];
+
   const channel = pick(mark);
   if (channel === undefined) return [];
+
   return rows.map(row => channelValue(channel, row));
 };
 
@@ -93,20 +96,26 @@ const intervalProportionalAxisTicks = (
 ): TickSet | undefined => {
   const bound = resolveIntervalBound(mark, role);
   if (bound.kind !== IntervalBoundKind.Proportional) return undefined;
+
   const channel = (mark.encoding as Record<string, IRPlotChannel | undefined>)[role];
   if (channel?.field === undefined) return undefined;
+
   const intervals = buildProportionalIntervals(bound.field, rows);
   const values: TickSet['values'] = [];
   const labels: TickSet['labels'] = [];
+
   for (const row of rows) {
     const interval = intervals.get(row);
     if (interval === undefined) continue;
+
     const center = (interval[0] + interval[1]) / 2;
     if (!Number.isFinite(center)) continue;
+
     values.push(center);
     const label = channelValue(channel, row);
     labels.push(label === null || label === undefined ? '' : String(label));
   }
+
   return values.length > 0 ? { values, labels } : undefined;
 };
 
@@ -116,6 +125,7 @@ const relationTargetRoleValues = (
   rows: Array<ExternalRow>,
 ): Array<unknown> => {
   if (!isBuiltinMark(mark) || mark.type !== PlotMark.Relation) return [];
+
   const refs = [
     mark.source,
     mark.target,
@@ -125,6 +135,7 @@ const relationTargetRoleValues = (
   const fields = refs.flatMap(ref =>
     'project' in ref && Object.prototype.hasOwnProperty.call(ref.project, role) ? [ref.project[role]] : [],
   );
+
   return fields.flatMap(field => rows.map(row => resolveFieldPath(row, field)));
 };
 
@@ -136,7 +147,7 @@ const markEncoding = (mark: IRPlotMarkOperation): Record<string, IRPlotChannel |
 const NON_POSITION_ENCODING_KEYS = new Set<string>(['color', 'text', 'channels']);
 
 /**
- * 校验内置 mark 的 encoding key 是否属于当前坐标系角色。
+ * 校验内置 mark 的 encoding key 是否属于当前坐标系角色
  * @description schema 允许未知 key 承载自定义坐标系位置角色；lowering 必须按 active CoordinateDefinition.roles
  *   fail-loud，避免把 `size` / `opacity` 这类拼错或误放进 encoding 的字段静默当成无效位置角色
  */
@@ -146,10 +157,13 @@ const assertKnownPositionEncodingRoles = (
   marks: ReadonlyArray<IRPlotMarkOperation>,
 ): void => {
   const roleSet = new Set<string>(roles);
+
   for (const mark of marks) {
     if (!isBuiltinMark(mark)) continue;
+
     const encoding = markEncoding(mark);
     if (encoding === undefined) continue;
+
     for (const key of Object.keys(encoding)) {
       if (NON_POSITION_ENCODING_KEYS.has(key)) continue;
       if (!roleSet.has(key)) {
@@ -163,7 +177,7 @@ const assertKnownPositionEncodingRoles = (
 
 /**
  * 按坐标系合法集校验每根 axis guide 的 dimension
- * @description 非法 dimension（如 cartesian 下 'angle'）fail-loud，给出清晰错误。
+ * @description 非法 dimension（如 cartesian 下 'angle'）fail-loud，给出清晰错误
  */
 const assertValidGuideDimensions = (
   coordinateType: string,
@@ -171,6 +185,7 @@ const assertValidGuideDimensions = (
   axisGuides: Array<IRPlotAxisGuide>,
 ): void => {
   const valid = roles;
+
   for (const guide of axisGuides) {
     if (!valid.includes(guide.dimension)) {
       throw new RetikzPlotError(
@@ -182,7 +197,7 @@ const assertValidGuideDimensions = (
 
 /**
  * 按坐标系必填角色集校验每个位置 mark 的 encoding
- * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud。
+ * @description sector 无位置通道（角度来自累积界）→ 跳过；其余 mark 缺任一必填角色通道 → fail-loud
  */
 const assertRequiredPositionChannels = (
   coordinateType: string,
@@ -190,14 +205,18 @@ const assertRequiredPositionChannels = (
   marks: ReadonlyArray<IRPlotMarkOperation>,
 ): void => {
   const required = roles;
+
   for (const mark of marks) {
     // 自定义 mark：必填位置通道由其 MarkDefinition.lower 自行 fail-loud，不在通用校验内强制
     if (!isBuiltinMark(mark)) continue;
+
     // reference 取向由 encoding.x XOR y 决定（绑一个、缺一个）；其取向校验在 lowerReference fail-loud
     if (mark.type === PlotMark.Reference || mark.type === PlotMark.Relation) continue;
+
     // interval：band / span bounds 需对应 encoding 位置通道；extent（字段区间）/ full（满域）从字段 / 坐标系取位置，豁免该角色
     if (mark.type === PlotMark.Interval) {
       const encoding = mark.encoding as Record<string, IRPlotChannel | undefined>;
+
       for (const channel of required) {
         if (!intervalBoundConsumesRoleChannel(mark, channel)) continue;
         if (encoding[channel] === undefined) {
@@ -208,8 +227,10 @@ const assertRequiredPositionChannels = (
       }
       continue;
     }
+
     // point / path：所有必填位置角色都要对应 encoding 通道
     const encoding = mark.encoding as Record<string, IRPlotChannel | undefined>;
+
     for (const channel of required) {
       if (encoding[channel] === undefined) {
         throw new RetikzPlotError(
@@ -223,7 +244,7 @@ const assertRequiredPositionChannels = (
 /**
  * 按坐标系解析出 mark / guide 共用的投影帧 + 下沉 guide 层
  * @description cartesian：x/y 角色绑 x/y scale、走 plotArea + 直线轴；polar：angle/radius 角色、走 polar layout + 弧 / 辐条轴。
- *   抽成纯函数使 mark 下沉与 locator 共用同一投影，杜绝两套投影漂移。
+ *   抽成纯函数使 mark 下沉与 locator 共用同一投影，杜绝两套投影漂移
  */
 export const resolveCoordinateFrame = (
   source: IRPlot,
@@ -256,6 +277,7 @@ export const resolveCoordinateFrame = (
   if (coordinateOperation === undefined) {
     throw new RetikzPlotError('lowerPlots: default coordinate view is not registered');
   }
+
   const coordinateDefinition = resolveCoordinateDefinition(coordinateOperation, { coordinateRegistry });
   const roles = coordinateDefinition.roles;
   const axisGuides = (node.guides ?? []).filter((guide): guide is IRPlotAxisGuide => guide.type === PlotGuide.Axis);
@@ -278,20 +300,25 @@ export const resolveCoordinateFrame = (
   ): Array<unknown> => {
     const out: Array<unknown> = [];
     const sourceViews = markDataViewsForRole(role);
+
     for (const { mark, dataView } of sourceViews) {
       const markRows = dataView.rows;
       out.push(...relationTargetRoleValues(mark, role, markRows));
+
       // interval：域贡献按 bounds 来源（band/span → 位置通道值、extent → 两字段、full → 不贡献），统一替代旧 histogram / stack / sector 特判
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && axis !== undefined) {
         out.push(...intervalRoleValues(mark, axis, pick, markRows));
         continue;
       }
+
       const channel = pick(mark);
       if (channel === undefined) continue;
+
       for (const row of markRows) {
         out.push(channelValue(channel, row));
       }
     }
+
     // 值轴从 baseline 起：interval span / extent 按实际 role 纳入 0；path closure 仍由调用方显式请求。
     if (
       axis !== undefined &&
@@ -300,6 +327,7 @@ export const resolveCoordinateFrame = (
       )
     )
       out.push(0);
+
     if (includeBaseline) {
       for (const mark of node.marks) {
         if (isBuiltinMark(mark) && mark.type === PlotMark.Path) {
@@ -312,6 +340,7 @@ export const resolveCoordinateFrame = (
         }
       }
     }
+
     return out;
   };
 
@@ -322,16 +351,21 @@ export const resolveCoordinateFrame = (
       return !(isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role));
     });
     if (hasRegularRoleTicks) return undefined;
+
     const values: TickSet['values'] = [];
     const labels: TickSet['labels'] = [];
+
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       const markRows = dataView.rows;
       if (!isBuiltinMark(mark) || mark.type !== PlotMark.Interval) continue;
+
       const ticks = intervalProportionalAxisTicks(mark, role, markRows);
       if (ticks === undefined) continue;
+
       values.push(...ticks.values);
       labels.push(...ticks.labels);
     }
+
     return values.length > 0 ? { values, labels } : undefined;
   };
 
@@ -339,52 +373,64 @@ export const resolveCoordinateFrame = (
   const roleFieldTypes = (
     role: DimensionRole,
     pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
-  ): Array<DataFieldTypeValue> => {
-    const types: Array<DataFieldTypeValue> = [];
+  ): Array<DataFieldType> => {
+    const types: Array<DataFieldType> = [];
+
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
         continue;
+
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
+
       const type = dataView.model.find(field => field.name === channel.field)?.type;
       if (type !== undefined) types.push(type);
     }
+
     return types;
   };
 
   /**
    * 解析某 role 的有效 order（解析 + 三道判定的两道：非分类 throw / 冲突 throw）
    * @description 收集该 role 各绑定字段的非默认 order（!=='appearance'）：非分类字段配 order → throw；
-   *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）。
+   *   ≥2 个不同非默认 order → throw；恰好 1 个 → 返回它；0 个 → undefined（保持现状出现序）
    */
   const resolveRoleOrder = (
     role: DimensionRole,
     pick: (mark: IRPlotMarkOperation) => IRPlotChannel | undefined,
   ): CategoryOrder | undefined => {
     const found: Array<CategoryOrder> = [];
+
     for (const { mark, dataView } of markDataViewsForRole(role)) {
       if (isBuiltinMark(mark) && mark.type === PlotMark.Interval && !intervalBoundConsumesRoleChannel(mark, role))
         continue;
+
       const channel = pick(mark);
       if (channel?.field === undefined) continue;
+
       const definition = dataView.model.find(field => field.name === channel.field);
       const order = definition?.order;
       if (order === undefined || order === FieldOrderMode.Appearance) continue;
+
       const type = definition?.type;
       if (type !== undefined && type !== DataFieldType.Categorical) {
         throw new RetikzPlotError(
           `lowerPlots: field "${channel.field}" has order but its type is ${type}, not categorical; order only applies to categorical fields`,
         );
       }
+
       found.push(order);
     }
+
     if (found.length === 0) return undefined;
+
     const distinct = [...new Set(found.map(order => JSON.stringify(order)))];
     if (distinct.length > 1) {
       throw new RetikzPlotError(
         `lowerPlots: coordinate.${role} binds fields with conflicting orders; give the scale an explicit domain`,
       );
     }
+
     return found[0];
   };
 
@@ -397,6 +443,7 @@ export const resolveCoordinateFrame = (
     values: Array<unknown>,
   ): IRPlotScaleOperation => {
     const types = roleFieldTypes(role, pick);
+
     // 解析该 role 有效 order（含「非分类配 order」「冲突 order」两道 fail-loud），无论 scale 显式与否都先校验
     const order = resolveRoleOrder(role, pick);
     let def: IRPlotScaleOperation;
@@ -407,6 +454,7 @@ export const resolveCoordinateFrame = (
         for (const type of types)
           assertScaleFieldCompatible(role, found.type, type, scaleName, { registry: scaleRegistry });
       }
+
       def = found;
     } else {
       const distinct = [...new Set(types)];
@@ -415,8 +463,10 @@ export const resolveCoordinateFrame = (
           `lowerPlots: coordinate.${role} omitted but its bound fields have mixed types [${distinct.join(', ')}]; declare an explicit scale`,
         );
       }
+
       def = derivePositionScale(distinct[0], `__${role}`);
     }
+
     // order 注入：仅当字段有非默认 order 且该 scale 是内置 band/point 且 domain 未显式给（显式 domain 优先、压过 order）
     if (
       order !== undefined &&
@@ -426,6 +476,7 @@ export const resolveCoordinateFrame = (
     ) {
       return { ...def, domain: orderedCategoryDomain(values, order) };
     }
+
     return def;
   };
 
@@ -436,6 +487,7 @@ export const resolveCoordinateFrame = (
         `lowerPlots: ${coordinateOperation.type} coordinate system does not support encoding role "${role}" (valid roles: ${roles.join(', ')})`,
       );
     }
+
     return def.pickWithOptions();
   };
 
@@ -457,9 +509,11 @@ export const resolveCoordinateFrame = (
     if (context.markPadding === undefined || coordinateDefinition.domainPadding === undefined) {
       throw new RetikzPlotError(`coordinate "${coordinateOperation.type}" has no mark domainPadding capability`);
     }
+
     for (const role of roles) {
       if (!coordinateDefinition.domainPadding.roles.includes(role))
         throw new RetikzPlotError(`coordinate role "${role}" does not support mark domainPadding`);
+
       const values = collectValues(role, role === 'x' ? 'primary' : 'secondary', roleChannelOf(role), role === 'y');
       const scaleName = coordinateScaleNames[role];
       const operation = resolveScaleForDefinitionRole(
@@ -472,6 +526,7 @@ export const resolveCoordinateFrame = (
       if (definition.family !== 'position' || definition.domainPadding === undefined) {
         throw new RetikzPlotError(`scale "${operation.name}" does not support mark domainPadding`);
       }
+
       const capability = definition.domainPadding;
       const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
       mappingsByRole.set(
@@ -483,6 +538,7 @@ export const resolveCoordinateFrame = (
       );
     }
   }
+
   const buildPositionScale = (
     operation: IRPlotScaleOperation,
     values: Array<unknown>,
@@ -490,47 +546,58 @@ export const resolveCoordinateFrame = (
   ): PositionScale => {
     const padding = markDomainPaddingOf(operation);
     if (padding === undefined) return resolvePositionScale(operation, values, range, { registry: scaleRegistry });
+
     const existing = paddedScales.get(operation.name);
     if (existing !== undefined) return existing;
+
     const role = roles.find(candidate => operationsByRole.get(candidate)?.name === operation.name);
     const mapping = role === undefined ? undefined : mappingsByRole.get(role);
     if (role === undefined || mapping === undefined || context.markPadding === undefined)
       throw new RetikzPlotError(`scale "${operation.name}" has no padding role`);
+
     const roleIndex = roles.indexOf(role);
     const localViews = context.paddingMarkDataViews ?? markDataViews;
     const paddingContext = context.markPadding;
     const group = context.markPadding.groupOf(operation.name, role, markDataViewsForRole(role));
+
     const samples = () => {
       const constraints = [];
       const clearance = {
         lower: (typeof padding.clearance === 'object' ? padding.clearance.lower : padding.clearance) ?? 0,
         upper: (typeof padding.clearance === 'object' ? padding.clearance.upper : padding.clearance) ?? 0,
       };
+
       for (const id of padding.marks) {
         const view = localViews.find(candidate => candidate.mark.id === id);
         if (view === undefined) {
           // 共享域可引用其它消费视图的图元；由该图元所在视图提交其实际 range 约束
           if (markDataViewsForRole(role).some(candidate => candidate.mark.id === id)) continue;
+
           throw new RetikzPlotError(
             `scale "${operation.name}" references unknown padding mark "${id}" or a mark that does not consume this scale`,
           );
         }
+
         const placed = paddingContext.placedTargetsOf(view, paddingFrame);
         const placedByKey = new Map(placed?.targets.map(target => [target.key, target]));
+
         for (const target of paddingContext.targetsOf(view, roles)) {
           const positions = roles.map(
             (targetRole, index) => mappingsByRole.get(targetRole)?.normalize(target.values[index]) ?? NaN,
           );
           if (positions.some(position => !Number.isFinite(position) || position < 0 || position > 1)) continue;
+
           const mapped = paddingFrame.mapRoles?.(target.values);
           const placedTarget = target.key === undefined ? undefined : placedByKey.get(target.key);
           if (placed !== undefined && placedTarget === undefined)
             throw new RetikzPlotError(`mark "${id}" padding target must identify its placement target`);
+
           const effectiveMapped = placedTarget?.mappedRoles ?? mapped;
           if (coordinateDefinition.domainPadding?.measure !== undefined && effectiveMapped == null)
             throw new RetikzPlotError(
               `coordinate "${coordinateOperation.type}" requires mapped roles for domainPadding measurement`,
             );
+
           if (
             placedTarget !== undefined &&
             placedTarget.position !== null &&
@@ -546,6 +613,7 @@ export const resolveCoordinateFrame = (
             )
               throw new RetikzPlotError(`mark "${id}" screen placement cannot be measured in role space`);
           }
+
           const measured =
             effectiveMapped != null && coordinateDefinition.domainPadding?.measure !== undefined
               ? coordinateDefinition.domainPadding.measure({
@@ -569,6 +637,7 @@ export const resolveCoordinateFrame = (
             throw new RetikzPlotError(
               `coordinate "${coordinateOperation.type}" returned invalid domainPadding extents`,
             );
+
           const currentRange = paddingFrame.roleScales?.[role]?.range();
           const position =
             placedTarget?.mappedRoles != null && currentRange !== undefined
@@ -583,8 +652,10 @@ export const resolveCoordinateFrame = (
           });
         }
       }
+
       return constraints;
     };
+
     const scale = context.markPadding.scaleOf(
       group,
       context.domainPaddingScope ?? 'root',
@@ -594,6 +665,7 @@ export const resolveCoordinateFrame = (
       'range' in operation && Array.isArray(operation.range) ? (operation.range as [number, number]) : range,
     );
     paddedScales.set(operation.name, scale);
+
     return scale;
   };
 
@@ -628,12 +700,14 @@ export const resolveCoordinateFrame = (
     rows,
     marks: node.marks,
   });
+
   const paddingFrame: CoordinateFrame = resolution.frame;
   if (resolution.frame.type !== coordinateOperation.type) {
     throw new RetikzPlotError(
       `lowerPlots: coordinate definition "${coordinateOperation.type}" returned frame type "${resolution.frame.type}"; frame type must match the registered coordinate type`,
     );
   }
+
   if (
     resolution.frame.roles.length !== roles.length ||
     resolution.frame.roles.some((role, index) => role !== roles[index])
@@ -642,6 +716,7 @@ export const resolveCoordinateFrame = (
       `lowerPlots: coordinate definition "${coordinateOperation.type}" returned frame roles [${resolution.frame.roles.join(', ')}]; frame roles must match definition roles [${roles.join(', ')}]`,
     );
   }
+
   return {
     frame: resolution.frame,
     gridLayers: resolution.gridLayers,

@@ -12,7 +12,9 @@ export const buildTransform = (
   round: (n: number) => number = defaultRound,
 ): string | undefined => {
   if (!transforms || transforms.length === 0) return undefined;
+
   const tokens: Array<string> = [];
+
   for (const t of transforms) {
     switch (t.kind) {
       case 'translate':
@@ -36,5 +38,6 @@ export const buildTransform = (
       }
     }
   }
+
   return tokens.join(' ');
 };

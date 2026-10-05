@@ -52,10 +52,12 @@ const legendHorizontalCenterDelta = (Preview: FC): number => {
   const viewBox = output.scene.layout;
   const envelope = output.artifacts.find(artifact => artifact.kind === 'composite');
   if (envelope === undefined) throw new Error('Expected a Legend compile artifact');
+
   const artifact = LegendArtifactSchema.parse(envelope.value);
   const bounds = artifact.container.allocationBounds;
   const legendCenter = bounds.x + bounds.width / 2;
   const viewBoxCenter = viewBox.x + viewBox.width / 2;
+
   return legendCenter - viewBoxCenter;
 };
 
@@ -65,6 +67,7 @@ describe('Standard Legend documentation', () => {
     const en = readPage('en');
 
     expect(headings(zh).map(heading => heading.replace(/^## /, ''))).toHaveLength(headings(en).length);
+
     for (const source of [zh, en]) {
       for (const schema of ['LegendSchema', 'LegendArtifactSchema']) {
         expect(source).toMatch(new RegExp(`^#{3,4} ${schema}$`, 'm'));
@@ -78,9 +81,11 @@ describe('Standard Legend documentation', () => {
       for (const api of ['LegendInputEmbedAdapter', 'LegendDefinition', 'InputLegend', 'IRLegend']) {
         expect(source).toContain(api);
       }
+
       for (const component of ['Legend', 'LegendTitle', 'LegendItem', 'LegendRamp', 'LegendTick']) {
         expect(source).toContain(component);
       }
+
       for (const preview of ['legend-basic', 'legend-ramp', 'legend-playground', 'legend-pipeline']) {
         expect(source).toMatch(new RegExp(`files=(?:"${preview}"|\\{\\['${preview}')`));
       }

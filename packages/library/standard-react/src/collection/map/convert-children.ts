@@ -17,9 +17,11 @@ export const collectMapEntries = (children: ReactNode): Array<{ key: DrawableCel
           visit(child.props.children);
           return;
         }
+
         if (!isValidElement(child) || (child.type !== MapKey && child.type !== MapValue)) {
           return invalidCellAuthoring('MapEntry accepts only MapKey and MapValue.');
         }
+
         const cell = markerCell((child as ReactElement<CellMarkerProps>).props);
         if (child.type === MapKey) {
           if (key !== undefined) return invalidCellAuthoring('MapEntry requires exactly one MapKey.');
@@ -32,5 +34,6 @@ export const collectMapEntries = (children: ReactNode): Array<{ key: DrawableCel
     visit(entry.children);
     if (key === undefined || value === undefined)
       return invalidCellAuthoring('MapEntry requires one MapKey and one MapValue.');
+
     return { key, value };
   });

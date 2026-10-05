@@ -43,6 +43,7 @@ describe('stroke Path Inspector', () => {
       ellipseAxes: false,
     });
   });
+
   it('treats a typed undefined override as omission during selection', () => {
     const local: { labels?: boolean } = { labels: undefined };
     const result = compileInspectionToScene(ir, {
@@ -64,9 +65,11 @@ describe('stroke Path Inspector', () => {
         ],
       },
     });
+
     expect(hasText(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? [])).toBe(true);
     expect(local).toEqual({ labels: undefined });
   });
+
   it('exports the same defaults and descriptions to JSON Schema', () => {
     expect(toJSONSchema(PathInspectOptionsSchema)).toMatchObject({
       properties: {
@@ -77,12 +80,14 @@ describe('stroke Path Inspector', () => {
       },
     });
   });
+
   it('uses the Core package namespace for its registry key', () => {
     expect(PATH_INSPECTOR_KEY).toEqual({ namespace: 'core', type: 'path' });
   });
 
   it('materializes schema defaults when explicitly parsing a configuration snapshot', () => {
     const source = PathInspectOptionsSchema.parse({});
+
     expect(source).toEqual({
       controlPoints: true,
       vertices: false,
@@ -114,6 +119,7 @@ describe('stroke Path Inspector', () => {
         ],
       },
     });
+
     expect(result.inspection?.entries.length).toBeGreaterThan(2);
     expect(hasText(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? [])).toBe(true);
   });
@@ -140,6 +146,7 @@ describe('stroke Path Inspector', () => {
           ],
         },
       });
+
       expect(hasText(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? [])).toBe(
         typeof local === 'boolean' || !('labels' in local),
       );
@@ -149,6 +156,7 @@ describe('stroke Path Inspector', () => {
   it('ignores undefined overrides and preserves explicit false during option merging', () => {
     const inherited = { labels: true, controlPoints: true };
     const merged = PATH_INSPECTOR.mergeOptionsInput?.(inherited, { labels: undefined, controlPoints: false });
+
     expect(merged).toEqual({ labels: true, controlPoints: false });
     expect(inherited).toEqual({ labels: true, controlPoints: true });
   });
@@ -160,6 +168,7 @@ describe('stroke Path Inspector', () => {
         rules: [{ kind: 'request', inspector: PATH_INSPECTOR_KEY, target: { kind: 'scene' }, options: true }],
       },
     });
+
     expect(result.inspection?.entries.length).toBeGreaterThan(0);
   });
 
@@ -198,7 +207,9 @@ describe('stroke Path Inspector', () => {
     );
 
     expect(Array.isArray(output)).toBe(true);
+
     if (!Array.isArray(output)) throw new Error('expected stroke Inspector output array');
+
     expect(drawingChildren(output)[0]).toMatchObject({
       type: 'path',
       children: [
@@ -258,6 +269,7 @@ describe('stroke Path Inspector', () => {
       { type: 'node', position: [-4, -12], text: 'A3' },
     ]);
   });
+
   it.each([
     [false, false, 0],
     [true, false, 1],
@@ -296,7 +308,9 @@ describe('stroke Path Inspector', () => {
     const paths = drawingChildren(Array.isArray(output) ? output : [output]).filter(
       (child): child is Extract<IRChild, { type: 'path' }> => child.type === 'path',
     );
+
     expect(paths).toHaveLength(pathCount);
+
     if (arcGeometry) expect(paths[0].style?.dashPattern).toEqual([4, 3]);
     if (ellipseAxes) {
       expect(paths.at(-1)?.style).toMatchObject({ dashPattern: [1, 4], lineCap: 'round' });

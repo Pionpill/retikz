@@ -5,12 +5,15 @@ import type { Lang } from '@/i18n';
 
 import { cutCenter, cutCurve, cutDistance, cutEnd, cutLength, cutNumber, cutRemoved, cutStart } from './path-cut.data';
 import { pathLabelIntervalI18n } from './path-label-interval.i18n';
+
 /** 标签截断区间图的语言 */
 export type PathLabelIntervalProps = { lang?: Lang };
+
 /** 展示文字边界沿切线的投影与路径距离区间 */
 const PathLabelInterval: FC<PathLabelIntervalProps> = props => {
   const { lang = 'zh' } = props;
   const t = pathLabelIntervalI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[t.bounds, t.interval].map((title, index) => (

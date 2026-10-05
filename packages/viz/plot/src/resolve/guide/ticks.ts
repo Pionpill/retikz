@@ -6,17 +6,13 @@ import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
 import type { PositionScale, TickSet } from '../../contract';
 import { RetikzPlotError } from '../../error';
-import type {
-  GuideTickTimeUnitValue,
-  IRPlotAxisGuide,
-  IRPlotGuideTickLabelFormat,
-  IRPlotGuideTickSource,
-} from '../../schemas';
+import type { IRPlotAxisGuide, IRPlotGuideTickLabelFormat, IRPlotGuideTickSource } from '../../schemas';
 import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../schemas';
 
 const MAX_INTERVAL_TICKS = 10_000;
 
 type GuideTickDensity = NonNullable<NonNullable<IRPlotAxisGuide['ticks']>['density']>;
+
 type GuideTickVisibilitySource = IRPlotGuideTickSource & { density?: GuideTickDensity };
 
 const normalizeExplicitTick = (scale: PositionScale, value: string | number): IRDataScalarValue => {
@@ -28,12 +24,15 @@ const normalizeExplicitTick = (scale: PositionScale, value: string | number): IR
         `lowerPlots: time guide tick value must be an epoch millisecond or ISO-like string (got "${value}")`,
       );
     }
+
     return stamp;
   }
+
   if (scale.tickKind === undefined) return value;
   if (typeof value !== 'number') {
     throw new RetikzPlotError(`lowerPlots: numeric guide tick value must be a number (got "${value}")`);
   }
+
   return value;
 };
 
@@ -55,6 +54,7 @@ const intervalDomain = (scale: PositionScale): [number, number] => {
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
     throw new RetikzPlotError('lowerPlots: fixed guide tick interval requires a finite scale domain');
   }
+
   return start <= end ? [start, end] : [end, start];
 };
 
@@ -64,22 +64,27 @@ const numberIntervalTicks = (scale: PositionScale, step: number, anchor: number 
       `lowerPlots: number guide tick interval requires a numeric scale (got "${scale.tickKind ?? 'unknown'}")`,
     );
   }
+
   const [lo, hi] = intervalDomain(scale);
   const base = anchor ?? lo;
   const values: Array<number> = [];
   const first = base + Math.ceil((lo - base) / step) * step;
   const epsilon = Math.abs(step) * DEFAULT_EPSILON;
+
   for (let value = first; value <= hi + epsilon; value += step) {
     if (values.length >= MAX_INTERVAL_TICKS) {
       throw new RetikzPlotError(
         `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
       );
     }
+
     if (values.length > 0 && value === values[values.length - 1]) {
       throw new RetikzPlotError('lowerPlots: guide tick interval step is too small to make numeric progress');
     }
+
     values.push(Number(value.toFixed(12)));
   }
+
   return values;
 };
 
@@ -105,16 +110,17 @@ const addUtcMonths = (stamp: number, months: number): number => {
   );
 };
 
-const addTimeInterval = (stamp: number, unit: GuideTickTimeUnitValue, step: number): number => {
+const addTimeInterval = (stamp: number, unit: GuideTickTimeUnit, step: number): number => {
   if (unit in TIME_UNIT_MS) return stamp + TIME_UNIT_MS[unit as keyof typeof TIME_UNIT_MS] * step;
   if (unit === GuideTickTimeUnit.Month) return addUtcMonths(stamp, step);
   if (unit === GuideTickTimeUnit.Quarter) return addUtcMonths(stamp, step * 3);
+
   return addUtcMonths(stamp, step * 12);
 };
 
 const timeIntervalTicks = (
   scale: PositionScale,
-  unit: GuideTickTimeUnitValue,
+  unit: GuideTickTimeUnit,
   step: number,
   anchor: string | number | undefined,
 ): Array<number> => {
@@ -123,6 +129,7 @@ const timeIntervalTicks = (
       `lowerPlots: time guide tick interval requires a time scale (got "${scale.tickKind ?? 'unknown'}")`,
     );
   }
+
   const [lo, hi] = intervalDomain(scale);
   const anchorStamp = anchor === undefined ? lo : coerceTimestamp(anchor);
   if (anchorStamp === null) {
@@ -130,49 +137,61 @@ const timeIntervalTicks = (
       `lowerPlots: time guide tick interval anchor must be an epoch millisecond or ISO-like string (got "${anchor}")`,
     );
   }
+
   let value = anchorStamp;
   let guard = 0;
+
   while (value > lo) {
     if (guard >= MAX_INTERVAL_TICKS) {
       throw new RetikzPlotError(
         `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
       );
     }
+
     const previous = value;
     value = addTimeInterval(value, unit, -step);
     if (value === previous) {
       throw new RetikzPlotError('lowerPlots: guide tick interval step is too small to make time progress');
     }
+
     guard += 1;
   }
+
   while (addTimeInterval(value, unit, step) <= lo) {
     if (guard >= MAX_INTERVAL_TICKS) {
       throw new RetikzPlotError(
         `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
       );
     }
+
     const next = addTimeInterval(value, unit, step);
     if (next === value) {
       throw new RetikzPlotError('lowerPlots: guide tick interval step is too small to make time progress');
     }
+
     value = next;
     guard += 1;
   }
+
   const values: Array<number> = [];
+
   while (value <= hi) {
     if (values.length >= MAX_INTERVAL_TICKS) {
       throw new RetikzPlotError(
         `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
       );
     }
+
     if (value >= lo) values.push(value);
     const next = addTimeInterval(value, unit, step);
     if (next === value) {
       throw new RetikzPlotError('lowerPlots: guide tick interval step is too small to make time progress');
     }
+
     value = next;
     guard += 1;
   }
+
   return values;
 };
 
@@ -186,6 +205,7 @@ const categoryIntervalTicks = (
       `lowerPlots: category guide tick interval requires a category scale (got "${scale.tickKind ?? 'unknown'}")`,
     );
   }
+
   const values = scale
     .domain()
     .filter((value): value is string | number => typeof value === 'string' || typeof value === 'number')
@@ -195,6 +215,7 @@ const categoryIntervalTicks = (
       `lowerPlots: guide tick interval generated more than ${MAX_INTERVAL_TICKS} candidate ticks`,
     );
   }
+
   return values;
 };
 
@@ -205,12 +226,13 @@ const resolveIntervalValues = (
   if (source.kind === GuideTickIntervalKind.Number) return numberIntervalTicks(scale, source.step, source.anchor);
   if (source.kind === GuideTickIntervalKind.Time)
     return timeIntervalTicks(scale, source.unit, source.step ?? 1, source.anchor);
+
   return categoryIntervalTicks(scale, source.step, source.offset);
 };
 
 /**
- * 解析 axis guide 使用的刻度值和标签。
- * @description 优先消费显式 ticks.values；否则委托 PositionScale.ticks。格式化按 tickKind 选择数字 / 时间 formatter，分类和未知 tickKind 保留原标签。
+ * 解析 axis guide 使用的刻度值和标签
+ * @description 优先消费显式 ticks.values；否则委托 PositionScale.ticks。格式化按 tickKind 选择数字 / 时间 formatter，分类和未知 tickKind 保留原标签
  */
 export const resolveGuideTicks = (
   scale: PositionScale,
@@ -222,6 +244,7 @@ export const resolveGuideTicks = (
     const labels = values.map((value, index) =>
       formatLabel(scale, labelFormat?.format, value, String(source.values?.[index] ?? value)),
     );
+
     return { values, labels };
   }
 
@@ -235,6 +258,7 @@ export const resolveGuideTicks = (
 
   const ticks = scale.ticks(source?.count);
   if (labelFormat?.format === undefined) return ticks;
+
   return {
     values: ticks.values,
     labels: ticks.values.map((value, index) => formatLabel(scale, labelFormat.format, value, ticks.labels[index])),
@@ -248,15 +272,18 @@ const pickSampleIndices = (indices: ReadonlyArray<number>, maxCount: number, pre
     const step = Math.ceil(indices.length / maxCount);
     return indices.filter((_, index) => index % step === 0).slice(0, maxCount);
   }
+
   const picked = new Set<number>([indices[0], indices[indices.length - 1]]);
   const slots = maxCount - 1;
+
   for (let slot = 1; slot < slots; slot += 1) {
     picked.add(indices[Math.round((slot * (indices.length - 1)) / slots)]);
   }
+
   return [...picked].sort((a, b) => a - b).slice(0, maxCount);
 };
 
-/** 按 density 把候选 tick set 抽样成 visible tick set。 */
+/** 按 density 把候选 tick set 抽样成 visible tick set */
 export const resolveVisibleGuideTicks = (
   ticks: TickSet,
   source: GuideTickVisibilitySource | undefined,
@@ -264,27 +291,33 @@ export const resolveVisibleGuideTicks = (
 ): TickSet => {
   const density = source?.density;
   if (density === undefined || density.kind === AxisTickDensityKind.All || ticks.values.length <= 1) return ticks;
+
   const preserveEnds = density.preserveEnds ?? true;
   let indices = ticks.values.map((_, index) => index);
   if (density.minGap !== undefined) {
     const kept: Array<number> = [];
+
     for (const index of indices) {
       if (kept.length === 0) {
         kept.push(index);
         continue;
       }
+
       const previous = coordinate(ticks.values[kept[kept.length - 1]]);
       const current = coordinate(ticks.values[index]);
       if (!Number.isFinite(previous) || !Number.isFinite(current) || Math.abs(current - previous) >= density.minGap) {
         kept.push(index);
       }
     }
+
     if (preserveEnds && kept[kept.length - 1] !== indices[indices.length - 1]) kept.push(indices[indices.length - 1]);
     indices = kept;
   }
+
   if (density.maxCount !== undefined) {
     indices = pickSampleIndices(indices, density.maxCount, preserveEnds);
   }
+
   return {
     values: indices.map(index => ticks.values[index]),
     labels: indices.map(index => ticks.labels[index]),

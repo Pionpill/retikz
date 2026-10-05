@@ -5,6 +5,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { createPointCoordinateSection } from '../point-coordinate-control';
 import { bubbleAppearanceI18n } from './bubble-appearance.i18n';
 import { gapminderBubbleData } from './bubble-basic.data';
+
 /** 只提供当前外观示例的相关控件 */
 export const createPreviewControlContract = (lang: Lang = 'zh') => {
   const i18n = bubbleAppearanceI18n[lang];

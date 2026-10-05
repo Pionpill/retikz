@@ -4,7 +4,7 @@
 
 #### Surface / SurfaceProps
 
-- `Surface`: <ApiSourceLink label={"Surface"} path={"packages/library/standard-react/src/presentation/surface/Surface.tsx"} startLine={39}>React Tier 2 authoring component for Standard Surface</ApiSourceLink>
+- `Surface`: <ApiSourceLink label={"Surface"} path={"packages/library/standard-react/src/presentation/surface/Surface.tsx"} startLine={41}>React Tier 2 authoring component for Standard Surface</ApiSourceLink>
 - `SurfaceProps`: <ApiSourceLink label={"SurfaceProps"} path={"packages/library/standard-react/src/presentation/surface/Surface.tsx"} startLine={12}>Standard authoring input accepted by React Surface</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -47,7 +47,7 @@ export type SurfaceProps = Omit<SurfaceInput, 'namespace' | 'type' | 'child'> & 
   <ApiSourceLink
     label={'InputSurface'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={17}
+    startLine={22}
   >
     Surface input with an optional persistent Scope id
   </ApiSourceLink>
@@ -89,7 +89,7 @@ export type InputSurface = Omit<SurfaceInput, 'namespace' | 'type' | 'child' | '
   <ApiSourceLink
     label={'InputSurfaceChild'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={14}
+    startLine={19}
   >
     Authoring input for the single Surface child
   </ApiSourceLink>
@@ -105,14 +105,15 @@ export type InputSurfaceChild = InputChild;
   <ApiSourceLink
     label={'SurfaceInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={28}
+    startLine={64}
   >
-    InputEmbed adapter for Standard Surface
+    Synchronous and asynchronous InputEmbed adapter for Standard Surface
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface>;
+export declare const SurfaceInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSurface> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputSurface>, 'prepare'>>;
 ```
 
 #### surface
@@ -121,7 +122,7 @@ export declare const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface>;
   <ApiSourceLink
     label={'surface'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={66}
+    startLine={89}
   >
     Create a Standard Surface embed lowered by SurfaceInputEmbedAdapter
   </ApiSourceLink>
@@ -158,7 +159,7 @@ export declare const surface: (input: InputSurface) => InputEmbed<InputSurface>;
   <ApiSourceLink
     label={'surfaceChild'}
     path={'packages/library/standard-vanilla/src/presentation/surface.ts'}
-    startLine={25}
+    startLine={30}
   >
     Create input for the single child normalized by the Surface adapter during root Scene traversal
   </ApiSourceLink>

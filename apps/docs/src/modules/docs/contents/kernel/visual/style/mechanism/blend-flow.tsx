@@ -16,6 +16,7 @@ const BlendFlow: FC<BlendFlowProps> = props => {
   const labels = blendFlowI18n[lang];
   const text = (index: number) =>
     labels[index].map((line, row) => ({ text: line, ...(row === 0 ? {} : { fill: 'gray', font: { size: 12 } }) }));
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

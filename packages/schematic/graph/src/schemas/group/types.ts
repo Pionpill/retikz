@@ -6,10 +6,10 @@ import type { GroupCaptionDirectionSchema, GroupCaptionSchema, GroupCaptionTextS
 export type IRGroupCaptionText = ZodInfer<typeof GroupCaptionTextSchema>;
 
 /** Group caption 排列方向 */
-export type GroupCaptionDirectionValue = ZodInfer<typeof GroupCaptionDirectionSchema>;
+export type GroupCaptionDirection = ZodInfer<typeof GroupCaptionDirectionSchema>;
 
 /** Group 结构化 caption */
 export type IRGroupCaption = ZodInfer<typeof GroupCaptionSchema>;
 
-/** JSON-safe Graph Group Source composite */
+/** 可 JSON 序列化的图分组组合节点输入 */
 export type IRGroup = ZodInfer<typeof GroupSchema>;

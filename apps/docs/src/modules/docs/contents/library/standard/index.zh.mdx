@@ -3,14 +3,14 @@ title: Standard · 标准包
 description: 用现成组件组合几何轮廓、结构化内容、参考线与图形说明
 ---
 
-Standard 提供通用绘图组件：形状组件把几何参数变成轮廓，集合组件组织列表与键值内容，展示组件补充参考线、分组边界和图例。它们可以与 Kernel 的 Node、Path 和 Scope 放在同一张图中。
+Standard 提供通用绘图组件：形状组件把几何参数变成轮廓，集合组件组织数组与键值内容，展示组件补充参考线、分组边界和图例。它们可以与 Kernel 的 Node、Path 和 Scope 放在同一张图中。
 
 ## 职责一览
 
 | 家族                | 职责                                                   | 何时阅读                           |
 | ------------------- | ------------------------------------------------------ | ---------------------------------- |
 | shape · 形状        | Circle、Ellipse、Rectangle、Polygon、Star、Arc、Sector | 已知中心、尺寸或角度，需要独立轮廓 |
-| collection · 集合   | List 与 Map 的单元格、索引和嵌套内容                   | 需要表达顺序或键值关系             |
+| collection · 集合   | Array 与 Map 的单元格、索引和嵌套内容                  | 需要表达顺序或键值关系             |
 | presentation · 展示 | Grid、Axes、Frame、Surface 与 Legend                   | 为已有图形补充参考、外观和含义     |
 
 ## 将组件组合成一张图

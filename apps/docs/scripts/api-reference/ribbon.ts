@@ -5,11 +5,13 @@ import { translateRibbonApiReference } from './ribbon.en';
 import { createApiReferenceMdx } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
+
 const packageDirectory = 'packages/library/extension';
 
 /** 只投影 Extension 包根真实公开导出的 Ribbon 成员 */
 export const writeRibbonApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const) {
     const content = await createApiReferenceMdx(
       {

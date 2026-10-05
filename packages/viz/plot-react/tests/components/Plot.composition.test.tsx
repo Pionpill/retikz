@@ -20,6 +20,7 @@ const geometry = (svg: string) => {
     })
     .sort();
   const paths = (svg.match(/\sd="[^"]+"/g) ?? []).sort();
+
   return { glyphs, paths };
 };
 
@@ -52,11 +53,15 @@ describe('<Plot data>{marks} 组合 DSL', () => {
       guides: [],
     };
     const viaSpec = renderToStaticMarkup(<Plot spec={spec} data={{ __plot: data }} width={480} height={300} />);
+
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
+
     const dashes = (svg: string) => svg.match(/stroke-dasharray="[^"]+"/g) ?? [];
+
     expect(dashes(viaDsl)).toHaveLength(1);
     expect(dashes(viaDsl)).toEqual(dashes(viaSpec));
   });
+
   it('多个嵌入 Plot 通过 provider graph 合并数据并各自渲染', () => {
     const svg = renderToStaticMarkup(
       <Layout width={480} height={300}>
@@ -79,6 +84,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PointMark x="month" y="revenue" />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
     expect(svg).toContain('<ellipse');
   });
@@ -90,6 +96,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PointMark x="month" y="revenue" />
       </Plot>,
     );
+
     // 薄 Plot DSL 不补默认 guides，等价 spec 也无 guides
     const equivalentSpec: IRPlot = {
       namespace: 'plot',
@@ -109,6 +116,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     const viaSpec = renderToStaticMarkup(
       <Plot spec={equivalentSpec} data={{ __plot: rows }} width={480} height={300} />,
     );
+
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
   });
 
@@ -119,6 +127,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PathMark x="month" y="revenue" order="month" />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
     expect(svg).not.toContain('<text');
   });
@@ -131,6 +140,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PlotAxis dimension="y" grid />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
     expect(svg).toContain('<text');
   });
@@ -149,6 +159,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PlotAxis dimension="y" grid />
       </Plot>,
     );
+
     expect(svg).toMatch(/<path[^>]+d="M [^"]+ L [^"]+"/);
     expect(svg).toContain('Q1');
   });
@@ -160,6 +171,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <IntervalMark x="month" y="revenue" />
       </Plot>,
     );
+
     expect(svg).toMatch(/<rect/);
   });
 
@@ -169,6 +181,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <IntervalMark x="revenue" y="month" direction="horizontal" />
       </Plot>,
     );
+
     expect(svg).toMatch(/<rect/);
   });
 
@@ -184,6 +197,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <IntervalMark x="revenue" y="month" direction="horizontal" group="product" />
       </Plot>,
     );
+
     expect(svg).toMatch(/<rect/);
   });
 
@@ -199,6 +213,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <IntervalMark x="month" y="revenue" series="product" stack />
       </Plot>,
     );
+
     expect(svg).toMatch(/<rect/);
   });
 
@@ -215,6 +230,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PlotAxis dimension="x" />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
     expect(svg).toContain('<text'); // 时间轴刻度标签
   });
@@ -232,6 +248,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <IntervalMark angle="value" color="label" />
       </Plot>,
     );
+
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
   });
@@ -242,6 +259,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <IntervalMark angle="value" color="label" />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
   });
 
@@ -251,6 +269,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <IntervalMark x="label" y="value" color="label" />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
   });
 
@@ -268,6 +287,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PlotAxis dimension="y" grid />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
   });
 
@@ -283,6 +303,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PathMark x="theta" y="r" order="theta" closed={false} />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
   });
 
@@ -297,6 +318,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
         <PathMark x="dim" y="value" closure={{ kind: 'cycle' }} />
       </Plot>,
     );
+
     expect(svg).toContain('<path');
   });
 
@@ -336,6 +358,7 @@ describe('<Plot data>{marks} 组合 DSL', () => {
     const viaSpec = renderToStaticMarkup(
       <Plot spec={equivalentSpec} data={{ __plot: share }} width={360} height={360} />,
     );
+
     expect(geometry(viaDsl)).toEqual(geometry(viaSpec));
   });
 });

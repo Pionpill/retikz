@@ -86,11 +86,15 @@ describe('Flow defaults and formal Source fragments', () => {
       );
       const outer = inputs[0].elements[0];
       if (outer.kind !== 'layout') throw new Error('Expected Layout');
+
       expect(outer.placement).toMatchObject({ gap: gap ?? 60 });
+
       const group = outer.elements[0];
       if (group.kind !== 'group') throw new Error('Expected Group');
+
       const grid = group.elements[0];
       if (grid.kind !== 'layout') throw new Error('Expected Grid');
+
       expect(grid.placement).toMatchObject({ gap: { row: gap === undefined ? 24 : 0, column: gap ?? 60 } });
     },
   );
@@ -120,12 +124,17 @@ describe('Flow defaults and formal Source fragments', () => {
         },
         { flowLayouts: [definition], defaultFlowLayout: definition.name },
       );
+
       expect(inputs[0].layout).toMatchObject({ nodeGap: 48, rankGap: 48 });
+
       const outer = inputs[0].elements[0];
       if (outer.kind !== 'group') throw new Error('Expected Group');
+
       expect(outer.layout).toMatchObject({ nodeGap: 48, rankGap: 48 });
+
       const lane = outer.elements[0];
       if (lane.kind !== 'layout') throw new Error('Expected Layout');
+
       expect(lane.placement).toMatchObject({ gap: direction === 'down' || direction === 'up' ? 32 : 48 });
     },
   );
@@ -158,8 +167,10 @@ describe('Flow defaults and formal Source fragments', () => {
     );
     const outer = inputs[0].elements[0];
     if (outer.kind !== 'layout') throw new Error('Expected Layout');
+
     const grid = outer.elements[0];
     if (grid.kind !== 'layout') throw new Error('Expected Grid');
+
     expect(grid.placement).toMatchObject({ gap: { row: nodeGap ?? 32, column: nodeGap ?? 48 } });
   });
 
@@ -251,8 +262,11 @@ describe('Flow defaults and formal Source fragments', () => {
       ...baseFlow,
       presentation: { title: 'Legacy title' },
     });
+
     expect(presentation.success).toBe(false);
+
     if (presentation.success) return;
+
     expect(presentation.error.issues).toEqual(
       expect.arrayContaining([expect.objectContaining({ path: ['presentation', 'title'] })]),
     );
@@ -263,11 +277,15 @@ describe('Flow defaults and formal Source fragments', () => {
       flowThemeTokens: { 'flow.layout.nodeGap': 1 },
       flowTheme: { layout: { nodeGap: 1 } },
     });
+
     expect(legacy.success).toBe(false);
+
     if (legacy.success) return;
+
     const legacyIssue = legacy.error.issues.find(
       issue => issue.code === 'unrecognized_keys' && issue.path.length === 0,
     );
+
     expect(legacyIssue).toMatchObject({
       keys: expect.arrayContaining(['diagramTheme', 'flowThemeTokens', 'flowTheme']),
     });
@@ -277,8 +295,11 @@ describe('Flow defaults and formal Source fragments', () => {
       groups: [{ id: 'group', layout: { direction: 'right', routing: { kind: 'straight' } }, children: ['source'] }],
       children: ['group'],
     });
+
     expect(groupLayout.success).toBe(false);
+
     if (groupLayout.success) return;
+
     expect(groupLayout.error.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -297,8 +318,11 @@ describe('Flow defaults and formal Source fragments', () => {
       children: ['source', 'target'],
       relations: [{ source: 'source', target: 'target', layout: { routing: { kind: 'straight' } } }],
     });
+
     expect(relationLayout.success).toBe(false);
+
     if (relationLayout.success) return;
+
     expect(relationLayout.error.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -312,8 +336,11 @@ describe('Flow defaults and formal Source fragments', () => {
       ...baseFlow,
       flowDefaults: { layout: { direction: 'right', routing: { kind: 'straight' } } },
     });
+
     expect(defaults.success).toBe(false);
+
     if (defaults.success) return;
+
     expect(defaults.error.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -380,6 +407,7 @@ describe('Flow defaults and formal Source fragments', () => {
       name: 'straight-only',
       capabilities: { ...layout.capabilities, routing: [{ kind: 'straight' }] },
     });
+
     expect(() => compileFlow(source, { flowLayouts: [straightOnly], defaultFlowLayout: straightOnly.name })).toThrow();
     expect(inputs).toHaveLength(1);
   });
@@ -409,6 +437,7 @@ describe('Flow defaults and formal Source fragments', () => {
     expect(entity?.fontWeight).not.toBe(700);
     expect(label).toEqual(expect.objectContaining({ fontFamily: 'RelationLabelFont', fontSize: 13, fontWeight: 700 }));
   });
+
   it.each([{}, { size: undefined }])('keeps caption defaults when the authored font is empty: %j', font => {
     const output = compileFlow({
       namespace: 'diagram',
@@ -419,6 +448,7 @@ describe('Flow defaults and formal Source fragments', () => {
       layouts: [],
       children: ['group'],
     });
+
     expect(textPrimitive(output.scene.primitives, 'Caption')).toMatchObject({
       fontFamily: 'CaptionFont',
       fontSize: 19,
@@ -454,10 +484,13 @@ describe('Flow defaults and formal Source fragments', () => {
     );
     const outer = inputs[0]?.elements[0];
     if (outer.kind !== 'group') throw new Error('Expected outer Group');
+
     const lane = outer.elements[0];
     if (lane.kind !== 'layout') throw new Error('Expected Layout');
+
     const inner = lane.elements[0];
     if (inner.kind !== 'group') throw new Error('Expected inner Group');
+
     expect(outer.layout).toMatchObject({ direction: 'right', nodeGap: 50, rankGap: 60 });
     expect(lane.layout).toMatchObject({ direction: 'down', nodeGap: 50, rankGap: 60 });
     expect(inner.layout).toMatchObject({ direction: 'down', nodeGap: 0, rankGap: 60 });

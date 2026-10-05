@@ -27,6 +27,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   const measureLabelText = nodeLabelMeasurer(measureText);
+
   return rawLabels?.map(lab => {
     const resolvedLabelFont = resolveFont(lab.font, {
       rootFontSize,
@@ -39,6 +40,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     const labTextColor = lab.textColor ?? node.textColor;
     const labOpacity = lab.opacity;
     const labTextFont: CanonicalFont = { size: labFontSize, family: labFamily, weight: labWeight, style: labStyle };
+
     const resolved = resolveTextLine(lab.text, {
       rootFontSize,
       inheritedFont: labTextFont,
@@ -48,6 +50,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
     });
     const plainText = resolved.plainText;
     const isMixed = resolved.mixed;
+
     const laid = isMixed
       ? layoutInlineLine(resolved.runs, {
           measureText: measureLabelText,
@@ -58,6 +61,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
           warn: inlineWarn,
         })
       : undefined;
+
     const metrics = laid
       ? {
           width: laid.width,
@@ -66,6 +70,7 @@ export const measureNodeLabels = (input: LayoutNodeLabelsInput): Array<MeasuredN
           descent: laid.descent,
         }
       : normalizeTextMetrics(measureText(plainText, labTextFont));
+
     return {
       text: plainText,
       laid,

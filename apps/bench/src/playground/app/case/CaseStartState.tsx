@@ -23,6 +23,7 @@ export const CaseStartState: FC<CaseStartStateProps> = props => {
   const { testCase, actionLabel, running, onRun } = props;
   const { t } = useTranslation();
   const buttonLabel = running ? t('header.running') : actionLabel;
+
   return (
     <div className="flex max-w-lg flex-col items-center text-center">
       <Button size="lg" aria-label={buttonLabel} disabled={running} onClick={onRun}>

@@ -40,9 +40,12 @@ const createPreview = (lang: Lang) =>
   });
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
+
 /** Grid 排列示例语言 */
 export type FlowGridProps = Readonly<{ lang?: Lang }>;
+
 /** Grid 排列交互示例 */
 const Demo: FC<FlowGridProps> = props => {
   const { lang = 'zh' } = props;

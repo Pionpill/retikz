@@ -1,5 +1,7 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  'marker 元素级不透明度 0..1，与路径整体不透明度相乘；省略时不额外降低不透明度':
+    'Marker opacity from 0 to 1, multiplied by the overall path opacity; omission applies no additional reduction',
   '屏幕绝对出射角（度）；任一 outAngle / inAngle 触发切线模式，缺省出射角为 0，优先于对称配置':
     'Absolute screen outgoing angle in degrees; either outAngle or inAngle selects tangent mode, with outgoing angle defaulting to 0 and symmetric settings ignored',
   '屏幕绝对入射角（度）；任一 outAngle / inAngle 触发切线模式，缺省入射角为 180':
@@ -399,5 +401,6 @@ export const translateDrawApiReference = (source: string): string => {
   const translated = translations[source];
   if (translated !== undefined) return translated;
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
+
   throw new Error(`Missing Draw API translation: ${source}`);
 };

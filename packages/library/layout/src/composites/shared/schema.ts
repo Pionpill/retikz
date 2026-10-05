@@ -41,6 +41,7 @@ const LayoutFillAxisSizeSchema = strictObject({
   max: NonNegativeNumberSchema.optional().describe('Optional authored maximum allocation size.'),
 });
 
+/** 校验单轴的内容、固定或填充尺寸策略，并检查最小值不超过最大值 */
 export const LayoutAxisSizeSchema = discriminatedUnion('kind', [
   LayoutContentAxisSizeSchema,
   LayoutFixedAxisSizeSchema,
@@ -57,6 +58,7 @@ export const LayoutAxisSizeSchema = discriminatedUnion('kind', [
   })
   .describe('Physical-axis allocation size policy for a Layout container.');
 
+/** 校验双轴尺寸策略；未配置的轴按内容决定分配尺寸 */
 export const LayoutSizeSchema = strictObject({
   x: LayoutAxisSizeSchema.default({ kind: LayoutAxisSizeKind.Content }).describe('Horizontal allocation size policy.'),
   y: LayoutAxisSizeSchema.default({ kind: LayoutAxisSizeKind.Content }).describe('Vertical allocation size policy.'),
@@ -68,20 +70,24 @@ const LayoutSpacingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).d
   'Uniform or side-specific non-negative box spacing.',
 );
 
+/** 校验视觉溢出保持可见或裁切到容器分配区域的策略 */
 export const LayoutOverflowSchema = zodEnum(LayoutOverflow).describe(
   'Whether visual overflow remains visible or is clipped to the container allocation.',
 );
 
+/** 校验容器分配尺寸、内边距与视觉溢出策略 */
 export const LayoutContainerBoxSchema = strictObject({
   size: LayoutSizeSchema.describe('Container allocation size including padding.'),
   padding: LayoutSpacingSchema.default(0).describe('Insets from allocation box to content box.'),
   overflow: LayoutOverflowSchema.default(LayoutOverflow.Visible).describe('Container visual overflow policy.'),
 }).describe('Shared Box contract for Layout containers.');
 
+/** 校验子项的边缘、居中、拉伸或基线对齐方式 */
 export const LayoutAlignmentSchema = zodEnum(LayoutAlignment).describe(
   'Item alignment including optional baseline-aware variants.',
 );
 
+/** 校验不使用基线的起点、居中、终点或拉伸对齐方式 */
 export const LayoutEdgeAlignmentSchema = zodEnum([
   LayoutAlignment.Start,
   LayoutAlignment.Center,
@@ -89,10 +95,12 @@ export const LayoutEdgeAlignmentSchema = zodEnum([
   LayoutAlignment.Stretch,
 ]).describe('Edge alignment without baseline variants.');
 
+/** 校验沿物理轴分配正负剩余空间的方式 */
 export const LayoutDistributionSchema = zodEnum(LayoutDistribution).describe(
   'Distribution of positive or negative free space along one physical axis.',
 );
 
+/** 校验布局子项的容器类型、局部标识、绘图内容与外边距 */
 export const LayoutItemBaseSchema = strictObject({
   kind: zodEnum(LayoutItemKind).describe('Discriminator selecting the owning Layout container.'),
   key: NonBlankStringSchema.optional().describe('Optional container-local stable authored item identity.'),
@@ -110,6 +118,7 @@ const LayoutArtifactTranslationSchema = strictObject({
   y: number().describe('Finite container-local vertical translation applied to the child.'),
 });
 
+/** 校验容器局部坐标中的有限矩形，宽高必须非负 */
 export const LayoutArtifactRectSchema = strictObject({
   x: number().describe('Finite container-local horizontal origin.'),
   y: number().describe('Finite container-local vertical origin.'),
@@ -138,10 +147,12 @@ const refineLayoutSpacingArtifact = (
   }
 };
 
+/** 校验已求解的固定间距或分配所得的自由空间段 */
 export const LayoutSpacingArtifactSchema = LayoutSpacingArtifactBaseSchema.superRefine(
   refineLayoutSpacingArtifact,
 ).describe('Resolved fixed gap or distributed free-space segment.');
 
+/** 校验子项分配边界和视觉边界相对槽位的双轴溢出结果 */
 export const LayoutArtifactOverflowSchema = strictObject({
   allocation: LayoutArtifactAxisOverflowSchema.describe(
     'Axis overflow of translated allocation bounds relative to the assigned slot.',
@@ -152,12 +163,14 @@ export const LayoutArtifactOverflowSchema = strictObject({
   clipped: boolean().describe('Whether container clipping removes any part of the visual bounds.'),
 }).describe('Observable allocation, visual, and clipping overflow state for one layout item.');
 
+/** 校验实际采用的对齐引导名称、容器局部位置与回退标记 */
 export const LayoutArtifactAlignmentGuideSchema = strictObject({
   name: NonBlankStringSchema.describe('Alignment guide name selected for this item placement.'),
   position: number().describe('Finite translated guide position in container allocation coordinates.'),
   fallback: boolean().describe('Whether the selected position falls back to an allocation edge.'),
 }).describe('Alignment guide actually used to place one layout item.');
 
+/** 校验布局子项的身份、作者顺序、槽位、放置与边界观测结果 */
 export const LayoutArtifactItemBaseSchema = strictObject({
   key: NonBlankStringSchema.describe('Container-local effective item identity.'),
   sourceIndex: NonNegativeIntegerSchema.describe('Zero-based authored item order.'),
@@ -175,6 +188,7 @@ export const LayoutArtifactItemBaseSchema = strictObject({
   ),
 }).describe('Shared observable placement result for one authored layout item.');
 
+/** 校验布局容器的分配区域、内容区域与聚合视觉边界 */
 export const LayoutArtifactContainerSchema = strictObject({
   allocationBounds: LayoutArtifactRectSchema.describe('Resolved container allocation rectangle.'),
   contentBounds: LayoutArtifactRectSchema.describe('Container content rectangle after padding.'),

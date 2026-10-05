@@ -1,19 +1,15 @@
-import type { ValueOf } from '@retikz/foundation';
-
-import type { ThemeMode, ThemeTokenSource } from './constants';
+import type { ThemeMode } from './constants';
 
 /** 可由 Theme IR 持久化的开放视觉人格名称 */
 export type ThemeStyleValue = string;
 
-export type ThemeModeValue = ValueOf<typeof ThemeMode>;
-
-/** Theme token 相对当前 owner 的来源关系取值 */
-export type ThemeTokenSourceValue = ValueOf<typeof ThemeTokenSource>;
-
 /** CSS 颜色在 Core shared color contract 中的 JSON-safe 字符串形态 */
 export type CssColorValue = string;
 
-/** 只允许非空颜色数组的通用 tuple 形态 */
+/**
+ * 只允许非空颜色数组的通用 tuple 形态
+ * @template T 至少包含一个成员的只读数组元素类型
+ */
 export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
 
 /** Core 跨领域共享的语义颜色角色集合 */
@@ -41,7 +37,7 @@ export type ResolvedTheme = Readonly<{
   /** 当前视觉人格 */
   style?: ThemeStyleValue;
   /** 当前明暗环境 */
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   /** 由 selector 派生的 shared color view */
   colors: ResolvedThemeColors;
 }>;

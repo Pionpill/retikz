@@ -141,6 +141,7 @@ test('packed manifest fields and every export target must match publishConfig', 
   assert.deepEqual(validatePackedManifestContract({ sourceManifest, packedManifest, packedFiles }), []);
 
   const missingTypeTarget = [{ path: 'dist/index.js' }];
+
   assert.ok(
     validatePackedManifestContract({ sourceManifest, packedManifest, packedFiles: missingTypeTarget }).some(
       diagnostic => diagnostic.includes('dist/types/index.d.ts'),
@@ -157,6 +158,7 @@ test('packed manifest fields and every export target must match publishConfig', 
   for (const [label, mutate, expected] of inconsistentCases) {
     const inconsistentManifest = structuredClone(packedManifest);
     mutate(inconsistentManifest);
+
     assert.ok(
       validatePackedManifestContract({ sourceManifest, packedManifest: inconsistentManifest, packedFiles }).some(
         diagnostic => diagnostic.includes(expected),

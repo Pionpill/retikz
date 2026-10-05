@@ -15,17 +15,26 @@ import { ChartLayout } from './ChartLayout';
 /** Chart declaration 在原始 children 中的稳定 slot 路径 */
 export type ChartDeclarationPath = ReadonlyArray<string | number>;
 
-/** 携带原始 slot 路径的 Chart declaration */
+/**
+ * 携带原始 slot 路径的 Chart declaration
+ * @template TProps 具体图表 React 组件或声明组件接受的属性类型
+ */
 export type CollectedChartDeclaration<TProps> = Readonly<{
+  /** 当前声明组件的原始属性 */
   props: TProps;
+  /** 用于定位重复或非法声明的 JSX 来源路径 */
   path: ChartDeclarationPath;
 }>;
 
 /** Chart 公共 declaration 收集结果 */
 export type CollectedChartDeclarations = Readonly<{
+  /** 唯一数据声明及其来源路径 */
   data?: CollectedChartDeclaration<ChartDataProps>;
+  /** 唯一坐标系声明及其来源路径 */
   coordinate?: CollectedChartDeclaration<ChartCoordinateProps>;
+  /** 唯一布局声明及其来源路径 */
   layout?: CollectedChartDeclaration<ChartLayoutProps>;
+  /** 唯一 Plot 扩展声明及其来源路径 */
   extension?: CollectedChartDeclaration<ChartExtensionProps>;
 }>;
 
@@ -50,43 +59,52 @@ export const collectChartDeclarations = (
       value.forEach((child, index) => visit(child, [...path, index]));
       return;
     }
+
     if (value === null || value === undefined || typeof value === 'boolean') return;
     if (!isValidElement(value)) {
       throw new RetikzChartReactError(
         `chart react: unsupported direct Chart child at ${JSON.stringify(path)}; place Plot declarations inside <ChartExtension>`,
       );
     }
+
     if (value.type === Fragment) {
       visit(value.props.children as ReactNode, [...path, 'children']);
       return;
     }
+
     if (value.type === ChartData) {
       if (data !== undefined) throw duplicateDeclarationError('ChartData', path);
       data = { props: value.props as ChartDataProps, path };
       return;
     }
+
     if (value.type === ChartCoordinate) {
       if (coordinate !== undefined) throw duplicateDeclarationError('ChartCoordinate', path);
       coordinate = { props: value.props as ChartCoordinateProps, path };
       return;
     }
+
     if (value.type === ChartLayout) {
       if (layout !== undefined) throw duplicateDeclarationError('ChartLayout', path);
       layout = { props: value.props as ChartLayoutProps, path };
       return;
     }
+
     if (value.type === ChartExtension) {
       if (extension !== undefined) throw duplicateDeclarationError('ChartExtension', path);
       extension = { props: value.props as ChartExtensionProps, path };
       return;
     }
+
     if (collectChartTypeDeclaration(value, path)) return;
+
     throw new RetikzChartReactError(
       `chart react: unsupported direct Chart child at ${JSON.stringify(path)}; place Plot declarations inside <ChartExtension>`,
     );
   };
 
   visit(children, ['children']);
+
   return {
     ...(data === undefined ? {} : { data }),
     ...(coordinate === undefined ? {} : { coordinate }),
@@ -104,16 +122,20 @@ const assertPositiveFiniteDimension = (name: 'width' | 'height', value: number |
 
 const sourceLayoutOf = (props: ChartLayoutProps): ChartLayoutProps['layout'] => {
   if (props.layout !== undefined) return props.layout;
+
   const mirrored = {
     ...(props.width === undefined ? {} : { width: props.width }),
     ...(props.height === undefined ? {} : { height: props.height }),
   };
+
   return Object.keys(mirrored).length === 0 ? undefined : mirrored;
 };
 
 /** standalone Chart 交给 Layout host 的尺寸与已移除 host dimensions 的 children */
 export type StandaloneChartDeclarations = Readonly<{
+  /** 交给独立图表内容收集器的 JSX 声明 */
   children: ReactNode;
+  /** 独立 Layout 宿主采用的宽、高与取景范围 */
   host: Pick<LayoutProps, 'width' | 'height' | 'viewBox'>;
 }>;
 
@@ -123,35 +145,44 @@ export const prepareStandaloneChartDeclarations = (
   rootLayout?: ChartLayoutProps['layout'],
 ): StandaloneChartDeclarations => {
   let layoutCount = 0;
+
   const visit = (value: ReactNode): ReactNode => {
     if (Array.isArray(value)) return value.map(visit);
     if (!isValidElement(value)) return value;
     if (value.type === Fragment)
       return createElement(Fragment, { key: value.key }, visit(value.props.children as ReactNode));
     if (value.type !== ChartLayout) return value;
+
     layoutCount += 1;
     if (layoutCount > 1) throw duplicateDeclarationError('ChartLayout', ['children']);
+
     const props = value.props as ChartLayoutProps;
     assertPositiveFiniteDimension('width', props.width);
     assertPositiveFiniteDimension('height', props.height);
     const layout = sourceLayoutOf(props);
+
     return layout === undefined ? null : createElement(ChartLayout, { key: value.key, layout });
   };
+
   const preparedChildren = visit(children);
 
   let childHost: Pick<ChartLayoutProps, 'width' | 'height'> = {};
   let childLayout: ChartLayoutProps['layout'];
+
   const readHost = (value: ReactNode): void => {
     if (Array.isArray(value)) {
       value.forEach(readHost);
       return;
     }
+
     if (!isValidElement(value)) return;
     if (value.type === Fragment) {
       readHost(value.props.children as ReactNode);
       return;
     }
+
     if (value.type !== ChartLayout) return;
+
     const props = value.props as ChartLayoutProps;
     childLayout = sourceLayoutOf(props);
     childHost = {
@@ -159,6 +190,7 @@ export const prepareStandaloneChartDeclarations = (
       ...(props.height === undefined ? {} : { height: props.height }),
     };
   };
+
   readHost(children);
   assertPositiveFiniteDimension('width', rootLayout?.width);
   assertPositiveFiniteDimension('height', rootLayout?.height);
@@ -170,6 +202,7 @@ export const prepareStandaloneChartDeclarations = (
           ...(rootLayout.height === undefined ? {} : { height: rootLayout.height }),
         };
   const layout = rootLayout ?? childLayout;
+
   return {
     children: preparedChildren,
     host: {
@@ -195,12 +228,15 @@ export const assertChartExtensionChildren = (children: ReactNode): void => {
       value.forEach(visit);
       return;
     }
+
     if (isOrdinaryIterable(value)) {
       throw new RetikzChartReactError(
         'chart react: ChartExtension children support Plot declarations, arrays, Fragment, and empty slots',
       );
     }
+
     if (isValidElement(value) && value.type === Fragment) visit(value.props.children as ReactNode);
   };
+
   visit(children);
 };

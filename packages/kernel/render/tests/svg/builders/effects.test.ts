@@ -47,13 +47,16 @@ describe('[svg-effects] drop shadow', () => {
       shadow: { offsetX: 1, offsetY: 2, blur: 4, color: 'rgba(0,0,0,0.4)' },
     };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
+
     expect(out).toContain('<filter');
     expect(out).toContain('<feDropShadow');
     expect(out).toContain('dx="1"');
     expect(out).toContain('dy="2"');
+
     // stdDeviation = blur / 2
     expect(out).toContain('stdDeviation="2"');
     expect(out).toContain('flood-color="rgba(0,0,0,0.4)"');
+
     // 几何元素引用 filter
     expect(out).toMatch(/<rect [^>]*filter="url\(#retikz-shadow-d1-[0-9a-f]{8}\)"/);
   });
@@ -68,7 +71,9 @@ describe('[svg-effects] drop shadow', () => {
       shadow: { offsetX: 0, offsetY: 8, blur: 15, color: '#000' },
     };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
+
     expect(out).toMatch(/<filter [^>]*filterUnits="userSpaceOnUse"/);
+
     // region = scene layout 按 blur/offset 外扩，避免大投影贴近 viewBox 边缘时被裁。
     expect(out).toMatch(/<filter [^>]*x="-15"[^>]*y="-15"[^>]*width="130"[^>]*height="138"/);
   });
@@ -85,6 +90,7 @@ describe('[svg-effects] drop shadow', () => {
       shadow: { offsetX: 0, offsetY: 2, blur: 4, color: '#000' },
     };
     const out = renderToSvgString(sceneOf([line]), { idPrefix: 'd1' });
+
     expect(out).toMatch(
       /<filter [^>]*filterUnits="userSpaceOnUse"[^>]*x="-4"[^>]*y="-4"[^>]*width="108"[^>]*height="110"/,
     );
@@ -101,6 +107,7 @@ describe('[svg-effects] drop shadow', () => {
       shadow: { offsetX: 0, offsetY: 1, blur: 2, color: '#000', opacity: 0.3 },
     };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
+
     expect(out).toContain('flood-opacity="0.3"');
   });
 
@@ -114,12 +121,14 @@ describe('[svg-effects] drop shadow', () => {
       shadow: { offsetX: 0, offsetY: 1, blur: 2, color: '#000' },
     });
     const out = renderToSvgString(sceneOf([mk(0), mk(20)]), { idPrefix: 'd1' });
+
     expect(out.match(/<feDropShadow/g)).toHaveLength(1);
   });
 
   it('无 shadow → 不产 filter / feDropShadow', () => {
     const rect: RectPrim = { type: 'rect', x: 0, y: 0, width: 10, height: 10, fill: '#fff' };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
+
     expect(out).not.toContain('feDropShadow');
     expect(out).not.toContain('filter=');
   });
@@ -136,6 +145,7 @@ describe('[svg-effects] drop shadow', () => {
       shadow: { offsetX: 0, offsetY: 2, blur: 4, color: '#000' },
     };
     const out = renderToSvgString(sceneOf([path]), { idPrefix: 'd1' });
+
     // SVG filter / mix-blend-mode 是元素级：marker-end 与 filter 落在同一 <path> 上 → 箭头随主路径一起进滤镜
     expect(out).toMatch(/<path\b[^>]*\bmarker-end="url\(#retikz-arrow-[^"]+"[^>]*\bfilter="url\(#retikz-shadow-[^"]+"/);
   });
@@ -159,6 +169,7 @@ describe('[svg-effects] drop shadow', () => {
       shadow: { offsetX: 1, offsetY: 1, blur: 2, color: '#000' },
     };
     const out = renderToSvgString(sceneOf([el, path]), { idPrefix: 'd1' });
+
     expect(out).toMatch(/<ellipse [^>]*filter="url\(#retikz-shadow-/);
     expect(out).toMatch(/<path [^>]*filter="url\(#retikz-shadow-/);
   });
@@ -176,7 +187,9 @@ describe('[svg-effects] blend mode', () => {
       blendMode: 'multiply',
     };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
+
     expect(out).toContain('mix-blend-mode:multiply');
+
     // 不引入 isolation，保持跨端语义。
     expect(out).not.toContain('isolation');
   });
@@ -184,6 +197,7 @@ describe('[svg-effects] blend mode', () => {
   it('blendMode="normal" / 省略 → 不出 mix-blend-mode', () => {
     const normal: RectPrim = { type: 'rect', x: 0, y: 0, width: 10, height: 10, blendMode: 'normal' };
     const omitted: RectPrim = { type: 'rect', x: 0, y: 0, width: 10, height: 10 };
+
     expect(renderToSvgString(sceneOf([normal]), { idPrefix: 'd1' })).not.toContain('mix-blend-mode');
     expect(renderToSvgString(sceneOf([omitted]), { idPrefix: 'd1' })).not.toContain('mix-blend-mode');
   });
@@ -200,6 +214,7 @@ describe('[svg-effects] blend mode', () => {
       shadow: { offsetX: 0, offsetY: 1, blur: 2, color: '#000' },
     };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
+
     expect(out).toContain('mix-blend-mode:screen');
     expect(out).toContain('fill:var(--brand)');
     expect(out).toMatch(/filter="url\(#retikz-shadow-/);

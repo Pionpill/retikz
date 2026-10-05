@@ -22,8 +22,10 @@ export const nodeIdFromResolvableTarget = (target: unknown): string | undefined 
   if (isBetweenPositionLike(target)) {
     return nodeIdFromResolvableTarget(target.between[0]) ?? nodeIdFromResolvableTarget(target.between[1]);
   }
+
   if (isOffsetPositionLike(target) || isAtPositionLike(target)) return nodeIdFromPositionReferent(target.of);
   if (isPolarPositionLike(target)) return nodeIdFromPositionReferent(target.origin);
+
   return undefined;
 };
 
@@ -52,23 +54,29 @@ export const resolvePosition = (
     if (reference === undefined) return null;
     return resolutionOfWorld([reference.node.rect.x, reference.node.rect.y], context);
   }
+
   if (isPositionTuple(position)) return resolutionOfLocal([position[0], position[1]], context);
   if (isAtPositionLike(position)) {
     const reference = context.lookupReference(position.of);
     if (reference === undefined) return null;
+
     const referenceLocal = context.toLocal([reference.node.rect.x, reference.node.rect.y]);
     const distance = position.distance ?? context.nodeDistance;
     const [dx, dy] = AnchorUnitVectorByAnchor[position.direction];
+
     return resolutionOfLocal([referenceLocal[0] + dx * distance, referenceLocal[1] + dy * distance], context);
   }
+
   if (isOffsetPositionLike(position)) {
     const base = resolvePosition(position.of, context);
     if (base === null) return null;
+
     return resolutionOfLocal(
       [base.localPoint[0] + position.offset[0], base.localPoint[1] + position.offset[1]],
       context,
     );
   }
+
   if (isBetweenPositionLike(position)) {
     const worldPoint = context.resolveBetweenWorld?.(position);
     return worldPoint === null || worldPoint === undefined ? null : resolutionOfWorld(worldPoint, context);
@@ -77,5 +85,6 @@ export const resolvePosition = (
   const origin =
     position.origin === undefined ? resolutionOfLocal([0, 0], context) : resolvePosition(position.origin, context);
   if (origin === null) return null;
+
   return resolutionOfLocal(pointAtArcAngle(origin.localPoint, position.radius, position.angle), context);
 };

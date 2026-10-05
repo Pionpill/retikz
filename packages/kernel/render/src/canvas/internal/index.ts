@@ -18,6 +18,7 @@ export const sceneFitMatrix = (
   const scale = Math.min(cssWidth / layout.width, cssHeight / layout.height);
   const offsetX = (cssWidth - layout.width * scale) / 2;
   const offsetY = (cssHeight - layout.height * scale) / 2;
+
   return [
     devicePixelRatio * scale,
     0,
@@ -41,12 +42,14 @@ export const createCssColorNormalizer = (
   return (color: string): string => {
     if (scratch === undefined) scratch = makeScratchCtx();
     if (!scratch) return color;
+
     scratch.fillStyle = '#000';
     scratch.fillStyle = color;
     const onBlack = scratch.fillStyle;
     scratch.fillStyle = '#fff';
     scratch.fillStyle = color;
     const onWhite = scratch.fillStyle;
+
     return onBlack === onWhite && typeof onBlack === 'string' ? onBlack : color;
   };
 };

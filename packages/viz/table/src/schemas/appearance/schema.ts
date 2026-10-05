@@ -7,6 +7,7 @@ const requireAtLeastOneField = (label: string) => ({
   message: `${label} must contain at least one field.`,
 });
 
+/** 校验在单元格边界内绘制的背景填充与透明度 */
 export const TableCellBackgroundSchema = strictObject({
   fill: PaintValueSchema.describe('Paint filling the Table Cell box.'),
   fillOpacity: ScopeSchema.shape.style
@@ -14,6 +15,7 @@ export const TableCellBackgroundSchema = strictObject({
     .shape.fillOpacity.describe('Cell background fill opacity. Omitted fields use 1 at runtime.'),
 }).describe('Background painted inside a resolved Table Cell box.');
 
+/** 校验既有单元格的稀疏背景默认值，null 用于清除下层默认 */
 export const TableCellBackgroundDefaultsSchema = strictObject({
   fill: PaintValueSchema.nullable().optional().describe('Optional background paint; null removes lower defaults.'),
   fillOpacity: ScopeSchema.shape.style
@@ -84,16 +86,19 @@ const TableCellContentStyleDefaultsSchema = strictObject({
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell content defaults'))
   .describe('Sparse Core Scope defaults applied to Table Cell content.');
 
+/** 校验单元格内容布局前应用的 Core Scope 默认样式 */
 export const TableCellContentStyleSchema = ScopeSchema.pick({ style: true, defaults: true }).describe(
   'Core Scope style defaults applied to Table Cell content before layout.',
 );
 
+/** 校验单元格呈现与布局共享的背景、内容和边框外观 */
 export const TableCellAppearanceSchema = strictObject({
   background: TableCellBackgroundSchema.optional().describe('Optional paint for the resolved Table Cell box.'),
   content: TableCellContentStyleSchema.optional().describe('Optional Core Scope defaults for Cell content.'),
   borders: TableCellBordersSchema.optional().describe('Optional final per-side Border Graph candidates.'),
 }).describe('Resolved visual appearance shared by Table Cell presentation and layout.');
 
+/** 校验既有单元格的稀疏外观默认值 */
 export const TableCellAppearanceDefaultsSchema = strictObject({
   background: TableCellBackgroundDefaultsSchema.nullable().optional().describe('Sparse background defaults.'),
   content: TableCellContentStyleDefaultsSchema.nullable()
@@ -104,6 +109,7 @@ export const TableCellAppearanceDefaultsSchema = strictObject({
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell appearance defaults'))
   .describe('Sparse appearance defaults for an existing Table Cell.');
 
+/** 校验分别作用于表体和列标题单元格的默认外观 */
 export const TableAppearanceDefaultsSchema = strictObject({
   body: TableCellAppearanceDefaultsSchema.nullable().optional().describe('Sparse defaults for existing body Cells.'),
   columnHeader: TableCellAppearanceDefaultsSchema.nullable()

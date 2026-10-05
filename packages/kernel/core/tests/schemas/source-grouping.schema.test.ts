@@ -11,7 +11,9 @@ describe('Source 语义分组', () => {
       style: { fill: 'red', opacity: 0, dashed: false, font: { size: 12 } },
       layout: { padding: 0, minimumSize: { width: 20 } },
     };
+
     expect(NodeSchema.parse(source)).toEqual(source);
+
     for (const invalid of [
       { fill: 'red' },
       { padding: 2 },
@@ -25,6 +27,7 @@ describe('Source 语义分组', () => {
 
   it('空分组和合法 undefined 由 owner schema 保留', () => {
     const source = { type: 'node', position: [0, 0], style: { fill: undefined }, layout: {} };
+
     expect(NodeSchema.parse(source)).toEqual(source);
     expect(
       ScopeSchema.parse({ type: 'scope', children: [], style: {}, defaults: { node: {}, reset: false } }),
@@ -44,7 +47,9 @@ describe('Source 语义分组', () => {
         reset: ['node'],
       },
     };
+
     expect(ScopeSchema.parse(source)).toEqual(source);
+
     for (const invalid of [
       { nodeDefault: {} },
       { resetStyle: false },

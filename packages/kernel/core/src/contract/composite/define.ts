@@ -15,6 +15,7 @@ const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {
       'defineComposite: schema must be a ZodObject or a ZodUnion of ZodObject variants extending CompositeBaseSchema.',
     );
   }
+
   if (schema.options.length === 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
@@ -29,6 +30,7 @@ const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {
         `defineComposite: schema union option ${index} must be a ZodObject extending CompositeBaseSchema.`,
       );
     }
+
     return option;
   });
 };
@@ -36,11 +38,13 @@ const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {
 /** 校验 schema literal 字符串 */
 const isNonEmptyLiteralString = (value: unknown, label: string): value is string => {
   if (typeof value !== 'string') return false;
+
   assertNonEmptyString(
     value,
     label,
     new RetikzCoreError(RetikzCoreErrorCode.CompositeContractViolation, `${label} must be a non-empty string.`),
   );
+
   return true;
 };
 
@@ -54,9 +58,11 @@ const literalValueOf = (schema: ZodType, field: 'namespace' | 'type'): string =>
     if (!(node instanceof ZodLiteral) || !isNonEmptyLiteralString(node.value, `defineComposite: ${path}`)) {
       throw new RetikzCoreError(RetikzCoreErrorCode.Contract, message);
     }
+
     return node.value;
   });
   const expected = values[0];
+
   for (let index = 1; index < values.length; index += 1) {
     const value = values[index];
     if (value !== expected) {
@@ -66,12 +72,18 @@ const literalValueOf = (schema: ZodType, field: 'namespace' | 'type'): string =>
       );
     }
   }
+
   return expected;
 };
 
 /**
  * 定义 Tier 2 composite 注册项
  * @remarks 保留精确 key、节点、artifact 与互斥执行分支，并校验 definition key 与 schema literal 一致
+ * @template TNamespace 复合组件注册命名空间的字面量类型
+ * @template TType 复合组件注册类型的字面量类型
+ * @template TNode schema 解析后传入组件执行回调的节点类型
+ * @template TArtifact 组件产物 schema 校验的 JSON 类型，默认 never 表示未声明产物
+ * @template TDefinition 保留具体执行分支及扩展字段的完整定义类型
  */
 export const defineComposite = <
   const TNamespace extends string,
@@ -95,11 +107,13 @@ export const defineComposite = <
       `defineComposite: declared namespace "${definition.namespace}" does not match schema literal "${namespace}".`,
     );
   }
+
   if (definition.type !== type) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
       `defineComposite: declared type "${definition.type}" does not match schema literal "${type}".`,
     );
   }
+
   return definition;
 };

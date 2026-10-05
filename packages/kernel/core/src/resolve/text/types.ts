@@ -12,12 +12,18 @@ export type ResolvedMathRun = WithResolvedFill<IRMathRun>;
 export type ResolvedInlineSourceRun = ResolvedTextRun | ResolvedMathRun;
 
 /** 已把 run 派生颜色确定为字符串的混排行 */
-export type ResolvedMixedLine = Readonly<{ runs: Array<ResolvedInlineSourceRun> }>;
+export type ResolvedMixedLine = Readonly<{
+  /** 保留作者顺序的文本与行内内容片段 */
+  runs: Array<ResolvedInlineSourceRun>;
+}>;
 
 /** 已把派生颜色确定为字符串的单行 Source */
 export type ResolvedTextLine =
   | string
-  | (Omit<Extract<IRLine, { text: string }>, 'fill'> & { fill?: string })
+  | (Omit<Extract<IRLine, { text: string }>, 'fill'> & {
+      /** 当前文本行已解析的填充颜色 */
+      fill?: string;
+    })
   | ResolvedMixedLine;
 
 /** 已把派生颜色确定为字符串的 label 单行内容 */
@@ -55,7 +61,11 @@ export type FontResolveContext = Readonly<{
 }>;
 
 /** 已解析字体的文本 run */
-export type CanonicalTextRun = Omit<ResolvedTextRun, 'font'> & Readonly<{ font: CanonicalFont }>;
+export type CanonicalTextRun = Omit<ResolvedTextRun, 'font'> &
+  Readonly<{
+    /** 当前文本片段完成继承与默认值补全的字体 */
+    font: CanonicalFont;
+  }>;
 
 /** 已确定的行内文字或公式 run */
 export type CanonicalInlineRun = CanonicalTextRun | ResolvedMathRun;

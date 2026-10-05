@@ -11,6 +11,7 @@ import { PatternShape } from '../../schemas';
 import { defineBuiltinProviderArray } from '../registry/index';
 
 const DEFAULT_PATTERN_SIZE = 8;
+
 const DEFAULT_STROKE_WIDTH = 1;
 
 const withBackground = (
@@ -68,6 +69,7 @@ const linesPattern = definePattern({
       horizontalLineOf(tileSize, context.round(context.size * (index + 0.5)), style),
     );
     const withTileBackground = withBackground(context, tileSize, motif);
+
     return context.lineStyleCycle === undefined
       ? withTileBackground
       : {
@@ -84,6 +86,7 @@ const gridPattern = definePattern({
   emit: (context): Array<MarkerPrimitive> => {
     const half = context.round(context.size / 2);
     const baseStyle = baseLineStyleOf(context);
+
     return withBackground(context, context.size, [
       {
         type: 'path',
@@ -112,6 +115,7 @@ const dotsPattern = definePattern({
   emit: (context): Array<MarkerPrimitive> => {
     const radius = context.round(context.lineWidth ?? context.size / 5);
     const center = context.round(context.size / 2);
+
     return withBackground(context, context.size, [
       { type: 'ellipse', cx: center, cy: center, rx: radius, ry: radius, fill: context.color },
     ]);

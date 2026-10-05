@@ -47,7 +47,10 @@ export const scope = (
  */
 export const layer = (config: Omit<InputLayer, 'type'>): InputLayer => ({ type: 'layer', ...config });
 
-/** 创建作者侧 Tier 2 嵌入输入 */
+/**
+ * 创建作者侧 Tier 2 嵌入输入
+ * @template TProps 嵌入声明携带的领域属性类型，传递给对应 adapter
+ */
 export const embed = <TProps = Record<string, unknown>>(
   config: Omit<InputEmbed<TProps>, 'type'>,
 ): InputEmbed<TProps> => ({
@@ -93,9 +96,11 @@ const createInputScene = (
     void _children;
     return { type: 'scene', ...config, layers: input.layers };
   }
+
   const childrenInput = input as InputSceneChildrenOptions;
   const { layers: _layers, ...config } = childrenInput;
   void _layers;
+
   return { type: 'scene', ...config, children: childrenInput.children };
 };
 

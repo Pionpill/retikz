@@ -20,6 +20,7 @@ export type ComponentPreviewsProps = {
 };
 
 const previewMinWidth = 280;
+
 const previewGap = 16;
 
 /** 在等宽、均衡分行的网格中只展示已有 demo 图形 */
@@ -41,6 +42,7 @@ export const ComponentPreviews: FC<ComponentPreviewsProps> = props => {
       const nextMaxColumns = Math.max(1, Math.floor((width + previewGap) / (previewMinWidth + previewGap)));
       setMaxColumns(currentMaxColumns => (currentMaxColumns === nextMaxColumns ? currentMaxColumns : nextMaxColumns));
     };
+
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) updateMaxColumns(entry.contentRect.width);
     });

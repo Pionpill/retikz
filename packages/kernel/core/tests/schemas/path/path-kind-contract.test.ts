@@ -81,6 +81,7 @@ describe('Path kind full-subject contract', () => {
           context.appearance.fill === 'blue' &&
           context.appearance.blendMode === 'multiply' &&
           context.appearance.dashPattern !== undefined;
+
         return null;
       },
     });

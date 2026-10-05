@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const regressionCompareI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '比较整体线性与多项式拟合', subtitle: '线性与多项式趋势共享一层观测点；趋势不代表因果关系' },

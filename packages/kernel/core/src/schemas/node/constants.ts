@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 import { Anchor } from '../../shared';
 
 /** Node 文字颜色的宿主专用关键字 */
@@ -27,3 +29,12 @@ export const NodeLabelRotateMode = {
   /** 沿径向方向的切线方向旋转 */
   Tangent: 'tangent',
 } as const;
+
+export type NodeTextColor = ValueOf<typeof NodeTextColor>;
+
+export type NodeLabelPosition = ValueOf<typeof NodeLabelPosition>;
+
+export type NodeLabelPlacement = ValueOf<typeof NodeLabelPlacement>;
+
+/** 节点标签自身旋转模式取值 */
+export type NodeLabelRotateMode = ValueOf<typeof NodeLabelRotateMode>;

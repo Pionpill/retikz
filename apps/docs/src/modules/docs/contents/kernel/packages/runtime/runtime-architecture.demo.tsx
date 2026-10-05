@@ -19,6 +19,7 @@ export type RuntimeArchitectureProps = Readonly<{ lang?: Lang }>;
 const RuntimeArchitecture: FC<RuntimeArchitectureProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = runtimeArchitectureI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} relationKinds={logicFigureRelationKinds}>
       <FlowLayout id="architecture" kind="linear" direction="right" align="center" gap={40}>

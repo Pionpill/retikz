@@ -15,6 +15,7 @@ export type ScopeTransformResolutionProps = Readonly<{ lang?: Lang }>;
 const ScopeTransformResolution: FC<ScopeTransformResolutionProps> = props => {
   const { lang = 'zh' } = props;
   const t = scopeTransformResolutionI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

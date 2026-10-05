@@ -11,13 +11,13 @@ import type {
   IRNodeLayout,
   IRNodeStyle,
   IRPaint,
-  NodeLabelPlacementValue,
-  NodeLabelPositionValue,
-  NodeTextAlignValue,
+  NodeLabelPlacement,
+  NodeLabelPosition,
+  NodeTextAlign,
   ResolvedDropShadow,
   StrokeDashPattern,
 } from '../../schemas';
-import type { ThemeModeValue } from '../../shared';
+import type { ThemeMode } from '../../shared';
 import type { Rect } from '../../shared/geometry';
 import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
@@ -62,11 +62,11 @@ export type CanonicalNodeLabel = Omit<
   'align' | 'position' | 'placement' | 'distance' | 'textColor' | 'text' | 'pin'
 > & {
   /** 标签视觉盒沿附着切线的对齐方式 */
-  align: NodeTextAlignValue;
+  align: NodeTextAlign;
   /** 标签附着位置 */
-  position: NodeLabelPositionValue | number | CanonicalNodeLabelBoundaryPosition;
+  position: NodeLabelPosition | number | CanonicalNodeLabelBoundaryPosition;
   /** 标签相对附着点的放置方向 */
-  placement: NodeLabelPlacementValue;
+  placement: NodeLabelPlacement;
   /** 标签到节点边界的距离 */
   distance: number;
   /** 已确定的标签文字主色 */
@@ -101,15 +101,25 @@ export type CanonicalNode = Omit<
   /** 完整外边距 */
   margin: BoundsInsets;
   /** 完整最小尺寸 */
-  minimumSize: { width: number; height: number };
+  minimumSize: {
+    /** 节点边界的最小宽度 */
+    width: number;
+    /** 节点边界的最小高度 */
+    height: number;
+  };
   /** 完整轴向缩放 */
-  scale: { x: number; y: number };
+  scale: {
+    /** 水平方向缩放系数 */
+    x: number;
+    /** 垂直方向缩放系数 */
+    y: number;
+  };
   /** 多行正文 */
   text?: Array<ResolvedTextLine>;
   /** 已按数组形态展开的附属标签 */
   label?: Array<CanonicalNodeLabel>;
   /** 正文对齐 */
-  align: NodeTextAlignValue;
+  align: NodeTextAlign;
   /** 节点旋转角度 */
   rotate: number;
   /** 已解析的边框虚线样式 */
@@ -185,7 +195,12 @@ export type NodeResolution = {
   /** 节点默认连接面引用 */
   boundary: BoundaryReferenceResolution;
   /** 已按有效 pattern registry 解析的节点 paint */
-  paint: Readonly<{ fill?: PaintResolutionInput; stroke?: PaintResolutionInput }>;
+  paint: Readonly<{
+    /** 节点填充的已解析绘制输入 */
+    fill?: PaintResolutionInput;
+    /** 节点描边的已解析绘制输入 */
+    stroke?: PaintResolutionInput;
+  }>;
 };
 
 /** Node resolve 阶段需要的样式、provider 与诊断上下文 */
@@ -193,7 +208,7 @@ export type NodeResolveContext = {
   /** 当前节点所在 scope 的样式 frame */
   styleFrames: ReadonlyArray<StyleResolveFrame>;
   /** 当前节点所在位置的 Theme 明暗模式 */
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   /** shape provider 注册表 */
   shapes: ProviderCollection<ShapeDefinition>;
   /** boundary provider 注册表 */

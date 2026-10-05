@@ -17,6 +17,7 @@ describe('[effects] DropShadowSchema accept/reject', () => {
 
   it('refine reject：{color:"red"}（无 preset 又无 offsets）→ 拒', () => {
     const res = DropShadowSchema.safeParse({ color: 'red' });
+
     expect(res.success).toBe(false);
   });
 
@@ -55,6 +56,7 @@ describe('[effects] SHADOW_PRESETS 表完整性', () => {
   it('sm/md/lg/xl/2xl → offsetX=0 的 ResolvedDropShadow', () => {
     for (const key of ['sm', 'md', 'lg', 'xl', '2xl'] as const) {
       const s = SHADOW_PRESETS[key];
+
       expect(s).not.toBeNull();
       expect(s!.offsetX).toBe(0);
       expect(typeof s!.offsetY).toBe('number');
@@ -77,6 +79,7 @@ describe('[effects] BlendMode 枚举', () => {
 
   it('含 normal + 15 个非 normal 模式', () => {
     const values = Object.values(BlendMode);
+
     expect(values).toContain('normal');
     expect(values).toContain('multiply');
     expect(values).toContain('luminosity');

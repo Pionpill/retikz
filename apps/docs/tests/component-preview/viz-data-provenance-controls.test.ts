@@ -35,6 +35,7 @@ describe('Viz Data Plot lineage controls', () => {
     const writableIds = getPreviewControlFields(plotLineageZh.controls)
       .map(control => control.id)
       .sort();
+
     expect(writableIds).toEqual([
       'layoutContext',
       'markEncoding',
@@ -46,6 +47,7 @@ describe('Viz Data Plot lineage controls', () => {
       'scaleMappings',
     ]);
     expect(Object.keys(plotLineageZh.canonicalValues).sort()).toEqual(writableIds);
+
     for (const preset of plotLineageZh.presets) {
       expect(Object.keys(preset.values).sort()).toEqual(writableIds);
     }
@@ -71,6 +73,7 @@ describe('Viz Data Plot lineage controls', () => {
     const buildTransforms = Reflect.get(plotLineageOptions, 'buildPlotLineageTransforms');
 
     expect(buildTransforms).toBeTypeOf('function');
+
     if (typeof buildTransforms !== 'function') return;
 
     expect(
@@ -87,6 +90,7 @@ describe('Viz Data Plot lineage controls', () => {
     const buildTransforms = Reflect.get(plotLineageOptions, 'buildPlotLineageTransforms');
 
     expect(buildTransforms).toBeTypeOf('function');
+
     if (typeof buildTransforms !== 'function') return;
 
     expect(
@@ -142,6 +146,7 @@ describe('Viz Data Plot lineage controls', () => {
     } satisfies PlotLineageRun;
 
     expect(summarizeTransformSteps).toBeTypeOf('function');
+
     if (typeof summarizeTransformSteps !== 'function') return;
 
     expect(summarizeTransformSteps(lineage)).toEqual([
@@ -174,6 +179,7 @@ describe('Viz Data Plot lineage controls', () => {
         resolve(`src/modules/docs/contents/viz/data/provenance/plot/index.${locale}.mdx`),
         'utf8',
       );
+
       expect(source).toContain(
         "files={['plot-lineage', 'plot-lineage.preview.tsx', 'plot-lineage.data.ts', 'plot-lineage-options.ts']}",
       );

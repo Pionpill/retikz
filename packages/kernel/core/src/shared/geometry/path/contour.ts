@@ -59,13 +59,28 @@ export type ContourSegment = LineSegment | ArcSegment;
 
 /** fillet 后用于 emit 的路径命令（与 primitive/path PathCommand 的 move/line/arc/close 子集对齐） */
 export type ContourCommand =
-  | { kind: 'move'; to: Position }
-  | { kind: 'line'; to: Position }
   | {
+      /** 选择移动、直线、圆弧或闭合操作 */
+      kind: 'move';
+      /** 移动或直线操作的目标坐标 */
+      to: Position;
+    }
+  | {
+      /** 选择移动、直线、圆弧或闭合操作 */
+      kind: 'line';
+      /** 移动或直线操作的目标坐标 */
+      to: Position;
+    }
+  | {
+      /** 选择移动、直线、圆弧或闭合操作 */
       kind: 'arc';
+      /** 圆弧中心坐标 */
       center: Position;
+      /** 圆弧半径，使用绘图坐标单位 */
       radius: number;
+      /** 圆弧起始角，单位为度；0 指向水平正向 */
       startAngle: number;
+      /** 圆弧终止角，单位为度 */
       endAngle: number;
       /**
        * 是否逆时针扫描；缺省 / false = CW
@@ -73,7 +88,10 @@ export type ContourCommand =
        */
       counterClockwise?: boolean;
     }
-  | { kind: 'close' };
+  | {
+      /** 选择移动、直线、圆弧或闭合操作 */
+      kind: 'close';
+    };
 
 /** 二维叉积 a × b */
 const cross = (a: Position, b: Position): number => a[0] * b[1] - a[1] * b[0];
@@ -93,9 +111,11 @@ const segmentEnd = (seg: ContourSegment): Position =>
  */
 const tangentAt = (seg: ContourSegment, atStart: boolean): Position => {
   if (seg.kind === 'line') return vector2.normalize([seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]]);
+
   const angleDeg = atStart ? seg.startAngle : seg.endAngle;
   const rad = angleDeg * DEG_TO_RAD;
   const sign = seg.counterClockwise ? -1 : 1;
+
   return vector2.normalize([-Math.sin(rad) * sign, Math.cos(rad) * sign]);
 };
 
@@ -135,22 +155,29 @@ const fractionAlong = (seg: ContourSegment, p: Position, fromStart: boolean): nu
     const ex = seg.to[0] - seg.from[0];
     const ey = seg.to[1] - seg.from[1];
     const len2 = ex * ex + ey * ey;
+
     // len2 是平方长度，阈值取 EPSILON²，使等效长度阈值与 EPSILON（线性）量纲一致
     if (len2 < EPSILON * EPSILON) return 0;
+
     // p 在 from→to 上的参数 t；fromStart 量「占整段比例」、否则量「自 to 反向的比例」
     const t = ((p[0] - seg.from[0]) * ex + (p[1] - seg.from[1]) * ey) / len2;
+
     return fromStart ? t : 1 - t;
   }
+
   // arc：p 相对圆心的角，量 |从端点到 p 的扫描角| / |总跨度|
   const angle = Math.atan2(p[1] - seg.center[1], p[0] - seg.center[0]) * RAD_TO_DEG;
   const span = Math.abs(arcSpan(seg));
   if (span < EPSILON) return 0;
+
   const ccw = seg.counterClockwise ?? false;
   const ref = fromStart ? seg.startAngle : seg.endAngle;
+
   // 从 ref 出发、沿（fromStart ? 扫描方向 : 反扫描方向）量到 angle 的非负角差
   const goingCcw = fromStart ? ccw : !ccw;
   const raw = goingCcw ? ref - angle : angle - ref;
   const swept = normalizeSignedDegrees(raw);
+
   return swept / span;
 };
 
@@ -172,12 +199,15 @@ type Offset =
 const offsetSegment = (seg: ContourSegment, r: number, turnSign: number, atEnd: boolean): Offset => {
   if (seg.kind === 'line') {
     const dir = tangentAt(seg, true);
+
     // 圆心侧法向 = 行进方向左手 (-dy, dx) × turnSign 符号（凸角内侧 / 凹角外侧）
     const sign = turnSign >= 0 ? 1 : -1;
     const normal: Position = [-dir[1] * sign, dir[0] * sign];
     const base = atEnd ? seg.to : seg.from;
+
     return { kind: 'line', point: [base[0] + normal[0] * r, base[1] + normal[1] * r], dir };
   }
+
   // arc 同心偏移：圆心方向 = 从圆周点指向圆心（内法向朝圆心）或反向，取决于转向 vs 弧凸向
   // fillet 圆心到 arc 距离须为 r：若 fillet 圆心在 arc 凸侧外 → radius+r，在凹侧（含圆心侧）→ radius-r。
   // 由 turnSign 与 arc 行进方向共同决定。统一返回两个候选同心圆，求交时择优。
@@ -210,6 +240,7 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
   if (segA.kind === 'arc' && segB.kind === 'arc') {
     throw new RetikzCoreError(RetikzCoreErrorCode.Geometry, 'filletContour: arc-arc seam fillet is not supported');
   }
+
   const corner = segmentEnd(segA);
   const tIn = tangentAt(segA, false); // 前段终点处行进方向
   const tOut = tangentAt(segB, true); // 后段起点处行进方向
@@ -217,10 +248,12 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
 
   const attempt = (radius: number): FilletSolution | undefined => {
     if (radius <= EPSILON) return undefined;
+
     // 收集 fillet 圆心候选
     const offA = offsetSegment(segA, radius, turnSign, true);
     const offB = offsetSegment(segB, radius, turnSign, false);
     const candidates: Array<Position> = [];
+
     const pushIntersections = (oa: Offset, ob: Offset): void => {
       if (oa.kind === 'line' && ob.kind === 'line') {
         const p = intersect.lineLine({
@@ -244,7 +277,9 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
         );
       }
     };
+
     pushIntersections(offA, offB);
+
     // arc 段有 ±r 两个同心候选，补充枚举
     if (segA.kind === 'arc') pushIntersections(offsetSegmentAlt(segA, radius), offB);
     if (segB.kind === 'arc') pushIntersections(offA, offsetSegmentAlt(segB, radius));
@@ -256,35 +291,43 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
     //   参数区间过滤剔除「落在边延长线上」的伪解（line-arc 时尤其关键）。
     let best: { center: Position; tInPt: Position; tOutPt: Position; inFrac: number; outFrac: number } | undefined;
     let bestDist = Infinity;
+
     for (const cand of candidates) {
       const tInPt = tangentPointOn(segA, cand, radius);
       const tOutPt = tangentPointOn(segB, cand, radius);
       if (!tInPt || !tOutPt) continue;
+
       // 圆心须真实距两段 == radius；相对容差（按 radius / 坐标量级缩放），避免大坐标（1e5+）下浮点抵消误差超固定 1e-6 而误拒合法候选
       const tol = 1e-6 * Math.max(1, radius, Math.abs(corner[0]), Math.abs(corner[1]));
       const dA = distanceToAny(segA, cand);
       const dB = distanceToAny(segB, cand);
       if (Math.abs(dA - radius) > tol || Math.abs(dB - radius) > tol) continue;
+
       const inFrac = fractionAlong(segA, tInPt, false); // 从 segA 终点反向量（剩余比例）
       const outFrac = fractionAlong(segB, tOutPt, true); // 从 segB 起点正向量
+
       // 切点须在段上、且不超过段中点（≤0.5）——每段被两端接缝共享，各占≤半段则两端 fillet 不重叠
       //   （单段双角无重叠的安全充分条件）；负值是延长线伪解，排除。
       if (inFrac < -1e-7 || inFrac > 0.5 + 1e-7 || outFrac < -1e-7 || outFrac > 0.5 + 1e-7) continue;
+
       const d = Math.hypot(cand[0] - corner[0], cand[1] - corner[1]);
       if (d < bestDist) {
         bestDist = d;
         best = { center: cand, tInPt, tOutPt, inFrac, outFrac };
       }
     }
+
     if (!best) return undefined;
 
     // fillet 弧从 tInPt 扫到 tOutPt，方向与轮廓绕向一致：凸角同绕向、凹角反向。
     // atan2 只给 [-180, 180] 主值；跨 ±180° 时需按扫描方向对齐成小弧，避免 SVG/Canvas 走远端大弧。
     const startAngle = Math.atan2(best.tInPt[1] - best.center[1], best.tInPt[0] - best.center[0]) * RAD_TO_DEG;
     const endAngle = Math.atan2(best.tOutPt[1] - best.center[1], best.tOutPt[0] - best.center[0]) * RAD_TO_DEG;
+
     // turnSign>0（叉积正，y-down 下为顺时针转弯凸角）→ CW（counterClockwise=false）；凹角反向。
     const counterClockwise = turnSign < 0;
     const adjusted = alignAngleSweep(startAngle, endAngle, counterClockwise);
+
     return {
       tangentInPoint: best.tInPt,
       tangentOutPoint: best.tOutPt,
@@ -302,9 +345,11 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
   //   使边界几何与渲染 clamp 对齐（正方角下 = min(w/2,h/2)）。仍无解则本角不倒。
   const direct = attempt(r);
   if (direct) return direct;
+
   let lo = 0;
   let hi = r;
   let bestSolution: FilletSolution | undefined;
+
   for (let iter = 0; iter < 48; iter++) {
     const mid = (lo + hi) / 2;
     const sol = attempt(mid);
@@ -315,7 +360,9 @@ const solveFillet = (segA: ContourSegment, segB: ContourSegment, r: number): Fil
       hi = mid;
     }
   }
+
   if (bestSolution) return bestSolution;
+
   // 夹紧到 0：本角不倒
   return {
     tangentInPoint: corner,
@@ -336,7 +383,9 @@ const distanceToAny = (seg: ContourSegment, p: Position): number => {
     const foot = footOnLine(p, seg.from, dir);
     return Math.hypot(p[0] - foot[0], p[1] - foot[1]);
   }
+
   const d = Math.hypot(p[0] - seg.center[0], p[1] - seg.center[1]);
+
   return Math.abs(d - seg.radius);
 };
 
@@ -350,13 +399,16 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
     const dir = tangentAt(seg, true);
     return footOnLine(filletCenter, seg.from, dir);
   }
+
   // arc：切点在 arc 圆周上、位于 arc 圆心 → fillet 圆心 方向（或反向，取较近 fillet 圆心者）
   const vx = filletCenter[0] - seg.center[0];
   const vy = filletCenter[1] - seg.center[1];
   const d = Math.hypot(vx, vy);
   if (d < EPSILON) return undefined;
+
   const ux = vx / d;
   const uy = vy / d;
+
   // fillet 圆心在 arc 外（d≈radius+r）→ 切点朝 fillet 圆心；在内（d≈radius−r）→ 同向（仍朝外推 arc.radius）
   const candidates: Array<Position> = [
     [seg.center[0] + ux * seg.radius, seg.center[1] + uy * seg.radius],
@@ -364,6 +416,7 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
   ];
   let best: Position | undefined;
   let bestErr = Infinity;
+
   for (const cand of candidates) {
     const angle = Math.atan2(cand[1] - seg.center[1], cand[0] - seg.center[0]) * RAD_TO_DEG;
     if (
@@ -376,6 +429,7 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
     ) {
       continue;
     }
+
     // 切点到 fillet 圆心距离应 ≈ radius
     const err = Math.abs(Math.hypot(cand[0] - filletCenter[0], cand[1] - filletCenter[1]) - radius);
     if (err < bestErr) {
@@ -383,8 +437,10 @@ const tangentPointOn = (seg: ContourSegment, filletCenter: Position, radius: num
       best = cand;
     }
   }
+
   // 相对容差（按 radius / 坐标量级缩放），与 attempt 的圆心距判据同口径，避免大坐标下误拒
   const tol = 1e-6 * Math.max(1, radius, Math.abs(filletCenter[0]), Math.abs(filletCenter[1]));
+
   return bestErr <= tol ? best : undefined;
 };
 
@@ -401,8 +457,10 @@ export const filletContour = (
   closed = true,
 ): Array<FilletSolution> => {
   if (cornerRadius === undefined || cornerRadius <= 0 || segments.length < 2) return [];
+
   const n = segments.length;
   const out: Array<FilletSolution> = [];
+
   for (let i = 0; i < n; i++) {
     // 开放折线无环绕接缝：末段（i=n-1）后没有「下一段」，置 clampedToZero 占位（不倒、保持尖末点）
     if (!closed && i === n - 1) {
@@ -419,10 +477,12 @@ export const filletContour = (
       });
       continue;
     }
+
     const segA = segments[i];
     const segB = segments[(i + 1) % n];
     out.push(solveFillet(segA, segB, cornerRadius));
   }
+
   return out;
 };
 
@@ -450,13 +510,16 @@ export const contourCommands = (
       emitSegmentBody(seg, segmentStart(seg), segmentEnd(seg), cmds);
     });
     if (closed) cmds.push({ kind: 'close' });
+
     return cmds;
   }
 
   const cmds: Array<ContourCommand> = [];
+
   // 段 i 的有效起点 = 上一接缝 fillet 出点（若该接缝未夹零），有效终点 = 本接缝 fillet 入点
   for (let i = 0; i < n; i++) {
     const seg = segments[i];
+
     // 开放折线 i=0 无「上一接缝」（环绕缝在 filletContour 已置 clampedToZero 占位），故起点 = 段原起点
     const prevFillet = fillets[(i - 1 + n) % n];
     const thisFillet = fillets[i];
@@ -475,7 +538,9 @@ export const contourCommands = (
       });
     }
   }
+
   if (closed) cmds.push({ kind: 'close' });
+
   return cmds;
 };
 
@@ -485,6 +550,7 @@ const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cm
     cmds.push({ kind: 'line', to: end });
     return;
   }
+
   const originalSweep = Math.abs(seg.endAngle - seg.startAngle);
   if (
     originalSweep >= 360 - DEFAULT_EPSILON &&
@@ -499,8 +565,10 @@ const emitSegmentBody = (seg: ContourSegment, start: Position, end: Position, cm
       endAngle: adjusted.end,
       counterClockwise: seg.counterClockwise,
     });
+
     return;
   }
+
   // arc：起点角 / 终点角 = start / end 相对圆心的角，扫描方向不变
   const startAngle = Math.atan2(start[1] - seg.center[1], start[0] - seg.center[0]) * RAD_TO_DEG;
   const endAngle = Math.atan2(end[1] - seg.center[1], end[0] - seg.center[0]) * RAD_TO_DEG;
@@ -531,6 +599,7 @@ export const boundaryFromContour = (
   const dirRaw: Position = [toward[0] - rayOrigin[0], toward[1] - rayOrigin[1]];
   const dl = vector2.length(dirRaw);
   if (dl < 1e-12) return undefined;
+
   const dir: Position = [dirRaw[0] / dl, dirRaw[1] / dl];
 
   const n = segments.length;
@@ -542,6 +611,7 @@ export const boundaryFromContour = (
     const ey = b[1] - a[1];
     const det = dir[0] * -ey - -ex * dir[1];
     if (Math.abs(det) < 1e-12) return;
+
     const ax = a[0] - rayOrigin[0];
     const ay = a[1] - rayOrigin[1];
     const s = (ax * -ey - -ex * ay) / det;
@@ -562,6 +632,7 @@ export const boundaryFromContour = (
       startAngleDeg: aligned.start,
       endAngleDeg: aligned.end,
     });
+
     for (const s of hits) {
       if (s > DEFAULT_EPSILON && s < best) best = s;
     }
@@ -588,6 +659,7 @@ export const boundaryFromContour = (
         const aligned = alignAngleSweep(sA, eA, seg.counterClockwise ?? false);
         considerArc(seg.center, seg.radius, aligned.start, aligned.end, seg.counterClockwise ?? false);
       }
+
       if (!thisFillet.clampedToZero) {
         considerArc(
           thisFillet.center,
@@ -601,5 +673,6 @@ export const boundaryFromContour = (
   }
 
   if (!Number.isFinite(best)) return undefined;
+
   return [rayOrigin[0] + dir[0] * best, rayOrigin[1] + dir[1] * best];
 };

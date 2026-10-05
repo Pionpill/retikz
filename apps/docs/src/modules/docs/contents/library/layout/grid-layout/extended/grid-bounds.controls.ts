@@ -3,6 +3,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { demoI18n } from './grid-bounds.i18n';
+
 /** 同一场景的本地化控件与重置基线 */
 export const createPreviewControlContract = (lang: Lang) => {
   const text = demoI18n[lang];
@@ -30,11 +31,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { mode: 'natural', minimum: 70, maximum: 160, childWidth: 220, width: 350 },
     relatedApis: ['GridLayout.columns', 'GridLayout.size', 'Node.layout.minimumSize'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

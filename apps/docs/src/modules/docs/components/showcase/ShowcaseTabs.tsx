@@ -70,6 +70,7 @@ export const ShowcaseTabs: FC<ShowcaseTabsProps> = props => {
 
   const familyPages = useMemo(() => {
     if (!moduleId) return [];
+
     const pages = collectShowcasePages(moduleId, getSectionsByArea(moduleId));
     const current = pages.find(page => page.path.toLowerCase() === pathname.toLowerCase());
     if (!current) return [];

@@ -6,11 +6,13 @@ import type { IRLegend, IRLegendItemsContent, IRLegendRampContent } from '..';
 export type CanonicalLegend = Omit<IRLegend, keyof CanonicalLayoutContainerBox | 'content'> &
   CanonicalLayoutContainerBox &
   Required<Pick<IRLegend, 'titleGap' | 'contentAlign'>> & {
+    /** 已补齐默认值的离散图例或连续图例内容 */
     content: CanonicalLegendItemsContent | CanonicalLegendRampContent;
   };
 
 /** 已展开行列间距且确定排列策略的离散图例 */
 export type CanonicalLegendItemsContent = Required<Omit<IRLegendItemsContent, 'gap'>> & {
+  /** 已从统一数值展开的图例项布局间距 */
   gap: Exclude<NonNullable<IRLegendItemsContent['gap']>, number>;
 };
 

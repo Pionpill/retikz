@@ -20,6 +20,7 @@ describe('compile path: fill / fillRule', () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(path.fill).toBe('none');
     expect(path.fillRule).toBeUndefined();
   });
@@ -42,6 +43,7 @@ describe('compile path: fill / fillRule', () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(path.fill).toBe('#3b82f6');
   });
 
@@ -61,6 +63,7 @@ describe('compile path: fill / fillRule', () => {
       ],
     };
     const path = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(path.fillRule).toBe('evenodd');
   });
 });

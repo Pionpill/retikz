@@ -26,16 +26,19 @@ describe('expand pipeline stable surface', () => {
 
   it('contributes the Standard Ribbon path kind and its profile dataset explicitly', () => {
     const contribution = createPlotProviderContribution({});
+
     expect(contribution.roots).toContainEqual({ capability: 'pathKind', name: 'ribbon' });
 
     const ribbonProvider = contribution.providers.find(
       provider => provider.key.capability === 'pathKind' && provider.key.name === 'ribbon',
     );
+
     expect(ribbonProvider).toBeDefined();
     expect(ribbonProvider?.datasets['profile:bulge']).toBe(BUILTIN_RIBBON_WIDTH_PROFILES[0]);
 
     const definitions = resolveCoreProviderDependencies({ contributions: [contribution] });
     const ribbonDefinitions = definitions.pathKinds?.filter(definition => definition.name === 'ribbon') ?? [];
+
     expect(ribbonDefinitions).toHaveLength(1);
     expect(ribbonDefinitions[0]?.schema).toBe(RibbonPathKindDefinition.schema);
 
@@ -57,6 +60,7 @@ describe('expand pipeline stable surface', () => {
         },
       ],
     };
+
     expect(() => compileToScene(ir, { ...definitions, padding: 0 })).not.toThrow();
   });
 });

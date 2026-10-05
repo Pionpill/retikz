@@ -46,7 +46,9 @@ describe('Plot defaults inspection', () => {
       categorical: ['#source-categorical'],
       series: ['#style-series'],
     });
+
     const serialized = JSON.stringify(result);
+
     expect(serialized).not.toContain('token');
     expect(serialized).not.toContain('sector');
   });

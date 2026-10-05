@@ -27,10 +27,12 @@ import { normalizeReactInput } from '../../helpers/normalize-input';
 /** 递归展开 GroupPrim，把所有叶子 primitive 拍平（合成 scope 的子元素都在 GroupPrim 内） */
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
+
   for (const p of prims) {
     out.push(p);
     if (p.type === 'group') out.push(...flatten(p.children));
   }
+
   return out;
 };
 
@@ -44,10 +46,13 @@ const layoutPrims = (style: ScopeStyleProps, children: ReactNode): Array<ScenePr
 
 const rectOf = (prims: Array<ScenePrimitive>): RectPrim | undefined =>
   prims.find((p): p is RectPrim => p.type === 'rect');
+
 const ellipseOf = (prims: Array<ScenePrimitive>): EllipsePrim | undefined =>
   prims.find((p): p is EllipsePrim => p.type === 'ellipse');
+
 const linePathOf = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
+
 const textWith = (prims: Array<ScenePrimitive>, content: string): TextPrim | undefined =>
   prims.find((p): p is TextPrim => p.type === 'text' && p.lines[0]?.text === content);
 
@@ -85,11 +90,13 @@ describe('rootScope 的空覆盖与命名空间边界', () => {
         <Node id="n" position={[0, 0]} />
       </Scope>
     );
+
     expect(layoutIR(rootScope, children)).toEqual(normalizeReactInput(children));
   });
 
   it('已有复合叶子 font 的空对象仍是明确覆盖', () => {
     const source = layoutIR({ defaults: { node: { style: { font: {} } } } }, <Node position={[0, 0]} />);
+
     expect(source.children[0]).toMatchObject({ type: 'scope', defaults: { node: { style: { font: {} } } } });
   });
 
@@ -99,6 +106,7 @@ describe('rootScope 的空覆盖与命名空间边界', () => {
         <Node position={[0, 0]} />
       </Layout>,
     );
+
     expect(markup).toContain('background-color:yellow');
     expect(markup).toContain('fill="red"');
   });
@@ -123,6 +131,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
       </Node>,
     );
     const rect = rectOf(prims);
+
     expect(rect?.fill).toBe('lightblue');
     expect(rect?.stroke).toBe('none');
   });
@@ -139,6 +148,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
       twoNodesAndDraw(),
     );
     const path = linePathOf(prims);
+
     expect(path?.strokeWidth).toBe(5);
     expect(path?.strokeLinecap).toBe('round');
   });
@@ -151,9 +161,11 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
       twoNodesAndDraw(),
     );
     const rect = rectOf(prims);
+
     expect(rect?.stroke).toBe('blue');
     expect(rect?.fill).toBe('blue');
     expect(linePathOf(prims)?.stroke).toBe('blue');
+
     // 端到端：真实 <Layout> 组件渲染也应把主色透出到 SVG
     const svg = renderToStaticMarkup(
       <Layout rootScope={{ style: { color: 'blue' } }}>
@@ -162,6 +174,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
         </Node>
       </Layout>,
     );
+
     expect(svg).toContain('blue');
   });
 
@@ -185,6 +198,7 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
         </Path>
       </>,
     );
+
     expect(textWith(prims, 'e')?.fill).toBe('green');
   });
 });
@@ -207,7 +221,9 @@ describe('边界：无样式 / 空 children / 单通道', () => {
     );
     const wrapped = layoutIR({}, children);
     const plain = normalizeReactInput(children);
+
     expect(wrapped).toEqual(plain);
+
     // 顶层不应出现合成 scope
     expect(wrapped.children.every(c => c.type !== 'scope')).toBe(true);
   });
@@ -220,6 +236,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
       undefined,
     );
     const scope = ir.children[0];
+
     expect(scope).toMatchObject({
       type: 'scope',
       children: [],
@@ -234,6 +251,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
         A
       </Node>
     );
+
     // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（避免无谓的空 scope）
     const emptyDefaults = layoutIR(
       {
@@ -241,8 +259,10 @@ describe('边界：无样式 / 空 children / 单通道', () => {
       },
       children,
     );
+
     expect(emptyDefaults).toEqual(normalizeReactInput(children));
     expect(emptyDefaults.children.every(c => c.type !== 'scope')).toBe(true);
+
     // 但标量 falsy-defined 值（strokeWidth=0）是有意义样式 → 仍包 scope
     const zeroWidth = layoutIR(
       {
@@ -250,6 +270,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
       },
       children,
     );
+
     expect(zeroWidth.children[0]).toMatchObject({
       type: 'scope',
       style: { strokeWidth: 0 },
@@ -266,6 +287,7 @@ describe('边界：无样式 / 空 children / 单通道', () => {
       </Node>,
     );
     const scope = ir.children[0];
+
     expect(scope).toMatchObject({
       type: 'scope',
       style: { stroke: 'red' },
@@ -303,6 +325,7 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
       />,
     );
     const plain = renderToStaticMarkup(<Layout ir={ir} />);
+
     // 样式被忽略：与不传样式的渲染逐字符一致
     expect(withStyle).toBe(plain);
     expect(warn).toHaveBeenCalledTimes(1);
@@ -323,6 +346,7 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
         A
       </Node>,
     );
+
     // Layout / Vanilla Input 原样透传，不在自己这层 sanitize
     expect(badIr.children[0]).toMatchObject({
       type: 'scope',
@@ -332,8 +356,10 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
         },
       },
     });
+
     // 既有 IRScope schema 校验路径拒掉
     expect(SceneSchema.safeParse(badIr).success).toBe(false);
+
     // 对照：合法 fill 同路径通过
     const okIr = layoutIR(
       {
@@ -347,6 +373,7 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
         A
       </Node>,
     );
+
     expect(SceneSchema.safeParse(okIr).success).toBe(true);
   });
 });
@@ -375,6 +402,7 @@ describe('交互：内层 Scope 覆盖 / 显式属性胜出 / resetStyle 屏障'
         {twoNodesAndDraw()}
       </Scope>,
     );
+
     expect(linePathOf(prims)?.strokeWidth).toBe(2);
   });
 
@@ -392,6 +420,7 @@ describe('交互：内层 Scope 覆盖 / 显式属性胜出 / resetStyle 屏障'
       </Node>,
     );
     const shape = rectOf(prims) ?? ellipseOf(prims);
+
     expect(shape?.stroke).toBe('red');
   });
 
@@ -407,6 +436,7 @@ describe('交互：内层 Scope 覆盖 / 显式属性胜出 / resetStyle 屏障'
       </Scope>,
     );
     const rect = rectOf(prims);
+
     // 屏障切断：内层 node 不染成 red
     expect(rect?.stroke).not.toBe('red');
     expect(rect?.fill).not.toBe('red');
@@ -452,6 +482,7 @@ describe('等价性：合成根 scope 与手写根 <Scope> 同 IR', () => {
         {children}
       </Scope>,
     );
+
     expect(synthetic).toEqual(manual);
   });
 });

@@ -12,8 +12,11 @@ import { useRightPanelStore } from '@/modules/docs/store';
 import { Header } from './header';
 
 const MIN_AI_PX = 320;
+
 const MAX_AI_PX = 800;
+
 const DEFAULT_AI_PX = 384;
+
 const DESKTOP_BREAKPOINT = 1024;
 
 const useViewportWidth = (): number => {
@@ -23,6 +26,7 @@ const useViewportWidth = (): number => {
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
   }, []);
+
   return vw;
 };
 

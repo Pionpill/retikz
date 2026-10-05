@@ -229,6 +229,7 @@ describe('statistical transform algebra (contract)', () => {
           0,
         );
         const weights = rows.reduce((sum, row) => sum + Number(row[operation.weight]), 0);
+
         return { [operation.as]: weighted / weights };
       },
     });

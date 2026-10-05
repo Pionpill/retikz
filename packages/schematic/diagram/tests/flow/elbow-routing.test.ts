@@ -86,6 +86,7 @@ describe('Flow single-elbow routing', () => {
         result.artifacts.find(item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow')
           ?.value,
       );
+
       expect(
         artifact.relations.map(relation => ({
           kind: relation.route.kind,
@@ -95,7 +96,9 @@ describe('Flow single-elbow routing', () => {
         { kind, cornerRadius: 13 },
         { kind, cornerRadius: 0 },
       ]);
+
       const priorCalls = calls;
+
       expect(() =>
         compile({
           ...provider,
@@ -153,23 +156,32 @@ describe('Flow single-elbow routing', () => {
             item => item.kind === 'composite' && item.namespace === 'diagram' && item.type === 'flow',
           )?.value,
         );
+
         expect(artifact.relations[0].route).toMatchObject({ kind, cornerRadius });
+
         const path = flatten(result.scene.primitives).find(item => item.type === 'path' && item.stroke === '#c026d3');
+
         expect(path?.type).toBe('path');
+
         if (path?.type !== 'path') throw new Error('Missing relation path');
+
         expect(
           path.commands.some(command => command.kind === 'arc' || command.kind === 'quad' || command.kind === 'cubic'),
         ).toBe(cornerRadius > 0);
+
         if (cornerRadius === 0) {
           const points = path.commands.flatMap(command =>
             command.kind === 'move' || command.kind === 'line' ? [command.to] : [],
           );
+
           expect(points).toHaveLength(3);
           expect(points[0][kind === '-|' ? 1 : 0]).toBeCloseTo(points[1][kind === '-|' ? 1 : 0]);
           expect(points[1][kind === '-|' ? 0 : 1]).toBeCloseTo(points[2][kind === '-|' ? 0 : 1]);
+
           const reference = artifact.relations[0].route.points;
           const span = (first: Readonly<Position>, last: Readonly<Position>) =>
             Math.abs(last[0] - first[0]) + Math.abs(last[1] - first[1]);
+
           expect(span(points[0], points[2])).toBeLessThan(span(reference[0], reference[2]));
         }
       }
@@ -183,6 +195,7 @@ describe('Flow single-elbow routing', () => {
       capabilities: { ...LayeredFlowLayoutDefinition.capabilities, routing: [{ kind }] },
       defaults: { ...LayeredFlowLayoutDefinition.defaults, routing: { kind, orthogonalCornerRadius: 5 } },
     };
+
     expect(
       getFlowLayoutCatalog({ flowLayouts: [provider], defaultFlowLayout: 'elbow' }).find(item => item.isDefault)
         ?.defaults.routing,
@@ -191,12 +204,15 @@ describe('Flow single-elbow routing', () => {
       getFlowLayoutCatalog({ flowLayouts: [{ ...provider, defaults: { ...provider.defaults, routing: { kind } } }] }),
     ).toThrow();
   });
+
   it.each(['-|', '|-'] as const)('preserves %s and radius through JSON parsing', kind => {
     expect(FlowRoutingSchema.parse(JSON.parse(JSON.stringify({ kind, cornerRadius: 4 })))).toEqual({
       kind,
       cornerRadius: 4,
     });
+
     const invalid = FlowRoutingSchema.safeParse({ kind, cornerRadius: -1 });
+
     expect(invalid.success).toBe(false);
     expect(FlowRoutingSchema.safeParse({ kind, extra: true }).success).toBe(false);
   });
@@ -312,6 +328,7 @@ describe('Flow single-elbow routing', () => {
       const input = inputFor(kind);
       const elements = elementsAt(target);
       const relations = routeFlowRelations(input, elements);
+
       expect(relations[0].route.points).toEqual(expected);
       expect(
         executeFlowLayout({ ...LayeredFlowLayoutDefinition, layout: () => ({ elements, relations }) }, input)
@@ -366,6 +383,7 @@ describe('Flow single-elbow routing', () => {
         ),
       ).toThrow(expect.objectContaining({ code: RetikzDiagramErrorCode.FlowLayoutOutputInvalid }));
     }
+
     expect(() =>
       executeFlowLayout(
         {
@@ -398,6 +416,7 @@ describe('Flow single-elbow routing', () => {
       kind: '-|',
       cornerRadius: 11,
     });
+
     expect(resolveEffectiveFlowLayout(LayeredFlowLayoutDefinition, {}, parent, { kind: '|-' }).routing).toEqual({
       kind: '|-',
       cornerRadius: 11,

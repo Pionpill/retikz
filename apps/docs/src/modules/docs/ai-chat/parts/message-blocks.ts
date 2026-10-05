@@ -34,13 +34,19 @@ const RETIKZ_LANG_FORMAT: Readonly<Record<string, RetikzPreviewFormat | undefine
 };
 
 const RE_HEADING = /^(#{1,3})\s+(.*)$/;
+
 const RE_LIST = /^[-*]\s/;
+
 /** 含缩进的列表项；tab 视作 2 空格 */
 const RE_LIST_INDENTED = /^(\s*)[-*]\s+/;
+
 /** 任务列表前缀（去掉列表标记后剩下的内容前缀）：`[ ]`、`[x]`、`[X]` */
 const RE_TASK_ITEM = /^\[([ xX])\]\s+(.*)$/;
+
 const RE_BLOCKQUOTE = /^>\s?/;
+
 const RE_HR = /^(-{3,}|\*{3,}|_{3,})\s*$/;
+
 /** GitHub table separator：`|---|---|`、`|:---|---:|:---:|` 等，至少 2 列 */
 const RE_TABLE_SEPARATOR = /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/;
 
@@ -49,6 +55,7 @@ const parseTableRow = (line: string): Array<string> => {
   let s = line.trim();
   if (s.startsWith('|')) s = s.slice(1);
   if (s.endsWith('|')) s = s.slice(0, -1);
+
   return s.split('|').map(c => c.trim());
 };
 
@@ -59,6 +66,7 @@ const parseTableAligns = (separator: string): Array<TableAlign> =>
     if (left && right) return 'center';
     if (right) return 'right';
     if (left) return 'left';
+
     return null;
   });
 
@@ -90,6 +98,7 @@ const parseListAt = (
 ): { items: Array<ListItem>; end: number } => {
   const items: Array<ListItem> = [];
   let i = start;
+
   while (i < lines.length) {
     const indent = getListIndent(lines[i]);
     if (indent === null || indent < baseIndent) break;
@@ -105,8 +114,10 @@ const parseListAt = (
         i = child.end;
       }
     }
+
     items.push(item);
   }
+
   return { items, end: i };
 };
 
@@ -120,6 +131,7 @@ const isBlockStarter = (lines: Array<string>, idx: number): boolean => {
   if (RE_BLOCKQUOTE.test(line)) return true;
   if (RE_HR.test(line)) return true;
   if (isTableStart(lines, idx)) return true;
+
   return false;
 };
 
@@ -127,16 +139,19 @@ export const parseMessageBlocks = (src: string): Array<MessageBlock> => {
   const lines = src.split('\n');
   const blocks: Array<MessageBlock> = [];
   let i = 0;
+
   while (i < lines.length) {
     const line = lines[i];
     if (line.trim() === '') {
       i++;
       continue;
     }
+
     if (line.startsWith('```')) {
       const lang = line.slice(3).trim();
       const start = i + 1;
       let j = start;
+
       while (j < lines.length && !lines[j].startsWith('```')) j++;
       const closed = j < lines.length;
       const retikzFormat = RETIKZ_LANG_FORMAT[lang];
@@ -149,23 +164,28 @@ export const parseMessageBlocks = (src: string): Array<MessageBlock> => {
       } else {
         blocks.push({ type: 'code', lang: lang || 'text', code: lines.slice(start, j).join('\n') });
       }
+
       i = j + 1;
       continue;
     }
+
     const headingMatch = RE_HEADING.exec(line);
     if (headingMatch) {
       blocks.push({ type: 'h', level: headingMatch[1].length as 1 | 2 | 3, text: headingMatch[2] });
       i++;
       continue;
     }
+
     if (RE_LIST.test(line)) {
       const { items, end } = parseListAt(lines, i, 0);
       blocks.push({ type: 'list', items });
       i = end;
       continue;
     }
+
     if (RE_BLOCKQUOTE.test(line)) {
       const start = i;
+
       while (i < lines.length && RE_BLOCKQUOTE.test(lines[i])) i++;
       const text = lines
         .slice(start, i)
@@ -174,28 +194,36 @@ export const parseMessageBlocks = (src: string): Array<MessageBlock> => {
       blocks.push({ type: 'blockquote', text });
       continue;
     }
+
     if (isTableStart(lines, i)) {
       const header = parseTableRow(lines[i]);
       const aligns = parseTableAligns(lines[i + 1]);
       i += 2;
       const rows: Array<Array<string>> = [];
+
       while (i < lines.length && lines[i].includes('|') && lines[i].trim() !== '') {
         rows.push(parseTableRow(lines[i]));
         i++;
       }
+
       blocks.push({ type: 'table', header, aligns, rows });
       continue;
     }
+
     if (RE_HR.test(line)) {
       blocks.push({ type: 'hr' });
       i++;
       continue;
     }
+
     const pStart = i;
+
     while (i < lines.length && !isBlockStarter(lines, i)) {
       i++;
     }
+
     blocks.push({ type: 'p', text: lines.slice(pStart, i).join('\n') });
   }
+
   return blocks;
 };

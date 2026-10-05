@@ -18,6 +18,7 @@ describe('buildPlotIR 装配', () => {
   it('透传 Plot plotDefaults 到 canonical IRPlot', () => {
     const plotDefaults: NonNullable<IRPlot['plotDefaults']> = { palette: { series: ['#2563eb'] } };
     const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotDefaults });
+
     expect(spec.plotDefaults).toEqual(plotDefaults);
   });
 
@@ -29,6 +30,7 @@ describe('buildPlotIR 装配', () => {
       },
     ];
     const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotRules });
+
     expect(spec.plotRules).toEqual(plotRules);
   });
 
@@ -46,11 +48,13 @@ describe('buildPlotIR 装配', () => {
       marks: [{ type: 'path', order: 'month', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
       guides: [],
     };
+
     expect(spec).toEqual(expected);
   });
 
   it('单 point：marks 等价手写', () => {
     const spec = buildPlotIR(<PointMark x="month" y="revenue" />, '__plot');
+
     expect(spec.marks).toEqual([{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }]);
   });
 
@@ -58,6 +62,7 @@ describe('buildPlotIR 装配', () => {
     const spec = buildPlotIR(<PointMark x="lng" y="lat" size="pop" />, '__plot', {
       dataFieldNames: new Set(['pop']),
     });
+
     expect(spec.marks[0]).toEqual({
       type: 'point',
       size: { kind: 'field', value: 'pop' },
@@ -69,6 +74,7 @@ describe('buildPlotIR 装配', () => {
     const spec = buildPlotIR(<PointMark x="x" y="y" opacity="density" />, '__plot', {
       dataFieldNames: new Set(['density']),
     });
+
     expect(spec.marks[0]).toEqual({
       type: 'point',
       opacity: { kind: 'field', value: 'density' },
@@ -81,6 +87,7 @@ describe('buildPlotIR 装配', () => {
       <PointMark x="x" y="y" channels={{ intensity: 'score', threshold: { kind: 'constant', value: 0.8 } }} />,
       '__plot',
     );
+
     expect(spec.marks[0]).toEqual({
       type: 'point',
       encoding: {
@@ -116,6 +123,7 @@ describe('buildPlotIR 装配', () => {
     const spec = buildPlotIR(<PointMark x="x" y="y" shape="category" />, '__plot', {
       dataFieldNames: new Set(['category']),
     });
+
     expect(spec.marks[0]).toEqual({
       type: 'point',
       shape: { kind: 'field', value: 'category' },
@@ -127,6 +135,7 @@ describe('buildPlotIR 装配', () => {
     const spec = buildPlotIR(<PointMark x="x" y="y" stroke="region" strokeWidth="density" />, '__plot', {
       dataFieldNames: new Set(['region', 'density']),
     });
+
     expect(spec.marks[0]).toEqual({
       type: 'point',
       stroke: { kind: 'field', value: 'region' },
@@ -156,6 +165,7 @@ describe('buildPlotIR 装配', () => {
       />,
       '__plot',
     );
+
     expect(spec.marks[0]).toEqual({
       type: 'point',
       fill: { kind: 'constant', value: '#f8fafc' },
@@ -186,6 +196,7 @@ describe('buildPlotIR 装配', () => {
       />,
       '__plot',
     );
+
     expect(spec.marks[0]).toEqual({
       type: 'path',
       strokeWidth: { kind: 'constant', value: 3 },
@@ -204,6 +215,7 @@ describe('buildPlotIR 装配', () => {
       '__plot',
       { dataFieldNames: new Set(['weight']) },
     );
+
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       strokeWidth: { kind: 'field', value: 'weight' },
@@ -214,6 +226,7 @@ describe('buildPlotIR 装配', () => {
 
   it('interval padAngle forwards to interval mark', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" padAngle={4} />, '__plot', { coordinate: 'polar2D' });
+
     expect(spec.marks[0]).toMatchObject({
       type: 'interval',
       padAngle: 4,
@@ -222,12 +235,14 @@ describe('buildPlotIR 装配', () => {
 
   it('interval pull forwards numeric and field values to interval mark', () => {
     const numeric = buildPlotIR(<IntervalMark angle="value" pull={12} />, '__plot', { coordinate: 'polar2D' });
+
     expect(numeric.marks[0]).toMatchObject({
       type: 'interval',
       pull: { kind: 'constant', value: 12 },
     });
 
     const field = buildPlotIR(<IntervalMark angle="value" pull="offset" />, '__plot', { coordinate: 'polar2D' });
+
     expect(field.marks[0]).toMatchObject({
       type: 'interval',
       pull: { kind: 'field', value: 'offset' },
@@ -249,6 +264,7 @@ describe('buildPlotIR 装配', () => {
       '__plot',
       { dataFieldNames: new Set(['kind']) },
     );
+
     expect(spec.marks[0]).toMatchObject({
       type: 'point',
       anchorId: { prefix: 'pt', field: 'id' },
@@ -286,6 +302,7 @@ describe('buildPlotIR 装配', () => {
       />,
       '__plot',
     );
+
     expect(spec.marks[0]).toEqual({
       type: 'relation',
       transform,
@@ -312,6 +329,7 @@ describe('buildPlotIR 装配', () => {
       />,
       '__plot',
     );
+
     expect(spec.marks[0]).toEqual({
       type: 'relation',
       kind: 'ribbon',
@@ -335,6 +353,7 @@ describe('buildPlotIR 装配', () => {
       </>,
       '__plot',
     );
+
     expect(spec.marks).toHaveLength(2);
     expect(spec.marks[0]?.type).toBe('path');
     expect(spec.marks[1]?.type).toBe('point');
@@ -343,6 +362,7 @@ describe('buildPlotIR 装配', () => {
 
   it('装配产物是合法 IR（过 PlotSchema）', () => {
     const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
+
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 
@@ -354,12 +374,14 @@ describe('buildPlotIR 装配', () => {
       </>,
       '__plot',
     );
+
     expect(spec.marks).toHaveLength(1);
   });
 
   // 薄 Plot guide 装配（无默认 / 显式）
   it('dsl_no_axis_no_guides：无 <PlotAxis> → guides 为空（薄 Plot 不补默认轴）', () => {
     const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
+
     expect(spec.guides).toEqual([]);
   });
 
@@ -371,6 +393,7 @@ describe('buildPlotIR 装配', () => {
       </>,
       '__plot',
     );
+
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x' }]);
   });
 
@@ -389,6 +412,7 @@ describe('buildPlotIR 装配', () => {
       </>,
       '__plot',
     );
+
     expect(spec.guides).toEqual([
       {
         type: 'axis',
@@ -410,6 +434,7 @@ describe('buildPlotIR 装配', () => {
       </>,
       '__plot',
     );
+
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'y', grid: true }]);
   });
 
@@ -433,6 +458,7 @@ describe('buildPlotIR 装配', () => {
       </>,
       '__plot',
     );
+
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'q' }]);
     expect(() => PlotSchema.parse(spec)).not.toThrow();
     expect(() => compilePlot(spec, { __plot: [{ m: 1, r: 2 }] }, { width: 320, height: 200 })).toThrow(

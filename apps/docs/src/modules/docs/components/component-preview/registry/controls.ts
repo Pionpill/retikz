@@ -35,6 +35,7 @@ const isPreviewControlsDefinition = (value: unknown): value is PreviewControlsDe
   const presentation = Reflect.get(value, 'presentation');
   if (presentation === 'overlay') return Array.isArray(Reflect.get(value, 'controls'));
   if (presentation === 'panel') return Array.isArray(Reflect.get(value, 'sections'));
+
   return false;
 };
 
@@ -66,9 +67,11 @@ const validateControlContract = (contract: PreviewControlContract): PreviewContr
     ...(contract.stateOnlyIds ?? []),
   ]);
   assertKnownValues('canonicalValues', contract.canonicalValues, ids);
+
   for (const preset of contract.presets ?? []) {
     assertKnownValues(`preset "${preset.id}"`, preset.values, ids);
   }
+
   return contract;
 };
 
@@ -87,15 +90,19 @@ export const resolvePreviewControlContract = (
   if (isControlContractFactory(mod.createPreviewControlContract)) {
     return validateControlContract(mod.createPreviewControlContract(lang));
   }
+
   if (isControlContract(mod.previewControlContract)) {
     return validateControlContract(mod.previewControlContract);
   }
+
   if (isPreviewControlsDefinition(mod.previewControls)) {
     return contractFromDefinition(mod.previewControls);
   }
+
   const namedControls = Object.entries(mod).find(
     ([key, value]) => key.endsWith('Controls') && isPreviewControlsDefinition(value),
   );
+
   return namedControls === undefined
     ? undefined
     : contractFromDefinition(namedControls[1] as PreviewControlsDefinition);

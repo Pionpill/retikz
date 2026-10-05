@@ -27,6 +27,7 @@ describe('Arc / Sector angle model figure', () => {
       const radians = (angle * Math.PI) / 180;
       const x = 70 * Math.cos(radians);
       const y = 70 * Math.sin(radians);
+
       return x >= left && x <= right && y >= top && y <= bottom;
     });
 

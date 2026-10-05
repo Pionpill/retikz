@@ -44,6 +44,7 @@ const normalizeRibbonInput = (input: Record<string, unknown> = {}): IRPathBase =
       ([, value]) => value !== undefined,
     ),
   );
+
   return {
     type: 'path',
     kind: 'ribbon',
@@ -69,12 +70,14 @@ const ribbonWithDefaultSampling = (overrides: Record<string, unknown> = {}): IRP
     const options = next.kindOptions;
     delete options.sampling;
   }
+
   return next;
 };
 
 const compileToScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
   const supplied = options.pathKinds ?? [];
   const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+
   return compileCoreToScene(input, {
     ...options,
     pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
@@ -91,10 +94,15 @@ describe('compile ribbon', () => {
       (() => {
         const parsed = RibbonSchema.parse(ribbon({ start: { direction: { angle: 90, radius: 1 } } }));
         if (parsed.kindOptions.mode !== 'centerline') throw new Error('Expected centerline');
+
         const start = parsed.kindOptions.start;
+
         expect(start).toBeDefined();
+
         const direction = start.direction;
+
         expect(direction).toBeDefined();
+
         return direction;
       })(),
     ).toEqual({
@@ -627,6 +635,7 @@ describe('compile ribbon', () => {
       ],
       style: { fill: '#bfdbfe' },
     });
+
     expect(RibbonSchema.parse(boundary)).toEqual(boundary);
     expect(() =>
       RibbonSchema.parse({

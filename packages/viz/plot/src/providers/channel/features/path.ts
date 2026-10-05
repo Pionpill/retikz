@@ -1,5 +1,4 @@
 import type { IRPathScale } from '@retikz/core';
-import type { PathThicknessValue } from '@retikz/core';
 import { DropShadowSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
 import type { DataTransformModel, ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
@@ -40,10 +39,14 @@ const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): MarkSt
 
 const jsonValue = (value: unknown): JsonValue | undefined =>
   JsonValueSchema.safeParse(value).success ? (value as JsonValue) : undefined;
+
 const finiteNumber = (value: unknown): number | undefined => (isFiniteNumber(value) ? value : undefined);
+
 const opacityNumber = (value: unknown): number | undefined =>
   isFiniteNumber(value) && value >= 0 && value <= 1 ? value : undefined;
+
 const integerNumber = (value: unknown): number | undefined => (isFiniteNumber(value) ? Math.trunc(value) : undefined);
+
 const dashPatternValue = (value: unknown): Array<number> | undefined =>
   Array.isArray(value) && value.length > 0 && value.every(item => isFiniteNumber(item) && item >= 0)
     ? value
@@ -78,6 +81,7 @@ const makeNumericPathResolver = (
   return mark => {
     const channel = pick(mark);
     if (!channel) return undefined;
+
     const source = makeMarkValueResolver<number>(channel, model, {
       channelName,
       expectedFieldType: DataFieldType.Continuous,
@@ -104,10 +108,13 @@ const makeNumericPathResolver = (
           throw new RetikzPlotError(
             `lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`,
           );
+
         def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
       }
+
       scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
     }
+
     return {
       resolver: row => {
         const value = source.resolver(row);
@@ -189,14 +196,18 @@ const pathNumericChannels: {
 };
 
 const lineCapValues = new Set(['butt', 'round', 'square']);
+
 const lineJoinValues = new Set(['miter', 'round', 'bevel']);
+
 const fillRuleValues = new Set(['nonzero', 'evenodd']);
-const thicknessValues = new Set<PathThicknessValue>(Object.values(PathThickness));
-const pathThicknessValue = (value: unknown): PathThicknessValue | undefined =>
-  typeof value === 'string' && thicknessValues.has(value as PathThicknessValue)
-    ? (value as PathThicknessValue)
-    : undefined;
+
+const thicknessValues = new Set<PathThickness>(Object.values(PathThickness));
+
+const pathThicknessValue = (value: unknown): PathThickness | undefined =>
+  typeof value === 'string' && thicknessValues.has(value as PathThickness) ? (value as PathThickness) : undefined;
+
 const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
+
 const blendModeValues = new Set([
   'normal',
   'multiply',
@@ -257,7 +268,7 @@ const directPathChannels = {
       path.style = { ...path.style, fillRule: value };
     },
   ),
-  thickness: defineSimplePathChannel<PathThicknessValue>(
+  thickness: defineSimplePathChannel<PathThickness>(
     'thickness',
     { outputKind: 'symbol', palette: [...thicknessValues] },
     pathThicknessValue,
@@ -296,7 +307,7 @@ const directPathChannels = {
   ),
 };
 
-/** 允许直接交付到 core Path 的内置通道名集合。 */
+/** 允许直接交付到 core Path 的内置通道名集合 */
 export const BUILTIN_PATH_CHANNELS = {
   ...pathNumericChannels,
   ...directPathChannels,
@@ -340,7 +351,7 @@ export const BUILTIN_PATH_CHANNELS = {
 
 const erasePathChannelDefinition = (def: unknown): AnyChannelDefinition => def as AnyChannelDefinition;
 
-/** 内置 Path 通道 definition 集合。 */
+/** 内置 Path 通道 definition 集合 */
 export const PATH_CHANNELS: ReadonlyArray<AnyChannelDefinition> = Object.values(BUILTIN_PATH_CHANNELS).map(def =>
   erasePathChannelDefinition(def),
 );

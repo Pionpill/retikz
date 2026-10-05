@@ -1,0 +1,91 @@
+---
+title: Extended usage
+description: Configure direction, spacing, appearance, and presentation regions.
+---
+
+Continue from [basic usage](/schematic/diagram/branch/usage) with the same node and branch model.
+
+## Direction, spacing, and appearance
+
+`layout.direction` accepts right, left, down, and up, defaulting to right. `nodeGap` and `laneGap` both default to 48. They measure clear space along progression and between lanes, including outside-label occupancy, not center-to-center distance. Zero allows occupied bounds to touch.
+
+The preview fixes the A/B/C topology and changes direction, gaps, and branch color. Same-lane routes are straight; cross-lane routes use rounded orthogonal turns. Node occupancy does not overlap, but complex routes are not guaranteed to avoid all crossings or labels.
+
+<ComponentPreview
+  files={['branch-layout', 'branch-layout.preview.tsx']}
+  defaultSourceFile="branch-layout.preview.tsx"
+  size="lg"
+/>
+
+A shared directed segment is drawn once. Equal effective styles merge; conflicting styles fail instead of using the last declaration.
+
+## Presentation
+
+`presentation` supplies title, description, and legend. `frame` controls the outer frame and region spacing. Authors supply the legend explicitly. Toggle each region below: omission removes its content and occupancy, and enabling it restores the region. The legend circle represents the blue topic node.
+
+<ComponentPreview
+  files={['branch-presentation', 'branch-presentation.preview.tsx']}
+  defaultSourceFile="branch-presentation.preview.tsx"
+  size="lg"
+/>
+
+## Scenario comparison
+
+These examples reuse the declarations above without adding business-specific APIs.
+
+**Commit history**: commits are nodes and display paths are branches. Consumers convert their parent DAG into ordered paths; Git branch/tag refs may be labels. This example explicitly progresses downward.
+
+<ComponentPreview files="/schematic/diagram/branch/branch-history" size="md" />
+
+**Reading routes**: previous and next articles form the main path; ordered additional reading forms side paths. Arbitrary related or backward links remain page navigation, not cyclic progression paths.
+
+<ComponentPreview files="/schematic/diagram/branch/branch-reading" size="md" />
+
+## Related props
+
+See the [API reference](/schematic/diagram/branch/api-reference) for complete definitions.
+
+<ComponentProps
+  items={[
+    {
+      name: 'BranchDiagram.layout.direction',
+      type: "'right' | 'left' | 'down' | 'up'",
+      defaultValue: "'right'",
+      description: 'Logical progression direction',
+    },
+    {
+      name: 'BranchDiagram.layout.nodeGap',
+      type: 'number',
+      defaultValue: '48',
+      description: 'Nonnegative progression gap',
+    },
+    { name: 'BranchDiagram.layout.laneGap', type: 'number', defaultValue: '48', description: 'Nonnegative lane gap' },
+    {
+      name: 'Branch.style',
+      type: "IRBranch['style']",
+      description: 'Connection appearance; shared segments require equal effective styles',
+    },
+    {
+      name: 'BranchDiagram.presentation',
+      type: '{ title?: IRDiagramPresentationText; description?: IRDiagramPresentationText; legend?: IRLegend }',
+      description: 'Omitted presentation regions occupy no space',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Implementation',
+      description: 'Understand measurement, layout, and final paths',
+      url: '/schematic/diagram/branch/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up layout definitions and runtime options',
+      url: '/schematic/diagram/branch/api-reference',
+    },
+  ]}
+/>

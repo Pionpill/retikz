@@ -12,7 +12,7 @@ export const RetikzStandardErrorCode = {
 } as const;
 
 /** Standard 包结构化错误码取值 */
-export type RetikzStandardErrorCodeValue = ValueOf<typeof RetikzStandardErrorCode>;
+export type RetikzStandardErrorCode = ValueOf<typeof RetikzStandardErrorCode>;
 
 /** Standard 包错误的结构化详情 */
 export type RetikzStandardErrorDetails = Readonly<Record<string, unknown>>;
@@ -20,7 +20,7 @@ export type RetikzStandardErrorDetails = Readonly<Record<string, unknown>>;
 /** Standard 包错误的构造参数 */
 export type RetikzStandardErrorOptions = Readonly<{
   /** 机器可判定的错误码 */
-  code: RetikzStandardErrorCodeValue;
+  code: RetikzStandardErrorCode;
   /** 面向调用方的错误消息 */
   message: string;
   /** 与错误码关联的结构化详情 */
@@ -30,7 +30,7 @@ export type RetikzStandardErrorOptions = Readonly<{
 }>;
 
 /** Standard 包在 authoring、几何和 lowering 阶段报告的结构化错误 */
-export class RetikzStandardError extends RetikzError<RetikzStandardErrorCodeValue, RetikzStandardErrorDetails> {
+export class RetikzStandardError extends RetikzError<RetikzStandardErrorCode, RetikzStandardErrorDetails> {
   /** 创建 Standard 包结构化错误 */
   constructor(options: RetikzStandardErrorOptions) {
     super(options);

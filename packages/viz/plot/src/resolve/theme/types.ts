@@ -8,6 +8,7 @@ type GuideTextStyle = Partial<
     'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'
   >
 >;
+
 type LegendStyle = NonNullable<IRPlotLegendGuide['style']>;
 
 /** Plot palette 解析结果：所有默认配色入口收敛到一个对象 */

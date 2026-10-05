@@ -43,8 +43,12 @@ import {
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { InputBranchDiagram } from '@retikz/diagram-vanilla/branch';
+import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
+import type { IRBranchDiagram } from '@retikz/diagram/branch';
+import { BranchDiagramSchema } from '@retikz/diagram/branch';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
@@ -105,7 +109,16 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import { list, ListInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import { chain, ChainInputEmbedAdapter } from '@retikz/standard-vanilla/collection';
+import type { InputChainItem } from '@retikz/standard-vanilla/collection';
+import {
+  matrix,
+  MatrixInputEmbedAdapter,
+  array,
+  ArrayInputEmbedAdapter,
+  map,
+  MapInputEmbedAdapter,
+} from '@retikz/standard-vanilla/collection';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -129,8 +142,10 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
-import type { IRCell, IRList, IRMap } from '@retikz/standard/collection';
-import { ListDefinition, MapDefinition } from '@retikz/standard/collection';
+import { ChainDefinition } from '@retikz/standard/collection';
+import type { IRChain, IRChainItem } from '@retikz/standard/collection';
+import type { IRCell, IRMatrix, IRArray, IRMap } from '@retikz/standard/collection';
+import { MatrixDefinition, ArrayDefinition, MapDefinition } from '@retikz/standard/collection';
 import {
   AxesDefinition,
   AxesSchema,
@@ -180,6 +195,7 @@ import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types
 type CompositeChild = IRChild & { namespace: string; type: string };
 
 let previewMeasureCanvas: HTMLCanvasElement | null = null;
+
 let previewMeasureContext: CanvasRenderingContext2D | null = null;
 
 /** 让自动 Vanilla SVG 使用与当前文档页面一致的浏览器字体指标 */
@@ -189,13 +205,16 @@ const browserPreviewMeasurer: TextMeasurer = (text: string, font: TextFont) => {
     previewMeasureCanvas = document.createElement('canvas');
     previewMeasureContext = previewMeasureCanvas.getContext('2d');
   }
+
   if (previewMeasureContext === null) return fallbackMeasurer(text, font);
+
   const inheritedFamily = getComputedStyle(document.body).fontFamily.trim();
   const family = font.family ?? (inheritedFamily.length > 0 ? inheritedFamily : 'sans-serif');
   previewMeasureContext.font = `${font.style ?? 'normal'} ${font.weight ?? 'normal'} ${font.size}px ${family}`;
   const metrics = previewMeasureContext.measureText(text);
   const ascent = Math.max(0, metrics.actualBoundingBoxAscent);
   const descent = Math.max(0, metrics.actualBoundingBoxDescent);
+
   return {
     width: metrics.width,
     height: ascent + descent || font.size * 1.2,
@@ -208,14 +227,18 @@ const isComposite = (child: IRChild): child is CompositeChild => 'namespace' in 
 
 const collectComposites = (children: ReadonlyArray<IRChild>): Array<CompositeChild> => {
   const composites: Array<CompositeChild> = [];
+
   const visit = (child: IRChild): void => {
     if (isComposite(child)) {
       composites.push(child);
       return;
     }
+
     if (child.type === 'scope') child.children.forEach(visit);
   };
+
   children.forEach(visit);
+
   return composites;
 };
 
@@ -230,6 +253,7 @@ const diagnostic = (message: string): VanillaPreviewArtifact => ({ code: `// ${m
 const convertCoreChild = (child: IRChild): InputChild => {
   if ('namespace' in child) throw new Error(`Unexpected Tier 2 composite "${child.namespace}.${child.type}".`);
   if (child.type !== 'scope') return child;
+
   return {
     ...child,
     children: child.children.map(convertCoreChild),
@@ -249,6 +273,7 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
       ? {}
       : { compile: { pathKinds: preview.pathKinds, measureText: options.measureText } }),
   });
+
   try {
     return { code: irToVanillaCode(preview.sourceIr, { pathKinds: preview.pathKinds }), svg };
   } catch (error) {
@@ -270,7 +295,9 @@ type StandardKind =
   | 'frame'
   | 'surface'
   | 'legend'
-  | 'list'
+  | 'chain'
+  | 'matrix'
+  | 'array'
   | 'map';
 
 type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
@@ -298,65 +325,76 @@ const convertStandardChild = (
   graphState: GraphConversionState,
 ): InputChild => {
   state.adapters.add(child.type as StandardKind);
+
   switch (child.type) {
     case 'circle': {
       const { namespace: _namespace, type: _type, ...input } = CircleSchema.parse(child);
       void _namespace;
       void _type;
+
       return shape.circle(input);
     }
     case 'ellipse': {
       const { namespace: _namespace, type: _type, ...input } = EllipseSchema.parse(child);
       void _namespace;
       void _type;
+
       return shape.ellipse(input);
     }
     case 'rectangle': {
       const { namespace: _namespace, type: _type, ...input } = RectangleSchema.parse(child);
       void _namespace;
       void _type;
+
       return shape.rectangle(input);
     }
     case 'polygon': {
       const { namespace: _namespace, type: _type, ...input } = PolygonSchema.parse(child);
       void _namespace;
       void _type;
+
       return shape.polygon(input);
     }
     case 'star': {
       const { namespace: _namespace, type: _type, ...input } = StarSchema.parse(child);
       void _namespace;
       void _type;
+
       return shape.star(input);
     }
     case 'arc': {
       const { namespace: _namespace, type: _type, ...input } = ArcSchema.parse(child);
       void _namespace;
       void _type;
+
       return shape.arc(input);
     }
     case 'sector': {
       const { namespace: _namespace, type: _type, ...input } = SectorSchema.parse(child);
       void _namespace;
       void _type;
+
       return shape.sector(input);
     }
     case 'grid': {
       const { namespace: _namespace, type: _type, ...input } = GridSchema.parse(child);
       void _namespace;
       void _type;
+
       return grid(input);
     }
     case 'axes': {
       const { namespace: _namespace, type: _type, ...input } = AxesSchema.parse(child);
       void _namespace;
       void _type;
+
       return axes(input);
     }
     case 'frame': {
       const { namespace: _namespace, type: _type, ...input } = FrameSchema.parse(child);
       void _namespace;
       void _type;
+
       return frame(input);
     }
     case 'legend': {
@@ -381,18 +419,65 @@ const convertStandardChild = (
                 ...(tick.label === undefined ? {} : { label: convertPreviewChild(tick.label, state, graphState) }),
               })),
             };
+
       return legend({
         ...input,
         ...(title === undefined ? {} : { title: convertPreviewChild(title, state, graphState) }),
         content: normalizedContent,
       });
     }
-    case 'list': {
-      const { namespace: _namespace, type: _type, data, items, dataExpand, ...input } = child as IRList;
+    case 'chain': {
+      const { namespace, type, items, data, skeleton, dataExpand, ...input } = child as IRChain;
+      void namespace;
+      void type;
+      if (skeleton !== undefined) return chain({ ...input, skeleton });
+      if (data !== undefined) return chain({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+
+      const convert = (sequence: Array<IRChainItem>): Array<InputChainItem> =>
+        sequence.map(item =>
+          typeof item === 'string'
+            ? item
+            : item.kind === 'parallel'
+              ? { ...item, branches: item.branches.map(branch => ({ items: convert(branch.items) })) }
+              : item.content === undefined || typeof item.content === 'string'
+                ? item
+                : { ...item, content: convertPreviewChild(item.content, state, graphState) },
+        );
+
+      return chain({ ...input, items: convert(items) });
+    }
+    case 'matrix': {
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRMatrix;
       void _namespace;
       void _type;
-      if (data !== undefined) return list({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
-      return list({
+      if (skeleton !== undefined) return matrix({ ...input, skeleton });
+      if (data !== undefined) return matrix({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+
+      return matrix({
+        ...input,
+        items: items.map(row =>
+          row.map(cell =>
+            typeof cell === 'string'
+              ? cell
+              : {
+                  ...cell,
+                  content:
+                    cell.content === undefined || typeof cell.content === 'string'
+                      ? cell.content
+                      : convertPreviewChild(cell.content, state, graphState),
+                },
+          ),
+        ),
+      });
+    }
+    case 'array': {
+      const { namespace: _namespace, type: _type, data, items, skeleton, dataExpand, ...input } = child as IRArray;
+      void _namespace;
+      void _type;
+      if (skeleton !== undefined) return array({ ...input, skeleton });
+      if (data !== undefined) return array({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+
+      return array({
         ...input,
         items: items.map(cell =>
           typeof cell === 'string'
@@ -400,7 +485,7 @@ const convertStandardChild = (
             : {
                 ...cell,
                 content:
-                  typeof cell.content === 'string'
+                  cell.content === undefined || typeof cell.content === 'string'
                     ? cell.content
                     : convertPreviewChild(cell.content, state, graphState),
               },
@@ -408,7 +493,7 @@ const convertStandardChild = (
       });
     }
     case 'map': {
-      const { namespace: _namespace, type: _type, data, entries, dataExpand, ...input } = child as IRMap;
+      const { namespace: _namespace, type: _type, data, entries, skeleton, dataExpand, ...input } = child as IRMap;
       void _namespace;
       void _type;
       const convertCell = (cell: string | IRCell) =>
@@ -417,9 +502,13 @@ const convertStandardChild = (
           : {
               ...cell,
               content:
-                typeof cell.content === 'string' ? cell.content : convertPreviewChild(cell.content, state, graphState),
+                cell.content === undefined || typeof cell.content === 'string'
+                  ? cell.content
+                  : convertPreviewChild(cell.content, state, graphState),
             };
+      if (skeleton !== undefined) return map({ ...input, skeleton });
       if (data !== undefined) return map({ ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) });
+
       return map({
         ...input,
         entries: entries.map(entry => ({ key: convertCell(entry.key), value: convertCell(entry.value) })),
@@ -429,6 +518,7 @@ const convertStandardChild = (
       const { namespace: _namespace, type: _type, child: nested, ...input } = SurfaceSchema.parse(child);
       void _namespace;
       void _type;
+
       return surface({
         ...input,
         child: surfaceChild(convertPreviewChild(nested, state, graphState)),
@@ -445,11 +535,13 @@ const convertLayoutChild = (
   graphState: GraphConversionState,
 ): InputChild => {
   state.adapters.add(child.type as LayoutKind);
+
   switch (child.type) {
     case 'flexLayout': {
       const { namespace: _namespace, type: _type, children, ...input } = FlexLayoutSchema.parse(child);
       void _namespace;
       void _type;
+
       return flexLayout({
         ...input,
         children: children.map(item => ({
@@ -462,6 +554,7 @@ const convertLayoutChild = (
       const { namespace: _namespace, type: _type, children, ...input } = GridLayoutSchema.parse(child);
       void _namespace;
       void _type;
+
       return gridLayout({
         ...input,
         children: children.map(item => ({
@@ -474,6 +567,7 @@ const convertLayoutChild = (
       const { namespace: _namespace, type: _type, children, ...input } = OverlayLayoutSchema.parse(child);
       void _namespace;
       void _type;
+
       return overlayLayout({
         ...input,
         children: children.map(item => ({
@@ -495,17 +589,22 @@ const convertGraphChild = (
   switch (child.type) {
     case 'graph': {
       const input = graphPreviewAuthoringInput(GraphSchema.parse(child));
+
       const convertGraphInputChild = (nested: InputGraphChild): InputGraphChild => {
         if (!('namespace' in nested)) {
           if (nested.type !== 'entity' && nested.type !== 'relation') {
             return convertPreviewChild(nested as IRChild, libraryState, state);
           }
+
           return nested;
         }
+
         return convertPreviewChild(nested, libraryState, state);
       };
+
       const children = input.children?.map(convertGraphInputChild);
       registerGraphAdapter('graph', state);
+
       return graph({
         ...input,
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
@@ -521,6 +620,7 @@ const convertGraphChild = (
         convertPreviewChild(nested, libraryState, state),
       );
       registerGraphAdapter('group', state);
+
       return group({
         ...input,
         ...(children === undefined ? {} : { children }),
@@ -534,6 +634,7 @@ const convertGraphChild = (
         convertPreviewChild(nested, libraryState, state),
       );
       registerGraphAdapter('block', state);
+
       return block({
         ...input,
         ...(children === undefined ? {} : { children }),
@@ -544,6 +645,7 @@ const convertGraphChild = (
       void _namespace;
       void _type;
       registerGraphAdapter('blockHeader', state);
+
       return blockHeader({
         ...input,
         ...(icon === undefined ? {} : { icon: convertPreviewChild(icon, libraryState, state) }),
@@ -563,6 +665,7 @@ const convertGraphChild = (
         convertPreviewChild(nested, libraryState, state),
       );
       registerGraphAdapter('blockSection', state);
+
       return blockSection({
         ...input,
         ...(children === undefined ? {} : { children }),
@@ -575,14 +678,17 @@ const convertGraphChild = (
         void _namespace;
         void _type;
         registerGraphAdapter('blockRow', state);
+
         return blockRow({
           ...input,
         });
       }
+
       const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
       void _namespace;
       void _type;
       registerGraphAdapter('blockRow', state);
+
       return blockRow({
         ...input,
         ...(sourceChildren === undefined
@@ -612,11 +718,15 @@ const convertPreviewChild = (
     if (child.namespace === 'standard') return convertStandardChild(child, libraryState, graphState);
     if (child.namespace === 'layout') return convertLayoutChild(child, libraryState, graphState);
     if (child.namespace === 'graph') return convertGraphChild(child, graphState, libraryState);
+
     throw new Error(`Unsupported composite "${child.namespace}.${child.type}".`);
   }
+
   if (child.type !== 'scope') return child;
+
   const { children, type: _type, ...config } = child;
   void _type;
+
   return scope(
     config,
     children.map(nested => convertPreviewChild(nested, libraryState, graphState)),
@@ -635,7 +745,9 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<Synchron
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
-  ...(state.adapters.has('list') ? [ListInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('chain') ? [ChainInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('matrix') ? [MatrixInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
+  ...(state.adapters.has('array') ? [ArrayInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('map') ? [MapInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
   ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as SynchronousInputEmbedAdapter<never>] : []),
@@ -672,7 +784,9 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
-  ListDefinition,
+  ChainDefinition,
+  MatrixDefinition,
+  ArrayDefinition,
   MapDefinition,
   SurfaceDefinition,
   LegendDefinition,
@@ -708,6 +822,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
     children: preview.ir.children.map(child => convertPreviewChild(child, libraryState, graphState)),
   });
+
   const definitionNames = collectPreviewDefinitions(
     preview.ir.children,
     new Set(
@@ -718,7 +833,9 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'frame',
           'surface',
           'legend',
-          'list',
+          'chain',
+          'matrix',
+          'array',
           'map',
           'circle',
           'ellipse',
@@ -737,6 +854,7 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     ),
     new Set(graphState.adapters),
   );
+
   const hasStandaloneGraphMembers = graphState.adapters.size > 0 && !graphState.adapters.has('graph');
   const definitions = [
     ...definitionNames.standard.map(name => standardDefinitionByName[name]),
@@ -757,14 +875,17 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
         definitions: { composites: definitions },
       })
     : { composites: definitions };
+
   const compile = {
     ...resolvedDefinitions,
     themeStyles: PreviewThemeDefinitionBundle.core,
     measureText: options.measureText ?? browserPreviewMeasurer,
   };
+
   const renderInput = hasStandaloneGraphMembers
     ? { ...preview.ir, ...(options.theme === undefined ? {} : { theme: options.theme }) }
     : input;
+
   return {
     code: irToVanillaCode(preview.sourceIr, { theme: options.theme }),
     svg: renderToSvgString(renderInput, {
@@ -784,6 +905,7 @@ const findProviderDataset = (
 ): ExternalDatasets | null => {
   let dataset: unknown;
   let found = false;
+
   for (const contribution of preview.contributions) {
     for (const provider of contribution.providers) {
       if (
@@ -792,14 +914,17 @@ const findProviderDataset = (
         !Object.hasOwn(provider.datasets, reference)
       )
         continue;
+
       const candidate = provider.datasets[reference];
       if (found && dataset !== candidate) {
         throw new Error(`${label} dataset reference "${reference}" resolves to different values.`);
       }
+
       dataset = candidate;
       found = true;
     }
   }
+
   return found ? ({ [reference]: dataset } as ExternalDatasets) : null;
 };
 
@@ -823,7 +948,9 @@ const buildPlotPreview = (
   if (datasets === null) {
     return diagnostic(`Cannot generate Vanilla preview: Plot dataset "${spec.data.reference}" was not captured.`);
   }
+
   const size = outputSize(preview);
+
   return {
     code: buildPlotCode(spec, datasets, preview),
     svg: renderPlot(spec, datasets, {
@@ -851,6 +978,7 @@ const buildDatasetImportCode = (
 ): DatasetImportCode | null => {
   const references = Object.keys(datasets);
   if (references.length === 0) return { imports: '', expression: '{}' };
+
   const bindings = references.map(reference => options.datasetImports?.[reference]);
   if (bindings.some(binding => binding === undefined)) return null;
 
@@ -860,6 +988,7 @@ const buildDatasetImportCode = (
     if (!identifierPattern.test(binding.name)) {
       throw new Error(`Dataset import name "${binding.name}" is not a supported identifier.`);
     }
+
     const names = importsBySource.get(binding.from) ?? [];
     if (!names.includes(binding.name)) names.push(binding.name);
     importsBySource.set(binding.from, names);
@@ -874,6 +1003,7 @@ const buildDatasetImportCode = (
       return `${key}: ${bindings[index]?.name ?? 'undefined'}`;
     })
     .join(', ')} }`;
+
   return { imports, expression };
 };
 
@@ -888,7 +1018,9 @@ type TypedChartSource =
 /** 从 Source IR 识别确定形态的 Chart */
 const typedChartSourceOf = (source: CompositeChild): TypedChartSource | undefined => {
   if (source.namespace !== 'chart' || source.type !== 'point' || !('recipe' in source)) return undefined;
+
   const chartType = (source as IRChartSource).recipe.chartType;
+
   switch (chartType) {
     case 'scatter':
       return ScatterChartSchema.parse(source);
@@ -924,6 +1056,7 @@ const typedChartAuthoringInput = (chart: TypedChartSource, datasets: ExternalDat
     ...(recipe.properties === undefined ? {} : { properties: recipe.properties }),
     ...(recipe.marks === undefined ? {} : { marks: recipe.marks }),
   };
+
   return shared;
 };
 
@@ -945,6 +1078,7 @@ const buildChartCode = (
     } as const;
     const factory = factoryByChartType[typedSource.recipe.chartType];
     const adapter = `${factory[0].toUpperCase()}${factory.slice(1)}InputEmbedAdapter`;
+
     const datasetImport = buildDatasetImportCode(datasets, options);
     const importCode = datasetImport === null || datasetImport.imports.length === 0 ? '' : `${datasetImport.imports}\n`;
     const dataCode = datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
@@ -953,6 +1087,7 @@ const buildChartCode = (
     const importedDataset = datasetImportBinding === undefined ? undefined : datasetImportBinding.name;
     const dataExpression =
       importedDataset ?? `${datasetImport?.expression ?? 'datasets'}[${formatVanillaValue(dataReference)}]`;
+
     const inputCode = formatVanillaValue({
       ...typedChartAuthoringInput(typedSource, datasets),
       data: '__DATASET__',
@@ -965,10 +1100,13 @@ const buildChartCode = (
       .replace("'__CORE_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.core')
       .replace("'__CHART_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.chart')
       .replace("'__PLOT_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.plot');
+
     const size = outputSize(preview);
     const renderOptionsCode = `, { adapters: [${adapter}]${Object.keys(size).length === 0 ? '' : `, output: ${formatVanillaValue(size)}`} }`;
+
     return `import { renderChart } from '@retikz/chart-vanilla';\nimport { ${factory}, ${adapter} } from '@retikz/chart-vanilla/point';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n${importCode}\n${dataCode}const chart = ${factory}(${inputCode});\n\nexport const svg = renderChart(chart${renderOptionsCode}).svg;\n`;
   }
+
   return diagnostic(`Cannot generate Vanilla preview for unknown Chart Source type "${chart.type}".`).code;
 };
 
@@ -979,10 +1117,12 @@ const buildChartPreview = (
 ): VanillaPreviewArtifact => {
   const chart = typedChartSourceOf(source);
   if (chart === undefined) return diagnostic(`Cannot generate Vanilla preview for Chart Source "${source.type}".`);
+
   const datasets = findProviderDataset(preview, 'plot', chart.data.reference, 'Chart');
   if (datasets === null) {
     return diagnostic(`Cannot generate Vanilla preview: Chart dataset "${chart.data.reference}" was not captured.`);
   }
+
   const size = outputSize(preview);
   const input = {
     ...typedChartAuthoringInput(chart, datasets),
@@ -991,6 +1131,7 @@ const buildChartPreview = (
     themeDefinitions: PreviewThemeDefinitionBundle.chart,
     lowerOptions: { plotThemeStyles: PreviewThemeDefinitionBundle.plot },
   };
+
   const runtime = (() => {
     switch (chart.recipe.chartType) {
       case 'bubble':
@@ -1007,6 +1148,7 @@ const buildChartPreview = (
         return stripChart(input as StripChartInputEmbedProps);
     }
   })();
+
   const rendered = renderChart(runtime, {
     adapters: [
       ScatterChartInputEmbedAdapter,
@@ -1019,6 +1161,7 @@ const buildChartPreview = (
     ...(options.measureText === undefined ? {} : { compile: { measureText: options.measureText } }),
     ...(Object.keys(size).length === 0 ? {} : { output: size }),
   });
+
   return {
     code: buildChartCode(chart, datasets, preview, options),
     svg: rendered.svg,
@@ -1049,6 +1192,7 @@ const buildTableCode = (
     ...(Object.keys(size).length > 0 ? { output: size } : {}),
   };
   const optionsCode = formatVanillaValue(renderOptions).replace("'__ADAPTERS__'", '[TableInputEmbedAdapter]');
+
   return `import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\n${importCode}\nconst spec = ${formatVanillaValue(spec)};\n${dataCode}const input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, ${optionsCode});\n`;
 };
 
@@ -1063,10 +1207,12 @@ const buildTablePreview = (
       `Cannot generate Vanilla preview: Table structure "${spec.structure.kind}" requires runtime definitions that cannot be serialized.`,
     );
   }
+
   const datasets = findTableDatasets(preview, spec);
   if (datasets === null && spec.data !== undefined) {
     return diagnostic(`Cannot generate Vanilla preview: Table dataset "${spec.data.reference}" was not captured.`);
   }
+
   const resolvedDatasets = datasets ?? {};
   const input = scene({
     ...(options.theme === undefined ? {} : { theme: options.theme }),
@@ -1074,6 +1220,7 @@ const buildTablePreview = (
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
     children: [embedTable(spec, Object.keys(resolvedDatasets).length > 0 ? { data: resolvedDatasets } : {})],
   });
+
   return {
     code: buildTableCode(spec, resolvedDatasets, preview, options),
     svg: renderToSvgString(input, {
@@ -1089,6 +1236,7 @@ const flowAuthoringInput = (source: IRFlowDiagram): InputFlowDiagram => {
   const { namespace: _namespace, type: _type, ...input } = source;
   void _namespace;
   void _type;
+
   return input;
 };
 
@@ -1110,6 +1258,7 @@ const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: Build
     ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
     children: '__FLOW_CHILDREN__',
   }).replace("'__FLOW_CHILDREN__'", `[flowDiagram(${authoringCode})]`);
+
   return `import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [FlowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
 };
 
@@ -1132,10 +1281,71 @@ const buildFlowPreview = (
       }),
     ],
   });
+
   return {
     code: buildFlowCode(source, preview, options),
     svg: renderToSvgString(input, {
       adapters: [FlowDiagramInputEmbedAdapter],
+      output: outputSize(preview),
+      compile: {
+        themeStyles: PreviewThemeDefinitionBundle.core,
+        measureText: options.measureText ?? browserPreviewMeasurer,
+      },
+    }),
+  };
+};
+
+const branchAuthoringInput = (source: IRBranchDiagram): InputBranchDiagram => {
+  const { namespace: _namespace, type: _type, ...input } = source;
+  void _namespace;
+  void _type;
+
+  return input;
+};
+
+const buildBranchCode = (source: IRBranchDiagram, preview: PreviewIR, options: BuildVanillaPreviewOptions): string => {
+  const authoring = {
+    ...branchAuthoringInput(source),
+    entityKinds: '__GRAPH_ENTITY_KINDS__',
+    diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    graphThemeStyles: '__GRAPH_THEME_STYLES__',
+  };
+  const authoringCode = formatVanillaValue(authoring)
+    .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
+    .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
+    .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  const figureCode = formatVanillaValue({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: '__BRANCH_CHILDREN__',
+  }).replace("'__BRANCH_CHILDREN__'", `[branchDiagram(${authoringCode})]`);
+
+  return `import { branchDiagram, BranchDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/branch';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [BranchDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
+};
+
+const buildBranchPreview = (
+  preview: PreviewIR,
+  composite: CompositeChild,
+  options: BuildVanillaPreviewOptions,
+): VanillaPreviewArtifact => {
+  const source = BranchDiagramSchema.parse(composite);
+  const input = scene({
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
+    children: [
+      branchDiagram({
+        ...branchAuthoringInput(source),
+        entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
+        diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
+        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+      }),
+    ],
+  });
+
+  return {
+    code: buildBranchCode(source, preview, options),
+    svg: renderToSvgString(input, {
+      adapters: [BranchDiagramInputEmbedAdapter],
       output: outputSize(preview),
       compile: {
         themeStyles: PreviewThemeDefinitionBundle.core,
@@ -1153,8 +1363,10 @@ export const buildVanillaPreview = (
   const runtimeComposites = collectComposites(preview.ir.children);
   const composites = collectComposites(preview.sourceIr.children);
   const effectiveComposites = composites.length === 0 ? runtimeComposites : composites;
+
   try {
     if (effectiveComposites.length === 0) return buildCorePreview(preview, options);
+
     const firstComposite = effectiveComposites[0];
     if (
       effectiveComposites.every(
@@ -1163,9 +1375,11 @@ export const buildVanillaPreview = (
     ) {
       return buildLibraryPreview(preview, options);
     }
+
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'plot' && firstComposite.type === 'plot') {
       return buildPlotPreview(preview, firstComposite, options);
     }
+
     if (
       effectiveComposites.length === 1 &&
       firstComposite.namespace === 'chart' &&
@@ -1173,12 +1387,23 @@ export const buildVanillaPreview = (
     ) {
       return buildChartPreview(preview, firstComposite, options);
     }
+
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'table' && firstComposite.type === 'table') {
       return buildTablePreview(preview, firstComposite, options);
     }
+
+    if (
+      effectiveComposites.length === 1 &&
+      firstComposite.namespace === 'diagram' &&
+      firstComposite.type === 'branch'
+    ) {
+      return buildBranchPreview(preview, firstComposite, options);
+    }
+
     if (effectiveComposites.length === 1 && firstComposite.namespace === 'diagram' && firstComposite.type === 'flow') {
       return buildFlowPreview(preview, firstComposite, options);
     }
+
     const unsupported = effectiveComposites.find(
       child =>
         child.namespace !== 'standard' &&
@@ -1190,6 +1415,7 @@ export const buildVanillaPreview = (
         !(child.namespace === 'diagram' && child.type === 'flow'),
     );
     const child = unsupported ?? firstComposite;
+
     return diagnostic(`Cannot generate Vanilla preview for Tier 2 composite "${child.namespace}.${child.type}".`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

@@ -8,9 +8,11 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 import { textNormalizationI18n } from './text-normalization.i18n';
 
 export type TextNormalizationProps = Readonly<{ lang?: Lang }>;
+
 const TextNormalization: FC<TextNormalizationProps> = props => {
   const { lang } = props;
   const labels = textNormalizationI18n[lang ?? 'zh'];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

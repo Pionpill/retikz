@@ -73,18 +73,24 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
     transformStyle,
     beginDrag,
   } = state;
+
   const dragCursor = dragEnabled ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : '';
   const [dimensions, setDimensions] = useState<PreviewDimensions>();
+
   useLayoutEffect(() => {
     if (!responsive) return;
+
     const element = renderPaneRef.current;
     if (!element) return;
+
     const update = (width: number, height: number) => {
       if (width <= 0 || height <= 0) return;
+
       setDimensions(previous =>
         previous?.width === width && previous.height === height ? previous : { width, height },
       );
     };
+
     update(element.clientWidth, element.clientHeight);
     const observer = new ResizeObserver(entries => {
       // ResizeObserver 在绘制前通知尺寸，同步提交避免新容器显示一帧旧图形
@@ -93,6 +99,7 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
       });
     });
     observer.observe(element);
+
     return () => observer.disconnect();
   }, [responsive, renderPaneRef]);
 

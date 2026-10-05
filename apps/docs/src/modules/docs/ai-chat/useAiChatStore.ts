@@ -156,9 +156,11 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         const state = get();
         const id = state.activeConversationId;
         if (!id) return;
+
         const existing = state.conversations[id];
         // oxlint-disable-next-line typescript/no-unnecessary-condition -- Record<string,V> index 在 TS 默认 typings 下永远返回 V，但运行时 id 不存在时确实是 undefined；保留防御
         if (!existing) return;
+
         const now = Date.now();
         const updated: Conversation = {
           ...existing,
@@ -175,20 +177,25 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         const state = get();
         const all = Object.values(state.conversations);
         if (all.length <= MAX_CONVERSATIONS) return;
+
         const sorted = [...all].sort((a, b) => b.updatedAt - a.updatedAt);
         const keep = new Set<string>();
         if (state.activeConversationId) keep.add(state.activeConversationId);
+
         for (const c of sorted) {
           if (keep.size >= MAX_CONVERSATIONS) break;
           keep.add(c.id);
         }
+
         const evictIds = all.filter(c => !keep.has(c.id)).map(c => c.id);
         if (evictIds.length === 0) return;
+
         set(s => {
           const rest = { ...s.conversations };
           for (const id of evictIds) delete rest[id];
           return { conversations: rest };
         });
+
         for (const id of evictIds) void deleteConversationFromStorage(id);
       };
 
@@ -254,10 +261,13 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         send: async input => {
           const text = input.trim();
           if (!text) return;
+
           const state = get();
           if (state.isGenerating) return;
+
           const resolved = resolveProvider(state.providerId, state);
           if (!resolved || !resolved.apiKey) return;
+
           const model = state.models[state.providerId];
           if (!model) return;
 
@@ -323,6 +333,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
                   if (last?.role === 'assistant') {
                     m[m.length - 1] = { role: 'assistant', content: last.content + chunk.text };
                   }
+
                   return { messages: m };
                 });
               } else if (chunk.type === 'done') {
@@ -338,6 +349,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
                   const m = s.messages.slice();
                   const last = m.at(-1);
                   if (last?.role === 'assistant' && last.content === '') m.pop();
+
                   return { messages: m, error: { kind: chunk.kind, message: chunk.message } };
                 });
               }
@@ -351,6 +363,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
               const m = s.messages.slice();
               const last = m.at(-1);
               if (last?.role === 'assistant' && last.content === '') m.pop();
+
               return { messages: m, isGenerating: false, abortController: null };
             });
             persistActiveConversation();
@@ -362,16 +375,19 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             set({ retikzRepairInProgress: false });
             return;
           }
+
           const lastAssistant = post.messages.at(-1);
           if (lastAssistant?.role !== 'assistant') {
             set({ retikzRepairInProgress: false });
             return;
           }
+
           const invalid = findInvalidRetikzBlocks(lastAssistant.content);
           if (invalid.length === 0 || post.retikzRepairAttempts >= maxAttempts) {
             set({ retikzRepairInProgress: false });
             return;
           }
+
           const lang = post.currentPage?.lang ?? 'zh';
           const repairPrompt = buildRepairPrompt(invalid, lang);
           set({
@@ -391,10 +407,12 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
 
         hydrateConversations: async () => {
           if (get().conversationsHydrated) return;
+
           const conversations = await loadAllConversations();
           set(s => {
             const id = s.activeConversationId;
             const active = id ? conversations[id] : null;
+
             return {
               conversations,
               conversationsHydrated: true,
@@ -412,9 +430,11 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             set({ activeConversationId: null, messages: [], error: null, usage: INITIAL_USAGE });
             return;
           }
+
           const target = state.conversations[id];
           // oxlint-disable-next-line typescript/no-unnecessary-condition -- 同上，运行时 id 不存在时索引返回 undefined
           if (!target) return;
+
           set({
             activeConversationId: id,
             messages: target.messages,
@@ -429,6 +449,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           set(s => {
             const rest = { ...s.conversations };
             delete rest[id];
+
             return {
               conversations: rest,
               ...(isActive ? { activeConversationId: null, messages: [], error: null, usage: INITIAL_USAGE } : {}),
@@ -440,10 +461,12 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         renameConversation: (id, title) => {
           const trimmed = title.trim();
           if (!trimmed) return;
+
           const state = get();
           const existing = state.conversations[id];
           // oxlint-disable-next-line typescript/no-unnecessary-condition -- 同上，运行时 id 不存在时索引返回 undefined
           if (!existing) return;
+
           const updated: Conversation = { ...existing, title: trimmed, updatedAt: Date.now() };
           set(s => ({ conversations: { ...s.conversations, [id]: updated } }));
           void saveConversation(updated);
@@ -452,8 +475,10 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         editAndResendAt: index => {
           const state = get();
           if (state.isGenerating) return;
+
           const target = state.messages.at(index);
           if (!target || target.role !== 'user') return;
+
           set(s => ({
             draft: target.content,
             focusInputNonce: s.focusInputNonce + 1,
@@ -464,6 +489,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           const state = get();
           if (state.isGenerating) return;
           if (index < 0 || index >= state.messages.length) return;
+
           set({ messages: state.messages.slice(0, index), error: null });
           persistActiveConversation();
         },
@@ -471,10 +497,13 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         regenerateAssistantAt: async index => {
           const state = get();
           if (state.isGenerating) return;
+
           const assistantMsg = state.messages.at(index);
           if (!assistantMsg || assistantMsg.role !== 'assistant') return;
+
           const userMsg = state.messages.at(index - 1);
           if (!userMsg || userMsg.role !== 'user') return;
+
           set({ messages: state.messages.slice(0, index - 1), error: null });
           await get().send(userMsg.content);
         },
@@ -486,8 +515,10 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           const state = get();
           if (state.isGenerating) return;
           if (state.messages.length === 0) return;
+
           const resolved = resolveProvider(state.providerId, state);
           if (!resolved || !resolved.apiKey) return;
+
           const model = state.models[state.providerId];
           if (!model) return;
 
@@ -502,6 +533,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           set({ isGenerating: true, error: null, abortController: controller });
 
           let summary = '';
+
           try {
             for await (const chunk of resolved.chat({
               apiKey: resolved.apiKey,
@@ -544,10 +576,13 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         polishDraft: async () => {
           const state = get();
           if (state.polishingDraft) return;
+
           const original = state.draft.trim();
           if (!original) return;
+
           const resolved = resolveProvider(state.providerId, state);
           if (!resolved || !resolved.apiKey) return;
+
           const model = state.models[state.providerId];
           if (!model) return;
 
@@ -566,6 +601,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
 
           let rewritten = '';
           let hadError = false;
+
           try {
             for await (const chunk of resolved.chat({
               apiKey: resolved.apiKey,

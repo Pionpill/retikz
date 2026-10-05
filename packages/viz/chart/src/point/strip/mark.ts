@@ -15,6 +15,7 @@ export const resolveStripPointMark = (
 ): IRPlotMarkOperation => {
   const point = resolvePointMark(encodings, properties);
   const jitter = properties.jitter;
+
   return PointMarkSchema.parse({
     ...point,
     placement: {

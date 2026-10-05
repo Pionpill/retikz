@@ -30,7 +30,7 @@ const TableVisualChannel = {
 type IRTableCellVisualEncoding = {
   id: string;
   selector: IRTableCellSelector;
-  channel: TableVisualChannelValue;
+  channel: TableVisualChannel;
   scale: IRTableVisualScaleRef;
   legend?: false | { title?: string };
 };
@@ -111,7 +111,7 @@ sequential / threshold 的任一 selected non-null scalar 不是 number 时 fail
 ```ts
 type TableLegendDescriptor = DeepReadonly<{
   encodingId: string;
-  channel: TableVisualChannelValue;
+  channel: TableVisualChannel;
   scaleName: string;
   title?: string;
   form: 'ramp' | 'swatch';

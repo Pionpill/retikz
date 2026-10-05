@@ -58,5 +58,6 @@ export const InlineMdx: FC<InlineMdxProps> = ({ source, className, components: c
   );
 
   if (!Content) return <p className={className}>{source}</p>;
+
   return <Content components={components} />;
 };

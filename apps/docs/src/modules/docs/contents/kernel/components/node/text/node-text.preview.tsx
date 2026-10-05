@@ -35,6 +35,7 @@ export const NodeTextPreview = (values: NodeTextPreviewValues) => {
     const fill = index === 0 ? values.firstFill : index === 1 ? values.secondFill : values.restFill;
     const opacity = index === 0 ? values.firstOpacity : index === 1 ? values.secondOpacity : values.restOpacity;
     const emphasis = index === 0 ? values.firstEmphasis : index === 1 ? values.secondEmphasis : values.restEmphasis;
+
     return { text: line || ' ', fill, opacity, font: fontOf(emphasis) };
   });
 

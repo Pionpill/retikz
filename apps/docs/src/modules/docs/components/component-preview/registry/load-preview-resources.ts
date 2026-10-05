@@ -58,11 +58,13 @@ export const resolvePreviewResourceTarget = (request: PreviewResourceRequest): P
 
 const sourceKeysOf = (request: PreviewResourceRequest): Array<string> => {
   const keys = new Set<string>();
+
   for (const entry of request.sourceFiles) {
     keys.add(buildSourceFileKey(request.segments, entry.file));
     const baselineFilename = resolveSourceBaselineFilename(entry, request.name, request.diffFrom);
     if (baselineFilename !== undefined) keys.add(buildSourceFileKey(request.segments, baselineFilename));
   }
+
   return [...keys];
 };
 

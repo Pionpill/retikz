@@ -1,4 +1,5 @@
 import type { ScenePatch } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
@@ -14,8 +15,7 @@ export const RetainedRendererCapability = {
 } as const;
 
 /** Retained renderer 增量能力等级取值 */
-export type RetainedRendererCapabilityValue =
-  (typeof RetainedRendererCapability)[keyof typeof RetainedRendererCapability];
+export type RetainedRendererCapability = ValueOf<typeof RetainedRendererCapability>;
 
 /** Retained renderer 对只读 Scene 图层的支持等级 */
 export const RetainedRendererReadonlyLayerCapability = {
@@ -24,15 +24,14 @@ export const RetainedRendererReadonlyLayerCapability = {
 } as const;
 
 /** Retained renderer 只读 Scene 图层支持等级取值 */
-export type RetainedRendererReadonlyLayerCapabilityValue =
-  (typeof RetainedRendererReadonlyLayerCapability)[keyof typeof RetainedRendererReadonlyLayerCapability];
+export type RetainedRendererReadonlyLayerCapability = ValueOf<typeof RetainedRendererReadonlyLayerCapability>;
 
 /** Retained renderer 支持的宿主元素 */
 export type RetainedRendererHost = SVGSVGElement | HTMLCanvasElement;
 
 /** SVG renderer 的 session-lifetime immutable options */
 export type RetainedSvgRendererImmutableOptions = Readonly<{
-  /** renderer backend */
+  /** 渲染后端种类 */
   backend: 'svg';
   /** 资源与 descriptor id 前缀 */
   idPrefix: string;
@@ -40,7 +39,7 @@ export type RetainedSvgRendererImmutableOptions = Readonly<{
 
 /** Canvas renderer 的 session-lifetime immutable options */
 export type RetainedCanvasRendererImmutableOptions = Readonly<{
-  /** renderer backend */
+  /** 渲染后端种类 */
   backend: 'canvas';
   /** 资源与 descriptor id 前缀 */
   idPrefix: string;
@@ -64,9 +63,9 @@ export type RetainedRendererRead = Readonly<{
 /** Retained renderer 私有 executor 公共作者契约 */
 export type RetainedRendererDefinitionBase = Readonly<{
   /** renderer 支持的最大增量粒度 */
-  capability: RetainedRendererCapabilityValue;
+  capability: RetainedRendererCapability;
   /** renderer 是否能物化只读 Scene 图层 */
-  readonlyLayerCapability: RetainedRendererReadonlyLayerCapabilityValue;
+  readonlyLayerCapability: RetainedRendererReadonlyLayerCapability;
   /** staging 首次 materialization */
   prepareMount: (
     frame: RenderFrameSnapshot,
@@ -83,11 +82,21 @@ export type RetainedRendererDefinitionBase = Readonly<{
 
 /** SVG retained renderer 作者输入 */
 export type RetainedSvgRendererDefinitionInput = RetainedRendererDefinitionBase &
-  Readonly<{ backend: 'svg'; host: SVGSVGElement }>;
+  Readonly<{
+    /** 标识 SVG 渲染后端 */
+    backend: 'svg';
+    /** 当前渲染器持有的 SVG 根元素 */
+    host: SVGSVGElement;
+  }>;
 
 /** Canvas retained renderer 作者输入 */
 export type RetainedCanvasRendererDefinitionInput = RetainedRendererDefinitionBase &
-  Readonly<{ backend: 'canvas'; host: HTMLCanvasElement }>;
+  Readonly<{
+    /** 标识 Canvas 渲染后端 */
+    backend: 'canvas';
+    /** 当前渲染器持有的 Canvas 根元素 */
+    host: HTMLCanvasElement;
+  }>;
 
 /** Retained renderer 作者输入 */
 export type RetainedRendererDefinitionInput =
@@ -99,33 +108,50 @@ declare const RetainedRendererBrand: unique symbol;
 /** Retained renderer nominal token 的共享字段 */
 export type RetainedRendererTokenBase = Readonly<{
   /** renderer 增量能力 */
-  capability: RetainedRendererCapabilityValue;
+  capability: RetainedRendererCapability;
   /** renderer 只读 Scene 图层支持等级 */
-  readonlyLayerCapability: RetainedRendererReadonlyLayerCapabilityValue;
-  /** nominal brand */
+  readonlyLayerCapability: RetainedRendererReadonlyLayerCapability;
+  /** 用于区分名义类型的不透明标记 */
   [RetainedRendererBrand]: true;
 }>;
 
-/** SVG retained renderer nominal token */
-export type RetainedSvgRenderer = RetainedRendererTokenBase & Readonly<{ backend: 'svg'; host: SVGSVGElement }>;
+/** 保留式 SVG 渲染器的名义类型令牌 */
+export type RetainedSvgRenderer = RetainedRendererTokenBase &
+  Readonly<{
+    /** 标识 SVG 渲染后端 */
+    backend: 'svg';
+    /** 当前渲染器关联的稳定 SVG 根元素 */
+    host: SVGSVGElement;
+  }>;
 
-/** Canvas retained renderer nominal token */
+/** 保留式 Canvas 渲染器的名义类型令牌 */
 export type RetainedCanvasRenderer = RetainedRendererTokenBase &
-  Readonly<{ backend: 'canvas'; host: HTMLCanvasElement }>;
+  Readonly<{
+    /** 标识 Canvas 渲染后端 */
+    backend: 'canvas';
+    /** 当前渲染器关联的稳定 Canvas 根元素 */
+    host: HTMLCanvasElement;
+  }>;
 
-/** Retained renderer nominal token */
+/** 保留式渲染器的名义类型令牌 */
 export type RetainedRenderer = RetainedSvgRenderer | RetainedCanvasRenderer;
 
 /** Retained renderer factory 的判别输入 */
 export type RetainedRendererFactoryInput =
   | Readonly<{
+      /** 选择与宿主元素匹配的渲染后端 */
       backend: 'svg';
+      /** 工厂创建的渲染器所关联的根元素 */
       host: SVGSVGElement;
+      /** 该挂载生命周期内固定的后端参数 */
       immutableOptions: RetainedSvgRendererImmutableOptions;
     }>
   | Readonly<{
+      /** 选择与宿主元素匹配的渲染后端 */
       backend: 'canvas';
+      /** 工厂创建的渲染器所关联的根元素 */
       host: HTMLCanvasElement;
+      /** 该挂载生命周期内固定的后端参数 */
       immutableOptions: RetainedCanvasRendererImmutableOptions;
     }>;
 
@@ -139,36 +165,45 @@ export type RetainedRendererFactory = {
 
 /** Render 私有 renderer executor */
 export type RetainedRendererExecutor = Readonly<{
+  /** 准备首次场景挂载，返回可提交和回滚的事务 */
   prepareMount: RetainedRendererDefinitionBase['prepareMount'];
+  /** 准备场景补丁与运行时配置的原子更新 */
   prepare: RetainedRendererDefinitionBase['prepare'];
+  /** 读取已提交的渲染帧与动画状态 */
   read: RetainedRendererDefinitionBase['read'];
+  /** 释放渲染器持有的宿主资源 */
   dispose: RetainedRendererDefinitionBase['dispose'];
 }>;
 
 const retainedRenderers = new WeakSet<object>();
+
 const retainedRendererExecutors = new WeakMap<object, RetainedRendererExecutor>();
 
 /** 判断动态宿主是否为 SVGSVGElement，兼容跨 realm 与无 DOM 构造器测试环境 */
 export const isSvgHost = (value: unknown): value is SVGSVGElement => {
   if (typeof value !== 'object' || value === null) return false;
+
   const constructor = (globalThis as { SVGSVGElement?: typeof SVGSVGElement }).SVGSVGElement;
   if (constructor !== undefined) {
     if (value instanceof constructor) return true;
     const realmConstructor = Reflect.get(Reflect.get(value, 'ownerDocument') ?? {}, 'defaultView')?.SVGSVGElement;
     return typeof realmConstructor === 'function' && value instanceof realmConstructor;
   }
+
   return Reflect.get(value, 'tagName')?.toString().toLowerCase() === 'svg';
 };
 
 /** 判断动态宿主是否为 HTMLCanvasElement，兼容跨 realm 与无 DOM 构造器测试环境 */
 export const isCanvasHost = (value: unknown): value is HTMLCanvasElement => {
   if (typeof value !== 'object' || value === null) return false;
+
   const constructor = (globalThis as { HTMLCanvasElement?: typeof HTMLCanvasElement }).HTMLCanvasElement;
   if (constructor !== undefined) {
     if (value instanceof constructor) return true;
     const realmConstructor = Reflect.get(Reflect.get(value, 'ownerDocument') ?? {}, 'defaultView')?.HTMLCanvasElement;
     return typeof realmConstructor === 'function' && value instanceof realmConstructor;
   }
+
   return Reflect.get(value, 'tagName')?.toString().toLowerCase() === 'canvas';
 };
 
@@ -187,6 +222,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   if (!validHost) {
     throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause: input });
   }
+
   const token = Object.freeze({
     backend,
     host,
@@ -194,9 +230,11 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
     readonlyLayerCapability,
   }) as RetainedRenderer;
   let state: 'live' | 'disposing' | 'disposed' = 'live';
+
   const assertLive = (): void => {
     if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
   };
+
   retainedRendererExecutors.set(
     token,
     Object.freeze({
@@ -214,6 +252,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
       },
       dispose: () => {
         if (state === 'disposed') return;
+
         state = 'disposing';
         dispose();
         state = 'disposed';
@@ -221,6 +260,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
     }),
   );
   retainedRenderers.add(token);
+
   return token;
 };
 

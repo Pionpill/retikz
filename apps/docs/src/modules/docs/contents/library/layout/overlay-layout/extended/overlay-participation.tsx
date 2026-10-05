@@ -11,6 +11,7 @@ import { demoI18n } from './overlay-participation.i18n';
 
 export { createPreviewControlContract } from './overlay-participation.controls';
 export const previewControls = previewControlContract.controls;
+
 const createPreview = (lang: Lang) =>
   defineOverlayPreview(
     createPreviewControlContract(lang),
@@ -58,12 +59,16 @@ const createPreview = (lang: Lang) =>
       ],
     }),
   );
+
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource: typeof previews.zh.source = {
   buildViews: context => previews[context.lang].source.buildViews!(context),
 };
+
 /** 示例语言 */
 export type DemoProps = { lang?: Lang };
+
 /** 本节 API 的交互示例，所有入口共享场景与检查配置 */
 const Demo: FC<DemoProps> = props => {
   const { lang = 'zh' } = props;

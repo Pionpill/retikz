@@ -21,6 +21,7 @@ const sceneWithText = (text: string): IRScene => ({
 const createOwnerSession = (source: IRScene) => {
   const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
   const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
+
   return createRuntime({
     sources,
     computations,
@@ -38,6 +39,7 @@ describe('Core Runtime owner', () => {
     if ('namespace' in sourceChild || sourceChild.type !== 'node') {
       throw new Error('test fixture must contain a node');
     }
+
     sourceChild.text = 'mutated after capture';
 
     expect(CoreSourceDefinition.key).toBe(CORE_SOURCE_KEY);
@@ -75,6 +77,7 @@ describe('Core Runtime owner', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, sceneWithText('B'))],
     });
+
     expect(session.revision()).toBe(1);
     expect(session.snapshot(CoreSourceDefinition).value).toEqual(sceneWithText('B'));
   });
@@ -93,6 +96,7 @@ describe('Core Runtime owner', () => {
     const nonFinite = sceneWithText('A');
     const nonFiniteChild = nonFinite.children[0];
     if ('namespace' in nonFiniteChild || nonFiniteChild.type !== 'node') throw new Error('expected node fixture');
+
     nonFiniteChild.position = [Number.POSITIVE_INFINITY, 0];
     invalidInputs.push(nonFinite);
 

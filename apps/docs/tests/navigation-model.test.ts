@@ -42,6 +42,7 @@ describe('layout utils', () => {
   it('构建 sidebar 分类并保留 ungrouped 标记', () => {
     const t = ((key: string) => key) as TFunction;
     const categories = buildSidebarCategories(t, 'kernel', sections);
+
     expect(categories[0]?.ungrouped).toBe(true);
     expect(categories[1]?.value).toBe('guide');
     expect(categories[1]?.path).toBe('/kernel/guide');
@@ -128,6 +129,7 @@ describe('layout utils', () => {
       .filter(path => path.startsWith('/viz/chart/') && !path.includes('/changelog/'));
 
     expect(points?.meta).toMatchObject({ pageType: 'group', capability: 'chart.points' });
+
     for (const [id, page] of [
       ['scatter', scatter],
       ['bubble', bubble],
@@ -142,6 +144,7 @@ describe('layout utils', () => {
         capability: `chart.${id}`,
       });
     }
+
     expect(model?.meta).toMatchObject({ pageType: 'concept', capability: 'chart.model' });
     expect(model?.children?.map(page => page.id)).toEqual(['general-structure', 'core-structure']);
     expect(chartPaths).toEqual([

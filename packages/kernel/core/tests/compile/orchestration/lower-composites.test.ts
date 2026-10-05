@@ -18,6 +18,7 @@ const LabeledBoxSchema = CompositeBaseSchema.extend({
   type: literal('labeledBox'),
   text: string().describe('Box label text'),
 });
+
 /** labeledBox → 一个带文字的 rectangle node */
 const labeledBox = defineComposite({
   namespace: 'example',
@@ -79,6 +80,7 @@ describe('lowerComposites — happy path', () => {
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 'Hi' }],
     };
+
     expect(findByType(compileToScene(ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
   });
 
@@ -93,6 +95,7 @@ describe('lowerComposites — happy path', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'Hi' }],
     };
+
     expect(compileToScene(irComposite, { composites: [labeledBox] }).scene).toEqual(compileToScene(irManual).scene);
   });
 
@@ -138,6 +141,7 @@ describe('lowerComposites — 边界', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'lb', position: [0, 0], shape: 'rectangle', text: 'inner' }],
     };
+
     expect(compileToScene(ir, { composites: [panel, labeledBox] }).scene).toEqual(compileToScene(irDirect).scene);
   });
 
@@ -155,6 +159,7 @@ describe('lowerComposites — 边界', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
+
     expect(() => compileToScene(ir, { composites: [vanishing] }).scene).not.toThrow();
     expect(compileToScene(ir, { composites: [vanishing] }).scene).toEqual(compileToScene(irOnlyA).scene);
   });
@@ -165,14 +170,17 @@ describe('lowerComposites — 边界', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
+
     // tier1 IR 不传 composites 也正常（不受 lowering 影响）
     expect(compileToScene(tier1Ir).scene).toEqual(compileToScene(tier1Ir, { composites: [labeledBox] }).scene);
+
     // 有 namespace 的节点被当 tier2 展开
     const tier2Ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 'x' }],
     };
+
     expect(findByType(compileToScene(tier2Ir, { composites: [labeledBox] }).scene.primitives, 'rect')).toBeDefined();
   });
 });
@@ -189,12 +197,14 @@ describe('lowerComposites — 错误路径', () => {
       ],
     };
     const scene = compileToScene(ir, { composites: [], onWarn: w => warnings.push(w) }).scene;
+
     expect(warnings.some(w => w.code === CompileWarningCode.CompositeNotRegistered)).toBe(true);
     expect(findByType(scene.primitives, 'rect')).toBeDefined(); // node A 照常
   });
 
   it('cycle-guard: tier2 展开出自身 → 深度守卫 throw、非死循环', () => {
     const ir: IRScene = { version: 1, type: 'scene', children: [{ namespace: 'example', type: 'loop' }] };
+
     expect(() => compileToScene(ir, { composites: [loop] }).scene).toThrow(/COMPOSITE_NEST_TOO_DEEP/);
   });
 
@@ -204,6 +214,7 @@ describe('lowerComposites — 错误路径', () => {
       type: 'scene',
       children: [{ namespace: 'example', type: 'labeledBox', text: 123 as unknown as string }],
     };
+
     expect(() => compileToScene(ir, { composites: [labeledBox] }).scene).toThrow(/composite 'example\.labeledBox'/);
     expect(() => compileToScene(ir, { composites: [labeledBox] }).scene).toThrow(/children\[0\]/);
   });
@@ -227,6 +238,7 @@ describe('lowerComposites — 交互', () => {
         { type: 'node', id: 'z', position: [0, 0], shape: 'rectangle', text: 'z', zIndex: 10 },
       ],
     };
+
     expect(compileToScene(irComposite, { composites: [zbox] }).scene).toEqual(compileToScene(irManual).scene);
   });
 
@@ -245,6 +257,7 @@ describe('lowerComposites — 交互', () => {
         },
       ],
     };
+
     expect(() => compileToScene(ir, { composites: [boxWithId] }).scene).not.toThrow();
     expect(compileToScene(ir, { composites: [boxWithId] }).scene.primitives.some(p => p.type === 'path')).toBe(true);
   });

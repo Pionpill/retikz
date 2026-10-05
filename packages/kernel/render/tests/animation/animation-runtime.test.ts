@@ -17,11 +17,13 @@ import {
  */
 
 const layout = { x: 0, y: 0, width: 100, height: 100 };
+
 const scene = (primitives: Array<ScenePrimitive>, animations?: Array<IRAnimationTrack>): Scene => ({
   primitives,
   layout,
   ...(animations ? { animations } : {}),
 });
+
 const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
   type: 'rect',
   x: 0,
@@ -31,11 +33,13 @@ const rect = (extra: Partial<RectPrim> = {}): RectPrim => ({
   fill: '#f00',
   ...extra,
 });
+
 const group = (children: Array<ScenePrimitive>, extra: Partial<GroupPrim> = {}): GroupPrim => ({
   type: 'group',
   children,
   ...extra,
 });
+
 const track = (extra: Partial<IRAnimationTrack> = {}): IRAnimationTrack => ({
   property: 'opacity',
   keyframes: [
@@ -87,6 +91,7 @@ describe('sceneHasAutoplayTrigger', () => {
       rect({ animations: [track({ trigger: 'manual' })] }),
       rect({ animations: [track({ trigger: { onEvent: 'click' } })] }),
     ]);
+
     expect(sceneHasAutoplayTrigger(s)).toBe(false);
   });
 
@@ -95,6 +100,7 @@ describe('sceneHasAutoplayTrigger', () => {
       rect({ animations: [track({ trigger: 'manual' })] }),
       rect({ animations: [track({ trigger: 'load' })] }),
     ]);
+
     expect(sceneHasAutoplayTrigger(s)).toBe(true);
   });
 
@@ -127,6 +133,7 @@ describe('sceneAnimationDurationMs', () => {
       [rect({ animations: [track({ duration: 300 })] })],
       [track({ property: 'viewBox', duration: 100, delay: 800 })],
     );
+
     expect(sceneAnimationDurationMs(s)).toBe(900);
   });
 
@@ -138,16 +145,19 @@ describe('sceneAnimationDurationMs', () => {
 describe('prefersReducedMotion', () => {
   it('matchMedia 命中 reduce → true', () => {
     vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('reduce') }));
+
     expect(prefersReducedMotion()).toBe(true);
   });
 
   it('matchMedia 不命中 → false', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: false }));
+
     expect(prefersReducedMotion()).toBe(false);
   });
 
   it('无 matchMedia（SSR）→ 降级 false', () => {
     vi.stubGlobal('matchMedia', undefined);
+
     expect(prefersReducedMotion()).toBe(false);
   });
 });
@@ -173,6 +183,7 @@ describe('createClock（无 requestAnimationFrame：SSR 降级）', () => {
     vi.stubGlobal('cancelAnimationFrame', undefined);
     const frames: Array<number> = [];
     createClock({ onFrame: t => frames.push(t), durationMs: 500, autoplay: true });
+
     expect(frames).toEqual([500]);
   });
 
@@ -180,6 +191,7 @@ describe('createClock（无 requestAnimationFrame：SSR 降级）', () => {
     vi.stubGlobal('requestAnimationFrame', undefined);
     const frames: Array<number> = [];
     createClock({ onFrame: t => frames.push(t), durationMs: null, autoplay: true });
+
     expect(frames).toEqual([0]);
   });
 
@@ -187,6 +199,7 @@ describe('createClock（无 requestAnimationFrame：SSR 降级）', () => {
     vi.stubGlobal('requestAnimationFrame', undefined);
     const frames: Array<number> = [];
     const clock = createClock({ onFrame: t => frames.push(t), durationMs: 500 });
+
     expect(frames).toEqual([]);
     expect(clock.running).toBe(false);
   });
@@ -196,6 +209,7 @@ describe('createClock（无 requestAnimationFrame：SSR 降级）', () => {
     const frames: Array<number> = [];
     const clock = createClock({ onFrame: t => frames.push(t), durationMs: 500 });
     clock.seek(123);
+
     expect(frames).toEqual([123]);
     expect(clock.time).toBe(123);
   });
@@ -204,6 +218,7 @@ describe('createClock（无 requestAnimationFrame：SSR 降级）', () => {
     vi.stubGlobal('requestAnimationFrame', undefined);
     const clock = createClock({ onFrame: () => undefined, durationMs: 500 });
     clock.play();
+
     expect(clock.running).toBe(false);
   });
 });
@@ -227,6 +242,7 @@ describe('createClock rAF lifecycle', () => {
     clock.play();
     const frame = requestFrame.mock.results[0]?.value;
     if (frame === undefined) throw new Error('expected pending clock frame');
+
     const callback = pendingFrames.get(frame);
     if (callback === undefined) throw new Error('expected pending clock callback');
 
@@ -249,7 +265,9 @@ describe('createClock rAF lifecycle', () => {
         disposeDuringRequest = false;
         controlsRef.current?.dispose();
       }
+
       pendingFrames.set(frame, callback);
+
       return frame;
     });
     const cancelFrame = vi.fn((frame: number) => pendingFrames.delete(frame));
@@ -261,8 +279,10 @@ describe('createClock rAF lifecycle', () => {
     if (phase === 'tick') {
       const firstFrame = requestFrame.mock.results[0]?.value;
       if (firstFrame === undefined) throw new Error('expected initial clock frame');
+
       const firstCallback = pendingFrames.get(firstFrame);
       if (firstCallback === undefined) throw new Error('expected initial clock callback');
+
       pendingFrames.delete(firstFrame);
       disposeDuringRequest = true;
       firstCallback();
@@ -372,8 +392,10 @@ describe('createClock rAF lifecycle', () => {
     clock.play();
 
     expect(() => clock.dispose()).toThrow('cancel 1 rejected');
+
     clock.play();
     clock.seek(100);
+
     expect(() => clock.dispose()).not.toThrow();
 
     expect(clock.running).toBe(false);

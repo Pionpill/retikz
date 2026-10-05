@@ -70,47 +70,61 @@ describe('Inspect demo source views', () => {
       const zh = contractFor('zh');
       const en = contractFor('en');
       const fields = getPreviewControlFields(zh.controls);
+
       expect(fields.map(field => ({ ...field, label: '' }))).toEqual(
         getPreviewControlFields(en.controls).map(field => ({ ...field, label: '' })),
       );
       expect(zh.canonicalValues).toEqual(en.canonicalValues);
+
       const codeFor = (values: Readonly<PreviewControlValues>) =>
         source.buildViews?.({ lang: 'zh', values }).config?.files[0].code ?? '';
       const baseline = codeFor(zh.canonicalValues);
       const disabled = { ...zh.canonicalValues };
+
       for (const field of fields) if (field.kind === 'switch') disabled[field.id] = false;
       const withoutHelpers = codeFor(disabled);
       const mainGeometry = (code: string) =>
         JSON.parse(code, (key, value) => (key === 'authoring' ? undefined : value)).input;
+
       expect(mainGeometry(withoutHelpers)).toEqual(mainGeometry(baseline));
       expect(withoutHelpers).not.toEqual(baseline);
+
       for (const field of fields) {
         if (field.kind === 'switch') continue;
         if (field.kind !== 'point' && field.kind !== 'range') continue;
+
         for (const edge of ['min', 'max'] as const) {
           const values: PreviewControlValues = { ...zh.canonicalValues };
           values[field.id] = field.kind === 'point' ? [...field[edge]] : field[edge];
+
           expect(codeFor(values)).not.toEqual(baseline);
         }
       }
+
       for (const edge of ['min', 'max'] as const) {
         const values = { ...zh.canonicalValues };
+
         for (const field of fields) {
           if (field.kind === 'point') values[field.id] = [...field[edge]];
           else if (field.kind === 'range') values[field.id] = field[edge];
         }
+
         const output = source.buildViews?.({ lang: 'en', values }).vanilla?.render?.('svg');
         if (!isValidElement<{ svg: string }>(output)) throw new Error('Expected SVG output');
+
         expect(output.props.svg).not.toMatch(/NaN|Infinity/);
       }
     },
   );
+
   it('rebuilds geometry and inspection options from current controls', () => {
     const baseline = source4.buildViews?.({ lang: 'zh' });
     const changed = source4.buildViews?.({ lang: 'zh', values: { position: [30, 20], bounds: false } });
+
     expect(changed?.config?.files[0].code).not.toEqual(baseline?.config?.files[0].code);
     expect(changed?.config?.files[0].code).toContain('"bounds": false');
   });
+
   it.each(demos)(
     '%s preserves inspection in generated Vanilla and Config for both languages',
     (name, Component, previewSource) => {
@@ -129,11 +143,15 @@ describe('Inspect demo source views', () => {
           hideCode: false,
           theme: previewTheme,
         });
+
         expect(availableSourceViews(result.source ?? {})).toEqual(['react', 'vanilla', 'config']);
         expect(result.previewIr).toBeNull();
+
         const configCode = result.source?.config?.files[0].code ?? '';
+
         expect(configCode).toContain('authoring');
         expect(configCode).not.toContain('token');
+
         const config = JSON.parse(configCode);
         const sourceCode = result.source?.vanilla?.files[0].code ?? '';
         const moduleExports: { svg?: string } = {};
@@ -153,15 +171,22 @@ describe('Inspect demo source views', () => {
             return modules[id];
           },
         });
+
         expect(moduleExports.svg).toContain('data-retikz-readonly-layer');
+
         for (const view of ['vanilla', 'config'] as const) {
           const rendered = result.source?.[view]?.render?.('svg');
+
           expect(isValidElement<{ svg: string }>(rendered)).toBe(true);
+
           if (!isValidElement<{ svg: string }>(rendered)) throw new Error('Expected SVG preview');
+
           expect(rendered.props.svg).toEqual(moduleExports.svg);
         }
+
         const root = previewSource.canonicalRender?.(lang);
         if (!isValidElement<InspectLayoutProps>(root)) throw new Error('Expected InspectLayout');
+
         const original = createInputScene(root.props.children);
         const input = {
           ...original.scene,
@@ -171,6 +196,7 @@ describe('Inspect demo source views', () => {
             ? {}
             : { authoring: inspectVanilla.createInspectionVanillaAuthoring(root.props.request) }),
         };
+
         expect(
           vanilla.renderToSvgString(input, {
             adapters: synchronousInputAdaptersOf(original.adapters),

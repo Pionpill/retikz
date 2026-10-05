@@ -3,7 +3,7 @@ import type { Position } from '@retikz/math';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
-import type { SideValue } from '../../shared';
+import type { Side } from '../../shared';
 import type { NodeLayout } from '../node';
 
 type AnchorLayout = NodeLayout | NodeReferenceView;
@@ -32,11 +32,12 @@ const computeAnchor = (
   if (ANGLE_RE.test(anchorName)) {
     return positionToIR(angleBoundaryOf(layout, Number(anchorName), boundary, true, boundaryResolution));
   }
+
   return positionToIR(anchorOf(layout, anchorName, boundary, isAnchor(anchorName), boundaryResolution));
 };
 
 /** 不经过 WeakMap 缓存解析视觉 shape 的边上比例点 */
-const computeEdgePoint = (layout: AnchorLayout, side: SideValue, fraction: number): IRPosition => {
+const computeEdgePoint = (layout: AnchorLayout, side: Side, fraction: number): IRPosition => {
   const { edgePoint } = layout.shapeDef;
   if (!edgePoint) {
     throw new RetikzCoreError(
@@ -44,13 +45,16 @@ const computeEdgePoint = (layout: AnchorLayout, side: SideValue, fraction: numbe
       `shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`,
     );
   }
+
   if (layout.rect.width === 0 && layout.rect.height === 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `{ side, fraction } is not meaningful on a zero-size target (shape '${layout.shapeName}')`,
     );
   }
+
   const raw = edgePoint(layout.rect, side, fraction, layout.shapeParams ?? {});
+
   return positionToIR(snapshotProviderPosition(`Shape '${layout.shapeName}' edgePoint`, raw));
 };
 
@@ -81,26 +85,32 @@ export const resolveAnchor = (
     layoutCache = new Map<string, IRPosition>();
     cache.set(layout, layoutCache);
   }
+
   const key = `${boundaryKey(boundary)} ${anchorName}`;
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
+
   const result = computeAnchor(layout, anchorName, boundary, boundaryResolution);
   layoutCache.set(key, result);
+
   return result;
 };
 
 /** 取节点边上比例点的全局坐标 */
-export const resolveEdgePoint = (layout: AnchorLayout, side: SideValue, t: number): IRPosition => {
+export const resolveEdgePoint = (layout: AnchorLayout, side: Side, t: number): IRPosition => {
   let layoutCache = cache.get(layout);
   if (!layoutCache) {
     layoutCache = new Map<string, IRPosition>();
     cache.set(layout, layoutCache);
   }
+
   const key = `${side}:${t}`;
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
+
   const result = computeEdgePoint(layout, side, t);
   layoutCache.set(key, result);
+
   return result;
 };
 

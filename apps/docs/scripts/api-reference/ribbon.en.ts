@@ -84,7 +84,9 @@ const translations: Readonly<Partial<Record<string, string>>> = {
 
 export const translateRibbonApiReference = (source: string): string => {
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
+
   const translated = translations[source];
   if (translated === undefined) throw new Error(`Missing Ribbon API translation: ${source}`);
+
   return translated;
 };

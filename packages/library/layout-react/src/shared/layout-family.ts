@@ -1,4 +1,4 @@
-import type { LayoutItemKindValue } from '@retikz/layout';
+import type { LayoutItemKind } from '@retikz/layout';
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type { InputFlexLayoutItem, InputGridLayoutItem, InputOverlayLayoutItem } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
@@ -32,8 +32,10 @@ const flattenLayoutChildren = (children: ReactNode): Array<ReactNode> => {
       );
       return;
     }
+
     flattened.push(child);
   });
+
   return flattened;
 };
 
@@ -58,11 +60,15 @@ const resolveLayoutItemChild = (
       details: { childCount: children?.length ?? 0 },
     });
   }
+
   return Object.freeze({ child: children[0], adapters: input.adapters });
 };
 
-/** 将 React 直属布局子项组装为匹配 Vanilla adapter 的 typed Input */
-export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
+/**
+ * 将 React 直属布局子项组装为匹配 Vanilla adapter 的 typed Input
+ * @template TKind 预期的布局项种类，同时决定返回 items 的输入类型
+ */
+export const createInputLayoutItems = <TKind extends LayoutItemKind>(
   children: ReactNode,
   expectedKind: TKind,
   context: ReactInputEmbedContext,
@@ -82,12 +88,14 @@ export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
         details: { expectedKind, expectedComponent: expectedComponent.displayName, index },
       });
     }
+
     const props = (child as ReactElement<LayoutItemAuthoringProps>).props;
     const { children: itemChildren, ir, itemKey, ...item } = props;
     void itemChildren;
     void ir;
     const resolved = resolveLayoutItemChild(props, `${context.id}:items:${index}`);
     adapters.push(...resolved.adapters);
+
     return {
       ...item,
       kind: expectedKind,
@@ -95,5 +103,6 @@ export const createInputLayoutItems = <TKind extends LayoutItemKindValue>(
       child: resolved.child,
     } as LayoutItemInputByKind[TKind];
   });
+
   return Object.freeze({ items, adapters: Object.freeze(adapters) });
 };

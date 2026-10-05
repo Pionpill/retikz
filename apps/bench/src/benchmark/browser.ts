@@ -12,7 +12,7 @@ import type {
 } from '@retikz/render/runtime';
 import { builtinRetainedRendererFactory, defineRetainedRenderer } from '@retikz/render/runtime';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
-import type { PerformanceTraceOutcomeValue, PerformanceTraceRecord } from '@retikz/runtime';
+import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeSourceUpdate,
   createRuntimeTraceReporter,
@@ -50,17 +50,21 @@ export const hashCanvasPixels = (context: CanvasRenderingContext2D): string => {
   const { width, height } = context.canvas;
   const pixels = context.getImageData(0, 0, width, height).data;
   let hash = 0x811c9dc5;
+
   const mix = (value: number): void => {
     hash ^= value;
     hash = Math.imul(hash, 0x01000193);
   };
+
   for (const value of [width, height]) {
     mix(value & 0xff);
     mix((value >>> 8) & 0xff);
     mix((value >>> 16) & 0xff);
     mix((value >>> 24) & 0xff);
   }
+
   for (const value of pixels) mix(value);
+
   return (hash >>> 0).toString(16).padStart(8, '0');
 };
 
@@ -102,6 +106,7 @@ const createHostListenerProbe = (host: SVGSVGElement | HTMLCanvasElement): HostL
     if (listeners?.size === 0) active.delete(key);
     originalRemove(type, listener, options);
   }) as typeof host.removeEventListener;
+
   return Object.freeze({
     live: () => [...active.values()].reduce((count, listeners) => count + listeners.size, 0),
     restore: () => {
@@ -123,12 +128,15 @@ const createImageLifecycleProbe = (): ImageLifecycleProbe => {
   } as unknown as typeof Image;
   TrackingImage.prototype = OriginalImage.prototype;
   Object.setPrototypeOf(TrackingImage, OriginalImage);
+
   const restore = (): void => {
     if (descriptor === undefined) Reflect.deleteProperty(globalThis, 'Image');
     else Object.defineProperty(globalThis, 'Image', descriptor);
   };
+
   const probe = Object.freeze({ images, restore });
   Object.defineProperty(globalThis, 'Image', { configurable: true, writable: true, value: TrackingImage });
+
   return probe;
 };
 
@@ -141,6 +149,7 @@ const toCanvasClientPoint = (
   const bounds = host.getBoundingClientRect();
   const layout = snapshot.scene.layout;
   const scale = Math.min(bounds.width / layout.width, bounds.height / layout.height);
+
   return Object.freeze({
     x: bounds.left + (bounds.width - layout.width * scale) / 2 + (point.x - layout.x) * scale,
     y: bounds.top + (bounds.height - layout.height * scale) / 2 + (point.y - layout.y) * scale,
@@ -163,14 +172,17 @@ const assertRetainedDisposeLifecycle = (backend: 'svg' | 'canvas', baseSource: I
       toJSON: () => ({}),
     });
   }
+
   const listenerProbe = createHostListenerProbe(host);
   let imageProbe: ImageLifecycleProbe | undefined;
   let value: RetainedBenchmarkSession | undefined;
+
   try {
     let source = baseSource;
     if (backend === 'canvas') {
       const first = baseSource.children[0];
       if (first.type !== 'node') throw new Error('retained lifecycle fixture requires a first Node');
+
       source = {
         ...baseSource,
         children: [
@@ -186,6 +198,7 @@ const assertRetainedDisposeLifecycle = (backend: 'svg' | 'canvas', baseSource: I
       };
       imageProbe = createImageLifecycleProbe();
     }
+
     const images = imageProbe?.images ?? [];
     let handlerCalls = 0;
     const config: RenderRuntimeConfigInput = {
@@ -208,7 +221,9 @@ const assertRetainedDisposeLifecycle = (backend: 'svg' | 'canvas', baseSource: I
       host.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: client.x, clientY: client.y }));
       if (images.length === 0) throw new Error('Canvas retained lifecycle probe did not create an image resource');
     }
+
     if (handlerCalls !== 1) throw new Error(`${backend} retained lifecycle hit-test/handler probe did not fire once`);
+
     value.session.dispose();
     value = undefined;
     const callsBeforeDisposedEvent = handlerCalls;
@@ -216,6 +231,7 @@ const assertRetainedDisposeLifecycle = (backend: 'svg' | 'canvas', baseSource: I
     const liveImageHandlers = images.filter(image => image.onload !== null || image.onerror !== null).length;
     const liveHandles = listenerProbe.live() + liveImageHandlers + (handlerCalls - callsBeforeDisposedEvent);
     if (liveHandles !== 0) throw new Error(`${backend} retained lifecycle leaked ${liveHandles} observable handles`);
+
     return liveHandles;
   } finally {
     value?.session.dispose();
@@ -229,7 +245,7 @@ const readRetainedUpdateRecord = (
   id: string,
   backend: 'svg' | 'canvas',
   records: ReadonlyArray<PerformanceTraceRecord>,
-  outcome: PerformanceTraceOutcomeValue,
+  outcome: PerformanceTraceOutcome,
 ): PerformanceTraceRecord => {
   return assertSingleTraceRecord(id, records, {
     owner: `@retikz/render:${backend}`,
@@ -253,6 +269,7 @@ const assertSvgFullOracle = (id: string, host: SVGSVGElement, scene: Scene): str
     .parseFromString(renderToSvgString(scene, { idPrefix: 'retained-bench', animate: false }), 'text/html')
     .querySelector('svg');
   if (expectedRoot === null) throw new Error(`${id}: full SVG oracle root is unavailable`);
+
   const expected = expectedRoot.outerHTML;
   const actual = host.outerHTML;
   if (actual !== expected) {
@@ -263,6 +280,7 @@ const assertSvgFullOracle = (id: string, host: SVGSVGElement, scene: Scene): str
       `${id}: retained SVG differs from full oracle at ${difference.toString()}; actual=${actual.slice(start, end)}; expected=${expected.slice(start, end)}`,
     );
   }
+
   return stableHash(actual);
 };
 
@@ -275,9 +293,11 @@ const assertCanvasFullOracle = (id: string, host: HTMLCanvasElement, scene: Scen
   const actualContext = host.getContext('2d', { willReadFrequently: true });
   const oracleContext = oracle.getContext('2d', { willReadFrequently: true });
   if (actualContext === null || oracleContext === null) throw new Error(`${id}: Canvas context is unavailable`);
+
   const actual = hashCanvasPixels(actualContext);
   const expected = hashCanvasPixels(oracleContext);
   if (actual !== expected) throw new Error(`${id}: retained Canvas differs from full oracle`);
+
   return actual;
 };
 
@@ -293,6 +313,7 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
     input: Extract<RetainedRendererFactoryInput, Readonly<{ backend: 'svg' }>>,
   ): RetainedSvgRenderer => {
     let current: RenderFrameSnapshot | undefined;
+
     const prepare = (patch: ScenePatch | undefined, frame: RenderFrameSnapshot) => {
       if (patch !== undefined) observePatch(patch);
       const markup = renderToSvgString(frame.primary.scene as unknown as Scene, {
@@ -303,6 +324,7 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
         .documentElement as unknown as SVGSVGElement;
       const previousHost = input.host.cloneNode(true) as SVGSVGElement;
       const previous = current;
+
       return Object.freeze({
         commit: () => {
           replaceSvgHost(input.host, candidate);
@@ -315,6 +337,7 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
         dispose: () => undefined,
       });
     };
+
     return defineRetainedRenderer({
       backend: 'svg',
       host: input.host,
@@ -331,10 +354,12 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
       },
     });
   };
+
   const createCanvasRenderer = (
     input: Extract<RetainedRendererFactoryInput, Readonly<{ backend: 'canvas' }>>,
   ): RetainedCanvasRenderer => {
     let current: RenderFrameSnapshot | undefined;
+
     const prepare = (patch: ScenePatch | undefined, frame: RenderFrameSnapshot) => {
       if (patch !== undefined) observePatch(patch);
       const candidate = document.createElement('canvas');
@@ -346,13 +371,16 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
       previous.height = input.host.height;
       previous.getContext('2d')?.drawImage(input.host, 0, 0);
       const previousSnapshot = current;
+
       const replace = (source: HTMLCanvasElement): void => {
         const context = input.host.getContext('2d');
         if (context === null) throw new Error('none Canvas benchmark renderer context is unavailable');
+
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, input.host.width, input.host.height);
         context.drawImage(source, 0, 0);
       };
+
       return Object.freeze({
         commit: () => {
           replace(candidate);
@@ -365,6 +393,7 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
         dispose: () => undefined,
       });
     };
+
     return defineRetainedRenderer({
       backend: 'canvas',
       host: input.host,
@@ -381,6 +410,7 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
       },
     });
   };
+
   return ((input: RetainedRendererFactoryInput): RetainedRenderer =>
     input.backend === 'svg' ? createSvgRenderer(input) : createCanvasRenderer(input)) as RetainedRendererFactory;
 };
@@ -388,6 +418,7 @@ const createNoneCapabilityFactory = (observePatch: (patch: ScenePatch) => void):
 /** 运行 SVG 与 Canvas 的确定性 full-path benchmark */
 const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchmarkResult> => {
   const results: Array<DeterministicBenchmarkResult> = [];
+
   for (const size of fullBaselineSizes) {
     const scene = compileToScene(createSimpleNodeScene(size)).scene;
 
@@ -436,6 +467,7 @@ const runDeterministicBrowserBenchmarks = (): ReadonlyArray<DeterministicBenchma
     });
     results.push(toResult(`canvas-full-${size}`, hashCanvasPixels(context), canvasRecord));
   }
+
   return Object.freeze(results);
 };
 
@@ -468,6 +500,7 @@ const assertBackendOracle = (
 /** 运行 retained initial、entity、Group 与 replace fallback 的确定性 browser benchmark */
 const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmarkResult> => {
   const results: Array<DeterministicBenchmarkResult> = [];
+
   const runWithSession = (
     backend: 'svg' | 'canvas',
     source: IRScene,
@@ -481,6 +514,7 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
     const host = createBackendHost(backend);
     const records: Array<PerformanceTraceRecord> = [];
     const value = createRetainedBenchmarkSession(backend, host, source, records, rendererFactory);
+
     try {
       execute(host, records, value);
     } finally {
@@ -513,12 +547,14 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
       ) {
         throw new Error(`${id}: Core did not produce one entity update`);
       }
+
       if (
         backend === 'svg' &&
         (unchangedSvgNode === null || host.querySelector('[data-retikz-id="entity-00000"]') !== unchangedSvgNode)
       ) {
         throw new Error(`${id}: unchanged SVG node identity was replaced`);
       }
+
       const record = readRetainedUpdateRecord(id, backend, records, 'incremental');
       const oracleScene = compileToScene(next).scene;
       results.push(toResult(id, assertBackendOracle(id, backend, host, oracleScene), record));
@@ -541,6 +577,7 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
       ) {
         throw new Error(`${id}: Core did not produce one stable Group subtree update`);
       }
+
       const record = readRetainedUpdateRecord(id, backend, records, 'incremental');
       results.push(toResult(id, assertBackendOracle(id, backend, host, compileToScene(groupNext).scene), record));
     });
@@ -564,16 +601,19 @@ const runRetainedDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchm
         ) {
           throw new Error(`${id}: none capability did not receive one replaceScene operation`);
         }
+
         const fallbackWarnings = value.session
           .diagnostics()
           .filter(diagnostic => diagnostic.code === 'RETAINED_RENDERER_CAPABILITY_FALLBACK');
         if (fallbackWarnings.length !== 1) throw new Error(`${id}: expected one capability fallback diagnostic`);
+
         const record = readRetainedUpdateRecord(id, backend, records, 'fallback');
         results.push(toResult(id, assertBackendOracle(id, backend, host, compileToScene(next).scene), record));
       },
       fallbackFactory,
     );
   }
+
   return Object.freeze(results);
 };
 
@@ -613,6 +653,7 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
             animation: { enabled: false },
             canvas: { devicePixelRatio: 1 },
           });
+
     try {
       staticRecords.length = 0;
       staticView.update(next);
@@ -653,6 +694,7 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
         {},
         updateStrategy,
       );
+
       try {
         records.length = 0;
         value.session.update({
@@ -671,6 +713,7 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
         });
         readRetainedUpdateRecord(id, backend, records, outcome);
         if (value.session.diagnostics().length !== 0) throw new Error(`${id}: unexpected Runtime diagnostics`);
+
         const execution: BenchmarkExecution = Object.freeze({
           mode: 'retained',
           updateStrategy,
@@ -683,6 +726,7 @@ const runPolicyDeterministicBenchmarks = (): ReadonlyArray<DeterministicBenchmar
       }
     }
   }
+
   return Object.freeze(results);
 };
 
@@ -700,6 +744,7 @@ const measureRetainedUpdateScenario = (
   const records: Array<PerformanceTraceRecord> = [];
   const value = createRetainedBenchmarkSession(backend, host, first, records, rendererFactory, {}, updateStrategy);
   let next = second;
+
   try {
     return measureScenario(id, warmupRuns, sampleRuns, () => {
       value.session.update({
@@ -736,6 +781,7 @@ const measureStaticPolicyUpdateScenario = (
           canvas: { devicePixelRatio: 1 },
         });
   let next = second;
+
   try {
     return measureScenario(id, warmupRuns, sampleRuns, () => {
       view.update(next);
@@ -767,6 +813,7 @@ const runRetainedWallClockReport = (warmupRuns: number, sampleRuns: number): Rea
   const entitySecond = updateSimpleNodeFill(entityFirst, 2_500, '#22c55e');
   const groupFirst = createStableGroupScene(5_000);
   const groupSecond = updateStableGroupFill(groupFirst, '#22c55e');
+
   for (const backend of ['svg', 'canvas'] as const) {
     const noneFactory = createNoneCapabilityFactory(() => undefined);
     reports.push(
@@ -834,12 +881,14 @@ const runRetainedWallClockReport = (warmupRuns: number, sampleRuns: number): Rea
       ),
     );
   }
+
   return Object.freeze(reports);
 };
 
 /** 在真实 browser backend 中生成 renderer wall-clock 报告 */
 const runBrowserWallClockReport = (warmupRuns: number, sampleRuns: number): ReadonlyArray<WallClockScenarioReport> => {
   const reports: Array<WallClockScenarioReport> = [];
+
   for (const size of fullBaselineSizes) {
     const scene = compileToScene(createSimpleNodeScene(size)).scene;
     const { context } = createBenchmarkCanvas();
@@ -853,6 +902,7 @@ const runBrowserWallClockReport = (warmupRuns: number, sampleRuns: number): Read
       }),
     );
   }
+
   return Object.freeze([...reports, ...runRetainedWallClockReport(warmupRuns, sampleRuns)]);
 };
 
@@ -860,7 +910,9 @@ const runBrowserWallClockReport = (warmupRuns: number, sampleRuns: number): Read
 const readEnvironment = (browserVersion: string): BrowserBenchmarkResult['environment'] => {
   const fontProbe = document.createElement('canvas').getContext('2d');
   if (fontProbe === null) throw new Error('browser benchmark: font probe context is unavailable');
+
   fontProbe.font = '16px Arial';
+
   return Object.freeze({
     browserVersion,
     userAgent: navigator.userAgent,

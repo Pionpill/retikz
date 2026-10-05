@@ -24,6 +24,7 @@ describe('[mathjax-golden] math profile lowering', () => {
 
       for (const tex of fixtures) {
         const result = lower({ tex, displayMode: true }, { fontSize: 16 });
+
         expect(result, tex).not.toBeNull();
         expect(result?.paths.length, tex).toBeGreaterThan(0);
       }
@@ -36,12 +37,14 @@ describe('[mathjax-golden] math profile lowering', () => {
     async () => {
       const lower = await createMathJaxLowerTex({ profile: 'math' });
       const cancel = lower({ tex: String.raw`\cancel{x}` }, { fontSize: 16 });
+
       expect(cancel?.paths.some(path => path.fill.kind === 'none' && path.stroke.kind !== 'none')).toBe(true);
 
       const colored = lower(
         { tex: String.raw`\color{crimson}{x}\colorbox{yellow}{y}\fcolorbox{red}{yellow}{z}` },
         { fontSize: 16 },
       );
+
       expect(colored).not.toBeNull();
       expect(colored?.paths.some(path => path.fill.kind === 'color' && path.fill.value === 'crimson')).toBe(true);
       expect(colored?.paths.some(path => path.fill.kind === 'color' && path.fill.value === 'yellow')).toBe(true);

@@ -7,10 +7,12 @@ import { flowOrthogonalCandidatesI18n } from './flow-orthogonal-candidates.i18n'
 
 /** 正交候选图语言 */
 export type FlowOrthogonalCandidatesProps = Readonly<{ lang?: Lang }>;
+
 /** 固定端点与障碍，对照三条未圆角化的参考折线 */
 const Demo: FC<FlowOrthogonalCandidatesProps> = props => {
   const { lang = 'zh' } = props;
   const copy = flowOrthogonalCandidatesI18n[lang];
+
   return (
     <Layout viewBox={{ x: -12, y: -8, width: 520, height: 306 }} style={{ maxWidth: '100%', height: 'auto' }}>
       {[

@@ -1,7 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { TableRowKind, TableStructureKind } from './constants';
 import type {
   CustomTableStructureSchema,
   DetailTableStructureSchema,
@@ -10,23 +8,17 @@ import type {
   TableStructureSchema,
 } from './schema';
 
-/** Table structure 判别值 */
-export type TableStructureKindValue = ValueOf<typeof TableStructureKind>;
-
-/** canonical Table row 类型取值 */
-export type TableRowKindValue = ValueOf<typeof TableRowKind>;
-
-/** manual Table structure operation */
+/** 显式编写表格结构的操作 */
 export type IRManualTableStructure = ZodInfer<typeof ManualTableStructureSchema>;
 
-/** detail Table column */
+/** 明细表格的列描述 */
 export type IRTableDetailColumn = ZodInfer<typeof TableDetailColumnSchema>;
 
-/** detail Table structure operation */
+/** 生成明细表格结构的操作 */
 export type IRDetailTableStructure = ZodInfer<typeof DetailTableStructureSchema>;
 
-/** JSON-safe custom Table structure operation */
+/** 可 JSON 序列化的自定义表格结构操作 */
 export type IRCustomTableStructure = ZodInfer<typeof CustomTableStructureSchema>;
 
-/** Table structure operation */
+/** 表格结构生成操作 */
 export type IRTableStructureOperation = ZodInfer<typeof TableStructureSchema>;

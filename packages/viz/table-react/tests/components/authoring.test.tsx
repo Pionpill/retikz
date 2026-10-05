@@ -255,7 +255,9 @@ describe('Table React composition root integration', () => {
 
     expect(vanilla).toEqual(direct);
     expect(react).toEqual(direct);
+
     const directResult = compileTable(direct, {}, { compile: { padding: 0 } });
+
     expect(compileTable(vanilla, {}, { compile: { padding: 0 } })).toEqual(directResult);
     expect(compileTable(react, {}, { compile: { padding: 0 } })).toEqual(directResult);
   });
@@ -462,7 +464,9 @@ describe('Table React composition root integration', () => {
     };
 
     expect(inputOf(ManualTable, childrenMode).table).toEqual(inputOf(ManualTable, propsMode).table);
+
     const output = renderToStaticMarkup(<ManualTable {...childrenMode} />);
+
     expect(output).toBe(renderToStaticMarkup(<ManualTable {...propsMode} />));
     expect(output).toContain('Ada');
     expect(output).toContain('98');
@@ -541,7 +545,9 @@ describe('Table React composition root integration', () => {
         columns: [{ id: 'name', field: 'name' }],
       }),
     );
+
     const tableProvider = contribution.providerDependencies.providers[0];
+
     expect(tableProvider.datasets).toMatchObject({ people: [{ name: 'Grace' }] });
     expect(Object.keys(tableProvider.datasets)).toContain('@@retikz/table/runtime/detail-runtime-reference');
     expect(renderToStaticMarkup(<DetailTable {...props} />)).toContain('Grace');

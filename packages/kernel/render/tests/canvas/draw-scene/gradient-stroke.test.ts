@@ -225,7 +225,9 @@ describe('drawScene 渐变描边', () => {
     });
 
     expect(sizes).toHaveLength(1);
+
     const [width, height] = sizes[0];
+
     expect(width).toBeLessThanOrEqual(2048);
     expect(height).toBeLessThanOrEqual(2048);
     expect(width * height).toBeLessThanOrEqual(1_048_576);
@@ -239,6 +241,7 @@ describe('drawScene 渐变描边', () => {
       const scene = gradientRectScene(kind);
       const primitive = scene.primitives[0];
       if (primitive.type !== 'rect') throw new Error('Expected rect primitive');
+
       primitive.width = 0;
 
       drawScene(context as unknown as CanvasRenderingContext2D, scene, {
@@ -294,6 +297,7 @@ describe('drawScene 渐变描边', () => {
     const scene = gradientRectScene('radialGradient');
     const primitive = scene.primitives[0];
     if (primitive.type !== 'rect') throw new Error('Expected rect primitive');
+
     primitive.width = 1e-8;
     primitive.height = 1e-9;
 
@@ -349,7 +353,9 @@ describe('drawScene 渐变描边', () => {
       [0, '#000'],
       [1, '#fff'],
     ]);
+
     const stroke = context.calls.find(c => c.name === 'stroke');
+
     expect(stroke?.lineWidth).toBe(3);
     expect(context.calls.find(c => c.name === 'setLineDash')?.args).toEqual([[4, 2]]);
   });

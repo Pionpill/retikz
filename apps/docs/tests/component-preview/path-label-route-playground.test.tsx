@@ -15,6 +15,7 @@ import PathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 const englishPreviewControlContract = createPreviewControlContract('en');
+
 const englishControls = englishPreviewControlContract.controls;
 
 type PlaygroundScenario = {
@@ -117,6 +118,7 @@ describe('Path 标签路线 playground', () => {
 
       expect(markup).toContain('<svg');
       expect(viewBoxOf(markup)).toBe(viewBoxOf(line));
+
       if (route !== 'line') expect(markup).not.toBe(line);
     },
   );

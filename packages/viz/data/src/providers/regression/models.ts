@@ -48,11 +48,13 @@ const fitCenteredLinear = (pairs: ReadonlyArray<RegressionPair>, method: IRRegre
   if (!isFiniteNumber(varianceX) || varianceX <= 0) {
     throw regressionError(method, 'x variance is zero or non-finite; distinct x values are required');
   }
+
   const covarianceXY = pairs.reduce((sum, pair) => sum + (pair.x - meanX) * (pair.y - meanY), 0);
   const slope = covarianceXY / varianceX;
   const intercept = meanY - slope * meanX;
   assertFiniteResult(method, slope, 'slope coefficient');
   assertFiniteResult(method, intercept, 'intercept coefficient');
+
   return { intercept, slope };
 };
 
@@ -101,6 +103,7 @@ const solveNormalEquations = (
   for (let column = 0; column < dimension; column++) {
     let pivotRow = column;
     let pivotRatio = -1;
+
     for (let row = column; row < dimension; row++) {
       const scale = rowScales[row];
       const ratio = scale > 0 ? Math.abs(matrix[row][column]) / scale : 0;
@@ -124,22 +127,28 @@ const solveNormalEquations = (
     for (let row = column + 1; row < dimension; row++) {
       const factor = matrix[row][column] / pivot;
       matrix[row][column] = 0;
+
       for (let index = column + 1; index < dimension; index++) {
         matrix[row][index] -= factor * matrix[column][index];
       }
+
       result[row] -= factor * result[column];
     }
   }
 
   const coefficients = Array<number>(dimension).fill(0);
+
   for (let row = dimension - 1; row >= 0; row--) {
     let known = 0;
+
     for (let column = row + 1; column < dimension; column++) {
       known += matrix[row][column] * coefficients[column];
     }
+
     coefficients[row] = (result[row] - known) / matrix[row][row];
     assertFiniteResult(method, coefficients[row], 'polynomial coefficient');
   }
+
   return coefficients;
 };
 
@@ -165,10 +174,13 @@ export const fitPolynomial = (
 
   const matrix = Array.from({ length: dimension }, () => Array<number>(dimension).fill(0));
   const result = Array<number>(dimension).fill(0);
+
   for (const pair of pairs) {
     const normalizedX = (pair.x - center) / scale;
     const basis = Array<number>(dimension).fill(1);
+
     for (let power = 1; power < dimension; power++) basis[power] = basis[power - 1] * normalizedX;
+
     for (let row = 0; row < dimension; row++) {
       result[row] += basis[row] * pair.y;
       for (let column = 0; column < dimension; column++) matrix[row][column] += basis[row] * basis[column];
@@ -176,11 +188,14 @@ export const fitPolynomial = (
   }
 
   const coefficients = solveNormalEquations(matrix, result, method);
+
   return {
     predict: x => {
       const normalizedX = (x - center) / scale;
       let prediction = coefficients[degree];
+
       for (let index = degree - 1; index >= 0; index--) prediction = prediction * normalizedX + coefficients[index];
+
       return assertFiniteResult(method, prediction, 'prediction');
     },
   };

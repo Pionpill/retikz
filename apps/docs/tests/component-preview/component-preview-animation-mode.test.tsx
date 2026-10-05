@@ -67,22 +67,26 @@ const renderPreview = async (Component: FC): Promise<HTMLElement> => {
   document.body.appendChild(container);
   const root = createRoot(container);
   await act(() => root.render(<PreviewHarness Component={Component} />));
+
   return container;
 };
 
 describe('ComponentPreview 全局动画模式', () => {
   it.each(['system', 'enabled', 'disabled'] satisfies Array<AnimationMode>)('持久化并读取 %s 模式', mode => {
     useComponentPreviewStore.getState().setAnimationMode(mode);
+
     expect(useComponentPreviewStore.getState().animationMode).toBe(mode);
   });
 
   it('共享 PreviewPanel 的 disabled 覆盖 demo 显式开启', async () => {
     useComponentPreviewStore.getState().setAnimationMode('disabled');
+
     expect((await renderPreview(ExplicitlyEnabledDemo)).querySelector('style')).toBeNull();
   });
 
   it('共享 PreviewPanel 的 enabled 覆盖 demo 显式关闭', async () => {
     useComponentPreviewStore.getState().setAnimationMode('enabled');
+
     expect((await renderPreview(ExplicitlyDisabledDemo)).querySelector('style')).not.toBeNull();
   });
 

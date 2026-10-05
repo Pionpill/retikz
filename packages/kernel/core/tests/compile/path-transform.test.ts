@@ -9,6 +9,7 @@ const findTransformGroup = (prims: ReadonlyArray<ScenePrimitive>): GroupPrim | u
   for (const p of prims) {
     if (p.type === 'group' && p.transforms && p.transforms.length > 0) return p;
   }
+
   return undefined;
 };
 
@@ -21,6 +22,7 @@ const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim | undefine
       if (inner) return inner;
     }
   }
+
   return undefined;
 };
 
@@ -44,8 +46,11 @@ describe('path rotate → GroupPrim 包裹 + 支点为包围盒中心', () => {
   it('rotate=30 产 rotate transform，cx/cy = path bbox center [5,0]', () => {
     const compiled = compileToScene(linePath({ rotate: 30 })).scene;
     const group = findTransformGroup(compiled.primitives);
+
     expect(group).toBeDefined();
+
     const rot = group?.transforms?.find((t): t is RotateTransform => t.kind === 'rotate');
+
     expect(rot).toBeDefined();
     expect(rot?.degrees).toBe(30);
     expect(rot?.cx).toBeCloseTo(5, 6);
@@ -55,9 +60,12 @@ describe('path rotate → GroupPrim 包裹 + 支点为包围盒中心', () => {
   it('包裹内仍含原始 path 几何（commands 不被旋转污染，几何留原坐标）', () => {
     const compiled = compileToScene(linePath({ rotate: 30 })).scene;
     const path = findPathPrim(compiled.primitives);
+
     expect(path).toBeDefined();
+
     // 端点几何在 group 内保持原坐标，旋转由外层 group.transforms 施加
     const move = path?.commands.find(c => c.kind === 'move');
+
     expect(move?.to).toEqual([0, 0]);
   });
 });
@@ -86,9 +94,11 @@ describe('path rotate 与绕同一中心的 scope rotate 等价', () => {
     }).scene;
     const gPath = findTransformGroup(viaPath.primitives);
     const gScope = findTransformGroup(viaScope.primitives);
+
     // 两者的旋转 transform 等价
     const rPath = gPath?.transforms?.find((t): t is RotateTransform => t.kind === 'rotate');
     const rScope = gScope?.transforms?.find((t): t is RotateTransform => t.kind === 'rotate');
+
     expect(rPath?.degrees).toBe(rScope?.degrees);
     expect(rPath?.cx).toBeCloseTo(rScope?.cx ?? NaN, 6);
     expect(rPath?.cy).toBeCloseTo(rScope?.cy ?? NaN, 6);
@@ -101,6 +111,7 @@ describe('path scale（等比 / 非等比）', () => {
     const compiled = compileToScene(linePath({ scale: 2 })).scene;
     const group = findTransformGroup(compiled.primitives);
     const sc = group?.transforms?.find((t): t is ScaleTransform => t.kind === 'scale');
+
     expect(sc).toBeDefined();
     expect(sc?.x).toBe(2);
     expect(sc?.y ?? sc?.x).toBe(2);
@@ -110,6 +121,7 @@ describe('path scale（等比 / 非等比）', () => {
     const compiled = compileToScene(linePath({ scale: { x: 2, y: 0.5 } })).scene;
     const group = findTransformGroup(compiled.primitives);
     const sc = group?.transforms?.find((t): t is ScaleTransform => t.kind === 'scale');
+
     expect(sc).toBeDefined();
     expect(sc?.x).toBe(2);
     expect(sc?.y).toBe(0.5);
@@ -124,13 +136,17 @@ describe('旋转 path + 箭头：方向随变换正确（变换顺序硬契约�
   it('rotate + arrow="->"：箭头几何在原始几何上解析（shrink 未被 path transform 污染）后整体由 group 旋转', () => {
     const noRotate = compileToScene(linePath({ marks: arrowMarks('->') })).scene;
     const rotated = compileToScene(linePath({ marks: arrowMarks('->'), rotate: 90 })).scene;
+
     // 旋转后仍有 path + 箭头；箭头 shrink 在未旋转几何上完成，故内层 path 的 arrowEnd 解析结果与未旋转一致
     const pNo = findPathPrim(noRotate.primitives);
     const pRot = findPathPrim(rotated.primitives);
+
     expect(pNo?.arrowEnd?.shape).toBe('stealth');
     expect(pRot?.arrowEnd?.shape).toBe('stealth');
+
     // 内层 commands 不受 path transform 影响（变换由外层 group 承担），shrink 落点一致
     expect(pRot?.commands).toEqual(pNo?.commands);
+
     // 旋转产生外层 group
     expect(findTransformGroup(rotated.primitives)).toBeDefined();
     expect(findTransformGroup(noRotate.primitives)).toBeUndefined();

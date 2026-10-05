@@ -14,6 +14,7 @@ import type { IRTransform } from '../../src/schemas';
 /** 把 id → 中心 entries 灌进新建的 namespaceStack，便于 lower 单测验证 referent lookup */
 const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack => {
   const stack = new NamespaceStack();
+
   for (const [id, [x, y]] of entries) {
     const layout: NodeLayout = {
       id,
@@ -37,6 +38,7 @@ const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack =
     };
     stack.register(id, layout);
   }
+
   return stack;
 };
 
@@ -76,20 +78,25 @@ const lower = (
   const { nodeDistance = 24, scopeChain, resolveBetweenGlobal, ...rest } = options;
   const base = createPositionResolveContext({ namespaceStack, nodeDistance, scopeChain });
   const positionContext = { ...base, resolveBetweenWorld: resolveBetweenGlobal };
+
   return lowerScopeTransforms(transforms, { positionContext, ...rest });
 };
 
 describe('lowerScopeTransforms 5 translate 变体', () => {
   it('translate 直接透传', () => {
     const out = lower([{ kind: 'translate', x: 5, y: 3 }]);
+
     expect(out).toEqual([{ kind: 'translate', x: 5, y: 3 }]);
   });
 
   it('polar-translate 不带 origin lower 成笛卡尔', () => {
     const out = lower([{ kind: 'polar-translate', angle: 0, radius: 50 }]);
+
     expect(out).not.toBeNull();
     expect(out![0]).toMatchObject({ kind: 'translate' });
+
     const t = out![0] as { x: number; y: number };
+
     expect(t.x).toBeCloseTo(50, 6);
     expect(t.y).toBeCloseTo(0, 6);
   });
@@ -97,16 +104,22 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
   it('polar-translate 带 origin=string id', () => {
     const idx = makeStack([['A', [10, 0]]]);
     const out = lower([{ kind: 'polar-translate', origin: 'A', angle: 0, radius: 30 }], idx);
+
     expect(out).not.toBeNull();
+
     const t = out![0] as { x: number; y: number };
+
     expect(t.x).toBeCloseTo(40, 6);
     expect(t.y).toBeCloseTo(0, 6);
   });
 
   it('polar-translate 带 origin=笛卡尔', () => {
     const out = lower([{ kind: 'polar-translate', origin: [10, 5], angle: 90, radius: 20 }]);
+
     expect(out).not.toBeNull();
+
     const t = out![0] as { x: number; y: number };
+
     expect(t.x).toBeCloseTo(10, 6);
     expect(t.y).toBeCloseTo(25, 6);
   });
@@ -114,6 +127,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
   it('polar-translate radius=0 等价 translate(0, 0)', () => {
     const out = lower([{ kind: 'polar-translate', angle: 45, radius: 0 }]);
     const t = out![0] as { x: number; y: number };
+
     expect(t.x).toBeCloseTo(0, 6);
     expect(t.y).toBeCloseTo(0, 6);
   });
@@ -121,6 +135,7 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
   it('polar-translate angle=360 与 angle=0 数值结果一致', () => {
     const a = lower([{ kind: 'polar-translate', angle: 360, radius: 50 }]);
     const b = lower([{ kind: 'polar-translate', angle: 0, radius: 50 }]);
+
     expect((a![0] as { x: number; y: number }).x).toBeCloseTo((b![0] as { x: number; y: number }).x, 6);
     expect((a![0] as { x: number; y: number }).y).toBeCloseTo((b![0] as { x: number; y: number }).y, 6);
   });
@@ -128,24 +143,28 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
   it('at-translate 含 distance lower 成笛卡尔', () => {
     const idx = makeStack([['A', [0, 0]]]);
     const out = lower([{ kind: 'at-translate', direction: 'right', of: 'A', distance: 20 }], idx);
+
     expect(out![0]).toEqual({ kind: 'translate', x: 20, y: 0 });
   });
 
   it('at-translate 缺 distance 走 nodeDistance', () => {
     const idx = makeStack([['A', [0, 0]]]);
     const out = lower([{ kind: 'at-translate', direction: 'top', of: 'A' }], idx, { nodeDistance: 15 });
+
     expect(out![0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
 
   it('offset-translate of=string + offset', () => {
     const idx = makeStack([['A', [0, 0]]]);
     const out = lower([{ kind: 'offset-translate', of: 'A', offset: [10, 5] }], idx);
+
     expect(out![0]).toEqual({ kind: 'translate', x: 10, y: 5 });
   });
 
   it('offset-translate of=string 缺 offset', () => {
     const idx = makeStack([['A', [100, 100]]]);
     const out = lower([{ kind: 'offset-translate', of: 'A' }], idx);
+
     expect(out![0]).toEqual({ kind: 'translate', x: 100, y: 100 });
   });
 
@@ -160,12 +179,14 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
         const aLayout = 'id' in a ? idx.lookup(a.id) : null;
         const bLayout = 'id' in b ? idx.lookup(b.id) : null;
         if (!aLayout || !bLayout) return null;
+
         return [
           aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
           aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
         ];
       },
     });
+
     expect(out![0]).toEqual({ kind: 'translate', x: 25, y: 10 });
   });
 });
@@ -173,16 +194,19 @@ describe('lowerScopeTransforms 5 translate 变体', () => {
 describe('lowerScopeTransforms 失败情形', () => {
   it('at-translate of 未解析返回 null', () => {
     const out = lower([{ kind: 'at-translate', direction: 'right', of: 'B' }], undefined, { nodeDistance: 10 });
+
     expect(out).toBeNull();
   });
 
   it('offset-translate of=string 未解析返回 null', () => {
     const out = lower([{ kind: 'offset-translate', of: 'B', offset: [5, 0] }]);
+
     expect(out).toBeNull();
   });
 
   it('polar-translate origin=string 未解析返回 null', () => {
     const out = lower([{ kind: 'polar-translate', origin: 'B', angle: 0, radius: 10 }]);
+
     expect(out).toBeNull();
   });
 
@@ -192,6 +216,7 @@ describe('lowerScopeTransforms 失败情形', () => {
       ['B', [100, 40]],
     ]);
     const out = lower([{ kind: 'between-translate', between: [{ id: 'A' }, { id: 'B' }], fraction: 0.5 }], idx);
+
     expect(out).toBeNull();
   });
 
@@ -204,6 +229,7 @@ describe('lowerScopeTransforms 失败情形', () => {
       undefined,
       { nodeDistance: 10 },
     );
+
     expect(out).toBeNull();
   });
 });
@@ -213,21 +239,25 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
     const out = lower([{ kind: 'rotate', degrees: 45, pivot: 'center' }], undefined, {
       intrinsicLayout: layoutForProjection(),
     });
+
     expect(out![0]).toEqual({ kind: 'rotate', degrees: 45, cx: 10, cy: 20 });
   });
 
   it('rotate 缺省 pivot=origin，不生成 cx/cy', () => {
     const out = lower([{ kind: 'rotate', degrees: 30 }]);
+
     expect(out![0]).toEqual({ kind: 'rotate', degrees: 30 });
   });
 
   it('scale 含 y', () => {
     const out = lower([{ kind: 'scale', x: 2, y: 3 }]);
+
     expect(out![0]).toEqual({ kind: 'scale', x: 2, y: 3 });
   });
 
   it('scale 缺 y 不带它', () => {
     const out = lower([{ kind: 'scale', x: 2 }]);
+
     expect(out![0]).toEqual({ kind: 'scale', x: 2 });
   });
 
@@ -235,6 +265,7 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
     const out = lower([{ kind: 'scale', x: 2, y: 3, pivot: [4, 5] }], undefined, {
       intrinsicLayout: layoutForProjection(),
     });
+
     expect(out).toEqual([
       { kind: 'translate', x: 4, y: 5 },
       { kind: 'scale', x: 2, y: 3 },
@@ -246,11 +277,13 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
     const out = lower([{ kind: 'rotate', degrees: 15, pivot: 'top-left' }], undefined, {
       intrinsicLayout: layoutForProjection(),
     });
+
     expect(out).toEqual([{ kind: 'rotate', degrees: 15, cx: -7, cy: -2 }]);
   });
 
   it('projectLayoutToGlobal 在负 scale 下保持 rect 尺寸为正数', () => {
     const layout = projectLayoutToGlobal(layoutForProjection(), [{ kind: 'scale', x: -2, y: 3 }]);
+
     expect(layout.rect.x).toBeCloseTo(-20, 6);
     expect(layout.rect.y).toBeCloseTo(60, 6);
     expect(layout.rect.width).toBe(60);
@@ -260,6 +293,7 @@ describe('lowerScopeTransforms rotate / scale 透传', () => {
 
   it('projectLayoutToGlobal 应同步 rect.rotate 与 rotateDeg', () => {
     const layout = projectLayoutToGlobal(layoutForProjection(), [{ kind: 'rotate', degrees: 45 }]);
+
     expect(layout.rect.rotate).toBeCloseTo(Math.PI / 4, 6);
     expect(layout.rotateDeg).toBeCloseTo(45, 6);
   });
@@ -286,12 +320,14 @@ describe('lowerScopeTransforms 链复合', () => {
         const aLayout = 'id' in a ? idx.lookup(a.id) : null;
         const bLayout = 'id' in b ? idx.lookup(b.id) : null;
         if (!aLayout || !bLayout) return null;
+
         return [
           aLayout.rect.x + (bLayout.rect.x - aLayout.rect.x) * between.fraction,
           aLayout.rect.y + (bLayout.rect.y - aLayout.rect.y) * between.fraction,
         ];
       },
     });
+
     expect(out).not.toBeNull();
     expect(out!).toHaveLength(7);
     expect(out![0]).toEqual({ kind: 'translate', x: 5, y: 5 });

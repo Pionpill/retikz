@@ -23,6 +23,7 @@ export const NodeLabelRotatePinPreview = (values: NodeLabelRotatePinPreviewValue
           strokeWidth: values.pinWidth,
           ...(values.pinStyle === 'dashed' ? { dashPattern: [4, 3], dashOffset: values.pinDashOffset } : {}),
         };
+
   return (
     <Layout>
       <Node

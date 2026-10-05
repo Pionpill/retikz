@@ -18,6 +18,7 @@ describe('renderToSvgString —— SvgNode → 字符串', () => {
   ])('显示尺寸默认取内容边界，单轴按比例推导：%j', (size, width, height) => {
     const scene: Scene = { primitives: [], layout: { x: -20, y: -10, width: 240, height: 120 } };
     const svg = renderToSvgString(scene, { idPrefix: 'size', ...size });
+
     expect(svg).toContain(`width="${width}"`);
     expect(svg).toContain(`height="${height}"`);
     expect(svg).toContain('viewBox="-20 -10 240 120"');
@@ -26,9 +27,12 @@ describe('renderToSvgString —— SvgNode → 字符串', () => {
   it('正数亚像素内容保持原尺寸，退化轴使用最小宿主尺寸', () => {
     const scene: Scene = { primitives: [], layout: { x: 0, y: 0, width: 0.25, height: 0.5 } };
     const svg = renderToSvgString(scene, { idPrefix: 'subpixel' });
+
     expect(svg).toContain('width="0.25"');
     expect(svg).toContain('height="0.5"');
+
     const empty = renderToSvgString({ ...scene, layout: { ...scene.layout, width: 0 } }, { idPrefix: 'zero' });
+
     expect(empty).toContain('width="1"');
     expect(empty).toContain('height="0.5"');
   });
@@ -44,9 +48,11 @@ describe('renderToSvgString —— SvgNode → 字符串', () => {
       strokeWidth: 2,
     };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
+
     expect(out).toContain('stroke-width="2"');
     expect(out).toContain('fill="#f00"');
     expect(out).not.toContain('strokeWidth');
+
     // 无 children 的元素自闭合
     expect(out).toContain('<rect ');
     expect(out).toContain('/>');
@@ -55,12 +61,14 @@ describe('renderToSvgString —— SvgNode → 字符串', () => {
   it('含 var() 的 fill → 拼进 style="fill:var(--brand)"，不进 fill attribute', () => {
     const rect: RectPrim = { type: 'rect', x: 0, y: 0, width: 1, height: 1, fill: 'var(--brand)' };
     const out = renderToSvgString(sceneOf([rect]), { idPrefix: 'd1' });
+
     expect(out).toContain('style="fill:var(--brand)"');
     expect(out).not.toContain('fill="var(--brand)"');
   });
 
   it('顶层 <svg> 携 viewBox，空场景不含 <defs>', () => {
     const out = renderToSvgString(sceneOf([]), { idPrefix: 'd1' });
+
     expect(out.startsWith('<svg viewBox="0 0 10 10"')).toBe(true);
     expect(out).not.toContain('<defs');
   });
@@ -79,6 +87,7 @@ describe('renderToSvgString —— SvgNode → 字符串', () => {
       measuredHeight: 12,
     };
     const out = renderToSvgString(sceneOf([text]), { idPrefix: 'd1' });
+
     expect(out).toContain('a &lt; b &amp; c');
     expect(out).not.toContain('a < b & c');
   });

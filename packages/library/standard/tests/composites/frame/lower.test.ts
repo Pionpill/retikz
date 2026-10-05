@@ -26,11 +26,13 @@ const compileFrameScene = (input: FrameInput, nodeLayouts = false) =>
 
 const nodeLayoutsById = (result: ReturnType<typeof compileFrameScene>): Map<string, CompiledNodeLayout> => {
   const layouts = new Map<string, CompiledNodeLayout>();
+
   for (const artifact of result.artifacts) {
     if (isNodeLayoutCompileArtifact(artifact) && artifact.value.id !== undefined) {
       layouts.set(artifact.value.id, artifact.value);
     }
   }
+
   return layouts;
 };
 
@@ -112,6 +114,7 @@ describe('Frame layout compile', () => {
     const titleBottomLeft = rectOps.anchor(title.rect, 'bottom-left');
     const titleBottomRight = rectOps.anchor(title.rect, 'bottom-right');
     const descriptionBottomLeft = rectOps.anchor(description.rect, 'bottom-left');
+
     expect(titleBottomLeft[0]).toBeCloseTo(bodyTopLeft[0], 8);
     expect(titleBottomLeft[1]).toBeCloseTo(bodyTopLeft[1] - 5, 8);
     expect(descriptionBottomLeft[0]).toBeCloseTo(titleBottomRight[0] + 5, 8);
@@ -139,6 +142,7 @@ describe('Frame layout compile', () => {
     const descriptionBottomLeft = rectOps.anchor(description.rect, 'bottom-left');
     const descriptionTopLeft = rectOps.anchor(description.rect, 'top-left');
     const titleBottomLeft = rectOps.anchor(title.rect, 'bottom-left');
+
     expect(descriptionBottomLeft).toEqual([bodyTopLeft[0], bodyTopLeft[1] - 6]);
     expect(titleBottomLeft).toEqual([descriptionTopLeft[0], descriptionTopLeft[1] - 6]);
   });
@@ -160,6 +164,7 @@ describe('Frame layout compile', () => {
 
     expect(titleShape).toMatchObject({ stroke: '#334155', fill: '#f8fafc' });
     expect(titleText).toMatchObject({ fontFamily: 'serif', fontSize: 14, fontWeight: 600 });
+
     if (titleText?.type === 'text') expect(titleText.lines[0]?.text).toBe('Contract');
   });
 

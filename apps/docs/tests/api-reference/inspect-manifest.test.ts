@@ -13,11 +13,14 @@ describe('Inspect API Reference', () => {
   it('保留公开入口、调用契约与语义分支，Schema 只展示摘要', async () => {
     for (const lang of ['zh', 'en'] as const) {
       const source = await createInspectApiReferenceMdx(lang);
+
       expect(source).toContain('<ApiTable variant="methods">');
       expect(source).toContain('<ApiTable variant="parameters">');
       expect(source).toContain('<ApiTable grouped>');
       expect(source).not.toContain('<div className=');
+
       const sections = source.split(/^## /m).slice(1);
+
       expect(sections).toHaveLength(3);
       expect(sections[0]).toContain('`@retikz/inspect`');
       expect(sections[0]).toContain('### defineInspector');
@@ -27,6 +30,7 @@ describe('Inspect API Reference', () => {
       expect(sections[1]).not.toContain('### createInspectionVanillaDriver');
       expect(sections[2]).toContain('`@retikz/inspect/vanilla`');
       expect(sections[2]).toContain('### createInspectionVanillaDriver');
+
       for (const schema of [
         'PathInspectOptionsSchema',
         'NodeInspectOptionsSchema',
@@ -35,36 +39,55 @@ describe('Inspect API Reference', () => {
         'CoordinateInspectOptionsSchema',
       ]) {
         const schemaSection = source.split(`### ${schema}\n`)[1]?.split('\n### ')[0];
+
         expect(schemaSection).toContain('/schema-reference#');
         expect(schemaSection).toContain('ApiSourceLink');
         expect(schemaSection).not.toContain('```');
       }
+
       const definitionInput = source.split('### InspectorDefinitionInput\n')[1]?.split('\n### ')[0] ?? '';
+
       expect(definitionInput).not.toContain(lang === 'zh' ? '#### 展开类型' : '#### Expanded type');
       expect(definitionInput).toContain('export type InspectorDefinitionInput');
+
       const diagnosticOrigin = source.split('### InspectionDiagnosticOrigin\n')[1]?.split('\n### ')[0] ?? '';
+
       expect(diagnosticOrigin).not.toContain(lang === 'zh' ? '#### 展开类型' : '#### Expanded type');
       expect(diagnosticOrigin).toContain('Readonly<');
+
       const selectionRule = source.split('### InspectionSelectionRule\n')[1]?.split('\n### ')[0] ?? '';
+
       expect(selectionRule).not.toContain(lang === 'zh' ? '#### 展开类型' : '#### Expanded type');
       expect(selectionRule).toContain('Readonly<');
+
       const errorCode = source.split('### RetikzInspectErrorCode\n')[1]?.split('\n### ')[0] ?? '';
+
       expect(errorCode).toContain('export const RetikzInspectErrorCode = {');
       expect(errorCode).toContain('} as const;');
+
       const registryFactory = source.split('### createInspectorRegistry\n')[1]?.split('\n### ')[0] ?? '';
+
       expect(registryFactory).toContain('export declare const createInspectorRegistry:');
+
       const inspectError = source.split('### RetikzInspectError\n')[1]?.split('\n### ')[0] ?? '';
+
       expect(inspectError).toContain('export class RetikzInspectError extends RetikzError');
+
       const inspectorContext = source.split('### InspectorContext\n')[1]?.split('\n### ')[0] ?? '';
+
       expect(inspectorContext).toContain(
         lang === 'zh' ? 'callback 消费的已解析 options 类型' : 'Resolved options type consumed by the callback',
       );
+
       const scopeProps = source.split('### InspectScope / InspectScopeProps\n')[1]?.split('\n### ')[0] ?? '';
+
       expect(scopeProps).toContain(lang === 'zh' ? 'label="直接属性"' : 'label="Direct members"');
       expect(scopeProps).toContain('`InspectionVanillaAuthoringInput`');
       expect(scopeProps).toContain('`ScopeProps`');
       expect(scopeProps).not.toContain('`animations?`');
+
       const section = (name: string): string => source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
+
       expect(section('createDefaultInspectorRegistry')).toContain(
         'definitions?: ReadonlyArray<AnyInspectorDefinitionInput>',
       );
@@ -73,10 +96,12 @@ describe('Inspect API Reference', () => {
       expect(section('compileInspectionToScene')).not.toContain('keyframes');
       expect(section('InspectorRegistry')).not.toContain('<DocTabs');
       expect(source).not.toContain('__@');
+
       for (const name of ['InspectCoordinate', 'InspectLayout', 'InspectNode', 'InspectPath', 'InspectScope']) {
         expect(source).toContain(`### ${name} / ${name}Props`);
         expect(source).not.toContain(`### ${name}Props\n`);
       }
+
       expect(section('InspectionSelectionRule')).toContain('value="request"');
       expect(section('InspectionSelectionRule')).toContain('value="barrier"');
       expect(section('InspectionSelectionTarget')).toContain('value="self"');
@@ -91,6 +116,7 @@ describe('Inspect API Reference', () => {
       );
       expect(section('InspectLayout / InspectLayoutProps')).toContain(lang === 'zh' ? '| 分组 |' : '| Group |');
       expect(source).not.toMatch(/^#### (参数|返回值|类型参数|Parameters|Returns|Type parameters)$/m);
+
       if (lang === 'en') expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);
       const compiled = await compile(source, { remarkPlugins: [remarkGfm], outputFormat: 'function-body' });
       const module = await run(compiled, jsxRuntime);
@@ -106,6 +132,7 @@ describe('Inspect API Reference', () => {
           },
         }),
       );
+
       expect(html).toContain('InspectorDefinitionInput');
     }
   }, 20000);

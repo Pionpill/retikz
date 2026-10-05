@@ -41,6 +41,7 @@ it('preserves Graph Group captions, labels and local context through React and V
     layouts: [],
     children: ['service'],
   });
+
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
   expect(vanilla.groups[0]).toEqual({ ...group, children: ['request'] });
 });
@@ -65,6 +66,7 @@ it('preserves local Layout exclusion through React and Vanilla equally', () => {
     ],
     children: ['row'],
   });
+
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
 });
 
@@ -73,7 +75,9 @@ type FlowComponent = FC<Readonly<Record<string, unknown>> & Readonly<{ children?
 const componentExport = (name: string): FlowComponent | undefined => {
   const value: unknown = FlowReact;
   if (typeof value !== 'object' || value === null || !(name in value)) return undefined;
+
   const candidate = value[name as keyof typeof value];
+
   return typeof candidate === 'function' ? (candidate as FlowComponent) : undefined;
 };
 
@@ -167,10 +171,12 @@ describe('@retikz/diagram-react/flow', () => {
       children: ['a', 'b'],
       relations: [relation],
     });
+
     expect(normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0]).toEqual(
       vanilla,
     );
     expect(FlowDiagramSchema.parse(vanilla).relations?.[0].routing).toEqual({ kind, cornerRadius: 3 });
+
     const markup = renderToStaticMarkup(
       createElement(
         FlowReact.FlowDiagram,
@@ -179,9 +185,11 @@ describe('@retikz/diagram-react/flow', () => {
         createElement(FlowReact.FlowRelation, relation),
       ),
     );
+
     expect(markup).toContain('<svg');
     expect(markup).toContain('<path');
   });
+
   it.each([
     { form: 'matrix', placements: [['a'], [null, 'b']] },
     {
@@ -223,15 +231,19 @@ describe('@retikz/diagram-react/flow', () => {
         ),
       );
       const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir.children[0];
+
       expect(react).toEqual(direct);
       expect(normalizeFlowDiagram(source)).toEqual(direct);
+
       const result = processToStaticInputResult(input.scene, {
         adapters: synchronousAdapters(input.adapters),
         compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
       });
+
       expect(JSON.stringify(result)).toContain('A');
     },
   );
+
   it('preserves Source-shaped defaults and instance paths through typed React and Vanilla authoring', () => {
     const props = {
       presentation: { title: { text: 'Pipeline', style: { font: { size: 21 } } } },
@@ -268,12 +280,14 @@ describe('@retikz/diagram-react/flow', () => {
       children: ['node'],
       relations: [relation],
     });
+
     expect(react).toEqual(direct);
     expect(vanilla).toEqual(direct);
   });
 
   it('exports the supported Flow root, single and batch JSX markers', () => {
     const exported = components();
+
     expect(exported.FlowDiagram).toBeDefined();
     expect(exported.FlowEntities).toBeDefined();
     expect(exported.FlowEntity).toBeDefined();
@@ -286,11 +300,13 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('expands batch Entity and Relation forms in mixed JSX order', () => {
     const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntities).toBeDefined();
     expect(FlowEntity).toBeDefined();
     expect(FlowRelations).toBeDefined();
     expect(FlowRelation).toBeDefined();
+
     if (
       FlowDiagram === undefined ||
       FlowEntities === undefined ||
@@ -349,11 +365,13 @@ describe('@retikz/diagram-react/flow', () => {
     'rejects a complete %s marker beside any same-owner declaration',
     declarationKind => {
       const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
+
       expect(FlowDiagram).toBeDefined();
       expect(FlowEntities).toBeDefined();
       expect(FlowEntity).toBeDefined();
       expect(FlowRelations).toBeDefined();
       expect(FlowRelation).toBeDefined();
+
       if (
         FlowDiagram === undefined ||
         FlowEntities === undefined ||
@@ -399,10 +417,12 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('scopes complete Entity lists to their direct Flow, Group, or Layout owner', () => {
     const { FlowDiagram, FlowEntities, FlowGroup, FlowLayout } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntities).toBeDefined();
     expect(FlowGroup).toBeDefined();
     expect(FlowLayout).toBeDefined();
+
     if (FlowDiagram === undefined || FlowEntities === undefined || FlowGroup === undefined || FlowLayout === undefined)
       return;
 
@@ -441,9 +461,11 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('keeps duplicate ids in additive collectors on the existing Flow diagnostic path', () => {
     const { FlowDiagram, FlowEntities, FlowEntity } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntities).toBeDefined();
     expect(FlowEntity).toBeDefined();
+
     if (FlowDiagram === undefined || FlowEntities === undefined || FlowEntity === undefined) return;
 
     const input = createInputScene(
@@ -470,10 +492,12 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('expands batch Entities inside Group and Layout owners', () => {
     const { FlowDiagram, FlowEntities, FlowGroup, FlowLayout } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntities).toBeDefined();
     expect(FlowGroup).toBeDefined();
     expect(FlowLayout).toBeDefined();
+
     if (FlowDiagram === undefined || FlowEntities === undefined || FlowGroup === undefined || FlowLayout === undefined)
       return;
 
@@ -507,10 +531,12 @@ describe('@retikz/diagram-react/flow', () => {
 
   it.each(['group', 'layout'] as const)('rejects batch Relations inside a %s owner', ownerKind => {
     const { FlowDiagram, FlowGroup, FlowLayout, FlowRelations } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowGroup).toBeDefined();
     expect(FlowLayout).toBeDefined();
     expect(FlowRelations).toBeDefined();
+
     if (FlowDiagram === undefined || FlowGroup === undefined || FlowLayout === undefined || FlowRelations === undefined)
       return;
 
@@ -530,10 +556,12 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('treats empty batch markers as no operations', () => {
     const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntities).toBeDefined();
     expect(FlowEntity).toBeDefined();
     expect(FlowRelations).toBeDefined();
+
     if (
       FlowDiagram === undefined ||
       FlowEntities === undefined ||
@@ -565,11 +593,13 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('produces the same Source from batch and single markers', () => {
     const { FlowDiagram, FlowEntities, FlowEntity, FlowRelations, FlowRelation } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntities).toBeDefined();
     expect(FlowEntity).toBeDefined();
     expect(FlowRelations).toBeDefined();
     expect(FlowRelation).toBeDefined();
+
     if (
       FlowDiagram === undefined ||
       FlowEntities === undefined ||
@@ -613,11 +643,13 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('flattens nested Group and Layout JSX with root relations to the exact Direct Source', () => {
     const { FlowDiagram, FlowEntity, FlowGroup, FlowLayout, FlowRelation } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntity).toBeDefined();
     expect(FlowGroup).toBeDefined();
     expect(FlowLayout).toBeDefined();
     expect(FlowRelation).toBeDefined();
+
     if (
       FlowDiagram === undefined ||
       FlowEntity === undefined ||
@@ -642,8 +674,10 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('normalizes a Core-compatible Entity text block and existing text layout props without JSX children', () => {
     const { FlowDiagram, FlowEntity } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntity).toBeDefined();
+
     if (FlowDiagram === undefined || FlowEntity === undefined) return;
 
     const input = createInputScene(
@@ -679,10 +713,12 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('rejects Relation inside Group and every embedded standalone host prop including explicit undefined', () => {
     const { FlowDiagram, FlowEntity, FlowGroup, FlowRelation } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntity).toBeDefined();
     expect(FlowGroup).toBeDefined();
     expect(FlowRelation).toBeDefined();
+
     if (FlowDiagram === undefined || FlowEntity === undefined || FlowGroup === undefined || FlowRelation === undefined)
       return;
 
@@ -705,8 +741,10 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('reuses Layout for standalone SSR without firing host lifecycle callbacks', () => {
     const { FlowDiagram, FlowEntity } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntity).toBeDefined();
+
     if (FlowDiagram === undefined || FlowEntity === undefined) return;
 
     let compileResultCalls = 0;
@@ -731,8 +769,10 @@ describe('@retikz/diagram-react/flow', () => {
 
   it('produces the same artifact value from embedded React authoring', () => {
     const { FlowDiagram, FlowEntity } = components();
+
     expect(FlowDiagram).toBeDefined();
     expect(FlowEntity).toBeDefined();
+
     if (FlowDiagram === undefined || FlowEntity === undefined) return;
 
     const input = createInputScene(
@@ -795,13 +835,16 @@ it('compiles bend and complete labels identically through React, Vanilla and dir
     children: ['a', 'b'],
     relations: [relation],
   });
+
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
+
   const providers = prepareProcessingInput(input.scene, { adapters: synchronousAdapters(input.adapters) }).coreOptions;
   const expected = processToStaticInputResult(
     { type: 'scene', version: 1, children: [direct] },
     { compile: providers },
   ).scene;
+
   expect(
     processToStaticInputResult({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene,
   ).toEqual(expected);
@@ -871,13 +914,16 @@ it('preserves automatic, explicit Bezier and smooth routing through all authorin
     children: ['a', 'b'],
     relations,
   });
+
   expect(FlowDiagramSchema.parse(react.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
+
   const providers = prepareProcessingInput(input.scene, { adapters: synchronousAdapters(input.adapters) }).coreOptions;
   const expected = processToStaticInputResult(
     { type: 'scene', version: 1, children: [direct] },
     { compile: providers },
   ).scene;
+
   expect(
     processToStaticInputResult({ type: 'scene', version: 1, children: [vanilla] }, { compile: providers }).scene,
   ).toEqual(expected);
@@ -920,7 +966,38 @@ it('keeps endpoint constraints and sparse defaults equal across React, Vanilla a
     layouts: [],
     children: ['a', 'b'],
   });
+
   expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(direct);
   expect(FlowDiagramSchema.parse(vanilla)).toEqual(direct);
   expect(direct.relations).toEqual(relations);
+});
+
+it('容器等宽与行内填充在 React 和 Vanilla 中保留相同 Source', () => {
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowLayout id="rows" kind="linear" direction="down" containerWidth="match-largest">
+        <FlowReact.FlowLayout id="row" kind="linear" direction="right" itemWidth="fill">
+          <FlowReact.FlowEntity id="a" text="A" />
+          <FlowReact.FlowEntity id="b" text="B" />
+        </FlowReact.FlowLayout>
+      </FlowReact.FlowLayout>
+      <FlowReact.FlowRelation source="a" target="b" />
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+  const vanilla = normalizeFlowDiagram({
+    entities: [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ],
+    groups: [],
+    layouts: [
+      { id: 'rows', kind: 'linear', direction: 'down', containerWidth: 'match-largest', children: ['row'] },
+      { id: 'row', kind: 'linear', direction: 'right', itemWidth: 'fill', children: ['a', 'b'] },
+    ],
+    children: ['rows'],
+    relations: [{ source: 'a', target: 'b' }],
+  });
+
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
 });

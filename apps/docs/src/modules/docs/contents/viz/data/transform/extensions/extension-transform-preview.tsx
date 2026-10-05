@@ -35,6 +35,7 @@ export const scaleField = defineTransform({
     fieldEffect: DataTransformFieldEffect.Preserve,
   },
 });
+
 /** scaleField的本地计算实现 */
 export const scaleFieldImplementation = defineTransformImplementation({
   definition: scaleField,

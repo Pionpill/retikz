@@ -42,6 +42,7 @@ const convertHeaderProps = (
       details: { childCount: children?.length ?? 0, kind },
     });
   }
+
   const child = children[0];
   if (child.type !== 'node' || 'namespace' in child) {
     throw new RetikzStandardError({
@@ -50,18 +51,21 @@ const convertHeaderProps = (
       details: { childType: child.type, kind },
     });
   }
+
   return child;
 };
 
 /** 从 Frame 的透明 Fragment 与直接 children 中提取唯一语义 parts */
 const readFrameParts = (children: ReactNode): FrameParts => {
   const result: FrameParts = { body: [] };
+
   const visit = (nodes: ReactNode): void => {
     Children.forEach(nodes, child => {
       if (isValidElement(child) && child.type === Fragment) {
         visit((child.props as { children?: ReactNode }).children);
         return;
       }
+
       if (isValidElement<FrameTitleProps>(child) && child.type === FrameTitle) {
         if (result.title !== undefined) {
           throw new RetikzStandardError({
@@ -70,9 +74,12 @@ const readFrameParts = (children: ReactNode): FrameParts => {
             details: { marker: 'FrameTitle' },
           });
         }
+
         result.title = convertHeaderProps(child.props, 'title');
+
         return;
       }
+
       if (isValidElement<FrameDescriptionProps>(child) && child.type === FrameDescription) {
         if (result.description !== undefined) {
           throw new RetikzStandardError({
@@ -81,13 +88,18 @@ const readFrameParts = (children: ReactNode): FrameParts => {
             details: { marker: 'FrameDescription' },
           });
         }
+
         result.description = convertHeaderProps(child.props, 'description');
+
         return;
       }
+
       result.body.push(child);
     });
   };
+
   visit(children);
+
   return result;
 };
 
@@ -100,6 +112,7 @@ const createFrameInput = (props: Readonly<Record<string, unknown>>, context: Rea
       details: { fields: ['title', 'description'] },
     });
   }
+
   const { children, ...input } = props as FrameProps;
   const parts = readFrameParts(children);
   const bodyInput = createInputScene(parts.body, { embedIdPrefix: `${context.id}:body` });
@@ -111,6 +124,7 @@ const createFrameInput = (props: Readonly<Record<string, unknown>>, context: Rea
       details: { component: 'Frame' },
     });
   }
+
   const headers: InputFrameHeaders = {
     ...(parts.title === undefined ? {} : { title: parts.title }),
     ...(parts.description === undefined ? {} : { description: parts.description }),
@@ -120,6 +134,7 @@ const createFrameInput = (props: Readonly<Record<string, unknown>>, context: Rea
     children: childrenInput,
     ...(Object.keys(headers).length === 0 ? {} : { headers }),
   };
+
   return withInputEmbedAdapters(inputProps, bodyInput.adapters);
 };
 

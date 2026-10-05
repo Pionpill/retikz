@@ -1,10 +1,4 @@
-import type {
-  IRDrawableStyle,
-  IRDropShadow,
-  ResolvedDropShadow,
-  ShadowPresetValue,
-  StrokeDashPattern,
-} from '../../schemas';
+import type { IRDrawableStyle, IRDropShadow, ResolvedDropShadow, ShadowPreset, StrokeDashPattern } from '../../schemas';
 import { SHADOW_PRESETS } from '../../schemas';
 
 /** 虚线预设 */
@@ -38,9 +32,7 @@ export const pickDrawableStyle = (src: Partial<IRDrawableStyle>): Partial<IRDraw
 };
 
 /** 将投影预设与显式覆盖解析为完整内部结构 */
-export const resolveDropShadow = (
-  shadow: ShadowPresetValue | IRDropShadow | undefined,
-): ResolvedDropShadow | undefined => {
+export const resolveDropShadow = (shadow: ShadowPreset | IRDropShadow | undefined): ResolvedDropShadow | undefined => {
   if (shadow === undefined) return undefined;
 
   if (typeof shadow === 'string') {
@@ -53,6 +45,7 @@ export const resolveDropShadow = (
   const merged: Omit<IRDropShadow, 'preset'> = { ...(base ?? {}), ...explicit };
 
   if (merged.offsetX === undefined || merged.offsetY === undefined) return undefined;
+
   return {
     ...merged,
     offsetX: merged.offsetX,
@@ -70,5 +63,6 @@ export const resolveDashPattern = (
   if (dashPattern !== undefined) return dashPattern;
   if (dashed) return DASHED_PATTERN;
   if (dotted) return DOTTED_PATTERN;
+
   return undefined;
 };

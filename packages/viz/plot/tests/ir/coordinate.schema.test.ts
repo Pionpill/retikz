@@ -13,6 +13,7 @@ describe('CoordinateSchema (contract)', () => {
   // Happy path
   it('coordinate_cartesian2d_valid', () => {
     const c = { type: 'cartesian2D', x: 'xs', y: 'ys' };
+
     expect(CoordinateSchema.parse(c)).toEqual(c);
   });
 
@@ -42,6 +43,7 @@ describe('CoordinateSchema (contract)', () => {
   // 交互：schema 层不做跨字段引用校验（引用完整性归 lowering）
   it('coordinate_references_unknown_scale_name_schema_passes', () => {
     const c = { type: 'cartesian2D', x: 'nonexistent', y: 'alsoMissing' };
+
     expect(CoordinateSchema.parse(c)).toEqual(c);
   });
 });
@@ -50,11 +52,13 @@ describe('CoordinateSchema polar2D (contract)', () => {
   // Happy path
   it('polar2d_parse_materializes_static_defaults', () => {
     const parsed = CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r' });
+
     expect(parsed).toEqual({ type: 'polar2D', angle: 'a', radius: 'r', startAngle: 0, endAngle: 360, innerRadius: 0 });
   });
 
   it('polar2d_explicit_fields_valid', () => {
     const c = { type: 'polar2D', angle: 'a', radius: 'r', startAngle: -90, endAngle: 180, innerRadius: 0.3 };
+
     expect(CoordinateSchema.parse(c)).toEqual(c);
   });
 
@@ -84,6 +88,7 @@ describe('CoordinateSchema polar2D (contract)', () => {
   it('polar2d_cartesian_still_accepted_regression', () => {
     // 回归：扩 union 后 cartesian2D 仍接受、产物不变
     const c = { type: 'cartesian2D', x: 'xs', y: 'ys' };
+
     expect(CoordinateSchema.parse(c)).toEqual(c);
   });
 
@@ -91,6 +96,7 @@ describe('CoordinateSchema polar2D (contract)', () => {
   it('polar2d_innerRadius_at_lower_bound_valid', () => {
     const c = { type: 'polar2D', angle: 'a', radius: 'r', innerRadius: 0 } as const;
     const parsed = CoordinateSchema.parse(c);
+
     expect(parsed.type === 'polar2D' && parsed.innerRadius).toBe(0);
   });
 
@@ -141,6 +147,7 @@ describe('CoordinateSchema polar2D (contract)', () => {
       endAngle: 270,
       innerRadius: 0.25,
     });
+
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
   });
 });
@@ -149,6 +156,7 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (contract)',
   // Happy path：cartesian1D
   it('cartesian1d_minimal_valid', () => {
     const c = { type: 'cartesian1D', x: 'xs' };
+
     expect(CoordinateSchema.parse(c)).toEqual(c);
   });
 
@@ -159,6 +167,7 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (contract)',
 
   it('cartesian1d_vertical_orientation_valid', () => {
     const c = { type: 'cartesian1D', x: 'xs', orientation: 'vertical' };
+
     expect(CoordinateSchema.parse(c)).toEqual(c);
   });
 
@@ -169,11 +178,13 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (contract)',
   // Happy path：polar1D
   it('polar1d_minimal_valid', () => {
     const c = { type: 'polar1D', angle: 'a' };
+
     expect(CoordinateSchema.parse(c)).toEqual(c);
   });
 
   it('polar1d_explicit_fields_valid', () => {
     const c = { type: 'polar1D', angle: 'a', radius: 0.5, startAngle: 180, endAngle: 360 };
+
     expect(CoordinateSchema.parse(c)).toEqual(c);
   });
 
@@ -216,11 +227,13 @@ describe('CoordinateSchema 一维坐标系族 cartesian1D / polar1D (contract)',
   // round-trip
   it('cartesian1d_json_round_trip', () => {
     const ir = CoordinateSchema.parse({ type: 'cartesian1D', x: 'xs', orientation: 'vertical' });
+
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
   });
 
   it('polar1d_json_round_trip', () => {
     const ir = CoordinateSchema.parse({ type: 'polar1D', angle: 'a', radius: 0.8, startAngle: 90, endAngle: 270 });
+
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
   });
 });
@@ -234,6 +247,7 @@ describe('CoordinateOperationSchema coordinate registry 占位（contract）', (
 
   it('自定义 coordinate operation 直接用自有 type 串并透传配置', () => {
     const operation = { type: 'arch', x: 'xScale', archHeight: 30, label: 'bridge' };
+
     expect(CoordinateOperationSchema.parse(operation)).toEqual(operation);
   });
 
@@ -251,6 +265,7 @@ describe('CoordinateOperationSchema coordinate registry 占位（contract）', (
 
   it('自定义 coordinate operation JSON round-trip 不丢字段', () => {
     const operation = { type: 'arch', x: 'xScale', archHeight: 30, nested: { curve: 'sine' } };
+
     expect(CoordinateOperationSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
@@ -268,6 +283,7 @@ describe('CoordinateOperationSchema coordinate registry 占位（contract）', (
     });
 
     expect(result.success).toBe(false);
+
     if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 });

@@ -12,6 +12,7 @@ const createContext = (): CanvasRenderingContext2D & { calls: Array<Call> } => {
     (...args: Array<unknown>): void => {
       calls.push({ name, args });
     };
+
   return {
     calls,
     beginPath: record('beginPath'),
@@ -40,6 +41,7 @@ describe('canvas canonical clip paths', () => {
       ],
     };
     applyClip(ctx, path);
+
     expect(ctx.calls.map(call => call.name)).toEqual(['beginPath', 'moveTo', 'lineTo', 'lineTo', 'closePath', 'clip']);
     expect(ctx.calls.at(-1)).toEqual({ name: 'clip', args: ['evenodd'] });
   });
@@ -60,6 +62,7 @@ describe('canvas canonical clip paths', () => {
       fillRule: 'nonzero',
     };
     applyClip(ctx, path);
+
     expect(ctx.calls.map(call => call.name)).toEqual([
       'beginPath',
       'moveTo',

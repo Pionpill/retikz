@@ -29,6 +29,7 @@ import { useMemo } from 'react';
 import { RetikzPlotReactError } from './error';
 import { resolvePlotAuthoring } from './plot-runtime';
 import { usePlotThemeStyles } from './theme-context';
+
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 
@@ -58,10 +59,14 @@ const PLOT_STANDALONE_PROP_KEYS = [
 ] as const satisfies ReadonlyArray<keyof PlotStandaloneProps>;
 
 type PlotStandalonePropKeysCheck = AssertEqual<(typeof PLOT_STANDALONE_PROP_KEYS)[number], keyof PlotStandaloneProps>;
+
 const plotStandalonePropKeysCheck: PlotStandalonePropKeysCheck = true;
 void plotStandalonePropKeysCheck;
 
-/** <Plot> 两条入口共享的展示 props 与 Plot lowering 选项 */
+/**
+ * <Plot> 两条入口共享的展示 props 与 Plot lowering 选项
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type PlotCommonProps<TSource = never> = PlotStandaloneProps &
   PlotPanelProps &
   LowerPlotsOptions & {
@@ -81,17 +86,34 @@ export type PlotThemeProps = {
   plotRules?: IRPlot['plotRules'];
 };
 
-/** 已构造 Plot Source IR 的薄包装入口 */
+/**
+ * 已构造 Plot Source IR 的薄包装入口
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type PlotIRProps<TSource = never> = PlotCommonProps<TSource> &
   PlotThemeProps &
-  ({ data: ExternalDatasets; dataBindings?: never } | { dataBindings: DataInputBindings<TSource>; data?: never }) & {
+  (
+    | {
+        /** 以数据引用名索引的外部行数据集，与 dataBindings 互斥 */
+        data: ExternalDatasets;
+        dataBindings?: never;
+      }
+    | {
+        /** 行数据或原生数据源的运行时绑定，与 data 互斥 */
+        dataBindings: DataInputBindings<TSource>;
+        data?: never;
+      }
+  ) & {
     /** 完整 Plot Source IR 根节点 */
     spec: IRPlot;
     /** 由 Plot lowering 消费的外部数据集表 */
     children?: never;
   };
 
-/** 由 React 组合 DSL 构造 Plot Source IR 的入口 */
+/**
+ * 由 React 组合 DSL 构造 Plot Source IR 的入口
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type PlotDslProps<TSource = never> = PlotCommonProps<TSource> &
   PlotThemeProps & {
     /** 不与 children 入口并存 */
@@ -120,7 +142,10 @@ export type PlotDslProps<TSource = never> = PlotCommonProps<TSource> &
     markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
   };
 
-/** <Plot> props，spec 入口与组合 DSL 入口二选一 */
+/**
+ * <Plot> props，spec 入口与组合 DSL 入口二选一
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type PlotProps<TSource = never> = PlotIRProps<TSource> | PlotDslProps<TSource>;
 
 /** 从 React 面板 props 组装 Plot Vanilla Input 的 Scope 部分 */
@@ -136,6 +161,7 @@ const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined
   ) {
     return undefined;
   }
+
   return {
     ...(x === undefined ? {} : { x }),
     ...(y === undefined ? {} : { y }),
@@ -155,8 +181,10 @@ const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmb
       `plot react: embedded Plot does not support standalone props: ${unsupportedStandaloneProps.join(', ')}; move Layout host props to the outer <Layout> and remove standalone lineage props`,
     );
   }
+
   const authored = resolvePlotAuthoring(plotProps, { embedded: true });
   const panel = createPlotPanelInput(plotProps);
+
   return {
     ...authored,
     dataTransformExecutor: plotProps.dataTransformExecutor,
@@ -184,6 +212,7 @@ const plotContentPropsOf = <TSource,>(props: PlotProps<TSource>): PlotProps<TSou
   void _lineage;
   void _hostLineageMetadata;
   void _onLineage;
+
   return contentProps;
 };
 
@@ -198,6 +227,7 @@ type InputEmbeddablePlotComponent = (<TSource = never>(
 
 /** Plot React 组件 */
 const PlotContent: FC<InputPlotEmbed<unknown>> = () => null;
+
 const EmbeddablePlotContent = Object.assign(PlotContent, {
   isTier2Embeddable: true as const,
   inputEmbedAdapter: PlotInputEmbedAdapter,

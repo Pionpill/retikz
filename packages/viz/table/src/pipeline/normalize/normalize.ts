@@ -56,6 +56,7 @@ export const normalizeTableStructure = (
 ): SemanticTableModel => {
   const kind = operation.kind;
   const prefix = `table: structure "${kind}"`;
+
   try {
     const registry = resolveTableStructureRegistry(options.structureDefinitions);
     const definition = tableStructureDefinitionOf(operation.kind, registry);
@@ -73,6 +74,7 @@ export const normalizeTableStructure = (
       },
       context,
     );
+
     return createSemanticTableModel(output);
   } catch (error) {
     throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });

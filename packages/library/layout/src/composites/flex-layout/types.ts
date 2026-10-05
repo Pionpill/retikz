@@ -1,7 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 import type {
   FlexLayoutArtifactSchema,
   FlexLayoutItemSchema,
@@ -9,14 +7,8 @@ import type {
   FlexMainDistributionSchema,
 } from './schema';
 
-/** FlexLayout 主轴方向取值 */
-export type FlexLayoutDirectionValue = ValueOf<typeof FlexLayoutDirection>;
-
-/** FlexLayout 换行策略取值 */
-export type FlexLayoutWrapValue = ValueOf<typeof FlexLayoutWrap>;
-
 /** FlexLayout 主轴剩余空间分布取值 */
-export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSchema>;
+export type FlexMainDistribution = ZodInfer<typeof FlexMainDistributionSchema>;
 
 /** 持久化的 FlexLayout item */
 export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'child'> &

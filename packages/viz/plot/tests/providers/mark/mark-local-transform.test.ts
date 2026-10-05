@@ -69,6 +69,7 @@ const doubleTransform = defineTransform({
   inputFields: operation => [operation.field],
   outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
 });
+
 const doubleTransformImplementation = defineTransformImplementation({
   definition: doubleTransform,
   apply: (rows, operation) =>
@@ -127,6 +128,7 @@ describe('mark-local transform', () => {
     });
     const { dataArtifact } = lowerPlotWithDataArtifact(spec, { rows: [] });
     const expectedModel = [{ name: 'group', type: 'categorical', order: ['B', 'A'] }, { name: 'range' }];
+
     expect(dataArtifact.rootDataView.model).toEqual(expectedModel);
     expect(dataArtifact.markDataViews[0].dataView.model).toEqual(expectedModel);
     expect(dataArtifact.markDataViews[0].dataView.model.find(field => field.name === 'range')).toEqual({
@@ -134,6 +136,7 @@ describe('mark-local transform', () => {
     });
     expect(dataArtifact.markDataViews[0].dataView.rows).toEqual([]);
   });
+
   it('builtin_mark_uses_local_transform_rows_for_lowering', () => {
     const layer = firstLayer(groupPointSpec(), {
       sales: [
@@ -148,6 +151,7 @@ describe('mark-local transform', () => {
 
   it('mark_local_transform_fields_feed_source_field_collection', () => {
     const fields = collectSourceFields(groupPointSpec());
+
     expect([...fields].sort()).toEqual(['category', 'value']);
   });
 
@@ -270,6 +274,7 @@ describe('mark-local transform', () => {
     });
 
     const fields = collectSourceFields(spec, resolveTransformRegistry([doubleTransform]));
+
     expect([...fields].sort()).toEqual(['value', 'x']);
   });
 });

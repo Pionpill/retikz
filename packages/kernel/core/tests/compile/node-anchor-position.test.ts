@@ -18,9 +18,11 @@ const compileLayouts = (ir: IRScene, options: CompileOptions = {}): Map<string, 
     ...options,
     artifacts: { nodeLayouts: true },
   });
+
   for (const artifact of result.artifacts.filter(isNodeLayoutCompileArtifact)) {
     if (artifact.value.id !== undefined) layouts.set(artifact.value.id, artifact.value);
   }
+
   return layouts;
 };
 
@@ -94,6 +96,7 @@ describe('Node anchor-to-anchor position', () => {
     const current = layouts.get('current')!;
     const targetPoint = rectOps.anchor(target.rect, 'bottom-left');
     const selfPoint = rectOps.anchor(current.rect, 'top-left');
+
     expect(selfPoint[0]).toBeCloseTo(targetPoint[0] + 5, 8);
     expect(selfPoint[1]).toBeCloseTo(targetPoint[1] - 2, 8);
   });
@@ -131,6 +134,7 @@ describe('Node anchor-to-anchor position', () => {
     const current = layouts.get('current')!;
     const targetPoint = rectOps.anchor(inflatedRect(target, margin * 1.5, margin * 0.75), 'bottom-left');
     const selfPoint = rectOps.anchor(inflatedRect(current, margin * 0.8, margin * 1.4), 'top-left');
+
     expect(selfPoint[0]).toBeCloseTo(targetPoint[0] + 11, 8);
     expect(selfPoint[1]).toBeCloseTo(targetPoint[1] - 6, 8);
   });
@@ -461,6 +465,7 @@ describe('Node anchor-to-anchor position fail-loud', () => {
 
   it('未知 anchor 与 boundary 保持既有 provider 诊断', () => {
     const target: IRNode = { type: 'node', id: 'target', position: [0, 0] };
+
     expect(
       () =>
         compileToScene(

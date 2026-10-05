@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /** compile occurrence 展开路径的阶段类别 */
 export const CompileExpansionKind = {
   /** composite 展开结果中的 child 序号 */
@@ -13,3 +15,6 @@ export const CompileExpansionKind = {
   /** 一次逻辑 Clip 应用中的稳定序号 */
   Clip: 'clip',
 } as const;
+
+/** compile occurrence 展开路径的阶段类别取值 */
+export type CompileExpansionKind = ValueOf<typeof CompileExpansionKind>;

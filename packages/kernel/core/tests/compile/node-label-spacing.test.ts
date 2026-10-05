@@ -40,6 +40,7 @@ const labelText = (primitives: Array<ScenePrimitive>, text = 'L'): TextPrim => {
     (candidate): candidate is TextPrim => candidate.type === 'text' && candidate.lines.some(line => line.text === text),
   );
   if (primitive === undefined) throw new Error(`missing label text '${text}'`);
+
   return primitive;
 };
 
@@ -55,6 +56,7 @@ const pinLine = (primitives: Array<ScenePrimitive>): PathPrim => {
       candidate.commands[1]?.kind === 'line',
   );
   if (primitive === undefined) throw new Error('missing pin line');
+
   return primitive;
 };
 
@@ -259,6 +261,7 @@ describe('Node label resolved metrics', () => {
       height: 20,
       depth: 2,
     });
+
     expect(() =>
       compileToScene(sceneWithLabel({ text: { runs: [{ tex: 'x' }] }, position: 'center' }), {
         lowerTex,
@@ -292,6 +295,7 @@ describe('Node label pin and bounds', () => {
     const end = pin.commands[1];
 
     expect(end).toMatchObject({ kind: 'line' });
+
     if (end.kind === 'line') {
       expect(end.to[0]).toBeCloseTo(67.0711, 3);
       expect(end.to[1]).toBeCloseTo(0, 3);
@@ -357,6 +361,7 @@ describe('Node label distance contracts', () => {
     const empty: IRScene = { version: 1, type: 'scene', children: [] };
 
     expect(() => compileToScene(empty, { labelDistance: 0 }).scene).not.toThrow();
+
     for (const invalid of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(() => compileToScene(empty, { labelDistance: invalid }).scene).toThrow(
         /labelDistance.*non-negative finite number/,

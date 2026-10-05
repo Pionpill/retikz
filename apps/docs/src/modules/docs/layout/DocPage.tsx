@@ -48,11 +48,13 @@ export const DocPage: FC<DocPageProps> = props => {
   const isChangelog = isChangelogLocation(loc);
   const moduleId = loc?.moduleId;
   const sectionId = loc?.sectionId;
+
   /** 当前模块与分组的 changelog 切片；非 changelog 页为空。 */
   const changelogReleases = useMemo(
     () => (isChangelog && moduleId ? changelogForModule(moduleId, sectionId ?? undefined) : []),
     [isChangelog, moduleId, sectionId],
   );
+
   /** 分组节点本身（无 subPage）为精简概览；带 subPage 时按 slug 命中某中版本详情 */
   const isChangelogOverview = isChangelog && loc?.subPageId == null;
   const changelogVersion = useMemo(() => {

@@ -56,13 +56,13 @@ Renderer capability：
 
 ```ts
 type ProgressiveRetainedRendererCapability = Readonly<{
-  patch: RetainedRendererCapabilityValue;
+  patch: RetainedRendererCapability;
   materialization: 'atomic' | 'progressive';
   rollback: 'replace' | 'journal' | 'shadow';
 }>;
 ```
 
-后续 milestone 若接受本 ADR，将以破坏性变更把 alpha.2 `RetainedRenderer.capability: RetainedRendererCapabilityValue` 替换为 `capability: ProgressiveRetainedRendererCapability`；其中 `patch` 复用原 const object value。旧 scalar field 删除，不保留并行同名 value/type、别名或桥接
+后续 milestone 若接受本 ADR，将以破坏性变更把 alpha.2 `RetainedRenderer.capability: RetainedRendererCapability` 替换为 `capability: ProgressiveRetainedRendererCapability`；其中 `patch` 复用原 const object value。旧 scalar field 删除，不保留并行同名 value/type、别名或桥接
 
 请求 progressive 但 renderer / Scene 边界不支持时，默认回退 atomic 并报告原因；`requireProgressive: true` 时在改变 live view 前 fail-loud。`auto` 的阈值由 host policy 注入，不能按 renderer 类型写死，也不能改变输出语义。
 

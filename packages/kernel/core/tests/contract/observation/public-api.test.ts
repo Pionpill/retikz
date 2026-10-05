@@ -12,6 +12,7 @@ describe('Core observation public contract', () => {
     expect('InspectionPlane' in core).toBe(false);
 
     const result = core.compileToScene(emptyScene);
+
     expect('inspection' in result).toBe(false);
   });
 });

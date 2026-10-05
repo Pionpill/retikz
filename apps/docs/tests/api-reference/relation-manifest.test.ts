@@ -8,9 +8,11 @@ import { createApiReferenceMdx } from '../../scripts/api-reference/tex';
 describe('Relation API public reference', () => {
   it('preserves paired entries, route alternatives, semantic recipes, and complete English output', async () => {
     const sections: Array<string> = [];
+
     for (const config of relationApiConfigs) sections.push(await createApiReferenceMdx(config, 'en'));
     const source = sections.join('\n\n');
     const headings = [...source.matchAll(/^### (.+)$/gm)].map(match => match[1]);
+
     for (const name of [
       'Relation / RelationProps',
       'relation / RelationInputEmbedProps',
@@ -25,6 +27,7 @@ describe('Relation API public reference', () => {
       'RelationKindDefinition',
     ])
       expect(headings).toContain(name);
+
     expect(headings.some(name => name.endsWith('Schema'))).toBe(false);
     expect(headings).not.toContain('RelationKind');
     expect(headings).not.toContain('RelationKindValue');

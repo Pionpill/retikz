@@ -33,7 +33,9 @@ export const AiChatTrigger: FC = () => {
         toggleOpen();
       }
     };
+
     window.addEventListener('keydown', onKey);
+
     return () => window.removeEventListener('keydown', onKey);
   }, [toggleOpen]);
 

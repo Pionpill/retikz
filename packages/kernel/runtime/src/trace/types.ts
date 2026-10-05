@@ -1,15 +1,15 @@
-import type { PerformanceTraceOutcomeValue, PerformanceTracePhaseValue, PerformanceTraceUnitValue } from './constants';
+import type { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from './constants';
 
 /** 一次 owner 执行阶段的确定性工作量记录 */
 export type PerformanceTraceRecord = Readonly<{
   /** 发出记录的 owner */
   owner: string;
   /** 被观测的执行阶段 */
-  phase: PerformanceTracePhaseValue;
+  phase: PerformanceTracePhase;
   /** 阶段使用的计数单位 */
-  unit: PerformanceTraceUnitValue;
+  unit: PerformanceTraceUnit;
   /** 阶段的完成方式 */
-  outcome: PerformanceTraceOutcomeValue;
+  outcome: PerformanceTraceOutcome;
   /** 本阶段访问的实体 occurrence 数 */
   visited: number;
   /** 本阶段复用的实体 occurrence 数 */
@@ -28,20 +28,23 @@ export type PerformanceTraceDiagnostic = Readonly<{
   /** reporter 绑定的 owner */
   owner: string;
   /** 触发诊断的执行阶段 */
-  phase: PerformanceTracePhaseValue;
+  phase: PerformanceTracePhase;
 }>;
 
 /** owner 允许报告的阶段、单位与结果组合 */
 export type RuntimeTracePhaseDefinition = Readonly<{
   /** 阶段名称 */
-  phase: PerformanceTracePhaseValue;
+  phase: PerformanceTracePhase;
   /** 阶段唯一的计数单位 */
-  unit: PerformanceTraceUnitValue;
+  unit: PerformanceTraceUnit;
   /** 阶段允许报告的结果 */
-  outcomes: ReadonlyArray<PerformanceTraceOutcomeValue>;
+  outcomes: ReadonlyArray<PerformanceTraceOutcome>;
 }>;
 
-/** 由 Runtime 固定 owner 的同步 trace reporter */
+/**
+ * 由 Runtime 固定 owner 的同步 trace reporter
+ * @template TOwner 报告器固定绑定的来源名称类型，保留 owner 的字面量信息；默认沿用 string
+ */
 export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
   /** reporter 绑定的 owner */
   owner: TOwner;
@@ -51,7 +54,10 @@ export type RuntimeTraceReporter<TOwner extends string = string> = Readonly<{
   diagnostics: () => ReadonlyArray<PerformanceTraceDiagnostic>;
 }>;
 
-/** 创建 trace reporter 的配置 */
+/**
+ * 创建 trace reporter 的配置
+ * @template TOwner 报告器固定绑定的来源名称类型，保留 owner 的字面量信息；默认沿用 string
+ */
 export type CreateRuntimeTraceReporterInput<TOwner extends string = string> = Readonly<{
   /** reporter 固定绑定的 owner */
   owner: TOwner;

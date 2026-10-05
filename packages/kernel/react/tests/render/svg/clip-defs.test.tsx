@@ -40,9 +40,11 @@ describe('ClipDefs — canonical SceneClipPath 物化', () => {
 
     expect(clipPath.type).toBe('clipPath');
     expect(clipPath.props.id).toBe('c-clip-1');
+
     const path = (
       Array.isArray(clipPath.props.children) ? clipPath.props.children[0] : clipPath.props.children
     ) as AnyEl;
+
     expect(path.type).toBe('path');
     expect(path.props.d).toBe('M 0 0 L 40 0 L 40 40 Z');
     expect(path.props.clipRule).toBe('evenodd');
@@ -80,16 +82,19 @@ describe('renderPrim — GroupPrim.clipRef → <g clip-path>', () => {
     const element = renderPrim(groupWithClip('clip-1'), 0, {
       clipRefUrl: (id: string) => `url(#C-${id})`,
     }) as AnyEl;
+
     expect(element.props.clipPath).toBe('url(#C-clip-1)');
   });
 
   it('缺省 resolver 使用原始 resource id', () => {
     const element = renderPrim(groupWithClip('clip-2'), 0) as AnyEl;
+
     expect(element.props.clipPath).toBe('url(#clip-2)');
   });
 
   it('无 clipRef 时不设置 clipPath', () => {
     const element = renderPrim(groupWithClip(), 0) as AnyEl;
+
     expect(element.props.clipPath).toBeUndefined();
   });
 });

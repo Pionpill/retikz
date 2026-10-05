@@ -21,8 +21,10 @@ export type CenteredShape = {
 export const localToWorld = (shape: CenteredShape, local: Position): Position => {
   const angle = shape.rotate ?? 0;
   if (angle === 0) return [shape.x + local[0], shape.y + local[1]];
+
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
+
   return [shape.x + local[0] * cos - local[1] * sin, shape.y + local[0] * sin + local[1] * cos];
 };
 
@@ -37,7 +39,9 @@ export const worldToLocal = (shape: CenteredShape, world: Position): Position =>
   const ty = world[1] - shape.y;
   const angle = shape.rotate ?? 0;
   if (angle === 0) return [tx, ty];
+
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
+
   return [tx * cos + ty * sin, -tx * sin + ty * cos];
 };

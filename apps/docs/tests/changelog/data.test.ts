@@ -13,16 +13,20 @@ import {
 } from '@/modules/docs/data';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
 const Localized = z.object({ zh: z.string().min(1), en: z.string().min(1) });
+
 const ChangeItem: z.ZodType = z.lazy(() =>
   z.object({ label: Localized, content: Localized, children: z.array(ChangeItem).optional() }),
 );
+
 const SubVersion = z.object({
   version: z.string().min(1),
   date: z.string().regex(DATE),
   summary: Localized.optional(),
   items: z.array(ChangeItem),
 });
+
 const PackageBlock = z.object({
   pkg: z.enum(PACKAGE_IDS),
   stableDate: z.string().regex(DATE).nullable().optional(),
@@ -31,6 +35,7 @@ const PackageBlock = z.object({
   highlights: z.array(ChangeItem),
   subVersions: z.array(SubVersion),
 });
+
 const Release = z.object({
   minor: z.string().min(1),
   stableDate: z.string().regex(DATE).nullable(),
@@ -55,7 +60,9 @@ describe('changelog data', () => {
     const reference = kernelSection.find(section => section.id === 'components');
     const changelogPage = reference?.pages.find(page => page.id === 'changelog');
     const currentKernelRelease = changelogForModule('kernel', 'components')[0];
+
     expect(currentKernelRelease).toBeDefined();
+
     const currentReleaseId = changelogVersionSlug(currentKernelRelease.minor);
 
     expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
@@ -65,7 +72,9 @@ describe('changelog data', () => {
     const standard = librarySection.find(section => section.id === 'standard');
     const changelogPage = standard?.pages.find(page => page.id === 'changelog');
     const currentStandardRelease = changelogForModule('library', 'standard')[0];
+
     expect(currentStandardRelease).toBeDefined();
+
     const currentReleaseId = changelogVersionSlug(currentStandardRelease.minor);
 
     expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
@@ -76,8 +85,10 @@ describe('changelog data', () => {
     const packages = ['@retikz/standard', '@retikz/standard-vanilla', '@retikz/standard-react'];
 
     expect(release.packages.map(block => block.pkg)).toEqual(packages);
+
     for (const block of release.packages) {
       const alpha = block.subVersions.find(version => version.version === 'alpha.2');
+
       expect(alpha?.date).toBe('2026-07-30');
       expect(alpha?.summary?.zh).toBeTruthy();
       expect(alpha?.summary?.en).toBeTruthy();
@@ -89,6 +100,7 @@ describe('changelog data', () => {
     const layout = librarySection.find(section => section.id === 'layout');
     const changelogPage = layout?.pages.find(page => page.id === 'changelog');
     const currentLayoutRelease = changelogForModule('library', 'layout')[0];
+
     expect(currentLayoutRelease).toBeDefined();
     expect(currentLayoutRelease.packages.map(block => block.pkg)).toEqual([
       '@retikz/layout',
@@ -134,8 +146,10 @@ describe('changelog data', () => {
 
     for (const block of graphBlocks) {
       expect(block.subVersions.map(version => version.version)).toEqual(['alpha.2', 'alpha.1']);
+
       const alpha1 = block.subVersions.find(version => version.version === 'alpha.1');
       const alpha2 = block.subVersions.find(version => version.version === 'alpha.2');
+
       expect(alpha1?.date).toBe('2026-08-28');
       expect(alpha1?.items).toHaveLength(9);
       expect(alpha2?.date).toBe('2026-09-14');
@@ -175,7 +189,9 @@ describe('changelog data', () => {
     const section = vizSection.find(entry => entry.id === sectionId);
     const changelogPage = section?.pages.find(page => page.id === 'changelog');
     const currentRelease = changelogForModule('viz', sectionId)[0];
+
     expect(currentRelease).toBeDefined();
+
     const currentReleaseId = changelogVersionSlug(currentRelease.minor);
 
     expect(changelogPage?.children?.some(page => page.id === currentReleaseId)).toBe(true);
@@ -186,6 +202,7 @@ describe('changelog data', () => {
       for (const block of release.packages) {
         const dates = block.subVersions.map(s => s.date);
         const sorted = [...dates].sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+
         expect(dates, `${release.minor} ${block.pkg}`).toEqual(sorted);
       }
     }

@@ -17,7 +17,7 @@ keywords: 'data、owner、FieldDef、DataModel、DataRef、Transform'
 
 ## 核心决策与公开契约
 
-data 拥有的 schema 派生公开类型统一使用 `IRDataXxx`，旧名直接删除，不保留 deprecated alias。const object 派生的 `XxxValue`、runtime-only 的 `ExternalRow` / `ExternalDatasets` / `DataFieldTypeMap`，以及 contract 层的 `XxxDefinition` / `XxxContext` 保持原名。plot 自有 schema 派生类型使用 `IRPlotXxx`，不由本 ADR 重命名。
+data 拥有的 schema 派生公开类型统一使用 `IRDataXxx`，旧名直接删除，不保留 deprecated alias。const object 派生类型不属于 schema 类型重命名范围，命名遵循 `standard-name`。runtime-only 的 `ExternalRow` / `ExternalDatasets` / `DataFieldTypeMap`，以及 contract 层的 `XxxDefinition` / `XxxContext` 保持原名。plot 自有 schema 派生类型使用 `IRPlotXxx`，不由本 ADR 重命名。
 
 | 旧名                                   | 新名                                         |
 | -------------------------------------- | -------------------------------------------- |

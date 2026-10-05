@@ -21,11 +21,14 @@ const expectDiagramError = (
 ): RetikzDiagramError => {
   try {
     resolve(source);
+
     expect.unreachable('Expected Flow resolve failure');
   } catch (error) {
     if (!(error instanceof RetikzDiagramError)) throw error;
+
     expect(error.code).toBe(code);
     expect(error.details).toMatchObject(details);
+
     return error;
   }
 };
@@ -133,6 +136,7 @@ describe('Flow Source resolve', () => {
     });
     const group = resolved.elements[0];
     if (group.type !== 'group') throw new Error('Expected Group');
+
     const entity = group.elements[0];
     if (entity.type !== 'entity') throw new Error('Expected Entity');
 

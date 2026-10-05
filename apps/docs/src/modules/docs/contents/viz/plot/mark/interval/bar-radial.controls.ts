@@ -5,6 +5,7 @@ import { rainfall } from './bar-radial.data';
 
 /** 径向柱内半径 playground 的稳定控件 id */
 export const BAR_RADIAL_INNER_RADIUS_ID = 'bar-radial-inner-radius';
+
 export const BAR_RADIAL_GAP_ID = 'bar-radial-gap';
 
 /** 径向柱坐标的中文属性面板 */

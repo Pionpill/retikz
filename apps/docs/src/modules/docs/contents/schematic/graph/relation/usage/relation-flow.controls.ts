@@ -21,4 +21,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     colorLabel: copy.controls[4],
   });
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

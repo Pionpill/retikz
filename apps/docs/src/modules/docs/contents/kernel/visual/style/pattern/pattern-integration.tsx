@@ -7,10 +7,12 @@ import { integrationI18n } from './pattern-integration.i18n';
 
 /** 组件对接示例参数 */
 export type IntegrationDemoProps = { lang?: Lang };
+
 /** 比较 Scope 提供的配置和图元局部配置 */
 const IntegrationDemo: FC<IntegrationDemoProps> = props => {
   const { lang = 'zh' } = props;
   const text = integrationI18n[lang];
+
   return (
     <Layout viewBox={{ x: -65, y: -65, width: 330, height: 155 }}>
       <Scope style={{ fill: { kind: 'pattern', shape: 'lines', color: 'dodgerblue', size: 8 } }}>

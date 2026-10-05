@@ -44,6 +44,7 @@ const DEFAULT_GRAPH_PROVIDERS: ReadonlyArray<CoreDependencyProvider> = Object.fr
 /** 创建当前 Graph 包族的完整 composite dependency provider 集合 */
 export const createBaseGraphProviders = (options?: GraphDefinitionOptions): ReadonlyArray<CoreDependencyProvider> => {
   if (options === undefined) return DEFAULT_GRAPH_PROVIDERS;
+
   return Object.freeze([
     createGraphProvider(options),
     createEntityProvider(options),

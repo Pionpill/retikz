@@ -28,6 +28,7 @@ import { computeDisplaySize } from '../display-size';
 
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
+
 const imageCache = new Map<string, ImageEntry>();
 
 /**
@@ -40,9 +41,12 @@ const loadImage = (href: string, onReady: () => void): HTMLImageElement | null =
   if (cached) {
     if (cached.loaded) return cached.img;
     if (cached.failed) return null;
+
     cached.waiters.add(onReady);
+
     return null;
   }
+
   const img = new Image();
   const entry: ImageEntry = { img, loaded: false, failed: false, waiters: new Set([onReady]) };
   imageCache.set(href, entry);
@@ -56,9 +60,11 @@ const loadImage = (href: string, onReady: () => void): HTMLImageElement | null =
     entry.waiters.clear();
   };
   img.src = href;
+
   return entry.loaded ? img : null;
 };
 
+/** 将编译后的静态帧接入 Canvas 宿主，并配置事件水合与动画播放 */
 export type CanvasHostProps = {
   /** 已编译主图与只读辅助层 */
   frame: StaticRenderFrame;
@@ -125,6 +131,7 @@ const clientToScene = (
   const offsetY = (rect.height - layout.height * scale) / 2;
   const contentX = clientX - rect.left - offsetX;
   const contentY = clientY - rect.top - offsetY;
+
   return { x: contentX / scale + layout.x, y: contentY / scale + layout.y };
 };
 
@@ -154,31 +161,39 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
   const initialBitmapWidth = Number(bitmapSize.width);
   const initialBitmapHeight = Number(bitmapSize.height);
   const ref = useRef<HTMLCanvasElement>(null);
+
   // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation 读 live，update 后自动跟随
   const clockRef = useRef<AnimationControls | null>(null);
+
   // per-id 虚拟时钟登记表（懒建一次，跨 render 稳定）；ctx.animation 的 per-id 控制经它折算各 id 有效时刻
   const registryRef = useRef<IdClockRegistry | null>(null);
   if (registryRef.current === null) registryRef.current = createIdClockRegistry();
+
   // 立即重绘一帧的闭包（render effect 按当前 canvas/scene/baseOptions 设置）；ctx.animation 的 pause/stop 即时反映
   const renderFrameRef = useRef<(() => void) | null>(null);
+
   // image 加载完 / 主题切换都触发重绘（renderToCanvas 重读 getComputedStyle 的 color → currentColor）
   const [renderTick, bumpRender] = useReducer((n: number) => n + 1, 0);
 
   // 主题切换（<html> 的 class / data-theme / style 变化）→ 重绘，让 currentColor 跟随（canvas 命令式、不像 SVG 声明式自动响应）
   useEffect(() => {
     if (typeof MutationObserver === 'undefined' || typeof document === 'undefined') return undefined;
+
     const observer = new MutationObserver(() => bumpRender());
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class', 'data-theme', 'style'],
     });
+
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
+
     const ratio = devicePixelRatio();
+
     // CSS 尺寸与设备像素分离；单轴数值尺寸按内容比例补齐
     const bitmapSize = computeDisplaySize(
       scene.layout,
@@ -195,24 +210,29 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       animationProperties,
     };
     const registry = registryRef.current as IdClockRegistry;
+
     // per-id 解析：stop→渲染 base；否则按该 id 有效时刻 + 是否含非自动播 track
     const resolvePrim = (id: string | undefined, globalTime: number): PrimAnimationResolution =>
       id !== undefined && registry.isStopped(id)
         ? { mode: 'skip' }
         : { mode: 'at', time: registry.timeFor(id, globalTime), includeNonAutoplay: registry.isActive(id) };
+
     // 截帧（snapshotAt 给定）：按该时刻画一帧、不起 rAF（定格）
     if (snapshotAt !== undefined) {
       renderFrameToCanvas(canvas, frame, { ...baseOptions, time: snapshotAt });
       clockRef.current = null;
       renderFrameRef.current = null;
       assignRef(animationRef, null);
+
       return undefined;
     }
+
     // 按当前时钟时刻 + per-id 登记表立即重绘一帧（ctx.animation 的 pause/stop 即时反映）
     renderFrameRef.current = () => {
       const time = clockRef.current?.time ?? 0;
       renderFrameToCanvas(canvas, frame, { ...baseOptions, time, resolvePrimAnimation: id => resolvePrim(id, time) });
     };
+
     // base 静态先画一帧；含动画且未降级 → 起 rAF 共享时钟逐帧重绘（auto track 自动播；manual/onEvent/visible 默认渲染 base）
     renderFrameToCanvas(canvas, frame, baseOptions);
     if (!animate || !sceneHasAnimations(scene)) {
@@ -220,6 +240,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       assignRef(animationRef, null);
       return undefined;
     }
+
     const clock = createClock({
       durationMs: sceneAnimationDurationMs(scene),
       onFrame: time =>
@@ -228,6 +249,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     clockRef.current = clock;
     assignRef(animationRef, clock); // 命令式句柄出口
     if (sceneHasAutoplayTrigger(scene)) clock.play();
+
     return () => {
       clock.dispose();
       clockRef.current = null;
@@ -240,26 +262,35 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas || !animate || !sceneHasAnimations(scene)) return undefined;
+
     const ids = collectCanvasVisibleAnimationIds(scene);
     if (ids.size === 0 || typeof window === 'undefined') return undefined;
+
     const activated = new Set<string>();
     const registry = registryRef.current as IdClockRegistry;
+
     const activateVisibleTracks = (): void => {
       let changed = false;
+
       for (const id of ids) {
         if (activated.has(id)) continue;
         if (!isCanvasAnimationIdVisible(canvas, scene, id)) continue;
+
         registry.restart(id, clockRef.current?.time ?? 0);
         activated.add(id);
         changed = true;
       }
+
       if (!changed) return;
+
       clockRef.current?.play();
       renderFrameRef.current?.();
     };
+
     window.addEventListener('scroll', activateVisibleTracks, true);
     window.addEventListener('resize', activateVisibleTracks);
     const raf = window.requestAnimationFrame(activateVisibleTracks);
+
     return () => {
       window.removeEventListener('scroll', activateVisibleTracks, true);
       window.removeEventListener('resize', activateVisibleTracks);
@@ -274,13 +305,17 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return undefined;
+
     const context2d = canvas.getContext('2d') ?? undefined;
+
     const locate = (event: Event): string | null => {
       const mouse = event as MouseEvent;
       const point = clientToScene(canvas, scene, mouse.clientX, mouse.clientY);
       context2d?.setTransform(1, 0, 0, 1, 0, 0);
+
       return hitTest(scene, point, { context2d });
     };
+
     // canvas 富 context：无逐元素 DOM（element=null），point 逆 meet-fit，动画 per-id（registry 折算各 id 有效时刻，读 live）。
     const buildContext: BuildContext = (event, id) => {
       const mouse = event as MouseEvent;
@@ -302,12 +337,14 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
         scene,
       };
     };
+
     const controller = createHydrationController(
       canvas,
       withCanvasAnimationEventHandlers(scene, handlers),
       locate,
       buildContext,
     );
+
     return () => controller.dispose();
   }, [handlers, scene]);
 

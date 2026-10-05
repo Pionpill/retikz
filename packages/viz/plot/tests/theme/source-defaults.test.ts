@@ -72,7 +72,9 @@ describe('Plot Source defaults and rules', () => {
   it('rejects invalid plot area border fields', () => {
     for (const border of [{ strokeWidth: -1 }, { drawOpacity: 2 }, { unknown: true }]) {
       const result = PlotSchema.safeParse(basePlot({ plotDefaults: { plotArea: { border } } }));
+
       expect(result.success).toBe(false);
+
       if (!result.success)
         expect(result.error.issues.some(issue => issue.path.join('.').startsWith('plotDefaults.plotArea.border'))).toBe(
           true,
@@ -86,11 +88,14 @@ describe('Plot Source defaults and rules', () => {
       ['plotThemeTokenRules', []],
       ['plotTheme', {}],
     ];
+
     for (const [field, value] of legacyFields) {
       const result = PlotSchema.safeParse(basePlot({ [field]: value }));
 
       expect(result.success).toBe(false);
+
       if (result.success) continue;
+
       expect(result.error.issues).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ code: 'unrecognized_keys', path: [], keys: expect.arrayContaining([field]) }),
@@ -125,6 +130,7 @@ describe('Plot Source defaults and rules', () => {
     const result = PlotSchema.safeParse(basePlot({ plotDefaults: { palette: { sector: ['#ef4444', '#3b82f6'] } } }));
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues).toEqual(
         expect.arrayContaining([
@@ -140,6 +146,7 @@ describe('Plot Source defaults and rules', () => {
     const resolution = resolvePlotTheme(DEFAULT_RESOLVED_THEME, {
       plotDefaults: { palette: { categorical: ['#2563eb'] } },
     });
+
     expect(JSON.stringify(resolution)).toContain('#2563eb');
     expect(JSON.stringify(resolution)).not.toContain('sector');
     expect(resolution.defaults.palette).not.toHaveProperty('sector');

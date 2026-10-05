@@ -1,0 +1,85 @@
+---
+title: Schema 参考
+description: 查询 Branch 持久化输入的字段、默认值与结构约束。
+---
+
+这些 Schema 从 `@retikz/diagram/branch` 导出，描述可序列化 Source。首次使用见[基础用法](/schematic/diagram/branch/usage)。运行时回调与布局结果见 [API 参考](/schematic/diagram/branch/api-reference)。
+
+默认值在解析或补全省略配置时应用。形状和标记最小尺寸默认分别为 circle、10；省略 layout 时向右推进，两种净距均为 48。引用、环和共享段样式冲突在编译时结合完整图示校验。
+
+## BranchDiagramSchema
+
+<ZodSchema
+  name="BranchDiagramSchema"
+  descriptions={{
+    namespace: '固定为 diagram',
+    type: '固定为 branch',
+    id: '完整图示的可选标识',
+    nodes: '非空节点目录，声明顺序用于稳定排序',
+    branches: '非空有序分支数组',
+    mainBranch: '保持同轨的已声明分支 ID',
+    layout: '自动布局意图',
+    presentation: '标题、说明与显式图例',
+    frame: '外框及区域间距',
+    diagramDefaults: 'Diagram 默认外观',
+    animations: '完整图示的动画配置',
+    boundingShape: '作用域边界形状',
+    clip: '作用域裁剪',
+    defaults: '后代图元默认配置',
+    localNamespace: '为后代引用建立局部命名空间',
+    meta: '图示 JSON 元数据',
+    placement: '完整图示的宿主放置方式',
+    style: '作用域共享外观',
+    theme: '作用域主题',
+    transforms: '完整图示的变换序列',
+    zIndex: '图示绘制层级',
+  }}
+/>
+
+## BranchNodeSchema
+
+<ZodSchema
+  name="BranchNodeSchema"
+  descriptions={{
+    id: '节点唯一 ID',
+    shape: '标记形状，默认 circle',
+    boundary: '连接边界',
+    cornerRadius: '矩形标记圆角',
+    style: '节点外观',
+    meta: 'JSON 元数据',
+    labels: '外侧标签数组',
+    layout: '标记尺寸',
+  }}
+/>
+
+## BranchSchema
+
+<ZodSchema
+  name="BranchSchema"
+  descriptions={{
+    id: '分支唯一 ID，与节点 ID 独立',
+    nodes: '有序节点引用，相邻引用自动连接',
+    style: '分支连接外观',
+  }}
+/>
+
+## BranchLayoutIntentSchema
+
+<ZodSchema
+  name="BranchLayoutIntentSchema"
+  descriptions={{
+    direction: '推进方向，默认 right',
+    nodeGap: '含标签占位后的推进净距，默认 48',
+    laneGap: '轨道占位之间的净距，默认 48',
+  }}
+/>
+
+## BranchNodeLayoutSchema
+
+<ZodSchema
+  name="BranchNodeLayoutSchema"
+  descriptions={{
+    width: '标记宽度约束',
+    minimumSize: '标记最小尺寸，默认 10',
+  }}
+/>

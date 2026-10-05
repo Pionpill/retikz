@@ -59,12 +59,15 @@ const resolvedResultOf = (
 
 const groups = (primitives: ReadonlyArray<ScenePrimitive>): Array<Extract<ScenePrimitive, { type: 'group' }>> => {
   const output: Array<Extract<ScenePrimitive, { type: 'group' }>> = [];
+
   const visit = (primitive: ScenePrimitive): void => {
     if (primitive.type !== 'group') return;
     output.push(primitive);
     primitive.children.forEach(visit);
   };
+
   primitives.forEach(visit);
+
   return output;
 };
 
@@ -106,6 +109,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           },
         );
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
         return { children: [context.replay(probe.result)] };
       },
     });
@@ -145,6 +149,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           },
           [replay],
         );
+
         return {
           children: [
             context.scope(
@@ -168,7 +173,9 @@ describe('layout-aware composite runtime wrapper tree', () => {
 
     expect(outer).toMatchObject({ type: 'group', id: 'cell', meta: { role: 'cell' }, clipRef: 'clip-1' });
     expect(outer).not.toHaveProperty('transforms');
+
     if (outer.type !== 'group') throw new Error('expected outer wrapper group');
+
     expect(outer.children).toHaveLength(1);
     expect(outer.children[0]).toMatchObject({
       type: 'group',
@@ -359,10 +366,12 @@ describe('layout-aware composite runtime wrapper tree', () => {
       { composites: [definition], padding: 0 },
     );
     const leaves: Array<ScenePrimitive> = [];
+
     const visit = (primitive: ScenePrimitive): void => {
       if (primitive.type === 'group') primitive.children.forEach(visit);
       else leaves.push(primitive);
     };
+
     result.scene.primitives.forEach(visit);
 
     expect(leaves).toContainEqual(expect.objectContaining({ type: 'ellipse', fill: 'white', stroke: 'red' }));
@@ -400,10 +409,12 @@ describe('layout-aware composite runtime wrapper tree', () => {
       padding: 0,
     });
     const rects: Array<ScenePrimitive> = [];
+
     const visit = (primitive: ScenePrimitive): void => {
       if (primitive.type === 'group') primitive.children.forEach(visit);
       else if (primitive.type === 'rect') rects.push(primitive);
     };
+
     result.scene.primitives.forEach(visit);
 
     expect(rects).toContainEqual(expect.objectContaining({ id: 'nested-replayed', fill: 'purple' }));
@@ -420,6 +431,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('once'));
         const replay = context.replay(laid);
+
         return {
           children: [context.scope({ id: 'a' }, [replay]), context.scope({ id: 'b' }, [replay])],
         };
@@ -447,6 +459,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           text: [{ runs: [{ tex: 'x' }] }],
         });
         const replay = context.replay(laid);
+
         return {
           children: [replay, {} as CompositeCompileChild],
         };
@@ -545,6 +558,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         scopeHandle = context.scope({ clip: { kind: 'conditionalPreflightClip', fail: value.fail } }, [
           context.scope({}, []),
         ]);
+
         return {
           children: [replayHandle, scopeHandle],
         };
@@ -570,6 +584,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       outputChildren: new WeakMap(),
       failures: new WeakMap(),
     };
+
     expect(() =>
       compileChildrenToPrimitives(failingIr.children, context, {
         session,
@@ -585,7 +600,9 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(identityTracker.rootIdentityRegistrations()).toEqual([]);
     expect(session.outputChildren.get(replayHandle!)).toMatchObject({ used: false });
     expect(session.outputChildren.get(scopeHandle!)).toMatchObject({ used: false });
+
     const transaction = session.replayTransactions.get(retainedResult!.replay);
+
     expect(transaction).toMatchObject({ used: false });
     expect(transaction?.primitives.length).toBeGreaterThan(0);
     expect(transaction?.resources.length).toBeGreaterThan(0);
@@ -599,6 +616,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       scene([{ namespace: 'test', type: 'nestedScopeClipPreflight', fail: false }]),
       options,
     );
+
     expect(committed.scene.primitives).toHaveLength(2);
     expect(committed.scene.resources?.map(resource => resource.kind)).toEqual(['paint', 'clip']);
     expect(warnings.map(warning => warning.code)).toContain(CompileWarningCode.DuplicateNodeId);
@@ -637,6 +655,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           retainedHandle = context.replay(retainedResult);
           return { children: [] };
         }
+
         return {
           children: [retainedHandle ?? context.replay(retainedResult!)],
         };
@@ -644,6 +663,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     });
 
     compileToScene(scene([{ namespace: 'test', type: 'retained' }]), { composites: [definition] });
+
     expect(() =>
       compileToScene(scene([{ namespace: 'test', type: 'retained' }]), { composites: [definition] }),
     ).toThrow(/compile|session|forged|belong/i);
@@ -775,7 +795,9 @@ describe('layout-aware composite runtime wrapper tree', () => {
     expect(resources.filter(resource => resource.kind === 'paint')).toHaveLength(1);
     expect(resources.filter(resource => resource.kind === 'clip')).toHaveLength(2);
     expect(groups(result.scene.primitives).filter(group => group.clipRef !== undefined)).toHaveLength(2);
+
     const serializedPrimitives = JSON.stringify(result.scene.primitives);
+
     for (const id of ids) expect(serializedPrimitives).toContain(id);
   });
 
@@ -915,6 +937,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
     });
 
     const duplicates = warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId);
+
     expect(duplicates).toHaveLength(1);
     expect(duplicates[0].message).toContain('under <Scope localNamespace>');
   });
@@ -939,6 +962,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
         animations[0].duration = 999;
         children[0] = node('mutated');
         props.id = 'mutated';
+
         return { children: [wrapper] };
       },
     });
@@ -1013,6 +1037,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('atomicReplayPreflight') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, node('preflight'));
+
         expect(() => context.replay(laid, { transforms: {} } as never)).toThrow(/invalid.*transforms/i);
         return { children: [context.replay(laid)] };
       },
@@ -1039,6 +1064,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           transforms: [{ kind: 'translate', x: 20, y: 0 }],
           clip: { kind: 'rect', x: 18, y: -10, width: 4, height: 20 },
         });
+
         return { children: [replay], artifact: { before, after: laid.visualBounds } };
       },
     });
@@ -1051,13 +1077,17 @@ describe('layout-aware composite runtime wrapper tree', () => {
 
     expect(outer).toMatchObject({ type: 'group', clipRef: 'clip-1' });
     expect(outer).not.toHaveProperty('transforms');
+
     if (outer.type !== 'group') throw new Error('expected replay clip group');
+
     expect(outer.children[0]).toMatchObject({
       type: 'group',
       transforms: [{ kind: 'translate', x: 20, y: 0 }],
     });
+
     const artifact = result.artifacts[0];
     if (artifact.kind !== 'composite') throw new Error('expected replay coordinate artifact');
+
     expect(artifact.value.before).toEqual(artifact.value.after);
     expect(result.scene.layout).toEqual({ x: 18, y: -4.5, width: 4, height: 9 });
   });
@@ -1116,6 +1146,7 @@ describe('layout-aware composite runtime wrapper tree', () => {
           },
           [context.scope({ transforms: [{ kind: 'translate', x: 5, y: 6 }] }, [context.replay(content)])],
         );
+
         return {
           children: [
             context.scope({ id: 'table-root', localNamespace: true }, [
@@ -1135,19 +1166,25 @@ describe('layout-aware composite runtime wrapper tree', () => {
     const root = result.scene.primitives[0];
 
     expect(root).toMatchObject({ type: 'group', id: 'table-root' });
+
     if (root.type !== 'group') throw new Error('expected table root group');
+
     expect(root.children).toHaveLength(3);
     expect(groups(root.children)).toContainEqual(
       expect.objectContaining({ type: 'group', id: 'cell-0-0', meta: { row: 0, column: 0 }, clipRef: 'clip-1' }),
     );
     expect(JSON.stringify(root.children).match(/content/g)).toHaveLength(1);
     expect(JSON.stringify(root.children).match(/border/g)).toHaveLength(1);
+
     const occurrences = result.artifacts
       .filter(isNodeLayoutCompileArtifact)
       .map(artifact => formatCompileOccurrence(artifact.occurrence));
+
     expect(new Set(occurrences).size).toBe(occurrences.length);
     expect(occurrences.some(value => value.includes('scopeChild[1]::scopeChild[0]::replay[0]'))).toBe(true);
+
     const borderArtifact = result.artifacts.find(artifact => artifact.kind === 'composite');
+
     expect(formatCompileOccurrence(borderArtifact!.occurrence)).toBe('children[0]::output[0]::replay[2]');
   });
 });

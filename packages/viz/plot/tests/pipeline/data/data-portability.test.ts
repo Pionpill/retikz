@@ -20,6 +20,7 @@ import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
+
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */
 const compile = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>, options?: LowerPlotsOptions) =>
   compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) }).scene;
@@ -65,6 +66,7 @@ const ownRecord = <T>(key: string, value: T): Record<string, T> => {
     value,
     writable: true,
   });
+
   return record;
 };
 
@@ -81,6 +83,7 @@ const doubleDefinition = defineTransform({
   inputFields: operation => [operation.field],
   outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
 });
+
 const doubleDefinitionImplementation = defineTransformImplementation({
   definition: doubleDefinition,
   apply: (rows, operation) =>
@@ -101,6 +104,7 @@ describe('coerceValue — 按 DataFieldType 值强制（contract）', () => {
     for (const bad of ['', '12px', '0xFF', 'Infinity', 'NaN', 'abc']) {
       expect(Number.isNaN(coerceValue(bad, DataFieldType.Continuous) as number)).toBe(true);
     }
+
     expect(Number.isNaN(coerceValue({}, DataFieldType.Continuous) as number)).toBe(true);
   });
 
@@ -111,6 +115,7 @@ describe('coerceValue — 按 DataFieldType 值强制（contract）', () => {
 
   it('temporal_accepts_date_iso_epoch', () => {
     const expected = Date.parse('2024-01-01');
+
     expect(coerceValue('2024-01-01', DataFieldType.Temporal)).toBe(expected);
     expect(coerceValue(new Date('2024-01-01'), DataFieldType.Temporal)).toBe(expected);
     expect(coerceValue(expected, DataFieldType.Temporal)).toBe(expected);
@@ -136,6 +141,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
 
   it('identity_coerces_in_place', () => {
     const out = normalizeRows([{ month: '2024-01-01', revenue: '120' }], fieldTypeMap);
+
     expect(out[0].month).toBe(Date.parse('2024-01-01'));
     expect(out[0].revenue).toBe(120);
   });
@@ -145,6 +151,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
       month: 'period',
       revenue: 'amount',
     });
+
     expect(out[0].month).toBe(Date.parse('2024-01-01'));
     expect(out[0].revenue).toBe(90);
   });
@@ -153,12 +160,14 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
     const out = normalizeRows([{ pricing: { amount: 42 } }], new Map([['revenue', DataFieldType.Continuous]]), {
       revenue: 'pricing.amount',
     });
+
     expect(out[0].revenue).toBe(42);
   });
 
   it('nested_logical_path_coerces', () => {
     // 点路径逻辑名归一化写扁平 key，下游 resolveFieldPath exact-first 命中 coerced 值（不再读回原始嵌套字符串）
     const out = normalizeRows([{ user: { age: '42' } }], new Map([['user.age', DataFieldType.Continuous]]));
+
     expect(out[0]['user.age']).toBe(42);
     expect(resolveFieldPath(out[0], 'user.age')).toBe(42);
   });
@@ -166,6 +175,7 @@ describe('normalizeRows — ingest 归一化（contract）', () => {
   it('preserves_source_index', () => {
     const tagged = tagSourceIndex([{ revenue: '5' }, { revenue: '7' }]);
     const out = normalizeRows(tagged, new Map([['revenue', DataFieldType.Continuous]]));
+
     expect(readSourceIndex(out[1])).toBe(1);
     expect(out[1].revenue).toBe(7);
   });
@@ -184,6 +194,7 @@ describe('coerce-before-transform 关键回归', () => {
     const stacked = applyTransforms(normalized, [{ kind: 'stack', x: 'm', y: 'v' }], {
       registry: resolveTransformRegistry(),
     });
+
     expect(stacked[1]).toMatchObject({ y0: 3, y1: 8 });
   });
 });
@@ -268,6 +279,7 @@ describe('数据字典 own-key 语义（contract 集成）', () => {
       { d: [{ period: '2024-01-01', amount: 10 }] },
       { fieldMaps: { d: { month: 'period', revenue: 'amount' } } },
     );
+
     expect(renamed).toBeTruthy();
   });
 });
@@ -343,6 +355,7 @@ describe('custom transform data portability（contract）', () => {
       definition: missingOutputDefinition,
       apply: doubleDefinitionImplementation.apply,
     });
+
     expect(() =>
       compile(
         customSpec(),

@@ -19,14 +19,17 @@ const topPath = (prims: ReadonlyArray<ScenePrimitive>): ScenePrimitive | undefin
       if (nested !== undefined) return nested;
     }
   }
+
   return undefined;
 };
 
 const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined => {
   if (!prim || prim.type !== 'path') return undefined;
+
   for (const cmd of prim.commands) {
     if (cmd.kind === 'line') return cmd.to;
   }
+
   return undefined;
 };
 
@@ -35,6 +38,7 @@ describe('applyTransformChain / inverseTransformChain 对偶性', () => {
     const chain = [{ kind: 'translate' as const, x: 50, y: 30 }];
     const p: IRPosition = [10, 20];
     const round = inverseTransformChain(applyTransformChain(p, chain), chain);
+
     expect(round[0]).toBeCloseTo(10, 10);
     expect(round[1]).toBeCloseTo(20, 10);
   });
@@ -43,6 +47,7 @@ describe('applyTransformChain / inverseTransformChain 对偶性', () => {
     const chain = [{ kind: 'rotate' as const, degrees: 45 }];
     const p: IRPosition = [10, 0];
     const round = inverseTransformChain(applyTransformChain(p, chain), chain);
+
     expect(round[0]).toBeCloseTo(10, 6);
     expect(round[1]).toBeCloseTo(0, 6);
   });
@@ -51,6 +56,7 @@ describe('applyTransformChain / inverseTransformChain 对偶性', () => {
     const chain = [{ kind: 'rotate' as const, degrees: 45, cx: 5, cy: 5 }];
     const p: IRPosition = [10, 0];
     const round = inverseTransformChain(applyTransformChain(p, chain), chain);
+
     expect(round[0]).toBeCloseTo(10, 6);
     expect(round[1]).toBeCloseTo(0, 6);
   });
@@ -59,6 +65,7 @@ describe('applyTransformChain / inverseTransformChain 对偶性', () => {
     const chain = [{ kind: 'scale' as const, x: 2 }];
     const p: IRPosition = [10, 20];
     const round = inverseTransformChain(applyTransformChain(p, chain), chain);
+
     expect(round[0]).toBeCloseTo(10, 10);
     expect(round[1]).toBeCloseTo(20, 10);
   });
@@ -71,6 +78,7 @@ describe('applyTransformChain / inverseTransformChain 对偶性', () => {
     ];
     const p: IRPosition = [10, 20];
     const round = inverseTransformChain(applyTransformChain(p, chain), chain);
+
     expect(round[0]).toBeCloseTo(10, 6);
     expect(round[1]).toBeCloseTo(20, 6);
   });
@@ -78,16 +86,19 @@ describe('applyTransformChain / inverseTransformChain 对偶性', () => {
   it('空 chain 正反复合是恒等', () => {
     const chain: Array<never> = [];
     const p: IRPosition = [10, 20];
+
     expect(inverseTransformChain(applyTransformChain(p, chain), chain)).toEqual([10, 20]);
   });
 
   it('scale x=0 inverse fail-loud', () => {
     const chain = [{ kind: 'scale' as const, x: 0 }];
+
     expect(() => inverseTransformChain([5, 10], chain)).toThrow('non-invertible scope transform');
   });
 
   it('scale y=0 inverse 同样 fail-loud', () => {
     const chain = [{ kind: 'scale' as const, x: 2, y: 0 }];
+
     expect(() => inverseTransformChain([10, 5], chain)).toThrow('non-invertible scope transform');
   });
 });
@@ -119,7 +130,9 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     // B 视觉位置 ≈ (0, 50)：x 接近 0、y 接近 50
     expect(Math.abs(end![0])).toBeLessThan(20);
     expect(Math.abs(end![1] - 50)).toBeLessThan(20);
@@ -150,6 +163,7 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
     expect(Math.abs(end![0])).toBeLessThan(20);
     expect(Math.abs(end![1] - 50)).toBeLessThan(20);
@@ -180,6 +194,7 @@ describe('Happy path：scope rotate 下 polar / at / offset 同 scope referent',
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
     expect(Math.abs(end![0])).toBeLessThan(20);
     expect(Math.abs(end![1] - 50)).toBeLessThan(20);
@@ -214,8 +229,11 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     const expected = 50 * Math.cos((45 * Math.PI) / 180); // ≈ 35.355
+
     expect(Math.abs(end![0] - expected)).toBeLessThan(20);
     expect(Math.abs(end![1] - expected)).toBeLessThan(20);
   });
@@ -245,8 +263,11 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     const expected = 50 * Math.cos((45 * Math.PI) / 180);
+
     expect(Math.abs(end![0] - expected)).toBeLessThan(20);
     expect(Math.abs(end![1] - expected)).toBeLessThan(20);
   });
@@ -276,8 +297,11 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     const expected = 50 * Math.cos((45 * Math.PI) / 180);
+
     expect(Math.abs(end![0] - expected)).toBeLessThan(20);
     expect(Math.abs(end![1] - expected)).toBeLessThan(20);
   });
@@ -315,10 +339,13 @@ describe('Happy path：跨 scope referent（hub 在 scope 外）', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     const rad = (30 * Math.PI) / 180;
     const expX = 30 * Math.cos(rad) - 20 * Math.sin(rad);
     const expY = 30 * Math.sin(rad) + 20 * Math.cos(rad);
+
     expect(Math.abs(end![0] - expX)).toBeLessThan(20);
     expect(Math.abs(end![1] - expY)).toBeLessThan(20);
   });
@@ -353,6 +380,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
     expect(Math.abs(end![0] - 10)).toBeLessThan(20);
     expect(Math.abs(end![1])).toBeLessThan(20);
@@ -385,7 +413,9 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     // B 全局 ≈ (20, 0)，boundary clip 偏移最多 ~半宽（注意 scale 后宽度也加倍）
     expect(Math.abs(end![0] - 20)).toBeLessThan(30);
     expect(Math.abs(end![1])).toBeLessThan(30);
@@ -416,6 +446,7 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
     expect(Math.abs(end![0] - 10)).toBeLessThan(20);
     expect(Math.abs(end![1])).toBeLessThan(20);
@@ -452,9 +483,12 @@ describe('边界：scope transform 单变体对 relative 的影响', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     const expX = 50 + 20 * Math.cos(rad);
     const expY = 0 + 20 * Math.sin(rad);
+
     expect(Math.abs(end![0] - expX)).toBeLessThan(20);
     expect(Math.abs(end![1] - expY)).toBeLessThan(20);
   });
@@ -477,6 +511,7 @@ describe('错误路径', () => {
         ],
       },
     ]);
+
     expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow('non-invertible scope transform');
   });
 
@@ -490,6 +525,7 @@ describe('错误路径', () => {
         ],
       },
     ]);
+
     expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow();
   });
 
@@ -508,6 +544,7 @@ describe('错误路径', () => {
         ],
       },
     ]);
+
     // 与 v0.1 一致：position 解析失败 layoutNode 抛错
     expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow();
   });
@@ -545,13 +582,16 @@ describe('交互场景', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     const r45 = (45 * Math.PI) / 180;
     const r30 = (30 * Math.PI) / 180;
     const localX = 50 * Math.cos(r45);
     const localY = 50 * Math.sin(r45);
     const expX = localX * Math.cos(r30) - localY * Math.sin(r30);
     const expY = localX * Math.sin(r30) + localY * Math.cos(r30);
+
     expect(Math.abs(end![0] - expX)).toBeLessThan(20);
     expect(Math.abs(end![1] - expY)).toBeLessThan(20);
   });
@@ -597,9 +637,13 @@ describe('交互场景', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+
     expect(warnings.filter(w => w.code === CompileWarningCode.OffsetBaseUnresolved)).toHaveLength(0);
+
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     // B 全局：A_global=(0,0); inverseRotate90 → A_local=(0,0); +(10,0)=(10,0); applyRotate90 → (0, 10)
     // C 在 scope2 rotate90 + scope3 scale2 链里：
     //   B_global=(0,10);
@@ -639,8 +683,11 @@ describe('交互场景', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     const expected = 130 * Math.cos((45 * Math.PI) / 180);
+
     expect(Math.abs(end![0] - expected)).toBeLessThan(20);
     expect(Math.abs(end![1] - expected)).toBeLessThan(20);
   });
@@ -670,7 +717,9 @@ describe('交互场景', () => {
     ]);
     const compiled = compileToScene(ir, { nodeDistance: 30 }).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
+
     // distance=30 取自 nodeDistance；right 局部 → rotate 90 视觉变 down → B 视觉 (0, 30)
     expect(Math.abs(end![0])).toBeLessThan(20);
     expect(Math.abs(end![1] - 30)).toBeLessThan(20);
@@ -696,6 +745,7 @@ describe('path step 在 scope 内（笛卡尔 / 相对 to）按 scope 局部度�
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(10, 6);
     expect(end![1]).toBeCloseTo(0, 6);
@@ -719,6 +769,7 @@ describe('path step 在 scope 内（笛卡尔 / 相对 to）按 scope 局部度�
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(30, 6);
     expect(end![1]).toBeCloseTo(0, 6);
@@ -747,6 +798,7 @@ describe('path relative inside scope', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(10, 1);
     expect(end![1]).toBeCloseTo(0, 1);
@@ -771,6 +823,7 @@ describe('path relative inside scope', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const end = lineTo(topPath(compiled.primitives));
+
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(10, 1);
     expect(end![1]).toBeCloseTo(0, 1);
@@ -799,12 +852,17 @@ describe('path relative inside scope', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const prim = topPath(compiled.primitives);
+
     expect(prim).toBeDefined();
+
     if (!prim || prim.type !== 'path') throw new Error('expect path');
+
     const lines: Array<[number, number]> = [];
+
     for (const cmd of prim.commands) {
       if (cmd.kind === 'line') lines.push(cmd.to);
     }
+
     expect(lines).toHaveLength(2);
     expect(lines[0][0]).toBeCloseTo(10, 1);
     expect(lines[0][1]).toBeCloseTo(0, 1);

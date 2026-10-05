@@ -15,6 +15,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
       </>,
       '__plot',
     );
+
     expect(spec.guides).toEqual([{ type: 'legend', channel: 'color' }]);
   });
 
@@ -27,6 +28,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
       </>,
       '__plot',
     );
+
     expect(spec.guides).toEqual([
       { type: 'axis', dimension: 'x', grid: true },
       { type: 'legend', channel: 'color', position: 'bottom' },
@@ -50,6 +52,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
       '__plot',
     );
     const legend = (spec.guides ?? []).find(guide => guide.type === 'legend');
+
     expect(legend).toEqual({
       type: 'legend',
       channel: 'size',
@@ -70,6 +73,7 @@ describe('buildPlotIR legend 装配（ADR-03 alpha.8）', () => {
       </>,
       '__plot',
     );
+
     expect(() => PlotSchema.parse(spec)).not.toThrow();
   });
 });

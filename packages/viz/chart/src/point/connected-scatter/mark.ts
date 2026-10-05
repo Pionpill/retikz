@@ -13,15 +13,19 @@ const seriesScaleName = pointRecipeId('connected-scatter', 'scale.series');
 
 const seriesOf = (encodings: JsonObject): Readonly<{ field: string; scale: string }> | undefined => {
   if (!Object.hasOwn(encodings, 'series')) return undefined;
+
   const value = encodings.series;
   if (typeof value === 'string') return { field: value, scale: seriesScaleName };
+
   const mapping = value as JsonObject;
+
   return { field: mapping.field as string, scale: typeof mapping.scale === 'string' ? mapping.scale : seriesScaleName };
 };
 
 const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): JsonObject => {
   const source = properties.path ?? {};
   const result: JsonObject = {};
+
   for (const name of [
     'strokeWidth',
     'strokeOpacity',
@@ -34,11 +38,14 @@ const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): JsonOb
   ] as const) {
     if (source[name] !== undefined) result[name] = { kind: 'constant', value: source[name] };
   }
+
   if (properties.colorMode === 'muted' && source.strokeOpacity === undefined) {
     result.strokeOpacity = { kind: 'constant', value: 0.6 };
   }
+
   if (source.connectNulls !== undefined) result.connectNulls = source.connectNulls;
   if (source.curve !== undefined) result.curve = source.curve;
+
   return result;
 };
 
@@ -51,6 +58,7 @@ export const resolveConnectedScatterMarkGroup = (
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const order = requiredFieldOf(encodings, 'order', ['recipe', 'encodings', 'order']);
   const series = seriesOf(encodings);
+
   const pointEncodings: JsonObject = { x, y };
   const pointProperties: JsonObject = { ...(properties.point ?? {}) };
   const separateColors = properties.colorMode === 'mark';
@@ -73,12 +81,15 @@ export const resolveConnectedScatterMarkGroup = (
     } else if (!Object.hasOwn(pointProperties, 'color') && !Object.hasOwn(pointProperties, 'fill')) {
       pointEncodings.color = { field: series.field, scale: series.scale };
     }
+
     path.stroke =
       properties.path?.stroke === undefined
         ? { kind: 'field', value: series.field, scale: separateColors ? `${series.scale}.path` : series.scale }
         : { kind: 'constant', value: properties.path.stroke };
   }
+
   const point = resolvePointMark(pointEncodings, pointProperties);
+
   return [
     PathMarkSchema.parse(path),
     separateColors && series === undefined ? { ...point, defaultColorIndex: 0 } : point,
@@ -91,6 +102,7 @@ const mergedPropertiesOf = (
 ): IRConnectedScatterChartProperties => {
   const inherited = context.inherited.properties as IRConnectedScatterChartProperties;
   const explicit = source.properties ?? {};
+
   return {
     ...inherited,
     ...explicit,
@@ -103,7 +115,7 @@ const mergedPropertiesOf = (
   };
 };
 
-/** Connected Scatter authored mark Definition */
+/** 连接散点标记的作者定义 */
 export const ConnectedScatterMarkDefinition: ChartMarkDefinition = defineChartMark({
   kind: 'connected-scatter',
   schema: ConnectedScatterChartMarkSchema,

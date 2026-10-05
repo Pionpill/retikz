@@ -1,7 +1,5 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { RelationDirection } from './constants';
 import type {
   GraphRelationMarkerAppearanceSchema,
   GraphRelationMarkerRecipeSchema,
@@ -10,8 +8,6 @@ import type {
   GraphRelationStructureTokenOverridesSchema,
   RelationSchema,
 } from './schema';
-
-export type RelationDirectionValue = ValueOf<typeof RelationDirection>;
 
 export type IRGraphRelation = ZodInfer<typeof RelationSchema>;
 

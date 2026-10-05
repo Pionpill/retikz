@@ -16,6 +16,7 @@ const findTopScopeGroup = (primitives: ReadonlyArray<ScenePrimitive>): GroupPrim
   for (const p of primitives) {
     if (p.type === 'group') return p;
   }
+
   return undefined;
 };
 
@@ -29,6 +30,7 @@ const findScopeStyleGroup = (
       return p;
     }
   }
+
   return undefined;
 };
 
@@ -43,6 +45,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
+
     expect(group?.transforms).toEqual([{ kind: 'translate', x: 50, y: 30 }]);
   });
 
@@ -56,8 +59,11 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
+
     expect(group?.transforms).toHaveLength(1);
+
     const t = group?.transforms?.[0] as { x: number; y: number; kind: string };
+
     expect(t.kind).toBe('translate');
     expect(t.x).toBeCloseTo(50, 6);
     expect(t.y).toBeCloseTo(0, 6);
@@ -75,6 +81,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
     const t = group?.transforms?.[0] as { x: number; y: number };
+
     expect(t.x).toBeCloseTo(40, 6);
     expect(t.y).toBeCloseTo(0, 6);
   });
@@ -90,6 +97,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     const t = group?.transforms?.[0] as { x: number; y: number };
+
     expect(t.x).toBeCloseTo(10, 6);
     expect(t.y).toBeCloseTo(25, 6);
   });
@@ -105,6 +113,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
+
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 20, y: 0 });
   });
 
@@ -119,6 +128,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir, { nodeDistance: 15 }).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
+
     // top direction = y -15
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 0, y: -15 });
   });
@@ -134,6 +144,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
+
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 10, y: 5 });
   });
 
@@ -148,6 +159,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate');
+
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 100, y: 100 });
   });
 
@@ -163,6 +175,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findScopeStyleGroup(compiled.primitives, ts => ts[0]?.kind === 'translate' && ts[0].x === 50);
+
     expect(group?.transforms?.[0]).toEqual({ kind: 'translate', x: 50, y: 20 });
   });
 
@@ -176,6 +189,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
+
     expect(group?.transforms).toEqual([{ kind: 'rotate', degrees: 45 }]);
   });
 
@@ -189,6 +203,7 @@ describe('scope.transforms lower 后生成 GroupPrim 的 Cartesian transforms �
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
+
     expect(group?.transforms).toEqual([{ kind: 'scale', x: 2 }]);
   });
 });
@@ -210,9 +225,13 @@ describe('scope nested compose', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const outer = findTopScopeGroup(compiled.primitives);
+
     expect(outer?.transforms).toEqual([{ kind: 'translate', x: 50, y: 0 }]);
+
     const inner = outer?.children.find(c => c.type === 'group');
+
     expect(inner).toBeDefined();
+
     if (inner?.type === 'group') {
       expect(inner.transforms).toEqual([{ kind: 'translate', x: 10, y: 0 }]);
     }
@@ -240,13 +259,20 @@ describe('scope nested compose', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const l1 = findTopScopeGroup(compiled.primitives);
+
     expect(l1?.transforms?.[0]).toEqual({ kind: 'translate', x: 100, y: 0 });
+
     const l2 = l1?.children.find(c => c.type === 'group');
+
     expect(l2).toBeDefined();
+
     if (l2?.type === 'group') {
       expect(l2.transforms?.[0]).toEqual({ kind: 'translate', x: 50, y: 0 });
+
       const l3 = l2.children.find(c => c.type === 'group');
+
       expect(l3).toBeDefined();
+
       if (l3?.type === 'group') {
         expect(l3.transforms?.[0]).toEqual({ kind: 'translate', x: 25, y: 0 });
       }
@@ -271,11 +297,15 @@ describe('scope nested compose', () => {
       },
     ]);
     const compiled = compileToScene(ir).scene;
+
     // 顶层有 path（path 在顶层 scope 外面）
     const topPath = compiled.primitives.find(p => p.type === 'path');
+
     expect(topPath).toBeDefined();
+
     if (topPath?.type === 'path') {
       const lineCmd = topPath.commands.find(c => c.kind === 'line');
+
       // line endpoint approaches A boundary; A 全局中心 (100, 0)，boundary clip 偏移最多 ~半宽
       if (lineCmd?.kind === 'line') {
         expect(Math.abs(lineCmd.to[0] - 100)).toBeLessThan(20);
@@ -298,8 +328,11 @@ describe('scope GroupPrim emit 形态', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const groups = compiled.primitives.filter(p => p.type === 'group');
+
     expect(groups).toHaveLength(1);
+
     const rects = flattenPrims(groups[0].children).filter(c => c.type === 'rect');
+
     expect(rects.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -323,18 +356,26 @@ describe('scope GroupPrim emit 形态', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const topPath = compiled.primitives.find(p => p.type === 'path');
+
     expect(topPath).toBeUndefined();
+
     const group = compiled.primitives.find(p => p.type === 'group');
+
     expect(group?.type).toBe('group');
+
     if (group?.type === 'group') {
       const innerPath = group.children.find(c => c.type === 'path');
+
       expect(innerPath).toBeDefined();
+
       if (innerPath?.type !== 'path') throw new Error('expected path in scope group');
+
       const moveCmd = innerPath.commands.find(c => c.kind === 'move');
       const lineCmd = innerPath.commands.find(c => c.kind === 'line');
       if (moveCmd?.kind === 'move') {
         expect(Math.abs(moveCmd.to[0])).toBeLessThan(20);
       }
+
       if (lineCmd?.kind === 'line') {
         expect(Math.abs(lineCmd.to[0] - 30)).toBeLessThan(20);
       }
@@ -353,10 +394,13 @@ describe('scope GroupPrim emit 形态', () => {
     const group = findTopScopeGroup(compiled.primitives);
     if (group?.type === 'group') {
       const rect = flattenPrims(group.children).find(c => c.type === 'rect');
+
       expect(rect).toBeDefined();
+
       if (rect?.type === 'rect') {
         // node 中心 = 局部 0,0；rect.x = 左上角 = -halfW < 0
         expect(rect.x).toBeLessThan(0);
+
         // 如果用了全局坐标 rect 中心会在 50，rect.x 会 > 30；这里应该明显小于 30
         expect(rect.x).toBeLessThan(30);
       }
@@ -373,6 +417,7 @@ describe('scope GroupPrim emit 形态', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
+
     expect(group?.transforms).toHaveLength(1);
     expect(group?.transforms?.[0].kind).toBe('translate');
   });
@@ -400,15 +445,20 @@ describe('scope GroupPrim emit 形态', () => {
     const compiled = compileToScene(ir).scene;
     const group = findTopScopeGroup(compiled.primitives);
     const path = group === undefined ? undefined : flattenPrims(group.children).find(p => p.type === 'path');
+
     expect(path).toBeDefined();
+
     if (path?.type === 'path') {
       const moveCmd = path.commands.find(c => c.kind === 'move');
       const lineCmd = path.commands.find(c => c.kind === 'line');
+
       // PathPrim 使用 scope 局部坐标；GroupPrim scale 负责映射到视觉坐标
       if (moveCmd?.kind === 'move' && lineCmd?.kind === 'line') {
         expect(moveCmd.to[0]).toBeGreaterThan(0);
         expect(lineCmd.to[0]).toBeLessThan(100);
+
         const midSegment = lineCmd.to[0] - moveCmd.to[0];
+
         expect(midSegment).toBeLessThan(100);
       }
     }
@@ -440,7 +490,9 @@ describe('scope GroupPrim emit 形态', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const path = compiled.primitives.find(p => p.type === 'path');
+
     expect(path).toBeDefined();
+
     if (path?.type === 'path') {
       const lineCmd = path.commands.find(c => c.kind === 'line');
       if (lineCmd?.kind === 'line') {
@@ -471,9 +523,12 @@ describe('scope 跨 scope path 引用', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const path = compiled.primitives.find(p => p.type === 'path');
+
     expect(path).toBeDefined();
+
     if (path?.type === 'path') {
       const lineCmd = path.commands.find(c => c.kind === 'line');
+
       // line 终点 ≈ A 全局中心 (100, 0)，boundary clip 偏移最多 ~半宽
       if (lineCmd?.kind === 'line') {
         expect(Math.abs(lineCmd.to[0] - 100)).toBeLessThan(20);
@@ -501,6 +556,7 @@ describe('scope 跨 scope path 引用', () => {
     const path = compiled.primitives.find(p => p.type === 'path');
     if (path?.type === 'path') {
       const lineCmd = path.commands.find(c => c.kind === 'line');
+
       // coordinate 是 0×0 rect → boundary 中心 = (60, 0)
       if (lineCmd?.kind === 'line') {
         expect(lineCmd.to[0]).toBeCloseTo(60, 1);
@@ -518,6 +574,7 @@ describe('scope empty / prune 行为', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const groups = compiled.primitives.filter(p => p.type === 'group');
+
     // 空 scope 不产 group；纯几何 node 平铺不产 group，所以总数 = 0
     expect(groups).toHaveLength(0);
   });
@@ -536,7 +593,9 @@ describe('scope empty / prune 行为', () => {
       const t = p.transforms?.[0];
       return t?.kind === 'translate' && t.x === 10;
     });
+
     expect(group).toBeDefined();
+
     if (group?.type === 'group') {
       expect(group.children).toEqual([]);
     }
@@ -552,8 +611,10 @@ describe('scope empty / prune 行为', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const groups = compiled.primitives.filter(p => p.type === 'group');
+
     // 空 transforms + 非空 children → 仍 emit；transforms 字段缺省
     const scopeGroup = groups.find(g => g.transforms === undefined || g.transforms.length === 0);
+
     expect(scopeGroup).toBeDefined();
   });
 
@@ -566,7 +627,9 @@ describe('scope empty / prune 行为', () => {
     ]);
     const compiled = compileToScene(ir).scene;
     const group = compiled.primitives.find(p => p.type === 'group');
+
     expect(group).toBeDefined();
+
     if (group?.type === 'group') {
       expect(group.transforms).toBeUndefined();
     }
@@ -584,6 +647,7 @@ describe('scope.transforms 解析失败 warn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
+
     expect(warnings.some(w => w.code === CompileWarningCode.AtTargetUnresolved)).toBe(true);
   });
 
@@ -597,6 +661,7 @@ describe('scope.transforms 解析失败 warn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
+
     expect(warnings.some(w => w.code === CompileWarningCode.OffsetBaseUnresolved)).toBe(true);
   });
 
@@ -610,6 +675,7 @@ describe('scope.transforms 解析失败 warn', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
+
     expect(warnings.some(w => w.code === CompileWarningCode.PolarOriginUnresolved)).toBe(true);
   });
 });
@@ -633,9 +699,12 @@ describe('scope.id synthetic bbox 注册', () => {
     ]);
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
+
     expect(warnings.filter(w => w.code === CompileWarningCode.UnresolvedNodeReference)).toHaveLength(0);
+
     // path 端点应被解析为 cluster bbox 中心（≈ 子 node A 的全局中心，即 translate(10,0)）
     const path = compiled.primitives.find(p => p.type === 'path');
+
     expect(path).toBeDefined();
   });
 });
@@ -682,9 +751,11 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     const warnings: Array<CompileWarning> = [];
     const compiled = compileToScene(ir, { onWarn: w => warnings.push(w) }).scene;
     const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
+
     expect(dups).toHaveLength(1);
     expect(dups[0].message).toContain("'A'");
     expect(dups[0].path).toContain('children[1].node.id');
+
     // last-wins：path 端点应接近 second 全局中心 (50, 0)
     const path = compiled.primitives.find(p => p.type === 'path');
     if (path?.type === 'path') {
@@ -703,6 +774,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
     const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
+
     expect(dups).toHaveLength(1);
     expect(dups[0].path).toContain('coordinate.id');
   });
@@ -715,6 +787,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
     const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
+
     expect(dups).toHaveLength(1);
   });
 
@@ -727,6 +800,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
     const warnings: Array<CompileWarning> = [];
     compileToScene(ir, { onWarn: w => warnings.push(w) });
     const dups = warnings.filter(w => w.code === CompileWarningCode.DuplicateNodeId);
+
     expect(dups).toHaveLength(2);
     expect(dups[0].path).toContain('children[1].node.id');
     expect(dups[1].path).toContain('children[2].node.id');
@@ -737,6 +811,7 @@ describe('同 frame 重复 id 触发 DUPLICATE_NODE_ID warn + last-wins', () => 
       { type: 'node', id: 'A', position: [0, 0], text: 'first' },
       { type: 'node', id: 'A', position: [50, 0], text: 'second' },
     ]);
+
     expect(() => compileToScene(ir, { onWarn: () => {} }).scene).not.toThrow();
   });
 });
@@ -752,6 +827,7 @@ describe('scope 内前向引用规则', () => {
         ],
       },
     ]);
+
     expect(() => compileToScene(ir, { onWarn: () => {} }).scene).toThrow();
   });
 });

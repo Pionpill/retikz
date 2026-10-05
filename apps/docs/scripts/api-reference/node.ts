@@ -108,6 +108,7 @@ export const createNodeApiReferenceMdx = async (lang: ApiReferenceLanguage): Pro
 /** 写出可重复生成的节点双语 API include */
 export const writeNodeApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const) {
     const source = await createNodeApiReferenceMdx(lang);
     writeFileSync(

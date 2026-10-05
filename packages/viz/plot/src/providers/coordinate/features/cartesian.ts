@@ -52,6 +52,7 @@ type TextNodeBounds = {
 const textBlockMeasureText = (text: IRNode['text']): string => {
   if (text === undefined) return '';
   if (typeof text === 'string') return text;
+
   return text
     .map(line => {
       if (typeof line === 'string') return line;
@@ -64,8 +65,10 @@ const textBlockMeasureText = (text: IRNode['text']): string => {
 /** 估算已经完成旋转与端点对齐的 guide 文本节点视觉边界 */
 const textNodeBoundsOf = (node: IRNode, fallbackFontSize: number): TextNodeBounds | undefined => {
   if (node.text === undefined || !Array.isArray(node.position)) return undefined;
+
   const [x, y] = node.position;
   if (typeof x !== 'number' || typeof y !== 'number') return undefined;
+
   const authoredFontSize = node.style?.font?.size;
   const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : fallbackFontSize;
   const width = Math.min(
@@ -86,6 +89,7 @@ const textNodeBoundsOf = (node: IRNode, fallbackFontSize: number): TextNodeBound
     [localMaxX, localMinY],
     [localMaxX, localMaxY],
   ].map(([localX, localY]) => [x + localX * cos - localY * sin, y + localX * sin + localY * cos]);
+
   return {
     minX: Math.min(...corners.map(([cornerX]) => cornerX)),
     minY: Math.min(...corners.map(([, cornerY]) => cornerY)),
@@ -127,6 +131,7 @@ const guideOverflowOf = (
           }),
   );
   if (bounds.length === 0) return { top: 0, right: 0, bottom: 0, left: 0 };
+
   return {
     top: Math.max(0, -Math.min(...bounds.map(item => item.minY))),
     right: Math.max(0, Math.max(...bounds.map(item => item.maxX)) - width),
@@ -155,7 +160,7 @@ const hasExplicitContinuousRange = (def: IRPlotScaleOperation): boolean =>
   def.range !== undefined;
 
 /**
- * 二维笛卡尔运行时坐标帧。
+ * 二维笛卡尔运行时坐标帧
  * @description 由 IR 坐标配置和 x/y scale 解析得到，lowering 阶段通过它把数据通道值投影成屏幕坐标。
  *   该类型描述可执行的投影能力，不等同于 schemas 层的 JSON IR 类型
  */
@@ -185,7 +190,7 @@ export type CartesianCoordinateFrame = {
 };
 
 /**
- * 建二维笛卡尔运行时坐标帧。
+ * 建二维笛卡尔运行时坐标帧
  * @description primary 是 x 角色位置 scale，secondary 是 y 角色位置 scale；返回的 frame 同时提供点投影与 rect cell 快路。
  *   这是 lowering 内部的运行时对象，不进入 JSON IR，也不从根入口暴露给用户作为构造公共坐标系的主路径
  */
@@ -198,15 +203,18 @@ export const createCartesianCoordinate = (
     const y = secondary.coordinate(values[1]);
     return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
   };
+
   const projectMappedRoles = (values: ReadonlyArray<number>): Position | null => {
     const x = values[0];
     const y = values[1];
     return Number.isFinite(x) && Number.isFinite(y) ? [x, y] : null;
   };
+
   const project = (primaryValue: unknown, secondaryValue: unknown): Position | null => {
     const mapped = mapRoles([primaryValue, secondaryValue]);
     return mapped === null ? null : projectMappedRoles(mapped);
   };
+
   return {
     type: PlotCoordinate.Cartesian2D,
     roles: ['x', 'y'],
@@ -226,6 +234,7 @@ export const createCartesianCoordinate = (
     projectCell: cell => {
       const [px0, px1] = cellInterval(cell, 'x');
       const [sy0, sy1] = cellInterval(cell, 'y');
+
       return {
         kind: 'rect',
         position: [(px0 + px1) / 2, (sy0 + sy1) / 2],
@@ -237,7 +246,7 @@ export const createCartesianCoordinate = (
 };
 
 /**
- * 一维笛卡尔运行时坐标帧。
+ * 一维笛卡尔运行时坐标帧
  * @description 用单一位置 scale 沿 horizontal/vertical 方向投影，另一屏幕维度固定在 baseline。
  *   适用于单轴图形或 1D 坐标语法解析后的 lowering；它仍然产出二维屏幕坐标
  */
@@ -267,7 +276,7 @@ export type Cartesian1DCoordinateFrame = {
 };
 
 /**
- * 建一维笛卡尔运行时坐标帧。
+ * 建一维笛卡尔运行时坐标帧
  * @description 单 scale 沿 orientation 指定的轴投影，另一屏幕维度固定在 baseline。
  *   1D 坐标没有面积 cell 语义，因此不提供 projectCell，interval / reference band 等 cell 类 mark 会 fail-loud
  */
@@ -280,15 +289,18 @@ export const createCartesian1DCoordinate = (
     const position = scale.coordinate(values[0]);
     return Number.isFinite(position) ? [position] : null;
   };
+
   const projectMappedRoles = (values: ReadonlyArray<number>): Position | null => {
     const position = values[0];
     if (!Number.isFinite(position)) return null;
     return orientation === Cartesian1DOrientation.Horizontal ? [position, baseline] : [baseline, position];
   };
+
   const projectRoles = (values: ReadonlyArray<unknown>): Position | null => {
     const mapped = mapRoles(values);
     return mapped === null ? null : projectMappedRoles(mapped);
   };
+
   return {
     type: PlotCoordinate.Cartesian1D,
     roles: ['x'],
@@ -341,6 +353,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
     let plotArea: Rect = { x: 0, y: 0, width: ctx.width, height: ctx.height };
     let lowered: Array<LoweredGuide> = [];
     let guideReserve: Margins = { top: 0, right: 0, bottom: 0, left: 0 };
+
     for (let pass = 0; pass < MAX_GUIDE_LAYOUT_PASSES; pass += 1) {
       const computed = computePlotArea(
         ctx.width,
@@ -373,6 +386,7 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       const visibleYTicks = yAxis
         ? ctx.resolveVisibleGuideTicks(yTicks ?? EMPTY_TICKS, yAxis.ticks, value => yScale.coordinate(value))
         : undefined;
+
       const [xRangeStart, xRangeEnd] = xScale.range();
       const [yRangeStart, yRangeEnd] = yScale.range();
       const guideFrame: Rect = {
@@ -390,8 +404,10 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
         fontSize: ctx.fontSize,
         labelGap: ctx.labelGap,
       };
+
       lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
       if (ctx.plotAreaOverride !== undefined) break;
+
       const tickLabelsByGuide = ctx.axisGuides.map(guide =>
         guide.placement?.kind === AxisPlacementKind.Origin
           ? new Set<string>()
@@ -401,7 +417,9 @@ const cartesian2DCoordinateDefinition: CoordinateDefinition<Cartesian2DCoordinat
       if (Object.values(overflow).every(value => value <= 1e-6)) break;
       guideReserve = addMarginReserve(guideReserve, overflow);
     }
+
     const frame = createCartesianCoordinate(xScale, yScale);
+
     return {
       frame,
       plotArea,
@@ -465,6 +483,7 @@ const cartesian1DCoordinateDefinition: CoordinateDefinition<IRPlotCartesian1DCoo
       axisOrientation: horizontal ? 'horizontal' : 'vertical',
     };
     const lowered = ctx.axisGuides.map(guide => ctx.lowerGuide(guide, guideContext, ctx.provenance));
+
     return {
       frame,
       plotArea,

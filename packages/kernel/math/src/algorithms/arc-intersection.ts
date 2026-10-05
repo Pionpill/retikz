@@ -34,15 +34,19 @@ export const intersectRayWithArc = ({
   const directionY = direction[1];
   const a = directionX * directionX + directionY * directionY;
   if (a <= tolerance * tolerance) return [];
+
   const b = 2 * (ox * directionX + oy * directionY);
   const c = ox * ox + oy * oy - radius * radius;
   const discriminant = b * b - 4 * a * c;
   if (discriminant < 0) return [];
+
   const discriminantRoot = Math.sqrt(discriminant);
   const roots = [(-b - discriminantRoot) / (2 * a), (-b + discriminantRoot) / (2 * a)];
   const intersections: Array<number> = [];
+
   for (const rayParameter of roots) {
     if (rayParameter <= tolerance) continue;
+
     const pointX = ox + rayParameter * directionX;
     const pointY = oy + rayParameter * directionY;
     const angle = Math.atan2(pointY, pointX) * (180 / Math.PI);
@@ -50,6 +54,8 @@ export const intersectRayWithArc = ({
       intersections.push(rayParameter);
     }
   }
+
   intersections.sort((left, right) => left - right);
+
   return intersections;
 };

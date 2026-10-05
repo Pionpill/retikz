@@ -18,6 +18,7 @@ export const alignmentGuidesOfNode = (
   if (offsets === undefined || offsets.length === 0 || !isEffectiveIdentityRotation(layout.rotateDeg)) {
     return undefined;
   }
+
   const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
   const firstBaseline = round(blockTop + offsets[0]);
   if (layout.inlineBlock !== undefined) {
@@ -34,7 +35,9 @@ export const alignmentGuidesOfNode = (
       },
     ];
   }
+
   const emittedLineHeight = round(layout.lineHeight);
+
   return [
     {
       name: LayoutAlignmentGuideName.FirstBaseline,
@@ -53,6 +56,7 @@ const contentCorners = (layout: NodeLayout): Array<IRPosition> => {
   const [cx, cy] = layout.contentCenter;
   const halfW = layout.textWidth / 2;
   const halfH = layout.textHeight / 2;
+
   return [
     [cx - halfW, cy - halfH],
     [cx + halfW, cy - halfH],
@@ -85,6 +89,7 @@ const contentBounds = (
   if (bounds === undefined) {
     return { x: layout.contentCenter[0], y: layout.contentCenter[1], width: 0, height: 0 };
   }
+
   return boundsToRect(bounds);
 };
 

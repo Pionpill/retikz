@@ -9,12 +9,36 @@ import type { Scene } from '../scene';
 
 /** 能够声明最终编译产物的领域中立所属者 */
 export type CompileObservationOwner =
-  | Readonly<{ kind: 'composite'; namespace: string; type: string }>
-  | Readonly<{ kind: 'path'; name: string }>
-  | Readonly<{ kind: 'node' }>
-  | Readonly<{ kind: 'scope' }>
-  | Readonly<{ kind: 'coordinate' }>
-  | Readonly<{ kind: 'clip' }>;
+  | Readonly<{
+      /** 当前被观测能力所属者的类别 */
+      kind: 'composite';
+      /** 被观测复合组件的注册命名空间 */
+      namespace: string;
+      /** 被观测复合组件的注册类型 */
+      type: string;
+    }>
+  | Readonly<{
+      /** 当前被观测能力所属者的类别 */
+      kind: 'path';
+      /** 被观测路径种类的注册名称 */
+      name: string;
+    }>
+  | Readonly<{
+      /** 当前被观测能力所属者的类别 */
+      kind: 'node';
+    }>
+  | Readonly<{
+      /** 当前被观测能力所属者的类别 */
+      kind: 'scope';
+    }>
+  | Readonly<{
+      /** 当前被观测能力所属者的类别 */
+      kind: 'coordinate';
+    }>
+  | Readonly<{
+      /** 当前被观测能力所属者的类别 */
+      kind: 'clip';
+    }>;
 
 /** 最终 observation 所属的逻辑容器链条项 */
 export type CompileObservationAncestor = Readonly<{
@@ -24,13 +48,19 @@ export type CompileObservationAncestor = Readonly<{
   occurrence: CompileOccurrenceLocator;
 }>;
 
-/** 所属者产物的 JSON schema 契约 */
+/**
+ * 所属者产物的 JSON schema 契约
+ * @template TValue 所属者 schema 校验、发布和观察的 JSON 产物类型
+ */
 export type CompileOwnerOutputDefinition<TValue extends JsonValue = JsonValue> = Readonly<{
   /** 校验并恢复所属者最终产物的 schema */
   schema: ZodType<TValue>;
 }>;
 
-/** Path kind 在需要时发布最终产物的编译期 publisher */
+/**
+ * Path kind 在需要时发布最终产物的编译期 publisher
+ * @template TValue 所属者 schema 校验、发布和观察的 JSON 产物类型
+ */
 export type CompileOwnerOutputPublisher<TValue extends JsonValue = JsonValue> = Readonly<{
   /** 当前编译是否至少被一个 observer 选中 */
   requested: boolean;
@@ -87,16 +117,26 @@ export type CompileFragmentDiagnostic = Readonly<{
   path: string;
   /** 诊断所属的主编译或观测阶段 */
   origin:
-    | Readonly<{ kind: 'primary' }>
     | Readonly<{
+        /** 诊断来自主编译或观察过程 */
+        kind: 'primary';
+      }>
+    | Readonly<{
+        /** 诊断来自主编译或观察过程 */
         kind: 'observation';
+        /** 产生该观察诊断的能力所属者 */
         owner: CompileObservationOwner;
+        /** 观察诊断对应的编译出现位置 */
         occurrence: CompileOccurrenceLocator;
+        /** 诊断来自所属者产物处理还是隔离片段编译 */
         stage: 'owner' | 'fragment';
       }>;
 }>;
 
-/** 一次最终所属者产物观察事件 */
+/**
+ * 一次最终所属者产物观察事件
+ * @template TValue 所属者 schema 校验、发布和观察的 JSON 产物类型
+ */
 export type CompileObservation<TValue extends JsonValue = JsonValue> = Readonly<{
   /** 所属者身份 */
   owner: CompileObservationOwner;
@@ -124,7 +164,7 @@ export type CompileObservationContext = Readonly<{
 
 /** 隔离片段编译结果，不并入 primary compile result */
 export type CompiledSceneFragment = Readonly<{
-  /** occurrence-local Scene */
+  /** 当前出现位置局部坐标中的场景 */
   scene: Scene;
   /** fragment 内产生的 artifacts */
   artifacts: ReadonlyArray<CompileFragmentArtifact>;
@@ -132,7 +172,10 @@ export type CompiledSceneFragment = Readonly<{
   diagnostics: ReadonlyArray<CompileFragmentDiagnostic>;
 }>;
 
-/** 一次 observer 定义 */
+/**
+ * 一次 observer 定义
+ * @template TOutput 观察会话完成时产生的结果类型
+ */
 export type CompileObserverDefinition<TOutput = unknown> = Readonly<{
   /** 本次 observed compile 内唯一的 observer key */
   key: string;
@@ -140,7 +183,10 @@ export type CompileObserverDefinition<TOutput = unknown> = Readonly<{
   createSession: () => CompileObserverSession<TOutput>;
 }>;
 
-/** 一次 observed compile 独占的 observer session */
+/**
+ * 一次 observed compile 独占的 observer session
+ * @template TOutput 观察会话完成时产生的结果类型
+ */
 export type CompileObserverSession<TOutput = unknown> = Readonly<{
   /** 在 owner compile 前决定是否需要捕获产物 */
   select: (site: CompileObservationSite) => boolean;
@@ -150,9 +196,12 @@ export type CompileObserverSession<TOutput = unknown> = Readonly<{
   complete: () => TOutput;
 }>;
 
-/** 一个 observer 的完成结果 */
+/**
+ * 一个 observer 的完成结果
+ * @template TOutput 观察会话完成时产生的结果类型
+ */
 export type CompileObserverOutput<TOutput = unknown> = Readonly<{
-  /** observer definition key */
+  /** 观察者定义的注册键 */
   key: string;
   /** observer session 的 canonical output */
   value: TOutput;

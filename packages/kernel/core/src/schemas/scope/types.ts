@@ -5,7 +5,7 @@ import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
 import type { IRNode } from '../node';
 import type { IRPathBase } from '../path';
-import type { ScopeBoundingShape, ScopeStyleChannel } from './constants';
+import type { ScopeStyleChannel } from './constants';
 import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
 import type {
   ScopeFrameSchema,
@@ -56,8 +56,5 @@ export type IRScope = IRScopeProps & {
   /** 按声明顺序处理的节点、路径、坐标点、作用域或复合组件 */
   children: Array<IRNode | IRPathBase | IRCoordinate | IRScope | IRComposite>;
 };
-
-/** scope 包络形状名联合（'rectangle' | 'circle'） */
-export type ScopeBoundingShapeValue = ValueOf<typeof ScopeBoundingShape>;
 
 export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;

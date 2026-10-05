@@ -32,6 +32,7 @@ describe('Extension public entry', () => {
       'pulse',
     ])
       expect(extension).toHaveProperty(name);
+
     expect(extension).not.toHaveProperty('CircleDefinition');
     expect(extension).not.toHaveProperty('GridDefinition');
     expect(extension).not.toHaveProperty('SurfaceDefinition');
@@ -41,6 +42,7 @@ describe('Extension public entry', () => {
     expect(Object.keys(manifest.exports)).toEqual(['.']);
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
     expect(manifest.sideEffects).toBe(false);
+
     for (const name of ['@retikz/layout', '@retikz/standard', '@retikz/react', '@retikz/vanilla']) {
       expect(manifest.dependencies).not.toHaveProperty(name);
     }

@@ -127,8 +127,10 @@ describe('loop / stagger', () => {
       direction: 'alternate',
     });
   });
+
   it('stagger 给 track 依次叠加 delay', () => {
     const out = stagger([fadeIn(), fadeIn(), fadeIn()], 100);
+
     expect(out.map(t => t.delay)).toEqual([0, 100, 200]);
     expect(stagger([fadeIn()], 100, 50)[0].delay).toBe(50);
   });

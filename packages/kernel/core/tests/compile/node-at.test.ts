@@ -42,6 +42,7 @@ describe('Node at relative positioning', () => {
         ],
       };
       const [, b] = centers(ir);
+
       expect(b[0]).toBeCloseTo(5);
       expect(b[1]).toBeCloseTo(0);
     });
@@ -56,6 +57,7 @@ describe('Node at relative positioning', () => {
         ],
       };
       const [, b] = centers(ir);
+
       expect(b[0]).toBeCloseTo(-5);
       expect(b[1]).toBeCloseTo(0);
     });
@@ -70,6 +72,7 @@ describe('Node at relative positioning', () => {
         ],
       };
       const [, b] = centers(ir);
+
       expect(b[0]).toBeCloseTo(0);
       expect(b[1]).toBeCloseTo(-5);
     });
@@ -84,6 +87,7 @@ describe('Node at relative positioning', () => {
         ],
       };
       const [, b] = centers(ir);
+
       expect(b[0]).toBeCloseTo(0);
       expect(b[1]).toBeCloseTo(5);
     });
@@ -99,8 +103,10 @@ describe('Node at relative positioning', () => {
       };
       const [, b] = centers(ir);
       const expected = 10 * Math.SQRT1_2;
+
       expect(b[0]).toBeCloseTo(expected);
       expect(b[1]).toBeCloseTo(-expected);
+
       // 与 A 的距离恰好 = distance
       expect(Math.hypot(b[0], b[1])).toBeCloseTo(10);
     });
@@ -116,6 +122,7 @@ describe('Node at relative positioning', () => {
       };
       const [, b] = centers(ir);
       const expected = 8 * Math.SQRT1_2;
+
       expect(b[0]).toBeCloseTo(-expected);
       expect(b[1]).toBeCloseTo(expected);
     });
@@ -131,9 +138,11 @@ describe('Node at relative positioning', () => {
           { type: 'node', id: 'B', position: { direction: 'right', of: 'A', distance: 7 } },
         ],
       };
+
       // nodeDistance=99 但 node 自带 7，应该用 7
       const scene = compileToScene(ir, { nodeDistance: 99 }).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
+
       expect(b[0]).toBeCloseTo(7);
     });
 
@@ -148,6 +157,7 @@ describe('Node at relative positioning', () => {
       };
       const scene = compileToScene(ir, { nodeDistance: 12 }).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
+
       expect(b[0]).toBeCloseTo(12);
     });
 
@@ -162,6 +172,7 @@ describe('Node at relative positioning', () => {
       };
       const scene = compileToScene(ir).scene;
       const [, b] = rects(scene.primitives).map(r => [r.x + r.width / 2, r.y + r.height / 2]);
+
       expect(b[0]).toBeCloseTo(24);
     });
   });
@@ -178,6 +189,7 @@ describe('Node at relative positioning', () => {
         ],
       };
       const [, b, c] = centers(ir);
+
       expect(b[0]).toBeCloseTo(4);
       expect(c[0]).toBeCloseTo(8);
       expect(b[1]).toBeCloseTo(0);
@@ -192,6 +204,7 @@ describe('Node at relative positioning', () => {
         type: 'scene',
         children: [{ type: 'node', id: 'B', position: { direction: 'right', of: 'A' } }],
       };
+
       expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
     });
 
@@ -204,6 +217,7 @@ describe('Node at relative positioning', () => {
           { type: 'node', id: 'A', position: [0, 0], text: 'A' },
         ],
       };
+
       expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position/);
     });
   });
@@ -227,7 +241,9 @@ describe('Node at relative positioning', () => {
       };
       const scene = compileToScene(ir).scene;
       const path = scene.primitives.find(p => p.type === 'path');
+
       expect(path).toBeDefined();
+
       // 至少有 move 和 line 两条命令
       if (path?.type === 'path') {
         expect(path.commands[0].kind).toBe('move');

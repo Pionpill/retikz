@@ -27,6 +27,7 @@ const inspectReactInput = (children: ReactNode): InspectionCompileResult | undef
     0,
   );
   processing.commit();
+
   return committed;
 };
 
@@ -41,6 +42,7 @@ describe('@retikz/layout-react/inspect', () => {
         </InspectFlexLayout>
       </LayoutInspectLayout>,
     );
+
     expect(html).toContain('data-retikz-readonly-layer');
     expect(html).toContain('hsl(210, 38%, 48%)');
   });
@@ -72,6 +74,7 @@ describe('@retikz/layout-react/inspect', () => {
     );
     const input = createInputScene(children);
     const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+
     expect(
       normalized.authoringSites
         .filter(site => site.kind === 'embeddable')
@@ -90,6 +93,7 @@ describe('@retikz/layout-react/inspect', () => {
     ]);
 
     const entries = inspectReactInput(children)?.inspection?.entries;
+
     expect(entries?.length).toBeGreaterThan(0);
     expect(entries?.every(entry => entry.owner.kind === 'composite' && entry.owner.type === expectedType)).toBe(true);
     expect(entries?.every(entry => entry.occurrence.expansionPath.length > 0)).toBe(true);

@@ -104,6 +104,7 @@ const renderGallery = (
   roots.push(root);
 
   expect(ShowcaseGallery).toBeTypeOf('function');
+
   if (!ShowcaseGallery) return container;
 
   act(() => {
@@ -203,6 +204,7 @@ describe('<ShowcaseGallery>', () => {
     const apiTab = container.querySelectorAll<HTMLElement>('[role="tab"]')[2];
 
     expect(apiTab).toBeInstanceOf(HTMLElement);
+
     act(() => {
       apiTab.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     });

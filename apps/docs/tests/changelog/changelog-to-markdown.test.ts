@@ -30,6 +30,7 @@ const fixture: Array<Release> = [
 describe('changelogToMarkdown', () => {
   it('按里程碑→包→highlights→预发布序列化中文', () => {
     const md = changelogToMarkdown(fixture, 'zh');
+
     expect(md).toContain('## v0.2（开发中）');
     expect(md).toContain('### @retikz/core v0.2');
     expect(md).toContain('核心摘要');
@@ -40,12 +41,14 @@ describe('changelogToMarkdown', () => {
 
   it('英文走 en 字段 + 英文"开发中"', () => {
     const md = changelogToMarkdown(fixture, 'en');
+
     expect(md).toContain('## v0.2 (in development)');
     expect(md).toContain('- **Shape registry:** registrable');
   });
 
   it('有 stableDate 时标题带日期', () => {
     const md = changelogToMarkdown([{ minor: 'v0.1', stableDate: '2026-05-20', packages: [] }], 'zh');
+
     expect(md).toContain('## v0.1（2026-05-20）');
   });
 });

@@ -4,8 +4,8 @@
 
 #### Star / StarProps
 
-- `Star`: <ApiSourceLink label={"Star"} path={"packages/library/standard-react/src/shape/Star.tsx"} startLine={12}>Declare a Standard Star through its Vanilla adapter</ApiSourceLink>
-- `StarProps`: <ApiSourceLink label={"StarProps"} path={"packages/library/standard-react/src/shape/Star.tsx"} startLine={9}>React Star authoring input and host events</ApiSourceLink>
+- `Star`: <ApiSourceLink label={"Star"} path={"packages/library/standard-react/src/shape/Star.tsx"} startLine={19}>Declare a Standard Star through its Vanilla adapter</ApiSourceLink>
+- `StarProps`: <ApiSourceLink label={"StarProps"} path={"packages/library/standard-react/src/shape/Star.tsx"} startLine={10}>React Star authoring input and host events</ApiSourceLink>
 
 ```ts
 export declare const Star: {
@@ -23,7 +23,7 @@ export type StarProps = InputStar &
 #### InputStar
 
 <p>
-  <ApiSourceLink label={'InputStar'} path={'packages/library/standard-vanilla/src/shape/star.ts'} startLine={8}>
+  <ApiSourceLink label={'InputStar'} path={'packages/library/standard-vanilla/src/shape/star.ts'} startLine={9}>
     Star Vanilla authoring input
   </ApiSourceLink>
 </p>
@@ -37,7 +37,7 @@ export type StarProps = InputStar &
 | Member            | Type                                  | Default | Description                                                                                                                                                                  |
 | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputStar["animations"]`             | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
 | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
 | `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
@@ -52,7 +52,7 @@ export type StarProps = InputStar &
 | `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
 | `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
 | `style?`          | `InputStar["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
 | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
@@ -66,7 +66,7 @@ export type StarProps = InputStar &
 | Member            | Type                                  | Default | Description                                                                                                                                                                  |
 | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputStar["animations"]`             | —       | Declarative timeline animation tracks carried verbatim into the emitted Scene primitive(s). They do not affect layout or bounding boxes and are not inherited across scopes. |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —       | Path-level arrow direction                                                                                                                                                   |
+| `arrow?`          | `InputPathArrowDirection`             | —       | Path-level arrow direction                                                                                                                                                   |
 | `arrowDetail?`    | `IRArrowDetail`                       | —       | Top-level arrow defaults and endpoint overrides                                                                                                                              |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —       | Shared and per-end arrow placement settings                                                                                                                                  |
 | `center`          | `[number, number]`                    | —       | Shape center; coordinate forms depend on the chosen geometry branch.                                                                                                         |
@@ -81,7 +81,7 @@ export type StarProps = InputStar &
 | `roundedCorners?` | `number`                              | —       | Geometric corner radius applied to line-to-line joints. Distinct from `lineJoin`, which only styles stroke corners. Omitted fields keep sharp joints.                        |
 | `scale?`          | `number \| { x: number; y: number; }` | —       | Scale the whole path around its bounding-box center. Applied with rotate around the same center.                                                                             |
 | `style?`          | `InputStar["style"]`                  | —       | Path visual overrides; fields independently override inherited defaults.                                                                                                     |
-| `thickness?`      | `PathThicknessValue`                  | —       | Path stroke-width shorthand                                                                                                                                                  |
+| `thickness?`      | `PathThickness`                       | —       | Path stroke-width shorthand                                                                                                                                                  |
 | `zIndex?`         | `number`                              | —       | Explicit stacking order among sibling IR children. Higher draws on top. Omitted = 0 = source order. Sorting is stable within the same parent group.                          |
 
 </ApiTable>
@@ -104,14 +104,14 @@ export type InputStar = InputShape<IRStar>;
   <ApiSourceLink
     label={'StarInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/shape/star.ts'}
-    startLine={10}
+    startLine={12}
   >
     Normalize Star authoring input into persistent Standard intent
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const StarInputEmbedAdapter: InputEmbedAdapter<InputStar & { id?: string }>;
+export declare const StarInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStar & { id?: string }>;
 ```
 
 **`@retikz/standard`**
@@ -119,7 +119,7 @@ export declare const StarInputEmbedAdapter: InputEmbedAdapter<InputStar & { id?:
 #### IRStar
 
 <p>
-  <ApiSourceLink label={'IRStar'} path={'packages/library/standard/src/shape/star/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRStar'} path={'packages/library/standard/src/shape/star/types.ts'} startLine={7}>
     Persistent Star shape
   </ApiSourceLink>
 </p>
@@ -193,7 +193,7 @@ export type IRStar = ShapeSource<ZodInput<typeof StarSchema>>;
 #### StarDefinition
 
 <p>
-  <ApiSourceLink label={'StarDefinition'} path={'packages/library/standard/src/shape/star/definition.ts'} startLine={7}>
+  <ApiSourceLink label={'StarDefinition'} path={'packages/library/standard/src/shape/star/definition.ts'} startLine={8}>
     Star Core composite registration
   </ApiSourceLink>
 </p>
@@ -233,7 +233,7 @@ export const StarDefinition = defineComposite({
 #### StarProvider
 
 <p>
-  <ApiSourceLink label={'StarProvider'} path={'packages/library/standard/src/shape/star/provider.ts'} startLine={5}>
+  <ApiSourceLink label={'StarProvider'} path={'packages/library/standard/src/shape/star/provider.ts'} startLine={6}>
     Star on-demand dependency contribution
   </ApiSourceLink>
 </p>
@@ -250,7 +250,7 @@ export const StarProvider: CoreDependencyProvider = Object.freeze({
 #### createStar
 
 <p>
-  <ApiSourceLink label={'createStar'} path={'packages/library/standard/src/shape/star/factory.ts'} startLine={4}>
+  <ApiSourceLink label={'createStar'} path={'packages/library/standard/src/shape/star/factory.ts'} startLine={5}>
     Create a Star Source preserving geometry intent
   </ApiSourceLink>
 </p>

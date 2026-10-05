@@ -20,9 +20,11 @@ const withinMatches = (
 ): boolean => {
   if (selectors.length === 0) return true;
   if (selectors.length > ancestors.length) return false;
+
   for (let start = 0; start <= ancestors.length - selectors.length; start += 1) {
     if (selectors.every((selector, index) => ownerMatches(ancestors[start + index], selector))) return true;
   }
+
   return false;
 };
 
@@ -34,6 +36,7 @@ const entryMatches = (entry: QualifiedSpatialHandle, selector: SpatialHandleSele
   if (selector.id !== undefined && entry.id !== selector.id && !entry.aliasIds?.includes(selector.id)) return false;
   if (selector.role !== undefined && entry.role !== selector.role) return false;
   if (selector.tags !== undefined && !selector.tags.every(tag => entry.tags.includes(tag))) return false;
+
   return true;
 };
 
@@ -58,5 +61,6 @@ export const resolveSpatialHandle = (
       `Spatial handle resolution ambiguity for selector ${summary}; matched ${matches.length} entries.`,
     );
   }
+
   return matches[0];
 };

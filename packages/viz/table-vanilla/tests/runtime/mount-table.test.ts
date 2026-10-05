@@ -48,7 +48,9 @@ describe('Table Vanilla mounted runtime', () => {
     const svgRoot = svgView.root;
 
     expect(svgRoot.textContent).toContain('Ada');
+
     svgView.update(tableFigure('Grace'));
+
     expect(svgView.root).toBe(svgRoot);
     expect(svgRoot.textContent).toContain('Grace');
 
@@ -59,6 +61,7 @@ describe('Table Vanilla mounted runtime', () => {
     });
     const canvasRoot = canvasView.root;
     canvasView.update(tableFigure('Edsger'));
+
     expect(canvasView.root).toBe(canvasRoot);
     expect(canvasRoot).toBeInstanceOf(HTMLCanvasElement);
 

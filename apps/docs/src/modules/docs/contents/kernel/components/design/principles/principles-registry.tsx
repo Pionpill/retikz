@@ -8,6 +8,7 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 import { principlesRegistryI18n } from './principles-registry.i18n';
 
 export type PrinciplesRegistryProps = { lang?: Lang };
+
 const Demo: FC<PrinciplesRegistryProps> = props => {
   const text = principlesRegistryI18n[props.lang ?? 'zh'];
   return (

@@ -6,7 +6,18 @@ import type { MarkerPrimitive } from './marker';
  * paint 属性取值词汇表（可用于 fill / stroke，不绑定单一属性）
  * @description 渲染无关：`string` 表示纯色，`resourceRef` 指向 `Scene.resources`，`contextStroke` 继承所在元素描边
  */
-export type PaintValue = string | { kind: 'resourceRef'; id: string } | { kind: 'contextStroke' };
+export type PaintValue =
+  | string
+  | {
+      /** 资源引用或继承宿主描边的绘制值判别 */
+      kind: 'resourceRef';
+      /** 当前绘制值引用的场景资源标识 */
+      id: string;
+    }
+  | {
+      /** 资源引用或继承宿主描边的绘制值判别 */
+      kind: 'contextStroke';
+    };
 
 /**
  * 已解析 pattern tile
@@ -17,7 +28,7 @@ export type ResolvedPatternTile = {
   size: number;
   /**
    * tile 背景填充（CSS 串）；缺省透明（字段缺省）
-   * @default 透明背景
+   * @default undefined
    */
   background?: string;
   /**
@@ -34,8 +45,11 @@ export type ResolvedPatternTile = {
  * @description primitive 经 `{ kind:'resourceRef', id }` 引用；pattern 资源额外带已解析 `tile`
  */
 export type PaintResource = {
+  /** 标识场景绘制资源 */
   kind: 'paint';
+  /** 供填充或描边引用的资源标识 */
   id: string;
+  /** 描述渐变、图案等绘制效果的 IR 声明 */
   spec: IRPaint;
   /** 已解析 pattern tile；仅 pattern 资源有，gradient / image 资源缺省 */
   tile?: ResolvedPatternTile;

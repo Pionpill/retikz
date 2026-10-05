@@ -17,11 +17,13 @@ type RuntimeObserverEntry = Readonly<{
 /** 校验 observer factory 返回的 session 形状 */
 const isCompileObserverSession = (value: unknown): value is CompileObserverSession => {
   if (value === null || typeof value !== 'object') return false;
+
   const candidate = value as Readonly<{
     select?: unknown;
     observe?: unknown;
     complete?: unknown;
   }>;
+
   return (
     typeof candidate.select === 'function' &&
     typeof candidate.observe === 'function' &&
@@ -54,6 +56,7 @@ export const createCompileObservationRuntime = (
         `observeCompileToScene: duplicate observer key '${normalized.key}' at index ${index}.`,
       );
     }
+
     seen.add(normalized.key);
     const session: unknown = normalized.createSession();
     if (!isCompileObserverSession(session)) {
@@ -62,6 +65,7 @@ export const createCompileObservationRuntime = (
         `observeCompileToScene: observer '${normalized.key}' created an invalid session.`,
       );
     }
+
     return { definition: normalized, session };
   });
   const byKey = new Map(entries.map(entry => [entry.definition.key, entry] as const));
@@ -70,6 +74,7 @@ export const createCompileObservationRuntime = (
     hasObservers: entries.length > 0,
     select: (site: CompileObservationSite): ReadonlyArray<string> => {
       const selected: Array<string> = [];
+
       for (const entry of entries) {
         const value = entry.session.select(Object.freeze({ owner: site.owner, sourcePath: site.sourcePath }));
         if (typeof value !== 'boolean') {
@@ -78,8 +83,10 @@ export const createCompileObservationRuntime = (
             `observeCompileToScene: observer '${entry.definition.key}' select() must return boolean.`,
           );
         }
+
         if (value) selected.push(entry.definition.key);
       }
+
       return selected;
     },
     dispatch: (
@@ -94,6 +101,7 @@ export const createCompileObservationRuntime = (
             RetikzCoreErrorCode.Compile,
             `observeCompileToScene: unknown selected observer key '${key}'.`,
           );
+
         entry.session.observe(observation, context);
       }
     },

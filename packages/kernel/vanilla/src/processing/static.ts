@@ -15,7 +15,9 @@ import type { ProcessingOptions, ProcessingResult, ProcessingSource } from './ty
 import type { PreparedProcessingInput, PreparedAsyncStaticProcessing, AsyncProcessingOptions } from './types';
 
 const EMPTY_ARTIFACTS = Object.freeze([]);
+
 const EMPTY_LAYERS = Object.freeze([]);
+
 const EMPTY_DIAGNOSTICS = Object.freeze([]);
 
 /** 已完成编译、等待宿主确认提交的 static processing 候选结果 */
@@ -63,6 +65,7 @@ const prepareStaticProcessingInput = (
     runtimeMeta: prepared.runtimeMeta,
   });
   let committed = false;
+
   return Object.freeze({
     result,
     commit: () => {
@@ -87,12 +90,14 @@ export const prepareStaticProcessingAsync = async (
   );
   assertPreparationActive(signal);
   let terminal: 'pending' | 'committed' | 'discarded' = 'pending';
+
   return Object.freeze({
     result: candidate.result,
     commit: () => {
       if (terminal === 'committed') return;
       if (terminal === 'discarded')
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Cannot commit a discarded candidate');
+
       assertPreparationActive(signal);
       terminal = 'committed';
       candidate.commit();
@@ -101,6 +106,7 @@ export const prepareStaticProcessingAsync = async (
       if (terminal === 'discarded') return;
       if (terminal === 'committed')
         throw new RetikzVanillaError(RetikzVanillaErrorCode.Processing, 'Cannot discard a committed candidate');
+
       terminal = 'discarded';
     },
   });
@@ -116,7 +122,9 @@ export const processToStaticInputResultAsync = async (
     candidate.discard();
     assertPreparationActive(options.signal);
   }
+
   candidate.commit();
+
   return candidate.result;
 };
 

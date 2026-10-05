@@ -13,17 +13,23 @@ export const assertFiniteWidth = (width: number, source: string): number => {
       details: { source, width },
     });
   }
+
   return width;
 };
 
 /** 按指定插值模式在两个宽度值之间取样 */
 export type InterpolateInput = {
+  /** 区间起点的宽度值 */
   from: number;
+  /** 区间终点的宽度值 */
   to: number;
+  /** 调用者提供的区间内比例，本函数不裁剪到 0 到 1 */
   t: number;
+  /** 线性、三次平滑或保持起点值的阶梯插值方式 */
   mode: 'linear' | 'smooth' | 'step';
 };
 
+/** 按给定区间比例插值宽度；step 始终取起点值，其他模式不裁剪比例 */
 export const interpolate = ({ from, to, t, mode }: InterpolateInput): number => {
   if (mode === 'step') return from;
   const u = mode === 'smooth' ? smoothstep(t) : t;
@@ -43,20 +49,24 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
   if (width.kind === 'stops') {
     const stops = width.stops;
     const mode = width.interpolation;
+
     return offset => {
       if (offset <= stops[0].offset) return assertFiniteWidth(stops[0].value, 'first stop');
+
       for (let i = 1; i < stops.length; i += 1) {
         const prev = stops[i - 1];
         const next = stops[i];
         if (offset <= next.offset) {
           const span = next.offset - prev.offset;
           const localT = span === 0 ? 1 : (offset - prev.offset) / span;
+
           return assertFiniteWidth(
             interpolate({ from: prev.value, to: next.value, t: localT, mode }),
             `stops profile at offset ${offset}`,
           );
         }
       }
+
       return assertFiniteWidth(stops[stops.length - 1].value, 'last stop');
     };
   }
@@ -70,12 +80,15 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
       details: { profile: width.name },
     });
   }
+
   return offset => {
     let rawWidth: number;
+
     try {
       rawWidth = profile.widthAt({ offset, length: totalLength, params });
     } catch (cause) {
       if (cause instanceof RetikzExtensionError) throw cause;
+
       throw new RetikzExtensionError({
         code: RetikzExtensionErrorCode.ResolutionInvalid,
         message: `Ribbon width profile '${width.name}' widthAt failed at offset ${String(offset)}.`,
@@ -83,6 +96,7 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
         cause,
       });
     }
+
     return assertFiniteWidth(rawWidth, `profile "${width.name}" at offset ${offset}`);
   };
 };

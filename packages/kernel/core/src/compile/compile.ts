@@ -46,7 +46,10 @@ const dispatchCompileDiagnostics = (
   diagnostics.forEach(warningSink);
 };
 
-/** Core full compile 的内部输出，供同步入口与 Runtime Computation 共享 */
+/**
+ * Core full compile 的内部输出，供同步入口与 Runtime Computation 共享
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CoreCompileSnapshot<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{
   /** 完整 compile result */
   result: CompileResult<CompositeArtifactOf<TComposites[number]>>;
@@ -66,7 +69,10 @@ export type CoreCompileExecutionOptions = Readonly<{
   observers?: ReadonlyArray<CompileObserverDefinition>;
 }>;
 
-/** 执行一次不派发 warning 的完整 Core compile */
+/**
+ * 执行一次不派发 warning 的完整 Core compile
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   ir: IRScene,
   options?: CompileOptions<TComposites>,
@@ -114,6 +120,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
       changed: context.trace.visited,
     });
   }
+
   return Object.freeze({
     result: Object.freeze({
       scene,
@@ -126,7 +133,10 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
   });
 };
 
-/** IR → Scene 纯函数转换，所有 adapter 共享 */
+/**
+ * IR → Scene 纯函数转换，所有 adapter 共享
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export const compileToScene = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   ir: IRScene,
   options?: CompileOptions<TComposites>,
@@ -136,7 +146,10 @@ export const compileToScene = <const TComposites extends ReadonlyArray<AnyCompos
   return snapshot.result;
 };
 
-/** 显式创建一次独占 observer session 的 Core compile */
+/**
+ * 显式创建一次独占 observer session 的 Core compile
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export const observeCompileToScene = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   ir: IRScene,
   options: CompileOptions<TComposites> | undefined,
@@ -144,6 +157,7 @@ export const observeCompileToScene = <const TComposites extends ReadonlyArray<An
 ): ObservedCompileResult => {
   const snapshot = compileCoreSnapshot(ir, options, { observers });
   dispatchCompileDiagnostics(snapshot.diagnostics, options?.onWarn);
+
   return Object.freeze({
     primary: snapshot.result,
     observerOutputs: snapshot.observerOutputs,

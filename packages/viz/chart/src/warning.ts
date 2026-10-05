@@ -7,4 +7,4 @@ export const ChartWarningCode = {
 } as const;
 
 /** Chart 包公开的编译 warning code 取值 */
-export type ChartWarningCodeValue = ValueOf<typeof ChartWarningCode>;
+export type ChartWarningCode = ValueOf<typeof ChartWarningCode>;

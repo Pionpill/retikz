@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const connectedScatterMarksI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '替换完整的点线组合', subtitle: 'World Bank；空心观测点与虚线仍表达同一条国家轨迹' },

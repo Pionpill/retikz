@@ -1,5 +1,5 @@
 import { Layout } from '@retikz/react';
-import { List, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/collection';
+import { Array, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/collection';
 import type { FC } from 'react';
 
 const MapComposition: FC = () => (
@@ -12,7 +12,7 @@ const MapComposition: FC = () => (
       <MapEntry>
         <MapKey text="items" />
         <MapValue id="items" style={{ fill: 'dodgerblue' }}>
-          <List items={[{ content: 'B' }, { content: 'C' }]} />
+          <Array items={[{ content: 'B' }, { content: 'C' }]} />
         </MapValue>
       </MapEntry>
     </Map>

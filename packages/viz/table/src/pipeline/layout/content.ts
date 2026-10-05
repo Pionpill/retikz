@@ -16,7 +16,7 @@ export type ComputeTableCellContentPlacementInput = Readonly<{
   sourceAllocationBounds: BoundsRect;
   /** replay-root local 的 fit 前 visual overflow bounds */
   sourceVisualOverflowBounds: BoundsRect;
-  /** Table-local content box */
+  /** 表格局部坐标中的内容盒 */
   contentBox: BoundsRect;
   /** 横向对齐 */
   horizontalAlign: TableCellAlignment;
@@ -30,11 +30,11 @@ export type ComputeTableCellContentPlacementInput = Readonly<{
 
 /** Cell 内容最终放置的纯数值结果 */
 export type TableCellContentPlacement = Readonly<{
-  /** replay-root local scale */
+  /** 相对重放根节点的局部缩放 */
   scale: TableCellFitScale;
   /** scale 后施加的 Table-local translation */
   translation: TableCellTranslation;
-  /** Table-local allocation bounds */
+  /** 表格局部坐标中的分配边界 */
   contentAllocationBounds: BoundsRect;
   /** Table-local 且已应用 overflow policy 的 visual bounds */
   visualOverflowBounds: BoundsRect;

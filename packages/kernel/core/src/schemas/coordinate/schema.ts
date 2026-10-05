@@ -9,6 +9,7 @@ import {
   PositionSchema,
 } from '../position';
 
+/** 校验可被路径和相对定位引用、但不产生视觉图元的命名坐标 */
 export const CoordinateSchema = object({
   type: literal('coordinate').describe('Discriminator marking this child as a coordinate placeholder'),
   id: NonBlankStringSchema.describe(

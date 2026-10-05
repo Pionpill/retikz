@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 映射示例的双语文案 */
 export const regressionEncodingsI18n: Record<Lang, { title: string; data: string; samples: string; group: string }> = {
   zh: {

@@ -1,21 +1,30 @@
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../../errors';
 
+/** 参与层级分配的元素身份与可选显式层号 */
 export type LayeredRankElement = Readonly<{
+  /** 拓扑中的元素唯一标识 */
   id: string;
+  /** 作者指定的层号，缺省时由拓扑约束推导 */
   rank?: number;
 }>;
 
+/** 用于层级分配的源到目标拓扑约束 */
 export type LayeredRankEdge = Readonly<{
+  /** 约束起点的元素标识 */
   source: string;
+  /** 约束终点的元素标识 */
   target: string;
 }>;
 
+/** 用 Tarjan 算法给强连通分量编号，供分层时将环内元素视为整体 */
 const getStronglyConnectedComponents = (
   elements: ReadonlyArray<LayeredRankElement>,
   edges: ReadonlyArray<LayeredRankEdge>,
 ): ReadonlyMap<string, number> => {
   const adjacency = new Map<string, Array<string>>();
+
   for (const element of elements) adjacency.set(element.id, []);
+
   for (const edge of edges) adjacency.get(edge.source)?.push(edge.target);
 
   let nextIndex = 0;
@@ -43,6 +52,7 @@ const getStronglyConnectedComponents = (
     }
 
     if (lowLinks.get(id) !== indices.get(id)) return;
+
     while (stack.length > 0) {
       const member = stack.pop();
       if (member === undefined) break;
@@ -50,12 +60,14 @@ const getStronglyConnectedComponents = (
       components.set(member, componentIndex);
       if (member === id) break;
     }
+
     componentIndex += 1;
   };
 
   for (const element of elements) {
     if (!indices.has(element.id)) visit(element.id);
   }
+
   return components;
 };
 
@@ -72,9 +84,11 @@ export const resolveLayeredRanks = (
   const ranks = new Map(elements.map(element => [element.id, element.rank ?? 0]));
 
   let remainingIterations = elements.length;
+
   while (remainingIterations > 0) {
     remainingIterations -= 1;
     let changed = false;
+
     for (const edge of normalEdges) {
       const required = (ranks.get(edge.source) ?? 0) + 1;
       const targetRank = ranks.get(edge.target) ?? 0;
@@ -85,12 +99,15 @@ export const resolveLayeredRanks = (
           details: { relatedIds: [edge.source, edge.target] },
         });
       }
+
       if (!explicit.has(edge.target) && required > targetRank) {
         ranks.set(edge.target, required);
         changed = true;
       }
     }
+
     if (!changed) break;
   }
+
   return ranks;
 };

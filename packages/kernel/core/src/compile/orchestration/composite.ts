@@ -31,7 +31,7 @@ type LowerOptions = {
   onUnregistered?: (key: string, path: string) => never;
   /**
    * composite 嵌套展开最大深度
-   * @default DEFAULT_MAX_COMPOSITE_DEPTH (32)
+   * @default DEFAULT_MAX_COMPOSITE_DEPTH
    */
   maxDepth?: number;
 };
@@ -78,30 +78,37 @@ const lowerCompositeTree = (
           message: `No composite registered for '${key}'; the node is skipped.`,
           path,
         });
+
         return [];
       }
+
       if (depth >= maxDepth) {
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Compile,
           `COMPOSITE_NEST_TOO_DEEP: composite expansion exceeded ${maxDepth} levels at ${path} (cyclic or runaway expand?)`,
         );
       }
+
       if (binding.kind === 'compile') {
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Compile,
           `lowerIRToKernel: composite '${key}' at ${path} requires layout-aware compile and cannot be lowered without the full compile environment.`,
         );
       }
+
       const resolution = resolveComposite(binding, path);
       const sourceInputs = inputs ?? { source: child, bindings: [] };
       const boundChildren = new Map<CompositeBoundChild, CompositeRuntimeInputScope>();
       const authoredChildren = new Map<string, CompositeBoundChild>();
+
       const bindScope = (scope: CompositeRuntimeInputScope): CompositeBoundChild => {
         snapshotCompositeLayoutChild(key, scope.source, 0);
         const handle = Object.freeze({}) as CompositeBoundChild;
         boundChildren.set(handle, scope);
+
         return handle;
       };
+
       const produced = resolution.expand(
         resolution.node,
         Object.freeze({
@@ -111,13 +118,16 @@ const lowerCompositeTree = (
             const pathKey = JSON.stringify(childPath);
             const existing = authoredChildren.get(pathKey);
             if (existing !== undefined) return existing;
+
             const selected = bindScope(selectCompositeInputScope(sourceInputs, childPath));
             authoredChildren.set(pathKey, selected);
+
             return selected;
           },
           bindChild: (nextChild, bindings) => bindScope(captureCompositeInputScope(nextChild, bindings)),
         }),
       );
+
       const outputInputs = new Map<number, CompositeRuntimeInputScope>();
       const consumed = new Set<CompositeBoundChild>();
       const result = validateExpandCompositeOutput(`Composite '${key}' at ${path}`, produced, (output, index) => {
@@ -125,8 +135,10 @@ const lowerCompositeTree = (
         if (bound === undefined) return snapshotCompositeLayoutChild(key, output, index);
         if (consumed.has(output as CompositeBoundChild))
           throw createCompositeContractError('Bound child may not be placed more than once');
+
         consumed.add(output as CompositeBoundChild);
         outputInputs.set(index, bound);
+
         return snapshotCompositeLayoutChild(key, bound.source, index);
       });
       if ((result.spatialHandles?.length ?? 0) > 0) {
@@ -135,6 +147,7 @@ const lowerCompositeTree = (
           `lowerIRToKernel: composite '${key}' at ${path} declared spatial handles; use compileToScene() to obtain settled world-space geometry.`,
         );
       }
+
       return result.children.flatMap((output, index) =>
         expandChild(
           snapshotCompositeLayoutChild(key, output, index),
@@ -145,10 +158,12 @@ const lowerCompositeTree = (
         ),
       );
     }
+
     if (child.type === 'scope') {
       const scopeTheme = resolveTheme(theme, child.theme, `${path}.theme`, themeStyles);
       return [{ ...child, children: expandList(child.children, depth, `${path}.children`, scopeTheme, inputs) }];
     }
+
     return [child];
   };
 

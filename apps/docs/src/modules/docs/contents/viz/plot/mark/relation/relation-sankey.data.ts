@@ -23,9 +23,13 @@ type PositionedNode = SankeyNode & {
 };
 
 const PLOT_WIDTH = 620;
+
 const PLOT_HEIGHT = 320;
+
 const X_DOMAIN_MAX = 3;
+
 const Y_DOMAIN_MAX = 100;
+
 const NODE_WIDTH = 8;
 
 const xOf = (screenX: number): number => (screenX / PLOT_WIDTH) * X_DOMAIN_MAX;
@@ -55,6 +59,7 @@ const stackColumn = (nodes: Array<SankeyNode>, x: number, top: number, gap: numb
       targetCursor: cursor,
     };
     cursor += nodeData.value + gap;
+
     return node;
   });
 };
@@ -66,6 +71,7 @@ const nextSlotY = (node: PositionedNode, side: 'source' | 'target', width: numbe
   const key = side === 'source' ? 'sourceCursor' : 'targetCursor';
   const y = node[key] + width / 2;
   node[key] += width;
+
   return y;
 };
 
@@ -76,6 +82,7 @@ const buildFlowRows = (flows: Array<SankeyFlow>, nodesById: Map<string, Position
     if (source === undefined || target === undefined) {
       throw new Error(`Unknown sankey flow endpoint: ${flow.source} -> ${flow.target}`);
     }
+
     return {
       sourceX: xOf(sideX(source, 'source')),
       sourceY: yOf(nextSlotY(source, 'source', flow.value)),

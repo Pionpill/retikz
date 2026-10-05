@@ -60,11 +60,14 @@ const styleFontFamily = (style: CSSProperties | undefined): string | undefined =
 
 /** 同一条诊断消息进程内只告警一次 */
 const warnedMessages = new Set<string>();
+
 let nextProcessingControllerKey = 0;
 
 /** React 为同步 SSR 与客户端选择同一作者输入的消费入口 */
 const subscribeClientRendering = (): (() => void) => () => undefined;
+
 const clientRenderingSnapshot = (): boolean => true;
+
 const serverRenderingSnapshot = (): boolean => false;
 
 /** 按当前入口一次收窄 adapter 能力，不调用领域回调来探测 Promise */
@@ -78,9 +81,11 @@ const inputAdapterOptions = (adapters: ReadonlyArray<AnyInputEmbedAdapter> | und
             RetikzReactErrorCode.Kernel,
             `Layout async adapter '${adapter.kind}' requires prepare`,
           );
+
         return { ...adapter, prepare: adapter.prepare };
       }),
     };
+
   return {
     adapters: adapters.map(adapter => {
       if (adapter.lower === undefined)
@@ -88,6 +93,7 @@ const inputAdapterOptions = (adapters: ReadonlyArray<AnyInputEmbedAdapter> | und
           RetikzReactErrorCode.Kernel,
           `Layout synchronous adapter '${adapter.kind}' requires lower`,
         );
+
       return { ...adapter, lower: adapter.lower };
     }),
   };
@@ -112,7 +118,9 @@ const createProcessingControllerKey = (): number => {
 /** 判断 processing diagnostics 中的值是否为 Runtime 的结构化诊断 */
 const isRuntimeDiagnostic = (diagnostic: unknown): diagnostic is RuntimeDiagnostic => {
   if (typeof diagnostic !== 'object' || diagnostic === null) return false;
+
   const candidate = diagnostic as Record<string, unknown>;
+
   return (
     typeof candidate.code === 'string' &&
     typeof candidate.phase === 'string' &&
@@ -128,6 +136,7 @@ const deliverProcessingDiagnostics = (
 ): void => {
   for (const diagnostic of controller.diagnostics()) {
     if (!isRuntimeDiagnostic(diagnostic) || callback === undefined) continue;
+
     try {
       callback(diagnostic);
     } catch (cause) {
@@ -148,22 +157,28 @@ const canonicalizeDefinitionArray = <TDefinition extends object>(
   definitions: ReadonlyArray<TDefinition> | undefined,
 ): ReadonlyArray<TDefinition> | undefined => {
   if (definitions === undefined || definitions.length === 0) return undefined;
+
   let current = definitionArrayRoot;
+
   for (const definition of definitions) {
     let child = current.children.get(definition);
     if (child === undefined) {
       child = { children: new WeakMap() };
       current.children.set(definition, child);
     }
+
     current = child;
   }
+
   current.value ??= Object.freeze([...definitions]);
+
   return current.value as ReadonlyArray<TDefinition>;
 };
 
 /** 将浏览器 text measurer 叠加 Layout style 的默认字体 */
 const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: string | undefined): TextMeasurer => {
   if (defaultFontFamily === undefined) return measureText;
+
   return (text, font) =>
     measureText(text, {
       ...font,
@@ -317,6 +332,7 @@ const useProcessingResult = (
     [controller],
   );
   const read = useCallback(() => controller?.read() ?? fallbackResult, [controller, fallbackResult]);
+
   return useSyncExternalStore(subscribe, read, read);
 };
 
@@ -334,6 +350,7 @@ const StaticLayoutContent: FC<{
   useEffect(() => {
     processing.commit();
   }, [processing]);
+
   return <ProcessingResultHost key={hostKey} {...hostProps} result={processing.result} />;
 };
 
@@ -355,16 +372,20 @@ const RetainedLayoutContent: FC<{
   const pendingDisposalRef = useRef<
     Readonly<{ controller: ProcessingController; timer: ReturnType<typeof setTimeout> }> | undefined
   >(undefined);
+
   const onDiagnosticRef = useRef(onDiagnostic);
   useEffect(() => {
     onDiagnosticRef.current = onDiagnostic;
   }, [onDiagnostic]);
+
   useEffect(() => {
     currentSourceRef.current = source;
   }, [source]);
+
   useEffect(() => {
     const nextController = createProcessingController(currentSourceRef.current, options);
     setController(nextController);
+
     return () => {
       const timer = setTimeout(() => {
         nextController.dispose();
@@ -373,9 +394,12 @@ const RetainedLayoutContent: FC<{
       pendingDisposalRef.current = { controller: nextController, timer };
     };
   }, [options]);
+
   useEffect(() => {
     if (controller === undefined) return;
+
     const previous = appliedSourceRef.current;
+
     try {
       if (previous?.controller === controller && previous.source !== source) controller.update(source);
       appliedSourceRef.current = { controller, source };
@@ -385,8 +409,10 @@ const RetainedLayoutContent: FC<{
       deliverProcessingDiagnostics(controller, onDiagnosticRef.current);
     }
   }, [controller, source]);
+
   const resultHostProps =
     controller === undefined ? { ...hostProps, onArtifacts: undefined, onCompileResult: undefined } : hostProps;
+
   return <ProcessingResultHost key={hostKey} {...resultHostProps} result={result} />;
 };
 
@@ -425,6 +451,7 @@ export const Layout: FC<LayoutProps> = props => {
     onCompileResult,
     rootScope,
   } = props;
+
   const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles } =
     extensions ?? {};
   const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
@@ -433,6 +460,7 @@ export const Layout: FC<LayoutProps> = props => {
     clientRenderingSnapshot,
     serverRenderingSnapshot,
   );
+
   const prepareAsync = resolvedRuntime.preparation === 'async' && isClientRendering;
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);
@@ -446,6 +474,7 @@ export const Layout: FC<LayoutProps> = props => {
   const stableThemeStyles = canonicalizeDefinitionArray(
     useMemo(() => mergeThemeStyleDefinitions(ambientThemeStyles, themeStyles), [ambientThemeStyles, themeStyles]),
   );
+
   const reducedMotion = usePrefersReducedMotion();
   const animationMode = useAnimationMode();
   const contextRenderer = useRendererMode();
@@ -454,6 +483,7 @@ export const Layout: FC<LayoutProps> = props => {
     reducedMotion,
   );
   const renderer = rendererProp ?? contextRenderer ?? 'svg';
+
   const ambientTheme = useTheme();
   const scopeStyle = useMemo(() => rootScope ?? {}, [rootScope]);
   const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
@@ -463,7 +493,9 @@ export const Layout: FC<LayoutProps> = props => {
 
   const reactInput = useMemo(() => {
     if (irFromProp !== undefined) return undefined;
+
     const input = createInputScene(wrapRootScope(children, scopeStyle));
+
     return Object.freeze({
       ...input,
       scene: {
@@ -472,6 +504,7 @@ export const Layout: FC<LayoutProps> = props => {
       },
     });
   }, [authoring, children, irFromProp, scopeStyle]);
+
   const stableInputAdapters = canonicalizeDefinitionArray(reactInput?.adapters);
   const source = useMemo<ProcessingSource>(() => {
     const base: ProcessingSource =
@@ -485,15 +518,19 @@ export const Layout: FC<LayoutProps> = props => {
       mergedTheme === undefined || isSameTheme(base.theme, mergedTheme) ? base : { ...base, theme: mergedTheme };
     const viewed = viewBox === undefined ? themed : { ...themed, viewBox };
     if (rootAnimations === undefined) return viewed;
+
     const animations = viewed.animations === undefined ? rootAnimations : [...viewed.animations, ...rootAnimations];
+
     return { ...viewed, animations } as InputScene;
   }, [ambientTheme, irFromProp, reactInput, rootAnimations, theme, viewBox]);
+
   const defaultFontFamily = styleFontFamily(style);
   const measureText = useMemo(() => withDefaultFontFamily(browserMeasurer, defaultFontFamily), [defaultFontFamily]);
   const compileArtifacts = useMemo<CompileArtifactOptions | undefined>(
     () => (artifacts?.nodeLayouts === true ? { nodeLayouts: true } : undefined),
     [artifacts?.nodeLayouts],
   );
+
   const processingOptions = useMemo<ProcessingOptions | AsyncProcessingOptions>(
     () => ({
       compileDriver,
@@ -539,6 +576,7 @@ export const Layout: FC<LayoutProps> = props => {
       compileArtifacts,
     ],
   );
+
   const rawId = useId();
   const processingControllerIdentity = useMemo(
     () => Object.freeze({ options: processingOptions, key: createProcessingControllerKey() }),
@@ -580,6 +618,7 @@ export const Layout: FC<LayoutProps> = props => {
         deliverDiagnostics={deliverProcessingDiagnostics}
       />
     );
+
   return resolvedRuntime.mode === LayoutRuntimeMode.Static ? (
     <StaticLayoutContent
       source={source}

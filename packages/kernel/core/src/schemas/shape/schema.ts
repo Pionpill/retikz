@@ -8,6 +8,7 @@ export const ShapeNameSchema = createOpenStringSchema(BuiltinShape).describe(
   'Shape name: a Core built-in or a custom name registered via CompileOptions.shapes.',
 );
 
+/** 校验形状名称与 JSON 参数；具体参数约束由注册定义处理 */
 export const ShapeRefSchema = strictObject({
   type: ShapeNameSchema.describe(
     'Shape name; built-in or registered via CompileOptions.shapes. Unregistered names are rejected at compile time.',

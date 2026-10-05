@@ -176,7 +176,7 @@ export type CoordinateProps = {
 ### node / InputNode
 
 - `node`：<ApiSourceLink label={"node"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={13}>创建作者侧节点输入，身份由配置中的 id 声明</ApiSourceLink>
-- `InputNode`：<ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={52}>作者侧节点输入</ApiSourceLink>
+- `InputNode`：<ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={53}>作者侧节点输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -268,7 +268,7 @@ export type InputCoordinate = IRCoordinate & {
 ### InputNodeLabel
 
 <p>
-  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={46}>
+  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={47}>
     作者侧节点标签
   </ApiSourceLink>
 </p>
@@ -307,7 +307,7 @@ export type InputNodeLabel = Omit<IRNodeLabel, 'position'> & {
   <ApiSourceLink
     label={'InputNodeLabelBoundaryPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={32}
+    startLine={33}
   >
     作者侧节点标签边界位置
   </ApiSourceLink>
@@ -321,10 +321,10 @@ fraction 表示所选边界上的归一化位置，省略时使用 0.5
 
 <ApiTable>
 
-| 成员        | 类型        | 默认值 | 说明                              |
-| ----------- | ----------- | ------ | --------------------------------- |
-| `boundary`  | `SideValue` | —      | 标签附着的节点边界方向            |
-| `fraction?` | `number`    | —      | 沿所选边的 0–1 比例位置，缺省 0.5 |
+| 成员        | 类型     | 默认值 | 说明                              |
+| ----------- | -------- | ------ | --------------------------------- |
+| `boundary`  | `Side`   | —      | 标签附着的节点边界方向            |
+| `fraction?` | `number` | —      | 沿所选边的 0–1 比例位置，缺省 0.5 |
 
 </ApiTable>
 
@@ -342,7 +342,7 @@ export type InputNodeLabelBoundaryPosition = Omit<
   >,
   'boundary'
 > & {
-  boundary: SideValue;
+  boundary: Side;
 };
 ```
 
@@ -356,7 +356,7 @@ export type InputNodeLabelBoundaryPosition = Omit<
   <ApiSourceLink
     label={'InputNodeLabelPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={41}
+    startLine={42}
   >
     作者侧节点标签位置
   </ApiSourceLink>
@@ -390,7 +390,7 @@ export type InputNodeLabelPosition =
 类型接受字符串；Node 引用解析仅将非中心的标准方位名交给 boundary，中心与形状专属名称由视觉 shape 解析
 
 ```ts
-export type BoundaryAnchorName = AnchorValue | (string & {});
+export type BoundaryAnchorName = Anchor | (string & {});
 ```
 
 ### BoundaryDefinition
@@ -556,7 +556,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 ### IRNode
 
 <p>
-  <ApiSourceLink label={'IRNode'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={33}>
+  <ApiSourceLink label={'IRNode'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={31}>
     节点：可定位的形状容器（矩形/圆/椭圆/菱形）+ 可选文本标签
   </ApiSourceLink>
 </p>
@@ -605,7 +605,7 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 ### IRNodeLabel
 
 <p>
-  <ApiSourceLink label={'IRNodeLabel'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={30}>
+  <ApiSourceLink label={'IRNodeLabel'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={28}>
     Node label IR 类型
   </ApiSourceLink>
 </p>
@@ -647,7 +647,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 ### IRNodeLayout
 
 <p>
-  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={59}>
+  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={47}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -685,7 +685,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 ### IRNodeStyle
 
 <p>
-  <ApiSourceLink label={'IRNodeStyle'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={58}>
+  <ApiSourceLink label={'IRNodeStyle'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={45}>
     查看源码
   </ApiSourceLink>
 </p>
@@ -752,7 +752,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 | `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => { halfWidth: number; halfHeight: number; }`   | —                        | 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴                                                                                                                           |
 | `circumscribeOffset?` | `(params: Record<string, JsonValue>) => Position`                                                                                      | `[0, 0]`                 | 外接 AABB 中心相对 node `position` 的未旋转局部偏移                                                                                                                             |
 | `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
-| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: Record<string, JsonValue>) => Position`                                              | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
+| `edgePoint?`          | `(rect: Rect, side: Side, t: number, params: Record<string, JsonValue>) => Position`                                                   | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
 | `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
 | `keyPoints?`          | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
 | `name`                | `string`                                                                                                                               | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
@@ -803,7 +803,7 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
 | `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {`<br />`halfWidth: number;`<br />`halfHeight: number;`<br />`}` | —                        | 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴                                                                                                                           |
 | `circumscribeOffset?` | `(params: TParams) => Position`                                                                                                         | `[0, 0]`                 | 外接 AABB 中心相对 node `position` 的未旋转局部偏移                                                                                                                             |
 | `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                        | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
-| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: TParams) => Position`                                                                 | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
+| `edgePoint?`          | `(rect: Rect, side: Side, t: number, params: TParams) => Position`                                                                      | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
 | `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>`                    | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
 | `keyPoints?`          | `(rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                                      | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
 | `name`                | `string`                                                                                                                                | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
@@ -835,7 +835,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   connectionEnvelope?: (rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope | undefined;
   outline?: (rect: Rect, params: TParams) => ReadonlyArray<PathCommand>;
   keyPoints?: (rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
-  edgePoint?: (rect: Rect, side: SideValue, t: number, params: TParams) => Position;
+  edgePoint?: (rect: Rect, side: Side, t: number, params: TParams) => Position;
   emit: (
     rect: Rect,
     style: ResolvedShapeStyle,
@@ -856,7 +856,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   <ApiSourceLink
     label={'BUILTIN_BOUNDARIES'}
     path={'packages/kernel/core/src/providers/boundary/definitions.ts'}
-    startLine={116}
+    startLine={119}
   >
     内置 boundary provider 注册项
   </ApiSourceLink>
@@ -893,7 +893,7 @@ export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, Builti
 ### NodeTextColor
 
 <p>
-  <ApiSourceLink label={'NodeTextColor'} path={'packages/kernel/core/src/schemas/node/constants.ts'} startLine={4}>
+  <ApiSourceLink label={'NodeTextColor'} path={'packages/kernel/core/src/schemas/node/constants.ts'} startLine={6}>
     Node 文字颜色的宿主专用关键字
   </ApiSourceLink>
 </p>
@@ -902,6 +902,8 @@ export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, Builti
 export const NodeTextColor = {
   Contrast: 'contrast',
 } as const;
+
+export type NodeTextColor = ValueOf<typeof NodeTextColor>;
 ```
 
 ### defineBoundary

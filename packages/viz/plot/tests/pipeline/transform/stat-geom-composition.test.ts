@@ -168,6 +168,7 @@ describe('stat-geom composition surface (contract)', () => {
     });
 
     const outer = expandOf(spec, { samples }, opts);
+
     expect((outer.children[0] as IRScope).children).toHaveLength(3);
     expect(((outer.children[1] as IRScope).children[0] as IRPath).children).toHaveLength(5);
     expect(((outer.children[2] as IRScope).children[0] as IRPath).children.at(-1)).toEqual({

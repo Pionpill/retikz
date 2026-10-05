@@ -14,6 +14,7 @@ const contourToPathCommand = (c: ContourCommand, round: (n: number) => number): 
   if (c.kind === 'move') return { kind: 'move', to: [round(c.to[0]), round(c.to[1])] };
   if (c.kind === 'line') return { kind: 'line', to: [round(c.to[0]), round(c.to[1])] };
   if (c.kind === 'close') return { kind: 'close' };
+
   const arc: PathCommand = {
     kind: 'arc',
     center: [round(c.center[0]), round(c.center[1])],
@@ -22,6 +23,7 @@ const contourToPathCommand = (c: ContourCommand, round: (n: number) => number): 
     endAngle: c.endAngle,
   };
   if (c.counterClockwise !== undefined) arc.counterClockwise = c.counterClockwise;
+
   return arc;
 };
 
@@ -49,16 +51,23 @@ type LineRun = {
 
 /** line-step 圆角改写输入 */
 export type ApplyRoundedCornersInput = {
+  /** 需要应用圆角的路径命令序列 */
   commands: Array<PathCommand>;
+  /** 与命令对应的生成来源，用于识别可圆角连接 */
   provenance: Array<CommandProvenance>;
+  /** 每条命令对应的原始步骤索引 */
   sourceStepIndexes: Array<number>;
+  /** 连接处的圆角半径 */
   radius: number;
+  /** 统一新增几何数值精度的函数 */
   round: (n: number) => number;
 };
 
 /** 圆角改写后的 command 与其 source step 映射 */
 export type RoundedCommandsResult = {
+  /** 应用圆角后的路径命令序列 */
   commands: Array<PathCommand>;
+  /** 与输出命令逐项对应的原始步骤索引 */
   sourceStepIndexes: Array<number>;
 };
 
@@ -70,12 +79,14 @@ const appendRoundedCommands = (
   moveStepIndex?: number,
 ): void => {
   let lineIndex = 0;
+
   for (const command of rounded) {
     if (command.kind === 'move') {
       output.push(command);
       outputStepIndexes.push(moveStepIndex ?? lineStepIndexes[0]);
       continue;
     }
+
     const sourceIndex = lineStepIndexes[Math.min(lineIndex, lineStepIndexes.length - 1)];
     output.push(command);
     outputStepIndexes.push(sourceIndex);
@@ -87,10 +98,12 @@ const appendRoundedCommands = (
 const runSegments = (run: LineRun): Array<ContourSegment> => {
   const segs: Array<ContourSegment> = [];
   let from = run.start;
+
   for (const to of run.lineEnds) {
     segs.push({ kind: 'line', from, to });
     from = to;
   }
+
   return segs;
 };
 
@@ -110,6 +123,7 @@ export const applyRoundedCorners = ({
   const out: Array<PathCommand> = [];
   const outStepIndexes: Array<number> = [];
   let i = 0;
+
   while (i < commands.length) {
     const cmd = commands[i];
     const isLineStep = cmd.kind === 'line' && (provenance[i] === 'line' || provenance[i] === 'axis-line');
@@ -119,6 +133,7 @@ export const applyRoundedCorners = ({
       i++;
       continue;
     }
+
     // run 起点取上一条命令的终点。
     const prev = out[out.length - 1];
     const start = endpointOf(prev);
@@ -128,9 +143,11 @@ export const applyRoundedCorners = ({
       i++;
       continue;
     }
+
     // 收集连续 line-step 命令
     const lineEnds: Array<[number, number]> = [];
     const cmdStart = i;
+
     while (
       i < commands.length &&
       commands[i].kind === 'line' &&
@@ -140,6 +157,7 @@ export const applyRoundedCorners = ({
       lineEnds.push(c.to);
       i++;
     }
+
     const cmdEnd = i;
     const run: LineRun = { start, lineEnds, cmdStart, cmdEnd };
 
@@ -158,10 +176,12 @@ export const applyRoundedCorners = ({
       const lastEnd = lineEnds[lineEnds.length - 1];
       const segs = runSegments(run);
       if (!samePoint(lastEnd, start)) segs.push({ kind: 'line', from: lastEnd, to: start });
+
       // 需 ≥3 段才是可倒角的闭合多边形；退化（如 A→B→A）落开放分支处理
       if (segs.length >= 3) {
         const fillets = filletContour(segs, radius, true);
         const rounded = contourCommands(segs, radius, fillets, true);
+
         // contourCommands 闭合版自带 move + close；替换 run 的 move（out 末尾）+ line 命令 + 这条 close
         out.pop(); // 去掉原 move（contourCommands 会重发 move）
         const moveStepIndex = outStepIndexes.pop();
@@ -197,6 +217,7 @@ export const applyRoundedCorners = ({
       outStepIndexes.push(sourceStepIndexes[k] ?? -1);
     }
   }
+
   return { commands: out, sourceStepIndexes: outStepIndexes };
 };
 
@@ -235,6 +256,7 @@ const piecesFromCommands = (commands: ReadonlyArray<PathCommand>): Array<Piece> 
   const pieces: Array<Piece> = [];
   let cursor: [number, number] | undefined;
   let subStart: [number, number] | undefined;
+
   for (const c of commands) {
     if (c.kind === 'move') {
       cursor = c.to;
@@ -263,6 +285,7 @@ const piecesFromCommands = (commands: ReadonlyArray<PathCommand>): Array<Piece> 
       cursor = subStart;
     }
   }
+
   return pieces;
 };
 
@@ -276,8 +299,10 @@ const samplePiece = (piece: Piece, u: number): CommandSample => {
     const dx = piece.to[0] - piece.from[0];
     const dy = piece.to[1] - piece.from[1];
     const l = Math.hypot(dx, dy) || 1;
+
     return { point, tangent: [dx / l, dy / l] };
   }
+
   const angle = piece.startAngle + (piece.endAngle - piece.startAngle) * u;
   const rad = angle * DEG_TO_RAD;
   const point: [number, number] = [
@@ -288,6 +313,7 @@ const samplePiece = (piece: Piece, u: number): CommandSample => {
   const tx = -Math.sin(rad) * sweepSign;
   const ty = Math.cos(rad) * sweepSign;
   const l = Math.hypot(tx, ty) || 1;
+
   return { point, tangent: [tx / l, ty / l] };
 };
 
@@ -300,14 +326,18 @@ export const sampleRoundedCommands = (commands: ReadonlyArray<PathCommand>, pos:
   const pieces = piecesFromCommands(commands);
   const total = pieces.reduce((s, p) => s + p.len, 0);
   if (total <= 0 || pieces.length === 0) return { point: [0, 0], tangent: [1, 0] };
+
   const target = Math.max(0, Math.min(1, pos)) * total;
   let acc = 0;
+
   for (const piece of pieces) {
     if (acc + piece.len >= target || piece === pieces[pieces.length - 1]) {
       const local = piece.len > 0 ? (target - acc) / piece.len : 0;
       return samplePiece(piece, Math.max(0, Math.min(1, local)));
     }
+
     acc += piece.len;
   }
+
   return samplePiece(pieces[pieces.length - 1], 1);
 };

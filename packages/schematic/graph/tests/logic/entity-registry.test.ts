@@ -71,6 +71,7 @@ describe('Entity definition registry', () => {
       description: 'Deployment replica count',
       paramsSchema: strictObject({ count: number().int().positive() }),
     });
+
     expect(Graph.defineEntityRole(role)).toBe(role);
     expect(Graph.defineEntityKind(kind)).toBe(kind);
     expect(Graph.defineEntityPredicate(predicate)).toBe(predicate);

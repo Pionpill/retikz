@@ -68,10 +68,14 @@ describe('density area composition (contract)', () => {
     });
 
     const layer = firstLayer(spec, { samples }, opts);
+
     expect(layer.children).toHaveLength(2);
+
     for (const seriesScope of layer.children as Array<IRScope>) {
       expect(seriesScope.type).toBe('scope');
+
       const path = seriesScope.children[0] as IRPath;
+
       expect(path.type).toBe('path');
       expect(path.children.at(-1)).toEqual({ type: 'step', kind: 'cycle' });
     }
@@ -112,6 +116,7 @@ describe('density area composition (contract)', () => {
     const outer = expandOf(spec, { samples: samples.slice(0, 2) }, opts);
     const pointLayer = outer.children[0] as IRScope;
     const pathLayer = outer.children[1] as IRScope;
+
     expect(pointLayer.children).toHaveLength(2);
     expect(pathLayer.children).toHaveLength(1);
     expect((pathLayer.children[0] as IRPath).children).toHaveLength(5);

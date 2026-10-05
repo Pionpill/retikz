@@ -10,6 +10,7 @@ const scene = (children: IRScene['children']): IRScene => ({
   type: 'scene',
   children,
 });
+
 const silent = { onWarn: () => {} };
 
 const allOfType = (prims: ReadonlyArray<ScenePrimitive>, type: ScenePrimitive['type']): Array<ScenePrimitive> =>
@@ -22,7 +23,9 @@ describe('Happy path：三载体 meta stamp 落点', () => {
     const ir = scene([{ type: 'node', id: 'a', position: [0, 0], meta: { ...PROV } }]);
     const prims = compileToScene(ir, silent).scene.primitives;
     const rects = allOfType(prims, 'rect');
+
     expect(rects.length).toBeGreaterThanOrEqual(1);
+
     for (const rect of rects) {
       expect(rect.meta).toEqual(PROV);
     }
@@ -31,9 +34,13 @@ describe('Happy path：三载体 meta stamp 落点', () => {
   it('text_node_meta_on_group：文本 Node 带 meta → 单层 GroupPrim 带 meta，子图元不带', () => {
     const ir = scene([{ type: 'node', id: 'n', position: [0, 0], text: 'A', meta: { ...PROV } }]);
     const prims = compileToScene(ir, silent).scene.primitives;
+
     expect(prims).toHaveLength(1);
+
     if (prims[0].type !== 'group') throw new Error('expected group');
+
     expect(prims[0].meta).toEqual(PROV);
+
     // 子图元不重复 stamp
     for (const child of prims[0].children) {
       expect(child.meta).toBeUndefined();
@@ -54,7 +61,9 @@ describe('Happy path：三载体 meta stamp 落点', () => {
     ]);
     const prims = compileToScene(ir, silent).scene.primitives;
     const paths = allOfType(prims, 'path');
+
     expect(paths.length).toBeGreaterThanOrEqual(1);
+
     for (const path of paths) {
       expect(path.meta).toEqual(PROV);
     }
@@ -71,11 +80,15 @@ describe('Happy path：三载体 meta stamp 落点', () => {
     ]);
     const prims = compileToScene(ir, silent).scene.primitives;
     const groups = prims.filter(p => p.type === 'group');
+
     expect(groups).toHaveLength(1);
     expect(groups[0].meta).toEqual(PROV);
+
     // 子节点（纯几何）不继承 scope.meta
     const rects = allOfType(prims, 'rect');
+
     expect(rects.length).toBeGreaterThanOrEqual(1);
+
     for (const rect of rects) {
       expect(rect.meta).toBeUndefined();
     }
@@ -86,7 +99,9 @@ describe('边界', () => {
   it('meta_omitted_equivalent：省略 meta → 图元无 meta 键（非 undefined 值）', () => {
     const ir = scene([{ type: 'node', id: 'a', position: [0, 0] }]);
     const rects = allOfType(compileToScene(ir, silent).scene.primitives, 'rect');
+
     expect(rects.length).toBeGreaterThanOrEqual(1);
+
     for (const rect of rects) {
       expect('meta' in rect).toBe(false);
     }
@@ -95,6 +110,7 @@ describe('边界', () => {
   it('meta_pruned_scope：仅带 meta 的空 scope 仍被 prune（meta 不构成保留理由）', () => {
     const ir = scene([{ type: 'scope', meta: { ...PROV }, children: [] }]);
     const prims = compileToScene(ir, silent).scene.primitives;
+
     expect(prims).toHaveLength(0);
   });
 });
@@ -105,6 +121,7 @@ describe('错误路径：非 JSON meta / meta 不进 every-X 默认', () => {
     expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], meta: { u: undefined } }).success).toBe(false);
     expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], meta: { d: new Date() } }).success).toBe(false);
     expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], meta: { m: new Map() } }).success).toBe(false);
+
     // 合法 JSON 对象通过
     expect(
       NodeSchema.safeParse({ type: 'node', position: [0, 0], meta: { a: 1, b: 'x', c: [true, null] } }).success,
@@ -121,6 +138,7 @@ describe('交互', () => {
   it('id_and_meta_coexist：同图元同时带 id + meta，两者都正确 stamp、互不影响', () => {
     const ir = scene([{ type: 'node', id: 'a', position: [0, 0], meta: { ...PROV } }]);
     const rects = allOfType(compileToScene(ir, silent).scene.primitives, 'rect');
+
     for (const rect of rects) {
       expect(rect.id).toBe('a');
       expect(rect.meta).toEqual(PROV);
@@ -133,7 +151,9 @@ describe('交互', () => {
       scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A', meta: { ...PROV } }]),
       silent,
     ).scene;
+
     expect(withMeta.layout).toEqual(without.layout);
+
     // 几何等价：剥掉 meta 后两份 primitives 完全一致
     const strip = (prims: ReadonlyArray<ScenePrimitive>): Array<Record<string, unknown>> =>
       flattenPrims(prims).map(p => {
@@ -141,6 +161,7 @@ describe('交互', () => {
         delete clone.meta;
         return clone;
       });
+
     expect(strip(withMeta.primitives)).toEqual(strip(without.primitives));
   });
 
@@ -159,6 +180,7 @@ describe('交互', () => {
       { type: 'scope', meta: { kind: 'scope' }, children: [{ type: 'node', id: 'b', position: [5, 5] }] },
     ]);
     const reparsed = SceneSchema.parse(JSON.parse(JSON.stringify(ir)));
+
     expect(reparsed).toEqual(ir);
   });
 });

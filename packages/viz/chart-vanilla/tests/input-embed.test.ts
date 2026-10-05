@@ -15,6 +15,7 @@ const input = {
 describe('Chart Vanilla standard composition', () => {
   it('preserves raw authoring input in a standard embed', () => {
     const chart = scatterChart(input);
+
     expect(chart).toEqual({ type: 'embed', kind: ScatterChartInputEmbedAdapter.kind, id: 'scatter', props: input });
     expect(chart.props).toBe(input);
   });
@@ -23,9 +24,11 @@ describe('Chart Vanilla standard composition', () => {
     const svg = renderToSvgString(scene({ children: [scatterChart(input)] }), {
       adapters: [ScatterChartInputEmbedAdapter],
     });
+
     expect(svg).toContain('<svg');
     expect(svg).toContain('scatter');
   });
+
   it('composes different chart types through the shared provider aggregation', () => {
     const bubble = bubbleChart({
       id: 'bubble',
@@ -37,6 +40,7 @@ describe('Chart Vanilla standard composition', () => {
     const svg = renderToSvgString(scene({ children: [scatterChart(input), bubble] }), {
       adapters: [ScatterChartInputEmbedAdapter, BubbleChartInputEmbedAdapter],
     });
+
     expect(svg).toContain('scatter');
     expect(svg).toContain('bubble');
   });

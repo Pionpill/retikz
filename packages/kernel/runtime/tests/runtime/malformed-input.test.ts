@@ -387,6 +387,7 @@ describe('runtime runtime malformed JavaScript input', () => {
           },
         ) as Readonly<{ code: string; phase: 'run'; message: string }>;
         context.diagnose(diagnostic);
+
         return { kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value };
       },
     });
@@ -429,6 +430,7 @@ describe('runtime runtime malformed JavaScript input', () => {
         });
         const drain = Reflect.get(context.trace, 'diagnostics');
         if (typeof drain === 'function') Reflect.apply(drain, context.trace, []);
+
         return { kind: RuntimeComputationKind.Full, artifact: view.snapshot(owner).value };
       },
     });

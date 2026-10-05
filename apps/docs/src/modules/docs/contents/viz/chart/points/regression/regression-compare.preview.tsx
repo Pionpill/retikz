@@ -49,5 +49,6 @@ export const renderRegressionComparePreview = (
       }}
     />
   );
+
   return chart;
 };

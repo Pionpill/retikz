@@ -26,6 +26,7 @@ export const RenderType: FC<RenderTypeProps> = props => {
   const { repr, name, className } = props;
   const text = schemaTypeText(repr);
   if (text.length <= MAX_SCHEMA_TYPE_CHARACTERS) return <RenderTypeContent {...props} />;
+
   return <span className={cn(code, 'inline-block max-w-full break-words align-top', className)}>{name}</span>;
 };
 
@@ -52,6 +53,7 @@ const RenderTypeContent: FC<RenderTypeProps> = props => {
           entry.values.every((value, index) => value === repr.values[index]),
       );
       if (matches.length === 1) return <ApiValues name={matches[0][0]} />;
+
       return (
         <span className={cn(codeClassName, className)}>
           {repr.values.map((v, i) => (

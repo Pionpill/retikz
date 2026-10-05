@@ -5,6 +5,7 @@ import { definePositionAdjustment, extractPositionAdjustmentKind } from '../../.
 import { resolvePositionAdjustmentRegistry } from '../../../src/providers';
 
 const NudgeSchema = strictObject({ kind: literal('screen-nudge'), dx: number() });
+
 type Nudge = { kind: 'screen-nudge'; dx: number };
 
 const nudge = definePositionAdjustment<Nudge>({
@@ -20,6 +21,7 @@ const nudge = definePositionAdjustment<Nudge>({
 describe('Position Adjustment registry', () => {
   it('uses the same registry for built-in and custom definitions', () => {
     const registry = resolvePositionAdjustmentRegistry([nudge]);
+
     expect([...registry.keys()]).toEqual(['jitter', 'screen-nudge']);
     expect(extractPositionAdjustmentKind(NudgeSchema)).toBe('screen-nudge');
   });

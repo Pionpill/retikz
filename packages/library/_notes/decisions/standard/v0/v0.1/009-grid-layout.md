@@ -48,8 +48,8 @@ export type IRGridLayoutItem = Readonly<{
   margin: number | IRBoxSpacing;
   column?: IRGridPlacement;
   row?: IRGridPlacement;
-  justifySelf?: LayoutEdgeAlignmentValue;
-  alignSelf?: LayoutAlignmentValue;
+  justifySelf?: LayoutEdgeAlignment;
+  alignSelf?: LayoutAlignment;
 }>;
 ```
 
@@ -70,19 +70,19 @@ export type IRGridLayout = Readonly<{
   type: 'gridLayout';
   size: IRLayoutSize;
   padding: number | IRBoxSpacing;
-  overflow: LayoutOverflowValue;
+  overflow: LayoutOverflow;
   columns: ReadonlyArray<IRGridTrack>;
   rows: ReadonlyArray<IRGridTrack>;
   implicitColumn: IRGridTrack;
   implicitRow: IRGridTrack;
-  autoFlow: GridAutoFlowValue;
-  overlap: GridOverlapValue;
+  autoFlow: GridAutoFlow;
+  overlap: GridOverlap;
   columnGap: number;
   rowGap: number;
-  justifyItems: LayoutEdgeAlignmentValue;
-  alignItems: LayoutAlignmentValue;
-  justifyContent: LayoutDistributionValue;
-  alignContent: LayoutDistributionValue;
+  justifyItems: LayoutEdgeAlignment;
+  alignItems: LayoutAlignment;
+  justifyContent: LayoutDistribution;
+  alignContent: LayoutDistribution;
   children: ReadonlyArray<IRGridLayoutItem>;
 }>;
 ```
@@ -93,7 +93,7 @@ export type IRGridLayout = Readonly<{
 
 - schema：`GridTrackBreadthSchema`、`GridTrackSchema`、`GridPlacementSchema`、`GridLayoutItemSchema`、`GridLayoutSchema`
 - parsed/input type：`IRGridTrackBreadth` / `GridTrackBreadthInput`、`IRGridTrack` / `GridTrackInput`、`IRGridPlacement` / `GridPlacementInput`、`IRGridLayoutItem` / `GridLayoutItemInput`、`IRGridLayout` / `GridLayoutInput`
-- const/value：`GridAutoFlow` / `GridAutoFlowValue`、`GridOverlap` / `GridOverlapValue`、`GRID_LAYOUT_MAX_TRACKS_PER_AXIS`
+- const/value：`GridAutoFlow` / `GridAutoFlow`、`GridOverlap` / `GridOverlap`、`GRID_LAYOUT_MAX_TRACKS_PER_AXIS`
 - capability：`createGridLayout`、`GridLayoutDefinition`
 
 layout、item、placement、track与breadth对象全部使用strict schema；unknown field fail-loud。placement refinement把错误定位到对应`column/row.start/span`，minmax refinement定位到`min/max`。

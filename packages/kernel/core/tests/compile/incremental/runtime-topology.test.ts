@@ -35,11 +35,14 @@ const identityKey = (identity: { owner: string; path: ReadonlyArray<string> }): 
 
 const flattenPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const flattened: Array<ScenePrimitive> = [];
+
   const visit = (primitive: ScenePrimitive): void => {
     flattened.push(primitive);
     if (primitive.type === 'group') primitive.children.forEach(visit);
   };
+
   primitives.forEach(visit);
+
   return flattened;
 };
 
@@ -56,6 +59,7 @@ const resolvedResultOf = (
 const runtimeRevision = (() => {
   const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
   const computations = createRuntimeComputationRegistry({ sources, builtins: [] });
+
   return createRuntime({
     sources,
     computations,
@@ -67,6 +71,7 @@ const recordsOf = (ir: IRScene) => {
   const compiled = compileCoreSnapshot(ir, { onWarn: () => {} }, { candidateRevision: runtimeRevision });
   const metadata: RuntimePrimitiveMetadataTable | undefined = compiled.primitiveMetadata;
   if (metadata === undefined) throw new Error('test compile must produce primitive metadata');
+
   return flattenPrimitives(compiled.result.scene.primitives).map(primitive => {
     const record = metadata.get(primitive);
     if (record === undefined) throw new Error('primitive metadata must be total');
@@ -116,6 +121,7 @@ describe('Core canonical Runtime topology', () => {
     const [first, second] = compiled.result.scene.primitives;
     const metadata = compiled.primitiveMetadata;
     if (metadata === undefined) throw new Error('test compile must produce primitive metadata');
+
     const firstRecord = metadata.get(first);
     const secondRecord = metadata.get(second);
     if (firstRecord === undefined || secondRecord === undefined) {
@@ -156,6 +162,7 @@ describe('Core canonical Runtime topology', () => {
     expect(semanticOwnerPaths).toContain('root/scope/scope-a');
     expect(semanticOwnerPaths).toContain('root/scope/scope-a/node/node-b');
     expect(semanticOwnerPaths).toContain('root/path/path-a');
+
     records.forEach(record => {
       expect(record.identity.path.slice(0, record.semanticOwner.path.length)).toEqual(record.semanticOwner.path);
       expect(record.identity.path[record.semanticOwner.path.length]).toBe('emission');
@@ -200,6 +207,7 @@ describe('Core canonical Runtime topology', () => {
         { type: 'node', position: [160, 0], text: 'C' },
       ],
     });
+
     expect(ambiguous.every(record => record.semanticOwner.path.includes('candidate'))).toBe(true);
     expect(ambiguous.some(record => record.semanticOwner.path.join('/') === 'root/node/duplicate')).toBe(false);
   });
@@ -292,6 +300,7 @@ describe('Core canonical Runtime topology', () => {
       compile: (_, context) => {
         context.layoutChild({ type: 'node', position: [-100, 0] }, NaturalLayoutProposal);
         const selected = resolvedResultOf(context, { type: 'node', position: [0, 0] });
+
         return {
           children: [context.replay(selected, { transforms: [{ kind: 'translate', x: 20, y: 30 }] })],
         };
@@ -522,6 +531,7 @@ describe('Core compile warning collection', () => {
       compile: (_, context) => {
         const first = resolvedResultOf(context, { type: 'node', id: 'duplicate', position: [20, 0] });
         const second = resolvedResultOf(context, { type: 'node', id: 'duplicate', position: [40, 0] });
+
         return {
           children: [
             {

@@ -1,4 +1,4 @@
-import type { PathCurveValue } from '@retikz/plot';
+import type { PathCurve } from '@retikz/plot';
 import { PathMark, PlotAxis, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
@@ -31,9 +31,10 @@ export type LineCurvePreviewValues = {
 /** 绘制示例图形 */
 export const LineCurvePreview = (values: LineCurvePreviewValues) => {
   const coordinate = values.coordinate;
-  const curve: PathCurveValue = values.pathCurveControl;
+  const curve: PathCurve = values.pathCurveControl;
   const showPoints = values.pathCurveShowPoints;
   const x = coordinate === 'polar2D' ? 'category' : 'index';
+
   return (
     <Layout viewBox={{ x: -12, y: 0, width: 420, height: 292 }}>
       <Plot data={curveSamples} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>

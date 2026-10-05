@@ -4,7 +4,7 @@
 
 ### GridLayout / GridLayoutProps
 
-- `GridLayout`: <ApiSourceLink label={"GridLayout"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={34}>React declaration component for GridLayout</ApiSourceLink>
+- `GridLayout`: <ApiSourceLink label={"GridLayout"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={35}>React declaration component for GridLayout</ApiSourceLink>
 - `GridLayoutProps`: <ApiSourceLink label={"GridLayoutProps"} path={"packages/library/layout-react/src/grid-layout/GridLayout.tsx"} startLine={13}>React props for GridLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -15,10 +15,10 @@ The remaining members are inherited from `GridLayoutInput`, with `'children'` re
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `readonly authoring?` | `unknown` | — | Opaque authoring data interpreted by an optional compilation driver |
-| `readonly children?` | `ReactNode` | `[]` | Direct children must be grid layout items; omission creates an empty container |
+| Member                | Type        | Default | Description                                                                    |
+| --------------------- | ----------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly authoring?` | `unknown`   | —       | Opaque authoring data interpreted by an optional compilation driver            |
+| `readonly children?`  | `ReactNode` | `[]`    | Direct children must be grid layout items; omission creates an empty container |
 
 </ApiTable>
 
@@ -31,10 +31,11 @@ export declare const GridLayout: {
   (props: GridLayoutProps, context?: any): ReactNode;
 };
 
-export type GridLayoutProps = Omit<GridLayoutInput, 'children'> & Readonly<{
+export type GridLayoutProps = Omit<GridLayoutInput, 'children'> &
+  Readonly<{
     authoring?: unknown;
     children?: ReactNode;
-}>;
+  }>;
 ```
 
 </DocTab>
@@ -52,16 +53,16 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> & Readonly<{
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional vertical alignment within the grid area. |
-| `readonly children` | `ReactNode` | — | Provide exactly one drawable JSX child; cannot be combined with ir |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit column placement. |
-| `readonly ir?` | `never` | — | The JSX branch does not accept IR input |
-| `readonly itemKey?` | `string` | — | Stable identity within the container; omission generates a positional internal key, independently of React key |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | Optional horizontal alignment within the grid area. |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit row placement. |
+| Member              | Type                                                                                                                                                                                                               | Default | Description                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `alignSelf?`        | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —       | Optional vertical alignment within the grid area.                                                              |
+| `readonly children` | `ReactNode`                                                                                                                                                                                                        | —       | Provide exactly one drawable JSX child; cannot be combined with ir                                             |
+| `column?`           | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit column placement.                                                                            |
+| `readonly ir?`      | `never`                                                                                                                                                                                                            | —       | The JSX branch does not accept IR input                                                                        |
+| `readonly itemKey?` | `string`                                                                                                                                                                                                           | —       | Stable identity within the container; omission generates a positional internal key, independently of React key |
+| `justifySelf?`      | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —       | Optional horizontal alignment within the grid area.                                                            |
+| `margin?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`     | Item margin outside the parent allocation slot.                                                                |
+| `row?`              | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit row placement.                                                                               |
 
 </ApiTable>
 
@@ -71,16 +72,16 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> & Readonly<{
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional vertical alignment within the grid area. |
-| `readonly children?` | `never` | — | The IR branch does not accept JSX children |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit column placement. |
-| `readonly ir` | `InputEmbedContribution['node']` | — | A serializable child drawing; cannot be combined with children |
-| `readonly itemKey?` | `string` | — | Stable identity within the container; omission generates a positional internal key, independently of React key |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | Optional horizontal alignment within the grid area. |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit row placement. |
+| Member               | Type                                                                                                                                                                                                               | Default | Description                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —       | Optional vertical alignment within the grid area.                                                              |
+| `readonly children?` | `never`                                                                                                                                                                                                            | —       | The IR branch does not accept JSX children                                                                     |
+| `column?`            | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit column placement.                                                                            |
+| `readonly ir`        | `InputEmbedContribution['node']`                                                                                                                                                                                   | —       | A serializable child drawing; cannot be combined with children                                                 |
+| `readonly itemKey?`  | `string`                                                                                                                                                                                                           | —       | Stable identity within the container; omission generates a positional internal key, independently of React key |
+| `justifySelf?`       | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —       | Optional horizontal alignment within the grid area.                                                            |
+| `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`     | Item margin outside the parent allocation slot.                                                                |
+| `row?`               | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit row placement.                                                                               |
 
 </ApiTable>
 
@@ -91,9 +92,11 @@ export type GridLayoutProps = Omit<GridLayoutInput, 'children'> & Readonly<{
 ```ts
 export declare const GridLayoutItem: FC<GridLayoutItemProps>;
 
-export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'kind'> & Readonly<{
+export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'kind'> &
+  Readonly<{
     itemKey?: string;
-}> & LayoutItemChildSource;
+  }> &
+  LayoutItemChildSource;
 ```
 
 </DocTab>
@@ -104,7 +107,7 @@ export type GridLayoutItemProps = Omit<GridLayoutItemInput, 'child' | 'key' | 'k
 
 ### gridLayout / InputGridLayout
 
-- `gridLayout`: <ApiSourceLink label={"gridLayout"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={33}>Create a GridLayout embed</ApiSourceLink>
+- `gridLayout`: <ApiSourceLink label={"gridLayout"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={55}>Create a GridLayout embed</ApiSourceLink>
 - `InputGridLayout`: <ApiSourceLink label={"InputGridLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={35}>Vanilla authoring input for GridLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -115,12 +118,12 @@ The remaining members are inherited from `GridLayoutInput`, with `'children'` re
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children?` | `ReadonlyArray<InputGridLayoutItem>` | `[]` | Authored direct items; omission is treated as an empty list |
-| `input` (Parameter) | `InputGridLayout` | — | Container and item input; the input object reference is retained |
-| `authoring?` (Parameter) | `unknown` | — | Opaque data for the compilation driver; omitted input adds no authoring data |
-| Returns | `InputEmbed<InputGridLayout>` | — | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
+| Member                   | Type                                 | Default | Description                                                                      |
+| ------------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------------- |
+| `children?`              | `ReadonlyArray<InputGridLayoutItem>` | `[]`    | Authored direct items; omission is treated as an empty list                      |
+| `input` (Parameter)      | `InputGridLayout`                    | —       | Container and item input; the input object reference is retained                 |
+| `authoring?` (Parameter) | `unknown`                            | —       | Opaque data for the compilation driver; omitted input adds no authoring data     |
+| Returns                  | `InputEmbed<InputGridLayout>`        | —       | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
 
 </ApiTable>
 
@@ -132,7 +135,7 @@ The remaining members are inherited from `GridLayoutInput`, with `'children'` re
 export declare const gridLayout: (input: InputGridLayout, authoring?: unknown) => InputEmbed<InputGridLayout>;
 
 export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
-    children?: ReadonlyArray<InputGridLayoutItem>;
+  children?: ReadonlyArray<InputGridLayoutItem>;
 };
 ```
 
@@ -142,26 +145,32 @@ export type InputGridLayout = Omit<GridLayoutInput, 'children'> & {
 
 ### InputGridLayoutItem
 
-<p><ApiSourceLink label={"InputGridLayoutItem"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={21}>Vanilla input for a GridLayout item</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'InputGridLayoutItem'}
+    path={'packages/library/layout-vanilla/src/normalize/types.ts'}
+    startLine={21}
+  >
+    Vanilla input for a GridLayout item
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional vertical alignment within the grid area. |
-| `child` | `InputChild` | — | Authoring input for a direct layout child |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit column placement. |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | Optional horizontal alignment within the grid area. |
-| `key?` | `string` | — | Optional container-local stable authored item identity. |
-| `kind` | `"grid"` | — | Discriminator for an item owned by GridLayout. |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit row placement. |
+| Member         | Type                                                                                                                                                                                                               | Default | Description                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------- |
+| `alignSelf?`   | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —       | Optional vertical alignment within the grid area.       |
+| `child`        | `InputChild`                                                                                                                                                                                                       | —       | Authoring input for a direct layout child               |
+| `column?`      | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit column placement.                     |
+| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —       | Optional horizontal alignment within the grid area.     |
+| `key?`         | `string`                                                                                                                                                                                                           | —       | Optional container-local stable authored item identity. |
+| `kind`         | `"grid"`                                                                                                                                                                                                           | —       | Discriminator for an item owned by GridLayout.          |
+| `margin?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`     | Item margin outside the parent allocation slot.         |
+| `row?`         | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit row placement.                        |
 
 </ApiTable>
 
@@ -179,10 +188,19 @@ export type InputGridLayoutItem = InputLayoutItem<GridLayoutItemInput>;
 
 ### GridLayoutInputEmbedAdapter
 
-<p><ApiSourceLink label={"GridLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/grid-layout.ts"} startLine={12}>InputEmbed adapter for GridLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutInputEmbedAdapter'}
+    path={'packages/library/layout-vanilla/src/grid-layout.ts'}
+    startLine={12}
+  >
+    InputEmbed adapter for GridLayout
+  </ApiSourceLink>
+</p>
 
 ```ts
-export declare const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLayout>;
+export declare const GridLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputGridLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputGridLayout>, 'prepare'>>;
 ```
 
 ## `@retikz/layout`
@@ -190,7 +208,7 @@ export declare const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLay
 ### createGridLayout / GridLayoutInput
 
 - `createGridLayout`: <ApiSourceLink label={"createGridLayout"} path={"packages/library/layout/src/composites/grid-layout/factory.ts"} startLine={8}>Create persistent GridLayout input preserving omitted fields and shorthand</ApiSourceLink>
-- `GridLayoutInput`: <ApiSourceLink label={"GridLayoutInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={55}>Authoring input accepted by the GridLayout factory</ApiSourceLink>
+- `GridLayoutInput`: <ApiSourceLink label={"GridLayoutInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>Authoring input accepted by the GridLayout factory</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -198,10 +216,10 @@ export declare const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLay
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `input` (Parameter) | `GridLayoutInput` | — | Container and item configuration; Schema parsing applies static defaults |
-| Returns | `IRGridLayout` | — | Source IR with the layout namespace and container type; input is not mutated |
+| Member              | Type              | Default | Description                                                                  |
+| ------------------- | ----------------- | ------- | ---------------------------------------------------------------------------- |
+| `input` (Parameter) | `GridLayoutInput` | —       | Container and item configuration; Schema parsing applies static defaults     |
+| Returns             | `IRGridLayout`    | —       | Source IR with the layout namespace and container type; input is not mutated |
 
 </ApiTable>
 
@@ -219,52 +237,32 @@ export type GridLayoutInput = Omit<IRGridLayout, 'namespace' | 'type'>;
 
 </DocTabs>
 
-### GridAutoFlowValue
-
-<p><ApiSourceLink label={"GridAutoFlowValue"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={16}>GridLayout automatic placement direction values</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type GridAutoFlowValue =
-  | "row"
-  | "column";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type GridAutoFlowValue = ValueOf<typeof GridAutoFlow>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### GridLayoutArtifact
 
-<p><ApiSourceLink label={"GridLayoutArtifact"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={58}>JSON-safe compilation artifact payload for GridLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutArtifact'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={50}
+  >
+    JSON-safe compilation artifact payload for GridLayout
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `columns` | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | — | Resolved columns in physical start order. |
-| `container` | `ZodInfer<typeof GridLayoutArtifactSchema.shape["container"]>` | — | Resolved container geometry. |
-| `items` | `ZodInfer<typeof GridLayoutArtifactSchema.shape["items"]>` | — | Items in authored source order. |
-| `kind` | `"grid"` | — | Discriminator for a GridLayout artifact payload. |
-| `rows` | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | — | Resolved rows in physical start order. |
-| `spacing` | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>` | — | Resolved fixed gaps and distributed free-space segments. |
+| Member      | Type                                                                                                                                                                 | Default | Description                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
+| `columns`   | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | —       | Resolved columns in physical start order.                |
+| `container` | `ZodInfer<typeof GridLayoutArtifactSchema.shape["container"]>`                                                                                                       | —       | Resolved container geometry.                             |
+| `items`     | `ZodInfer<typeof GridLayoutArtifactSchema.shape["items"]>`                                                                                                           | —       | Items in authored source order.                          |
+| `kind`      | `"grid"`                                                                                                                                                             | —       | Discriminator for a GridLayout artifact payload.         |
+| `rows`      | `Array<{ index: number; start: number; size: number; sourceKind: "fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"; implicit: boolean; }>` | —       | Resolved rows in physical start order.                   |
+| `spacing`   | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>`                                       | —       | Resolved fixed gaps and distributed free-space segments. |
 
 </ApiTable>
 
@@ -282,26 +280,32 @@ export type GridLayoutArtifact = ZodInfer<typeof GridLayoutArtifactSchema>;
 
 ### GridLayoutItemInput
 
-<p><ApiSourceLink label={"GridLayoutItemInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={44}>Authoring input for a GridLayout item</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutItemInput'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={36}
+  >
+    Authoring input for a GridLayout item
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional vertical alignment within the grid area. |
-| `child` | `IRChild` | — | JSON-safe Core child laid out by the container. |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit column placement. |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | Optional horizontal alignment within the grid area. |
-| `key?` | `string` | — | Optional container-local stable authored item identity. |
-| `kind` | `"grid"` | — | Discriminator for an item owned by GridLayout. |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit row placement. |
+| Member         | Type                                                                                                                                                                                                               | Default | Description                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------- |
+| `alignSelf?`   | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —       | Optional vertical alignment within the grid area.       |
+| `child`        | `IRChild`                                                                                                                                                                                                          | —       | JSON-safe Core child laid out by the container.         |
+| `column?`      | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit column placement.                     |
+| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —       | Optional horizontal alignment within the grid area.     |
+| `key?`         | `string`                                                                                                                                                                                                           | —       | Optional container-local stable authored item identity. |
+| `kind`         | `"grid"`                                                                                                                                                                                                           | —       | Discriminator for an item owned by GridLayout.          |
+| `margin?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`     | Item margin outside the parent allocation slot.         |
+| `row?`         | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit row placement.                        |
 
 </ApiTable>
 
@@ -317,48 +321,28 @@ export type GridLayoutItemInput = IRGridLayoutItem;
 
 </DocTabs>
 
-### GridOverlapValue
-
-<p><ApiSourceLink label={"GridOverlapValue"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={19}>GridLayout fully explicit overlap policy values</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type GridOverlapValue =
-  | "reject"
-  | "allow";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type GridOverlapValue = ValueOf<typeof GridOverlap>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### GridPlacementInput
 
-<p><ApiSourceLink label={"GridPlacementInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={37}>Authoring input for placement along one grid axis</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridPlacementInput'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={29}
+  >
+    Authoring input for placement along one grid axis
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `span?` | `number` | `1` | Positive explicit or auto track span within the track guard. |
-| `start?` | `number` | — | Optional zero-based explicit track start. |
+| Member   | Type     | Default | Description                                                  |
+| -------- | -------- | ------- | ------------------------------------------------------------ |
+| `span?`  | `number` | `1`     | Positive explicit or auto track span within the track guard. |
+| `start?` | `number` | —       | Optional zero-based explicit track start.                    |
 
 </ApiTable>
 
@@ -376,7 +360,15 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 ### GridTrackBreadthInput
 
-<p><ApiSourceLink label={"GridTrackBreadthInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={25}>Authoring input for a grid track breadth</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridTrackBreadthInput'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={17}
+  >
+    Authoring input for a grid track breadth
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="fixed">
 
@@ -384,10 +376,10 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `kind` | `"fixed"` | — | Discriminator for a fixed grid track breadth. |
-| `value` | `number` | — | Finite authored fixed track breadth. |
+| Member  | Type      | Default | Description                                   |
+| ------- | --------- | ------- | --------------------------------------------- |
+| `kind`  | `"fixed"` | —       | Discriminator for a fixed grid track breadth. |
+| `value` | `number`  | —       | Finite authored fixed track breadth.          |
 
 </ApiTable>
 
@@ -397,10 +389,10 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `kind` | `"content"` | — | Discriminator for an intrinsic grid track breadth. |
-| `mode` | `"minimum" \| "natural"` | — | Intrinsic contribution profile used by this breadth. |
+| Member | Type                     | Default | Description                                          |
+| ------ | ------------------------ | ------- | ---------------------------------------------------- |
+| `kind` | `"content"`              | —       | Discriminator for an intrinsic grid track breadth.   |
+| `mode` | `"minimum" \| "natural"` | —       | Intrinsic contribution profile used by this breadth. |
 
 </ApiTable>
 
@@ -410,10 +402,10 @@ export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `factor` | `number` | — | Finite positive share of remaining finite axis space. |
-| `kind` | `"fraction"` | — | Discriminator for a fractional grid track breadth. |
+| Member   | Type         | Default | Description                                           |
+| -------- | ------------ | ------- | ----------------------------------------------------- |
+| `factor` | `number`     | —       | Finite positive share of remaining finite axis space. |
+| `kind`   | `"fraction"` | —       | Discriminator for a fractional grid track breadth.    |
 
 </ApiTable>
 
@@ -431,7 +423,15 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 ### GridTrackInput
 
-<p><ApiSourceLink label={"GridTrackInput"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={31}>Authoring input for a grid track</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridTrackInput'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={23}
+  >
+    Authoring input for a grid track
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="fixed">
 
@@ -439,10 +439,10 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `kind` | `"fixed"` | — | Discriminator for a fixed grid track breadth. |
-| `value` | `number` | — | Finite authored fixed track breadth. |
+| Member  | Type      | Default | Description                                   |
+| ------- | --------- | ------- | --------------------------------------------- |
+| `kind`  | `"fixed"` | —       | Discriminator for a fixed grid track breadth. |
+| `value` | `number`  | —       | Finite authored fixed track breadth.          |
 
 </ApiTable>
 
@@ -452,10 +452,10 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `kind` | `"content"` | — | Discriminator for an intrinsic grid track breadth. |
-| `mode` | `"minimum" \| "natural"` | — | Intrinsic contribution profile used by this breadth. |
+| Member | Type                     | Default | Description                                          |
+| ------ | ------------------------ | ------- | ---------------------------------------------------- |
+| `kind` | `"content"`              | —       | Discriminator for an intrinsic grid track breadth.   |
+| `mode` | `"minimum" \| "natural"` | —       | Intrinsic contribution profile used by this breadth. |
 
 </ApiTable>
 
@@ -465,10 +465,10 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `factor` | `number` | — | Finite positive share of remaining finite axis space. |
-| `kind` | `"fraction"` | — | Discriminator for a fractional grid track breadth. |
+| Member   | Type         | Default | Description                                           |
+| -------- | ------------ | ------- | ----------------------------------------------------- |
+| `factor` | `number`     | —       | Finite positive share of remaining finite axis space. |
+| `kind`   | `"fraction"` | —       | Discriminator for a fractional grid track breadth.    |
 
 </ApiTable>
 
@@ -478,11 +478,11 @@ export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `kind` | `"minmax"` | — | Discriminator for bounded GridLayout track sizing. |
-| `max` | `{ kind: "fixed"; value: number; } \| { kind: "content"; mode: "minimum" \| "natural"; } \| { factor: number; kind: "fraction"; }` | — | Upper or fractional growth breadth. |
-| `min` | `{ kind: "fixed"; value: number; } \| { kind: "content"; mode: "minimum" \| "natural"; }` | — | Non-fraction lower breadth. |
+| Member | Type                                                                                                                               | Default | Description                                        |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------- |
+| `kind` | `"minmax"`                                                                                                                         | —       | Discriminator for bounded GridLayout track sizing. |
+| `max`  | `{ kind: "fixed"; value: number; } \| { kind: "content"; mode: "minimum" \| "natural"; } \| { factor: number; kind: "fraction"; }` | —       | Upper or fractional growth breadth.                |
+| `min`  | `{ kind: "fixed"; value: number; } \| { kind: "content"; mode: "minimum" \| "natural"; }`                                          | —       | Non-fraction lower breadth.                        |
 
 </ApiTable>
 
@@ -500,7 +500,15 @@ export type GridTrackInput = ZodInput<typeof GridTrackSchema>;
 
 ### IRGridLayout
 
-<p><ApiSourceLink label={"IRGridLayout"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={47}>Persistent JSON input for GridLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'IRGridLayout'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={39}
+  >
+    Persistent JSON input for GridLayout
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
@@ -510,9 +518,9 @@ The remaining members are inherited from `ZodInput<typeof GridLayoutSchema>`, wi
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children?` | `Array<IRGridLayoutItem>` | `[]` | Authored direct items; omission is treated as an empty list |
+| Member      | Type                      | Default | Description                                                 |
+| ----------- | ------------------------- | ------- | ----------------------------------------------------------- |
+| `children?` | `Array<IRGridLayoutItem>` | `[]`    | Authored direct items; omission is treated as an empty list |
 
 </ApiTable>
 
@@ -522,7 +530,7 @@ The remaining members are inherited from `ZodInput<typeof GridLayoutSchema>`, wi
 
 ```ts
 export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> & {
-    children?: Array<IRGridLayoutItem>;
+  children?: Array<IRGridLayoutItem>;
 };
 ```
 
@@ -532,26 +540,32 @@ export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> &
 
 ### IRGridLayoutItem
 
-<p><ApiSourceLink label={"IRGridLayoutItem"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={40}>Persistent JSON input for a GridLayout item</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'IRGridLayoutItem'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={32}
+  >
+    Persistent JSON input for a GridLayout item
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional vertical alignment within the grid area. |
-| `child` | `IRChild` | — | JSON-safe Core child laid out by the container. |
-| `column?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit column placement. |
-| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"` | — | Optional horizontal alignment within the grid area. |
-| `key?` | `string` | — | Optional container-local stable authored item identity. |
-| `kind` | `"grid"` | — | Discriminator for an item owned by GridLayout. |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `row?` | `{ start?: number \| undefined; span?: number \| undefined; }` | — | Optional explicit row placement. |
+| Member         | Type                                                                                                                                                                                                               | Default | Description                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------- |
+| `alignSelf?`   | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —       | Optional vertical alignment within the grid area.       |
+| `child`        | `IRChild`                                                                                                                                                                                                          | —       | JSON-safe Core child laid out by the container.         |
+| `column?`      | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit column placement.                     |
+| `justifySelf?` | `"start" \| "center" \| "end" \| "stretch"`                                                                                                                                                                        | —       | Optional horizontal alignment within the grid area.     |
+| `key?`         | `string`                                                                                                                                                                                                           | —       | Optional container-local stable authored item identity. |
+| `kind`         | `"grid"`                                                                                                                                                                                                           | —       | Discriminator for an item owned by GridLayout.          |
+| `margin?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`     | Item margin outside the parent allocation slot.         |
+| `row?`         | `{ start?: number \| undefined; span?: number \| undefined; }`                                                                                                                                                     | —       | Optional explicit row placement.                        |
 
 </ApiTable>
 
@@ -560,7 +574,8 @@ export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> &
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'child'> & Pick<ZodInfer<typeof GridLayoutItemSchema>, 'child'>;
+export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'child'> &
+  Pick<ZodInfer<typeof GridLayoutItemSchema>, 'child'>;
 ```
 
 </DocTab>
@@ -569,23 +584,29 @@ export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'chil
 
 ### LayoutTrackArtifact
 
-<p><ApiSourceLink label={"LayoutTrackArtifact"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={64}>Resolved GridLayout track artifact</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutTrackArtifact'}
+    path={'packages/library/layout/src/composites/grid-layout/types.ts'}
+    startLine={53}
+  >
+    Resolved GridLayout track artifact
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `implicit` | `boolean` | — | Whether the track was materialized beyond the authored explicit track list. |
-| `index` | `number` | — | Contiguous zero-based resolved track index. |
-| `size` | `number` | — | Finite non-negative resolved track size. |
-| `sourceKind` | `"fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"` | — | Authored or implicit outer sizing source for the track. |
-| `start` | `number` | — | Finite physical track start in container allocation coordinates. |
+| Member       | Type                                                                          | Default | Description                                                                 |
+| ------------ | ----------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------- |
+| `implicit`   | `boolean`                                                                     | —       | Whether the track was materialized beyond the authored explicit track list. |
+| `index`      | `number`                                                                      | —       | Contiguous zero-based resolved track index.                                 |
+| `size`       | `number`                                                                      | —       | Finite non-negative resolved track size.                                    |
+| `sourceKind` | `"fixed" \| "fraction" \| "content-minimum" \| "content-natural" \| "minmax"` | —       | Authored or implicit outer sizing source for the track.                     |
+| `start`      | `number`                                                                      | —       | Finite physical track start in container allocation coordinates.            |
 
 </ApiTable>
 
@@ -601,38 +622,17 @@ export type LayoutTrackArtifact = ZodInfer<typeof LayoutTrackArtifactSchema>;
 
 </DocTabs>
 
-### LayoutTrackSourceKindValue
-
-<p><ApiSourceLink label={"LayoutTrackSourceKindValue"} path={"packages/library/layout/src/composites/grid-layout/types.ts"} startLine={61}>GridLayout track artifact source values</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type LayoutTrackSourceKindValue =
-  | "fixed"
-  | "fraction"
-  | "content-minimum"
-  | "content-natural"
-  | "minmax";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type LayoutTrackSourceKindValue = ValueOf<typeof LayoutTrackSourceKind>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### GRID_LAYOUT_MAX_TRACKS_PER_AXIS
 
-<p><ApiSourceLink label={"GRID_LAYOUT_MAX_TRACKS_PER_AXIS"} path={"packages/library/layout/src/composites/grid-layout/constants.ts"} startLine={28}>Maximum combined number of explicit and implicit tracks along one grid axis</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GRID_LAYOUT_MAX_TRACKS_PER_AXIS'}
+    path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
+    startLine={30}
+  >
+    Maximum combined number of explicit and implicit tracks along one grid axis
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const GRID_LAYOUT_MAX_TRACKS_PER_AXIS = 10000;
@@ -640,67 +640,118 @@ export const GRID_LAYOUT_MAX_TRACKS_PER_AXIS = 10000;
 
 ### GridAutoFlow
 
-<p><ApiSourceLink label={"GridAutoFlow"} path={"packages/library/layout/src/composites/grid-layout/constants.ts"} startLine={2}>GridLayout automatic placement direction</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridAutoFlow'}
+    path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
+    startLine={4}
+  >
+    GridLayout automatic placement direction
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const GridAutoFlow = {
-    Row: 'row',
-    Column: 'column',
+  Row: 'row',
+  Column: 'column',
 } as const;
+
+export type GridAutoFlow = ValueOf<typeof GridAutoFlow>;
 ```
 
 ### GridLayoutDefinition
 
-<p><ApiSourceLink label={"GridLayoutDefinition"} path={"packages/library/layout/src/composites/grid-layout/definition.ts"} startLine={10}>Official layout-aware composite definition for GridLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutDefinition'}
+    path={'packages/library/layout/src/composites/grid-layout/definition.ts'}
+    startLine={10}
+  >
+    Official layout-aware composite definition for GridLayout
+  </ApiSourceLink>
+</p>
 
 ```ts
-export const GridLayoutDefinition: LayoutCompositeDefinition<IRGridLayout, typeof LAYOUT_NAMESPACE, 'gridLayout', GridLayoutArtifact> = defineComposite({
-    namespace: LAYOUT_NAMESPACE,
-    type: 'gridLayout',
-    schema: GridLayoutSchema,
-    compile: compileGridLayout,
-    artifactSchema: GridLayoutArtifactSchema,
+export const GridLayoutDefinition: LayoutCompositeDefinition<
+  IRGridLayout,
+  typeof LAYOUT_NAMESPACE,
+  'gridLayout',
+  GridLayoutArtifact
+> = defineComposite({
+  namespace: LAYOUT_NAMESPACE,
+  type: 'gridLayout',
+  schema: GridLayoutSchema,
+  compile: compileGridLayout,
+  artifactSchema: GridLayoutArtifactSchema,
 });
 ```
 
 ### GridLayoutProvider
 
-<p><ApiSourceLink label={"GridLayoutProvider"} path={"packages/library/layout/src/composites/grid-layout/provider.ts"} startLine={8}>Composite dependency provider for GridLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridLayoutProvider'}
+    path={'packages/library/layout/src/composites/grid-layout/provider.ts'}
+    startLine={8}
+  >
+    Composite dependency provider for GridLayout
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const GridLayoutProvider: CoreDependencyProvider = Object.freeze({
-    key: Object.freeze({
-        capability: 'composite',
-        namespace: GridLayoutDefinition.namespace,
-        type: GridLayoutDefinition.type,
-    }),
-    dependencies: Object.freeze([]),
-    datasets: Object.freeze({}),
-    makeDefinition: makeGridLayoutDefinition,
+  key: Object.freeze({
+    capability: 'composite',
+    namespace: GridLayoutDefinition.namespace,
+    type: GridLayoutDefinition.type,
+  }),
+  dependencies: Object.freeze([]),
+  datasets: Object.freeze({}),
+  makeDefinition: makeGridLayoutDefinition,
 });
 ```
 
 ### GridOverlap
 
-<p><ApiSourceLink label={"GridOverlap"} path={"packages/library/layout/src/composites/grid-layout/constants.ts"} startLine={8}>GridLayout explicit-area overlap policy</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'GridOverlap'}
+    path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
+    startLine={10}
+  >
+    GridLayout explicit-area overlap policy
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const GridOverlap = {
-    Reject: 'reject',
-    Allow: 'allow',
+  Reject: 'reject',
+  Allow: 'allow',
 } as const;
+
+export type GridOverlap = ValueOf<typeof GridOverlap>;
 ```
 
 ### LayoutTrackSourceKind
 
-<p><ApiSourceLink label={"LayoutTrackSourceKind"} path={"packages/library/layout/src/composites/grid-layout/constants.ts"} startLine={14}>Authored sizing source for a track in GridLayout artifacts</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutTrackSourceKind'}
+    path={'packages/library/layout/src/composites/grid-layout/constants.ts'}
+    startLine={16}
+  >
+    Authored sizing source for a track in GridLayout artifacts
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutTrackSourceKind = {
-    Fixed: 'fixed',
-    ContentMinimum: 'content-minimum',
-    ContentNatural: 'content-natural',
-    Fraction: 'fraction',
-    Minmax: 'minmax',
+  Fixed: 'fixed',
+  ContentMinimum: 'content-minimum',
+  ContentNatural: 'content-natural',
+  Fraction: 'fraction',
+  Minmax: 'minmax',
 } as const;
+
+export type LayoutTrackSourceKind = ValueOf<typeof LayoutTrackSourceKind>;
 ```

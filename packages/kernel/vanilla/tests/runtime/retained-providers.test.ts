@@ -18,8 +18,11 @@ import {
 } from '../../src/runtime/retained-providers';
 
 const pathKindSchema = PathBaseSchema.extend({ kind: literal('retained-fixture') });
+
 const ownerOutput = { schema: StrokePathOwnerOutputSchema };
+
 const initialResult = { primitives: [], boundsPoints: [] };
+
 const nextResult = { primitives: [], boundsPoints: [[1, 1] as [number, number]] };
 
 type RetainedClip = {
@@ -59,6 +62,7 @@ const nextClipPath: SceneClipPath = {
 };
 
 type RetainedClipResolve = (spec: RetainedClip, context: ClipResolveContext) => RetainedClipShape;
+
 type RetainedClipLower = (shape: RetainedClipShape, context: ClipLowerContext) => SceneClipPath;
 
 const createClipDefinition = (
@@ -106,8 +110,11 @@ describe('retained Path Kind definitions', () => {
       clips: [createClipDefinition(initialResolve, initialLower)],
     });
     const delegated = retained.definitions.clips?.[0];
+
     expect(delegated).toBeDefined();
+
     if (delegated === undefined) throw new Error('Expected retained Clip definition.');
+
     const stableResolve = delegated.resolve as unknown as RetainedClipResolve;
     const stableLower = delegated.lower;
     const resolveContext = {
@@ -130,6 +137,7 @@ describe('retained Path Kind definitions', () => {
     expect(stableLower({ kind: 'retainedClip', size: 4 }, lowerContext)).toBe(initialClipPath);
 
     const changed = retained.prepare({ clips: [createClipDefinition(nextResolve, nextLower)] });
+
     expect(changed.changed).toBe(true);
     expect(stableResolve({ kind: 'retainedClip', size: 4 }, resolveContext)).toEqual({
       kind: 'retainedClip',
@@ -138,6 +146,7 @@ describe('retained Path Kind definitions', () => {
     expect(stableLower({ kind: 'retainedClip', size: 4 }, lowerContext)).toBe(nextClipPath);
 
     changed.rollback();
+
     expect(stableResolve({ kind: 'retainedClip', size: 4 }, resolveContext)).toEqual({
       kind: 'retainedClip',
       size: 4,
@@ -204,6 +213,7 @@ describe('retained Path Kind definitions', () => {
     expect(copy && Object.hasOwn(copy, 'optionsSchema')).toBe(false);
 
     const retained = createRetainedProviderDefinitions({ pathKinds: [initial] });
+
     expect(retained.definitions.pathKinds?.[0]?.ownerOutput).toBe(ownerOutput);
   });
 
@@ -214,7 +224,9 @@ describe('retained Path Kind definitions', () => {
     const nextCompile: AnyPathKindDefinition['compile'] = () => nextResult;
     const next = createDefinition(pathKindSchema, nextCompile);
     const changed = retained.prepare({ pathKinds: [next] });
+
     expect(changed.changed).toBe(true);
+
     changed.rollback();
 
     const changedSchema = PathBaseSchema.extend({
@@ -222,6 +234,7 @@ describe('retained Path Kind definitions', () => {
       kindOptions: strictObject({ changed: boolean() }).optional(),
     });
     const invalid = expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid });
+
     expect(() => retained.prepare({ pathKinds: [createDefinition(changedSchema)] })).toThrow(invalid);
     expect(() =>
       retained.prepare({ pathKinds: [createDefinition(pathKindSchema, initial.compile, 'renamed-fixture')] }),
@@ -236,13 +249,17 @@ describe('retained Path Kind definitions', () => {
     const stableCompile = retained.definitions.pathKinds?.[0]?.compile;
 
     expect(stableCompile).toBeDefined();
+
     if (stableCompile === undefined) throw new Error('Expected retained Path Kind compile delegate.');
+
     expect(stableCompile(undefined as never)).toBe(initialResult);
 
     const changed = retained.prepare({ pathKinds: [createDefinition(pathKindSchema, nextCompile)] });
+
     expect(stableCompile(undefined as never)).toBe(nextResult);
 
     changed.rollback();
+
     expect(stableCompile(undefined as never)).toBe(initialResult);
   });
 });

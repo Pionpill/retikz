@@ -32,6 +32,7 @@ describe('[shadow] Happy', () => {
       shadow: { offsetX: 1, offsetY: 2, blur: 4, color: 'rgba(0,0,0,0.4)' },
     });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect).toBeDefined();
     expect(rect!.shadow).toEqual({ offsetX: 1, offsetY: 2, blur: 4, color: 'rgba(0,0,0,0.4)' });
   });
@@ -39,12 +40,14 @@ describe('[shadow] Happy', () => {
   it('shadow-defaults：仅给 offsetX/Y → blur/color 取默认 rgba(0,0,0,0.5)', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x', shadow: { offsetX: 2, offsetY: 2 } });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.shadow).toMatchObject({ offsetX: 2, offsetY: 2, color: 'rgba(0,0,0,0.5)' });
   });
 
   it('shadow-preset-md：shadow="md" → compile 展开为 SHADOW_PRESETS.md', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x', shadow: 'md' });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.shadow).toEqual(SHADOW_PRESETS.md);
   });
 
@@ -55,6 +58,7 @@ describe('[shadow] Happy', () => {
       shadow: { preset: 'md', color: '#3b82f6', opacity: 0.5 },
     });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.shadow).toEqual({
       offsetX: SHADOW_PRESETS.md!.offsetX,
       offsetY: SHADOW_PRESETS.md!.offsetY,
@@ -67,6 +71,7 @@ describe('[shadow] Happy', () => {
   it('node-ellipse-shadow：circle/ellipse 节点 → EllipsePrim 带 shadow', () => {
     const compiled = compileNode({ shape: 'circle', text: 'x', shadow: 'lg' });
     const el = findByType(compiled.primitives, 'ellipse');
+
     expect(el).toBeDefined();
     expect(el!.shadow).toEqual(SHADOW_PRESETS.lg);
   });
@@ -78,24 +83,28 @@ describe('[shadow] 边界', () => {
   it('shadow-omitted-noop：不设 → 几何图元无 shadow（逐字不变）', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x' });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.shadow).toBeUndefined();
   });
 
   it('blur-zero-hard：blur=0 → 硬边（resolved blur=0）', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x', shadow: { offsetX: 1, offsetY: 1, blur: 0 } });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.shadow!.blur).toBe(0);
   });
 
   it('preset-string-equals-preset-object：shadow="md" ≡ {preset:"md"}（编译逐字一致）', () => {
     const a = findByType(compileNode({ shape: 'rectangle', text: 'x', shadow: 'md' }).primitives, 'rect');
     const b = findByType(compileNode({ shape: 'rectangle', text: 'x', shadow: { preset: 'md' } }).primitives, 'rect');
+
     expect(a!.shadow).toEqual(b!.shadow);
   });
 
   it('override-priority：{preset:"sm", offsetY:99} → offsetY=99、其余取 sm', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x', shadow: { preset: 'sm', offsetY: 99 } });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.shadow).toEqual({
       offsetX: SHADOW_PRESETS.sm!.offsetX,
       offsetY: 99,
@@ -107,6 +116,7 @@ describe('[shadow] 边界', () => {
   it('preset-none-noop：shadow="none" → 几何图元无 shadow', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x', shadow: 'none' });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.shadow).toBeUndefined();
   });
 });
@@ -155,6 +165,7 @@ describe('[shadow] 交互', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'hi', shadow: 'md' });
     const rect = findByType(compiled.primitives, 'rect');
     const text = findByType(compiled.primitives, 'text');
+
     expect(rect!.shadow).toEqual(SHADOW_PRESETS.md);
     expect(text).toBeDefined();
     expect((text as unknown as { shadow?: unknown }).shadow).toBeUndefined();
@@ -163,6 +174,7 @@ describe('[shadow] 交互', () => {
   it('shadow-with-opacity：shadow + 节点 opacity 共存，互不吞没', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x', opacity: 0.6, shadow: 'md' });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.opacity).toBe(0.6);
     expect(rect!.shadow).toEqual(SHADOW_PRESETS.md);
   });
@@ -174,6 +186,7 @@ describe('[shadow] 交互', () => {
       text: 'x',
       shadow: { offsetX: 0, offsetY: 20, blur: 10 },
     });
+
     expect(bottomOf(shadowed.layout)).toBeGreaterThan(bottomOf(plain.layout) + 25);
   });
 
@@ -195,6 +208,7 @@ describe('[shadow] 交互', () => {
       },
       silent,
     ).scene;
+
     expect(compiled.layout).toEqual({ x: -1, y: -2, width: 3, height: 4 });
   });
 });
@@ -212,6 +226,7 @@ describe('[shadow] round-trip', () => {
     };
     const parsed = NodeSchema.parse(node);
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
+
     expect(round.style?.shadow).toEqual(parsed.style?.shadow);
   });
 
@@ -224,6 +239,7 @@ describe('[shadow] round-trip', () => {
       style: { shadow: 'md' },
     });
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
+
     expect(round.style?.shadow).toBe('md');
   });
 });

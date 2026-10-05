@@ -13,6 +13,7 @@ describe('Coordinate placeholder', () => {
       children: [{ type: 'coordinate', id: 'm', position: [3, 2] }],
     };
     const scene = compileToScene(ir).scene;
+
     expect(scene.primitives).toHaveLength(0);
   });
 
@@ -25,6 +26,7 @@ describe('Coordinate placeholder', () => {
       children: [{ type: 'coordinate', id: 'far', position: [9999, 9999] }],
     };
     const emptyIR: IRScene = { version: 1, type: 'scene', children: [] };
+
     expect(compileToScene(farIR).scene.layout).toEqual(compileToScene(emptyIR).scene.layout);
   });
 
@@ -46,7 +48,9 @@ describe('Coordinate placeholder', () => {
     };
     const scene = compileToScene(ir).scene;
     const path = scene.primitives.find(p => p.type === 'path');
+
     expect(path).toBeDefined();
+
     if (path?.type === 'path') {
       // coordinate 是 0×0 rect，boundary point 即中心；move(0,0) → line(10,0)
       expect(path.commands).toEqual([move([0, 0]), line([10, 0])]);
@@ -69,11 +73,14 @@ describe('Coordinate placeholder', () => {
     };
     const scene = compileToScene(ir).scene;
     const rect = flattenPrims(scene.primitives).find(p => p.type === 'rect');
+
     expect(rect).toBeDefined();
+
     if (rect?.type === 'rect') {
       // A 中心 = origin + (4, 0) = (9, 5)
       const cx = rect.x + rect.width / 2;
       const cy = rect.y + rect.height / 2;
+
       expect(cx).toBeCloseTo(9);
       expect(cy).toBeCloseTo(5);
     }
@@ -101,7 +108,9 @@ describe('Coordinate placeholder', () => {
     };
     const scene = compileToScene(ir).scene;
     const path = scene.primitives.find(p => p.type === 'path');
+
     expect(path).toBeDefined();
+
     if (path?.type === 'path') {
       // c 在 (5+3, 0) = (8, 0)
       expect(path.commands[0]).toEqual(move([8, 0]));
@@ -114,6 +123,7 @@ describe('Coordinate placeholder', () => {
       type: 'scene',
       children: [{ type: 'coordinate', id: 'b', position: { direction: 'right', of: 'a' } }],
     };
+
     expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position for coordinate/);
   });
 
@@ -127,6 +137,7 @@ describe('Coordinate placeholder', () => {
         { type: 'coordinate', id: 'a', position: [0, 0] },
       ],
     };
+
     expect(() => compileToScene(ir).scene).toThrow(/Cannot resolve position for coordinate/);
   });
 });

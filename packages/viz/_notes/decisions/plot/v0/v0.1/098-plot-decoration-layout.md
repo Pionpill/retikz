@@ -52,7 +52,7 @@ type LayoutPlacement =
       target?: 'frame' | 'plotArea' | 'view';
       view?: string;
       side: 'top' | 'right' | 'bottom' | 'left';
-      placement?: GeometryLabelPositionValue | number;
+      placement?: GeometryLabelPosition | number;
       padding?: number;
       shift?: { along?: number; normal?: number };
       anchor?: 'auto' | 'start' | 'center' | 'end';

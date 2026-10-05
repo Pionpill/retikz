@@ -20,6 +20,7 @@ describe('@retikz/layout-vanilla/inspect', () => {
       adapters: LayoutInputEmbedAdapters,
       compileDriver: createLayoutInspectionVanillaDriver(),
     });
+
     expect(svg).toContain('data-retikz-readonly-layer');
     expect(svg).toContain('hsl(210, 38%, 48%)');
   });

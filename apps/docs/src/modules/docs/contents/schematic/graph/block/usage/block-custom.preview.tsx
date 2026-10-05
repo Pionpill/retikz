@@ -6,6 +6,7 @@ import type { Lang } from '@/i18n';
 import { blockCustomI18n } from './block-custom.i18n';
 
 const ACCENT = '#f97316';
+
 /** 图形参数 */
 export type BlockCustomPreviewValues = {
   content: string;

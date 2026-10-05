@@ -12,7 +12,11 @@ export type InputChartPanel = Pick<InputScope, 'clip' | 'placement' | 'theme' | 
   y?: number;
 };
 
-/** adapter 内部规范化后用于依赖组装的运行时输入；不作为公开编写结果 */
+/**
+ * adapter 内部规范化后用于依赖组装的运行时输入；不作为公开编写结果
+ * @template TNative 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ * @template TSource 当前 chartType 的精确 Chart 输入声明类型，关联 recipe 与运行时组装
+ */
 export type ChartRuntimeInput<TSource extends IRChartSource = IRChartSource, TNative = never> = Readonly<{
   /** 已由精确 normalizer 组装的 Chart Source IR */
   source: TSource;

@@ -29,14 +29,17 @@ export const buildReactSourceFiles = (input: BuildReactSourceFilesInput): Array<
     const code = rawSourceFile?.replace(/\n$/, '') ?? `// Source file not found: ${filename}`;
     const baselineFilename = resolveSourceBaselineFilename(entry, name, diffFrom);
     if (baselineFilename === undefined) return { filename, code, lang: langOfFilename(filename) };
+
     const baselineRaw = sourceContents[buildSourceFileKey(segments, baselineFilename)];
     const diff =
       !hideCode && rawSourceFile !== undefined && baselineRaw !== undefined
         ? computeUnifiedDiff(baselineRaw.replace(/\n$/, ''), code)
         : undefined;
+
     return { filename, code, lang: langOfFilename(filename), diff };
   });
   const mainFilename = filenameFromKey(key);
+
   return [
     { filename: mainFilename, code: trimmedSource, lang: langOfFilename(mainFilename), diff: reactDiff, isMain: true },
     ...extraSourceFiles,

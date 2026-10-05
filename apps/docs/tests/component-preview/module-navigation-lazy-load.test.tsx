@@ -44,8 +44,10 @@ describe('module navigation does not preload preview demos', () => {
     const original = new Map(Object.entries(demoModuleLoaders));
     const watched = Object.entries(demoModuleLoaders).flatMap(([key, loader]) => {
       if (!loader) return [];
+
       const spy = vi.fn(loader);
       demoModuleLoaders[key] = spy;
+
       return [spy];
     });
 

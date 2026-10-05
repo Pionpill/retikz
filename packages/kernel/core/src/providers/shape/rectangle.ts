@@ -30,6 +30,7 @@ type RectangleParams = ZodInfer<typeof rectangleParamsSchema>;
 const rectVertices = (bounds: Rect): Array<Position> => {
   const halfW = bounds.width / 2;
   const halfH = bounds.height / 2;
+
   return [
     localToWorld(bounds, [-halfW, -halfH]),
     localToWorld(bounds, [halfW, -halfH]),
@@ -52,6 +53,7 @@ export const rectangle = defineShape<RectangleParams>({
     const segments: Array<ContourSegment> = verticesToSegments(verts);
     const center: Position = [bounds.x, bounds.y];
     const hit = boundaryFromContour(segments, params.cornerRadius, center, toward);
+
     return hit ?? center;
   },
   anchor: (r, name) => {
@@ -73,6 +75,7 @@ export const rectangle = defineShape<RectangleParams>({
   *emit(r, style, round, params): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;
+
     // compile 已把顶层 Node.cornerRadius 合进 params（见 compile/node.ts），故与 boundaryPoint 一致只读 params.cornerRadius
     const cornerRadius = params.cornerRadius === undefined ? undefined : Math.min(params.cornerRadius, halfW, halfH);
     yield {

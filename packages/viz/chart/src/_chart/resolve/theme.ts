@@ -1,4 +1,4 @@
-import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
+import type { ResolvedTheme } from '@retikz/core';
 import { ThemeMode } from '@retikz/core';
 import type { IRPlotDefaults } from '@retikz/plot';
 import { mergePlotDefaults } from '@retikz/plot';
@@ -7,7 +7,7 @@ import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/the
 import type { IRChartDefaults, IRChartSource } from '../schemas';
 
 /** 构造 Core mode 对应的 Chart Neutral defaults */
-const neutralChartDefaultsOf = (mode: ThemeModeValue): IRChartDefaults => {
+const neutralChartDefaultsOf = (mode: ThemeMode): IRChartDefaults => {
   const isDark = mode === ThemeMode.Dark;
   return {
     background: { fill: isDark ? '#09090B' : '#FFFFFF' },
@@ -51,10 +51,12 @@ export const mergeChartDefaults = (
   override: IRChartDefaults | undefined,
 ): IRChartDefaults => {
   const presentation: NonNullable<IRChartDefaults['presentation']> = {};
+
   for (const slot of ['title', 'subtitle', 'note', 'source'] as const) {
     const current = base?.presentation?.[slot];
     const next = override?.presentation?.[slot];
     if (current === undefined && next === undefined) continue;
+
     presentation[slot] = {
       ...(current?.style === undefined && next?.style === undefined
         ? {}
@@ -64,6 +66,7 @@ export const mergeChartDefaults = (
         : { layout: { ...current?.layout, ...next?.layout } }),
     };
   }
+
   return {
     ...(base?.background === undefined && override?.background === undefined
       ? {}
@@ -85,11 +88,14 @@ export const resolveChartTheme = (
 ): ChartThemeResolution => {
   let defaults = neutralChartDefaultsOf(context.theme.mode);
   let plotDefaults: IRPlotDefaults | undefined;
+
   for (const definition of context.themeDefinitions) {
     defaults = mergeChartDefaults(defaults, definition.defaults);
     plotDefaults = mergePlotDefaults(plotDefaults, definition.plotDefaults);
   }
+
   defaults = mergeChartDefaults(defaults, source.chartDefaults);
+
   return {
     defaults,
     ...(plotDefaults === undefined || Object.keys(plotDefaults).length === 0 ? {} : { plotDefaults }),

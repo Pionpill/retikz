@@ -5,6 +5,7 @@ export const createSimpleNodeScene = (count: number): IRScene => {
   if (!Number.isSafeInteger(count) || count <= 0) {
     throw new Error('createSimpleNodeScene: count must be a positive safe integer');
   }
+
   return {
     version: 1,
     type: 'scene',
@@ -23,8 +24,10 @@ export const updateSimpleNodeFill = (scene: IRScene, index: number, fill: string
   if (!Number.isSafeInteger(index) || index < 0 || index >= scene.children.length) {
     throw new Error('updateSimpleNodeFill: index must address an existing child');
   }
+
   const child = scene.children[index];
   if (child.type !== 'node') throw new Error('updateSimpleNodeFill: target child must be a node');
+
   return {
     ...scene,
     children: scene.children.map((candidate, childIndex) =>
@@ -38,7 +41,9 @@ export const createStableGroupScene = (primitiveCount: number): IRScene => {
   if (!Number.isSafeInteger(primitiveCount) || primitiveCount < 4) {
     throw new Error('createStableGroupScene: primitiveCount must be a safe integer greater than three');
   }
+
   const children = createSimpleNodeScene(primitiveCount - 3).children;
+
   return {
     version: 1,
     type: 'scene',
@@ -62,6 +67,7 @@ export const updateStableGroupFill = (scene: IRScene, fill: string): IRScene => 
   if (group.type !== 'node' || group.id !== 'stable-group' || group.text === undefined) {
     throw new Error('updateStableGroupFill: scene must contain the stable-group fixture root');
   }
+
   return {
     ...scene,
     children: [{ ...group, style: { ...(group as IRNode).style, fill } }, ...scene.children.slice(1)],

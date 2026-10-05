@@ -43,6 +43,7 @@ const textPrim = (primitives: ReadonlyArray<ScenePrimitive>, text: string): Text
     (candidate): candidate is TextPrim => candidate.type === 'text' && candidate.lines.some(line => line.text === text),
   );
   if (primitive === undefined) throw new Error(`missing text primitive '${text}'`);
+
   return primitive;
 };
 
@@ -70,6 +71,7 @@ const rotationCenter = (primitives: ReadonlyArray<ScenePrimitive>, text: string)
   if (transform === undefined || transform.cx === undefined || transform.cy === undefined) {
     throw new Error(`missing rotation group for '${text}'`);
   }
+
   return [transform.cx, transform.cy];
 };
 
@@ -149,6 +151,7 @@ describe('Stroke Path label interruption', () => {
     expect(owner?.meta).toEqual({ source: 'interruption' });
     expect(owner?.animations).toEqual([animation]);
     expect(fragments).toHaveLength(2);
+
     for (const fragment of fragments) {
       expect(fragment.id).toBeUndefined();
       expect(fragment.meta).toBeUndefined();
@@ -217,6 +220,7 @@ describe('Stroke Path label interruption', () => {
         measureText: value => ({ width: value.length * 4, height: 10, ascent: 8, descent: 2 }),
       }).scene;
     };
+
     const single = strokeFragments(vertical('single').primitives).sort(
       (left, right) => firstMove(left)[1] - firstMove(right)[1],
     );

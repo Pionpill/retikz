@@ -3,15 +3,15 @@ title: 简介
 description: 用现成组件表达常见几何轮廓、结构化内容与图形说明
 ---
 
-Standard 是 Retikz 的标准组件库。已经知道要画“一个列表”“一组参考轴”或“包住内容的边框”时，可以直接描述这个对象的参数，无需逐条计算路径、文字位置和外围尺寸。
+Standard 是 Retikz 的标准组件库。已经知道要画“一个数组”“一组参考轴”或“包住内容的边框”时，可以直接描述这个对象的参数，无需逐条计算路径、文字位置和外围尺寸。
 
 它适合数学与算法插图、结构示意和通用图形界面。React 与 Vanilla 使用相同的组件语义；需要保存或传输绘图意图时，还可以使用对应的 JSON IR。
 
 ## 从内容意图开始
 
-下面的 List 用单元格表达顺序，其中一个单元格嵌入 Map 表达记录。你控制“哪些内容属于哪一格”，组件负责各自的排布与边界。
+下面的 Array 用单元格表达顺序，其中一个单元格嵌入 Map 表达记录。你控制“哪些内容属于哪一格”，组件负责各自的排布与边界。
 
-<ComponentPreview files="/library/standard/collection/list/list-composition" size="sm" />
+<ComponentPreview files="/library/standard/collection/array/array-composition" size="sm" />
 
 这类组合不需要你给每一格手动指定坐标。同样，Frame 会根据 Node 内容更新分组边框，Surface 为一个子图增加留白、背景与裁剪；已知中心、半径或角度时，形状组件则直接绘制对应轮廓。
 
@@ -20,13 +20,13 @@ Standard 是 Retikz 的标准组件库。已经知道要画“一个列表”“
 | 当前任务                         | 选择                  | 原因                             |
 | -------------------------------- | --------------------- | -------------------------------- |
 | 已知几何参数，绘制独立轮廓       | Standard 形状组件     | 直接保留矩形、圆、星形等几何意图 |
-| 展示顺序或键值关系               | Standard List / Map   | 单元格承担内容、身份与嵌套关系   |
+| 展示顺序或键值关系               | Standard Array / Map  | 单元格承担内容、身份与嵌套关系   |
 | 添加参考轴、背景、分组或符号说明 | Standard 展示组件     | 围绕已有图形补充呈现信息         |
 | 给任意子图做通用排列             | Layout                | 用尺寸与排列策略组织内容         |
 | 根据数据域映射数值、生成数据刻度 | Plot                  | 拥有数据与 scale 语义            |
 | 自己定义任意路径或节点连接       | Kernel 的 Node / Path | 直接控制基础图元                 |
 
-Standard 不推断业务数据的含义。Axes 的刻度文字由你提供，Legend 的样本由你构造，List 与 Map 展示结构而不实现运行时集合。需要数据可视化时，先由领域包处理数据，再复用这些通用组件。
+Standard 不推断业务数据的含义。Axes 的刻度文字由你提供，Legend 的样本由你构造，Array 与 Map 展示结构而不实现运行时集合。需要数据可视化时，先由领域包处理数据，再复用这些通用组件。
 
 ## 按宿主选择写法
 
@@ -39,9 +39,9 @@ React 组件来自 `@retikz/standard-react` 的家族子入口，Vanilla 函数�
 <LinkedSections
   items={[
     {
-      title: 'List · 列表',
+      title: 'Array · 数组',
       description: '从顺序内容开始，学习单格控制与嵌套组合',
-      url: '/library/standard/collection/list',
+      url: '/library/standard/collection/array',
     },
     {
       title: 'Surface · 表面',

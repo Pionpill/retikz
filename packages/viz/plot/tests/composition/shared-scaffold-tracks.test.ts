@@ -80,6 +80,7 @@ const expandOf = (spec: unknown, provenance = false): IRScope => {
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
 
 const innerContentOf = (scope: IRScope): IRScope => scope.children.filter(isScope)[0];
@@ -97,6 +98,7 @@ const axisLayersOf = (scope: IRScope): Array<IRScope> =>
 const nodesOf = (scope: IRScope): Array<IRNode> => scope.children.filter(isNode);
 
 const xValuesOf = (scope: IRScope): Array<number> => nodesOf(scope).map(node => (node.position as [number, number])[0]);
+
 const yValuesOf = (scope: IRScope): Array<number> => nodesOf(scope).map(node => (node.position as [number, number])[1]);
 
 const distancesFromCenter = (scope: IRScope, center: [number, number]): Array<number> =>
@@ -108,12 +110,14 @@ const distancesFromCenter = (scope: IRScope, center: [number, number]): Array<nu
 describe('shared scaffold tracks schema', () => {
   it('shared scaffold spec preserves JSON round trip', () => {
     const parsed = parsePlotIR(JSON.parse(JSON.stringify(cartesianScaffoldSpec)));
+
     expect(parsed).toEqual(cartesianScaffoldSpec);
   });
 
   it('track view can inherit scaffold coordinate', () => {
     const parsed = parsePlotIR(cartesianScaffoldSpec);
     const tracks = parsed.composition?.arrangements?.find(arrangement => arrangement.kind === 'tracks')?.tracks ?? [];
+
     expect(tracks.every(track => track.coordinate === undefined)).toBe(true);
   });
 
@@ -134,6 +138,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/band|start|end/i);
   });
 
@@ -153,6 +158,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/overlap|band/i);
   });
 
@@ -172,6 +178,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/duplicate track/i);
   });
 
@@ -188,6 +195,7 @@ describe('shared scaffold tracks schema', () => {
         ],
       },
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/sharedRoles|band/i);
   });
 });
@@ -196,6 +204,7 @@ describe('shared scaffold tracks lowering', () => {
   it('cartesian lanes share x and use independent y bands', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const [events, volume] = markLayersOf(outer);
+
     expect(Math.max(...xValuesOf(events))).toBeLessThan(Math.min(...xValuesOf(volume)));
     expect(Math.min(...yValuesOf(events))).toBeGreaterThan(Math.max(...yValuesOf(volume)));
   });
@@ -204,6 +213,7 @@ describe('shared scaffold tracks lowering', () => {
     const outer = expandOf(polarScaffoldSpec, true);
     const [inner, outerRing] = markLayersOf(outer);
     const center: [number, number] = [150, 150];
+
     expect(Math.max(...distancesFromCenter(inner, center))).toBeLessThan(
       Math.min(...distancesFromCenter(outerRing, center)),
     );
@@ -227,6 +237,7 @@ describe('shared scaffold tracks lowering', () => {
       marks: [cartesianScaffoldSpec.marks[0]],
       guides: [],
     };
+
     expect(markLayersOf(expandOf(spec, true))).toHaveLength(1);
   });
 
@@ -244,18 +255,21 @@ describe('shared scaffold tracks lowering', () => {
         ],
       },
     };
+
     expect(markLayersOf(expandOf(spec, true))).toHaveLength(2);
   });
 
   it('guide can bind to a track view', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const axes = axisLayersOf(outer);
+
     expect(axes.map(axis => axis.meta?.dimension)).toEqual(['x', 'y']);
   });
 
   it('provenance meta carries arrangement and track identity', () => {
     const outer = expandOf(cartesianScaffoldSpec, true);
     const [events, volume] = markLayersOf(outer);
+
     expect(events.meta).toMatchObject({ arrangement: 'lanes', track: 'events' });
     expect(volume.meta).toMatchObject({ arrangement: 'lanes', track: 'volume' });
     expect(events.meta?.scaffold).toBeUndefined();
@@ -275,6 +289,7 @@ describe('shared scaffold tracks lowering', () => {
         ],
       },
     };
+
     expect(() => expandOf(spec, true)).toThrow(/shared role|theta/i);
   });
 });

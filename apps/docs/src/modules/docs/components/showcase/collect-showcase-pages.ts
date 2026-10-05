@@ -22,9 +22,11 @@ export const collectShowcasePages = (moduleId: string, sections: Array<Section>)
     if (layout === 'showcase' && metadata === undefined) {
       throw new Error(`Showcase page "${path}" requires showcase metadata`);
     }
+
     if (layout !== 'showcase' && metadata !== undefined) {
       throw new Error(`Showcase metadata on "${path}" requires layout "showcase"`);
     }
+
     if (layout === 'showcase' && metadata !== undefined) {
       const entry = { path, segments, label: node.label, metadata };
       assertShowcaseMetadata(entry);
@@ -40,6 +42,7 @@ export const collectShowcasePages = (moduleId: string, sections: Array<Section>)
   }
 
   const familyOrders = new Map<string, Map<number, string>>();
+
   for (const entry of entries) {
     const orders = familyOrders.get(entry.metadata.family) ?? new Map<number, string>();
     const previousPath = orders.get(entry.metadata.order);
@@ -48,6 +51,7 @@ export const collectShowcasePages = (moduleId: string, sections: Array<Section>)
         `Duplicate Showcase order ${entry.metadata.order} in family "${entry.metadata.family}": "${previousPath}" and "${entry.path}"`,
       );
     }
+
     orders.set(entry.metadata.order, entry.path);
     familyOrders.set(entry.metadata.family, orders);
   }

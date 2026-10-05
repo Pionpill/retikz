@@ -16,6 +16,7 @@ type SvgNode = {
 };
 
 const HOST_COLOR = Symbol('host-color');
+
 type EffectiveColor = string | typeof HOST_COLOR;
 
 type PaintContext = {
@@ -46,8 +47,10 @@ const parseXml = (source: string): SvgNode => {
   const stack = [root];
   const tagPattern = /<!--[\s\S]*?-->|<\/?([a-zA-Z][\w:-]*)([^<>]*?)\/?>/g;
   let match: RegExpExecArray | null;
+
   while ((match = tagPattern.exec(source)) !== null) {
     if (match[0].startsWith('<!--')) continue;
+
     const closing = match[0].startsWith('</');
     const name = match[1];
     if (closing) {
@@ -55,46 +58,58 @@ const parseXml = (source: string): SvgNode => {
       if (!current || current.name !== name) throwMalformedSvgError(`Mismatched closing element: ${name}`);
       continue;
     }
+
     const attributes = new Map<string, string>();
     const rawAttributes = match[2];
     const attributePattern = /([:\w-]+)\s*=\s*(["'])(.*?)\2/g;
     let attributeMatch: RegExpExecArray | null;
+
     while ((attributeMatch = attributePattern.exec(rawAttributes)) !== null) {
       attributes.set(attributeMatch[1], attributeMatch[3]);
     }
+
     const node: SvgNode = { name, attributes, children: [] };
     stack.at(-1)?.children.push(node);
     if (!match[0].endsWith('/>')) stack.push(node);
   }
+
   if (stack.length !== 1) throwMalformedSvgError(`Unclosed SVG element: ${stack.at(-1)?.name ?? 'unknown'}`);
+
   return root;
 };
 
 /** 从解析后的节点树中查找 SVG 根节点 */
 const findRootSvg = (root: SvgNode): SvgNode | undefined => {
   const queue = [...root.children];
+
   while (queue.length > 0) {
     const node = queue.shift();
     if (!node) continue;
     if (node.name === 'svg') return node;
+
     queue.push(...node.children);
   }
+
   return undefined;
 };
 
 /** 解析 SVG 数字属性，并在属性缺省时使用默认值 */
 const parseFiniteSvgNumber = (value: string | undefined, fallback?: number): number => {
   if (value === undefined && fallback !== undefined) return fallback;
+
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) throwMalformedSvgError(`Invalid SVG number: ${String(value)}`);
+
   return parsed;
 };
 
 /** 解析限制在 `0..1` 区间内的 SVG 透明度属性 */
 const parseSvgUnitInterval = (value: string | undefined): number | undefined => {
   if (value === undefined) return undefined;
+
   const parsed = parseFiniteSvgNumber(value);
   if (parsed < 0 || parsed > 1) throwMalformedSvgError(`SVG opacity must be within 0..1: ${value}`);
+
   return parsed;
 };
 
@@ -102,9 +117,11 @@ const parseSvgUnitInterval = (value: string | undefined): number | undefined => 
 const parseStyle = (value: string | undefined): ParsedStyle => {
   const style: ParsedStyle = {};
   if (!value) return style;
+
   for (const declaration of value.split(';')) {
     const trimmed = declaration.trim();
     if (!trimmed) continue;
+
     const separator = trimmed.indexOf(':');
     if (separator < 1) throwMalformedSvgError(`Malformed SVG style declaration: ${trimmed}`);
     const property = trimmed.slice(0, separator).trim();
@@ -122,8 +139,10 @@ const parseStyle = (value: string | undefined): ParsedStyle => {
     ) {
       throwUnsupportedSvgError(`Unsupported SVG style property: ${property}`);
     }
+
     style[property] = propertyValue;
   }
+
   return style;
 };
 
@@ -138,6 +157,7 @@ const resolvePaintContext = (
   if (readSvgAttribute(node, 'clip-path') !== undefined) {
     throwUnsupportedSvgError('SVG clip-path is not supported');
   }
+
   const style = parseStyle(readSvgAttribute(node, 'style'));
   const colorValue = readPresentationValue(node, style, 'color');
   let color = parent.color;
@@ -155,8 +175,10 @@ const resolvePaintContext = (
   if (fillRuleValue !== undefined && fillRuleValue !== 'nonzero' && fillRuleValue !== 'evenodd') {
     throwUnsupportedSvgError(`Unsupported SVG fill-rule: ${fillRuleValue}`);
   }
+
   const fillRule = fillRuleValue as PaintContext['fillRule'];
   const opacityValue = readPresentationValue(node, style, 'opacity');
+
   return {
     paint: { color, fill, stroke, fillOpacity, strokeOpacity, strokeWidth, fillRule },
     opacity: parseSvgUnitInterval(opacityValue),
@@ -184,6 +206,7 @@ const countDrawableNodes = (node: SvgNode, insideDefs = false): number => {
   ) {
     return 1;
   }
+
   return node.children.reduce((count, child) => count + countDrawableNodes(child, false), 0);
 };
 
@@ -198,7 +221,9 @@ const indexPathDefinitions = (
     const id = readSvgAttribute(node, 'id');
     if (id) output.set(id, node);
   }
+
   for (const child of node.children) indexPathDefinitions(child, defs, output);
+
   return output;
 };
 
@@ -208,6 +233,7 @@ const resolveUseTarget = (node: SvgNode, definitions: Map<string, SvgNode>): Svg
   const definition = href ? definitions.get(href.replace(/^#/, '')) : undefined;
   if (definition === undefined)
     throw new RetikzTexError(RetikzTexErrorCode.SvgMalformed, `Unknown SVG use reference: ${String(href)}`);
+
   return definition;
 };
 
@@ -218,6 +244,7 @@ const convertRectToPathCommands = (node: SvgNode): Array<SvgPathCommand> => {
   const width = parseFiniteSvgNumber(readSvgAttribute(node, 'width'), 0);
   const height = parseFiniteSvgNumber(readSvgAttribute(node, 'height'), 0);
   if (width < 0 || height < 0) throwMalformedSvgError('SVG rect dimensions must be non-negative');
+
   return [
     { kind: 'move', to: [x, y] },
     { kind: 'line', to: [x + width, y] },
@@ -249,11 +276,15 @@ const convertPolygonToPathCommands = (node: SvgNode): Array<SvgPathCommand> => {
   if (numbers.length < 4 || numbers.length % 2 !== 0 || numbers.some(value => !Number.isFinite(value))) {
     throwMalformedSvgError('Invalid SVG polygon points');
   }
+
   const commands: Array<SvgPathCommand> = [{ kind: 'move', to: [numbers[0], numbers[1]] }];
+
   for (let index = 2; index < numbers.length; index += 2) {
     commands.push({ kind: 'line', to: [numbers[index], numbers[index + 1]] });
   }
+
   commands.push({ kind: 'close' });
+
   return commands;
 };
 
@@ -292,6 +323,7 @@ const lowerSvgDrawable = (
     matrix = multiplyAffine(matrix, [1, 0, 0, 1, x, y]);
     matrix = multiplyAffine(matrix, parseSvgTransform(readSvgAttribute(effectiveNode, 'transform')));
   }
+
   if (!isFiniteNonSingularAffine(matrix))
     throwUnsupportedSvgError('SVG drawable transform must be finite and non-singular');
   if (effectiveNode.name === 'path') {
@@ -307,12 +339,14 @@ const lowerSvgDrawable = (
   } else {
     throwUnsupportedSvgError(`Unsupported SVG drawable: ${effectiveNode.name}`);
   }
+
   let definitionPaint = paint;
   if (effectiveNode !== node) {
     const resolvedPaintContext = resolvePaintContext(paint, effectiveNode);
     definitionPaint = resolvedPaintContext.paint;
     effectiveOpacity = multiplyOpacity(effectiveOpacity, resolvedPaintContext.opacity);
   }
+
   const fill =
     effectiveNode.name === 'line'
       ? { kind: 'none' as const }
@@ -329,9 +363,11 @@ const lowerSvgDrawable = (
     const scale = getAffineSimilarityScale(matrix);
     if (scale === undefined)
       throw new RetikzTexError(RetikzTexErrorCode.SvgUnsupported, 'Visible SVG stroke requires a similarity transform');
+
     path.strokeWidth = (definitionPaint.strokeWidth ?? 1) * scale * context.fontScale;
     if (definitionPaint.strokeOpacity !== undefined) path.strokeOpacity = definitionPaint.strokeOpacity;
   }
+
   if (effectiveOpacity !== undefined) path.opacity = effectiveOpacity;
   if (definitionPaint.fillRule !== undefined) path.fillRule = definitionPaint.fillRule;
   context.paths.push(path);
@@ -356,13 +392,16 @@ const lowerSvgNode = (node: SvgNode, context: SvgLoweringContext, matrix: Affine
   if (resolvedPaintContext.hasOpacity && countDrawableNodes(node) > 1) {
     throwUnsupportedSvgError('Container opacity with multiple drawables is not supported');
   }
+
   const opacity = multiplyOpacity(context.opacity, resolvedPaintContext.opacity);
   const currentMatrix = multiplyAffine(matrix, parseSvgTransform(readSvgAttribute(node, 'transform')));
   if (supportedDrawable) {
     lowerSvgDrawable(node, context, matrix, resolvedPaintContext.paint, opacity);
     return;
   }
+
   const childContext = { ...context, paint: resolvedPaintContext.paint, opacity };
+
   for (const child of node.children) lowerSvgNode(child, childContext, currentMatrix);
 };
 
@@ -377,6 +416,7 @@ export const lowerMathJaxSvg = (svg: string, fontSize: number, texSource = ''): 
     const document = parseXml(svg);
     const rootSvg = findRootSvg(document);
     if (!rootSvg) throw new RetikzTexError(RetikzTexErrorCode.SvgMalformed, 'MathJax SVG root is missing');
+
     const viewBox = (readSvgAttribute(rootSvg, 'viewBox') ?? '')
       .trim()
       .split(/[\s,]+/)
@@ -384,6 +424,7 @@ export const lowerMathJaxSvg = (svg: string, fontSize: number, texSource = ''): 
     if (viewBox.length !== 4 || viewBox.some(value => !Number.isFinite(value)) || viewBox[2] <= 0 || viewBox[3] <= 0) {
       throwMalformedSvgError('MathJax SVG requires a positive finite viewBox');
     }
+
     const [viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight] = viewBox;
     const fontScale = fontSize / 1000;
     const pointMapper: PointMapper = (x, y) => [(x - viewBoxX) * fontScale, (y - viewBoxY) * fontScale];
@@ -401,6 +442,7 @@ export const lowerMathJaxSvg = (svg: string, fontSize: number, texSource = ''): 
       rootSvg,
       paths,
     });
+
     return {
       ok: true,
       value: {

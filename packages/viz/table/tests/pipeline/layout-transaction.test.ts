@@ -35,10 +35,12 @@ const tableArtifactsOf = (artifacts: ReturnType<typeof compileTable>['artifacts'
 const errorChainOf = (error: unknown): Array<Error> => {
   const chain: Array<Error> = [];
   let current = error;
+
   while (current instanceof Error) {
     chain.push(current);
     current = current.cause;
   }
+
   return chain;
 };
 
@@ -180,6 +182,7 @@ describe('Table layout transaction', () => {
             : 100;
         calls.push(context.proposal);
         const mode = context.proposal.x.kind === LayoutAxisProposalKind.Range ? 'range' : 'natural';
+
         return {
           children: [
             {
@@ -257,6 +260,7 @@ describe('Table layout transaction', () => {
           y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
         if (tableProbe.kind === LayoutChildProbeKind.Failed) return context.raise(tableProbe.failure);
+
         return { children: [context.replay(tableProbe.result)] };
       },
     });
@@ -307,6 +311,7 @@ describe('Table layout transaction', () => {
           y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
         if (tableProbe.kind === LayoutChildProbeKind.Failed) return context.raise(tableProbe.failure);
+
         return { children: [context.replay(tableProbe.result)] };
       },
     });
@@ -500,11 +505,13 @@ describe('Table layout transaction', () => {
     };
 
     let thrown: unknown;
+
     try {
       compileTable(spec, {}, { theme: { mode: 'light' }, compile: { composites: [failing] } });
     } catch (error) {
       thrown = error;
     }
+
     const chain = errorChainOf(thrown);
     const message = thrown instanceof Error ? thrown.message : '';
 
@@ -588,6 +595,7 @@ describe('Table layout transaction', () => {
     });
 
     let thrown: unknown;
+
     try {
       compileToScene(
         {
@@ -600,6 +608,7 @@ describe('Table layout transaction', () => {
     } catch (error) {
       thrown = error;
     }
+
     const message = thrown instanceof Error ? thrown.message : '';
 
     expect(message.match(/Layout child provider/g)).toHaveLength(1);
@@ -620,6 +629,7 @@ describe('Table layout transaction', () => {
       schema: FailingSchema,
       compile: (_node, context) => {
         if (context.proposal.x.kind === LayoutAxisProposalKind.Range) throw rootCause;
+
         return {
           children: [
             {
@@ -647,11 +657,13 @@ describe('Table layout transaction', () => {
     };
 
     let thrown: unknown;
+
     try {
       compileTable(spec, {}, { theme: { mode: 'light' }, compile: { composites: [failing] } });
     } catch (error) {
       thrown = error;
     }
+
     const chain = errorChainOf(thrown);
 
     expect(
@@ -678,6 +690,7 @@ describe('Table layout transaction', () => {
         if (context.proposal.x.kind === LayoutAxisProposalKind.Range) {
           throw new Error('anonymous constrained failure');
         }
+
         return {
           children: [
             {
@@ -748,6 +761,7 @@ describe('Table layout transaction', () => {
         if (failedProbe.kind === LayoutChildProbeKind.Resolved) {
           throw new Error('expected a real failed Border fixture probe');
         }
+
         expectedFailure = failedProbe.failure;
         const tableContext: LayoutCompositeCompileContext = {
           ...context,
@@ -759,8 +773,11 @@ describe('Table layout transaction', () => {
             ) {
               return context.layoutChild(child, proposal);
             }
+
             borderLayoutCalls += 1;
+
             expect(proposal).toEqual(NaturalLayoutProposal);
+
             return failedProbe;
           },
           raise: failure => {
@@ -769,11 +786,13 @@ describe('Table layout transaction', () => {
           },
         };
         resolveTableTransaction(spec, {}, {}, tableContext);
+
         return { children: [] };
       },
     });
 
     let thrown: unknown;
+
     try {
       compileToScene(
         {
@@ -786,6 +805,7 @@ describe('Table layout transaction', () => {
     } catch (error) {
       thrown = error;
     }
+
     const chain = errorChainOf(thrown);
 
     expect(

@@ -80,6 +80,7 @@ export const InspectLayout: FC<InspectLayoutProps> = props => {
     () => createInspectionVanillaDriver({ registry, selection, onDiagnostic, onCommit }),
     [registry, selection, onDiagnostic, onCommit],
   );
+
   return (
     <Layout
       {...layoutProps}

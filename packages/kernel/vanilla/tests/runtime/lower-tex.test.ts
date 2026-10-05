@@ -42,6 +42,7 @@ const scene: IRScene = {
 describe('Vanilla compile.lowerTex passthrough', () => {
   it('把 custom lowerer 的多条路径与 paint 交给同一 Core consumer', () => {
     const svg = renderToSvgString(scene, { compile: { lowerTex } });
+
     expect(svg).toContain('fill="royalblue"');
     expect(svg).toContain('fill="crimson"');
   });

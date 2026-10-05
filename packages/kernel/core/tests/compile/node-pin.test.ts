@@ -21,18 +21,21 @@ const lineEnds = (p: PathPrim): { from: [number, number]; to: [number, number] }
   const move = p.commands.find(c => c.kind === 'move');
   const line = p.commands.find(c => c.kind === 'line');
   if (move?.kind !== 'move' || line?.kind !== 'line') throw new Error('expected move + line');
+
   return { from: move.to, to: line.to };
 };
 
 describe('pin 引线产出', () => {
   it('pin:true → 恰好 1 条 leader PathPrim（move + line）', () => {
     const paths = compileNode({ text: 'x', position: 'top', pin: true });
+
     expect(paths).toHaveLength(1);
     expect(paths[0].commands.map(c => c.kind)).toEqual(['move', 'line']);
   });
 
   it("position:'top' → leader 竖直向上（end 比 start 更高、x 近似相等）", () => {
     const { from, to } = lineEnds(compileNode({ text: 'x', position: 'top', pin: true })[0]);
+
     expect(to[1]).toBeLessThan(from[1]); // 屏幕 y-down：label 在上 → end y 更小
     expect(Math.abs(to[0] - from[0])).toBeLessThan(1); // 竖直
   });
@@ -50,12 +53,14 @@ describe('pin 引线样式', () => {
       position: 'right',
       pin: { stroke: 'gray', dashPattern: [2, 2] },
     });
+
     expect(paths[0].stroke).toBe('gray');
     expect(paths[0].dashPattern).toEqual([2, 2]);
   });
 
   it('pin:true 引线 stroke 缺省继承 currentColor', () => {
     const paths = compileNode({ text: 'x', position: 'top', pin: true });
+
     expect(paths[0].stroke).toBe('currentColor');
   });
 });
@@ -66,6 +71,7 @@ describe('多 pin', () => {
       { text: 'in', position: 'left', pin: true },
       { text: 'out', position: 'right', pin: true },
     ]);
+
     expect(paths).toHaveLength(2);
   });
 });
@@ -83,12 +89,14 @@ describe('label / pin 进 bbox（不被 viewBox 裁切）', () => {
   it('远处 label 撑大 scene.layout（与无 label 比）', () => {
     const base = sceneOf({});
     const withLabel = sceneOf({ label: { text: 'far top', position: 'top', distance: 60 } });
+
     expect(withLabel.height).toBeGreaterThan(base.height);
   });
 
   it('pin label 同样进 bbox', () => {
     const base = sceneOf({});
     const withPin = sceneOf({ label: { text: 'note', position: 'right', distance: 50, pin: true } });
+
     expect(withPin.width).toBeGreaterThan(base.width);
   });
 });

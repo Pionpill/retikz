@@ -12,6 +12,7 @@ export type FlowBendCandidatesProps = Readonly<{ lang?: Lang }>;
 const FlowBendCandidates: FC<FlowBendCandidatesProps> = props => {
   const { lang = 'zh' } = props;
   const t = flowBendCandidatesI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[30, 45, 60].flatMap(bendAngle =>

@@ -323,6 +323,21 @@ Custom layouts use `context.resolveRoutePoints`. After the callback returns, Flo
   ]}
 />
 
+## Container width allocation
+
+Sibling containers first retain their natural widths, then use the largest as a shared budget. Measurement includes nodes, gaps and relation label reservations, plus Group captions and content insets. Fill rows reuse equal-weight Flex growth; nodes with a fixed layout.width do not participate. Graph/Core remeasures nodes before the layout callback receives their final sizes. Allocated widths never feed back into a larger natural baseline.
+
+The allocatedWidth input is a mandatory container constraint; output still uses bounds. Custom layouts must preserve it. Routing, Graph drawing and artifacts consume the same geometry. See the [interactive comparison](/schematic/diagram/flow/extended#equal-width-sibling-containers).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Allocation and remeasurement',
+      path: 'packages/schematic/diagram/src/flow/pipeline/flow/container-width.ts',
+    },
+  ]}
+/>
+
 ## Endpoint allocation
 
 Layout input normalizes each relation source/target into an object with id, effective overlap and optional side or anchor. The endpointPlacement capability is checked before the callback. Output retains only `{ id, anchor? }` and never writes back to Source.

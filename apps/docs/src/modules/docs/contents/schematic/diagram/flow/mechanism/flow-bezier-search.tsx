@@ -6,8 +6,10 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { flowBezierSearchI18n } from './flow-bezier-search.i18n';
+
 /** 有限候选流程语言 */
 export type FlowBezierSearchProps = Readonly<{ lang?: Lang }>;
+
 /** 基线成功可早停，扩展时完整比较一轮再决定是否继续 */
 const Demo: FC<FlowBezierSearchProps> = props => {
   const { lang = 'zh' } = props;
@@ -20,6 +22,7 @@ const Demo: FC<FlowBezierSearchProps> = props => {
     ['score', copy.score, copy.scoreNote],
     ['result', copy.result, copy.resultNote],
   ];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="rows" kind="linear" direction="down" gap={56}>

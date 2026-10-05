@@ -8,6 +8,7 @@ import { TableVisualChannel } from '../../schemas';
 const strictlyIncreasingEdges = (edges: ReadonlyArray<number>): boolean =>
   edges.every((edge, index) => index === 0 || edge > edges[index - 1]);
 
+/** 校验一次表格视觉比例尺解析产生的可序列化图例描述 */
 export const TableLegendDescriptorSchema = strictObject({
   encodingId: NonBlankStringSchema.describe('Owning Table visual encoding id.'),
   channel: zodEnum(TableVisualChannel).describe('Table Cell appearance channel described by this Legend.'),
@@ -22,18 +23,23 @@ export const TableLegendDescriptorSchema = strictObject({
     if (descriptor.edges !== undefined && !strictlyIncreasingEdges(descriptor.edges)) {
       context.addIssue({ code: 'custom', path: ['edges'], message: 'edges must be strictly increasing' });
     }
+
     if (descriptor.form === 'ramp') {
       if (descriptor.domain.length !== 2 || descriptor.range.length !== 2 || descriptor.edges !== undefined) {
         context.addIssue({ code: 'custom', message: 'ramp requires two domain and range endpoints without edges' });
       }
+
       return;
     }
+
     if (descriptor.edges === undefined) {
       if (descriptor.domain.length !== descriptor.range.length) {
         context.addIssue({ code: 'custom', message: 'swatch domain and range must have equal lengths' });
       }
+
       return;
     }
+
     if (
       descriptor.range.length !== descriptor.edges.length + 1 ||
       descriptor.domain.length !== descriptor.edges.length ||

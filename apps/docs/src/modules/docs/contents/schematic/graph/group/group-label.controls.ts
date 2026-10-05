@@ -67,5 +67,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     relatedApis: ['Group.labels', 'NodeLabel.position'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const groupLabelControls = previewControlContract.controls;

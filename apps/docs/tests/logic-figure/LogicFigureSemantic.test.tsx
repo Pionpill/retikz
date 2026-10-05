@@ -55,8 +55,11 @@ describe('LogicFigure semantic vocabulary', () => {
       </PreviewThemeProvider>,
     );
     const vanilla = buildVanillaPreview(buildPreviewIR(Figure), { theme: { mode } });
+
     expect(vanilla.svg, vanilla.code).toBeDefined();
+
     const vanillaSvg = vanilla.svg;
+
     for (const svg of [reactSvg, vanillaSvg]) {
       expect(svg).toContain(`fill="${fill}"`);
       expect(svg).toContain('stroke="none"');
@@ -68,6 +71,7 @@ describe('LogicFigure semantic vocabulary', () => {
 
   it('Inspect 总览使用普通实体，通过 group 区分主图与观测支路', () => {
     const figure = FlowDiagramSchema.parse(buildPreviewIR(InspectCompileFlow).sourceIr.children[0]);
+
     expect(figure.entities.every(entity => entity.kind === undefined)).toBe(true);
     expect(figure.entities.filter(entity => entity.group === 'inspection').map(entity => entity.id)).toEqual([
       'observation',
@@ -179,6 +183,7 @@ describe('LogicFigure semantic vocabulary', () => {
         expect.objectContaining({ id: 'compose-row', direction: 'right' }),
       ]),
     );
+
     const relations = figure.relations ?? [];
 
     expect(relations).toEqual(

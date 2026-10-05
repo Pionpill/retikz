@@ -34,6 +34,7 @@ export const BlockRowInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockRowInp
         children: normalized.children,
       });
     }
+
     return {
       node,
       providerDependencies: {

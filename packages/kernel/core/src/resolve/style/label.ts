@@ -7,11 +7,13 @@ import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
 /** fold labelDefault 通道 */
 export const resolveEffectiveLabelDefault = (stack: ReadonlyArray<StyleResolveFrame>): EffectiveLabelDefault => {
   let acc: IRLabelDefault = {};
+
   for (const frame of stack) {
     if (cutsStyleChannel(frame.resetStyle, 'label')) acc = {};
     if (frame.labelDefault)
       acc = { ...acc, ...mergeProperties([frame.labelDefault], { shouldOverride: value => value !== undefined }) };
   }
+
   return acc;
 };
 
@@ -19,6 +21,7 @@ export const resolveEffectiveLabelDefault = (stack: ReadonlyArray<StyleResolveFr
 const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undefined => {
   if (a === undefined) return b;
   if (b === undefined) return a;
+
   const out: IRFont = {};
   const family = a.family ?? b.family;
   if (family !== undefined) out.family = family;
@@ -28,6 +31,7 @@ const mergeFont = (a: IRFont | undefined, b: IRFont | undefined): IRFont | undef
   if (weight !== undefined) out.weight = weight;
   const style = a.style ?? b.style;
   if (style !== undefined) out.style = style;
+
   return out;
 };
 
@@ -45,5 +49,6 @@ export const resolveGeometryLabel = (
   if (font !== undefined) out.font = font;
   const opacity = label.opacity ?? labelDefault.opacity;
   if (opacity !== undefined) out.opacity = opacity;
+
   return out;
 };

@@ -33,23 +33,27 @@ const validateConnectionEnvelope = (
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected an object with finite positive half-axes`,
     );
   }
+
   const { halfWidth, halfHeight } = envelope as Record<string, unknown>;
   if (typeof halfWidth !== 'number' || typeof halfHeight !== 'number') {
     throw createCompositeContractError(
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected numeric half-axes`,
     );
   }
+
   if (!Number.isFinite(halfWidth) || !Number.isFinite(halfHeight) || halfWidth <= 0 || halfHeight <= 0) {
     throw createCompositeContractError(
       `Shape '${shapeName}' returned an invalid ${kind} connection envelope at ${path}: expected finite positive half-axes, received [${halfWidth}, ${halfHeight}]`,
     );
   }
+
   const tolerance = Number.EPSILON * Math.max(1, halfWidth, halfHeight) * 8;
   if (kind === 'circle' && Math.abs(halfWidth - halfHeight) > tolerance) {
     throw createCompositeContractError(
       `Shape '${shapeName}' returned an invalid circle connection envelope at ${path}: half-axes must be equal, received [${halfWidth}, ${halfHeight}]`,
     );
   }
+
   return { halfWidth, halfHeight };
 };
 
@@ -74,12 +78,14 @@ const connectionEnvelopeOf = (kind: ConnectionEnvelopeKind, context: BoundaryGeo
       `Shape '${context.visualDef.name}' does not provide a ${kind} connection envelope; falling back to visual bounds.`,
     );
   }
+
   const resolved = {
     ...context.visualRect,
     width: envelope.halfWidth * 2,
     height: envelope.halfHeight * 2,
   };
   context.connectionEnvelopeCache?.set(cacheKey, resolved);
+
   return resolved;
 };
 
@@ -90,6 +96,7 @@ const validateResolvedRect = (providerName: string, value: unknown, irPath?: str
       `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected an object`,
     );
   }
+
   const { x, y, width, height, rotate } = value as Record<string, unknown>;
   if (
     typeof x !== 'number' ||
@@ -109,6 +116,7 @@ const validateResolvedRect = (providerName: string, value: unknown, irPath?: str
       `Boundary '${providerName}' resolved an invalid rect at ${irPath ?? 'node'}: expected finite positive width and height`,
     );
   }
+
   return { x, y, width, height, ...(rotate === undefined ? {} : { rotate }) };
 };
 
@@ -123,10 +131,12 @@ export const resolveBoundary = (
   if (resolution.isShape) {
     return { def: asGeometryDefinition(resolution.definition), rect: context.visualRect, params: resolution.params };
   }
+
   const boundaryDef = resolution.definition as BoundaryDefinition;
   let rect = context.visualRect;
   if (boundaryDef.resolveRect !== undefined) {
     let rawRect: unknown;
+
     try {
       rawRect = boundaryDef.resolveRect(
         {
@@ -137,18 +147,22 @@ export const resolveBoundary = (
       );
     } catch (error) {
       if (isFatalProbeError(error) || isLayoutProbeRecoverableError(error)) throw error;
+
       const message = safeThrownDetail(error);
       throw createLayoutProbeRecoverableError(
         `Boundary '${resolution.name}' failed to resolve its rect at ${context.irPath ?? 'node'}: ${message}`,
         { cause: error, providerKey: `boundary:${resolution.name}` },
       );
     }
+
     rect = withProviderOutputValidationBoundary(`Boundary '${resolution.name}' resolveRect`, () =>
       validateResolvedRect(resolution.name, rawRect, context.irPath),
     );
   }
+
   return { def: asGeometryDefinition(boundaryDef), rect, params: resolution.params };
 };
 
+/** 将标准方向锚点退回到矩形边界求解；非标准名称返回 undefined */
 export const fallbackBoundaryAnchor = (rect: BoundaryGeometryResolution['rect'], name: string): Position | undefined =>
   isDirectionalAnchor(name) ? rectOps.anchor(rect, name) : undefined;

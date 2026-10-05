@@ -1,10 +1,10 @@
 import type { LowerTex } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
-import type { MathJaxExtensionValue } from '@retikz/tex';
+import type { MathJaxExtension } from '@retikz/tex';
 
 import { TexExtensionExample, TexExtensions } from './tex-extensions.controls';
 
-const extensions: Array<MathJaxExtensionValue> = [...TexExtensions];
+const extensions: Array<MathJaxExtension> = [...TexExtensions];
 
 const renderTexExtensions = (values: TexExtensionsPreviewValues, lowerTex?: LowerTex) => {
   const source = TexExtensionExample[values.example];

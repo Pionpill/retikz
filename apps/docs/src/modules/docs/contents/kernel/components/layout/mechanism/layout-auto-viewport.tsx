@@ -14,6 +14,7 @@ export type LayoutAutoViewportProps = Readonly<{ lang?: Lang }>;
 const LayoutAutoViewport: FC<LayoutAutoViewportProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = layoutAutoViewportI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

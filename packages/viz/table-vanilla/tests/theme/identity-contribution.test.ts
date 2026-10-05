@@ -15,6 +15,7 @@ describe('Table Vanilla runtime style contract', () => {
   it('adapter contributions keep removed theme definitions out of the payload', () => {
     const spec = createManualTableIR({ rows: [[null]] });
     const contribution = TableInputEmbedAdapter.lower({ table: inputTableFromIR(spec) }, contextOf('panel'));
+
     expect(contribution).not.toHaveProperty('themeTokenDefinitions');
     expect(contribution).not.toHaveProperty('datasets');
     expect(contribution).not.toHaveProperty('makeComposites');

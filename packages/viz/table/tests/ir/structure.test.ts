@@ -71,6 +71,7 @@ describe('Table structure schema', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues).toEqual(expect.arrayContaining([expect.objectContaining({ path: ['rows', 1] })]));
     }
@@ -84,6 +85,7 @@ describe('Table structure schema', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues).toEqual(expect.arrayContaining([expect.objectContaining({ path: ['rowKinds'] })]));
     }
@@ -130,10 +132,13 @@ describe('Table structure schema', () => {
       kind: 'summaryByRegion',
       group: 'region',
     });
+
     for (const kind of ['manual', 'detail', 'pivot', 'matrix', 'custom']) {
       const operation = kind === 'manual' ? { kind } : kind === 'detail' ? { kind } : { kind, value: 1 };
+
       expect(() => TableStructureSchema.parse(operation)).toThrow();
     }
+
     expect(() => TableStructureSchema.parse({ kind: 'extension', build: () => [] })).toThrow();
   });
 });

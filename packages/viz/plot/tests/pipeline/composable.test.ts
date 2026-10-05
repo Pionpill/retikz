@@ -52,6 +52,7 @@ describe('contract L1-a · IRPlot 自描述尺寸', () => {
     // node.width=200 应覆盖全局 opts.width=480：max-x 数据点落在 200，而非 480
     const layer = expandOf(pointSpec({ width: 200, height: 120 }), opts).children[0] as IRScope;
     const xs = (layer.children as Array<IRNode>).map(n => (n.position as [number, number])[0]);
+
     expect(Math.max(...xs)).toBe(200);
   });
 
@@ -59,6 +60,7 @@ describe('contract L1-a · IRPlot 自描述尺寸', () => {
     // node.height=120 覆盖全局 300：y 轴底（revenue 最小值 9）落在 height=120 处
     const layer = expandOf(pointSpec({ width: 200, height: 120 }), opts).children[0] as IRScope;
     const ys = (layer.children as Array<IRNode>).map(n => (n.position as [number, number])[1]);
+
     expect(Math.max(...ys)).toBe(120);
   });
 
@@ -66,6 +68,7 @@ describe('contract L1-a · IRPlot 自描述尺寸', () => {
     // 不写 node.width/height → 回退全局 opts（单图逐字回归）：max-x = 480
     const layer = expandOf(pointSpec(), opts).children[0] as IRScope;
     const xs = (layer.children as Array<IRNode>).map(n => (n.position as [number, number])[0]);
+
     expect(Math.max(...xs)).toBe(480);
   });
 });
@@ -74,10 +77,13 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
   it('id_plot_outer_panel_scope', () => {
     // 有 id → 外层 panel scope（id、非 localNamespace，承面板 bbox）⊃ 内层 localNamespace 内容
     const outer = expandOf(pointSpec({ id: 'p' }), opts);
+
     expect(outer.type).toBe('scope');
     expect(outer.id).toBe('p');
     expect(outer.localNamespace).toBeUndefined();
+
     const inner = outer.children[0] as IRScope;
+
     expect(inner.type).toBe('scope');
     expect(inner.localNamespace).toBe(true);
   });
@@ -89,6 +95,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
       (c): c is IRNode =>
         (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea',
     );
+
     expect(carrier).toBeTruthy();
     expect(carrier!.type).toBe('node');
     expect(carrier!.shape).toBe('rectangle');
@@ -114,6 +121,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
         (c as { type?: string; id?: string }).type === 'node' && (c as { id?: string }).id === 'p.plotArea',
     );
     if (carrier === undefined) throw new Error('Expected p.plotArea carrier node');
+
     expect(nodeWidth(carrier)).toBeLessThan(480);
     expect(nodeHeight(carrier)).toBeLessThan(300);
   });
@@ -121,6 +129,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
   it('no_id_structure_unchanged', () => {
     // 无 id → 老结构（localNamespace root、无 carrier、children[0]=首个 mark 层），单图零回归
     const outer = expandOf(pointSpec(), opts);
+
     expect(outer.id).toBeUndefined();
     expect(outer.localNamespace).toBe(true);
     expect(
@@ -148,14 +157,18 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
     const compiled = compileToScene(scene, { composites: lowerPlots({ sales: SALES }, opts) }).scene;
     const path = compiled.primitives.find((p): p is Extract<ScenePrimitive, { type: 'path' }> => p.type === 'path');
     if (!path) return undefined;
+
     for (const cmd of path.commands) if (cmd.kind === 'line') return cmd.to;
+
     return undefined;
   };
 
   it('panel_bbox_resolvable_from_sibling', () => {
     // 面板 bbox：core contract 既有能力（scope.id 注册父帧）；无 guides → 内容满图，p.right ≈ [480,150]
     const end = lineEndpoint(pointSpec({ id: 'p' }), { id: 'p', anchor: 'right' });
+
     expect(end).toBeDefined();
+
     // 内容右边 ≈ 480（+ 散点字形半径），y 居中 ≈ 150
     expect(end![0]).toBeGreaterThan(470);
     expect(end![0]).toBeLessThan(495);
@@ -165,6 +178,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
   it('plotarea_resolvable_from_sibling', () => {
     // 跨 localNamespace：`<plotId>.plotArea` 兄弟可锚（外部可见）；无 guides → plotArea 满图，center = [240,150]
     const end = lineEndpoint(pointSpec({ id: 'p' }), { id: 'p.plotArea', anchor: 'center' });
+
     expect(end).toBeDefined();
     expect(end![0]).toBeCloseTo(240, 0);
     expect(end![1]).toBeCloseTo(150, 0);

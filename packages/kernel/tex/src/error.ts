@@ -14,12 +14,12 @@ export const RetikzTexErrorCode = {
 } as const;
 
 /** TeX 包稳定错误码取值 */
-export type RetikzTexErrorCodeValue = ValueOf<typeof RetikzTexErrorCode>;
+export type RetikzTexErrorCode = ValueOf<typeof RetikzTexErrorCode>;
 
 /** TeX 包错误的结构化构造参数 */
 export type RetikzTexErrorOptions = Readonly<{
   /** 稳定错误码 */
-  code: RetikzTexErrorCodeValue;
+  code: RetikzTexErrorCode;
   /** 面向调用方的原始错误消息 */
   message: string;
   /** 失败上下文的结构化详情 */
@@ -31,13 +31,13 @@ export type RetikzTexErrorOptions = Readonly<{
 type RetikzTexErrorCauseOptions = Readonly<Pick<RetikzTexErrorOptions, 'details' | 'cause'>>;
 
 /** TeX 包统一的结构化错误 */
-export class RetikzTexError extends RetikzError<RetikzTexErrorCodeValue, Readonly<Record<string, unknown>>> {
+export class RetikzTexError extends RetikzError<RetikzTexErrorCode, Readonly<Record<string, unknown>>> {
   /** 使用默认错误码创建 TeX 错误 */
   constructor(message: string);
   /** 使用结构化参数创建 TeX 错误 */
   constructor(options: RetikzTexErrorOptions);
   /** 使用显式错误码创建 TeX 错误 */
-  constructor(code: RetikzTexErrorCodeValue, message: string, options?: RetikzTexErrorCauseOptions);
+  constructor(code: RetikzTexErrorCode, message: string, options?: RetikzTexErrorCauseOptions);
   constructor(
     optionsOrMessageOrCode: RetikzTexErrorOptions | string,
     message?: string,
@@ -48,7 +48,7 @@ export class RetikzTexError extends RetikzError<RetikzTexErrorCodeValue, Readonl
         ? optionsOrMessageOrCode
         : message === undefined
           ? { code: RetikzTexErrorCode.Default, message: optionsOrMessageOrCode }
-          : { code: optionsOrMessageOrCode as RetikzTexErrorCodeValue, message, ...causeOptions };
+          : { code: optionsOrMessageOrCode as RetikzTexErrorCode, message, ...causeOptions };
     super({
       code: options.code,
       message: options.message,

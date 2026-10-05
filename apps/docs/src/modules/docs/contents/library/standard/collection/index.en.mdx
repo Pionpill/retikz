@@ -1,26 +1,28 @@
 ---
 title: Collections
-description: Visualize ordered collections, key-value records, and nested structures with List and Map.
+description: Visualize ordered collections, key-value records, and nested structures with Array, Map, and Matrix.
 ---
 
-Collection components draw structured content as identifiable cells. List organizes items in sequence; Map organizes entries as keys and values. A cell can also contain another component to represent nested structures.
+Collection components draw structured content as identifiable cells. Array organizes items in sequence; Map organizes entries as keys and values; Matrix aligns two-dimensional cells on shared row and column tracks. A cell can also contain another component to represent nested structures.
 
 ## Responsibilities at a glance
 
 | Component | Responsibility                                            | When to read                                        |
 | --------- | --------------------------------------------------------- | --------------------------------------------------- |
-| List      | Arrange sequential items with direction and index options | Show arrays, queues, or other ordered structures    |
+| Array     | Arrange sequential items with direction and index options | Show arrays, queues, or other ordered structures    |
 | Map       | Organize entries into keys and values                     | Show records, property tables, or keyed collections |
+
+| Matrix | Arrange cells on shared row/column tracks | Show two-dimensional arrays and schematic matrices |
 
 ## Show a record inside a sequence
 
-This example from the List page places a Map inside one ListItem. The outer List establishes item order, while the inner Map represents the fields of a record.
+This example from the Array page places a Map inside one ArrayItem. The outer Array establishes item order, while the inner Map represents the fields of a record.
 
-<ComponentPreview files="/library/standard/collection/list/list-composition" size="sm" />
+<ComponentPreview files="/library/standard/collection/array/array-composition" size="sm" />
 
-Nesting changes the content of a cell without obscuring the sequence. The List and Map pages cover cell styling, indices, and references in detail.
+Nesting changes the content of a cell without obscuring the sequence. The Array and Map pages cover cell styling, indices, and references in detail.
 
-Pass a JSON array as List data or a JSON object as Map data. Use explicit items / entries or React composition when individual cells need ids, styles, or drawable children. These inputs serve different authoring needs and cannot be mixed on one instance.
+Pass a JSON array as Array data or a JSON object as Map data. Use explicit items / entries or React composition when individual cells need ids, styles, or drawable children. These inputs serve different authoring needs and cannot be mixed on one instance.
 
 ## Choosing the right family
 
@@ -31,10 +33,17 @@ These collection components visualize structures; they are not runtime data stru
 <LinkedSections
   items={[
     {
-      title: 'List',
+      title: 'Array',
       description: 'Arrange sequential items with direction and index options',
-      url: '/library/standard/collection/list',
+      url: '/library/standard/collection/array',
+    },
+    {
+      title: 'Matrix',
+      description: 'Two-dimensional cells on shared row and column tracks',
+      url: '/library/standard/collection/matrix',
     },
     { title: 'Map', description: 'Organize entries into keys and values', url: '/library/standard/collection/map' },
   ]}
 />
+
+[Chain](/library/standard/collection/chain) connects arbitrary content with ordered branches, joins, and independent alignment controls.

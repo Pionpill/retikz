@@ -11,6 +11,7 @@ export const resolveAxes = (source: IRAxes): CanonicalAxes => {
   const origin = AxesSchema.shape.origin.parse(source.origin);
   const label = origin.label;
   const labelSchema = AxesSchema.shape.origin.unwrap().shape.label.unwrap().options[2];
+
   return {
     ...source,
     x: resolveAxis(source.x, 'x'),
@@ -47,6 +48,7 @@ const resolveAxis = (source: IRAxes['x'], key: 'x' | 'y'): CanonicalAxesAxis => 
     ticks,
   };
   checkDefaultDependentValues(source, canonical, key);
+
   return canonical;
 };
 
@@ -59,6 +61,7 @@ const checkDefaultDependentValues = (source: IRAxes['x'], axis: CanonicalAxesAxi
       details: { path: [key, ...path] },
     });
   };
+
   if (axis.grid && source.grid && source.grid.offset === undefined) {
     const error = getLatticeRangeError({
       min: -axis.extent.negative,
@@ -69,7 +72,9 @@ const checkDefaultDependentValues = (source: IRAxes['x'], axis: CanonicalAxesAxi
     });
     if (error !== undefined) fail(error, ['grid', 'spacing']);
   }
+
   if (!axis.ticks || !source.ticks) return;
+
   const ticks = axis.ticks;
   if (
     ticks.source.kind === AxesTickSourceKind.Spacing &&
@@ -84,6 +89,7 @@ const checkDefaultDependentValues = (source: IRAxes['x'], axis: CanonicalAxesAxi
     });
     if (error !== undefined) fail(error, ['ticks', 'source', 'spacing']);
   }
+
   if (
     ticks.labels &&
     (source.ticks.endpointGap === undefined ||

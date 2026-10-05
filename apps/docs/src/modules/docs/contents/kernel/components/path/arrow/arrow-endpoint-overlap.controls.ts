@@ -18,6 +18,7 @@ const createControls = (lang: Lang) => {
     { label: i18n.solidCircle, value: 'circle' },
     { label: i18n.hollowCircle, value: 'openCircle' },
   ] as const;
+
   return definePreviewControls({
     presentation: 'panel',
     title: i18n.endpointOverlap,

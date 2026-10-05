@@ -16,6 +16,7 @@ export type FlowBoundsProps = Readonly<{ lang?: Lang }>;
 export { previewControls };
 
 const viewBox = { x: -112, y: -44, width: 430, height: 210 };
+
 const framePadding = 8;
 
 type BoundsSceneProps = Readonly<{ lang: Lang; excludeFormats: boolean }>;
@@ -70,6 +71,7 @@ const BoundsScene: FC<BoundsSceneProps> = props => {
         : nextBounds,
     );
   }, []);
+
   return (
     <div className="relative inline-block align-top">
       {renderFlow(lang, excludeFormats, handleCompileResult)}
@@ -106,7 +108,9 @@ const createPreview = (lang: Lang) => {
 };
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
+
 /** 当前语言的结构边界交互示例 */
 const Demo: FC<FlowBoundsProps> = props => {
   const { lang = 'zh' } = props;

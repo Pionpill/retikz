@@ -39,12 +39,14 @@ describe('<Plot> lowerPlots option 转发', () => {
   it('react_options_forwarded — provenance reaches lowerPlots', () => {
     // provenance:true + root id → 合成 scope id 'sales.mark.0' → SVG data-retikz-id
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} provenance />);
+
     expect(svg).toContain('data-retikz-id="sales.mark.0"');
   });
 
   it('provenance_off_no_synthesized_id', () => {
     // 不传 provenance（默认关）→ 不合成内部 id → SVG 无 'sales.mark.0'
     const svg = renderToStaticMarkup(<Plot spec={spec} data={data} width={480} height={300} />);
+
     expect(svg).not.toContain('data-retikz-id="sales.mark.0"');
   });
 
@@ -53,6 +55,7 @@ describe('<Plot> lowerPlots option 转发', () => {
     const svg = renderToStaticMarkup(
       <Plot spec={spec} data={data} width={480} height={300} provenance datumProvenance datumIdField="q" />,
     );
+
     expect(svg).toContain('data-retikz-id="sales.datum.Q1"');
   });
 });
@@ -84,6 +87,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
         <IntervalMark x="region" y="total" />
       </Plot>,
     );
+
     expect((svg.match(/<rect/g) ?? []).length).toBe(2);
   });
 
@@ -101,6 +105,7 @@ describe('<Plot dataTransforms> 快捷数据变换直传', () => {
         <IntervalMark x="region" y="n" />
       </Plot>,
     );
+
     // count：N=2、S=1 → 仍 2 组 2 柱
     expect((svg.match(/<rect/g) ?? []).length).toBe(2);
   });

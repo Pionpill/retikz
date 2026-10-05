@@ -5,11 +5,16 @@ import { renderFrameToCanvas, renderToCanvas } from '../../src/canvas';
 import type { RenderReadonlyLayer } from '../../src/runtime';
 
 type CanvasCall = {
+  /** 记录的 Canvas API 方法名 */
   name: string;
+  /** 调用时按顺序传入的参数 */
   args: Array<unknown>;
+  /** 调用时的填充样式快照 */
   fillStyle: string | CanvasGradient | CanvasPattern;
   globalAlpha: number;
+  /** 调用时的线宽快照 */
   lineWidth: number;
+  /** 调用时的描边样式快照 */
   strokeStyle: string | CanvasGradient | CanvasPattern;
 };
 
@@ -32,10 +37,15 @@ type SpyCanvasContext = Pick<
   | 'stroke'
   | 'transform'
 > & {
+  /** 按调用顺序记录的绘制 API 及状态快照 */
   calls: Array<CanvasCall>;
+  /** 当前模拟填充样式 */
   fillStyle: string | CanvasGradient | CanvasPattern;
+  /** 当前模拟全局不透明度 */
   globalAlpha: number;
+  /** 当前模拟线宽 */
   lineWidth: number;
+  /** 当前模拟描边样式 */
   strokeStyle: string | CanvasGradient | CanvasPattern;
 };
 
@@ -83,6 +93,7 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     stroke: record('stroke'),
     transform: record('transform'),
   };
+
   return context;
 };
 
@@ -202,9 +213,12 @@ describe('renderToCanvas 规格', () => {
 
     const rectIndex = context.calls.findIndex(call => call.name === 'rect');
     const lineIndex = context.calls.findIndex(call => call.name === 'lineTo');
+
     expect(rectIndex).toBeGreaterThanOrEqual(0);
     expect(lineIndex).toBeGreaterThan(rectIndex);
+
     const fillIndices = context.calls.flatMap((call, index) => (call.name === 'fill' ? [index] : []));
+
     expect(fillIndices).toHaveLength(3);
     expect(context.calls.some(call => call.name === 'createLinearGradient')).toBe(true);
     expect(context.calls.some(call => call.name === 'createPattern')).toBe(true);

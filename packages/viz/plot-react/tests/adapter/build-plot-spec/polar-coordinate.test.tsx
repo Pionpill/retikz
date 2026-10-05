@@ -64,6 +64,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       ],
       guides: [],
     };
+
     expect(spec.coordinate).not.toHaveProperty('startAngle');
     expect(PlotSchema.parse(spec)).toEqual(PlotSchema.parse(expected));
   });
@@ -89,11 +90,13 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
   it('pie_equivalence：coordinate="polar2D" + <IntervalMark angle> → polar2D + linear 角向 + stack transform + interval mark', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" color="label" />, '__plot', { coordinate: 'polar2D' });
     const expected = createPolarPieSpec('__plot', { angle: '__angle', radius: '__radius', color: '__color' });
+
     expect(PlotSchema.parse(spec)).toEqual(PlotSchema.parse(expected));
   });
 
   it('pie_color_defaults_to_angle_field：未给 color → 按 angle 值字段分类上色', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+
     expect(spec.marks[0]).toEqual({
       type: 'interval',
       bounds: { x: { kind: 'extent', from: 'y0', to: 'y1' }, y: { kind: 'full' } },
@@ -104,6 +107,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
 
   it('sector_series_orders_stack：<IntervalMark angle series> → stack transform 带 groupBy', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" series="label" />, '__plot', { coordinate: 'polar2D' });
+
     expect(spec.transform).toEqual([{ operation: { kind: 'stack', y: 'value', groupBy: 'label' } }]);
     expect(spec.marks[0]).toEqual({
       type: 'interval',
@@ -116,6 +120,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(<IntervalMark angle="value" color="label" />, '__plot', {
       coordinate: { type: 'polar2D', innerRadius: 0.5 },
     });
+
     expect(spec.coordinate).toEqual({
       type: 'polar2D',
       angle: '__angle',
@@ -128,6 +133,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(<IntervalMark angle="value" />, '__plot', {
       coordinate: { type: 'polar2D', startAngle: -90, endAngle: 90 },
     });
+
     expect(spec.coordinate).toEqual({
       type: 'polar2D',
       angle: '__angle',
@@ -148,6 +154,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       '__plot',
       { coordinate: 'polar2D' },
     );
+
     expect(spec.scales[0]).toEqual({ type: 'point', name: '__angle' });
     expect(spec.scales[1]).toEqual({ type: 'log', name: '__radius' });
     expect(spec.coordinate).toMatchObject({ type: 'polar2D', angle: '__angle', radius: '__radius' });
@@ -174,6 +181,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       marks: [{ type: 'path', encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
       guides: [],
     };
+
     expect(PlotSchema.parse(spec)).toEqual(PlotSchema.parse(expected));
   });
 
@@ -181,6 +189,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(<PathMark x="theta" y="r" order="theta" closed={false} />, '__plot', {
       coordinate: 'polar2D',
     });
+
     expect(spec.scales[0]).toEqual({ type: 'linear', name: '__angle' });
     expect(spec.marks[0]).toEqual({
       type: 'path',
@@ -195,6 +204,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(<PathMark x="t" y="v" closure={{ kind: 'baseline', baseline: 2 }} />, '__plot', {
       coordinate: 'polar2D',
     });
+
     expect(spec.marks[0]).toEqual({
       type: 'path',
       closure: { kind: 'baseline', baseline: 2 },
@@ -211,6 +221,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       '__plot',
       { coordinate: 'polar2D' },
     );
+
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x' }]);
   });
 
@@ -224,6 +235,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       '__plot',
       { coordinate: 'polar2D' },
     );
+
     expect(spec.guides).toEqual([
       { type: 'axis', dimension: 'x' },
       { type: 'axis', dimension: 'y', grid: true },
@@ -232,11 +244,13 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
 
   it('polar_default_no_guides：polar 缺省不画轴（与 cartesian 默认全套相对）', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" />, '__plot', { coordinate: 'polar2D' });
+
     expect(spec.guides).toEqual([]);
   });
 
   it('cartesian_regression_no_coordinate：不传 coordinate → cartesian（向后兼容）', () => {
     const spec = buildPlotIR(<IntervalMark x="month" y="revenue" />, '__plot');
+
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
     expect(spec.scales[0]).toEqual({ type: 'band', name: '__x' });
   });

@@ -9,7 +9,9 @@ describe('[tex-schema] TexContentSchema (lowerTex payload)', () => {
 
   it('accepts displayMode', () => {
     const result = TexContentSchema.safeParse({ tex: 'E=mc^2', displayMode: true });
+
     expect(result.success).toBe(true);
+
     if (result.success) expect(result.data).toEqual({ tex: 'E=mc^2', displayMode: true });
   });
 

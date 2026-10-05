@@ -4,7 +4,7 @@ import type { output as ZodOutput, ZodType } from 'zod';
 import type {
   IRGraphRelationRoleTokenRecipe,
   IRGraphRelationStructureTokenOverrides,
-  RelationDirectionValue,
+  RelationDirection,
 } from '../../schemas';
 
 /** Relation role 的主要语义、方向约束与完整基础展示定义 */
@@ -14,11 +14,11 @@ export type RelationRoleDefinition = Readonly<{
   /** 面向作者与工具的稳定语义说明 */
   description: string;
   /** 省略 Source direction 时使用的有效方向 */
-  defaultDirection: RelationDirectionValue;
+  defaultDirection: RelationDirection;
   /** role 允许的全部有效方向 */
-  allowedDirections: ReadonlyArray<RelationDirectionValue>;
+  allowedDirections: ReadonlyArray<RelationDirection>;
   /** 每个允许方向对应的完整结构 recipe */
-  directions: Readonly<Partial<Record<RelationDirectionValue, IRGraphRelationRoleTokenRecipe>>>;
+  directions: Readonly<Partial<Record<RelationDirection, IRGraphRelationRoleTokenRecipe>>>;
 }>;
 
 /** Relation kind 的稳定子类型、方向收窄与稀疏展示定义 */
@@ -30,14 +30,17 @@ export type RelationKindDefinition = Readonly<{
   /** 面向作者与工具的稳定语义说明 */
   description: string;
   /** kind 覆盖的默认方向 */
-  defaultDirection?: RelationDirectionValue;
+  defaultDirection?: RelationDirection;
   /** kind 对所属 role 方向集合的非空收窄 */
-  allowedDirections?: ReadonlyArray<RelationDirectionValue>;
+  allowedDirections?: ReadonlyArray<RelationDirection>;
   /** 按有效方向提供的稀疏结构 delta */
-  directions?: Readonly<Partial<Record<RelationDirectionValue, IRGraphRelationStructureTokenOverrides>>>;
+  directions?: Readonly<Partial<Record<RelationDirection, IRGraphRelationStructureTokenOverrides>>>;
 }>;
 
-/** Relation predicate 作者侧的类型安全定义 */
+/**
+ * Relation predicate 作者侧的类型安全定义
+ * @template TSchema 校验 predicate 参数的 JSON 对象 schema，其输出类型传给结构解析回调
+ */
 export type RelationPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> = Readonly<{
   /** 全局唯一的 predicate definition name */
   name: string;

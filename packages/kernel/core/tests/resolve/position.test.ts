@@ -42,6 +42,7 @@ const contextOf = (references: ReadonlyArray<PositionReferenceView> = []): Posit
       if (target.anchor === 'right') {
         return [item.node.rect.x + item.node.rect.width / 2, item.node.rect.y];
       }
+
       return [item.node.rect.x, item.node.rect.y];
     },
   };
@@ -54,6 +55,7 @@ describe('resolvePosition', () => {
 
   it('把命名引用和 at 从世界中心反投影后应用局部距离', () => {
     const context = contextOf([reference('A', [120, 80])]);
+
     expect(resolvePosition('A', context)).toEqual({ localPoint: [20, 30], worldPoint: [120, 80] });
     expect(resolvePosition({ direction: 'right', of: 'A' }, context)).toEqual({
       localPoint: [44, 30],
@@ -63,6 +65,7 @@ describe('resolvePosition', () => {
 
   it('在局部空间递归应用 polar 与 OffsetPosition', () => {
     const context = contextOf();
+
     expect(resolvePosition({ origin: [10, 20], angle: 0, radius: 5 }, context)).toEqual({
       localPoint: [15, 20],
       worldPoint: [115, 70],
@@ -82,6 +85,7 @@ describe('resolvePositionTarget', () => {
   it('保留 reference 生命周期并在世界坐标叠加 NodeTarget offset', () => {
     const target: IRNodeTarget = { id: 'A', anchor: 'right', offset: [3, 4] };
     const result = resolvePositionTarget(target, contextOf([reference('A', [120, 80], 'scope-placeholder')]));
+
     expect(result.point).toEqual([33, 34]);
     expect(result.referencePoint).toEqual([133, 84]);
     expect(result.reference?.state).toBe('scope-placeholder');
@@ -93,11 +97,13 @@ describe('resolvePositionTarget', () => {
       { between: [{ id: 'A' }, { id: 'B', offset: [10, 0] }], fraction: 0.5 },
       contextOf([reference('A', [100, 50]), reference('B', [120, 70])]),
     );
+
     expect(result).toMatchObject({ point: [15, 10], referencePoint: [115, 60] });
   });
 
   it('absolute target 引用不存在时保留原 target 并返回 null 点', () => {
     const target: IRNodeTarget = { id: 'missing' };
+
     expect(resolvePositionTarget(target, contextOf())).toEqual({
       target,
       point: null,

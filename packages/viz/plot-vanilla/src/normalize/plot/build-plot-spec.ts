@@ -34,7 +34,7 @@ export const resolveLabelOf = (spec: IRPlot): ResolveLabelMap | undefined => res
 
 /** Chart typed extension 的 Plot-owned declaration 归一化结果 */
 export type ResolvedPlotExtensionAuthoring = Readonly<{
-  /** JSON-safe Plot member fragment */
+  /** 可 JSON 序列化的绘图成员片段 */
   fragment: PlotMemberFragment;
   /** 不进入 IR 的 Plot runtime sidecar */
   runtime: PlotAuthoringRuntime;
@@ -83,6 +83,7 @@ export const normalizePlotIR = (
   if (scales === undefined || marks === undefined || guides === undefined) {
     throw new RetikzPlotVanillaError('normalizePlotIR: plot-root normalization must provide scales, marks, and guides');
   }
+
   const coordinateRoot =
     composition !== undefined
       ? { composition }
@@ -110,6 +111,7 @@ export const normalizePlotIR = (
     ...(options.height === undefined ? {} : { height: options.height }),
   } satisfies IRPlot;
   if (runtime.resolveLabel !== undefined) resolveLabelByPlotIR.set(spec, runtime.resolveLabel);
+
   return spec;
 };
 
@@ -120,7 +122,9 @@ export const normalizePlotIR = (
 export const decorateDefaultGuides = (spec: IRPlot): IRPlot => {
   if (spec.coordinate === undefined) return spec;
   if (spec.coordinate.type !== PlotCoordinate.Cartesian2D) return spec;
+
   const guides = spec.guides ?? [];
   if (guides.some(guide => guide.type === PlotGuide.Axis)) return spec;
+
   return { ...spec, guides: [...DEFAULT_GUIDES, ...guides] };
 };

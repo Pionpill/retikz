@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scriptPath = fileURLToPath(import.meta.url);
+
 const repositoryRoot = path.resolve(path.dirname(scriptPath), '..');
 
 /** 判断目标是否位于指定目录内，且不是目录自身。 */

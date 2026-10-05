@@ -13,6 +13,7 @@ export type NamespaceScopeProps = { lang?: Lang };
 const NamespaceScope: FC<NamespaceScopeProps> = props => {
   const { lang = 'zh' } = props;
   const t = namespaceScopeI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Node

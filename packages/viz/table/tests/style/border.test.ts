@@ -29,8 +29,10 @@ describe('Source defaults Border Graph integration', () => {
     );
 
     expect(result.manifest.borders).toHaveLength(2);
+
     for (const border of result.manifest.borders) {
       const winner = border.atoms[0].winner;
+
       expect(winner).toMatchObject({
         kind: 'line',
         origin: 'defaults',

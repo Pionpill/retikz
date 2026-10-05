@@ -127,6 +127,7 @@ const compileWithWarnings = (children: IRScene['children']) => {
     { type: 'scene', version: 1, children },
     { composites: definitions, padding: 0, onWarn: warning => warnings.push(warning.code) },
   );
+
   return { output, warnings };
 };
 
@@ -172,6 +173,7 @@ describe('layout compile artifacts', () => {
     const artifacts = compositeArtifacts(output);
 
     expect(artifacts).toHaveLength(3);
+
     for (const artifact of artifacts) {
       expect(artifact.value).toMatchObject({
         container: {
@@ -197,6 +199,7 @@ describe('layout compile artifacts', () => {
     const artifacts = compositeArtifacts(output);
 
     expect(artifacts).toHaveLength(3);
+
     for (const artifact of artifacts) {
       expect(artifact.value).toMatchObject({
         container: {

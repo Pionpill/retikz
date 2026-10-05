@@ -45,6 +45,7 @@ export type TextLine = {
  * @description 多行 lines 至少 1 行；renderer 按 lineHeight 堆叠每行、按 baseline 在 (x,y) 锚点上下对齐。顶层属性是块级默认，单行 TextLine 可覆盖
  */
 export type TextPrim = {
+  /** 标识文本场景图元 */
   type: 'text';
   /** 禁用该图元及其子树的指针命中；省略时保持正常命中 */
   hitTest?: false;
@@ -60,6 +61,7 @@ export type TextPrim = {
   y: number;
   /** 至少 1 行；单行节点也用 `[{ text: 'Hello' }]` */
   lines: Array<TextLine>;
+  /** 已解析的字号，采用场景坐标单位 */
   fontSize: number;
   /**
    * 块级字体族
@@ -76,7 +78,9 @@ export type TextPrim = {
    * @default 'normal'
    */
   fontStyle?: IRFont['style'];
+  /** 文本相对定位点的水平对齐方式 */
   align: 'start' | 'middle' | 'end';
+  /** 定位点对应的文本基线方式 */
   baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
   /** 行高，多行下相邻行的垂直距离 */
   lineHeight: number;

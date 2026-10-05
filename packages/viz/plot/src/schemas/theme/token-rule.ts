@@ -13,6 +13,7 @@ const PlotAxisRuleDimensionListSchema = array(NonBlankStringSchema)
         firstIndexByDimension.set(dimension, index);
         return;
       }
+
       context.addIssue({
         code: 'custom',
         path: [index],
@@ -34,6 +35,7 @@ const hasDefinedVisualField = (value: unknown): boolean => {
   if (value === undefined) return false;
   if (value === null || typeof value !== 'object') return true;
   if (Array.isArray(value)) return value.length > 0;
+
   return Object.values(value).some(field => hasDefinedVisualField(field));
 };
 

@@ -18,6 +18,7 @@ const reducerContext = {
   ...DEFAULT_TRANSFORM_CONTEXT,
   statisticsReducerRegistry: resolveStatisticsReducerRegistry([midpoint]),
 };
+
 const selectorContext = {
   ...DEFAULT_TRANSFORM_CONTEXT,
   rowSelectorRegistry: resolveRowSelectorRegistry([closestToMean]),

@@ -77,6 +77,7 @@ describe('<AppSidebarMenuItem>', () => {
     const navigationButton = findButton(container, 'Navigate to principles');
 
     expect(navigationButton).toBeDefined();
+
     if (!navigationButton) throw new Error('Navigation button not found');
 
     act(() => {
@@ -84,6 +85,7 @@ describe('<AppSidebarMenuItem>', () => {
     });
 
     const activeLeaf = findButton(container, 'Principles');
+
     expect(activeLeaf).toBeDefined();
     expect(activeLeaf?.className).toContain('bg-accent');
   });
@@ -119,6 +121,7 @@ describe('<AppSidebarMenuItem>', () => {
     expect(findButton(container, 'B')).toBeUndefined();
     expect(expandGroupB).toBeDefined();
     expect(navigateButton).toBeDefined();
+
     if (!expandGroupB || !navigateButton) throw new Error('Sidebar controls not found');
 
     act(() => {
@@ -274,10 +277,12 @@ describe('<AppSidebar>', () => {
           </MemoryRouter>,
         );
       });
+
       return container;
     };
 
     const components = renderSidebar({ moduleId: 'kernel', sectionId: 'components', pageId: 'introduction' });
+
     expect(components.textContent).toContain('kernel.introduction');
     expect(components.textContent).toContain('kernel.getStart');
     expect(components.textContent).toContain('kernel.concepts');
@@ -288,12 +293,15 @@ describe('<AppSidebar>', () => {
       'kernel.visual',
       'kernel.internals',
     ]);
+
     const visual = renderSidebar({ moduleId: 'kernel', sectionId: 'visual', pageId: 'pattern', subPageId: 'usage' });
+
     expect(visual.textContent).toContain('kernel.components');
     expect(visual.textContent).toContain('kernel.visual');
     expect(visual.textContent).toContain('kernel.internals');
 
     const about = renderSidebar({ moduleId: 'about', sectionId: null, pageId: 'introduction' });
+
     expect(about.textContent).toContain('about.introduction');
     expect(about.textContent).toContain('about.blog');
     expect(about.textContent).toContain('about.blogCorePhilosophy');
@@ -304,6 +312,7 @@ describe('<AppSidebar>', () => {
     expect(about.textContent).not.toContain('kernel.introduction');
 
     const moduleHome = renderSidebar(null);
+
     expect(moduleHome.querySelector('aside')).toBeNull();
   });
 

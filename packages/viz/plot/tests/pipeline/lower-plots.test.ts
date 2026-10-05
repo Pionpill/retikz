@@ -85,11 +85,13 @@ const textNodeVisualBottom = (node: IRNode): number => {
   const height = typeof node.layout?.lineHeight === 'number' ? node.layout.lineHeight : fontSize;
   const radians = (Math.abs(node.rotate ?? 0) * Math.PI) / 180;
   const rotatedHeight = width * Math.abs(Math.sin(radians)) + height * Math.abs(Math.cos(radians));
+
   return position[1] + rotatedHeight / 2;
 };
 
 const scopeByLayerMeta = (root: IRScope, layer: string): IRScope => {
   const scope = collectScopes(root).find(item => (item.meta as { layer?: unknown } | undefined)?.layer === layer);
+
   expect(scope).toBeDefined();
   return scope as IRScope;
 };
@@ -107,6 +109,7 @@ const nodeHeight = (node: IRNode): number => {
 };
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
+
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 describe('lowerPlots (contract)', () => {
@@ -154,8 +157,10 @@ describe('lowerPlots (contract)', () => {
   // Happy path
   it('marks_become_layer_scopes', () => {
     const outer = expandOf(lineSpec, { sales: SALES }, opts);
+
     expect(outer.type).toBe('scope');
     expect(outer.localNamespace).toBe(true);
+
     // 每个 mark 下沉成一层独立 scope
     expect((outer.children[0] as IRScope).type).toBe('scope');
   });
@@ -163,9 +168,12 @@ describe('lowerPlots (contract)', () => {
   it('lower_line_produces_path', () => {
     const layer = firstLayer(lineSpec, { sales: SALES }, opts);
     const path = layer.children[0] as IRPath;
+
     expect(path.type).toBe('path');
+
     // 样式上提到图层 pathDefault，path 本身只留几何
     expect(layer.defaults?.path?.style?.strokeWidth).toBe(2);
+
     // domain x [0,2]->[0,480]; y [9,14]->[300,0]
     expect(path.children).toEqual([
       { type: 'step', kind: 'move', to: [0, 240] },
@@ -176,10 +184,13 @@ describe('lowerPlots (contract)', () => {
 
   it('lower_point_produces_bare_nodes_with_hoisted_style', () => {
     const layer = firstLayer(pointSpec(), { sales: SALES }, opts);
+
     expect(layer.children).toHaveLength(3);
+
     // 样式上提：circle / fill 在图层 nodeDefault，不重复写在每个 node
     expect(layer.defaults?.node?.shape).toBe('circle');
     expect(layer.defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
+
     // 每个 node 是裸的（只有 type + position，无 shape/fill）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
     expect((layer.children[0] as IRNode).position).toEqual([0, 240]);
@@ -255,6 +266,7 @@ describe('lowerPlots (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
+
     expect(layer.defaults?.node).toMatchObject({
       shape: 'circle',
       rotate: 45,
@@ -399,6 +411,7 @@ describe('lowerPlots (contract)', () => {
       { composites: lowerPlots({ sales: data }, opts) },
     ).scene;
     const serialized = JSON.stringify(scene);
+
     expect(serialized).toContain(area);
     expect(serialized).toContain(grid);
     expect(serialized).toContain(line);
@@ -459,6 +472,7 @@ describe('lowerPlots (contract)', () => {
       { month: 1, revenue: 14, region: 'south', density: 30 },
     ];
     const layer = firstLayer(spec, { sales: data }, opts);
+
     expect(layer.defaults?.node?.style?.stroke).toBeUndefined();
     expect(layer.defaults?.node?.style?.strokeWidth).toBeUndefined();
     expect(layer.children[0]).toMatchObject({ style: { stroke: '#0f172a', strokeWidth: 1 } });
@@ -470,6 +484,7 @@ describe('lowerPlots (contract)', () => {
       { version: 1, type: 'scene', children: [lineSpec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
+
     expect(scene).toBeTruthy();
     expect(Array.isArray(scene.primitives)).toBe(true);
     expect(scene.primitives.length).toBeGreaterThan(0);
@@ -481,20 +496,24 @@ describe('lowerPlots (contract)', () => {
       { version: 1, type: 'scene', children: [pointSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
   // 边界
   it('domain_inferred_from_data', () => {
     const layer = firstLayer(pointSpec(), { sales: SALES }, opts);
+
     // 端点：month 0 -> x 0；month 2 -> x 480
     const xs = layer.children.map(c => ((c as IRNode).position as [number, number])[0]);
+
     expect(Math.min(...xs)).toBe(0);
     expect(Math.max(...xs)).toBe(480);
   });
 
   it('lower_single_datum_point', () => {
     const layer = firstLayer(pointSpec(), { sales: [{ month: 1, revenue: 5 }] }, opts);
+
     expect(layer.children).toHaveLength(1);
   });
 
@@ -510,6 +529,7 @@ describe('lowerPlots (contract)', () => {
       { month: 2, revenue: 9 },
     ];
     const layer = firstLayer(pointSpec(), { sales: rows }, opts);
+
     expect(layer.children).toHaveLength(2); // 非有限 x 的那行被跳过
   });
 
@@ -540,6 +560,7 @@ describe('lowerPlots (contract)', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
     const layer = firstLayer(spec, { sales: [{ month: 5, revenue: 50 }] }, opts);
+
     // x: 5/10*100=50; y: 100 + 50/100*(0-100)=50
     expect((layer.children[0] as IRNode).position).toEqual([50, 50]);
   });
@@ -552,6 +573,7 @@ describe('lowerPlots (contract)', () => {
     ];
     const layer = firstLayer(lineSpec, { sales: shuffled }, opts);
     const path = layer.children[0] as IRPath;
+
     // 首点应是 month 最小 (=0) -> x 0
     expect(path.children[0]).toEqual({ type: 'step', kind: 'move', to: [0, 240] });
   });
@@ -576,6 +598,7 @@ describe('lowerPlots (contract)', () => {
   it('compat_no_guides_projection_unchanged', () => {
     // compat: omitting guides keeps the plot area equal to the full frame.
     const path = (firstLayer(lineSpec, { sales: SALES }, opts).children[0] as IRPath).children;
+
     expect(path).toEqual([
       { type: 'step', kind: 'move', to: [0, 240] },
       { type: 'step', kind: 'line', to: [240, 0] },
@@ -588,6 +611,7 @@ describe('lowerPlots (contract)', () => {
     const path = (firstLayer(guidedLineSpec, { sales: SALES }, opts).children[0] as IRPath).children;
     const firstX = (path[0] as { to: [number, number] }).to[0];
     const lastX = (path[path.length - 1] as { to: [number, number] }).to[0];
+
     expect(firstX).toBeGreaterThan(0);
     expect(lastX).toBeLessThan(480);
     expect(firstX).toBeLessThan(lastX);
@@ -612,6 +636,7 @@ describe('lowerPlots (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: [{ month: 5, revenue: 50 }] }, opts);
+
     expect((layer.children[0] as IRNode).position).toEqual([50, 50]);
   });
 });
@@ -633,17 +658,20 @@ const barSpec = (): IRPlot =>
 describe('lowerPlots interval/bar (contract)', () => {
   it('bar_layer_rectangle_nodes', () => {
     const layer = firstLayer(barSpec(), { sales: SALES }, opts);
+
     expect(layer.children).toHaveLength(3);
     expect(layer.defaults?.node?.shape).toBe('rectangle');
     expect(layer.defaults?.node?.layout?.padding).toBe(0);
     expect(layer.defaults?.node?.style?.strokeWidth).toBe(0);
     expect(layer.defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
+
     // 每个 node 裸（只有 type/position/minimumSize，无 shape）
     expect(layer.children.every(c => (c as IRNode).shape === undefined)).toBe(true);
   });
 
   it('bar_width_is_bandwidth_equal', () => {
     const widths = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => nodeWidth(n));
+
     expect(widths.every(w => w > 0)).toBe(true);
     expect(widths[0]).toBeCloseTo(widths[1], 6);
     expect(widths[1]).toBeCloseTo(widths[2], 6);
@@ -651,6 +679,7 @@ describe('lowerPlots interval/bar (contract)', () => {
 
   it('bar_height_reflects_value', () => {
     const heights = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(n => nodeHeight(n));
+
     // revenue 10/14/9 → 第二根最高、第三根最矮
     expect(heights[1]).toBeGreaterThan(heights[0]);
     expect(heights[2]).toBeLessThan(heights[0]);
@@ -660,6 +689,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     // 无 guides → plot area 满，baseline y(0)=300：正值柱底 center + height/2 ≈ 300
     for (const node of firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>) {
       const cy = (node.position as [number, number])[1];
+
       expect(cy + nodeHeight(node) / 2).toBeCloseTo(300, 6);
     }
   });
@@ -668,6 +698,7 @@ describe('lowerPlots interval/bar (contract)', () => {
     const xs = (firstLayer(barSpec(), { sales: SALES }, opts).children as Array<IRNode>).map(
       n => (n.position as [number, number])[0],
     );
+
     expect(xs[0]).toBeLessThan(xs[1]);
     expect(xs[1]).toBeLessThan(xs[2]);
     expect(xs[1] - xs[0]).toBeCloseTo(xs[2] - xs[1], 6);
@@ -705,8 +736,11 @@ describe('lowerPlots interval/bar (contract)', () => {
     );
     const xAxis = outer.children[outer.children.length - 1] as IRScope;
     const labels = xAxis.children.filter((child): child is IRNode => (child as IRNode).text !== undefined);
+
     expect(labels.map(label => label.text)).toEqual(['Norway', 'France', 'Germany']);
+
     const xs = labels.map(label => (label.position as [number, number])[0]);
+
     expect(xs[0]).toBeLessThan(xs[1]);
     expect(xs[1]).toBeLessThan(xs[2]);
   });
@@ -717,6 +751,7 @@ describe('lowerPlots interval/bar (contract)', () => {
       { month: 1, revenue: 'oops' },
       { month: 2, revenue: 9 },
     ];
+
     expect(firstLayer(barSpec(), { sales: rows }, opts).children).toHaveLength(2);
   });
 
@@ -725,6 +760,7 @@ describe('lowerPlots interval/bar (contract)', () => {
       { version: 1, type: 'scene', children: [barSpec()] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -743,8 +779,10 @@ describe('lowerPlots interval/bar (contract)', () => {
         { type: 'point', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } },
       ],
     });
+
     // 无 guides：两 mark → 两层 mark scope
     const outer = expandOf(spec, { sales: SALES }, opts);
+
     expect(outer.children).toHaveLength(2);
     expect((outer.children[0] as IRScope).defaults?.node?.shape).toBe('rectangle'); // interval 层
     expect((outer.children[1] as IRScope).defaults?.node?.shape).toBe('circle'); // point 层
@@ -784,13 +822,18 @@ describe('lowerPlots color (contract)', () => {
       { c: COUNTRIES },
       opts,
     );
+
     // 2 类别 → 2 子 Scope（Asia 先于 Europe，按数据序）
     expect(layer.children).toHaveLength(2);
+
     const asia = layer.children[0] as IRScope;
+
     expect(asia.defaults?.node?.shape).toBe('circle');
     expect(asia.defaults?.node?.style?.fill).toBe('#aa');
     expect(asia.children).toHaveLength(2);
+
     const europe = layer.children[1] as IRScope;
+
     expect(europe.defaults?.node?.style?.fill).toBe('#bb');
     expect(europe.children).toHaveLength(1);
   });
@@ -805,6 +848,7 @@ describe('lowerPlots color (contract)', () => {
       { c: COUNTRIES },
       opts,
     );
+
     expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
     expect((layer.children[1] as IRScope).defaults?.node?.style?.fill).toBe(sharedCategorical[1]);
   });
@@ -829,6 +873,7 @@ describe('lowerPlots color (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
+
     expect(layer.children).toHaveLength(2);
     expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe(sharedCategorical[0]);
   });
@@ -852,6 +897,7 @@ describe('lowerPlots color (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
+
     expect(layer.children).toHaveLength(1);
     expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#333');
     expect((layer.children[0] as IRScope).children).toHaveLength(3);
@@ -862,6 +908,7 @@ describe('lowerPlots color (contract)', () => {
       { type: 'linear', name: 'x', domainPadding: 0 },
       { type: 'linear', name: 'y', domainPadding: 0 },
     ]);
+
     expect(() => expandOf(spec, { c: COUNTRIES }, opts)).toThrow(/unknown scale/);
   });
 
@@ -871,6 +918,7 @@ describe('lowerPlots color (contract)', () => {
       { type: 'linear', name: 'y', domainPadding: 0 },
       { type: 'linear', name: 'col', domainPadding: 0 },
     ]);
+
     expect(() => expandOf(spec, { c: COUNTRIES }, opts)).toThrow(/ordinal/);
   });
 
@@ -892,6 +940,7 @@ describe('lowerPlots color (contract)', () => {
         },
       ],
     });
+
     expect(firstLayer(spec, { c: COUNTRIES }, opts).defaults?.path?.style?.stroke).toBe('tomato');
   });
 
@@ -914,6 +963,7 @@ describe('lowerPlots color (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { c: COUNTRIES }, opts);
+
     expect(layer.children).toHaveLength(2);
     expect((layer.children[0] as IRScope).defaults?.node?.shape).toBe('rectangle');
   });
@@ -945,6 +995,7 @@ describe('lowerPlots mark paint', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
+
     expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
     expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
@@ -952,6 +1003,7 @@ describe('lowerPlots mark paint', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
+
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -975,12 +1027,14 @@ describe('lowerPlots mark paint', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
+
     expect(layer.defaults?.path?.style?.stroke).toEqual(paintGradient);
 
     const scene = compileToScene(
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
+
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -1004,6 +1058,7 @@ describe('lowerPlots mark paint', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
+
     expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
     expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
@@ -1011,6 +1066,7 @@ describe('lowerPlots mark paint', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
+
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -1036,6 +1092,7 @@ describe('lowerPlots mark paint', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
+
     expect(layer.defaults?.path?.style?.fill).toEqual(paintGradient);
     expect(layer.defaults?.path?.style?.stroke).toEqual(paintGradient);
 
@@ -1043,6 +1100,7 @@ describe('lowerPlots mark paint', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
+
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 
@@ -1067,6 +1125,7 @@ describe('lowerPlots mark paint', () => {
       ],
     });
     const layer = firstLayer(spec, { sales: SALES }, opts);
+
     expect(layer.defaults?.node?.style?.fill).toEqual(paintGradient);
     expect(layer.defaults?.node?.style?.stroke).toEqual(paintGradient);
 
@@ -1074,6 +1133,7 @@ describe('lowerPlots mark paint', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, opts) },
     ).scene;
+
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: paintGradient }]);
   });
 });
@@ -1110,18 +1170,25 @@ describe('lowerPlots relation (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
+
     // 2 系列 → 2 子 Scope（按颜色），共 4 柱
     expect(layer.children).toHaveLength(2);
+
     const nodes = allNodes(layer);
+
     expect(nodes).toHaveLength(4);
+
     // 所有子带等宽
     const widths = nodes.map(n => nodeWidth(n));
+
     expect(widths.every(w => Math.abs(w - widths[0]) < 1e-6)).toBe(true);
+
     // 同类别内 A（系列 0）在 B（系列 1）左侧：A.Jan.x < B.Jan.x
     const seriesA = layer.children[0] as IRScope;
     const seriesB = layer.children[1] as IRScope;
     const aJanX = ((seriesA.children[0] as IRNode).position as [number, number])[0];
     const bJanX = ((seriesB.children[0] as IRNode).position as [number, number])[0];
+
     expect(aJanX).toBeLessThan(bJanX);
   });
 
@@ -1148,13 +1215,18 @@ describe('lowerPlots relation (contract)', () => {
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
     const nodes = allNodes(layer);
+
     expect(nodes).toHaveLength(4);
+
     // 全宽柱（堆叠不切子带）：宽度都相等
     const widths = nodes.map(n => nodeWidth(n));
+
     expect(widths.every(w => Math.abs(w - widths[0]) < 1e-6)).toBe(true);
+
     // Jan：B（值更高、堆在上）中心像素 < A（y 屏幕向下，越高像素越小）
     const aJan = (layer.children[0] as IRScope).children[0] as IRNode; // 系列 A
     const bJan = (layer.children[1] as IRScope).children[0] as IRNode; // 系列 B
+
     expect((bJan.position as [number, number])[1]).toBeLessThan((aJan.position as [number, number])[1]);
   });
 
@@ -1177,6 +1249,7 @@ describe('lowerPlots relation (contract)', () => {
         },
       ],
     });
+
     expect(() => expandOf(spec, { s: SALES2 }, opts)).toThrow(/stack/);
   });
 
@@ -1207,9 +1280,12 @@ describe('lowerPlots relation (contract)', () => {
       ],
     });
     const layer = firstLayer(spec, { t: TREND }, opts);
+
     // 2 系列 → 2 个 series Scope，各含一条独立颜色的 Path
     expect(layer.children).toHaveLength(2);
+
     const [seriesX, seriesY] = layer.children as Array<IRScope>;
+
     expect(seriesX.type).toBe('scope');
     expect((seriesX.children[0] as IRPath).style?.stroke).toBe('#aa');
     expect((seriesY.children[0] as IRPath).style?.stroke).toBe('#bb');
@@ -1229,6 +1305,7 @@ describe('lowerPlots relation (contract)', () => {
       marks: [{ type: 'interval', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
     const layer = firstLayer(spec, { s: SALES2 }, opts);
+
     expect(layer.defaults?.node?.shape).toBe('rectangle');
   });
 
@@ -1261,6 +1338,7 @@ describe('lowerPlots relation (contract)', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ s: SALES2 }, opts) },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 });

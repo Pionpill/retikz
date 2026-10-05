@@ -9,6 +9,7 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 import { principlesPackagesI18n } from './principles-packages.i18n';
 
 export type PrinciplesPackagesProps = { lang?: Lang };
+
 const Demo: FC<PrinciplesPackagesProps> = props => {
   const text = principlesPackagesI18n[props.lang ?? 'zh'];
   return (

@@ -41,8 +41,10 @@ import {
 
 /** sequential 缺省配色（感知均匀、色盲友好） */
 const DEFAULT_SEQUENTIAL_SCHEME = PlotColorScheme.Viridis;
+
 /** diverging 缺省配色（两侧红蓝、中点淡） */
 const DEFAULT_DIVERGING_SCHEME = PlotColorScheme.RdBu;
+
 /** 默认离散化档数（choropleth 社区惯例 4–7 档） */
 const DEFAULT_DISCRETE_BIN_COUNT = 5;
 
@@ -63,6 +65,7 @@ export const resolveOrdinalScale = (
   const offset = def?.rangeIndex?.offset ?? 0;
   const indexedRange = range.map((_color, index) => range[(index * step + offset) % range.length]);
   const scale = d3ScaleOrdinal<string | number, string>().domain(domain).range(indexedRange);
+
   return value => scale(value);
 };
 
@@ -93,18 +96,23 @@ export const resolveSequentialColorScale = (
       `lowerPlots: sequential color scale "${def.name}" domain endpoints must be finite numbers (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
+
   if (def.domain && def.domain[0] >= def.domain[1]) {
     throw new RetikzPlotError(
       `lowerPlots: sequential color scale "${def.name}" domain must satisfy min < max (got [${def.domain[0]}, ${def.domain[1]}])`,
     );
   }
+
   if (def.range) {
     const scale = d3ScaleLinear<string, string>().domain([lo, hi]).range([def.range[0], def.range[1]]).clamp(true);
     return value => toHexColor(scale(value));
   }
+
   const interpolator = resolveScheme(def.scheme ?? DEFAULT_SEQUENTIAL_SCHEME);
+
   // 退化 domain（min == max）→ position 恒 0.5；正常 domain 线性归一化到 [0, 1] 再喂 interpolator
   const span = hi - lo;
+
   return value => {
     const t = span === 0 ? 0.5 : Math.max(0, Math.min(1, (value - lo) / span));
     return toHexColor(interpolator(t));
@@ -132,6 +140,7 @@ export const resolveDivergingColorScale = (
         `lowerPlots: diverging color scale "${def.name}" domain endpoints must be finite numbers (got [${low}, ${mid}, ${high}])`,
       );
     }
+
     if (!(low < mid && mid < high)) {
       throw new RetikzPlotError(
         `lowerPlots: diverging color scale "${def.name}" domain must satisfy low < mid < high (got [${low}, ${mid}, ${high}])`,
@@ -143,6 +152,7 @@ export const resolveDivergingColorScale = (
     high = hi;
     mid = (lo + hi) / 2;
   }
+
   if (def.range) {
     const scale = d3ScaleLinear<string, string>()
       .domain([low, mid, high])
@@ -150,7 +160,9 @@ export const resolveDivergingColorScale = (
       .clamp(true);
     return value => toHexColor(scale(value));
   }
+
   const interpolator = resolveScheme(def.scheme ?? DEFAULT_DIVERGING_SCHEME);
+
   // [low, mid, high] → interpolator 的 [0, 0.5, 1]：两段线性，退化段（low==mid 等）由分支守住不除零
   return value => {
     let t: number;
@@ -158,6 +170,7 @@ export const resolveDivergingColorScale = (
     else if (value >= high) t = 1;
     else if (value <= mid) t = mid === low ? 0 : (0.5 * (value - low)) / (mid - low);
     else t = high === mid ? 1 : 0.5 + (0.5 * (value - mid)) / (high - mid);
+
     return toHexColor(interpolator(t));
   };
 };
@@ -177,10 +190,12 @@ export const resolveQuantizeColorScale = (
       `lowerPlots: quantize color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`,
     );
   }
+
   const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
   const [lo, hi] = def.domain ?? safeExtent(values);
   const scale = d3ScaleQuantize<string>().domain([lo, hi]).range(colors);
+
   return value => scale(value);
 };
 
@@ -201,16 +216,19 @@ export const resolveThresholdColorScale = (
       );
     }
   }
+
   const binCount = def.breakpoints.length + 1;
   if (def.range && def.range.length !== binCount) {
     throw new RetikzPlotError(
       `lowerPlots: threshold color scale "${def.name}" range length (${def.range.length}) must equal breakpoints.length + 1 (${binCount})`,
     );
   }
+
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
   const scale = d3ScaleThreshold<number, string>()
     .domain([...def.breakpoints])
     .range(colors);
+
   return value => scale(value);
 };
 
@@ -229,11 +247,13 @@ export const resolveQuantileColorScale = (
       `lowerPlots: quantile color scale "${def.name}" range length (${def.range.length}) must equal count (${def.count}) when both are given`,
     );
   }
+
   const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
   const colors = discreteBinColors(def.range, def.scheme, binCount, resolveScheme);
   const scale = d3ScaleQuantile<string>()
     .domain([...values])
     .range(colors);
+
   return value => scale(value);
 };
 
@@ -241,11 +261,13 @@ export const resolveQuantileColorScale = (
 const quantileAt = (sortedAscending: ReadonlyArray<number>, p: number): number => {
   if (sortedAscending.length === 0) return 0;
   if (sortedAscending.length === 1) return sortedAscending[0];
+
   const position = p * (sortedAscending.length - 1);
   const lowerIndex = Math.floor(position);
   const fraction = position - lowerIndex;
   const lower = sortedAscending[lowerIndex];
   const upper = sortedAscending[Math.min(lowerIndex + 1, sortedAscending.length - 1)];
+
   return lower + (upper - lower) * fraction;
 };
 
@@ -263,8 +285,10 @@ export const discretizedBins = (
     const edges = [...def.breakpoints];
     const binCount = edges.length + 1;
     const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+
     return { colors, edges };
   }
+
   const sorted = [...values].sort((a, b) => a - b);
   const binCount = def.range ? def.range.length : (def.count ?? DEFAULT_DISCRETE_BIN_COUNT);
   if (def.type === PlotScale.Quantile) {
@@ -272,8 +296,10 @@ export const discretizedBins = (
       quantileAt(sorted, (index + 1) / binCount),
     );
     const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+
     return { colors, edges };
   }
+
   // quantize：domain 等宽切
   const lo = def.domain ? def.domain[0] : sorted.length > 0 ? sorted[0] : 0;
   const hi = def.domain ? def.domain[1] : sorted.length > 0 ? sorted[sorted.length - 1] : 1;
@@ -282,6 +308,7 @@ export const discretizedBins = (
     (_unused, index) => lo + ((index + 1) * (hi - lo)) / binCount,
   );
   const colors = def.range ? [...def.range] : sampleSchemeColors(def.scheme, binCount, resolveScheme);
+
   return { colors, edges };
 };
 
@@ -331,6 +358,7 @@ const ordinalScaleDefinition = defineScale<IRPlotOrdinalScale>({
       def.range !== undefined ? def : ctx.defaultColors !== undefined ? { ...def, range: [...ctx.defaultColors] } : def;
     const ordinal = resolveOrdinalScale(withPalette, values);
     const domain = withPalette.domain ?? inferCategoryDomain(values);
+
     return {
       of: value => (typeof value === 'string' || typeof value === 'number' ? ordinal(value) : undefined),
       legendForm: 'swatch',
@@ -350,6 +378,7 @@ const sequentialScaleDefinition = defineScale<IRPlotSequentialColorScale>({
     const themedDef = withSequentialTheme(def, ctx);
     const evaluate = resolveSequentialColorScale(themedDef, numeric, ctx.resolveColorScheme);
     const [lo, hi] = def.domain ?? (numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)]);
+
     return {
       of: continuousColorOf(ctx, evaluate),
       legendForm: 'ramp',
@@ -371,6 +400,7 @@ const divergingScaleDefinition = defineScale<IRPlotDivergingColorScale>({
     const evaluate = resolveDivergingColorScale(themedDef, numeric, ctx.resolveColorScheme);
     const extentRange: [number, number] = numeric.length === 0 ? [0, 1] : [Math.min(...numeric), Math.max(...numeric)];
     const [lo, hi] = def.domain ? [def.domain[0], def.domain[def.domain.length - 1]] : extentRange;
+
     return {
       of: continuousColorOf(ctx, evaluate),
       legendForm: 'ramp',

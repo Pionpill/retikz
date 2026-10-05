@@ -1,4 +1,4 @@
-import type { DataTransformModel, DataFieldTypeValue } from '@retikz/data';
+import type { DataTransformModel, DataFieldType } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 
 import type { ChannelResolution } from '../../../contract';
@@ -11,27 +11,36 @@ type MarkStyleValue<T> =
   | Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Field }>
   | (Omit<Extract<IRPlotPointNumberStyle, { kind: typeof MarkValueKind.Constant }>, 'value'> & { value: T });
 
-/** mark 样式值解析出的逐行 resolver 与字段元数据 */
+/**
+ * mark 样式值解析出的逐行 resolver 与字段元数据
+ * @template T 逐行解析后交给 mark 的视觉值类型
+ */
 export type MarkValueResolution<T> = ChannelResolution<T> & {
   /** 绑定的数据字段名；常量值没有字段名 */
   field?: string;
   /** 绑定字段的解析类型；常量值或未知字段类型时省略 */
-  fieldType?: DataFieldTypeValue;
+  fieldType?: DataFieldType;
 };
 
-/** 创建 mark 样式值 resolver 时的字段类型与常量处理策略 */
+/**
+ * 创建 mark 样式值 resolver 时的字段类型与常量处理策略
+ * @template T 原始字段解析成功时返回的视觉值类型
+ */
 export type MarkValueResolverOptions<T> = {
   /** 用于错误信息的属性 / 通道名 */
   channelName: string;
   /** 字段变体允许的字段类型；省略表示不做类型限制 */
-  expectedFieldType?: DataFieldTypeValue;
+  expectedFieldType?: DataFieldType;
   /** 把数据行中的原始字段值转换为属性值；返回 undefined 表示该行跳过该属性 */
   parse: (value: unknown) => T | undefined;
   /** 常量变体是否也产出 resolver；默认产出，需要把常量收敛进默认 core 属性时可显式跳过 */
   constants?: 'resolve' | 'skip';
 };
 
-/** 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用 */
+/**
+ * 把 schema 定义的 mark 样式值解析为「行 → 属性值」函数，供内置 mark 与自定义 mark 复用
+ * @template T 常量或字段解析器产出的视觉值类型
+ */
 export const makeMarkValueResolver = <T>(
   value: MarkStyleValue<T> | undefined,
   model: DataTransformModel,
@@ -42,6 +51,7 @@ export const makeMarkValueResolver = <T>(
     if (options.constants === 'skip') return undefined;
     return { resolver: () => value.value };
   }
+
   const field = value.value;
   const fieldType = model.find(definition => definition.name === field)?.type;
   if (options.expectedFieldType !== undefined && fieldType !== undefined && fieldType !== options.expectedFieldType) {
@@ -49,6 +59,7 @@ export const makeMarkValueResolver = <T>(
       `lowerPlots: ${options.channelName} channel field "${field}" is ${fieldType}; ${options.channelName} requires a ${options.expectedFieldType} field`,
     );
   }
+
   return {
     field,
     fieldType,

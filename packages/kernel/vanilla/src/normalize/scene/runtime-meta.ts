@@ -16,6 +16,7 @@ export const createInputRuntimeMetaSnapshot = (input: InputRuntimeMeta): InputRu
     Array.from(input.identityIndex, ([identity, path]) => [identity, Object.freeze([...path])] as const),
   );
   const parentIndex = createReadonlyMap(input.parentIndex);
+
   return Object.freeze({ layers, identityIndex, parentIndex });
 };
 

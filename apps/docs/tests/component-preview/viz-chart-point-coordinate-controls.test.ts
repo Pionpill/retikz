@@ -87,6 +87,7 @@ const canonicalCoordinateProps = (source: PreviewSourceConfig): Record<string, u
   if (!isValidElement<Record<string, unknown>>(chart)) {
     throw new Error('Point Chart preview must provide a canonical element');
   }
+
   return chart.props;
 };
 
@@ -97,13 +98,17 @@ describe('Viz Chart Point family coordinate controls', () => {
         if (contract.controls.presentation !== 'panel') {
           throw new Error('Point Chart basic preview must use a controls panel');
         }
+
         const coordinateControl = getPreviewControlFields(contract.controls).find(
           control => control.id === scenario.coordinateId,
         );
+
         expect(coordinateControl).toMatchObject({ kind: 'select', defaultValue: 'cartesian2D' });
+
         if (coordinateControl?.kind === 'select') {
           expect(coordinateControl.options.map(option => option.value)).toEqual(['cartesian2D', 'polar2D']);
         }
+
         expect(contract.canonicalValues[scenario.coordinateId]).toBe('cartesian2D');
         expect(contract.relatedApis).toContain(scenario.relatedApi);
         expect(contract.controls.sections[0]?.controls[0]?.kind).toBe('table');
@@ -133,12 +138,17 @@ describe('Viz Chart Point family coordinate controls', () => {
       () => import('../../src/modules/docs/contents/viz/chart/points/regression/regression-marks.controls'),
       () => import('../../src/modules/docs/contents/viz/chart/points/strip/strip-encodings.controls'),
     ];
+
     for (const load of contractLoaders) {
       const { createPreviewControlContract } = await load();
+
       for (const lang of ['zh', 'en'] as const) {
         const contract = createPreviewControlContract(lang);
+
         expect(contract.controls.sections[0]?.controls[0]?.kind).toBe('table');
+
         const coordinateControl = contract.controls.sections[1]?.controls[0];
+
         expect(coordinateControl).toMatchObject({ kind: 'select', defaultValue: 'cartesian2D' });
         expect(contract.canonicalValues[coordinateControl.id]).toBe('cartesian2D');
         expect(contract.relatedApis).toContainEqual(expect.stringMatching(/Chart\.coordinate$/));

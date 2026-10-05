@@ -27,6 +27,7 @@ describe('commandEndpoint', () => {
       startAngle: 0,
       endAngle: 90,
     });
+
     expect(point?.[0]).toBeCloseTo(0);
     expect(point?.[1]).toBeCloseTo(5);
   });

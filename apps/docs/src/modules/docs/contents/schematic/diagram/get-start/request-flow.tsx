@@ -12,6 +12,7 @@ export type RequestFlowProps = { lang?: Lang };
 const RequestFlow: FC<RequestFlowProps> = props => {
   const { lang = 'zh' } = props;
   const t = requestFlowI18n[lang];
+
   return (
     <FlowDiagram
       presentation={{ title: { text: t.title } }}

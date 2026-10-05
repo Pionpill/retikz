@@ -4,7 +4,7 @@
 
 ### FlexLayout / FlexLayoutProps
 
-- `FlexLayout`: <ApiSourceLink label={"FlexLayout"} path={"packages/library/layout-react/src/flex-layout/FlexLayout.tsx"} startLine={34}>React declaration component for FlexLayout</ApiSourceLink>
+- `FlexLayout`: <ApiSourceLink label={"FlexLayout"} path={"packages/library/layout-react/src/flex-layout/FlexLayout.tsx"} startLine={35}>React declaration component for FlexLayout</ApiSourceLink>
 - `FlexLayoutProps`: <ApiSourceLink label={"FlexLayoutProps"} path={"packages/library/layout-react/src/flex-layout/FlexLayout.tsx"} startLine={13}>React props for FlexLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -15,10 +15,10 @@ The remaining members are inherited from `FlexLayoutInput`, with `'children'` re
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `readonly authoring?` | `unknown` | — | Opaque authoring data interpreted by an optional compilation driver |
-| `readonly children?` | `ReactNode` | `[]` | Direct children must be flex layout items; omission creates an empty container |
+| Member                | Type        | Default | Description                                                                    |
+| --------------------- | ----------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly authoring?` | `unknown`   | —       | Opaque authoring data interpreted by an optional compilation driver            |
+| `readonly children?`  | `ReactNode` | `[]`    | Direct children must be flex layout items; omission creates an empty container |
 
 </ApiTable>
 
@@ -31,10 +31,11 @@ export declare const FlexLayout: {
   (props: FlexLayoutProps, context?: any): ReactNode;
 };
 
-export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> & Readonly<{
+export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> &
+  Readonly<{
     authoring?: unknown;
     children?: ReactNode;
-}>;
+  }>;
 ```
 
 </DocTab>
@@ -52,18 +53,18 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> & Readonly<{
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional cross-axis alignment overriding the container alignment. |
-| `basis?` | `number \| "content"` | `"content"` | Natural content contribution or authored main-axis base slot. |
-| `readonly children` | `ReactNode` | — | Provide exactly one drawable JSX child; cannot be combined with ir |
-| `grow?` | `number` | `0` | Non-negative factor for receiving positive free space. |
-| `readonly ir?` | `never` | — | The JSX branch does not accept IR input |
-| `readonly itemKey?` | `string` | — | Stable identity within the container; omission generates a positional internal key, independently of React key |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `max?` | `number` | — | Optional authored hard maximum main-axis slot. |
-| `min?` | `number` | — | Optional authored hard minimum main-axis slot. |
-| `shrink?` | `number` | `1` | Non-negative factor applied to the base slot for shrink. |
+| Member              | Type                                                                                                                                                                                                               | Default     | Description                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| `alignSelf?`        | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | Optional cross-axis alignment overriding the container alignment.                                              |
+| `basis?`            | `number \| "content"`                                                                                                                                                                                              | `"content"` | Natural content contribution or authored main-axis base slot.                                                  |
+| `readonly children` | `ReactNode`                                                                                                                                                                                                        | —           | Provide exactly one drawable JSX child; cannot be combined with ir                                             |
+| `grow?`             | `number`                                                                                                                                                                                                           | `0`         | Non-negative factor for receiving positive free space.                                                         |
+| `readonly ir?`      | `never`                                                                                                                                                                                                            | —           | The JSX branch does not accept IR input                                                                        |
+| `readonly itemKey?` | `string`                                                                                                                                                                                                           | —           | Stable identity within the container; omission generates a positional internal key, independently of React key |
+| `margin?`           | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Item margin outside the parent allocation slot.                                                                |
+| `max?`              | `number`                                                                                                                                                                                                           | —           | Optional authored hard maximum main-axis slot.                                                                 |
+| `min?`              | `number`                                                                                                                                                                                                           | —           | Optional authored hard minimum main-axis slot.                                                                 |
+| `shrink?`           | `number`                                                                                                                                                                                                           | `1`         | Non-negative factor applied to the base slot for shrink.                                                       |
 
 </ApiTable>
 
@@ -73,18 +74,18 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> & Readonly<{
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional cross-axis alignment overriding the container alignment. |
-| `basis?` | `number \| "content"` | `"content"` | Natural content contribution or authored main-axis base slot. |
-| `readonly children?` | `never` | — | The IR branch does not accept JSX children |
-| `grow?` | `number` | `0` | Non-negative factor for receiving positive free space. |
-| `readonly ir` | `InputEmbedContribution['node']` | — | A serializable child drawing; cannot be combined with children |
-| `readonly itemKey?` | `string` | — | Stable identity within the container; omission generates a positional internal key, independently of React key |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `max?` | `number` | — | Optional authored hard maximum main-axis slot. |
-| `min?` | `number` | — | Optional authored hard minimum main-axis slot. |
-| `shrink?` | `number` | `1` | Non-negative factor applied to the base slot for shrink. |
+| Member               | Type                                                                                                                                                                                                               | Default     | Description                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| `alignSelf?`         | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | Optional cross-axis alignment overriding the container alignment.                                              |
+| `basis?`             | `number \| "content"`                                                                                                                                                                                              | `"content"` | Natural content contribution or authored main-axis base slot.                                                  |
+| `readonly children?` | `never`                                                                                                                                                                                                            | —           | The IR branch does not accept JSX children                                                                     |
+| `grow?`              | `number`                                                                                                                                                                                                           | `0`         | Non-negative factor for receiving positive free space.                                                         |
+| `readonly ir`        | `InputEmbedContribution['node']`                                                                                                                                                                                   | —           | A serializable child drawing; cannot be combined with children                                                 |
+| `readonly itemKey?`  | `string`                                                                                                                                                                                                           | —           | Stable identity within the container; omission generates a positional internal key, independently of React key |
+| `margin?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Item margin outside the parent allocation slot.                                                                |
+| `max?`               | `number`                                                                                                                                                                                                           | —           | Optional authored hard maximum main-axis slot.                                                                 |
+| `min?`               | `number`                                                                                                                                                                                                           | —           | Optional authored hard minimum main-axis slot.                                                                 |
+| `shrink?`            | `number`                                                                                                                                                                                                           | `1`         | Non-negative factor applied to the base slot for shrink.                                                       |
 
 </ApiTable>
 
@@ -95,9 +96,11 @@ export type FlexLayoutProps = Omit<FlexLayoutInput, 'children'> & Readonly<{
 ```ts
 export declare const FlexLayoutItem: FC<FlexLayoutItemProps>;
 
-export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'kind'> & Readonly<{
+export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'kind'> &
+  Readonly<{
     itemKey?: string;
-}> & LayoutItemChildSource;
+  }> &
+  LayoutItemChildSource;
 ```
 
 </DocTab>
@@ -108,7 +111,7 @@ export type FlexLayoutItemProps = Omit<FlexLayoutItemInput, 'child' | 'key' | 'k
 
 ### flexLayout / InputFlexLayout
 
-- `flexLayout`: <ApiSourceLink label={"flexLayout"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={33}>Create a FlexLayout embed</ApiSourceLink>
+- `flexLayout`: <ApiSourceLink label={"flexLayout"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={55}>Create a FlexLayout embed</ApiSourceLink>
 - `InputFlexLayout`: <ApiSourceLink label={"InputFlexLayout"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={27}>Vanilla authoring input for FlexLayout</ApiSourceLink>
 
 <DocTabs defaultValue="members">
@@ -119,12 +122,12 @@ The remaining members are inherited from `FlexLayoutInput`, with `'children'` re
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children?` | `ReadonlyArray<InputFlexLayoutItem>` | `[]` | Authored direct items; omission is treated as an empty list |
-| `input` (Parameter) | `InputFlexLayout` | — | Container and item input; the input object reference is retained |
-| `authoring?` (Parameter) | `unknown` | — | Opaque data for the compilation driver; omitted input adds no authoring data |
-| Returns | `InputEmbed<InputFlexLayout>` | — | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
+| Member                   | Type                                 | Default | Description                                                                      |
+| ------------------------ | ------------------------------------ | ------- | -------------------------------------------------------------------------------- |
+| `children?`              | `ReadonlyArray<InputFlexLayoutItem>` | `[]`    | Authored direct items; omission is treated as an empty list                      |
+| `input` (Parameter)      | `InputFlexLayout`                    | —       | Container and item input; the input object reference is retained                 |
+| `authoring?` (Parameter) | `unknown`                            | —       | Opaque data for the compilation driver; omitted input adds no authoring data     |
+| Returns                  | `InputEmbed<InputFlexLayout>`        | —       | An InputEmbed consumed by the layout adapter; creation does not solve the layout |
 
 </ApiTable>
 
@@ -136,7 +139,7 @@ The remaining members are inherited from `FlexLayoutInput`, with `'children'` re
 export declare const flexLayout: (input: InputFlexLayout, authoring?: unknown) => InputEmbed<InputFlexLayout>;
 
 export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
-    children?: ReadonlyArray<InputFlexLayoutItem>;
+  children?: ReadonlyArray<InputFlexLayoutItem>;
 };
 ```
 
@@ -146,28 +149,34 @@ export type InputFlexLayout = Omit<FlexLayoutInput, 'children'> & {
 
 ### InputFlexLayoutItem
 
-<p><ApiSourceLink label={"InputFlexLayoutItem"} path={"packages/library/layout-vanilla/src/normalize/types.ts"} startLine={18}>Vanilla input for a FlexLayout item</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'InputFlexLayoutItem'}
+    path={'packages/library/layout-vanilla/src/normalize/types.ts'}
+    startLine={18}
+  >
+    Vanilla input for a FlexLayout item
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional cross-axis alignment overriding the container alignment. |
-| `basis?` | `number \| "content"` | `"content"` | Natural content contribution or authored main-axis base slot. |
-| `child` | `InputChild` | — | Authoring input for a direct layout child |
-| `grow?` | `number` | `0` | Non-negative factor for receiving positive free space. |
-| `key?` | `string` | — | Optional container-local stable authored item identity. |
-| `kind` | `"flex"` | — | Discriminator for a FlexLayout item. |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `max?` | `number` | — | Optional authored hard maximum main-axis slot. |
-| `min?` | `number` | — | Optional authored hard minimum main-axis slot. |
-| `shrink?` | `number` | `1` | Non-negative factor applied to the base slot for shrink. |
+| Member       | Type                                                                                                                                                                                                               | Default     | Description                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ----------------------------------------------------------------- |
+| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | Optional cross-axis alignment overriding the container alignment. |
+| `basis?`     | `number \| "content"`                                                                                                                                                                                              | `"content"` | Natural content contribution or authored main-axis base slot.     |
+| `child`      | `InputChild`                                                                                                                                                                                                       | —           | Authoring input for a direct layout child                         |
+| `grow?`      | `number`                                                                                                                                                                                                           | `0`         | Non-negative factor for receiving positive free space.            |
+| `key?`       | `string`                                                                                                                                                                                                           | —           | Optional container-local stable authored item identity.           |
+| `kind`       | `"flex"`                                                                                                                                                                                                           | —           | Discriminator for a FlexLayout item.                              |
+| `margin?`    | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Item margin outside the parent allocation slot.                   |
+| `max?`       | `number`                                                                                                                                                                                                           | —           | Optional authored hard maximum main-axis slot.                    |
+| `min?`       | `number`                                                                                                                                                                                                           | —           | Optional authored hard minimum main-axis slot.                    |
+| `shrink?`    | `number`                                                                                                                                                                                                           | `1`         | Non-negative factor applied to the base slot for shrink.          |
 
 </ApiTable>
 
@@ -185,22 +194,37 @@ export type InputFlexLayoutItem = InputLayoutItem<FlexLayoutItemInput>;
 
 ### FlexLayoutInputEmbedAdapter
 
-<p><ApiSourceLink label={"FlexLayoutInputEmbedAdapter"} path={"packages/library/layout-vanilla/src/flex-layout.ts"} startLine={12}>InputEmbed adapter for FlexLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutInputEmbedAdapter'}
+    path={'packages/library/layout-vanilla/src/flex-layout.ts'}
+    startLine={12}
+  >
+    InputEmbed adapter for FlexLayout
+  </ApiSourceLink>
+</p>
 
 ```ts
-export declare const FlexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout>;
+export declare const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlexLayout> &
+  Required<Pick<SynchronousInputEmbedAdapter<InputFlexLayout>, 'prepare'>>;
 ```
 
 ### LayoutInputEmbedAdapters
 
-<p><ApiSourceLink label={"LayoutInputEmbedAdapters"} path={"packages/library/layout-vanilla/src/preset/index.ts"} startLine={8}>InputEmbed adapter catalog for the three layout containers</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutInputEmbedAdapters'}
+    path={'packages/library/layout-vanilla/src/preset/index.ts'}
+    startLine={8}
+  >
+    InputEmbed adapter catalog for the three layout containers
+  </ApiSourceLink>
+</p>
 
 ```ts
-export const LayoutInputEmbedAdapters: ReadonlyArray<AnyInputEmbedAdapter> = Object.freeze([
-    FlexLayoutInputEmbedAdapter,
-    GridLayoutInputEmbedAdapter,
-    OverlayLayoutInputEmbedAdapter,
-]);
+export const LayoutInputEmbedAdapters: ReadonlyArray<
+  AnyInputEmbedAdapter & Required<Pick<AnyInputEmbedAdapter, 'lower' | 'prepare'>>
+> = Object.freeze([FlexLayoutInputEmbedAdapter, GridLayoutInputEmbedAdapter, OverlayLayoutInputEmbedAdapter]);
 ```
 
 ## `@retikz/layout`
@@ -208,7 +232,7 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<AnyInputEmbedAdapter> = Obj
 ### createFlexLayout / FlexLayoutInput
 
 - `createFlexLayout`: <ApiSourceLink label={"createFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/factory.ts"} startLine={8}>Create persistent FlexLayout input preserving omitted fields and shorthand</ApiSourceLink>
-- `FlexLayoutInput`: <ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={37}>FlexLayout input allowing fixed discriminators and optional fields to be omitted</ApiSourceLink>
+- `FlexLayoutInput`: <ApiSourceLink label={"FlexLayoutInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={29}>FlexLayout input allowing fixed discriminators and optional fields to be omitted</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -216,10 +240,10 @@ export const LayoutInputEmbedAdapters: ReadonlyArray<AnyInputEmbedAdapter> = Obj
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `input` (Parameter) | `FlexLayoutInput` | — | Container and item configuration; Schema parsing applies static defaults |
-| Returns | `IRFlexLayout` | — | Source IR with the layout namespace and container type; input is not mutated |
+| Member              | Type              | Default | Description                                                                  |
+| ------------------- | ----------------- | ------- | ---------------------------------------------------------------------------- |
+| `input` (Parameter) | `FlexLayoutInput` | —       | Container and item configuration; Schema parsing applies static defaults     |
+| Returns             | `IRFlexLayout`    | —       | Source IR with the layout namespace and container type; input is not mutated |
 
 </ApiTable>
 
@@ -239,23 +263,29 @@ export type FlexLayoutInput = Omit<IRFlexLayout, 'namespace' | 'type'>;
 
 ### FlexLayoutArtifact
 
-<p><ApiSourceLink label={"FlexLayoutArtifact"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={40}>JSON-safe compilation artifact payload for FlexLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutArtifact'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={32}
+  >
+    JSON-safe compilation artifact payload for FlexLayout
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `container` | `ZodInfer<typeof FlexLayoutArtifactSchema.shape["container"]>` | — | Resolved container geometry. |
-| `items` | `ZodInfer<typeof FlexLayoutArtifactSchema.shape["items"]>` | — | Items in authored source order. |
-| `kind` | `"flex"` | — | Discriminator for a FlexLayout artifact payload. |
-| `lines` | `Array<{ index: number; itemKeys: Array<string>; mainAxis: "x" \| "y"; mainStart: number; mainSize: number; crossStart: number; crossSize: number; }>` | — | Lines in final physical cross-axis order. |
-| `spacing` | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>` | — | Resolved fixed gaps and distributed free-space segments. |
+| Member      | Type                                                                                                                                                   | Default | Description                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | -------------------------------------------------------- |
+| `container` | `ZodInfer<typeof FlexLayoutArtifactSchema.shape["container"]>`                                                                                         | —       | Resolved container geometry.                             |
+| `items`     | `ZodInfer<typeof FlexLayoutArtifactSchema.shape["items"]>`                                                                                             | —       | Items in authored source order.                          |
+| `kind`      | `"flex"`                                                                                                                                               | —       | Discriminator for a FlexLayout artifact payload.         |
+| `lines`     | `Array<{ index: number; itemKeys: Array<string>; mainAxis: "x" \| "y"; mainStart: number; mainSize: number; crossStart: number; crossSize: number; }>` | —       | Lines in final physical cross-axis order.                |
+| `spacing`   | `Array<{ kind: "gap" \| "distributed"; axis: "x" \| "y"; bounds: { x: number; y: number; width: number; height: number; }; }>`                         | —       | Resolved fixed gaps and distributed free-space segments. |
 
 </ApiTable>
 
@@ -271,58 +301,36 @@ export type FlexLayoutArtifact = ZodInfer<typeof FlexLayoutArtifactSchema>;
 
 </DocTabs>
 
-### FlexLayoutDirectionValue
-
-<p><ApiSourceLink label={"FlexLayoutDirectionValue"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={13}>FlexLayout main-axis direction values</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type FlexLayoutDirectionValue =
-  | "row"
-  | "row-reverse"
-  | "column"
-  | "column-reverse";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type FlexLayoutDirectionValue = ValueOf<typeof FlexLayoutDirection>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### FlexLayoutItemInput
 
-<p><ApiSourceLink label={"FlexLayoutItemInput"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={26}>FlexLayout item input allowing defaulted fields to be omitted</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutItemInput'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={18}
+  >
+    FlexLayout item input allowing defaulted fields to be omitted
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional cross-axis alignment overriding the container alignment. |
-| `basis?` | `number \| "content"` | `"content"` | Natural content contribution or authored main-axis base slot. |
-| `child` | `IRChild` | — | JSON-safe Core child laid out by the container. |
-| `grow?` | `number` | `0` | Non-negative factor for receiving positive free space. |
-| `key?` | `string` | — | Optional container-local stable authored item identity. |
-| `kind` | `"flex"` | — | Discriminator for a FlexLayout item. |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `max?` | `number` | — | Optional authored hard maximum main-axis slot. |
-| `min?` | `number` | — | Optional authored hard minimum main-axis slot. |
-| `shrink?` | `number` | `1` | Non-negative factor applied to the base slot for shrink. |
+| Member       | Type                                                                                                                                                                                                               | Default     | Description                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ----------------------------------------------------------------- |
+| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | Optional cross-axis alignment overriding the container alignment. |
+| `basis?`     | `number \| "content"`                                                                                                                                                                                              | `"content"` | Natural content contribution or authored main-axis base slot.     |
+| `child`      | `IRChild`                                                                                                                                                                                                          | —           | JSON-safe Core child laid out by the container.                   |
+| `grow?`      | `number`                                                                                                                                                                                                           | `0`         | Non-negative factor for receiving positive free space.            |
+| `key?`       | `string`                                                                                                                                                                                                           | —           | Optional container-local stable authored item identity.           |
+| `kind`       | `"flex"`                                                                                                                                                                                                           | —           | Discriminator for a FlexLayout item.                              |
+| `margin?`    | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Item margin outside the parent allocation slot.                   |
+| `max?`       | `number`                                                                                                                                                                                                           | —           | Optional authored hard maximum main-axis slot.                    |
+| `min?`       | `number`                                                                                                                                                                                                           | —           | Optional authored hard minimum main-axis slot.                    |
+| `shrink?`    | `number`                                                                                                                                                                                                           | `1`         | Non-negative factor applied to the base slot for shrink.          |
 
 </ApiTable>
 
@@ -338,19 +346,24 @@ export type FlexLayoutItemInput = IRFlexLayoutItem;
 
 </DocTabs>
 
-### FlexLayoutWrapValue
+### FlexMainDistribution
 
-<p><ApiSourceLink label={"FlexLayoutWrapValue"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={16}>FlexLayout wrapping policy values</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexMainDistribution'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={11}
+  >
+    FlexLayout main-axis remaining-space distribution values
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="expanded">
 
 <DocTab value="expanded" label="Expanded type">
 
 ```ts
-export type FlexLayoutWrapValue =
-  | "nowrap"
-  | "wrap"
-  | "wrap-reverse";
+export type FlexMainDistribution = 'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly';
 ```
 
 </DocTab>
@@ -358,37 +371,7 @@ export type FlexLayoutWrapValue =
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type FlexLayoutWrapValue = ValueOf<typeof FlexLayoutWrap>;
-```
-
-</DocTab>
-
-</DocTabs>
-
-### FlexMainDistributionValue
-
-<p><ApiSourceLink label={"FlexMainDistributionValue"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={19}>FlexLayout main-axis remaining-space distribution values</ApiSourceLink></p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type FlexMainDistributionValue =
-  | "start"
-  | "center"
-  | "end"
-  | "space-between"
-  | "space-around"
-  | "space-evenly";
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSchema>;
+export type FlexMainDistribution = ZodInfer<typeof FlexMainDistributionSchema>;
 ```
 
 </DocTab>
@@ -397,7 +380,15 @@ export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSche
 
 ### IRFlexLayout
 
-<p><ApiSourceLink label={"IRFlexLayout"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={29}>Persistent FlexLayout composite input</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'IRFlexLayout'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={21}
+  >
+    Persistent FlexLayout composite input
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
@@ -407,9 +398,9 @@ The remaining members are inherited from `ZodInput<typeof FlexLayoutSchema>`, wi
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `children?` | `Array<IRFlexLayoutItem>` | `[]` | Authored direct items; omission is treated as an empty list |
+| Member      | Type                      | Default | Description                                                 |
+| ----------- | ------------------------- | ------- | ----------------------------------------------------------- |
+| `children?` | `Array<IRFlexLayoutItem>` | `[]`    | Authored direct items; omission is treated as an empty list |
 
 </ApiTable>
 
@@ -419,7 +410,7 @@ The remaining members are inherited from `ZodInput<typeof FlexLayoutSchema>`, wi
 
 ```ts
 export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> & {
-    children?: Array<IRFlexLayoutItem>;
+  children?: Array<IRFlexLayoutItem>;
 };
 ```
 
@@ -429,28 +420,34 @@ export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> &
 
 ### IRFlexLayoutItem
 
-<p><ApiSourceLink label={"IRFlexLayoutItem"} path={"packages/library/layout/src/composites/flex-layout/types.ts"} startLine={22}>Persistent FlexLayout item input</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'IRFlexLayoutItem'}
+    path={'packages/library/layout/src/composites/flex-layout/types.ts'}
+    startLine={14}
+  >
+    Persistent FlexLayout item input
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-
-
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"` | — | Optional cross-axis alignment overriding the container alignment. |
-| `basis?` | `number \| "content"` | `"content"` | Natural content contribution or authored main-axis base slot. |
-| `child` | `IRChild` | — | JSON-safe Core child laid out by the container. |
-| `grow?` | `number` | `0` | Non-negative factor for receiving positive free space. |
-| `key?` | `string` | — | Optional container-local stable authored item identity. |
-| `kind` | `"flex"` | — | Discriminator for a FlexLayout item. |
-| `margin?` | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0` | Item margin outside the parent allocation slot. |
-| `max?` | `number` | — | Optional authored hard maximum main-axis slot. |
-| `min?` | `number` | — | Optional authored hard minimum main-axis slot. |
-| `shrink?` | `number` | `1` | Non-negative factor applied to the base slot for shrink. |
+| Member       | Type                                                                                                                                                                                                               | Default     | Description                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ----------------------------------------------------------------- |
+| `alignSelf?` | `"start" \| "center" \| "end" \| "stretch" \| "first-baseline" \| "last-baseline"`                                                                                                                                 | —           | Optional cross-axis alignment overriding the container alignment. |
+| `basis?`     | `number \| "content"`                                                                                                                                                                                              | `"content"` | Natural content contribution or authored main-axis base slot.     |
+| `child`      | `IRChild`                                                                                                                                                                                                          | —           | JSON-safe Core child laid out by the container.                   |
+| `grow?`      | `number`                                                                                                                                                                                                           | `0`         | Non-negative factor for receiving positive free space.            |
+| `key?`       | `string`                                                                                                                                                                                                           | —           | Optional container-local stable authored item identity.           |
+| `kind`       | `"flex"`                                                                                                                                                                                                           | —           | Discriminator for a FlexLayout item.                              |
+| `margin?`    | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | `0`         | Item margin outside the parent allocation slot.                   |
+| `max?`       | `number`                                                                                                                                                                                                           | —           | Optional authored hard maximum main-axis slot.                    |
+| `min?`       | `number`                                                                                                                                                                                                           | —           | Optional authored hard minimum main-axis slot.                    |
+| `shrink?`    | `number`                                                                                                                                                                                                           | `1`         | Non-negative factor applied to the base slot for shrink.          |
 
 </ApiTable>
 
@@ -459,7 +456,8 @@ export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> &
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'child'> & Pick<ZodInfer<typeof FlexLayoutItemSchema>, 'child'>;
+export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'child'> &
+  Pick<ZodInfer<typeof FlexLayoutItemSchema>, 'child'>;
 ```
 
 </DocTab>
@@ -468,7 +466,15 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 
 ### LayoutAxisSizeInput
 
-<p><ApiSourceLink label={"LayoutAxisSizeInput"} path={"packages/library/layout/src/composites/shared/types.ts"} startLine={32}>Schema input for an axis sizing policy</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutAxisSizeInput'}
+    path={'packages/library/layout/src/composites/shared/types.ts'}
+    startLine={21}
+  >
+    Schema input for an axis sizing policy
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="content">
 
@@ -476,11 +482,11 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `kind` | `"content"` | — | Discriminator for intrinsic content sizing. |
-| `max?` | `number` | — | Optional authored maximum allocation size. |
-| `min?` | `number` | — | Optional authored minimum allocation size. |
+| Member | Type        | Default | Description                                 |
+| ------ | ----------- | ------- | ------------------------------------------- |
+| `kind` | `"content"` | —       | Discriminator for intrinsic content sizing. |
+| `max?` | `number`    | —       | Optional authored maximum allocation size.  |
+| `min?` | `number`    | —       | Optional authored minimum allocation size.  |
 
 </ApiTable>
 
@@ -490,10 +496,10 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `kind` | `"fixed"` | — | Discriminator for fixed allocation sizing. |
-| `value` | `number` | — | Authored fixed allocation size. |
+| Member  | Type      | Default | Description                                |
+| ------- | --------- | ------- | ------------------------------------------ |
+| `kind`  | `"fixed"` | —       | Discriminator for fixed allocation sizing. |
+| `value` | `number`  | —       | Authored fixed allocation size.            |
 
 </ApiTable>
 
@@ -503,11 +509,11 @@ export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'chil
 
 <ApiTable>
 
-| Member | Type | Default | Description |
-| --- | --- | --- | --- |
-| `kind` | `"fill"` | — | Discriminator for filling finite parent allocation. |
-| `max?` | `number` | — | Optional authored maximum allocation size. |
-| `min?` | `number` | — | Optional authored minimum allocation size. |
+| Member | Type     | Default | Description                                         |
+| ------ | -------- | ------- | --------------------------------------------------- |
+| `kind` | `"fill"` | —       | Discriminator for filling finite parent allocation. |
+| `max?` | `number` | —       | Optional authored maximum allocation size.          |
+| `min?` | `number` | —       | Optional authored minimum allocation size.          |
 
 </ApiTable>
 
@@ -525,7 +531,15 @@ export type LayoutAxisSizeInput = ZodInput<typeof LayoutAxisSizeSchema>;
 
 ### LayoutSizeInput
 
-<p><ApiSourceLink label={"LayoutSizeInput"} path={"packages/library/layout/src/composites/shared/types.ts"} startLine={38}>Two-axis sizing input allowing default axes to be omitted</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutSizeInput'}
+    path={'packages/library/layout/src/composites/shared/types.ts'}
+    startLine={27}
+  >
+    Two-axis sizing input allowing default axes to be omitted
+  </ApiSourceLink>
+</p>
 
 <DocTabs defaultValue="expanded">
 
@@ -535,9 +549,17 @@ export type LayoutAxisSizeInput = ZodInput<typeof LayoutAxisSizeSchema>;
 export type LayoutSizeInput =
   | undefined
   | {
-    x?: { kind: "content"; max?: number | undefined; min?: number | undefined; } | { kind: "fixed"; value: number; } | { kind: "fill"; max?: number | undefined; min?: number | undefined; } | undefined;
-    y?: { kind: "content"; max?: number | undefined; min?: number | undefined; } | { kind: "fixed"; value: number; } | { kind: "fill"; max?: number | undefined; min?: number | undefined; } | undefined;
-  };
+      x?:
+        | { kind: 'content'; max?: number | undefined; min?: number | undefined }
+        | { kind: 'fixed'; value: number }
+        | { kind: 'fill'; max?: number | undefined; min?: number | undefined }
+        | undefined;
+      y?:
+        | { kind: 'content'; max?: number | undefined; min?: number | undefined }
+        | { kind: 'fixed'; value: number }
+        | { kind: 'fill'; max?: number | undefined; min?: number | undefined }
+        | undefined;
+    };
 ```
 
 </DocTab>
@@ -554,122 +576,213 @@ export type LayoutSizeInput = ZodInput<typeof LayoutSizeSchema>;
 
 ### FlexLayoutDefinition
 
-<p><ApiSourceLink label={"FlexLayoutDefinition"} path={"packages/library/layout/src/composites/flex-layout/definition.ts"} startLine={10}>Official layout-aware composite definition for FlexLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutDefinition'}
+    path={'packages/library/layout/src/composites/flex-layout/definition.ts'}
+    startLine={10}
+  >
+    Official layout-aware composite definition for FlexLayout
+  </ApiSourceLink>
+</p>
 
 ```ts
-export const FlexLayoutDefinition: LayoutCompositeDefinition<IRFlexLayout, typeof LAYOUT_NAMESPACE, 'flexLayout', FlexLayoutArtifact> = defineComposite({
-    namespace: LAYOUT_NAMESPACE,
-    type: 'flexLayout',
-    schema: FlexLayoutSchema,
-    compile: compileFlexLayout,
-    artifactSchema: FlexLayoutArtifactSchema,
+export const FlexLayoutDefinition: LayoutCompositeDefinition<
+  IRFlexLayout,
+  typeof LAYOUT_NAMESPACE,
+  'flexLayout',
+  FlexLayoutArtifact
+> = defineComposite({
+  namespace: LAYOUT_NAMESPACE,
+  type: 'flexLayout',
+  schema: FlexLayoutSchema,
+  compile: compileFlexLayout,
+  artifactSchema: FlexLayoutArtifactSchema,
 });
 ```
 
 ### FlexLayoutDirection
 
-<p><ApiSourceLink label={"FlexLayoutDirection"} path={"packages/library/layout/src/composites/flex-layout/constants.ts"} startLine={2}>FlexLayout main-axis direction</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutDirection'}
+    path={'packages/library/layout/src/composites/flex-layout/constants.ts'}
+    startLine={4}
+  >
+    FlexLayout main-axis direction
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const FlexLayoutDirection = {
-    Row: 'row',
-    RowReverse: 'row-reverse',
-    Column: 'column',
-    ColumnReverse: 'column-reverse',
+  Row: 'row',
+  RowReverse: 'row-reverse',
+  Column: 'column',
+  ColumnReverse: 'column-reverse',
 } as const;
+
+export type FlexLayoutDirection = ValueOf<typeof FlexLayoutDirection>;
 ```
 
 ### FlexLayoutProvider
 
-<p><ApiSourceLink label={"FlexLayoutProvider"} path={"packages/library/layout/src/composites/flex-layout/provider.ts"} startLine={8}>Composite dependency provider for FlexLayout</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutProvider'}
+    path={'packages/library/layout/src/composites/flex-layout/provider.ts'}
+    startLine={8}
+  >
+    Composite dependency provider for FlexLayout
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const FlexLayoutProvider: CoreDependencyProvider = Object.freeze({
-    key: Object.freeze({
-        capability: 'composite',
-        namespace: FlexLayoutDefinition.namespace,
-        type: FlexLayoutDefinition.type,
-    }),
-    dependencies: Object.freeze([]),
-    datasets: Object.freeze({}),
-    makeDefinition: makeFlexLayoutDefinition,
+  key: Object.freeze({
+    capability: 'composite',
+    namespace: FlexLayoutDefinition.namespace,
+    type: FlexLayoutDefinition.type,
+  }),
+  dependencies: Object.freeze([]),
+  datasets: Object.freeze({}),
+  makeDefinition: makeFlexLayoutDefinition,
 });
 ```
 
 ### FlexLayoutWrap
 
-<p><ApiSourceLink label={"FlexLayoutWrap"} path={"packages/library/layout/src/composites/flex-layout/constants.ts"} startLine={10}>FlexLayout wrapping policy</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'FlexLayoutWrap'}
+    path={'packages/library/layout/src/composites/flex-layout/constants.ts'}
+    startLine={12}
+  >
+    FlexLayout wrapping policy
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const FlexLayoutWrap = {
-    NoWrap: 'nowrap',
-    Wrap: 'wrap',
-    WrapReverse: 'wrap-reverse',
+  NoWrap: 'nowrap',
+  Wrap: 'wrap',
+  WrapReverse: 'wrap-reverse',
 } as const;
+
+export type FlexLayoutWrap = ValueOf<typeof FlexLayoutWrap>;
 ```
 
 ### LayoutAlignment
 
-<p><ApiSourceLink label={"LayoutAlignment"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={22}>Item alignment along a physical axis</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutAlignment'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={24}
+  >
+    Item alignment along a physical axis
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutAlignment = {
-    Start: 'start',
-    Center: 'center',
-    End: 'end',
-    Stretch: 'stretch',
-    FirstBaseline: 'first-baseline',
-    LastBaseline: 'last-baseline',
+  Start: 'start',
+  Center: 'center',
+  End: 'end',
+  Stretch: 'stretch',
+  FirstBaseline: 'first-baseline',
+  LastBaseline: 'last-baseline',
 } as const;
+
+export type LayoutAlignment = ValueOf<typeof LayoutAlignment>;
 ```
 
 ### LayoutAxisSizeKind
 
-<p><ApiSourceLink label={"LayoutAxisSizeKind"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={2}>Container sizing policy for one axis</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutAxisSizeKind'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={4}
+  >
+    Container sizing policy for one axis
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutAxisSizeKind = {
-    Content: 'content',
-    Fixed: 'fixed',
-    Fill: 'fill',
+  Content: 'content',
+  Fixed: 'fixed',
+  Fill: 'fill',
 } as const;
+
+export type LayoutAxisSizeKind = ValueOf<typeof LayoutAxisSizeKind>;
 ```
 
 ### LayoutDistribution
 
-<p><ApiSourceLink label={"LayoutDistribution"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={38}>Remaining-space distribution mode</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutDistribution'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={40}
+  >
+    Remaining-space distribution mode
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutDistribution = {
-    Start: 'start',
-    Center: 'center',
-    End: 'end',
-    Stretch: 'stretch',
-    SpaceBetween: 'space-between',
-    SpaceAround: 'space-around',
-    SpaceEvenly: 'space-evenly',
+  Start: 'start',
+  Center: 'center',
+  End: 'end',
+  Stretch: 'stretch',
+  SpaceBetween: 'space-between',
+  SpaceAround: 'space-around',
+  SpaceEvenly: 'space-evenly',
 } as const;
+
+export type LayoutDistribution = ValueOf<typeof LayoutDistribution>;
 ```
 
 ### LayoutItemKind
 
-<p><ApiSourceLink label={"LayoutItemKind"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={12}>Container kind owning a layout item</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutItemKind'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={14}
+  >
+    Container kind owning a layout item
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutItemKind = {
-    Flex: 'flex',
-    Grid: 'grid',
-    Overlay: 'overlay',
+  Flex: 'flex',
+  Grid: 'grid',
+  Overlay: 'overlay',
 } as const;
+
+export type LayoutItemKind = ValueOf<typeof LayoutItemKind>;
 ```
 
 ### LayoutOverflow
 
-<p><ApiSourceLink label={"LayoutOverflow"} path={"packages/library/layout/src/composites/shared/constants.ts"} startLine={56}>Container visual overflow policy</ApiSourceLink></p>
+<p>
+  <ApiSourceLink
+    label={'LayoutOverflow'}
+    path={'packages/library/layout/src/composites/shared/constants.ts'}
+    startLine={58}
+  >
+    Container visual overflow policy
+  </ApiSourceLink>
+</p>
 
 ```ts
 export const LayoutOverflow = {
-    Visible: 'visible',
-    Clip: 'clip',
+  Visible: 'visible',
+  Clip: 'clip',
 } as const;
+
+export type LayoutOverflow = ValueOf<typeof LayoutOverflow>;
 ```

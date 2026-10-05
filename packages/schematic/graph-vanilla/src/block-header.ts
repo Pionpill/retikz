@@ -26,6 +26,7 @@ export const BlockHeaderInputEmbedAdapter: SynchronousInputEmbedAdapter<BlockHea
     const normalized = normalizeGraphAuthoringChildren(slots, context, 'BlockHeader slots');
     const trailIndex = input.icon === undefined ? 0 : 1;
     const dependencies = createGraphProviderDependencies(BlockHeaderProviderKey);
+
     return {
       node: normalizeBlockHeader({
         ...input,

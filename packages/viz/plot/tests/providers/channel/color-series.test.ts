@@ -8,6 +8,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };
+
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 const expandOf = (spec: IRPlot, datasets: Record<string, Array<Record<string, unknown>>>): IRScope => {
@@ -19,6 +20,7 @@ const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, 
 
 const collectPaths = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -26,12 +28,15 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -39,7 +44,9 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -75,6 +82,7 @@ describe('color × series · B/C 收口（contract）', () => {
       encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } },
     });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
+
     expect(paths).toHaveLength(2);
     expect(paths[0].style?.stroke).not.toEqual(paths[1].style?.stroke);
   });
@@ -87,6 +95,7 @@ describe('color × series · B/C 收口（contract）', () => {
       encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } },
     });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
+
     expect(paths).toHaveLength(2); // 旧行为是 1 条 currentColor 线；现按 city 拆 2 条
   });
 
@@ -103,6 +112,7 @@ describe('color × series · B/C 收口（contract）', () => {
       order: 't',
       encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } },
     });
+
     expect(firstLayer(implicit, { d: SERIES_DATA })).toEqual(firstLayer(explicit, { d: SERIES_DATA }));
   });
 
@@ -115,6 +125,7 @@ describe('color × series · B/C 收口（contract）', () => {
       encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } },
     });
     const paths = collectPaths(firstLayer(spec, { d: SERIES_DATA }));
+
     expect(paths).toHaveLength(2);
   });
 
@@ -126,6 +137,7 @@ describe('color × series · B/C 收口（contract）', () => {
       encoding: { x: { field: 't' }, y: { field: 'v' } },
     });
     const nodes = collectNodes(firstLayer(spec, { d: SERIES_DATA }));
+
     expect(nodes).toHaveLength(4); // 每行一点，按 city 分色（子 Scope），不拆 path
   });
 });
@@ -153,6 +165,7 @@ describe('plot theme default palette', () => {
       ],
     });
     const [lineLayer, barLayerNode] = root.children as Array<IRScope>;
+
     expect(lineLayer.defaults?.path?.style?.stroke).toBe(sharedCategorical[0]);
     expect(barLayerNode.defaults?.node?.style?.fill).toBe(sharedCategorical[1]);
   });
@@ -181,6 +194,7 @@ describe('plot theme default palette', () => {
       ],
     });
     const [lineLayer, barLayerNode, pointLayer] = root.children as Array<IRScope>;
+
     expect(lineLayer.defaults?.path?.style?.stroke).toBe('#2563eb');
     expect(barLayerNode.defaults?.node?.style?.fill).toBe('#f97316');
     expect(pointLayer.defaults?.node?.style?.fill).toBe('currentColor');
@@ -214,6 +228,7 @@ describe('plot theme default palette', () => {
       ],
     });
     const colorScopes = layer.children as Array<IRScope>;
+
     expect(colorScopes.map(scope => scope.defaults?.node?.style?.fill)).toEqual(['#2563eb', '#f97316']);
     expect(colorScopes.map(scope => scope.children.length)).toEqual([2, 1]);
   });
@@ -226,6 +241,7 @@ describe('color 类型兼容校验（contract）', () => {
       color: { kind: 'field', value: 'v' },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
     });
+
     expect(() =>
       expandOf(spec, {
         d: [
@@ -242,6 +258,7 @@ describe('color 类型兼容校验（contract）', () => {
       color: { kind: 'field', value: 'date' },
       encoding: { x: { field: 'x' }, y: { field: 'y' } },
     });
+
     expect(() =>
       expandOf(spec, {
         d: [
@@ -266,6 +283,7 @@ describe('series + color 冲突（contract）', () => {
       { t: 0, v: 1, city: 'X', shade: 'a' },
       { t: 1, v: 3, city: 'X', shade: 'b' },
     ];
+
     expect(() => expandOf(spec, { d: data })).toThrow(/not constant within series/);
   });
 
@@ -276,6 +294,7 @@ describe('series + color 冲突（contract）', () => {
       order: 't',
       encoding: { x: { field: 't' }, y: { field: 'v' }, color: { field: 'city', scale: 'col' } },
     });
+
     expect(() => expandOf(spec, { d: SERIES_DATA })).not.toThrow();
   });
 });

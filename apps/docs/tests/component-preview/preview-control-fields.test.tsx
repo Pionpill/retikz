@@ -15,7 +15,9 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 class ResizeObserverMock implements ResizeObserver {
   disconnect = (): void => undefined;
+
   observe = (): void => undefined;
+
   unobserve = (): void => undefined;
 }
 
@@ -75,6 +77,7 @@ const renderField = async (
       />,
     ),
   );
+
   return { container, root };
 };
 
@@ -82,6 +85,7 @@ afterEach(async () => {
   for (const root of renderedRoots.splice(0)) {
     await act(() => root.unmount());
   }
+
   vi.unstubAllGlobals();
   document.body.replaceChildren();
 });
@@ -101,9 +105,11 @@ describe('PreviewControlFieldInput', () => {
 
     expect(textarea).not.toBeNull();
     expect(text.container.querySelector('input[type="text"]')).toBeNull();
+
     await act(() => {
       if (textarea) setTextareaValue(textarea, 'Title\nBody');
     });
+
     expect(onValueChange).toHaveBeenLastCalledWith('Title\nBody');
   });
 
@@ -180,7 +186,9 @@ describe('PreviewControlFieldInput', () => {
     const aggregationTrigger = aggregation.container.querySelector<HTMLElement>('[data-slot="select-trigger"]');
     await act(() => aggregationTrigger?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })));
     const options = document.body.querySelectorAll<HTMLElement>('[data-slot="select-item"]');
+
     expect(options).toHaveLength(2);
+
     await act(() => options[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
 
     expect(onValueChange).toHaveBeenLastCalledWith('');
@@ -239,11 +247,14 @@ describe('PreviewControlFieldInput', () => {
     expect(textInput?.classList.contains('w-full')).toBe(true);
     expect(numberInput?.classList.contains('w-full')).toBe(true);
     expect(colorToggleGroup?.getAttribute('data-size')).toBe('sm');
+
     for (const toggle of color.container.querySelectorAll('[data-slot="toggle-group-item"]')) {
       expect(toggle.classList.contains('h-7')).toBe(true);
     }
+
     expect(select.container.querySelector('[data-slot="select-trigger"]')?.getAttribute('data-size')).toBe('sm');
     expect(select.container.querySelector('[data-slot="select-trigger"]')?.classList.contains('min-w-0')).toBe(true);
+
     for (const input of point.container.querySelectorAll('input[type="number"]')) {
       expect(input.classList.contains('h-7')).toBe(true);
     }
@@ -264,8 +275,10 @@ describe('PreviewControlFieldInput', () => {
 
     expect(defaultRange.container.firstElementChild?.classList.contains('w-full')).toBe(true);
     expect(compactRange.container.firstElementChild?.classList.contains('w-full')).toBe(true);
+
     for (const range of [defaultRange, compactRange]) {
       const value = range.container.querySelector('.tabular-nums');
+
       expect(value?.textContent).toBe('1');
       expect(value?.classList.contains('shrink-0')).toBe(true);
     }
@@ -291,10 +304,13 @@ describe('PreviewControlFieldInput', () => {
 
     expect(playButton).not.toBeNull();
     expect(playButton?.previousElementSibling?.textContent).toBe('0.5');
+
     await act(() => playButton?.click());
+
     expect(onRangePlaybackStart).toHaveBeenCalledWith(field);
 
     await act(() => thumb?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+
     expect(onRangePlaybackStop).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenLastCalledWith(0.6);
   });
@@ -307,12 +323,15 @@ describe('PreviewControlFieldInput', () => {
       onTextChange,
     );
     const textInput = text.container.querySelector<HTMLInputElement>('input[type="text"]');
+
     expect(textInput).not.toBeNull();
+
     await act(() => {
       if (textInput) {
         setInputValue(textInput, 'Changed');
       }
     });
+
     expect(onTextChange).toHaveBeenLastCalledWith('Changed');
 
     const onNumberChange = vi.fn();
@@ -322,12 +341,15 @@ describe('PreviewControlFieldInput', () => {
       onNumberChange,
     );
     const numberInput = number.container.querySelector<HTMLInputElement>('input[type="number"]');
+
     expect(numberInput).not.toBeNull();
+
     await act(() => {
       if (numberInput) {
         setInputValue(numberInput, '4.5');
       }
     });
+
     expect(onNumberChange).toHaveBeenLastCalledWith(4.5);
 
     const onSwitchChange = vi.fn();
@@ -337,8 +359,11 @@ describe('PreviewControlFieldInput', () => {
       onSwitchChange,
     );
     const switchButton = toggle.container.querySelector<HTMLButtonElement>('[data-slot="switch"]');
+
     expect(switchButton).not.toBeNull();
+
     await act(() => switchButton?.click());
+
     expect(onSwitchChange).toHaveBeenLastCalledWith(true);
 
     const onColorChange = vi.fn();
@@ -349,9 +374,12 @@ describe('PreviewControlFieldInput', () => {
     );
     const picker = color.container.querySelector<HTMLInputElement>('input[type="color"]');
     const currentColor = color.container.querySelector<HTMLElement>('[role="radio"][aria-label="Foreground"]');
+
     expect(picker).not.toBeNull();
     expect(currentColor).not.toBeNull();
+
     await act(() => currentColor?.click());
+
     expect(onColorChange).toHaveBeenLastCalledWith('currentColor');
   });
 
@@ -368,7 +396,9 @@ describe('PreviewControlFieldInput', () => {
     expect(color.container.querySelector('input[type="text"]')).toBeNull();
     expect(color.container.querySelector('datalist')).toBeNull();
     expect(picker).not.toBeNull();
+
     if (!picker) throw new Error('Expected color picker');
+
     expect(picker.value).toBe('#000000');
     expect(picker.disabled).toBe(false);
     expect(custom.getAttribute('data-state')).toBe('off');
@@ -376,12 +406,14 @@ describe('PreviewControlFieldInput', () => {
     expect(color.container.querySelectorAll('[role="radio"]')).toHaveLength(2);
 
     await act(() => custom.click());
+
     expect(onCurrentColorChange).toHaveBeenLastCalledWith('#000000');
 
     const disabledContrast = await renderField(
       { kind: 'color', id: 'fill', label: 'Fill', defaultValue: '#ffffff', contrast: false },
       '#ffffff',
     );
+
     expect(disabledContrast.container.querySelectorAll('[role="radio"]')).toHaveLength(2);
   });
 
@@ -392,14 +424,20 @@ describe('PreviewControlFieldInput', () => {
       'contrast',
       onValueChange,
     );
+
     expect(color.container.querySelectorAll('[data-slot="toggle-group-item"]')).toHaveLength(3);
+
     const modes = color.container.querySelectorAll<HTMLElement>('[role="radio"]');
+
     expect(modes[1].getAttribute('data-state')).toBe('off');
     expect(modes[2].getAttribute('data-state')).toBe('on');
 
     await act(() => modes[1].click());
+
     expect(onValueChange).toHaveBeenLastCalledWith('currentColor');
+
     await act(() => modes[0].click());
+
     expect(onValueChange).toHaveBeenLastCalledWith('#ffffff');
   });
 
@@ -421,9 +459,12 @@ describe('PreviewControlFieldInput', () => {
       onValueChange,
     );
     const picker = color.container.querySelector<HTMLInputElement>('input[type="color"]');
+
     expect(picker).not.toBeNull();
+
     await act(() => {
       if (!picker) return;
+
       setInputValue(picker, '#112233');
       setInputValue(picker, '#223344');
       setInputValue(picker, '#334455');
@@ -446,6 +487,7 @@ describe('PreviewControlFieldInput', () => {
       onValueChange,
     );
     const input = number.container.querySelector<HTMLInputElement>('input[type="number"]');
+
     expect(input).not.toBeNull();
 
     await act(() => {
@@ -453,6 +495,7 @@ describe('PreviewControlFieldInput', () => {
         setInputValue(input, '');
       }
     });
+
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
@@ -473,11 +516,16 @@ describe('PreviewControlFieldInput', () => {
       onSelectChange,
     );
     const trigger = select.container.querySelector<HTMLElement>('[data-slot="select-trigger"]');
+
     expect(trigger).not.toBeNull();
+
     await act(() => trigger?.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true })));
     const options = document.body.querySelectorAll<HTMLElement>('[data-slot="select-item"]');
+
     expect(options).toHaveLength(2);
+
     await act(() => options[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+
     expect(onSelectChange).toHaveBeenLastCalledWith('circle');
 
     const onRangeChange = vi.fn();
@@ -487,8 +535,11 @@ describe('PreviewControlFieldInput', () => {
       onRangeChange,
     );
     const thumb = range.container.querySelector<HTMLElement>('[data-slot="slider-thumb"]');
+
     expect(thumb).not.toBeNull();
+
     await act(() => thumb?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+
     expect(onRangeChange).toHaveBeenLastCalledWith(0.6);
   });
 
@@ -509,6 +560,7 @@ describe('PreviewControlFieldInput', () => {
     );
     const xInput = point.container.querySelector<HTMLInputElement>('[aria-label="Control x"]');
     const yInput = point.container.querySelector<HTMLInputElement>('[aria-label="Control y"]');
+
     expect(xInput).not.toBeNull();
     expect(yInput).not.toBeNull();
     expect(xInput?.min).toBe('-100');
@@ -520,6 +572,7 @@ describe('PreviewControlFieldInput', () => {
         setInputValue(xInput, '15');
       }
     });
+
     expect(onPointChange).toHaveBeenLastCalledWith([15, 20]);
 
     await act(() => {
@@ -527,6 +580,7 @@ describe('PreviewControlFieldInput', () => {
         setInputValue(yInput, '25');
       }
     });
+
     expect(onPointChange).toHaveBeenLastCalledWith([10, 25]);
 
     await act(() => {
@@ -534,6 +588,7 @@ describe('PreviewControlFieldInput', () => {
         setInputValue(xInput, '999');
       }
     });
+
     expect(onPointChange).toHaveBeenLastCalledWith([100, 20]);
 
     await act(() => {
@@ -541,6 +596,7 @@ describe('PreviewControlFieldInput', () => {
         setInputValue(yInput, '-999');
       }
     });
+
     expect(onPointChange).toHaveBeenLastCalledWith([10, -100]);
 
     onPointChange.mockClear();
@@ -549,6 +605,7 @@ describe('PreviewControlFieldInput', () => {
         setInputValue(xInput, '');
       }
     });
+
     expect(onPointChange).not.toHaveBeenCalled();
   });
 

@@ -30,7 +30,9 @@ type BenchEnvironment = BrowserRunnerEnvironment &
   }>;
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+
 const environment = JSON.parse(readFileSync(resolve(appRoot, 'environment.json'), 'utf8')) as BenchEnvironment;
+
 const baseline = JSON.parse(
   readFileSync(resolve(appRoot, 'baselines', 'deterministic.json'), 'utf8'),
 ) as ReadonlyArray<DeterministicBenchmarkBudget>;
@@ -41,6 +43,7 @@ const assertEnvironment = (): void => {
   if (process.versions.node.split('.')[0] !== expectedMajor) {
     throw new Error(`bench environment mismatch: expected Node ${environment.node}, received ${process.version}`);
   }
+
   if (
     !Number.isSafeInteger(environment.warmupRuns) ||
     environment.warmupRuns < 0 ||
@@ -56,6 +59,7 @@ const writeResult = (name: string, value: unknown): string => {
   const resultPath = resolve(appRoot, 'results', name);
   mkdirSync(dirname(resultPath), { recursive: true });
   writeFileSync(resultPath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+
   return resultPath;
 };
 
@@ -121,7 +125,9 @@ const main = async (): Promise<void> => {
     const { results } = await runDeterministicBenchmarks();
     const errors = compareDeterministicResults(results, baseline);
     if (errors.length > 0) throw new Error(`deterministic benchmark failed:\n${errors.join('\n')}`);
+
     console.log(`bench:check passed (${baseline.length} deterministic budgets)`);
+
     return;
   }
 
@@ -140,6 +146,7 @@ const main = async (): Promise<void> => {
           },
         )
       : undefined;
+
     const finalComparison = gateRun?.finalComparison;
     const path = writeResult('wall-clock-report.json', {
       environment: {
@@ -157,12 +164,15 @@ const main = async (): Promise<void> => {
               gate: comparison,
             })),
     });
+
     console.log(`bench:report wrote ${path}`);
     if (finalComparison?.status === 'skipped') {
       console.log(`timing gate skipped: ${finalComparison.errors.join('; ')}`);
     }
+
     if (finalComparison?.status === 'passed') console.log('timing gate passed');
     if (finalComparison !== undefined) assertTimingGatePassed(finalComparison);
+
     return;
   }
 
@@ -190,6 +200,7 @@ const main = async (): Promise<void> => {
       createTimingBaselineCandidate(timing.fingerprint, timing.scenarios),
     );
     console.log(`bench:update-baseline wrote candidates ${deterministicPath} and ${timingPath}`);
+
     return;
   }
 

@@ -7,6 +7,7 @@ import { PointMark } from '../../../src/components/marks';
 describe('buildPlotIR 坐标系族 cartesian1D / polar1D', () => {
   it('cartesian1d_coordinate_input：字符串简写 → IR coordinate.type', () => {
     const spec = buildPlotIR(<PointMark x="value" />, '__plot', { coordinate: 'cartesian1D' });
+
     expect(spec.coordinate).toEqual({ type: 'cartesian1D', x: '__x' });
     expect(spec.marks[0]).toEqual({ type: 'point', encoding: { x: { field: 'value' } } });
   });
@@ -15,11 +16,13 @@ describe('buildPlotIR 坐标系族 cartesian1D / polar1D', () => {
     const spec = buildPlotIR(<PointMark x="value" />, '__plot', {
       coordinate: { type: 'cartesian1D', orientation: 'vertical' },
     });
+
     expect(spec.coordinate).toEqual({ type: 'cartesian1D', x: '__x', orientation: 'vertical' });
   });
 
   it('cartesian1d_point_only_x：PointMark 只 x（无 y）→ 合法 IR', () => {
     const spec = buildPlotIR(<PointMark x="value" />, '__plot', { coordinate: 'cartesian1D' });
+
     expect(() => PlotSchema.parse(spec)).not.toThrow();
     expect(spec.guides).toEqual([]);
   });
@@ -29,14 +32,17 @@ describe('buildPlotIR 坐标系族 cartesian1D / polar1D', () => {
       type: 'polar1D',
       angle: '__angle',
     });
+
     const half = buildPlotIR(<PointMark x="hour" />, '__plot', {
       coordinate: { type: 'polar1D', radius: 0.8, startAngle: 180, endAngle: 360 },
     });
+
     expect(half.coordinate).toEqual({ type: 'polar1D', angle: '__angle', radius: 0.8, startAngle: 180, endAngle: 360 });
   });
 
   it('cartesian_regression：默认 cartesian2D scale/coord 推断不变；薄 Plot 无默认轴', () => {
     const spec = buildPlotIR(<PointMark x="m" y="r" />, '__plot');
+
     expect(spec.coordinate).toEqual({ type: 'cartesian2D', x: '__x', y: '__y' });
     expect(spec.guides).toEqual([]);
   });

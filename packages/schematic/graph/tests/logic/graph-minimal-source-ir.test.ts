@@ -54,6 +54,7 @@ describe('Graph minimal Source IR', () => {
       target: { id: 'database' },
       role: 'dependency',
     });
+
     expect(entity).not.toHaveProperty('variant');
     expect(entity).not.toHaveProperty('ports');
     expect(entity).not.toHaveProperty('position');
@@ -83,7 +84,9 @@ describe('Graph minimal Source IR', () => {
     const projected = Graph.resolveGraph(source, definitions);
 
     expect(source).not.toHaveProperty('relations');
+
     const sourceEntity = source.children?.find(child => 'namespace' in child && child.type === 'entity');
+
     expect(sourceEntity).not.toHaveProperty('variant');
     expect(projected).toEqual(source.children);
     expect(Graph.resolveEntity(sourceEntity as Graph.IRGraphEntity, definitions)).not.toHaveProperty(

@@ -7,21 +7,21 @@ Drawing a circle, arranging a set of entries, and adding a border around content
 
 ## Turn common tasks into components
 
-Standard builds on Kernel's nodes, paths, and containers while preserving recognizable names such as circle, list, and legend. You can choose a component for the task instead of assembling basic primitives each time.
+Standard builds on Kernel's nodes, paths, and containers while preserving recognizable names such as circle, array, and legend. You can choose a component for the task instead of assembling basic primitives each time.
 
 | What you want to express            | Components        | What the component handles                        |
 | ----------------------------------- | ----------------- | ------------------------------------------------- |
 | A circle or rectangle of known size | Circle, Rectangle | Generate an outline from geometric parameters     |
-| Visible sequential or keyed content | List, Map         | Arrange entries, cells, and their boundaries      |
+| Visible sequential or keyed content | Array, Map        | Arrange entries, cells, and their boundaries      |
 | A background or symbol explanation  | Surface, Legend   | Form a surrounding area or display legend entries |
 
-For example, a List entry can contain a Map. The author declares the nesting, and the components arrange cells from their content; there is no need to maintain coordinates for every cell.
+For example, a Array entry can contain a Map. The author declares the nesting, and the components arrange cells from their content; there is no need to maintain coordinates for every cell.
 
 ## Use the same drawing foundation
 
 Standard components still use Kernel drawing capabilities and can appear alongside ordinary Nodes and Paths in one drawing. A Node is a drawable object; a Path draws an outline or line. Shape components produce drawable outlines, while components that wrap content arrange it and form its boundary. They share the same output path, so you can add them to an existing drawing gradually.
 
-Standard adds a way to express **general drawing objects**; it does not interpret business data. List represents visible entry structure rather than performing runtime collection operations. Legend displays entries supplied by the author instead of inferring them from data.
+Standard adds a way to express **general drawing objects**; it does not interpret business data. Array represents visible entry structure rather than performing runtime collection operations. Legend displays entries supplied by the author instead of inferring them from data.
 
 ## Leave different problems to the right capability
 
@@ -38,7 +38,7 @@ This division keeps Standard general: drawing authors can use it directly, and d
 
 <LinkedSections
   items={[
-    { title: 'List', description: 'See how entries compose and nest', url: '/library/standard/collection/list' },
+    { title: 'Array', description: 'See how entries compose and nest', url: '/library/standard/collection/array' },
     {
       title: 'Surface',
       description: 'Add a background, spacing, and boundary to existing content',

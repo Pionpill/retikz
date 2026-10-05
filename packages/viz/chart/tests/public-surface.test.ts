@@ -71,6 +71,7 @@ describe('@retikz/chart public surface', () => {
 
   it('publishes Chart-facing locator options without exposing recipe identities', () => {
     const options: ChartLocatorOptions = { facet: { row: 'north' } };
+
     expect(point.qualifyScatterChartLocatorOptions(options)).toEqual({
       facet: {
         id: '__chart.scatter.composition.facet',
@@ -94,6 +95,7 @@ describe('@retikz/chart public surface', () => {
   it('keeps generated Source JSON-safe without publishing a wide Chart schema', () => {
     expect(chart).not.toHaveProperty('ChartSchema');
     expect(chart).not.toHaveProperty('IRChart');
+
     const sourceSchema = chart.createChartSourceSchema('point', RecipeSchema);
     const source = sourceSchema.parse({
       namespace: 'chart',
@@ -101,6 +103,7 @@ describe('@retikz/chart public surface', () => {
       data: { reference: 'rows' },
       recipe: { chartType: 'fixture', encodings: { x: 'amount', y: 'margin' }, properties: { visible: false } },
     });
+
     expect(JSON.parse(JSON.stringify(source))).toEqual(source);
   });
 });

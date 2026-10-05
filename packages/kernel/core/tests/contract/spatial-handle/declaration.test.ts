@@ -77,9 +77,11 @@ describe('spatial handle declaration contract', () => {
         ],
       }),
     ).toThrow(/duplicate/i);
+
     const aliasIds = ['alternate'];
     const result = compileToScene(scene, { composites: [defineCard([{ ...valid, aliasIds }])] });
     aliasIds.push('later');
+
     expect(result.spatialHandles.entries[0]?.aliasIds).toEqual(['alternate']);
     expect(Object.isFrozen(result.spatialHandles.entries[0]?.aliasIds)).toBe(true);
   });

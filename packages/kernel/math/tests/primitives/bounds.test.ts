@@ -26,6 +26,7 @@ describe('bounds geometry helpers', () => {
     ]);
 
     if (bounds === undefined) throw new Error('Expected non-empty bounds.');
+
     expect(bounds).toEqual({ minX: -4, minY: -3, maxX: 8, maxY: 5 });
     expect(centerOfBounds(bounds)).toEqual([2, 1]);
     expect(halfAxesOfBounds(bounds)).toEqual({ halfWidth: 6, halfHeight: 4 });

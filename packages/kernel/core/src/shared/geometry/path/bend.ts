@@ -44,6 +44,7 @@ export const bendControlPoints = (
   const c1: Position = [from[0] + dx / 3 + ctlOffset * nx, from[1] + dy / 3 + ctlOffset * ny];
   const c2: Position = [from[0] + (2 * dx) / 3 + ctlOffset * nx, from[1] + (2 * dy) / 3 + ctlOffset * ny];
   assertFiniteBendControls(c1, c2);
+
   return [c1, c2];
 };
 
@@ -81,5 +82,6 @@ export const outInControlPoints = (
   const c1: Position = [from[0] + d * outDir[0], from[1] + d * outDir[1]];
   const c2: Position = [to[0] + d * inDir[0], to[1] + d * inDir[1]];
   assertFiniteBendControls(c1, c2);
+
   return [c1, c2];
 };

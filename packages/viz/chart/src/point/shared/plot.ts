@@ -36,7 +36,9 @@ const pointContinuousPositionScaleTypes = new Set<string>([
 ]);
 
 type PointPositionRole = 'x' | 'y';
+
 type PointVisualSide = 'left' | 'right' | 'top' | 'bottom';
+
 type PointSizeSource = Readonly<{ size?: IRPlotPointMark['size'] }>;
 
 const invalidPointScaleDefaults = (message: string, path: ReadonlyArray<string | number>): RetikzChartError =>
@@ -60,10 +62,12 @@ const pointRadiusOf = (
   if (size === undefined) return POINT_DEFAULT_RADIUS;
   if (size.kind === MarkValueKind.Constant) return assertRadius(size.value, [...path, 'size', 'value']);
   if (size.scale === undefined) return SIZE_MAX_RADIUS;
+
   const scale = scalesByName.get(size.scale);
   if (scale === undefined) {
     throw invalidPointScaleDefaults(`Point size scale "${size.scale}" is not available`, [...path, 'size', 'scale']);
   }
+
   if (!isBuiltinScaleOperation(scale) || scale.type !== PlotScale.Sqrt) {
     throw invalidPointScaleDefaults(`Point size scale "${size.scale}" must be a sqrt scale`, [
       ...path,
@@ -71,6 +75,7 @@ const pointRadiusOf = (
       'scale',
     ]);
   }
+
   return assertRadius(Math.max(...(scale.range ?? [SIZE_MAX_RADIUS])), [...path, 'size', 'scale']);
 };
 
@@ -80,13 +85,16 @@ const maximumPointRadiusOf = (
 ): number => {
   const scalesByName = new Map(scales.map(scale => [scale.name, scale]));
   const radii: Array<number> = [];
+
   for (const [markIndex, mark] of marks.entries()) {
     if (!isBuiltinMark(mark)) continue;
     if (mark.type === PlotMark.Point) {
       radii.push(pointRadiusOf(mark, scalesByName, ['recipe', 'marks', markIndex]));
       continue;
     }
+
     if (mark.type !== PlotMark.Relation || mark.endpoints === undefined) continue;
+
     for (const endpoint of ['source', 'target'] as const) {
       const glyph = mark.endpoints[endpoint];
       if (glyph !== undefined) {
@@ -94,6 +102,7 @@ const maximumPointRadiusOf = (
       }
     }
   }
+
   return radii.length === 0 ? 0 : Math.max(...radii);
 };
 
@@ -110,11 +119,13 @@ const assertSpecificSidesSupport = (
   propertyPath: ReadonlyArray<string> = ['domainPadding'],
 ): void => {
   if (!hasSpecificSide(padding)) return;
+
   const coordinates =
     spatial.coordinate === undefined
       ? (spatial.composition?.views?.map(view => view.coordinate) ?? [])
       : [spatial.coordinate];
   if (coordinates.length > 0 && coordinates.every(coordinate => coordinate.type === PlotCoordinate.Cartesian2D)) return;
+
   const side = (['left', 'right', 'top', 'bottom'] as const).find(
     name => typeof padding === 'object' && padding[name] !== undefined,
   );
@@ -160,6 +171,7 @@ const domainPaddingOf = (
     endSide,
     kind === PlotDomainPaddingKind.Ratio ? 0 : radius + clearance[endSide],
   );
+
   const rawRange = 'range' in scale ? scale.range : undefined;
   const range =
     Array.isArray(rawRange) &&
@@ -168,6 +180,7 @@ const domainPaddingOf = (
     typeof rawRange[1] === 'number'
       ? rawRange
       : undefined;
+
   const increasing = range === undefined ? role === 'x' : range[1] >= range[0];
   if (marks !== undefined && kind === PlotDomainPaddingKind.Range) {
     const explicitStart = visualPaddingOf(padding, role, startSide, NaN);
@@ -177,6 +190,7 @@ const domainPaddingOf = (
       if (references.length > 0) {
         const lowerClearance = clearance[increasing ? startSide : endSide];
         const upperClearance = clearance[increasing ? endSide : startSide];
+
         return {
           kind: 'mark',
           marks: references,
@@ -194,6 +208,7 @@ const domainPaddingOf = (
             : {}),
         };
       }
+
       return {
         kind: 'range',
         lower: increasing ? start : end,
@@ -201,6 +216,7 @@ const domainPaddingOf = (
       };
     }
   }
+
   return {
     kind,
     lower: increasing ? start : end,
@@ -234,12 +250,15 @@ export const resolvePointScaleDefaults = (
     [pointRecipeId(context.source.recipe.chartType, 'scale.x'), 'x'],
     [pointRecipeId(context.source.recipe.chartType, 'scale.y'), 'y'],
   ]);
+
   for (const [role, scaleName] of Object.entries(context.encodings.positionScales)) {
     if (role === 'x' || role === 'y') roleByScaleName.set(scaleName, role);
   }
+
   const extensionScaleNames = new Set(
     (context.encodings.extensionScales ?? context.source.plotExtension?.scales ?? []).map(scale => scale.name),
   );
+
   return context.scales.map(scale => {
     const role = roleByScaleName.get(scale.name);
     if (
@@ -250,6 +269,7 @@ export const resolvePointScaleDefaults = (
     ) {
       return scale;
     }
+
     return { ...scale, domainPadding: domainPaddingOf(padding, role, scale, radius, clearance, marks) };
   });
 };
@@ -266,6 +286,7 @@ export const pointCartesian2DOf = (
 }> => {
   const x = pointRecipeId(chartType, 'scale.x');
   const y = pointRecipeId(chartType, 'scale.y');
+
   return {
     scales: [
       { type: PlotScale.Linear, name: x },

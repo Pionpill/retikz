@@ -8,10 +8,12 @@ const HighlightOptionsSchema = z.strictObject({
   stroke: z.string().min(1),
   strokeWidth: z.number().positive().optional(),
 });
+
 const HighlightPathSchema = PathSchema.extend({
   kind: z.literal('highlight'),
   kindOptions: HighlightOptionsSchema,
 });
+
 type HighlightPath = z.infer<typeof HighlightPathSchema>;
 
 const highlight = definePathKind<HighlightPath>({
@@ -30,6 +32,7 @@ const highlight = definePathKind<HighlightPath>({
       },
     });
     if (base === null) return null;
+
     return {
       ...base,
       primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>

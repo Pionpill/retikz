@@ -251,6 +251,7 @@ describe('Block-family Source schemas', () => {
       type: 'blockHeader',
       title: { text: 'Default' },
     });
+
     for (const justifyContent of ['start', 'center', 'end', 'space-between', 'space-around', 'space-evenly'] as const) {
       expect(
         Graph.createBlockHeader({
@@ -261,6 +262,7 @@ describe('Block-family Source schemas', () => {
         }),
       ).toMatchObject({ itemGap: 0, justifyContent });
     }
+
     expect(
       Graph.BlockHeaderSchema.safeParse({
         namespace: 'graph',

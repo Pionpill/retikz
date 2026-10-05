@@ -36,6 +36,7 @@ const inputOf = (props: FlowDiagramInputEmbedProps): InputFlowDiagram => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
+
   return input;
 };
 

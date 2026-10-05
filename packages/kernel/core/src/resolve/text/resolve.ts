@@ -39,11 +39,13 @@ const resolveRun = (
   context: TextLineResolveContext,
 ): CanonicalInlineRun => {
   if (isMathRun(run)) return run;
+
   const sourceFont = run.font ?? lineFont;
   const resolved: Omit<ResolvedTextRun, 'font'> & { font: ReturnType<typeof resolveFont> } = {
     ...run,
     font: resolveFont(sourceFont, context),
   };
+
   return resolved;
 };
 
@@ -59,6 +61,7 @@ export const resolveTextLine = (source: TextLineSource, context: TextLineResolve
   if (parsed.warn && context.warn !== undefined) {
     context.warn(TEXT_TEX_PARSE_ERROR, context.warningMessage ?? 'Unbalanced `$` in text.');
   }
+
   const foldedRuns = styled
     ? parsed.runs.map(run =>
         isMathRun(run)
@@ -71,6 +74,7 @@ export const resolveTextLine = (source: TextLineSource, context: TextLineResolve
       )
     : parsed.runs;
   const runs = foldedRuns.map(run => resolveRun(run, styled?.font, context));
+
   return {
     runs,
     plainText: runs.map(run => (isMathRun(run) ? '' : run.text)).join(''),

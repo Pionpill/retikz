@@ -44,6 +44,7 @@ export const compileObservedFragment = (
           `${warning.code} at ${warning.path}: ${warning.message}`,
         );
       }
+
       warnings.push({
         ...warning,
         origin: {
@@ -68,6 +69,7 @@ export const compileObservedFragment = (
       layout: assertFiniteLayout(computeLayoutFromBounds(compiled.layoutBounds, 0, context.round)),
       ...(resources.length === 0 ? {} : { resources }),
     };
+
     return Object.freeze({
       scene,
       artifacts: Object.freeze(compiled.artifacts),

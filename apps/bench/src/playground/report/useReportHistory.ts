@@ -51,10 +51,12 @@ export const useReportHistory = (moduleId: string, caseId?: string): UseReportHi
       setDiagnostics([]);
       setLoading(false);
       setError(undefined);
+
       return () => {
         active = false;
       };
     }
+
     setLoading(true);
     setError(undefined);
     void listBenchReports(moduleId, caseId)
@@ -65,6 +67,7 @@ export const useReportHistory = (moduleId: string, caseId?: string): UseReportHi
       })
       .catch(reason => {
         if (!active) return;
+
         setReports([]);
         setDiagnostics([]);
         setError(reason instanceof Error ? reason.message : String(reason));
@@ -72,6 +75,7 @@ export const useReportHistory = (moduleId: string, caseId?: string): UseReportHi
       .finally(() => {
         if (active) setLoading(false);
       });
+
     return () => {
       active = false;
     };
@@ -83,10 +87,12 @@ export const useReportHistory = (moduleId: string, caseId?: string): UseReportHi
       setSelectedReport(undefined);
       setDetailLoading(false);
       setDetailError(undefined);
+
       return () => {
         active = false;
       };
     }
+
     setSelectedReport(undefined);
     setDetailLoading(true);
     setDetailError(undefined);
@@ -100,6 +106,7 @@ export const useReportHistory = (moduleId: string, caseId?: string): UseReportHi
       .finally(() => {
         if (active) setDetailLoading(false);
       });
+
     return () => {
       active = false;
     };

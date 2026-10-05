@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /** 单轴容器尺寸策略 */
 export const LayoutAxisSizeKind = {
   /** 根据内容贡献确定尺寸 */
@@ -67,3 +69,21 @@ export const LayoutSpacingKind = {
   /** 由布局规则分配出的间距 */
   Distributed: 'distributed',
 } as const;
+
+/** 单轴容器尺寸策略判别值 */
+export type LayoutAxisSizeKind = ValueOf<typeof LayoutAxisSizeKind>;
+
+/** LayoutItem 容器种类判别值 */
+export type LayoutItemKind = ValueOf<typeof LayoutItemKind>;
+
+/** item 对齐方式取值 */
+export type LayoutAlignment = ValueOf<typeof LayoutAlignment>;
+
+/** 剩余空间分布方式取值 */
+export type LayoutDistribution = ValueOf<typeof LayoutDistribution>;
+
+/** 容器视觉溢出策略取值 */
+export type LayoutOverflow = ValueOf<typeof LayoutOverflow>;
+
+/** 布局产物中间距区域的语义取值 */
+export type LayoutSpacingKind = ValueOf<typeof LayoutSpacingKind>;

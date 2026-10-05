@@ -11,12 +11,15 @@ export const resolvePositionAdjustmentRegistry = (
   custom?: ReadonlyArray<AnyPositionAdjustmentDefinition>,
 ): Map<string, AnyPositionAdjustmentDefinition> => {
   const registry = new Map<string, AnyPositionAdjustmentDefinition>();
+
   for (const definition of [...BUILTIN_POSITION_ADJUSTMENTS, ...(custom ?? [])]) {
     const kind = extractPositionAdjustmentKind(definition.schema);
     if (registry.has(kind)) {
       throw new RetikzPlotError(`lowerPlots: duplicate position adjustment registration: "${kind}"`);
     }
+
     registry.set(kind, definition);
   }
+
   return registry;
 };

@@ -122,6 +122,7 @@ import { resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveLegendBands } from './legend';
 import { plotMarkTransformsOf } from './preparation';
 import type { LowerPlotsOptions, MarkDataView } from './types';
+
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>
   frame?.type !== PlotCoordinate.Cartesian1D && frame?.type !== PlotCoordinate.Polar1D;
@@ -136,6 +137,7 @@ const coordinateScaleNameOf = (coordinate: IRPlotCoordinateOperation, role: Dime
           : role
       : role;
   const value = (coordinate as Record<string, unknown>)[field];
+
   return typeof value === 'string' ? value : undefined;
 };
 
@@ -152,10 +154,13 @@ const assertPlacementRangeCompatible = (
   scaleRegistry: ReadonlyMap<string, AnyScaleDefinition>,
 ): void => {
   if (boundaryRange === undefined || rangesEqual(candidateRange, boundaryRange)) return;
+
   const scaleName = coordinateScaleNameOf(coordinate, role);
   if (scaleName === undefined) return;
+
   const scaleOperation = plot.scales.find(operation => operation.name === scaleName);
   if (scaleOperation === undefined) return;
+
   const authoredRange = (scaleOperation as Record<string, unknown>).range;
   if (
     !Array.isArray(authoredRange) ||
@@ -165,6 +170,7 @@ const assertPlacementRangeCompatible = (
   ) {
     return;
   }
+
   throw new RetikzPlotError(
     `lowerPlots: explicit range of scale "${scaleName}" for role "${role}" cannot satisfy position adjustment containment`,
   );
@@ -174,14 +180,19 @@ const assertPlacementRangeCompatible = (
 const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>): ReadonlyArray<number> => {
   const indices = new Map<string, number>();
   let nextIndex = 0;
+
   return marks.map(mark => {
     if (mark.defaultColorIndex !== undefined) return mark.defaultColorIndex;
+
     const group = mark.defaultColorGroup;
     if (group === undefined) return nextIndex++;
+
     const existing = indices.get(group);
     if (existing !== undefined) return existing;
+
     const index = nextIndex++;
     indices.set(group, index);
+
     return index;
   });
 };
@@ -204,7 +215,9 @@ const plotBackgroundNode = (
   masterColor: string,
 ): IRNode | null => {
   if (!supportsPlotArea(frame) || fill === undefined || fill === 'none') return null;
+
   const geometry = plotAreaGeometryOf(plotArea, frame);
+
   return {
     type: 'node',
     position: geometry.position,
@@ -223,7 +236,9 @@ const plotAreaBorderNode = (
   masterColor: string,
 ): IRNode | null => {
   if (!supportsPlotArea(frame) || border === undefined || border === false) return null;
+
   const geometry = plotAreaGeometryOf(plotArea, frame);
+
   return {
     type: 'node',
     position: geometry.position,
@@ -261,8 +276,10 @@ const withFacetGuideContext = (
 ): IRScope => {
   const scoped = withScopeContext(layer, context) as IRScope;
   if (plotId === undefined || scoped.id === undefined) return scoped;
+
   const plotPrefix = `${plotId}.`;
   const localId = scoped.id.startsWith(plotPrefix) ? scoped.id.slice(plotPrefix.length) : scoped.id;
+
   return { ...scoped, id: `${plotId}.view.${slug(panelId)}.${localId}` };
 };
 
@@ -278,6 +295,7 @@ const resolvePlotAxisSize = (intrinsic: number, proposal: LayoutAxisProposal): n
     const bounded = Math.max(proposal.min, intrinsic);
     return proposal.max === undefined ? bounded : Math.min(proposal.max, bounded);
   }
+
   return intrinsic;
 };
 
@@ -323,10 +341,12 @@ export const lowerPlotWithDataArtifact = (
   // 自描述尺寸：节点自带 width/height 优先（组合时各面板本性尺寸），缺省回退全局选项、再回退默认
   const width = node.width ?? options.width ?? DEFAULT_PLOT_WIDTH;
   const height = node.height ?? options.height ?? DEFAULT_PLOT_HEIGHT;
+
   // 绘图区尺寸是 scale range / 投影的单一来源；非有限或非正数会一路污染出 cx="NaN" 等坏坐标——入口抛清晰错误
   if (!Number.isFinite(width) || width <= 0) {
     throw new RetikzPlotError(`lowerPlots: width must be a positive finite number, got ${width}`);
   }
+
   if (!Number.isFinite(height) || height <= 0) {
     throw new RetikzPlotError(`lowerPlots: height must be a positive finite number, got ${height}`);
   }
@@ -383,12 +403,14 @@ export const lowerPlotWithDataArtifact = (
         fieldTypeMap: undefined,
         normalized: preparedRootView.rows,
       };
+
   // scheme 解析器：内置 scheme + options.colorSchemes；channel scale 取色 / legend ramp 共用。
   const resolveColorScheme = makeColorSchemeResolver(options.colorSchemes);
   if (fieldTypeMap !== undefined && options.validateData) {
     const sampleRows = typeof options.validateData === 'object' ? (options.validateData.sampleRows ?? 100) : 100;
     validateBoundData(normalized, fieldTypeMap, sampleRows);
   }
+
   // invalid:'error'：transform 之前对 spec 参与字段（= fieldTypeMap 键）全量校验，遇任一非法 / 缺失 fail-loud；
   //   置于 transform 前 → 错误定位到原始源字段、不被 transform 改写干扰。默认 'skip' 不校验（哨兵留给下游跳）。
   if (fieldTypeMap !== undefined && options.invalid === 'error') {
@@ -419,6 +441,7 @@ export const lowerPlotWithDataArtifact = (
         context: transformContext,
       },
     );
+
   const compositionResolution = resolveComposition(node);
   const {
     coordinateScopes,
@@ -428,6 +451,7 @@ export const lowerPlotWithDataArtifact = (
     scaffolds: compositionScaffolds,
     policyContext: compositionPolicyContext,
   } = compositionResolution;
+
   /** 在一个明确DataView scope内执行一次mark-local transform并保留可选lineage */
   const resolveMarkTransform = (
     mark: IRPlotMarkOperation,
@@ -444,6 +468,7 @@ export const lowerPlotWithDataArtifact = (
         } satisfies MarkDataView,
         ...(prepared.lineage === undefined ? {} : { lineage: prepared.lineage }),
       };
+
     const transform = plotMarkTransformsOf(mark).map(declaration => declaration.operation);
     if (lineageOptions === undefined || transform.length === 0) {
       return {
@@ -455,21 +480,25 @@ export const lowerPlotWithDataArtifact = (
         ...(lineageOptions !== undefined ? { lineage: { events: [] } satisfies DataLineageRun } : {}),
       };
     }
+
     const result = applyTransformsToDataViewWithLineage(inputDataView, transform, {
       registry: transformRegistry,
       context: transformContext,
       lineage: lineageOptions,
     });
+
     return {
       markDataView: { markIndex, mark, dataView: result.dataView } satisfies MarkDataView,
       lineage: result.lineage,
     };
   };
+
   const rootMarkResults = node.marks.map((mark, markIndex) =>
     resolveMarkTransform(mark, markIndex, rootDataView, preparedData?.marks[markIndex]),
   );
   const rootMarkDataViews = rootMarkResults.map(result => result.markDataView);
   const markDataViews: Array<MarkDataView> = rootMarkDataViews;
+
   const themeResolution = resolvePlotTheme(
     effectiveTheme,
     {
@@ -486,6 +515,7 @@ export const lowerPlotWithDataArtifact = (
   });
   const allGuides: Array<IRPlotGuide> = themedGuides;
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
+
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const coordinateResolveContextOf = (
     source: IRPlot,
@@ -530,6 +560,7 @@ export const lowerPlotWithDataArtifact = (
     resolveColorScheme,
     palette: resolvedTheme.palette,
   };
+
   const markPadding = node.scales.some(scale => markDomainPaddingOf(scale) !== undefined)
     ? createMarkPaddingContext(channelCtx, (view, frame) =>
         resolveMarkPlacement(
@@ -542,6 +573,7 @@ export const lowerPlotWithDataArtifact = (
         ),
       )
     : undefined;
+
   const scopedFramesContext = {
     markPadding,
     node,
@@ -561,6 +593,7 @@ export const lowerPlotWithDataArtifact = (
     allGuides,
     allGuidesWithCompositionGap,
   };
+
   type ScopedPlacementRanges = ReadonlyMap<string, Partial<Record<DimensionRole, readonly [number, number]>>>;
   const frameRoleRangesOf = (
     frames: ReadonlyMap<string, CoordinateFrame>,
@@ -576,6 +609,7 @@ export const lowerPlotWithDataArtifact = (
         ),
       ]),
     );
+
   const intersectPlacementRanges = (
     currentRange: readonly [number, number],
     candidateRange: readonly [number, number],
@@ -589,15 +623,20 @@ export const lowerPlotWithDataArtifact = (
         `lowerPlots: position adjustment containment leaves no drawable range for role "${role}" in coordinate view "${scopeId}"`,
       );
     }
+
     return currentRange[0] <= currentRange[1] ? [low, high] : [high, low];
   };
+
   const placementRangesEqual = (left: ScopedPlacementRanges, right: ScopedPlacementRanges): boolean => {
     if (left.size !== right.size) return false;
+
     for (const [scopeId, leftByRole] of left) {
       const rightByRole = right.get(scopeId);
       if (rightByRole === undefined) return false;
+
       const roles = Object.keys(leftByRole);
       if (roles.length !== Object.keys(rightByRole).length) return false;
+
       for (const role of roles) {
         const leftRange = leftByRole[role];
         const rightRange = rightByRole[role];
@@ -611,17 +650,21 @@ export const lowerPlotWithDataArtifact = (
         }
       }
     }
+
     return true;
   };
+
   const resolveScopedPlacementRanges = (
     frames: ReadonlyMap<string, CoordinateFrame>,
     boundaryRangesByScope: ScopedPlacementRanges,
   ): Map<string, Partial<Record<DimensionRole, readonly [number, number]>>> => {
     const rangesByScope = new Map<string, Partial<Record<DimensionRole, readonly [number, number]>>>();
+
     for (const { dataView, mark, markIndex } of markDataViews) {
       const scopeId = coordinateScopeIdOf(mark, coordinateScopes.defaultScope);
       const frame = frames.get(scopeId);
       if (frame === undefined) continue;
+
       const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
       const markChannels = resolveMarkChannels(mark, {
         ...channelCtx,
@@ -643,8 +686,10 @@ export const lowerPlotWithDataArtifact = (
         frame.roles.filter(role => markPadding?.protects(frame.roleScales?.[role], mark.id)),
       );
       if (markRanges === undefined) continue;
+
       const scopeRanges = rangesByScope.get(scopeId) ?? {};
       const coordinateScope = coordinateScopes.scopes.find(scope => scope.id === scopeId);
+
       for (const [role, candidateRange] of Object.entries(markRanges)) {
         if (candidateRange === undefined) continue;
         if (coordinateScope !== undefined) {
@@ -657,14 +702,17 @@ export const lowerPlotWithDataArtifact = (
             scaleRegistry,
           );
         }
+
         const currentRange = scopeRanges[role];
         scopeRanges[role] =
           currentRange === undefined
             ? candidateRange
             : intersectPlacementRanges(currentRange, candidateRange, role, scopeId);
       }
+
       rangesByScope.set(scopeId, scopeRanges);
     }
+
     return rangesByScope;
   };
 
@@ -673,6 +721,7 @@ export const lowerPlotWithDataArtifact = (
     const boundaryRangesByScope = frameRoleRangesOf(scopedFramesResolution.frameByScope);
     let placementRangesByScope: ScopedPlacementRanges = new Map();
     let stable = false;
+
     for (let pass = 0; pass < 12; pass += 1) {
       const nextRanges =
         compositionFacets.length === 0
@@ -691,28 +740,34 @@ export const lowerPlotWithDataArtifact = (
         break;
       }
     }
+
     if (!stable) throw new RetikzPlotError('mark domainPadding shared layout did not converge');
   }
+
   if (compositionFacets.length === 0 && markPadding === undefined) {
     const boundaryRangesByScope = frameRoleRangesOf(scopedFramesResolution.frameByScope);
     let placementRangesByScope: ScopedPlacementRanges = new Map();
     let didPlacementConverge = false;
+
     for (let pass = 0; pass < 12; pass += 1) {
       const nextRanges = resolveScopedPlacementRanges(scopedFramesResolution.frameByScope, boundaryRangesByScope);
       if (placementRangesEqual(placementRangesByScope, nextRanges)) {
         didPlacementConverge = true;
         break;
       }
+
       placementRangesByScope = nextRanges;
       scopedFramesResolution = resolveScopedFrames({
         ...scopedFramesContext,
         placementRoleRangeOverridesByScope: placementRangesByScope,
       });
     }
+
     if (!didPlacementConverge) {
       throw new RetikzPlotError('lowerPlots: position adjustment containment did not converge');
     }
   }
+
   const { scopeById, scopeContextOf, axisPolicyFor, frameByScope, gridLayers, axisLayers, plotArea } =
     scopedFramesResolution;
   const dataArtifact: PlotDataArtifact = {
@@ -756,6 +811,7 @@ export const lowerPlotWithDataArtifact = (
         preparedData.panels.some(panel => panel.length !== node.marks.length))
     )
       throw new RetikzPlotError('Plot prepared facet scopes do not match the current source');
+
     const panelMarkResults = panels.map((panel, panelIndex) => {
       const panelDataView = createDataView(panel.rows, rootDataView.model);
       return {
@@ -771,6 +827,7 @@ export const lowerPlotWithDataArtifact = (
       );
       const fallbackDataView = rootMarkDataViews[markIndex]?.dataView ?? rootDataView;
       const representativeDataView = scopedDataViews[0] ?? fallbackDataView;
+
       return {
         markIndex,
         mark,
@@ -780,12 +837,14 @@ export const lowerPlotWithDataArtifact = (
         ),
       };
     });
+
     dataArtifact.markDataViews = sharedFacetMarkDataViews;
     if (lineageOptions !== undefined) {
       dataArtifact.markLineages = node.marks.map((_mark, markIndex) => ({
         events: panelMarkResults.flatMap(panelResult => panelResult.markResults[markIndex]?.lineage?.events ?? []),
       }));
     }
+
     const maxColumnIndex = panels.reduce((max, panel) => Math.max(max, panel.columnIndex), 0);
     const maxRowIndex = panels.reduce((max, panel) => Math.max(max, panel.rowIndex), 0);
     const facetLayout = arrangementLayoutOf(facets[0]);
@@ -805,6 +864,7 @@ export const lowerPlotWithDataArtifact = (
           ...facets.map(facet => (isFacetHeaderVisible(facet, 'column') ? facetDimensionsOf(facet.column).length : 0)),
         )
       : 0;
+
     const facetLabelBandSize =
       facetLabelsEnabled && (rowFacetLevelCount > 0 || columnFacetLevelCount > 0)
         ? Math.max((options.fontSize ?? DEFAULT_FONT_SIZE) + 10, 22)
@@ -814,6 +874,7 @@ export const lowerPlotWithDataArtifact = (
     const columnLabelGap = columnFacetLevelCount > 0 ? facetLabelGap : 0;
     const rowLabelWidth = rowFacetLevelCount * facetLabelBandSize + rowLabelGap;
     const columnLabelHeight = columnFacetLevelCount * facetLabelBandSize + columnLabelGap;
+
     const panelGridWidth = width - rowLabelWidth;
     const panelGridHeight = height - columnLabelHeight;
     const columnCount = maxColumnIndex + 1;
@@ -825,8 +886,10 @@ export const lowerPlotWithDataArtifact = (
         `lowerPlots: panelGap ${panelGap} leaves no room for ${columnCount}x${rowCount} facet panels`,
       );
     }
+
     const panelStrideX = panelWidth + panelGap;
     const panelStrideY = panelHeight + panelGap;
+
     const makeFacetLabelScope = (
       facet: FacetGrid,
       dimension: FacetLabelDimension,
@@ -848,6 +911,7 @@ export const lowerPlotWithDataArtifact = (
       const rotate = facetHeaderLabelRotateOf(facet, dimension);
       const maxTextWidth = authoredMaxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
+
       return {
         type: 'scope',
         zIndex: PlotLayerZIndex.FacetLabel,
@@ -884,14 +948,17 @@ export const lowerPlotWithDataArtifact = (
         },
       };
     };
+
     const facetLabelScopes: Array<IRScope> = facetLabelsEnabled
       ? facets.flatMap(facet => {
           const facetPanels = panels.filter(panel => panel.facet.id === facet.id);
           const rowLevels = isFacetHeaderVisible(facet, 'row') ? facetDimensionsOf(facet.row).length : 0;
           const columnLevels = isFacetHeaderVisible(facet, 'column') ? facetDimensionsOf(facet.column).length : 0;
           const labels: Array<IRScope> = [];
+
           for (let level = columnLevels - 1; level >= 0; level -= 1) {
             const bandIndex = columnLevels - 1 - level;
+
             for (const group of buildFacetLabelGroups(facetPanels, 'column', level)) {
               const rect: Rect = {
                 x: rowLabelWidth + group.startIndex * panelStrideX,
@@ -902,8 +969,10 @@ export const lowerPlotWithDataArtifact = (
               labels.push(makeFacetLabelScope(facet, 'column', level, group.startIndex, group.span, group.value, rect));
             }
           }
+
           for (let level = rowLevels - 1; level >= 0; level -= 1) {
             const bandIndex = rowFacetLevelCount - rowLevels + level;
+
             for (const group of buildFacetLabelGroups(facetPanels, 'row', level)) {
               const rect: Rect = {
                 x: bandIndex * facetLabelBandSize,
@@ -914,6 +983,7 @@ export const lowerPlotWithDataArtifact = (
               labels.push(makeFacetLabelScope(facet, 'row', level, group.startIndex, group.span, group.value, rect));
             }
           }
+
           return labels;
         })
       : [];
@@ -923,40 +993,53 @@ export const lowerPlotWithDataArtifact = (
       ),
       facetLayout?.axisGap,
     );
+
     const keepOuterSharedAxisForPanel = (guide: IRPlotGuide, panel: FacetPanel): boolean => {
       const resolve = arrangementResolveOf(panel.facet);
       if (!isAxisGuide(guide)) return true;
+
       const policy = axisPolicyFor(resolve, { hasFacets: true, hasScaffolds: false }, guide.dimension);
       if (policy === 'none') return false;
       if (policy !== 'outerShared') {
         return true;
       }
+
       const sharing = resolve?.scale?.[guide.dimension] ?? 'shared';
       if (sharing === 'independent') return true;
       if (guide.dimension === 'x') return panel.rowIndex === maxRowIndex;
       if (guide.dimension === 'y') return panel.columnIndex === 0;
+
       return panel.rowIndex === 0 && panel.columnIndex === 0;
     };
+
     const axisConsumesFacetPanelLayout = (guide: IRPlotGuide, panel: FacetPanel): boolean => {
       if (!isAxisGuide(guide)) return true;
+
       const resolve = arrangementResolveOf(panel.facet);
       const policy = axisPolicyFor(resolve, { hasFacets: true, hasScaffolds: false }, guide.dimension);
       if (policy !== 'outerShared') return true;
+
       const sharing = resolve?.scale?.[guide.dimension] ?? 'shared';
       if (sharing === 'independent') return true;
+
       return guide.dimension !== 'x';
     };
+
     const selectorMatchesFacetPanel = (selector: GridTargetSelector, panel: FacetPanel): boolean => {
       if (selector.view !== undefined) {
         const views = Array.isArray(selector.view) ? selector.view : [selector.view];
         if (views.includes(panel.id)) return true;
       }
+
       if (selector.facet === undefined) return false;
+
       const facetMatches = selector.facet.arrangement === undefined || selector.facet.arrangement === panel.facet.id;
       const rowMatches = scalarSelectorIncludes(selector.facet.row, panel.row);
       const columnMatches = scalarSelectorIncludes(selector.facet.column, panel.column);
+
       return facetMatches && rowMatches && columnMatches;
     };
+
     const axisGridTargetsFacetPanel = (guide: IRPlotAxisGuide, panel: FacetPanel): boolean => {
       const applyTo = axisGridApplyToOf(guide, arrangementResolveOf(panel.facet), {
         hasFacets: true,
@@ -965,9 +1048,12 @@ export const lowerPlotWithDataArtifact = (
       if (applyTo === null) return false;
       if (applyTo === AxisGridApplyTo.None) return false;
       if (applyTo === AxisGridApplyTo.Local || applyTo === AxisGridApplyTo.All) return true;
+
       const selector = axisGridSelectorOf(guide);
+
       return selector !== undefined && selectorMatchesFacetPanel(selector, panel);
     };
+
     const facetAxisGuidesForPanel = (panel: FacetPanel): Array<IRPlotGuide> =>
       withoutAxisGrid(facetGuides.filter(guide => keepOuterSharedAxisForPanel(guide, panel)));
     const facetFrameGuidesForPanel = (panel: FacetPanel): Array<IRPlotGuide> =>
@@ -980,8 +1066,10 @@ export const lowerPlotWithDataArtifact = (
       facetGuides.flatMap(guide =>
         isAxisGuide(guide) && axisGridTargetsFacetPanel(guide, panel) ? [withEnabledAxisGrid(guide, undefined)] : [],
       );
+
     for (const guide of facetGuides) {
       if (!isAxisGuide(guide)) continue;
+
       const hasSelectedTarget = panels.some(
         panel =>
           axisGridApplyToOf(guide, arrangementResolveOf(panel.facet), {
@@ -990,6 +1078,7 @@ export const lowerPlotWithDataArtifact = (
           }) === AxisGridApplyTo.Selected,
       );
       if (!hasSelectedTarget) continue;
+
       const count = panels.filter(panel => axisGridTargetsFacetPanel(guide, panel)).length;
       if (count === 0) {
         throw new RetikzPlotError(
@@ -1028,8 +1117,10 @@ export const lowerPlotWithDataArtifact = (
       ) as Partial<Record<DimensionRole, readonly [number, number]>>;
       let currentRanges: ScopedPlacementRanges = new Map();
       let didConverge = false;
+
       for (let pass = 0; pass < 12; pass += 1) {
         const nextByRole: Partial<Record<DimensionRole, readonly [number, number]>> = {};
+
         for (const { dataView, mark, markIndex } of panelMarkDataViews) {
           const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
           const markChannels = resolveMarkChannels(mark, {
@@ -1052,6 +1143,7 @@ export const lowerPlotWithDataArtifact = (
             resolution.frame.roles.filter(role => markPadding?.protects(resolution.frame.roleScales?.[role], mark.id)),
           );
           if (markRanges === undefined) continue;
+
           for (const [role, candidateRange] of Object.entries(markRanges)) {
             if (candidateRange === undefined) continue;
             if (panelNode.coordinate !== undefined) {
@@ -1064,6 +1156,7 @@ export const lowerPlotWithDataArtifact = (
                 scaleRegistry,
               );
             }
+
             const currentRange = nextByRole[role];
             nextByRole[role] =
               currentRange === undefined
@@ -1071,20 +1164,24 @@ export const lowerPlotWithDataArtifact = (
                 : intersectPlacementRanges(currentRange, candidateRange, role, panel.id);
           }
         }
+
         const nextRanges: ScopedPlacementRanges =
           Object.keys(nextByRole).length === 0 ? new Map() : new Map([[panel.id, nextByRole]]);
         if (placementRangesEqual(currentRanges, nextRanges)) {
           didConverge = true;
           break;
         }
+
         currentRanges = nextRanges;
         resolution = resolveCoordinateFrame(panelNode, frameContext(nextByRole));
       }
+
       if (!didConverge) {
         throw new RetikzPlotError(
           `lowerPlots: position adjustment containment did not converge for facet panel "${panel.id}"`,
         );
       }
+
       return resolution;
     };
 
@@ -1096,9 +1193,11 @@ export const lowerPlotWithDataArtifact = (
         const panelDataView = panelResult.panelDataView;
         const panelMarkDataViews = panelResult.markResults.map(markResult => markResult.markDataView);
         const roleMarkDataViews: Record<string, Array<MarkDataView>> = {};
+
         for (const [role, sharing] of Object.entries(arrangementResolveOf(panel.facet)?.scale ?? {})) {
           if (sharing === 'independent') roleMarkDataViews[role] = panelMarkDataViews;
         }
+
         const panelNode: IRPlot = {
           ...node,
           coordinate: panel.facet.coordinate ?? defaultScope.coordinate,
@@ -1116,6 +1215,7 @@ export const lowerPlotWithDataArtifact = (
           panelLayout,
           roleMarkDataViews,
         );
+
         return {
           panel,
           panelAxisGuides,
@@ -1128,9 +1228,11 @@ export const lowerPlotWithDataArtifact = (
           frameResolution,
         };
       });
+
     let preparedPanels = resolvePanelFrames();
     if (markPadding !== undefined) {
       let stable = false;
+
       for (let pass = 0; pass < 12; pass += 1) {
         markPadding.beginLayout();
         preparedPanels = resolvePanelFrames();
@@ -1139,8 +1241,10 @@ export const lowerPlotWithDataArtifact = (
           break;
         }
       }
+
       if (!stable) throw new RetikzPlotError('mark domainPadding facet layout did not converge');
     }
+
     const panelScopes: Array<IRScope> = preparedPanels.map(
       ({
         panel,
@@ -1171,6 +1275,7 @@ export const lowerPlotWithDataArtifact = (
                   roleMarkDataViews,
                 }),
               );
+
         const panelGridGuides = facetGridGuidesForPanel(panel);
         const gridResolution =
           panelGridGuides.length > 0
@@ -1189,10 +1294,12 @@ export const lowerPlotWithDataArtifact = (
                 }),
               )
             : undefined;
+
         const facetContext: JsonObject = { id: panel.facet.id };
         if (panel.row !== undefined) facetContext.row = panel.row;
         if (panel.column !== undefined) facetContext.column = panel.column;
         const panelContext: JsonObject = { coordinateView: panel.id, facet: facetContext };
+
         const backgroundNode = plotBackgroundNode(
           frameResolution.plotArea,
           frameResolution.frame,
@@ -1205,6 +1312,7 @@ export const lowerPlotWithDataArtifact = (
           resolvedTheme.plotArea?.border,
           resolvedTheme.typography.textColor ?? 'currentColor',
         );
+
         const markLayers: Array<IRChild> = node.marks
           .map((mark, markIndex) => {
             const markDataView = panelMarkDataViews[markIndex]?.dataView ?? panelDataView;
@@ -1234,12 +1342,15 @@ export const lowerPlotWithDataArtifact = (
               anchors: anchorRegistry,
               ...(positions !== undefined ? { positions } : {}),
             });
+
             return layer === null ? null : withScopeContext(layer, panelContext);
           })
           .filter((layer): layer is IRChild => layer !== null);
+
         const meta: JsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
         if (panel.row !== undefined) meta.row = panel.row;
         if (panel.column !== undefined) meta.column = panel.column;
+
         const base: IRScope = {
           type: 'scope',
           id: panel.id,
@@ -1263,9 +1374,11 @@ export const lowerPlotWithDataArtifact = (
             ),
           ],
         };
+
         const translateX = rowLabelWidth + panel.columnIndex * panelStrideX;
         const translateY = panel.rowIndex * panelStrideY;
         if (translateX === 0 && translateY === 0) return base;
+
         return {
           ...base,
           transforms: [
@@ -1299,6 +1412,7 @@ export const lowerPlotWithDataArtifact = (
       style: { opacity: 0 },
       layout: { minimumSize: { width: facetContentWidth, height: facetContentHeight }, padding: 0 },
     };
+
     return { child: { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] }, dataArtifact };
   }
 
@@ -1314,6 +1428,7 @@ export const lowerPlotWithDataArtifact = (
       if (frame === undefined) {
         throw new RetikzPlotError(`lowerPlots: coordinateView "${coordinateScopeId}" is not registered`);
       }
+
       const operationResolution = resolveMarkOperation(mark, { registry: markRegistry });
       const markChannels = resolveMarkChannels(mark, {
         ...channelCtx,
@@ -1340,6 +1455,7 @@ export const lowerPlotWithDataArtifact = (
         ...(positions !== undefined ? { positions } : {}),
       });
       if (layer === null) return null;
+
       const scope = scopeById.get(coordinateScopeId);
       const scopedLayer = scope === undefined ? layer : withScopeContext(layer, scopeContextOf(scope));
       const semanticLayer = withLayerZIndex(scopedLayer, mark.layer?.zIndex ?? PlotLayerZIndex.Mark);
@@ -1348,12 +1464,15 @@ export const lowerPlotWithDataArtifact = (
         scope?.placement?.kind === CoordinateViewPlacementKind.Overlay
           ? (scope.placement.zIndex ?? declarationOrder)
           : declarationOrder;
+
       return { layer: semanticLayer, markIndex, zIndex };
     })
     .filter((entry): entry is { layer: IRChild; markIndex: number; zIndex: number } => entry !== null);
+
   const markLayers: Array<IRChild> = markLayerEntries
     .sort((a, b) => a.zIndex - b.zIndex || a.markIndex - b.markIndex)
     .map(entry => entry.layer);
+
   anchorRegistry.assertResolved();
 
   // 收 legend guide → 据通道 + scale 类型选形态下沉成独立 scope，落 position 预留带。
@@ -1376,6 +1495,7 @@ export const lowerPlotWithDataArtifact = (
       ),
     );
   }
+
   // z-order：所有网格层 → marks → 所有轴层 → legend
   const defaultFrame = frameByScope.get(coordinateScopes.defaultScope);
   const guideMasterColor = resolvedTheme.typography.textColor ?? 'currentColor';
@@ -1405,6 +1525,7 @@ export const lowerPlotWithDataArtifact = (
   if (!supportsPlotArea(defaultFrame)) {
     return { child: { type: 'scope', id: node.id, children: [innerContent] }, dataArtifact };
   }
+
   // plotArea 精确矩形 carrier：几何 = 扣除轴 / legend 后的绘图区；opacity 0 不可见，仅登记 bbox 锚
   const plotAreaCarrier: IRNode = {
     type: 'node',
@@ -1414,6 +1535,7 @@ export const lowerPlotWithDataArtifact = (
     style: { opacity: 0 },
     layout: { minimumSize: { width: plotArea.width, height: plotArea.height }, padding: 0 },
   };
+
   return { child: { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] }, dataArtifact };
 };
 
@@ -1453,6 +1575,7 @@ export const lowerPlots = (
       );
       const probe = context.layoutChild(child, context.proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       return {
         children: [context.replay(probe.result)],
         allocationBounds: { x: 0, y: 0, width, height },

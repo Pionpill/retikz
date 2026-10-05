@@ -17,9 +17,11 @@ describe('Bench workspace preferences', () => {
   it('通过根节点 dark class 应用主题', () => {
     const toggle = vi.fn();
     applyThemeToRoot('dark', { classList: { toggle } });
+
     expect(toggle).toHaveBeenCalledWith('dark', true);
 
     applyThemeToRoot('light', { classList: { toggle } });
+
     expect(toggle).toHaveBeenLastCalledWith('dark', false);
   });
 });

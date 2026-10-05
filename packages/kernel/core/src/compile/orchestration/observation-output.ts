@@ -20,6 +20,7 @@ const matrixOf = (entry: PendingCompileObservation): readonly [number, number, n
   const origin = applyTransformChain([0, 0], entry.scopeChain);
   const xBasis = applyTransformChain([1, 0], entry.scopeChain);
   const yBasis = applyTransformChain([0, 1], entry.scopeChain);
+
   return Object.freeze([
     xBasis[0] - origin[0],
     xBasis[1] - origin[1],

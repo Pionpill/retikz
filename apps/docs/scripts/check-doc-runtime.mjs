@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 import { preview } from 'vite';
 
 const docsRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
 const workerCount = 4;
 
 const getServerUrl = server => {
@@ -30,15 +31,18 @@ const getPageFailure = async ({ page, pageErrors, check }) => {
   if (pageErrors.length > 0) return `unhandled page error: ${pageErrors.join(' | ')}`;
 
   let content;
+
   try {
     content = await page.locator('[data-doc-content-state]:visible').last().innerText({ timeout: 1_000 });
   } catch {
     return 'document content unmounted after becoming ready';
   }
+
   if (/页面内容暂未提供|Content is not available yet/.test(content)) return 'document content was unavailable';
   if (check.expectsFallback && !/尚未翻译|not translated yet/i.test(content)) {
     return 'English fallback was expected but not identified as fallback';
   }
+
   return undefined;
 };
 
@@ -54,6 +58,7 @@ const waitForPageResult = async page => {
 const checkLanguage = async ({ browser, checks, language, serverUrl }) => {
   const context = await browser.newContext({ locale: language === 'zh' ? 'zh-CN' : 'en-US' });
   const failures = [];
+
   try {
     await context.addInitScript(selectedLanguage => {
       if (location.protocol === 'http:' || location.protocol === 'https:') {
@@ -64,14 +69,17 @@ const checkLanguage = async ({ browser, checks, language, serverUrl }) => {
     const languageChecks = checks.filter(candidate => candidate.language === language);
     let nextIndex = 0;
     let completed = 0;
+
     const checkOne = async () => {
       const index = nextIndex;
       nextIndex += 1;
       const check = languageChecks[index];
       if (check === undefined) return;
+
       const page = await context.newPage();
       const pageErrors = [];
       page.on('pageerror', error => pageErrors.push(error.message));
+
       try {
         await page.goto(`${serverUrl}${check.path}`, { waitUntil: 'domcontentloaded' });
         await page.getByRole('heading', { level: 1 }).waitFor({ state: 'visible' });
@@ -97,12 +105,16 @@ const checkLanguage = async ({ browser, checks, language, serverUrl }) => {
   } finally {
     await context.close();
   }
+
   return failures;
 };
 
 const start = performance.now();
+
 const manifestPath = resolve(docsRoot, 'dist', 'llms', 'manifest.json');
+
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+
 const server = await preview({
   root: docsRoot,
   configFile: resolve(docsRoot, 'vite.config.ts'),
@@ -110,6 +122,7 @@ const server = await preview({
   logLevel: 'silent',
   preview: { host: '127.0.0.1', port: 0, strictPort: true },
 });
+
 let browser;
 try {
   const checks = getRouteChecks(manifest);
@@ -118,6 +131,7 @@ try {
   console.log(`Docs runtime check: ${checks.length} route-language checks with ${workerCount} workers.`);
 
   const failures = [];
+
   for (const language of ['zh', 'en']) {
     failures.push(...(await checkLanguage({ browser, checks, language, serverUrl })));
   }
@@ -128,11 +142,13 @@ try {
       `Docs runtime check failed (${checks.length} route-language checks, ${elapsedSeconds}s):\n${failures.join('\n')}`,
     );
   }
+
   console.log(`Docs runtime check passed (${checks.length} route-language checks, ${elapsedSeconds}s).`);
 } catch (error) {
   if (error instanceof Error && /Executable doesn't exist|browserType\.launch/.test(error.message)) {
     throw new Error('Chromium is not installed; run pnpm bench:install-browser', { cause: error });
   }
+
   throw error;
 } finally {
   await browser?.close();

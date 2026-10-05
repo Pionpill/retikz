@@ -1,5 +1,7 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /**
- * transform operation kind 关键字。
+ * transform operation kind 关键字
  * @description 数据变换 operation 的判别字段；schema、provider definition 与 registry 诊断共用这些稳定取值
  */
 export const DataTransform = {
@@ -184,3 +186,45 @@ export const DensityBandwidthKind = {
   /** 使用显式数值带宽 */
   Value: 'value',
 } as const;
+
+/** transform operation kind 取值 */
+export type DataTransform = ValueOf<typeof DataTransform>;
+
+/** data 排序方向取值 */
+export type DataSortOrder = ValueOf<typeof DataSortOrder>;
+
+/** 内置统计 reducer operation kind 取值 */
+export type ReducerOperationKind = ValueOf<typeof ReducerOperationKind>;
+
+/** 读取 numeric field 的内置统计 reducer operation kind 取值 */
+export type FieldReducerOperationKind = ValueOf<typeof FieldReducerOperationKind>;
+
+/** 内置 row selector operation kind 取值 */
+export type SelectorOperationKind = ValueOf<typeof SelectorOperationKind>;
+
+/** 按数值字段取极值的 row selector operation kind 取值 */
+export type MinMaxSelectorOperationKind = ValueOf<typeof MinMaxSelectorOperationKind>;
+
+/** 按现有顺序或显式排序取行的 row selector operation kind 取值 */
+export type FirstLastSelectorOperationKind = ValueOf<typeof FirstLastSelectorOperationKind>;
+
+/** 按排序名次取行的 row selector operation kind 取值 */
+export type TopBottomSelectorOperationKind = ValueOf<typeof TopBottomSelectorOperationKind>;
+
+/** row selector 平局处理策略值 */
+export type RowSelectorTie = ValueOf<typeof RowSelectorTie>;
+
+/** stack baseline offset 策略值 */
+export type StackOffset = ValueOf<typeof StackOffset>;
+
+/** 配对度量操作类型取值 */
+export type PairMeasureOperationKind = ValueOf<typeof PairMeasureOperationKind>;
+
+/** 归一化结果的数值基准取值 */
+export type NormalizeBasis = ValueOf<typeof NormalizeBasis>;
+
+/** jitter 作用轴取值 */
+export type JitterAxis = ValueOf<typeof JitterAxis>;
+
+/** density 带宽策略类型取值 */
+export type DensityBandwidthKind = ValueOf<typeof DensityBandwidthKind>;

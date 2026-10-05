@@ -5,12 +5,21 @@ import { RetikzChartReactError } from '../../error';
 import type { ChartDeclarationPath, CollectedChartDeclaration, CollectedChartDeclarations } from '../../shared';
 import { collectChartDeclarations, splitPresentationMarkers } from '../../shared';
 
-/** 具体 Point chartType direct-child declarations 的共享收集结果 */
+/**
+ * 具体 Point chartType direct-child declarations 的共享收集结果
+ * @template TEncodings 当前图表的精确字段映射结构类型
+ * @template TProperties 当前图表的精确视觉属性结构类型
+ * @template TMark 由 mark 子声明转换得到的领域输入类型
+ */
 export type CollectedPointChartDeclarations<TEncodings, TProperties, TMark> = CollectedChartDeclarations &
   Readonly<{
+    /** 带来源路径的唯一字段映射声明 */
     encodings?: CollectedChartDeclaration<TEncodings>;
+    /** 带来源路径的唯一常量属性声明 */
     properties?: CollectedChartDeclaration<TProperties>;
+    /** 按作者顺序收集的 mark 输入 */
     marks?: Array<TMark>;
+    /** 按固定语义槽位收集的标题、副标题、注释与来源文本 */
     presentation: Partial<Record<'title' | 'subtitle' | 'note' | 'source', IRTextBlock>>;
   }>;
 
@@ -26,7 +35,13 @@ type PointDeclarationCollectionOptions<TEncodings, TProperties, TMarkProps, TMar
 const duplicateDeclarationError = (name: string, path: ChartDeclarationPath): RetikzChartReactError =>
   new RetikzChartReactError(`chart react: ${name} may appear at most once at ${JSON.stringify(path)}`);
 
-/** 收集具体 Point chartType 的公共与私有 direct-child declarations */
+/**
+ * 收集具体 Point chartType 的公共与私有 direct-child declarations
+ * @template TEncodings 当前图表的精确字段映射结构类型
+ * @template TProperties 当前图表的精确视觉属性结构类型
+ * @template TMarkProps 子 mark 声明组件接受的属性类型
+ * @template TMark 由 mark 子声明转换得到的领域输入类型
+ */
 export const collectPointChartDeclarations = <TEncodings, TProperties, TMarkProps, TMark>(
   children: ReactNode,
   options: PointDeclarationCollectionOptions<TEncodings, TProperties, TMarkProps, TMark>,
@@ -41,17 +56,21 @@ export const collectPointChartDeclarations = <TEncodings, TProperties, TMarkProp
       encodings = { props: element.props as TEncodings, path };
       return true;
     }
+
     if (element.type === options.propertiesComponent) {
       if (properties !== undefined) throw duplicateDeclarationError(options.propertiesName, path);
       properties = { props: element.props as TProperties, path };
       return true;
     }
+
     if (element.type === options.markComponent) {
       marks.push(options.createMark(element.props as TMarkProps));
       return true;
     }
+
     return false;
   });
+
   return {
     ...common,
     ...(encodings === undefined ? {} : { encodings }),

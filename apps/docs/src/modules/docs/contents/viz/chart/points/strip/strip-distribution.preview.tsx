@@ -49,5 +49,6 @@ export const renderStripDistributionPreview = (
       }}
     />
   );
+
   return chart;
 };

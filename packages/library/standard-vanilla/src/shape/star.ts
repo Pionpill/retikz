@@ -4,8 +4,10 @@ import type { SynchronousInputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputShape } from './shared';
 import { normalizeShapeInput } from './shared';
+
 /** Star 的 Vanilla 作者输入 */
 export type InputStar = InputShape<IRStar>;
+
 /** 将 Star 作者输入归一为持久化的 Standard 意图 */
 export const StarInputEmbedAdapter: SynchronousInputEmbedAdapter<InputStar & { id?: string }> = {
   kind: 'standard.star',

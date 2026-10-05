@@ -17,11 +17,16 @@ const createPreview = (lang: Lang) =>
       lang,
     ),
   );
+
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewControls = previewControlContract.controls;
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
+
 /** 语义示例的语言 */
 export type SemanticRolesProps = { lang?: Lang };
+
 /** 固定对象身份和位置，仅改变角色或描边 */
 const SemanticRoles: FC<SemanticRolesProps> = props => {
   const { lang = 'zh' } = props;

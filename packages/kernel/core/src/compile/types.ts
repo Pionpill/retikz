@@ -66,23 +66,36 @@ export type CompiledNodeLayout = {
   };
 };
 
-/** layout-aware composite 返回的显式领域产物 */
+/**
+ * layout-aware composite 返回的显式领域产物
+ * @template TNamespace 产生该产物的复合组件命名空间
+ * @template TType 产生该产物的复合组件类型标识
+ * @template TValue 由复合组件产物 schema 校验的 JSON 值类型
+ */
 export type CompositeCompileArtifact<
   TNamespace extends string = string,
   TType extends string = string,
   TValue extends JsonValue = JsonValue,
 > = Readonly<{
+  /** 标识复合组件领域产物 */
   kind: 'composite';
+  /** 产物所属复合组件的注册命名空间 */
   namespace: TNamespace;
+  /** 产物所属复合组件的注册类型 */
   type: TType;
+  /** 产生该产物的最终编译出现位置 */
   occurrence: CompileOccurrenceLocator;
+  /** 通过组件产物 schema 校验的领域结果 */
   value: TValue;
 }>;
 
 /** 真实 Node 的 opt-in 布局产物 */
 export type NodeLayoutCompileArtifact = Readonly<{
+  /** 标识真实节点的布局观测产物 */
   kind: 'nodeLayout';
+  /** 被观测节点的最终编译出现位置 */
   occurrence: CompileOccurrenceLocator;
+  /** 节点的正文测量、视觉外框及文本布局结果 */
   value: CompiledNodeLayout;
 }>;
 
@@ -95,15 +108,23 @@ export type CompileArtifactOptions = Readonly<{
   nodeLayouts?: boolean;
 }>;
 
-/** `compileToScene()` 的显式 Scene + artifact 结果 */
+/**
+ * `compileToScene()` 的显式 Scene + artifact 结果
+ * @template TCompositeArtifact 本次编译可返回的复合组件产物联合
+ */
 export type CompileResult<TCompositeArtifact extends CompositeCompileArtifact = CompositeCompileArtifact> = Readonly<{
+  /** 可由渲染器直接消费的完整场景 */
   scene: Scene;
+  /** 本次编译收集的复合组件产物及显式请求的节点布局产物 */
   artifacts: ReadonlyArray<TCompositeArtifact | NodeLayoutCompileArtifact>;
   /** 与 Scene / artifacts 同 revision 的 renderer-neutral world-space 空间索引 */
   spatialHandles: SpatialHandleIndex;
 }>;
 
-/** 显式 observed compile 的主结果与 observer outputs */
+/**
+ * 显式 observed compile 的主结果与 observer outputs
+ * @template TOutput 观察会话完成时产生的结果类型
+ */
 export type ObservedCompileResult<TOutput = unknown> = Readonly<{
   /** 与普通 compile 等价的 primary result */
   primary: CompileResult;
@@ -111,7 +132,10 @@ export type ObservedCompileResult<TOutput = unknown> = Readonly<{
   observerOutputs: ReadonlyArray<CompileObserverOutput<TOutput>>;
 }>;
 
-/** 从精确 composite definition 推导 artifact envelope */
+/**
+ * 从精确 composite definition 推导 artifact envelope
+ * @template TDefinition 用于推导命名空间、类型标识与产物值的复合组件定义
+ */
 export type CompositeArtifactOf<TDefinition> = TDefinition extends {
   namespace: infer TNamespace extends string;
   type: infer TType extends string;
@@ -179,7 +203,10 @@ export type CompileProviderOptions = Omit<CoreProviderDefinitions, 'composites'>
   themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
 };
 
-/** Tier 2 composite 展开选项 */
+/**
+ * Tier 2 composite 展开选项
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CompileCompositeOptions<
   TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
 > = {
@@ -188,13 +215,13 @@ export type CompileCompositeOptions<
   /**
    * 运行时注入的 Tier 2 composite 展开逻辑
    * @description Core 不预留官方 namespace 名称；未注册的 namespace/type 会触发 warning，并跳过该 composite 节点，重复的完整 namespace/type 键在注册期报错
-   * @default 空注册表
+   * @default []
    */
   composites?: TComposites;
   /**
    * composite 嵌套展开的最大深度
    * @description 超限或环会 throw
-   * @default DEFAULT_MAX_COMPOSITE_DEPTH (32)
+   * @default DEFAULT_MAX_COMPOSITE_DEPTH
    */
   maxCompositeDepth?: number;
 };
@@ -221,7 +248,10 @@ export type LowerIRToKernelOptions = Pick<
 > &
   Pick<CompileProviderOptions, 'themeStyles'>;
 
-/** compileToScene 的可选参数 */
+/**
+ * compileToScene 的可选参数
+ * @template TComposites 本次编译使用的复合组件定义集合，用于保留输出产物的精确类型
+ */
 export type CompileOptions<
   TComposites extends ReadonlyArray<AnyCompositeDefinition> = ReadonlyArray<AnyCompositeDefinition>,
 > = CompileHostOptions &

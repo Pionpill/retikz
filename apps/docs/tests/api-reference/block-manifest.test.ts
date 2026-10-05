@@ -14,6 +14,7 @@ describe('Block public API reference', () => {
         ),
         'utf8',
       );
+
       for (const name of [
         'Block / BlockProps',
         'BlockHeader / BlockHeaderProps',
@@ -25,10 +26,13 @@ describe('Block public API reference', () => {
         'createCodeBlockContribution',
       ])
         expect(source).toContain(`### ${name}`);
+
       expect(source).not.toMatch(/^### \w+Schema/gm);
       expect(source).toContain('BlockRowCreateOptions');
       expect(source).toContain('compose');
+
       if (lang === 'en') expect(source).not.toMatch(/[\u3400-\u9fff]/u);
+
       await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeDefined();
     }
   });

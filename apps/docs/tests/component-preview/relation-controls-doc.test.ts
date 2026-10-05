@@ -94,6 +94,7 @@ const fieldContractOf = (field: PreviewPanelControlItem) =>
 /** 抹平章节文案后比较面板分组与控件结构 */
 const definitionContractOf = (definition: PreviewControlsDefinition) => {
   if (definition.presentation !== 'panel') throw new Error('Relation controls must use panel presentation');
+
   return definition.sections.map(section => ({
     defaultCollapsed: section.defaultCollapsed,
     visibleWhen: section.visibleWhen,
@@ -474,6 +475,7 @@ describe('关系图元文档 controls', () => {
       const match = markup.match(/<svg[^>]*viewBox="([^"]+)"/);
 
       expect(match).not.toBeNull();
+
       return match?.[1].split(' ').map(Number);
     });
 
@@ -481,6 +483,7 @@ describe('关系图元文档 controls', () => {
     expect(viewBoxes[2]).toEqual(viewBoxes[0]);
 
     const [x, y, width, height] = viewBoxes[0] ?? [];
+
     expect(x).toBeLessThanOrEqual(-10);
     expect(y).toBeLessThanOrEqual(-20);
     expect(x + width).toBeGreaterThanOrEqual(630);
@@ -499,8 +502,10 @@ describe('关系图元文档 controls', () => {
 
     expect(Object.keys(canonicalValues).sort()).toEqual(writableFields.map(field => field.id).sort());
     expect(testCase.englishContract.canonicalValues).toEqual(testCase.contract.canonicalValues);
+
     for (const field of writableFields) {
       if (field.kind === 'table') continue;
+
       expect(canonicalValues[field.id]).toBe(field.defaultValue);
     }
   });

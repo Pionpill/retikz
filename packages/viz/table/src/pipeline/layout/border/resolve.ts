@@ -9,13 +9,16 @@ import { tableBorderSourceOrderKey } from './types';
 const compareContributions = (left: TableBorderContribution, right: TableBorderContribution): number => {
   if (left.priority !== right.priority) return left.priority < right.priority ? 1 : -1;
   if (left.specificity !== right.specificity) return right.specificity - left.specificity;
+
   const leftKindRank = left.kind === 'none' ? 1 : 0;
   const rightKindRank = right.kind === 'none' ? 1 : 0;
   if (leftKindRank !== rightKindRank) return rightKindRank - leftKindRank;
+
   const leftWidth = left.kind === 'line' ? left.line.width : 0;
   const rightWidth = right.kind === 'line' ? right.line.width : 0;
   if (leftWidth !== rightWidth) return rightWidth - leftWidth;
   if (left.ownerSideRank !== right.ownerSideRank) return right.ownerSideRank - left.ownerSideRank;
+
   return left.sourceOrderKey.localeCompare(right.sourceOrderKey);
 };
 
@@ -25,6 +28,7 @@ const validateAtomGeometry = (atom: TableBorderAtom): void => {
   if (!values.every(Number.isFinite)) {
     throw new RetikzTableError(`table: Border Graph atom "${atom.key}" geometry must be finite`);
   }
+
   const valid =
     atom.orientation === 'horizontal'
       ? atom.start.y === atom.end.y && atom.end.x >= atom.start.x
@@ -45,13 +49,17 @@ const compareAtoms = (left: TableBorderAtom, right: TableBorderAtom): number => 
     const boundary = Number(leftParts[2]) - Number(rightParts[2]);
     return boundary === 0 ? Number(leftParts[3]) - Number(rightParts[3]) : boundary;
   }
+
   if (leftParts[0] === 's' && rightParts[0] === 's') {
     const row = Number(leftParts[1]) - Number(rightParts[1]);
     if (row !== 0) return row;
+
     const column = Number(leftParts[2]) - Number(rightParts[2]);
     if (column !== 0) return column;
+
     return SideRank[leftParts[3] as keyof typeof SideRank] - SideRank[rightParts[3] as keyof typeof SideRank];
   }
+
   return left.key.localeCompare(right.key);
 };
 
@@ -65,11 +73,13 @@ export const resolveTableBorderAtoms = (
     if (seenAtomKeys.has(atom.key)) {
       throw new RetikzTableError(`table: duplicate Border Graph atom key "${atom.key}"`);
     }
+
     seenAtomKeys.add(atom.key);
     validateAtomGeometry(atom);
     if (atom.contributors.length === 0) {
       throw new RetikzTableError(`table: Border Graph atom "${atom.key}" must have at least one contributor`);
     }
+
     const contributors = atom.contributors
       .map(raw => {
         const parsed = TableBorderContributionSchema.parse(raw);
@@ -79,19 +89,24 @@ export const resolveTableBorderAtoms = (
             `table: Border contribution sourceOrderKey must equal "${expectedSourceOrderKey}"`,
           );
         }
+
         const expectedKey = `${expectedSourceOrderKey}@${atom.key}`;
         if (parsed.key !== expectedKey) {
           throw new RetikzTableError(`table: Border contribution key must equal "${expectedKey}"`);
         }
+
         if (seenContributionKeys.has(parsed.key)) {
           throw new RetikzTableError(`table: duplicate Border contribution key "${parsed.key}"`);
         }
+
         seenContributionKeys.add(parsed.key);
+
         return parsed;
       })
       .sort((left, right) => left.sourceOrderKey.localeCompare(right.sourceOrderKey));
     const winner = [...contributors].sort(compareContributions)[0];
     const visible = winner.kind === 'line' && winner.line.width > 0 && winner.line.strokeOpacity > 0;
+
     return {
       key: atom.key,
       orientation: atom.orientation,
@@ -102,5 +117,6 @@ export const resolveTableBorderAtoms = (
       visible,
     };
   });
+
   return deepFreeze(resolved);
 };

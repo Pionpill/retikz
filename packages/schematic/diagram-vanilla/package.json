@@ -41,6 +41,10 @@
     "./flow": {
       "types": "./src/flow/index.ts",
       "default": "./src/flow/index.ts"
+    },
+    "./branch": {
+      "types": "./src/branch/index.ts",
+      "default": "./src/branch/index.ts"
     }
   },
   "publishConfig": {
@@ -57,6 +61,11 @@
         "types": "./dist/types/flow/index.d.ts",
         "import": "./dist/flow/index.js",
         "default": "./dist/flow/index.js"
+      },
+      "./branch": {
+        "types": "./dist/types/branch/index.d.ts",
+        "import": "./dist/branch/index.js",
+        "default": "./dist/branch/index.js"
       }
     }
   },

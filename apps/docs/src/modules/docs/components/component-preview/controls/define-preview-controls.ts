@@ -12,9 +12,13 @@ import type {
 } from '../types';
 
 const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
+
 const CURRENT_COLOR_VALUE = 'currentColor';
+
 const CONTRAST_COLOR_VALUE = 'contrast';
+
 const MIN_PANEL_SIZE = 18;
+
 const MAX_PANEL_SIZE = 50;
 
 /** 获取控件定义中的全部扁平字段 */
@@ -68,6 +72,7 @@ const validatePointTuple = (fieldId: string, property: string, value: unknown): 
   if (!Array.isArray(value) || value.length !== 2) {
     throw new Error(`Preview point control "${fieldId}" ${property} must be a two-number tuple.`);
   }
+
   value.forEach((coordinate, index) => {
     if (typeof coordinate !== 'number' || !Number.isFinite(coordinate)) {
       throw new Error(`Preview point control "${fieldId}" ${property}[${index}] must be finite.`);
@@ -89,6 +94,7 @@ const validatePointControl = (field: PreviewPointControlField): void => {
     if (field.min[index] > field.max[index]) {
       throw new Error(`Preview point control "${field.id}" min[${index}] must not exceed max[${index}].`);
     }
+
     if (field.defaultValue[index] < field.min[index] || field.defaultValue[index] > field.max[index]) {
       throw new Error(
         `Preview point control "${field.id}" defaultValue[${index}] must be between ${field.min[index]} and ${field.max[index]}.`,
@@ -104,10 +110,12 @@ const validateSelectControl = (field: PreviewSelectControlField): void => {
   }
 
   const optionValues = new Set<string>();
+
   for (const option of field.options) {
     if (optionValues.has(option.value)) {
       throw new Error(`Duplicate preview select option value "${option.value}" in control "${field.id}".`);
     }
+
     optionValues.add(option.value);
   }
 
@@ -136,14 +144,17 @@ const validateTableControl = (field: PreviewTableControlField): void => {
     }
 
     const viewIds = new Set<string>();
+
     for (const view of field.views) {
       if (viewIds.has(view.id)) {
         throw new Error(`Duplicate preview table view id "${view.id}" in control "${field.id}".`);
       }
+
       viewIds.add(view.id);
       if (view.label.trim().length === 0) {
         throw new Error(`Preview table view "${view.id}" in control "${field.id}" must define a label.`);
       }
+
       if (typeof view.rows !== 'function' && !Array.isArray(view.rows)) {
         throw new Error(`Preview table view "${view.id}" in control "${field.id}" rows must be an array or resolver.`);
       }
@@ -151,10 +162,12 @@ const validateTableControl = (field: PreviewTableControlField): void => {
   }
 
   const columnKeys = new Set<string>();
+
   for (const column of field.columns ?? []) {
     if (columnKeys.has(column.key)) {
       throw new Error(`Duplicate preview table column key "${column.key}" in control "${field.id}".`);
     }
+
     columnKeys.add(column.key);
   }
 };
@@ -164,6 +177,7 @@ const validateControlCondition = (condition: PreviewControlCondition, knownIds: 
   if (!knownIds.has(condition.controlId)) {
     throw new Error(`Preview control condition references unknown control id: "${condition.controlId}".`);
   }
+
   if (condition.oneOf.length === 0) {
     throw new Error(`Preview control condition for "${condition.controlId}" must define at least one value.`);
   }
@@ -179,14 +193,17 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
     if (ids.has(field.id)) {
       throw new Error(`Duplicate preview control id: "${field.id}".`);
     }
+
     ids.add(field.id);
 
     if (field.kind === 'table') {
       if (definition.presentation === 'overlay') {
         throw new Error(`Preview table control "${field.id}" is only supported in panel controls.`);
       }
+
       validateTableControl(field);
     }
+
     if (field.kind === 'select') validateSelectControl(field);
     if (field.kind === 'number' || field.kind === 'range') validateNumericControl(field);
     if (field.kind === 'point') validatePointControl(field);
@@ -205,6 +222,7 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
   for (const field of fields) {
     if (field.visibleWhen) validateControlCondition(field.visibleWhen, stateFieldIds);
   }
+
   if (definition.presentation === 'panel') {
     if (
       definition.defaultSize !== undefined &&
@@ -214,10 +232,12 @@ const validatePreviewControls = (definition: PreviewControlsDefinition): void =>
     ) {
       throw new Error(`Preview panel defaultSize must be between ${MIN_PANEL_SIZE} and ${MAX_PANEL_SIZE}.`);
     }
+
     for (const section of definition.sections) {
       if (section.defaultCollapsed && !section.label) {
         throw new Error('Preview control section must define a label when defaultCollapsed is true.');
       }
+
       if (section.visibleWhen) validateControlCondition(section.visibleWhen, stateFieldIds);
     }
   }

@@ -1,6 +1,7 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
+/** 校验绘图组合边框周围的可选四边内边距 */
 export const BoxPaddingSchema = strictObject({
   top: NonNegativeNumberSchema.optional().describe('Top padding in user units'),
   right: NonNegativeNumberSchema.optional().describe('Right padding in user units'),

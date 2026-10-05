@@ -53,6 +53,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   it('horizontal_rug_points_on_baseline', () => {
     const rows = [{ v: 0 }, { v: 5 }, { v: 10 }];
     const positions = positionsOf(firstLayer(rugSpec(), { d: rows }, opts));
+
     // 无 guides → plotArea 满 480×300；baseline = 底边 y=300；x domain[0,10]→[0,480]
     expect(positions[0]).toEqual([0, 300]);
     expect(positions[1]).toEqual([240, 300]);
@@ -63,6 +64,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
   it('vertical_orientation_points_on_left_baseline', () => {
     const rows = [{ v: 0 }, { v: 10 }];
     const positions = positionsOf(firstLayer(rugSpec({ orientation: 'vertical' }), { d: rows }, opts));
+
     // baseline = 左边 x=0；y domain[0,10]→[300,0]（屏幕 y 向下倒置）
     expect(positions[0]).toEqual([0, 300]);
     expect(positions[1]).toEqual([0, 0]);
@@ -96,6 +98,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       },
       opts,
     );
+
     expect(layer.children).toHaveLength(2);
   });
 
@@ -109,6 +112,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       coordinate: { type: 'cartesian1D', x: 'xs' },
       marks: [{ type: 'interval', encoding: { x: { field: 'cat' }, y: { field: 'v' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ cat: 'A', v: 3 }] }, opts)).toThrow(/cartesian1D|not supported|interval/i);
   });
 
@@ -122,6 +126,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       coordinate: { type: 'cartesian1D', x: 'xs' },
       marks: [{ type: 'point', color: { kind: 'constant', value: '#333' }, encoding: {} }],
     });
+
     expect(() => expandOf(spec, { d: [{ v: 1 }] }, opts)).toThrow(/cartesian1D|requires|x/i);
   });
 
@@ -136,6 +141,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'v' } } }],
       guides: [{ type: 'axis', dimension: 'angle' }],
     });
+
     expect(() => expandOf(spec, { d: [{ v: 1 }] }, opts)).toThrow(/does not support axis dimension "angle"/);
   });
 
@@ -151,6 +157,7 @@ describe('cartesian1D 直线坐标系 (contract)', () => {
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const root = expandOf(spec, { d: [{ v: 1 }, { v: 9 }] }, opts);
+
     // 轴层在 mark 之后（压顶）；至少有 mark 层 + 轴层两个 children
     expect(root.children.length).toBeGreaterThanOrEqual(2);
   });
@@ -187,16 +194,19 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   // Happy path：角向投影落半径 R=150 圆周（angle 0 → 圆心右、angle 90 → 圆心下）
   it('polar1d_points_on_circle', () => {
     const positions = positionsOf(firstLayer(ringSpec(), { d: [{ deg: 0 }, { deg: 90 }] }, opts));
+
     expect(positions[0][0]).toBeCloseTo(390, 4); // [240+150, 150]
     expect(positions[0][1]).toBeCloseTo(150, 4);
     expect(positions[1][0]).toBeCloseTo(240, 4); // [240, 150+150]
     expect(positions[1][1]).toBeCloseTo(300, 4);
+
     for (const p of positions) expect(dist(p, CENTER)).toBeCloseTo(150, 4);
   });
 
   // 边界：radius 占比 0.5 → 落半径一半（75）的圈
   it('polar1d_radius_fraction_halves_circle', () => {
     const [p] = positionsOf(firstLayer(ringSpec({ radius: 0.5 }), { d: [{ deg: 0 }] }, opts));
+
     expect(dist(p, CENTER)).toBeCloseTo(75, 4);
     expect(p[0]).toBeCloseTo(315, 4); // 240 + 75
   });
@@ -205,6 +215,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
   it('polar1d_half_arc_scales_angular_range', () => {
     // domain[0,360] range[0,180]：deg=360 → θ=180° → 圆心左侧
     const [p] = positionsOf(firstLayer(ringSpec({ startAngle: 0, endAngle: 180 }), { d: [{ deg: 360 }] }, opts));
+
     expect(p[0]).toBeLessThan(CENTER[0]);
     expect(p[1]).toBeCloseTo(CENTER[1], 3);
     expect(dist(p, CENTER)).toBeCloseTo(150, 4);
@@ -222,6 +233,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const root = expandOf(spec, { d: [{ deg: 0 }, { deg: 120 }, { deg: 240 }] }, opts);
+
     expect(root.children.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -257,6 +269,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
         },
       ],
     });
+
     expect(() => expandOf(spec, { d: [{ label: 'A', v: 1 }] }, opts)).toThrow(/polar1D|not supported|interval/i);
   });
 
@@ -271,6 +284,7 @@ describe('polar1D 圆周坐标系 (contract)', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'deg' } } }],
       guides: [{ type: 'axis', dimension: 'radius' }],
     });
+
     expect(() => expandOf(spec, { d: [{ deg: 0 }] }, opts)).toThrow(/does not support axis dimension "radius"/);
   });
 });

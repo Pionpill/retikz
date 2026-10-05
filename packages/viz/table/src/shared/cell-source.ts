@@ -11,4 +11,4 @@ export const TableCellSourceKind = {
 } as const;
 
 /** Table Cell 来源判别值 */
-export type TableCellSourceKindValue = ValueOf<typeof TableCellSourceKind>;
+export type TableCellSourceKind = ValueOf<typeof TableCellSourceKind>;

@@ -89,7 +89,7 @@ type FacetArrangement = {
   view: CoordinateViewId;
   row?: FacetDimensionInput;
   column?: FacetDimensionInput;
-  empty?: FacetEmptyPolicyValue;
+  empty?: FacetEmptyPolicy;
   header?: { row?: boolean; column?: boolean };
   resolve?: CompositionResolve;
   spacing?: Pick<CompositionSpacing, 'panelGap' | 'labelGap'>;
@@ -101,7 +101,7 @@ type TrackArrangement = {
   id: string;
   coordinate: IRPlotCoordinateOperation;
   sharedRoles: Array<string>;
-  frame?: ScaffoldFrameModeValue;
+  frame?: ScaffoldFrameMode;
   tracks: Array<{
     id: string;
     view?: CoordinateViewId;

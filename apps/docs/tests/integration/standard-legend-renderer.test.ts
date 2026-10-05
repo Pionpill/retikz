@@ -19,6 +19,7 @@ const recordingContext = (calls: Array<string>): CanvasRenderingContext2D =>
     {
       get: (_target, property) => {
         if (typeof property !== 'string') return undefined;
+
         return vi.fn(() => {
           calls.push(property);
           return undefined;

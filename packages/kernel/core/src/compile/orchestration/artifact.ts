@@ -11,7 +11,10 @@ export const freezeOccurrence = (occurrence: CompileOccurrenceLocator): CompileO
     ),
   });
 
-/** 冻结完整 artifact envelope */
+/**
+ * 冻结完整 artifact envelope
+ * @template T 要保留判别信息与产物值关联的编译产物类型
+ */
 export const freezeCompileArtifact = <T extends CompositeCompileArtifact | NodeLayoutCompileArtifact>(
   artifact: T,
 ): T => {

@@ -20,8 +20,11 @@ describe('Table data preparation', () => {
     const synchronous = resolveTableData(spec, { rows });
     const preparation = await prepareTableData(spec, { dataBindings: { rows: { kind: 'rows', rows } } });
     const preparedData = await preparation.execute();
+
     expect(preparedData).toEqual(synchronous);
+
     const structure = normalizeTableStructure(spec.structure, { data: spec.data, preparedData });
+
     expect(structure.cells.map(cell => cell.payload)).toEqual([
       { kind: 'value', value: 0.25 },
       { kind: 'value', value: 0.75 },
@@ -36,6 +39,7 @@ describe('Table data preparation', () => {
     const preparation = await prepareTableData(spec, { dataBindings: { rows: { kind: 'rows', rows } } });
     const preparedData = await preparation.execute();
     const expected = normalizeTableStructure(spec.structure, { data: spec.data, datasets: { rows } });
+
     expect(normalizeTableStructure(spec.structure, { data: spec.data, preparedData })).toEqual(expected);
   });
 
@@ -49,6 +53,7 @@ describe('Table data preparation', () => {
       dataBindings: { rows: { kind: 'rows', rows: [{ value: '2026-10-03' }] } },
     });
     const result = await preparation.execute();
+
     expect(result?.model).toEqual([{ name: 'value', type: 'temporal' }]);
     expect(result?.rows[0].value).toBe(Date.UTC(2026, 9, 3));
   });
@@ -62,12 +67,14 @@ describe('Table data preparation', () => {
         transform: [],
       }).success,
     ).toBe(false);
+
     const custom = TableSchema.parse({
       namespace: 'table',
       type: 'table',
       structure: { kind: 'summary' },
       transform: [],
     });
+
     await expect(prepareTableData(custom, { dataBindings: {} })).rejects.toThrow(/bound dataset/);
   });
 
@@ -91,6 +98,7 @@ describe('Table data preparation', () => {
                   await Promise.resolve();
                   calls++;
                   if (input.kind !== 'source') throw new Error('native source expected');
+
                   return {
                     rows: input.source.values.map(value => ({ value, ratio: value / 8, extra: 'payload' })),
                     model: stage.outputModel,
@@ -107,6 +115,7 @@ describe('Table data preparation', () => {
       dataTransformExecutor: executor,
     });
     const result = await preparation.execute();
+
     expect(result?.rows.map(row => row.ratio)).toEqual([0.25, 0.75]);
     expect(result?.model.map(field => field.name)).toEqual(['value', 'ratio']);
     expect(calls).toBe(1);
@@ -117,10 +126,12 @@ describe('Table data preparation', () => {
     await expect(
       prepareTableData(detail(), { dataBindings: { rows: { kind: 'source', source: {} } } }),
     ).rejects.toThrow(/complete data.model/);
+
     const spec = TableSchema.parse({
       ...detail(false),
       data: { reference: 'rows', model: [{ name: 'value', format: 'iso' }] },
     });
+
     await expect(
       prepareTableData(spec, {
         dataBindings: { rows: { kind: 'result', result: { rows: [], model: [{ name: 'value', type: 'temporal' }] } } },
@@ -139,16 +150,19 @@ describe('Table data preparation', () => {
       },
     });
     const preparedData = await preparation.execute();
+
     expect(() =>
       normalizeTableStructure(
         { kind: 'detail', header: false, columns: [{ id: 'extra', field: 'extra' }] },
         { data: spec.data, preparedData },
       ),
     ).toThrow(/unknown field.*extra/);
+
     const empty = await prepareTableData(
       TableSchema.parse({ ...spec, data: { reference: 'rows', model: [{ name: 'value' }] }, transform: [] }),
       { dataBindings: { rows: { kind: 'rows', rows: [] } } },
     );
+
     expect((await empty.execute())?.model).toEqual([{ name: 'value' }]);
   });
 });

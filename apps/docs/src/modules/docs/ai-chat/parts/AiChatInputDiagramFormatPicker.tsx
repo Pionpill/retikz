@@ -61,6 +61,7 @@ export const AiChatInputDiagramFormatPicker: FC = () => {
           {PREFERENCES.map(pref => {
             const isActive = pref === preference;
             const Icon = FORMAT_ICON[pref];
+
             return (
               <li key={pref}>
                 <button

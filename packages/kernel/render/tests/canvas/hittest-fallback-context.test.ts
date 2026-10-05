@@ -32,13 +32,16 @@ describe('hitTest 兜底 context 复用', () => {
       if (tag === 'canvas') {
         Object.assign(el, { getContext: () => stubCtx });
       }
+
       return el;
     });
 
     for (let i = 0; i < 5; i++) hitTest(scene, { x: 1, y: 1 });
 
     const canvasCreations = spy.mock.calls.filter(([tag]) => tag === 'canvas').length;
+
     expect(canvasCreations).toBeLessThanOrEqual(1);
+
     spy.mockRestore();
   });
 });

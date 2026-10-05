@@ -17,7 +17,9 @@ describe('assertNonEmptyString', () => {
 
   it.each(['', ' ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])('rejects blank value %j', value => {
     expect(NonBlankStringSchema.safeParse(value).success).toBe(false);
+
     let failure: unknown;
+
     try {
       assertNonEmptyString(value, 'name');
     } catch (error) {
@@ -59,7 +61,9 @@ describe('assertPositiveNumber', () => {
 
   it.each([-Infinity, -1, -0, 0, Infinity, NaN])('rejects non-positive or non-finite value %j', value => {
     expect(PositiveNumberSchema.safeParse(value).success).toBe(false);
+
     let failure: unknown;
+
     try {
       assertPositiveNumber(value, 'size');
     } catch (error) {

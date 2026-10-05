@@ -38,16 +38,19 @@ import { reducerOutputFieldsOf } from './output-fields';
 import { ReducerMetricsSchema } from './reducer';
 import { BuiltinSelectorOperationSchemas, SelectorOperationSchema } from './selector';
 
+/** 校验按单字段及指定方向排序的数据变换 */
 export const SortTransformSchema = strictObject({
   kind: literal(DataTransform.Sort).describe('Discriminator: sort rows'),
   field: NonBlankStringSchema.describe('Sort field'),
   order: zodEnum(DataSortOrder).optional().describe('Sort direction; default ascending'),
 }).describe('Sort rows by one field');
 
+/** 校验分组字段列表，省略或空列表表示所有行属于同一组 */
 export const GroupBySchema = array(NonBlankStringSchema)
   .optional()
   .describe('Group key fields; omitted or empty means one group');
 
+/** 校验将分组数据归约为指标行的操作，指标输出字段不得覆盖分组字段 */
 export const SummarizeTransformSchema = strictObject({
   kind: literal(DataTransform.Summarize).describe('Discriminator: summarize transform'),
   groupBy: GroupBySchema,
@@ -58,6 +61,7 @@ export const SummarizeTransformSchema = strictObject({
     operation.metrics.forEach((metric, metricIndex) => {
       for (const { field, path } of reducerOutputFieldsOf(metric)) {
         if (!groupFields.has(field)) continue;
+
         ctx.addIssue({
           code: 'custom',
           path: ['metrics', metricIndex, ...path],
@@ -68,6 +72,7 @@ export const SummarizeTransformSchema = strictObject({
   })
   .describe('Group rows into metric rows');
 
+/** 校验按组选择代表行并可选输出一基排名的操作 */
 export const SelectTransformSchema = strictObject({
   kind: literal(DataTransform.Select).describe('Discriminator: select transform'),
   groupBy: GroupBySchema,
@@ -95,11 +100,13 @@ const AnnotateSelectorOperationSchema = discriminatedUnion('kind', [
   BuiltinSelectorOperationSchemas.Nth,
 ]).describe('Built-in selector operation guaranteed to select at most one row');
 
+/** 校验单行选择器及写入注解结果的字段 */
 export const AnnotateSelectorSchema = strictObject({
   selector: AnnotateSelectorOperationSchema.describe('Single-row selector'),
   as: NonBlankStringSchema.describe('Annotation output field'),
 }).describe('Single-row selector annotation');
 
+/** 校验为行追加分组指标或选择器注解的操作，拒绝重复输出字段 */
 export const AnnotateTransformSchema = strictObject({
   kind: literal(DataTransform.Annotate).describe('Discriminator: annotate transform'),
   groupBy: GroupBySchema,
@@ -113,6 +120,7 @@ export const AnnotateTransformSchema = strictObject({
         message: 'annotate transform requires metrics or selectors',
       });
     }
+
     const outputFields = new Set(
       (operation.metrics ?? []).flatMap(metric => reducerOutputFieldsOf(metric).map(output => output.field)),
     );
@@ -124,6 +132,7 @@ export const AnnotateTransformSchema = strictObject({
           message: `duplicate annotate output field "${selector.as}"`,
         });
       }
+
       outputFields.add(selector.as);
     });
   })
@@ -336,6 +345,7 @@ export const DensityTransformSchema = strictObject({
         message: 'density extent lower bound must be less than upper bound',
       });
     }
+
     if (operation.xAs === operation.densityAs) {
       ctx.addIssue({
         code: 'custom',
@@ -343,6 +353,7 @@ export const DensityTransformSchema = strictObject({
         message: 'density output fields xAs and densityAs must be different',
       });
     }
+
     for (const [index, field] of (operation.groupBy ?? []).entries()) {
       if (field === operation.xAs || field === operation.densityAs) {
         ctx.addIssue({
@@ -381,6 +392,7 @@ export const SmoothTransformSchema = strictObject({
         message: 'smooth extent lower bound must be less than upper bound',
       });
     }
+
     if (operation.xAs === operation.yAs) {
       ctx.addIssue({
         code: 'custom',
@@ -388,6 +400,7 @@ export const SmoothTransformSchema = strictObject({
         message: 'smooth output fields xAs and yAs must be different',
       });
     }
+
     for (const [index, field] of (operation.groupBy ?? []).entries()) {
       if (field === operation.xAs || field === operation.yAs) {
         ctx.addIssue({
@@ -400,6 +413,7 @@ export const SmoothTransformSchema = strictObject({
   })
   .describe('Smooth transform: sample regression trend rows');
 
+/** 校验按 kind 区分的内置数据变换操作 */
 export const BuiltinTransformSchema = discriminatedUnion('kind', [
   SortTransformSchema,
   SummarizeTransformSchema,
@@ -421,10 +435,12 @@ const ExternalTransformObjectSchema = looseObject({
   }).describe('Discriminator: custom transform kind'),
 });
 
+/** 校验带 JSON 配置的自定义数据变换操作 */
 export const ExternalTransformSchema = ExternalTransformObjectSchema.catchall(JsonValueSchema).describe(
   'Custom transform operation with JSON config',
 );
 
+/** 校验内置或自定义的数据变换声明 */
 export const TransformSchema = union([BuiltinTransformSchema, ExternalTransformSchema]).describe(
   'Built-in or custom data transform operation',
 );

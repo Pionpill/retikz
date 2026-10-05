@@ -27,15 +27,18 @@ export const defineGridPreview = <const TDefinition extends PreviewControlsDefin
       const { ir } = buildPreviewIR(() => element);
       const output = compileToScene(ir, { composites: [GridLayoutDefinition], measureText: browserMeasurer });
       const rectangles = [output.scene.layout];
+
       for (const artifact of output.artifacts) {
         if (artifact.kind !== 'composite') continue;
         const { container } = GridLayoutArtifactSchema.parse(artifact.value);
         rectangles.push(container.allocationBounds);
       }
+
       const left = Math.min(...rectangles.map(rect => rect.x));
       const top = Math.min(...rectangles.map(rect => rect.y));
       const right = Math.max(...rectangles.map(rect => rect.x + rect.width));
       const bottom = Math.max(...rectangles.map(rect => rect.y + rect.height));
+
       return cloneElement(element, {
         viewBox: { x: left - 16, y: top - 16, width: right - left + 32, height: bottom - top + 32 },
       });

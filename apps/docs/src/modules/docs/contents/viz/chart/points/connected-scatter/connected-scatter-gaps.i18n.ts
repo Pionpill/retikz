@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 示例的双语标题与读图说明 */
 export const connectedScatterGapsI18n: Record<Lang, { title: string; subtitle: string }> = {
   zh: { title: '跨过缺失观测连接', subtitle: '南非 2005 年寿命值人为置空；虚线不代表补出了该观测' },

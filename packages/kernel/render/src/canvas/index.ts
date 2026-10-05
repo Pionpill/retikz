@@ -1,4 +1,4 @@
-/** @retikz/render/canvas 公开 API */
+/* @retikz/render/canvas 公开 API */
 export * from './draw-readonly-layer';
 export * from './draw-scene';
 export * from './hit-test';

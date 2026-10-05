@@ -87,6 +87,7 @@ describe('Flow Diagram artifact schema', () => {
         : undefined;
 
     expect(isRuntimeSchema(schema)).toBe(true);
+
     if (!isRuntimeSchema(schema)) return;
 
     expect(schema.parse(JSON.parse(JSON.stringify(artifact)))).toEqual(artifact);

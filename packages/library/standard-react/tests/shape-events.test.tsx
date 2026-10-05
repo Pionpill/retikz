@@ -41,11 +41,14 @@ describe('Standard 形状事件全链 DOM 派发', () => {
     await act(() => root.render(render(15)));
     const before = container.querySelector('[data-retikz-id="sector"]')?.outerHTML;
     await act(() => root.render(render()));
+
     expect(onDiagnostic.mock.calls).toEqual([]);
     expect(container.querySelector('[data-retikz-id="sector"]')?.outerHTML).not.toEqual(before);
+
     await act(() => root.unmount());
     container.remove();
   });
+
   it('点击 <Circle id onClick> 底层挂点 DOM → onClick 触发一次', async () => {
     const onClick = vi.fn();
     const container = document.createElement('div');
@@ -61,6 +64,7 @@ describe('Standard 形状事件全链 DOM 派发', () => {
     });
 
     const target = container.querySelector('[data-retikz-id="ring"]');
+
     expect(target).not.toBeNull();
 
     await act(() => {
@@ -133,6 +137,7 @@ describe('Standard 形状事件全链 DOM 派发', () => {
     });
 
     const target = container.querySelector('[data-retikz-id="box"]');
+
     expect(target).not.toBeNull();
 
     await act(() => {
@@ -169,6 +174,7 @@ describe('Standard 形状事件全链 DOM 派发', () => {
     });
 
     const target = container.querySelector('[data-retikz-id="s"]');
+
     expect(target).not.toBeNull();
 
     await act(() => {

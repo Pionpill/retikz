@@ -1,7 +1,7 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type { Cartesian1DOrientation, PlotCoordinate, PolarInterpolation } from './constants';
+import type { Cartesian1DOrientation } from './constants';
 import type {
   Cartesian1DSchema,
   CoordinateSchema,
@@ -10,14 +10,8 @@ import type {
   Polar2DSchema,
 } from './schema';
 
-/** 坐标系类型 */
-export type PlotCoordinateValue = ValueOf<typeof PlotCoordinate>;
-
 /** cartesian1D 轴向 */
 export type Cartesian1DOrientationType = ValueOf<typeof Cartesian1DOrientation>;
-
-/** Polar2D 相邻位置的连接空间 */
-export type PolarInterpolationValue = ValueOf<typeof PolarInterpolation>;
 
 /** 内置坐标系（cartesian2D | polar2D | cartesian1D | polar1D） */
 export type IRPlotCoordinate = ZodInput<typeof CoordinateSchema>;

@@ -21,7 +21,9 @@ export const AiChatPanel: FC = () => {
   const hasKey = useAiChatStore(s => {
     const id = s.providerId;
     if (id === 'deepseek' || id === 'openai' || id === 'anthropic') return s.apiKeys[id].length > 0;
+
     const customProviders = s.customProviders as Record<string, { apiKey: string } | undefined>;
+
     return (customProviders[id]?.apiKey ?? '').length > 0;
   });
   const isGenerating = useAiChatStore(s => s.isGenerating);
@@ -41,6 +43,7 @@ export const AiChatPanel: FC = () => {
 
   useEffect(() => {
     if (!open) return;
+
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (isGenerating) {
@@ -51,7 +54,9 @@ export const AiChatPanel: FC = () => {
         close();
       }
     };
+
     window.addEventListener('keydown', handler);
+
     return () => window.removeEventListener('keydown', handler);
   }, [open, isGenerating, abort, close]);
 
@@ -83,17 +88,21 @@ export const AiChatPanel: FC = () => {
     setDraft(activeConversation?.title ?? '');
     setEditing(true);
   };
+
   const commitEdit = () => {
     if (!editing) return;
+
     const trimmed = draft.trim();
     if (trimmed && activeConversationId) renameConversation(activeConversationId, trimmed);
     setEditing(false);
     setDraft('');
   };
+
   const cancelEdit = () => {
     setEditing(false);
     setDraft('');
   };
+
   const handleTitleKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();

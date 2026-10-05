@@ -3,13 +3,21 @@ import { Circle, Ellipse, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const CONTENT_WIDTH = 82;
+
 const CONTENT_HEIGHT = 30;
+
 const INNER_WIDTH = 132;
+
 const INNER_HEIGHT = 74;
+
 const BBOX_WIDTH = INNER_WIDTH * Math.SQRT2;
+
 const BBOX_HEIGHT = INNER_HEIGHT * Math.SQRT2;
+
 const BOUNDARY_RADIUS = Math.max(BBOX_WIDTH, BBOX_HEIGHT) / 2;
+
 const SHAPE_TARGET_ANGLE = (-50 * Math.PI) / 180;
+
 const SHAPE_TARGET: [number, number] = [
   (BBOX_WIDTH / 2) * Math.cos(SHAPE_TARGET_ANGLE),
   (BBOX_HEIGHT / 2) * Math.sin(SHAPE_TARGET_ANGLE),

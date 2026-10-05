@@ -22,6 +22,7 @@ describe('Node multi-line text', () => {
     };
     const t1 = findText(compileToScene(single).scene.primitives);
     const t2 = findText(compileToScene(arr).scene.primitives);
+
     expect(t1?.lines).toEqual([{ text: 'Hello' }]);
     expect(t2?.lines).toEqual([{ text: 'Hello' }]);
     expect(t1?.measuredWidth).toBe(t2?.measuredWidth);
@@ -41,6 +42,7 @@ describe('Node multi-line text', () => {
     };
     const t1 = findText(compileToScene(str).scene.primitives);
     const t2 = findText(compileToScene(arr).scene.primitives);
+
     expect(t1?.lines).toEqual([{ text: 'a' }, { text: 'b' }]);
     expect(t1?.lines).toEqual(t2?.lines);
     expect(t1?.measuredHeight).toBe(t2?.measuredHeight);
@@ -60,6 +62,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.lines).toEqual([
       { text: 'a', fill: 'red' },
       { text: 'b', fill: 'red' },
@@ -73,6 +76,7 @@ describe('Node multi-line text', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], text: ['a\nb', 'c'] }],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.lines).toEqual([{ text: 'a' }, { text: 'b' }, { text: 'c' }]);
   });
 
@@ -90,7 +94,9 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.lines).toEqual([{ text: 'ab' }, { text: 'longer line' }, { text: 'c' }]);
+
     // fallback measurer: width = text.length × 16 × 0.55；'longer line' 11 字符 → 96.8
     // 多行高度 = 3 × (16 × 1.2) = 57.6
     expect(t?.measuredWidth).toBeCloseTo(96.8, 1);
@@ -112,7 +118,9 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.align).toBe('start');
+
     // align=start 时 TextPrim.x = center.x - blockHalfWidth
     expect(t!.x).toBeLessThan(100);
   });
@@ -132,6 +140,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.align).toBe('end');
     expect(t!.x).toBeGreaterThan(100);
   });
@@ -143,6 +152,7 @@ describe('Node multi-line text', () => {
       children: [{ type: 'node', id: 'A', position: [50, 50], text: ['hi', 'there'] }],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.align).toBe('middle');
     expect(t?.x).toBe(50);
   });
@@ -162,6 +172,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.lineHeight).toBeCloseTo(20 * 1.2, 1);
   });
 
@@ -180,6 +191,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.lineHeight).toBe(30);
   });
 
@@ -207,6 +219,7 @@ describe('Node multi-line text', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', position: [0, 0] }],
     };
+
     expect(findText(compileToScene(ir).scene.primitives)).toBeUndefined();
   });
 
@@ -224,6 +237,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.lines).toEqual([{ text: 'red', fill: 'red' }, { text: 'half', opacity: 0.5 }, { text: 'plain' }]);
   });
 
@@ -242,13 +256,16 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.lines[0]).toEqual({
       text: 'big',
       fontSize: 20,
       fontWeight: 'bold',
     });
+
     // 第二行无任何覆盖
     expect(t?.lines[1]).toEqual({ text: 'normal' });
+
     // 块级默认仍写在 TextPrim 顶层
     expect(t?.fontSize).toBe(12);
     expect(t?.fontFamily).toBe('monospace');
@@ -273,6 +290,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.measuredWidth).toBeCloseTo(66, 0);
   });
 
@@ -291,6 +309,7 @@ describe('Node multi-line text', () => {
       ],
     };
     const t = findText(compileToScene(ir).scene.primitives);
+
     expect(t?.fontSize).toBe(32);
     expect(t?.lines[0]).toEqual({ text: 'scaled', fontSize: 28 });
   });

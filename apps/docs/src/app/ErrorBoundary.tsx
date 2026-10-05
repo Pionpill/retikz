@@ -26,6 +26,7 @@ const getErrorDetails = (error: Error, info: ErrorInfo | null): string => {
   const componentStack = info?.componentStack?.trim();
 
   if (!componentStack) return stack;
+
   return `${stack}\n\nComponent stack:\n${componentStack}`;
 };
 

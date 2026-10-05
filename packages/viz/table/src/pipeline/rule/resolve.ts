@@ -1,7 +1,7 @@
 import type {
   SemanticTableCell,
   SemanticTableModel,
-  TableCellAppearanceTracePathValue,
+  TableCellAppearanceTracePath,
   TableCellPlanSource,
   TableLegendDescriptor,
 } from '../../contract';
@@ -43,6 +43,7 @@ import type {
 } from './types';
 
 const DEFAULT_SOURCE = { kind: TableCellPlanSourceKind.Default } as const;
+
 const STRUCTURE_SOURCE = { kind: TableCellPlanSourceKind.Structure } as const;
 
 type MutableValuePlan = {
@@ -71,22 +72,26 @@ type MutablePlan = MutableValuePlan | MutableContentPlan;
 
 const hasOwnPath = (value: unknown, path: ReadonlyArray<string>): boolean => {
   let current: unknown = value;
+
   for (const segment of path) {
     if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment)) return false;
     current = Reflect.get(current, segment);
   }
+
   return current !== undefined;
 };
 
 /** 找到某个 defaults Source 字段最终采用的来源层 */
 const defaultsSourceOf = (options: ResolveTableCellPlansOptions, path: ReadonlyArray<string>): TableCellPlanSource => {
   const layers = options.tableDefaults?.layers ?? [];
+
   for (let index = layers.length - 1; index >= 0; index -= 1) {
     const layer = layers[index];
     if (layer.defaults !== undefined && hasOwnPath(layer.defaults, path)) {
       return TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Defaults, path: layer.path });
     }
   }
+
   return DEFAULT_SOURCE;
 };
 
@@ -96,14 +101,16 @@ const traceAppearanceLeaves = (
   appearancePath: ReadonlyArray<string>,
   defaultsPath: ReadonlyArray<string>,
   options: ResolveTableCellPlansOptions,
-  trace: Partial<Record<TableCellAppearanceTracePathValue, TableCellPlanSource>>,
+  trace: Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>>,
 ): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     const path = '/' + appearancePath.join('/');
     const parsedPath = TableCellAppearanceTracePathSchema.safeParse(path);
     if (parsedPath.success) trace[parsedPath.data] = defaultsSourceOf(options, defaultsPath);
+
     return;
   }
+
   Object.entries(value).forEach(([key, child]) =>
     traceAppearanceLeaves(child, [...appearancePath, key], [...defaultsPath, key], options, trace),
   );
@@ -116,7 +123,7 @@ const styleAppearanceOf = (
 ): Readonly<{ appearance: IRTableCellAppearance; trace: TableCellAppearanceTrace }> => {
   const location = cell.location === TableCellLocation.ColumnHeader ? 'columnHeader' : 'body';
   const defaults = options.tableDefaults?.defaults.appearanceDefaults?.[location];
-  const trace: Partial<Record<TableCellAppearanceTracePathValue, TableCellPlanSource>> = {};
+  const trace: Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>> = {};
   const appearance: IRTableCellAppearance = {};
 
   if (defaults?.background?.fill !== undefined) {
@@ -125,12 +132,15 @@ const styleAppearanceOf = (
       fillOpacity: defaults.background.fillOpacity ?? 1,
     });
   }
+
   if (defaults?.content !== undefined) {
     appearance.content = TableCellContentStyleSchema.parse(defaults.content);
   }
+
   if (defaults?.borders !== undefined) {
     appearance.borders = TableCellAppearanceSchema.shape.borders.unwrap().parse(defaults.borders);
   }
+
   if (appearance.background !== undefined)
     traceAppearanceLeaves(
       appearance.background,
@@ -139,9 +149,11 @@ const styleAppearanceOf = (
       options,
       trace,
     );
+
   if (defaults?.background?.fillOpacity === undefined) {
     delete trace['/background/fillOpacity'];
   }
+
   if (appearance.content !== undefined)
     traceAppearanceLeaves(appearance.content, ['content'], ['appearanceDefaults', location, 'content'], options, trace);
   if (appearance.borders !== undefined)
@@ -152,6 +164,7 @@ const styleAppearanceOf = (
         trace[parsedPath.data] = defaultsSourceOf(options, ['appearanceDefaults', location, 'borders', side]);
       }
     });
+
   return { appearance: TableCellAppearanceSchema.parse(appearance), trace };
 };
 
@@ -162,6 +175,7 @@ const initialAppearanceOf = (
 ): Readonly<{ appearance: IRTableCellAppearance; trace: TableCellAppearanceTrace }> => {
   const style = styleAppearanceOf(cell, options);
   if (cell.layout.borders === undefined) return deepFreeze(style);
+
   return cascadeTableCellAppearance(
     style.appearance,
     style.trace,
@@ -181,6 +195,7 @@ const initialPlanOf = (cell: SemanticTableCell, options: ResolveTableCellPlansOp
       trace: { appearance: structuredClone(initial.trace), matchedRuleIndices: [] },
     };
   }
+
   return {
     kind: TableCellPayloadKind.Value,
     ...(cell.id === undefined ? {} : { cellId: cell.id }),
@@ -217,6 +232,7 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
     });
     plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/style/color': source };
   }
+
   plan.trace.encodingIds ??= [];
   plan.trace.encodingIds.push(encoding.id);
 };
@@ -231,6 +247,7 @@ const applyRule = (plan: MutablePlan, rule: IRTableCellRule, ruleIndex: number, 
         `table: rule ${ruleIndex} matched content Cell ${cellLabel} and cannot override formatter`,
       );
     }
+
     if (rule.presentation !== undefined) {
       throw new RetikzTableError(
         `table: rule ${ruleIndex} matched content Cell ${cellLabel} and cannot override presentation`,
@@ -241,11 +258,13 @@ const applyRule = (plan: MutablePlan, rule: IRTableCellRule, ruleIndex: number, 
       plan.formatter = structuredClone(rule.formatter);
       plan.trace.formatter = source;
     }
+
     if (rule.presentation !== undefined) {
       plan.presentation = structuredClone(rule.presentation);
       plan.trace.presentation = source;
     }
   }
+
   if (rule.appearance !== undefined) {
     const cascaded = cascadeTableCellAppearance(plan.appearance, plan.trace.appearance, rule.appearance, source);
     plan.appearance = structuredClone(cascaded.appearance);
@@ -282,9 +301,11 @@ export const resolveTableCellPlans = (
       selected.forEach(candidate => {
         const color = resolution.of(candidate.value);
         if (color === undefined) return;
+
         const plan = plans[candidate.index];
         if (plan.kind !== TableCellPayloadKind.Value)
           throw new RetikzTableError('table: internal encoding candidate kind differs');
+
         applyEncodingColor(plan, encoding, color);
         cellIndices.push(candidate.index);
       });
@@ -303,8 +324,10 @@ export const resolveTableCellPlans = (
         );
       }
     }
+
     return { id: encoding.id, channel: encoding.channel, scaleName: encoding.scale.name, cellIndices };
   });
+
   parsedRules.forEach((rule, ruleIndex) => {
     model.cells.forEach((cell, cellIndex) => {
       if (matchesTableCellSelector(cell, rule.selector)) {
@@ -313,6 +336,7 @@ export const resolveTableCellPlans = (
       }
     });
   });
+
   return deepFreeze({
     cells: plans satisfies Array<ResolvedTableCellPlan>,
     legendDescriptors,

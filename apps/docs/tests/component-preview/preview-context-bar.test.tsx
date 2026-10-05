@@ -72,10 +72,12 @@ describe('PreviewContextBar', () => {
 
     const actions = container.querySelector('[data-slot="preview-context-bar"] > div');
     const trigger = container.querySelector('[data-slot="dropdown-menu-trigger"]');
+
     expect(actions?.classList.contains('gap-2')).toBe(true);
     expect(trigger?.classList.contains('bg-background')).toBe(true);
     expect(trigger?.classList.contains('border-l-0')).toBe(false);
     expect(trigger?.classList.contains('rounded-l-none')).toBe(false);
+
     await act(() => root.unmount());
   });
 
@@ -98,7 +100,9 @@ describe('PreviewContextBar', () => {
 
     const contextBar = container.querySelector('[data-slot="preview-context-bar"]');
     const trigger = container.querySelector<HTMLButtonElement>('[data-slot="dropdown-menu-trigger"]');
+
     expect(trigger).not.toBeNull();
+
     await act(() => {
       trigger?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 }));
     });
@@ -106,6 +110,7 @@ describe('PreviewContextBar', () => {
     expect(trigger?.dataset.state).toBe('open');
     expect(contextBar?.classList.contains('opacity-100')).toBe(true);
     expect(contextBar?.classList.contains('pointer-events-auto')).toBe(true);
+
     await act(() => root.unmount());
   });
 

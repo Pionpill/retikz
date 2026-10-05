@@ -7,7 +7,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { drawScene } from '../../src/canvas';
 
 type CanvasCall = {
+  /** 记录的 Canvas API 方法名 */
   name: string;
+  /** 调用时按顺序传入的参数 */
   args: Array<unknown>;
 };
 
@@ -15,10 +17,15 @@ type SpyCanvasContext = Pick<
   CanvasRenderingContext2D,
   'beginPath' | 'fill' | 'rect' | 'restore' | 'save' | 'setLineDash' | 'stroke'
 > & {
+  /** 按调用顺序记录的绘制 API 及状态快照 */
   calls: Array<CanvasCall>;
+  /** 当前模拟全局不透明度 */
   globalAlpha: number;
+  /** 当前模拟填充样式 */
   fillStyle: string | CanvasGradient | CanvasPattern;
+  /** 当前模拟线宽 */
   lineWidth: number;
+  /** 当前模拟描边样式 */
   strokeStyle: string | CanvasGradient | CanvasPattern;
 };
 
@@ -48,6 +55,7 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
 
 const collectFiles = (directory: string): Array<string> => {
   const out: Array<string> = [];
+
   for (const entry of readdirSync(directory)) {
     const absolute = join(directory, entry);
     if (statSync(absolute).isDirectory()) {
@@ -56,6 +64,7 @@ const collectFiles = (directory: string): Array<string> => {
       out.push(absolute);
     }
   }
+
   return out;
 };
 
@@ -104,6 +113,7 @@ describe('canvas 降级与边界规格', () => {
     const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
       dependencies?: Record<string, string>;
     };
+
     // render 仅依赖 foundation/runtime/core/math 底座 + csstype（纯类型）；不依赖 react / 任何框架
     expect(packageJson.dependencies).toEqual({
       '@retikz/foundation': 'workspace:*',
@@ -121,6 +131,7 @@ describe('canvas 降级与边界规格', () => {
 
     // Canvas 与 SVG 是并列 renderer；Canvas 后端不得导入 SVG 或走字符串中转。
     const canvasSrc = readSrc('src/canvas');
+
     expect(canvasSrc).not.toContain('render/svg');
     expect(canvasSrc).not.toContain('../svg');
     expect(canvasSrc).not.toContain('buildSvgDocument');
@@ -129,6 +140,7 @@ describe('canvas 降级与边界规格', () => {
 
     // svg 后端不得反向依赖 canvas
     const svgSrc = readSrc('src/svg');
+
     expect(svgSrc).not.toContain('render/canvas');
     expect(svgSrc).not.toContain('../canvas');
     expect(svgSrc).not.toContain('drawScene');

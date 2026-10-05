@@ -54,9 +54,11 @@ describe('@retikz/inspect/react authoring and driver', () => {
         {children}
       </InspectLayout>,
     );
+
     expect(retained).toContain('data-retikz-readonly-layer');
     expect(normalizeEmptyElements(staticHtml)).toBe(normalizeEmptyElements(retained));
   });
+
   it('可选 Path wrapper 复用基础 Path 并保持 static/retained SSR plane 等价', () => {
     const retained = renderToString(
       <InspectLayout registry={registry} idPrefix="inspect-react">
@@ -91,6 +93,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
     expect(onCommit.mock.calls[0]?.[0].inspection?.entries.length).toBeGreaterThan(0);
     expect(onCommit.mock.calls[0]?.[0].primary.scene).toBeDefined();
     expect(onDiagnostic).not.toHaveBeenCalled();
+
     await act(() => root.unmount());
   });
 

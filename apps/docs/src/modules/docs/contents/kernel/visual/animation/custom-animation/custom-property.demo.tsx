@@ -11,6 +11,7 @@ import { createBlurIn } from './custom-property.data';
 import { CustomPropertyPreview } from './custom-property.preview';
 
 export const previewControls = customPropertyControls;
+
 export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
 
 /** 源码面板使用 canonical 状态生成 IR 与 Vanilla，避免执行带 hook 的交互组件 */

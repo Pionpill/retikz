@@ -9,6 +9,7 @@ import { createPreviewControlContract } from './inspect-ellipse-arc.controls';
 export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-ellipse-arc.controls';
 
 const registry = createDefaultInspectorRegistry();
+
 const preview = defineControlledBuiltinInspectPreview(
   createPreviewControlContract,
   values => {
@@ -49,6 +50,7 @@ const preview = defineControlledBuiltinInspectPreview(
 
 /** Derive all views from the same drawing and current controls. */
 export const previewSource = preview.source;
+
 const Preview = preview.Component;
 
 export default Preview;

@@ -49,12 +49,14 @@ describe('<StaticCssColorCatalog>', () => {
     act(() => {
       if (searchInput) setInputValue(searchInput, 'rebeccapurple');
     });
+
     expect(container.querySelectorAll('[data-static-css-color-card]')).toHaveLength(1);
     expect(container.textContent).toContain('rebeccapurple');
 
     act(() => {
       if (searchInput) setInputValue(searchInput, '#ff8c00');
     });
+
     expect(container.querySelectorAll('[data-static-css-color-card]')).toHaveLength(1);
     expect(container.textContent).toContain('darkorange');
   });
@@ -66,11 +68,13 @@ describe('<StaticCssColorCatalog>', () => {
     act(() => {
       if (searchInput) setInputValue(searchInput, 'rgb(255 0 0 / 50%)');
     });
+
     expect(container.querySelector('[data-static-css-color-preview]')).not.toBeNull();
 
     act(() => {
       if (searchInput) setInputValue(searchInput, 'var(--accent)');
     });
+
     expect(container.querySelector('[data-static-css-color-preview]')).toBeNull();
   });
 });

@@ -19,6 +19,7 @@ const firstLayer = (spec: IRPlot, datasets: Record<string, Array<Record<string, 
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -26,7 +27,9 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -55,6 +58,7 @@ describe('opacity channel (contract)', () => {
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'd' }), { d: data }));
     const ops = nodes.map(opacityOf);
+
     expect(ops[0]).toBeCloseTo(OPACITY_MIN, 6);
     expect(ops[2]).toBeCloseTo(1, 6);
     expect(ops[1]).toBeCloseTo(OPACITY_MIN + 0.5 * (1 - OPACITY_MIN), 6);
@@ -87,6 +91,7 @@ describe('opacity channel (contract)', () => {
         ],
       }),
     );
+
     expect(opacityOf(nodes[0])).toBeCloseTo(OPACITY_MIN, 6);
     expect(opacityOf(nodes[1])).toBeCloseTo(1, 6);
   });
@@ -97,6 +102,7 @@ describe('opacity channel (contract)', () => {
       { x: 1, y: 1 },
     ];
     const layer = firstLayer(pointSpec({ kind: 'constant', value: 0.4 }), { d: data });
+
     expect(layer.defaults?.node?.style?.opacity).toBeCloseTo(0.4, 6);
     expect(collectNodes(layer).every(n => opacityOf(n) === undefined)).toBe(true);
   });
@@ -109,6 +115,7 @@ describe('opacity channel (contract)', () => {
       { x: 1, y: 1, d: 5 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec({ kind: 'field', value: 'd' }), { d: data }));
+
     expect(
       nodes.every(n => opacityOf(n)! >= OPACITY_MIN - DEFAULT_EPSILON && opacityOf(n)! <= 1 + DEFAULT_EPSILON),
     ).toBe(true);
@@ -120,6 +127,7 @@ describe('opacity channel (contract)', () => {
       { x: 1, y: 1 },
     ];
     const nodes = collectNodes(firstLayer(pointSpec(undefined), { d: data }));
+
     expect(nodes.every(n => opacityOf(n) === undefined)).toBe(true);
   });
 
@@ -129,6 +137,7 @@ describe('opacity channel (contract)', () => {
       { x: 0, y: 0, t: '2024-01-01' },
       { x: 1, y: 1, t: '2024-02-01' },
     ];
+
     expect(() => expandOf(pointSpec({ kind: 'field', value: 't' }), { d: data })).toThrow(
       /opacity requires a continuous field/,
     );
@@ -159,6 +168,7 @@ describe('opacity channel (contract)', () => {
       { x: 1, y: 1, p: 4, d: 8 },
     ];
     const nodes = collectNodes(firstLayer(spec, { d: data }));
+
     expect(nodes.every(n => opacityOf(n) !== undefined && n.layout?.minimumSize !== undefined)).toBe(true);
   });
 });

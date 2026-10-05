@@ -1,0 +1,71 @@
+---
+title: 基础用法
+description: 声明平级节点和有序分支，用共享节点表达分叉与汇合。
+---
+
+本页从版本主线开始，加入专题支线。首次接入宿主见 [Diagram 快速开始](/schematic/diagram/get-start)。
+
+## 接入方式
+
+示例提供 React、Vanilla 和 IR 源码。React 从 `@retikz/diagram-react/branch` 导入组件；Vanilla 使用 `@retikz/diagram-vanilla/branch` 的 `branchDiagram()` 和 `BranchDiagramInputEmbedAdapter`。Direct IR 使用 `namespace: 'diagram', type: 'branch'`，由 `createBranchDiagramProviderContribution()` 注册编译能力。
+
+React 声明保持平级，分支通过 `nodes` 引用节点 ID：
+
+```text
+BranchDiagram
+├── BranchNode
+└── Branch
+```
+
+<ComponentPreview files="/schematic/diagram/branch/branch-roadmap" size="md" />
+
+主线经过 v1、v2、v3，支线经过 v1、feature、v2。共享节点 v1、v2 各只绘制一次。
+
+## 节点、标签与主线
+
+`mainBranch` 指定一条已声明分支，使它的节点保持同轨。切换下面的主线，观察 B 是否进入直线主轨；省略时不会按名称推断主线。
+
+标记默认为直径 10 的圆。外侧 `labels` 不会撑大标记，可设置文字、位置、距离及字体。示例将标签放在下方，默认位置则在上方。调整标记尺寸或隐藏标签，观察占位对自动排布的影响。
+
+<ComponentPreview
+  files={['branch-nodes', 'branch-nodes.preview.tsx']}
+  defaultSourceFile="branch-nodes.preview.tsx"
+  size="md"
+/>
+
+## 错误与限制
+
+节点和分支各自的 ID 必须唯一。分支不能为空，引用必须存在；同一分支不能重复经过节点，合成路径也不能成环。每个节点必须被引用，独立节点用单节点分支表达。
+
+`BranchNode` 不接受手工位置或正文卡片。`Branch` 不嵌套节点，也没有独立 relations 输入。完整形状与样式字段见参考页。
+
+## 相关属性
+
+本页常用成员如下，完整定义见 [API 参考](/schematic/diagram/branch/api-reference)。
+
+<ComponentProps
+  items={[
+    { name: 'Branch.nodes', type: 'Array<string>', required: true, description: '按顺序引用节点 ID，相邻引用自动连接' },
+    { name: 'BranchDiagram.mainBranch', type: 'string', description: '保持同轨的已声明分支 ID' },
+    {
+      name: 'BranchNode.labels',
+      type: 'Array<IRNodeLabel>',
+      description: '外侧标注，使用 text 和 position；本例位置为 bottom',
+    },
+    {
+      name: 'BranchNode.layout.minimumSize',
+      type: 'number | { width: number; height: number }',
+      defaultValue: '10',
+      description: '标记最小尺寸，标签单独参与占位',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展用法', description: '调整方向、间距和展示说明', url: '/schematic/diagram/branch/extended' },
+    { title: 'Schema 参考', description: '查询节点和分支输入', url: '/schematic/diagram/branch/schema-reference' },
+  ]}
+/>

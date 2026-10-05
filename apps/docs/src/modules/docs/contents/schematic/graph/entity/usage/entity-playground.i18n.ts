@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 实体试验场与控件共用文案 */
 export const entityPlaygroundI18n: Record<
   Lang,

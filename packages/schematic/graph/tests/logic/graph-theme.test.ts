@@ -308,6 +308,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     );
 
     const scene = JSON.stringify(output.scene);
+
     expect(scene).not.toContain('dashPattern');
     expect(scene).toContain('#ef4444');
   });
@@ -419,6 +420,7 @@ describe('Graph Scope and Theme compile semantics', () => {
 
     const theme = themeWithStyle(definition.name);
     const baseline = Graph.getDefaultGraphThemePreset(theme);
+
     expect(Graph.resolveGraphTheme(theme, styleRegistry(definition))).toEqual(baseline);
   });
 

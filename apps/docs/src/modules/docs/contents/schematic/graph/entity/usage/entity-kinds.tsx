@@ -8,7 +8,9 @@ import type { Lang } from '@/i18n';
 import { entityKindsI18n } from './entity-kinds.i18n';
 
 const kinds = ['docs.task.routine', 'docs.task.priority', 'docs.task.blocked'] as const;
+
 const entityKinds = kinds.map(kind => defineEntityKind({ role: 'activity', kind, description: kind }));
+
 const graphRules: Array<IRGraphRule> = [
   {
     type: 'entity',

@@ -111,7 +111,9 @@ export const reduceLabState = (state: LabState, action: LabStateAction): LabStat
       if (action.presetId === LabPreviewSizePresetId.Custom) {
         return Object.freeze({ ...state, previewSizePresetId: action.presetId });
       }
+
       const preset = getLabPreviewSizePreset(action.presetId);
+
       return Object.freeze({
         ...state,
         previewSizePresetId: preset.id,
@@ -121,6 +123,7 @@ export const reduceLabState = (state: LabState, action: LabStateAction): LabStat
     }
     case LabActionType.PreviewSizeChanged:
       if (!isValidLabPreviewSize(action.width, action.height)) return state;
+
       return Object.freeze({
         ...state,
         previewSizePresetId: LabPreviewSizePresetId.Custom,

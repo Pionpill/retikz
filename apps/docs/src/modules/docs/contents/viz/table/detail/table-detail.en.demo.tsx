@@ -10,6 +10,7 @@ import { scoreRows } from './table-detail.data';
 type ScoreTableProps = { embedded?: boolean };
 
 const rootTheme = { style: 'academic', mode: 'light' } as const;
+
 const appearanceDefaults = {
   body: {
     background: { fill: 0.08 },

@@ -15,9 +15,9 @@ const referenceTitles = new Set(['API 参考', 'api reference', 'Schema 参考',
 
 describe('embedded API and Schema references', () => {
   it('projects package labels and public members while preserving code fences', () => {
-    expect(embedApiReferenceMdx('## `@retikz/standard`\n\n### List / ListProps\n\n```md\n### Code heading\n```')).toBe(
-      '**`@retikz/standard`**\n\n#### List / ListProps\n\n```md\n### Code heading\n```',
-    );
+    expect(
+      embedApiReferenceMdx('## `@retikz/standard`\n\n### Array / ArrayProps\n\n```md\n### Code heading\n```'),
+    ).toBe('**`@retikz/standard`**\n\n#### Array / ArrayProps\n\n```md\n### Code heading\n```');
   });
 
   it('keeps reference members out of the page TOC after expanding includes', async () => {

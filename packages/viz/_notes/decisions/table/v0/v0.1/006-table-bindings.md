@@ -36,7 +36,7 @@ type DetailTableInput = Omit<IRTable, 'namespace' | 'type' | 'data' | 'structure
 type ManualTableInput = Omit<IRTable, 'namespace' | 'type' | 'data' | 'structure'> & {
   rows: number;
   columns: number;
-  rowKinds?: Array<TableRowKindValue>;
+  rowKinds?: Array<TableRowKind>;
   cells: Array<IRTableCell>;
 };
 

@@ -3,6 +3,7 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { demoI18n } from './overlay-offset.i18n';
+
 /** 同一场景的本地化控件与重置基线 */
 export const createPreviewControlContract = (lang: Lang) => {
   const text = demoI18n[lang];
@@ -30,11 +31,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { x: 30, y: 25, alignSelf: 'center' },
     relatedApis: ['OverlayLayoutItem.offset', 'OverlayLayoutItem.alignSelf'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

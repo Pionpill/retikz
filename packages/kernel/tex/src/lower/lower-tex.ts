@@ -29,7 +29,9 @@ export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptio
       if (!cached.ok) options?.onDiagnostic?.(cached.diagnostic);
       return cached.ok ? cached.value : null;
     }
+
     let result: TexLoweringResult<NonNullable<ReturnType<LowerTex>>>;
+
     try {
       const svg = engine.convert(content.tex, { display: content.displayMode ?? false });
       if (svg.includes('data-mml-node="merror"')) {
@@ -53,12 +55,15 @@ export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptio
         cacheable: false,
       };
     }
+
     if (!result.ok) {
       options?.onDiagnostic?.(result.diagnostic);
       if (result.cacheable) cache.set(key, result);
       return null;
     }
+
     cache.set(key, result);
+
     return result.value;
   };
 };

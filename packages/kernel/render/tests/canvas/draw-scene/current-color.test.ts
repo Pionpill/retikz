@@ -106,6 +106,7 @@ describe('drawScene currentColor 解析', () => {
     drawScene(context as unknown as CanvasRenderingContext2D, s, { currentColor: '#ff8800' });
 
     const markerFill = [...context.calls].reverse().find(c => c.name === 'fill');
+
     expect(markerFill?.fillStyle).toBe('#ff8800');
   });
 

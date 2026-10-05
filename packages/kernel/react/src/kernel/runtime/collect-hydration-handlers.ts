@@ -7,15 +7,17 @@ import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } fro
 import { resolveInputEmbedAdapter } from '../protocol';
 import { EVENT_PROP_TO_NAME } from '../protocol';
 
-/** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEventValue → handler 的 ElementHandlers（无 handler 返回空对象） */
+/** 从一个元素 props 读出 `on<Event>` handler，翻译成 RetikzEvent → handler 的 ElementHandlers（无 handler 返回空对象） */
 const readElementHandlers = (props: Record<string, unknown>): ElementHandlers => {
   const handlers: ElementHandlers = {};
+
   for (const propName of Object.keys(EVENT_PROP_TO_NAME) as Array<HydrationEventPropName>) {
     const handler = props[propName];
     if (typeof handler === 'function') {
       handlers[EVENT_PROP_TO_NAME[propName]] = handler as HydrationHandler;
     }
   }
+
   return handlers;
 };
 
@@ -33,16 +35,20 @@ const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handl
         '[retikz] 水合：元素带事件 handler 但缺少 `id`，无法定位挂点——该元素的 handler 被跳过。给它加一个 `id` 即可绑定。',
       );
     }
+
     return;
   }
+
   const existing = registry.get(id);
   if (existing === undefined) {
     registry.set(id, { ...handlers });
     return;
   }
+
   if (process.env.NODE_ENV !== 'production') {
     console.warn(`[retikz] 水合：重复 id "${id}"——合并各元素的事件 handler，同一事件以后出现者覆盖先出现者。`);
   }
+
   Object.assign(existing, handlers);
 };
 
@@ -54,14 +60,17 @@ const mergeElement = (registry: Map<string, ElementHandlers>, id: unknown, handl
 const visit = (registry: Map<string, ElementHandlers>, children: ReactNode): void => {
   Children.forEach(children, child => {
     if (!isValidElement(child)) return;
+
     const props = child.props as Record<string, unknown>;
     if (child.type === Fragment) {
       visit(registry, props.children as ReactNode);
       return;
     }
+
     const handlers = readElementHandlers(props);
     mergeElement(registry, props.id, handlers);
     const name = getDisplayName(child);
+
     switch (name) {
       case TIKZ_SCOPE:
         // 容器：递归子级（与 builder 的 buildScopeFromProps → readSceneChildren 同源）。
@@ -73,11 +82,13 @@ const visit = (registry: Map<string, ElementHandlers>, children: ReactNode): voi
         // Kernel 叶子：children 是 Step / Text / Label，无事件挂点，不递归。
         return;
     }
+
     if (typeof child.type === 'function') {
       // 可嵌入 Tier2：自身 id + handler 已被上方 mergeElement 捕获；其内部由 composite lowering 管理，
       // 绝不调用 / 递归该组件。标记但缺 InputEmbedAdapter 时会 fail-loud throw。
       const adapter = resolveInputEmbedAdapter(child.type);
       if (adapter) return;
+
       // 其余函数式组件（Sugar / 自定义 wrapper）：同步展开后递归，捕获展开后的 id-bearing Kernel 元素。
       const expanded = (child.type as (props: unknown) => ReactNode)(props);
       visit(registry, expanded);

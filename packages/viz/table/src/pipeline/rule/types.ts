@@ -1,9 +1,9 @@
-import type { ThemeModeValue } from '@retikz/core';
+import type { ThemeMode } from '@retikz/core';
 
 import type {
   AnyCellVisualScaleDefinition,
   CellVisualScaleResolveContext,
-  TableCellAppearanceTracePathValue,
+  TableCellAppearanceTracePath,
   TableCellPlanSource,
   TableLegendDescriptor,
 } from '../../contract';
@@ -14,7 +14,7 @@ import type {
   IRTableDefaults,
   IRTableFormatterRef,
   IRTablePresentationRef,
-  TableVisualChannelValue,
+  TableVisualChannel,
 } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 
@@ -33,7 +33,7 @@ export type ResolvedTableDefaults = DeepReadonly<{
   /** 可选 Core style 名称 */
   style?: string;
   /** 有效 Core Theme mode */
-  mode: ThemeModeValue;
+  mode: ThemeMode;
   /** 已按来源顺序合并的 defaults */
   defaults: IRTableDefaults;
   /** 实际参与 cascade 的 defaults 来源层 */
@@ -41,9 +41,7 @@ export type ResolvedTableDefaults = DeepReadonly<{
 }>;
 
 /** Cell appearance winner 的逐叶来源 */
-export type TableCellAppearanceTrace = DeepReadonly<
-  Partial<Record<TableCellAppearanceTracePathValue, TableCellPlanSource>>
->;
+export type TableCellAppearanceTrace = DeepReadonly<Partial<Record<TableCellAppearanceTracePath, TableCellPlanSource>>>;
 
 /** Rule 解析后交给 formatter、presentation 与后续 manifest 的 Cell plan */
 export type ResolvedTableCellPlan =
@@ -107,7 +105,7 @@ export type ResolvedTableEncoding = Readonly<{
   /** Encoding 稳定 id */
   id: string;
   /** Encoding 拥有的 appearance channel */
-  channel: TableVisualChannelValue;
+  channel: TableVisualChannel;
   /** 已解析的 scale definition 名称 */
   scaleName: string;
   /** 实际产生颜色的 canonical Cell indices */

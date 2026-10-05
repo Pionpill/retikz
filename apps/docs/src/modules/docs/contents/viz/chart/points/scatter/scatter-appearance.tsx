@@ -6,6 +6,7 @@ import { createPreviewControlContract } from './scatter-appearance.controls';
 import { renderScatterAppearancePreview } from './scatter-appearance.preview';
 
 const contract = createPreviewControlContract();
+
 const controlledPreview = defineControlledPreview(contract, (values, dimensions) =>
   renderScatterAppearancePreview({
     layout: dimensions,

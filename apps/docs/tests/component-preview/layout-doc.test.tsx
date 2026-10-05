@@ -31,12 +31,19 @@ import { previewSource as nestedEnSource } from '../../src/modules/docs/contents
 import { previewSource as nestedZhSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.zh.demo';
 
 const FlexEnDemo: FC = () => flexBasicEnSource.canonicalRender!();
+
 const FlexZhDemo: FC = () => flexBasicZhSource.canonicalRender!();
+
 const FlexPlaygroundCanonical: FC = () => flexPlaygroundSource.canonicalRender!();
+
 const NestedEnCanonical: FC = () => nestedEnSource.canonicalRender();
+
 const NestedZhCanonical: FC = () => nestedZhSource.canonicalRender();
+
 const ScopeInspectionEnCanonical: FC = () => scopeInspectionEnSource.canonicalRender();
+
 const ScopeInspectionZhCanonical: FC = () => scopeInspectionZhSource.canonicalRender();
+
 const scopeInspectionVanillaSource = readFileSync(
   resolve('src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.vanilla.ts'),
   'utf8',
@@ -88,6 +95,7 @@ describe('Layout documentation demos', () => {
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.svg).toContain('Nested');
   });
+
   it.each([['flex', flexZhContract, flexEnContract]])(
     'keeps %s controls structurally aligned across languages',
     (_name, chinese, english) => {
@@ -228,7 +236,9 @@ describe('Layout documentation demos', () => {
       expect(vanilla.code).not.toMatch(/\binspect\b/);
       expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
       expect(html).toContain('data-retikz-readonly-layer');
+
       for (const label of ['A1', 'A2', 'B1', 'B2']) expect(vanilla.svg).toContain(label);
+
       for (const color of ['#dbeafe', '#2563eb', '#dcfce7', '#16a34a']) expect(vanilla.svg).toContain(color);
     },
   );
@@ -238,10 +248,12 @@ describe('Layout documentation demos', () => {
     expect(scopeInspectionVanillaSource).toContain('createLayoutInspectionVanillaDriver()');
     expect(scopeInspectionVanillaSvg).toContain('<svg');
     expect(scopeInspectionVanillaSvg).toContain('data-retikz-readonly-layer');
+
     for (const label of ['A1', 'A2', 'B1', 'B2']) {
       expect(scopeInspectionVanillaSource).toContain(label);
       expect(scopeInspectionVanillaSvg).toContain(label);
     }
+
     for (const color of ['#dbeafe', '#2563eb', '#dcfce7', '#16a34a']) {
       expect(scopeInspectionVanillaSource).toContain(color);
       expect(scopeInspectionVanillaSvg).toContain(color);

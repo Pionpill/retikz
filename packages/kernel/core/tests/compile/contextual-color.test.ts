@@ -3,10 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { compileToScene, ThemeMode } from '../../src';
 import type { PathPrim, RectPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-import type { ThemeModeValue } from '../../src/shared';
 import { flattenPrims } from '../helpers/flatten';
 
-const sceneOf = (children: IRScene['children'], mode: ThemeModeValue = ThemeMode.Light): IRScene => ({
+const sceneOf = (children: IRScene['children'], mode: ThemeMode = ThemeMode.Light): IRScene => ({
   version: 1,
   type: 'scene',
   theme: { mode },
@@ -168,6 +167,7 @@ describe('Core contextual color compile', () => {
     expect(path.stroke).toBe('#0a141f');
 
     const contextualKeys = new Set(['color', 'fill', 'stroke', 'textColor']);
+
     const visit = (value: unknown, key?: string): void => {
       if (key !== undefined && contextualKeys.has(key)) expect(typeof value).not.toBe('number');
       if (Array.isArray(value)) value.forEach(item => visit(item));
@@ -175,6 +175,7 @@ describe('Core contextual color compile', () => {
         Object.entries(value).forEach(([childKey, childValue]) => visit(childValue, childKey));
       }
     };
+
     visit(compiled);
   });
 });

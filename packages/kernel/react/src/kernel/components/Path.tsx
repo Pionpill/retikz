@@ -1,4 +1,4 @@
-import type { IRPath, PathThicknessValue, WayDSL } from '@retikz/core';
+import type { IRPath, PathThickness, WayDSL } from '@retikz/core';
 import type { InputPath } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
@@ -32,7 +32,7 @@ export type PathProps = HydrationEventProps & {
    */
   roundedCorners?: IRPath['roundedCorners'];
   /** 语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；构造 IR 时解析为 `strokeWidth`，显式 `strokeWidth` 始终优先 */
-  thickness?: PathThicknessValue;
+  thickness?: PathThickness;
   /**
    * 路径级箭头方向
    * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头

@@ -1,17 +1,8 @@
-import type { ValueOf } from '@retikz/foundation';
+import type { Anchor, CenterAnchor, Side } from './constants';
 
-import type { Anchor, CenterAnchor, Corner, Side } from './constants';
+export type SideInput = Side;
 
-export type CenterAnchorValue = ValueOf<typeof CenterAnchor>;
+/** 可用于定位的中心锚点或八方向边界锚点 */
+export type AnchorInput = CenterAnchor | Anchor;
 
-export type SideValue = ValueOf<typeof Side>;
-
-export type CornerValue = ValueOf<typeof Corner>;
-
-export type AnchorValue = ValueOf<typeof Anchor>;
-
-export type SideInput = SideValue;
-
-export type AnchorInput = CenterAnchorValue | AnchorValue;
-
-export type DirectionalAnchorInput = AnchorValue;
+export type DirectionalAnchorInput = Anchor;

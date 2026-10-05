@@ -14,6 +14,7 @@ describe('Position Adjustment schema', () => {
       { kind: 'jitter', span: { kind: 'ratio', value: 1 } },
     ];
     const parsed = PointMarkSchema.parse({ ...point, placement: { adjustments: operations } });
+
     expect(JSON.parse(JSON.stringify(parsed.placement?.adjustments))).toEqual(operations);
   });
 
@@ -64,6 +65,7 @@ describe('Position Adjustment schema', () => {
       ...point,
       placement: { adjustments: [{ kind: 'screen-nudge', dx: 4 }] },
     });
+
     expect(parsed.placement?.adjustments).toEqual([{ kind: 'screen-nudge', dx: 4 }]);
     expect(() =>
       PointMarkSchema.parse({
@@ -80,6 +82,7 @@ describe('Position Adjustment schema', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 

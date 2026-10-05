@@ -31,6 +31,7 @@ describe('内置辅助几何边界', () => {
         },
       },
     );
+
     expect(output).toMatchObject([
       { type: 'scope', children: [{ type: 'node', position: [6, -12], text: 'scope 1' }] },
     ]);
@@ -68,7 +69,9 @@ describe('内置辅助几何边界', () => {
     const result = compile(true);
     const primitives = leafPrimitives(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? []);
     const paths = primitives.filter(item => item.type === 'path');
+
     expect(paths).toHaveLength(2);
+
     // 40 单位的轴由 Core 为 6 单位箭头缩短线身，保留其标准接触重叠
     expect(paths.map(path => path.commands.at(-1))).toEqual([
       { kind: 'line', to: [36.3, 0] },
@@ -129,8 +132,10 @@ describe('内置辅助几何边界', () => {
         },
       );
       const primitives = leafPrimitives(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? []);
+
       // 三个不同顶点与一个圆心；同起点的 move、arc 和半径标记共享一个点
       expect(primitives.filter(item => item.type === 'ellipse')).toHaveLength(4);
+
       // 去重后的顶点连续编号，不暴露命令的 start/end 后缀
       expect(
         primitives.filter(item => item.type === 'text').flatMap(item => item.lines.map(line => line.text)),
@@ -168,11 +173,14 @@ describe('内置辅助几何边界', () => {
         },
       },
     );
+
     expect(result.diagnostics).toEqual([]);
+
     const curves = leafPrimitives(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? [])
       .filter(item => item.type === 'path')
       .flatMap(item => item.commands)
       .filter(command => command.kind === 'ellipseArc');
+
     expect(curves).toHaveLength(1);
     expect(curves[0]).toMatchObject({ radiusX: 40, radiusY: 20, startAngle: 0, endAngle: 360 });
   });
@@ -194,6 +202,7 @@ describe('内置辅助几何边界', () => {
         },
       },
     );
+
     expect(
       leafPrimitives(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? []).map(item => item.type),
     ).toEqual(['ellipse']);
@@ -239,6 +248,7 @@ describe('内置辅助几何边界', () => {
     const markers = leafPrimitives(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? []).filter(
       item => item.type === 'ellipse',
     );
+
     expect(markers.filter(item => item.cx === 10 && item.cy === 0)).toHaveLength(1);
     expect(markers.filter(item => item.cx === 0 && item.cy === 0)).toHaveLength(1);
     expect(result.diagnostics).toEqual([]);
@@ -278,6 +288,7 @@ describe('内置辅助几何边界', () => {
         },
       }).inspection;
     };
+
     expect(
       compile({
         node: {
@@ -320,6 +331,7 @@ describe('内置辅助几何边界', () => {
     const scene = compileToScene({ version: 1, type: 'scene', children: Array.isArray(output) ? output : [output] });
     const paths = leafPrimitives(scene.scene.primitives).filter(primitive => primitive.type === 'path');
     const lines = paths.flatMap(primitive => primitive.commands.filter(command => command.kind === 'line'));
+
     expect(lines).toContainEqual({ kind: 'line', to: [0, 0] });
     expect(lines).toContainEqual({ kind: 'line', to: [10, 16] });
     expect(paths.at(-1)?.commands.at(-1)).toEqual({ kind: 'line', to: [0, 0] });

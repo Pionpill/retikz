@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 /** Table border 候选判别值 */
 export const TableBorderKind = {
   /** 显式抑制边线 */
@@ -13,3 +15,9 @@ export const TableBorderMode = {
   /** 每个真实 Cell side 独立绘制 */
   Separate: 'separate',
 } as const;
+
+/** Table border 候选判别值 */
+export type TableBorderKind = ValueOf<typeof TableBorderKind>;
+
+/** Table border 拓扑模式 */
+export type TableBorderMode = ValueOf<typeof TableBorderMode>;

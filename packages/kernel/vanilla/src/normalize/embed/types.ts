@@ -54,8 +54,12 @@ export type InputEmbedThemeContextResolver = Readonly<{
   ) => InputEmbedThemeContext;
 }>;
 
-/** 作者侧 Tier 2 嵌入输入 */
+/**
+ * 作者侧 Tier 2 嵌入输入
+ * @template TProps 交给领域 adapter 的已类型化属性，默认使用字符串键记录
+ */
 export type InputEmbed<TProps = Record<string, unknown>> = {
+  /** 标识需要交给领域 adapter 处理的嵌入声明 */
   type: 'embed';
   /** 匹配 Vanilla adapter 的稳定键 */
   kind: string;
@@ -121,7 +125,10 @@ export type InputEmbedPreparationContext = Readonly<Omit<InputEmbedContext, 'nor
     prepareChildren: (children: ReadonlyArray<InputChild>) => Promise<InputEmbedChildrenPreparation>;
   }>;
 
-/** 同步入口只接受具有明确 lower 能力的 adapter */
+/**
+ * 同步入口只接受具有明确 lower 能力的 adapter
+ * @template TProps lower 与可选 prepare 共同接受的领域属性类型
+ */
 export type SynchronousInputEmbedAdapter<TProps = unknown> = {
   /** `InputEmbed.kind` 的匹配键 */
   kind: string;
@@ -134,7 +141,10 @@ export type SynchronousInputEmbedAdapter<TProps = unknown> = {
   ) => InputEmbedPreparation | Promise<InputEmbedPreparation>;
 };
 
-/** 同一 kind 的同步与异步作者能力 */
+/**
+ * 同一 kind 的同步与异步作者能力
+ * @template TProps adapter 的同步下沉或异步准备入口接受的领域属性类型
+ */
 export type InputEmbedAdapter<TProps = unknown> =
   | SynchronousInputEmbedAdapter<TProps>
   | Readonly<{

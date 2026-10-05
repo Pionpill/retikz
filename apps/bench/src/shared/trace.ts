@@ -1,7 +1,7 @@
 import type {
-  PerformanceTracePhaseValue,
+  PerformanceTracePhase,
   PerformanceTraceRecord,
-  PerformanceTraceUnitValue,
+  PerformanceTraceUnit,
   RuntimeTraceReporter,
 } from '@retikz/runtime';
 import { PerformanceTraceOutcome } from '@retikz/runtime';
@@ -12,8 +12,8 @@ export const assertFullTrace = (
   reporter: RuntimeTraceReporter,
   records: ReadonlyArray<PerformanceTraceRecord>,
   expected: Readonly<{
-    phase: PerformanceTracePhaseValue;
-    unit: PerformanceTraceUnitValue;
+    phase: PerformanceTracePhase;
+    unit: PerformanceTraceUnit;
     visited: number;
   }>,
 ): PerformanceTraceRecord => {
@@ -21,7 +21,9 @@ export const assertFullTrace = (
   if (diagnostics.length !== 0) {
     throw new Error(`${id}: reporter emitted ${diagnostics.length} diagnostics`);
   }
+
   if (records.length !== 1) throw new Error(`${id}: emitted ${records.length} records instead of 1`);
+
   const record = records[0];
   if (
     record.owner !== reporter.owner ||
@@ -31,12 +33,15 @@ export const assertFullTrace = (
   ) {
     throw new Error(`${id}: full trace identity mismatch`);
   }
+
   if (record.visited !== expected.visited) {
     throw new Error(`${id}: visited ${record.visited} differs from exact fixture count ${expected.visited}`);
   }
+
   if (record.reused !== 0 || record.changed !== record.visited) {
     throw new Error(`${id}: full path must report reused=0 and changed=visited`);
   }
+
   return record;
 };
 
@@ -54,6 +59,7 @@ export const assertSingleTraceRecord = (
       `${id}: emitted ${unitRecords.length} ${expected.owner}/${expected.phase}/${expected.unit} records`,
     );
   }
+
   const record = unitRecords[0];
   if (
     record.outcome !== expected.outcome ||
@@ -63,5 +69,6 @@ export const assertSingleTraceRecord = (
   ) {
     throw new Error(`${id}: trace record differs from the exact expected work`);
   }
+
   return record;
 };

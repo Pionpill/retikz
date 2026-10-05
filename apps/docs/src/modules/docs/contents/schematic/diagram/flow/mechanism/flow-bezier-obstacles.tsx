@@ -13,6 +13,7 @@ export type FlowBezierObstaclesProps = Readonly<{ lang?: Lang }>;
 const Demo: FC<FlowBezierObstaclesProps> = props => {
   const { lang = 'zh' } = props;
   const copy = flowBezierObstaclesI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[0, 1, 2].map(stage => {

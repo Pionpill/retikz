@@ -24,8 +24,10 @@ type RangedDotPositionEncoding = ZodInfer<typeof RangedDotStartEncodingSchema>;
 /** 读取 Ranged Dot 位置映射显式声明或引用的 scale 名称 */
 const authoredScaleNameOf = (mapping: RangedDotPositionEncoding): string | undefined => {
   if (typeof mapping === 'string') return undefined;
+
   const parsed = PointPositionScaleBindingSchema.safeParse(mapping.scale);
   if (!parsed.success) return undefined;
+
   return 'reference' in parsed.data ? parsed.data.reference : parsed.data.operation.name;
 };
 

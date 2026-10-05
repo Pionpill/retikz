@@ -8,6 +8,7 @@ import {
 } from '@retikz/foundation';
 import { array, number, object, record, strictObject, union, unknown } from 'zod';
 
+/** 校验字段驱动与常量二选一的通道绑定及可选比例尺引用 */
 export const ChannelSchema = object({
   field: NonBlankStringSchema.optional().describe(
     'Path accessor into a data row bound to this channel (e.g. "month" or "user.age"); resolved against the externally-supplied dataset at lowering and must yield a scalar',
@@ -35,10 +36,12 @@ const PositionEncodingObjectSchema = object({
   ),
 }).catchall(ChannelSchema);
 
+/** 校验按坐标角色命名的位置通道，必需角色由坐标定义在降低阶段判断 */
 export const PositionEncodingSchema = NonBlankRecordKeySchema.pipe(PositionEncodingObjectSchema).describe(
   'Positional channel bindings. Built-ins use x for 1D and x / y for 2D; custom CoordinateDefinition roles may add arbitrary non-blank role keys. All are optional at the schema level, and the coordinate system decides which roles are required during lowering',
 );
 
+/** 校验交给标记降低逻辑的非位置通道绑定 */
 export const MarkChannelEncodingSchema = object({
   color: ChannelSchema.optional().describe(
     'Color channel (non-positional): maps a field through an ordinal / color scale to the mark fill / stroke',
@@ -55,10 +58,12 @@ const EncodingObjectSchema = object({
   ...MarkChannelEncodingSchema.shape,
 }).catchall(ChannelSchema);
 
+/** 校验标记的位置角色与共享视觉通道绑定 */
 export const EncodingSchema = NonBlankRecordKeySchema.pipe(EncodingObjectSchema).describe(
   'Channel bindings for a mark: built-in keys cover x / y and shared mark channels; unknown non-blank keys are treated as custom coordinate position roles',
 );
 
+/** 校验尺寸通道的字段映射或直接使用的常量半径 */
 export const SizeChannelSchema = object({
   field: NonBlankStringSchema.optional().describe(
     'Data path bound to the size channel; resolves to a numeric magnitude mapped through a radius (sqrt) scale',
@@ -77,6 +82,7 @@ export const SizeChannelSchema = object({
     'Size channel (PointMark): field maps glyph radius via a sqrt scale; value is a constant final radius (px) that bypasses the scale',
   );
 
+/** 校验透明度通道的字段映射或绕过比例尺的常量值 */
 export const OpacityChannelSchema = object({
   field: NonBlankStringSchema.optional().describe(
     'Data path bound to opacity; continuous, mapped through a clamped linear scale to [minOpacity, 1]',
@@ -97,6 +103,7 @@ export const OpacityChannelSchema = object({
     'Opacity channel (PointMark): field maps glyph opacity via a clamped linear scale; value is a constant opacity that bypasses the scale',
   );
 
+/** 校验形状通道的字段映射或固定 Core 形状名称 */
 export const ShapeChannelSchema = object({
   field: NonBlankStringSchema.optional().describe(
     'Data path bound to shape; categorical, mapped to a built-in glyph palette',
@@ -112,6 +119,7 @@ export const ShapeChannelSchema = object({
     'Shape channel (PointMark): field maps glyph shape via the built-in shape palette; value is a constant core shape name',
   );
 
+/** 校验逐数据项或常量文本内容及可选显示格式 */
 export const TextChannelSchema = strictObject({
   field: NonBlankStringSchema.optional().describe(
     'Data path whose row value becomes the label string; mutually exclusive with value',
@@ -130,6 +138,7 @@ export const TextChannelSchema = strictObject({
     'Text content channel: field is a per-datum label string, value is a constant label, displayFormat is a display format string for a numeric or temporal field',
   );
 
+/** 校验与 Core 节点标签对齐的引线样式 */
 export const LabelPinStyleSchema = object({
   stroke: CssColorSchema.optional().describe('Leader line color; defaults to the label color / currentColor'),
   strokeWidth: PositiveNumberSchema.optional().describe('Leader line width in user units; default 1'),
@@ -143,10 +152,12 @@ const PointEncodingObjectSchema = PositionEncodingObjectSchema.extend({
   ...MarkChannelEncodingSchema.shape,
 });
 
+/** 校验点标记的位置、文本及扩展通道，内置节点外观由标记样式字段承载 */
 export const PointEncodingSchema = NonBlankRecordKeySchema.pipe(PointEncodingObjectSchema).describe(
   'PointMark encoding: positional channels plus optional text and extension channel bindings; built-in node properties live on the mark as schema-defined style fields',
 );
 
+/** 校验标签内容的字段或常量互斥绑定及可选显示格式 */
 export const MarkLabelContentSchema = strictObject({
   field: NonBlankStringSchema.optional().describe(
     'Data path whose row value becomes the label text; mutually exclusive with value',
@@ -169,8 +180,10 @@ const omitText = <T extends Record<string, unknown>>(shape: T): Omit<T, 'text'> 
   Object.fromEntries(Object.entries(shape).filter(([key]) => key !== 'text')) as Omit<T, 'text'>;
 
 const nodeLabelShape = omitText(NodeLabelSchema.shape);
+
 const geometryLabelShape = omitText(GeometryLabelSchema.shape);
 
+/** 校验附着于 Core 节点宿主的标签，几何字段复用节点标签契约 */
 export const MarkNodeLabelSchema = strictObject({
   ...nodeLabelShape,
   content: MarkLabelContentSchema.describe('Node label content binding (field / value / displayFormat)'),
@@ -188,6 +201,7 @@ export const MarkNodeLabelSchema = strictObject({
     'Plot label attached to a core Node.label host; all geometry fields are inherited from core NodeLabelSchema',
   );
 
+/** 校验附着于路径类几何宿主的标签，几何字段复用 Core 几何标签契约 */
 export const MarkGeometryLabelSchema = strictObject({
   ...geometryLabelShape,
   content: MarkLabelContentSchema.describe('Geometry label content binding (field / value / displayFormat)'),
@@ -195,19 +209,23 @@ export const MarkGeometryLabelSchema = strictObject({
   'Plot label attached to a path-like GeometryLabel host; all geometry fields are inherited from core GeometryLabelSchema',
 );
 
+/** 校验单个或按声明顺序排列的节点宿主标签 */
 export const MarkNodeLabelListSchema = union([MarkNodeLabelSchema, array(MarkNodeLabelSchema).min(1)]).describe(
   'Single or multiple node-host labels; array order is preserved',
 );
 
+/** 校验单个或按声明顺序排列的几何宿主标签 */
 export const MarkGeometryLabelListSchema = union([
   MarkGeometryLabelSchema,
   array(MarkGeometryLabelSchema).min(1),
 ]).describe('Single or multiple geometry-host labels; array order is preserved');
 
+/** 校验由标记定义决定节点或几何宿主的标签输入 */
 export const MarkLabelSchema = union([MarkNodeLabelSchema, MarkGeometryLabelSchema]).describe(
   'Host-inferred plot label input; mark definitions choose node or geometry host schema',
 );
 
+/** 按节点或几何宿主选择对应的单个及多标签输入校验器 */
 export const MarkLabelSchemaByHost = {
   node: MarkNodeLabelListSchema,
   geometry: MarkGeometryLabelListSchema,

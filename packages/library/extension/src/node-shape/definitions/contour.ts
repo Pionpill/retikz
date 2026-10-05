@@ -41,6 +41,7 @@ const aabbCenterOf = (points: Array<Position>): Position => {
       details: { pointCount: points.length, shape: 'contour' },
     });
   }
+
   return centerOfBounds(bounds);
 };
 
@@ -67,6 +68,7 @@ export const ContourShapeDefinition = defineShape<ContourShapeParams>({
         details: { pointCount: params.points.length, shape: 'contour' },
       });
     }
+
     return halfAxesOfBounds(bounds);
   },
   circumscribeOffset: () => [0, 0],

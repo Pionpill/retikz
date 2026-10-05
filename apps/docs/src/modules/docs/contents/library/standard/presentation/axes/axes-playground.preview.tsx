@@ -78,6 +78,7 @@ const resolveTickMode = (value: string): TickMode => {
     value === 'valuesLabels'
   )
     return value;
+
   return invalidControlValue('tickMode', value);
 };
 
@@ -187,6 +188,7 @@ const createAxis = (options: CreateAxisOptions): AxisInput => {
                 },
               }),
         };
+
   const ticks = createTicks(options.ticks);
   const label: AxisInput['label'] =
     labelMode === 'off'
@@ -315,6 +317,7 @@ export const renderAxesPlaygroundPreview = (values: AxesPlaygroundPreviewValues)
     values.extentMode === 'symmetric' ? values.extentX : { negative: values.xNegative, positive: values.xPositive };
   const yExtent: AxisInput['extent'] =
     values.extentMode === 'symmetric' ? values.extentY : { negative: values.yNegative, positive: values.yPositive };
+
   const x = createAxis({
     extent: xExtent,
     lineMode: values.xLineMode,
@@ -354,6 +357,7 @@ export const renderAxesPlaygroundPreview = (values: AxesPlaygroundPreviewValues)
     labelSize: values.xLabelSize,
     labelOpacity: values.xLabelOpacity,
   });
+
   const y = createAxis({
     extent: yExtent,
     lineMode: values.yLineMode,
@@ -393,6 +397,7 @@ export const renderAxesPlaygroundPreview = (values: AxesPlaygroundPreviewValues)
     labelSize: values.yLabelSize,
     labelOpacity: values.yLabelOpacity,
   });
+
   const gridDashPattern = resolveDashPattern(values.gridDash);
   const gridStyle = {
     stroke: values.gridStroke,
@@ -402,6 +407,7 @@ export const renderAxesPlaygroundPreview = (values: AxesPlaygroundPreviewValues)
     opacity: values.gridOpacity,
     ...(gridDashPattern === undefined ? {} : { dashPattern: gridDashPattern }),
   };
+
   const xGrid = values.gridEnabled
     ? {
         spacing: values.gridSpacingMode === 'uniform' ? values.gridSpacing : values.gridSpacingX,
@@ -416,6 +422,7 @@ export const renderAxesPlaygroundPreview = (values: AxesPlaygroundPreviewValues)
         style: values.gridSeparateDirections ? { ...gridStyle, stroke: values.gridHorizontalStroke } : gridStyle,
       }
     : false;
+
   const hiddenAxis = (extent: AxisInput['extent']): AxisInput => ({
     extent,
     line: false,
@@ -423,6 +430,7 @@ export const renderAxesPlaygroundPreview = (values: AxesPlaygroundPreviewValues)
     grid: false,
     label: false,
   });
+
   const axesInput: AxesInput = {
     origin: {
       position: [values.originX, values.originY],

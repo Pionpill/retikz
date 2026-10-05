@@ -37,10 +37,12 @@ export const PreviewControlSlotLayer: FC<PreviewControlSlotLayerProps> = props =
   const groups = useMemo(() => {
     const next = new Map<PreviewControlPlacement, Array<PreviewControlSlot>>();
     const visibleSlots = controlsLocked ? slots.filter(slot => slot.id === PREVIEW_CONTROLS_LOCK_SLOT_ID) : slots;
+
     for (const slot of visibleSlots) {
       const placement = slot.placement ?? DEFAULT_PLACEMENT;
       next.set(placement, [...(next.get(placement) ?? []), slot]);
     }
+
     return [...next.entries()];
   }, [controlsLocked, slots]);
 

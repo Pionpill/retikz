@@ -17,6 +17,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 );
 
 export const previewSource = controlledPreview.source;
+
 const Demo: FC = controlledPreview.Component;
 
 export default Demo;

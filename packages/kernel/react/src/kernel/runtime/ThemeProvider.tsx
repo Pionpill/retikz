@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { mergeThemeOverlays, ThemeContext, useTheme } from './theme-context';
 import { mergeThemeStyleDefinitions, ThemeStylesContext, useThemeStyles } from './theme-styles-context';
 
+/** 向子树 Layout 注入主题覆盖与主题风格定义 */
 export type ThemeProviderProps = {
   /** 注入给子树 `<Layout>` 的 sparse Theme */
   theme?: IRScene['theme'];
@@ -14,7 +15,7 @@ export type ThemeProviderProps = {
   children?: ReactNode;
 };
 
-/** ambient Theme Provider */
+/** 向后代提供主题上下文的组件 */
 export const ThemeProvider: FC<ThemeProviderProps> = props => {
   const { theme, themeStyles, children } = props;
   const parentTheme = useTheme();

@@ -8,6 +8,7 @@ export const resolveGraphThemeStyleRegistry = (
   custom: ReadonlyArray<GraphThemeStyleDefinition> | undefined = undefined,
 ): ReadonlyMap<string, GraphThemeStyleDefinition> => {
   const registry = new Map<string, GraphThemeStyleDefinition>();
+
   for (const definition of custom ?? []) {
     assertNonEmptyString(
       definition.name,
@@ -29,7 +30,9 @@ export const resolveGraphThemeStyleRegistry = (
         details: { capability: 'graph-theme-style', key: definition.name },
       });
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };

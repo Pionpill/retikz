@@ -21,6 +21,7 @@ const report = {
 describe('Bench report client', () => {
   it('使用稳定 API 保存并列出用例报告', async () => {
     const requests: Array<Readonly<{ url: string; method: string; body?: string }>> = [];
+
     const fetcher = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       const url = String(input);
       requests.push(
@@ -30,6 +31,7 @@ describe('Bench report client', () => {
           ...(typeof init?.body === 'string' ? { body: init.body } : {}),
         }),
       );
+
       return Promise.resolve(
         url.includes('?')
           ? new Response(JSON.stringify({ reports: [{ ...report, payload: undefined }], diagnostics: [] }), {
@@ -77,6 +79,7 @@ describe('Bench report client', () => {
           headers: { 'content-type': 'application/json' },
         }),
       );
+
     await expect(listBenchReports('kernel', undefined, errorFetcher)).rejects.toThrow('disk full');
 
     const invalidFetcher = (): Promise<Response> =>
@@ -86,11 +89,13 @@ describe('Bench report client', () => {
           headers: { 'content-type': 'application/json' },
         }),
       );
+
     await expect(listBenchReports('kernel', undefined, invalidFetcher)).rejects.toThrow('response is invalid');
   });
 
   it('按稳定标识读取一份完整报告', async () => {
     const requests: Array<string> = [];
+
     const fetcher = (input: RequestInfo | URL): Promise<Response> => {
       requests.push(String(input));
       return Promise.resolve(

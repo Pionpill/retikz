@@ -33,12 +33,14 @@ const sin = definePathGenerator({
     const amplitude = params.amplitude as number;
     const samples = params.samples as number;
     const cmds: Array<PathCommand> = [{ kind: 'move', to: from }];
+
     for (let i = 1; i <= samples; i++) {
       const t = i / samples;
       const x = from[0] + (end[0] - from[0]) * t;
       const y = from[1] + Math.sin(t * Math.PI * 2) * amplitude;
       cmds.push({ kind: 'line', to: [x, y] });
     }
+
     return cmds;
   },
 });
@@ -74,6 +76,7 @@ describe('Path generator 注册面 — happy path', () => {
     };
     const scene = compileToScene(ir, { pathGenerators: [customQuad] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
+
     expect(drawn?.commands.some(c => c.kind === 'quad')).toBe(true);
   });
 
@@ -99,6 +102,7 @@ describe('Path generator 注册面 — happy path', () => {
     };
     const scene = compileToScene(ir, { pathGenerators: [sin] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
+
     expect(drawn?.commands.filter(c => c.kind === 'line').length).toBeGreaterThan(1);
     expect(drawn?.commands.some(c => c.kind === 'move')).toBe(true);
   });
@@ -135,6 +139,7 @@ describe('Path generator 注册面 — happy path', () => {
       ],
     };
     compileToScene(ir, { pathGenerators: [probe] });
+
     expect(seenBend).toEqual([40, 60]);
   });
 
@@ -160,8 +165,10 @@ describe('Path generator 注册面 — happy path', () => {
     };
     const scene = compileToScene(ir, { pathGenerators: [fixedSegment] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
+
     // generator 产 line 到 [30,0]，cursor 落此，后续 line 不应重发 move（续接 [30,0]→[30,50]）
     const moves = drawn?.commands.filter(c => c.kind === 'move') ?? [];
+
     expect(moves.length).toBe(1);
   });
 });
@@ -182,6 +189,7 @@ describe('Path generator 注册面 — 边界', () => {
       ],
     };
     const scene = compileToScene(ir, { pathGenerators: [fixedSegment] }).scene;
+
     expect(firstDrawnPath(scene.primitives)).toBeDefined();
   });
 
@@ -201,6 +209,7 @@ describe('Path generator 注册面 — 边界', () => {
     };
     const a = compileToScene(ir, { pathGenerators: [sin] }).scene;
     const b = compileToScene(ir, { pathGenerators: [sin] }).scene;
+
     expect(a).toEqual(b);
   });
 
@@ -229,6 +238,7 @@ describe('Path generator 注册面 — 边界', () => {
     };
     const scene = compileToScene(ir, { pathGenerators: [multi] }).scene;
     const drawn = firstDrawnPath(scene.primitives);
+
     expect(drawn?.commands.filter(c => c.kind === 'move').length).toBeGreaterThanOrEqual(2);
   });
 });
@@ -248,6 +258,7 @@ describe('Path generator 注册面 — 错误路径', () => {
         },
       ],
     };
+
     expect(() => compileToScene(ir, { pathGenerators: [customQuad] }).scene).toThrow(/nope/);
     expect(() => compileToScene(ir, { pathGenerators: [customQuad] }).scene).toThrow(/customQuad/);
   });
@@ -339,6 +350,7 @@ describe('Path generator 注册面 — 错误路径', () => {
       ],
     };
     compileToScene(ir, { pathGenerators: [nestedGen] });
+
     // 嵌套路径不被解析：resolvedTargets 不含 'control.at'，更不含已解析坐标
     expect(seen?.['control.at']).toBeUndefined();
   });
@@ -367,6 +379,7 @@ describe('Path generator 注册面 — 交互', () => {
     };
     const scene = compileToScene(ir, { pathGenerators: [fixedSegment] }).scene;
     const text = flattenPrims(scene.primitives).find(p => p.type === 'text');
+
     expect(text).toBeDefined();
   });
 
@@ -489,9 +502,12 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
     };
     const roundTripped = JSON.parse(JSON.stringify(path));
     const parsed = PathSchema.parse(roundTripped);
+
     expect(parsed).toEqual(PathSchema.parse(path));
+
     // params JSON 内容保真
     const genStep = parsed.children![1];
+
     expect(genStep.kind === 'generator' && genStep.params).toEqual({
       bend: { id: 'C' },
       coeff: 2.5,
@@ -537,7 +553,9 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
       ],
     };
     const result = PathSchema.safeParse(bad);
+
     expect(result.success).toBe(false);
+
     if (!result.success) {
       expect(result.error.issues.some(iss => iss.path.includes('name'))).toBe(true);
     }
@@ -551,6 +569,7 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
         { type: 'step', kind: 'generator', name: 'parabola', params: [1, 2, 3] },
       ],
     };
+
     expect(PathSchema.safeParse(bad).success).toBe(false);
   });
 
@@ -562,6 +581,7 @@ describe('Path generator step — JSON round-trip & zod 校验', () => {
         { type: 'step', kind: 'generator', name, params: {} },
       ],
     };
+
     expect(PathSchema.safeParse(bad).success).toBe(false);
   });
 });
@@ -573,6 +593,7 @@ describe('definePathGenerator', () => {
       paramsSchema: object({ a: number() }),
       generate: ({ from }) => [{ kind: 'line', to: from }],
     });
+
     expect(typeof def.generate).toBe('function');
     expect(def.paramsSchema).toBeDefined();
   });

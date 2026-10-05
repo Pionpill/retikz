@@ -7,14 +7,18 @@ import { fullScopeProps } from '../presentation/scope-props';
 describe('AxesSchema', () => {
   it('resolves default-dependent label and lattice checks without modifying typed factory source', () => {
     const source = createAxes({ x: { extent: 20, label: false }, y: { extent: 20 } });
+
     expect(source.x).toEqual({ extent: 20, label: false });
     expect(resolveAxes(AxesSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual(resolveAxes(source));
     expect(resolveAxes(source).x.label).toBe(false);
+
     const excessive = createAxes({
       ...source,
       x: { extent: 1, ticks: { source: { kind: 'spacing', spacing: 0.000001 } } },
     });
+
     expect(() => resolveAxes(excessive)).toThrow(/exceeds/);
+
     const invalidLabel = createAxes({
       ...source,
       x: {
@@ -25,6 +29,7 @@ describe('AxesSchema', () => {
         },
       },
     });
+
     expect(() => resolveAxes(invalidLabel)).toThrow(/emitted tick/);
   });
 
@@ -142,6 +147,7 @@ describe('AxesSchema', () => {
 
     expect(zeroGap.success).toBe(true);
     expect(negativeGap.success).toBe(false);
+
     if (!negativeGap.success) expect(negativeGap.error.issues[0]?.path).toEqual(['x', 'ticks', 'endpointGap']);
   });
 
@@ -198,6 +204,7 @@ describe('AxesSchema', () => {
     expect(parsed.x.grid).toEqual({ spacing: 10, offset: 0 });
     expect(resolveAxes(parsed).x.grid).toMatchObject({ spacing: 10, offset: 0 });
     expect(invalidArrow.success).toBe(false);
+
     if (!invalidArrow.success)
       expect(invalidArrow.error.issues[0]?.path).toEqual(['x', 'line', 'arrowDetail', 'scale']);
   });
@@ -218,6 +225,7 @@ describe('AxesSchema', () => {
 
     expect(zeroExtent.success).toBe(false);
     expect(noAxes.success).toBe(false);
+
     if (!zeroExtent.success) expect(zeroExtent.error.issues[0]?.path).toEqual(['x', 'extent']);
     if (!noAxes.success) expect(noAxes.error.issues[0]?.path).toEqual(['x']);
   });
@@ -236,6 +244,7 @@ describe('AxesSchema', () => {
     });
 
     expect(parsed.success).toBe(false);
+
     if (!parsed.success) expect(parsed.error.issues[0]?.path).toEqual(issuePath);
   });
 
@@ -269,6 +278,7 @@ describe('AxesSchema', () => {
 
     expect(spacingLabel.success).toBe(false);
     expect(explicitLabel.success).toBe(false);
+
     if (!spacingLabel.success)
       expect(spacingLabel.error.issues[0]?.path).toEqual(['x', 'ticks', 'labels', 'entries', 0, 'value']);
     if (!explicitLabel.success)
@@ -291,6 +301,7 @@ describe('AxesSchema', () => {
     });
 
     expect(parsed.success).toBe(false);
+
     if (!parsed.success) expect(parsed.error.issues[0]?.path).toEqual(['x', 'ticks', 'labels', 'entries', 0, 'value']);
   });
 
@@ -311,6 +322,7 @@ describe('AxesSchema', () => {
 
     expect(excessiveTicks.success).toBe(false);
     expect(unknownField.success).toBe(false);
+
     if (!excessiveTicks.success)
       expect(excessiveTicks.error.issues[0]?.path).toEqual(['x', 'ticks', 'source', 'spacing']);
     if (!unknownField.success) expect(unknownField.error.issues[0]?.path).toEqual([]);

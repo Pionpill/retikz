@@ -38,6 +38,7 @@ describe('node IRPaint fill → 资源表 + resourceRef', () => {
     };
     const scene = compileToScene(ir).scene;
     const rect = rectsOf(scene.primitives)[0];
+
     expect(rect.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
   });
@@ -57,6 +58,7 @@ describe('node IRPaint fill → 资源表 + resourceRef', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(rectsOf(scene.primitives)[0].fill).toBe('lightblue');
     expect(scene.resources).toBeUndefined();
   });
@@ -86,6 +88,7 @@ describe('去重 + 稳定 id', () => {
     };
     const scene = compileToScene(ir).scene;
     const rects = rectsOf(scene.primitives);
+
     expect(rects[0].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toHaveLength(1);
@@ -114,6 +117,7 @@ describe('去重 + 稳定 id', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(scene.resources).toHaveLength(2);
     expect(scene.resources?.map(r => r.id)).toEqual(['paint-1', 'paint-2']);
   });
@@ -132,6 +136,7 @@ describe('去重 + 稳定 id', () => {
         },
       ],
     };
+
     expect(compileToScene(ir).scene.resources).toEqual(compileToScene(ir).scene.resources);
   });
 });
@@ -156,6 +161,7 @@ describe('path IRPaint fill', () => {
     };
     const scene = compileToScene(ir).scene;
     const path = flattenPrims(scene.primitives).find(p => p.type === 'path');
+
     expect(path?.type === 'path' && path.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toHaveLength(1);
   });
@@ -179,6 +185,7 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
     };
     const scene = compileToScene(ir).scene;
     const rects = rectsOf(scene.primitives);
+
     expect(rects[0].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
@@ -207,6 +214,7 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
     };
     const scene = compileToScene(ir).scene;
     const rects = rectsOf(scene.primitives);
+
     expect(rects[0].fill).toBe('lightblue');
     expect(rects[1].fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
@@ -230,6 +238,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(pathsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: grad }]);
   });
@@ -250,6 +259,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(rectsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: radial }]);
   });
@@ -276,6 +286,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(rectsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(pathsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toHaveLength(1);
@@ -300,6 +311,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     };
     const scene = compileToScene(ir).scene;
     const path = pathsOf(scene.primitives)[0];
+
     expect(path.fill).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(path.stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(scene.resources).toHaveLength(1);
@@ -321,6 +333,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(pathsOf(scene.primitives)[0].stroke).toBe('#333');
     expect(scene.resources).toBeUndefined();
   });
@@ -340,6 +353,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       ],
     };
     const scene = compileToScene(ir).scene;
+
     expect(pathsOf(scene.primitives)[0].stroke).toBe('currentColor');
     expect(scene.resources).toBeUndefined();
   });
@@ -360,6 +374,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
         },
       ],
     };
+
     expect(() => compileToScene(ir).scene).toThrow(/arrow.*stroke.*IRPaint|IRPaint.*arrow/i);
   });
 
@@ -381,6 +396,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     };
     const scene = compileToScene(ir).scene;
     const path = pathsOf(scene.primitives)[0];
+
     expect(path.stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
     expect(path.arrowEnd?.marker[0]).toMatchObject({ fill: '#111' });
   });

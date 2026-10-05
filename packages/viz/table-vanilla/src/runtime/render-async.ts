@@ -38,9 +38,11 @@ const renderTableAsyncImpl = async <TSource = never>(
   );
   const svg = renderToSvgString(result.scene, { output: options.output, animation: options.animation });
   if (options.artifacts !== true) return svg;
+
   const artifacts = result.compileResult.artifacts.filter(isRootTableArtifact);
   if (artifacts.length !== 1)
     throw new RetikzTableVanillaError(`Table expected exactly one root artifact, received ${artifacts.length}`);
+
   return Object.freeze({ svg, manifest: artifacts[0].value });
 };
 

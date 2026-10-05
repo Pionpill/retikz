@@ -76,13 +76,18 @@ export const buildSourceFileKey = (segments: Array<string>, filename: string) =>
   `../../contents/${filename.startsWith('/') ? filename.slice(1) : `${segments.join('/')}/${filename}`}`;
 
 export const buildKey = (segments: Array<string>, name: string) => buildSourceFileKey(segments, `${name}.demo.tsx`);
+
 export const buildComponentKey = (segments: Array<string>, name: string) => buildSourceFileKey(segments, `${name}.tsx`);
+
 export const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
   buildSourceFileKey(segments, `${name}.${lang}.demo.tsx`);
+
 export const buildVanillaKey = (segments: Array<string>, name: string) =>
   buildSourceFileKey(segments, `${name}.vanilla.ts`);
+
 export const buildIrJsonKey = (segments: Array<string>, name: string) =>
   buildSourceFileKey(segments, `${name}.ir.json`);
+
 export const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') + 1);
 
 /**
@@ -92,10 +97,13 @@ export const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') +
 export const resolveDemoKey = (segments: Array<string>, name: string, lang: string): string => {
   const langKey = buildLangKey(segments, name, lang);
   if (demoModuleLoaders[langKey] !== undefined) return langKey;
+
   const componentKey = buildComponentKey(segments, name);
   if (demoModuleLoaders[componentKey] !== undefined) return componentKey;
+
   const demoKey = buildKey(segments, name);
   if (demoModuleLoaders[demoKey] !== undefined) return demoKey;
+
   return demoKey;
 };
 

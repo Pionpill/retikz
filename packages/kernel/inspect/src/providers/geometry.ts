@@ -5,17 +5,26 @@ import { applyAffine, DEFAULT_EPSILON, localToWorld } from '@retikz/math';
 
 /** 由 Inspector 生成的普通 Path 子项样式 */
 export type InspectionPathStyle = Readonly<{
+  /** 辅助轮廓固定不填充内部区域 */
   fill: 'none';
+  /** 辅助轮廓使用的 CSS 描边颜色 */
   stroke: string;
+  /** 辅助轮廓的描边宽度，单位与场景坐标一致 */
   strokeWidth: number;
+  /** 仅作用于辅助轮廓描边的不透明度 */
   strokeOpacity?: number;
+  /** 填充通道的不透明度；无填充时不产生可见区域 */
   fillOpacity?: number;
+  /** 辅助路径整体的不透明度 */
   opacity?: number;
+  /** 辅助轮廓的虚线段长序列，采用场景单位 */
   dashPattern?: Array<number>;
+  /** 辅助轮廓虚线序列的相位偏移 */
   dashOffset?: number;
 }>;
 
 type PathChild = Extract<IRChild, { type: 'path' }>;
+
 type ScopeChild = Extract<IRChild, { type: 'scope' }>;
 
 /** 创建不继承主图填充的辅助 Path */
@@ -45,9 +54,11 @@ export const pointAtArcCommand = (
       command.center[1] + command.radius * Math.sin(radians),
     ];
   }
+
   const localX = command.radiusX * Math.cos(radians);
   const localY = command.radiusY * Math.sin(radians);
   const rotation = (command.rotation ?? 0) * DEG_TO_RAD;
+
   return [
     command.center[0] + localX * Math.cos(rotation) - localY * Math.sin(rotation),
     command.center[1] + localX * Math.sin(rotation) + localY * Math.cos(rotation),
@@ -71,6 +82,7 @@ const rotatedEllipseScope = (
 ): ScopeChild => {
   const angles = arcAnglesOf(command);
   const start = pointAtArcCommand({ ...command, rotation: undefined }, angles.start);
+
   return {
     type: 'scope',
     transforms: [{ kind: 'rotate', degrees: command.rotation ?? 0, pivot: command.center }],
@@ -101,6 +113,7 @@ const ensurePathStart = (steps: Array<IRStep>, current: IRPosition | undefined, 
     steps.push({ type: 'step', kind: 'move', to: start });
     return start;
   }
+
   return current ?? fallback;
 };
 
@@ -114,6 +127,7 @@ export const pathCommandsToChildren = (
   let steps: Array<IRStep> = [];
   let current: IRPosition | undefined;
   let subpathStart: IRPosition | undefined;
+
   // 旋转椭圆弧单独放入 Scope；分段后必须显式连回原起点，cycle 只会关闭当前片段
   let splitSubpath = false;
 
@@ -124,6 +138,7 @@ export const pathCommandsToChildren = (
 
   const closeOpenPath = (): void => {
     if (subpathStart === undefined) return;
+
     const pathEnd = current ?? subpathStart;
     if (steps.length === 0) {
       // 整椭圆已回到起点，不额外生成只有 move/cycle 的片段
@@ -144,6 +159,7 @@ export const pathCommandsToChildren = (
         steps.push({ type: 'step', kind: 'cycle' });
       }
     }
+
     current = subpathStart;
   };
 
@@ -198,6 +214,7 @@ export const pathCommandsToChildren = (
         ensurePathStart(steps, current, arcStart);
         steps.push({ type: 'step', kind: 'line', to: arcStart });
       }
+
       flush();
       output.push(rotatedEllipseScope(command, style));
       current = arcEnd;
@@ -221,6 +238,7 @@ export const pathCommandsToChildren = (
 
   if (options.implicitClose) closeOpenPath();
   flush();
+
   return output;
 };
 
@@ -231,6 +249,7 @@ export const cornersOfRect = (
   const halfWidth = rect.width / 2;
   const halfHeight = rect.height / 2;
   const point = (x: number, y: number): IRPosition => localToWorld(rect, [x, y]);
+
   return [
     point(-halfWidth, -halfHeight),
     point(halfWidth, -halfHeight),
@@ -270,6 +289,7 @@ export const sceneBoundsOfRect = (
   ];
   const xs = corners.map(corner => corner[0]);
   const ys = corners.map(corner => corner[1]);
+
   return {
     corners,
     bounds: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)],

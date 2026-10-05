@@ -1,7 +1,6 @@
 import type { IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
 import { categoricalColorAt } from '@retikz/core';
-import type { DataFieldTypeValue } from '@retikz/data';
 import { createDataView, DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 
@@ -33,10 +32,13 @@ export const collectChannelDescriptors = (
   markDataViews?: ReadonlyArray<MarkDataView>,
 ): Array<ScaleDescriptor> => {
   const out: Array<ScaleDescriptor> = [];
+
   const register = (descriptor: ScaleDescriptor | undefined): void => {
     if (descriptor) out.push(descriptor);
   };
+
   const rootDataView = createDataView(channelCtx.rows, channelCtx.model);
+
   for (const view of markDataViews ??
     node.marks.map((mark, markIndex) => ({ markIndex, mark, dataView: rootDataView }))) {
     const markChannels = resolveMarkChannels(view.mark, {
@@ -44,8 +46,10 @@ export const collectChannelDescriptors = (
       rows: view.dataView.rows,
       model: view.dataView.model,
     });
+
     for (const descriptor of markChannels.descriptors ?? []) register(descriptor);
   }
+
   return out;
 };
 
@@ -59,6 +63,7 @@ const descriptorValuesEqual = (left: ReadonlyArray<JsonValue>, right: ReadonlyAr
  */
 const assertEquivalentSizeDescriptors = (descriptors: ReadonlyArray<ScaleDescriptor>): void => {
   if (descriptors.length < 2) return;
+
   const first = descriptors[0];
   const equivalent = descriptors
     .slice(1)
@@ -93,6 +98,7 @@ const selectLegendDescriptor = (
   );
   if (guide.channel === 'size') {
     const descriptorsByIdentity = new Map<string, Array<ScaleDescriptor>>();
+
     for (const descriptor of matched) {
       const identity =
         descriptor.scaleName ?? `${descriptor.channel}:${descriptor.field ?? ''}:${descriptor.scaleType}`;
@@ -100,25 +106,31 @@ const selectLegendDescriptor = (
       if (group === undefined) descriptorsByIdentity.set(identity, [descriptor]);
       else group.push(descriptor);
     }
+
     for (const group of descriptorsByIdentity.values()) assertEquivalentSizeDescriptors(group);
   }
+
   if (guide.scale !== undefined) {
     if (matched.length === 0) {
       const scale = scaleByName.get(guide.scale);
       if (scale === undefined)
         throw new RetikzPlotError(`lowerPlots: legend references unknown scale "${guide.scale}"`);
+
       const scaleDefinition = resolveScaleDefinition(scale, { registry: scaleRegistry });
       if (scaleDefinition.family !== 'channel') {
         throw new RetikzPlotError(
           `lowerPlots: scale "${guide.scale}" is not a color scale (legend channel "${guide.channel}" can only bind channel scales)`,
         );
       }
+
       throw new RetikzPlotError(
         `lowerPlots: legend channel "${guide.channel}" has no bound scale named "${guide.scale}"`,
       );
     }
+
     return matched[0];
   }
+
   const signatures = new Set(
     matched.map(
       descriptor => descriptor.scaleName ?? `${descriptor.channel}:${descriptor.field ?? ''}:${descriptor.scaleType}`,
@@ -129,6 +141,7 @@ const selectLegendDescriptor = (
       `lowerPlots: legend channel "${guide.channel}" is driven by multiple scales [${[...signatures].join(', ')}]; specify which via the legend "scale" field`,
     );
   }
+
   return matched[0];
 };
 
@@ -145,6 +158,7 @@ const niceNumericTicks = (
   );
   const { values, labels } = scaleTicks(scale, count);
   const span = hi - lo;
+
   return values.map((value, index) => ({
     value: typeof value === 'number' ? value : Number(value),
     offset: span === 0 ? 0.5 : ((typeof value === 'number' ? value : Number(value)) - lo) / span,
@@ -154,7 +168,7 @@ const niceNumericTicks = (
 
 const legendRampTickScale = (
   domain: readonly [number, number],
-  fieldType: DataFieldTypeValue | undefined,
+  fieldType: DataFieldType | undefined,
 ): PositionScale => {
   const scale = resolveLinearScale(
     { type: PlotScale.Linear, name: '__legend_ramp_ticks', domain: [domain[0], domain[1]] },
@@ -181,6 +195,7 @@ const legendRampTicks = (
   const scale = legendRampTickScale(domain, descriptor.fieldType);
   const ticks = resolveGuideTicks(scale, guide.ticks, guide.tickLabels === false ? undefined : guide.tickLabels);
   const span = domain[1] - domain[0];
+
   return ticks.values.map((value, index) => {
     const numeric = Number(value);
     return {
@@ -224,7 +239,7 @@ type LegendLoweringBase = {
  * color legend 解析：消费 channel definition 产出的 colorScale descriptor → 按 legendForm 选 swatch / ramp / 分箱
  * @description legendForm='ramp'（sequential / diverging）→ core linearGradient 连续色带 + nice 刻度；
  *   legendForm='swatch' + edges（quantize/threshold/quantile）→ 每档区间 swatch（区间标签闭开口契约）；
- *   legendForm='swatch' 无 edges（ordinal）→ 逐类别色块 swatch。evaluator / domain / range 来自实绘解析结果。
+ *   legendForm='swatch' 无 edges（ordinal）→ 逐类别色块 swatch。evaluator / domain / range 来自实绘解析结果
  */
 const resolveColorLegend = (
   descriptor: ScaleDescriptor,
@@ -251,6 +266,7 @@ const resolveColorLegend = (
       return { offset: t, color: resolution.of(lo + (hi - lo) * t) ?? '' };
     });
     const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
+
     return { ...base, form: 'ramp', title, entries: [], ramp: { stops, ticks } };
   }
 
@@ -278,8 +294,10 @@ const resolveColorLegend = (
           : lower !== undefined && upper === undefined
             ? `≥ ${formatNumber(lower)}`
             : `${formatNumber(lower as number)}–${formatNumber(upper as number)}`;
+
       return { label, color };
     });
+
     return { ...base, form: 'swatch', title, entries };
   }
 
@@ -288,6 +306,7 @@ const resolveColorLegend = (
     label: showLabels ? String(category) : '',
     color: resolution.range[index],
   }));
+
   return { ...base, form: 'swatch', title, entries };
 };
 
@@ -299,7 +318,7 @@ const LEGEND_CONTENT_GAP = 24;
 
 /**
  * 据 legend guide 估算各边 legend 预留带宽（同侧多个 legend 累加）
- * @description 喂 computePlotArea 在对应边收窄 plotArea；估算式占位、不测量。
+ * @description 喂 computePlotArea 在对应边收窄 plotArea；估算式占位、不测量
  */
 export const legendReserveOf = (legendGuides: Array<IRPlotLegendGuide>): LegendReserve => {
   const reserve: { right: number; left: number; top: number; bottom: number } = {
@@ -308,15 +327,17 @@ export const legendReserveOf = (legendGuides: Array<IRPlotLegendGuide>): LegendR
     top: 0,
     bottom: 0,
   };
+
   for (const guide of legendGuides) {
     reserve[guide.position ?? 'right'] += LEGEND_BAND_EXTENT;
   }
+
   return reserve;
 };
 
 /**
  * 为每个 legend 计算预留带矩形（落在 plotArea 旁的预留 gutter 内；同侧按声明序堆叠）
- * @description gutter 由 computePlotArea 在对应边按 legendReserveOf 让出；此处把每个 legend 摆进其所在边的带。
+ * @description gutter 由 computePlotArea 在对应边按 legendReserveOf 让出；此处把每个 legend 摆进其所在边的带
  */
 export const reserveLegendBands = (
   legendGuides: Array<IRPlotLegendGuide>,
@@ -331,6 +352,7 @@ export const reserveLegendBands = (
     perSideOffset.set(position, offset + LEGEND_BAND_EXTENT);
     const plotRight = plotArea.x + plotArea.width;
     const plotBottom = plotArea.y + plotArea.height;
+
     switch (position) {
       case 'left':
         // 带右沿留 GAP 到 plot 左边（content 从带左起摆，本就远离 plot；右沿额外让 GAP）
@@ -370,7 +392,7 @@ const legendLayerId = (plotId: string | undefined, channel: string, index: numbe
  * 解析所有 legend guide → core legend scope（据通道 + 绑定 scale 类型选 swatch / ramp / 分箱 / 梯度符号）
  * @description color descriptor 从 IRPlot.scales 具名 color scale 取（多于一个且未消歧 → fail-loud）；
  *   其它通道从 resolver descriptor 与 channel definition 取值。形态由 definition.legend 决定，标签复用 axis formatter 链。
- *   每个 legend 下沉成归属当前 plot owner 的稳定 id 独立 scope，落在传入的预留带内。
+ *   每个 legend 下沉成归属当前 plot owner 的稳定 id 独立 scope，落在传入的预留带内
  */
 export const buildLegendLayers = (
   node: IRPlot,
@@ -409,9 +431,11 @@ export const buildLegendLayers = (
         if (primary.legendForm !== 'swatch' || primary.edges !== undefined) {
           throw new RetikzPlotError('Composite legend symbols require a categorical color scale');
         }
+
         const layers = guide.symbols.map(symbol => {
           if (symbol.paint !== undefined) return { symbol, colors: undefined };
           if (symbol.scale === undefined) throw new RetikzPlotError('Legend symbol requires paint or scale');
+
           const matches = channelDescriptors.filter(
             candidate => candidate.scaleName === symbol.scale && candidate.colorScale !== undefined,
           );
@@ -419,10 +443,12 @@ export const buildLegendLayers = (
             throw new RetikzPlotError(
               `Composite legend references unknown scale or unbound color scale "${symbol.scale}"`,
             );
+
           const colors = matches[0].colorScale;
           if (matches.some(candidate => !descriptorValuesEqual(candidate.domain, primary.domain))) {
             throw new RetikzPlotError('Composite legend symbols must share the same ordered categorical domain');
           }
+
           if (
             colors === undefined ||
             colors.legendForm !== 'swatch' ||
@@ -431,6 +457,7 @@ export const buildLegendLayers = (
           ) {
             throw new RetikzPlotError('Composite legend symbols must share the same ordered categorical domain');
           }
+
           return { symbol, colors };
         });
         options.entries = options.entries.map((entry, index) => ({
@@ -442,8 +469,10 @@ export const buildLegendLayers = (
           }),
         }));
       }
+
       return lowerLegend(options);
     }
+
     if (guide.symbols !== undefined)
       throw new RetikzPlotError('Composite legend symbols require a categorical color scale');
     if (guide.channel === 'color') {
@@ -451,12 +480,14 @@ export const buildLegendLayers = (
         'lowerPlots: legend channel "color" has no bound color scale; bind a color encoding with a scale or give the legend an explicit scale',
       );
     }
+
     // 非 color 通道：descriptor 提供 domain / range，definition.legend 决定可视形态
     if (!descriptor) {
       throw new RetikzPlotError(
         `lowerPlots: legend channel "${guide.channel}" has no bound scale (no mark encodes ${guide.channel} by field); cannot derive a legend`,
       );
     }
+
     const channelDefinition = resolveChannelDefinition(guide.channel, { channelRegistry });
     const legendForm =
       channelDefinition !== undefined && 'legend' in channelDefinition ? channelDefinition.legend : undefined;
@@ -465,6 +496,7 @@ export const buildLegendLayers = (
     if (legendForm === undefined) {
       throw new RetikzPlotError(`lowerPlots: channel "${guide.channel}" does not declare a legend form`);
     }
+
     // 标题只在用户显式给时渲染（见 resolveColorLegend 同注）
     const title = guide.title;
     if (legendForm === 'symbol') {
@@ -473,23 +505,28 @@ export const buildLegendLayers = (
           `lowerPlots: channel "${guide.channel}" legend form "symbol" requires outputKind "symbol"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
         );
       }
+
       const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({
         label: showLabels ? String(category) : '',
         shape: descriptor.range[index] as IRShapeValue,
         symbolSize: style.symbolSize,
         color: descriptor.defaultColor ?? categoricalColorAt(resolvedTheme.palette.series, 0),
       }));
+
       return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
+
     if (legendForm === 'size') {
       if (channelOutput?.outputKind !== 'number') {
         throw new RetikzPlotError(
           `lowerPlots: channel "${guide.channel}" legend form "size" requires outputKind "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
         );
       }
+
       const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
       const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3).filter(tick => tick.value > 0);
       const reps = ticks.length > 0 ? ticks : [{ value: hi, offset: 1, label: String(hi) }];
+
       // 半径据 descriptor range（与 mark 实绘同源）线性插值（sqrt domain→radius）
       const [rMin, rMax] = [Number(descriptor.range[0]), Number(descriptor.range[descriptor.range.length - 1])];
       const radiusScale = resolveSqrtForLegend([lo, hi], [rMin, rMax]);
@@ -506,14 +543,17 @@ export const buildLegendLayers = (
             ? Math.min(radiusScale(tick.value) * fitScale, symbolRadiusLimit)
             : radiusScale(tick.value)) * style.symbolScale,
       }));
+
       return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
+
     if (legendForm === 'ramp') {
       if (channelOutput?.outputKind !== 'color' && channelOutput?.outputKind !== 'number') {
         throw new RetikzPlotError(
           `lowerPlots: channel "${guide.channel}" legend form "ramp" requires outputKind "color" or "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
         );
       }
+
       const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
       const stops =
         channelOutput.outputKind === 'color'
@@ -534,6 +574,7 @@ export const buildLegendLayers = (
             ]
           : stops;
       const ticks = showLabels ? legendRampTicks(descriptor, guide, [lo, hi]) : [];
+
       return lowerLegend({
         ...base,
         form: 'ramp',
@@ -542,6 +583,7 @@ export const buildLegendLayers = (
         ramp: { stops: normalizedStops, ticks },
       });
     }
+
     if (channelOutput?.outputKind === 'color') {
       const entries: Array<LegendEntry> = descriptor.domain.map((category, index) => ({
         label: showLabels ? String(category) : '',
@@ -549,11 +591,13 @@ export const buildLegendLayers = (
       }));
       return lowerLegend({ ...base, form: 'swatch', title, entries });
     }
+
     if (channelOutput?.outputKind !== 'number') {
       throw new RetikzPlotError(
         `lowerPlots: channel "${guide.channel}" legend form "swatch" requires outputKind "color" or "number"; received "${channelOutput?.outputKind ?? 'unknown'}"`,
       );
     }
+
     // number swatch 用透明度表达
     const [lo, hi] = [Number(descriptor.domain[0]), Number(descriptor.domain[descriptor.domain.length - 1])];
     const ticks = niceNumericTicks([lo, hi], guide.ticks?.count ?? 3);
@@ -563,6 +607,7 @@ export const buildLegendLayers = (
       const t = span === 0 ? 1 : (tick.value - lo) / span;
       return { label: showLabels ? tick.label : '', opacity: oMin + (oMax - oMin) * Math.max(0, Math.min(1, t)) };
     });
+
     return lowerLegend({ ...base, form: 'swatch', title, entries });
   });
 };

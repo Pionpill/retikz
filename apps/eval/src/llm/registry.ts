@@ -41,7 +41,9 @@ export const createClients = (): Array<LlmClient> =>
   PROVIDERS.flatMap(p => {
     const modelId = modelIdFor(p);
     if (!process.env[p.envKey] || modelId === null) return [];
+
     const provider = p.create({ baseURL: envOf(p, 'BASE_URL') });
+
     return [
       {
         id: `${p.id}:${modelId}`,

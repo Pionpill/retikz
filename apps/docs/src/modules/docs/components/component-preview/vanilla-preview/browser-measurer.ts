@@ -2,6 +2,7 @@ import type { TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer } from '@retikz/core';
 
 let canvas: HTMLCanvasElement | null = null;
+
 let context: CanvasRenderingContext2D | null = null;
 
 /** 旧浏览器可能缺少实际字形边界度量 */
@@ -15,6 +16,7 @@ const getContext = (): CanvasRenderingContext2D | null => {
     canvas = document.createElement('canvas');
     context = canvas.getContext('2d');
   }
+
   return context;
 };
 
@@ -37,6 +39,7 @@ export const browserMeasurer: TextMeasurer = (text, font) => {
   const metrics: BrowserTextMetrics = currentContext.measureText(text);
   const ascent = Math.max(0, metrics.actualBoundingBoxAscent ?? font.size * 0.8);
   const descent = Math.max(0, metrics.actualBoundingBoxDescent ?? font.size * 0.2);
+
   return {
     width: metrics.width,
     height: ascent + descent || font.size * 1.2,

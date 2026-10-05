@@ -88,6 +88,7 @@ describe('App case workspace', () => {
     await i18n.init({ lng: 'zh', resources: { zh: { translation: resources } } });
     const testCase = getBenchTestCase('kernel', 'node-selection');
     if (testCase === undefined) throw new Error('Kernel default case is unavailable');
+
     const renderStartState = (running: boolean) =>
       renderToStaticMarkup(
         createElement(
@@ -103,12 +104,14 @@ describe('App case workspace', () => {
       );
 
     const idleMarkup = renderStartState(false);
+
     expect(idleMarkup).toContain('aria-label="运行预览"');
     expect(idleMarkup).toContain('5,000 个稳定节点中只修改一个节点的选中样式');
     expect(idleMarkup).toContain('场景标识');
     expect(idleMarkup).toContain('node-selection');
 
     const runningMarkup = renderStartState(true);
+
     expect(runningMarkup).toContain('aria-label="运行中"');
     expect(runningMarkup).toContain('disabled=""');
   });
@@ -138,6 +141,7 @@ describe('App case workspace', () => {
       );
 
     const previewMarkup = renderView(BenchCaseView.Preview);
+
     expect(previewMarkup).toContain('href="/kernel/cases/node-selection/preview"');
     expect(previewMarkup).toContain('href="/kernel/cases/node-selection/benchmark"');
     expect(previewMarkup).toContain('href="/kernel/cases/node-selection/reports"');
@@ -153,6 +157,7 @@ describe('App case workspace', () => {
     expect(previewMarkup).not.toContain('预览会在此保留真实 renderer host');
 
     const benchmarkMarkup = renderView(BenchCaseView.Benchmark);
+
     expect(benchmarkMarkup.match(/aria-label="开始基准"/g)).toHaveLength(2);
     expect(benchmarkMarkup).toContain('5,000 个稳定节点中只修改一个节点的选中样式');
     expect(benchmarkMarkup).toContain('node-selection');
@@ -160,6 +165,7 @@ describe('App case workspace', () => {
     expect(benchmarkMarkup).not.toContain('开始基准后将比较全部更新策略');
 
     const reportsMarkup = renderView(BenchCaseView.Reports);
+
     expect(reportsMarkup).toContain('本地报告');
     expect(reportsMarkup).toContain('选择一份报告查看详情');
 
@@ -182,6 +188,7 @@ describe('App case workspace', () => {
         }),
       ),
     );
+
     expect(historyMarkup).toContain('persisted-run');
     expect(historyMarkup).toContain('选择一份报告查看详情');
   });
@@ -217,6 +224,7 @@ describe('App case workspace', () => {
       );
 
     const previewMarkup = renderHeader(BenchCaseView.Preview);
+
     expect(previewMarkup).toMatch(/role="tablist"[^>]*aria-label="用例页面"/);
     expect(previewMarkup).toMatch(/role="tablist"[^>]*aria-label="渲染后端"/);
     expect(previewMarkup.match(/role="tab"/g)).toHaveLength(5);
@@ -239,12 +247,14 @@ describe('App case workspace', () => {
     expect(previewMarkup).not.toContain('5,000 个稳定实体中修改一个节点');
 
     const benchmarkMarkup = renderHeader(BenchCaseView.Benchmark);
+
     expect(benchmarkMarkup).toContain('全部策略');
     expect(benchmarkMarkup).not.toContain('aria-label="更新策略"');
     expect(benchmarkMarkup).toContain('aria-label="策略说明"');
     expect(benchmarkMarkup).toContain('aria-label="开始基准"');
 
     const reportsMarkup = renderHeader(BenchCaseView.Reports);
+
     expect(reportsMarkup).not.toMatch(/>SVG<\/span>/);
     expect(reportsMarkup).not.toMatch(/>Canvas<\/span>/);
     expect(reportsMarkup).not.toContain('aria-label="更新策略"');
@@ -255,6 +265,7 @@ describe('App case workspace', () => {
     expect(reportsMarkup.match(/role="tab"/g)).toHaveLength(3);
 
     const breadcrumbMarkup = previewMarkup.match(/<nav aria-label="breadcrumb"[\s\S]*?<\/nav>/)?.[0];
+
     expect(breadcrumbMarkup).toMatch(/增量测试[\s\S]*data-slot="breadcrumb-separator"[\s\S]*节点选中状态/);
   });
 
@@ -274,6 +285,7 @@ describe('App case workspace', () => {
       );
 
     const presetMarkup = renderControls(createInitialLabState());
+
     expect(presetMarkup).toContain('aria-label="预览尺寸"');
     expect(presetMarkup).toContain('640 × 400');
     expect(presetMarkup).not.toContain('aria-label="宽度"');
@@ -284,6 +296,7 @@ describe('App case workspace', () => {
       presetId: 'custom',
     });
     const customMarkup = renderControls(customState);
+
     expect(customMarkup).toContain('aria-label="宽度"');
     expect(customMarkup).toContain('value="640"');
     expect(customMarkup).toContain('aria-label="高度"');

@@ -1,5 +1,5 @@
 import type {
-  AnchorValue,
+  Anchor,
   IRAnchorPosition,
   IRAtPosition,
   IRBetweenPosition,
@@ -8,12 +8,13 @@ import type {
   IROffsetPosition,
   IRPosition,
   PolarPosition,
-  SideValue,
+  Side,
 } from '@retikz/core';
 
 /** 作者侧相对定位输入 */
 export type InputAtPosition = Omit<IRAtPosition, 'direction'> & {
-  direction: AnchorValue;
+  /** 相对于目标的放置方向，接受 Anchor 枚举值 */
+  direction: Anchor;
 };
 
 /** 作者侧节点位置输入 */
@@ -34,7 +35,7 @@ export type InputNodeLabelBoundaryPosition = Omit<
   'boundary'
 > & {
   /** 标签附着的节点边界方向 */
-  boundary: SideValue;
+  boundary: Side;
 };
 
 /** 作者侧节点标签位置 */

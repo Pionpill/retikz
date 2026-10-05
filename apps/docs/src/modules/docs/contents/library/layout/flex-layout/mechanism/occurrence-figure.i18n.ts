@@ -1,4 +1,5 @@
 import type { Lang } from '@/i18n';
+
 /** 嵌套布局几何与身份说明 */
 export const figureI18n: Record<Lang, { outer: string; left: string; right: string; child: string; note: string }> = {
   zh: {

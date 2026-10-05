@@ -19,6 +19,7 @@ const positionOf = (value: unknown): IRNodeLabel['position'] => {
   if (value === 'bottom') return 'bottom';
   if (value === 'left') return 'left';
   if (value === 'right') return 'right';
+
   return undefined;
 };
 
@@ -34,9 +35,12 @@ const createPreview = (lang: Lang) =>
   });
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
+
 /** 分组示例语言 */
 export type GroupLabelProps = { lang?: Lang };
+
 /** 分组交互示例 */
 const Demo: FC<GroupLabelProps> = props => {
   const { lang = 'zh' } = props;

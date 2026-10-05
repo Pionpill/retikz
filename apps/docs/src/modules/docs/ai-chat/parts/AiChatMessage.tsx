@@ -148,6 +148,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({ message, index, isStream
         </div>
       );
     }
+
     return (
       <div className="flex justify-end">
         <HumanMessageMenu index={index} message={message}>
@@ -158,6 +159,7 @@ export const AiChatMessage: FC<AiChatMessageProps> = ({ message, index, isStream
       </div>
     );
   }
+
   return (
     <AssistantMessageMenu index={index} message={message}>
       <div className="text-sm leading-relaxed">
@@ -178,6 +180,7 @@ const renderInline = (src: string): ReactNode => {
   let lastIndex = 0;
   let m: RegExpExecArray | null;
   let key = 0;
+
   while ((m = re.exec(src)) !== null) {
     if (m.index > lastIndex) nodes.push(src.slice(lastIndex, m.index));
     const token = m[0];
@@ -234,9 +237,12 @@ const renderInline = (src: string): ReactNode => {
         nodes.push(token);
       }
     }
+
     lastIndex = m.index + token.length;
   }
+
   if (lastIndex < src.length) nodes.push(src.slice(lastIndex));
+
   return nodes.map((n, idx) => <Fragment key={idx}>{n}</Fragment>);
 };
 
@@ -258,6 +264,7 @@ const renderListItem = (item: ListItem, idx: number): ReactNode => {
   ) : (
     renderInline(item.text)
   );
+
   return (
     <li key={idx} className={isTask ? '-ml-5 list-none' : undefined}>
       {body}
@@ -281,8 +288,10 @@ type RenderMarkdownOptions = {
 
 const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): ReactNode => {
   if (!src) return null;
+
   const { liveRetikz = true } = options;
   const blocks = parseMessageBlocks(src);
+
   return blocks.map((b, i) => {
     if (b.type === 'code') {
       return (
@@ -291,6 +300,7 @@ const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): React
         </div>
       );
     }
+
     if (b.type === 'retikz') {
       if (!liveRetikz) {
         return (
@@ -299,21 +309,26 @@ const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): React
           </div>
         );
       }
+
       return <RetikzPreview key={i} format={b.format} source={b.source} />;
     }
+
     if (b.type === 'retikz-pending') {
       return <RetikzPreviewPending key={i} format={b.format} />;
     }
+
     if (b.type === 'h') {
       const baseCls = 'mt-3 mb-1 font-medium';
       const sizeCls = b.level === 1 ? 'text-base' : b.level === 2 ? 'text-sm' : 'text-sm';
       const Cmp = b.level === 1 ? 'h3' : b.level === 2 ? 'h4' : 'h5';
+
       return (
         <Cmp key={i} className={cn(baseCls, sizeCls)}>
           {renderInline(b.text)}
         </Cmp>
       );
     }
+
     if (b.type === 'list') {
       return (
         <ul key={i} className="my-2 ml-5 list-disc space-y-1">
@@ -321,6 +336,7 @@ const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): React
         </ul>
       );
     }
+
     if (b.type === 'blockquote') {
       return (
         <blockquote key={i} className="my-2 border-l-2 border-border pl-3 whitespace-pre-wrap text-muted-foreground">
@@ -328,9 +344,11 @@ const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): React
         </blockquote>
       );
     }
+
     if (b.type === 'hr') {
       return <hr key={i} className="my-3 border-border" />;
     }
+
     if (b.type === 'table') {
       const alignCls = (a: TableAlign) => (a === 'center' ? 'text-center' : a === 'right' ? 'text-right' : 'text-left');
       return (
@@ -360,6 +378,7 @@ const renderMarkdown = (src: string, options: RenderMarkdownOptions = {}): React
         </div>
       );
     }
+
     return (
       <p key={i} className="my-2 whitespace-pre-wrap leading-relaxed">
         {renderInline(b.text)}

@@ -40,14 +40,17 @@ export const mergePreviewControlSlots = (
 ): Array<PreviewControlSlot> => {
   const result: Array<PreviewControlSlot> = [];
   const ids = new Set<string>();
+
   for (const group of groups) {
     for (const slot of group ?? []) {
       if (ids.has(slot.id)) {
         throw new Error(`Duplicate preview control slot id: "${slot.id}".`);
       }
+
       ids.add(slot.id);
       result.push(slot);
     }
   }
+
   return result;
 };

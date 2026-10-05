@@ -1,4 +1,4 @@
-import type { ThemeModeValue } from '@retikz/core';
+import type { ThemeMode } from '@retikz/core';
 import type { LucideIcon } from 'lucide-react';
 import { BrushCleaning, CircleDot, GraduationCap, Sparkles } from 'lucide-react';
 
@@ -16,7 +16,7 @@ export type PreviewThemeStyleValue = (typeof PreviewThemeStyle)[keyof typeof Pre
 /** ComponentPreview 解析后的最小 Theme 选择器 */
 export type PreviewTheme = {
   style?: Exclude<PreviewThemeStyleValue, typeof PreviewThemeStyle.Default>;
-  mode: ThemeModeValue;
+  mode: ThemeMode;
 };
 
 /** ComponentPreview 支持的 ThemeStyle 选项 */
@@ -51,7 +51,7 @@ export const getPreviewThemeStyleIcon = (themeStyle: PreviewThemeStyleValue): Lu
   previewThemeStyleIcons[themeStyle];
 
 /** 根据 docs 偏好生成传给 Core 的 sparse Theme selector */
-export const resolvePreviewTheme = (themeStyle: PreviewThemeStyleValue, themeMode: ThemeModeValue): PreviewTheme => ({
+export const resolvePreviewTheme = (themeStyle: PreviewThemeStyleValue, themeMode: ThemeMode): PreviewTheme => ({
   ...(themeStyle === PreviewThemeStyle.Default ? {} : { style: themeStyle }),
   mode: themeMode,
 });

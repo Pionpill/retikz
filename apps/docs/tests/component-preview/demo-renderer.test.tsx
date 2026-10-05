@@ -24,19 +24,26 @@ import type {
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const Demo: FC = () => <Layout width={40} height={20} />;
+
 const WrappedLayout: FC = () => <Layout width={40} height={20} />;
+
 const WrappedDemo: FC = () => <WrappedLayout />;
+
 const ExplicitSvgDemo: FC = () => <Layout width={40} height={20} renderer="svg" />;
+
 const SingleHookDemo: FC = () => {
   const [first] = useState('single');
   return <span>{first}</span>;
 };
+
 const DoubleHookDemo: FC = () => {
   const [first] = useState('double');
   const [second] = useState('hooks');
   return <span>{`${first} ${second}`}</span>;
 };
+
 const noop = () => {};
+
 const previewControlRuntime = {
   remount: noop,
   rendererMode: 'svg' as const,
@@ -62,17 +69,21 @@ afterEach(() => {
 describe('DemoRenderer', () => {
   it('svg 模式保持 svg 输出', () => {
     const markup = renderToStaticMarkup(<DemoRenderer Component={Demo} rendererMode="svg" />);
+
     expect(markup).toContain('<svg');
     expect(markup).not.toContain('<canvas');
   });
 
   it('canvas 模式切到 canvas 输出', () => {
     const markup = renderToStaticMarkup(<DemoRenderer Component={Demo} rendererMode="canvas" />);
+
     expect(markup).toContain('<canvas');
     expect(markup).not.toContain('<svg');
   });
+
   it('passes canvas mode through component wrappers', () => {
     const markup = renderToStaticMarkup(<DemoRenderer Component={WrappedDemo} rendererMode="canvas" />);
+
     expect(markup).toContain('<canvas');
     expect(markup).not.toContain('<svg');
   });
@@ -84,6 +95,7 @@ describe('DemoRenderer', () => {
     let renderError: unknown;
 
     act(() => root.render(<DemoRenderer Component={SingleHookDemo} rendererMode="svg" />));
+
     try {
       act(() => root.render(<DemoRenderer Component={DoubleHookDemo} rendererMode="svg" />));
     } catch (error) {
@@ -91,21 +103,25 @@ describe('DemoRenderer', () => {
     }
 
     expect(renderError).toBeUndefined();
+
     act(() => root.unmount());
   });
 
   it('demo 显式 renderer 优先于 provider', () => {
     const markup = renderToStaticMarkup(<DemoRenderer Component={ExplicitSvgDemo} rendererMode="canvas" />);
+
     expect(markup).toContain('<svg');
     expect(markup).not.toContain('<canvas');
   });
 
   it('父级无关状态更新时不重复渲染 demo', () => {
     const renderDemo = vi.fn();
+
     const CountingDemo: FC = () => {
       renderDemo();
       return <span>counted demo</span>;
     };
+
     const DemoRendererStabilityHarness: FC = () => {
       const [, setParentRevision] = useState(0);
 
@@ -118,14 +134,17 @@ describe('DemoRenderer', () => {
         </>
       );
     };
+
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
 
     act(() => root.render(<DemoRendererStabilityHarness />));
+
     expect(renderDemo).toHaveBeenCalledTimes(1);
 
     act(() => container.querySelector('button')?.click());
+
     expect(renderDemo).toHaveBeenCalledTimes(1);
 
     act(() => root.unmount());
@@ -135,9 +154,11 @@ describe('DemoRenderer', () => {
 describe('RendererModeButton', () => {
   it('按当前模式切换图标与无障碍标签', () => {
     const svgMarkup = renderToStaticMarkup(<RendererModeButton rendererMode="svg" onToggle={noop} />);
+
     expect(svgMarkup).toContain('aria-label="SVG renderer"');
 
     const canvasMarkup = renderToStaticMarkup(<RendererModeButton rendererMode="canvas" onToggle={noop} />);
+
     expect(canvasMarkup).toContain('aria-label="Canvas renderer"');
   });
 });
@@ -150,9 +171,11 @@ describe('useComponentPreviewStore', () => {
     expect(useComponentPreviewStore.getState().rendererMode).toBe('svg');
 
     useComponentPreviewStore.getState().toggleRendererMode();
+
     expect(useComponentPreviewStore.getState().rendererMode).toBe('canvas');
 
     useComponentPreviewStore.getState().toggleRendererMode();
+
     expect(useComponentPreviewStore.getState().rendererMode).toBe('svg');
 
     useComponentPreviewStore.getState().setRendererMode(originalMode);
@@ -187,11 +210,13 @@ describe('PreviewControlSlotLayer', () => {
         useComponentPreviewStore.getState().setControlsLocked(false);
         root.render(<PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />);
       });
+
       expect(container.innerHTML).toContain('lucide-lock-open');
       expect(container.textContent).toContain('Show code');
       expect(container.textContent).toContain('Other control');
 
       act(() => useComponentPreviewStore.getState().setControlsLocked(true));
+
       expect(container.innerHTML).toContain('lucide-lock');
       expect(container.textContent).not.toContain('Show code');
       expect(container.textContent).not.toContain('Other control');
@@ -226,6 +251,7 @@ describe('PreviewControlSlotLayer', () => {
     const pinnedMarkup = renderToStaticMarkup(
       <PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />,
     );
+
     expect(pinnedMarkup.match(/pointer-events-auto opacity-100/g)).toHaveLength(2);
   });
 

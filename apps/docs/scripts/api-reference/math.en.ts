@@ -287,7 +287,9 @@ const translations: Readonly<Record<string, string>> = {
 /** 将中文 JSDoc 投影为英文文案，缺少审阅后的映射时终止生成 */
 export const translateMathApiReference = (source: string): string => {
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
+
   const translation = translations[source];
   if (translation) return translation;
+
   throw new Error(`缺少 @retikz/math API Reference 的审阅后英文翻译：${source}`);
 };

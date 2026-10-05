@@ -8,17 +8,28 @@ import { collectPlotDeclarations } from './adapter';
 import { RetikzPlotReactError } from './error';
 import type { PlotProps } from './Plot';
 
-/** `Plot` props 的完整 authoring 结果 */
+/**
+ * `Plot` props 的完整 authoring 结果
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export type ResolvedPlotAuthoring<TSource = never> = Readonly<{
   /** 完整 Plot Source IR */
   spec: IRPlot;
-  /** runtime-only dataset table */
-  /** Plot lowering runtime options */
+
+  /** 将绘图描述降低为 Core 图元时的运行时选项 */
   lowerOptions: LowerPlotsOptions;
 }> &
   (
-    | Readonly<{ datasets: ExternalDatasets; dataBindings?: never }>
-    | Readonly<{ dataBindings: DataInputBindings<TSource>; datasets?: never }>
+    | Readonly<{
+        /** 传给 Plot 下沉阶段的外部行数据集 */
+        datasets: ExternalDatasets;
+        dataBindings?: never;
+      }>
+    | Readonly<{
+        /** 传给数据执行阶段的运行时源绑定 */
+        dataBindings: DataInputBindings<TSource>;
+        datasets?: never;
+      }>
   );
 
 /** `resolvePlotAuthoring` 的可选嵌入与默认数据引用配置 */
@@ -33,14 +44,17 @@ export type ResolvePlotAuthoringOptions = Readonly<{
 const DSL_DATA_REF = '__plot';
 
 const embeddedDataRefs = new WeakMap<Array<ExternalRow>, string>();
+
 let embeddedDataRefSeed = 0;
 
 const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
   const existing = embeddedDataRefs.get(rows);
   if (existing !== undefined) return existing;
+
   const next = `${DSL_DATA_REF}_${embeddedDataRefSeed}`;
   embeddedDataRefSeed += 1;
   embeddedDataRefs.set(rows, next);
+
   return next;
 };
 
@@ -78,11 +92,13 @@ const lowerPlotOptionsOf = <TSource>(
     formatDefinitions,
     plotThemeStyles,
   } = props;
+
   // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
   const mergedResolveLabel =
     collectedResolveLabel !== undefined || resolveLabel !== undefined
       ? { ...collectedResolveLabel, ...resolveLabel }
       : undefined;
+
   return {
     width,
     height,
@@ -117,6 +133,7 @@ const lowerPlotOptionsOf = <TSource>(
 
 const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+
   for (const [key, child] of Object.entries(value)) {
     const path = prefix ? `${prefix}.${key}` : key;
     into.add(path);
@@ -137,6 +154,7 @@ const applyPlotPropsToSpec = <TSource>(
 ): IRPlot => {
   if (spec.dataExecution !== undefined && props.dataExecution !== undefined)
     throw new RetikzPlotReactError('Plot dataExecution is declared in both spec and root props');
+
   const width = spec.width === undefined && props.width !== undefined ? props.width : undefined;
   const height = spec.height === undefined && props.height !== undefined ? props.height : undefined;
   if (
@@ -148,6 +166,7 @@ const applyPlotPropsToSpec = <TSource>(
   ) {
     return spec;
   }
+
   return {
     ...spec,
     ...(width === undefined ? {} : { width }),
@@ -158,7 +177,10 @@ const applyPlotPropsToSpec = <TSource>(
   };
 };
 
-/** 解析 `<Plot>` props 为下沉运行时输入。 */
+/**
+ * 解析 `<Plot>` props 为下沉运行时输入
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const resolvePlotAuthoring = <TSource = never>(
   props: PlotProps<TSource>,
   options: ResolvePlotAuthoringOptions = {},
@@ -175,6 +197,7 @@ export const resolvePlotAuthoring = <TSource = never>(
   let spec: IRPlot;
   let datasets: ExternalDatasets;
   let effectiveFieldMaps = props.fieldMaps;
+
   // DSL 入口 buildPlotIR 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
@@ -202,6 +225,7 @@ export const resolvePlotAuthoring = <TSource = never>(
     datasets = { [dataRef]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
   }
+
   return {
     spec,
     ...(props.dataBindings === undefined ? { datasets } : { dataBindings: props.dataBindings }),
@@ -209,15 +233,20 @@ export const resolvePlotAuthoring = <TSource = never>(
   };
 };
 
-/** 解析一组 `<Plot>` props 对应的 runtime-only 图元链路。 */
+/**
+ * 解析一组 `<Plot>` props 对应的 runtime-only 图元链路
+ * @template TSource 原生数据源句柄类型，关联数据绑定与执行器支持的源；默认 never 表示不接入原生源
+ */
 export const resolvePlotLineage = <TSource = never>(
   props: PlotProps<TSource>,
   options: { embedded?: boolean } = {},
 ): PlotLineageRun | undefined => {
   if (props.lineage === false) return undefined;
+
   const { spec, datasets, lowerOptions } = resolvePlotAuthoring(props, options);
   if (datasets === undefined || props.dataTransformExecutor !== undefined)
     throw new RetikzPlotReactError('Plot async lineage is delivered from the committed processing result');
+
   return lowerPlotWithLineage(spec, datasets, {
     ...lowerOptions,
     lineage: props.lineage ?? {},

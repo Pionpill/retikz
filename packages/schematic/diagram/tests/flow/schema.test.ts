@@ -5,16 +5,22 @@ import { FlowDiagramSchema, FlowRoutingSchema } from '../../src/flow';
 describe('Flow bend authoring', () => {
   it('preserves omitted direction and inactive authored fields through JSON', () => {
     expect(FlowRoutingSchema.parse({ kind: 'bend' })).toEqual({ kind: 'bend' });
+
     const authored = { kind: 'bend', bendDirection: 'right', bendAngle: 0, outAngle: 45, looseness: 2 };
+
     expect(FlowRoutingSchema.parse(JSON.parse(JSON.stringify(authored)))).toEqual(authored);
   });
+
   it.each([-180, 180, Infinity])('rejects invalid bend angle %s at its field', bendAngle => {
     const parsed = FlowRoutingSchema.safeParse({ kind: 'bend', bendAngle });
+
     expect(parsed.success).toBe(false);
+
     if (!parsed.success) {
       const issues = parsed.error.issues.flatMap(issue =>
         issue.code === 'invalid_union' ? issue.errors.flat() : [issue],
       );
+
       expect(issues.some(issue => issue.path.join('.') === 'bendAngle')).toBe(true);
     }
   });

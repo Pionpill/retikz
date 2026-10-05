@@ -51,6 +51,7 @@ describe('statistics provider schema boundaries', () => {
     ] as const;
 
     for (const [kind, schema] of reducerSchemas) expect(reducerRegistry.get(kind)?.schema).toBe(schema);
+
     for (const [kind, schema] of selectorSchemas) expect(selectorRegistry.get(kind)?.schema).toBe(schema);
   });
 

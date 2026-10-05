@@ -79,6 +79,7 @@ const inspectNodeGeometry = (
         labels.push(labelNode([topLeft[0] + 6, topLeft[1] - 12], 'content', color));
       }
     }
+
     if (context.options.baselines && subject.content.baselines.length > 0) {
       const baselineSteps = subject.content.baselines.flatMap(baseline => [
         { type: 'step' as const, kind: 'move' as const, to: baseline.from },
@@ -114,6 +115,7 @@ const inspectNodeGeometry = (
   if (context.options.labels) output.push(...labels);
   const localOutput = isolateInspectionChildren(output);
   if (!context.options.bounds) return localOutput;
+
   const {
     bounds: [minX, minY, maxX, maxY],
   } = sceneBoundsOfRect(subject.rect, context.transform);
@@ -129,6 +131,7 @@ const inspectNodeGeometry = (
     ),
   ];
   if (context.options.labels) sceneOutput.push(labelNode([minX + 6, minY - 12], 'bounds', color));
+
   return [
     ...localOutput,
     ...isolateInspectionChildren(sceneOutput).map(child => ({

@@ -51,19 +51,19 @@ export const LayoutAxisProposalKind = {
   Exact: 'exact',
 } as const;
 
-export type LayoutAxisProposalKindValue = ValueOf<typeof LayoutAxisProposalKind>;
+export type LayoutAxisProposalKind = ValueOf<typeof LayoutAxisProposalKind>;
 
 export const LayoutIntrinsicMode = {
   Minimum: 'minimum',
   Natural: 'natural',
 } as const;
 
-export type LayoutIntrinsicModeValue = ValueOf<typeof LayoutIntrinsicMode>;
+export type LayoutIntrinsicMode = ValueOf<typeof LayoutIntrinsicMode>;
 
 export type LayoutAxisProposal =
   | Readonly<{
       kind: typeof LayoutAxisProposalKind.Intrinsic;
-      mode: LayoutIntrinsicModeValue;
+      mode: LayoutIntrinsicMode;
     }>
   | Readonly<{
       kind: typeof LayoutAxisProposalKind.Range;
@@ -159,23 +159,23 @@ export const LayoutAlignmentGuideName = {
   LastBaseline: 'last-baseline',
 } as const;
 
-export type LayoutAlignmentGuideNameValue = ValueOf<typeof LayoutAlignmentGuideName>;
+export type LayoutAlignmentGuideName = ValueOf<typeof LayoutAlignmentGuideName>;
 
 export const LayoutAlignmentGuideDimension = {
   X: 'x',
   Y: 'y',
 } as const;
 
-export type LayoutAlignmentGuideDimensionValue = ValueOf<typeof LayoutAlignmentGuideDimension>;
+export type LayoutAlignmentGuideDimension = ValueOf<typeof LayoutAlignmentGuideDimension>;
 
 export type LayoutAlignmentGuide = Readonly<{
   name: string;
-  dimension: LayoutAlignmentGuideDimensionValue;
+  dimension: LayoutAlignmentGuideDimension;
   position: number;
 }>;
 ```
 
-`name` 保持开放字符串，使第三方 Composite 可以声明自定义 guide；`LayoutAlignmentGuideNameValue` 仅表达 Core 提供的稳定 first / last baseline 名称。单个 result 内 `dimension + name` 必须唯一，`position` 必须有限，并处于 child-local allocation coordinate；guide 可以位于 slot 或 allocation bounds 外。
+`name` 保持开放字符串，使第三方 Composite 可以声明自定义 guide；`LayoutAlignmentGuideName` 仅表达 Core 提供的稳定 first / last baseline 名称。单个 result 内 `dimension + name` 必须唯一，`position` 必须有限，并处于 child-local allocation coordinate；guide 可以位于 slot 或 allocation bounds 外。
 
 Node baseline 只从同一次真实文本 layout 的 line metrics 产生。单行 first / last baseline 相同，多行分别取首行和末行 alphabetic baseline；无正文文本的 child 不伪造 baseline。Guide 不从 `visualBounds`、glyph ink、renderer 或 Node primitive 结构反推。
 
@@ -212,7 +212,7 @@ export const LayoutChildProbeKind = {
   Failed: 'failed',
 } as const;
 
-export type LayoutChildProbeKindValue = ValueOf<typeof LayoutChildProbeKind>;
+export type LayoutChildProbeKind = ValueOf<typeof LayoutChildProbeKind>;
 
 export type LayoutChildProbe =
   | Readonly<{

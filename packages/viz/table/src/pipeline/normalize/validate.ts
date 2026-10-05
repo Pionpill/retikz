@@ -11,6 +11,7 @@ type TableStructureValidationSource = Readonly<{
 
 const assertUniqueIds = (owner: string, values: ReadonlyArray<{ id?: string }>): void => {
   const ids = new Set<string>();
+
   for (const value of values) {
     if (value.id === undefined) continue;
     if (ids.has(value.id)) throw new RetikzTableError(`duplicate ${owner} id "${value.id}"`);
@@ -31,11 +32,13 @@ export const validateTableStructureOutput = (
     Array.from<{ cellIndex: number; cellId?: string } | undefined>({ length: output.columns.length }),
   );
   const sourceIndices = new Set(context.data?.sourceIndices ?? []);
+
   for (const [rowIndex, row] of output.rows.entries()) {
     const rowLabel = row.id === undefined ? `at index ${rowIndex}` : `"${row.id}"`;
     if (row.kind === TableRowKind.ColumnHeader && row.sourceIndex !== undefined) {
       throw new RetikzTableError(`columnHeader row ${rowLabel} cannot declare sourceIndex`);
     }
+
     if (row.kind === TableRowKind.Body && row.sourceIndex !== undefined && !sourceIndices.has(row.sourceIndex)) {
       throw new RetikzTableError(`body row ${rowLabel} references unknown sourceIndex ${row.sourceIndex}`);
     }
@@ -47,6 +50,7 @@ export const validateTableStructureOutput = (
     if (cell.column >= output.columns.length) {
       throw new RetikzTableError(`Cell ${cellLabel} column ${cell.column} is out of range`);
     }
+
     const row = output.rows[cell.row];
     const isHeader = row.kind === TableRowKind.ColumnHeader;
     const expectedLocation = isHeader ? TableCellLocation.ColumnHeader : TableCellLocation.Body;
@@ -63,16 +67,19 @@ export const validateTableStructureOutput = (
           `Cell ${cellLabel} manual source (${cell.source.row}, ${cell.source.column}) is out of range`,
         );
       }
+
       const sourceEntry = source.manualRows[cell.source.row][cell.source.column];
       if (sourceEntry === null) {
         throw new RetikzTableError(
           `Cell ${cellLabel} manual source (${cell.source.row}, ${cell.source.column}) does not reference a Cell entry`,
         );
       }
+
       if (cell.source.row !== cell.row || cell.source.column !== cell.column) {
         throw new RetikzTableError(`Cell ${cellLabel} manual source must match its canonical coordinates`);
       }
     }
+
     if (cell.source?.kind === TableCellSourceKind.Field) {
       if (context.data === undefined)
         throw new RetikzTableError(`Cell ${cellLabel} field source requires data context`);
@@ -81,10 +88,12 @@ export const validateTableStructureOutput = (
       if (cell.source.reference !== context.data.reference) {
         throw new RetikzTableError(`Cell ${cellLabel} field source reference does not match Table data reference`);
       }
+
       if (!sourceIndices.has(cell.source.sourceIndex)) {
         throw new RetikzTableError(`Cell ${cellLabel} field sourceIndex ${cell.source.sourceIndex} is unknown`);
       }
     }
+
     if (cell.source?.kind === TableCellSourceKind.Generated && cell.source.structureKind !== source.kind) {
       throw new RetikzTableError(`Cell ${cellLabel} generated source must match structure kind "${source.kind}"`);
     }
@@ -94,10 +103,12 @@ export const validateTableStructureOutput = (
     if (cell.row + rowSpan > output.rows.length || cell.column + columnSpan > output.columns.length) {
       throw new RetikzTableError(`Cell ${cellLabel} span range is out of bounds`);
     }
+
     for (let rowIndex = cell.row; rowIndex < cell.row + rowSpan; rowIndex += 1) {
       if (output.rows[rowIndex].kind !== row.kind) {
         throw new RetikzTableError(`Cell ${cellLabel} span crosses row kind at row ${rowIndex}`);
       }
+
       for (let columnIndex = cell.column; columnIndex < cell.column + columnSpan; columnIndex += 1) {
         const occupied = occupancy[rowIndex][columnIndex];
         if (occupied !== undefined) {
@@ -105,6 +116,7 @@ export const validateTableStructureOutput = (
             `Cell ${cellLabel} overlaps Cell ${occupied.cellId === undefined ? `at index ${occupied.cellIndex}` : `"${occupied.cellId}"`} at (${rowIndex}, ${columnIndex})`,
           );
         }
+
         occupancy[rowIndex][columnIndex] = {
           cellIndex,
           ...(cell.id === undefined ? {} : { cellId: cell.id }),
@@ -112,5 +124,6 @@ export const validateTableStructureOutput = (
       }
     }
   }
+
   assertUniqueIds('cell', output.cells);
 };

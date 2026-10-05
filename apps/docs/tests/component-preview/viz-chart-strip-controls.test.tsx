@@ -51,6 +51,7 @@ const renderPolarSample = (scale: 'point' | 'band', role: 'x' | 'y', values: Pre
     },
   } as const;
   const value = { field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } } as const;
+
   return renderToStaticMarkup(
     <StripChart rows={stripVegaBarleyData} coordinate={{ type: 'polar2D' }}>
       <StripEncodings {...(role === 'x' ? { x: category, y: value } : { x: value, y: category })} />
@@ -67,28 +68,37 @@ const renderPolarSample = (scale: 'point' | 'band', role: 'x' | 'y', values: Pre
 
 const textVisualCenterOf = (markup: string, text: string): [number, number] => {
   const textElement = markup.match(/<text\b[^>]*>[\s\S]*?<\/text>/g)?.find(element => element.includes(`>${text}<`));
+
   expect(textElement).toBeDefined();
+
   const x = textElement?.match(/\bx="([^"]+)"/)?.[1];
   const y = textElement?.match(/\by="([^"]+)"/)?.[1];
   const fontSize = textElement?.match(/\bfont-size="([^"]+)"/)?.[1];
   const anchor = textElement?.match(/\btext-anchor="([^"]+)"/)?.[1];
+
   expect(x).toBeDefined();
   expect(y).toBeDefined();
   expect(fontSize).toBeDefined();
   expect(anchor).toBeDefined();
+
   const width = text.length * Number(fontSize) * 0.6;
   const centerX = anchor === 'start' ? Number(x) + width / 2 : anchor === 'end' ? Number(x) - width / 2 : Number(x);
+
   return [centerX, Number(y)];
 };
 
 describe('Strip Chart controls', () => {
   it('扩展散布示例默认使用极坐标并能完整渲染', () => {
     const chart = stripDistributionSource.canonicalRender('zh');
+
     expect(isValidElement(chart)).toBe(true);
+
     if (isValidElement<{ coordinate?: { type: string } }>(chart)) {
       expect(chart.props.coordinate).toEqual({ type: 'polar2D' });
     }
+
     const markup = renderToStaticMarkup(chart);
+
     expect(markup).toContain('<svg');
     expect(markup).not.toMatch(/NaN|Infinity/);
   });
@@ -96,6 +106,7 @@ describe('Strip Chart controls', () => {
   it('条带图元固定替换，仅用形状与大小控件改变图形', () => {
     const zh = createStripMarksControlContract('zh');
     const en = createStripMarksControlContract('en');
+
     expect(getPreviewControlFields(zh.controls).map(control => control.id)).toEqual(['shape', 'size']);
     expect(getPreviewControlFields(en.controls).map(control => control.id)).toEqual(['shape', 'size']);
     expect(zh.canonicalValues).toEqual({ shape: 'diamond', size: 4 });
@@ -103,6 +114,7 @@ describe('Strip Chart controls', () => {
 
     const canonical = zh.canonicalValues as PreviewControlValues;
     const baseline = renderDemo(StripMarksDemo, canonical, canonical);
+
     expect(renderDemo(StripMarksDemo, canonical, { ...canonical, shape: 'circle' })).not.toBe(baseline);
     expect(renderDemo(StripMarksDemo, canonical, { ...canonical, size: 8 })).not.toBe(baseline);
   });
@@ -114,9 +126,12 @@ describe('Strip Chart controls', () => {
 
     for (const field of getPreviewControlFields(contract.controls)) {
       if (field.kind !== 'select') throw new Error(`Unexpected control kind: ${field.kind}`);
+
       const alternate = field.options.find(option => option.value !== field.defaultValue)?.value;
       if (alternate === undefined) throw new Error(`Missing alternate value: ${field.id}`);
+
       const changed = renderDemo(StripEncodingsDemo, canonical, { ...canonical, [field.id]: alternate });
+
       expect(changed, field.id).not.toBe(baseline);
     }
   });
@@ -164,6 +179,7 @@ describe('Strip Chart controls', () => {
 
   it('中英文属性 controls 保持相同结构并覆盖散布与点外观', () => {
     const expectedIds = Object.values(STRIP_BASIC_CONTROL_IDS).sort();
+
     for (const contract of [zhContract, enContract]) {
       expect(
         getPreviewControlFields(contract.controls)
@@ -213,7 +229,9 @@ describe('Strip Chart controls', () => {
   it('canonical source 使用精确 Strip Chart，并在笛卡尔与两种极坐标角色下稳定渲染', () => {
     for (const source of [zhSource, enSource]) {
       const chart = source.canonicalRender?.();
+
       expect(isValidElement(chart)).toBe(true);
+
       if (isValidElement(chart)) expect(chart.type).toBe(StripChart);
     }
 

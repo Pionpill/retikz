@@ -22,6 +22,7 @@ const mergeMinimumSize = (
   const height =
     roleHeight === undefined && sourceHeight === undefined ? undefined : Math.max(roleHeight ?? 0, sourceHeight ?? 0);
   if (width === undefined && height === undefined) return undefined;
+
   return {
     ...(width === undefined ? {} : { width }),
     ...(height === undefined ? {} : { height }),
@@ -59,7 +60,9 @@ export const lowerEntity = (entity: CanonicalEntity, appearance: EffectiveEntity
       },
     });
   }
+
   const minimumSize = mergeMinimumSize(entity.roleDefinition.minimumSize, appearance.layout?.minimumSize);
+
   return {
     type: 'node',
     ...definedNodeFields(source),

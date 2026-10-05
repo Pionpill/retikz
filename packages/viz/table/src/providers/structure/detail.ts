@@ -10,12 +10,13 @@ import {
 } from '../../schemas';
 import { TableCellSourceKind } from '../../shared';
 
-/** detail Table structure definition */
+/** 生成明细表格结构的能力定义 */
 export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
   schema: DetailTableStructureSchema,
   build: (spec, context) => {
     if (context.data === undefined)
       throw new RetikzTableError('detail structure requires a data reference and dataset');
+
     context.resolveFieldTypes(new Set(spec.columns.map(column => column.field)));
 
     const hasHeader = spec.header !== false;
@@ -45,6 +46,7 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
           if (value === undefined) {
             throw new RetikzTableError(`sourceIndex ${sourceIndex} is missing detail field "${column.field}"`);
           }
+
           return {
             row: bodyIndex + (hasHeader ? 1 : 0),
             column: columnIndex,
@@ -67,6 +69,7 @@ export const DETAIL_TABLE_STRUCTURE = defineTableStructure({
         }),
       ),
     ];
+
     return { rows, columns, cells };
   },
 });

@@ -8,7 +8,7 @@ export const RetikzChartReactErrorCode = {
 } as const;
 
 /** Chart React 包稳定错误码取值 */
-export type RetikzChartReactErrorCodeValue = ValueOf<typeof RetikzChartReactErrorCode>;
+export type RetikzChartReactErrorCode = ValueOf<typeof RetikzChartReactErrorCode>;
 
 /** Chart React 包运行时错误的可选构造参数 */
 type RetikzChartReactErrorOptions = Readonly<{
@@ -17,7 +17,7 @@ type RetikzChartReactErrorOptions = Readonly<{
 }>;
 
 /** Chart React 包未细分领域错误的统一结构化错误 */
-export class RetikzChartReactError extends RetikzError<RetikzChartReactErrorCodeValue, Readonly<{ message: string }>> {
+export class RetikzChartReactError extends RetikzError<RetikzChartReactErrorCode, Readonly<{ message: string }>> {
   /** 创建保留原始消息与 cause 的 Chart React 包错误 */
   constructor(message: string, options?: RetikzChartReactErrorOptions) {
     super({

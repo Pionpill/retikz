@@ -6,7 +6,9 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { IRPosition } from '../../../schemas';
 
 const DISTANCE_EPSILON = 1e-7;
+
 const PARAMETER_BISECTION_STEPS = 32;
+
 const CURVE_LENGTH_SAMPLES = 32;
 
 type StrokeParameterBoundaryOwner = 'previous' | 'next';
@@ -117,12 +119,15 @@ const curveSegmentOfOccurrence = ({ command, from, to }: StrokeCommandGeometry):
   if (command.kind === 'line' || command.kind === 'close') {
     return { kind: 'line', from, to };
   }
+
   if (command.kind === 'quad') {
     return { kind: 'quadraticBezier', from, control: command.control, to };
   }
+
   if (command.kind === 'cubic') {
     return { kind: 'cubicBezier', from, control1: command.control1, control2: command.control2, to };
   }
+
   if (command.kind === 'arc') {
     return {
       kind: 'arc',
@@ -133,6 +138,7 @@ const curveSegmentOfOccurrence = ({ command, from, to }: StrokeCommandGeometry):
       counterClockwise: command.counterClockwise,
     };
   }
+
   if (command.kind === 'ellipseArc') {
     return {
       kind: 'ellipseArc',
@@ -145,6 +151,7 @@ const curveSegmentOfOccurrence = ({ command, from, to }: StrokeCommandGeometry):
       counterClockwise: command.counterClockwise,
     };
   }
+
   throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Cannot map a non-drawable Stroke command to a curve.');
 };
 
@@ -165,9 +172,11 @@ const approximateOccurrenceLengthTo = (occurrence: StrokeCommandOccurrence, end:
   if (occurrence.command.kind === 'line' || occurrence.command.kind === 'close') {
     return (occurrence.logicalEnd - occurrence.logicalStart) * parameter;
   }
+
   if (occurrence.command.kind === 'arc') {
     return (occurrence.logicalEnd - occurrence.logicalStart) * parameter;
   }
+
   return curve.approximateLength(curve.slice(curveSegmentOfOccurrence(occurrence), 0, parameter), {
     sampleCount: Math.max(4, Math.ceil(CURVE_LENGTH_SAMPLES * parameter)),
   });
@@ -176,9 +185,11 @@ const approximateOccurrenceLengthTo = (occurrence: StrokeCommandOccurrence, end:
 const parameterAtOccurrenceDistance = (occurrence: StrokeCommandOccurrence, distance: number): number => {
   const length = occurrence.logicalEnd - occurrence.logicalStart;
   if (length <= DISTANCE_EPSILON) return 0;
+
   const clamped = Math.max(0, Math.min(length, distance));
   if (clamped <= DISTANCE_EPSILON) return 0;
   if (length - clamped <= DISTANCE_EPSILON) return 1;
+
   return curve.parameterAtDistance(curveSegmentOfOccurrence(occurrence), clamped, {
     sampleCount: CURVE_LENGTH_SAMPLES,
     totalLength: length,
@@ -207,6 +218,7 @@ export const createStrokePathGeometry = (
       subPaths.push({ index: subPathIndex, logicalStart: logicalDistance, logicalEnd: logicalDistance });
       continue;
     }
+
     if (cursor === undefined || subPathStart === undefined || subPathIndex < 0) continue;
 
     let from = cursor;
@@ -222,6 +234,7 @@ export const createStrokePathGeometry = (
     } else {
       to = subPathStart;
     }
+
     const rawOccurrence = {
       command,
       commandIndex,
@@ -247,6 +260,7 @@ export const createStrokePathGeometry = (
   for (const occurrence of occurrences) {
     occurrence.subPathLogicalEnd = subPaths[occurrence.subPathIndex]?.logicalEnd ?? occurrence.logicalEnd;
   }
+
   return { occurrences, subPaths, totalLength: logicalDistance };
 };
 
@@ -255,27 +269,33 @@ const sampleGeometryOccurrences = (
   position: number,
 ): StrokeLabelSample | undefined => {
   if (occurrences.length === 0) return undefined;
+
   const totalLength = occurrences.reduce(
     (length, occurrence) => length + occurrence.logicalEnd - occurrence.logicalStart,
     0,
   );
   if (!Number.isFinite(totalLength) || totalLength <= DISTANCE_EPSILON) return undefined;
+
   const target = clampUnit(position) * totalLength;
   let consumed = 0;
+
   for (let index = 0; index < occurrences.length; index += 1) {
     const occurrence = occurrences[index];
     const length = occurrence.logicalEnd - occurrence.logicalStart;
     if (target < consumed + length - DISTANCE_EPSILON || index === occurrences.length - 1) {
       const localDistance = Math.max(0, Math.min(length, target - consumed));
       const parameter = parameterAtOccurrenceDistance(occurrence, localDistance);
+
       return {
         sample: sampleOccurrenceAt(occurrence, parameter),
         logicalDistance: occurrence.logicalStart + localDistance,
         occurrence,
       };
     }
+
     consumed += length;
   }
+
   return undefined;
 };
 
@@ -308,6 +328,7 @@ export const sampleStrokeStepParameterGeometry = (
 ): StrokeLabelSample | undefined => {
   const occurrences = geometry.occurrences.filter(occurrence => occurrence.sourceStepIndex === sourceStepIndex);
   if (occurrences.length === 0) return undefined;
+
   const scaled = clampUnit(position) * occurrences.length;
   const isInteriorBoundary =
     scaled > DISTANCE_EPSILON &&
@@ -320,6 +341,7 @@ export const sampleStrokeStepParameterGeometry = (
   const localParameter = position === 1 ? 1 : scaled - occurrenceIndex;
   const occurrence = occurrences[occurrenceIndex];
   const localDistance = approximateOccurrenceLengthTo(occurrence, localParameter);
+
   return {
     sample: sampleOccurrenceAt(occurrence, localParameter),
     logicalDistance: occurrence.logicalStart + localDistance,
@@ -338,6 +360,7 @@ export const createStrokeInterruptionIntervals = (
   protectedRanges: ReadonlyArray<StrokeInterruptionProtectedRange> = [],
 ): Array<StrokeInterruptionInterval> => {
   const intervals: Array<StrokeInterruptionInterval> = [];
+
   for (const label of labels) {
     const { sample, visualBoundsPoints, gap } = label;
     if (
@@ -353,8 +376,10 @@ export const createStrokeInterruptionIntervals = (
         'Cannot determine finite Stroke label interruption geometry.',
       );
     }
+
     const tangent = sample.sample.tangent;
     let halfProjection = 0;
+
     for (const point of visualBoundsPoints) {
       if (!isFinitePoint(point)) {
         throw new RetikzCoreError(
@@ -362,17 +387,21 @@ export const createStrokeInterruptionIntervals = (
           'Cannot determine finite Stroke label interruption geometry.',
         );
       }
+
       const projection = Math.abs(
         (point[0] - sample.sample.point[0]) * tangent[0] + (point[1] - sample.sample.point[1]) * tangent[1],
       );
       halfProjection = Math.max(halfProjection, projection);
     }
+
     const clearance = Math.max(0, strokeWidth) / 2 + gap;
     const start = Math.max(sample.occurrence.subPathLogicalStart, sample.logicalDistance - halfProjection - clearance);
     const end = Math.min(sample.occurrence.subPathLogicalEnd, sample.logicalDistance + halfProjection + clearance);
     let intervalParts: Array<{ start: number; end: number }> = [{ start, end }];
+
     for (const protectedRange of protectedRanges) {
       if (protectedRange.subPathIndex !== sample.occurrence.subPathIndex) continue;
+
       intervalParts = intervalParts.flatMap(interval => {
         if (
           protectedRange.end <= interval.start + DISTANCE_EPSILON ||
@@ -380,16 +409,20 @@ export const createStrokeInterruptionIntervals = (
         ) {
           return [interval];
         }
+
         const parts: Array<{ start: number; end: number }> = [];
         if (interval.start < protectedRange.start - DISTANCE_EPSILON) {
           parts.push({ start: interval.start, end: Math.min(interval.end, protectedRange.start) });
         }
+
         if (interval.end > protectedRange.end + DISTANCE_EPSILON) {
           parts.push({ start: Math.max(interval.start, protectedRange.end), end: interval.end });
         }
+
         return parts;
       });
     }
+
     for (const interval of intervalParts) {
       if (interval.end - interval.start > DISTANCE_EPSILON) {
         intervals.push({ subPathIndex: sample.occurrence.subPathIndex, start: interval.start, end: interval.end });
@@ -401,6 +434,7 @@ export const createStrokeInterruptionIntervals = (
     (left, right) => left.subPathIndex - right.subPathIndex || left.start - right.start,
   );
   const merged: Array<StrokeInterruptionInterval> = [];
+
   for (const interval of ordered) {
     const previous = merged.at(-1);
     if (
@@ -413,6 +447,7 @@ export const createStrokeInterruptionIntervals = (
       merged.push({ ...interval });
     }
   }
+
   return merged;
 };
 
@@ -433,6 +468,7 @@ const sliceOccurrenceCommand = (
   if (segment.kind === 'line') {
     return { kind: 'line', to: roundPoint(segment.to, round) };
   }
+
   if (segment.kind === 'quadraticBezier') {
     return {
       kind: 'quad',
@@ -440,6 +476,7 @@ const sliceOccurrenceCommand = (
       to: roundPoint(segment.to, round),
     };
   }
+
   if (segment.kind === 'cubicBezier') {
     return {
       kind: 'cubic',
@@ -448,6 +485,7 @@ const sliceOccurrenceCommand = (
       to: roundPoint(segment.to, round),
     };
   }
+
   if (segment.kind === 'arc') {
     const sliced: Extract<PathCommand, { kind: 'arc' }> = {
       kind: 'arc',
@@ -457,8 +495,10 @@ const sliceOccurrenceCommand = (
       endAngle: segment.endAngleDeg,
     };
     if (segment.counterClockwise !== undefined) sliced.counterClockwise = segment.counterClockwise;
+
     return sliced;
   }
+
   const sliced: Extract<PathCommand, { kind: 'ellipseArc' }> = {
     kind: 'ellipseArc',
     center: roundPoint(segment.center, round),
@@ -469,6 +509,7 @@ const sliceOccurrenceCommand = (
   };
   if (segment.rotationDeg !== undefined) sliced.rotation = segment.rotationDeg;
   if (segment.counterClockwise !== undefined) sliced.counterClockwise = segment.counterClockwise;
+
   return sliced;
 };
 
@@ -478,16 +519,20 @@ const visibleRangesForOccurrence = (
 ): Array<{ start: number; end: number }> => {
   const ranges: Array<{ start: number; end: number }> = [];
   let cursor = occurrence.logicalStart;
+
   for (const interval of intervals) {
     if (interval.end <= cursor + DISTANCE_EPSILON) continue;
     if (interval.start >= occurrence.logicalEnd - DISTANCE_EPSILON) break;
     if (interval.start > cursor + DISTANCE_EPSILON) {
       ranges.push({ start: cursor, end: Math.min(interval.start, occurrence.logicalEnd) });
     }
+
     cursor = Math.max(cursor, interval.end);
     if (cursor >= occurrence.logicalEnd - DISTANCE_EPSILON) break;
   }
+
   if (cursor < occurrence.logicalEnd - DISTANCE_EPSILON) ranges.push({ start: cursor, end: occurrence.logicalEnd });
+
   return ranges;
 };
 
@@ -499,23 +544,28 @@ export const splitStrokePathAtInterruptions = (
   options: SplitStrokePathOptions = {},
 ): Array<StrokeCommandFragment> => {
   if (intervals.length === 0) return [];
+
   const intervalsBySubPath = new Map<number, Array<StrokeInterruptionInterval>>();
+
   for (const interval of intervals) {
     const current = intervalsBySubPath.get(interval.subPathIndex) ?? [];
     current.push(interval);
     intervalsBySubPath.set(interval.subPathIndex, current);
   }
+
   const fragments: Array<StrokeCommandFragment> = [];
   const firstDrawableCommandIndex = geometry.occurrences.find(
     occurrence => occurrence.command.kind !== 'close',
   )?.commandIndex;
   let lastDrawableCommandIndex: number | undefined;
+
   for (let index = geometry.occurrences.length - 1; index >= 0; index -= 1) {
     if (geometry.occurrences[index].command.kind !== 'close') {
       lastDrawableCommandIndex = geometry.occurrences[index].commandIndex;
       break;
     }
   }
+
   const hasClosingOccurrenceAfterTerminalDrawable = geometry.occurrences.some(
     occurrence =>
       occurrence.command.kind === 'close' &&
@@ -544,6 +594,7 @@ export const splitStrokePathAtInterruptions = (
         hasPathEnd: current.hasPathEnd,
       });
     }
+
     current = undefined;
   };
 
@@ -580,9 +631,11 @@ export const splitStrokePathAtInterruptions = (
           hasPathEnd: false,
         };
       }
+
       if (current === undefined) {
         throw new RetikzCoreError(RetikzCoreErrorCode.Compile, 'Cannot create an interrupted Stroke fragment.');
       }
+
       const fragment = current;
 
       if (
@@ -595,14 +648,17 @@ export const splitStrokePathAtInterruptions = (
       } else {
         fragment.commands.push(sliceOccurrenceCommand(occurrence, fromParameter, toParameter, round));
       }
+
       fragment.logicalEnd = range.end;
       fragment.lastPoint = endPoint;
       if (occurrence.commandIndex === firstDrawableCommandIndex && fromParameter <= DISTANCE_EPSILON) {
         fragment.hasPathStart = true;
       }
+
       if (occurrence.commandIndex === lastDrawableCommandIndex && toParameter >= 1 - DISTANCE_EPSILON) {
         fragment.hasPathEnd = true;
       }
+
       if (
         options.separateTerminalDrawable === true &&
         hasClosingOccurrenceAfterTerminalDrawable &&
@@ -614,6 +670,8 @@ export const splitStrokePathAtInterruptions = (
 
     if (Math.abs(occurrence.logicalEnd - occurrence.subPathLogicalEnd) <= DISTANCE_EPSILON) finishCurrent();
   }
+
   finishCurrent();
+
   return fragments;
 };

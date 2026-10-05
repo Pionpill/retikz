@@ -12,15 +12,15 @@
 
 ## 视觉编码
 
-| 对象                       | 编码                                                |
-| -------------------------- | --------------------------------------------------- |
-| 普通文字、主节点内容       | currentColor                                        |
-| 辅助说明、边标签           | 12px gray                                           |
-| 普通 Draw 连线             | 沿用默认颜色，不主动覆盖 stroke                     |
-| 需要区分的类别             | darkorange、dodgerblue；第三类才用 darkviolet       |
-| 错误 / 成功                | red / green，仅承载对应状态                         |
-| 实际不存在的几何教学辅助   | gray dotted，`dashPattern={[1, 4]}` + round lineCap |
-| 真实辅助依赖 / 边界        | dashed；主数据流保持实线                            |
+| 对象                     | 编码                                                |
+| ------------------------ | --------------------------------------------------- |
+| 普通文字、主节点内容     | currentColor                                        |
+| 辅助说明、边标签         | 12px gray                                           |
+| 普通 Draw 连线           | 沿用默认颜色，不主动覆盖 stroke                     |
+| 需要区分的类别           | darkorange、dodgerblue；第三类才用 darkviolet       |
+| 错误 / 成功              | red / green，仅承载对应状态                         |
+| 实际不存在的几何教学辅助 | gray dotted，`dashPattern={[1, 4]}` + round lineCap |
+| 真实辅助依赖 / 边界      | dashed；主数据流保持实线                            |
 
 同色对应同一类别，不用强调色表达每个当前步骤。不在消费图复制主题色值；复用站点 vocabulary。中性线文字不用 lightgray/dimgray 等易消失的固定颜色，opacity 通常 0.6–1；不要对整个分组降透明度而弱化正文。明暗背景下均核对可辨性。
 

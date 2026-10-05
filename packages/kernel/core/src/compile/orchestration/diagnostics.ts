@@ -34,6 +34,7 @@ export const createDuplicateWarning = (info: DuplicateRegisterInfo): CompileWarn
       : `frame depth: ${info.frameDepth} (under <Scope localNamespace>)`;
   const firstLoc = info.firstIrPath ?? '(unknown earlier location)';
   const secondLoc = info.secondIrPath ?? '(unknown current location)';
+
   return {
     code: CompileWarningCode.DuplicateNodeId,
     message: `Duplicate id '${info.id}' registered in the same namespace frame (${frameNote}); first defined at ${firstLoc}, redefined at ${secondLoc}. The later definition overrides the earlier one (last-wins).`,

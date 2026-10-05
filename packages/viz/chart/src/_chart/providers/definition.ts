@@ -30,8 +30,10 @@ const chartProposalOf = (
       const value = parent.max === undefined ? lowerBounded : Math.min(parent.max, lowerBounded);
       return { kind: LayoutAxisProposalKind.Exact, value };
     }
+
     return { kind: LayoutAxisProposalKind.Exact, value: preferred };
   };
+
   return {
     x: resolveAxis(source.layout?.width, layout.width, proposal.x),
     y: resolveAxis(source.layout?.height, layout.height, proposal.y),
@@ -49,6 +51,7 @@ export const createChartDefinition = (
       details: { path: ['recipes'] },
     });
   }
+
   return defineComposite({
     namespace: CHART_NAMESPACE,
     type: registry.family,
@@ -62,6 +65,7 @@ export const createChartDefinition = (
           details: { path: ['recipe', 'chartType'], chartType: source.recipe.chartType },
         });
       }
+
       if (source.type !== registry.family) {
         throw new RetikzChartError({
           code: RetikzChartErrorCode.FamilyMismatch,
@@ -69,10 +73,13 @@ export const createChartDefinition = (
           details: { path: ['type'], family: source.type, expected: registry.family },
         });
       }
+
       const resolution = resolveChartFromProvider(source, { theme: context.theme, registry });
+
       for (const warning of resolution.warnings) {
         context.warn(warning.code, warning.message, warning.subPath);
       }
+
       const proposal = chartProposalOf(source, resolution.presentation.layout, context.proposal);
       const prepared = context.runtimeInput as PreparedPlotData | undefined;
       const surface =
@@ -95,6 +102,7 @@ export const createChartDefinition = (
           throw contextualizeChartFailure(source, cause);
         }
       }
+
       return {
         children: [context.replay(probe.result)],
         allocationBounds: {

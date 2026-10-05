@@ -28,6 +28,7 @@ export const endpointInspector = defineInspector({
         : [],
     );
     if (subject.transforms.length === 0) return markers;
+
     return { type: 'scope' as const, transforms: subject.transforms, children: markers };
   },
 });

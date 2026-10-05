@@ -70,12 +70,15 @@ export type NamespaceFrameChange = {
 export class NamespaceStack {
   /** 栈式 frame 容器；栈底（index 0）= 根 frame，栈顶（last）= 当前 frame */
   private readonly frames: Array<Map<string, NamespaceEntry>>;
+
   /** 与每个 frame 对应的"已注册 id → 首次 register 时的 irPath"映射，用于 duplicate warn 复述位置 */
   private readonly firstIrPaths: Array<Map<string, string | undefined>>;
+
   /** fork 创建时的 frame 快照，只用于区分 baseline collision 与 probe 内部 duplicate */
   private forkBaselineFrames?: Array<Map<string, NamespaceEntry>>;
   private readonly onDuplicate?: (info: DuplicateRegisterInfo) => void;
   private readonly onRegister?: (info: NamespaceRegisterInfo) => void;
+
   /** 当前阶段；registering 允许写入，resolving 只允许 lookup */
   private currentPhase: NamespacePhase = 'registering';
 
@@ -96,6 +99,7 @@ export class NamespaceStack {
     fork.firstIrPaths.splice(0, fork.firstIrPaths.length, ...this.firstIrPaths.map(paths => new Map(paths)));
     fork.forkBaselineFrames = this.frames.map(frame => new Map(frame));
     fork.currentPhase = this.currentPhase;
+
     return fork;
   }
 
@@ -104,13 +108,16 @@ export class NamespaceStack {
     if (this.frames.length !== base.frames.length) {
       throw createCompileInvariantError('NamespaceStack.diffTopFrame: frame depth mismatch after isolated layout');
     }
+
     const frameIndex = this.frames.length - 1;
     const current = this.frames[frameIndex];
     const baseline = base.frames[frameIndex];
     const paths = this.firstIrPaths[frameIndex];
     const changes: Array<NamespaceFrameChange> = [];
+
     for (const [id, entry] of current) {
       if (baseline.get(id) === entry) continue;
+
       changes.push({
         id,
         entry,
@@ -119,6 +126,7 @@ export class NamespaceStack {
         ...(baseline.get(id) === undefined ? {} : { baselineEntry: baseline.get(id) }),
       });
     }
+
     return changes;
   }
 
@@ -133,12 +141,15 @@ export class NamespaceStack {
         `NamespaceStack.commitForkChange('${change.id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
+
     const topFrame = this.frames[this.frames.length - 1];
     if (change.overwroteBaseline && topFrame.get(change.id) === change.baselineEntry) {
       topFrame.set(change.id, change.entry);
       return true;
     }
+
     this.register(change.id, change.entry.layout, change.irPath, change.entry.state);
+
     return false;
   }
 
@@ -166,6 +177,7 @@ export class NamespaceStack {
         'NamespaceStack.popFrame: cannot pop the root frame (internal invariant violated)',
       );
     }
+
     this.frames.pop();
     this.firstIrPaths.pop();
     this.forkBaselineFrames?.pop();
@@ -188,6 +200,7 @@ export class NamespaceStack {
         `NamespaceStack.register('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
+
     const topFrame = this.frames[this.frames.length - 1];
     const topFirstPaths = this.firstIrPaths[this.firstIrPaths.length - 1];
     const wasOverwritten = topFrame.has(id);
@@ -203,6 +216,7 @@ export class NamespaceStack {
     } else {
       topFirstPaths.set(id, irPath);
     }
+
     topFrame.set(id, { layout, state });
     this.onRegister?.({
       id,
@@ -210,6 +224,7 @@ export class NamespaceStack {
       ...(irPath === undefined ? {} : { irPath }),
       wasOverwritten,
     });
+
     return wasOverwritten;
   }
 
@@ -220,20 +235,25 @@ export class NamespaceStack {
         `NamespaceStack.replaceLayout('${id}'): only allowed during registering; current phase is '${this.currentPhase}'`,
       );
     }
+
     if (frameDepth < 0 || frameDepth >= this.frames.length) {
       throw createCompileInvariantError(
         `NamespaceStack.replaceLayout('${id}'): frameDepth ${frameDepth} out of range (stack depth ${this.frames.length})`,
       );
     }
+
     const targetFrame = this.frames[frameDepth];
     if (!targetFrame.has(id)) {
       throw createCompileInvariantError(
         `NamespaceStack.replaceLayout('${id}'): id not previously registered in frame at depth ${frameDepth}`,
       );
     }
+
     const current = targetFrame.get(id);
     if (expectedCurrent !== undefined && current?.layout !== expectedCurrent) return false;
+
     targetFrame.set(id, { layout, state: 'resolved' });
+
     return true;
   }
 
@@ -248,6 +268,7 @@ export class NamespaceStack {
       const entry = this.frames[i].get(id);
       if (entry !== undefined) return entry;
     }
+
     return undefined;
   }
 }

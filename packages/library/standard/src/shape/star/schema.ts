@@ -13,6 +13,7 @@ const properties = {
   outerRadius: NonNegativeNumberSchema.describe('Circumradius of outer star vertices.'),
   rotate: ShapeVertexAngleSchema,
 };
+
 /** Star 的持久化几何契约 */
 export const StarSchema = union([
   strictObject({

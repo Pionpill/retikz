@@ -19,7 +19,7 @@ export const PathThickness = {
 } as const;
 
 /** 路径语义线宽关键字取值 */
-export type PathThicknessValue = ValueOf<typeof PathThickness>;
+export type PathThickness = ValueOf<typeof PathThickness>;
 
 /** 语义线宽关键字到数值 strokeWidth 的确定性映射 */
 export const THICKNESS_TO_WIDTH = {
@@ -30,9 +30,10 @@ export const THICKNESS_TO_WIDTH = {
   thick: 2,
   veryThick: 3,
   ultraThick: 4,
-} as const satisfies Record<PathThicknessValue, number>;
+} as const satisfies Record<PathThickness, number>;
 
 /** 确保每个语义线宽关键字都有对应数值 */
-type ThicknessCheck = AssertEqual<keyof typeof THICKNESS_TO_WIDTH, PathThicknessValue>;
+type ThicknessCheck = AssertEqual<keyof typeof THICKNESS_TO_WIDTH, PathThickness>;
+
 const thicknessCheck: ThicknessCheck = true;
 void thicknessCheck;

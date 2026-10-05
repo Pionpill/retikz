@@ -38,6 +38,7 @@ const GridFractionTrackBreadthSchema = strictObject({
   factor: PositiveNumberSchema.describe('Finite positive share of remaining finite axis space.'),
 }).describe('Fractional GridLayout track breadth.');
 
+/** 校验固定尺寸、内容尺寸或剩余空间份额三种轨道宽度 */
 export const GridTrackBreadthSchema = discriminatedUnion('kind', [
   GridFixedTrackBreadthSchema,
   GridContentTrackBreadthSchema,
@@ -58,10 +59,12 @@ const GridMinmaxTrackSchema = strictObject({
   })
   .describe('Canonical minmax GridLayout track.');
 
+/** 校验单一轨道宽度或带最小、最大限制的轨道定义 */
 export const GridTrackSchema = union([GridTrackBreadthSchema, GridMinmaxTrackSchema]).describe(
   'Canonical GridLayout track definition.',
 );
 
+/** 校验零基轨道起点与正整数跨度；省略起点时交由自动放置 */
 export const GridPlacementSchema = strictObject({
   start: NonNegativeIntegerSchema.optional().describe('Optional zero-based explicit track start.'),
   span: PositiveIntegerSchema.max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
@@ -69,6 +72,7 @@ export const GridPlacementSchema = strictObject({
     .describe('Positive explicit or auto track span within the track guard.'),
 }).describe('Canonical zero-based GridLayout axis placement.');
 
+/** 校验 Grid 子项的行列位置与跨度，以及槽位内对齐方式 */
 export const GridLayoutItemSchema = LayoutItemBaseSchema.extend({
   kind: literal(LayoutItemKind.Grid).describe('Discriminator for an item owned by GridLayout.'),
   column: GridPlacementSchema.optional().describe('Optional explicit column placement.'),
@@ -124,7 +128,9 @@ const refineGridLayout = (layout: GridLayoutRefinementInput, context: Refinement
         message: `Duplicate GridLayout item key '${item.key}'.`,
       });
     }
+
     if (item.key !== undefined) seen.add(item.key);
+
     for (const axis of ['column', 'row'] as const) {
       const placement = item[axis];
       if (
@@ -142,10 +148,12 @@ const refineGridLayout = (layout: GridLayoutRefinementInput, context: Refinement
   });
 };
 
+/** 校验 Grid 容器输入及轨道、子项之间的跨字段约束 */
 export const GridLayoutSchema = GridLayoutBaseSchema.superRefine(refineGridLayout).describe(
   'Sparse JSON-safe Layout GridLayout composite.',
 );
 
+/** 校验已求解轨道的连续索引、容器局部起点与尺寸 */
 export const LayoutTrackArtifactSchema = strictObject({
   index: NonNegativeIntegerSchema.describe('Contiguous zero-based resolved track index.'),
   start: number().describe('Finite physical track start in container allocation coordinates.'),
@@ -181,9 +189,11 @@ const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBa
         message: 'sourceIndex must be contiguous.',
       });
     }
+
     if (keys.has(item.key)) {
       context.addIssue({ code: 'custom', path: ['items', index, 'key'], message: `Duplicate item key '${item.key}'.` });
     }
+
     keys.add(item.key);
     if (item.column + item.columnSpan > artifact.columns.length) {
       context.addIssue({
@@ -192,6 +202,7 @@ const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBa
         message: 'Column span exceeds resolved columns.',
       });
     }
+
     if (item.row + item.rowSpan > artifact.rows.length) {
       context.addIssue({
         code: 'custom',
@@ -200,11 +211,13 @@ const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBa
       });
     }
   });
+
   const refineTracks = (tracks: typeof artifact.columns, path: 'columns' | 'rows') => {
     tracks.forEach((track, index) => {
       if (track.index !== index) {
         context.addIssue({ code: 'custom', path: [path, index, 'index'], message: 'Track index must be contiguous.' });
       }
+
       if (index > 0 && track.start < tracks[index - 1].start) {
         context.addIssue({
           code: 'custom',
@@ -214,10 +227,12 @@ const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBa
       }
     });
   };
+
   refineTracks(artifact.columns, 'columns');
   refineTracks(artifact.rows, 'rows');
 };
 
+/** 校验 Grid 编译产物中的轨道、子项与布局观测结果 */
 export const GridLayoutArtifactSchema = GridLayoutArtifactBaseSchema.superRefine(refineGridLayoutArtifact).describe(
   'Canonical JSON-safe GridLayout compile artifact payload.',
 );

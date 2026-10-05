@@ -55,6 +55,7 @@ const stepsOf = (segment: CurveSegment): ReactNode => {
       </>
     );
   }
+
   if (segment.kind === 'quadraticBezier') {
     return (
       <>
@@ -63,6 +64,7 @@ const stepsOf = (segment: CurveSegment): ReactNode => {
       </>
     );
   }
+
   if (segment.kind === 'cubicBezier') {
     return (
       <>

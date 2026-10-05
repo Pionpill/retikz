@@ -5,6 +5,7 @@ import { cloneAndFreezeJson } from '../../shared/json';
 import type { SpatialHandleDeclaration } from './types';
 
 const declarationFields = new Set(['id', 'aliasIds', 'role', 'bounds', 'tags', 'payload']);
+
 const boundsFields = new Set(['x', 'y', 'width', 'height']);
 
 const fail = (owner: string, detail: string): never => {
@@ -50,10 +51,12 @@ export const validateSpatialHandleDeclarations = (
           const aliasId = requireNonEmptyString(owner, alias, `${location}.aliasIds[${aliasIndex}]`);
           if (ids.has(aliasId)) fail(owner, `duplicate spatial handle id '${aliasId}'`);
           ids.add(aliasId);
+
           return aliasId;
         }),
       );
     }
+
     const role = requireNonEmptyString(owner, declaration.role, `${location}.role`);
 
     const rawBounds = requireRecord(owner, declaration.bounds, `${location}.bounds must be an object`);
@@ -61,13 +64,16 @@ export const validateSpatialHandleDeclarations = (
     if (unsupportedBounds.length > 0) {
       fail(owner, `${location}.bounds contains unsupported field '${unsupportedBounds[0]}'`);
     }
+
     const readFinite = (field: 'x' | 'y' | 'width' | 'height'): number => {
       const number = rawBounds[field];
       if (typeof number !== 'number' || !Number.isFinite(number)) {
         return fail(owner, `${location}.bounds.${field} must be finite`);
       }
+
       return number;
     };
+
     const x = readFinite('x');
     const y = readFinite('y');
     const width = readFinite('width');
@@ -86,6 +92,7 @@ export const validateSpatialHandleDeclarations = (
           const resolved = requireNonEmptyString(owner, tag, `${location}.tags[${tagIndex}]`);
           if (seenTags.has(resolved)) fail(owner, `${location}.tags contains duplicate tag '${resolved}'`);
           seenTags.add(resolved);
+
           return resolved;
         }),
       );
@@ -94,6 +101,7 @@ export const validateSpatialHandleDeclarations = (
     let payload: Readonly<JsonObject> | undefined;
     if (declaration.payload !== undefined) {
       const rawPayload = requireRecord(owner, declaration.payload, `${location}.payload must be a JSON object`);
+
       try {
         payload = cloneAndFreezeJson(rawPayload, `${owner} ${location}.payload`) as Readonly<JsonObject>;
       } catch (cause) {
@@ -111,5 +119,6 @@ export const validateSpatialHandleDeclarations = (
       ...(payload === undefined ? {} : { payload }),
     });
   });
+
   return Object.freeze(declarations);
 };

@@ -9,12 +9,14 @@ export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<Sty
   let defaults: IRNodeDefault = {};
   let style: IRNodeStyle = {};
   let layout: IRNodeLayout = {};
+
   for (const frame of stack) {
     if (cutsStyleChannel(frame.resetStyle, 'node')) {
       defaults = {};
       style = {};
       layout = {};
     }
+
     const { style: nodeStyle, layout: nodeLayout, ...geometry } = frame.nodeDefault ?? {};
     defaults = { ...defaults, ...mergeProperties([geometry], { shouldOverride: value => value !== undefined }) };
     style = {
@@ -23,6 +25,7 @@ export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<Sty
     };
     layout = { ...layout, ...mergeProperties([nodeLayout ?? {}], { shouldOverride: value => value !== undefined }) };
   }
+
   style = { ...style, ...mergeProperties([node.style ?? {}], { shouldOverride: value => value !== undefined }) };
   layout = { ...layout, ...mergeProperties([node.layout ?? {}], { shouldOverride: value => value !== undefined }) };
   if (style.color !== undefined) {
@@ -30,6 +33,7 @@ export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<Sty
     style.fill ??= style.color;
     style.textColor ??= style.color;
   }
+
   return {
     ...defaults,
     ...mergeProperties([node], { shouldOverride: value => value !== undefined }),

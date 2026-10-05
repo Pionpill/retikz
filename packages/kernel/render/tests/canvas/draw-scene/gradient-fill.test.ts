@@ -62,6 +62,7 @@ describe('drawScene 渐变填充', () => {
 
     const horizontal = context.getImageData(70, 30, 1, 1).data[0];
     const vertical = context.getImageData(50, 40, 1, 1).data[0];
+
     expect(Math.abs(horizontal - vertical)).toBeLessThanOrEqual(3);
     expect(horizontal).toBeGreaterThan(110);
     expect(horizontal).toBeLessThan(145);
@@ -91,7 +92,9 @@ describe('drawScene 渐变填充', () => {
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
     expect(context.calls.find(call => call.name === 'transform')?.args).toEqual([80, 0, 0, 40, 10, 20]);
+
     const args = context.calls.find(call => call.name === 'createLinearGradient')?.args as Array<number>;
+
     expect(args[0]).toBeCloseTo(0.14644661);
     expect(args[1]).toBeCloseTo(0.14644661);
     expect(args[2]).toBeCloseTo(0.85355339);
@@ -256,6 +259,7 @@ describe('drawScene 渐变填充', () => {
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
     const args = context.calls.find(c => c.name === 'createLinearGradient')?.args as Array<number>;
+
     expect(args[0]).toBeCloseTo(0.5);
     expect(args[1]).toBeCloseTo(0);
     expect(args[2]).toBeCloseTo(0.5);
@@ -344,6 +348,7 @@ describe('drawScene 渐变填充', () => {
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
     const stops = context.calls.filter(c => c.name === 'addColorStop').map(c => c.args);
+
     expect(stops[0]).toEqual([0, 'rgba(255, 0, 0, 0.5)']);
     expect(stops[1]).toEqual([1, '#0000ff']);
   });
@@ -373,6 +378,7 @@ describe('drawScene 渐变填充', () => {
     });
 
     const stops = context.calls.filter(c => c.name === 'addColorStop').map(c => c.args);
+
     // opacity 1 → 原样命名色；opacity 0 → 经归一成 hex 再烘焙成 rgba（不再丢 alpha 退化纯色）
     expect(stops[0]).toEqual([0, 'darkorange']);
     expect(stops[1]).toEqual([1, 'rgba(255, 140, 0, 0)']);

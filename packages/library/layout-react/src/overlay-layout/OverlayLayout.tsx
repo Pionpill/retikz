@@ -25,6 +25,7 @@ const createOverlayLayoutInput = (props: Readonly<Record<string, unknown>>, cont
   const { authoring: _authoring, children, ...input } = props as OverlayLayoutProps;
   void _authoring;
   const collected = createInputLayoutItems(children, LayoutItemKind.Overlay, context);
+
   return withInputEmbedAdapters(
     { ...input, children: collected.items } satisfies InputOverlayLayout,
     collected.adapters,

@@ -45,6 +45,7 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
       defaults: { node: { style: { fill: 'white' } }, reset: ['label' as const] },
     };
     const parsed = ScopePropsSchema.parse(JSON.parse(JSON.stringify(props)));
+
     expect(parsed).toEqual(props);
     expect(ScopeSchema.parse({ type: 'scope', ...parsed, children: [] })).toEqual({
       type: 'scope',
@@ -427,6 +428,7 @@ describe('Scope 样式 JSON round-trip', () => {
       },
     };
     const restored = ScopeSchema.parse(JSON.parse(JSON.stringify(ir)));
+
     expect(restored).toEqual(ir);
   });
 });
@@ -434,6 +436,7 @@ describe('Scope 样式 JSON round-trip', () => {
 describe('Node / Path 主色 color 字段', () => {
   it('Node 接受 color', async () => {
     const { NodeSchema } = await import('../../src/schemas');
+
     expect(
       NodeSchema.safeParse({
         type: 'node',
@@ -445,6 +448,7 @@ describe('Node / Path 主色 color 字段', () => {
 
   it('Path 接受 color', async () => {
     const { PathSchema } = await import('../../src/schemas');
+
     expect(
       PathSchema.safeParse({
         type: 'path',

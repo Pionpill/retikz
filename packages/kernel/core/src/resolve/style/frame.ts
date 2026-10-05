@@ -17,6 +17,7 @@ export const createStyleResolveFrame = (scope: IRScope): StyleResolveFrame => {
   if (scope.defaults?.label) frame.labelDefault = scope.defaults.label;
   if (scope.defaults?.arrow) frame.arrowDefault = scope.defaults.arrow;
   if (scope.defaults?.reset !== undefined) frame.resetStyle = scope.defaults.reset;
+
   return frame;
 };
 

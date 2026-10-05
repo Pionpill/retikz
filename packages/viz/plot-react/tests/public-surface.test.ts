@@ -17,6 +17,7 @@ describe('@retikz/plot-react public surface', () => {
     ]) {
       expect(publicSurface[name], `${name} must be exported`).toBeTypeOf('function');
     }
+
     for (const legacyName of ['Facet', 'Scaffold', 'Track', 'Axis', 'Legend', 'Scale', 'Transform']) {
       expect(legacyName in publicSurface, `${legacyName} must be removed`).toBe(false);
     }

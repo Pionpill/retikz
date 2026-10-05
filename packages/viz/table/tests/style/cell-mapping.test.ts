@@ -6,7 +6,9 @@ import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 
 const lightColors = resolveDefaultCoreThemeColors(ThemeMode.Light);
+
 const resolvedBaseline = resolveTableThemeDefaults();
+
 const sequential = resolvedBaseline.defaults.visualDefaults?.sequential;
 if (sequential === undefined || sequential === null)
   throw new Error('test fixture requires the default sequential palette');

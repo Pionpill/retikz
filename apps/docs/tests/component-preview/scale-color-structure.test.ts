@@ -6,13 +6,16 @@ import { describe, expect, it } from 'vitest';
 import { discretizationValues } from '../../src/modules/docs/contents/viz/plot/scale/color/scale-discretization.data';
 
 const scaleColorRoot = resolve('src/modules/docs/contents/viz/plot/scale/color');
+
 const chinesePage = readFileSync(resolve(scaleColorRoot, 'index.zh.mdx'), 'utf8');
+
 const englishPage = readFileSync(resolve(scaleColorRoot, 'index.en.mdx'), 'utf8');
 
 const readRequiredFile = (name: string): string => {
   const path = resolve(scaleColorRoot, name);
 
   expect(existsSync(path), `${name} should exist`).toBe(true);
+
   return readFileSync(path, 'utf8');
 };
 
@@ -55,6 +58,7 @@ describe('颜色比例尺文档结构', () => {
     const nodeTags = flowDemo.match(/<Node[\s\S]*?>/g) ?? [];
 
     expect(nodeTags.length).toBeGreaterThan(0);
+
     for (const nodeTag of nodeTags) {
       expect(nodeTag).toContain("stroke: 'gray'");
       expect(nodeTag).toContain("fill: 'gray'");
@@ -75,6 +79,7 @@ describe('颜色比例尺文档结构', () => {
       expect(controls).not.toContain("{ value: 'threshold'");
       expect(controls).not.toContain("{ value: 'quantile'");
     }
+
     expect(demo).not.toContain("type: 'quantize'");
     expect(demo).not.toContain("type: 'threshold'");
     expect(demo).not.toContain("type: 'quantile'");
@@ -84,6 +89,7 @@ describe('颜色比例尺文档结构', () => {
     for (const page of [chinesePage, englishPage]) {
       expect(page).not.toContain('<div className="text-sm text-muted-foreground">');
     }
+
     expect(chinesePage).toContain('## API 参考\n');
     expect(englishPage).toContain('## API Reference\n');
   });

@@ -7,6 +7,7 @@ import { alignAngleSweep } from '@retikz/core';
 const DEG_TO_RAD = Math.PI / 180;
 
 type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
+
 type Point = [number, number];
 
 const normalizeVector = (x: number, y: number): Point | null => {
@@ -46,6 +47,7 @@ export const ellipseArcPointAt = (command: EllipseArcPathCommand, angleDeg: numb
     command.radiusY * Math.sin(angle),
     command.rotation ?? 0,
   );
+
   return [command.center[0] + x, command.center[1] + y];
 };
 
@@ -84,6 +86,7 @@ const arcTangent = (command: ArcCommand, angleDeg: number): Point | null => {
   const angle = angleDeg * DEG_TO_RAD;
   const sweep = commandArcSweep(command);
   if (sweep.start === sweep.end) return null;
+
   const { direction } = sweep;
   const radiusX = command.kind === 'arc' ? command.radius : command.radiusX;
   const radiusY = command.kind === 'arc' ? command.radius : command.radiusY;
@@ -92,6 +95,7 @@ const arcTangent = (command: ArcCommand, angleDeg: number): Point | null => {
     radiusY * Math.cos(angle) * direction,
     command.kind === 'ellipseArc' ? (command.rotation ?? 0) : 0,
   );
+
   return normalizeVector(x, y);
 };
 
@@ -148,6 +152,7 @@ export const commandEndTangent = (command: PathCommand, from: Point | null): Poi
  */
 export const pathControlPoints = (commands: ReadonlyArray<PathCommand>): Array<[number, number]> => {
   const points: Array<[number, number]> = [];
+
   for (const command of commands) {
     switch (command.kind) {
       case 'move':
@@ -180,5 +185,6 @@ export const pathControlPoints = (commands: ReadonlyArray<PathCommand>): Array<[
         break;
     }
   }
+
   return points;
 };

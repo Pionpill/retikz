@@ -20,6 +20,7 @@ import type {
 } from './types';
 
 const ARROW_GEOMETRY_BASE_SIZE = 10;
+
 /** 主路径进入 marker 接触边的描边宽度比例 */
 const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 
@@ -42,6 +43,7 @@ export const resolvePathKind = (
     schema: definition.schema,
     value: path,
   });
+
   return { name: kind, definition, path: parsed as IRPathBase };
 };
 
@@ -65,6 +67,7 @@ export const resolvePathGenerator = (
     schema: definition.paramsSchema,
     value: step.params,
   });
+
   return { stepIndex, name: step.name, definition, params, irPath };
 };
 
@@ -74,26 +77,31 @@ const assertFiniteArrowGeometry = (shape: string, definition: ArrowDefinition): 
       `Arrow '${shape}' has a non-finite backX (${String(definition.backX)}); it must be a finite number.`,
     );
   }
+
   if (!Number.isFinite(definition.lineContactX)) {
     throw createCompositeContractError(
       `Arrow '${shape}' has a non-finite lineContactX (${String(definition.lineContactX)}); it must be a finite number.`,
     );
   }
+
   if (definition.baseSize !== undefined && (!Number.isFinite(definition.baseSize) || definition.baseSize <= 0)) {
     throw createCompositeContractError(
       `Arrow '${shape}' has an invalid baseSize (${String(definition.baseSize)}); it must be a finite number greater than 0.`,
     );
   }
+
   if (definition.tipX !== undefined && !Number.isFinite(definition.tipX)) {
     throw createCompositeContractError(
       `Arrow '${shape}' has a non-finite tipX (${String(definition.tipX)}); it must be a finite number.`,
     );
   }
+
   if (definition.outerInset !== undefined && !Number.isFinite(definition.outerInset)) {
     throw createCompositeContractError(
       `Arrow '${shape}' has a non-finite outerInset (${String(definition.outerInset)}); it must be a finite number.`,
     );
   }
+
   const tipX = definition.tipX ?? definition.baseSize ?? ARROW_GEOMETRY_BASE_SIZE;
   if (definition.backX > definition.lineContactX || definition.lineContactX > tipX) {
     throw createCompositeContractError(
@@ -134,18 +142,21 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
       `Arrow '${shape}' resolved length/width is non-finite (length × scale overflowed); use smaller length / scale values.`,
     );
   }
+
   if (!Number.isFinite(boundaryOuterInset)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
       `Arrow '${shape}' resolved outerInset is non-finite; use smaller outerInset / length / scale values.`,
     );
   }
+
   if (!Number.isFinite(visualBackX)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
       `Arrow '${shape}' resolved visual back is non-finite; use smaller backX / outerInset values.`,
     );
   }
+
   const geometry: ArrowMarkGeometry = {
     baseSize,
     tipX,
@@ -162,6 +173,7 @@ export const resolveArrowMark = (mark: ResolvedArrowMark, context: PathResolveCo
       `Arrow '${shape}' resolved shrink is non-finite; use smaller tip/contact/length values.`,
     );
   }
+
   return { mark, definition, visual, geometry };
 };
 
@@ -182,10 +194,12 @@ export const resolvePathGenerators = (
   prefix: string,
 ): ReadonlyMap<CanonicalStep, PathGeneratorResolution> => {
   const resolutions = new Map<CanonicalStep, PathGeneratorResolution>();
+
   for (const [index, step] of steps.entries()) {
     if (step.kind !== 'generator') continue;
     resolutions.set(step, resolvePathGenerator(step, index, context, `${prefix}.children[${index}]`));
   }
+
   return resolutions;
 };
 
@@ -199,6 +213,7 @@ export const resolveStrokePathProviders = (
   if (strokeTooShort) {
     return { ...resolution, generators: new Map(), arrows: new Map() };
   }
+
   return {
     ...resolution,
     generators: resolvePathGenerators(children, context, context.irPath ?? 'path'),

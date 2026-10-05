@@ -15,6 +15,7 @@ export type ThemeState = {
 /** 把主题应用到 DOM 根节点（shadcn 暗色用 .dark class 区分） */
 const applyToDOM = (theme: Theme) => {
   if (typeof document === 'undefined') return;
+
   const root = document.documentElement;
   if (theme === 'dark') root.classList.add('dark');
   else root.classList.remove('dark');

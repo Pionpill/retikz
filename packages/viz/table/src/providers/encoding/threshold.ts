@@ -31,12 +31,15 @@ export const THRESHOLD_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
     if (options.range === undefined && defaults === undefined) {
       throw new RetikzTableError('threshold-color requires a range or categorical Table defaults');
     }
+
     const range = [...(options.range ?? defaults?.slice(0, options.thresholds.length + 1) ?? [])];
     if (range.length !== options.thresholds.length + 1) {
       throw new RetikzTableError(`threshold-color range must contain ${options.thresholds.length + 1} colors`);
     }
+
     const domain = [...options.thresholds];
     const scale = d3ScaleThreshold<number, string>().domain(domain).range(range);
+
     return {
       of: value => {
         if (typeof value !== 'number') throw new RetikzTableError('threshold-color values must be numbers');

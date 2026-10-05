@@ -14,6 +14,7 @@ const readManifest = (path: string): PackageManifest =>
   JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8')) as PackageManifest;
 
 const standardManifest = readManifest('../../package.json');
+
 const adapterManifests = [
   readManifest('../../../standard-react/package.json'),
   readManifest('../../../standard-vanilla/package.json'),
@@ -22,6 +23,7 @@ const adapterManifests = [
 describe('Standard package exports', () => {
   it('exposes the three Standard component families', () => {
     const entries = ['.', './shape', './presentation', './collection'];
+
     expect(Object.keys(standardManifest.exports)).toEqual(entries);
     expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(entries);
   });

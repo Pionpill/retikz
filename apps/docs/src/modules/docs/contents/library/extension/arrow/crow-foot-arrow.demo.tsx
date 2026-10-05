@@ -6,6 +6,7 @@ import { crowFootArrowControls, previewControlContract } from './crow-foot-arrow
 import { renderCrowFootArrowPreview } from './crow-foot-arrow.preview';
 
 export const previewControls = crowFootArrowControls;
+
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   renderCrowFootArrowPreview({
     length: values.length,
@@ -14,7 +15,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     color: values.color,
   }),
 );
+
 export const previewSource = controlledPreview.source;
+
 /** 固定 CrowFoot marker 并调整端点视觉参数 */
 const Demo: FC = controlledPreview.Component;
 export default Demo;

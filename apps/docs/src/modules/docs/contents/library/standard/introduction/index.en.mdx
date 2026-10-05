@@ -3,15 +3,15 @@ title: Introduction
 description: Express common outlines, structured content, and visual explanations with ready-made components
 ---
 
-Standard is Retikz's standard component library. When you already know you need a list, reference axes, or a border around content, describe that object's parameters without calculating every path, text position, or outer dimension.
+Standard is Retikz's standard component library. When you already know you need an array, reference axes, or a border around content, describe that object's parameters without calculating every path, text position, or outer dimension.
 
 Use it for mathematical and algorithmic illustrations, structural diagrams, and general drawing interfaces. React and Vanilla share the same component semantics. Corresponding JSON IR lets you persist or transmit the drawing intent.
 
 ## Start with the content
 
-This List expresses order through cells, with a Map inside one cell to represent a record. You specify which content belongs in each cell; the components handle their own arrangement and boundaries.
+This Array expresses order through cells, with a Map inside one cell to represent a record. You specify which content belongs in each cell; the components handle their own arrangement and boundaries.
 
-<ComponentPreview files="/library/standard/collection/list/list-composition" size="sm" />
+<ComponentPreview files="/library/standard/collection/array/array-composition" size="sm" />
 
 You do not need to position each cell manually. Similarly, Frame updates a group border around Nodes, while Surface adds padding, appearance, and clipping around one child drawing. Shape components draw an outline directly when its center, radii, or angles are known.
 
@@ -20,13 +20,13 @@ You do not need to position each cell manually. Similarly, Frame updates a group
 | Task                                                      | Choose                | Why                                                          |
 | --------------------------------------------------------- | --------------------- | ------------------------------------------------------------ |
 | Draw an independent outline from geometry                 | Standard shapes       | Preserve rectangle, circle, star, and other geometric intent |
-| Display sequential or keyed content                       | Standard List / Map   | Cells own content, identity, and nesting                     |
+| Display sequential or keyed content                       | Standard Array / Map  | Cells own content, identity, and nesting                     |
 | Add axes, a background, grouping, or a symbol explanation | Standard presentation | Add presentation information around an existing drawing      |
 | Arrange arbitrary child drawings                          | Layout                | Organize content using sizing and arrangement policies       |
 | Map values from data domains and generate data ticks      | Plot                  | Own data and scale semantics                                 |
 | Define arbitrary paths or node connections                | Kernel Node / Path    | Control drawing primitives directly                          |
 
-Standard does not infer domain meaning. You supply Axes tick labels and Legend samples; List and Map visualize structures rather than implementing runtime collections. For data visualization, let a domain package process data before reusing these generic components.
+Standard does not infer domain meaning. You supply Axes tick labels and Legend samples; Array and Map visualize structures rather than implementing runtime collections. For data visualization, let a domain package process data before reusing these generic components.
 
 ## Choose a host syntax
 
@@ -39,9 +39,9 @@ Start with the quick start for first use. Read basic usage and limitations for e
 <LinkedSections
   items={[
     {
-      title: 'List',
+      title: 'Array',
       description: 'Start with sequential content, cell control, and nested composition',
-      url: '/library/standard/collection/list',
+      url: '/library/standard/collection/array',
     },
     {
       title: 'Surface',

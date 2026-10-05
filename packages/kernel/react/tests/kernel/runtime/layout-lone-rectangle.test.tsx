@@ -20,6 +20,7 @@ describe('<Layout> 单个自包含 rectangle step', () => {
         </Path>
       </Layout>,
     );
+
     expect(svg).toContain('<path');
     expect(svg).toContain('<svg');
   });

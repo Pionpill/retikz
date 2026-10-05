@@ -28,6 +28,7 @@ describe('<InlineMdx> 渲染（回归）', () => {
     const html = renderToStaticMarkup(
       <InlineMdx source="IR root gains optional `viewBox` ({ x, y, width, height }); fine." />,
     );
+
     expect(html).toContain('x, y, width, height');
     expect(html).toContain('<p');
   });

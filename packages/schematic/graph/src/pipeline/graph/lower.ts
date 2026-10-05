@@ -19,6 +19,7 @@ export const graphScopeProps = (source: IRGraph): Omit<IRScope, 'type' | 'childr
   void _graphDefaults;
   void _graphRules;
   void _children;
+
   return scope;
 };
 

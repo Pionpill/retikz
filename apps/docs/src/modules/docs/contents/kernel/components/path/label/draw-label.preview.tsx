@@ -11,6 +11,7 @@ const wayOf = (values: DrawLabelPreviewValues): WayDSL => {
   } as const;
   if (values.segmentKind === 'line') return ['A', { label }, 'B'];
   if (values.segmentKind === 'curve') return ['A', { label }, { curve: [180, -110] }, 'B'];
+
   return ['A', { label }, values.segmentKind, 'B'];
 };
 

@@ -25,9 +25,12 @@ describe('SurfaceSchema', () => {
       properties: { padding: { default: 0 }, overflow: { default: 'visible' }, cornerRadius: { default: 0 } },
     });
   });
+
   it('materializes static defaults without inventing appearance', () => {
     const source = SurfaceSchema.parse(surface());
+
     expect(source).toEqual({ ...surface(), padding: 0, overflow: 'visible', cornerRadius: 0 });
+
     const parsed = resolveSurface(source);
 
     expect(parsed).toEqual({
@@ -61,6 +64,7 @@ describe('SurfaceSchema', () => {
 
   it('round-trips a defaulted snapshot without expanding shorthand', () => {
     const source = SurfaceSchema.parse(surface({ padding: { x: 4, top: 6 } }));
+
     expect(source.padding).toEqual({ x: 4, top: 6 });
     expect(source.overflow).toBe('visible');
     expect(SurfaceSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);

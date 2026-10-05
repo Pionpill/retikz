@@ -33,6 +33,7 @@ describe('Inspector registry', () => {
     };
     defineInspector(rawDefinition);
     const registered = resolveRegistry(createInspectorRegistry([rawDefinition])).require(rawDefinition);
+
     for (const candidate of [registered]) {
       expect(candidate.optionsSchema.parse({})).toEqual({});
       expect(() => candidate.optionsSchema.parse({ unexpected: true })).toThrow();
@@ -52,6 +53,7 @@ describe('Inspector registry', () => {
       inspect: (_subject, context) => ({ type: 'node', position: [0, 0], content: context.options.label }),
     });
     const inspector = resolveRegistry(createInspectorRegistry([input])).require(input);
+
     expect(inspector.optionsSchema.parse({})).toEqual({});
     expect(inspector.resolveOptions).toBe(resolveOptions);
   });
@@ -59,6 +61,7 @@ describe('Inspector registry', () => {
   it('reuses a validated definition across registries', () => {
     const input = definition('test', 'reused');
     const inspector = resolveRegistry(createInspectorRegistry([input])).require(input);
+
     expect(resolveRegistry(createInspectorRegistry([input])).require(input)).toBe(inspector);
     expect(resolveRegistry(createInspectorRegistry([input])).require(input)).toBe(inspector);
   });
@@ -67,6 +70,7 @@ describe('Inspector registry', () => {
     const rawDefinition = { ...definition('test', 'raw'), owner: { kind: 'path' as const, name: 'stroke' } };
     const registered = resolveRegistry(createInspectorRegistry([rawDefinition])).require(rawDefinition);
     rawDefinition.owner.name = 'changed';
+
     expect(registered.owner).toEqual({ kind: 'path', name: 'stroke' });
     expect(Object.isFrozen(registered)).toBe(true);
     expect(Object.isFrozen(registered.owner)).toBe(true);
@@ -78,6 +82,7 @@ describe('Inspector registry', () => {
       ...definition('test', 'invalid'),
       owner: Object.freeze({ kind: 'path' as const, name: ' ' }),
     });
+
     expect(() => createInspectorRegistry([invalidDefinition])).toThrow(
       'Inspector owner name must be a non-empty string.',
     );
@@ -86,6 +91,7 @@ describe('Inspector registry', () => {
   it('allows multiple keys for one owner and resolves each key', () => {
     const registry = createInspectorRegistry([definition('third-party', 'points'), definition('third-party', 'curve')]);
     const resolvedRegistry = resolveRegistry(registry);
+
     expect(resolvedRegistry.definitions).toHaveLength(2);
     expect(resolvedRegistry.get({ namespace: 'third-party', type: 'points' })?.type).toBe('points');
     expect(Object.isFrozen(resolvedRegistry.definitions)).toBe(true);
@@ -124,6 +130,7 @@ describe('Inspector registry', () => {
 
   it('registers the stroke builtin through the same default path', () => {
     const registry = createDefaultInspectorRegistry([definition('third-party', 'points')]);
+
     expect(resolveRegistry(registry).get(PATH_INSPECTOR_KEY)).toBeDefined();
     expect(resolveRegistry(registry).get({ namespace: 'third-party', type: 'points' })).toBeDefined();
   });

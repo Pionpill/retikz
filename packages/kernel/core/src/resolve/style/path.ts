@@ -16,6 +16,7 @@ const resolveStepLabels = (
     if ('label' in step && step.label !== undefined) {
       return { ...step, label: resolveGeometryLabel(step.label, labelDefault, masterColor) };
     }
+
     return step;
   });
 
@@ -28,6 +29,7 @@ const resolveGeometryLabelField = (
   if (Array.isArray(label)) {
     return label.map(item => resolveGeometryLabel(item, labelDefault, masterColor));
   }
+
   return resolveGeometryLabel(label, labelDefault, masterColor);
 };
 
@@ -35,11 +37,13 @@ const resolveGeometryLabelField = (
 export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<StyleResolveFrame>): IRPathBase => {
   let defaults: IRPathDefault = {};
   let style: IRPathStyle = {};
+
   for (const frame of stack) {
     if (cutsStyleChannel(frame.resetStyle, 'path')) {
       defaults = {};
       style = {};
     }
+
     const { style: pathStyle, ...geometry } = frame.pathDefault ?? {};
     defaults = { ...defaults, ...mergeProperties([geometry], { shouldOverride: value => value !== undefined }) };
     style = {
@@ -47,6 +51,7 @@ export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<Styl
       ...mergeProperties<IRPathStyle>([frame.cascade, pathStyle], { shouldOverride: value => value !== undefined }),
     };
   }
+
   style = { ...style, ...mergeProperties([path.style ?? {}], { shouldOverride: value => value !== undefined }) };
   const masterColor = style.color;
   const effective: IRPathBase = {
@@ -63,7 +68,9 @@ export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<Styl
   } else {
     delete effective.children;
   }
+
   const label = resolveGeometryLabelField(path.label, labelDefault, masterColor);
   if (label !== undefined) effective.label = label;
+
   return effective;
 };

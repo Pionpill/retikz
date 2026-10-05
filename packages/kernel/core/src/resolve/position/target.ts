@@ -19,11 +19,13 @@ export const resolvePositionTargetWorld = (
   if (isNodeTargetLike(target)) {
     const reference = context.lookupReference(target.id);
     if (reference === undefined) return { target, referencePoint: null };
+
     const boundaryResolution = context.boundaryResolutionOf?.(target, reference);
     const referencePoint = addNodeTargetOffset(
       context.pointOfNodeTarget(target, reference, boundaryResolution),
       target,
     );
+
     return {
       target,
       referencePoint,
@@ -36,8 +38,10 @@ export const resolvePositionTargetWorld = (
     const start = resolvePositionTargetWorld(target.between[0], context).referencePoint;
     const end = resolvePositionTargetWorld(target.between[1], context).referencePoint;
     if (start === null || end === null) return { target, referencePoint: null };
+
     const referencePoint = lerpPoint(start, end, target.fraction);
     if (!isFinitePoint(referencePoint)) return { target, referencePoint: null };
+
     return { target, referencePoint };
   }
 
@@ -45,6 +49,7 @@ export const resolvePositionTargetWorld = (
     ...context,
     resolveBetweenWorld: between => resolvePositionTargetWorld(between, context).referencePoint,
   });
+
   return {
     target,
     referencePoint: position?.worldPoint ?? null,

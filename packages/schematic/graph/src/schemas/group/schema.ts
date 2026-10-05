@@ -43,7 +43,7 @@ export const GroupCaptionSchema = strictObject({
   })
   .describe('Optional structured caption placed inside the Group Surface.');
 
-/** JSON-safe Group semantic composite */
+/** 可 JSON 序列化的分组语义组合节点 */
 export const GroupSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Group).describe('Group Source composite discriminator.'),

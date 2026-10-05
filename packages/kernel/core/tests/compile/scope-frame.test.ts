@@ -13,17 +13,24 @@ const content: IRScope['children'] = [
     zIndex: -100,
   },
 ];
+
 const compile = (scope: IRScope) => compileToScene({ version: 1, type: 'scene', children: [scope] }).scene;
+
 const childrenOf = (primitive: ScenePrimitive | undefined) => (primitive?.type === 'group' ? primitive.children : []);
 
 describe('Scope frame', () => {
   it('schema 物化 padding 默认并拒绝非法间距和额外字段', () => {
     expect(ScopeFrameSchema.parse({})).toMatchObject({ padding: 0 });
+
     for (const padding of [-1, Infinity, NaN]) expect(ScopeFrameSchema.safeParse({ padding }).success).toBe(false);
+
     expect(ScopeFrameSchema.safeParse({ id: 'frame' }).success).toBe(false);
+
     const parsed = ScopeSchema.parse({ type: 'scope', frame: {}, children: [] });
+
     expect(ScopeSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
+
   it('默认外框不继承填充、透明度或节点默认，且始终位于负 zIndex 内容下面', () => {
     const scope: IRScope = {
       type: 'scope',
@@ -34,21 +41,26 @@ describe('Scope frame', () => {
     const plain = compile(scope);
     const framed = compile({ ...scope, frame: {} });
     const output = childrenOf(framed.primitives[0]);
+
     expect(output).toHaveLength(childrenOf(plain.primitives[0]).length + 1);
     expect(output[0]).toMatchObject({ type: 'rect', fill: 'none', stroke: 'red', strokeWidth: 1, hitTest: false });
     expect(output[0]).not.toHaveProperty('shadow');
     expect(output.slice(1)).toEqual(childrenOf(plain.primitives[0]));
   });
+
   it('padding 只扩大外框与取景，不改变后代内容', () => {
     const plain = compile({ type: 'scope', children: content });
     const framed = compile({ type: 'scope', frame: { padding: 10 }, children: content });
+
     expect(childrenOf(framed.primitives[0])[0]).toMatchObject({ type: 'rect', x: -30, y: -20, width: 60, height: 40 });
     expect(childrenOf(framed.primitives[0]).slice(1)).toEqual(childrenOf(plain.primitives[0]));
     expect(framed.layout.width).toBeGreaterThan(plain.layout.width);
   });
+
   it('空组即使有 padding 也没有外框', () => {
     expect(compile({ type: 'scope', frame: { padding: 20 }, children: [] }).primitives).toEqual([]);
   });
+
   it('嵌套外框不会扩大祖先固有包络', () => {
     const nested = (padding: number) =>
       compile({
@@ -56,8 +68,10 @@ describe('Scope frame', () => {
         frame: {},
         children: [{ type: 'scope', id: 'inner', frame: { padding }, children: content }],
       });
+
     expect(childrenOf(nested(0).primitives[0])[0]).toEqual(childrenOf(nested(100).primitives[0])[0]);
   });
+
   it('圆形包络按半径扩展且跟随所属组变换', () => {
     const scene = compile({
       type: 'scope',
@@ -66,9 +80,13 @@ describe('Scope frame', () => {
       frame: { padding: 10 },
       children: content,
     });
+
     expect(scene.primitives[0]).toMatchObject({ transforms: [{ kind: 'translate', x: 80, y: 20 }] });
+
     const circle = childrenOf(scene.primitives[0])[0];
+
     expect(circle.type).toBe('ellipse');
+
     if (circle.type === 'ellipse') {
       expect(circle.rx).toBeCloseTo(Math.hypot(20, 10) + 10, 2);
       expect(circle.ry).toEqual(circle.rx);
@@ -83,6 +101,7 @@ it('描边和阴影进入自动取景，clip 限制外框而显式 viewBox 不�
     children: content,
   };
   const ir = { version: 1 as const, type: 'scene' as const, children: [scope] };
+
   expect(compileToScene(ir, { padding: 0 }).scene.layout).toEqual({ x: -35, y: -25, width: 75, height: 55 });
   expect(
     compileToScene(
@@ -105,6 +124,7 @@ it('显式 undefined 使用默认值，上下文数值颜色由有效 Scope 主�
     frame: { style: { fill: 1, stroke: undefined, strokeWidth: undefined } },
     children: content,
   });
+
   expect(childrenOf(scene.primitives[0])[0]).toMatchObject({ fill: '#ff0000', stroke: '#ff0000', strokeWidth: 1 });
 });
 
@@ -120,6 +140,7 @@ it('祖先裁剪同样限制后代外框的自动取景', () => {
       },
     ],
   };
+
   expect(compileToScene(ir, { padding: 0 }).scene.layout).toEqual({ x: -20, y: -10, width: 40, height: 20 });
 });
 
@@ -141,8 +162,11 @@ it('外框与 Node 共用自定义图案资源，未注册图案保持诊断', (
     ],
   };
   const { scene } = compileToScene(ir, { patterns: [pattern] });
+
   expect(scene.resources).toHaveLength(1);
+
   const output = childrenOf(scene.primitives[0]);
+
   expect(output[0]).toMatchObject({ fill: { kind: 'resourceRef' } });
   expect(output[0]).toHaveProperty('fill', output[1].type === 'rect' ? output[1].fill : undefined);
   expect(() => compileToScene(ir)).toThrow(/frame-motif/);
@@ -159,7 +183,9 @@ it('不扩大既有 Path 包络语义，外框不改变整体锚点连接', () =
     },
   ];
   const scene = compile({ type: 'scope', frame: { padding: 5 }, children });
+
   expect(childrenOf(scene.primitives[0]).some(primitive => primitive.hitTest === false)).toBe(false);
+
   const connected = (padding?: number) =>
     compileToScene({
       version: 1,
@@ -176,6 +202,7 @@ it('不扩大既有 Path 包络语义，外框不改变整体锚点连接', () =
         },
       ],
     }).scene.primitives.find(primitive => primitive.id === 'link');
+
   expect(connected(100)).toEqual(connected());
 });
 
@@ -185,6 +212,7 @@ it('非空退化包络仍可通过 padding 绘制外框', () => {
     frame: { padding: 10 },
     children: [{ type: 'coordinate', id: 'point', position: [25, 30] }],
   });
+
   expect(childrenOf(scene.primitives[0])[0]).toMatchObject({
     type: 'rect',
     x: 15,

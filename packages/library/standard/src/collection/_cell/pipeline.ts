@@ -15,15 +15,34 @@ import { surfaceBoundaryPath, surfaceClip } from '../../shared/surface-geometry'
 import type { CanonicalCell } from './resolve';
 
 /** 内容一次自然测量的结果与含 padding 的需求 */
-export type MeasuredCell = { cell: CanonicalCell; result: LayoutChildResult; width: number; height: number };
+export type MeasuredCell = {
+  /** 已完成样式与布局继承的单元格 */
+  cell: CanonicalCell;
+
+  /** 内容的自然尺寸探测结果；无内容时省略 */
+  result?: LayoutChildResult;
+
+  /** 格子所需宽度；显式宽度优先，否则为内容宽度加左右内边距 */
+  width: number;
+
+  /** 格子所需高度；显式高度优先，否则为内容高度加上下内边距 */
+  height: number;
+};
+
 /** 确定的单格边框位置及引用角色 */
 export type CellPlacement = {
+  /** 此次放置复用的单格测量结果 */
   measured: MeasuredCell;
+  /** 格子左上角在集合局部坐标中的横坐标 */
   x: number;
+  /** 格子左上角在集合局部坐标中的纵坐标 */
   y: number;
+  /** 分配给格子边框区域的最终宽度 */
   width: number;
+  /** 分配给格子边框区域的最终高度 */
   height: number;
-  role: 'list-cell' | 'map-key' | 'map-value';
+  /** 空间引用中标识格子所属集合及键值角色的类别 */
+  role: 'chain-cell' | 'array-cell' | 'matrix-cell' | 'map-key' | 'map-value';
 };
 
 /** 在当前组件的样式环境下探测内容，保留结果供最终 replay */
@@ -56,27 +75,33 @@ export const measureCell = (
 ): MeasuredCell => {
   const { font, textColor, color } = cell.style;
   const textStyle = { ...(font === undefined ? {} : { font }), ...(textColor === undefined ? {} : { textColor }) };
-  const result = measureCellChild(
-    context,
-    {
-      type: 'scope',
-      ...(color === undefined ? {} : { style: { color } }),
-      defaults: { node: { style: textStyle }, label: textStyle },
-      children: [cell.content],
-    },
-    occurrence,
-    scope,
-  );
+  const result =
+    cell.content === undefined
+      ? undefined
+      : measureCellChild(
+          context,
+          {
+            type: 'scope',
+            ...(color === undefined ? {} : { style: { color } }),
+            defaults: { node: { style: textStyle }, label: textStyle },
+            children: [cell.content],
+          },
+          occurrence,
+          scope,
+        );
   const { padding } = cell.layout;
+
   return {
     cell,
     result,
     width:
-      typeof cell.layout.width === 'number' ? cell.layout.width : result.slotSize.width + padding.left + padding.right,
+      typeof cell.layout.width === 'number'
+        ? cell.layout.width
+        : (result?.slotSize.width ?? 0) + padding.left + padding.right,
     height:
       typeof cell.layout.height === 'number'
         ? cell.layout.height
-        : result.slotSize.height + padding.top + padding.bottom,
+        : (result?.slotSize.height ?? 0) + padding.top + padding.bottom,
   };
 };
 
@@ -111,6 +136,7 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
   const { padding } = cell.layout;
   const cx = Math.max(0, Math.min(width, (width + padding.left - padding.right) / 2));
   const cy = Math.max(0, Math.min(height, (height + padding.top - padding.bottom) / 2));
+
   return context.scope(
     {
       transforms: [{ kind: 'translate', x, y }],
@@ -118,20 +144,24 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
     },
     [
       surfaceBoundaryPath(width, height, radius, { zIndex: -1, style: { fill, fillOpacity, stroke: 'none' } }),
-      context.scope(
-        { zIndex: 0, ...(cell.layout.overflow === 'clip' ? { clip: surfaceClip(width, height, radius) } : {}) },
-        [
-          context.replay(result, {
-            transforms: [
-              {
-                kind: 'translate',
-                x: cx - result.slotSize.width / 2 - result.allocationBounds.x,
-                y: cy - result.slotSize.height / 2 - result.allocationBounds.y,
-              },
-            ],
-          }),
-        ],
-      ),
+      ...(result === undefined
+        ? []
+        : [
+            context.scope(
+              { zIndex: 0, ...(cell.layout.overflow === 'clip' ? { clip: surfaceClip(width, height, radius) } : {}) },
+              [
+                context.replay(result, {
+                  transforms: [
+                    {
+                      kind: 'translate',
+                      x: cx - result.slotSize.width / 2 - result.allocationBounds.x,
+                      y: cy - result.slotSize.height / 2 - result.allocationBounds.y,
+                    },
+                  ],
+                }),
+              ],
+            ),
+          ]),
       surfaceBoundaryPath(width, height, radius, { zIndex: 1, style: { ...border, fill: 'none' } }),
     ],
   );
@@ -170,9 +200,10 @@ export const compileCells = (
   if (width > allocationBounds.width + 1e-8 || height > allocationBounds.height + 1e-8)
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.PipelineInvariant,
-      message: 'List / Map allocation cannot fit its cells and gaps.',
+      message: 'Collection allocation cannot fit its cells and gaps.',
       details: { width, height, allocation: allocationBounds },
     });
+
   const handles: Array<SpatialHandleDeclaration> = [{ id: 'container', role: 'container', bounds: allocationBounds }];
   const children: Array<IRChild | CompositeCompileChild> = cells.map(cell => emitCell(cell, context));
   children.push(...extra);
@@ -205,6 +236,7 @@ export const compileCells = (
       ],
     });
   }
+
   for (const {
     measured: { cell },
     role,
@@ -214,6 +246,7 @@ export const compileCells = (
     height: cellHeight,
   } of cells) {
     if (cell.id === undefined) continue;
+
     const bounds = { x, y, width: cellWidth, height: cellHeight };
     handles.push({
       id: `cell:${cell.id}`,
@@ -227,5 +260,6 @@ export const compileCells = (
       children: [cellReferenceNode(cell.id, bounds, cell.aliasIds)],
     });
   }
+
   return { allocationBounds, children: [context.scope(scope, children, handles)] };
 };

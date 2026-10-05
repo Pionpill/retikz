@@ -45,6 +45,7 @@ const CrossShapeParamsSchema = strictObject({
 export type CrossShapeParams = ZodInfer<typeof CrossShapeParamsSchema>;
 
 type CrossDimension = NonNullable<CrossShapeParams['width']>;
+
 type CrossHeight = NonNullable<CrossShapeParams['height']>;
 
 type CrossGeometry = {
@@ -106,6 +107,7 @@ const crossGeometry = (
     [-leftHeight, -halfHorizontalWidth],
     [-halfVerticalWidth, -halfHorizontalWidth],
   ];
+
   return { vertices, halfWidth, halfHeight, offset };
 };
 

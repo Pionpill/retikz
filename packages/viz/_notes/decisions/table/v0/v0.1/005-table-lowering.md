@@ -104,8 +104,8 @@ type TableLayoutManifest = Readonly<{
     Readonly<{
       cellId: string;
       box: Readonly<BoundsRect>;
-      location: TableCellLocationValue;
-      roles: ReadonlyArray<TableCellRoleValue>;
+      location: TableCellLocation;
+      roles: ReadonlyArray<TableCellRole>;
       source?: TableCellSource;
     }>
   >;

@@ -19,6 +19,7 @@ describe('Graph Source authoring helpers', () => {
         { type: 'step', kind: 'line', to: [100, 30] },
       ],
     });
+
     expect(
       Graph.createGraph({ children: [entity, Graph.createEntity({ id: 'database', role: 'resource' }), relation] }),
     ).toEqual({

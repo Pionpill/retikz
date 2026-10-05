@@ -11,6 +11,7 @@ const properties = {
   ...ShapeAnglesSchema.shape,
   label: StepLabelSchema.optional(),
 };
+
 /** Sector 的持久化几何契约 */
 export const SectorSchema = union([
   strictObject({
@@ -49,6 +50,7 @@ export const SectorSchema = union([
         path: ['innerRadius'],
         message: 'Inner axes must both be zero or both positive.',
       });
+
     if (input.innerRadius.x > input.radius.x || input.innerRadius.y > input.radius.y)
       ctx.addIssue({ code: 'custom', path: ['innerRadius'], message: 'Inner radii cannot exceed outer radii.' });
   }),

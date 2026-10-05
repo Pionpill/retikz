@@ -14,6 +14,7 @@ import { normalizeReactInput } from '../../helpers/normalize-input';
  * 动画 runtime（react，jsdom）：SVG load track → 内联 <style> 自播；交互 track → WAAPI 桥；animate={false} 静态
  */
 let animateSpy: ReturnType<typeof vi.fn>;
+
 let rafSpy: ReturnType<typeof vi.fn>;
 
 const createRecordingContext = (): CanvasRenderingContext2D => {
@@ -55,6 +56,7 @@ const FADE: Array<IRAnimationTrack> = [
     duration: 400,
   },
 ];
+
 const MANUAL: Array<IRAnimationTrack> = [
   {
     property: 'strokeWidth',
@@ -72,6 +74,7 @@ const mount = async (node: React.ReactElement): Promise<HTMLElement> => {
   document.body.appendChild(container);
   const root = createRoot(container);
   await act(() => root.render(node));
+
   return container;
 };
 
@@ -83,6 +86,7 @@ describe('react SVG 动画', () => {
       </Layout>,
     );
     const style = c.querySelector('style');
+
     expect(style).not.toBeNull();
     expect(style!.textContent).toContain('@keyframes');
   });
@@ -93,6 +97,7 @@ describe('react SVG 动画', () => {
         <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(c.querySelector('style')).toBeNull();
   });
 
@@ -102,6 +107,7 @@ describe('react SVG 动画', () => {
         <Node id="a" position={[0, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(animateSpy).toHaveBeenCalled();
   });
 });
@@ -110,6 +116,7 @@ describe('preset 集成', () => {
   it('<Node animations={[fadeIn()]}> → 节点 IR 带等价 opacity track', () => {
     const ir = normalizeReactInput(<Node id="a" position={[0, 0]} animations={[fadeIn()]} />);
     const node = ir.children[0] as { animations?: Array<IRAnimationTrack> };
+
     expect(node.animations).toEqual([fadeIn()]);
   });
 
@@ -137,6 +144,7 @@ describe('preset 集成', () => {
       </Layout>,
     );
     const style = c.querySelector('style');
+
     expect(style).not.toBeNull();
     expect(style!.textContent).toContain('@keyframes');
     expect(style!.textContent).toContain('translate('); // 镜头 group transform
@@ -164,7 +172,9 @@ describe('preset 集成', () => {
     const c = await mount(<Layout width={100} height={100} ir={ir} animations={[propAnimation]} />);
     const style = c.querySelector('style');
     if (style === null) throw new Error('Expected Layout to emit animation style element.');
+
     const keyframes = style.textContent.match(/@keyframes/g) ?? [];
+
     expect(keyframes).toHaveLength(2);
   });
 });
@@ -177,6 +187,7 @@ describe('命令式动画句柄（animationRef）', () => {
         <Node id="a" position={[0, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(ref.current).not.toBeNull();
     expect(typeof ref.current?.play).toBe('function');
     expect(typeof ref.current?.pause).toBe('function');
@@ -190,6 +201,7 @@ describe('命令式动画句柄（animationRef）', () => {
         <Node id="a" position={[0, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(ref.current).not.toBeNull();
     expect(typeof ref.current?.play).toBe('function');
   });
@@ -201,6 +213,7 @@ describe('命令式动画句柄（animationRef）', () => {
         <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(ref.current).not.toBeNull();
     expect(typeof ref.current?.play).toBe('function');
   });
@@ -212,6 +225,7 @@ describe('命令式动画句柄（animationRef）', () => {
         <Node id="a" position={[0, 0]} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(ref.current).toBeNull();
   });
 });
@@ -223,6 +237,7 @@ describe('react canvas 动画', () => {
         <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(rafSpy).toHaveBeenCalled();
   });
 
@@ -232,6 +247,7 @@ describe('react canvas 动画', () => {
         <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(rafSpy).not.toHaveBeenCalled();
   });
 
@@ -245,6 +261,7 @@ describe('react canvas 动画', () => {
         <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
+
     expect(rafSpy).toHaveBeenCalled();
   });
 });

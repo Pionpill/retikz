@@ -30,6 +30,7 @@ const mount = async (node: React.ReactNode): Promise<Root> => {
     root.render(node);
     await Promise.resolve();
   });
+
   return root;
 };
 
@@ -42,6 +43,7 @@ afterEach(async () => {
   for (const root of roots) {
     await act(() => root.unmount());
   }
+
   roots.clear();
   document.body.replaceChildren();
   vi.restoreAllMocks();
@@ -52,10 +54,12 @@ describe('useLowerTex', () => {
     const initializationError = new Error('@retikz/tex: failed to initialize MathJax.');
     createMathJaxEngineMock.mockRejectedValueOnce(initializationError);
     const diagnostics: Array<{ kind: string; message: string }> = [];
+
     const SilentProbe = () => {
       useLowerTex();
       return null;
     };
+
     const DiagnosticProbe = () => {
       useLowerTex({ onDiagnostic: diagnostic => diagnostics.push(diagnostic) });
       return null;
@@ -73,6 +77,7 @@ describe('useLowerTex', () => {
     createMathJaxEngineMock.mockRejectedValueOnce(initializationError).mockResolvedValueOnce(engine);
     const diagnostics: Array<{ kind: string; message: string }> = [];
     const values: Array<MathJaxLowerTexState> = [];
+
     const Probe = () => {
       values.push(useLowerTex({ onDiagnostic: diagnostic => diagnostics.push(diagnostic) }));
       return null;

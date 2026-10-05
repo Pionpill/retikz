@@ -1,4 +1,5 @@
 import { ThemeMode } from '@retikz/core';
+import type { ValueOf } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { array, enum as zodEnum, strictObject } from 'zod';
 
@@ -57,6 +58,7 @@ export const PlotThemeResolutionSchema = strictObject({
         message: 'Plot defaults cascade must begin with the effective Neutral source',
       });
     }
+
     const sourcePaths = new Set(resolution.layers.map(layer => layer.path));
     resolution.rules.forEach((source, index) => {
       if (!sourcePaths.has(source.sourcePath) || !source.path.startsWith(source.sourcePath + '/plotRules/')) {
@@ -69,3 +71,6 @@ export const PlotThemeResolutionSchema = strictObject({
     });
   })
   .describe('Stable JSON-safe Plot defaults resolution and inspection result');
+
+/** Plot defaults inspection 来源分类 */
+export type PlotThemeLayerKind = ValueOf<typeof PlotThemeLayerKind>;

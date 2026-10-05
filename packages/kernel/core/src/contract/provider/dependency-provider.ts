@@ -1,3 +1,5 @@
+import type { ValueOf } from '@retikz/foundation';
+
 import type { ArrowDefinition } from '../arrow';
 import type { BoundaryDefinition } from '../boundary';
 import type { ClipDefinition } from '../clip';
@@ -20,12 +22,12 @@ export const CoreProviderCapability = {
 } as const;
 
 /** Core 提供者能力判别值 */
-export type CoreProviderCapabilityValue = (typeof CoreProviderCapability)[keyof typeof CoreProviderCapability];
+export type CoreProviderCapability = ValueOf<typeof CoreProviderCapability>;
 
 /** 非复合提供者的完整能力/名称标识 */
 export type NamedCoreProviderKey = Readonly<{
   /** 提供者所属的 Core 能力 */
-  capability: Exclude<CoreProviderCapabilityValue, typeof CoreProviderCapability.Composite>;
+  capability: Exclude<CoreProviderCapability, typeof CoreProviderCapability.Composite>;
   /** 能力内稳定的提供者名称 */
   name: string;
 }>;

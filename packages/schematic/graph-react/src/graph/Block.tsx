@@ -80,12 +80,14 @@ const collectOptionalSlot = (
       receivedCount: collected.children.length,
     });
   }
+
   return { child: collected.children[0], adapters: collected.adapters };
 };
 
 const createBlockInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { children, ...input } = props as BlockProps;
   const collected = collectGraphChildren(children, context.id);
+
   return withInputEmbedAdapters(
     {
       ...input,
@@ -109,6 +111,7 @@ const createBlockHeaderInput = (props: Readonly<Record<string, unknown>>, contex
   const { icon: iconNode, trail: trailNode, ...input } = props as BlockHeaderProps;
   const icon = collectOptionalSlot(iconNode, `${context.id}:icon`, 'BlockHeader.icon');
   const trail = collectOptionalSlot(trailNode, `${context.id}:trail`, 'BlockHeader.trail');
+
   return withInputEmbedAdapters(
     {
       ...input,
@@ -132,6 +135,7 @@ BlockHeader.createInputEmbedProps = createBlockHeaderInput;
 const createBlockSectionInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { children, ...input } = props as BlockSectionProps;
   const collected = collectGraphChildren(children, context.id);
+
   return withInputEmbedAdapters(
     {
       ...input,
@@ -160,9 +164,12 @@ const createBlockRowInput = (props: Readonly<Record<string, unknown>>, context: 
         receivedContentSources: 2,
       });
     }
+
     return withInputEmbedAdapters(input, []);
   }
+
   const collected = collectGraphChildren(children, context.id);
+
   return withInputEmbedAdapters(
     {
       ...input,

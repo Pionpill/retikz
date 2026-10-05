@@ -24,6 +24,7 @@ const Probe = (props: ProbeProps) => {
     expanded: false,
   });
   onRuntime(state);
+
   return null;
 };
 
@@ -60,6 +61,7 @@ describe('usePreviewControlRuntime', () => {
     );
 
     expect(latest).not.toBeNull();
+
     const runtimeState: PreviewControlRuntimeState = latest!;
 
     expect(runtimeState.remountKey).toBe(0);

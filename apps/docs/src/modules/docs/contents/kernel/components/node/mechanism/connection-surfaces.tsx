@@ -6,10 +6,12 @@ import type { Lang } from '@/i18n';
 import { connectionSurfacesI18n } from './connection-surfaces.i18n';
 
 export type ConnectionSurfacesProps = { lang?: Lang };
+
 /** 同一视觉形状下比较连接面与外边距 */
 const ConnectionSurfaces: FC<ConnectionSurfacesProps> = props => {
   const { lang } = props;
   const labels = connectionSurfacesI18n[lang ?? 'zh'];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[0, 1, 2].map(index => (

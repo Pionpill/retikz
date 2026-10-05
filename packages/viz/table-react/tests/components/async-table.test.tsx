@@ -13,7 +13,9 @@ describe('Table client preparation', () => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   });
+
   afterEach(() => vi.restoreAllMocks());
+
   it.each([false, true])('renders typed Promise data with embedded=%s', async embedded => {
     let executions = 0;
     const dataTransformExecutor = createDataTransformExecutor<{ values: Array<number> }>({
@@ -30,6 +32,7 @@ describe('Table client preparation', () => {
                   await Promise.resolve();
                   executions++;
                   if (input.kind !== 'source') throw new Error('native input expected');
+
                   return {
                     rows: input.source.values.map(value => ({ value, ratio: value / 8 })),
                     model: stage.outputModel,
@@ -71,13 +74,16 @@ describe('Table client preparation', () => {
       root.render(embedded ? <Layout runtime={{ preparation: 'async' }}>{table}</Layout> : table);
       await Promise.resolve();
     });
+
     expect(container.textContent).toContain('0.25');
     expect(container.textContent).toContain('0.75');
     expect(executions).toBe(1);
+
     if (!embedded) {
       expect(onManifest).toHaveBeenCalledOnce();
       expect(onManifest.mock.calls[0][0].allocationBounds.height).toBeGreaterThan(0);
     }
+
     act(() => root.unmount());
     container.remove();
   });

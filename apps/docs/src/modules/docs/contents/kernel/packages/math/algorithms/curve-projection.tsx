@@ -8,8 +8,11 @@ import { renderCurveProjection } from './curve-projection.preview';
 
 export { previewControls } from './curve-projection.controls';
 const controlledPreview = defineControlledPreview(previewControlContract, values => renderCurveProjection(values));
+
 const englishPreview = defineControlledPreview(previewControlContract, values => renderCurveProjection(values, 'en'));
+
 export const previewSource = controlledPreview.source;
+
 /** 曲线投影示例的文档语言 */
 export type CurveProjectionDemoProps = { lang?: Lang };
 

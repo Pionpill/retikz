@@ -44,6 +44,7 @@ export const foldSegmentSample = (
         tangent: curve.sampleAt({ kind: 'line', from: points[previous], to: points[previous + 1] }, 0).tangent,
       };
     }
+
     const next = legIndex + distance;
     if (next < legCount && !point.isEqual(points[next], points[next + 1])) {
       return {
@@ -52,6 +53,7 @@ export const foldSegmentSample = (
       };
     }
   }
+
   return sample;
 };
 
@@ -66,6 +68,7 @@ export const rectPerimeterSample = (from: Position, to: Position, t: number): Cu
   const x1 = Math.max(from[0], to[0]);
   const y0 = Math.min(from[1], to[1]);
   const y1 = Math.max(from[1], to[1]);
+
   // 与 rectOutline 同序 / 同向：左上 → 右上 → 右下 → 左下 → 闭合回左上
   const corners: Array<Position> = [
     [x0, y0],
@@ -78,5 +81,6 @@ export const rectPerimeterSample = (from: Position, to: Position, t: number): Cu
   const scaled = clamped * 4;
   const edge = Math.min(Math.floor(scaled), 3);
   const localT = scaled - edge;
+
   return curve.sampleAt({ kind: 'line', from: corners[edge], to: corners[edge + 1] }, localT);
 };

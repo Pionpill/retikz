@@ -10,8 +10,11 @@ function descriptionOf(schema: AnySchema): string | undefined {
 }
 
 const isGreaterThan = (def: z.core.$ZodCheckDef): def is z.core.$ZodCheckGreaterThanDef => def.check === 'greater_than';
+
 const isLessThan = (def: z.core.$ZodCheckDef): def is z.core.$ZodCheckLessThanDef => def.check === 'less_than';
+
 const isMinLength = (def: z.core.$ZodCheckDef): def is z.core.$ZodCheckMinLengthDef => def.check === 'min_length';
+
 const isMaxLength = (def: z.core.$ZodCheckDef): def is z.core.$ZodCheckMaxLengthDef => def.check === 'max_length';
 
 function checkDefsOf(schema: {
@@ -38,6 +41,7 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
   }
 
   if (ctx.seen.has(schema) || ctx.depth >= MAX_DEPTH) return truncated(schema);
+
   const next: WalkCtx = { seen: new Set(ctx.seen).add(schema), depth: ctx.depth + 1 };
 
   if (schema instanceof z.ZodString) return { kind: 'primitive', name: 'string' };
@@ -50,18 +54,22 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
       return { kind: 'literal', value };
     }
+
     return { kind: 'unknown', note: `unhandled literal: ${String(value)}` };
   }
 
   if (schema instanceof z.ZodEnum) {
     return { kind: 'enum', values: schema.options };
   }
+
   if (schema instanceof z.ZodArray) {
     const constraints: Array<string> = [];
+
     for (const def of checkDefsOf(schema)) {
       if (isMinLength(def)) constraints.push(`min ${def.minimum}`);
       else if (isMaxLength(def)) constraints.push(`max ${def.maximum}`);
     }
+
     return {
       kind: 'array',
       element: walkTypeImpl(schema.element, false, next),
@@ -75,30 +83,37 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
       elements: schema.def.items.map(item => walkTypeImpl(item, false, next)),
     };
   }
+
   if (schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault) {
     return { kind: 'default', inner: walkTypeImpl(schema.unwrap(), false, next) };
   }
+
   if (schema instanceof z.ZodNullable) {
     return { kind: 'nullable', inner: walkTypeImpl(schema.unwrap(), false, next) };
   }
+
   if (schema instanceof z.ZodLazy) {
     return walkTypeImpl(schema.unwrap(), false, next);
   }
+
   if (schema instanceof z.ZodReadonly) return walkTypeImpl(schema.unwrap(), false, next);
   if (schema instanceof z.ZodNonOptional) {
     const inner = schema.unwrap();
     return walkTypeImpl(inner instanceof z.ZodOptional ? inner.unwrap() : inner, false, next);
   }
+
   if (schema instanceof z.ZodPipe) {
     if (schema.out instanceof z.ZodTransform) return walkTypeImpl(schema.in, false, next);
     return walkTypeImpl(schema.out, false, next);
   }
+
   if (schema instanceof z.ZodUnion) {
     const discriminator = (schema.def as z.core.$ZodUnionDef & { discriminator?: unknown }).discriminator;
     const branches =
       typeof discriminator === 'string'
         ? schema.options.map((member, index) => extractDiscriminatedBranch(member, discriminator, index))
         : undefined;
+
     return {
       kind: 'union',
       members: schema.options.map(member => walkTypeImpl(member, false, next)),
@@ -137,10 +152,13 @@ const isSchemaPathLiteral = (value: unknown): value is SchemaPathLiteral =>
 
 function extractDiscriminatedBranch(schema: AnySchema, discriminator: string, index: number): DiscriminatedUnionBranch {
   if (!(schema instanceof z.ZodObject)) return { index, discriminator, values: [] };
+
   const raw = schema.shape[discriminator] as AnySchema | undefined;
   if (raw === undefined) return { index, discriminator, values: [] };
+
   const { inner } = unwrapOptional(raw);
   if (!(inner instanceof z.ZodLiteral)) return { index, discriminator, values: [] };
+
   return { index, discriminator, values: Array.from(inner.values).filter(isSchemaPathLiteral) };
 }
 
@@ -150,13 +168,16 @@ export function walkType(schema: AnySchema): TypeRepr {
 
 export function walk(schema: AnySchema): SchemaRepr {
   let s = schema;
+
   while (s instanceof z.ZodLazy) s = s.unwrap();
   const topDesc = descriptionOf(s);
+
   while (s instanceof z.ZodPipe) s = s.out;
 
   if (s instanceof z.ZodObject) {
     return { kind: 'object', description: topDesc, fields: extractFields(s, { seen: new Set([s]), depth: 1 }) };
   }
+
   return { kind: 'alias', description: topDesc, type: walkTypeImpl(s, true, ROOT_CTX) };
 }
 
@@ -177,9 +198,11 @@ function unwrapOptional(schema: AnySchema): { inner: AnySchema; optional: boolea
   if (schema instanceof z.ZodDefault) {
     return { inner: schema, optional: true };
   }
+
   if (schema instanceof z.ZodOptional) {
     return { inner: schema.unwrap(), optional: true };
   }
+
   return { inner: schema, optional: false };
 }
 
@@ -194,6 +217,7 @@ function extractConstraints(schema: AnySchema): Array<string> {
     if (min?.value === 0 && min.inclusive && max?.value === 1 && max.inclusive) {
       return ['0..1'];
     }
+
     if (min?.value === 0 && !max) {
       out.push(min.inclusive ? 'nonnegative' : 'positive');
     } else {
@@ -201,11 +225,13 @@ function extractConstraints(schema: AnySchema): Array<string> {
       if (max) out.push(max.inclusive ? `max ${max.value}` : `< ${max.value}`);
     }
   }
+
   if (schema instanceof z.ZodString) {
     for (const def of checkDefsOf(schema)) {
       if (isMinLength(def)) out.push(`min ${def.minimum}`);
       else if (isMaxLength(def)) out.push(`max ${def.maximum}`);
     }
   }
+
   return out;
 }

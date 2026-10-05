@@ -4,8 +4,8 @@
 
 #### Arc / ArcProps
 
-- `Arc`：<ApiSourceLink label={"Arc"} path={"packages/library/standard-react/src/shape/Arc.tsx"} startLine={12}>通过 Vanilla adapter 声明 Standard Arc</ApiSourceLink>
-- `ArcProps`：<ApiSourceLink label={"ArcProps"} path={"packages/library/standard-react/src/shape/Arc.tsx"} startLine={9}>React Arc 的作者输入与宿主事件</ApiSourceLink>
+- `Arc`：<ApiSourceLink label={"Arc"} path={"packages/library/standard-react/src/shape/Arc.tsx"} startLine={19}>通过 Vanilla adapter 声明 Standard Arc</ApiSourceLink>
+- `ArcProps`：<ApiSourceLink label={"ArcProps"} path={"packages/library/standard-react/src/shape/Arc.tsx"} startLine={10}>React Arc 的作者输入与宿主事件</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -16,13 +16,13 @@
 | 成员              | 类型                                  | 默认值   | 说明                                                                                         |
 | ----------------- | ------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
 | `animations?`     | `InputArc['animations']`              | —        | 作用于图形的声明式动画，不参与布局且不跨作用域继承                                           |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —        | 路径级箭头方向                                                                               |
+| `arrow?`          | `InputPathArrowDirection`             | —        | 路径级箭头方向                                                                               |
 | `arrowDetail?`    | `IRArrowDetail`                       | —        | 箭头的顶层默认与端点覆盖配置                                                                 |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —        | 箭头端点的共享与逐端放置配置                                                                 |
 | `center`          | `InputTarget`                         | —        | 形状中心，坐标形式由几何分支决定                                                             |
-| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | 圆弧的闭合方式：开放、弦闭合或扇形闭合                                                       |
+| `close?`          | `"open" \| "chord" \| "sector"`       | `"open"` | 圆弧的闭合方式：开放、弦闭合或扇形闭合                                                       |
 | `endAngle?`       | `number`                              | —        | 终止角度，单位为度                                                                           |
-| `id?`             | `string`                              | —        | —                                                                                            |
+| `id?`             | `string`                              | —        | 显式路径身份                                                                                 |
 | `label?`          | `InputArc['label']`                   | —        | 附着于路径的标签                                                                             |
 | `marks?`          | `InputArc['marks']`                   | —        | 沿路径按归一化位置放置的标记                                                                 |
 | `meta?`           | `Record<string, JsonValue>`           | —        | 透传至 Scene 的 JSON 元数据，编译器不解释其内容                                              |
@@ -42,7 +42,7 @@
 | `startAngle?`     | `number`                              | —        | 起始角度，单位为度                                                                           |
 | `style?`          | `InputArc['style']`                   | —        | 路径的稀疏视觉覆盖                                                                           |
 | `sweepAngle?`     | `number`                              | —        | 有符号扫过角度；三个角度字段恰好指定两个                                                     |
-| `thickness?`      | `PathThicknessValue`                  | —        | 路径描边宽度语法糖                                                                           |
+| `thickness?`      | `PathThickness`                       | —        | 路径描边宽度语法糖                                                                           |
 | `zIndex?`         | `number`                              | —        | 同级图形的绘制层级，数值越大越靠上                                                           |
 
 </ApiTable>
@@ -68,8 +68,8 @@ export type ArcProps = InputArc &
 
 #### Sector / SectorProps
 
-- `Sector`：<ApiSourceLink label={"Sector"} path={"packages/library/standard-react/src/shape/Sector.tsx"} startLine={12}>通过 Vanilla adapter 声明 Standard Sector</ApiSourceLink>
-- `SectorProps`：<ApiSourceLink label={"SectorProps"} path={"packages/library/standard-react/src/shape/Sector.tsx"} startLine={9}>React Sector 的作者输入与宿主事件</ApiSourceLink>
+- `Sector`：<ApiSourceLink label={"Sector"} path={"packages/library/standard-react/src/shape/Sector.tsx"} startLine={19}>通过 Vanilla adapter 声明 Standard Sector</ApiSourceLink>
+- `SectorProps`：<ApiSourceLink label={"SectorProps"} path={"packages/library/standard-react/src/shape/Sector.tsx"} startLine={10}>React Sector 的作者输入与宿主事件</ApiSourceLink>
 
 ```ts
 export declare const Sector: {
@@ -87,7 +87,7 @@ export type SectorProps = InputSector &
 #### InputArc
 
 <p>
-  <ApiSourceLink label={'InputArc'} path={'packages/library/standard-vanilla/src/shape/arc.ts'} startLine={8}>
+  <ApiSourceLink label={'InputArc'} path={'packages/library/standard-vanilla/src/shape/arc.ts'} startLine={9}>
     Arc 的 Vanilla 作者输入
   </ApiSourceLink>
 </p>
@@ -101,11 +101,11 @@ export type SectorProps = InputSector &
 | 成员              | 类型                                  | 默认值   | 说明                                               |
 | ----------------- | ------------------------------------- | -------- | -------------------------------------------------- |
 | `animations?`     | `InputArc["animations"]`              | —        | 作用于图形的声明式动画，不参与布局且不跨作用域继承 |
-| `arrow?`          | `InputPathArrowDirectionValue`        | —        | 路径级箭头方向                                     |
+| `arrow?`          | `InputPathArrowDirection`             | —        | 路径级箭头方向                                     |
 | `arrowDetail?`    | `IRArrowDetail`                       | —        | 箭头的顶层默认与端点覆盖配置                       |
 | `arrowPlacement?` | `InputPathArrowPlacement`             | —        | 箭头端点的共享与逐端放置配置                       |
 | `center`          | `InputTarget`                         | —        | 形状中心，坐标形式由几何分支决定                   |
-| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | 圆弧的闭合方式：开放、弦闭合或扇形闭合             |
+| `close?`          | `"open" \| "chord" \| "sector"`       | `"open"` | 圆弧的闭合方式：开放、弦闭合或扇形闭合             |
 | `endAngle?`       | `number`                              | —        | 终止角度，单位为度                                 |
 | `id?`             | `string`                              | —        | 图形的可选引用身份                                 |
 | `label?`          | `InputArc["label"]`                   | —        | 附着于路径的标签                                   |
@@ -118,7 +118,7 @@ export type SectorProps = InputSector &
 | `startAngle?`     | `number`                              | —        | 起始角度，单位为度                                 |
 | `style?`          | `InputArc["style"]`                   | —        | 路径的稀疏视觉覆盖                                 |
 | `sweepAngle?`     | `number`                              | —        | 有符号扫过角度；三个角度字段恰好指定两个           |
-| `thickness?`      | `PathThicknessValue`                  | —        | 路径描边宽度语法糖                                 |
+| `thickness?`      | `PathThickness`                       | —        | 路径描边宽度语法糖                                 |
 | `zIndex?`         | `number`                              | —        | 同级图形的绘制层级，数值越大越靠上                 |
 
 </ApiTable>
@@ -138,7 +138,7 @@ export type InputArc = InputShape<IRArc>;
 #### InputSector
 
 <p>
-  <ApiSourceLink label={'InputSector'} path={'packages/library/standard-vanilla/src/shape/sector.ts'} startLine={8}>
+  <ApiSourceLink label={'InputSector'} path={'packages/library/standard-vanilla/src/shape/sector.ts'} startLine={9}>
     Sector 的 Vanilla 作者输入
   </ApiSourceLink>
 </p>
@@ -153,14 +153,14 @@ export type InputSector = InputShape<IRSector>;
   <ApiSourceLink
     label={'ArcInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/shape/arc.ts'}
-    startLine={10}
+    startLine={12}
   >
     将 Arc 作者输入归一为持久化的 Standard 意图
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const ArcInputEmbedAdapter: InputEmbedAdapter<InputArc & { id?: string }>;
+export declare const ArcInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArc & { id?: string }>;
 ```
 
 #### SectorInputEmbedAdapter
@@ -169,14 +169,14 @@ export declare const ArcInputEmbedAdapter: InputEmbedAdapter<InputArc & { id?: s
   <ApiSourceLink
     label={'SectorInputEmbedAdapter'}
     path={'packages/library/standard-vanilla/src/shape/sector.ts'}
-    startLine={10}
+    startLine={12}
   >
     将 Sector 作者输入归一为持久化的 Standard 意图
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const SectorInputEmbedAdapter: InputEmbedAdapter<InputSector & { id?: string }>;
+export declare const SectorInputEmbedAdapter: SynchronousInputEmbedAdapter<InputSector & { id?: string }>;
 ```
 
 **`@retikz/standard`**
@@ -184,7 +184,7 @@ export declare const SectorInputEmbedAdapter: InputEmbedAdapter<InputSector & { 
 #### IRArc
 
 <p>
-  <ApiSourceLink label={'IRArc'} path={'packages/library/standard/src/shape/arc/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRArc'} path={'packages/library/standard/src/shape/arc/types.ts'} startLine={7}>
     持久化的 Arc 形状
   </ApiSourceLink>
 </p>
@@ -199,7 +199,7 @@ export declare const SectorInputEmbedAdapter: InputEmbedAdapter<InputSector & { 
 | ----------------- | ------------------------------------- | -------- | -------------------------------------------------- |
 | `animations?`     | `IRArc["animations"]`                 | —        | 作用于图形的声明式动画，不参与布局且不跨作用域继承 |
 | `center`          | `IRArc["center"]`                     | —        | 形状中心，坐标形式由几何分支决定                   |
-| `close?`          | `"chord" \| "open" \| "sector"`       | `"open"` | 圆弧的闭合方式：开放、弦闭合或扇形闭合             |
+| `close?`          | `"open" \| "chord" \| "sector"`       | `"open"` | 圆弧的闭合方式：开放、弦闭合或扇形闭合             |
 | `endAngle?`       | `number`                              | —        | 终止角度，单位为度                                 |
 | `id?`             | `string`                              | —        | 图形的可选引用身份                                 |
 | `label?`          | `IRArc["label"]`                      | —        | 附着于路径的标签                                   |
@@ -233,7 +233,7 @@ export type IRArc = ShapeSource<ZodInput<typeof ArcSchema>>;
 #### IRSector
 
 <p>
-  <ApiSourceLink label={'IRSector'} path={'packages/library/standard/src/shape/sector/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRSector'} path={'packages/library/standard/src/shape/sector/types.ts'} startLine={7}>
     持久化的 Sector 形状
   </ApiSourceLink>
 </p>
@@ -245,7 +245,7 @@ export type IRSector = ShapeSource<ZodInput<typeof SectorSchema>>;
 #### ArcDefinition
 
 <p>
-  <ApiSourceLink label={'ArcDefinition'} path={'packages/library/standard/src/shape/arc/definition.ts'} startLine={7}>
+  <ApiSourceLink label={'ArcDefinition'} path={'packages/library/standard/src/shape/arc/definition.ts'} startLine={8}>
     Arc 的 Core composite 注册项
   </ApiSourceLink>
 </p>
@@ -285,7 +285,7 @@ export const ArcDefinition = defineComposite({
 #### ArcProvider
 
 <p>
-  <ApiSourceLink label={'ArcProvider'} path={'packages/library/standard/src/shape/arc/provider.ts'} startLine={5}>
+  <ApiSourceLink label={'ArcProvider'} path={'packages/library/standard/src/shape/arc/provider.ts'} startLine={6}>
     Arc 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -305,7 +305,7 @@ export const ArcProvider: CoreDependencyProvider = Object.freeze({
   <ApiSourceLink
     label={'SectorDefinition'}
     path={'packages/library/standard/src/shape/sector/definition.ts'}
-    startLine={7}
+    startLine={8}
   >
     Sector 的 Core composite 注册项
   </ApiSourceLink>
@@ -346,7 +346,7 @@ export const SectorDefinition = defineComposite({
 #### SectorProvider
 
 <p>
-  <ApiSourceLink label={'SectorProvider'} path={'packages/library/standard/src/shape/sector/provider.ts'} startLine={5}>
+  <ApiSourceLink label={'SectorProvider'} path={'packages/library/standard/src/shape/sector/provider.ts'} startLine={6}>
     Sector 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -363,7 +363,7 @@ export const SectorProvider: CoreDependencyProvider = Object.freeze({
 #### createArc
 
 <p>
-  <ApiSourceLink label={'createArc'} path={'packages/library/standard/src/shape/arc/factory.ts'} startLine={4}>
+  <ApiSourceLink label={'createArc'} path={'packages/library/standard/src/shape/arc/factory.ts'} startLine={5}>
     创建保留几何意图的 Arc Source
   </ApiSourceLink>
 </p>
@@ -396,7 +396,7 @@ export declare const createArc: (input: ShapeProperties<IRArc>) => IRArc;
 #### createSector
 
 <p>
-  <ApiSourceLink label={'createSector'} path={'packages/library/standard/src/shape/sector/factory.ts'} startLine={4}>
+  <ApiSourceLink label={'createSector'} path={'packages/library/standard/src/shape/sector/factory.ts'} startLine={5}>
     创建保留几何意图的 Sector Source
   </ApiSourceLink>
 </p>
