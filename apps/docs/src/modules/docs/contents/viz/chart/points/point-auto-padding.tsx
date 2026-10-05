@@ -18,6 +18,7 @@ const rows = [
 const PointAutoPadding: FC<PointAutoPaddingProps> = props => {
   const { lang = 'zh' } = props;
   const text = pointAutoPaddingI18n[lang];
+
   return (
     <div className="grid w-full min-w-[724px] grid-cols-4 gap-3">
       {(

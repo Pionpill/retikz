@@ -6,6 +6,7 @@ import type { Lang } from '@/i18n';
 import { entityRolesI18n } from './entity-roles.i18n';
 
 const roles = ['participant', 'activity', 'event', 'state', 'gateway', 'resource', 'concept'] as const;
+
 const positions: ReadonlyArray<[number, number]> = [
   [125, 65],
   [275, 65],

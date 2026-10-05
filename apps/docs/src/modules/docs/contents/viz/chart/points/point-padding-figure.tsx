@@ -21,11 +21,13 @@ const PointPaddingFigure: FC<PointPaddingFigureProps> = props => {
     [1, 1],
   ];
   const labelStyle = { fill: 'none', stroke: 'none', font: { size: 14 } };
+
   return (
     <Layout viewBox={{ x: 0, y: 0, width: 720, height: 290 }} style={{ maxWidth: '100%', height: 'auto' }}>
       {[false, true].map((automatic, index) => {
         const left = 50 + index * 360;
         const inset = automatic ? radius : 0;
+
         return (
           <Fragment key={index}>
             <Node key={`title-${index}`} position={[left + 120, 25]} style={labelStyle}>

@@ -78,6 +78,7 @@ export const wrapPathPrimitiveOutput = ({
       if (path.id !== undefined) group.id = path.id;
       if (path.meta !== undefined) group.meta = path.meta;
       if (path.animations !== undefined) group.animations = path.animations;
+
       return { primitives: [group], boundsPoints: projectPathTransformPoints(boundsPoints, transforms) };
     }
   }
@@ -85,5 +86,6 @@ export const wrapPathPrimitiveOutput = ({
   if (path.id !== undefined) primitive.id = path.id;
   if (path.meta !== undefined) primitive.meta = path.meta;
   if (path.animations !== undefined) primitive.animations = path.animations;
+
   return { primitives: bodyPrims, boundsPoints };
 };

@@ -22,18 +22,23 @@ export const TableLegendDescriptorSchema = strictObject({
     if (descriptor.edges !== undefined && !strictlyIncreasingEdges(descriptor.edges)) {
       context.addIssue({ code: 'custom', path: ['edges'], message: 'edges must be strictly increasing' });
     }
+
     if (descriptor.form === 'ramp') {
       if (descriptor.domain.length !== 2 || descriptor.range.length !== 2 || descriptor.edges !== undefined) {
         context.addIssue({ code: 'custom', message: 'ramp requires two domain and range endpoints without edges' });
       }
+
       return;
     }
+
     if (descriptor.edges === undefined) {
       if (descriptor.domain.length !== descriptor.range.length) {
         context.addIssue({ code: 'custom', message: 'swatch domain and range must have equal lengths' });
       }
+
       return;
     }
+
     if (
       descriptor.range.length !== descriptor.edges.length + 1 ||
       descriptor.domain.length !== descriptor.edges.length ||

@@ -23,6 +23,7 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
         existing.updateSites(sites);
         return existing.session;
       }
+
       const notifications = new WeakMap<CompileResult, Array<() => void>>();
       let currentSites = sites;
       const session: VanillaCompileDriverSession = {
@@ -52,12 +53,14 @@ export const createPlotLineageCompileDriver = (): VanillaCompileDriver => {
           }
         },
       };
+
       sessions.set(input.instance, {
         session,
         updateSites: next => {
           currentSites = next;
         },
       });
+
       return session;
     },
   };

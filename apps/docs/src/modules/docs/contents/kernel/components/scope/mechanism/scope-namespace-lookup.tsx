@@ -15,6 +15,7 @@ export type ScopeNamespaceLookupProps = Readonly<{ lang?: Lang }>;
 const ScopeNamespaceLookup: FC<ScopeNamespaceLookupProps> = props => {
   const { lang = 'zh' } = props;
   const t = scopeNamespaceLookupI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

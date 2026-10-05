@@ -86,9 +86,11 @@ const captureSurfaceContentPlacement = (
       if (child === content && probe.kind === LayoutChildProbeKind.Resolved) {
         placement = { proposal, result: probe.result };
       }
+
       return probe;
     },
   });
+
   return placement ?? foundationCompositionFailure('Surface content placement is missing.');
 };
 
@@ -112,12 +114,14 @@ const collectFoundationFlexRegions = (
   artifact.items.forEach(item => {
     const authoredItem = flex.children?.[item.sourceIndex];
     if (authoredItem === undefined) return foundationCompositionFailure('FlexLayout artifact has no authored child.');
+
     const childOffset: Position = [containerOffset[0] + item.translation.x, containerOffset[1] + item.translation.y];
     if (item.key === 'title' || item.key === 'description' || item.key === 'drawing' || item.key === 'legend') {
       state.regions[item.key] = translateFoundationRegion(item, containerOffset);
       if (item.key === 'drawing') state.drawingOffset = childOffset;
       return;
     }
+
     if (item.key === 'heading') {
       const title = resolution.presentation?.title;
       const description = resolution.presentation?.description;
@@ -126,10 +130,12 @@ const collectFoundationFlexRegions = (
         state.regions[regionKey] = translateFoundationRegion(item, containerOffset);
         return;
       }
+
       const headingChild = isScope(authoredItem.child) ? authoredItem.child.children[0] : authoredItem.child;
       if (!isFlexLayout(headingChild)) {
         return foundationCompositionFailure('Heading with title and description did not lower to FlexLayout.');
       }
+
       collectFoundationFlexRegions(
         headingChild,
         exactLayoutProposal(item.slotBounds),
@@ -138,17 +144,21 @@ const collectFoundationFlexRegions = (
         resolution,
         state,
       );
+
       return;
     }
+
     if (item.key === 'main') {
       if (resolution.presentation?.legend === undefined) {
         state.regions.drawing = translateFoundationRegion(item, containerOffset);
         state.drawingOffset = childOffset;
         return;
       }
+
       if (!isFlexLayout(authoredItem.child)) {
         return foundationCompositionFailure('Drawing and Legend did not lower to FlexLayout.');
       }
+
       collectFoundationFlexRegions(
         authoredItem.child,
         exactLayoutProposal(item.slotBounds),
@@ -200,6 +210,7 @@ export const composeDiagramFoundation = (
   if (state.regions.drawing === undefined || state.drawingOffset === undefined) {
     return foundationCompositionFailure('Drawing placement is missing.');
   }
+
   return {
     frame: frameProbe,
     drawingOffset: state.drawingOffset,

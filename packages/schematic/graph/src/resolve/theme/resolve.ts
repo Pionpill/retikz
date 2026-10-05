@@ -34,8 +34,10 @@ const definedFields = <T extends object>(value: Partial<T> | undefined): Partial
 /** 空 font 不提供默认值；非空 font 保持 Node Source 的整体覆盖粒度 */
 const definedEntityStyle = (style: IRGraphEntityDefaultsStyle | undefined): IRGraphEntityDefaultsStyle | undefined => {
   if (style === undefined) return undefined;
+
   const { font, ...fields } = mergeProperties([style], { shouldOverride: value => value !== undefined });
   const definedFont = mergeFields(undefined, font);
+
   return { ...fields, ...(definedFont === undefined ? {} : { font: definedFont }) };
 };
 
@@ -45,8 +47,10 @@ const mergeEntityDefaults = (
   override: IRGraphEntityDefaults | undefined,
 ): IRGraphEntityDefaults | undefined => {
   if (current === undefined && override === undefined) return undefined;
+
   const style = mergeFields(definedEntityStyle(current?.style), definedEntityStyle(override?.style));
   const layout = mergeFields<IRGraphEntityDefaultsLayout>(current?.layout, override?.layout);
+
   return {
     ...(style === undefined ? {} : { style }),
     ...(layout === undefined ? {} : { layout }),
@@ -59,12 +63,14 @@ const mergeRelationDefaults = (
   override: IRGraphRelationDefaults | undefined,
 ): IRGraphRelationDefaults | undefined => {
   if (current === undefined && override === undefined) return undefined;
+
   const style = mergeFields<IRGraphRelationDefaultsStyle>(current?.style, override?.style);
   const sourceMarker = mergeFields(current?.sourceMarker, override?.sourceMarker);
   const targetMarker = mergeFields(current?.targetMarker, override?.targetMarker);
   const labelFont = mergeFields(current?.labelFont, override?.labelFont);
   const labelTextForeground = override?.labelTextForeground ?? current?.labelTextForeground;
   const labelOpacity = override?.labelOpacity ?? current?.labelOpacity;
+
   return {
     ...(labelTextForeground === undefined ? {} : { labelTextForeground }),
     ...(labelOpacity === undefined ? {} : { labelOpacity }),
@@ -90,10 +96,12 @@ export const mergeGraphDefaults = (
   override: IRGraphDefaults | undefined,
 ): IRGraphDefaults | undefined => {
   if (current === undefined && override === undefined) return undefined;
+
   const entity = mergeEntityDefaults(current?.entity, override?.entity);
   const relation = mergeRelationDefaults(current?.relation, override?.relation);
   const group = mergeGraphSurfaceDefaults(current?.group, override?.group);
   const block = mergeGraphSurfaceDefaults(current?.block, override?.block);
+
   return {
     ...mergeProperties([current, override], { shouldOverride: value => value !== undefined }),
     ...(entity === undefined ? {} : { entity }),
@@ -135,14 +143,17 @@ const jsonEqual = (left: JsonValue, right: JsonValue): boolean => {
       left.every((value, index) => jsonEqual(value, right[index]))
     );
   }
+
   if (typeof left === 'object' && left !== null && typeof right === 'object' && right !== null) {
     const leftObject = left as JsonObject;
     const rightObject = right as JsonObject;
     const keys = Object.keys(leftObject);
+
     return (
       keys.length === Object.keys(rightObject).length && keys.every(key => jsonEqual(leftObject[key], rightObject[key]))
     );
   }
+
   return left === right;
 };
 
@@ -153,10 +164,12 @@ const isJsonObject = (value: JsonValue): value is JsonObject =>
 export const matchesGraphPredicateParams = (selector: JsonObject, params: JsonObject): boolean =>
   Object.entries(selector).every(([key, expected]) => {
     if (!Object.hasOwn(params, key)) return false;
+
     const actual = params[key];
     if (isJsonObject(expected) && isJsonObject(actual)) {
       return matchesGraphPredicateParams(expected, actual);
     }
+
     return jsonEqual(expected, actual);
   });
 
@@ -185,6 +198,7 @@ export const matchesGraphThemeSelector = (
   if (selector.predicate === undefined) return true;
   if (subject.predicate === undefined || !selectorIncludes(selector.predicate.name, subject.predicate.name))
     return false;
+
   return (
     selector.predicate.params === undefined ||
     matchesGraphPredicateParams(selector.predicate.params, subject.predicate.params)
@@ -224,6 +238,7 @@ export const validateGraphThemeSelector = (
   context: GraphThemeSelectorRegistryContext,
 ): void => {
   if (selector === undefined) return;
+
   const capabilityPrefix = context.member.toLowerCase();
   assertSelectorKeysRegistered(selectorKeys(selector.role), context.roles, `${capabilityPrefix}-role`);
   assertSelectorKeysRegistered(selectorKeys(selector.kind), context.kinds, `${capabilityPrefix}-kind`);
@@ -241,6 +256,7 @@ export const resolveGraphTheme = (
 ): GraphThemeResolution => {
   const baseline = getDefaultGraphThemePreset(theme);
   if (theme.style === undefined) return baseline;
+
   const definition = styles.get(theme.style);
   if (definition === undefined) {
     throw new RetikzGraphError({
@@ -249,9 +265,11 @@ export const resolveGraphTheme = (
       details: { capability: 'graph-theme-style', key: theme.style, availableKeys: [...styles.keys()] },
     });
   }
+
   try {
     const { codeBlockTokens, ...fragments } = definition.resolve(theme);
     const source = parseGraphThemeStyleSource(fragments);
+
     return {
       defaults: mergeGraphDefaults(baseline.defaults, source.defaults) ?? baseline.defaults,
       rules: mergeRules(baseline.rules, source.rules),

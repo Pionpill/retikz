@@ -12,6 +12,7 @@ import type { InputCell } from './cell';
 export type InputChainConnection = Omit<IRChainConnection, 'path'> & {
   path?: NonNullable<IRChainConnection['path']> & Pick<InputPath, 'arrow' | 'arrowDetail' | 'arrowPlacement'>;
 };
+
 /** 递归单元支持 Vanilla drawable */
 export type InputChainItem =
   | string
@@ -20,6 +21,7 @@ export type InputChainItem =
       branches: Array<{ items: Array<InputChainItem> }>;
       connection?: InputChainConnection;
     });
+
 /** 三种输入共用同一结构与连接契约 */
 export type InputChain = Omit<
   IRChain,
@@ -29,9 +31,11 @@ export type InputChain = Omit<
     | { data: NonNullable<IRChain['data']>; items?: never; skeleton?: never; dataExpand?: IRChain['dataExpand'] }
     | { skeleton: NonNullable<IRChain['skeleton']>; items?: never; data?: never; dataExpand?: never }
   );
+
 /** 复用路径归一化，只保留呈现字段和显式空 marks */
 const normalizeConnection = (connection: InputChainConnection): IRChainConnection => {
   if (connection.path === undefined) return connection;
+
   const { type, children, ...path } = normalizePath({
     ...connection.path,
     way: [
@@ -42,8 +46,10 @@ const normalizeConnection = (connection: InputChainConnection): IRChainConnectio
   void type;
   void children;
   const explicit = connection.path.arrow !== undefined || connection.path.marks !== undefined;
+
   return { ...connection, path: { ...path, ...(explicit ? { marks: path.marks ?? [] } : {}) } };
 };
+
 /** 递归收集内容，通过 Kernel 归一化一次并保留依赖 */
 export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = {
   kind: StandardChainEmbedKind,
@@ -75,7 +81,9 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
           ],
         },
       };
+
     const cells: Array<InputCell> = [];
+
     const collect = (items: Array<InputChainItem>) => {
       for (const item of items) {
         if (typeof item === 'string') cells.push({ content: item });
@@ -86,6 +94,7 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
         } else for (const branch of item.branches) collect(branch.items);
       }
     };
+
     collect(props.items);
     const normalized = normalizeCells(cells, context, ChainProvider);
     let cursor = 0;
@@ -95,14 +104,18 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
           cursor++;
           return item;
         }
+
         if (item.kind === 'cell') return { kind: 'cell', ...normalized.cells[cursor++] };
+
         const { connection: blockConnection, ...block } = item;
+
         return {
           ...block,
           ...(blockConnection === undefined ? {} : { connection: normalizeConnection(blockConnection) }),
           branches: item.branches.map(branch => ({ items: rebuild(branch.items) })),
         };
       });
+
     return {
       node: createChain({ ...common, items: rebuild(props.items) }),
       providerDependencies: normalized.providerDependencies,
@@ -110,6 +123,7 @@ export const ChainInputEmbedAdapter: SynchronousInputEmbedAdapter<InputChain> = 
     };
   },
 };
+
 /** 创建保留作者输入的链 */
 export const chain = (input: InputChain): InputEmbed<InputChain> => ({
   type: 'embed',

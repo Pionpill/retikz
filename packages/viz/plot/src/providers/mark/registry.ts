@@ -49,13 +49,16 @@ export const BUILTIN_MARKS: ReadonlyArray<AnyMarkDefinition> = Object.values(MAR
  */
 export const resolveMarkRegistry = (custom?: ReadonlyArray<AnyMarkDefinition>): Map<string, AnyMarkDefinition> => {
   const registry = new Map<string, AnyMarkDefinition>(BUILTIN_MARK_REGISTRY);
+
   for (const def of custom ?? []) {
     const type = extractMarkType(def.schema);
     if (registry.has(type)) {
       throw new RetikzPlotError(`lowerPlots: duplicate mark registration: "${type}"`);
     }
+
     registry.set(type, def);
   }
+
   return registry;
 };
 
@@ -69,9 +72,11 @@ const applyScopeChannelDeliveries = (
   channels: MarkChannels,
 ): IRChild | null => {
   if (!isScopeLayer(layer)) return layer;
+
   for (const entry of channels.scopeDeliveries ?? []) {
     entry.deliver(layer, entry.value, { mark, rows });
   }
+
   return layer;
 };
 

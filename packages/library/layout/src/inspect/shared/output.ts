@@ -134,9 +134,11 @@ const boundarySegmentOf = (line: LayoutInspectionLineMark): AxisAlignedBoundaryS
   if (sameCoordinate(line.y1, line.y2)) {
     return { axis: 'x', fixed: line.y1, start: Math.min(line.x1, line.x2), end: Math.max(line.x1, line.x2) };
   }
+
   if (sameCoordinate(line.x1, line.x2)) {
     return { axis: 'y', fixed: line.x1, start: Math.min(line.y1, line.y2), end: Math.max(line.y1, line.y2) };
   }
+
   return undefined;
 };
 
@@ -148,16 +150,19 @@ const subtractCoveredBoundary = (
   let fragments = [segment];
   covered.forEach(candidate => {
     if (candidate.axis !== segment.axis || !sameCoordinate(candidate.fixed, segment.fixed)) return;
+
     fragments = fragments.flatMap(fragment => {
       const overlapStart = Math.max(fragment.start, candidate.start);
       const overlapEnd = Math.min(fragment.end, candidate.end);
       if (overlapEnd <= overlapStart + 1e-9) return [fragment];
+
       return [
         { ...fragment, end: overlapStart },
         { ...fragment, start: overlapEnd },
       ].filter(part => part.end > part.start + 1e-9);
     });
   });
+
   return fragments;
 };
 
@@ -169,6 +174,7 @@ const lineFromBoundarySegment = (
   const forward = segment.axis === 'x' ? source.x1 <= source.x2 : source.y1 <= source.y2;
   const start = forward ? segment.start : segment.end;
   const end = forward ? segment.end : segment.start;
+
   return segment.axis === 'x'
     ? { ...source, x1: start, y1: segment.fixed, x2: end, y2: segment.fixed }
     : { ...source, x1: segment.fixed, y1: start, x2: segment.fixed, y2: end };
@@ -180,12 +186,15 @@ const normalizeBoundaryMark = (
   covered: Array<AxisAlignedBoundarySegment>,
 ): Array<LayoutInspectionMark> => {
   if (mark.kind !== 'line' && mark.kind !== 'outline') return [mark];
+
   const sourceLines = mark.kind === 'line' ? [mark] : inspectLayoutStructureRect(mark.role, mark.rect, mark.color);
   const fragments = sourceLines.flatMap(line => {
     const segment = boundarySegmentOf(line);
     if (segment === undefined) return [line];
+
     const uncovered = subtractCoveredBoundary(segment, covered);
     covered.push(...uncovered);
+
     return uncovered.map(fragment => lineFromBoundarySegment(line, fragment));
   });
   const unchanged =
@@ -200,6 +209,7 @@ const normalizeBoundaryMark = (
         sameCoordinate(line.y2, source.y2)
       );
     });
+
   return unchanged ? [mark] : fragments;
 };
 
@@ -226,6 +236,7 @@ export const inspectLayoutStructureRect = (
 /** 返回外层矩形减去裁剪后内层矩形所得的非重叠区域 */
 const subtractRect = (outer: LayoutArtifactRect, inner: LayoutArtifactRect): Array<LayoutArtifactRect> => {
   if (!positiveRect(outer)) return [];
+
   const outerRight = outer.x + outer.width;
   const outerBottom = outer.y + outer.height;
   const intersection = {
@@ -235,8 +246,10 @@ const subtractRect = (outer: LayoutArtifactRect, inner: LayoutArtifactRect): Arr
     height: Math.max(0, Math.min(outerBottom, inner.y + inner.height) - Math.max(outer.y, inner.y)),
   };
   if (!positiveRect(intersection)) return [outer];
+
   const intersectionRight = intersection.x + intersection.width;
   const intersectionBottom = intersection.y + intersection.height;
+
   return [
     { x: outer.x, y: outer.y, width: outer.width, height: intersection.y - outer.y },
     { x: outer.x, y: intersectionBottom, width: outer.width, height: outerBottom - intersectionBottom },
@@ -274,6 +287,7 @@ const fillRing = (
     opacity: LayoutInspectionPatternOpacity,
   }));
   if (fills.length === 0) return [];
+
   const outerRight = outer.x + outer.width;
   const outerBottom = outer.y + outer.height;
   const clippedInner = {
@@ -286,6 +300,7 @@ const fillRing = (
     ...inspectLayoutStructureRect(role, outer, color),
     ...(positiveRect(clippedInner) ? inspectLayoutStructureRect(role, clippedInner, color) : []),
   ];
+
   return [...fills, ...boundaries];
 };
 
@@ -328,8 +343,10 @@ export const inspectLayoutSpacing = (
           opacity: LayoutInspectionPatternOpacity,
         });
       }
+
       inspected.push(...inspectLayoutStructureRect(role, segment.bounds, appearance.scopeColor));
     });
+
   return inspected;
 };
 
@@ -349,17 +366,21 @@ export const inspectLayoutArtifactBase = (
   if (options.bounds.container) {
     boxes.push(inspectLayoutOutline('layout.container', container.allocationBounds, appearance.scopeColor));
   }
+
   if (options.bounds.content) {
     boxes.push(inspectLayoutOutline('layout.content', container.contentBounds, appearance.scopeColor));
   }
+
   items.forEach(item => {
     if (options.bounds.slot) boxes.push(inspectLayoutOutline('layout.slot', item.slotBounds, appearance.scopeColor));
     if (options.bounds.allocation) {
       boxes.push(inspectLayoutOutline('layout.allocation', item.allocationBounds, appearance.scopeColor));
     }
+
     if (options.bounds.visual) {
       boxes.push(inspectLayoutOutline('layout.visual', item.visualBounds, appearance.scopeColor));
     }
+
     if (
       options.overflow &&
       (item.overflow.allocation.x ||
@@ -376,6 +397,7 @@ export const inspectLayoutArtifactBase = (
         opacity: LayoutInspectionWarningOpacity,
       });
     }
+
     if (options.alignmentGuides && item.alignmentGuide !== undefined) {
       const vertical = alignmentGuideDimension === 'x';
       guides.push(
@@ -390,6 +412,7 @@ export const inspectLayoutArtifactBase = (
         ),
       );
     }
+
     if (options.labels) {
       labels.push({
         kind: 'label',
@@ -412,6 +435,7 @@ export const inspectLayoutArtifactBase = (
       ),
     );
   }
+
   if (options.spacing.margin) {
     items.forEach(item =>
       underlay.push(
@@ -419,6 +443,7 @@ export const inspectLayoutArtifactBase = (
       ),
     );
   }
+
   return { underlay, boxes, warnings, guides, labels };
 };
 
@@ -457,6 +482,7 @@ const lowerLayoutInspectionMark = (mark: LayoutInspectionMark): LayoutInspection
       },
     };
   }
+
   if (mark.kind === 'area') {
     return {
       type: 'node',
@@ -467,6 +493,7 @@ const lowerLayoutInspectionMark = (mark: LayoutInspectionMark): LayoutInspection
       layout: { minimumSize: { width: mark.rect.width, height: mark.rect.height }, padding: 0 },
     };
   }
+
   return {
     type: 'node',
     position: [mark.x, mark.y],

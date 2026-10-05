@@ -12,6 +12,7 @@ describe('intersectRayWithArc', () => {
       startAngleDeg: 0,
       endAngleDeg: 360,
     });
+
     expect(hits.length).toBe(2);
     expect(hits[0]).toBeCloseTo(3, 9); // 命中 x=-2
     expect(hits[1]).toBeCloseTo(7, 9); // 命中 x=2
@@ -26,6 +27,7 @@ describe('intersectRayWithArc', () => {
       startAngleDeg: 0,
       endAngleDeg: 360,
     });
+
     expect(hits.length).toBe(2);
     expect(hits[0]).toBeCloseTo(1.5, 9); // origin + 1.5 * [2, 0] = [-2, 0]
     expect(hits[1]).toBeCloseTo(3.5, 9); // origin + 3.5 * [2, 0] = [2, 0]
@@ -67,6 +69,7 @@ describe('intersectRayWithArc', () => {
       startAngleDeg: 0,
       endAngleDeg: 90,
     });
+
     expect(hits.length).toBe(1);
     expect(hits[0]).toBeCloseTo(7, 9);
   });

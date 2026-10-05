@@ -30,6 +30,7 @@ type SpyCanvasContext = Pick<
 };
 
 const contexts: Array<SpyCanvasContext> = [];
+
 const encodes: Array<{ width: number; height: number; format: string; quality?: number }> = [];
 
 const createContext = (): SpyCanvasContext => {
@@ -57,6 +58,7 @@ const createContext = (): SpyCanvasContext => {
     stroke: record('stroke'),
   };
   contexts.push(context);
+
   return context;
 };
 

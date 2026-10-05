@@ -28,6 +28,7 @@ describe('Graph defaults and rules Source fragments', () => {
         children: [{ namespace: 'graph', type: 'entity', role: 'activity', position: [0, 0], text: 'Inherited' }],
       });
       const text = primitivesOf(output.scene.primitives).find(primitive => primitive.type === 'text');
+
       expect(text).toMatchObject({ fontFamily: 'monospace', fontSize: 31, fontWeight: 700 });
     },
   );
@@ -37,6 +38,7 @@ describe('Graph defaults and rules Source fragments', () => {
       entity: { style: { font: {} }, layout: {} },
       relation: { style: {}, labelFont: {}, sourceMarker: {}, targetMarker: {} },
     });
+
     expect(defaults?.entity).toEqual({});
     expect(defaults?.relation).toEqual({});
   });
@@ -64,6 +66,7 @@ describe('Graph defaults and rules Source fragments', () => {
       });
       return Graph.resolveGraph(source, Graph.resolveGraphDefinitionOptions());
     };
+
     expect(project({})[0]).toMatchObject({ style: { font: { family: 'serif', weight: 700 } } });
     expect(
       Graph.mergeGraphDefaults(
@@ -71,7 +74,9 @@ describe('Graph defaults and rules Source fragments', () => {
         { entity: { style: { font: { size: undefined } } } },
       ),
     ).toMatchObject({ entity: { style: { font: { family: 'serif', weight: 700 } } } });
+
     const replaced = project({ size: 20 });
+
     expect(Graph.EntitySchema.parse(replaced[0]).style?.font).toEqual({ size: 20 });
     expect(replaced[1]).toMatchObject({ labelFont: { family: 'serif', weight: 700, size: 20 } });
   });
@@ -131,6 +136,7 @@ describe('Graph defaults and rules Source fragments', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (result.success) return;
 
     expect(result.error.issues).toEqual(
@@ -153,6 +159,7 @@ describe('Graph defaults and rules Source fragments', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (result.success) return;
 
     expect(result.error.issues).toEqual(
@@ -204,6 +211,7 @@ describe('Graph defaults and rules Source fragments', () => {
     const result = Graph.GraphSchema.safeParse(source);
 
     expect(result.success).toBe(false);
+
     if (result.success) return;
 
     expect(result.error.issues).toEqual(

@@ -32,8 +32,10 @@ const flattenLayoutChildren = (children: ReactNode): Array<ReactNode> => {
       );
       return;
     }
+
     flattened.push(child);
   });
+
   return flattened;
 };
 
@@ -58,6 +60,7 @@ const resolveLayoutItemChild = (
       details: { childCount: children?.length ?? 0 },
     });
   }
+
   return Object.freeze({ child: children[0], adapters: input.adapters });
 };
 
@@ -82,12 +85,14 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
         details: { expectedKind, expectedComponent: expectedComponent.displayName, index },
       });
     }
+
     const props = (child as ReactElement<LayoutItemAuthoringProps>).props;
     const { children: itemChildren, ir, itemKey, ...item } = props;
     void itemChildren;
     void ir;
     const resolved = resolveLayoutItemChild(props, `${context.id}:items:${index}`);
     adapters.push(...resolved.adapters);
+
     return {
       ...item,
       kind: expectedKind,
@@ -95,5 +100,6 @@ export const createInputLayoutItems = <TKind extends LayoutItemKind>(
       child: resolved.child,
     } as LayoutItemInputByKind[TKind];
   });
+
   return Object.freeze({ items, adapters: Object.freeze(adapters) });
 };

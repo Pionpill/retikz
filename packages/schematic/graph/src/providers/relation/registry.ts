@@ -35,8 +35,10 @@ const uniqueDirections = (
   directions: ReadonlyArray<RelationDirection>,
 ): ReadonlySet<RelationDirection> => {
   if (directions.length === 0) throw conflictingDefinition(capability, key, 'requires at least one direction.');
+
   const unique = new Set(directions);
   if (unique.size !== directions.length) throw duplicateDefinition(`${capability} direction`, key);
+
   return unique;
 };
 
@@ -45,6 +47,7 @@ export const resolveRelationRoleRegistry = (
   custom: ReadonlyArray<RelationRoleDefinition> | undefined = undefined,
 ): ReadonlyMap<string, RelationRoleDefinition> => {
   const registry = new Map<string, RelationRoleDefinition>();
+
   for (const definition of [...BUILTIN_RELATION_ROLE_DEFINITIONS, ...(custom ?? [])]) {
     assertNonEmptyString(definition.role, 'Relation role', invalidDefinition('Relation role', definition.role));
     assertNonEmptyString(
@@ -53,6 +56,7 @@ export const resolveRelationRoleRegistry = (
       invalidDefinition(`Relation role '${definition.role}' description`, definition.description),
     );
     if (registry.has(definition.role)) throw duplicateDefinition('relation-role', definition.role);
+
     const allowed = uniqueDirections('Relation role', definition.role, definition.allowedDirections);
     if (!allowed.has(definition.defaultDirection)) {
       throw conflictingDefinition(
@@ -61,18 +65,22 @@ export const resolveRelationRoleRegistry = (
         `default direction '${definition.defaultDirection}' is not allowed.`,
       );
     }
+
     for (const direction of allowed) {
       if (definition.directions[direction] === undefined) {
         throw conflictingDefinition('Relation role', definition.role, `does not define direction '${direction}'.`);
       }
     }
+
     for (const direction of Object.keys(definition.directions) as Array<RelationDirection>) {
       if (!allowed.has(direction)) {
         throw conflictingDefinition('Relation role', definition.role, `defines unsupported direction '${direction}'.`);
       }
     }
+
     registry.set(definition.role, definition);
   }
+
   return registry;
 };
 
@@ -82,6 +90,7 @@ export const resolveRelationKindRegistry = (
   roles: ReadonlyMap<string, RelationRoleDefinition>,
 ): ReadonlyMap<string, RelationKindDefinition> => {
   const registry = new Map<string, RelationKindDefinition>();
+
   for (const definition of custom ?? []) {
     assertNonEmptyString(definition.kind, 'Relation kind', invalidDefinition('Relation kind', definition.kind));
     assertNonEmptyString(
@@ -95,13 +104,16 @@ export const resolveRelationKindRegistry = (
       invalidDefinition(`Relation kind '${definition.kind}' description`, definition.description),
     );
     if (registry.has(definition.kind)) throw duplicateDefinition('relation-kind', definition.kind);
+
     const role = roles.get(definition.role);
     if (role === undefined) {
       throw missingDefinition(`Relation kind '${definition.kind}' parent role`, definition.role, roles.keys());
     }
+
     const roleAllowed = new Set(role.allowedDirections);
     const effectiveAllowed = definition.allowedDirections ?? role.allowedDirections;
     const allowed = uniqueDirections('Relation kind', definition.kind, effectiveAllowed);
+
     for (const direction of allowed) {
       if (!roleAllowed.has(direction)) {
         throw conflictingDefinition(
@@ -111,6 +123,7 @@ export const resolveRelationKindRegistry = (
         );
       }
     }
+
     const defaultDirection = definition.defaultDirection ?? role.defaultDirection;
     if (!allowed.has(defaultDirection)) {
       throw conflictingDefinition(
@@ -119,13 +132,16 @@ export const resolveRelationKindRegistry = (
         `default direction '${defaultDirection}' is not allowed.`,
       );
     }
+
     for (const direction of Object.keys(definition.directions ?? {}) as Array<RelationDirection>) {
       if (!allowed.has(direction)) {
         throw conflictingDefinition('Relation kind', definition.kind, `defines unsupported direction '${direction}'.`);
       }
     }
+
     registry.set(definition.kind, definition);
   }
+
   return registry;
 };
 
@@ -136,6 +152,7 @@ export const resolveRelationPredicateRegistry = (
   kinds: ReadonlyMap<string, RelationKindDefinition>,
 ): ReadonlyMap<string, RelationPredicateDefinition> => {
   const registry = new Map<string, RelationPredicateDefinition>();
+
   for (const definition of custom ?? []) {
     assertNonEmptyString(
       definition.name,
@@ -156,14 +173,18 @@ export const resolveRelationPredicateRegistry = (
     if (!roles.has(definition.role)) {
       throw missingDefinition(`Relation predicate '${definition.name}' parent role`, definition.role, roles.keys());
     }
+
     const seenKinds = new Set<string>();
+
     for (const kindKey of definition.kinds ?? []) {
       if (seenKinds.has(kindKey)) throw duplicateDefinition(`Relation predicate '${definition.name}' kind`, kindKey);
+
       seenKinds.add(kindKey);
       const kind = kinds.get(kindKey);
       if (kind === undefined) {
         throw missingDefinition(`Relation predicate '${definition.name}' kind`, kindKey, kinds.keys());
       }
+
       if (kind.role !== definition.role) {
         throw conflictingDefinition(
           `Relation predicate '${definition.name}' kind`,
@@ -172,7 +193,9 @@ export const resolveRelationPredicateRegistry = (
         );
       }
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };

@@ -3,23 +3,28 @@ import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/founda
 import { describe, expect, it } from 'vitest';
 
 type ParseStaticCssColor = (input: string) => Readonly<{ r: number; g: number; b: number; a: number }> | null;
+
 type CompositeOpaqueColor = (foreground: string, backdrop: string, weight: number) => `#${string}`;
+
 type StaticCssNamedColorHexByName = Readonly<Record<string, `#${string}`>>;
 
 const parseStaticCssColor = (input: string): ReturnType<ParseStaticCssColor> => {
   const candidate = (foundation as Record<string, unknown>).parseStaticCssColor;
+
   expect(candidate).toEqual(expect.any(Function));
   return (candidate as ParseStaticCssColor)(input);
 };
 
 const compositeOpaqueColor = (foreground: string, backdrop: string, weight: number): `#${string}` => {
   const candidate = (foundation as Record<string, unknown>).compositeOpaqueColor;
+
   expect(candidate).toEqual(expect.any(Function));
   return (candidate as CompositeOpaqueColor)(foreground, backdrop, weight);
 };
 
 const staticCssNamedColorHexByName = (): StaticCssNamedColorHexByName => {
   const candidate = (foundation as Record<string, unknown>).StaticCssNamedColorHexByName;
+
   expect(candidate).toEqual(expect.any(Object));
   return candidate as StaticCssNamedColorHexByName;
 };
@@ -31,6 +36,7 @@ const captureFoundationError = (operation: () => unknown): RetikzFoundationError
     expect(error).toBeInstanceOf(RetikzFoundationError);
     return error as RetikzFoundationError;
   }
+
   throw new Error('Expected operation to throw RetikzFoundationError');
 };
 

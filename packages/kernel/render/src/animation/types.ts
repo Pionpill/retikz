@@ -6,7 +6,9 @@
 
 /** cubic-bezier 控制点四元组 [x1, y1, x2, y2] */
 export type CubicBezier = [number, number, number, number];
+
 /** 缓动函数：归一化进度 t∈[0,1] → 输出进度 */
 export type EasingFn = (t: number) => number;
+
 /** 自定义缓动注册表：名 → cubic-bezier 四元组（CSS / WAAPI 通用）或函数（仅 Canvas / JS） */
 export type EasingRegistry = Record<string, CubicBezier | EasingFn>;

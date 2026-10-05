@@ -61,6 +61,7 @@ const makeContext = (
   const paintIdFor = (id: string): string => `retikz-paint-${safeIdPrefix}-${id}`;
   const clipIdFor = (id: string): string => `retikz-clip-${safeIdPrefix}-${id}`;
   const shadowIdFor = (shadow: IRDropShadow): string => `retikz-shadow-${safeIdPrefix}-${shadowHash(shadow)}`;
+
   return {
     context: {
       arrowMarkerIdFor,
@@ -78,20 +79,24 @@ const makeContext = (
 /** 收集 + 按 stableArrowKey dedup arrow 端点 spec（保持首次出现顺序） */
 const dedupArrowSpecs = (prims: ReadonlyArray<ScenePrimitive>): Map<string, ResolvedArrowEnd> => {
   const uniqueByKey = new Map<string, ResolvedArrowEnd>();
+
   for (const s of collectArrowEnds(prims)) {
     const k = stableArrowKey(s);
     if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);
   }
+
   return uniqueByKey;
 };
 
 /** 收集 + 按 stableShadowKey dedup shadow（保持首次出现顺序） */
 const dedupShadows = (prims: ReadonlyArray<ScenePrimitive>): Map<string, IRDropShadow> => {
   const uniqueByKey = new Map<string, IRDropShadow>();
+
   for (const s of collectShadows(prims)) {
     const k = stableShadowKey(s);
     if (!uniqueByKey.has(k)) uniqueByKey.set(k, s);
   }
+
   return uniqueByKey;
 };
 
@@ -106,13 +111,19 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
   if (uniqueByKey.size === 0 && uniqueShadows.size === 0 && paintResources.length === 0 && clipResources.length === 0) {
     return undefined;
   }
+
   const children: Array<SvgNode> = [];
+
   for (const spec of uniqueByKey.values()) {
     children.push(buildArrowMarker(arrowMarkerIdFor(spec), spec));
   }
+
   for (const r of paintResources) children.push(buildPaintDef(r, paintIdFor(r.id)));
+
   for (const r of clipResources) children.push(buildClipDef(r, clipIdFor(r.id)));
+
   for (const s of uniqueShadows.values()) children.push(buildShadowDef(s, shadowIdFor(s), scene.layout));
+
   return { tag: 'defs', attrs: {}, children };
 };
 
@@ -123,6 +134,7 @@ const buildDefs = (scene: Scene, idPrefix: string): SvgNode | undefined => {
 export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): Array<SvgNode> => {
   const safeIdPrefix = toSafeSvgToken(options.idPrefix);
   const { context } = makeContext(options.idPrefix);
+
   // 截帧（snapshotAt 给定）→ 烘焙静态帧的收集器；否则按 animate 决定动画收集器 / 无（base）
   const collector =
     options.snapshotAt !== undefined
@@ -144,10 +156,12 @@ export const buildSvgFragment = (scene: Scene, options: BuildDocumentOptions): A
   let prims = scene.primitives.filter((p): p is ScenePrimitive => Boolean(p)).map(p => buildPrim(p, context));
   if (collector) prims = collector.wrapCamera(prims, scene);
   const style = collector?.styleNode();
+
   // 顺序：<style>（动画）→ <defs>（资源）→ primitives
   const head: Array<SvgNode> = [];
   if (style) head.push(style);
   if (defs) head.push(defs);
+
   return [...head, ...prims];
 };
 
@@ -188,6 +202,7 @@ export const buildSvgFrameDocument = (frame: StaticRenderFrame, options: BuildDo
       changed: visited,
     });
   }
+
   return document;
 };
 

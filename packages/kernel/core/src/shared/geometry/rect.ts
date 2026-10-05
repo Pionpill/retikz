@@ -27,6 +27,7 @@ export const rect = {
     const [lx, ly] = worldToLocal(r, p);
     const halfW = r.width / 2;
     const halfH = r.height / 2;
+
     return lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH;
   },
   /** 8 个标准方位 anchor 之一的世界坐标（含旋转）；center 请用 `rect.center()` */
@@ -35,6 +36,7 @@ export const rect = {
     const halfH = r.height / 2;
     let lx = 0;
     let ly = 0;
+
     switch (name) {
       case Anchor.Top:
         ly = -halfH;
@@ -65,17 +67,20 @@ export const rect = {
         ly = halfH;
         break;
     }
+
     return localToWorld(r, [lx, ly]);
   },
   /** 从中心向 toward 方向射线与矩形边界交点（含旋转），Path 端点贴 Node 边界用 */
   boundaryPoint: (r: Rect, toward: Position): Position => {
     const [localX, localY] = worldToLocal(r, toward);
     if (localX === 0 && localY === 0) return [r.x, r.y];
+
     const halfW = r.width / 2;
     const halfH = r.height / 2;
     const tx = localX === 0 ? Infinity : halfW / Math.abs(localX);
     const ty = localY === 0 ? Infinity : halfH / Math.abs(localY);
     const t = Math.min(tx, ty);
+
     return localToWorld(r, [localX * t, localY * t]);
   },
   /** 边上比例点：side 直边 t∈[0,1] 处（两角 anchor 线性插值，含旋转）；方向见 EDGE_ENDS */

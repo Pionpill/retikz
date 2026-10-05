@@ -14,6 +14,7 @@ export type InputMatrix = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
     | { data: NonNullable<IRMatrix['data']>; items?: never; skeleton?: never; dataExpand?: IRMatrix['dataExpand'] }
     | { skeleton: NonNullable<IRMatrix['skeleton']>; items?: never; data?: never; dataExpand?: never }
   );
+
 /** 收集矩阵及格内 drawable 的依赖 */
 export const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> = {
   kind: StandardMatrixEmbedKind,
@@ -23,6 +24,7 @@ export const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> 
         node: createMatrix({ namespace: 'standard', type: 'matrix', ...props }),
         providerDependencies: { roots: [MatrixProvider.key], providers: [MatrixProvider, PathClipProvider] },
       };
+
     if (props.data !== undefined)
       return {
         node: createMatrix({ namespace: 'standard', type: 'matrix', ...props }),
@@ -31,6 +33,7 @@ export const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> 
           providers: [MatrixProvider, ...dataCellDependencies.providers],
         },
       };
+
     const { items, ...input } = props;
     const normalized = normalizeCells(
       items.flatMap(row => row.map(cell => (typeof cell === 'string' ? { content: cell } : cell))),
@@ -38,6 +41,7 @@ export const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> 
       MatrixProvider,
     );
     let cursor = 0;
+
     return {
       node: createMatrix({
         namespace: 'standard',
@@ -55,6 +59,7 @@ export const MatrixInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMatrix> 
     };
   },
 };
+
 /** 创建保留原始输入的 Matrix embed */
 export const matrix = (input: InputMatrix): InputEmbed<InputMatrix> => ({
   type: 'embed',

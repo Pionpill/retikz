@@ -51,6 +51,7 @@ describe('Cell visual scale runtime guard', () => {
         return undefined;
       },
     });
+
     expect(runCustom(transformed)).toBeUndefined();
     expect((transformedOptions as { run: () => string }).run()).toBe('x');
     expect(Object.isFrozen(transformedOptions)).toBe(true);
@@ -81,8 +82,10 @@ describe('Cell visual scale runtime guard', () => {
     expect(Object.isFrozen(scale)).toBe(true);
     expect(Object.isFrozen(scale?.domain)).toBe(true);
     expect(Object.isFrozen(scale?.range)).toBe(true);
+
     domain[0] = 9;
     range[0] = 'orange';
+
     expect(scale).toMatchObject({ domain: [1, 2], range: ['red', 'blue'] });
   });
 
@@ -139,6 +142,7 @@ describe('Cell visual scale runtime guard', () => {
       optionsSchema: strictObject({}),
       resolve: () => ({ of: () => 'red', ...partial }) as never,
     });
+
     expect(() => runCustom(invalid)).toThrow(message);
   });
 
@@ -155,6 +159,7 @@ describe('Cell visual scale runtime guard', () => {
       }),
     });
     const scale = runCustom(definition, [1, 1]);
+
     expect(scale?.of(1)).toBe('not-a-color');
     expect(() => scale?.of(1)).toThrow(/deterministic/i);
 
@@ -163,6 +168,7 @@ describe('Cell visual scale runtime guard', () => {
       optionsSchema: strictObject({}),
       resolve: () => ({ of: () => ' ', legendForm: 'swatch', domain: [1], range: ['red'] }),
     });
+
     expect(() => runCustom(whitespace)?.of(1)).toThrow(/color/i);
   });
 });

@@ -84,6 +84,7 @@ export const mount: MountFn = ((
     if (staticOptions.renderer === 'canvas') return mountCanvas(container, input, staticOptions);
     return mountSvg(container, input, staticOptions);
   }
+
   const rawOptions = options as MountUnifiedOptions;
   const mountRawCanvas = mountCanvas as (
     target: Element,
@@ -96,5 +97,6 @@ export const mount: MountFn = ((
     mountOptions: MountOptions,
   ) => VanillaView;
   if (rawOptions.renderer === 'canvas') return mountRawCanvas(container, input, rawOptions);
+
   return mountRawSvg(container, input, rawOptions);
 }) as MountFn;

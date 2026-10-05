@@ -20,6 +20,7 @@ const includeLoaders: Record<string, MdxIncludeLoader | undefined> = import.meta
 );
 
 const includeMarkerPattern = /\{\/\*\s*@include\s+([a-z0-9][a-z0-9/_-]*)\s*\*\/\}/g;
+
 const includePathPattern = /^\.\.\/contents\/(.+)\/_includes\/([^/]+)\.([a-z]+)\.mdx$/;
 
 const isLang = (value: string): value is Lang => LANGS.some(lang => lang === value);
@@ -33,6 +34,7 @@ export const createMdxIncludeRegistry = (entries: ReadonlyArray<MdxIncludeEntry>
 
   for (const [path, loader] of entries) {
     if (!loader) continue;
+
     const match = path.match(includePathPattern);
     if (!match) throw new Error(`Invalid MDX include source path "${path}"`);
 
@@ -42,6 +44,7 @@ export const createMdxIncludeRegistry = (entries: ReadonlyArray<MdxIncludeEntry>
     const name = `${match[1]}/${match[2]}`;
     const sources = registry.get(name) ?? {};
     if (sources[lang]) throw new Error(`Duplicate MDX include "${name}" for language "${lang}"`);
+
     sources[lang] = loader;
     registry.set(name, sources);
   }
@@ -73,6 +76,7 @@ export const expandMdxIncludes = async (
     const name = match[1];
     const sources = registry.get(name);
     if (!sources) throw new Error(`Unknown MDX include "${name}"`);
+
     const loader = sources[lang];
     if (!loader) throw new Error(`MDX include "${name}" has no "${lang}" source`);
 

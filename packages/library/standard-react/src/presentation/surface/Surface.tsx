@@ -26,10 +26,12 @@ const createSurfaceInput = (props: Readonly<Record<string, unknown>>, context: R
       details: { childCount: childrenInput?.length ?? 0, component: 'Surface' },
     });
   }
+
   const inputProps: InputSurface = {
     ...input,
     child: childrenInput[0],
   };
+
   return withInputEmbedAdapters(inputProps, childInput.adapters);
 };
 

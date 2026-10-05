@@ -17,20 +17,27 @@ import { arrowMarks } from '../helpers/arrow-marks';
 /** 递归展开 GroupPrim，把所有叶子 primitive 拍平（scope 子元素在 GroupPrim 内） */
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];
+
   for (const p of prims) {
     out.push(p);
     if (p.type === 'group') out.push(...flatten(p.children));
   }
+
   return out;
 };
 
 const allPrims = (ir: IRScene): Array<ScenePrimitive> => flatten(compileToScene(ir).scene.primitives);
+
 const rectOf = (ir: IRScene): RectPrim | undefined => allPrims(ir).find((p): p is RectPrim => p.type === 'rect');
+
 const ellipseOf = (ir: IRScene): EllipsePrim | undefined =>
   allPrims(ir).find((p): p is EllipsePrim => p.type === 'ellipse');
+
 const linePathOf = (ir: IRScene): PathPrim | undefined =>
   allPrims(ir).find((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'));
+
 const textsOf = (ir: IRScene): Array<TextPrim> => allPrims(ir).filter((p): p is TextPrim => p.type === 'text');
+
 /** 取指定文字内容的 TextPrim（node 文本 vs step label 文本区分） */
 const textWith = (ir: IRScene, content: string): TextPrim | undefined =>
   textsOf(ir).find(t => t.lines[0]?.text === content);
@@ -44,7 +51,9 @@ const textWith = (ir: IRScene, content: string): TextPrim | undefined =>
  */
 const markerPaintColor = (spec: ResolvedArrowEnd | undefined): string | undefined => {
   if (!spec) return undefined;
+
   const pickFill = (f: MarkerFill | undefined): string | undefined => (typeof f === 'string' ? f : undefined);
+
   const walk = (prims: ReadonlyArray<MarkerPrimitive>): string | undefined => {
     for (const p of prims) {
       if (p.type === 'group') {
@@ -52,11 +61,14 @@ const markerPaintColor = (spec: ResolvedArrowEnd | undefined): string | undefine
         if (c !== undefined) return c;
         continue;
       }
+
       const c = pickFill(p.fill) ?? (typeof p.stroke === 'string' ? p.stroke : undefined);
       if (c !== undefined && c !== 'context-stroke') return c;
     }
+
     return undefined;
   };
+
   return walk(spec.marker);
 };
 
@@ -88,11 +100,15 @@ describe('Happy: 主色级联 / 四通道', () => {
       ],
     };
     const rect = rectOf(ir);
+
     expect(rect?.stroke).toBe('blue');
     expect(rect?.fill).toBe('blue');
     expect(textWith(ir, 'A')?.fill).toBe('blue');
+
     const path = linePathOf(ir);
+
     expect(path?.stroke).toBe('blue');
+
     // 解析后的箭头颜色物化进 marker 几何（新契约：color 不再挂 ResolvedArrowEnd）
     expect(markerPaintColor(path?.arrowEnd)).toBe('blue');
     expect(textWith(ir, 'e')?.fill).toBe('blue');
@@ -115,6 +131,7 @@ describe('Happy: 主色级联 / 四通道', () => {
         },
       ],
     };
+
     expect(ellipseOf(ir)?.fill).toBe('lightblue');
   });
 
@@ -134,6 +151,7 @@ describe('Happy: 主色级联 / 四通道', () => {
         },
       ],
     };
+
     expect(linePathOf(ir)?.stroke).toBe('crimson');
     expect(markerPaintColor(linePathOf(ir)?.arrowEnd)).toBe('crimson');
     expect(textWith(ir, 'sin')?.fill).toBe('crimson');
@@ -160,7 +178,9 @@ describe('Happy: 主色级联 / 四通道', () => {
         },
       ],
     };
+
     expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
+
     // scale 1.5 在 compile 被消费乘进 markerWidth（默认 length 8 × 1.5 = 12）；scale 不再挂 ResolvedArrowEnd
     expect(linePathOf(ir)?.arrowEnd?.markerWidth).toBeCloseTo(12, 5);
   });
@@ -184,6 +204,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.stroke).toBe('red');
     expect(rectOf(ir)?.fill).toBe('blue');
     expect(textWith(ir, 'x')?.fill).toBe('blue');
@@ -201,6 +222,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.stroke).toBe('white');
     expect(rectOf(ir)?.fill).toBe('white');
     expect(textWith(ir, 'x')?.fill).toBe('white');
@@ -212,6 +234,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
       type: 'scene',
       children: [{ type: 'node', position: [0, 0], text: 'x' }],
     };
+
     expect(rectOf(ir)?.stroke).toBe('currentColor');
     expect(rectOf(ir)?.fill).toBe('transparent');
     expect(textWith(ir, 'x')?.fill).toBe('currentColor');
@@ -229,6 +252,7 @@ describe('边界: 缺省 / 显式 / 内置', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.stroke).toBe('currentColor');
     expect(rectOf(ir)?.fill).toBe('transparent');
   });
@@ -258,6 +282,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.stroke).toBe('none');
     expect(rectOf(ir)?.fill).toBe('white');
   });
@@ -280,6 +305,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.stroke).toBe('blue');
   });
 
@@ -300,6 +326,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.stroke).toBe('green');
   });
 
@@ -322,6 +349,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.stroke).toBe('white');
     expect(rectOf(ir)?.fill).toBe('white');
   });
@@ -354,6 +382,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     // 外层 arrowDefault circle 被切 → 回内置 stealth；但 color 仍跟宿主 path 红（host 轴不切）
     expect(linePathOf(ir)?.arrowEnd?.shape).toBe('stealth');
     expect(markerPaintColor(linePathOf(ir)?.arrowEnd)).toBe('red');
@@ -386,6 +415,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     expect(textWith(ir, 'x')?.fill).toBe('red');
   });
 
@@ -407,6 +437,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.opacity).toBe(0.5);
   });
 
@@ -423,6 +454,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.strokeWidth).toBe(3);
   });
 
@@ -439,6 +471,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         },
       ],
     };
+
     expect(rectOf(ir)?.stroke).toBe('red');
   });
 
@@ -476,6 +509,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
     const arrowColors = allPrims(ir)
       .filter((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
       .map(p => markerPaintColor(p.arrowEnd));
+
     // 第一条：主色 red 覆盖 arrowDefault green（host 轴 > every-X color）；第二条：元素 arrowDetail.color=purple 最高
     expect(arrowColors).toEqual(['red', 'purple']);
   });
@@ -514,6 +548,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
     const arrowColors = allPrims(ir)
       .filter((p): p is PathPrim => p.type === 'path' && !p.commands.some(c => c.kind === 'close'))
       .map(p => markerPaintColor(p.arrowEnd));
+
     // 第一条：主色 red 覆盖 arrowDefault.end.color=green（端点回退主色）；第二条：显式 arrowDetail.end.color=purple 最高
     expect(arrowColors).toEqual(['red', 'purple']);
   });
@@ -546,6 +581,7 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       ],
     };
     const arrow = linePathOf(ir)?.arrowEnd;
+
     // per-field merge：内层 shape=stealth 覆盖，外层 end.color=red 保留（path 无主色，arrowDefault 端点色生效）
     expect(arrow?.shape).toBe('stealth');
     expect(markerPaintColor(arrow)).toBe('red');

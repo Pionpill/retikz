@@ -13,6 +13,7 @@ import { PlotSchema } from '../../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();
+
 const assertScaleFieldCompatible = (role: string, scaleType: string, fieldType: DataFieldType, scaleName: string) =>
   assertScaleFieldCompatibleOp(role, scaleType, fieldType, scaleName, { registry: scaleRegistry });
 
@@ -38,12 +39,15 @@ describe('derivePositionScale — 按 DataFieldType 派生默认 scale', () => {
   it('continuous_to_linear', () => {
     expect(derivePositionScale(DataFieldType.Continuous, 'x').type).toBe('linear');
   });
+
   it('temporal_to_time', () => {
     expect(derivePositionScale(DataFieldType.Temporal, 'x').type).toBe('time');
   });
+
   it('categorical_to_band', () => {
     expect(derivePositionScale(DataFieldType.Categorical, 'x').type).toBe('band');
   });
+
   it('undefined_field_defaults_linear', () => {
     expect(derivePositionScale(undefined, 'x').type).toBe('linear');
   });
@@ -53,15 +57,19 @@ describe('assertScaleFieldCompatible — 类型↔scale 兼容', () => {
   it('incompatible_categorical_linear_throws', () => {
     expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs')).toThrow(/incompatible/i);
   });
+
   it('incompatible_temporal_band_throws', () => {
     expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Temporal, 'xs')).toThrow(/incompatible/i);
   });
+
   it('continuous_band_allowed', () => {
     expect(() => assertScaleFieldCompatible('x', 'band', DataFieldType.Continuous, 'xs')).not.toThrow();
   });
+
   it('continuous_linear_allowed', () => {
     expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Continuous, 'xs')).not.toThrow();
   });
+
   it('temporal_time_allowed', () => {
     expect(() => assertScaleFieldCompatible('x', 'time', DataFieldType.Temporal, 'xs')).not.toThrow();
   });
@@ -82,6 +90,7 @@ describe('type-driven scale 集成', () => {
         ],
       },
     );
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -165,6 +174,7 @@ describe('type-driven scale 集成', () => {
         { type: 'point', encoding: { x: { field: 'c' }, y: { field: 'b' } } },
       ],
     });
+
     expect(() => compile(s, { d: [{ a: 1, b: 2, c: 'x' }] })).toThrow(/incompatible/i);
   });
 
@@ -188,6 +198,7 @@ describe('type-driven scale 集成', () => {
         { type: 'point', encoding: { x: { field: 'c' }, y: { field: 'b' } } },
       ],
     });
+
     expect(() => compile(s, { d: [{ a: 1, b: 2, c: 'x' }] })).toThrow(/mixed types/i);
   });
 

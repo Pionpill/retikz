@@ -45,6 +45,7 @@ export const compileBranchDiagram = (
   });
   const graphOptions = resolveGraphDefinitionOptions(options);
   const relations = new Map<string, { source: IRGraphRelation; appearance: string }>();
+
   for (const [branchIndex, branch] of source.branches.entries())
     for (let index = 1; index < branch.nodes.length; index += 1) {
       const relation: IRGraphRelation = {
@@ -69,8 +70,10 @@ export const compileBranchDiagram = (
           message: 'Shared Branch segment has conflicting effective appearances.',
           details: { path: ['branches', branchIndex, 'style'], relatedIds: [relation.source.id, relation.target.id] },
         });
+
       if (previous === undefined) relations.set(key, { source: relation, appearance });
     }
+
   const output = executeBranchLayout(definition, {
     layout: diagram.layout,
     nodes: measurements,
@@ -82,6 +85,7 @@ export const compileBranchDiagram = (
     ...node,
     position: [...positions.get(node.id)!.position] as Position,
   }));
+
   for (const segment of output.segments) {
     const relation = relations.get(JSON.stringify([segment.source, segment.target]))!.source;
     children.push({
@@ -96,7 +100,9 @@ export const compileBranchDiagram = (
       ],
     });
   }
+
   const drawing: IRScope = { type: 'scope', children };
+
   try {
     const probe = requiredLayoutProbe(context, { child: drawing, occurrence: 0 }, intrinsicLayoutProposal('natural'));
     const bounds = probe.visualBounds;
@@ -114,6 +120,7 @@ export const compileBranchDiagram = (
         },
       ],
     });
+
     const foundation = composeDiagramFoundation(
       resolveDiagramFoundation(source, { ...resolveDiagramDefinitionOptions(options), theme: context.theme }),
       wrapped,
@@ -124,6 +131,7 @@ export const compileBranchDiagram = (
     const segmentIndexes = new Map(
       output.segments.map((segment, index) => [JSON.stringify([segment.source, segment.target]), index]),
     );
+
     const artifact: BranchDiagramArtifact = {
       layout: { definition: definition.name },
       frame: { allocationBounds: foundation.frame.allocationBounds, visualBounds: foundation.frame.visualBounds },
@@ -143,6 +151,7 @@ export const compileBranchDiagram = (
           .map((target, index) => segmentIndexes.get(JSON.stringify([branch.nodes[index], target]))!),
       })),
     };
+
     const {
       namespace: _namespace,
       type: _type,
@@ -155,6 +164,7 @@ export const compileBranchDiagram = (
       diagramDefaults: _defaults,
       ...scope
     } = source;
+
     return {
       allocationBounds: foundation.frame.allocationBounds,
       children: [

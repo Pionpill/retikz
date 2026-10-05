@@ -28,6 +28,7 @@ const graphCanonicalRender = (node: ReactNode): ReactNode => {
         }
       : element.props;
   const { children, width, height, viewBox, className, renderer, themeStyles, ...graphProps } = resolvedProps;
+
   // LogicFigure 的 Docs-only 选项不能进入严格的 Graph Source schema
   delete graphProps.semanticColors;
   const hostProps: GraphLayoutHostProps = {

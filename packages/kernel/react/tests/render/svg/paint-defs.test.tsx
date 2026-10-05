@@ -12,11 +12,13 @@ const rect = (fill: RectPrim['fill']): RectPrim => ({ type: 'rect', x: 0, y: 0, 
 describe('renderPrim — PaintValue fill 分派', () => {
   it('纯色 string → fill attribute', () => {
     const el = renderPrim(rect('red'), 0) as AnyEl;
+
     expect(el.props.fill).toBe('red');
   });
 
   it('var() 纯色 → 走 inline style.fill、attribute 为 undefined', () => {
     const el = renderPrim(rect('var(--bg)'), 0) as AnyEl;
+
     expect(el.props.fill).toBeUndefined();
     expect((el.props.style as { fill?: string }).fill).toBe('var(--bg)');
   });
@@ -25,16 +27,19 @@ describe('renderPrim — PaintValue fill 分派', () => {
     const el = renderPrim(rect({ kind: 'resourceRef', id: 'paint-1' }), 0, {
       paintRefUrl: id => `url(#X-${id})`,
     }) as AnyEl;
+
     expect(el.props.fill).toBe('url(#X-paint-1)');
   });
 
   it('contextStroke → fill="context-stroke"', () => {
     const el = renderPrim(rect({ kind: 'contextStroke' }), 0) as AnyEl;
+
     expect(el.props.fill).toBe('context-stroke');
   });
 
   it('resourceRef 缺省 paintRefUrl → url(#id)', () => {
     const el = renderPrim(rect({ kind: 'resourceRef', id: 'paint-2' }), 0) as AnyEl;
+
     expect(el.props.fill).toBe('url(#paint-2)');
   });
 });
@@ -53,11 +58,13 @@ describe('renderPrim — PaintValue stroke 分派', () => {
     const el = renderPrim(path, 0, {
       paintRefUrl: id => `url(#X-${id})`,
     }) as AnyEl;
+
     expect(el.props.stroke).toBe('url(#X-paint-1)');
   });
 
   it('var() 纯色 stroke → 走 inline style.stroke', () => {
     const el = renderPrim({ ...path, stroke: 'var(--outline)' }, 0) as AnyEl;
+
     expect(el.props.stroke).toBeUndefined();
     expect((el.props.style as { stroke?: string }).stroke).toBe('var(--outline)');
   });
@@ -84,15 +91,19 @@ describe('PaintDefs — 渐变物化', () => {
         },
       },
     ]);
+
     expect(g.type).toBe('linearGradient');
     expect(g.props.id).toBe('g-paint-1');
+
     // angle 90 → 竖直：x1≈x2=0.5, y1=0→y2=1
     expect(g.props.x1).toBeCloseTo(0.5, 6);
     expect(g.props.x2).toBeCloseTo(0.5, 6);
     expect(g.props.y1).toBeCloseTo(0, 6);
     expect(g.props.y2).toBeCloseTo(1, 6);
+
     // stops 直接物化成 <stop> 子元素（不再经 <Stops> 包装组件）
     const stops = g.props.children as Array<AnyEl>;
+
     expect(stops).toHaveLength(2);
     expect(stops[0].type).toBe('stop');
     expect(stops[0].props.offset).toBe(0);
@@ -113,6 +124,7 @@ describe('PaintDefs — 渐变物化', () => {
         },
       },
     ]);
+
     expect(g.type).toBe('radialGradient');
     expect(g.props.id).toBe('g-paint-1');
     expect(g.props.cx).toBe(0.5);
@@ -143,13 +155,16 @@ describe('PaintDefs — 渐变物化', () => {
         },
       },
     ]);
+
     expect(p.type).toBe('pattern');
     expect(p.props.patternUnits).toBe('userSpaceOnUse');
     expect(p.props.width).toBe(6);
     expect(p.props.height).toBe(6);
     expect(p.props.patternTransform).toBe('rotate(45)');
+
     // tile.motif 物化进 <pattern>（复用 arrow 的 renderMarkerPrim）：横线 path
     const motif = (p.props.children as Array<AnyEl>).filter(Boolean);
+
     expect(motif).toHaveLength(1);
     expect(motif[0].type).toBe('path');
     expect(motif[0].props.stroke).toBe('currentColor');
@@ -172,13 +187,17 @@ describe('PaintDefs — 渐变物化', () => {
       },
     ]);
     const motif = (p.props.children as Array<AnyEl>).filter(Boolean);
+
     expect(motif.map(m => m.type)).toEqual(['rect', 'ellipse']);
   });
 
   it('image：<pattern> 套 <image>，fit cover → slice', () => {
     const [p] = childrenOf([{ kind: 'paint', id: 'paint-1', spec: { kind: 'image', href: 'a.png' } }]);
+
     expect(p.type).toBe('pattern');
+
     const img = (p.props.children as Array<AnyEl>)[0];
+
     expect(img.type).toBe('image');
     expect(img.props.href).toBe('a.png');
     expect(img.props.preserveAspectRatio).toBe('xMidYMid slice');

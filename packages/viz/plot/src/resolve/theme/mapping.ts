@@ -12,13 +12,16 @@ const hasDefinedValue = (value: unknown, field?: string): boolean => {
   if (value === null || typeof value !== 'object') return true;
   if (Array.isArray(value)) return value.length > 0;
   if (field === 'border') return true;
+
   return Object.entries(value).some(([key, child]) => hasDefinedValue(child, key));
 };
 
 const discriminatorOf = (value: JsonRecord): string | undefined => {
   const kind = value.kind;
   if (typeof kind === 'string') return kind;
+
   const type = value.type;
+
   return typeof type === 'string' ? type : undefined;
 };
 
@@ -42,11 +45,13 @@ const mergeSourceValue = (base: unknown, override: unknown, field: string | unde
   }
 
   const merged: JsonRecord = cloneValue(base);
+
   for (const [key, value] of Object.entries(override)) {
     if (value === undefined) continue;
     const next = mergeSourceValue(merged[key], value, key);
     if (next !== undefined) merged[key] = next;
   }
+
   return merged;
 };
 
@@ -69,13 +74,16 @@ const typographyAppliedToAxis = (
   typography: IRPlotTypographyDefaults,
 ): IRPlotAxisDefaults | undefined => {
   if (axis === undefined) return undefined;
+
   const result: IRPlotAxisDefaults = { ...axis };
   if (axis.tickLabels !== undefined && axis.tickLabels !== false) {
     result.tickLabels = mergeGuideTextStyle(axis.tickLabels, typography);
   }
+
   if (axis.title !== undefined && axis.title !== false) {
     result.title = mergeGuideTextStyle(axis.title, typography);
   }
+
   return result;
 };
 
@@ -84,6 +92,7 @@ const typographyAppliedToLegend = (
   typography: IRPlotTypographyDefaults,
 ): IRPlotDefaults['legend'] | undefined => {
   if (legend === undefined) return undefined;
+
   return {
     ...legend,
     ...(legend.title === undefined ? {} : { title: mergeGuideTextStyle(legend.title, typography) }),
@@ -100,6 +109,7 @@ export const applyPlotDefaults = (
   source: IRPlotDefaults | undefined,
 ): IRPlotDefaults => {
   if (!hasPlotDefaultsValue(source)) return cloneValue(base ?? {});
+
   const typography = source?.typography;
   if (typography === undefined || !hasDefinedValue(typography)) return mergePlotDefaults(base, source);
 
@@ -113,6 +123,7 @@ export const applyPlotDefaults = (
     ...(source?.legend === undefined ? {} : { legend: source.legend }),
     ...(source?.palette === undefined ? {} : { palette: source.palette }),
   };
+
   return mergePlotDefaults(
     {
       ...current,

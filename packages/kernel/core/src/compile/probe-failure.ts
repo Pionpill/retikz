@@ -19,6 +19,7 @@ export const createCompileInvariantError = (message: string, options?: ErrorOpti
     cause: options?.cause,
   });
   registerFatalProbeError(error);
+
   return error;
 };
 
@@ -54,7 +55,9 @@ export const enrichLayoutProbeError = (
       ? errorOccurrence
       : occurrence;
   if (errorOccurrence === resolvedOccurrence && errorProviderKey !== undefined) return error;
+
   const cause = Object.hasOwn(error, 'cause') ? error.cause : error;
+
   return createLayoutProbeRecoverableError(error.message, {
     cause,
     detail,
@@ -86,6 +89,7 @@ export const createLayoutChildFailure = (
     cause: Object.hasOwn(error, 'cause') ? error.cause : error,
     consumed: false,
   });
+
   return failure;
 };
 
@@ -98,20 +102,24 @@ export const raiseLayoutChildFailure = (
   if (failure === null || typeof failure !== 'object') {
     throw createCompositeContractError(`${owner.label} received an invalid or forged layout child failure`);
   }
+
   const entry = failures.get(failure);
   if (entry === undefined) {
     throw createCompositeContractError(
       `${owner.label} received a layout child failure that does not belong to this compile or was forged`,
     );
   }
+
   if (entry.owner !== owner) {
     throw createCompositeContractError(
       `${owner.label} received a layout child failure that does not belong to this composite callback`,
     );
   }
+
   if (entry.consumed) {
     throw createCompositeContractError(`${owner.label} received a layout child failure that was already raised`);
   }
+
   entry.consumed = true;
   throw createLayoutProbeRecoverableError(
     `Layout child provider '${entry.providerKey}' failed at ${entry.sourcePath} (${formatCompileOccurrence(entry.occurrence)}): ${entry.detail}`,

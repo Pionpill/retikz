@@ -56,14 +56,18 @@ const primitiveAtPath = (
   path: ReadonlyArray<number>,
 ): RuntimeScenePrimitive | undefined => {
   let primitives = snapshot.scene.primitives;
+
   for (let depth = 0; depth < path.length; depth += 1) {
     const candidate: unknown = Reflect.get(primitives, path[depth]);
     if (typeof candidate !== 'object' || candidate === null) return undefined;
+
     const primitive = candidate as RuntimeScenePrimitive;
     if (depth === path.length - 1) return primitive;
     if (primitive.type !== 'group') return undefined;
+
     primitives = primitive.children;
   }
+
   return undefined;
 };
 
@@ -151,10 +155,12 @@ type CanvasAnimationState = Readonly<{
 }>;
 
 const canvasVisibilitySetupFailures = new WeakMap<RetikzRenderError, Readonly<{ cause: unknown }>>();
+
 const canvasAnimationSetupFailures = new WeakMap<
   RetikzRenderError,
   Readonly<{ cause: unknown; state: CanvasAnimationState }>
 >();
+
 const canvasAnimationCommitRecoveryFailures = new WeakMap<
   RetikzRenderError,
   Readonly<{ cause: unknown; retryRollback: () => void }>
@@ -169,6 +175,7 @@ const createCanvasVisibilitySetupError = (cause: unknown, cleanupCause: unknown)
     cause,
   });
   canvasVisibilitySetupFailures.set(error, Object.freeze({ cause }));
+
   return error;
 };
 
@@ -185,6 +192,7 @@ const createCanvasAnimationSetupError = (
     cause,
   });
   canvasAnimationSetupFailures.set(error, Object.freeze({ cause, state }));
+
   return error;
 };
 
@@ -201,6 +209,7 @@ const createCanvasAnimationCommitRecoveryError = (
     cause,
   });
   canvasAnimationCommitRecoveryFailures.set(error, Object.freeze({ cause, retryRollback }));
+
   return error;
 };
 
@@ -217,6 +226,7 @@ type CanvasAnimationCleanupQueue = Readonly<{
 /** 创建 renderer 生命周期内的 Canvas animation 清理队列 */
 const createCanvasAnimationCleanupQueue = (): CanvasAnimationCleanupQueue => {
   const pending = new Set<CanvasAnimationState>();
+
   const dispose = (state: CanvasAnimationState): void => {
     try {
       state.dispose();
@@ -226,12 +236,15 @@ const createCanvasAnimationCleanupQueue = (): CanvasAnimationCleanupQueue => {
       throw cause;
     }
   };
+
   const retain = (state: CanvasAnimationState): void => {
     pending.add(state);
   };
+
   const disposePending = (): void => {
     runBestEffortCleanup([...pending].map(state => () => dispose(state)));
   };
+
   return Object.freeze({ dispose, retain, disposePending });
 };
 
@@ -273,8 +286,10 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
   const entries = new Map<string, Readonly<{ image: HTMLImageElement; loaded: () => boolean }>>();
   let active = true;
   let committed = new Set<string>();
+
   const ensure = (href: string): void => {
     if (entries.has(href) || typeof Image === 'undefined') return;
+
     const image = new Image();
     let loaded = false;
     image.onload = () => {
@@ -285,24 +300,29 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
     entries.set(href, Object.freeze({ image, loaded: () => loaded }));
     image.src = href;
   };
+
   const getImage: CanvasImageResolver = href => {
     ensure(href);
     const entry = entries.get(href);
     return entry?.loaded() === true ? entry.image : null;
   };
+
   const release = (href: string): void => {
     const entry = entries.get(href);
     if (entry === undefined) return;
+
     entry.image.onload = null;
     entry.image.onerror = null;
     entries.delete(href);
   };
+
   return Object.freeze({
     getImage,
     stage: hrefs => {
       const created = new Set<string>();
       const requestedBeforeReady = new Set<string>();
       const previous = new Set(committed);
+
       try {
         for (const href of hrefs) {
           if (!entries.has(href)) created.add(href);
@@ -312,17 +332,22 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
         for (const href of created) if (!committed.has(href)) release(href);
         throw cause;
       }
+
       let didCommit = false;
       let didRollback = false;
+
       return Object.freeze({
         getImage: (href: string) => {
           if (!hrefs.has(href)) return null;
+
           const image = getImage(href);
           if (image === null && entries.has(href)) requestedBeforeReady.add(href);
+
           return image;
         },
         commit: () => {
           if (didCommit || didRollback) return;
+
           didCommit = true;
           committed = new Set(hrefs);
           if (
@@ -334,8 +359,10 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
         },
         rollback: () => {
           if (didRollback) return;
+
           didRollback = true;
           if (didCommit) committed = previous;
+
           for (const href of created) if (!committed.has(href)) release(href);
         },
         dispose: () => {
@@ -346,11 +373,14 @@ const createCanvasImageLoader = (onReady: () => void): CanvasImageLoader => {
     },
     dispose: () => {
       if (!active) return;
+
       active = false;
+
       for (const { image } of entries.values()) {
         image.onload = null;
         image.onerror = null;
       }
+
       entries.clear();
       committed.clear();
     },
@@ -379,9 +409,11 @@ type CanvasHostStyle = Readonly<{
 /** 读取 host 当前的字体族与 currentColor，供离屏 bitmap 保持 full parity */
 const readCanvasHostStyle = (host: HTMLCanvasElement): CanvasHostStyle => {
   if (typeof getComputedStyle === 'undefined') return {};
+
   const style = getComputedStyle(host);
   const defaultFontFamily = style.fontFamily.trim();
   const currentColor = style.color.trim();
+
   return {
     ...(defaultFontFamily.length === 0 ? {} : { defaultFontFamily }),
     ...(currentColor.length === 0 ? {} : { currentColor }),
@@ -390,10 +422,12 @@ const readCanvasHostStyle = (host: HTMLCanvasElement): CanvasHostStyle => {
 
 const unionBounds = (left: CanvasBounds | undefined, right: CanvasBounds): CanvasBounds => {
   if (left === undefined) return right;
+
   const x = Math.min(left.x, right.x);
   const y = Math.min(left.y, right.y);
   const maxX = Math.max(left.x + left.width, right.x + right.width);
   const maxY = Math.max(left.y + left.height, right.y + right.height);
+
   return { x, y, width: maxX - x, height: maxY - y };
 };
 
@@ -416,17 +450,23 @@ const primitiveBounds = (primitive: RuntimeScenePrimitive): CanvasBounds | undef
   ) {
     return undefined;
   }
+
   if (primitive.type === 'group') {
     if ((primitive.transforms?.length ?? 0) > 0) return undefined;
+
     let bounds: CanvasBounds | undefined;
+
     for (const child of primitive.children) {
       const childBounds = primitiveBounds(child);
       if (childBounds === undefined) return undefined;
       bounds = unionBounds(bounds, childBounds);
     }
+
     return bounds;
   }
+
   let bounds: CanvasBounds;
+
   switch (primitive.type) {
     case 'rect':
       bounds = { x: primitive.x, y: primitive.y, width: primitive.width, height: primitive.height };
@@ -439,6 +479,7 @@ const primitiveBounds = (primitive: RuntimeScenePrimitive): CanvasBounds | undef
         height: primitive.ry * 2,
       };
       if (primitive.rotate !== undefined && primitive.rotate !== 0) return undefined;
+
       break;
     case 'text': {
       const x =
@@ -465,6 +506,7 @@ const primitiveBounds = (primitive: RuntimeScenePrimitive): CanvasBounds | undef
       break;
     }
   }
+
   const strokeWidth = Reflect.get(candidate, 'strokeWidth');
   const strokeExpansion =
     typeof strokeWidth === 'number' && Number.isFinite(strokeWidth)
@@ -472,26 +514,32 @@ const primitiveBounds = (primitive: RuntimeScenePrimitive): CanvasBounds | undef
         ? strokeWidth * 5
         : strokeWidth
       : 0;
+
   return expandBounds(bounds, strokeExpansion);
 };
 
 /** 按 primitivePath 建立顶层 display list，不依赖 topology 数组排列 */
 const buildDisplayList = (snapshot: SceneRuntimeSnapshot): ReadonlyArray<CanvasDisplayItem> | undefined => {
   if (snapshot.scene.resources.length > 0 || snapshot.scene.animations.length > 0) return undefined;
+
   const topologyByIndex = new Map(
     snapshot.topology.flatMap(node =>
       node.primitivePath.length === 1 ? ([[node.primitivePath[0], node]] as const) : [],
     ),
   );
   if (topologyByIndex.size !== snapshot.scene.primitives.length) return undefined;
+
   const items: Array<CanvasDisplayItem> = [];
+
   for (let index = 0; index < snapshot.scene.primitives.length; index += 1) {
     const primitive = snapshot.scene.primitives[index];
     const node = topologyByIndex.get(index);
     const bounds = primitiveBounds(primitive);
     if (node === undefined || bounds === undefined) return undefined;
+
     items.push(Object.freeze({ identity: node.identity, primitive, bounds }));
   }
+
   return Object.freeze(items);
 };
 
@@ -508,17 +556,21 @@ const prepareDisplayListUpdate = (
 ): Readonly<{ items: ReadonlyArray<CanvasDisplayItem>; dirty: CanvasBounds }> | undefined => {
   if (current === undefined || patch === undefined || patch.operations.length === 0) return undefined;
   if (!patch.operations.every(operation => operation.kind === 'update')) return undefined;
+
   const byIdentity = createRuntimeIdentityMap(current.map((item, index) => [item.identity, index] as const));
   const candidate = [...current];
   let dirty: CanvasBounds | undefined;
+
   for (const operation of patch.operations) {
     const index = byIdentity.get(operation.identity);
     const bounds = primitiveBounds(operation.subtree.primitive);
     if (index === undefined || bounds === undefined) return undefined;
+
     const previous = candidate[index];
     candidate[index] = Object.freeze({ identity: operation.identity, primitive: operation.subtree.primitive, bounds });
     dirty = unionBounds(dirty, unionBounds(previous.bounds, bounds));
   }
+
   return dirty === undefined ? undefined : Object.freeze({ items: Object.freeze(candidate), dirty });
 };
 
@@ -533,6 +585,7 @@ const resolveCanvasBitmapSize = (
 ): CanvasBitmapSize => {
   const ratio = resolvedDevicePixelRatio(options);
   const size = computeDisplaySize(snapshot.scene.layout, config.canvas?.width, config.canvas?.height);
+
   return Object.freeze({
     width: Math.max(1, Math.round(size.width * ratio)),
     height: Math.max(1, Math.round(size.height * ratio)),
@@ -574,6 +627,7 @@ const createBitmap = (
       getImage,
     },
   );
+
   return bitmap;
 };
 
@@ -634,6 +688,7 @@ const createIncrementalBitmap = (
   if (region.width === 0 || region.height === 0) {
     return Object.freeze({ kind: 'offscreen' });
   }
+
   const bitmap = host.ownerDocument.createElement('canvas');
   bitmap.width = host.width;
   bitmap.height = host.height;
@@ -643,12 +698,14 @@ const createIncrementalBitmap = (
       RetikzRenderErrorCode.Runtime,
       'Canvas retained renderer cannot acquire an incremental 2D context',
     );
+
   context.save();
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.beginPath();
   context.rect(region.x, region.y, region.width, region.height);
   context.clip();
   context.clearRect(region.x, region.y, region.width, region.height);
+
   const primitives = update.items
     .filter(item => boundsIntersect(item.bounds, update.dirty))
     .map(item => item.primitive as unknown as Scene['primitives'][number]);
@@ -673,6 +730,7 @@ const createIncrementalBitmap = (
     },
   );
   context.restore();
+
   const rollback = host.ownerDocument.createElement('canvas');
   rollback.width = region.width;
   rollback.height = region.height;
@@ -682,6 +740,7 @@ const createIncrementalBitmap = (
       RetikzRenderErrorCode.Runtime,
       'Canvas retained renderer cannot capture the dirty rollback region',
     );
+
   rollbackContext.drawImage(
     committedBitmap,
     region.x,
@@ -693,6 +752,7 @@ const createIncrementalBitmap = (
     region.width,
     region.height,
   );
+
   return Object.freeze({ kind: 'dirty', bitmap, rollback, region });
 };
 
@@ -701,6 +761,7 @@ const paintBitmap = (host: HTMLCanvasElement, bitmap: HTMLCanvasElement | undefi
   const context = host.getContext('2d');
   if (context === null)
     throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas retained renderer cannot acquire a 2D context');
+
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(0, 0, host.width, host.height);
   if (bitmap !== undefined) context.drawImage(bitmap, 0, 0);
@@ -719,6 +780,7 @@ const paintBitmapRegion = (
       RetikzRenderErrorCode.Runtime,
       'Canvas retained renderer cannot acquire a dirty 2D context',
     );
+
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(region.x, region.y, region.width, region.height);
   const sourceX = sourceKind === 'full' ? region.x : 0;
@@ -747,7 +809,9 @@ const captureBitmap = (host: HTMLCanvasElement): HTMLCanvasElement => {
       RetikzRenderErrorCode.Runtime,
       'Canvas retained renderer cannot capture the committed bitmap',
     );
+
   context.drawImage(host, 0, 0);
+
   return bitmap;
 };
 
@@ -758,10 +822,12 @@ const resolveCanvasPoint = (
 ): { x: number; y: number } | undefined => {
   const mouse = event as MouseEvent;
   if (typeof mouse.clientX !== 'number') return undefined;
+
   const bounds = host.getBoundingClientRect();
   const layout = snapshot.scene.layout;
   const scale = Math.min(bounds.width / layout.width, bounds.height / layout.height);
   if (!Number.isFinite(scale) || scale <= 0) return undefined;
+
   return {
     x: (mouse.clientX - bounds.left - (bounds.width - layout.width * scale) / 2) / scale + layout.x,
     y: (mouse.clientY - bounds.top - (bounds.height - layout.height * scale) / 2) / scale + layout.y,
@@ -779,6 +845,7 @@ const createCanvasHydration = (
   const topologyByPath = new Map(snapshot.topology.map(node => [node.primitivePath.join('.'), node]));
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
   const primitivePathsByPublicId = createPublicIdPrimitivePathMap(snapshot.topology);
+
   /** 给内部 trigger collector 注入与 hydration target 相同的 semantic-owner public id 口径 */
   const stampAnimationOwners = (
     primitive: RuntimeScenePrimitive,
@@ -787,7 +854,9 @@ const createCanvasHydration = (
     const topology = topologyByPath.get(path.join('.'));
     if (topology === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas hydration topology is incomplete');
+
     const publicId = topology.publicId ?? publicIdByOwner.get(topology.semanticOwner);
+
     return {
       ...(primitive as unknown as Scene['primitives'][number]),
       ...(publicId === undefined ? {} : { id: publicId }),
@@ -796,18 +865,22 @@ const createCanvasHydration = (
         : {}),
     };
   };
+
   const animationOwnerScene: Scene = {
     ...scene,
     primitives: snapshot.scene.primitives.map((primitive, index) => stampAnimationOwners(primitive, [index])),
   };
   const handlers = withCanvasAnimationEventHandlers(animationOwnerScene, mergeRenderHandlers(config));
   if (Object.keys(handlers).length === 0) return undefined;
+
   const targets = new Map<string, HydrationTarget>();
+
   const stamp = (primitive: RuntimeScenePrimitive, path: ReadonlyArray<number>): Scene['primitives'][number] => {
     const token = path.join('.');
     const topology = topologyByPath.get(token);
     if (topology === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas hydration topology is incomplete');
+
     targets.set(
       token,
       Object.freeze({
@@ -818,6 +891,7 @@ const createCanvasHydration = (
           : { publicId: topology.publicId ?? publicIdByOwner.get(topology.semanticOwner) }),
       }),
     );
+
     return {
       ...(primitive as unknown as Scene['primitives'][number]),
       id: token,
@@ -826,18 +900,23 @@ const createCanvasHydration = (
         : {}),
     };
   };
+
   const hitScene: Scene = {
     ...scene,
     primitives: snapshot.scene.primitives.map((primitive, index) => stamp(primitive, [index])),
   };
+
   const locateTarget = (event: Event): HydrationTarget | null => {
     const point = resolveCanvasPoint(host, snapshot, event);
     const context = host.getContext('2d') ?? undefined;
     context?.setTransform(1, 0, 0, 1, 0, 0);
     if (point === undefined) return null;
+
     const token = hitTest(hitScene, point, { context2d: context });
+
     return token === null ? null : (targets.get(token) ?? null);
   };
+
   return createHydrationController(
     host,
     handlers,
@@ -865,10 +944,12 @@ const createCanvasAnimationOccurrenceIndex = (
   const tokenByPath = new Map<string, string>();
   const tokensByPublicId = new Map<string, Array<string>>();
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
+
   for (const node of snapshot.topology) {
     const token = previous?.tokenByIdentity.get(node.identity) ?? allocateToken();
     if (!tokenByIdentity.set(node.identity, token))
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas animation topology has duplicate identity');
+
     tokenByPath.set(node.primitivePath.join('.'), token);
     const publicId = node.publicId ?? publicIdByOwner.get(node.semanticOwner);
     if (publicId !== undefined) {
@@ -877,10 +958,12 @@ const createCanvasAnimationOccurrenceIndex = (
       tokensByPublicId.set(publicId, tokens);
     }
   }
+
   const stamp = (primitive: RuntimeScenePrimitive, path: ReadonlyArray<number>): Scene['primitives'][number] => {
     const token = tokenByPath.get(path.join('.'));
     if (token === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas animation topology is incomplete');
+
     return {
       ...(primitive as unknown as Scene['primitives'][number]),
       id: token,
@@ -889,6 +972,7 @@ const createCanvasAnimationOccurrenceIndex = (
         : {}),
     };
   };
+
   return Object.freeze({
     scene: {
       ...(snapshot.scene as unknown as Scene),
@@ -917,6 +1001,7 @@ const createCanvasAnimation = (
   ) {
     return undefined;
   }
+
   let tokenSequence = 0;
   const allocateToken = (): string => `retikz-canvas-animation-${tokenSequence++}`;
   let occurrenceIndex = createCanvasAnimationOccurrenceIndex(snapshot, undefined, allocateToken);
@@ -936,6 +1021,7 @@ const createCanvasAnimation = (
   let disposed = false;
   let clockDisposed = false;
   let clockReplacementInProgress = false;
+
   /** 外部 animation callback 返回后重新读取 renderer animation gate */
   const isAnimationStateActive = (): boolean => enabled && !cleanupStarted;
   const resolveWithRegistry = (candidate: IdClockRegistry, id: string | undefined, time: number) =>
@@ -946,8 +1032,10 @@ const createCanvasAnimation = (
           time: candidate.timeFor(id, time),
           includeNonAutoplay: candidate.isActive(id),
         } as const);
+
   const renderFrame = (time = clock.time): void => {
     if (!enabled || cleanupStarted) return;
+
     renderFrameToCanvas(
       host,
       { primary: scene, layers: currentLayers },
@@ -962,37 +1050,47 @@ const createCanvasAnimation = (
       },
     );
   };
+
   const bindVisibility = (): void => {
     visibleTeardown?.();
     visibleTeardown = undefined;
     const visibleIds = collectCanvasVisibleAnimationIds(scene);
     if (!enabled || cleanupStarted || visibleIds.size === 0 || typeof window === 'undefined') return;
+
     const activated = new Set(Array.from(visibleIds).filter(id => registry.isActive(id)));
     let scheduled: number | undefined;
     let scheduleInProgress = false;
+
     const activate = (): void => {
       scheduled = undefined;
       if (!enabled || cleanupStarted) return;
+
       let changed = false;
+
       for (const id of visibleIds) {
         if (activated.has(id) || !isCanvasAnimationIdVisible(host, scene, id)) continue;
+
         registry.restart(id, clock.time);
         activated.add(id);
         changed = true;
       }
+
       if (changed) {
         ensureActiveTimelinesPlaying();
         renderFrame();
       }
     };
+
     /** 外部 rAF 注册前后都重新读取 visibility gate */
     const canSchedule = (): boolean => enabled && !cleanupStarted;
     type ListenerRegistration = { state: 'idle' | 'registering' | 'registered'; cleanupRequested: boolean };
     const scrollRegistration: ListenerRegistration = { state: 'idle', cleanupRequested: false };
     const resizeRegistration: ListenerRegistration = { state: 'idle', cleanupRequested: false };
+
     /** 外部 listener 注册返回后重新读取 registration 与 visibility gate */
     const canPublishListener = (registration: ListenerRegistration): boolean =>
       !registration.cleanupRequested && canSchedule();
+
     /** 清理 listener；注册尚未返回时先关闭发布资格，由注册方在返回后接管清理 */
     const removeListener = (registration: ListenerRegistration, remove: () => void): void => {
       if (registration.state === 'idle') return;
@@ -1000,10 +1098,12 @@ const createCanvasAnimation = (
         registration.cleanupRequested = true;
         return;
       }
+
       remove();
       registration.state = 'idle';
       registration.cleanupRequested = false;
     };
+
     const teardown = (): void => {
       runBestEffortCleanup([
         () => removeListener(scrollRegistration, () => window.removeEventListener('scroll', schedule, true)),
@@ -1011,24 +1111,30 @@ const createCanvasAnimation = (
         () => {
           const frame = scheduled;
           if (frame === undefined) return;
+
           window.cancelAnimationFrame(frame);
           if (scheduled === frame) scheduled = undefined;
         },
       ]);
     };
+
     /** 注册 listener，并在注册期间同步 cleanup 后立即回收可能已安装的 listener */
     const registerListener = (registration: ListenerRegistration, register: () => void): boolean => {
       registration.state = 'registering';
       registration.cleanupRequested = false;
+
       try {
         register();
       } catch (cause) {
         registration.state = 'registered';
         throw cause;
       }
+
       registration.state = 'registered';
       if (canPublishListener(registration)) return true;
+
       visibleTeardown = teardown;
+
       try {
         teardown();
         if (visibleTeardown === teardown) visibleTeardown = undefined;
@@ -1036,11 +1142,15 @@ const createCanvasAnimation = (
         disposed = false;
         throw cause;
       }
+
       return false;
     };
+
     const schedule = (): void => {
       if (!canSchedule() || scheduled !== undefined || scheduleInProgress) return;
+
       scheduleInProgress = true;
+
       try {
         const registration = { consumed: false, frame: undefined as number | undefined };
         const frame = window.requestAnimationFrame(() => {
@@ -1050,8 +1160,10 @@ const createCanvasAnimation = (
         });
         registration.frame = frame;
         if (registration.consumed) return;
+
         scheduled = frame;
         if (canSchedule()) return;
+
         try {
           window.cancelAnimationFrame(frame);
           if (scheduled === frame) scheduled = undefined;
@@ -1064,7 +1176,9 @@ const createCanvasAnimation = (
         scheduleInProgress = false;
       }
     };
+
     visibleTeardown = teardown;
+
     try {
       if (!registerListener(scrollRegistration, () => window.addEventListener('scroll', schedule, true))) return;
       if (!registerListener(resizeRegistration, () => window.addEventListener('resize', schedule))) return;
@@ -1076,43 +1190,57 @@ const createCanvasAnimation = (
       } catch (cleanupCause) {
         throw createCanvasVisibilitySetupError(cause, cleanupCause);
       }
+
       throw cause;
     }
   };
+
   /** 计算当前 Scene root 与各 occurrence timeline 的全局 envelope 终点 */
   const animationEnvelopeEnd = (): number | null => {
     const sceneDuration = sceneAnimationDurationMs(scene);
     const rootDuration = sceneAnimationDurationMs({ ...scene, primitives: [] });
     const occurrenceEnds = [...timelineEndByToken.values()];
     if (sceneDuration === null || rootDuration === null || occurrenceEnds.includes(null)) return null;
+
     const finiteOccurrenceEnds = occurrenceEnds.filter((value): value is number => value !== null);
+
     return Math.max(sceneDuration, rootTimelineStart + rootDuration, ...finiteOccurrenceEnds);
   };
+
   /** 外部 cleanup 返回后重新读取 replacement gate，避免闭包状态被同步重入改写 */
   const canContinueClockReplacement = (): boolean => !cleanupStarted && clockReplacementInProgress;
+
   const replaceClock = (time: number, shouldPlay: boolean): void => {
     if (cleanupStarted || clockReplacementInProgress) return;
+
     clockReplacementInProgress = true;
+
     try {
       visibleTeardown?.();
       visibleTeardown = undefined;
       if (!canContinueClockReplacement()) return;
+
       clock.dispose();
       if (!canContinueClockReplacement()) return;
+
       clockEnd = animationEnvelopeEnd();
       clock = createClock({ durationMs: clockEnd, onFrame: renderFrame });
       clock.seek(time);
       if (!canContinueClockReplacement()) return;
+
       bindVisibility();
       if (shouldPlay && canContinueClockReplacement()) clock.play();
     } finally {
       clockReplacementInProgress = false;
     }
   };
+
   /** per-id play/restart/seek 后按有效时刻刷新 finite envelope，并确保新 clock 推进 */
   const ensureActiveTimelinesPlaying = (): void => {
     if (!enabled || cleanupStarted) return;
+
     const currentTime = clock.time;
+
     const walk = (primitives: ReadonlyArray<Scene['primitives'][number]>): void => {
       for (const primitive of primitives) {
         if (primitive.id !== undefined && registry.isActive(primitive.id)) {
@@ -1123,33 +1251,41 @@ const createCanvasAnimation = (
             duration === null ? null : currentTime + Math.max(0, duration - effectiveTime),
           );
         }
+
         if (primitive.type === 'group') walk(primitive.children);
       }
     };
+
     walk(scene.primitives);
     const requiredEnd = animationEnvelopeEnd();
     const requiresReplacement = requiredEnd === null ? clockEnd !== null : clockEnd !== null && requiredEnd > clockEnd;
     if (requiresReplacement) replaceClock(currentTime, true);
     else clock.play();
   };
+
   for (const node of snapshot.topology) {
     const token = occurrenceIndex.tokenByIdentity.get(node.identity);
     const primitive = primitiveAtPath(snapshot, node.primitivePath);
     if (token !== undefined && primitive !== undefined)
       timelineEndByToken.set(token, primitiveAnimationDurationMs(primitive));
   }
+
   clockEnd = sceneAnimationDurationMs(scene);
   clock = createClock({ durationMs: clockEnd, onFrame: renderFrame });
+
   const dispose = (): void => {
     if (disposed || cleanupInProgress) return;
+
     cleanupStarted = true;
     cleanupInProgress = true;
     enabled = false;
+
     try {
       runBestEffortCleanup([
         () => {
           const teardown = visibleTeardown;
           if (teardown === undefined) return;
+
           teardown();
           if (visibleTeardown === teardown) visibleTeardown = undefined;
         },
@@ -1164,6 +1300,7 @@ const createCanvasAnimation = (
       cleanupInProgress = false;
     }
   };
+
   const controls: AnimationControls = Object.freeze({
     play: () => {
       if (!enabled || cleanupStarted) return;
@@ -1186,6 +1323,7 @@ const createCanvasAnimation = (
       return enabled && !cleanupStarted && clock.running;
     },
   });
+
   /** 以 renderer-private token 与默认 public id 创建一组 per-id hydration controls */
   const makeHydrationControls = (defaultId: string): HydrationAnimationControls =>
     createCanvasIdAnimationControls({
@@ -1200,8 +1338,10 @@ const createCanvasAnimation = (
     controls,
     makeHydrationControls: target => {
       if (!enabled || cleanupStarted) return createClockAnimationControls(undefined);
+
       const defaultToken = occurrenceIndex.tokenByIdentity.get(target.identity);
       if (defaultToken === undefined) return createClockAnimationControls(undefined);
+
       return makeHydrationControls(target.publicId ?? defaultToken);
     },
     makeHydrationControlsForPublicId: publicId => {
@@ -1217,6 +1357,7 @@ const createCanvasAnimation = (
       const candidateTime = clock.time;
       const candidateRootTimelineStart = diff.rootChanged ? candidateTime : rootTimelineStart;
       let restartedAutoplay = diff.rootChanged && runtimeAnimationsHaveAutoplay(nextSnapshot.scene.animations);
+
       for (const change of diff.occurrences) {
         const currentToken = occurrenceIndex.tokenByIdentity.get(change.identity);
         const nextToken = nextOccurrenceIndex.tokenByIdentity.get(change.identity);
@@ -1227,6 +1368,7 @@ const createCanvasAnimation = (
           }
           continue;
         }
+
         if (
           (change.kind === SceneAnimationOccurrenceChangeKind.Added ||
             change.kind === SceneAnimationOccurrenceChangeKind.Changed) &&
@@ -1240,16 +1382,19 @@ const createCanvasAnimation = (
               RetikzRenderErrorCode.Runtime,
               'Canvas animation occurrence topology is incomplete',
             );
+
           const duration = primitiveAnimationDurationMs(primitive);
           candidateTimelineEndByToken.set(nextToken, duration === null ? null : candidateTime + duration);
           restartedAutoplay ||= runtimeAnimationsHaveAutoplay(primitive.animations);
         }
       }
+
       const candidateFrame: CanvasAnimationFrame = Object.freeze({
         scene: nextOccurrenceIndex.scene,
         resolveRootAnimationTime: time => Math.max(0, time - candidateRootTimelineStart),
         resolvePrimAnimation: (id, time) => resolveWithRegistry(candidateRegistry, id, time),
       });
+
       return Object.freeze({
         ...candidateFrame,
         commit: () => {
@@ -1276,6 +1421,7 @@ const createCanvasAnimation = (
             registry.hasActive() ||
             restartedAutoplay ||
             (nextAutoplay && (previousAutoplay ? previousRunning : true));
+
           try {
             replaceClock(previousTime, shouldPlay);
           } catch (cause) {
@@ -1287,13 +1433,16 @@ const createCanvasAnimation = (
             timelineEndByToken = previousTimelineEndByToken;
             rootTimelineStart = previousRootTimelineStart;
             const retryRollback = (): void => replaceClock(previousTime, previousRunning);
+
             try {
               retryRollback();
             } catch (rollbackCause) {
               throw createCanvasAnimationCommitRecoveryError(cause, rollbackCause, retryRollback);
             }
+
             throw cause;
           }
+
           return () => {
             occurrenceIndex = previousOccurrenceIndex;
             scene = previousScene;
@@ -1310,17 +1459,20 @@ const createCanvasAnimation = (
     renderFrame: () => renderFrame(),
     suspend: () => {
       if (!enabled || cleanupStarted) return false;
+
       const running = clock.running;
       enabled = false;
       runBestEffortCleanup([
         () => {
           const teardown = visibleTeardown;
           if (teardown === undefined) return;
+
           teardown();
           if (visibleTeardown === teardown) visibleTeardown = undefined;
         },
         () => clock.pause(),
       ]);
+
       return running;
     },
     resume: running => {
@@ -1330,19 +1482,23 @@ const createCanvasAnimation = (
     },
     dispose,
   });
+
   try {
     bindVisibility();
     if (sceneHasAutoplayTrigger(scene)) clock.play();
   } catch (cause) {
     const setupCause =
       cause instanceof RetikzRenderError ? (canvasVisibilitySetupFailures.get(cause)?.cause ?? cause) : cause;
+
     try {
       state.dispose();
     } catch (cleanupCause) {
       throw createCanvasAnimationSetupError(setupCause, cleanupCause, state);
     }
+
     throw setupCause;
   }
+
   return state;
 };
 
@@ -1366,8 +1522,10 @@ export const createBuiltinCanvasRetainedRenderer = (
   let currentHostStyle: CanvasHostStyle | undefined;
   const candidateHydrationCleanup = createHydrationCleanupQueue();
   const candidateAnimationCleanup = createCanvasAnimationCleanupQueue();
+
   const imageLoader = createCanvasImageLoader(() => {
     if (currentSnapshot === undefined || currentConfig === undefined) return;
+
     const time =
       currentAnimation?.controls.time ??
       currentConfig.animation?.snapshotAt ??
@@ -1399,6 +1557,7 @@ export const createBuiltinCanvasRetainedRenderer = (
     const snapshot = frame.primary;
     const layers = validateReadonlyLayers(frame.layers);
     const imageStage = imageLoader.stage(collectCanvasImageHrefs(snapshot, layers));
+
     try {
       const animationDiff = diffSceneAnimationDescriptors(currentSnapshot, snapshot);
       const replaceScene = patch?.operations.some(operation => operation.kind === 'replaceScene') === true;
@@ -1415,6 +1574,7 @@ export const createBuiltinCanvasRetainedRenderer = (
       const animationCandidate = reuseAnimation
         ? currentAnimation?.stage(snapshot, layers, config, animationDiff)
         : undefined;
+
       const targetSize = resolveCanvasBitmapSize(snapshot, config, immutableOptions);
       const bitmapSizeStable =
         currentBitmap?.width === targetSize.width &&
@@ -1430,10 +1590,12 @@ export const createBuiltinCanvasRetainedRenderer = (
         runtimeStructuralEquals(currentLayers, layers) &&
         runtimeStructuralEquals(currentPaintConfig, config.animation) &&
         runtimeStructuralEquals(currentHostStyle, hostStyle);
+
       const displayUpdate =
         reuseBitmap || !bitmapSizeStable || currentLayers.length > 0 || layers.length > 0
           ? undefined
           : prepareDisplayListUpdate(currentDisplayList, patch);
+
       // display list 会拒绝任意层级的 animation，dirty rollback 因而可安全读取 committed bitmap
       const incrementalBitmap =
         displayUpdate !== undefined && currentBitmap !== undefined
@@ -1468,6 +1630,7 @@ export const createBuiltinCanvasRetainedRenderer = (
                 animationCandidate,
                 imageStage.getImage,
               );
+
       const candidateDisplayList = reuseBitmap
         ? currentDisplayList
         : (displayUpdate?.items ?? buildDisplayList(snapshot));
@@ -1475,6 +1638,7 @@ export const createBuiltinCanvasRetainedRenderer = (
         reuseBitmap || currentSnapshot === undefined || incrementalBitmap !== undefined
           ? undefined
           : captureBitmap(host);
+
       const previousSnapshot = currentSnapshot;
       const previousLayers = currentLayers;
       const previousBitmap = currentBitmap;
@@ -1486,28 +1650,36 @@ export const createBuiltinCanvasRetainedRenderer = (
       const previousHostStyle = currentHostStyle;
       const previousHostSize = Object.freeze({ width: host.width, height: host.height });
       let animation: CanvasAnimationState | undefined;
+
       const disposeCandidateAnimation = (): void => {
         if (reuseAnimation) return;
+
         const candidate = animation;
         if (candidate === undefined) return;
+
         candidateAnimationCleanup.dispose(candidate);
         if (animation === candidate) animation = undefined;
       };
+
       let rollbackAnimationRebind: (() => void) | undefined;
       let retryAnimationCommitRollback: (() => void) | undefined;
       let previousAnimationRunning: boolean | undefined;
       let hydration: HydrationController | undefined;
+
       const disposeCandidateHydration = (): void => {
         const candidate = hydration;
         if (candidate === undefined) return;
+
         candidateHydrationCleanup.dispose(candidate);
         hydration = undefined;
       };
+
       let committed = false;
       let rolledBack = false;
       let hostMutated = false;
       let committedBitmapMutated = false;
       let previousHydrationDisposeAttempted = false;
+
       return Object.freeze({
         commit: () => {
           if (!reuseBitmap) {
@@ -1523,6 +1695,7 @@ export const createBuiltinCanvasRetainedRenderer = (
               paintBitmap(host, bitmap);
             }
           }
+
           if (reuseAnimation) animation = previousAnimation;
           else {
             try {
@@ -1534,9 +1707,11 @@ export const createBuiltinCanvasRetainedRenderer = (
                 candidateAnimationCleanup.retain(setupFailure.state);
                 throw setupFailure.cause;
               }
+
               throw cause;
             }
           }
+
           if (reuseAnimation && animation !== undefined) {
             try {
               rollbackAnimationRebind = animationCandidate?.commit();
@@ -1547,17 +1722,21 @@ export const createBuiltinCanvasRetainedRenderer = (
                 retryAnimationCommitRollback = recovery.retryRollback;
                 throw recovery.cause;
               }
+
               throw cause;
             }
           }
+
           if (!reuseAnimation && previousAnimation !== undefined) {
             previousAnimationRunning = previousAnimation.controls.running;
             previousAnimationRunning = previousAnimation.suspend();
           }
+
           if (previousHydration !== undefined) {
             previousHydrationDisposeAttempted = true;
             previousHydration.dispose();
           }
+
           try {
             hydration = createCanvasHydration(host, snapshot, config, animation);
           } catch (cause) {
@@ -1566,8 +1745,10 @@ export const createBuiltinCanvasRetainedRenderer = (
               hydration = setupFailure.controller;
               throw setupFailure.cause;
             }
+
             throw cause;
           }
+
           currentSnapshot = snapshot;
           currentLayers = layers;
           currentBitmap = incrementalBitmap === undefined ? bitmap : previousBitmap;
@@ -1589,6 +1770,7 @@ export const createBuiltinCanvasRetainedRenderer = (
                 retry();
                 if (retryAnimationCommitRollback === retry) retryAnimationCommitRollback = undefined;
               }
+
               rollbackAnimationRebind?.();
             },
             disposeCandidateHydration,
@@ -1601,6 +1783,7 @@ export const createBuiltinCanvasRetainedRenderer = (
                 if (committedBitmapMutated && previousBitmap !== undefined) {
                   paintBitmapRegion(previousBitmap, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
                 }
+
                 if (hostMutated) {
                   paintBitmapRegion(host, incrementalBitmap.rollback, incrementalBitmap.region, 'region');
                 }
@@ -1630,7 +1813,9 @@ export const createBuiltinCanvasRetainedRenderer = (
               ) {
                 return;
               }
+
               previousHydration.dispose();
+
               try {
                 currentHydration = createCanvasHydration(host, previousSnapshot, previousConfig, previousAnimation);
               } catch (cause) {
@@ -1639,6 +1824,7 @@ export const createBuiltinCanvasRetainedRenderer = (
                   currentHydration = setupFailure.controller;
                   throw setupFailure.cause;
                 }
+
                 throw cause;
               }
             },
@@ -1652,6 +1838,7 @@ export const createBuiltinCanvasRetainedRenderer = (
                   () => {
                     const retry = retryAnimationCommitRollback;
                     if (retry === undefined) return;
+
                     retry();
                     if (retryAnimationCommitRollback === retry) retryAnimationCommitRollback = undefined;
                   },
@@ -1684,6 +1871,7 @@ export const createBuiltinCanvasRetainedRenderer = (
     read: () => {
       if (currentSnapshot === undefined)
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Canvas retained renderer is not committed');
+
       return Object.freeze({
         frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),

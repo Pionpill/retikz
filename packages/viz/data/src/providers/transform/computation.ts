@@ -9,6 +9,7 @@ export function* computeTransformValue<T>(action: () => T | Promise<T>): Transfo
 /** 同步驱动；调用方只提供同步计算回调 */
 export const runTransformComputation = <T>(computation: TransformComputation<T>): T => {
   let step = computation.next();
+
   while (!step.done) {
     try {
       step = computation.next(step.value());
@@ -16,12 +17,14 @@ export const runTransformComputation = <T>(computation: TransformComputation<T>)
       step = computation.throw(cause);
     }
   }
+
   return step.value;
 };
 
 /** 异步驱动；每次回调完成后才恢复同一个计算实例 */
 export const runTransformComputationAsync = async <T>(computation: TransformComputation<T>): Promise<T> => {
   let step = computation.next();
+
   while (!step.done) {
     try {
       step = computation.next(await step.value());
@@ -29,5 +32,6 @@ export const runTransformComputationAsync = async <T>(computation: TransformComp
       step = computation.throw(cause);
     }
   }
+
   return step.value;
 };

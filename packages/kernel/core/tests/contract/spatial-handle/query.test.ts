@@ -47,12 +47,14 @@ const entries = [
   ),
   entry('c', 'card-c', [{ namespace: 'other', type: 'panel' }], ['secondary']),
 ] as const;
+
 const index: SpatialHandleIndex = { entries };
 
 describe('spatial handle query', () => {
   it('returns one identical entry for its primary id and aliases', () => {
     const aliased = Object.freeze({ ...entries[0], aliasIds: Object.freeze(['other', 'third']) });
     const aliasedIndex = { entries: [aliased] };
+
     expect(resolveSpatialHandle(aliasedIndex, { id: 'other' })).toBe(aliased);
     expect(resolveSpatialHandle(aliasedIndex, { id: 'a' })).toBe(aliased);
     expect(selectSpatialHandles(aliasedIndex, {})).toEqual([aliased]);
@@ -60,6 +62,7 @@ describe('spatial handle query', () => {
       resolveSpatialHandle({ entries: [aliased, { ...entries[1], aliasIds: ['other'] }] }, { id: 'other' }),
     ).toThrow(/ambiguity/);
   });
+
   it('matches owner fields together, id, role, and all requested tags in index order', () => {
     expect(
       selectSpatialHandles(index, {

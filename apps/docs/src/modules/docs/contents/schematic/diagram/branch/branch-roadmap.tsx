@@ -8,6 +8,7 @@ import { branchRoadmapI18n } from './branch-roadmap.i18n';
 
 /** 路线图示例属性 */
 export type BranchRoadmapProps = { lang?: Lang };
+
 /** 版本主线和专题开发支线 */
 const BranchRoadmap: FC<BranchRoadmapProps> = props => {
   const t = branchRoadmapI18n[props.lang ?? 'zh'];

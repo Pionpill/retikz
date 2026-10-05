@@ -26,7 +26,9 @@ const mergeContextMeta = (meta: JsonObject | undefined, context: JsonObject): Js
 });
 
 const isIRScope = (child: IRChild): child is IRScope => child.type === 'scope' && 'children' in child;
+
 const isIRNode = (child: IRChild): child is IRNode => child.type === 'node' && 'position' in child;
+
 const isIRPath = (child: IRChild): child is IRPathBase => child.type === 'path' && 'children' in child;
 
 /** 把 coordinate scope context 递归写入 lowering 产物 metadata。 */
@@ -39,7 +41,9 @@ export const withScopeContext = (child: IRChild, context: JsonObject): IRChild =
       children: child.children.map(item => withScopeContext(item, context)),
     };
   }
+
   if (isIRNode(child)) return { ...child, meta: mergeContextMeta(child.meta, context) } satisfies IRNode;
   if (isIRPath(child)) return { ...child, meta: mergeContextMeta(child.meta, context) } satisfies IRPathBase;
+
   return child;
 };

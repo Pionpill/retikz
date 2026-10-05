@@ -28,6 +28,7 @@ export const normalizeCells = <TCell extends { content?: string | InputChild }>(
       message: 'Collection cells require Kernel Vanilla normalizeScene.',
       details: { operation: 'normalizeCells' },
     });
+
   const normalized = cells.map(cell =>
     cell.content === undefined || typeof cell.content === 'string' ? undefined : normalizeChildren([cell.content]),
   );
@@ -37,7 +38,9 @@ export const normalizeCells = <TCell extends { content?: string | InputChild }>(
       void content;
       return empty;
     }
+
     if (typeof cell.content === 'string') return { ...cell, content: cell.content };
+
     const children = normalized[index]!.children;
     if (children.length !== 1)
       throw new RetikzStandardError({
@@ -45,8 +48,10 @@ export const normalizeCells = <TCell extends { content?: string | InputChild }>(
         message: 'Each cell must contain exactly one drawable child.',
         details: { cell: index, childCount: children.length },
       });
+
     return { ...cell, content: children[0] };
   });
+
   return {
     cells: output,
     providerDependencies: {

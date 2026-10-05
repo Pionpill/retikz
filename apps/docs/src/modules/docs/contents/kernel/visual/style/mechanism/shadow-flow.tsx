@@ -16,6 +16,7 @@ const ShadowFlow: FC<ShadowFlowProps> = props => {
   const labels = shadowFlowI18n[lang];
   const text = (index: number) =>
     labels[index].map((line, row) => ({ text: line, ...(row === 0 ? {} : { fill: 'gray', font: { size: 12 } }) }));
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

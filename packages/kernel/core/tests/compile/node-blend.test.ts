@@ -25,6 +25,7 @@ describe('[blend] Happy', () => {
   it('node-blend：Node + blendMode="multiply" → shape 图元带 blendMode', () => {
     const compiled = compileNode({ shape: 'circle', text: 'x', fill: 'magenta', blendMode: 'multiply' });
     const el = findByType(compiled.primitives, 'ellipse');
+
     expect(el).toBeDefined();
     expect(el!.blendMode).toBe('multiply');
   });
@@ -32,6 +33,7 @@ describe('[blend] Happy', () => {
   it('node-blend-rect：rectangle 节点 → RectPrim 带 blendMode', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x', blendMode: 'screen' });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.blendMode).toBe('screen');
   });
 
@@ -43,6 +45,7 @@ describe('[blend] Happy', () => {
         shape: 'rectangle',
         style: { blendMode: mode },
       });
+
       expect(parsed.success, mode).toBe(true);
     }
   });
@@ -54,6 +57,7 @@ describe('[blend] 边界', () => {
   it('blend-omitted-noop：不设 → 几何图元无 blendMode', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'x' });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.blendMode).toBeUndefined();
   });
 
@@ -63,6 +67,7 @@ describe('[blend] 边界', () => {
       'rect',
     );
     const omitted = findByType(compileNode({ shape: 'rectangle', text: 'x' }).primitives, 'rect');
+
     expect(withNormal!.blendMode ?? 'normal').toBe(omitted!.blendMode ?? 'normal');
   });
 });
@@ -94,6 +99,7 @@ describe('[blend] 交互', () => {
     const compiled = compileNode({ shape: 'rectangle', text: 'hi', blendMode: 'multiply' });
     const rect = findByType(compiled.primitives, 'rect');
     const text = findByType(compiled.primitives, 'text');
+
     expect(rect!.blendMode).toBe('multiply');
     expect(text).toBeDefined();
     expect((text as unknown as { blendMode?: unknown }).blendMode).toBeUndefined();
@@ -108,6 +114,7 @@ describe('[blend] 交互', () => {
       blendMode: 'multiply',
     });
     const rect = findByType(compiled.primitives, 'rect');
+
     expect(rect!.opacity).toBe(0.7);
     expect(rect!.blendMode).toBe('multiply');
     expect(rect!.shadow).toBeDefined();
@@ -127,6 +134,7 @@ describe('[blend] round-trip', () => {
     };
     const parsed = NodeSchema.parse(node);
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
+
     expect(round.style?.blendMode).toBe(parsed.style?.blendMode);
   });
 });

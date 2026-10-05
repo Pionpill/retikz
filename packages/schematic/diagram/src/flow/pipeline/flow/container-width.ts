@@ -37,16 +37,19 @@ export const allocateFlowContainerWidths = (
   remeasure: (entity: CanonicalFlowEntity, allocatedWidth: number) => FlowLayoutLeafInput,
 ): FlowLayoutInput => {
   const authored = new Map<string, CanonicalFlowElement>();
+
   const collect = (elements: ReadonlyArray<CanonicalFlowElement>): void => {
     for (const element of elements) {
       authored.set(element.id, element);
       if (element.type !== 'entity') collect(element.elements);
     }
   };
+
   collect(diagram.elements);
   const allocatedRows = new Set<string>();
   const placement = createFlowLayoutExecutionContext(context, input);
   const naturalSize = (element: FlowLayoutElementInput) => measureFlowLayoutElement(element, input, placement);
+
   const rowOf = (element: FlowLayoutElementInput): Extract<FlowLayoutElementInput, { kind: 'layout' }> => {
     const row = element.kind === 'group' && element.elements.length === 1 ? element.elements[0] : element;
     if (
@@ -61,25 +64,32 @@ export const allocateFlowContainerWidths = (
         'Expected a horizontal Entity-only row, or a Group with exactly one such content root.',
       );
     }
+
     const owner = authored.get(row.id)!;
     if (owner.type === 'layout' && owner.source.kind === 'linear' && owner.source.containerWidth !== undefined)
       return widthFailure(owner, 'A horizontal receiving row cannot itself declare containerWidth.');
+
     return row;
   };
+
   const growRow = (row: Extract<FlowLayoutElementInput, { kind: 'layout' }>, width: number): FlowLayoutElementInput => {
     allocatedRows.add(row.id);
     const owner = authored.get(row.id)!;
     if (owner.type !== 'layout') return widthFailure(owner, 'Expected a Layout.');
+
     const natural = naturalSize(row).width;
     const tolerance = Number.EPSILON * 64 * Math.max(1, width, natural);
     if (width < natural - tolerance) return widthFailure(owner, 'Allocated width cannot shrink natural content.');
+
     const extra = Math.max(0, width - natural);
     if (owner.source.itemWidth !== 'fill' || extra <= tolerance) return { ...row, allocatedWidth: width };
+
     const eligible = row.elements.filter(child => {
       const entity = authored.get(child.id)!;
       return entity.type === 'entity' && entity.graph.layout?.width === undefined;
     });
     if (eligible.length === 0) return widthFailure(owner, 'Positive free width requires a non-fixed Entity.');
+
     const flex = createFlexLayout({
       size: { x: { kind: 'fixed', value: extra } },
       children: eligible.map(child => ({
@@ -98,22 +108,28 @@ export const allocateFlowContainerWidths = (
       sourceChild: path => children[path[1] as number],
     }).artifact;
     if (artifact === undefined) return widthFailure(owner, 'Flex allocation returned no artifact.');
+
     const increments = new Map(artifact.items.map(item => [item.key, item.slotBounds.width]));
+
     return {
       ...row,
       allocatedWidth: width,
       elements: row.elements.map(child => {
         const increment = increments.get(child.id);
         if (increment === undefined || child.kind !== 'leaf') return child;
+
         const entity = authored.get(child.id)!;
         if (entity.type !== 'entity') return widthFailure(owner, 'Expected an Entity.');
+
         return remeasure(entity, child.size.width + increment);
       }),
     };
   };
+
   const visit = (elements: ReadonlyArray<FlowLayoutElementInput>): ReadonlyArray<FlowLayoutElementInput> =>
     elements.map(element => {
       if (element.kind === 'leaf') return element;
+
       const owner = authored.get(element.id)!;
       if (owner.type !== 'layout' || owner.source.kind !== 'linear' || owner.source.containerWidth === undefined)
         return { ...element, elements: visit(element.elements) };
@@ -122,8 +138,10 @@ export const allocateFlowContainerWidths = (
           owner,
           'containerWidth requires a vertical linear container with all children included in bounds.',
         );
+
       for (const child of element.elements) rowOf(child);
       const width = Math.max(...element.elements.map(child => naturalSize(child).width));
+
       return {
         ...element,
         elements: element.elements.map(child => {
@@ -134,14 +152,17 @@ export const allocateFlowContainerWidths = (
               allocatedWidth: width,
               elements: [growRow(row, width - child.contentInsets.left - child.contentInsets.right)],
             };
+
           return growRow(row, width);
         }),
       };
     });
   const elements = visit(input.elements);
+
   for (const owner of authored.values()) {
     if (owner.type === 'layout' && owner.source.itemWidth === 'fill' && !allocatedRows.has(owner.id))
       widthFailure(owner, 'fill requires a horizontal row receiving a parent containerWidth allocation.');
   }
+
   return { ...input, elements };
 };

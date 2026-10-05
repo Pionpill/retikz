@@ -23,12 +23,14 @@ const selectTopBottomRows = (
       selected.push(row);
     }
   }
+
   if (operation.tie === RowSelectorTie.Last) {
     for (const row of ranked.slice(operation.n)) {
       if (resolveFieldPath(row, operation.by) !== threshold) break;
       selected[selected.length - 1] = row;
     }
   }
+
   return selected;
 };
 
@@ -50,6 +52,7 @@ const minSelectorImplementation = defineRowSelectorImplementation({
         .filter(row => resolveFieldPath(row, operation.by) === value)
         .map((row, index) => ({ row, rank: index + 1 }));
     }
+
     const row =
       operation.tie === RowSelectorTie.Last
         ? ([...ranked]
@@ -58,6 +61,7 @@ const minSelectorImplementation = defineRowSelectorImplementation({
               candidate => resolveFieldPath(candidate, operation.by) === resolveFieldPath(ranked[0], operation.by),
             ) ?? ranked[0])
         : ranked[0];
+
     return [{ row, rank: 1 }];
   },
 });
@@ -80,6 +84,7 @@ const maxSelectorImplementation = defineRowSelectorImplementation({
         .filter(row => resolveFieldPath(row, operation.by) === value)
         .map((row, index) => ({ row, rank: index + 1 }));
     }
+
     const row =
       operation.tie === RowSelectorTie.Last
         ? ([...ranked]
@@ -88,6 +93,7 @@ const maxSelectorImplementation = defineRowSelectorImplementation({
               candidate => resolveFieldPath(candidate, operation.by) === resolveFieldPath(ranked[0], operation.by),
             ) ?? ranked[0])
         : ranked[0];
+
     return [{ row, rank: 1 }];
   },
 });
@@ -184,6 +190,7 @@ const outsideQuantileBandSelectorImplementation = defineRowSelectorImplementatio
     const factor = boundary.kind === 'spread' ? spreadFactorOf(boundary.factor) : 0;
     const lower = boundary.kind === 'spread' ? stats.lower - factor * stats.spread : stats.lower;
     const upper = boundary.kind === 'spread' ? stats.upper + factor * stats.spread : stats.upper;
+
     return stats.entries
       .filter(entry => entry.value < lower || entry.value > upper)
       .map((entry, index) => ({ row: entry.row, rank: index + 1 }));

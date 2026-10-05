@@ -175,10 +175,12 @@ export const readCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
   const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
   const authoredScaleNames = definition.scaleBinding?.read(parsedOperation as never);
   const scaleNames: Partial<Record<DimensionRole, string>> = {};
+
   for (const role of definition.roles) {
     const scaleName = authoredScaleNames === undefined ? Reflect.get(parsedOperation, role) : authoredScaleNames[role];
     if (typeof scaleName === 'string') scaleNames[role] = scaleName;
   }
+
   return scaleNames;
 };
 
@@ -193,14 +195,17 @@ export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
 ): TCoordinateOperation => {
   const parsedOperation = definition.schema.parse(operation) as TCoordinateOperation;
   const applicableScaleNames: Partial<Record<DimensionRole, string>> = {};
+
   for (const role of definition.roles) {
     const scaleName = scaleNames[role];
     if (scaleName !== undefined) applicableScaleNames[role] = scaleName;
   }
+
   const candidate =
     definition.scaleBinding === undefined
       ? { ...parsedOperation, ...applicableScaleNames }
       : definition.scaleBinding.bind(parsedOperation as never, applicableScaleNames);
+
   return definition.schema.parse(candidate) as TCoordinateOperation;
 };
 

@@ -95,10 +95,12 @@ export const extractMarkType = (schema: ZodType): string => {
   if (!(schema instanceof ZodObject)) {
     throw new RetikzPlotError('lowerPlots: mark registration schema must be a ZodObject with a literal type field');
   }
+
   const typeSchema = schema.shape.type;
   if (!(typeSchema instanceof ZodLiteral) || typeof typeSchema.value !== 'string' || typeSchema.value.length === 0) {
     throw new RetikzPlotError('lowerPlots: mark registration schema must declare type as a non-empty z.literal string');
   }
+
   return typeSchema.value;
 };
 

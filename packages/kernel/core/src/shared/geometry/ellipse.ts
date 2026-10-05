@@ -24,6 +24,7 @@ export const ellipse = {
   anchor: (e: Ellipse, name: Anchor): Position => {
     let lx = 0;
     let ly = 0;
+
     switch (name) {
       case Anchor.Top:
         ly = -e.ry;
@@ -54,6 +55,7 @@ export const ellipse = {
         ly = e.ry * SQRT_HALF;
         break;
     }
+
     return localToWorld(e, [lx, ly]);
   },
   /**

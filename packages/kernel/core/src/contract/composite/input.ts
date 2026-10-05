@@ -46,6 +46,7 @@ const snapshots = new WeakMap<CompositeInputBindings, CompositeRuntimeInputScope
 /** 精确读取 Source 路径，不使用继承属性或模糊字段匹配 */
 const sourceAtPath = (source: unknown, path: CompositeInputPath): unknown => {
   let current = source;
+
   for (const segment of path) {
     if (
       (Array.isArray(current) && (typeof segment !== 'number' || !Number.isSafeInteger(segment) || segment < 0)) ||
@@ -55,13 +56,16 @@ const sourceAtPath = (source: unknown, path: CompositeInputPath): unknown => {
         RetikzCoreErrorCode.CompositeContractViolation,
         `Composite input path ${JSON.stringify(path)} must use numeric array indices and string object fields`,
       );
+
     if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment))
       throw new RetikzCoreError(
         RetikzCoreErrorCode.CompositeContractViolation,
         `Composite input path ${JSON.stringify(path)} does not exist in Source`,
       );
+
     current = (current as Record<string | number, unknown>)[segment];
   }
+
   return current;
 };
 
@@ -79,6 +83,7 @@ export const captureCompositeInputScope = (
         RetikzCoreErrorCode.CompositeContractViolation,
         `Duplicate composite input path ${key}`,
       );
+
     paths.add(key);
     const target = sourceAtPath(snapshot, binding.path);
     if (target === null || typeof target !== 'object' || !('namespace' in target) || !('type' in target))
@@ -86,8 +91,10 @@ export const captureCompositeInputScope = (
         RetikzCoreErrorCode.CompositeContractViolation,
         `Composite input path ${key} must select a composite Source`,
       );
+
     return Object.freeze({ path: Object.freeze([...binding.path]), input: binding.input });
   });
+
   return Object.freeze({ source: snapshot, bindings: Object.freeze(captured) });
 };
 
@@ -97,12 +104,14 @@ export const resolveCompositeInputScope = (
   inputs: CompositeInputBindings | undefined,
 ): CompositeRuntimeInputScope => {
   if (inputs === undefined) return { source, bindings: [] };
+
   const snapshot = snapshots.get(inputs);
   if (snapshot === undefined || !jsonStructuralEquals(snapshot.source, source))
     throw new RetikzCoreError(
       RetikzCoreErrorCode.CompositeContractViolation,
       'Composite input bindings do not match this Source',
     );
+
   return snapshot;
 };
 
@@ -125,5 +134,6 @@ export const createCompositeInputBindings = (
   const scope = captureCompositeInputScope(source, bindings);
   const handle = Object.freeze({}) as CompositeInputBindings;
   snapshots.set(handle, scope);
+
   return handle;
 };

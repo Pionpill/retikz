@@ -24,7 +24,9 @@ export const lowerCircle = (source: IRCircle): IRPath => {
         ? Math.max(box.width, box.height)
         : Math.min(box.width, box.height)) / 2;
   }
+
   const angles = shapeAngles(source);
+
   return {
     ...shapePathProperties(source),
     type: 'path',

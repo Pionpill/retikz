@@ -41,16 +41,19 @@ const declarationKindOf = (element: ReactElement): PlotDeclarationKind | undefin
   if (element.type === PlotLegend) return 'legend';
   if (element.type === PlotScale) return 'scale';
   if (element.type === PlotTransform) return 'transform';
+
   return undefined;
 };
 
 const plainPropsOf = (props: Record<string, unknown>, overrides: Record<string, unknown> = {}): JsonObject => {
   const plain: Record<string, unknown> = {};
+
   for (const [key, value] of Object.entries({ ...props, ...overrides })) {
     if (key === 'resolveLabel' || (key === 'children' && !Object.hasOwn(overrides, 'children')) || value === undefined)
       continue;
     plain[key] = value;
   }
+
   return JsonObjectSchema.parse(plain);
 };
 
@@ -91,30 +94,38 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
       for (let index = 0; index < value.length; index += 1) visit(value[index], [...path, index], context);
       return;
     }
+
     if (isRawIterable(value)) {
       let index = 0;
+
       for (const slot of value) {
         visit(slot, [...path, index], context);
         index += 1;
       }
+
       return;
     }
+
     visit(value, [...path, 0], context);
   };
 
   const childTrackSpecsOf = (value: unknown): Array<ScaffoldTrack> => {
     const tracks: Array<ScaffoldTrack> = [];
+
     const visitTrack = (slot: unknown): void => {
       if (Array.isArray(slot) || isRawIterable(slot)) {
         visitContainer(slot, [], {}, candidate => visitTrack(candidate));
         return;
       }
+
       if (!isValidElement(slot)) return;
       if (slot.type === Fragment) {
         visitContainer((slot.props as { children?: ReactNode }).children, [], {}, candidate => visitTrack(candidate));
         return;
       }
+
       if (slot.type !== PlotTrack) return;
+
       const props = slot.props as ScaffoldTrack & { children?: ReactNode };
       tracks.push({
         id: props.id,
@@ -124,7 +135,9 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
         ...(props.order !== undefined ? { order: props.order } : {}),
       });
     };
+
     visitContainer(value, [], {}, candidate => visitTrack(candidate));
+
     return tracks;
   };
 
@@ -133,11 +146,13 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
       visitContainer(slot, path, context, visitSlot);
       return;
     }
+
     if (slot === null || slot === undefined || typeof slot === 'boolean') return;
     if (!isValidElement(slot)) {
       appendDeclaration('unsupported', { valueKind: typeof slot }, path, context);
       return;
     }
+
     if (slot.type === Fragment) {
       visitContainer((slot.props as { children?: ReactNode }).children, [...path, 'children'], context, visitSlot);
       return;
@@ -148,6 +163,7 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
       appendDeclaration('unsupported', { valueKind: 'element' }, path, context);
       return;
     }
+
     const rawProps = slot.props as Record<string, unknown>;
     const resolveLabel = rawProps.resolveLabel;
     if (typeof resolveLabel === 'function') {
@@ -165,14 +181,17 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
       if (typeof facetId === 'string') {
         visitContainer(rawProps.children, [...path, 'props', 'children'], { facetId }, visitSlot);
       }
+
       return;
     }
+
     if (kind === 'scaffold') {
       const scaffoldId = rawProps.id;
       const propTracks = Array.isArray(rawProps.tracks) ? rawProps.tracks : [];
       const tracks = [...propTracks, ...childTrackSpecsOf(rawProps.children)];
       appendDeclaration(kind, plainPropsOf(rawProps, { tracks }), path, context);
       if (typeof scaffoldId !== 'string') return;
+
       const visitScaffoldSlot = (
         child: unknown,
         childPath: PlotDeclarationPath,
@@ -182,10 +201,12 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
           visitContainer(child, childPath, childContext, visitScaffoldSlot);
           return;
         }
+
         if (!isValidElement(child)) {
           visitSlot(child, childPath, { scaffoldId });
           return;
         }
+
         if (child.type === Fragment) {
           visitContainer(
             (child.props as { children?: ReactNode }).children,
@@ -195,6 +216,7 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
           );
           return;
         }
+
         if (child.type === PlotTrack) {
           const trackProps = child.props as ScaffoldTrack & { children?: ReactNode };
           visitContainer(
@@ -203,11 +225,15 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
             { trackId: trackProps.id },
             visitSlot,
           );
+
           return;
         }
+
         visitSlot(child, childPath, { scaffoldId });
       };
+
       visitContainer(rawProps.children, [...path, 'props', 'children'], { scaffoldId }, visitScaffoldSlot);
+
       return;
     }
 
@@ -215,5 +241,6 @@ export const collectPlotDeclarations = (children: ReactNode): PlotDeclarationCol
   };
 
   visitContainer(children, ['children'], {}, visitSlot);
+
   return { declarations, runtimeSources };
 };

@@ -53,6 +53,7 @@ const mergeGroupCaptionText = (
 ): IRFlowDefaultsGroupCaptionText | undefined => {
   const merged = mergeFields(base, override);
   if (merged === undefined) return undefined;
+
   const { font: _font, ...fields } = merged;
   void _font;
   const definedOverride = mergeProperties([override?.font], { shouldOverride: value => value !== undefined });
@@ -62,6 +63,7 @@ const mergeGroupCaptionText = (
       : definedOverride;
   const font = Object.keys(candidateFont).length === 0 ? undefined : candidateFont;
   const result = { ...fields, ...(font === undefined ? {} : { font }) };
+
   return Object.keys(result).length === 0 ? undefined : result;
 };
 
@@ -70,6 +72,7 @@ const mergeGroupDefaults = (
   override: IRFlowDefaultsGroup | undefined,
 ): IRFlowDefaultsGroup | undefined => {
   if (base === undefined && override === undefined) return undefined;
+
   const { caption: baseCaption, ...baseSurface } = base ?? {};
   const { caption: overrideCaption, ...overrideSurface } = override ?? {};
   const surface = mergeFields(baseSurface, overrideSurface);
@@ -85,6 +88,7 @@ const mergeGroupDefaults = (
           ...(title === undefined ? {} : { title }),
           ...(description === undefined ? {} : { description }),
         };
+
   return {
     ...(surface === undefined ? {} : surface),
     ...(caption === undefined ? {} : { caption }),
@@ -99,6 +103,7 @@ export const mergeFlowDefaults = (
   const graph = mergeGraphFlowDefaults(base, override);
   const layout = mergeFields(base?.layout, override?.layout);
   const group = mergeGroupDefaults(base?.group, override?.group);
+
   return {
     ...(layout === undefined ? {} : { layout }),
     ...(graph.entity === undefined ? {} : { entity: graph.entity }),
@@ -112,6 +117,7 @@ const resolveRegisteredDefaults = (
   registry: ReadonlyMap<string, FlowThemeStyleDefinition>,
 ): IRFlowDefaults | undefined => {
   if (theme.style === undefined) return undefined;
+
   const definition = registry.get(theme.style);
   if (definition === undefined) {
     throw new RetikzDiagramError({
@@ -120,6 +126,7 @@ const resolveRegisteredDefaults = (
       details: { capability: 'flow-theme-style', key: theme.style, availableKeys: [...registry.keys()] },
     });
   }
+
   try {
     return FlowDefaultsSchema.parse(definition.resolve(theme));
   } catch (cause) {

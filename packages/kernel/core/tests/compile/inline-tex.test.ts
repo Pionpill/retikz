@@ -13,8 +13,10 @@ const lowerTexCalls: Array<{ tex: string; displayMode?: boolean }> = [];
 const fakeLowerTex: LowerTex = (content, style) => {
   lowerTexCalls.push({ tex: content.tex, displayMode: content.displayMode });
   if (content.tex === 'INVALID') return null;
+
   const width = Math.max(content.tex.length, 1) * style.fontSize * 0.5;
   const height = style.fontSize * (content.displayMode ? 2 : 1);
+
   return {
     paths: [
       {
@@ -46,17 +48,20 @@ const compile = (
     onWarn: w => warnings.push(w),
     ...(withTex ? { lowerTex: fakeLowerTex } : {}),
   }).scene;
+
   return { primitives: out.primitives, warnings, width: out.layout.width };
 };
 
 const glyphPaths = (prims: Array<ScenePrimitive>): Array<PathPrim> =>
   flattenPrims(prims).filter((p): p is PathPrim => p.type === 'path' && p.fillRule === 'evenodd');
+
 const textPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
   flattenPrims(prims).filter((p): p is TextPrim => p.type === 'text');
 
 describe('[inline-tex] node text', () => {
   it('renders a `$$...$$` node as a glyph block (no plain text prim)', () => {
     const { primitives } = compile([{ type: 'node', id: 'a', position: [0, 0], text: '$$ab$$' } as never]);
+
     expect(glyphPaths(primitives).length).toBe(1);
     expect(textPrims(primitives).length).toBe(0);
   });
@@ -69,6 +74,7 @@ f'(x) &= 2ax + b
     const { primitives, warnings } = compile([
       { type: 'node', id: 'a', position: [0, 0], text: `$$${tex}$$` } as never,
     ]);
+
     expect(glyphPaths(primitives).length).toBe(1);
     expect(textPrims(primitives).length).toBe(0);
     expect(warnings.length).toBe(0);
@@ -78,11 +84,13 @@ f'(x) &= 2ax + b
   it('sizes a display-math node from the glyph bbox (wider tex → wider node)', () => {
     const narrow = compile([{ type: 'node', id: 'a', position: [0, 0], text: '$$ab$$' } as never]).width;
     const wide = compile([{ type: 'node', id: 'a', position: [0, 0], text: '$$abcdefgh$$' } as never]).width;
+
     expect(wide).toBeGreaterThan(narrow);
   });
 
   it('mixes text and inline math on one line', () => {
     const { primitives } = compile([{ type: 'node', id: 'a', position: [0, 0], text: 'a $x$ b' } as never]);
+
     expect(glyphPaths(primitives).length).toBe(1);
     expect(textPrims(primitives).map(t => t.lines[0].text)).toEqual(['a ', ' b']);
   });
@@ -92,6 +100,7 @@ f'(x) &= 2ax + b
       [{ type: 'node', id: 'a', position: [0, 0], text: 'a $x$ b' } as never],
       false,
     );
+
     expect(glyphPaths(primitives).length).toBe(0);
     expect(textPrims(primitives)[0].lines[0].text).toBe('a $x$ b');
     expect(warnings.length).toBe(0);
@@ -103,6 +112,7 @@ f(x) &= ax^2 + bx + c\\
 f'(x) &= 2ax + b
 \end{array}$$`;
     const { primitives, warnings } = compile([{ type: 'node', id: 'a', position: [0, 0], text } as never], false);
+
     expect(glyphPaths(primitives).length).toBe(0);
     expect(textPrims(primitives)[0].lines.map(line => line.text)).toEqual(text.split('\n'));
     expect(warnings.length).toBe(0);
@@ -110,6 +120,7 @@ f'(x) &= 2ax + b
 
   it('warns on an unbalanced `$` but keeps the text', () => {
     const { warnings } = compile([{ type: 'node', id: 'a', position: [0, 0], text: 'a $x' } as never]);
+
     expect(warnings.some(w => w.code === CompileWarningCode.TextTexParseError)).toBe(true);
   });
 
@@ -117,6 +128,7 @@ f'(x) &= 2ax + b
     const { primitives, warnings } = compile([
       { type: 'node', id: 'a', position: [0, 0], text: 'ok $INVALID$ done' } as never,
     ]);
+
     expect(warnings.some(w => w.code === CompileWarningCode.TexInvalid)).toBe(true);
     expect(glyphPaths(primitives).length).toBe(0);
     expect(textPrims(primitives).length).toBeGreaterThan(0);
@@ -132,6 +144,7 @@ f'(x) &= 2ax + b
       } as never,
     ]);
     const glyphs = glyphPaths(primitives);
+
     expect(glyphs.length).toBe(1);
     expect(glyphs[0].fill).toBe('#ff0000');
     expect(textPrims(primitives).map(t => t.lines[0].text)).toEqual(['E=']);
@@ -151,6 +164,7 @@ describe('[inline-tex] labels', () => {
         ],
       } as never,
     ]);
+
     expect(glyphPaths(primitives).length).toBe(1);
   });
 
@@ -165,6 +179,7 @@ describe('[inline-tex] labels', () => {
         label: { text: 'area $r^2$' },
       } as never,
     ]);
+
     expect(glyphPaths(primitives).length).toBe(1);
   });
 });

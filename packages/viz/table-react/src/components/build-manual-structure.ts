@@ -30,6 +30,7 @@ const buildCell = (element: ReactElement<CellProps, typeof Cell>): IRManualTable
       content,
     };
   }
+
   return {
     ...fields,
     value: value === undefined ? children : value,
@@ -45,6 +46,7 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
     if (!isRowElement(child)) {
       throw new RetikzTableReactError('table react: ManualTable children only accept Row');
     }
+
     rowElements.push(child);
   });
   if (rowElements.length === 0)
@@ -63,10 +65,13 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
       if (!isCellElement(child)) {
         throw new RetikzTableReactError('table react: Row children only accept Cell');
       }
+
       rowCells.push(child);
     });
+
     rowCells.forEach(cell => {
       let columnIndex = 0;
+
       while (occupancy[rowIndex][columnIndex]) columnIndex += 1;
       const rowSpan = cell.props.span?.rows ?? 1;
       const columnSpan = cell.props.span?.columns ?? 1;
@@ -75,17 +80,20 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
           `table react: Cell at row ${rowIndex}, column ${columnIndex} span must be positive integers`,
         );
       }
+
       if (rowIndex + rowSpan > rowElements.length) {
         throw new RetikzTableReactError(
           `table react: Cell at row ${rowIndex}, column ${columnIndex} span is out of bounds`,
         );
       }
+
       for (let occupiedRow = rowIndex; occupiedRow < rowIndex + rowSpan; occupiedRow += 1) {
         if (rowKinds[occupiedRow] !== rowKinds[rowIndex]) {
           throw new RetikzTableReactError(
             `table react: Cell at row ${rowIndex}, column ${columnIndex} span crosses row kind`,
           );
         }
+
         for (let occupiedColumn = columnIndex; occupiedColumn < columnIndex + columnSpan; occupiedColumn += 1) {
           if (occupancy[occupiedRow][occupiedColumn]) {
             throw new RetikzTableReactError(
@@ -94,11 +102,13 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
           }
         }
       }
+
       for (let occupiedRow = rowIndex; occupiedRow < rowIndex + rowSpan; occupiedRow += 1) {
         for (let occupiedColumn = columnIndex; occupiedColumn < columnIndex + columnSpan; occupiedColumn += 1) {
           occupancy[occupiedRow][occupiedColumn] = true;
         }
       }
+
       entries.push({ row: rowIndex, column: columnIndex, cell: buildCell(cell) });
       columnCount = Math.max(columnCount, columnIndex + columnSpan);
     });
@@ -109,9 +119,11 @@ export const buildManualStructure = (children: ReactNode): ManualStructureInput 
       'table react: ManualTable Row children require at least one Cell to infer column count',
     );
   }
+
   const rows = Array.from({ length: rowElements.length }, () =>
     Array.from<IRManualTableCell | null>({ length: columnCount }).fill(null),
   );
+
   for (const entry of entries) rows[entry.row][entry.column] = entry.cell;
 
   return {

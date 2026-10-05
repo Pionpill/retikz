@@ -37,6 +37,7 @@ const warnUnsupported = (options: DrawOptions, feature: UnsupportedCanvasFeature
     options.warnUnsupported(warning);
     return;
   }
+
   console.warn(`[retikz/canvas] ${message}`);
 };
 
@@ -101,12 +102,14 @@ const bakeAlpha = (color: string, opacity: number): string | undefined => {
   if (bytes) {
     return `rgba(${bytes.r}, ${bytes.g}, ${bytes.b}, ${opacity})`;
   }
+
   const rgb = /^rgba?\(([^)]+)\)$/.exec(color);
   if (rgb) {
     const parts = rgb[1].split(',').map(s => s.trim());
     const a = parts.length > 3 ? parseFloat(parts[3]) : 1;
     return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a * opacity})`;
   }
+
   return undefined;
 };
 
@@ -161,6 +164,7 @@ const withShadow = (
     draw();
     return;
   }
+
   ctx.save();
   const canvasShadow = resolveCanvasShadowStyle(ctx, shadow);
   ctx.shadowOffsetX = canvasShadow.offsetX;
@@ -181,6 +185,7 @@ const withBlend = (ctx: CanvasRenderingContext2D, blendMode: BlendMode | undefin
     draw();
     return;
   }
+
   ctx.save();
   ctx.globalCompositeOperation = blendMode;
   draw();
@@ -198,13 +203,16 @@ const applyColorAlpha = (
   resolveCssColor: ((color: string) => string) | undefined,
 ): string => {
   if (opacity === undefined || opacity >= 1) return color;
+
   const direct = bakeAlpha(color, opacity);
   if (direct !== undefined) return direct;
+
   const normalized = resolveCssColor?.(color);
   if (normalized !== undefined && normalized !== color) {
     const baked = bakeAlpha(normalized, opacity);
     if (baked !== undefined) return baked;
   }
+
   return color;
 };
 
@@ -218,6 +226,7 @@ const resolvePaintStyle = (
   if (paint === undefined) return undefined;
   if (typeof paint === 'string') return paint === 'none' ? undefined : resolveColor(paint, options);
   if (paint.kind === 'contextStroke') return resolveColor(contextStroke, options) ?? String(ctx.strokeStyle);
+
   const resource = resources.get(paint.id);
   if (resource !== undefined && resource.kind === 'paint') {
     const spec = resource.spec;
@@ -226,11 +235,13 @@ const resolvePaintStyle = (
       if (pattern !== undefined) return pattern;
     }
   }
+
   warnUnsupported(
     options,
     'paint',
     `Canvas renderer does not support paint resource "${paint.id}" yet; paint is skipped.`,
   );
+
   return undefined;
 };
 
@@ -266,8 +277,10 @@ const fillImage = (
         `Canvas renderer requires a getImage loader to render image paint "${spec.href}"; fill is skipped.`,
       );
     }
+
     return;
   }
+
   ctx.save();
   if (fillOpacity !== undefined) ctx.globalAlpha *= fillOpacity;
   ctx.clip();
@@ -281,6 +294,7 @@ const fillImage = (
     const dh = ih * scale;
     ctx.drawImage(img, bbox.x + (bbox.w - dw) / 2, bbox.y + (bbox.h - dh) / 2, dw, dh);
   }
+
   ctx.restore();
 };
 
@@ -301,6 +315,7 @@ const fillCurrentPath = (
         fillImage(ctx, resource.spec, bbox, fillOpacity, options);
         return;
       }
+
       if (
         resource.spec.kind === 'linearGradient' ||
         resource.spec.kind === 'radialGradient' ||
@@ -320,12 +335,14 @@ const fillCurrentPath = (
       }
     }
   }
+
   const fillStyle = resolvePaintStyle(ctx, fill, typeof stroke === 'string' ? stroke : undefined, options, resources);
   if (fillStyle === undefined) return;
   if (fillOpacity !== undefined) {
     ctx.save();
     ctx.globalAlpha *= fillOpacity;
   }
+
   ctx.fillStyle = fillStyle;
   ctx.fill(fillRule);
   if (fillOpacity !== undefined) ctx.restore();
@@ -371,6 +388,7 @@ const strokeCurrentPath = (
       });
     }
   }
+
   if (!gradientHandled) strokeStyle = resolvePaintStyle(ctx, stroke, undefined, options, resources);
   if (strokeStyle === undefined) return;
   if (strokeOpacity !== undefined) ctx.save();
@@ -385,6 +403,7 @@ const resolveFontFamily = (fontFamily: string | undefined, options: DrawOptions)
   if (typeof options.defaultFontFamily === 'string' && options.defaultFontFamily.trim().length > 0) {
     return options.defaultFontFamily;
   }
+
   return 'sans-serif';
 };
 
@@ -403,9 +422,11 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
   ctx.font = buildFont(p.fontSize, p.fontFamily, p.fontWeight, p.fontStyle, options);
   ctx.textAlign = p.align === 'middle' ? 'center' : p.align;
   ctx.textBaseline = p.baseline;
+
   // 确定 fill 基线：缺省 #000（与 SVG 文本省略 fill 时的默认黑一致），避免继承上一个 prim 残留的脏 fillStyle
   ctx.fillStyle = '#000000';
   if (p.fill !== undefined && p.fill !== 'none') ctx.fillStyle = resolveColor(p.fill, options) ?? p.fill;
+
   const offset = firstLineDy(p);
   p.lines.forEach((line, index) => {
     const shouldRestore =
@@ -431,10 +452,12 @@ const drawText = (ctx: CanvasRenderingContext2D, p: TextPrim, options: DrawOptio
         options,
       );
     }
+
     if (line.fill !== undefined && line.fill !== 'none') ctx.fillStyle = resolveColor(line.fill, options) ?? line.fill;
     if ((line.fill ?? p.fill) !== 'none') {
       ctx.fillText(line.text, p.x, p.y + (index === 0 ? offset : offset + index * p.lineHeight));
     }
+
     if (shouldRestore) ctx.restore();
   });
 };
@@ -459,6 +482,7 @@ const drawableSegments = (commands: ReadonlyArray<PathCommand>): Array<DrawableS
       subpathStart = cursor;
       continue;
     }
+
     if (command.kind === 'close') {
       cursor = subpathStart;
       continue;
@@ -480,10 +504,13 @@ const drawableSegments = (commands: ReadonlyArray<PathCommand>): Array<DrawableS
 const endArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
   const segment = drawableSegments(commands).at(-1);
   if (!segment) return null;
+
   const vertex = commandEndpoint(segment.command);
   if (!vertex) return null;
+
   const tangent = commandEndTangent(segment.command, segment.from);
   const angle = tangent ? Math.atan2(tangent[1], tangent[0]) : 0;
+
   return { vertex, angle };
 };
 
@@ -494,8 +521,10 @@ const endArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Poin
 const startArrowPlacement = (commands: ReadonlyArray<PathCommand>): { vertex: Point; angle: number } | null => {
   const segment = drawableSegments(commands).at(0);
   if (!segment) return null;
+
   const tangent = commandStartTangent(segment.command, segment.from);
   const angle = tangent ? Math.atan2(tangent[1], tangent[0]) + Math.PI : 0;
+
   return { vertex: segment.from, angle };
 };
 
@@ -524,6 +553,7 @@ const resolveMarkerStroke = (
     if (stroke === 'context-stroke') return pathStroke ?? String(ctx.strokeStyle); // legacy 关键字兼容
     return resolveColor(stroke, options) ?? stroke;
   }
+
   return pathStroke ?? String(ctx.strokeStyle); // { kind: 'contextStroke' }
 };
 
@@ -538,6 +568,7 @@ const fillMarkerPath = (
     ctx.save();
     ctx.globalAlpha *= fillOpacity;
   }
+
   ctx.fillStyle = fill;
   ctx.fill(fillRule);
   if (fillOpacity !== undefined) ctx.restore();
@@ -569,6 +600,7 @@ const drawMarkerPrim = (
   options: DrawOptions,
 ): void => {
   ctx.save();
+
   switch (prim.type) {
     case 'path':
       buildPath(ctx, prim.commands);
@@ -590,6 +622,7 @@ const drawMarkerPrim = (
         ctx.rotate(prim.rotate * DEG_TO_RAD);
         ctx.translate(-prim.cx, -prim.cy);
       }
+
       ctx.beginPath();
       ctx.ellipse(prim.cx, prim.cy, prim.rx, prim.ry, 0, 0, Math.PI * 2);
       fillMarkerPath(ctx, resolveMarkerFill(ctx, prim.fill, pathStroke, options), prim.fillOpacity, undefined);
@@ -619,6 +652,7 @@ const drawMarkerPrim = (
       for (const child of prim.children) drawMarkerPrim(ctx, child, pathStroke, options);
       break;
   }
+
   ctx.restore();
 };
 
@@ -639,7 +673,9 @@ const buildPattern = (
     off.fillStyle = tile.background;
     off.fillRect(0, 0, tile.size, tile.size);
   }
+
   const motifColor = options.currentColor ?? '#000';
+
   for (const prim of tile.motif) drawMarkerPrim(off, prim, motifColor, options);
   const pattern = ctx.createPattern(off.canvas, 'repeat');
   if (pattern === null) return undefined;
@@ -647,6 +683,7 @@ const buildPattern = (
     const rad = tile.rotation * DEG_TO_RAD;
     pattern.setTransform({ a: Math.cos(rad), b: Math.sin(rad), c: -Math.sin(rad), d: Math.cos(rad), e: 0, f: 0 });
   }
+
   return pattern;
 };
 
@@ -666,6 +703,7 @@ const drawArrowMarker = (
 ): void => {
   ctx.save();
   if (spec.opacity !== undefined) ctx.globalAlpha *= spec.opacity;
+
   // marker 在独立坐标系渲染（如 SVG defs marker），描边样式不继承 path 的 lineCap / lineJoin
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
@@ -673,6 +711,7 @@ const drawArrowMarker = (
   ctx.rotate(angle);
   ctx.scale((spec.markerWidth * strokeWidth) / spec.baseSize, (spec.markerHeight * strokeWidth) / spec.baseSize);
   ctx.translate(-spec.refX, -spec.baseSize / 2);
+
   for (const prim of spec.marker) drawMarkerPrim(ctx, prim, pathStroke, options);
   ctx.restore();
 };
@@ -685,6 +724,7 @@ const drawPrim = (
   state: DrawState,
 ): void => {
   ctx.save();
+
   // 动画：把该 prim 的 tracks 在「有效时刻」应用到 ctx（transform / dash）并取覆盖后的 prim（opacity / 色 / 线宽）。
   // per-id 虚拟时钟经 resolvePrimAnimation 折算各 id 的有效时刻 / 模式（skip=渲染 base）；缺省退回全局 time + 仅自动播。
   if (p.animations !== undefined && p.animations.length > 0) {
@@ -699,6 +739,7 @@ const drawPrim = (
       });
     }
   }
+
   switch (p.type) {
     case 'rect':
       withBlend(ctx, p.blendMode, () =>
@@ -743,6 +784,7 @@ const drawPrim = (
               ctx.rotate(p.rotate * DEG_TO_RAD);
               ctx.translate(-p.cx, -p.cy);
             }
+
             ctx.beginPath();
             ctx.ellipse(p.cx, p.cy, p.rx, p.ry, 0, 0, Math.PI * 2);
             fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, undefined, options, resources, {
@@ -780,6 +822,7 @@ const drawPrim = (
             buildPath(ctx, p.commands);
             if (p.strokeLinecap !== undefined) ctx.lineCap = p.strokeLinecap;
             if (p.strokeLinejoin !== undefined) ctx.lineJoin = p.strokeLinejoin;
+
             const bbox = pathBounds(p.commands);
             fillCurrentPath(ctx, p.fill, p.stroke, p.fillOpacity, p.fillRule, options, resources, bbox);
             strokeCurrentPath(
@@ -794,6 +837,7 @@ const drawPrim = (
               bbox,
               state,
             );
+
             if (p.arrowStart || p.arrowEnd) {
               const strokeWidth = p.strokeWidth ?? 1;
               const pathStroke = typeof p.stroke === 'string' ? resolveColor(p.stroke, options) : undefined;
@@ -810,6 +854,7 @@ const drawPrim = (
                     options,
                   );
               }
+
               if (p.arrowEnd) {
                 const placement = endArrowPlacement(p.commands);
                 if (placement)
@@ -825,6 +870,7 @@ const drawPrim = (
       break;
     case 'group': {
       ctx.save();
+
       for (const transform of p.transforms ?? []) applyTransform(ctx, transform);
       if (p.clipRef !== undefined) {
         const clip = resources.get(p.clipRef);
@@ -834,6 +880,7 @@ const drawPrim = (
           warnUnsupported(options, 'clip', `Canvas renderer: clip resource "${p.clipRef}" not found; clip is skipped.`);
         }
       }
+
       const groupOpacity = 'opacity' in p && typeof p.opacity === 'number' ? p.opacity : undefined;
       withOpacity(ctx, groupOpacity, () => {
         for (const child of p.children) drawPrim(ctx, child, options, resources, state);
@@ -842,6 +889,7 @@ const drawPrim = (
       break;
     }
   }
+
   ctx.restore();
 };
 
@@ -849,6 +897,7 @@ const drawPrim = (
 export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: DrawOptions = {}): void => {
   const resources: ResourceMap = new Map((scene.resources ?? []).map(r => [r.id, r]));
   const state: DrawState = { gradientPatterns: new Map() };
+
   // 镜头：给定 time 且 scene 根有 viewBox track 时，先叠一层取景变换（包住全部 prim）
   const rootAnimationTime = options.rootAnimationTime ?? options.time;
   const hasCamera = rootAnimationTime !== undefined && (scene.animations ?? []).some(t => t.property === 'viewBox');
@@ -856,6 +905,7 @@ export const drawScene = (ctx: CanvasRenderingContext2D, scene: Scene, options: 
     ctx.save();
     applySceneCamera(ctx, scene, rootAnimationTime, options.easings);
   }
+
   for (const primitive of scene.primitives) drawPrim(ctx, primitive, options, resources, state);
   if (hasCamera) ctx.restore();
   if (options.trace !== undefined) {

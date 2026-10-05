@@ -58,6 +58,7 @@ export const PlotThemeResolutionSchema = strictObject({
         message: 'Plot defaults cascade must begin with the effective Neutral source',
       });
     }
+
     const sourcePaths = new Set(resolution.layers.map(layer => layer.path));
     resolution.rules.forEach((source, index) => {
       if (!sourcePaths.has(source.sourcePath) || !source.path.startsWith(source.sourcePath + '/plotRules/')) {

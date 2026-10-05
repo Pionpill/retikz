@@ -64,6 +64,7 @@ const defaultsOf = (style: ReferenceStyle): IRChartDefaults => {
       layout: { align: NodeTextAlign; lineHeight: number };
     }
   >;
+
   return ChartDefaultsSchema.parse({
     layout: { padding: preset.padding, gap: preset.gap },
     presentation,

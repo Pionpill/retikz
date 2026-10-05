@@ -59,6 +59,7 @@ const TwoSegResolver = () => {
   if (!moduleId || !firstSeg || !isDocModuleId(moduleId)) {
     return <Navigate to="/" replace />;
   }
+
   const sections = getSectionsByArea(moduleId);
 
   const ungrouped = sections.find(s => !s.label);

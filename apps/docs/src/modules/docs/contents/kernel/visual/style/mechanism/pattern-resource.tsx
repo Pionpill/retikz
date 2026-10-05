@@ -9,10 +9,12 @@ import { resourceI18n } from './pattern-resource.i18n';
 
 /** 资源共享图参数 */
 export type PatternResourceProps = { lang?: Lang };
+
 /** 展示两个消费方指向同一个资源 */
 const PatternResource: FC<PatternResourceProps> = props => {
   const { lang = 'zh' } = props;
   const text = resourceI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

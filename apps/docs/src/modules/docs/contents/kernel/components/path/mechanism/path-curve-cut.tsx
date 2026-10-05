@@ -9,10 +9,12 @@ import { cutAfter, cutBefore, cutCurve, cutRemoved } from './path-cut.data';
 
 /** 曲线保形截取图的语言 */
 export type PathCurveCutProps = { lang?: Lang };
+
 /** 对照完整曲线、切点与两个保持曲线类型的输出片段 */
 const PathCurveCut: FC<PathCurveCutProps> = props => {
   const { lang = 'zh' } = props;
   const t = pathCurveCutI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {t.titles.map((title, index) => (

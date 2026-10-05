@@ -57,12 +57,14 @@ export const ScatterChartDefinition: ChartRecipeDefinition<IRScatterChart> = def
       pointFieldConsumersOf(ChartType.Scatter),
     );
     const spatial = pointSpatialResolutionOf(ChartType.Scatter, context.encodings);
+
     return spatial === undefined ? resolution : { ...resolution, spatial };
   },
   resolve: (context: ChartRecipeResolveContext) => {
     const slots = pointSlotsOf(context);
     const mark = resolvePointMark(slots.encodings, slots.properties);
     const sizeGuide = sizeGuideOf(slots.encodings);
+
     return pointResolutionOf(ChartType.Scatter, [{ kind: ChartType.Scatter, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });

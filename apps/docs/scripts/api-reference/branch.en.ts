@@ -72,15 +72,20 @@ const translations: Partial<Record<string, string>> = {
   '定义与内置项共享调用和验证链的 Branch 布局':
     'Define a Branch layout using the same execution and validation chain as built-in layouts',
 };
+
 const missing = new Set<string>();
+
 /** 翻译源码说明，保持代码字面量不变 */
 export const translateBranchApiReference = (source: string): string => {
   const text = source.replace(/\r/g, '');
   if (!/[\u3400-\u9fff]/u.test(text)) return text;
   if (translations[text] !== undefined) return translations[text];
+
   missing.add(text);
+
   return text;
 };
+
 /** 缺译时阻止写入英文产物 */
 export const assertBranchApiReferenceTranslated = (): void => {
   if (missing.size) throw new Error(`Branch API translations missing:\n${JSON.stringify([...missing])}`);

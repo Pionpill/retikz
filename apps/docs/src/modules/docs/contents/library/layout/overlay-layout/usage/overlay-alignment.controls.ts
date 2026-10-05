@@ -40,11 +40,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { justifyItems: 'center', justifySelf: 'auto' },
     relatedApis: ['OverlayLayout.justifyItems', 'OverlayLayoutItem.justifySelf'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

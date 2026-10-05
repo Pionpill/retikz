@@ -23,6 +23,7 @@ export const assertUniqueAxisDimension = (
   roleOf: AxisRoleOf = dimension => dimension,
 ): void => {
   const seen = new Set<string>();
+
   for (const guide of guides) {
     const role = roleOf(guide.dimension);
     if (seen.has(role)) {
@@ -30,6 +31,7 @@ export const assertUniqueAxisDimension = (
         `lowerPlots: duplicate axis for "${role}" role (dimension "${guide.dimension}"); one axis per positional role`,
       );
     }
+
     seen.add(role);
   }
 };
@@ -43,6 +45,7 @@ export const axisPlacementKeyOf = (guide: IRPlotAxisGuide, roleOf: AxisRoleOf = 
   if (placement.kind === AxisPlacementKind.Origin) {
     return `${role}:origin:${String(placement.origin ?? 0)}:${placement.tickSide ?? defaultOriginAxisTickSideOf(role)}`;
   }
+
   return `${role}:edge:${placement.edge}`;
 };
 
@@ -55,6 +58,7 @@ export const assertUniqueAxisPlacement = (
   roleOf: AxisRoleOf = dimension => dimension,
 ): void => {
   const seen = new Set<string>();
+
   for (const guide of guides) {
     const key = axisPlacementKeyOf(guide, roleOf);
     if (seen.has(key)) {
@@ -62,6 +66,7 @@ export const assertUniqueAxisPlacement = (
         `lowerPlots: duplicate axis for placement "${key}"; one axis per coordinate role and placement`,
       );
     }
+
     seen.add(key);
   }
 };

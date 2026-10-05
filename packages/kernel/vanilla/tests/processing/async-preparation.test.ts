@@ -19,12 +19,14 @@ const contribution = (id: string, x = 0): InputEmbedContribution => ({
   node: { type: 'node', id, position: [x, 0] },
   providerDependencies: { roots: [], providers: [] },
 });
+
 const source = (x = 0): InputSceneChildren => ({ children: [{ type: 'embed', kind: 'async-node', props: { x } }] });
 
 describe('shared async authoring preparation', () => {
   it('does not begin static compilation when the driver creation callback cancels the request', async () => {
     const abort = new AbortController();
     let resolutions = 0;
+
     await expect(
       prepareStaticProcessingAsync(
         { children: [] },
@@ -52,6 +54,7 @@ describe('shared async authoring preparation', () => {
     ).rejects.toThrow(/cancel|abort|invalid/);
     expect(resolutions).toBe(0);
   });
+
   it('rejects cancellation from synchronous compile callbacks before an initial controller commits', async () => {
     for (const phase of ['create', 'resolve'] as const) {
       const abort = new AbortController();
@@ -71,6 +74,7 @@ describe('shared async authoring preparation', () => {
           };
         },
       };
+
       await expect(
         createProcessingControllerAsync({ children: [] }, { compileDriver: driver, signal: abort.signal }),
       ).rejects.toThrow(/cancel|abort|invalid|disposed/);
@@ -87,6 +91,7 @@ describe('shared async authoring preparation', () => {
         const callback = invalidate;
         invalidate = undefined;
         callback?.();
+
         return { primary: output.result, observerOutputs: output.observerOutputs, layers: [], diagnostics: [] };
       },
       commit: () => {
@@ -104,11 +109,13 @@ describe('shared async authoring preparation', () => {
       next = controller.update({ children: [{ type: 'node', position: [2, 0] }] });
     };
     const stale = await controller.update({ children: [{ type: 'node', position: [1, 0] }] });
+
     expect(stale).toEqual({ kind: 'superseded' });
     expect(await next).toMatchObject({ kind: 'committed', result: { revision: 1 } });
     expect(published).toEqual([1]);
     expect(commits).toBe(2);
     expect(controller.diagnostics()).toEqual([]);
+
     controller.dispose();
   });
 
@@ -126,6 +133,7 @@ describe('shared async authoring preparation', () => {
         const left = context.normalizeChildren?.(source(1).children);
         const right = context.normalizeChildren?.(source(2).children);
         if (left === undefined || right === undefined) throw new Error('missing children');
+
         return {
           node: { type: 'scope', id: context.id, children: [...left.children, ...right.children] },
           providerDependencies: { roots: [], providers: [] },
@@ -134,6 +142,7 @@ describe('shared async authoring preparation', () => {
       prepare: async (_props, context) => {
         const left = await context.prepareChildren(source(1).children);
         const right = await context.prepareChildren(source(2).children);
+
         return {
           execute: async () => ({
             node: {
@@ -149,14 +158,20 @@ describe('shared async authoring preparation', () => {
     const input: InputSceneChildren = { children: [{ type: 'embed', kind: 'slots', props: {} }] };
     const synchronous = processToStaticInputResult(input, { adapters: [outer, inner] });
     const asynchronous = await processToStaticInputResultAsync(input, { adapters: [outer, inner] });
+
     expect(asynchronous.scene).toEqual(synchronous.scene);
     expect([...asynchronous.runtimeMeta.identityIndex]).toEqual([...synchronous.runtimeMeta.identityIndex]);
+
     const nestedIds = [...asynchronous.runtimeMeta.identityIndex.keys()].filter(id => id.endsWith(':async-node'));
+
     expect(nestedIds).toHaveLength(2);
+
     const group = asynchronous.scene.primitives[0];
     if (group.type !== 'group') throw new Error('Expected the authored Scope group');
+
     expect(group.children).toHaveLength(2);
   });
+
   it('rejects nested execution during prepare, unknown adapters and duplicate kinds without computing', async () => {
     let executed = 0;
     const inner = {
@@ -176,6 +191,7 @@ describe('shared async authoring preparation', () => {
         return { execute: () => contribution(context.id) };
       },
     };
+
     await expect(
       processToStaticInputResultAsync(
         { children: [{ type: 'embed', kind: 'container', props: {} }] },
@@ -229,6 +245,7 @@ describe('shared async authoring preparation', () => {
     };
     const sync = processToStaticInputResult(input, { adapters: [adapter] });
     const asynchronous = await processToStaticInputResultAsync(input, { adapters: [adapter] });
+
     expect(asyncContexts).toEqual(syncContexts);
     expect(asynchronous.scene).toEqual(sync.scene);
     expect([...asynchronous.runtimeMeta.identityIndex]).toEqual([...sync.runtimeMeta.identityIndex]);
@@ -257,11 +274,13 @@ describe('shared async authoring preparation', () => {
     await new Promise(resolve => setTimeout(resolve, 0));
     abort.abort();
     complete?.(contribution('__retikz-embed:default:children[0]:async-node', 1));
+
     expect(await pending).toEqual({ kind: 'superseded' });
     expect(publications).toBe(0);
     await expect(controller.update(source())).rejects.toBeInstanceOf(RetikzVanillaError);
     expect(() => controller.subscribe(() => undefined)).toThrow(/disposed/);
   });
+
   it('prepares the entire authoring tree before any contribution executes', async () => {
     const calls: Array<string> = [];
     const adapter = {
@@ -269,6 +288,7 @@ describe('shared async authoring preparation', () => {
       prepare: (props: { x: number }, context: { id: string }) => {
         calls.push(`prepare:${props.x}`);
         if (props.x === 2) throw new Error('unsupported');
+
         return {
           execute: () => {
             calls.push(`execute:${props.x}`);
@@ -277,6 +297,7 @@ describe('shared async authoring preparation', () => {
         };
       },
     };
+
     await expect(
       processToStaticInputResultAsync(
         { children: [...source(1).children, ...source(2).children] },
@@ -300,6 +321,7 @@ describe('shared async authoring preparation', () => {
       lower: (props, context) => {
         const children = context.normalizeChildren?.(props.children ?? []);
         if (children === undefined) throw new Error('missing children context');
+
         return {
           node: { type: 'scope', id: context.id, children: [...children.children] },
           providerDependencies: children.providerDependencies,
@@ -326,6 +348,7 @@ describe('shared async authoring preparation', () => {
     };
     const sync = processToStaticInputResult(input, { adapters: [outer, inner] });
     const asyncResult = await processToStaticInputResultAsync(input, { adapters: [outer, inner] });
+
     expect(asyncResult.scene).toEqual(sync.scene);
     expect(asyncResult.runtimeMeta.layers).toEqual(sync.runtimeMeta.layers);
     expect([...asyncResult.runtimeMeta.identityIndex]).toEqual([...sync.runtimeMeta.identityIndex]);
@@ -342,15 +365,21 @@ describe('shared async authoring preparation', () => {
     const discarded = await prepareStaticProcessingAsync(source(), { adapters: [adapter] }, 3);
     discarded.discard();
     discarded.discard();
+
     expect(() => discarded.commit()).toThrow(/discard|terminal/);
+
     const committed = await prepareStaticProcessingAsync(source(), { adapters: [adapter] }, 4);
     committed.commit();
     committed.commit();
+
     expect(() => committed.discard()).toThrow(/commit|terminal/);
+
     const abort = new AbortController();
     const cancelled = await prepareStaticProcessingAsync(source(), { adapters: [adapter], signal: abort.signal }, 5);
     abort.abort();
+
     expect(() => cancelled.commit()).toThrow(/cancel|abort|invalid/);
+
     cancelled.discard();
   });
 
@@ -372,6 +401,7 @@ describe('shared async authoring preparation', () => {
             commit: () => {
               commits++;
               candidate.commit();
+
               try {
                 candidate.discard();
               } catch (cause) {
@@ -384,6 +414,7 @@ describe('shared async authoring preparation', () => {
     );
     candidate.commit();
     candidate.commit();
+
     expect(commits).toBe(1);
     expect(discardCause).toBeInstanceOf(RetikzVanillaError);
   });
@@ -410,17 +441,23 @@ describe('shared async authoring preparation', () => {
     const next = controller.update(source(2));
     await new Promise(resolve => setTimeout(resolve, 0));
     completions.get(2)?.resolve(contribution('__retikz-embed:default:children[0]:async-node', 2));
+
     expect((await next).kind).toBe('committed');
+
     completions.get(1)?.reject(new Error('late error'));
+
     expect(await old).toEqual({ kind: 'superseded' });
     expect(controller.diagnostics()).toEqual([]);
+
     const failed = controller.update(source(3));
     await new Promise(resolve => setTimeout(resolve, 0));
     completions.get(3)?.reject(new Error('current error'));
+
     await expect(failed).rejects.toThrow(/current error/);
     expect(controller.read().revision).toBe(1);
     expect(published).toEqual([1]);
     expect(controller.diagnostics()).toHaveLength(1);
+
     controller.dispose();
   });
 });

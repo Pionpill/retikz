@@ -8,9 +8,11 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 import { coordinateResolutionFlowI18n } from './coordinate-resolution-flow.i18n';
 
 export type CoordinateResolutionFlowProps = Readonly<{ lang?: Lang }>;
+
 const CoordinateResolutionFlow: FC<CoordinateResolutionFlowProps> = props => {
   const { lang } = props;
   const labels = coordinateResolutionFlowI18n[lang ?? 'zh'];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

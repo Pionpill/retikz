@@ -8,10 +8,12 @@ import { figureI18n } from './occurrence-figure.i18n';
 
 /** 图示语言参数 */
 export type OccurrenceFigureProps = { lang?: Lang };
+
 /** 展示嵌套容器的几何包含关系与独立局部 key 空间，编号仅为读图标记 */
 const OccurrenceFigure: FC<OccurrenceFigureProps> = props => {
   const { lang = 'zh' } = props;
   const text = figureI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Rectangle corner1={[0, 0]} width={480} height={180} style={{ stroke: 'gray' }} />

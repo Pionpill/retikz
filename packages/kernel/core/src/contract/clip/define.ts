@@ -30,6 +30,7 @@ const defineClipImplementation = (
       shapeSchema: definition.schema,
     };
   }
+
   return definition;
 };
 

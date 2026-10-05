@@ -28,6 +28,7 @@ describe('@retikz/chart-react public surface', () => {
       expect(point).toHaveProperty(`${prefix}Properties`);
       expect(point).toHaveProperty(`${prefix}Mark`);
     }
+
     expect(point).not.toHaveProperty('ChartData');
     expect(point).not.toHaveProperty('ChartExtension');
     expect(point).not.toHaveProperty('PathMark');

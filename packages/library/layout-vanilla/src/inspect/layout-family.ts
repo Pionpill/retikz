@@ -24,6 +24,7 @@ export const createLayoutInspectionVanillaDriver = (
     GRID_LAYOUT_INSPECTOR,
     OVERLAY_LAYOUT_INSPECTOR,
   ]);
+
   return createInspectionVanillaDriver({
     ...driver,
     registry: customRegistry === undefined ? layoutRegistry : mergeInspectorRegistries(layoutRegistry, customRegistry),

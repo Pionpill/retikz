@@ -91,6 +91,7 @@ const refineLegendKeys = (
         message: `Duplicate Legend key '${entry.key}'.`,
       });
     }
+
     seenKeys.add(entry.key);
   });
 };
@@ -139,6 +140,7 @@ const refineLegendAuthoredArtifactEntries = (
         message: 'sourceIndex must match the authored array order.',
       });
     }
+
     if (keys.has(entry.key)) {
       context.addIssue({
         code: 'custom',
@@ -146,6 +148,7 @@ const refineLegendAuthoredArtifactEntries = (
         message: `Duplicate ${path === 'items' ? 'item' : 'tick'} key '${entry.key}'.`,
       });
     }
+
     keys.add(entry.key);
   });
 };

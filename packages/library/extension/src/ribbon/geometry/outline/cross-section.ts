@@ -40,8 +40,10 @@ export const ribbonCrossSection = ({
         message: 'Ribbon section direction must not be parallel to the centerline tangent.',
         details: { offset, direction: explicit },
       });
+
     normal = dot < 0 ? [-explicit[0], -explicit[1]] : explicit;
   }
+
   const leftOffset = align === 'right' ? 0 : align === 'left' ? width : width / 2;
   const rightOffset = align === 'left' ? 0 : align === 'right' ? width : width / 2;
   const left: IRPosition = [
@@ -59,6 +61,7 @@ export const ribbonCrossSection = ({
       details: { left, right, sample: sample.point, width },
     });
   }
+
   return {
     center: [round(sample.point[0]), round(sample.point[1])],
     left,

@@ -60,6 +60,7 @@ export const ellipseArc = (
   };
   if (rotation !== undefined) cmd.rotation = rotation;
   if (counterClockwise !== undefined) cmd.counterClockwise = counterClockwise;
+
   return cmd;
 };
 

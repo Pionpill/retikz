@@ -15,6 +15,7 @@ describe('marker group transform', () => {
       children: [],
     };
     const node = buildMarkerPrim(group);
+
     expect(node.tag).toBe('g');
     expect(node.attrs.transform).toBe('translate(3 4)');
   });
@@ -22,6 +23,7 @@ describe('marker group transform', () => {
   it('无 transforms 时不写 transform 属性', () => {
     const group: MarkerPrimitive = { type: 'group', children: [] };
     const node = buildMarkerPrim(group);
+
     expect(node.attrs.transform).toBeUndefined();
   });
 });

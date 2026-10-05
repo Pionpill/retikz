@@ -68,6 +68,7 @@ export const createVisualApiConfig = (
   const owner = renderer ? 'render' : 'core';
   const source = path.resolve(repositoryRoot, `packages/kernel/${owner}/src/${renderer ? 'animation/' : ''}index.ts`);
   const presets = !renderer && symbols.every(symbol => animationPresetSymbols.has(symbol));
+
   return {
     packageName: renderer ? '@retikz/render/animation' : '@retikz/core',
     packageDirectory: `packages/kernel/${owner}`,
@@ -106,6 +107,7 @@ export const writeStyleApiReference = async (outputRoot: string): Promise<void> 
     createVisualApiConfig(visualApiSymbols.blend, false, { zh: 'blend · 混合', en: 'blend · Blending' }),
   ];
   mkdirSync(outputRoot, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const) {
     const sections = await Promise.all(configs.map(config => createApiReferenceMdx(config, lang)));
     writeFileSync(
@@ -120,6 +122,7 @@ export const writeStyleApiReference = async (outputRoot: string): Promise<void> 
 export const writeAnimationApiReference = async (outputRoot: string): Promise<void> => {
   const configs = createAnimationApiConfigs();
   mkdirSync(outputRoot, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const) {
     const sections = await Promise.all(configs.map(config => createApiReferenceMdx(config, lang)));
     writeFileSync(

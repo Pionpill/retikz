@@ -44,6 +44,7 @@ const guardedEnd = (start: number, span: number, axis: 'column' | 'row', key: st
       details: { axis, key, span, start },
     });
   }
+
   if (start > GRID_LAYOUT_MAX_TRACKS_PER_AXIS - span) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.PlacementInvalid,
@@ -51,6 +52,7 @@ const guardedEnd = (start: number, span: number, axis: 'column' | 'row', key: st
       details: { axis, key, span, start, trackGuard: GRID_LAYOUT_MAX_TRACKS_PER_AXIS },
     });
   }
+
   return start + span;
 };
 
@@ -95,6 +97,7 @@ export const resolveGridPlacements = (
       details: { axis: 'column', count: options.explicitColumns, trackGuard: GRID_LAYOUT_MAX_TRACKS_PER_AXIS },
     });
   }
+
   if (options.explicitRows < 0 || options.explicitRows > GRID_LAYOUT_MAX_TRACKS_PER_AXIS) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.PlacementInvalid,
@@ -102,6 +105,7 @@ export const resolveGridPlacements = (
       details: { axis: 'row', count: options.explicitRows, trackGuard: GRID_LAYOUT_MAX_TRACKS_PER_AXIS },
     });
   }
+
   let columnCount = options.explicitColumns;
   let rowCount = Math.max(options.explicitRows, 1);
   const occupied: Array<OccupiedRect> = [];
@@ -116,6 +120,7 @@ export const resolveGridPlacements = (
         details: { key: placement.key, phase: 'explicit-placement' },
       });
     }
+
     occupied.push(rect);
     resolved[placement.sourceIndex] = Object.freeze(placement);
     columnCount = Math.max(columnCount, rect.columnEnd);
@@ -126,6 +131,7 @@ export const resolveGridPlacements = (
     const columnStart = item.column.start;
     const rowStart = item.row.start;
     if (columnStart === undefined || rowStart === undefined) continue;
+
     const columnSpan = item.column.span;
     const rowSpan = item.row.span;
     guardedEnd(columnStart, columnSpan, 'column', item.key);
@@ -154,12 +160,14 @@ export const resolveGridPlacements = (
       const rowEnd = guardedEnd(rowStart, rowSpan, 'row', item.key);
       rowCount = Math.max(rowCount, rowEnd);
       let columnStart = 0;
+
       for (;;) {
         const columnEnd = guardedEnd(columnStart, columnSpan, 'column', item.key);
         const collision = firstOverlap({ columnStart, columnEnd, rowStart, rowEnd }, occupied);
         if (collision === undefined) break;
         columnStart = collision.columnEnd;
       }
+
       register({
         key: item.key,
         sourceIndex: item.sourceIndex,
@@ -176,12 +184,14 @@ export const resolveGridPlacements = (
       const columnEnd = guardedEnd(columnStart, columnSpan, 'column', item.key);
       columnCount = Math.max(columnCount, columnEnd);
       let rowStart = 0;
+
       for (;;) {
         const rowEnd = guardedEnd(rowStart, rowSpan, 'row', item.key);
         const collision = firstOverlap({ columnStart, columnEnd, rowStart, rowEnd }, occupied);
         if (collision === undefined) break;
         rowStart = collision.rowEnd;
       }
+
       register({
         key: item.key,
         sourceIndex: item.sourceIndex,
@@ -195,8 +205,10 @@ export const resolveGridPlacements = (
 
   let cursorColumn = 0;
   let cursorRow = 0;
+
   for (const item of items) {
     if (item.column.start !== undefined || item.row.start !== undefined) continue;
+
     const columnSpan = item.column.span;
     const rowSpan = item.row.span;
     if (options.autoFlow === GridAutoFlow.Row) {
@@ -206,15 +218,18 @@ export const resolveGridPlacements = (
       guardedEnd(0, rowSpan, 'row', item.key);
       rowCount = Math.max(rowCount, rowSpan);
     }
+
     for (;;) {
       if (options.autoFlow === GridAutoFlow.Row && cursorColumn > columnCount - columnSpan) {
         cursorColumn = 0;
         cursorRow += 1;
       }
+
       if (options.autoFlow === GridAutoFlow.Column && cursorRow > rowCount - rowSpan) {
         cursorRow = 0;
         cursorColumn += 1;
       }
+
       const columnEnd = guardedEnd(cursorColumn, columnSpan, 'column', item.key);
       const rowEnd = guardedEnd(cursorRow, rowSpan, 'row', item.key);
       const collision = firstOverlap({ columnStart: cursorColumn, columnEnd, rowStart: cursorRow, rowEnd }, occupied);
@@ -222,6 +237,7 @@ export const resolveGridPlacements = (
       if (options.autoFlow === GridAutoFlow.Row) cursorColumn = collision.columnEnd;
       else cursorRow = collision.rowEnd;
     }
+
     const placement = {
       key: item.key,
       sourceIndex: item.sourceIndex,
@@ -247,6 +263,7 @@ export const resolveGridPlacements = (
             details: { phase: 'resolution' },
           });
         }
+
         return value;
       }),
     ),

@@ -167,6 +167,7 @@ describe('Core contextual color compile', () => {
     expect(path.stroke).toBe('#0a141f');
 
     const contextualKeys = new Set(['color', 'fill', 'stroke', 'textColor']);
+
     const visit = (value: unknown, key?: string): void => {
       if (key !== undefined && contextualKeys.has(key)) expect(typeof value).not.toBe('number');
       if (Array.isArray(value)) value.forEach(item => visit(item));
@@ -174,6 +175,7 @@ describe('Core contextual color compile', () => {
         Object.entries(value).forEach(([childKey, childValue]) => visit(childValue, childKey));
       }
     };
+
     visit(compiled);
   });
 });

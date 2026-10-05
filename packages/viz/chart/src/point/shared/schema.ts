@@ -41,6 +41,7 @@ const PointPositionDomainPaddingObjectSchema = strictObject({
   })
   .superRefine((value, context) => {
     if (value.kind !== PlotDomainPaddingKind.Ratio) return;
+
     for (const field of pointPositionDomainPaddingFields) {
       const padding = value[field as keyof typeof value];
       if (typeof padding === 'number' && padding >= 1) {
@@ -160,7 +161,11 @@ export const createPointChartMarkSchema = <
   });
 
 export type IRPointEncoding = ZodInfer<typeof PointEncodingSchema>;
+
 export type IRPointMarkEncoding = ZodInfer<typeof PointMarkEncodingSchema>;
+
 export type IRPointProperties = ZodInfer<typeof PointPropertiesSchema>;
+
 export type IRPointPositionDomainPadding = ZodInfer<typeof PointPositionDomainPaddingSchema>;
+
 export type IRPointRecipeGuides = ZodInfer<typeof PointRecipeGuidesSchema>;

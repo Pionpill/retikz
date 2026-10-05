@@ -9,6 +9,7 @@ export type MatrixPreviewValues = {
   row: 'none' | 'before' | 'after';
   column: 'none' | 'before' | 'after';
 };
+
 /** 按当前参数绘制矩阵 */
 export const renderMatrixPreview = (values: MatrixPreviewValues) => {
   return (

@@ -49,6 +49,7 @@ describe('Flow Layout registry and catalog', () => {
 
   it('rejects same-name different identities and unknown defaults without last-wins fallback', () => {
     const custom = customDefinition();
+
     for (const [run, code] of [
       [
         () => resolveFlowLayoutRegistry({ flowLayouts: [custom, customDefinition()] }),
@@ -61,9 +62,11 @@ describe('Flow Layout registry and catalog', () => {
     ] as const) {
       try {
         run();
+
         expect.unreachable('Expected Flow Layout registry failure');
       } catch (error) {
         if (!(error instanceof RetikzDiagramError)) throw error;
+
         expect(error.code).toBe(code);
         expect(error.details).toMatchObject({ capability: 'flow-layout' });
       }
@@ -143,9 +146,11 @@ describe('Flow Layout capability preflight', () => {
 
     try {
       assertFlowLayoutCapabilities(customDefinition(), canonical);
+
       expect.unreachable('Expected unsupported capability failure');
     } catch (error) {
       if (!(error instanceof RetikzDiagramError)) throw error;
+
       expect(error.code).toBe(RetikzDiagramErrorCode.FlowLayoutCapabilityUnsupported);
       expect(error.details).toMatchObject({
         definition: 'custom',

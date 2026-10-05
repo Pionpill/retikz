@@ -100,9 +100,11 @@ void flowDiagramLayoutHostPropKeysCheck;
 /** 按 own-property 语义提取 Flow standalone Layout 宿主属性 */
 export const flowDiagramLayoutHostPropsOf = (props: FlowDiagramLayoutHostProps): FlowDiagramLayoutHostProps => {
   const output: FlowDiagramLayoutHostProps = {};
+
   for (const key of flowDiagramLayoutHostPropKeys) {
     if (Object.hasOwn(props, key)) Object.assign(output, { [key]: props[key] });
   }
+
   return output;
 };
 
@@ -132,6 +134,7 @@ const childLabelOf = (child: ReactNode): string => {
     const component = child.type as { displayName?: string; name?: string };
     return component.displayName ?? component.name ?? 'anonymous';
   }
+
   return 'unknown';
 };
 
@@ -199,6 +202,7 @@ const collectFlowElements = (
     hasDeclaration: false,
     hasCompleteDeclaration: false,
   };
+
   const visit = (nodes: ReactNode): void => {
     Children.forEach(nodes, child => {
       if (child === null || child === undefined || typeof child === 'boolean') return;
@@ -207,24 +211,30 @@ const collectFlowElements = (
         visit((child.props as Readonly<{ children?: ReactNode }>).children);
         return;
       }
+
       const markerKind = markerKindOf(child);
       if (markerKind === 'entity') {
         registerFlowCollectionMarker(entityMarkerState, false, label, child, 'complete-entities-conflict');
         const entity = child.props as InputFlowEntity;
         entities.push(entity);
         childIds.push(entity.id);
+
         return;
       }
+
       if (markerKind === 'entities') {
         const { items, complete = false } = child.props as FlowEntitiesProps;
         registerFlowCollectionMarker(entityMarkerState, complete, label, child, 'complete-entities-conflict');
+
         for (const entityItem of items) {
           const entity = flowEntityInputOf(entityItem);
           entities.push(entity);
           childIds.push(entity.id);
         }
+
         return;
       }
+
       if (markerKind === 'group') {
         const { children: groupChildren, ...group } = child.props as FlowGroupMarkerProps &
           Readonly<{ children?: ReactNode }>;
@@ -233,8 +243,10 @@ const collectFlowElements = (
         layouts.push(...collected.layouts);
         entities.push(...collected.entities);
         childIds.push(group.id);
+
         return;
       }
+
       if (markerKind === 'layout') {
         const { children: layoutChildren, ...layout } = child.props as FlowLayoutMarkerProps &
           Readonly<{ children?: ReactNode }>;
@@ -243,25 +255,33 @@ const collectFlowElements = (
         groups.push(...collected.groups);
         entities.push(...collected.entities);
         childIds.push(layout.id);
+
         return;
       }
+
       if (markerKind === 'relation') {
         if (!allowRelations) invalidChild(label, child, 'relation-outside-root');
         registerFlowCollectionMarker(relationMarkerState, false, label, child, 'complete-relations-conflict');
         relations.push(child.props as InputFlowRelation);
+
         return;
       }
+
       if (markerKind === 'relations') {
         if (!allowRelations) invalidChild(label, child, 'relation-outside-root');
         const { items, complete = false } = child.props as FlowRelationsProps;
         registerFlowCollectionMarker(relationMarkerState, complete, label, child, 'complete-relations-conflict');
         relations.push(...items.map(flowRelationInputOf));
+
         return;
       }
+
       invalidChild(label, child, 'unknown-flow-marker');
     });
   };
+
   visit(children);
+
   return { entities, groups, layouts, relations, children: childIds };
 };
 
@@ -356,6 +376,7 @@ export const collectFlowDiagramInput = (
   void _onCompileResult;
 
   const collected = collectFlowElements(children, 'FlowDiagram', true);
+
   return {
     ...input,
     entities: collected.entities,

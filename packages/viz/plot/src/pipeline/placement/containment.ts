@@ -39,31 +39,38 @@ export const resolveMarkPlacementRangeOverrides = (
 ): MarkPlacementRangeOverrides | undefined => {
   const placement = (resolution.operation as { placement?: IRPlotMarkPlacement }).placement;
   if (placement === undefined) return undefined;
+
   const definitions = placement.adjustments.map(operation => resolvePositionAdjustmentOperation(operation, registry));
   const contained = definitions.filter(({ definition }) => definition.containment?.policy === 'contain');
   if (contained.length === 0) return undefined;
+
   const capability = resolution.definition.placement;
   if (capability === undefined || capability.normalExtent === undefined) {
     throw new RetikzPlotError(
       `lowerPlots: mark type "${resolution.operation.type}" cannot provide glyph extent for position adjustment containment`,
     );
   }
+
   if (frame.mapRoles === undefined || frame.roleScales === undefined || frame.placementBoundary === undefined) {
     throw new RetikzPlotError(
       `lowerPlots: coordinate type "${frame.type}" cannot measure position adjustment containment`,
     );
   }
+
   const targets: Array<MappedMarkPlacementTarget> = capability
     .targets(resolution.operation as never, rows, frame)
     .map(target => ({ ...target, mappedRoles: frame.mapRoles?.(target.roleValues) ?? null }));
   const envelopeByRole = new Map<string, { lower: number; upper: number }>();
+
   for (const { definition, operation } of contained) {
     if (definition.space === 'screen') {
       throw new RetikzPlotError(
         `lowerPlots: screen-space position adjustment "${operation.kind}" containment requires a screen boundary capability`,
       );
     }
+
     let envelope;
+
     try {
       envelope = definition.containment?.measure(operation as never, {
         space: 'role',
@@ -74,17 +81,21 @@ export const resolveMarkPlacementRangeOverrides = (
       });
     } catch (cause) {
       if (cause instanceof RetikzPlotError) throw cause;
+
       throw new RetikzPlotError(`lowerPlots: position adjustment "${operation.kind}" containment failed`, {
         cause,
       });
     }
+
     if (envelope === undefined) {
       throw new RetikzPlotError(
         `lowerPlots: position adjustment "${operation.kind}" returned an invalid containment space`,
       );
     }
+
     for (const [role, extent] of Object.entries(envelope.byRole)) {
       if (extent === undefined) continue;
+
       assertEnvelopeExtent(operation.kind, role, extent);
       const current = envelopeByRole.get(role) ?? { lower: 0, upper: 0 };
       envelopeByRole.set(role, { lower: current.lower + extent.lower, upper: current.upper + extent.upper });
@@ -92,39 +103,48 @@ export const resolveMarkPlacementRangeOverrides = (
   }
 
   const overrides: MarkPlacementRangeOverrides = {};
+
   for (const [role, adjustmentExtent] of envelopeByRole) {
     if (protectedRoles.includes(role)) continue;
     if (frame.placementBoundary.isCyclic(role)) continue;
+
     const roleIndex = frame.roles.indexOf(role);
     const scale = frame.roleScales[role];
     if (roleIndex < 0 || scale === undefined) {
       throw new RetikzPlotError(`lowerPlots: containment role "${role}" does not expose a position scale`);
     }
+
     const validTargets = targets.filter(
       (target): target is MappedMarkPlacementTarget & { mappedRoles: ReadonlyArray<number> } =>
         target.mappedRoles !== null,
     );
     if (validTargets.length === 0) continue;
+
     let glyphExtent = 0;
+
     for (const target of validTargets) {
       const normal = frame.placementBoundary.unitNormal(role, target.mappedRoles);
       if (normal === null) {
         throw new RetikzPlotError(`lowerPlots: coordinate type "${frame.type}" cannot resolve role "${role}" normal`);
       }
+
       const screenExtent = capability.normalExtent(resolution.operation as never, target, normal, channels);
       if (screenExtent === undefined || !Number.isFinite(screenExtent) || screenExtent < 0) {
         throw new RetikzPlotError(
           `lowerPlots: mark type "${resolution.operation.type}" cannot provide a finite glyph extent for containment`,
         );
       }
+
       const roleExtent = frame.placementBoundary.glyphExtentInRoleUnits(role, target.mappedRoles, screenExtent);
       if (roleExtent === null || !Number.isFinite(roleExtent) || roleExtent < 0) {
         throw new RetikzPlotError(
           `lowerPlots: coordinate type "${frame.type}" cannot contain glyph extent ${screenExtent} on role "${role}" at target "${target.key}"`,
         );
       }
+
       glyphExtent = Math.max(glyphExtent, roleExtent);
     }
+
     const [rangeStart, rangeEnd] = scale.range();
     const [boundaryStart, boundaryEnd] = boundaryRanges?.[role] ?? [rangeStart, rangeEnd];
     const rangeLow = Math.min(rangeStart, rangeEnd);
@@ -143,9 +163,11 @@ export const resolveMarkPlacementRangeOverrides = (
         `lowerPlots: position adjustment containment for role "${role}" leaves no drawable scale range`,
       );
     }
+
     const low = rangeLow + lowerInset;
     const high = rangeHigh - upperInset;
     overrides[role] = rangeStart <= rangeEnd ? [low, high] : [high, low];
   }
+
   return Object.keys(overrides).length === 0 ? undefined : overrides;
 };

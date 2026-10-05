@@ -5,8 +5,11 @@ import { sales } from './bar-grouped.data';
 
 /** 多系列柱形 playground 的稳定控件 id */
 export const BAR_SERIES_MODE_ID = 'bar-series-mode';
+
 export const BAR_SERIES_STACK_OFFSET_ID = 'bar-series-stack-offset';
+
 export const BAR_SERIES_GAP_ID = 'bar-series-gap';
+
 export const BAR_SERIES_COORDINATE_ID = 'interval-series-coordinate';
 
 /** 多系列排列方式的中文属性面板 */

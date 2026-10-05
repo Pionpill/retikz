@@ -29,6 +29,7 @@ export const rectOutlinePathCommands = (
     if (operation.kind === 'move') return { kind: 'move', to: toWorld(operation.to) };
     if (operation.kind === 'line') return { kind: 'line', to: toWorld(operation.to) };
     if (operation.kind === 'close') return { kind: 'close' };
+
     return {
       kind: 'ellipseArc',
       center: toWorld(operation.center),
@@ -78,6 +79,7 @@ export const contourToPathCommands = (
         break;
     }
   });
+
   return output;
 };
 
@@ -104,6 +106,7 @@ export const pathPrimitiveStyle = (
 ): PathPrimitiveStyle => {
   const { fill, stroke, strokeWidth, cornerRadius: _cornerRadius, ...passthroughStyle } = style;
   void _cornerRadius;
+
   return {
     ...(passthroughStyle as ShapeStylePassthrough),
     fill: options?.fill ?? fill ?? 'transparent',

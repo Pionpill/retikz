@@ -70,25 +70,33 @@ export type ChannelRegistry = Map<string, AnyChannelDefinition> & {
 export const resolveChannelRegistry = (options: ChannelRegistryOptions = {}): ChannelRegistry => {
   const registry = new Map<string, AnyChannelDefinition>() as ChannelRegistry;
   const definitions: Array<AnyChannelDefinition> = [];
+
   const addDefinition = (def: AnyChannelDefinition): void => {
     if (def.channel.trim() === '') {
       throw new RetikzPlotError('lowerPlots: channel definition must use a non-empty channel name');
     }
+
     definitions.push(def);
     if (!registry.has(def.channel)) registry.set(def.channel, def);
   };
+
   for (const def of createBuiltinChannels({ resolveLabel: options.resolveLabel })) {
     addDefinition(def);
   }
+
   for (const def of options.custom ?? []) {
     if (BUILTIN_CHANNEL_NAMES.has(def.channel)) {
       throw new RetikzPlotError(`lowerPlots: custom channel "${def.channel}" collides with a built-in channel name`);
     }
+
     if (definitions.some(registered => registered.channel === def.channel)) {
       throw new RetikzPlotError(`lowerPlots: duplicate custom channel registration: "${def.channel}"`);
     }
+
     addDefinition(def);
   }
+
   Object.defineProperty(registry, 'definitions', { value: definitions, enumerable: false });
+
   return registry;
 };

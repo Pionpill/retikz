@@ -5,5 +5,7 @@ import type { CellSchema, CellStyleSchema, CellLayoutSchema } from './cell';
 
 /** Array 与 Map 共用的稀疏单元格 Source */
 export type IRCell = Omit<input<typeof CellSchema>, 'content'> & { content?: string | IRChild };
+
 export type IRCellStyle = input<typeof CellStyleSchema>;
+
 export type IRCellLayout = input<typeof CellLayoutSchema>;

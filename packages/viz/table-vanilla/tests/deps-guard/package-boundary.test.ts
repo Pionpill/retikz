@@ -16,6 +16,7 @@ type PackageManifest = Readonly<{
 }>;
 
 const packageDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
 const manifest = JSON.parse(readFileSync(path.join(packageDirectory, 'package.json'), 'utf8')) as PackageManifest;
 
 describe('@retikz/table-vanilla package boundary', () => {

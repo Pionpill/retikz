@@ -10,6 +10,7 @@ const encodeRuntimeReference = (reference: string): string =>
   Array.from(reference, character => {
     const codeUnit = character.charCodeAt(0);
     const isLoneSurrogate = character.length === 1 && codeUnit >= 0xd800 && codeUnit <= 0xdfff;
+
     return isLoneSurrogate
       ? `%u${codeUnit.toString(16).padStart(4, '0').toUpperCase()}`
       : encodeURIComponent(character);
@@ -43,6 +44,7 @@ const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
       }),
     ),
   });
+
 /** 创建供 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
 export const createTableRuntimeContribution = (input: TableRuntimeContributionInput): TableRuntimeContribution => {
   assertNonEmptyString(
@@ -60,6 +62,7 @@ export const createTableRuntimeContribution = (input: TableRuntimeContributionIn
 
   const tableProvider = createTableProvider(data, runtimeReference, snapshotLowerOptions(input.lowerOptions ?? {}));
   const nestedProviders = [...(input.composites ?? [])].map(createTableNestedDefinitionProvider);
+
   return {
     roots: Object.freeze([tableProvider.key, ...nestedProviders.map(provider => provider.key)]),
     providers: Object.freeze([tableProvider, ...nestedProviders]),

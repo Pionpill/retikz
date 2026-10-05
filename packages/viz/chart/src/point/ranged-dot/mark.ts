@@ -15,6 +15,7 @@ import { RangedDotChartMarkSchema } from './schema';
 
 const endpointGlyphOf = (properties: IRRangedDotPointProperties): JsonObject => {
   const glyph: JsonObject = {};
+
   for (const name of [
     'color',
     'size',
@@ -30,22 +31,27 @@ const endpointGlyphOf = (properties: IRRangedDotPointProperties): JsonObject => 
   ] as const) {
     if (properties[name] !== undefined) glyph[name] = { kind: 'constant', value: properties[name] };
   }
+
   return glyph;
 };
 
 const rangeStyleOf = (properties: IRRangedDotRangeProperties): JsonObject => {
   const style: JsonObject = {};
+
   for (const name of ['stroke', 'strokeWidth', 'strokeOpacity', 'opacity', 'shadow', 'blendMode'] as const) {
     if (properties[name] !== undefined) style[name] = { kind: 'constant', value: properties[name] };
   }
+
   return style;
 };
 
 const rangePathOf = (properties: IRRangedDotRangeProperties): JsonObject | undefined => {
   const options: JsonObject = {};
+
   for (const name of ['lineCap', 'lineJoin', 'dashPattern'] as const) {
     if (properties[name] !== undefined) options[name] = properties[name];
   }
+
   return Object.keys(options).length === 0 ? undefined : { options: { style: options } };
 };
 
@@ -55,7 +61,9 @@ const fieldMappingOf = (
 ): Readonly<{ field: string; scale: string }> | undefined => {
   if (typeof value === 'string') return { field: value, scale: fallbackScale };
   if (value === null || Array.isArray(value) || typeof value !== 'object') return undefined;
+
   const mapping = value as JsonObject;
+
   return typeof mapping.field === 'string'
     ? { field: mapping.field, scale: typeof mapping.scale === 'string' ? mapping.scale : fallbackScale }
     : undefined;
@@ -91,6 +99,7 @@ export const resolveRangedDotMark = (
 const mergedPropertiesOf = (context: ChartMarkResolveContext, source: IRRangedDotMark): IRRangedDotChartProperties => {
   const inherited = context.inherited.properties as IRRangedDotChartProperties;
   const explicit = source.properties ?? {};
+
   return {
     ...inherited,
     ...explicit,

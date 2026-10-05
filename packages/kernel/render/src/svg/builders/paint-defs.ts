@@ -20,6 +20,7 @@ const buildStops = (stops: ReadonlyArray<{ offset: number; color: string; opacit
 type GradientStop = { offset: number; color: string; opacity?: number };
 
 const CONIC_SEGMENTS = 360;
+
 const CONIC_SEGMENT_OVERLAP_DEG = 0.25;
 
 const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
@@ -31,9 +32,11 @@ const normalizeStops = (stops: ReadonlyArray<GradientStop>): Array<GradientStop>
       { offset: 0, color: 'transparent' },
       { offset: 1, color: 'transparent' },
     ];
+
   const first = sorted[0];
   const last = sorted[sorted.length - 1];
   const out: Array<GradientStop> = first.offset > 0 ? [{ ...first, offset: 0 }, ...sorted] : sorted;
+
   return last.offset < 1 ? [...out, { ...last, offset: 1 }] : out;
 };
 
@@ -44,6 +47,7 @@ const colorAt = (stops: ReadonlyArray<GradientStop>, t: number): { color: string
   const offset = clamp01(t);
   let left = normalized[0];
   let right = normalized[normalized.length - 1];
+
   for (let i = 0; i < normalized.length - 1; i += 1) {
     if (offset >= normalized[i].offset && offset <= normalized[i + 1].offset) {
       left = normalized[i];
@@ -51,6 +55,7 @@ const colorAt = (stops: ReadonlyArray<GradientStop>, t: number): { color: string
       break;
     }
   }
+
   const span = right.offset - left.offset;
   const localT = span <= DEFAULT_EPSILON ? 0 : (offset - left.offset) / span;
   const leftRgb = parseHexColor(left.color);
@@ -60,6 +65,7 @@ const colorAt = (stops: ReadonlyArray<GradientStop>, t: number): { color: string
       ? undefined
       : (left.opacity ?? 1) + ((right.opacity ?? 1) - (left.opacity ?? 1)) * localT;
   if (!leftRgb || !rightRgb) return { color: localT < 0.5 ? left.color : right.color, opacity };
+
   return {
     color: `#${channelToHex(leftRgb.r + (rightRgb.r - leftRgb.r) * localT)}${channelToHex(leftRgb.g + (rightRgb.g - leftRgb.g) * localT)}${channelToHex(leftRgb.b + (rightRgb.b - leftRgb.b) * localT)}`,
     opacity,
@@ -77,6 +83,7 @@ const buildConicGradient = (spec: Extract<IRPaint, { kind: 'conicGradient' }>, i
     Math.max(Math.hypot(cx, cy), Math.hypot(1 - cx, cy), Math.hypot(cx, 1 - cy), Math.hypot(1 - cx, 1 - cy)) * 1.02;
   const startAngle = spec.angle ?? 0;
   const children: Array<SvgNode> = [];
+
   for (let i = 0; i < CONIC_SEGMENTS; i += 1) {
     const t0 = i / CONIC_SEGMENTS;
     const t1 = (i + 1) / CONIC_SEGMENTS;
@@ -92,6 +99,7 @@ const buildConicGradient = (spec: Extract<IRPaint, { kind: 'conicGradient' }>, i
       }),
     });
   }
+
   return {
     tag: 'pattern',
     attrs: {
@@ -131,6 +139,7 @@ const buildPatternTile = (tile: ResolvedPatternTile, id: string): SvgNode => ({
  */
 export const buildPaintDef = (resource: PaintResource, id: string): SvgNode => {
   const spec: IRPaint = resource.spec;
+
   switch (spec.kind) {
     case 'linearGradient': {
       const gradientLine = gradientLineFromAngle(spec.angle);

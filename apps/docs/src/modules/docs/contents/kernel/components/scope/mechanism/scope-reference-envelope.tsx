@@ -15,6 +15,7 @@ export type ScopeReferenceEnvelopeProps = Readonly<{ lang?: Lang }>;
 const ScopeReferenceEnvelope: FC<ScopeReferenceEnvelopeProps> = props => {
   const { lang = 'zh' } = props;
   const t = scopeReferenceEnvelopeI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

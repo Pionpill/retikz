@@ -27,15 +27,18 @@ export const readSourceIndices = (row: ExternalRow): Array<number> | undefined =
 /** 取一组行的源行索引集合；仅源行已 tagSourceIndex 时非空 */
 export const readSourceIndicesOf = (rows: Array<ExternalRow>): Array<number> => {
   const out: Array<number> = [];
+
   for (const row of rows) {
     const group = readSourceIndices(row);
     if (group !== undefined) {
       for (const index of group) out.push(index);
       continue;
     }
+
     const index = readSourceIndex(row);
     if (index !== undefined) out.push(index);
   }
+
   return out;
 };
 

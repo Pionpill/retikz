@@ -61,6 +61,7 @@ type FrameRefinementInput = ZodInfer<typeof FrameBaseSchema>;
 
 const refineReservedIds = (frame: FrameRefinementInput, ctx: RefinementCtx): void => {
   if (frame.id === undefined) return;
+
   const reservedIds = new Set([frame.id]);
   frame.children.forEach((child, index) => {
     if (child.id !== undefined && reservedIds.has(child.id)) {

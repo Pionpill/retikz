@@ -62,10 +62,14 @@ describe('smooth path composition (contract)', () => {
     });
 
     const layer = expandOf(spec, { samples }, opts).children[0] as IRScope;
+
     expect(layer.children).toHaveLength(2);
+
     for (const seriesScope of layer.children as Array<IRScope>) {
       expect(seriesScope.type).toBe('scope');
+
       const path = seriesScope.children[0] as IRPath;
+
       expect(path.type).toBe('path');
       expect(path.children).toHaveLength(4);
       expect(path.children.at(-1)).not.toEqual({ type: 'step', kind: 'cycle' });
@@ -98,6 +102,7 @@ describe('smooth path composition (contract)', () => {
     const outer = expandOf(spec, { samples: samples.slice(0, 3) }, opts);
     const pointLayer = outer.children[0] as IRScope;
     const pathLayer = outer.children[1] as IRScope;
+
     expect(pointLayer.children).toHaveLength(3);
     expect(pathLayer.children).toHaveLength(1);
     expect((pathLayer.children[0] as IRPath).children).toHaveLength(5);

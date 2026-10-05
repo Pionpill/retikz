@@ -77,11 +77,13 @@ describe('rect.contains with rotation', () => {
   it('treats omitted rotate and rotate=0 the same', () => {
     const noRot: Rect = { x: 0, y: 0, width: 10, height: 6 };
     const rot0: Rect = { ...noRot, rotate: 0 };
+
     expect(rect.contains(noRot, [4, 2])).toBe(rect.contains(rot0, [4, 2]));
   });
 
   it('keeps 180 degree rotation symmetric', () => {
     const rot180: Rect = { ...r10x6, rotate: Math.PI };
+
     expect(rect.contains(rot180, [3, 2])).toBe(rect.contains(r10x6, [3, 2]));
     expect(rect.contains(rot180, [5.01, 0])).toBe(false);
   });
@@ -101,6 +103,7 @@ describe('rect.anchor', () => {
 
   it('offsets anchors by rectangle center', () => {
     const r: Rect = { x: 100, y: 50, width: 10, height: 6 };
+
     expect(rect.center(r)).toEqual([100, 50]);
     expect(rect.anchor(r, Anchor.TopRight)).toEqual([105, 47]);
   });
@@ -108,10 +111,12 @@ describe('rect.anchor', () => {
   it('rotates top and right anchors with the rectangle', () => {
     const r: Rect = { ...r10x6, rotate: Math.PI / 2 };
     const [topX, topY] = rect.anchor(r, Anchor.Top);
+
     expect(topX).toBeCloseTo(3);
     expect(topY).toBeCloseTo(0);
 
     const [rightX, rightY] = rect.anchor(r, Anchor.Right);
+
     expect(rightX).toBeCloseTo(0);
     expect(rightY).toBeCloseTo(5);
   });
@@ -120,6 +125,7 @@ describe('rect.anchor', () => {
     const rRot: Rect = { ...r10x6, rotate: Math.PI };
     const [x, y] = rect.anchor(rRot, Anchor.Top);
     const [sx, sy] = rect.anchor(r10x6, Anchor.Bottom);
+
     expect(x).toBeCloseTo(sx);
     expect(y).toBeCloseTo(sy);
   });
@@ -135,6 +141,7 @@ describe('rect.boundaryPoint', () => {
 
   it('intersects diagonal rays at corners', () => {
     const [x, y] = rect.boundaryPoint(r10x6, [10, 6]);
+
     expect(x).toBeCloseTo(5);
     expect(y).toBeCloseTo(3);
   });
@@ -145,12 +152,14 @@ describe('rect.boundaryPoint', () => {
 
   it('uses rectangle center as the ray origin', () => {
     const r: Rect = { x: 100, y: 50, width: 10, height: 6 };
+
     expect(rect.boundaryPoint(r, [200, 50])).toEqual([105, 50]);
   });
 
   it('respects rotation', () => {
     const r: Rect = { ...r10x6, rotate: Math.PI / 2 };
     const [x, y] = rect.boundaryPoint(r, [10, 0]);
+
     expect(x).toBeCloseTo(3);
     expect(y).toBeCloseTo(0);
   });
@@ -167,6 +176,7 @@ describe('rect.boundaryPoint', () => {
     ];
     const cos = Math.cos(r.rotate ?? 0);
     const sin = Math.sin(r.rotate ?? 0);
+
     for (const target of targets) {
       const hit = rect.boundaryPoint(r, target);
       const dx = hit[0] - r.x;
@@ -175,6 +185,7 @@ describe('rect.boundaryPoint', () => {
       const ly = -dx * sin + dy * cos;
       const onVerticalEdge = Math.abs(Math.abs(lx) - halfW) < DEFAULT_EPSILON;
       const onHorizontalEdge = Math.abs(Math.abs(ly) - halfH) < DEFAULT_EPSILON;
+
       expect(onVerticalEdge || onHorizontalEdge).toBe(true);
     }
   });

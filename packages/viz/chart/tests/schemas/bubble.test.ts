@@ -30,6 +30,7 @@ describe('Bubble Chart exact Source schema', () => {
   it.each(['x', 'y', 'size'] as const)('requires a non-blank %s field mapping', role => {
     const encodings = { ...bubble.recipe.encodings };
     Reflect.deleteProperty(encodings, role);
+
     expect(BubbleChartEncodingsSchema.safeParse(encodings).success).toBe(false);
     expect(BubbleChartEncodingsSchema.safeParse({ ...bubble.recipe.encodings, [role]: '   ' }).success).toBe(false);
   });

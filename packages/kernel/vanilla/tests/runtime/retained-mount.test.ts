@@ -83,12 +83,15 @@ const createMemoryRendererFactory = (
   ((input: RetainedRendererFactoryInput) => {
     onCreate?.();
     let current: RenderFrameSnapshot | undefined;
+
     const prepare = (frame: RenderFrameSnapshot): RuntimePreparedCommit => {
       if (current !== undefined) {
         const shouldFail = typeof failUpdate === 'function' ? failUpdate() : failUpdate;
         if (shouldFail) throw new Error('expected update failure');
       }
+
       const previous = current;
+
       return Object.freeze({
         commit: () => {
           current = frame;
@@ -100,13 +103,16 @@ const createMemoryRendererFactory = (
         dispose: () => undefined,
       });
     };
+
     const definition = {
       capability,
       readonlyLayerCapability: 'supported' as const,
       prepareMount: (frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
         const shouldFail = typeof failMount === 'function' ? failMount() : failMount;
         if (shouldFail) throw new Error('expected mount failure');
+
         onConfig?.(config);
+
         return prepare(frame);
       },
       prepare: (patch: unknown, frame: RenderFrameSnapshot, config: RenderRuntimeConfig) => {
@@ -123,6 +129,7 @@ const createMemoryRendererFactory = (
         onDispose?.();
       },
     };
+
     return input.backend === 'svg'
       ? defineRetainedRenderer({ ...definition, backend: 'svg', host: input.host })
       : defineRetainedRenderer({ ...definition, backend: 'canvas', host: input.host });
@@ -193,11 +200,13 @@ const createLayerDriver = (): VanillaCompileDriver => {
         existing.update(authoring);
         return existing.session;
       }
+
       let currentAuthoring = authoring;
       const session = Object.freeze({
         observers: Object.freeze([]),
         resolve: (coreOutput: Parameters<ReturnType<VanillaCompileDriver['create']>['resolve']>[0]) => {
           if (currentAuthoring === 'fail') throw new Error('expected compile driver failure');
+
           return Object.freeze({
             primary: coreOutput.result,
             observerOutputs: coreOutput.observerOutputs,
@@ -221,6 +230,7 @@ const createLayerDriver = (): VanillaCompileDriver => {
         },
         session,
       });
+
       return session;
     },
   });
@@ -268,8 +278,10 @@ describe('@retikz/vanilla retained mount', () => {
     expect(configs.at(-1)?.handlerContributions).toEqual([
       expect.objectContaining({ handlers: { 'layer-box': { click: handler } } }),
     ]);
+
     view.dispose();
     view.dispose();
+
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
@@ -292,6 +304,7 @@ describe('@retikz/vanilla retained mount', () => {
     expect(view.artifacts).toBe(artifacts);
     expect(view.runtimeMeta).toBe(runtimeMeta);
     expect(() => view.update(layerScene(false))).not.toThrow();
+
     view.dispose();
   });
 
@@ -301,6 +314,7 @@ describe('@retikz/vanilla retained mount', () => {
     const retained = createRetainedCompositeDefinitions([initial]);
     const delegate = retained.definitions[0];
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
+
     const node = { namespace: 'fixture', type: 'datasetBox' } as never;
     const context = {
       runtimeInput: undefined,
@@ -318,7 +332,9 @@ describe('@retikz/vanilla retained mount', () => {
     } as const;
 
     const prepared = retained.prepare([candidate]);
+
     expect(delegate.expand(node, context).children[0]).toMatchObject({ style: { fill: '#22c55e' } });
+
     prepared.rollback();
 
     expect(delegate.expand(node, context).children[0]).toMatchObject({ style: { fill: '#ef4444' } });
@@ -347,6 +363,7 @@ describe('@retikz/vanilla retained mount', () => {
     const retained = createRetainedCompositeDefinitions([initial]);
     const delegate = retained.definitions[0];
     if (typeof delegate.expand !== 'function') throw new Error('expected expand delegate');
+
     const context = {
       runtimeInput: undefined,
       sourceChild: () => {
@@ -441,6 +458,7 @@ describe('@retikz/vanilla retained mount', () => {
 
     expect(() => view.update(cachedDatasetScene('#22c55e'))).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
     expect(greenExpand).toHaveBeenCalledTimes(1);
+
     view.update(cachedDatasetScene('#ef4444'));
 
     expect(redExpand).toHaveBeenCalledTimes(1);
@@ -522,6 +540,7 @@ describe('@retikz/vanilla retained mount', () => {
     const view = mountSvg(container, datasetScene('#ef4444'), { adapters: [datasetAdapter] });
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#ef4444');
+
     view.update(datasetScene('#22c55e'));
 
     expect(view.root.querySelector('rect')?.getAttribute('fill')).toBe('#22c55e');
@@ -557,11 +576,13 @@ describe('@retikz/vanilla retained mount', () => {
     expect(Number(frames[1]?.primary.revision)).toBe(Number(frames[0]?.primary.revision) + 1);
     expect(view.compileResult).not.toBe(initialCompileResult);
     expect(view.diagnostics()).toEqual([]);
+
     const committedFrame = frames.at(-1);
     const committedCompileResult = view.compileResult;
     const committedHtml = view.root.innerHTML;
 
     rejectNextPrepare = true;
+
     expect(() => view.update(source('#3b82f6'))).toThrowError(
       expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRendererPrepareFailed }),
     );
@@ -575,6 +596,7 @@ describe('@retikz/vanilla retained mount', () => {
 
     view.dispose();
     view.dispose();
+
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
@@ -681,6 +703,7 @@ describe('@retikz/vanilla retained mount', () => {
     expect(() => {
       (view.runtimeMeta.identityIndex as Map<string, Array<string>>).set('forged', ['main']);
     }).toThrow(TypeError);
+
     view.hydrate({ handlers: {} });
 
     expect(observedCachePolicies).toEqual(['static', 'static']);
@@ -712,6 +735,7 @@ describe('@retikz/vanilla retained mount', () => {
 
     const tuple = [0, 0, 1, 1];
     Object.defineProperty(tuple, Symbol('hidden'), { enumerable: true, value: true });
+
     expect(() => view.update(source('#22c55e'), { animation: { easings: { custom: tuple } } } as never)).toThrow(
       expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
@@ -745,7 +769,9 @@ describe('@retikz/vanilla retained mount', () => {
     };
 
     const svg = mountSvg(document.createElement('div'), input, { compile: { composites: [composite] } });
+
     expect(expand).toHaveBeenCalledTimes(1);
+
     svg.dispose();
     expand.mockClear();
 
@@ -753,7 +779,9 @@ describe('@retikz/vanilla retained mount', () => {
       compile: { composites: [composite] },
       output: { width: 100, height: 100 },
     });
+
     expect(expand).toHaveBeenCalledTimes(1);
+
     canvas.dispose();
   });
 
@@ -762,6 +790,7 @@ describe('@retikz/vanilla retained mount', () => {
     const view = mountSvg(container, source('#ef4444'));
 
     expect(view.mode).toBe('retained');
+
     const stable = view.root.querySelector('[data-retikz-id="stable"]');
 
     view.update(source('#22c55e'));
@@ -825,6 +854,7 @@ describe('@retikz/vanilla retained mount', () => {
     const getter = vi.fn(() => 'static');
     const runtime = Object.defineProperty({}, 'mode', { enumerable: true, get: getter });
     const container = document.createElement('div');
+
     expect(() => mountSvg(container, source('#ef4444'), { runtime } as never)).toThrowError(
       expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
@@ -833,6 +863,7 @@ describe('@retikz/vanilla retained mount', () => {
 
     const runtimeGetter = vi.fn(() => ({ mode: 'static' }));
     const options = Object.defineProperty({}, 'runtime', { enumerable: true, get: runtimeGetter });
+
     expect(() => mountSvg(container, source('#ef4444'), options as never)).toThrowError(
       expect.objectContaining({ code: RetikzRenderErrorCode.RetainedRuntimeInputInvalid }),
     );
@@ -861,6 +892,7 @@ describe('@retikz/vanilla retained mount', () => {
     vi.spyOn(view.root, 'appendChild').mockImplementationOnce(() => {
       throw new Error('materialization failed');
     });
+
     expect(() => view.update(source('#22c55e'))).toThrow('materialization failed');
   });
 
@@ -899,6 +931,7 @@ describe('@retikz/vanilla retained mount', () => {
     expect(() => view.hydrate({ handlers: { changed: { click: rejected } } })).toThrow(
       /RUNTIME_PARTICIPANT_PREPARE_FAILED/,
     );
+
     view.hydrate({ handlers: { changed: { click: accepted } } });
 
     expect(observedConfigs.at(-1)?.handlerContributions).toEqual([
@@ -924,7 +957,9 @@ describe('@retikz/vanilla retained mount', () => {
     const hydration = view.hydrate({ handlers: { changed: { click: handler } } });
 
     rejectNextUpdate = true;
+
     expect(() => hydration.dispose()).toThrow(/RUNTIME_PARTICIPANT_PREPARE_FAILED/);
+
     hydration.dispose();
 
     expect(observedContributionCounts).toEqual([0, 1, 0, 0]);
@@ -961,6 +996,7 @@ describe('@retikz/vanilla retained mount', () => {
 
     expect(retained.mode).toBe('retained');
     expect(staticView.mode).toBe('static');
+
     retained.dispose();
     staticView.dispose();
   });

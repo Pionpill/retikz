@@ -23,13 +23,17 @@ import { PlotSchema } from '../../../src/schemas';
 type Datasets = Record<string, Array<Record<string, unknown>>>;
 
 const markRegistry = resolveMarkRegistry();
+
 const lowerMark = (mark: IRPlotIntervalMark, rows: Array<ExternalRow>, frame: CoordinateFrame) =>
   lowerMarkDefinition(resolveMarkOperation(mark, { registry: markRegistry }), rows, frame);
+
 const datumAnchor = (mark: IRPlotIntervalMark, row: ExternalRow, frame: CoordinateFrame, context?: IntervalContext) =>
   resolveDatumAnchor(mark, row, frame, { registry: markRegistry }, context);
 
 const WIDTH = 400;
+
 const HEIGHT = 400;
+
 const cartOpts: LowerPlotsOptions = { width: WIDTH, height: HEIGHT };
 
 const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions): IRScope => {
@@ -42,6 +46,7 @@ const firstLayer = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions
 /** 深度收集图层内所有 node（无 color → 直接子；有 color → 藏在分色子 Scope 里） */
 const nodesOf = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -49,7 +54,9 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -70,6 +77,7 @@ const bandStub = (categories: Array<string>, range: [number, number]): PositionS
   const [r0, r1] = range;
   const step = (r1 - r0) / categories.length;
   const index = new Map(categories.map((cat, i) => [cat, i] as const));
+
   return {
     coordinate: (value: unknown) => {
       const i = typeof value === 'string' ? index.get(value) : undefined;
@@ -92,6 +100,7 @@ const bandStub = (categories: Array<string>, range: [number, number]): PositionS
 const linearStub = (domain: [number, number], range: [number, number]): PositionScale => {
   const [d0, d1] = domain;
   const [r0, r1] = range;
+
   return {
     coordinate: (value: unknown) =>
       typeof value === 'number' && Number.isFinite(value) ? r0 + ((value - d0) / (d1 - d0)) * (r1 - r0) : NaN,
@@ -136,10 +145,15 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     const mark = rectMark();
     const ctx = buildIntervalContext(mark, frame, [{ rk: 'r0', ck: 'c0' }]);
     if (ctx === undefined) throw new Error('expected interval context');
+
     const cell = intervalCell(mark, { rk: 'r0', ck: 'c0' }, frame, ctx);
+
     expect(cell).not.toBeNull();
+
     const geometry = frame.projectCell(cell as Cell);
+
     expect(geometry.kind).toBe('rect');
+
     if (geometry.kind === 'rect') {
       // r0 中心 = 50、c0 中心 = 150（y 倒置）；格 100×100
       expect(geometry.position).toEqual([50, 150]);
@@ -155,7 +169,9 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
       { rk: 'r1', ck: 'c1' },
     ];
     const nodes = nodesOf(lowerMark(rectMark(), rows, frame) as IRScope);
+
     expect(nodes).toHaveLength(2);
+
     for (const node of nodes) {
       expect(node.shape).toBeUndefined(); // barStyle 在 nodeDefault 给 rectangle
       expect(nodeWidth(node)).toBe(100);
@@ -166,6 +182,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
   it('rect-single-cell', () => {
     const frame = createCartesianCoordinate(bandStub(['r0'], [0, 120]), bandStub(['c0'], [120, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 'c0' }], frame) as IRScope);
+
     expect(nodes).toHaveLength(1);
     expect(nodeWidth(nodes[0])).toBe(120);
     expect(nodeHeight(nodes[0])).toBe(120);
@@ -178,6 +195,7 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
       { rk: 'ZZZ', ck: 'c1' }, // 缺类别 → coordinate NaN → 跳过
     ];
     const nodes = nodesOf(lowerMark(rectMark(), rows, frame) as IRScope);
+
     expect(nodes).toHaveLength(1);
   });
 
@@ -188,8 +206,11 @@ describe('rect cartesian 双 band cell 几何（projectCell rect 快路）', () 
     const mark = rectMark();
     const ctx = buildIntervalContext(mark, frame, rows);
     const anchor = datumAnchor(mark, rows[0], frame, ctx);
+
     expect(anchor).not.toBeNull();
+
     const position = node.position as [number, number];
+
     expect(anchor![0]).toBeCloseTo(position[0], 9);
     expect(anchor![1]).toBeCloseTo(position[1], 9);
   });
@@ -232,11 +253,14 @@ describe('rect 值 → color', () => {
     });
     const layer = firstLayer(spec, { d: rows }, cartOpts);
     const nodes = nodesOf(layer);
+
     expect(nodes).toHaveLength(4);
+
     // 按色分子 Scope：每个子 Scope nodeDefault 含 fill；不同值 → 不同 fill 串
     const fills = (layer.children as Array<{ defaults?: { node?: { style?: { fill?: string } } } }>)
       .map(c => c.defaults?.node?.style?.fill)
       .filter((f): f is string => f !== undefined);
+
     expect(fills.length).toBeGreaterThan(1);
     expect(new Set(fills).size).toBeGreaterThan(1);
   });
@@ -272,9 +296,12 @@ describe('rect 值 → color', () => {
     const colorScopes = (layer.children as Array<{ type?: string; children?: Array<unknown> }>).filter(
       c => c.type === 'scope',
     );
+
     // 3 个不同值（1 / 5 / 9）→ 3 个分色子 Scope；v=5 的两格在同一 Scope（2 子节点）
     expect(colorScopes).toHaveLength(3);
+
     const sizes = colorScopes.map(s => s.children?.length ?? 0).sort();
+
     expect(sizes).toEqual([1, 1, 2]);
   });
 });
@@ -287,10 +314,12 @@ describe('rect 缺 color', () => {
       { rk: 'r1', ck: 'c1' },
     ];
     const layer = firstLayer(heatmapSpec(), { d: rows }, cartOpts);
+
     // 单图层：nodeDefault 含 rectangle barStyle + 单一默认填充（图层级，无分色子 Scope）
     expect(layer.defaults?.node).toBeDefined();
     expect((layer.defaults!.node as { shape?: string }).shape).toBe('rectangle');
     expect(layer.defaults?.node?.style?.fill).toBeTruthy();
+
     // 缺 color → 不分色子 Scope（children 直接是 node，非 scope）
     expect((layer.children as Array<{ type?: string }>).every(c => c.type === 'node')).toBe(true);
     expect(nodesOf(layer)).toHaveLength(2);
@@ -299,6 +328,7 @@ describe('rect 缺 color', () => {
   it('rect-compiles-to-scene', () => {
     const rows = [{ rk: 'r0', ck: 'c0' }];
     const layer = firstLayer(heatmapSpec(), { d: rows }, cartOpts);
+
     expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 });
@@ -309,6 +339,7 @@ describe('rect fail-loud', () => {
   it('rect-secondary-not-band-degenerate-cell', () => {
     const frame = createCartesianCoordinate(bandStub(['r0', 'r1'], [0, 200]), linearStub([0, 10], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 'r0', ck: 5 }], frame) as IRScope);
+
     expect(nodes).toHaveLength(1);
     expect(nodeHeight(nodes[0])).toBe(0);
   });
@@ -316,6 +347,7 @@ describe('rect fail-loud', () => {
   it('rect-primary-not-band-degenerate-cell', () => {
     const frame = createCartesianCoordinate(linearStub([0, 10], [0, 200]), bandStub(['c0', 'c1'], [200, 0]));
     const nodes = nodesOf(lowerMark(rectMark(), [{ rk: 5, ck: 'c0' }], frame) as IRScope);
+
     expect(nodes).toHaveLength(1);
     expect(nodeWidth(nodes[0])).toBe(0);
   });
@@ -338,6 +370,7 @@ describe('rect fail-loud', () => {
         },
       ],
     });
+
     expect(() => expandOf(spec, { d: [{ rk: 'r0', ck: 3 }] }, cartOpts)).not.toThrow();
   });
 
@@ -354,6 +387,7 @@ describe('rect fail-loud', () => {
       primary: bandStub(['r0', 'r1'], [0, 360]),
       secondary: bandStub(['c0', 'c1'], [0, 150]),
     });
+
     expect(() => lowerMark(rectMark(), [{ rk: 'r0', ck: 'c0' }], frame)).not.toThrow();
   });
 
@@ -372,6 +406,7 @@ describe('rect fail-loud', () => {
         },
       ],
     });
+
     expect(() => expandOf(spec, { d: [{ rk: 'r0', ck: 'c0' }] }, cartOpts)).toThrow(/cartesian1D|not supported|rect/i);
   });
 });
@@ -408,13 +443,16 @@ describe('rect + interval 共存', () => {
       },
       cartOpts,
     );
+
     // 两个图层各产物互不串扰
     const rectLayer = expanded.children[0] as IRScope;
     const intervalLayer = expanded.children[1] as IRScope;
     const rectNodes = nodesOf(rectLayer);
     const intervalNodes = nodesOf(intervalLayer);
+
     expect(rectNodes).toHaveLength(2);
     expect(intervalNodes).toHaveLength(2);
+
     // rect 格高 = y band bandwidth（固定）；interval 柱高随 value 变（两柱不等高）
     expect(nodeHeight(rectNodes[0])).toBeCloseTo(nodeHeight(rectNodes[1]), 6);
     expect(nodeHeight(intervalNodes[0])).not.toBe(nodeHeight(intervalNodes[1]));
@@ -430,6 +468,7 @@ describe('rect schema', () => {
 
   it('rect-schema-discriminates', () => {
     const spec = PlotSchema.parse(heatmapSpec());
+
     expect(spec.marks[0].type).toBe('interval');
   });
 });

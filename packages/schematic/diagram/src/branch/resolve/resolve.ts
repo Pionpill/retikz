@@ -12,8 +12,10 @@ export const resolveBranchDiagram = (source: IRBranchDiagram): CanonicalBranchDi
       details: { stage: 'resolve', path },
     });
   };
+
   const byId = new Map(source.nodes.map(node => [node.id, node]));
   if (byId.size !== source.nodes.length) fail('Branch node ids must be unique.', ['nodes']);
+
   const branches = new Set<string>();
   const used = new Set<string>();
   const edges = new Map(source.nodes.map(node => [node.id, new Set<string>()]));
@@ -38,19 +40,25 @@ export const resolveBranchDiagram = (source: IRBranchDiagram): CanonicalBranchDi
       }
     });
   });
+
   if (source.mainBranch !== undefined && !branches.has(source.mainBranch)) fail('Unknown mainBranch.', ['mainBranch']);
   source.nodes.forEach((node, index) => {
     if (!used.has(node.id)) fail(`Unused Branch node '${node.id}'.`, ['nodes', index]);
   });
+
   const order: Array<string> = [];
   const remaining = new Set(byId.keys());
+
   while (remaining.size > 0) {
     const id = source.nodes.find(node => remaining.has(node.id) && indegree.get(node.id) === 0)?.id;
     if (id === undefined) return fail('Branch progression must be acyclic.', ['branches'], true);
+
     remaining.delete(id);
     order.push(id);
+
     for (const target of edges.get(id)!) indegree.set(target, indegree.get(target)! - 1);
   }
+
   return {
     source,
     layout: BranchLayoutIntentSchema.parse(source.layout ?? {}),

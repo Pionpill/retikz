@@ -90,6 +90,7 @@ export const builtinColorSchemeInterpolator: ColorSchemeResolver = name => {
   if (!BUILTIN_COLOR_SCHEMES.has(name)) {
     throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
   }
+
   return SCHEME_INTERPOLATORS[name as PlotColorScheme];
 };
 
@@ -101,8 +102,10 @@ export const makeColorSchemeResolver =
   (custom?: Record<string, (t: number) => string>): ColorSchemeResolver =>
   name => {
     if (BUILTIN_COLOR_SCHEMES.has(name)) return SCHEME_INTERPOLATORS[name as PlotColorScheme];
+
     const customInterpolator = custom?.[name];
     if (customInterpolator !== undefined) return customInterpolator;
+
     throw new RetikzPlotError(`lowerPlots: unknown color scheme "${name}"; register it via options.colorSchemes`);
   };
 
@@ -114,10 +117,12 @@ export const makeColorSchemeResolver =
 export const toHexColor = (color: string): string => {
   const match = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(color);
   if (!match) return color;
+
   const channel = (text: string): string =>
     Math.max(0, Math.min(255, Math.round(Number(text))))
       .toString(16)
       .padStart(2, '0');
+
   return `#${channel(match[1])}${channel(match[2])}${channel(match[3])}`;
 };
 

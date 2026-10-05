@@ -28,11 +28,13 @@ const expandOf = (spec: IRPlot, datasets: Datasets, options: LowerPlotsOptions =
 
 /** 子节点谓词 */
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
 
 /** 整棵子树里所有 scope（深度优先；含外层自身的直接 / 间接子层） */
 const allScopes = (root: IRScope): Array<IRScope> => {
   const out: Array<IRScope> = [];
+
   const walk = (scope: IRScope): void => {
     for (const child of scope.children) {
       if (isScope(child)) {
@@ -41,7 +43,9 @@ const allScopes = (root: IRScope): Array<IRScope> => {
       }
     }
   };
+
   walk(root);
+
   return out;
 };
 
@@ -52,8 +56,10 @@ const allScopes = (root: IRScope): Array<IRScope> => {
  */
 const swatchNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text === undefined);
+
 const labelsOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text !== undefined);
+
 const sizeSymbolNodesOf = (scope: IRScope): Array<IRNode> =>
   scope.children.filter(isNode).filter(node => node.text === undefined && node.shape === 'circle');
 
@@ -68,6 +74,7 @@ const findLegendLayer = (outer: IRScope): IRScope | undefined => {
   const scopes = allScopes(outer);
   const byId = scopes.find(scope => typeof scope.id === 'string' && scope.id.startsWith('legend'));
   if (byId) return byId;
+
   // 兜底：非 mark 层（无 nodeDefault.shape）且含 swatch Node + 标签 Node
   return scopes.find(
     scope => scope.defaults?.node?.shape === undefined && swatchNodesOf(scope).length > 0 && labelsOf(scope).length > 0,
@@ -260,6 +267,7 @@ const SECTOR_SHARE = [
   { label: 'B', value: 5 },
   { label: 'C', value: 2 },
 ];
+
 const sectorColorLegendSpec = (): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -287,7 +295,9 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
   it('sector_color_legend_one_swatch_per_slice', () => {
     const outer = expandOf(sectorColorLegendSpec(), { d: SECTOR_SHARE });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     // 3 个 label（A/B/C）→ 3 个 swatch + 3 个标签
     expect(swatchNodesOf(legend as IRScope).length).toBe(3);
     expect(labelsOf(legend as IRScope).length).toBe(3);
@@ -297,8 +307,11 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
   it('shape_legend_swatches_use_encoded_glyphs_not_rectangles', () => {
     const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     const shapes = swatchNodesOf(legend as IRScope).map(node => node.shape);
+
     // 3 类 → 3 个 glyph swatch；调色板 circle/rectangle/diamond，至少含一个非 rectangle（证实用了编码形状）
     expect(shapes.length).toBe(3);
     expect(shapes.some(shape => shape !== 'rectangle')).toBe(true);
@@ -311,6 +324,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
       plotDefaults: { palette: { shape: [pentagon, 'cross', 'circle'] } },
     });
     const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
+
     expect(legend).toBeDefined();
     expect(swatchNodesOf(legend as IRScope).map(node => node.shape)).toEqual([pentagon, 'cross', 'circle']);
   });
@@ -318,7 +332,9 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
   it('shape_legend_glyphs_default_to_no_stroke', () => {
     const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     const glyphs = swatchNodesOf(legend as IRScope);
 
     expect(glyphs.length).toBe(3);
@@ -330,6 +346,7 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
     const outer = expandOf(shapeLegendSpec(), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
     const mark = findMarkLayer(outer);
+
     expect(legend).toBeDefined();
     expect(mark).toBeDefined();
 
@@ -343,7 +360,9 @@ describe('lowerPlots legend — review 修复回归（sector color / shape glyph
   it('shape_legend_symbol_size_style_controls_glyph_box', () => {
     const outer = expandOf(shapeLegendSpec({ style: { symbolSize: 18 } }), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     const glyphs = swatchNodesOf(legend as IRScope).filter(node => node.shape !== 'rectangle');
 
     expect(glyphs.length).toBeGreaterThan(0);
@@ -361,9 +380,12 @@ describe('lowerPlots legend — happy path（contract）', () => {
   it('ordinal_color_legend_one_swatch_per_category', () => {
     const outer = expandOf(ordinalColorLegendSpec(), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     // 3 个类别（A/B/C 去重）→ 3 个 swatch + 3 个标签
     const labels = labelsOf(legend as IRScope);
+
     expect(labels).toHaveLength(3);
     expect(labels.map(n => n.text).sort()).toEqual(['A', 'B', 'C']);
     expect(swatchNodesOf(legend as IRScope).length).toBeGreaterThanOrEqual(3);
@@ -372,7 +394,9 @@ describe('lowerPlots legend — happy path（contract）', () => {
   it('ordinal_legend_text_nodes_default_to_no_stroke_or_fill', () => {
     const outer = expandOf(ordinalColorLegendSpec({ title: 'Kind' }), { d: ORDINAL_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     const labels = labelsOf(legend as IRScope);
 
     expect(labels.map(node => node.text).sort()).toEqual(['A', 'B', 'C', 'Kind']);
@@ -385,9 +409,12 @@ describe('lowerPlots legend — happy path（contract）', () => {
   it('sequential_color_legend_continuous_ramp', () => {
     const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     // 连续 ramp：刻度标签数 > 1（非逐类 swatch），ticks.count 提示 4 档左右
     const labels = labelsOf(legend as IRScope);
+
     expect(labels.length).toBeGreaterThan(1);
     expect(labels.every(n => typeof n.text === 'string')).toBe(true);
   });
@@ -395,7 +422,9 @@ describe('lowerPlots legend — happy path（contract）', () => {
   it('ramp_legend_tick_labels_default_to_no_stroke_or_fill', () => {
     const outer = expandOf(sequentialColorLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     const labels = labelsOf(legend as IRScope);
 
     expect(labels.length).toBeGreaterThan(1);
@@ -408,9 +437,12 @@ describe('lowerPlots legend — happy path（contract）', () => {
   it('size_legend_graduated_symbols', () => {
     const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     // 梯度符号：≥2 档代表大小（nice 3 档左右）+ 值标签
     const labels = labelsOf(legend as IRScope);
+
     expect(labels.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -454,10 +486,14 @@ describe('lowerPlots legend — happy path（contract）', () => {
 
     expect(symbols.length).toBeGreaterThanOrEqual(2);
     expect(Math.max(...symbols.map(nodeMinimumSide))).toBeGreaterThan(14);
+
     const [first, second] = symbols;
+
     expect(first).toBeDefined();
     expect(second).toBeDefined();
+
     const yGap = Math.abs((second.position as [number, number])[1] - (first.position as [number, number])[1]);
+
     expect(yGap).toBeGreaterThanOrEqual((nodeMinimumSide(first) + nodeMinimumSide(second)) / 2 + 6);
   });
 
@@ -480,8 +516,11 @@ describe('lowerPlots legend — 边界（contract）', () => {
   it('single_category_legend_one_swatch', () => {
     const outer = expandOf(ordinalColorLegendSpec(), { d: SINGLE_CATEGORY_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     const labels = labelsOf(legend as IRScope);
+
     expect(labels).toHaveLength(1);
     expect(labels[0].text).toBe('A');
   });
@@ -548,7 +587,9 @@ describe('lowerPlots legend — 边界（contract）', () => {
     });
     const outer = expandOf(spec, { d: QUANTILE_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     // 分箱 → 多个区间 swatch + 区间标签
     expect(swatchNodesOf(legend as IRScope).length).toBeGreaterThanOrEqual(1);
     expect(labelsOf(legend as IRScope).length).toBeGreaterThanOrEqual(1);
@@ -589,6 +630,7 @@ describe('lowerPlots legend — 错误路径（contract）', () => {
       // channel=color 无 scale → 两个 color scale 歧义
       guides: [{ type: 'legend', channel: 'color' }],
     });
+
     expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow();
   });
 
@@ -613,6 +655,7 @@ describe('lowerPlots legend — 错误路径（contract）', () => {
       ],
       guides: [{ type: 'legend', channel: 'color', scale: 'doesNotExist' }],
     });
+
     expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow();
   });
 });
@@ -645,6 +688,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
       ],
     });
     const outer = expandOf(spec, { d: ORDINAL_ROWS });
+
     // 默认 x/y 轴层仍在（≥2 轴层）+ legend 层在
     expect(axisLayersOf(outer).length).toBeGreaterThanOrEqual(2);
     expect(findLegendLayer(outer)).toBeDefined();
@@ -675,6 +719,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
       ],
     });
     const outer = expandOf(spec, { d: ORDINAL_ROWS });
+
     expect(axisLayersOf(outer).length).toBeGreaterThanOrEqual(1);
     expect(findLegendLayer(outer)).toBeDefined();
     expect(findMarkLayer(outer)).toBeDefined();
@@ -701,6 +746,7 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
 
     const markXMax = (outer: IRScope): number => {
       const mark = findMarkLayer(outer) as IRScope;
+
       // point mark 的 Node position x（color 编码时 Node 落在嵌套子 scope，故递归收集所有 Node）
       const collectNodes = (scope: IRScope): Array<IRNode> =>
         scope.children.flatMap(child => (isScope(child) ? collectNodes(child) : isNode(child) ? [child] : []));
@@ -708,8 +754,10 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
         .map(n => n.position)
         .filter((p): p is [number, number] => Array.isArray(p))
         .map(p => p[0]);
+
       return xs.length > 0 ? Math.max(...xs) : 0;
     };
+
     // 有 legend 时数据点最大 x 应更靠左（plotArea 右侧被 legend 占走）
     expect(markXMax(withLegend)).toBeLessThan(markXMax(noLegend));
   });
@@ -719,9 +767,12 @@ describe('lowerPlots legend — 交互（contract 修 P1 ⑦ / P2 ⑩ / P1 ⑥�
   it('size_legend_reuses_resolver_descriptor', () => {
     const outer = expandOf(sizeLegendSpec(), { d: CONTINUOUS_ROWS });
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     // 梯度符号用 Node 表示；这里弱断言：legend 至少有 swatch 几何与 mark 同帧（结构存在）
     expect(swatchNodesOf(legend as IRScope).length + labelsOf(legend as IRScope).length).toBeGreaterThan(0);
+
     // mark 层存在（resolver 同时驱动实绘 size 与 legend descriptor）
     expect(findMarkLayer(outer)).toBeDefined();
   });
@@ -793,6 +844,7 @@ describe('lowerPlots legend — ramp 刻度域取配置 domain', () => {
       .map(node => (typeof node.text === 'string' ? node.text : ''))
       .map(text => Number(text.replace(/[^0-9.-]/g, '')))
       .filter(value => Number.isFinite(value));
+
     // 数据 extent 上界仅 30；domain 上界 100 → 应出现 > 30 的刻度（证实刻度跟 domain 而非数据）
     expect(Math.max(...labelNumbers)).toBeGreaterThan(30);
   });
@@ -861,8 +913,11 @@ describe('lowerPlots legend — core schema 合法性回归（修 PathSchema.min
   //   改用 core Node（shape rectangle）后，整个 legend scope 应 100% 合法可序列化
   const assertLegendSchemaValid = (outer: IRScope): void => {
     const legend = findLegendLayer(outer);
+
     expect(legend).toBeDefined();
+
     const result = ChildSchema.safeParse(legend);
+
     expect(result.success).toBe(true);
   };
 
@@ -896,8 +951,11 @@ describe('composite categorical legend symbols', () => {
       ],
     });
     const layer = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
+
     expect(layer).toBeDefined();
+
     const symbols = swatchNodesOf(layer!);
+
     expect(symbols).toHaveLength(6);
     expect(symbols.filter(node => node.shape === 'rectangle').map(node => node.style?.fill)).toEqual([
       '#112233',
@@ -906,17 +964,21 @@ describe('composite categorical legend symbols', () => {
     ]);
     expect(symbols.filter(node => node.shape === 'circle')).toHaveLength(3);
   });
+
   it('rejects a symbol without a color source at parse', () => {
     expect(() => ordinalColorLegendSpec({ symbols: [{ kind: 'point' }] })).toThrow();
   });
+
   it('rejects missing symbol scale and continuous legends', () => {
     expect(() =>
       expandOf(ordinalColorLegendSpec({ symbols: [{ kind: 'line', scale: 'missing' }] }), { d: ORDINAL_ROWS }),
     ).toThrow(/unknown scale/);
+
     const spec = sequentialColorLegendSpec();
     spec.guides = [
       { type: 'legend', channel: 'color', scale: 'tempColor', symbols: [{ kind: 'point', paint: '#112233' }] },
     ];
+
     expect(() => expandOf(spec, { d: CONTINUOUS_ROWS })).toThrow(/categorical/);
   });
 });
@@ -929,12 +991,14 @@ it('rejects different ordered category domains in composite symbols', () => {
     color: { kind: 'field', value: 'kind', scale: 'otherColor' },
     encoding: { x: { field: 'lon' }, y: { field: 'lat' } },
   });
+
   expect(() => expandOf(spec, { d: ORDINAL_ROWS })).toThrow(/same ordered categorical domain/);
 });
 it.each([{ step: 0 }, { step: -1 }, { offset: -1 }, { step: 1.5 }])(
   'rejects invalid ordinal palette indexing %j',
   rangeIndex => {
     const spec = ordinalColorLegendSpec();
+
     expect(() => PlotSchema.parse({ ...spec, scales: [{ type: 'ordinal', name: 'bad', rangeIndex }] })).toThrow();
   },
 );
@@ -945,5 +1009,6 @@ it('applies ordinal index steps to the effective theme palette', () => {
   );
   spec.plotDefaults = { palette: { categorical: ['#111111', '#222222', '#333333'] } };
   const legend = findLegendLayer(expandOf(spec, { d: ORDINAL_ROWS }));
+
   expect(swatchNodesOf(legend!).map(node => node.style?.fill)).toEqual(['#222222', '#111111', '#333333']);
 });

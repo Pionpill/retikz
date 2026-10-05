@@ -37,11 +37,14 @@ if (!values.url || !values.out || !values.demos) {
 }
 
 const URL = values.url;
+
 const OUT_DIR = values.out;
+
 const DEMO_NAMES = values.demos
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
+
 const PORT = Number(values.port);
 
 const BROWSER_CANDIDATES = {
@@ -57,6 +60,7 @@ const BROWSER_CANDIDATES = {
   ],
   linux: ['/usr/bin/microsoft-edge', '/usr/bin/google-chrome', '/usr/bin/chromium'],
 };
+
 const browser = (BROWSER_CANDIDATES[platform()] ?? []).find(p => existsSync(p));
 if (!browser) {
   console.error(
@@ -66,6 +70,7 @@ if (!browser) {
 }
 
 const userDataDir = mkdtempSync(join(tmpdir(), 'cdp-blog-'));
+
 const proc = spawn(
   browser,
   [
@@ -86,6 +91,7 @@ const cleanup = () => {
   try {
     proc.kill('SIGKILL');
   } catch {}
+
   try {
     rmSync(userDataDir, { recursive: true, force: true });
   } catch {}
@@ -121,6 +127,7 @@ const waitDebugger = async () => {
       await new Promise(r => setTimeout(r, 300));
     }
   }
+
   throw new Error('浏览器调试端口未就绪');
 };
 
@@ -149,6 +156,7 @@ const main = async () => {
       msg.error ? reject(new Error(msg.error.message)) : resolve(msg.result);
     }
   };
+
   const send = (method, params = {}) => {
     const id = nextId++;
     return new Promise((resolve, reject) => {
@@ -160,6 +168,7 @@ const main = async () => {
   await send('Page.enable');
   console.log(`[grab] navigating → ${URL}`);
   await send('Page.navigate', { url: URL });
+
   // 给 Vite bundle 优化 + React hydration + retikz 文本测量留够时间
   await new Promise(r => setTimeout(r, 5000));
 
@@ -183,6 +192,7 @@ const main = async () => {
   if (result.exceptionDetails) {
     throw new Error('eval failed: ' + JSON.stringify(result.exceptionDetails));
   }
+
   const svgs = JSON.parse(result.result.value);
 
   console.log(`[grab] found ${svgs.length} SVG(s) on page; expected ${DEMO_NAMES.length}`);
@@ -191,6 +201,7 @@ const main = async () => {
       `SVG 数量不够（拿到 ${svgs.length}、需要 ${DEMO_NAMES.length}）——页面可能没渲染完，把上面的 setTimeout 加大再试`,
     );
   }
+
   if (svgs.length > DEMO_NAMES.length) {
     console.warn(`[grab] 多出 ${svgs.length - DEMO_NAMES.length} 个 SVG，按顺序取前 ${DEMO_NAMES.length} 个`);
   }

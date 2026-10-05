@@ -67,6 +67,7 @@ const probeGuidesOf = (
     composites: [...composites, inspector],
     padding: 0,
   });
+
   return guides;
 };
 
@@ -256,6 +257,7 @@ describe('layout alignment guide ownership', () => {
           layout: { padding: 0, margin: 0 },
         });
         if (child === undefined) throw new Error('expected child baseline guides');
+
         const laid = context.layoutChild(
           {
             type: 'node',
@@ -266,6 +268,7 @@ describe('layout alignment guide ownership', () => {
           NaturalLayoutProposal,
         );
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
+
         return {
           children: [context.replay(laid.result)],
           alignmentGuides: [{ name: 'container', dimension: 'x', position: 12 }],
@@ -290,6 +293,7 @@ describe('layout alignment guide ownership', () => {
           NaturalLayoutProposal,
         );
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
+
         return { children: [context.replay(laid.result)] };
       },
     });
@@ -325,6 +329,7 @@ describe('layout alignment guide ownership', () => {
         const count = (fieldReads.get(property) ?? 0) + 1;
         fieldReads.set(property, count);
         if (count > 1) throw new Error(`alignment guide field '${String(property)}' was read more than once`);
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -334,6 +339,7 @@ describe('layout alignment guide ownership', () => {
         const count = (arrayReads.get(property) ?? 0) + 1;
         arrayReads.set(property, count);
         if (count > 1) throw new Error(`alignment guide array '${String(property)}' was read more than once`);
+
         return Reflect.get(target, property, receiver);
       },
     });
@@ -360,8 +366,10 @@ describe('layout alignment guide ownership', () => {
       compile: (_node, context) => {
         firstResult = context.layoutChild(explicitGuideChild, NaturalLayoutProposal);
         if (firstResult.kind === LayoutChildProbeKind.Failed) return context.raise(firstResult.failure);
+
         first = firstResult.result.alignmentGuides;
         second = resolvedGuides(context, explicitGuideChild);
+
         return { children: [] };
       },
     });
@@ -377,9 +385,11 @@ describe('layout alignment guide ownership', () => {
     expect(Object.isFrozen(first)).toBe(true);
     expect(Object.isFrozen(first?.[0])).toBe(true);
     expect(Object.isFrozen(firstResult)).toBe(true);
+
     if (firstResult?.kind === LayoutChildProbeKind.Resolved) {
       expect(Object.isFrozen(firstResult.result)).toBe(true);
     }
+
     expect(first).not.toBe(second);
     expect(first?.[0]).not.toBe(second?.[0]);
   });

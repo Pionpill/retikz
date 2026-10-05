@@ -39,10 +39,14 @@ const pickStyleChannel = <T>(mark: IRPlotMarkOperation, channel: string): MarkSt
 
 const jsonValue = (value: unknown): JsonValue | undefined =>
   JsonValueSchema.safeParse(value).success ? (value as JsonValue) : undefined;
+
 const finiteNumber = (value: unknown): number | undefined => (isFiniteNumber(value) ? value : undefined);
+
 const opacityNumber = (value: unknown): number | undefined =>
   isFiniteNumber(value) && value >= 0 && value <= 1 ? value : undefined;
+
 const integerNumber = (value: unknown): number | undefined => (isFiniteNumber(value) ? Math.trunc(value) : undefined);
+
 const dashPatternValue = (value: unknown): Array<number> | undefined =>
   Array.isArray(value) && value.length > 0 && value.every(item => isFiniteNumber(item) && item >= 0)
     ? value
@@ -77,6 +81,7 @@ const makeNumericPathResolver = (
   return mark => {
     const channel = pick(mark);
     if (!channel) return undefined;
+
     const source = makeMarkValueResolver<number>(channel, model, {
       channelName,
       expectedFieldType: DataFieldType.Continuous,
@@ -103,10 +108,13 @@ const makeNumericPathResolver = (
           throw new RetikzPlotError(
             `lowerPlots: ${channelName} path channel scale "${scaleName}" must be a linear scale`,
           );
+
         def = { ...found, range: found.range ?? def.range, clamp: found.clamp ?? def.clamp };
       }
+
       scale = resolveLinearScale(def, numeric, options.range ?? [0, 1]);
     }
+
     return {
       resolver: row => {
         const value = source.resolver(row);
@@ -188,12 +196,18 @@ const pathNumericChannels: {
 };
 
 const lineCapValues = new Set(['butt', 'round', 'square']);
+
 const lineJoinValues = new Set(['miter', 'round', 'bevel']);
+
 const fillRuleValues = new Set(['nonzero', 'evenodd']);
+
 const thicknessValues = new Set<PathThickness>(Object.values(PathThickness));
+
 const pathThicknessValue = (value: unknown): PathThickness | undefined =>
   typeof value === 'string' && thicknessValues.has(value as PathThickness) ? (value as PathThickness) : undefined;
+
 const shadowPresetValues = new Set(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
+
 const blendModeValues = new Set([
   'normal',
   'multiply',

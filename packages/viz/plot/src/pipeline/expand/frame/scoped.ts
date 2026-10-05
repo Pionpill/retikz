@@ -103,6 +103,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     allGuidesWithCompositionGap,
     placementRoleRangeOverridesByScope,
   } = context;
+
   const coordinateRegistry = resolveCoordinateRegistry(options.coordinates);
   const scopeById = new Map(coordinateScopes.scopes.map(scope => [scope.id, scope] as const));
   const coordinateResolveContextOf = (
@@ -128,15 +129,19 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     resolveVisibleGuideTicks,
     ...overrides,
   });
+
   const scopeContextOf = (scope: CoordinateScopeRegistryEntry): JsonObject => {
     if (node.composition === undefined) return {};
+
     const scopeMeta: JsonObject = { coordinateView: scope.id };
     if (scope.placement?.kind === 'track') {
       scopeMeta.arrangement = scope.placement.scaffold;
       scopeMeta.track = scope.placement.track;
     }
+
     return scopeMeta;
   };
+
   const scaffoldById = new Map(compositionScaffolds.map(scaffold => [scaffold.id, scaffold] as const));
   const arrangementLayoutOf = (arrangement: CoordinateArrangement | undefined): CompositionLayout | undefined =>
     resolveArrangementLayout(compositionLayout, arrangement);
@@ -153,9 +158,11 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     compositionState: { hasFacets: boolean; hasScaffolds: boolean },
     dimension: DimensionRole,
   ): CompositionAxisPolicy => compositionAxisPolicyOf(resolve, compositionState, dimension);
+
   const rolesOf = (coordinate: IRPlotCoordinateOperation): ReadonlySet<DimensionRole> => {
     return new Set(resolveCoordinateDefinition(coordinate, { coordinateRegistry }).roles);
   };
+
   const assertScaffoldRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scaffoldId: string): void => {
     if (!roles.has(role)) {
       throw new RetikzPlotError(
@@ -163,6 +170,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       );
     }
   };
+
   const assertTrackRole = (role: DimensionRole, roles: ReadonlySet<DimensionRole>, scopeId: string): void => {
     if (!roles.has(role)) {
       throw new RetikzPlotError(
@@ -170,6 +178,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       );
     }
   };
+
   const roleRangeOf = (
     frameResolution: CoordinateFrameResolution,
     role: DimensionRole,
@@ -179,14 +188,17 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     if (range === undefined) {
       throw new RetikzPlotError(`lowerPlots: ${scopeDescription} does not expose a scale range for role "${role}"`);
     }
+
     return range;
   };
+
   const trackIndexOf = (scaffold: SharedScaffold, track: ScaffoldTrack): { index: number; count: number } => {
     const ordered = scaffold.tracks
       .filter(candidate => candidate.band.role === track.band.role)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.band.start - b.band.start || a.band.end - b.band.end);
     return { index: ordered.findIndex(candidate => candidate.id === track.id), count: ordered.length };
   };
+
   const bandRangeOf = (
     range: readonly [number, number],
     track: ScaffoldTrack,
@@ -197,6 +209,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     const end = range[0] + delta * track.band.end;
     const gap = arrangementLayoutOf(scaffold)?.trackGap ?? 0;
     if (gap === 0) return [start, end];
+
     const { index, count } = trackIndexOf(scaffold, track);
     const direction = delta >= 0 ? 1 : -1;
     const adjustedStart = start + (index > 0 ? direction * (gap / 2) : 0);
@@ -204,8 +217,10 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     if ((delta >= 0 && adjustedStart >= adjustedEnd) || (delta < 0 && adjustedStart <= adjustedEnd)) {
       throw new RetikzPlotError(`lowerPlots: trackGap ${gap} leaves no range for track "${track.id}"`);
     }
+
     return [adjustedStart, adjustedEnd];
   };
+
   const intersectRoleRanges = (
     currentRange: readonly [number, number],
     placementRange: readonly [number, number],
@@ -219,19 +234,25 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
         `lowerPlots: position adjustment containment leaves no drawable range for role "${role}" in coordinate view "${scopeId}"`,
       );
     }
+
     return currentRange[0] <= currentRange[1] ? [low, high] : [high, low];
   };
+
   const trackScopesByScaffold = new Map<string, Array<CoordinateScopeRegistryEntry>>();
+
   for (const scope of coordinateScopes.scopes) {
     if (scope.placement?.kind !== 'track') continue;
+
     const entries = trackScopesByScaffold.get(scope.placement.scaffold) ?? [];
     entries.push(scope);
     trackScopesByScaffold.set(scope.placement.scaffold, entries);
   }
+
   const coordinateScaleNameOf = (scope: CoordinateScopeRegistryEntry, role: DimensionRole): string | undefined => {
     const value = (scope.coordinate as Record<string, unknown>)[role];
     return typeof value === 'string' ? value : undefined;
   };
+
   const scopeSharesAxisRole = (
     source: CoordinateScopeRegistryEntry,
     target: CoordinateScopeRegistryEntry,
@@ -244,15 +265,19 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
         if (scaffold?.sharedRoles.includes(dimension)) return true;
       }
     }
+
     const sourceScale = coordinateScaleNameOf(source, dimension);
     const targetScale = coordinateScaleNameOf(target, dimension);
+
     return sourceScale !== undefined && sourceScale === targetScale;
   };
+
   const selectorMatchesScope = (selector: GridTargetSelector, scope: CoordinateScopeRegistryEntry): boolean => {
     if (selector.view !== undefined) {
       const views = Array.isArray(selector.view) ? selector.view : [selector.view];
       if (views.includes(scope.id)) return true;
     }
+
     if (selector.track !== undefined && scope.placement?.kind === 'track') {
       const scaffoldMatches =
         selector.track.arrangement === undefined || selector.track.arrangement === scope.placement.scaffold;
@@ -263,32 +288,42 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
             ? selector.track.id
             : [selector.track.id];
       const trackMatches = trackIds === undefined || trackIds.includes(scope.placement.track);
+
       return scaffoldMatches && trackMatches;
     }
+
     return false;
   };
+
   const axisGridTargetsScope = (guide: IRPlotAxisGuide, scope: CoordinateScopeRegistryEntry): boolean => {
     const sourceScope = scopeById.get(axisGuideScopeIdOf(guide, coordinateScopes.defaultScope));
     if (sourceScope === undefined) return false;
+
     const applyTo = axisGridApplyToOf(guide, scopeResolveOf(sourceScope), compositionPolicyContext);
     if (applyTo === null) return false;
     if (applyTo === AxisGridApplyTo.None) return false;
     if (applyTo === AxisGridApplyTo.Local) return sourceScope.id === scope.id;
     if (applyTo === AxisGridApplyTo.All) return scopeSharesAxisRole(sourceScope, scope, guide.dimension);
+
     const selector = axisGridSelectorOf(guide);
+
     return selector !== undefined && selectorMatchesScope(selector, scope);
   };
+
   const gridGuidesForScope = (scope: CoordinateScopeRegistryEntry): Array<IRPlotAxisGuide> =>
     allGuides.flatMap(guide =>
       isAxisGuide(guide) && axisGridTargetsScope(guide, scope) ? [withEnabledAxisGrid(guide, scope.id)] : [],
     );
+
   const assertSelectedGridTargetsScopes = (): void => {
     for (const guide of allGuides) {
       if (!isAxisGuide(guide)) continue;
+
       const sourceScope = scopeById.get(axisGuideScopeIdOf(guide, coordinateScopes.defaultScope));
       if (sourceScope === undefined) continue;
       if (axisGridApplyToOf(guide, scopeResolveOf(sourceScope), compositionPolicyContext) !== AxisGridApplyTo.Selected)
         continue;
+
       const count = coordinateScopes.scopes.filter(scope => axisGridTargetsScope(guide, scope)).length;
       if (count === 0) {
         throw new RetikzPlotError(
@@ -297,14 +332,19 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       }
     }
   };
+
   const resolvedFrames = new Map<string, CoordinateFrameResolution & { scopeId: string }>();
   const scaffoldFrames = new Map<string, CoordinateFrameResolution>();
   const resolvingFrames = new Set<string>();
+
   const resolveScaffoldFrame = (scaffold: SharedScaffold): CoordinateFrameResolution => {
     const cached = scaffoldFrames.get(scaffold.id);
     if (cached !== undefined) return cached;
+
     const scaffoldRoles = rolesOf(scaffold.coordinate);
+
     for (const role of scaffold.sharedRoles) assertScaffoldRole(role, scaffoldRoles, scaffold.id);
+
     for (const track of scaffold.tracks) assertTrackRole(track.band.role, scaffoldRoles, scaffold.id);
     const scaffoldScopeIds = new Set((trackScopesByScaffold.get(scaffold.id) ?? []).map(scope => scope.id));
     const scaffoldMarkDataViews = markDataViews.filter(view =>
@@ -327,14 +367,17 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       }),
     );
     scaffoldFrames.set(scaffold.id, resolved);
+
     return resolved;
   };
+
   const resolveScopedFrame = (scope: CoordinateScopeRegistryEntry): CoordinateFrameResolution & { scopeId: string } => {
     const cached = resolvedFrames.get(scope.id);
     if (cached !== undefined) return cached;
     if (resolvingFrames.has(scope.id)) {
       throw new RetikzPlotError(`lowerPlots: overlay coordinate view cycle detected at "${scope.id}"`);
     }
+
     resolvingFrames.add(scope.id);
     const targetPlotArea =
       scope.placement?.kind === CoordinateViewPlacementKind.Overlay
@@ -355,21 +398,26 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       const scaffoldMarkDataViews = markDataViews.filter(view =>
         scaffoldScopeIds.has(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope)),
       );
+
       for (const role of scaffold.sharedRoles) {
         assertScaffoldRole(role, scopeRoles, scaffold.id);
         roleMarkDataViews[role] = scaffoldMarkDataViews;
         roleRangeOverrides[role] = roleRangeOf(scaffoldFrame, role, `scaffold "${scaffold.id}"`);
       }
+
       assertTrackRole(track.band.role, scopeRoles, scope.id);
       const baseBandRange = roleRangeOf(scaffoldFrame, track.band.role, `scaffold "${scaffold.id}"`);
       roleRangeOverrides[track.band.role] = bandRangeOf(baseBandRange, track, scaffold);
     }
+
     for (const [role, placementRange] of Object.entries(placementRoleRangeOverridesByScope?.get(scope.id) ?? {})) {
       if (placementRange === undefined) continue;
+
       const currentRange = roleRangeOverrides[role];
       roleRangeOverrides[role] =
         currentRange === undefined ? placementRange : intersectRoleRanges(currentRange, placementRange, role, scope.id);
     }
+
     const scopedMarkDataViews = markDataViews.filter(
       view => coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope) === scope.id,
     );
@@ -377,6 +425,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       for (const role of rolesOf(scope.coordinate)) {
         const scaleName = coordinateScaleNameOf(scope, role);
         if (scaleName === undefined) continue;
+
         const sharedViews = markDataViews.filter(view => {
           const viewScope = scopeById.get(coordinateScopeIdOf(view.mark, coordinateScopes.defaultScope));
           return viewScope !== undefined && coordinateScaleNameOf(viewScope, role) === scaleName;
@@ -384,6 +433,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
         if (sharedViews.length > scopedMarkDataViews.length) roleMarkDataViews[role] = sharedViews;
       }
     }
+
     const scopedArrangement = scopeArrangementOf(scope);
     const scopedLayout = scopeLayoutOf(scope);
     const rawScopedGuides = (scopedArrangement === undefined ? allGuidesWithCompositionGap : allGuides).filter(
@@ -404,6 +454,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       marks: scopedMarkDataViews.map(view => view.mark),
       guides: scopedGuides,
     };
+
     const rawResolution = resolveCoordinateFrame(
       scopedNode,
       coordinateResolveContextOf(scopedNode, scopedGuides, {
@@ -420,6 +471,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
         ...(Object.keys(roleMarkDataViews).length > 0 ? { roleMarkDataViews } : {}),
       }),
     );
+
     const gridResolution =
       scopedGridGuides.length > 0
         ? resolveCoordinateFrame(
@@ -436,6 +488,7 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
             }),
           )
         : undefined;
+
     const scopeContext = scopeContextOf(scope);
     const resolved = {
       scopeId: scope.id,
@@ -443,10 +496,13 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
       gridLayers: (gridResolution?.gridLayers ?? []).map(layer => withScopeContext(layer, scopeContext) as IRScope),
       axisLayers: rawResolution.axisLayers.map(layer => withScopeContext(layer, scopeContext) as IRScope),
     };
+
     resolvingFrames.delete(scope.id);
     resolvedFrames.set(scope.id, resolved);
+
     return resolved;
   };
+
   const facets = compositionFacets;
   if (facets.length === 0) assertSelectedGridTargetsScopes();
   const scopedFrames = coordinateScopes.scopes.map(resolveScopedFrame);

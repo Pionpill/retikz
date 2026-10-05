@@ -145,14 +145,17 @@ export const BendAngleSchema = AngleDegreesSchema.gt(-180)
   .lt(180)
   .describe('Symmetric bend angle in degrees; negative values reverse the side. Defaults to 30.')
   .default(DEFAULT_BEND_ANGLE);
+
 /** 切线 bend 出射角的权威约束与默认 */
 export const BendOutAngleSchema = AngleDegreesSchema.describe(
   'Absolute outgoing tangent angle in screen coordinates (positive toward +y). Either tangent angle activates tangent mode and overrides symmetric bend parameters. Defaults to 0.',
 ).default(DEFAULT_BEND_OUT_ANGLE);
+
 /** 切线 bend 入射角的权威约束与默认 */
 export const BendInAngleSchema = AngleDegreesSchema.describe(
   'Absolute incoming tangent angle in screen coordinates, measured from the endpoint toward its control point. Either tangent angle activates tangent mode. Defaults to 180.',
 ).default(DEFAULT_BEND_IN_ANGLE);
+
 /** 切线 bend 松弛度的权威约束与默认 */
 export const BendLoosenessSchema = PositiveNumberSchema.describe(
   'Control-point distance multiplier used only in tangent mode; does not activate tangent mode by itself. Defaults to 1.',
@@ -197,6 +200,7 @@ const refinePartialAngles = (
       message: `${kind} requires startAngle and endAngle together`,
     });
   }
+
   if (step.closed === 'closed' && (hasStart || hasEnd)) {
     ctx.addIssue({
       code: 'custom',
@@ -344,6 +348,7 @@ export const StepSchema = discriminatedUnion('kind', [
       refinePartialAngles(step, ctx, 'circlePath');
       return;
     }
+
     if (step.kind === 'ellipsePath') {
       refinePartialAngles(step, ctx, 'ellipsePath');
     }

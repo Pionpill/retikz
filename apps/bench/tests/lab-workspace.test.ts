@@ -105,6 +105,7 @@ describe('Bench workspace', () => {
 
   it('成功运行后保留供报告页面读取的会话', () => {
     const next = reduceLabState(createInitialLabState(), { type: 'run-succeeded', session });
+
     expect(next.status).toBe('success');
     expect(next.session).toBe(session);
     expect('reportOpen' in next).toBe(false);
@@ -112,12 +113,14 @@ describe('Bench workspace', () => {
 
   it('详细配置 Sheet 独立管理开关', () => {
     const detailsOpen = reduceLabState(createInitialLabState(), { type: 'details-opened' });
+
     expect(detailsOpen.detailsOpen).toBe(true);
     expect('reportOpen' in detailsOpen).toBe(false);
   });
 
   it('详细配置可以修改预热次数', () => {
     const next = reduceLabState(createInitialLabState(), { type: 'warmup-runs-selected', warmupRuns: 4 });
+
     expect(next.warmupRuns).toBe(4);
   });
 });

@@ -70,6 +70,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: {
@@ -90,5 +91,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     ],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

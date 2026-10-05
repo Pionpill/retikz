@@ -108,6 +108,7 @@ export const createSpyCanvasContext = (width = 300, height = 150): SpyCanvasCont
           strokeStyle: context.strokeStyle,
         });
       }
+
       if (name === 'restore') {
         const snapshot = stack.pop();
         if (snapshot) {
@@ -115,6 +116,7 @@ export const createSpyCanvasContext = (width = 300, height = 150): SpyCanvasCont
           Object.assign(context, snapshot);
         }
       }
+
       calls.push({
         name,
         args,

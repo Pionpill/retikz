@@ -49,6 +49,7 @@ export const typedChartPartsOf = <TSource extends IRChartSource, TNative>(
     panel,
   } = input;
   const reference = dataRef ?? DEFAULT_CHART_DATA_REFERENCE;
+
   return {
     root: {
       ...(id === undefined ? {} : { id }),

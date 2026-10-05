@@ -85,6 +85,7 @@ export const resolveFlexLineMainProfile = (
       details: { gap },
     });
   }
+
   const gapTotal = gap * Math.max(0, itemIndexes.length - 1);
   const minimum = compensatedLayoutSum([
     ...itemIndexes.map(index => {
@@ -97,6 +98,7 @@ export const resolveFlexLineMainProfile = (
     ...itemIndexes.map(index => hypotheticalOuterMainSizeOf(items[index])),
     gapTotal,
   ]);
+
   return Object.freeze({ minimum, natural });
 };
 
@@ -119,7 +121,9 @@ export const resolveFlexLinesCrossProfile = (
       details: { gap },
     });
   }
+
   const gapTotal = gap * Math.max(0, lines.length - 1);
+
   return Object.freeze({
     minimum: compensatedLayoutSum([...lines.map(line => line.minimum), gapTotal]),
     natural: compensatedLayoutSum([...lines.map(line => line.natural), gapTotal]),
@@ -138,6 +142,7 @@ export const formFlexLines = (
       details: { gap: options.gap },
     });
   }
+
   if (
     options.availableMainSize !== undefined &&
     (!Number.isFinite(options.availableMainSize) || options.availableMainSize < 0)
@@ -148,6 +153,7 @@ export const formFlexLines = (
       details: { availableMainSize: options.availableMainSize },
     });
   }
+
   const traversal = items.map((_, index) => index);
   if (traversal.length === 0) return Object.freeze([]);
   if (options.wrap === 'nowrap' || options.availableMainSize === undefined) {
@@ -157,6 +163,7 @@ export const formFlexLines = (
   const lines: Array<ReadonlyArray<number>> = [];
   let current: Array<number> = [];
   let used = 0;
+
   for (const index of traversal) {
     const outerSize = hypotheticalOuterMainSizeOf(items[index]);
     const candidate = current.length === 0 ? outerSize : compensatedLayoutSum([used, options.gap, outerSize]);
@@ -172,7 +179,9 @@ export const formFlexLines = (
       used = candidate;
     }
   }
+
   lines.push(Object.freeze(current));
+
   return Object.freeze(lines);
 };
 
@@ -189,6 +198,7 @@ export const resolveFlexLineMainSizes = (
       details: { availableMainSize },
     });
   }
+
   if (!Number.isFinite(gap) || gap < 0) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.GeometryInvalid,
@@ -196,6 +206,7 @@ export const resolveFlexLineMainSizes = (
       details: { gap },
     });
   }
+
   const outerFixed = compensatedLayoutSum([
     ...items.flatMap(item => [item.marginStart, item.marginEnd]),
     gap * Math.max(0, items.length - 1),
@@ -207,6 +218,7 @@ export const resolveFlexLineMainSizes = (
       details: { outerFixed },
     });
   }
+
   const distributable = Math.max(0, availableMainSize - outerFixed);
   const hypothetical = items.map(hypotheticalMainSlotOf);
   const initialFree = distributable - compensatedLayoutSum(hypothetical);
@@ -218,6 +230,7 @@ export const resolveFlexLineMainSizes = (
     weight: growing ? item.grow : item.shrink * item.flexBaseSlot,
   }));
   const distributed = distributeWeightedLayoutSizes(weighted, distributable);
+
   return Object.freeze({
     values: distributed.values,
     remaining: availableMainSize - outerFixed - compensatedLayoutSum(distributed.values),
@@ -237,6 +250,7 @@ export const resolveFlexSpaceDistribution = (
       details: { remaining },
     });
   }
+
   if (!Number.isInteger(itemCount) || itemCount < 0) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.GeometryInvalid,
@@ -244,24 +258,29 @@ export const resolveFlexSpaceDistribution = (
       details: { itemCount },
     });
   }
+
   if (remaining <= 0) {
     if (distribution === LayoutDistribution.End) return Object.freeze({ leading: remaining, between: 0 });
     if (distribution === LayoutDistribution.Center) return Object.freeze({ leading: remaining / 2, between: 0 });
     return Object.freeze({ leading: 0, between: 0 });
   }
+
   if (distribution === LayoutDistribution.End) return Object.freeze({ leading: remaining, between: 0 });
   if (distribution === LayoutDistribution.Center) return Object.freeze({ leading: remaining / 2, between: 0 });
   if (distribution === LayoutDistribution.SpaceBetween && itemCount > 1) {
     return Object.freeze({ leading: 0, between: remaining / (itemCount - 1) });
   }
+
   if (distribution === LayoutDistribution.SpaceAround && itemCount > 0) {
     const between = remaining / itemCount;
     return Object.freeze({ leading: between / 2, between });
   }
+
   if (distribution === LayoutDistribution.SpaceEvenly && itemCount > 0) {
     const between = remaining / (itemCount + 1);
     return Object.freeze({ leading: between, between });
   }
+
   return Object.freeze({ leading: 0, between: 0 });
 };
 
@@ -274,6 +293,7 @@ export const resolveFlexLineCrossMetrics = (items: ReadonlyArray<FlexCrossItem>)
   let lastDescent = 0;
   let hasFirst = false;
   let hasLast = false;
+
   for (const item of items) {
     const offset = item.firstBaselineOffset ?? 0;
     const lastOffset = item.lastBaselineOffset ?? item.slotSize;
@@ -283,13 +303,16 @@ export const resolveFlexLineCrossMetrics = (items: ReadonlyArray<FlexCrossItem>)
       firstDescent = Math.max(firstDescent, item.slotSize - offset + item.marginEnd);
       hasFirst = true;
     }
+
     if (item.alignment === LayoutAlignment.LastBaseline) {
       lastAscent = Math.max(lastAscent, item.marginStart + lastOffset);
       lastDescent = Math.max(lastDescent, item.slotSize - lastOffset + item.marginEnd);
       hasLast = true;
     }
   }
+
   const size = Math.max(ordinary, firstAscent + firstDescent, lastAscent + lastDescent);
+
   return Object.freeze({
     size,
     ...(hasFirst ? { firstTarget: firstAscent } : {}),
@@ -306,7 +329,9 @@ export const resolveFlexLineDistribution = (
   if (distribution === LayoutDistribution.Stretch && remaining > 0 && lineCount > 0) {
     return Object.freeze({ leading: 0, between: 0, stretch: remaining / lineCount });
   }
+
   const nonStretch = distribution === LayoutDistribution.Stretch ? LayoutDistribution.Start : distribution;
+
   return Object.freeze({ ...resolveFlexSpaceDistribution(nonStretch, remaining, lineCount), stretch: 0 });
 };
 
@@ -323,11 +348,14 @@ export const resolveFlexItemCrossSlotStart = (
     const available = Math.max(0, line.finalCrossSize - margins.start - margins.end);
     return line.crossStart + margins.start + (available - slotSize) / 2;
   }
+
   if (alignment === LayoutAlignment.FirstBaseline && line.firstTarget !== undefined) {
     return line.crossStart + line.firstTarget - guideOffset;
   }
+
   if (alignment === LayoutAlignment.LastBaseline && line.lastTarget !== undefined) {
     return line.crossStart + line.lastTarget - guideOffset;
   }
+
   return line.crossStart + margins.start;
 };

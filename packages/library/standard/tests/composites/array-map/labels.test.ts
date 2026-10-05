@@ -8,15 +8,18 @@ import type { IRArray, IRMap } from '../../../src/collection';
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));
+
 const compile = (children: Array<IRChild>) =>
   compileToScene(
     { type: 'scene', version: 1, children },
     { composites: [ArrayDefinition, MapDefinition], clips: [PathClipDefinition], padding: 0 },
   );
+
 const labelsOf = (children: Array<IRChild>) =>
   flat(compile(children).scene.primitives).filter(
     node => node.type === 'text' && node.lines.some(line => line.text.startsWith('label')),
   );
+
 const sources: Array<IRArray | IRMap> = [
   {
     namespace: 'standard',
@@ -31,6 +34,7 @@ const sources: Array<IRArray | IRMap> = [
     layout: { width: 40, height: 40, gap: 0 },
   },
 ];
+
 const host = (label: IRNode['label']): IRNode => ({
   type: 'node',
   position: [40, 20],
@@ -43,6 +47,7 @@ const host = (label: IRNode['label']): IRNode => ({
 describe('Array / Map container labels', () => {
   it('preserves Node label Source and its cross-field validation', () => {
     const label = [{ text: 'label top' }, { text: 'label pin', position: 'bottom', pin: true }];
+
     for (const source of sources) {
       const parse =
         source.type === 'array'
@@ -52,10 +57,12 @@ describe('Array / Map container labels', () => {
         source.type === 'array'
           ? (input: unknown) => ArraySchema.safeParse(input).success
           : (input: unknown) => MapSchema.safeParse(input).success;
+
       expect(parse(JSON.parse(JSON.stringify({ ...source, label })))).toEqual(label);
       expect(accepts({ ...source, label: { text: 'label', placement: 'inside', pin: true } })).toBe(false);
     }
   });
+
   it('uses the same default and explicit label rendering as a Node of the allocated size', () => {
     for (const label of [
       { text: 'label default' },
@@ -67,6 +74,7 @@ describe('Array / Map container labels', () => {
       for (const source of sources) expect(labelsOf([{ ...source, label }])).toEqual(labelsOf([host(label)]));
     }
   });
+
   it('keeps container and cell handles and named path endpoints stable while expanding the viewBox', () => {
     for (const source of sources) {
       const path: IRChild = {
@@ -81,6 +89,7 @@ describe('Array / Map container labels', () => {
         { ...source, id: 'container', label: { text: 'label with a very long title', distance: 20 } },
         path,
       ]);
+
       expect(after.spatialHandles.entries.map(entry => ({ role: entry.role, geometry: entry.geometry }))).toEqual(
         before.spatialHandles.entries.map(entry => ({ role: entry.role, geometry: entry.geometry })),
       );
@@ -96,11 +105,14 @@ describe('Array / Map container labels', () => {
       expect(after.scene.layout).not.toEqual(before.scene.layout);
     }
   });
+
   it('inherits label defaults and container text style without inheriting cell role styles', () => {
     const defaults = { label: { font: { size: 21 }, textColor: 'green' } };
     const label = { text: 'label inherited' };
     const expected = labelsOf([{ type: 'scope', defaults, children: [host(label)] }]);
+
     for (const source of sources) expect(labelsOf([{ ...source, label, defaults }])).toEqual(expected);
+
     for (const source of sources)
       expect(labelsOf([{ ...source, label, style: { font: { size: 18 }, textColor: 'blue' } }])).toEqual(
         labelsOf([
@@ -111,6 +123,7 @@ describe('Array / Map container labels', () => {
         ]),
       );
   });
+
   it('renders empty container labels and applies root transforms and clipping outside cell clips', () => {
     for (const source of [
       { namespace: 'standard', type: 'array', data: [] },
@@ -119,6 +132,7 @@ describe('Array / Map container labels', () => {
       const result = compile([
         { ...source, label: { text: 'label empty' }, transforms: [{ kind: 'translate', x: 10, y: 20 }] },
       ]);
+
       expect(flat(result.scene.primitives).filter(node => node.type === 'text')).toHaveLength(1);
       expect(result.spatialHandles.entries.find(entry => entry.role === 'container')?.geometry.bounds).toEqual({
         x: 10,
@@ -127,6 +141,7 @@ describe('Array / Map container labels', () => {
         height: 0,
       });
     }
+
     for (const source of sources) {
       const result = compile([
         {
@@ -137,8 +152,11 @@ describe('Array / Map container labels', () => {
         },
       ]);
       const root = result.scene.primitives[0];
+
       expect(root).toMatchObject({ type: 'group', transforms: [{ kind: 'translate', x: 10, y: 20 }] });
+
       if (root.type !== 'group') throw new Error('Expected clipped container');
+
       expect(root.clipRef).toBeDefined();
       expect(
         flat(root.children).some(

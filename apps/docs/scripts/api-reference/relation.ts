@@ -136,8 +136,10 @@ export const relationApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
 /** 按真实公开声明生成 Relation 双语参考 */
 export const writeRelationApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const satisfies ReadonlyArray<ApiReferenceLanguage>) {
     const sections: Array<string> = [];
+
     for (const config of relationApiConfigs) sections.push(await createApiReferenceMdx(config, lang));
     writeFileSync(
       path.resolve(outputDirectory, `generated.${lang}.mdx`),

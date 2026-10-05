@@ -69,19 +69,24 @@ export const compareDeterministicResults = (
       errors.push(`${budget.id}: missing benchmark result`);
       continue;
     }
+
     if (result.oracle !== budget.oracle) errors.push(`${budget.id}: oracle mismatch`);
     if (result.visited !== budget.visited) {
       errors.push(`${budget.id}: visited ${result.visited} differs from ${budget.visited}`);
     }
+
     if (result.reused !== budget.reused) {
       errors.push(`${budget.id}: reused ${result.reused} differs from ${budget.reused}`);
     }
+
     if (result.changed !== budget.changed) {
       errors.push(`${budget.id}: changed ${result.changed} differs from ${budget.changed}`);
     }
+
     if (result.liveHandles !== budget.liveHandles) {
       errors.push(`${budget.id}: liveHandles ${String(result.liveHandles)} differs from ${String(budget.liveHandles)}`);
     }
+
     if (!executionEquals(result.execution, budget.execution)) {
       errors.push(`${budget.id}: execution metadata differs from reviewed budget`);
     }
@@ -90,6 +95,7 @@ export const compareDeterministicResults = (
   for (const result of results) {
     if (!budgetIds.has(result.id)) errors.push(`${result.id}: missing reviewed budget`);
   }
+
   return Object.freeze(errors);
 };
 

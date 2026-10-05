@@ -37,6 +37,7 @@ const innerEls = (el: AnyEl): Array<AnyEl> => {
 describe('ArrowMarker: wrapper 参数物化自 spec（不再 switch / 不算几何）', () => {
   it('viewBox / refY / markerUnits / orient / id 来自 spec', () => {
     const el = render(spec({ baseSize: 10, refX: 3, markerWidth: 6, markerHeight: 6 }), 'arrow-x');
+
     expect(el.type).toBe('marker');
     expect(el.props).toMatchObject({
       id: 'arrow-x',
@@ -63,6 +64,7 @@ describe('ArrowMarker: wrapper 参数物化自 spec（不再 switch / 不算几�
 
   it('markerWidth / markerHeight 直接取 spec（compile 已乘 scale）', () => {
     const el = render(spec({ markerWidth: 9, markerHeight: 12 }));
+
     expect(el.props.markerWidth).toBe(9);
     expect(el.props.markerHeight).toBe(12);
   });
@@ -88,6 +90,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
     ];
     const el = render(spec({ marker }));
     const inner = innerEls(el);
+
     expect(inner).toHaveLength(1);
     expect(inner[0].type).toBe('path');
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 0 L 10 5 L 0 10 Z');
@@ -99,12 +102,14 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
       { type: 'path', commands: [{ kind: 'move', to: [0, 0] }], fill: { kind: 'contextStroke' } },
     ];
     const inner = innerEls(render(spec({ marker })));
+
     expect((inner[0].props as Record<string, unknown>).fill).toBe('context-stroke');
   });
 
   it('ellipse marker → 物化出 <ellipse>，cx/cy/rx/ry 透传', () => {
     const marker: Array<MarkerPrimitive> = [{ type: 'ellipse', cx: 5, cy: 5, rx: 5, ry: 5, fill: 'black' }];
     const inner = innerEls(render(spec({ marker })));
+
     expect(inner[0].type).toBe('ellipse');
     expect(inner[0].props as Record<string, unknown>).toMatchObject({ cx: 5, cy: 5, rx: 5, ry: 5 });
   });
@@ -119,8 +124,11 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
       },
     ];
     const inner = innerEls(render(spec({ marker })));
+
     expect(inner[0].type).toBe('g');
+
     const groupChildren = (inner[0].props as { children?: unknown }).children as Array<AnyEl>;
+
     expect(groupChildren[0].type).toBe('path');
     expect((groupChildren[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 Z');
   });
@@ -145,6 +153,7 @@ describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）',
         ]),
       ),
     );
+
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 0 L 10 5 L 0 10 Z');
   });
 
@@ -160,6 +169,7 @@ describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）',
         ]),
       ),
     );
+
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 0 L 10 5 L 0 10 L 3 5 Z');
   });
 
@@ -175,6 +185,7 @@ describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）',
         ]),
       ),
     );
+
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 0 5 L 5 0 L 10 5 L 5 10 Z');
   });
 
@@ -189,6 +200,7 @@ describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）',
         ]),
       ),
     );
+
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 L 1 9 Z');
   });
 
@@ -204,6 +216,7 @@ describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）',
         ]),
       ),
     );
+
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 1 L 9 5 L 1 9 L 3 5 Z');
   });
 
@@ -219,17 +232,20 @@ describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）',
         ]),
       ),
     );
+
     expect((inner[0].props as Record<string, unknown>).d).toBe('M 1 5 L 5 1 L 9 5 L 5 9 Z');
   });
 
   it('circle: 实心圆 cx=5 cy=5 r=5（ellipse rx=ry=5）', () => {
     const inner = innerEls(render(spec({ marker: [{ type: 'ellipse', cx: 5, cy: 5, rx: 5, ry: 5 }] })));
+
     expect(inner[0].type).toBe('ellipse');
     expect(inner[0].props as Record<string, unknown>).toMatchObject({ cx: 5, cy: 5, rx: 5, ry: 5 });
   });
 
   it('openCircle: 空心圆 cx=5 cy=5 r=4.25', () => {
     const inner = innerEls(render(spec({ marker: [{ type: 'ellipse', cx: 5, cy: 5, rx: 4.25, ry: 4.25 }] })));
+
     expect(inner[0].props as Record<string, unknown>).toMatchObject({ cx: 5, cy: 5, rx: 4.25, ry: 4.25 });
   });
 });

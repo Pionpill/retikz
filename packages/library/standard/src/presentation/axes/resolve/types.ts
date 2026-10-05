@@ -1,10 +1,15 @@
 import type { IRAxes } from '..';
 
 type Axis = IRAxes['x'];
+
 type Ticks = Exclude<Axis['ticks'], false | undefined>;
+
 type TickSpacing = Extract<Ticks['source'], { kind: 'spacing' }>;
+
 type AxisLabel = Extract<Axis['label'], { text: unknown }>;
+
 type Origin = NonNullable<IRAxes['origin']>;
+
 type OriginLabel = Extract<Origin['label'], { text: unknown }>;
 
 /** 已确定默认值的刻度配置 */

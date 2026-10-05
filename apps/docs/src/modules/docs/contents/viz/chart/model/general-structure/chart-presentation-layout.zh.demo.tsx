@@ -26,11 +26,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, (value
     dimensions={dimensions}
   />
 ));
+
 const canonicalPreview = defineControlledPreview(previewControlContract, () => (
   <ChartPresentationLayoutPreview copy={copy} inspect={false} />
 ));
 
 export const previewSource = canonicalPreview.source;
+
 export const previewControls = previewControlContract.controls;
 
 /** 展示 Chart presentation 真实 Flex 布局的中文 playground */

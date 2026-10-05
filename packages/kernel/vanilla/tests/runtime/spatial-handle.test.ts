@@ -68,6 +68,7 @@ describe('Vanilla compile result spatial sidecar', () => {
     expect(first?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
     expect(view.compileResult?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
     expect(view.compileResult).not.toBe(first);
+
     view.dispose();
   });
 
@@ -80,6 +81,7 @@ describe('Vanilla compile result spatial sidecar', () => {
     expect(first?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
     expect(view.compileResult?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(20);
     expect(view.compileResult).not.toBe(first);
+
     view.dispose();
   });
 
@@ -90,6 +92,7 @@ describe('Vanilla compile result spatial sidecar', () => {
     expect(() => view.update(scene(-1))).toThrow();
     expect(view.compileResult).toBe(committed);
     expect(view.compileResult?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
+
     view.dispose();
   });
 });

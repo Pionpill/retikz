@@ -32,6 +32,7 @@ const computeAnchor = (
   if (ANGLE_RE.test(anchorName)) {
     return positionToIR(angleBoundaryOf(layout, Number(anchorName), boundary, true, boundaryResolution));
   }
+
   return positionToIR(anchorOf(layout, anchorName, boundary, isAnchor(anchorName), boundaryResolution));
 };
 
@@ -44,13 +45,16 @@ const computeEdgePoint = (layout: AnchorLayout, side: Side, fraction: number): I
       `shape '${layout.shapeName}' does not support side anchors ({ side, fraction })`,
     );
   }
+
   if (layout.rect.width === 0 && layout.rect.height === 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `{ side, fraction } is not meaningful on a zero-size target (shape '${layout.shapeName}')`,
     );
   }
+
   const raw = edgePoint(layout.rect, side, fraction, layout.shapeParams ?? {});
+
   return positionToIR(snapshotProviderPosition(`Shape '${layout.shapeName}' edgePoint`, raw));
 };
 
@@ -81,11 +85,14 @@ export const resolveAnchor = (
     layoutCache = new Map<string, IRPosition>();
     cache.set(layout, layoutCache);
   }
+
   const key = `${boundaryKey(boundary)} ${anchorName}`;
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
+
   const result = computeAnchor(layout, anchorName, boundary, boundaryResolution);
   layoutCache.set(key, result);
+
   return result;
 };
 
@@ -96,11 +103,14 @@ export const resolveEdgePoint = (layout: AnchorLayout, side: Side, t: number): I
     layoutCache = new Map<string, IRPosition>();
     cache.set(layout, layoutCache);
   }
+
   const key = `${side}:${t}`;
   const cached = layoutCache.get(key);
   if (cached !== undefined) return cached;
+
   const result = computeEdgePoint(layout, side, t);
   layoutCache.set(key, result);
+
   return result;
 };
 

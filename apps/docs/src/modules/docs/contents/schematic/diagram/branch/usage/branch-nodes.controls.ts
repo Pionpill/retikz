@@ -34,5 +34,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     relatedApis: ['BranchNode.layout.minimumSize', 'BranchNode.labels', 'BranchDiagram.mainBranch'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

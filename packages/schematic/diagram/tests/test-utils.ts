@@ -64,6 +64,7 @@ const createTestDiagramFoundationDefinition = (
       const surface = lowerDiagramFoundation(resolution, source.drawing);
       const result = context.layoutChild(surface, proposal ?? context.proposal);
       if (result.kind === LayoutChildProbeKind.Failed) return context.raise(result.failure);
+
       return { children: [context.replay(result.result)] };
     },
   });

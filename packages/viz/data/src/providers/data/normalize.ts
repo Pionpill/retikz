@@ -12,7 +12,9 @@ const asParsedValue = (value: ParsedFieldValue, type: DataFieldType): ParsedFiel
   if (type === DataFieldType.Categorical) {
     return typeof value === 'string' || isFiniteNumber(value) ? value : undefined;
   }
+
   if (typeof value !== 'number') return undefined;
+
   return isFiniteNumber(value) ? value : NaN;
 };
 
@@ -34,12 +36,14 @@ export const normalizeRows = (
 ): Array<ExternalRow> =>
   rows.map(row => {
     const canonical: ExternalRow = { ...row };
+
     for (const [logical, type] of fieldTypeMap) {
       const physical = fieldMap?.[logical] ?? logical;
       const raw = resolveFieldPath(row, physical);
       const parse = parsers?.get(logical);
       canonical[logical] = parse ? asParsedValue(parse(raw), type) : coerceValue(raw, type);
     }
+
     return canonical;
   });
 
@@ -57,19 +61,23 @@ export const validateBoundData = (
 ): void => {
   const limit = Math.min(rows.length, sampleRows);
   if (limit === 0) return;
+
   for (const [logical, type] of fieldTypeMap) {
     let valid = false;
     let invalidCount = 0;
     let missingCount = 0;
+
     for (let index = 0; index < limit; index++) {
       const raw = resolveFieldPath(rows[index], logical);
       if (isCoercedValid(coerceValue(raw, type), type)) {
         valid = true;
         break;
       }
+
       if (isMissingRaw(raw)) missingCount += 1;
       else invalidCount += 1;
     }
+
     if (!valid) {
       throw new RetikzDataError(
         `data: field "${logical}" has no valid values in the sampled data: ${invalidCount}/${limit} invalid, ${missingCount}/${limit} missing (check fieldMaps / dataset)`,
@@ -87,6 +95,7 @@ export const assertAllValuesValid = (normalized: Array<ExternalRow>, fieldTypeMa
     for (let index = 0; index < normalized.length; index++) {
       const value = normalized[index][logical];
       if (isCoercedValid(value, type)) continue;
+
       const shown =
         isMissingRaw(value) || (typeof value === 'number' && Number.isNaN(value))
           ? 'missing or invalid'

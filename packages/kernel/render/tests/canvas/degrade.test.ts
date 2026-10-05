@@ -48,6 +48,7 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
 
 const collectFiles = (directory: string): Array<string> => {
   const out: Array<string> = [];
+
   for (const entry of readdirSync(directory)) {
     const absolute = join(directory, entry);
     if (statSync(absolute).isDirectory()) {
@@ -56,6 +57,7 @@ const collectFiles = (directory: string): Array<string> => {
       out.push(absolute);
     }
   }
+
   return out;
 };
 
@@ -104,6 +106,7 @@ describe('canvas 降级与边界规格', () => {
     const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
       dependencies?: Record<string, string>;
     };
+
     // render 仅依赖 foundation/runtime/core/math 底座 + csstype（纯类型）；不依赖 react / 任何框架
     expect(packageJson.dependencies).toEqual({
       '@retikz/foundation': 'workspace:*',
@@ -121,6 +124,7 @@ describe('canvas 降级与边界规格', () => {
 
     // Canvas 与 SVG 是并列 renderer；Canvas 后端不得导入 SVG 或走字符串中转。
     const canvasSrc = readSrc('src/canvas');
+
     expect(canvasSrc).not.toContain('render/svg');
     expect(canvasSrc).not.toContain('../svg');
     expect(canvasSrc).not.toContain('buildSvgDocument');
@@ -129,6 +133,7 @@ describe('canvas 降级与边界规格', () => {
 
     // svg 后端不得反向依赖 canvas
     const svgSrc = readSrc('src/svg');
+
     expect(svgSrc).not.toContain('render/canvas');
     expect(svgSrc).not.toContain('../canvas');
     expect(svgSrc).not.toContain('drawScene');

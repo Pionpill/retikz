@@ -28,6 +28,7 @@ const assertFiniteScopePoint = (point: IRPosition, label: string): IRPosition =>
   if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) {
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `${label} must resolve to a finite point`);
   }
+
   return point;
 };
 
@@ -41,6 +42,7 @@ export const resolveScopeSelfPoint = (point: IRScopeSelfPoint, intrinsicLayout: 
   if (intrinsicLayout === undefined) {
     throw createCompileInvariantError('internal: intrinsic Scope layout is required to resolve an anchor self point');
   }
+
   return assertFiniteScopePoint(resolveAnchorRefUncached(intrinsicLayout, point), 'scope self point');
 };
 
@@ -56,6 +58,7 @@ export const lowerScopeTransforms = (
 ): Array<Transform> | null => {
   const { positionContext, onUnresolved, intrinsicLayout } = context;
   const out: Array<Transform> = [];
+
   for (const t of transforms) {
     switch (t.kind) {
       case 'translate':
@@ -68,6 +71,7 @@ export const lowerScopeTransforms = (
           onUnresolved?.(t);
           return null;
         }
+
         out.push({ kind: 'translate', x: resolved[0], y: resolved[1] });
         break;
       }
@@ -78,6 +82,7 @@ export const lowerScopeTransforms = (
           r.cx = cx;
           r.cy = cy;
         }
+
         out.push(r);
         break;
       }
@@ -88,22 +93,26 @@ export const lowerScopeTransforms = (
           out.push(s);
           break;
         }
+
         const [px, py] = resolveScopeSelfPoint(t.pivot, intrinsicLayout);
         if (px === 0 && py === 0) {
           out.push(s);
           break;
         }
+
         out.push({ kind: 'translate', x: px, y: py }, s, { kind: 'translate', x: -px, y: -py });
         break;
       }
     }
   }
+
   return out;
 };
 
 /** 收集一组 NodeLayout 的全局 4 角点，供 AABB / MEC 等包络复用 */
 export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Array<IRPosition> => {
   const points: Array<IRPosition> = [];
+
   for (const layout of layouts) {
     const outerRect = outerRectOf(layout);
     points.push(
@@ -113,6 +122,7 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
       rectOps.anchor(outerRect, Anchor.BottomRight),
     );
   }
+
   return points;
 };
 
@@ -120,6 +130,8 @@ export const collectScopeCornerPoints = (layouts: ReadonlyArray<NodeLayout>): Ar
 export const computeScopeBoundingBox = (layouts: ReadonlyArray<NodeLayout>): Rect | null => {
   const bounds = boundsOf(collectScopeCornerPoints(layouts));
   if (bounds === undefined) return null;
+
   const center = centerOfBounds(bounds);
+
   return { x: center[0], y: center[1], width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY };
 };

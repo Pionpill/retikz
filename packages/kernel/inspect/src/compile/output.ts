@@ -40,6 +40,7 @@ const sealPrimitive = (primitive: ScenePrimitive): ScenePrimitive => {
   Reflect.deleteProperty(sealed, 'meta');
   Reflect.deleteProperty(sealed, 'animations');
   if (primitive.type !== 'group') return sealed;
+
   return { ...sealed, children: primitive.children.map(sealPrimitive) } as ScenePrimitive;
 };
 
@@ -50,10 +51,12 @@ export const sealInspectionScene = (scene: Scene): Scene => {
     layout: { ...scene.layout },
     ...(scene.resources === undefined ? {} : { resources: structuredClone(scene.resources) }),
   };
+
   const freeze = <T>(value: T): T => {
     if (value === null || typeof value !== 'object') return value;
     for (const child of Object.values(value)) freeze(child);
     return Object.freeze(value);
   };
+
   return freeze(sealed);
 };

@@ -39,7 +39,9 @@ export const bindComposite = (source: IRComposite, composites: CompositeRegistry
       expand: callable.expand,
     };
   }
+
   const callable = definition as unknown as CallableLayoutComposite;
+
   return {
     kind: 'compile',
     key,

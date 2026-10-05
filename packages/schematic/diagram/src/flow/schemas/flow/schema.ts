@@ -279,6 +279,7 @@ export const FlowDefaultsSchema = strictObject({
 
 const hasFlowEntityText = (text: IRTextBlock): boolean => {
   if (typeof text === 'string') return text.trim().length > 0;
+
   return text.some(line => {
     if (typeof line === 'string') return line.trim().length > 0;
     if ('text' in line) return line.text.trim().length > 0;
@@ -406,6 +407,7 @@ const FlowGridLayoutSchema = strictObject({
 export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSchema, FlowGridLayoutSchema])
   .superRefine((layout, context) => {
     const excluded = new Set<string>();
+
     for (const [index, id] of (layout.excludeFromBounds ?? []).entries()) {
       if (excluded.has(id) || !layout.children.includes(id)) {
         context.addIssue({
@@ -414,8 +416,10 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           message: 'Excluded ids must be unique direct children.',
         });
       }
+
       excluded.add(id);
     }
+
     if (layout.children.every(id => excluded.has(id))) {
       context.addIssue({
         code: 'custom',
@@ -423,10 +427,13 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
         message: 'At least one direct child must contribute to Layout bounds.',
       });
     }
+
     if (layout.kind !== FlowPlacementKind.Grid) return;
+
     const children = new Set(layout.children);
     if (Array.isArray(layout.placements)) {
       const placed = new Set<string>();
+
       for (const [row, cells] of layout.placements.entries()) {
         for (const [column, child] of cells.entries()) {
           if (child === null) continue;
@@ -437,6 +444,7 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
               message: 'Grid cell must reference a direct child.',
             });
           }
+
           if (placed.has(child)) {
             context.addIssue({
               code: 'custom',
@@ -444,9 +452,11 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
               message: 'Grid child must appear in exactly one cell.',
             });
           }
+
           placed.add(child);
         }
       }
+
       for (const child of children) {
         if (!placed.has(child)) {
           context.addIssue({
@@ -456,9 +466,12 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           });
         }
       }
+
       return;
     }
+
     const occupied = new Set<string>();
+
     for (const [child, cell] of Object.entries(layout.placements)) {
       if (!children.has(child)) {
         context.addIssue({
@@ -467,6 +480,7 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           message: 'Grid cell must reference a direct child.',
         });
       }
+
       const coordinate = `${cell.row}:${cell.column}`;
       if (occupied.has(coordinate)) {
         context.addIssue({
@@ -475,8 +489,10 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           message: 'Grid cells must not overlap.',
         });
       }
+
       occupied.add(coordinate);
     }
+
     for (const child of children) {
       if (!Object.hasOwn(layout.placements, child)) {
         context.addIssue({

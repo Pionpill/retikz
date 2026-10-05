@@ -8,5 +8,6 @@ export const previewControls = axisCoordinateBasicsControls;
 const controlledPreview = defineControlledPreview(previewControlContract, renderCoordinateBasics);
 
 export const previewSource = controlledPreview.source;
+
 const Preview = controlledPreview.Component;
 export default Preview;

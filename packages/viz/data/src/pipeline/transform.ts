@@ -104,10 +104,12 @@ const applyToView = (
     inputModel,
     { ...context, transformRegistry: registry },
   );
+
   const implementations = resolution.stages.map(stage => {
     const implementation = context.transformImplementationRegistry?.get(stage.operation.kind);
     if (implementation === undefined || implementation.definition !== stage.definition)
       throw new RetikzDataError(`data: "${stage.operation.kind}" has no matching synchronous implementation`);
+
     for (const dependency of stage.dependencies) {
       const matched =
         dependency.type === 'reducer'
@@ -120,13 +122,17 @@ const applyToView = (
           `data: ${dependency.type} "${dependency.operation.kind}" has no matching synchronous implementation`,
         );
     }
+
     return implementation;
   });
+
   if (lineage !== undefined) context.lineage = lineage;
   let rows = lineage === undefined ? view.rows : tagSourceIndex(view.rows);
   lineage?.recordSource(rows);
+
   for (const [operationIndex, stage] of resolution.stages.entries()) {
     const previous = rows;
+
     try {
       rows = implementations[operationIndex].apply(rows, stage.operation as never, context);
     } catch (cause) {
@@ -135,6 +141,7 @@ const applyToView = (
         { cause, operationIndex },
       );
     }
+
     const model = stage.outputModel;
     ingestDataTransformResult({ inputModel: model, stages: [] }, { rows, model });
     const semantic: TransformSemanticContext = {
@@ -159,10 +166,12 @@ const applyToView = (
         .map(field => field.field),
     });
   }
+
   const dataView = ingestDataTransformResult(resolution, {
     rows,
     model: resolution.stages.at(-1)?.outputModel ?? inputModel,
   });
+
   return { dataView, ...(lineage === undefined ? {} : { lineage }) };
 };
 
@@ -172,6 +181,7 @@ export const applyTransformsToDataView = (
   operations: Array<IRDataTransform> = [],
   options: ApplyTransformsOptions = {},
 ): DataView => (operations.length === 0 ? view : applyToView(view, operations, options).dataView);
+
 /** 同步行数据便捷入口；全计划预检后只执行一次 */
 export const applyTransforms = (
   rows: Array<ExternalRow>,
@@ -179,11 +189,13 @@ export const applyTransforms = (
   options: ApplyTransformsOptions = {},
 ): Array<ExternalRow> => {
   if (operations.length === 0) return rows;
+
   const parsed = parseDataTransformDeclarations(
     operations.map(operation => ({ operation })),
     options.registry ?? resolveTransformRegistry(),
   );
   const fields = collectRowInputFields(parsed, options);
+
   return applyToView(describeRows(rows, fields), operations, options, undefined, parsed).dataView.rows;
 };
 
@@ -194,9 +206,11 @@ const collectRowInputFields = (
 ): Array<string> => {
   const context: TransformSemanticContext = { ...options.context, model: [] };
   const fields = new Set<string>();
+
   for (const { declaration, definition } of declarations) {
     for (const field of definition.inputFields?.(declaration.operation as never, context) ?? []) fields.add(field);
   }
+
   return [...fields];
 };
 
@@ -210,10 +224,12 @@ export const collectTransformFields = (
 ): void => {
   const definition = registry.get(transform.kind);
   if (definition === undefined) throw new RetikzDataError(`data: transform "${transform.kind}" is not registered`);
+
   const operation = definition.schema.parse(transform) as never;
   const context = { ...semantic, model: semantic.model ?? [] };
   fields.addFields(...(definition.inputFields?.(operation, context) ?? []));
   const output = definition.outputModel(operation, context);
+
   for (const descriptor of output.kind === 'preserve' ? output.outputs : output.fields) {
     if (
       output.kind === 'preserve' ||
@@ -224,12 +240,16 @@ export const collectTransformFields = (
       derivedOutputs.add(descriptor.field);
   }
 };
+
 /** 同步来源执行选项 */
 export type ApplyTransformsWithLineageOptions = ApplyTransformsOptions & Readonly<{ lineage?: DataLineageOptions }>;
+
 /** 同步行执行的事件记录 */
 export type ApplyTransformsWithLineageResult = Readonly<{ rows: Array<ExternalRow>; lineage: DataLineageRun }>;
+
 /** 同步完整视图与事件记录 */
 export type ApplyTransformsToDataViewWithLineageResult = Readonly<{ dataView: DataView; lineage: DataLineageRun }>;
+
 /** 一次同步执行并返回实际来源事件 */
 export const applyTransformsToDataViewWithLineage = (
   view: DataView,
@@ -240,6 +260,7 @@ export const applyTransformsToDataViewWithLineage = (
   const result = applyToView(view, operations, options, lineage);
   return { dataView: result.dataView, lineage };
 };
+
 /** 行数据同步来源便捷入口 */
 export const applyTransformsWithLineage = (
   rows: Array<ExternalRow>,
@@ -258,5 +279,6 @@ export const applyTransformsWithLineage = (
     lineage,
     parsed,
   );
+
   return { rows: result.dataView.rows, lineage };
 };

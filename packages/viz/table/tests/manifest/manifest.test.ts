@@ -14,7 +14,9 @@ import { CLEAN_TABLE_DEFAULTS } from '../fixtures/clean-table-defaults';
 /** 断言 JSON 风格对象图的每一层都已冻结 */
 const expectDeepFrozen = (value: unknown): void => {
   if (value === null || typeof value !== 'object') return;
+
   expect(Object.isFrozen(value)).toBe(true);
+
   for (const child of Object.values(value)) expectDeepFrozen(child);
 };
 
@@ -101,6 +103,7 @@ describe('Table layout manifest', () => {
     const second = compileTable(spec, {}, { compile: { padding: 0 } });
 
     expectDeepFrozen(first.manifest);
+
     expect(() => {
       (first.manifest.allocationBounds as { width: number }).width = 999;
     }).toThrow();

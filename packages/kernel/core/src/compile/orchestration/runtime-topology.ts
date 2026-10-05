@@ -53,6 +53,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
     ownerStates.set(owner, state);
     return owner;
   };
+
   const rootOwner = createOwnerHandle({ candidate: false });
 
   const stateOf = (owner: RuntimeSemanticOwner): RuntimeOwnerState => {
@@ -64,6 +65,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
   const identityOf = (owner: RuntimeSemanticOwner): RuntimeIdentity => {
     const cached = ownerIdentities.get(owner);
     if (cached !== undefined) return cached;
+
     const state = stateOf(owner);
     const identity =
       state.parent === undefined
@@ -78,12 +80,14 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
             ])
           : createRuntimeIdentity(CORE_SOURCE_KEY, [...identityOf(state.parent).path, state.childType, state.id]);
     ownerIdentities.set(owner, identity);
+
     return identity;
   };
 
   const registerIdentity = (id: string, owner: RuntimeSemanticOwner): void => {
     const frame = namespaceFrames.at(-1);
     if (frame === undefined) throw createCompileInvariantError('internal: Runtime namespace frame stack is empty');
+
     const occurrences = frame.get(id) ?? [];
     occurrences.push(owner);
     frame.set(id, occurrences);
@@ -106,6 +110,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
       candidate: generated || id === undefined,
     });
     if (id !== undefined) registerIdentity(id, owner);
+
     return owner;
   };
 
@@ -130,8 +135,10 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
         emissionOrdinals.set(owner, ownerOrdinals);
         primitiveEmissions.set(primitive, { owner, role: emissionRole, ordinal });
       }
+
       if (primitive.type === 'group') primitive.children.forEach(visit);
     };
+
     primitives.forEach(visit);
   };
 
@@ -146,6 +153,7 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
       if (namespaceFrames.length <= 1) {
         throw createCompileInvariantError('internal: cannot pop Runtime root namespace frame');
       }
+
       namespaceFrames.pop();
     },
     rootIdentityRegistrations: () => [...namespaceFrames[0]].flatMap(([id, occurrences]) => occurrences.map(() => id)),
@@ -155,7 +163,9 @@ export const createRuntimeTopologyTracker = (revision: RuntimeRevision): Runtime
       get: (primitive: ScenePrimitive): RuntimePrimitiveMetadata | undefined => {
         const emission = primitiveEmissions.get(primitive);
         if (emission === undefined) return undefined;
+
         const semanticOwner = identityOf(emission.owner);
+
         return {
           identity: createRuntimeIdentity(CORE_SOURCE_KEY, [
             ...semanticOwner.path,

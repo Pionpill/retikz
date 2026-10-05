@@ -37,6 +37,7 @@ const createMapInput = (props: Readonly<Record<string, unknown>>, context: React
   if (skeleton !== undefined) return { ...input, skeleton } satisfies InputMap;
   if (data !== undefined)
     return { ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) } satisfies InputMap;
+
   const entries = dataEntries ?? collectMapEntries(children);
   const collected = createCellsInput(
     entries.flatMap(entry =>
@@ -51,9 +52,12 @@ const createMapInput = (props: Readonly<Record<string, unknown>>, context: React
       value: typeof entries[index].value === 'string' ? entries[index].value : collected.cells[index * 2 + 1],
     })),
   };
+
   return withInputEmbedAdapters(result, collected.adapters);
 };
+
 const MapComponent: FC<MapProps> = () => null;
+
 /** Standard Map 呈现组件 */
 export const Map = MapComponent as StandardEmbeddableComponent<MapProps>;
 Map.displayName = 'Map';

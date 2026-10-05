@@ -64,6 +64,7 @@ export const FixedRibbonWidthSchema = strictObject({
   kind: literal('fixed').describe('Fixed width discriminator.'),
   value: NonNegativeNumberSchema.describe('Constant ribbon width.'),
 });
+
 /** 首尾宽度渐变 */
 export const TaperRibbonWidthSchema = strictObject({
   kind: literal('taper').describe('Endpoint taper discriminator.'),
@@ -71,6 +72,7 @@ export const TaperRibbonWidthSchema = strictObject({
   end: NonNegativeNumberSchema.describe('Width at the centerline end.'),
   interpolation: zodEnum(RibbonTaperInterpolation).default('linear').describe('Width interpolation along arc length.'),
 });
+
 /** 四种互斥宽度策略 */
 export const RibbonWidthSchema = discriminatedUnion('kind', [
   FixedRibbonWidthSchema,
@@ -136,6 +138,7 @@ export const CenterlineRibbonPathOptionsSchema = strictObject({
   ),
   align: zodEnum(RibbonAlignment).default('center').describe('Width distribution relative to the centerline.'),
 });
+
 /** 复用 Core Step 校验，将坐标预处理的 unknown 输入收窄到公开 JSON Step 类型 */
 const ribbonBoundaryStepSchema = StepSchema as ZodType<IRStep, IRStep>;
 
@@ -145,6 +148,7 @@ export const BoundaryRibbonPathOptionsSchema = strictObject({
   upper: array(ribbonBoundaryStepSchema).min(2).describe('Open upper boundary steps.'),
   lower: array(ribbonBoundaryStepSchema).min(2).describe('Open lower boundary steps.'),
 });
+
 /** 由 mode 区分的流带构造契约 */
 export const RibbonPathOptionsSchema = discriminatedUnion('mode', [
   CenterlineRibbonPathOptionsSchema,

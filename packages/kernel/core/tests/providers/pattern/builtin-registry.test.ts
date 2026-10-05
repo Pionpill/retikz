@@ -70,6 +70,7 @@ const pathD = (prim: MarkerPathPrim): string =>
       if (c.kind === 'move') return `M${c.to[0]},${c.to[1]}`;
       if (c.kind === 'line') return `L${c.to[0]},${c.to[1]}`;
       if (c.kind === 'close') return 'Z';
+
       return `?${c.kind}`;
     })
     .join(' ');
@@ -118,31 +119,39 @@ describe('Pattern registry — happy path', () => {
     // lines：一个 path 横线居中 d "M0,4 L8,4"（size 缺省 8，中线 y=size/2=4，避免边缘半宽裁切）
     const linesTile = tileOf({ kind: 'pattern', shape: 'lines' });
     const linesPath = firstMotifPath(linesTile);
+
     expect(linesPath && pathD(linesPath)).toBe('M0,4 L8,4');
 
     // grid：横纵方向是两个独立 path，均落在 tile 中线
     const gridTile = tileOf({ kind: 'pattern', shape: 'grid' });
+
     expect(motifPaths(gridTile).map(pathD)).toEqual(['M0,4 L8,4', 'M4,0 L4,8']);
 
     // dots：一个 ellipse（圆），cx=cy=4（size/2）、rx=ry=8/5=1.6（缺省半径 size/5）
     const dotsTile = tileOf({ kind: 'pattern', shape: 'dots' });
     const dotsEllipse = firstMotifEllipse(dotsTile);
+
     expect(dotsEllipse).toMatchObject({ cx: 4, cy: 4, rx: 1.6, ry: 1.6 });
   });
 
   it('custom_pattern_register：注册自定义 PatternDefinition → tile.motif 进资源', () => {
     const opts: CompileOptions = { patterns: [{ ...customPattern(), name: 'cross' }] };
     const ir = patternNodeIR({ kind: 'pattern', shape: 'cross' });
+
     expect(() => compileToScene(ir, opts).scene).not.toThrow();
+
     const tile = firstPatternResource(compileToScene(ir, opts).scene.resources)?.tile;
+
     // 自定义 def.emit 几何进 tile.motif（size 缺省 = defaultSize 10）
     const mp = firstMotifPath(tile);
+
     expect(mp && pathD(mp)).toBe('M0,0 L10,10');
   });
 
   it('shape_open_string：pattern.shape=myMotif（已注册）合法编译', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'myMotif' });
     const scene = compileToScene(ir, { patterns: [{ ...customPattern(), name: 'myMotif' }] }).scene;
+
     expect(firstPatternResource(scene.resources)).toBeDefined();
   });
 
@@ -152,6 +161,7 @@ describe('Pattern registry — happy path', () => {
     const patternResources = (scene.resources ?? []).filter(
       (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
+
     expect(patternResources).toHaveLength(1);
     expect(patternResources[0].tile).toBeDefined();
   });
@@ -160,8 +170,11 @@ describe('Pattern registry — happy path', () => {
 describe('Pattern registry — boundary', () => {
   it('default_size：缺省 size 8、dots 半径 size/5、color currentColor', () => {
     const tile = tileOf({ kind: 'pattern', shape: 'dots' });
+
     expect(tile?.size).toBe(8);
+
     const dot = firstMotifEllipse(tile);
+
     // 缺省半径 = size/5 = 1.6；缺省 color = currentColor → ellipse fill 'currentColor'
     expect(dot?.rx).toBe(1.6);
     expect(dot?.fill).toBe('currentColor');
@@ -169,11 +182,14 @@ describe('Pattern registry — boundary', () => {
 
   it('size_background_rotation：size / background / rotation override 进 tile', () => {
     const tile = tileOf({ kind: 'pattern', shape: 'lines', size: 12, background: '#eee', rotation: 45 });
+
     expect(tile?.size).toBe(12);
     expect(tile?.background).toBe('#eee');
     expect(tile?.rotation).toBe(45);
+
     // size override 影响 motif 几何（横线到 x=12，中线 y=size/2=6）
     const mp = firstMotifPath(tile);
+
     expect(mp && pathD(mp)).toBe('M0,6 L12,6');
   });
 
@@ -188,6 +204,7 @@ describe('Pattern registry — boundary', () => {
         lineJoin: 'bevel',
       }),
     );
+
     expect(path).toMatchObject({
       dashPattern: [6, 3],
       dashOffset: 2,
@@ -296,11 +313,13 @@ describe('Pattern registry — boundary', () => {
         dashPattern: [8, 3, 2, 3],
       }),
     );
+
     expect(path?.dashPattern).toEqual([8, 3, 2, 3]);
   });
 
   it('preset_priority：dashed 优先于 dotted', () => {
     const path = firstMotifPath(tileOf({ kind: 'pattern', shape: 'lines', dashed: true, dotted: true }));
+
     expect(path?.dashPattern).toEqual([4, 2]);
   });
 
@@ -315,6 +334,7 @@ describe('Pattern registry — boundary', () => {
         lineJoin: 'bevel',
       }),
     );
+
     expect(dot).toMatchObject({ type: 'ellipse', fill: 'currentColor' });
     expect(dot?.dashPattern).toBeUndefined();
     expect(dot?.dashOffset).toBeUndefined();
@@ -351,6 +371,7 @@ describe('Pattern registry — boundary', () => {
         { patterns: [echo] },
       ),
     );
+
     expect(path).toMatchObject({
       dashPattern: [1, 2],
       dashOffset: -1,
@@ -440,9 +461,13 @@ describe('Pattern registry — boundary', () => {
     };
     const pat: IRPaint = { kind: 'pattern', shape: 'grid' };
     const scene = compileToScene(patternNodeIR(grad, pat)).scene;
+
     expect(scene.resources).toHaveLength(2);
+
     const ids = (scene.resources ?? []).map(r => r.id);
+
     expect(new Set(ids).size).toBe(2);
+
     // gradient 资源无 tile、pattern 资源有 tile
     const gradRes = (scene.resources ?? []).find(
       (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'linearGradient',
@@ -450,6 +475,7 @@ describe('Pattern registry — boundary', () => {
     const patRes = (scene.resources ?? []).find(
       (r): r is PaintResource => r.kind === 'paint' && r.spec.kind === 'pattern',
     );
+
     expect(gradRes?.tile).toBeUndefined();
     expect(patRes?.tile).toBeDefined();
   });
@@ -458,13 +484,16 @@ describe('Pattern registry — boundary', () => {
 describe('Pattern registry — error path', () => {
   it('unregistered_pattern_throws：未注册 pattern 名 → 编译期 throw（带可用名）', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'nope' });
+
     expect(() => compileToScene(ir).scene).toThrow(/nope/);
+
     // 可用名（内置 3 字母序）出现在错误消息里
     expect(() => compileToScene(ir).scene).toThrow(/dots, grid, lines/);
   });
 
   it('same_name_duplicate_rejected：patterns 覆盖内置名 → duplicate error（不静默）', () => {
     const ir = patternNodeIR({ kind: 'pattern', shape: 'lines' });
+
     expect(
       () =>
         compileToScene(ir, {
@@ -478,6 +507,7 @@ describe('Pattern registry — error path', () => {
     const externalEmit = (): unknown => badMotif;
     const badPattern = { name: 'bad', emit: externalEmit } as unknown as PatternDefinition;
     const ir = patternNodeIR({ kind: 'pattern', shape: 'bad' });
+
     expect(() => compileToScene(ir, { patterns: [{ ...badPattern, name: 'bad' }] }).scene).toThrow();
   });
 });
@@ -487,6 +517,7 @@ describe('Pattern registry — interaction', () => {
     // lines motif 缺省 color → path stroke 'currentColor'（不冻结成纯色，主题反应）
     const tile = tileOf({ kind: 'pattern', shape: 'lines' });
     const mp = firstMotifPath(tile);
+
     expect(mp?.stroke).toBe('currentColor');
   });
 
@@ -495,6 +526,7 @@ describe('Pattern registry — interaction', () => {
     const tile = firstPatternResource(
       compileToScene(patternNodeIR({ kind: 'pattern', shape: 'multi', background: '#fff' }), opts).scene.resources,
     )?.tile;
+
     // 背景 rect + ellipse + path = 3 个 motif 元素
     expect(tile?.motif).toHaveLength(3);
     expect(tile?.motif.map(m => m.type)).toEqual(['rect', 'ellipse', 'path']);
@@ -512,7 +544,9 @@ describe('Pattern registry — interaction', () => {
     };
     const original = PaintSchema.parse(spec);
     const roundTripped = PaintSchema.parse(JSON.parse(JSON.stringify(original)));
+
     expect(roundTripped).toEqual(original);
+
     // 开放 shape 名经 JSON 往返不丢
     expect(roundTripped.kind === 'pattern' && roundTripped.shape).toBe('myMotif');
   });
@@ -520,11 +554,16 @@ describe('Pattern registry — interaction', () => {
   it('round_trip_scene：Scene 的 pattern tile 纯 JSON 无函数（序列化往返不丢）', () => {
     const scene = compileToScene(patternNodeIR({ kind: 'pattern', shape: 'grid' })).scene;
     const tile = firstPatternResource(scene.resources)?.tile;
+
     expect(tile).toBeDefined();
+
     // tile.motif 纯 JSON 数据（无函数）：序列化往返等价
     const json = JSON.parse(JSON.stringify(tile));
+
     expect(json).toEqual(tile);
+
     const hasFn = (tile?.motif ?? []).some(m => typeof (m as unknown) === 'function');
+
     expect(hasFn).toBe(false);
   });
 });

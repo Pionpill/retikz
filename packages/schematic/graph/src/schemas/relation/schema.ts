@@ -118,6 +118,7 @@ export const RelationSchema = strictObject({
 }).describe('JSON-safe Graph Relation combining semantic endpoints with non-conflicting Core Path fields.');
 
 const GraphRelationMarkerRecipeValueSchema = union([literal(false), GraphRelationMarkerRecipeSchema]);
+
 const GraphRelationDashPatternRecipeSchema = union([literal(false), PathStyleSchema.shape.dashPattern.unwrap()]);
 
 export const GraphRelationRoleTokenRecipeSchema = strictObject({

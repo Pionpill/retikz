@@ -39,12 +39,14 @@ export const renderCurveProjection = (values: CurveProjectionValues, lang: Lang 
   const radians = (values.angle * Math.PI) / 180;
   const axis: Position = [Math.cos(radians), Math.sin(radians)];
   const range = curve.projectedRange(segment, axis);
+
   // 支撑线经过满足 dot(point, axis) = value 的点，并沿法向延伸
   const support = (value: number): Array<Position> => {
     const offset = value - 10 * axis[1];
     const center: Position = [offset * axis[0], 10 + offset * axis[1]];
     return [-14, 14].map(t => displayPoint([center[0] - t * axis[1], center[1] + t * axis[0]]));
   };
+
   const from = displayPoint(curve.sampleAt(segment, 0).point);
   const to = displayPoint(curve.sampleAt(segment, 1).point);
   const controls =
@@ -70,6 +72,7 @@ export const renderCurveProjection = (values: CurveProjectionValues, lang: Lang 
       />
     );
   const textStyle = { stroke: 'none', fill: 'none', textColor: 'currentColor', font: { size: 12 } };
+
   return (
     <Layout viewBox={{ x: -220, y: -180, width: 440, height: 360 }}>
       {controls.length > 0 && (

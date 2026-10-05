@@ -28,6 +28,7 @@ const scene: Scene = {
 describe('TeX lowered PathPrim renderer parity', () => {
   it('SVG 保留多通道 paint 与 opacity', () => {
     const svg = renderToSvgString(scene, { idPrefix: 'tex' });
+
     expect(svg).toContain('fill="crimson"');
     expect(svg).toContain('fill-opacity="0.6"');
     expect(svg).toContain('stroke="royalblue"');
@@ -39,6 +40,7 @@ describe('TeX lowered PathPrim renderer parity', () => {
   it('Canvas 对同一 PathPrim 应用 fill / stroke paint 与透明度', () => {
     const context = createSpyCanvasContext();
     drawScene(context as unknown as CanvasRenderingContext2D, scene);
+
     expect(context.calls.find(call => call.name === 'fill')).toMatchObject({ fillStyle: 'crimson' });
     expect(context.calls.find(call => call.name === 'stroke')).toMatchObject({
       strokeStyle: 'royalblue',

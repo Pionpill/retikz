@@ -17,6 +17,7 @@ const resolveConnection = (
     marks: source?.path?.marks ?? parent?.path.marks ?? [{ pos: 1, mark: { kind: 'arrow' } }],
   },
 });
+
 /** 骨架结构只转换符号与显式分支 */
 const skeletonItems = (items: NonNullable<IRChainSkeleton['items']>): Array<IRChainItem> =>
   items.map(item =>
@@ -26,6 +27,7 @@ const skeletonItems = (items: NonNullable<IRChainSkeleton['items']>): Array<IRCh
         : item
       : { kind: 'parallel', branches: item.branches.map(branchItems => ({ items: skeletonItems(branchItems) })) },
   );
+
 /** 解析三入口及各并行块的字段继承 */
 export const resolveChain = (source: IRChain): CanonicalChain => {
   const layout = ChainParallelLayoutSchema.parse(
@@ -39,6 +41,7 @@ export const resolveChain = (source: IRChain): CanonicalChain => {
           justify: source.layout.justify,
         },
   );
+
   const connection = resolveConnection(source.connection);
   const visit = (
     items: Array<IRChainItem>,
@@ -48,8 +51,10 @@ export const resolveChain = (source: IRChain): CanonicalChain => {
     items.map(item => {
       if (typeof item === 'string' || item.kind === 'cell')
         return { kind: 'cell', cell: resolveCell(item, { overallStyle: source.style, overallLayout: source.layout }) };
+
       const nestedLayout = ChainParallelLayoutSchema.parse({ ...parentLayout, ...item.layout });
       const nestedConnection = resolveConnection(item.connection, parentConnection);
+
       return {
         kind: 'parallel',
         layout: nestedLayout,
@@ -57,6 +62,7 @@ export const resolveChain = (source: IRChain): CanonicalChain => {
         branches: item.branches.map(branch => visit(branch.items, nestedLayout, nestedConnection)),
       };
     });
+
   const skeleton = source.skeleton;
   const items: Array<IRChainItem> =
     skeleton !== undefined
@@ -71,6 +77,7 @@ export const resolveChain = (source: IRChain): CanonicalChain => {
             ...createDataCell(value, source.dataExpand ?? DataExpandSchema.parse(undefined)),
           }))
         : source.items;
+
   return {
     items: visit(items, layout, connection),
     layout,

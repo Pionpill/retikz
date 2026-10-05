@@ -29,6 +29,7 @@ describe('drawScene 图案填充', () => {
     ],
     primitives: [{ type: 'rect', x: 0, y: 0, width: 100, height: 100, fill: { kind: 'resourceRef', id: 'pat' } }],
   });
+
   const makeOffscreen = (): SpyCanvasContext => {
     const off = createSpyCanvasContext();
     (off as unknown as { canvas: object }).canvas = { offscreen: true };
@@ -50,6 +51,7 @@ describe('drawScene 图案填充', () => {
     });
 
     expect(offSize).toEqual([8, 8]);
+
     // motif 画进离屏（描边线段）
     expect(off.calls.some(c => c.name === 'stroke' || c.name === 'fill')).toBe(true);
     expect(context.calls.some(c => c.name === 'createPattern')).toBe(true);

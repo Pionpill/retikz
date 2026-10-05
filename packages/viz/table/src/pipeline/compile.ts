@@ -42,5 +42,6 @@ export const compileTable = <const TComposites extends ReadonlyArray<AnyComposit
       `table: compileTable expected exactly one root table.table artifact, received ${matches.length}`,
     );
   }
+
   return Object.freeze({ ...result, manifest: matches[0].value });
 };

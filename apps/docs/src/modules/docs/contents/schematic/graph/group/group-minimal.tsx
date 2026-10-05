@@ -7,10 +7,12 @@ import { groupBasicI18n } from './group-basic.i18n';
 
 /** 最小分组示例的语言 */
 export type GroupMinimalProps = { lang?: Lang };
+
 /** 保留子节点位置，以外框表达包含关系 */
 const GroupMinimal: FC<GroupMinimalProps> = props => {
   const { lang = 'zh' } = props;
   const text = groupBasicI18n[lang];
+
   return (
     <Graph>
       <Group id="runtime">

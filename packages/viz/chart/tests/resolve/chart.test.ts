@@ -17,6 +17,7 @@ const sourceSchema = createChartSourceSchema(
       .optional(),
   }),
 );
+
 const recipe = defineChartRecipe({
   chartType: 'demo',
   encodingSlots: ['x', 'y'],
@@ -48,6 +49,7 @@ const recipe = defineChartRecipe({
     semanticMarks: [{ kind: 'demo', plotMarks: [{ type: 'point', id: 'semantic', encoding: {} }] }],
   }),
 });
+
 const source = sourceSchema.parse({
   namespace: 'chart',
   type: 'point',
@@ -82,6 +84,7 @@ const resolve = (input = source) => {
 describe('Chart resolve', () => {
   it('applies Definition and Source defaults only to existing presentation slots', () => {
     const result = resolve();
+
     expect(result.theme.defaults.layout?.gap).toBe(8);
     expect(result.presentation.surface.background).toEqual({ fill: '#FFFFFF' });
     expect(result.presentation.content).toMatchObject({ type: 'flexLayout' });
@@ -97,6 +100,7 @@ describe('Chart resolve', () => {
         recipe: { ...source.recipe, marks: [{ kind: 'annotation' }] },
       }),
     );
+
     expect(result.presentation.surface.background).toEqual({ fill: '#f8fafc' });
     expect(result.plot.marks.map(mark => mark.id)).toEqual(['semantic', 'annotation']);
   });
@@ -105,6 +109,7 @@ describe('Chart resolve', () => {
     const result = resolve(
       sourceSchema.parse({ ...source, plotExtension: { guides: [{ type: 'axis', dimension: 'x' }] } }),
     );
+
     expect(result.plot.guides).toEqual([{ type: 'axis', dimension: 'x' }]);
   });
 

@@ -41,17 +41,21 @@ export const collectPointChartDeclarations = <TEncodings, TProperties, TMarkProp
       encodings = { props: element.props as TEncodings, path };
       return true;
     }
+
     if (element.type === options.propertiesComponent) {
       if (properties !== undefined) throw duplicateDeclarationError(options.propertiesName, path);
       properties = { props: element.props as TProperties, path };
       return true;
     }
+
     if (element.type === options.markComponent) {
       marks.push(options.createMark(element.props as TMarkProps));
       return true;
     }
+
     return false;
   });
+
   return {
     ...common,
     ...(encodings === undefined ? {} : { encodings }),

@@ -66,11 +66,13 @@ export const resolveStatisticsReducerRegistry = (
   custom?: ReadonlyArray<AnyStatisticsReducerDefinition>,
 ): Map<string, AnyStatisticsReducerDefinition> => {
   const registry = new Map(BUILTIN_STATISTICS_REDUCER_REGISTRY);
+
   for (const def of custom ?? []) {
     const kind = extractStatisticOperation(def.schema);
     if (registry.has(kind)) throw new RetikzDataError(`data: duplicate statistics reducer registration: "${kind}"`);
     registry.set(kind, def);
   }
+
   return registry;
 };
 
@@ -79,11 +81,13 @@ export const resolveRowSelectorRegistry = (
   custom?: ReadonlyArray<AnyRowSelectorDefinition>,
 ): Map<string, AnyRowSelectorDefinition> => {
   const registry = new Map(BUILTIN_ROW_SELECTOR_REGISTRY);
+
   for (const def of custom ?? []) {
     const kind = extractStatisticOperation(def.schema);
     if (registry.has(kind)) throw new RetikzDataError(`data: duplicate row selector registration: "${kind}"`);
     registry.set(kind, def);
   }
+
   return registry;
 };
 
@@ -106,6 +110,7 @@ const reducerDefinitionOf = (
       `data: reducer kind "${operation.kind}" is not registered; pass a StatisticsReducerDefinition via options.statisticsReducerDefinitions`,
     );
   }
+
   return definition;
 };
 
@@ -120,6 +125,7 @@ const selectorDefinitionOf = (
       `data: selector kind "${operation.kind}" is not registered; pass a RowSelectorDefinition via options.rowSelectorDefinitions`,
     );
   }
+
   return definition;
 };
 
@@ -184,12 +190,15 @@ export const applyReducerOperation = (
   ).get(operation.kind);
   if (implementation === undefined)
     throw new RetikzDataError(`data: reducer "${operation.kind}" has no local implementation`);
+
   let out: ExternalRow;
+
   try {
     out = implementation.reduce(rows, parsed, context);
   } catch (cause) {
     throw new RetikzDataError(`data: reducer "${operation.kind}" failed`, { cause });
   }
+
   const outputFields = definition.outputs(parsed).map(descriptor => descriptor.field);
   context.lineage?.recordReducerOperation({
     operation,
@@ -197,6 +206,7 @@ export const applyReducerOperation = (
     inputFields: definition.inputFields?.(parsed) ?? [],
     outputFields,
   });
+
   return out;
 };
 
@@ -224,17 +234,21 @@ export const applySelectorOperation = (
   ).get(operation.kind);
   if (implementation === undefined)
     throw new RetikzDataError(`data: selector "${operation.kind}" has no local implementation`);
+
   let out: Array<RowSelection>;
+
   try {
     out = implementation.select(rows, parsed);
   } catch (cause) {
     throw new RetikzDataError(`data: selector "${operation.kind}" failed`, { cause });
   }
+
   context.lineage?.recordSelectorOperation({
     operation,
     rows,
     selectedRows: out.map(selection => selection.row),
     inputFields: definition.inputFields?.(parsed) ?? [],
   });
+
   return out;
 };

@@ -25,12 +25,15 @@ export const RenderStage: FC<RenderStageProps> = props => {
   useEffect(() => {
     const host = previewHostRef.current;
     if (host === null) return;
+
     const updatePresence = (): void => setHasOutput(host.childElementCount > 0);
     updatePresence();
     const observer = new MutationObserver(updatePresence);
     observer.observe(host, { childList: true });
+
     return () => observer.disconnect();
   }, [previewHostRef]);
+
   return (
     <section className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
       <div

@@ -29,13 +29,16 @@ describe('Layout async authoring', () => {
       overlayLayout({ children: [{ kind: LayoutItemKind.Overlay, child }] }),
     ];
     const options = { adapters: [...LayoutInputEmbedAdapters, adapter] };
+
     for (const container of containers) {
       const input = { children: [container] };
       const expected = processToStaticInputResult(input, options);
       const actual = await processToStaticInputResultAsync(input, options);
+
       expect(actual.scene).toEqual(expected.scene);
       expect(JSON.stringify(actual.scene)).toContain('prepared-child');
     }
+
     expect(executed).toBe(3);
   });
 
@@ -72,6 +75,7 @@ describe('Layout async authoring', () => {
         compile: { composites: [leafDefinition] },
       },
     );
+
     expect(JSON.stringify(result.scene)).toContain('nested-bound-ready');
   });
 });

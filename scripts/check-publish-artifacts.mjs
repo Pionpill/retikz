@@ -9,9 +9,13 @@ import { readPackageRecords } from './check-release-groups.mjs';
 import { releaseGroups } from './release-groups.config.mjs';
 
 const dependencyFields = ['dependencies', 'peerDependencies', 'optionalDependencies'];
+
 const allowedPackedRootFiles = new Set(['LICENSE', 'README.md', 'package.json']);
+
 const scriptPath = fileURLToPath(import.meta.url);
+
 const repoRoot = path.resolve(path.dirname(scriptPath), '..');
+
 const packedTypeSmokeMaxOldSpaceSize = 8192;
 
 const toPosixPath = value => value.replaceAll('\\', '/');

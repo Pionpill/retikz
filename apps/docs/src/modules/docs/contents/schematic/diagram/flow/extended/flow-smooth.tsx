@@ -13,15 +13,20 @@ const createPreview = (lang: Lang) => {
   const controlled = defineControlledPreview(contract, values => (
     <FlowCurveViewport diagram={renderFlowSmoothPreview(values, lang)} />
   ));
+
   return {
     ...controlled,
     source: { ...controlled.source, canonicalRender: () => renderFlowSmoothPreview(contract.canonicalValues, lang) },
   };
 };
+
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
+
 /** 过点曲线示例语言 */
 export type FlowSmoothProps = Readonly<{ lang?: Lang }>;
+
 /** 有序经过点与控制臂倍率试验场 */
 const Demo: FC<FlowSmoothProps> = props => {
   const { lang = 'zh' } = props;

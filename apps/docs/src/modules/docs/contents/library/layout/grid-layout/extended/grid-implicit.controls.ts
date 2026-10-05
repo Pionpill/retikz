@@ -29,11 +29,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { start: 2, height: 52, autoFlow: 'row' },
     relatedApis: ['GridLayoutItem.row', 'GridLayoutItem.column', 'GridLayout.implicitRow', 'GridLayout.autoFlow'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

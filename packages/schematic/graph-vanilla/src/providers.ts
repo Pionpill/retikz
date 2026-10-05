@@ -4,6 +4,7 @@ import { createGraphProviders } from '@retikz/graph';
 import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from './errors';
 
 type GraphProvider = ReturnType<typeof createGraphProviders>[number];
+
 type GraphProviderKey = GraphProvider['key'];
 
 const sameProviderKey = (left: GraphProviderKey, right: GraphProviderKey): boolean =>
@@ -50,10 +51,13 @@ export const createGraphProviderDependencies = (rootKey: GraphProviderKey, optio
 
   const output: Array<GraphProvider> = [];
   const visited = new Set<GraphProvider>();
+
   const visit = (provider: GraphProvider): void => {
     if (visited.has(provider)) return;
+
     visited.add(provider);
     output.push(provider);
+
     for (const dependency of provider.dependencies) {
       const candidate = providers.find(entry => sameProviderKey(entry.key, dependency));
       if (candidate === undefined) {
@@ -64,9 +68,11 @@ export const createGraphProviderDependencies = (rootKey: GraphProviderKey, optio
           details: { dependency: label },
         });
       }
+
       visit(candidate);
     }
   };
+
   visit(root);
 
   return {

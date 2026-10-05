@@ -86,6 +86,7 @@ describe('Relation data resolution', () => {
 
   it('rejects a registered kind under another role or an expanded direction', () => {
     const context = Graph.resolveGraphDefinitionOptions({ relationKinds: [realization] });
+
     expect(() => Graph.resolveRelation(relation({ role: 'generalization', kind: realization.kind }), context)).toThrow(
       /uml\.realization.*dependency.*generalization/i,
     );

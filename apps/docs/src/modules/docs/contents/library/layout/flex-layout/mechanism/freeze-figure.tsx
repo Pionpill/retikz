@@ -9,10 +9,12 @@ import { figureI18n } from './freeze-figure.i18n';
 
 /** 图示语言参数 */
 export type FreezeFigureProps = { lang?: Lang };
+
 /** 使用相同尺度展示边界钳制后再次分配的具体状态 */
 const FreezeFigure: FC<FreezeFigureProps> = props => {
   const { lang = 'zh' } = props;
   const text = figureI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[

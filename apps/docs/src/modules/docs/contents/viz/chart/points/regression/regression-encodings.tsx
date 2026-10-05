@@ -6,6 +6,7 @@ import { createPreviewControlContract } from './regression-encodings.controls';
 import { renderRegressionEncodingsPreview } from './regression-encodings.preview';
 
 const contract = createPreviewControlContract();
+
 const controlled = defineControlledPreview(contract, (values, dimensions) =>
   renderRegressionEncodingsPreview(
     {
@@ -15,8 +16,10 @@ const controlled = defineControlledPreview(contract, (values, dimensions) =>
     dimensions,
   ),
 );
+
 /** 映射交互示例 */
 const Demo: FC = controlled.Component;
+
 /** 预览使用的控件 */
 export const previewControls = contract.controls;
 export { createPreviewControlContract } from './regression-encodings.controls';

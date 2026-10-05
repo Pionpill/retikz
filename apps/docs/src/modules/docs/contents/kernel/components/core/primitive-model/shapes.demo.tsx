@@ -4,26 +4,38 @@ import { Circle, Ellipse, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const IHW = 28; // 内框半宽（共享）
+
 const IHH = 17; // 内框半高（共享）
+
 const CHW = 20; // 内容盒半宽
+
 const CHH = 10; // 内容盒半高
+
 const ROW1 = -56;
+
 const ROW2 = 56;
+
 const L1 = -2; // 第一行标签
+
 const L2 = 112; // 第二行标签
+
 const SHAPE = {
   style: { fill: 'none', stroke: 'darkorange', strokeWidth: 2 },
 } as const;
+
 const STROKE = {
   style: { stroke: 'darkorange', strokeWidth: 2 },
 } as const;
+
 const LABEL = {
   style: { stroke: 'none', textColor: 'gray' },
 } as const;
 
 // 第一行前三个、第二行后两个；宽的 diamond 放行末
 const C = { rect: -150, ellipse: 0, diamond: 150, polygon: -75, circle: 75 };
+
 const R1 = [C.rect, C.ellipse, C.diamond];
+
 const R2 = [C.polygon, C.circle];
 
 // diamond / pentagon 顶点（绕原点），circumscribe 共享内框；用 cycle 闭合，不复制首顶点
@@ -33,6 +45,7 @@ const DIAMOND: Array<[number, number]> = [
   [0, IHH * 2],
   [-IHW * 2, 0],
 ];
+
 const PENTAGON: Array<[number, number]> = [
   [0, -39.4],
   [37.47, -12.18],
@@ -40,6 +53,7 @@ const PENTAGON: Array<[number, number]> = [
   [-23.16, 31.87],
   [-37.47, -12.18],
 ];
+
 const shift = (cx: number, cy: number, pts: Array<[number, number]>): Array<[number, number]> =>
   pts.map(([x, y]): [number, number] => [cx + x, cy + y]);
 

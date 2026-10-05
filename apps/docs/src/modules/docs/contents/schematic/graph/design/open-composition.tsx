@@ -9,10 +9,12 @@ import { openCompositionI18n } from './open-composition.i18n';
 
 /** 开放组合示例的语言 */
 export type OpenCompositionProps = { lang?: Lang };
+
 /** 普通 Node 与 Graph 成员共用引用空间，Block 仅排布内部内容 */
 const OpenComposition: FC<OpenCompositionProps> = props => {
   const { lang = 'zh' } = props;
   const t = openCompositionI18n[lang];
+
   return (
     <Graph>
       <Group id="business" caption={{ title: { text: t.group } }}>
@@ -32,5 +34,6 @@ const OpenComposition: FC<OpenCompositionProps> = props => {
     </Graph>
   );
 };
+
 export const previewSource = createGraphPreviewSource(() => OpenComposition({}));
 export default OpenComposition;

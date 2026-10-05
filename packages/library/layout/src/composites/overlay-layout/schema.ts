@@ -86,6 +86,7 @@ const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: Refi
         message: `Duplicate OverlayLayout item key '${item.key}'.`,
       });
     }
+
     if (item.key !== undefined) seen.add(item.key);
     const alignment = item.alignSelf ?? layout.alignItems;
     const isBaseline = alignment === LayoutAlignment.FirstBaseline || alignment === LayoutAlignment.LastBaseline;
@@ -96,6 +97,7 @@ const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: Refi
         message: 'Positioned OverlayLayout items require an explicit edge alignment when baseline would be effective.',
       });
     }
+
     if (item.placement.kind !== OverlayPlacementKind.Positioned && isBaseline && item.offset.y !== 0) {
       context.addIssue({
         code: 'custom',
@@ -150,9 +152,11 @@ const refineOverlayLayoutArtifact = (
         message: 'sourceIndex must be contiguous.',
       });
     }
+
     if (keys.has(item.key)) {
       context.addIssue({ code: 'custom', path: ['items', index, 'key'], message: `Duplicate item key '${item.key}'.` });
     }
+
     keys.add(item.key);
     if (item.placement === OverlayPlacementKind.Positioned) {
       if (item.position === undefined) {
@@ -179,6 +183,7 @@ const refineOverlayLayoutArtifact = (
       });
     }
   });
+
   const expected = [...artifact.items]
     .sort((first, second) => first.zIndex - second.zIndex || first.sourceIndex - second.sourceIndex)
     .map(item => item.key);

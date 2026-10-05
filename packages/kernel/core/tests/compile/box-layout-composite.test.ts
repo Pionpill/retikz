@@ -176,6 +176,7 @@ describe('Box Layout Composite contract', () => {
           x: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
           y: { kind: LayoutAxisProposalKind.Range, min: 0, max: 0 },
         });
+
         return {
           children: [context.replay(exact)],
           artifact: {
@@ -389,6 +390,7 @@ describe('Box Layout Composite contract', () => {
           x: { kind: LayoutAxisProposalKind.Exact, value: 25 },
           y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
+
         return {
           children: [context.replay(constrained)],
           artifact: {
@@ -409,6 +411,7 @@ describe('Box Layout Composite contract', () => {
     if (artifact?.kind !== 'composite') throw new Error('Expected exact width artifact');
 
     const value = artifact.value;
+
     expect(value.slotWidth).toBe(25);
     expect(value.constrainedHeight).toBeGreaterThan(value.intrinsicHeight);
   });
@@ -427,6 +430,7 @@ describe('Box Layout Composite contract', () => {
         const xProposal = context.proposal.x;
         receivedFrozenConstraint = Object.isFrozen(context.proposal) && Object.isFrozen(xProposal);
         mutationSucceeded = Reflect.set(xProposal, 'value', -5);
+
         return { children: [] };
       },
     });
@@ -475,6 +479,7 @@ describe('Box Layout Composite contract', () => {
           y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
         });
         slotWidth = laid.slotSize.width;
+
         return { children: [context.replay(laid)] };
       },
     });
@@ -549,12 +554,16 @@ describe('Box Layout Composite contract', () => {
       clipRef: 'clip-1',
     });
     expect(primitive).not.toHaveProperty('transforms');
+
     if (primitive.type !== 'group') throw new Error('expected replay clip group');
+
     expect(primitive.children[0]).toMatchObject({
       type: 'group',
       transforms: [{ kind: 'translate', x: 10, y: 20 }],
     });
+
     const allocation = result.artifacts.find(value => value.kind === 'composite')?.value;
+
     expect(allocation?.width).toBe(10);
     expect(allocation?.height).toBeCloseTo(19.2);
     expect(result.scene.layout).toEqual({ x: 8, y: 18, width: 4, height: 4 });
@@ -571,6 +580,7 @@ describe('Box Layout Composite contract', () => {
       compile: (_node, context) => {
         const empty = resolvedResultOf(context, { type: 'coordinate', id: 'empty-coordinate', position: [20, 20] });
         const clipped = resolvedResultOf(context, boxNode());
+
         return {
           children: [
             context.replay(empty, { clip: { kind: 'rect', x: -10, y: -10, width: 5, height: 5 } }),
@@ -604,6 +614,7 @@ describe('Box Layout Composite contract', () => {
         const replay = context.replay(laid, { transforms, clip });
         transforms[0].x = 99;
         clip.width = 99;
+
         return { children: [replay] };
       },
     });
@@ -614,8 +625,11 @@ describe('Box Layout Composite contract', () => {
     });
 
     const primitive = result.scene.primitives[0];
+
     expect(primitive).toMatchObject({ type: 'group', clipRef: 'clip-1' });
+
     if (primitive.type !== 'group') throw new Error('expected replay clip group');
+
     expect(primitive.children[0]).toMatchObject({
       type: 'group',
       transforms: [{ kind: 'translate', x: 5, y: 6 }],
@@ -670,6 +684,7 @@ describe('Box Layout Composite contract', () => {
       }),
       compile: (_node, context) => {
         const laid = resolvedResultOf(context, boxNode());
+
         expect(() => context.replay(laid, { unknown: true } as never)).toThrow(/unsupported.*wrapper/i);
         return { children: [context.replay(laid)] };
       },
@@ -736,6 +751,7 @@ describe('Box Layout Composite contract', () => {
             widthReads += 1;
             return widthReads <= 3 ? 20 : Number.NaN;
           }
+
           return Reflect.get(target, property, receiver);
         },
       },

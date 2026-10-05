@@ -27,11 +27,13 @@ const isZeroInsets = (m: BoundsInsets): boolean => m.top === 0 && m.right === 0 
 /** 按 rect 局部坐标系四边外扩，非对称外扩会移动外边界中心 */
 const inflateRect = (r: Rect, m: BoundsInsets): Rect => {
   if (isZeroInsets(m)) return r;
+
   const dx = (m.right - m.left) / 2;
   const dy = (m.bottom - m.top) / 2;
   const rot = r.rotate ?? 0;
   const cos = Math.cos(rot);
   const sin = Math.sin(rot);
+
   return {
     x: r.x + dx * cos - dy * sin,
     y: r.y + dx * sin + dy * cos,
@@ -70,6 +72,7 @@ const resolveBoundaryOf = (
       `Boundary '${boundaryKey(boundary)}' was not resolved for node '${layout.id ?? '(unnamed)'}'`,
     );
   }
+
   return resolveBoundaryGeometry(resolution, {
     visualDef: layout.shapeDef,
     visualRect: layout.rect,
@@ -123,6 +126,7 @@ export const anchorOf = (
         layout.shapeDef.anchor(shapeRect, name, layout.shapeParams ?? EMPTY_SHAPE_PARAMS),
       );
       if (own !== undefined) return own;
+
       const fallbackRect = applyMargin ? inflateRect(layout.rect, layout.margin) : layout.rect;
       const p = fallbackBoundaryAnchor(fallbackRect, name);
       if (p === undefined)
@@ -130,8 +134,10 @@ export const anchorOf = (
           RetikzCoreErrorCode.Compile,
           `Unknown anchor '${name}' for shape '${layout.shapeName}'`,
         );
+
       return p;
     }
+
     const { def, rect, params } = resolveBoundaryOf(layout, boundary, boundaryResolution);
     const anchorRect = applyMargin ? inflateRect(rect, layout.margin) : rect;
     const raw = def.anchor?.(anchorRect, name, params);
@@ -143,8 +149,10 @@ export const anchorOf = (
         RetikzCoreErrorCode.Compile,
         `Unknown anchor '${name}' for shape '${layout.shapeName}'`,
       );
+
     return p;
   }
+
   // 形状专属命名 anchor 恒走视觉形状。
   const p = snapshotOptionalProviderPosition(
     `Shape '${layout.shapeName}' anchor`,
@@ -153,6 +161,7 @@ export const anchorOf = (
   if (p === undefined) {
     throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `Unknown anchor '${name}' for shape '${layout.shapeName}'`);
   }
+
   return p;
 };
 
@@ -172,8 +181,10 @@ export const angleBoundaryOf = (
   const rot = boundaryRect.rotate ?? 0;
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
+
   // 局部方向转为世界方向。
   const toward: Position = [boundaryRect.x + lx * cosR - ly * sinR, boundaryRect.y + lx * sinR + ly * cosR];
   const raw = def.boundaryPoint(boundaryRect, toward, params);
+
   return snapshotProviderPosition(`Boundary '${boundaryKey(boundary)}' boundaryPoint`, raw);
 };

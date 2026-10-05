@@ -18,8 +18,10 @@ export type BuiltinTextChannelOptions = {
 const labelContentChannel = (mark: IRPlotMarkOperation): IRPlotTextChannel | IRPlotMarkLabelContent | undefined => {
   const encodingText = (mark as { encoding?: { text?: IRPlotTextChannel } }).encoding?.text;
   if (encodingText !== undefined) return encodingText;
+
   const label = (mark as { label?: { content?: IRPlotMarkLabelContent } | Array<{ content?: IRPlotMarkLabelContent }> })
     .label;
+
   return Array.isArray(label) ? label[0]?.content : label?.content;
 };
 
@@ -33,11 +35,13 @@ export const createBuiltinTextChannels = (options: BuiltinTextChannelOptions = {
       const id = (mark as { id?: string }).id;
       const runtime = id !== undefined ? options.resolveLabel?.[id] : undefined;
       if (content === undefined && runtime === undefined) return undefined;
+
       const fieldType =
         content?.field !== undefined
           ? ctx.model.find(definition => definition.name === content.field)?.type
           : undefined;
       const effectiveContent = content ?? { value: '' };
+
       return { resolver: row => labelOf(effectiveContent, row, fieldType, runtime) };
     },
   },

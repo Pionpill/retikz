@@ -11,7 +11,9 @@ const scene = (children: IRScene['children'], extra: Partial<IRScene> = {}): IRS
   children,
   ...extra,
 });
+
 const silent = { onWarn: () => {} };
+
 const collector = () => {
   const warnings: Array<CompileWarning> = [];
   return { onWarn: (w: CompileWarning) => warnings.push(w), warnings };
@@ -30,6 +32,7 @@ const FADE: IRAnimationTrack = {
   duration: 400,
   trigger: 'load',
 };
+
 const SPIN: IRAnimationTrack = {
   property: 'rotate',
   keyframes: [
@@ -40,6 +43,7 @@ const SPIN: IRAnimationTrack = {
   iterations: 'infinite',
   easing: 'linear',
 };
+
 const CAMERA: IRAnimationTrack = {
   property: 'viewBox',
   keyframes: [
@@ -49,6 +53,7 @@ const CAMERA: IRAnimationTrack = {
   duration: 500,
   easing: 'ease-in-out',
 };
+
 /** 柱子从基线长出：scaleY 0→1，支点底边中点 */
 const GROW_UP: IRAnimationTrack = {
   property: 'scaleY',
@@ -66,7 +71,9 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
     const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [FADE] }]), silent).scene
       .primitives;
     const rects = allOfType(prims, 'rect');
+
     expect(rects.length).toBeGreaterThanOrEqual(1);
+
     for (const rect of rects) expect(rect.animations).toEqual([FADE]);
   });
 
@@ -76,7 +83,9 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
       silent,
     ).scene.primitives;
     if (prims[0].type !== 'group') throw new Error('expected group');
+
     expect(prims[0].animations).toEqual([FADE, SPIN]);
+
     for (const child of prims[0].children) expect(child.animations).toBeUndefined();
   });
 
@@ -96,7 +105,9 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
       silent,
     ).scene.primitives;
     const paths = allOfType(prims, 'path');
+
     expect(paths.length).toBeGreaterThanOrEqual(1);
+
     for (const path of paths) expect(path.animations).toEqual([FADE]);
   });
 
@@ -106,8 +117,10 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
       silent,
     ).scene.primitives;
     const groups = prims.filter(p => p.type === 'group');
+
     expect(groups).toHaveLength(1);
     expect(groups[0].animations).toEqual([FADE]);
+
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toBeUndefined();
   });
 
@@ -116,6 +129,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
       scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [CAMERA] }),
       silent,
     ).scene;
+
     expect(built.animations).toEqual([CAMERA]);
   });
 
@@ -128,6 +142,7 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
       ],
       duration: 300,
     };
+
     // 自定义通道允许任意 JSON value（含嵌套对象），供 renderer 注册插值器解释
     const objectValued: IRAnimationTrack = {
       property: 'gradientStop',
@@ -137,11 +152,14 @@ describe('Happy path：三载体 + scene 根 stamp + 自定义透传', () => {
       ],
       duration: 300,
     };
+
     expect(AnimationTrackSchema.safeParse(objectValued).success).toBe(true);
+
     const prims = compileToScene(
       scene([{ type: 'node', id: 'a', position: [0, 0], animations: [custom, objectValued] }]),
       silent,
     ).scene.primitives;
+
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([custom, objectValued]);
   });
 });
@@ -151,7 +169,9 @@ describe('非均匀缩放 scaleX / scaleY + origin 支点', () => {
     const prims = compileToScene(scene([{ type: 'node', id: 'bar', position: [0, 0], animations: [GROW_UP] }]), silent)
       .scene.primitives;
     const rects = allOfType(prims, 'rect');
+
     expect(rects.length).toBeGreaterThanOrEqual(1);
+
     for (const rect of rects) expect(rect.animations).toEqual([GROW_UP]);
   });
 
@@ -186,6 +206,7 @@ describe('边界', () => {
       compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }]), silent).scene.primitives,
       'rect',
     );
+
     for (const rect of rects) expect('animations' in rect).toBe(false);
   });
 
@@ -246,7 +267,9 @@ describe('compile 校验：viewBox ⇔ 根', () => {
     const c = collector();
     const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA] }]), c).scene
       .primitives;
+
     expect(c.warnings.some(w => w.code === CompileWarningCode.AnimationInvalidProperty)).toBe(true);
+
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toBeUndefined();
   });
 
@@ -254,13 +277,16 @@ describe('compile 校验：viewBox ⇔ 根', () => {
     const c = collector();
     const prims = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0], animations: [CAMERA, FADE] }]), c)
       .scene.primitives;
+
     for (const rect of allOfType(prims, 'rect')) expect(rect.animations).toEqual([FADE]);
+
     expect(c.warnings.filter(w => w.code === CompileWarningCode.AnimationInvalidProperty)).toHaveLength(1);
   });
 
   it('scene 根非 viewBox track → warn + drop（Scene.animations 省略）', () => {
     const c = collector();
     const built = compileToScene(scene([{ type: 'node', id: 'a', position: [0, 0] }], { animations: [FADE] }), c).scene;
+
     expect(c.warnings.some(w => w.code === CompileWarningCode.AnimationInvalidProperty)).toBe(true);
     expect(built.animations).toBeUndefined();
   });
@@ -272,6 +298,7 @@ describe('交互', () => {
       scene([{ type: 'node', id: 'a', position: [0, 0], meta: { s: 'plot' }, animations: [FADE] }]),
       silent,
     ).scene.primitives;
+
     for (const rect of allOfType(prims, 'rect')) {
       expect(rect.id).toBe('a');
       expect(rect.meta).toEqual({ s: 'plot' });
@@ -285,13 +312,16 @@ describe('交互', () => {
       scene([{ type: 'node', id: 'a', position: [0, 0], text: 'A', animations: [FADE, SPIN] }]),
       silent,
     ).scene;
+
     expect(withAnim.layout).toEqual(without.layout);
+
     const strip = (prims: ReadonlyArray<ScenePrimitive>): Array<Record<string, unknown>> =>
       flattenPrims(prims).map(p => {
         const clone: Record<string, unknown> = { ...p };
         delete clone.animations;
         return clone;
       });
+
     expect(strip(withAnim.primitives)).toEqual(strip(without.primitives));
   });
 
@@ -321,6 +351,7 @@ describe('交互', () => {
       ],
       { animations: [CAMERA] },
     );
+
     expect(SceneSchema.parse(JSON.parse(JSON.stringify(ir)))).toEqual(ir);
   });
 });

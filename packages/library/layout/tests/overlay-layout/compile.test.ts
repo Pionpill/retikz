@@ -59,8 +59,10 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
       ) {
         throw new Error(`Leaf '${node.id}' rejected an exact proposal`);
       }
+
       const slotWidth = axisSize(context.proposal.x, node.width, node.minimumWidth ?? node.width);
       const slotHeight = axisSize(context.proposal.y, node.height, node.minimumHeight ?? node.height);
+
       return {
         allocationBounds: {
           x: node.originX,
@@ -132,7 +134,9 @@ const compileOverlay = (child: IRChild, proposal: LayoutProposal) => {
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -148,6 +152,7 @@ const compileOverlay = (child: IRChild, proposal: LayoutProposal) => {
     },
   );
   if (observed === undefined) throw new Error('Expected OverlayLayout probe to resolve');
+
   return { logs, observed, output };
 };
 
@@ -162,19 +167,24 @@ const translationOf = (primitives: ReadonlyArray<ScenePrimitive>, id: string): R
   ): Readonly<{ x: number; y: number }> | undefined => {
     for (const primitive of children) {
       if (primitive.type !== 'group') continue;
+
       const translations = (primitive.transforms ?? []).filter(
         (transform): transform is TranslateTransform => transform.kind === 'translate',
       );
       const nextX = x + translations.reduce((sum, transform) => sum + transform.x, 0);
       const nextY = y + translations.reduce((sum, transform) => sum + transform.y, 0);
       if (primitive.id === id) return { x: nextX, y: nextY };
+
       const nested = visit(primitive.children, nextX, nextY);
       if (nested !== undefined) return nested;
     }
+
     return undefined;
   };
+
   const found = visit(primitives, 0, 0);
   if (found === undefined) throw new Error(`Expected Scene group '${id}'`);
+
   return found;
 };
 
@@ -572,6 +582,7 @@ describe('OverlayLayout compile contract', () => {
 
   it('fails loudly with the physical axis when root fill has no finite parent allocation', () => {
     const proposal = intrinsicProposal('natural');
+
     expect(() => compileOverlay(createOverlayLayout({ size: { x: { kind: 'fill' } } }), proposal)).toThrow(
       'Layout fill requires a finite parent allocation on x',
     );

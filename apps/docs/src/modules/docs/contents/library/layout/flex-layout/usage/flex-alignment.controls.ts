@@ -56,11 +56,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { justifyContent: 'start', alignItems: 'center', alignSelf: 'auto' },
     relatedApis: ['FlexLayout.justifyContent', 'FlexLayout.alignItems', 'FlexLayoutItem.alignSelf'],
   } satisfies PreviewControlContract;
 };
+
 /** 默认语言的注册契约 */
 export const previewControlContract = createPreviewControlContract('zh');

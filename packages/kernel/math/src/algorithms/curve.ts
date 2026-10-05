@@ -3,6 +3,7 @@ import type { Position, Vector2 } from '../primitives';
 import { lerp, point, vector2 } from '../primitives';
 
 const DEFAULT_CURVE_SAMPLE_COUNT = 32;
+
 const DEFAULT_CURVE_BISECTION_STEPS = 32;
 
 /** 直线曲线段 */
@@ -154,14 +155,17 @@ const catmullRomSegmentControls = (
   const dt0 = centripetalKnotSpacing(p0, p1);
   const dt1 = centripetalKnotSpacing(p1, p2);
   const dt2 = centripetalKnotSpacing(p2, p3);
+
   const tangent = (a: number, b: number, c: number, d: number): { m1: number; m2: number } => {
     const m1 = (b - a) / dt0 - (c - a) / (dt0 + dt1) + (c - b) / dt1;
     const m2 = (c - b) / dt1 - (d - b) / (dt1 + dt2) + (d - c) / dt2;
     return { m1, m2 };
   };
+
   const tx = tangent(p0[0], p1[0], p2[0], p3[0]);
   const ty = tangent(p0[1], p1[1], p2[1], p3[1]);
   const k = (dt1 / 3) * tension;
+
   return {
     control1: [p1[0] + tx.m1 * k, p1[1] + ty.m1 * k],
     control2: [p2[0] - tx.m2 * k, p2[1] - ty.m2 * k],
@@ -178,6 +182,7 @@ const catmullRomToCubic = (knots: Array<Position>, tension: number): Array<Cubic
   if (n < 2) return [];
 
   const segments: Array<CubicSegment> = [];
+
   for (let i = 0; i < n - 1; i++) {
     const p1 = knots[i];
     const p2 = knots[i + 1];
@@ -187,6 +192,7 @@ const catmullRomToCubic = (knots: Array<Position>, tension: number): Array<Cubic
     const { control1, control2 } = catmullRomSegmentControls({ p0, p1, p2, p3, tension });
     segments.push({ control1, control2, to: [p2[0], p2[1]] });
   }
+
   return segments;
 };
 
@@ -208,6 +214,7 @@ const normalizedArcSweep = (segment: CurveArcSegment): { startAngleDeg: number; 
   if (Math.abs(sweep) === 360) {
     return { startAngleDeg, endAngleDeg: startAngleDeg + (counterClockwise ? -360 : 360) };
   }
+
   const normalizedSweep = ((sweep % 360) + 360) % 360;
   const alignedSweep = counterClockwise
     ? normalizedSweep === 0
@@ -216,6 +223,7 @@ const normalizedArcSweep = (segment: CurveArcSegment): { startAngleDeg: number; 
     : normalizedSweep === 0
       ? 360
       : normalizedSweep;
+
   return { startAngleDeg, endAngleDeg: startAngleDeg + alignedSweep };
 };
 
@@ -229,6 +237,7 @@ const sampleArcAt = (segment: CurveArcSegment, parameter: number): CurveSegmentS
   const rotationRad = segment.kind === 'ellipseArc' ? ((segment.rotationDeg ?? 0) * Math.PI) / 180 : 0;
   const localPoint: Position = [radiusX * Math.cos(angleRad), radiusY * Math.sin(angleRad)];
   const localTangent: Vector2 = [-radiusX * Math.sin(angleRad) * direction, radiusY * Math.cos(angleRad) * direction];
+
   return {
     point: [
       segment.center[0] + localPoint[0] * Math.cos(rotationRad) - localPoint[1] * Math.sin(rotationRad),
@@ -252,6 +261,7 @@ const sampleCurveSegmentAt = (segment: CurveSegment, parameter: number): CurveSe
       tangent: vector2.normalize([segment.to[0] - segment.from[0], segment.to[1] - segment.from[1]]),
     };
   }
+
   if (segment.kind === 'quadraticBezier') {
     const inverse = 1 - t;
     return {
@@ -265,6 +275,7 @@ const sampleCurveSegmentAt = (segment: CurveSegment, parameter: number): CurveSe
       ]),
     };
   }
+
   if (segment.kind === 'cubicBezier') {
     const inverse = 1 - t;
     return {
@@ -288,6 +299,7 @@ const sampleCurveSegmentAt = (segment: CurveSegment, parameter: number): CurveSe
       ]),
     };
   }
+
   return sampleArcAt(segment, t);
 };
 
@@ -299,14 +311,17 @@ const approximateCurveLengthTo = (segment: CurveSegment, parameter: number, samp
     const sweep = normalizedArcSweep(segment);
     return Math.abs(sweep.endAngleDeg - sweep.startAngleDeg) * (Math.PI / 180) * Math.abs(segment.radius) * t;
   }
+
   const samples = Math.max(4, Math.ceil(sampleCount * t));
   let length = 0;
   let previousPoint = sampleCurveSegmentAt(segment, 0).point;
+
   for (let index = 1; index <= samples; index += 1) {
     const currentPoint = sampleCurveSegmentAt(segment, (t * index) / samples).point;
     length += point.distance(previousPoint, currentPoint);
     previousPoint = currentPoint;
   }
+
   return length;
 };
 
@@ -317,6 +332,7 @@ const splitQuadraticBezier = (
   const fromControl = lerp(segment.from, segment.control, parameter);
   const controlTo = lerp(segment.control, segment.to, parameter);
   const middle = lerp(fromControl, controlTo, parameter);
+
   return {
     left: { kind: 'quadraticBezier', from: copyPoint(segment.from), control: fromControl, to: middle },
     right: { kind: 'quadraticBezier', from: middle, control: controlTo, to: copyPoint(segment.to) },
@@ -333,6 +349,7 @@ const splitCubicBezier = (
   const fourth = lerp(first, second, parameter);
   const fifth = lerp(second, third, parameter);
   const middle = lerp(fourth, fifth, parameter);
+
   return {
     left: {
       kind: 'cubicBezier',
@@ -361,10 +378,12 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
       to: sampleCurveSegmentAt(segment, end).point,
     };
   }
+
   if (segment.kind === 'quadraticBezier') {
     const untilEnd = end < 1 ? splitQuadraticBezier(segment, end).left : segment;
     const localStart = end > DEFAULT_EPSILON ? start / end : 0;
     const slice = start > DEFAULT_EPSILON ? splitQuadraticBezier(untilEnd, localStart).right : untilEnd;
+
     return {
       kind: 'quadraticBezier',
       from: copyPoint(slice.from),
@@ -372,10 +391,12 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
       to: copyPoint(slice.to),
     };
   }
+
   if (segment.kind === 'cubicBezier') {
     const untilEnd = end < 1 ? splitCubicBezier(segment, end).left : segment;
     const localStart = end > DEFAULT_EPSILON ? start / end : 0;
     const slice = start > DEFAULT_EPSILON ? splitCubicBezier(untilEnd, localStart).right : untilEnd;
+
     return {
       kind: 'cubicBezier',
       from: copyPoint(slice.from),
@@ -384,6 +405,7 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
       to: copyPoint(slice.to),
     };
   }
+
   const sweep = normalizedArcSweep(segment);
   const startAngleDeg = sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * start;
   const endAngleDeg = sweep.startAngleDeg + (sweep.endAngleDeg - sweep.startAngleDeg) * end;
@@ -396,8 +418,10 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
       endAngleDeg,
     };
     if (segment.counterClockwise !== undefined) sliced.counterClockwise = segment.counterClockwise;
+
     return sliced;
   }
+
   const sliced: EllipseArcCurveSegment = {
     kind: 'ellipseArc',
     center: copyPoint(segment.center),
@@ -408,6 +432,7 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
   };
   if (segment.rotationDeg !== undefined) sliced.rotationDeg = segment.rotationDeg;
   if (segment.counterClockwise !== undefined) sliced.counterClockwise = segment.counterClockwise;
+
   return sliced;
 };
 
@@ -415,9 +440,11 @@ const sliceCurveSegment = (segment: CurveSegment, fromParameter: number, toParam
 const projectedCurveRange = (segment: CurveSegment, axis: Vector2): { min: number; max: number } => {
   const dot = (p: Position): number => p[0] * axis[0] + p[1] * axis[1];
   const parameters = [0, 1];
+
   const add = (t: number): void => {
     if (t > 0 && t < 1) parameters.push(t);
   };
+
   if (segment.kind === 'quadraticBezier') {
     const a = dot(segment.from),
       b = dot(segment.control),
@@ -464,6 +491,7 @@ const projectedCurveRange = (segment: CurveSegment, axis: Vector2): { min: numbe
       const extreme = (Math.atan2(y, x) * 180) / Math.PI;
       const low = Math.min(sweep.startAngleDeg, sweep.endAngleDeg);
       const high = Math.max(sweep.startAngleDeg, sweep.endAngleDeg);
+
       for (const angle of [extreme, extreme + 180]) {
         const first = Math.ceil((low - angle) / 360);
         const last = Math.floor((high - angle) / 360);
@@ -471,7 +499,9 @@ const projectedCurveRange = (segment: CurveSegment, axis: Vector2): { min: numbe
       }
     }
   }
+
   const values = parameters.map(t => dot(sampleCurveSegmentAt(segment, t).point));
+
   return { min: Math.min(...values), max: Math.max(...values) };
 };
 
@@ -511,12 +541,15 @@ export const curve = {
     const sampleCount = normalizedSampleCount(options.sampleCount);
     const totalLength = options.totalLength ?? approximateCurveLengthTo(segment, 1, sampleCount);
     if (!Number.isFinite(totalLength) || totalLength <= DEFAULT_EPSILON) return 0;
+
     const clampedDistance = Math.max(0, Math.min(totalLength, distance));
     if (clampedDistance <= DEFAULT_EPSILON) return 0;
     if (totalLength - clampedDistance <= DEFAULT_EPSILON) return 1;
     if (segment.kind === 'line' || segment.kind === 'arc') return clampedDistance / totalLength;
+
     let lowerParameter = 0;
     let upperParameter = 1;
+
     for (let index = 0; index < normalizedBisectionSteps(options.bisectionSteps); index += 1) {
       const middleParameter = (lowerParameter + upperParameter) / 2;
       const middleLength = approximateCurveLengthTo(segment, middleParameter, sampleCount);
@@ -527,6 +560,7 @@ export const curve = {
         upperParameter = middleParameter;
       }
     }
+
     return (lowerParameter + upperParameter) / 2;
   },
   /**

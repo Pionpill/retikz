@@ -19,5 +19,6 @@ export const GraphThemeProvider: FC<GraphThemeProviderProps> = props => {
     if (graphThemeStyles === undefined) return parent;
     return [...parent, ...graphThemeStyles];
   }, [parent, graphThemeStyles]);
+
   return <GraphThemeStylesContext.Provider value={merged}>{children}</GraphThemeStylesContext.Provider>;
 };

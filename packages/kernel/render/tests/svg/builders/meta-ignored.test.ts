@@ -13,6 +13,7 @@ describe('SVG renderer 忽略 meta', () => {
   it('rect-meta-ignored：带 meta 的 rect 与不带 meta 产出相同 SvgNode（无 meta 派生 attr）', () => {
     const base: RectPrim = { type: 'rect', id: 'a', x: 0, y: 0, width: 10, height: 10, fill: '#f00' };
     const withMeta: RectPrim = { ...base, meta: { source: 'plot', datum: 3 } };
+
     expect(buildPrim(withMeta)).toEqual(buildPrim(base));
     expect('meta' in buildPrim(withMeta).attrs).toBe(false);
   });
@@ -27,6 +28,7 @@ describe('SVG renderer 忽略 meta', () => {
       ],
       stroke: '#000',
     };
+
     expect(buildPrim({ ...base, meta: { series: 'trend' } })).toEqual(buildPrim(base));
   });
 
@@ -36,6 +38,7 @@ describe('SVG renderer 忽略 meta', () => {
       id: 'sc',
       children: [{ type: 'rect', x: 0, y: 0, width: 5, height: 5, stroke: '#444' }],
     };
+
     expect(buildPrim({ ...base, meta: { layer: 'marks' } })).toEqual(buildPrim(base));
   });
 
@@ -61,6 +64,7 @@ describe('SVG renderer 忽略 meta', () => {
       ],
     };
     const options = { idPrefix: 'fig' };
+
     expect(renderToSvgString(withMeta, options)).toBe(renderToSvgString(without, options));
   });
 });

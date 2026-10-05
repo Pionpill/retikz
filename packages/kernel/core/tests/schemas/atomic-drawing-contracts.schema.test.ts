@@ -51,12 +51,14 @@ describe('Core atomic drawing contracts', () => {
 
   it('parses shared stroke style and path stroke fragments', () => {
     const stroke = { strokeWidth: 2, dashPattern: [4, 2], dashOffset: -1 };
+
     expect(StrokeStyleSchema.parse(stroke)).toEqual(stroke);
     expect(StrokeStyleSchema.safeParse({ strokeWidth: -1 }).success).toBe(false);
     expect(StrokeStyleSchema.safeParse({ dashPattern: [] }).success).toBe(false);
     expect(StrokeStyleSchema.safeParse({ dashPattern: [4, -2] }).success).toBe(false);
 
     const pathStroke = { ...stroke, lineCap: 'round' as const, lineJoin: 'bevel' as const };
+
     expect(PathStrokeSchema.parse(pathStroke)).toEqual(pathStroke);
     expect(PathStrokeSchema.safeParse({ ...pathStroke, fillRule: 'evenodd' }).success).toBe(false);
   });
@@ -66,15 +68,18 @@ describe('Core atomic drawing contracts', () => {
     expect(PathFillSchema.safeParse({ lineCap: 'round' }).success).toBe(false);
 
     const geometry = { roundedCorners: 3, rotate: 45, scale: 2, children: steps };
+
     expect(PathGeometrySchema.parse(geometry)).toEqual(geometry);
     expect(PathGeometrySchema.safeParse({ scale: 0 }).success).toBe(false);
     expect(PathGeometrySchema.safeParse({ children: [] }).success).toBe(false);
 
     const decoration = { label: { text: 'edge' }, marks: [mark] };
+
     expect(PathDecorationSchema.parse(decoration)).toEqual(decoration);
     expect(PathDecorationSchema.safeParse({ kind: 'stroke' }).success).toBe(false);
 
     const structure = { type: 'path' as const, kind: 'stroke' };
+
     expect(PathStructureSchema.parse(structure)).toEqual(structure);
     expect(PathStructureSchema.safeParse({ children: steps }).success).toBe(false);
   });
@@ -158,6 +163,7 @@ describe('Core atomic drawing contracts', () => {
       ...PathDecorationSchema.parse(JSON.parse(JSON.stringify({ label: value.label, marks: value.marks }))),
       ...PathStructureSchema.parse(JSON.parse(JSON.stringify({ type: value.type, kind: value.kind }))),
     };
+
     expect(restored).toMatchObject(value);
   });
 });

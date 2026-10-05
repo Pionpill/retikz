@@ -66,11 +66,14 @@ export const ellipse = {
    */
   boundaryPoint: (e: Ellipse, toward: Position): Position => {
     if (e.rx === 0 || e.ry === 0) return [e.x, e.y];
+
     const [lx, ly] = worldToLocal(e, toward);
     if (lx === 0 && ly === 0) return [e.x, e.y];
+
     const a = lx / e.rx;
     const b = ly / e.ry;
     const t = 1 / Math.sqrt(a * a + b * b);
+
     return localToWorld(e, [lx * t, ly * t]);
   },
 };

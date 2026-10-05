@@ -29,6 +29,7 @@ export const COORDINATE_INSPECTOR = defineInspector({
     if (context.options.labels) {
       output.push(labelNode([subject.position[0] + 6, subject.position[1] + 12], subject.id, color));
     }
+
     return isolateInspectionChildren(output);
   },
 });

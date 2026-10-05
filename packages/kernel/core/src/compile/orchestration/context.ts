@@ -116,6 +116,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
     if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') return;
     console.warn(formatCompileWarning({ ...warning, origin: warning.origin ?? { kind: 'primary' } }));
   };
+
   const onWarn = options.onWarn ?? defaultWarnDispatcher;
 
   const clips = resolveClipRegistry(options.clips);
@@ -126,6 +127,7 @@ export const createCompileContext = (ir: IRScene, options: CreateCompileContextO
       `CompileOptions.maxClipDepth '${maxClipDepth}' must be a non-negative safe integer`,
     );
   }
+
   const patterns = resolvePatternRegistry(options.patterns);
   const composites = resolveCompositeRegistry(options.composites);
   const themeStyles = resolveThemeStyleRegistry(options.themeStyles);

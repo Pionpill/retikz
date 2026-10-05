@@ -169,6 +169,7 @@ const omitText = <T extends Record<string, unknown>>(shape: T): Omit<T, 'text'> 
   Object.fromEntries(Object.entries(shape).filter(([key]) => key !== 'text')) as Omit<T, 'text'>;
 
 const nodeLabelShape = omitText(NodeLabelSchema.shape);
+
 const geometryLabelShape = omitText(GeometryLabelSchema.shape);
 
 export const MarkNodeLabelSchema = strictObject({

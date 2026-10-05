@@ -15,6 +15,7 @@ const isValidIsoCalendarDate = (value: string): boolean => {
   const date = new Date(0);
   date.setUTCFullYear(year, month - 1, day);
   date.setUTCHours(0, 0, 0, 0);
+
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 };
 
@@ -25,10 +26,12 @@ export const coerceNumber = (value: unknown): number => {
     const numeric = Number(value);
     return Number.isSafeInteger(numeric) ? numeric : NaN;
   }
+
   if (typeof value === 'string') {
     const trimmed = value.trim();
     return NUMERIC_RE.test(trimmed) ? Number(trimmed) : NaN;
   }
+
   return NaN;
 };
 
@@ -37,6 +40,7 @@ export const coerceCategory = (value: unknown): string | number | undefined => {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return isFiniteNumber(value) ? value : undefined;
   if (typeof value === 'boolean') return String(value);
+
   return undefined;
 };
 
@@ -46,12 +50,14 @@ export const coerceTimestamp = (value: unknown): number | null => {
     const stamp = value.getTime();
     return Number.isNaN(stamp) ? null : stamp;
   }
+
   if (typeof value === 'number') return isFiniteNumber(value) ? value : null;
   if (typeof value === 'string') {
     if (!isIsoDateString(value) || !isValidIsoCalendarDate(value)) return null;
     const parsed = Date.parse(value.replace(' ', 'T'));
     return Number.isNaN(parsed) ? null : parsed;
   }
+
   return null;
 };
 
@@ -64,8 +70,10 @@ export const coerceValue = (value: unknown, type: DataFieldType): string | numbe
     const stamp = coerceTimestamp(value);
     return stamp === null ? NaN : stamp;
   }
+
   if (type === DataFieldType.Categorical) {
     return coerceCategory(value);
   }
+
   return coerceNumber(value);
 };

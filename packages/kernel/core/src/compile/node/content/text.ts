@@ -32,26 +32,32 @@ export type WrapTextContext = {
 /** 按既有折行规则把文本拆成可断单元与规范化空格 */
 const tokenizeText = (text: string): Array<string> => {
   const units: Array<string> = [];
+
   for (const seg of text.split(/(\s+)/)) {
     if (seg === '') continue;
     if (/^\s+$/.test(seg)) {
       units.push(' ');
       continue;
     }
+
     let run = '';
+
     for (const ch of seg) {
       if (isCjk(ch)) {
         if (run) {
           units.push(run);
           run = '';
         }
+
         units.push(ch);
       } else {
         run += ch;
       }
     }
+
     if (run) units.push(run);
   }
+
   return units;
 };
 
@@ -73,12 +79,15 @@ export const wrapText = (text: string, context: WrapTextContext): Array<string> 
 
   const lines: Array<string> = [];
   let cur = '';
+
   for (const u of units) {
     if (u === ' ') {
       if (cur !== '') cur += ' ';
       continue;
     }
+
     const candidate = cur === '' ? u : cur + u;
+
     // cur 为空时即使溢出也接受（单 token 宽于阈值 → 溢出不硬断）
     if (cur !== '' && measureText(candidate, font).width > maxWidth) {
       lines.push(cur.trimEnd());
@@ -87,6 +96,8 @@ export const wrapText = (text: string, context: WrapTextContext): Array<string> 
       cur = candidate;
     }
   }
+
   if (cur.trimEnd() !== '') lines.push(cur.trimEnd());
+
   return lines.length > 0 ? lines : [''];
 };

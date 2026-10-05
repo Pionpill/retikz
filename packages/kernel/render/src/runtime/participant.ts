@@ -122,12 +122,15 @@ const primitiveAtPath = (
 ): RuntimeScenePrimitive | undefined => {
   let current = snapshot.scene.primitives;
   let primitive: RuntimeScenePrimitive | undefined;
+
   for (const index of path) {
     const candidate: unknown = Reflect.get(current, index);
     if (candidate === undefined) return undefined;
+
     primitive = candidate as RuntimeScenePrimitive;
     current = primitive.type === 'group' ? primitive.children : [];
   }
+
   return primitive;
 };
 
@@ -138,12 +141,14 @@ const operationTargetsGroup = (
   if (operation.kind === 'setLayout' || operation.kind === 'setResources' || operation.kind === 'setAnimations') {
     return true;
   }
+
   if (operation.kind === 'replaceScene') return true;
   if (operation.kind === 'insert') return operation.subtree.primitive.type === 'group';
   if (operation.kind === 'update') {
     const currentPrimitive = currentPrimitives.get(operation.identity);
     return currentPrimitive?.type === 'group' && operation.subtree.primitive.type === 'group';
   }
+
   return currentPrimitives.get(operation.identity)?.type === 'group';
 };
 
@@ -152,9 +157,11 @@ const supportsPatch = (renderer: RetainedRenderer, patch: ScenePatch, current: S
     return true;
   if (renderer.capability === 'entity') return true;
   if (renderer.capability === 'none') return false;
+
   const currentPrimitives = createRuntimeIdentityMap(
     current.topology.map(node => [node.identity, primitiveAtPath(current, node.primitivePath)] as const),
   );
+
   return patch.operations.every(operation => operationTargetsGroup(operation, currentPrimitives));
 };
 
@@ -197,6 +204,7 @@ const validatePreparedToken = (token: RuntimePreparedCommit): RuntimePreparedCom
       cause: token,
     });
   }
+
   return token;
 };
 
@@ -205,6 +213,7 @@ const callRendererPrepare = (callback: () => RuntimePreparedCommit): RuntimePrep
     return validatePreparedToken(callback());
   } catch (cause) {
     if (isRetikzRenderError(cause)) throw cause;
+
     throw new RetikzRenderError({
       code: RetikzRenderErrorCode.RetainedRendererPrepareFailed,
       cause,
@@ -218,11 +227,13 @@ const invalidRendererRead = (cause: unknown): never => {
 
 const findPropertyDescriptor = (value: object, key: PropertyKey): PropertyDescriptor | undefined => {
   let current: object | null = value;
+
   while (current !== null) {
     const descriptor = Object.getOwnPropertyDescriptor(current, key);
     if (descriptor !== undefined) return descriptor;
     current = Object.getPrototypeOf(current);
   }
+
   return undefined;
 };
 
@@ -233,10 +244,12 @@ const captureAnimationState = <TValue extends number | boolean>(
 ): (() => TValue) => {
   const descriptor = findPropertyDescriptor(controls, key);
   if (descriptor === undefined) return invalidRendererRead({ controls, key });
+
   const read =
     descriptor.get === undefined ? () => descriptor.value as unknown : () => descriptor.get?.call(controls) as unknown;
   const initial = read();
   if (!validate(initial)) return invalidRendererRead({ controls, key, value: initial });
+
   return () => {
     try {
       const value = read();
@@ -254,8 +267,10 @@ const freezeAnimationControls = (
 ): AnimationControls => {
   const candidate: unknown = controls;
   if (typeof candidate !== 'object' || candidate === null) return invalidRendererRead(controls);
+
   const cached = cache.get(candidate);
   if (cached !== undefined) return cached;
+
   const play = Reflect.get(candidate, 'play');
   const pause = Reflect.get(candidate, 'pause');
   const seek = Reflect.get(candidate, 'seek');
@@ -268,6 +283,7 @@ const freezeAnimationControls = (
   ) {
     return invalidRendererRead(controls);
   }
+
   const readTime = captureAnimationState<number>(
     candidate,
     'time',
@@ -278,6 +294,7 @@ const freezeAnimationControls = (
     'running',
     (value): value is boolean => typeof value === 'boolean',
   );
+
   const wrapper: AnimationControls = {
     play: () => {
       Reflect.apply(play, candidate, []);
@@ -298,8 +315,10 @@ const freezeAnimationControls = (
       return readRunning();
     },
   };
+
   const frozen = Object.freeze(wrapper);
   cache.set(candidate, frozen);
+
   return frozen;
 };
 
@@ -315,6 +334,7 @@ const normalizeRendererReadUnsafe = (
       cause: value,
     });
   }
+
   const rawFrame: unknown = Reflect.get(candidate, 'frame');
   const animation = Reflect.get(candidate, 'animation') as AnimationControls | undefined;
   if (typeof rawFrame !== 'object' || rawFrame === null) {
@@ -323,6 +343,7 @@ const normalizeRendererReadUnsafe = (
       cause: value,
     });
   }
+
   const frame = rawFrame as RenderFrameSnapshot;
   validateSceneRuntimeSnapshot(frame.primary);
   if (
@@ -334,6 +355,7 @@ const normalizeRendererReadUnsafe = (
       cause: { expected: lineage, received: frame },
     });
   }
+
   return Object.freeze({
     frame: lineage,
     ...(animation === undefined ? {} : { animation: freezeAnimationControls(animation, animationControlsCache) }),
@@ -365,6 +387,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
 ): CreateRetainedRenderParticipantOptions<TComposites> => {
   const candidate: unknown = options;
   if (typeof candidate !== 'object' || candidate === null) return invalidInput(options);
+
   const backend = Reflect.get(candidate, 'backend');
   const host = Reflect.get(candidate, 'host');
   const rendererFactory = Reflect.get(candidate, 'rendererFactory');
@@ -377,6 +400,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
   if (typeof immutableOptions !== 'object' || immutableOptions === null || !isPlainObject(immutableOptions)) {
     return invalidInput(options);
   }
+
   const immutableBackend = Reflect.get(immutableOptions, 'backend');
   const idPrefix = Reflect.get(immutableOptions, 'idPrefix');
   const devicePixelRatio = Reflect.get(immutableOptions, 'devicePixelRatio');
@@ -400,6 +424,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
   ) {
     return invalidInput(options);
   }
+
   if (backend === 'canvas') {
     if (expectedInitialFrame !== undefined) return invalidInput(options);
     if (
@@ -408,6 +433,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
     ) {
       return invalidInput(options);
     }
+
     return Object.freeze({
       backend,
       host: host as HTMLCanvasElement,
@@ -429,6 +455,7 @@ const captureOptionsUnsafe = <TComposites extends ReadonlyArray<AnyCompositeDefi
       ...(mountMode === undefined ? {} : { mountMode }),
     });
   }
+
   return Object.freeze({
     backend,
     host: host as SVGSVGElement,
@@ -490,6 +517,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause });
     }
   }
+
   const validRenderer =
     isRetainedRenderer(renderer) && renderer.backend === captured.backend && renderer.host === captured.host;
   if (!validRenderer) {
@@ -501,11 +529,13 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         disposeFailure = cause;
       }
     }
+
     throw new RetikzRenderError({
       code: RetikzRenderErrorCode.RetainedRendererInvalid,
       cause: disposeFailure === undefined ? renderer : Object.freeze({ renderer, disposeFailure }),
     });
   }
+
   const executor = getRetainedRendererExecutor(renderer);
   if (executor === undefined) {
     throw new RetikzRenderError({
@@ -513,6 +543,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
       cause: renderer,
     });
   }
+
   const lease =
     previousLease ??
     (() => {
@@ -524,6 +555,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
   if (currentLeaseState === undefined) {
     throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause: lease });
   }
+
   const previousFrame =
     previousLease === undefined
       ? undefined
@@ -551,16 +583,20 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
             ),
           ),
         });
+
   let committedFrame: RenderFrameSnapshot | undefined = previousFrame;
   const animationControlsCache = new WeakMap<object, AnimationControls>();
   const resolveReadonlyLayers = (output: CoreComputationOutput<TComposites>): ReadonlyArray<RenderReadonlyLayer> =>
     validateReadonlyLayers(captured.resolveReadonlyLayers?.(output) ?? EMPTY_READONLY_LAYERS);
+
   const assertReadonlyLayersSupported = (frame: RenderFrameSnapshot): void => {
     if (frame.layers.length === 0 || renderer.readonlyLayerCapability === 'supported') return;
+
     throw new RetikzRenderError({
       code: RetikzRenderErrorCode.RetainedRendererReadonlyLayerUnsupported,
     });
   };
+
   const participant = defineRuntimeCommitParticipant<RetainedRendererRead>({
     key: captured.backend === 'svg' ? RETAINED_SVG_PARTICIPANT_KEY : RETAINED_CANVAS_PARTICIPANT_KEY,
     sources: [RenderRuntimeSourceDefinition],
@@ -600,6 +636,7 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
             code: RetikzRenderErrorCode.RetainedRendererInitialFrameMismatch,
           });
         }
+
         assertReadonlyLayersSupported(frame);
         const rendererToken =
           previousFrame === undefined
@@ -613,9 +650,11 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
                   ]),
                 });
                 validateScenePatch(previousFrame.primary, patch, frame.primary);
+
                 return callRendererPrepare(() => executor.prepare(patch, frame, config));
               })();
         const previous = committedFrame;
+
         return Object.freeze({
           commit: () => {
             rendererToken.commit();
@@ -638,9 +677,11 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           dispose: () => rendererToken.dispose(),
         });
       }
+
       if (committedFrame === undefined) {
         throw new RetikzRenderError({ code: RetikzRenderErrorCode.ScenePatchRevisionMismatch });
       }
+
       const hasCandidateCoreSnapshot = core.snapshot.revision === candidate.candidateRevision;
       const next = hasCandidateCoreSnapshot
         ? rebaseSnapshot(core.snapshot)
@@ -664,9 +705,11 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
           message: `Renderer capability "${renderer.capability}" requires a full Scene replacement`,
         });
       }
+
       assertReadonlyLayersSupported(nextFrame);
       const rendererToken = callRendererPrepare(() => executor.prepare(rendererPatch, nextFrame, config));
       const previous = committedFrame;
+
       return Object.freeze({
         commit: () => {
           rendererToken.commit();
@@ -697,9 +740,11 @@ export const createRetainedRenderParticipant = <TComposites extends ReadonlyArra
         executor.dispose();
         currentLeaseState.owner = undefined;
       }
+
       committedFrame = undefined;
     },
   });
+
   return Object.freeze({
     participant,
     read: runtime => runtime.participant(participant),

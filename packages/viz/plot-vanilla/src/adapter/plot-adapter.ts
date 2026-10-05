@@ -22,12 +22,14 @@ import { plotIROf } from '../spec';
 /** 将 Plot 根节点包进可选的面板 Scope */
 const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
   if (panel === undefined) return node;
+
   const { x, y, transforms, zIndex, clip, theme } = panel;
   const panelTransforms =
     x !== undefined || y !== undefined
       ? [{ kind: 'translate' as const, x: x ?? 0, y: y ?? 0 }, ...(transforms ?? [])]
       : transforms;
   if (panelTransforms === undefined && zIndex === undefined && clip === undefined && theme === undefined) return node;
+
   const input: InputScope = {
     type: 'scope',
     ...(panelTransforms === undefined ? {} : { transforms: panelTransforms }),
@@ -36,6 +38,7 @@ const wrapPlotPanel = (node: IRPlot, panel: InputPlotEmbed['panel']) => {
     ...(theme === undefined ? {} : { theme }),
     children: [node],
   };
+
   return normalizeScopeWithChildren(input, () => [node]);
 };
 
@@ -77,8 +80,10 @@ export const PlotInputEmbedAdapter = {
   lower: (props: InputPlotEmbed, _context: InputEmbedContext) => {
     if (props.datasets === undefined || props.dataTransformExecutor !== undefined || props.signal !== undefined)
       throw new RetikzPlotVanillaError('Plot dataBindings, executor or signal require async processing');
+
     const spec = plotIROf(props);
     const providerDependencies = createPlotProviderContribution(props.datasets, props.lowerOptions);
+
     return {
       node: wrapPlotPanel(spec, props.panel),
       providerDependencies,
@@ -110,6 +115,7 @@ export const PlotInputEmbedAdapter = {
       props.lowerOptions,
     );
     const providerDependencies = createPlotProviderContribution({}, props.lowerOptions);
+
     return {
       execute: async () => {
         const preparedData = await preparation.execute();
@@ -124,6 +130,7 @@ export const PlotInputEmbedAdapter = {
                 hostLineageMetadata: props.hostLineageMetadata,
                 onLineage: props.onLineage,
               };
+
         return {
           node,
           providerDependencies,

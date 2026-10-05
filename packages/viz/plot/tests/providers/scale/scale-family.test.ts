@@ -25,6 +25,7 @@ const firstLayer = (
 
 const collectPaths = (layer: IRScope): Array<IRPath> => {
   const out: Array<IRPath> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -32,7 +33,9 @@ const collectPaths = (layer: IRScope): Array<IRPath> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -62,6 +65,7 @@ describe('scale family · log (contract)', () => {
     ];
     const path = collectPaths(firstLayer(lineSpec({ type: 'log' }), { d: data }, cartOpts))[0];
     const mid = stepPoint(path.children[1]);
+
     expect(mid[0]).toBeCloseTo(240, 6); // x linear i=1
     expect(mid[1]).toBeCloseTo(150, 6); // log 几何中点
   });
@@ -73,9 +77,11 @@ describe('scale family · log (contract)', () => {
       { i: 1, v: 10 },
       { i: 2, v: 100 },
     ];
+
     // v=0 不可绘（log）→ 该点跳过；仍有 2 个有效顶点成线
     const path = collectPaths(firstLayer(lineSpec({ type: 'log' }), { d: data }, cartOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+
     expect(points.length).toBe(2);
   });
 
@@ -85,6 +91,7 @@ describe('scale family · log (contract)', () => {
       { i: 0, v: 1 },
       { i: 1, v: 10 },
     ];
+
     expect(() => expandOf(lineSpec({ type: 'log', domain: [0, 100] }), { d: data }, cartOpts)).toThrow(
       /strictly positive/,
     );
@@ -103,6 +110,7 @@ describe('scale family · sqrt (contract)', () => {
       { i: 2, v: 4 },
     ];
     const path = collectPaths(firstLayer(lineSpec({ type: 'sqrt' }), { d: data }, cartOpts))[0];
+
     expect(stepPoint(path.children[1])[1]).toBeCloseTo(150, 6);
   });
 
@@ -111,6 +119,7 @@ describe('scale family · sqrt (contract)', () => {
       { i: 0, v: 1 },
       { i: 1, v: 4 },
     ];
+
     expect(() => expandOf(lineSpec({ type: 'sqrt', domain: [-1, 9] }), { d: data }, cartOpts)).toThrow(/non-negative/);
   });
 });
@@ -124,6 +133,7 @@ describe('scale family · pow (contract)', () => {
       { i: 2, v: 2 },
     ];
     const path = collectPaths(firstLayer(lineSpec({ type: 'pow', exponent: 2 }), { d: data }, cartOpts))[0];
+
     expect(stepPoint(path.children[1])[1]).toBeCloseTo(225, 6);
   });
 
@@ -132,6 +142,7 @@ describe('scale family · pow (contract)', () => {
       { i: 0, v: 1 },
       { i: 1, v: 4 },
     ];
+
     expect(() => expandOf(lineSpec({ type: 'pow', exponent: 0.5, domain: [-1, 9] }), { d: data }, cartOpts)).toThrow(
       /non-negative domain/,
     );
@@ -143,6 +154,7 @@ describe('scale family · pow (contract)', () => {
       { i: 1, v: 0 },
       { i: 2, v: 2 },
     ];
+
     // exponent 2（整数）允许负 domain，不抛
     expect(() => expandOf(lineSpec({ type: 'pow', exponent: 2 }), { d: data }, cartOpts)).not.toThrow();
   });
@@ -157,6 +169,7 @@ describe('scale family · symlog', () => {
       { i: 2, v: 10 },
     ];
     const path = collectPaths(firstLayer(lineSpec({ type: 'symlog' }), { d: data }, cartOpts))[0];
+
     expect(stepPoint(path.children[1])[1]).toBeCloseTo(150, 6); // 对称 domain 下 0 落中点
   });
 
@@ -169,6 +182,7 @@ describe('scale family · symlog', () => {
     ];
     const path = collectPaths(firstLayer(lineSpec({ type: 'symlog' }), { d: data }, cartOpts))[0];
     const points = path.children.filter(s => s.kind === 'move' || s.kind === 'line');
+
     expect(points.length).toBe(3);
   });
 });
@@ -182,6 +196,7 @@ describe('scale family · radial', () => {
       { i: 2, v: 4 },
     ];
     const path = collectPaths(firstLayer(lineSpec({ type: 'radial' }), { d: data }, cartOpts))[0];
+
     expect(stepPoint(path.children[1])[1]).toBeCloseTo(Math.sqrt(67500), 4);
   });
 
@@ -204,6 +219,7 @@ describe('scale family · radial', () => {
       { cat: 'C', val: 9 },
     ];
     const nodes: Array<{ shape?: { type?: string; params?: Record<string, number> } }> = [];
+
     const walk = (children: ReadonlyArray<unknown>): void => {
       for (const child of children) {
         const node = child as {
@@ -215,9 +231,13 @@ describe('scale family · radial', () => {
         else if (node.type === 'scope' && node.children) walk(node.children);
       }
     };
+
     walk(firstLayer(spec, { d: data }, cartOpts).children);
+
     expect(nodes).toHaveLength(3); // 每类别一扇区
+
     const radii = nodes.map(node => node.shape?.params?.outerRadius ?? NaN);
+
     expect(nodes.every(node => node.shape?.type === 'sector')).toBe(true);
     expect(radii).toEqual([...radii].sort((a, b) => a - b)); // val 升序 → 外半径单调增
   });
@@ -239,6 +259,7 @@ describe('scale family · radial', () => {
       { cat: 'a', v: 1 },
       { cat: 'b', v: 4 },
     ];
+
     expect(() => expandOf(barSpec, { d: data }, cartOpts)).not.toThrow();
   });
 });
@@ -280,6 +301,7 @@ describe('scale family · L1 baseline guard (contract)', () => {
       { cat: 'a', v: 1 },
       { cat: 'b', v: 10 },
     ];
+
     expect(() => expandOf(barSpec({ type: 'log' }), { d: data }, cartOpts)).toThrow(MSG);
   });
 
@@ -288,6 +310,7 @@ describe('scale family · L1 baseline guard (contract)', () => {
       { i: 0, v: 1 },
       { i: 1, v: 4 },
     ];
+
     expect(() => expandOf(areaSpec({ type: 'sqrt' }), { d: data }, cartOpts)).toThrow(MSG);
   });
 
@@ -296,6 +319,7 @@ describe('scale family · L1 baseline guard (contract)', () => {
       { cat: 'a', v: 1 },
       { cat: 'b', v: 4 },
     ];
+
     expect(() => expandOf(barSpec({ type: 'pow', exponent: 2 }), { d: data }, cartOpts)).toThrow(MSG);
   });
 
@@ -304,6 +328,7 @@ describe('scale family · L1 baseline guard (contract)', () => {
       { cat: 'a', v: -4 },
       { cat: 'b', v: 4 },
     ];
+
     expect(() => expandOf(barSpec({ type: 'symlog' }), { d: data }, cartOpts)).toThrow(MSG);
   });
 
@@ -313,6 +338,7 @@ describe('scale family · L1 baseline guard (contract)', () => {
       { i: 0, v: 1 },
       { i: 1, v: 10 },
     ];
+
     expect(() => expandOf(lineSpec({ type: 'log' }), { d: data }, cartOpts)).not.toThrow();
   });
 });

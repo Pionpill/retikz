@@ -7,10 +7,12 @@ import { integrationI18n } from './blend-integration.i18n';
 
 /** 组件对接示例参数 */
 export type IntegrationDemoProps = { lang?: Lang };
+
 /** 比较 Scope 提供的配置和图元局部配置 */
 const IntegrationDemo: FC<IntegrationDemoProps> = props => {
   const { lang = 'zh' } = props;
   const text = integrationI18n[lang];
+
   return (
     <Layout viewBox={{ x: -65, y: -65, width: 330, height: 155 }}>
       <Node position={[200, 0]} layout={{ minimumSize: 90 }} style={{ fill: 'dodgerblue', stroke: 'none' }} />

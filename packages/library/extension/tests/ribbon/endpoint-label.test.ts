@@ -18,6 +18,7 @@ const textsOf = (items: ReadonlyArray<ScenePrimitive>): Array<string> =>
 describe('Ribbon endpoint labels', () => {
   it('accepts Kernel rotation modes and rejects centerline-only fields', () => {
     const width = { kind: 'fixed', value: 20 };
+
     expect(
       RibbonPathOptionsSchema.safeParse({
         width,
@@ -28,6 +29,7 @@ describe('Ribbon endpoint labels', () => {
       RibbonPathOptionsSchema.safeParse({ width, start: { label: { text: 'source', sloped: true } } }).success,
     ).toBe(false);
   });
+
   it('emits both endpoint labels alongside a centerline label', () => {
     const scene = compileToScene(
       {
@@ -52,6 +54,7 @@ describe('Ribbon endpoint labels', () => {
       },
       { pathKinds: [RibbonPathKindDefinition] },
     ).scene;
+
     expect(textsOf(scene.primitives)).toEqual(expect.arrayContaining(['source', 'target', 'detail', 'flow']));
   });
 });
@@ -87,12 +90,16 @@ describe('Endpoint label cap clearance', () => {
     { name: 'round', right: 154 },
   ])('places text beyond the complete $name cap', ({ name, right }) => {
     const scene = labeledScene({ name });
+
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(right, 2);
   });
+
   it('accounts for projected text size after independent rotation', () => {
     const scene = labeledScene({ name: 'butt' }, { text: 'endpoint', rotate: 'tangent' });
+
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(124, 2);
   });
+
   it('uses the true quadratic cap extremum, not its control point', () => {
     const custom = defineRibbonCap({
       name: 'curved',
@@ -110,10 +117,13 @@ describe('Endpoint label cap clearance', () => {
       { text: 'endpoint' },
       createRibbonPathKindDefinition({ caps: [custom] }),
     );
+
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(164, 2);
   });
+
   it('keeps inside labels on the inward side without expanding the end', () => {
     const scene = labeledScene({ name: 'butt' }, { text: 'endpoint', placement: 'inside' });
+
     expect(scene.layout.x + scene.layout.width).toBeCloseTo(100, 2);
   });
 });
@@ -123,14 +133,18 @@ const allPrimitives = (items: ReadonlyArray<ScenePrimitive>): Array<ScenePrimiti
 
 it('keeps numeric rotations readable without changing the projected clearance', () => {
   const scene = labeledScene({ name: 'butt' }, { text: 'endpoint', rotate: 180, keepUpright: true });
+
   expect(scene.layout.x + scene.layout.width).toBeCloseTo(144, 2);
+
   const angles = allPrimitives(scene.primitives).flatMap(p =>
     p.type === 'group' ? (p.transforms?.filter(t => t.kind === 'rotate').map(t => t.degrees) ?? []) : [],
   );
+
   expect(angles).toContain(360);
 });
 it('measures rotated multiline blocks rather than a single line', () => {
   const scene = labeledScene({ name: 'butt' }, { text: ['first', 'second'], rotate: 'tangent', font: { size: 20 } });
+
   expect(scene.layout.x + scene.layout.width).toBeCloseTo(152, 2);
 });
 it('places both labels at zero-width butt caps and preserves parent transforms', () => {
@@ -165,6 +179,7 @@ it('places both labels at zero-width butt caps and preserves parent transforms',
     padding: 0,
     measureText: () => ({ width: 40, height: 20 }),
   });
+
   expect(textsOf(result.scene.primitives)).toEqual(['start', 'end']);
   expect(result.scene.layout.x).toBeCloseTo(-14, 2);
   expect(result.scene.layout.y).toBeCloseTo(30, 2);
@@ -200,6 +215,7 @@ it('inherits Kernel label font and color, multiplies opacity, and retains host m
   const scene = compileToScene(input, { pathKinds: [RibbonPathKindDefinition] }).scene;
   const primitives = allPrimitives(scene.primitives);
   const text = primitives.find(p => p.type === 'text');
+
   expect(text).toMatchObject({ fill: 'blue', fontSize: 18, fontWeight: 'bold', opacity: 0.2 });
   expect(primitives.some(p => p.type === 'group' && p.meta?.source === 'connection')).toBe(true);
 });
@@ -228,6 +244,7 @@ it('uses the specified endpoint section for radial rotation and tangent alignmen
   const angles = allPrimitives(scene.primitives).flatMap(p =>
     p.type === 'group' ? (p.transforms?.filter(t => t.kind === 'rotate').map(t => t.degrees) ?? []) : [],
   );
+
   expect(angles).toContain(-45);
 });
 
@@ -236,6 +253,7 @@ it('uses arc cap extrema for rich text labels', () => {
     { name: 'arc', params: { center: [0, 0], radius: 10 } },
     { text: [{ runs: [{ text: 'rich', fill: 'red' }] }] },
   );
+
   expect(textsOf(scene.primitives)).toContain('rich');
   expect(scene.layout.x + scene.layout.width).toBeCloseTo(154, 2);
 });
@@ -268,10 +286,13 @@ describe('Whole Ribbon transforms', () => {
       },
       { pathKinds: [RibbonPathKindDefinition], padding: 0, measureText: () => ({ width: 40, height: 20 }) },
     );
+
     for (const key of ['x', 'y', 'width', 'height'] as const)
       expect(result.scene.layout[key]).toBeCloseTo(expected[key], 2);
     const group = result.scene.primitives[0];
+
     expect(group).toMatchObject({ type: 'group', id: 'ribbon', meta: { owner: 'connection' } });
+
     if (group.type === 'group') {
       expect(textsOf(group.children)).toContain('target');
       expect(group.children.some(p => p.type === 'path')).toBe(true);

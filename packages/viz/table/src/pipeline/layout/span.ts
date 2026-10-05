@@ -65,12 +65,15 @@ const validateConstraint = (constraint: TableSpanConstraint, trackCount: number)
   if (!Number.isInteger(constraint.startIndex) || constraint.startIndex < 0) {
     throw new RetikzTableError(`table: span Cell "${label}" startIndex must be a nonnegative integer`);
   }
+
   if (!Number.isInteger(constraint.length) || constraint.length <= 0) {
     throw new RetikzTableError(`table: span Cell "${label}" length must be a positive integer`);
   }
+
   if (constraint.startIndex + constraint.length > trackCount) {
     throw new RetikzTableError(`table: span Cell "${label}" range exceeds ${trackCount} tracks`);
   }
+
   assertFiniteNonnegative(constraint.requiredOuterSize, `span Cell "${label}" requiredOuterSize`);
 };
 
@@ -94,9 +97,11 @@ const growthCandidateOf = (track: ResolvedTableTrackSize, index: number): SpanGr
       if (track.max.kind === TableTrackSizeKind.Fraction) {
         return { index, limit: Number.POSITIVE_INFINITY, weight: track.max.weight };
       }
+
       if (track.min.kind === TableTrackSizeKind.Fixed && track.max.kind === TableTrackSizeKind.Fixed) {
         return { index, limit: Math.max(track.min.value, track.max.value), weight: 0 };
       }
+
       return { index, limit: Number.POSITIVE_INFINITY, weight: 0 };
   }
 };
@@ -141,6 +146,7 @@ const growEqualNaturalSizes = (
     }
 
     if (!(consumed > 0)) return 0;
+
     remaining = Math.max(0, remaining - consumed);
     active = active.filter(candidate => candidate.limit > naturalSizes[candidate.index]);
   }
@@ -194,6 +200,7 @@ const growFlexibleNaturalSizes = (
     }
 
     if (!(consumed > 0)) return 0;
+
     remaining = Math.max(0, remaining - consumed);
   }
 
@@ -246,6 +253,7 @@ export const propagateTableSpanContributions = (
       size: remaining,
     });
   });
+
   return deepFreeze({
     contributions: contributionSizes.map((size, trackIndex) => ({ trackIndex, size })),
     unmet,

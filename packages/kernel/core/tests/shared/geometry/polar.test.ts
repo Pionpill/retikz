@@ -5,30 +5,35 @@ import { polar } from '../../../src/shared/geometry/polar';
 describe('polar.toPosition 极坐标 → 笛卡尔', () => {
   it('angle=0 → +x 方向', () => {
     const [x, y] = polar.toPosition({ angle: 0, radius: 1 });
+
     expect(x).toBeCloseTo(1);
     expect(y).toBeCloseTo(0);
   });
 
   it('angle=90 → +y 方向', () => {
     const [x, y] = polar.toPosition({ angle: 90, radius: 1 });
+
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(1);
   });
 
   it('angle=180 → -x 方向', () => {
     const [x, y] = polar.toPosition({ angle: 180, radius: 1 });
+
     expect(x).toBeCloseTo(-1);
     expect(y).toBeCloseTo(0);
   });
 
   it('angle=270 → -y 方向', () => {
     const [x, y] = polar.toPosition({ angle: 270, radius: 1 });
+
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(-1);
   });
 
   it('对角 angle=45, radius=sqrt(2) → [1, 1]', () => {
     const [x, y] = polar.toPosition({ angle: 45, radius: Math.SQRT2 });
+
     expect(x).toBeCloseTo(1);
     expect(y).toBeCloseTo(1);
   });
@@ -39,6 +44,7 @@ describe('polar.toPosition 极坐标 → 笛卡尔', () => {
 
   it('origin 是 Position：偏移基于该点', () => {
     const [x, y] = polar.toPosition({ origin: [10, 10], angle: 0, radius: 5 });
+
     expect(x).toBeCloseTo(15);
     expect(y).toBeCloseTo(10);
   });
@@ -50,6 +56,7 @@ describe('polar.toPosition 极坐标 → 笛卡尔', () => {
       angle: 90,
       radius: 5,
     });
+
     expect(x).toBeCloseTo(10);
     expect(y).toBeCloseTo(5);
   });
@@ -74,12 +81,14 @@ describe('polar.fromPosition 笛卡尔 → 极坐标', () => {
 
   it('[0, -1] → angle=-90, radius=1', () => {
     const p = polar.fromPosition([0, -1]);
+
     expect(p.angle).toBe(-90);
     expect(p.radius).toBe(1);
   });
 
   it('对角 [1, 1] → angle≈45, radius≈sqrt(2)', () => {
     const p = polar.fromPosition([1, 1]);
+
     expect(p.angle).toBeCloseTo(45);
     expect(p.radius).toBeCloseTo(Math.SQRT2);
   });
@@ -93,6 +102,7 @@ describe('polar.toPosition / fromPosition 互为逆变换', () => {
     [0.5, 0.5],
   ])('toPosition(fromPosition([%i, %i])) ≈ 原点', (x, y) => {
     const back = polar.toPosition(polar.fromPosition([x, y]));
+
     expect(back[0]).toBeCloseTo(x);
     expect(back[1]).toBeCloseTo(y);
   });
@@ -101,12 +111,14 @@ describe('polar.toPosition / fromPosition 互为逆变换', () => {
 describe('polar.offsetFrom 从某点按极坐标偏移', () => {
   it('原点 [10, 10] + (0°, 5) → [15, 10]', () => {
     const [x, y] = polar.offsetFrom([10, 10], { angle: 0, radius: 5 });
+
     expect(x).toBeCloseTo(15);
     expect(y).toBeCloseTo(10);
   });
 
   it('原点 [0, 0] + (90°, 3) → [0, 3]', () => {
     const [x, y] = polar.offsetFrom([0, 0], { angle: 90, radius: 3 });
+
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(3);
   });

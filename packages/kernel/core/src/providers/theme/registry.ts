@@ -6,6 +6,7 @@ export const resolveThemeStyleRegistry = (
   custom: ReadonlyArray<ThemeStyleDefinition> | undefined = undefined,
 ): ReadonlyMap<string, ThemeStyleDefinition> => {
   const registry = new Map<string, ThemeStyleDefinition>();
+
   for (const definition of custom ?? []) {
     if (registry.has(definition.name)) {
       throw new RetikzCoreError(
@@ -13,7 +14,9 @@ export const resolveThemeStyleRegistry = (
         `Theme style '${definition.name}' is already registered.`,
       );
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };

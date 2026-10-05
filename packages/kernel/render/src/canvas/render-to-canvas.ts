@@ -12,7 +12,9 @@ const getDevicePixelRatio = (options: RenderOptions): number => {
   if (options.devicePixelRatio !== undefined) {
     return Number.isFinite(options.devicePixelRatio) && options.devicePixelRatio > 0 ? options.devicePixelRatio : 1;
   }
+
   const ratio = globalThis.devicePixelRatio;
+
   return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
 };
 
@@ -28,7 +30,9 @@ const assertPositiveFinite = (name: string, value: number): void => {
 const getCanvasDefaultFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
   if (typeof getComputedStyle === 'undefined') return undefined;
   if (typeof Element === 'undefined' || !(canvas instanceof Element)) return undefined;
+
   const fontFamily = getComputedStyle(canvas).fontFamily.trim();
+
   return fontFamily.length > 0 ? fontFamily : undefined;
 };
 
@@ -36,16 +40,20 @@ const getCanvasDefaultFontFamily = (canvas: HTMLCanvasElement): string | undefin
 const getCanvasCurrentColor = (canvas: HTMLCanvasElement): string | undefined => {
   if (typeof getComputedStyle === 'undefined') return undefined;
   if (typeof Element === 'undefined' || !(canvas instanceof Element)) return undefined;
+
   const color = getComputedStyle(canvas).color.trim();
+
   return color.length > 0 ? color : undefined;
 };
 
 /** 创建 size×size 离屏 2D context（pattern motif tile 用）；无 document 环境返回 null */
 const createOffscreenContext = (width: number, height: number): CanvasRenderingContext2D | null => {
   if (typeof document === 'undefined') return null;
+
   const el = document.createElement('canvas');
   el.width = Math.max(1, Math.ceil(width));
   el.height = Math.max(1, Math.ceil(height));
+
   return el.getContext('2d');
 };
 
@@ -73,12 +81,14 @@ export const renderFrameToCanvas = (
       'renderToCanvas: scene.layout.x must be a finite number.',
     );
   }
+
   if (!Number.isFinite(scene.layout.y)) {
     throw new RetikzRenderError(
       RetikzRenderErrorCode.Canvas,
       'renderToCanvas: scene.layout.y must be a finite number.',
     );
   }
+
   assertPositiveFinite('canvas.width', canvas.width);
   assertPositiveFinite('canvas.height', canvas.height);
   assertPositiveFinite('scene.layout.width', scene.layout.width);
@@ -106,6 +116,7 @@ export const renderFrameToCanvas = (
     resolveCssColor: options.resolveCssColor ?? normalizeCssColorViaCanvas,
   };
   drawScene(ctx, scene, drawOptions);
+
   for (const layer of layers) drawReadonlyLayer(ctx, layer, drawOptions);
 };
 

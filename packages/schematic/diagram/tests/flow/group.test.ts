@@ -59,6 +59,7 @@ describe('Flow Group Graph surface', () => {
       graphDefaults: { entity: { style: { textColor: 'red' } } },
     });
     const parsed = Flow.FlowDiagramSchema.parse(source);
+
     expect(parsed.groups[0]).toMatchObject(source.groups[0]);
     expect(Flow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
     expect(Flow.FlowGroupSchema.safeParse({ id: 'group', children: ['item'], caption: {} }).success).toBe(false);
@@ -74,7 +75,9 @@ describe('Flow Group Graph surface', () => {
       ...flow({}),
       groups: [{ id: 'group', children: ['item'], ...field }],
     });
+
     expect(parsed.success).toBe(false);
+
     if (!parsed.success) expect(parsed.error.issues[0].path).toEqual(['groups', 0]);
   });
 
@@ -95,14 +98,17 @@ describe('Flow Group Graph surface', () => {
     };
     const group = resolve(source).elements[0];
     if (group.type !== 'group') throw new Error('Expected Group');
+
     expect(group.graph.caption).toEqual({
       side: 'bottom',
       direction: 'vertical',
       bodyGap: 0,
       description: { text: 'Detail', textColor: 'red', font: { weight: 700 } },
     });
+
     const withoutCaption = resolve({ ...source, groups: flow({}).groups }).elements[0];
     if (withoutCaption.type !== 'group') throw new Error('Expected Group');
+
     expect(withoutCaption.graph.caption).toBeUndefined();
   });
 
@@ -133,10 +139,13 @@ describe('Flow Group Graph surface', () => {
     const canonical = resolve(source);
     const outer = canonical.elements[0];
     if (outer.type !== 'group') throw new Error('Expected outer Group');
+
     const inner = outer.elements[0];
     if (inner.type !== 'group') throw new Error('Expected inner Group');
+
     const item = inner.elements[0];
     if (item.type !== 'entity') throw new Error('Expected Entity');
+
     expect(outer.graph.border).toBeUndefined();
     expect(inner.graph.border).toEqual({ stroke: 'red' });
     expect(item.graph.style?.textColor).toBe('red');
@@ -145,6 +154,7 @@ describe('Flow Group Graph surface', () => {
 
     const output = compile(source);
     const texts = primitives(output.scene.primitives).filter(value => value.type === 'text');
+
     expect(texts.some(value => value.lines.length > 1 && value.fill === 'red')).toBe(true);
     expect(texts.find(value => value.lines.some(line => line.text === 'Outside'))?.fill).toBe('blue');
   });
@@ -170,6 +180,7 @@ describe('Flow Group Graph surface', () => {
     const first = inputs[0].elements[0];
     const second = inputs[1].elements[0];
     if (first.kind !== 'group' || second.kind !== 'group') throw new Error('Expected Group metrics');
+
     expect(first.contentInsets.top).toBeGreaterThan(first.contentInsets.bottom);
     expect(second.contentInsets.bottom).toBe(first.contentInsets.top);
     expect(second.contentInsets.top).toBe(first.contentInsets.bottom);
@@ -200,8 +211,11 @@ describe('Flow Group Graph surface', () => {
     const group = primitives(output.scene.primitives).find(
       value => value.type === 'group' && value.meta?.owner === 'service',
     );
+
     expect(group).toMatchObject({ type: 'group', meta: { owner: 'service' } });
+
     if (group?.type !== 'group') throw new Error('Expected Group Scope');
+
     expect(group.clipRef).toBeDefined();
     expect(primitives(output.scene.primitives).some(value => value.type === 'rect' && value.stroke === 'red')).toBe(
       true,

@@ -8,6 +8,7 @@ export type CanonicalMatrixAxisIndex =
         | { start: number; labels?: never }
         | { labels: Array<string>; start?: never }
       ));
+
 /** 已解析的矩形格与独立行列索引 */
 export type CanonicalMatrix = Omit<
   IRMatrix,

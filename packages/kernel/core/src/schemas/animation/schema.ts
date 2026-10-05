@@ -12,6 +12,7 @@ import { Anchor, CenterAnchor } from '../../shared';
 import { AnimationDirection, AnimationEasing, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
 
 const AnimationEasingNameSchema = createOpenStringSchema(AnimationEasing);
+
 const AnimationPropertySchema = createOpenStringSchema(AnimationProperty);
 
 export const EasingSchema = union([

@@ -101,6 +101,7 @@ describe('resolvePath', () => {
     for (const [index, step] of canonical.path.children!.slice(1).entries()) {
       expect(step).toMatchObject({ label: { position: expected[index], side: 'top', distance: 4 } });
     }
+
     expect(
       resolvePathWithBuiltinProviders(
         path({

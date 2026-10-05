@@ -28,6 +28,7 @@ export const createTableStructureContext = (
   if (preparedData === undefined && !Object.hasOwn(datasets, parsedData.reference)) {
     throw new RetikzTableError(`dataset "${parsedData.reference}" not found in provided datasets`);
   }
+
   const rows = preparedData?.rows ?? datasets[parsedData.reference];
   const sourceIndices = deepFreeze(rows.map((_, index) => index));
   const modelSource = preparedData?.model ?? parsedData.model;
@@ -38,14 +39,17 @@ export const createTableStructureContext = (
     if (!Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex >= rows.length) {
       throw new RetikzTableError(`sourceIndex ${sourceIndex} is outside dataset "${parsedData.reference}"`);
     }
+
     const value = resolveFieldPath(rows[sourceIndex], field);
     if (value === undefined) return undefined;
+
     const scalar = ScalarValueSchema.safeParse(value);
     if (!scalar.success) {
       throw new RetikzTableError(`field "${field}" at sourceIndex ${sourceIndex} must resolve to a JSON scalar value`, {
         cause: scalar.error,
       });
     }
+
     return scalar.data;
   };
 
@@ -57,13 +61,17 @@ export const createTableStructureContext = (
     }),
     resolveFieldTypes: (sourceFields: ReadonlySet<string>) => {
       if (preparedView === undefined) return resolveFieldTypes(parsedData.model, rows, new Set(sourceFields));
+
       const declared = new Set(preparedView.model.map(field => field.name));
+
       for (const field of sourceFields)
         if (!declared.has(field)) throw new RetikzTableError(`unknown field "${field}" in prepared Table data model`);
       const types: DataFieldTypeMap = new Map();
+
       for (const field of preparedView.model) {
         if (sourceFields.has(field.name) && field.type !== undefined) types.set(field.name, field.type);
       }
+
       return types;
     },
     resolveField: resolveScalarField,

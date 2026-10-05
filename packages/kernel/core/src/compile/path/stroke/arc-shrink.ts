@@ -7,7 +7,9 @@ import { alignAngleSweep, DEG_TO_RAD, RAD_TO_DEG } from '../../../shared/geometr
 type ArcCommand = ArcPathCommand | EllipseArcPathCommand;
 
 const ARC_LENGTH_TOLERANCE = 1e-7;
+
 const MAX_INTEGRATION_DEPTH = 12;
+
 const ANGLE_BISECTION_STEPS = 48;
 
 /** 解析弧命令的实际有向扫描区间 */
@@ -24,6 +26,7 @@ export const arcCommandPointAt = (command: ArcCommand, angleDeg: number): IRPosi
   const rotation = command.kind === 'ellipseArc' ? (command.rotation ?? 0) * DEG_TO_RAD : 0;
   const x = radiusX * Math.cos(angle);
   const y = radiusY * Math.sin(angle);
+
   return [
     command.center[0] + x * Math.cos(rotation) - y * Math.sin(rotation),
     command.center[1] + x * Math.sin(rotation) + y * Math.cos(rotation),
@@ -60,6 +63,7 @@ const integrateEllipseLength = (radiusX: number, radiusY: number, startAngle: nu
     if (depth >= MAX_INTEGRATION_DEPTH || Math.abs(refined - whole) <= 15 * tolerance) {
       return refined + (refined - whole) / 15;
     }
+
     return (
       integrate(left, middle, leftEstimate, tolerance / 2, depth + 1) +
       integrate(middle, right, rightEstimate, tolerance / 2, depth + 1)
@@ -72,6 +76,7 @@ const integrateEllipseLength = (radiusX: number, radiusY: number, startAngle: nu
     (ellipseSpeed(radiusX, radiusY, from) +
       4 * ellipseSpeed(radiusX, radiusY, middle) +
       ellipseSpeed(radiusX, radiusY, to));
+
   return integrate(from, to, whole, ARC_LENGTH_TOLERANCE, 0);
 };
 
@@ -80,6 +85,7 @@ const arcLength = (command: ArcCommand, startAngle: number, endAngle: number): n
   if (command.kind === 'arc') {
     return Math.abs(endAngle - startAngle) * DEG_TO_RAD * Math.abs(command.radius);
   }
+
   return integrateEllipseLength(Math.abs(command.radiusX), Math.abs(command.radiusY), startAngle, endAngle);
 };
 
@@ -87,6 +93,7 @@ const arcLength = (command: ArcCommand, startAngle: number, endAngle: number): n
 const angleAtDistance = (command: ArcCommand, startAngle: number, endAngle: number, distance: number): number => {
   const totalLength = arcLength(command, startAngle, endAngle);
   if (totalLength <= DEFAULT_EPSILON) return startAngle;
+
   const clamped = Math.max(0, Math.min(distance, totalLength));
   if (clamped <= DEFAULT_EPSILON) return startAngle;
   if (totalLength - clamped <= DEFAULT_EPSILON) return endAngle;
@@ -98,6 +105,7 @@ const angleAtDistance = (command: ArcCommand, startAngle: number, endAngle: numb
 
   let low = 0;
   let high = 1;
+
   for (let index = 0; index < ANGLE_BISECTION_STEPS; index += 1) {
     const middle = (low + high) / 2;
     const candidate = startAngle + (endAngle - startAngle) * middle;
@@ -105,6 +113,7 @@ const angleAtDistance = (command: ArcCommand, startAngle: number, endAngle: numb
     if (length < clamped) low = middle;
     else high = middle;
   }
+
   return startAngle + (endAngle - startAngle) * ((low + high) / 2);
 };
 
@@ -120,5 +129,6 @@ export const trimArcEnd = (command: ArcCommand, distance: number): ArcCommand =>
   const sweep = resolveArcSweep(command);
   const totalLength = arcLength(command, sweep.start, sweep.end);
   const endAngle = angleAtDistance(command, sweep.start, sweep.end, Math.max(0, totalLength - Math.max(0, distance)));
+
   return { ...command, startAngle: sweep.start, endAngle };
 };

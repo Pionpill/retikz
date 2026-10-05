@@ -5,6 +5,7 @@ import type { IRCell } from '../../_cell/schema';
 import type { MatrixSchema, MatrixAxisIndexSchema } from './schema';
 
 export type IRMatrixAxisIndex = input<typeof MatrixAxisIndexSchema>;
+
 /** 三种入口互斥的 Matrix Source；单元格内容沿用共享绘图契约 */
 export type IRMatrix = Omit<
   input<typeof MatrixSchema>,

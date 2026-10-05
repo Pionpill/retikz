@@ -31,8 +31,10 @@ export const resolveFlowEndpointPosition = (
         message: 'Endpoint query context is required.',
         details: { relatedIds: [target.id] },
       });
+
     return context.resolveEndpoint({ target, elements });
   }
+
   const bounds = elements.find(element => element.id === target.id)?.bounds;
   if (bounds === undefined)
     throw new RetikzDiagramError({
@@ -40,6 +42,7 @@ export const resolveFlowEndpointPosition = (
       message: 'Endpoint has no layout bounds.',
       details: { relatedIds: [target.id] },
     });
+
   return [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2];
 };
 
@@ -76,6 +79,7 @@ export const allocateFlowEndpoints = (
       .map(endpoint => endpoint.id),
   );
   const records: Array<EndpointRecord> = [];
+
   for (const [relationIndex, relation] of input.relations.entries()) {
     for (const end of ['source', 'target'] as const) {
       const endpoint = relation[end];
@@ -96,6 +100,7 @@ export const allocateFlowEndpoints = (
       });
     }
   }
+
   for (const id of active) {
     const nodeRecords = records.filter(record => record.input.id === id);
     const placed = nodeRecords.filter(record => record.input.anchor !== undefined);
@@ -109,6 +114,7 @@ export const allocateFlowEndpoints = (
     placed.forEach((record, index) => {
       if (conflict(record, placed.slice(0, index))) allocationFailure(record, 'fixed-endpoint-conflict');
     });
+
     for (const side of ['top', 'right', 'bottom', 'left'] as const) {
       const automatic = nodeRecords.filter(record => record.input.anchor === undefined && record.side === side);
       const shared = automatic.filter(record => record.input.overlap === 'allow');
@@ -122,6 +128,7 @@ export const allocateFlowEndpoints = (
           a[0].relationIndex - b[0].relationIndex ||
           (a[0].end === b[0].end ? 0 : a[0].end === 'source' ? -1 : 1),
       );
+
       for (const [index, slot] of slots.entries()) {
         const fraction = (index + 1) / (slots.length + 1);
         const assign = (value: number) =>
@@ -140,6 +147,7 @@ export const allocateFlowEndpoints = (
             .map((value, cutIndex) => (value + cuts[cutIndex]) / 2)
             .sort((a, b) => Math.abs(a - fraction) - Math.abs(b - fraction) || a - b);
           let matched = false;
+
           for (const candidate of candidates) {
             assign(candidate);
             if (slot.every(record => !conflict(record, placed))) {
@@ -147,12 +155,15 @@ export const allocateFlowEndpoints = (
               break;
             }
           }
+
           if (!matched) allocationFailure(slot[0], 'endpoint-search-exhausted');
         }
+
         placed.push(...slot);
       }
     }
   }
+
   return input.relations.map((_, index) => ({
     source: records[index * 2].output,
     target: records[index * 2 + 1].output,

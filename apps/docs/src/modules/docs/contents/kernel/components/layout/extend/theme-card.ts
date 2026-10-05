@@ -65,6 +65,7 @@ export const themeCardComposite = defineComposite({
       style: { fill: color, stroke: 'none' },
       layout: { minimumSize: 12, padding: 0 },
     }));
+
     return { children: [card, ...swatches] };
   },
 });

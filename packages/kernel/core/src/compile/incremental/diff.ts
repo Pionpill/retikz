@@ -57,11 +57,13 @@ export const createCoreSnapshotIndex = (source: Readonly<IRScene>): CoreSnapshot
 
   const indexChildren = (children: ReadonlyArray<IRChild>, parent: RuntimeIdentity): void => {
     const seenIds = new Set<string>();
+
     for (const child of children) {
       if ('namespace' in child || !('id' in child) || !child.id || seenIds.has(child.id)) {
         complete = false;
         continue;
       }
+
       seenIds.add(child.id);
       const identity = createRuntimeIdentity(CORE_SOURCE_KEY, [...parent.path, child.type, child.id]);
       entries.push({
@@ -74,6 +76,7 @@ export const createCoreSnapshotIndex = (source: Readonly<IRScene>): CoreSnapshot
   };
 
   indexChildren(source.children, rootIdentity);
+
   return { complete, entries };
 };
 
@@ -91,25 +94,32 @@ const identityPathKey = (identity: RuntimeIdentity): string => JSON.stringify(id
 const createSnapshotEntryLookup = (index: CoreSnapshotIndexRead): CoreSnapshotEntryLookup | undefined => {
   const root = index.entries[0];
   if (root.parent !== undefined) return undefined;
+
   const entriesByPath = new Map<string, CoreSnapshotIndexEntry>();
   const mutableChildrenByParentPath = new Map<string, Array<CoreSnapshotIndexEntry>>();
   entriesByPath.set(identityPathKey(root.identity), root);
+
   for (const entry of index.entries.slice(1)) {
     if (entry.parent === undefined) return undefined;
+
     const key = identityPathKey(entry.identity);
     const parentKey = identityPathKey(entry.parent);
     if (entriesByPath.has(key) || !entriesByPath.has(parentKey)) return undefined;
+
     entriesByPath.set(key, entry);
     const siblings = mutableChildrenByParentPath.get(parentKey) ?? [];
     siblings.push(entry);
     mutableChildrenByParentPath.set(parentKey, siblings);
   }
+
   const childrenByParentPath = new Map<string, ReadonlyArray<CoreSnapshotIndexEntry>>();
   const siblingIndexByPath = new Map<string, number>();
+
   for (const [parentKey, children] of mutableChildrenByParentPath) {
     childrenByParentPath.set(parentKey, children);
     children.forEach((entry, siblingIndex) => siblingIndexByPath.set(identityPathKey(entry.identity), siblingIndex));
   }
+
   return { root, entriesByPath, childrenByParentPath, siblingIndexByPath };
 };
 
@@ -131,16 +141,20 @@ const lookupSnapshotChildren = (
 /** 计算唯一位置序列的严格最长递增子序列长度 */
 const longestIncreasingSubsequenceLength = (positions: ReadonlyArray<number>): number => {
   const tails: Array<number> = [];
+
   for (const position of positions) {
     let start = 0;
     let end = tails.length;
+
     while (start < end) {
       const middle = Math.floor((start + end) / 2);
       if (tails[middle] < position) start = middle + 1;
       else end = middle;
     }
+
     tails[start] = position;
   }
+
   return tails.length;
 };
 
@@ -171,6 +185,7 @@ export const coreChangeSetMatchesSnapshots = (
   changeSet: RuntimeChangeSet<CoreChange>,
 ): boolean => {
   if (!previous.complete || !next.complete) return false;
+
   try {
     const rootIdentity = createRuntimeIdentity(CORE_SOURCE_KEY, ['root']);
     const previousLookup = createSnapshotEntryLookup(previous);
@@ -213,6 +228,7 @@ export const coreChangeSetMatchesSnapshots = (
         ) {
           return false;
         }
+
         matchedUpdates.add(previousEntry);
         continue;
       }
@@ -227,6 +243,7 @@ export const coreChangeSetMatchesSnapshots = (
         ) {
           return false;
         }
+
         removed.add(previousEntry);
         continue;
       }
@@ -243,11 +260,14 @@ export const coreChangeSetMatchesSnapshots = (
         ) {
           return false;
         }
+
         const nextSiblings = lookupSnapshotChildren(nextLookup, nextEntry.parent);
         const nextIndex = nextLookup.siblingIndexByPath.get(identityPathKey(nextEntry.identity));
         if (nextIndex === undefined) return false;
+
         const expectedBefore = nextSiblings[nextIndex + 1]?.identity;
         if (!sameOptionalIdentity(change.before, expectedBefore)) return false;
+
         added.add(nextEntry);
         continue;
       }
@@ -264,11 +284,14 @@ export const coreChangeSetMatchesSnapshots = (
       ) {
         return false;
       }
+
       const nextSiblings = lookupSnapshotChildren(nextLookup, nextEntry.parent);
       const nextIndex = nextLookup.siblingIndexByPath.get(identityPathKey(nextEntry.identity));
       if (nextIndex === undefined) return false;
+
       const expectedBefore = nextSiblings[nextIndex + 1]?.identity;
       if (!sameOptionalIdentity(change.before, expectedBefore)) return false;
+
       movedPrevious.add(previousEntry);
       movedNext.add(nextEntry);
     }
@@ -283,35 +306,44 @@ export const coreChangeSetMatchesSnapshots = (
     ) {
       return false;
     }
+
     for (const parent of previous.entries) {
       if (!nextIdentities.has(parent.identity)) continue;
+
       const previousChildren = lookupSnapshotChildren(previousLookup, parent.identity);
       const nextChildren = lookupSnapshotChildren(nextLookup, parent.identity);
       const previousCommon = previousChildren.filter(entry => nextIdentities.has(entry.identity));
       const nextCommon = nextChildren.filter(entry => previousIdentities.has(entry.identity));
       const previousCommonPositions = new Map(previousCommon.map((entry, index) => [entry, index]));
       const previousPositionsInNextOrder: Array<number> = [];
+
       for (const entry of nextCommon) {
         const previousEntry = lookupSnapshotEntry(previousLookup, entry.identity);
         if (previousEntry === undefined) return false;
+
         const previousPosition = previousCommonPositions.get(previousEntry);
         if (previousPosition === undefined) return false;
+
         previousPositionsInNextOrder.push(previousPosition);
       }
+
       const minimumMoveCount = previousCommon.length - longestIncreasingSubsequenceLength(previousPositionsInNextOrder);
       const movedPreviousChildren = previousCommon.filter(entry => movedPrevious.has(entry));
       const movedNextChildren = nextCommon.filter(entry => movedNext.has(entry));
       if (movedPreviousChildren.length !== minimumMoveCount || movedNextChildren.length !== minimumMoveCount) {
         return false;
       }
+
       const unmovedPrevious = previousCommon.filter(entry => !movedPrevious.has(entry));
       const unmovedNext = nextCommon.filter(entry => !movedNext.has(entry));
       if (!sameIdentityOrder(unmovedPrevious, unmovedNext)) return false;
     }
+
     const changedValues = previous.entries.filter(entry => {
       const nextEntry = lookupSnapshotEntry(nextLookup, entry.identity);
       return nextEntry !== undefined && !jsonStructuralEquals(entry.value, nextEntry.value);
     });
+
     return matchedUpdates.size === changedValues.length && changedValues.every(entry => matchedUpdates.has(entry));
   } catch {
     return false;

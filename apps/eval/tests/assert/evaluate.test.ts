@@ -28,6 +28,7 @@ describe('evaluateAssertions', () => {
       { kind: 'textPresent', text: 'A', description: '含字母 A' },
       { kind: 'primitiveCount', primitive: 'rect', op: '>=', value: 2 },
     ]);
+
     expect(results.map(r => r.pass)).toEqual([true, false]);
     expect(results[0]?.description).toBe('含字母 A');
     expect(results[0]?.kind).toBe('textPresent');

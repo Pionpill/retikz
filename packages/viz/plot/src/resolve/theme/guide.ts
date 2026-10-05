@@ -20,9 +20,13 @@ type GuidePathStyle = Partial<
 > & {
   drawOpacity?: number;
 };
+
 type PlotTypographyStyle = NonNullable<IRPlotDefaults['typography']>;
+
 type AxisTicksDefaults = NonNullable<IRPlotAxisDefaults['ticks']>;
+
 type AxisTitleDefaults = Exclude<NonNullable<IRPlotAxisDefaults['title']>, false>;
+
 type LegendStyle = NonNullable<IRPlotLegendGuide['style']>;
 
 const DEFAULT_TYPOGRAPHY: PlotTypographyStyle = {
@@ -53,6 +57,7 @@ const mergePathStyle = <T extends GuidePathStyle>(base: GuidePathStyle | undefin
 const guideThemeFromDefaults = (defaults: IRPlotDefaults, palette: EffectivePlotPalette): EffectivePlotGuideTheme => {
   const typography = mergeGuideTextStyle(DEFAULT_TYPOGRAPHY, defaults.typography);
   const legend = defaults.legend;
+
   return {
     ...(defaults.plotArea === undefined ? {} : { plotArea: structuredClone(defaults.plotArea) }),
     typography,
@@ -90,7 +95,9 @@ const mergeAxisTicks = (
   local: IRPlotAxisGuide['ticks'],
 ): IRPlotAxisGuide['ticks'] => {
   if (theme === undefined) return local;
+
   const themeMark = theme.mark;
+
   const lineMarkFromShorthand = (): AxisTicksDefaults['mark'] => {
     const themeLineMark =
       themeMark !== undefined && themeMark !== false && themeMark.kind === 'line' ? themeMark : undefined;
@@ -100,35 +107,43 @@ const mergeAxisTicks = (
         : local?.line !== undefined
           ? mergePathStyle(themeLineMark?.line === false ? undefined : themeLineMark?.line, local.line)
           : themeLineMark?.line;
+
     return {
       ...(themeLineMark ?? { kind: 'line' as const }),
       ...(local?.length === undefined ? {} : { length: local.length }),
       ...(line === undefined ? {} : { line }),
     };
   };
+
   const usesLineShorthand = local?.mark === undefined && (local?.length !== undefined || local?.line !== undefined);
   if (usesLineShorthand) {
     const rest = { ...local };
     delete rest.length;
     delete rest.line;
+
     return { ...rest, mark: lineMarkFromShorthand() } satisfies NonNullable<IRPlotAxisGuide['ticks']>;
   }
+
   const mark = (() => {
     if (local?.mark === false) return false;
     if (local?.mark === undefined) return themeMark;
     if (themeMark === undefined || themeMark === false || themeMark.kind !== local.mark.kind) return local.mark;
     if (local.mark.kind === 'line') {
       if (themeMark.kind !== 'line') return local.mark;
+
       const line =
         local.mark.line === false
           ? false
           : local.mark.line !== undefined
             ? mergePathStyle(themeMark.line === false ? undefined : themeMark.line, local.mark.line)
             : themeMark.line;
+
       return { ...themeMark, ...local.mark, ...(line === undefined ? {} : { line }) };
     }
+
     return { ...themeMark, ...local.mark };
   })();
+
   return {
     ...(local ?? {}),
     ...(mark === undefined ? {} : { mark }),
@@ -143,6 +158,7 @@ const mergeAxisTickLabels = (
   if (theme === false && local === undefined) return false;
   if (theme === undefined) return local;
   if (theme === false) return local;
+
   return { ...theme, ...(local ?? {}), ...mergeGuideTextStyle(theme, local) };
 };
 
@@ -152,10 +168,12 @@ const mergeAxisTitle = (
 ): IRPlotAxisGuide['title'] => {
   if (local === undefined) return undefined;
   if (typeof local === 'string') return theme === undefined || theme === false ? local : { text: local, ...theme };
+
   const themeTitle: AxisTitleDefaults | undefined = theme === undefined || theme === false ? undefined : { ...theme };
   if (local.orientation !== undefined && local.rotate === undefined && themeTitle !== undefined) {
     delete themeTitle.rotate;
   }
+
   return {
     ...themeTitle,
     ...local,
@@ -171,6 +189,7 @@ const mergeAxisGrid = (
   if (theme === undefined) return local;
   if (theme === false) return local ?? false;
   if (local === undefined || local === true) return { ...theme };
+
   return { ...mergePathStyle(theme, local), ...local };
 };
 

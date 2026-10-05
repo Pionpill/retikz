@@ -17,6 +17,7 @@ describe('provider registry gating', () => {
     saved = Object.fromEntries(ENV.map(k => [k, process.env[k]]));
     for (const k of ENV) delete process.env[k];
   });
+
   afterEach(() => {
     for (const k of ENV) {
       if (saved[k] === undefined) delete process.env[k];
@@ -34,18 +35,21 @@ describe('provider registry gating', () => {
 
   it('anthropic 有权威默认模型：设 key 即可用', () => {
     process.env.ANTHROPIC_API_KEY = 'x';
+
     expect(availableProviderIds()).toEqual(['anthropic']);
   });
 
   it('openai/deepseek 仅设 key、未配模型 id：不可用', () => {
     process.env.OPENAI_API_KEY = 'x';
     process.env.DEEPSEEK_API_KEY = 'x';
+
     expect(availableProviderIds()).toEqual([]);
   });
 
   it('openai/deepseek 设 key + 显式 EVAL_<P>_MODEL：才可用', () => {
     process.env.OPENAI_API_KEY = 'x';
     process.env.EVAL_OPENAI_MODEL = 'gpt-x';
+
     expect(availableProviderIds()).toEqual(['openai']);
   });
 
@@ -53,6 +57,7 @@ describe('provider registry gating', () => {
     process.env.ANTHROPIC_API_KEY = 'x';
     process.env.EVAL_ANTHROPIC_BASE_URL = 'https://proxy.example.com/v1';
     const clients = createClients();
+
     expect(clients.map(c => c.id)).toEqual(['anthropic:claude-opus-4-8']);
   });
 });

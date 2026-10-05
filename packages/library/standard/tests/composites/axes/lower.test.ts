@@ -6,8 +6,10 @@ import { AxesDefinition, createAxes, lowerAxes } from '../../../src/presentation
 import { fullScopeProps } from '../presentation/scope-props';
 
 const endpoints = (path: IRPath) => path.children.map(step => ('to' in step ? step.to : undefined));
+
 const lowerAxesChildren = (input: Parameters<typeof lowerAxes>[0]): Array<IRNode | IRPath> =>
   lowerAxes(input).children as Array<IRNode | IRPath>;
+
 const scenePathsOf = (children: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   children.flatMap(child =>
     child.type === 'path' ? [child] : child.type === 'group' ? scenePathsOf(child.children) : [],
@@ -63,6 +65,7 @@ describe('lowerAxes', () => {
 
     const xAxis = lowered[10] as IRPath;
     const yAxis = lowered[11] as IRPath;
+
     expect(endpoints(xAxis)).toEqual([
       [60, 80],
       [160, 80],
@@ -75,6 +78,7 @@ describe('lowerAxes', () => {
     expect(yAxis.marks).toEqual([{ pos: 1, mark: { kind: 'arrow' } }]);
 
     const tickPaths = lowered.slice(12, 20) as Array<IRPath>;
+
     expect(tickPaths.map(path => endpoints(path)[0])).toEqual([
       [60, 77],
       [80, 77],

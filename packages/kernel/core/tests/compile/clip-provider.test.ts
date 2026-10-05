@@ -65,6 +65,7 @@ const roundedRectClip = (): ClipDefinition =>
         { kind: 'quad', control: [spec.x, spec.y], to: [spec.x + r, spec.y] },
         { kind: 'close' },
       ];
+
       return {
         kind: 'roundedRect',
         fillRule: 'evenodd',
@@ -101,6 +102,7 @@ describe('clip providers', () => {
     const scene = compileToScene(clippedIr({ kind: 'roundedRect', x: 0, y: 0, width: 40, height: 30, r: 5 }), {
       clips: [roundedRectClip()],
     }).scene;
+
     expect(scene.resources ?? []).toHaveLength(1);
     expect((scene.resources ?? [])[0]).toMatchObject({
       kind: 'clip',
@@ -132,6 +134,7 @@ describe('clip providers', () => {
         fillRule: 'nonzero',
       }),
     });
+
     expect(
       () =>
         compileToScene(clippedIr({ kind: 'rect', x: 0, y: 0, width: 10, height: 10 }), { clips: [rectOverride] }).scene,

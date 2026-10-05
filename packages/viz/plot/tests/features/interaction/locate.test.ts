@@ -31,6 +31,7 @@ const doubleDefinition = defineTransform({
   inputFields: operation => [operation.field],
   outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
 });
+
 const doubleDefinitionImplementation = defineTransformImplementation({
   definition: doubleDefinition,
   apply: (rows, operation) =>
@@ -56,14 +57,17 @@ const groupSumDefinition = defineTransform({
     ],
   }),
 });
+
 const groupSumDefinitionImplementation = defineTransformImplementation({
   definition: groupSumDefinition,
   apply: (rows, operation, context) => {
     const groups = new Map<string, Array<Record<string, unknown>>>();
+
     for (const row of rows) {
       const key = String(row[operation.groupBy]);
       groups.set(key, [...(groups.get(key) ?? []), row]);
     }
+
     return [...groups.entries()].map(([key, members]) =>
       context.groupProvenance(
         {
@@ -96,6 +100,7 @@ const firstLayer = (spec: IRPlot, datasets: Datasets, options?: LowerPlotsOption
 /** 深度收集图层内所有 datum Node（无 color 时直接子；有 color 时藏在子 Scope 里）——渲染序 */
 const datumNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -103,7 +108,9 @@ const datumNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -112,6 +119,7 @@ const sectorParams = (
   node: IRNode,
 ): { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number } => {
   const shape = node.shape as { type?: string; params?: Record<string, number> } | undefined;
+
   expect(shape?.type).toBe('sector');
   return shape!.params as { innerRadius: number; outerRadius: number; startAngle: number; endAngle: number };
 };
@@ -188,9 +196,12 @@ describe('datum locator — happy path', () => {
     const datasets: Datasets = { sales: SALES };
     const locator = createPlotLocator(spec, datasets, opts);
     const nodes = datumNodes(firstLayer(spec, datasets, opts));
+
     expect(nodes).toHaveLength(SALES.length);
+
     for (let index = 0; index < nodes.length; index++) {
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
       expect(anchor!.position).toEqual(nodes[index].position);
     }
@@ -202,9 +213,12 @@ describe('datum locator — happy path', () => {
     const datasets: Datasets = { sales: SALES };
     const locator = createPlotLocator(spec, datasets, opts);
     const nodes = datumNodes(firstLayer(spec, datasets, opts));
+
     expect(nodes).toHaveLength(SALES.length);
+
     for (let index = 0; index < nodes.length; index++) {
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
       expect(anchor!.position).toEqual(nodes[index].position);
     }
@@ -215,6 +229,7 @@ describe('datum locator — happy path', () => {
     const spec = barSpec({ id: 'sales' });
     const datasets: Datasets = { sales: SALES };
     const locator = createPlotLocator(spec, datasets, opts);
+
     for (let index = 0; index < SALES.length; index++) {
       const meta = locator.datum(index)!.meta as {
         source?: string;
@@ -224,11 +239,13 @@ describe('datum locator — happy path', () => {
         transformedIndex?: number;
         sourceIndex?: number;
       };
+
       expect(meta.source).toBe('plot');
       expect(meta.dataReference).toBe('sales');
       expect(meta.mark).toBe('interval');
       expect(meta.markIndex).toBe(0);
       expect(meta.transformedIndex).toBe(index);
+
       // 无 transform → sourceIndex 回指、等于 transformedIndex
       expect(meta.sourceIndex).toBe(index);
     }
@@ -258,13 +275,16 @@ describe('datum locator — happy path', () => {
     const datasets: Datasets = { t: TREND };
     const locator = createPlotLocator(spec, datasets, opts);
     const anchor = locator.resolve('trend.series.X');
+
     expect(anchor).not.toBeNull();
+
     // centroid = X series 两行锚点均值；meta 带 series
     expect((anchor!.meta as { series?: unknown }).series).toBe('X');
     expect(Array.isArray(anchor!.position)).toBe(true);
     expect(anchor!.position).toHaveLength(2);
     expect(Number.isFinite(anchor!.position[0])).toBe(true);
     expect(Number.isFinite(anchor!.position[1])).toBe(true);
+
     // resolve 与结构 series() 等价
     expect(locator.series('X')).toEqual(anchor);
   });
@@ -348,6 +368,7 @@ describe('datum locator — boundary', () => {
     // datum(负 / ≥ rowCount) → null（不抛）
     const spec = pointSpec({ id: 'sales' });
     const locator = createPlotLocator(spec, { sales: SALES }, opts);
+
     expect(locator.datum(-1)).toBeNull();
     expect(locator.datum(SALES.length)).toBeNull();
     expect(locator.datum(999)).toBeNull();
@@ -374,15 +395,20 @@ describe('datum locator — boundary', () => {
       marks: [{ type: 'path', series: 'city', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
     const locator = createPlotLocator(spec, { sales: rows }, opts);
+
     // 被跳过的中间行（transformedIndex 1）→ null；存活行 0 / 2 仍可解析
     expect(locator.datum(1)).toBeNull();
     expect(locator.datum(0)).not.toBeNull();
     expect(locator.datum(2)).not.toBeNull();
+
     // series centroid 只计存活两点（= 行0、行2 锚点均值），不含幽灵中点
     const centroid = locator.series('X');
+
     expect(centroid).not.toBeNull();
+
     const a0 = locator.datum(0)!.position;
     const a2 = locator.datum(2)!.position;
+
     expect(centroid!.position[0]).toBeCloseTo((a0[0] + a2[0]) / 2, 6);
     expect(centroid!.position[1]).toBeCloseTo((a0[1] + a2[1]) / 2, 6);
   });
@@ -407,7 +433,9 @@ describe('datum locator — boundary', () => {
       marks: [{ type: 'path', series: 'city', encoding: { x: { field: 'month' }, y: { field: 'revenue' } } }],
     });
     const locator = createPlotLocator(spec, { sales: rows }, opts);
+
     expect(locator.series('does-not-exist')).toBeNull();
+
     // Z 系列唯一行被跳过 → centroid 无成员 → null
     expect(locator.series('Z')).toBeNull();
   });
@@ -417,14 +445,19 @@ describe('datum locator — boundary', () => {
     const spec = pointSpec(); // 无 id
     const locator = createPlotLocator(spec, { sales: SALES }, opts);
     const nodes = datumNodes(firstLayer(spec, { sales: SALES }, opts));
+
     for (let index = 0; index < nodes.length; index++) {
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
       expect(anchor!.position).toEqual(nodes[index].position);
+
       // 无具名 Node 可连 → id 省略
       expect(anchor!.id).toBeUndefined();
     }
+
     const viaAddress = locator.resolve('datum.0');
+
     expect(viaAddress).not.toBeNull();
     expect(viaAddress!.position).toEqual(nodes[0].position);
   });
@@ -438,6 +471,7 @@ describe('datum locator — errors', () => {
     // 非法 address → null（不抛）：垃圾串、错 plotId、错段、越界、错类别值
     const spec = pointSpec({ id: 'sales' });
     const locator = createPlotLocator(spec, { sales: SALES }, opts);
+
     expect(locator.resolve('garbage')).toBeNull();
     expect(locator.resolve('')).toBeNull();
     expect(locator.resolve('wrongPlot.datum.0')).toBeNull(); // plotId 不符
@@ -457,17 +491,22 @@ describe('datum locator — errors', () => {
     const specSnapshot = JSON.stringify(barSpec({ id: 'sales' }));
     const spec = barSpec({ id: 'sales' });
     const locator = createPlotLocator(spec, datasets, opts);
+
     // 多次解析稳定（同输入同输出，无内部状态漂移）
     const first = locator.datum(0);
     const second = locator.datum(0);
+
     expect(second).toEqual(first);
+
     locator.datum(1);
     locator.series('whatever');
     locator.resolve('sales.datum.1');
+
     // 输入行未被打 SOURCE_INDEX symbol（locator 不污染调用方数据）
     for (const row of rows) {
       expect(Object.getOwnPropertySymbols(row)).not.toContain(SOURCE_INDEX);
     }
+
     // spec 未被改写
     expect(JSON.stringify(spec)).toBe(specSnapshot);
   });
@@ -483,29 +522,40 @@ describe('datum locator — interaction', () => {
     const spec = pieSpec({ id: 'pie' });
     const locator = createPlotLocator(spec, { d: PIE_ROWS }, squareOpts);
     const nodes = datumNodes(firstLayer(spec, { d: PIE_ROWS }, squareOpts));
+
     expect(nodes.length).toBeGreaterThan(0);
+
     const center: [number, number] = [200, 200]; // 正方形画布圆心
+
     for (let index = 0; index < nodes.length; index++) {
       const params = sectorParams(nodes[index]);
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
+
       // sector 锚点 ≠ 圆心 Node.position
       expect(anchor!.position).not.toEqual(nodes[index].position);
+
       const [ax, ay] = anchor!.position;
       const dx = ax - center[0];
       const dy = ay - center[1];
       const r = Math.hypot(dx, dy);
+
       // 径向落在扇环内
       expect(r).toBeGreaterThanOrEqual(params.innerRadius - 1e-6);
       expect(r).toBeLessThanOrEqual(params.outerRadius + 1e-6);
+
       // 角度落在 [startAngle, endAngle]（度，0°=+x、90°=+y、屏幕 y 向下，与 projectPolar 同约定）
       let angle = (Math.atan2(dy, dx) * 180) / Math.PI;
       if (angle < params.startAngle - 1e-6) angle += 360;
+
       expect(angle).toBeGreaterThanOrEqual(params.startAngle - 1e-6);
       expect(angle).toBeLessThanOrEqual(params.endAngle + 1e-6);
+
       // 显式对照预期 centroid 公式：mid-angle θ=(start+end)/2、mid-radius r=(inner+outer)/2
       const midAngle = ((params.startAngle + params.endAngle) / 2) * (Math.PI / 180);
       const midRadius = (params.innerRadius + params.outerRadius) / 2;
+
       expect(ax).toBeCloseTo(center[0] + midRadius * Math.cos(midAngle), 4);
       expect(ay).toBeCloseTo(center[1] + midRadius * Math.sin(midAngle), 4);
     }
@@ -521,14 +571,18 @@ describe('datum locator — interaction', () => {
     const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
     const spec = barSpec({ id: 'sales' });
     const locator = createPlotLocator(spec, { sales: rows }, options);
+
     // 与 lowering 实际绑定的 Node.id 对照
     const nodeIds = datumNodes(firstLayer(spec, { sales: rows }, options)).map(n => n.id);
+
     expect(nodeIds).toEqual(['sales.datum.Q1', 'sales.datum.Q2', 'sales.datum.Q3']);
     expect(locator.datum(0)!.id).toBe('sales.datum.Q1');
     expect(locator.datum(1)!.id).toBe('sales.datum.Q2');
     expect(locator.datum(2)!.id).toBe('sales.datum.Q3');
+
     // 未设 datumIdField 时 id 省略
     const plain = createPlotLocator(spec, { sales: rows }, opts);
+
     expect(plain.datum(0)!.id).toBeUndefined();
   });
 
@@ -540,6 +594,7 @@ describe('datum locator — interaction', () => {
       const datasets: Datasets = { sales: SALES };
       const locator = createPlotLocator(spec, datasets, opts);
       const nodes = datumNodes(firstLayer(spec, datasets, opts));
+
       for (let index = 0; index < nodes.length; index++) {
         // 逐点严格相等（非近似）——共享 datumAnchor 保证无浮点漂移
         expect(locator.datum(index)!.position).toEqual(nodes[index].position);
@@ -572,19 +627,26 @@ describe('datum locator — bug hunter regressions', () => {
     const options: LowerPlotsOptions = { ...opts, provenance: true, datumProvenance: true };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
     const locator = createPlotLocator(spec, datasets, options);
+
     // 渲染序：revenue 降序 → [14(month1),10(month0),9(month2)] = source 行 [1,0,2]
     expect(nodes).toHaveLength(3);
+
     for (let index = 0; index < nodes.length; index++) {
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
+
       // 位置与 lowering 渲染序逐点一致（locator 复用同一 transform 后行 + frame）
       expect(anchor!.position).toEqual(nodes[index].position);
+
       // meta 渲染序与 lowering Node.meta 一致
       const nodeMeta = nodes[index].meta as { transformedIndex: number; sourceIndex?: number };
       const anchorMeta = anchor!.meta as { transformedIndex: number; sourceIndex?: number };
+
       expect(anchorMeta.transformedIndex).toBe(index);
       expect(anchorMeta.sourceIndex).toBe(nodeMeta.sourceIndex);
     }
+
     // sourceIndex 反映降序后回指原始行：[1,0,2]
     expect(nodes.map(n => (n.meta as { sourceIndex?: number }).sourceIndex)).toEqual([1, 0, 2]);
   });
@@ -598,6 +660,7 @@ describe('datum locator — bug hunter regressions', () => {
     const locator = createPlotLocator(barSpec({ id: 'sales' }), { sales: rows }, { ...opts, datumProvenance: true });
     locator.datum(0);
     locator.series('x'); // 触发各路径
+
     for (const row of rows) {
       expect(Object.getOwnPropertySymbols(row)).not.toContain(SOURCE_INDEX);
     }
@@ -632,7 +695,9 @@ describe('datum locator transform registry parity', () => {
     };
     const nodes = datumNodes(firstLayer(spec, datasets, options));
     const locator = createPlotLocator(spec, datasets, options);
+
     expect(nodes).toHaveLength(2);
+
     for (let index = 0; index < nodes.length; index++) {
       expect(locator.datum(index)!.position).toEqual(nodes[index].position);
     }
@@ -663,14 +728,17 @@ describe('datum locator transform registry parity', () => {
     const locator = createPlotLocator(spec, datasets, options);
 
     expect(nodes).toHaveLength(3);
+
     for (let index = 0; index < nodes.length; index++) {
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
       expect(anchor!.position).toEqual(nodes[index].position);
       expect((anchor!.meta as { sourceIndex?: number }).sourceIndex).toBe(
         (nodes[index].meta as { sourceIndex?: number }).sourceIndex,
       );
     }
+
     expect(nodes.map(node => (node.meta as { sourceIndex?: number }).sourceIndex)).toEqual([1, 0, 2]);
   });
 
@@ -700,6 +768,7 @@ describe('datum locator transform registry parity', () => {
       transformDefinitions: [groupSumDefinition],
       transformImplementations: [groupSumDefinitionImplementation],
     });
+
     expect((locator.datum(0)!.meta as { sourceIndices?: Array<number> }).sourceIndices).toEqual([0, 1]);
     expect((locator.datum(1)!.meta as { sourceIndices?: Array<number> }).sourceIndices).toEqual([2]);
   });
@@ -801,9 +870,12 @@ describe('datum locator — anchor parity and fail-loud', () => {
     const datasets: Datasets = { d: DODGE_ROWS };
     const locator = createPlotLocator(spec, datasets, opts);
     const nodes = datumNodes(firstLayer(spec, datasets, opts));
+
     expect(nodes).toHaveLength(DODGE_ROWS.length);
+
     for (let index = 0; index < nodes.length; index++) {
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
       expect(anchor!.position).toEqual(nodes[index].position);
     }
@@ -815,9 +887,12 @@ describe('datum locator — anchor parity and fail-loud', () => {
     const datasets: Datasets = { d: STACK_ROWS };
     const locator = createPlotLocator(spec, datasets, opts);
     const nodes = datumNodes(firstLayer(spec, datasets, opts));
+
     expect(nodes).toHaveLength(STACK_ROWS.length);
+
     for (let index = 0; index < nodes.length; index++) {
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
       expect(anchor!.position).toEqual(nodes[index].position);
     }
@@ -829,20 +904,29 @@ describe('datum locator — anchor parity and fail-loud', () => {
     const datasets: Datasets = { d: POLAR_DODGE_ROWS };
     const locator = createPlotLocator(spec, datasets, squareOpts);
     const nodes = datumNodes(firstLayer(spec, datasets, squareOpts));
+
     expect(nodes.length).toBeGreaterThan(0);
+
     const center: [number, number] = [200, 200];
+
     for (let index = 0; index < nodes.length; index++) {
       const params = sectorParams(nodes[index]);
       const anchor = locator.datum(index);
+
       expect(anchor).not.toBeNull();
+
       const [ax, ay] = anchor!.position;
+
       // 落在 lowered 扇区内（径向）
       const r = Math.hypot(ax - center[0], ay - center[1]);
+
       expect(r).toBeGreaterThanOrEqual(params.innerRadius - 1e-6);
       expect(r).toBeLessThanOrEqual(params.outerRadius + 1e-6);
+
       // 等于该扇区 params 的 wedgeCentroid（mid-angle / mid-radius）
       const midAngle = ((params.startAngle + params.endAngle) / 2) * (Math.PI / 180);
       const midRadius = (params.innerRadius + params.outerRadius) / 2;
+
       expect(ax).toBeCloseTo(center[0] + midRadius * Math.cos(midAngle), 4);
       expect(ay).toBeCloseTo(center[1] + midRadius * Math.sin(midAngle), 4);
     }
@@ -871,6 +955,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
       ],
     });
     const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
+
     expect(() => expandOf(spec, { d: rows }, options)).toThrow();
     expect(() => createPlotLocator(spec, { d: rows }, options)).toThrow();
   });
@@ -883,6 +968,7 @@ describe('datum locator — anchor parity and fail-loud', () => {
       { month: 2, revenue: 9, q: 'Q3' },
     ];
     const options: LowerPlotsOptions = { ...opts, datumIdField: 'q' };
+
     expect(() => expandOf(barSpec({ id: 'sales' }), { sales: rows }, options)).toThrow();
     expect(() => createPlotLocator(barSpec({ id: 'sales' }), { sales: rows }, options)).toThrow();
   });
@@ -909,11 +995,14 @@ describe('datum locator — anchor parity and fail-loud', () => {
     });
     const locator = createPlotLocator(spec, { t: TREND }, opts);
     const viaAddress = locator.resolve('p.series.5');
+
     expect(viaAddress).not.toBeNull();
     expect(Number.isFinite(viaAddress!.position[0])).toBe(true);
     expect(Number.isFinite(viaAddress!.position[1])).toBe(true);
+
     // 位置与结构 series(5)（数值）一致——宽松字符串比对让 '5' token 命中数值 5
     const structural = locator.series(5);
+
     expect(structural).not.toBeNull();
     expect(viaAddress!.position).toEqual(structural!.position);
   });

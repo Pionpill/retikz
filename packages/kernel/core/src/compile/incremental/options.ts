@@ -22,7 +22,9 @@ const copyConfigValue = <T>(value: T, ancestors: ReadonlySet<object>): T => {
   }
 
   const copy = Object.create(Object.getPrototypeOf(value)) as Record<string, unknown>;
+
   for (const [key, item] of Object.entries(value)) copy[key] = copyConfigValue(item, nextAncestors);
+
   return copy as T;
 };
 
@@ -35,5 +37,6 @@ export const copyCoreComputationOptions = <TComposites extends ReadonlyArray<Any
     new Set(),
   );
   if (options.compositeInputs !== undefined) copied.compositeInputs = options.compositeInputs;
+
   return copied;
 };

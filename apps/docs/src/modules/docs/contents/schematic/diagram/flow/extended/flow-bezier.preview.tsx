@@ -25,6 +25,7 @@ export const renderFlowBezierPreview = (
       : values.automatic
         ? { kind: 'cubic' }
         : { kind: 'cubic', control1: [values.x1, values.y1], control2: [values.x2, values.y2] };
+
   return (
     <PreviewFlowDiagram
       flowLayouts={[createObstacleLayout(values.obstacleX, values.obstacleY, false)]}

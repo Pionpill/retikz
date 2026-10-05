@@ -33,14 +33,17 @@ export type ResolvePlotAuthoringOptions = Readonly<{
 const DSL_DATA_REF = '__plot';
 
 const embeddedDataRefs = new WeakMap<Array<ExternalRow>, string>();
+
 let embeddedDataRefSeed = 0;
 
 const embeddedDataRefFor = (rows: Array<ExternalRow>): string => {
   const existing = embeddedDataRefs.get(rows);
   if (existing !== undefined) return existing;
+
   const next = `${DSL_DATA_REF}_${embeddedDataRefSeed}`;
   embeddedDataRefSeed += 1;
   embeddedDataRefs.set(rows, next);
+
   return next;
 };
 
@@ -78,11 +81,13 @@ const lowerPlotOptionsOf = <TSource>(
     formatDefinitions,
     plotThemeStyles,
   } = props;
+
   // DSL 入口 <PointMark resolveLabel> / <IntervalMark resolveLabel> 收集的 per-mark 函数，与显式 props.resolveLabel 合并（显式优先）
   const mergedResolveLabel =
     collectedResolveLabel !== undefined || resolveLabel !== undefined
       ? { ...collectedResolveLabel, ...resolveLabel }
       : undefined;
+
   return {
     width,
     height,
@@ -117,6 +122,7 @@ const lowerPlotOptionsOf = <TSource>(
 
 const collectRowFields = (value: unknown, into: Set<string>, prefix = ''): void => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+
   for (const [key, child] of Object.entries(value)) {
     const path = prefix ? `${prefix}.${key}` : key;
     into.add(path);
@@ -137,6 +143,7 @@ const applyPlotPropsToSpec = <TSource>(
 ): IRPlot => {
   if (spec.dataExecution !== undefined && props.dataExecution !== undefined)
     throw new RetikzPlotReactError('Plot dataExecution is declared in both spec and root props');
+
   const width = spec.width === undefined && props.width !== undefined ? props.width : undefined;
   const height = spec.height === undefined && props.height !== undefined ? props.height : undefined;
   if (
@@ -148,6 +155,7 @@ const applyPlotPropsToSpec = <TSource>(
   ) {
     return spec;
   }
+
   return {
     ...spec,
     ...(width === undefined ? {} : { width }),
@@ -175,6 +183,7 @@ export const resolvePlotAuthoring = <TSource = never>(
   let spec: IRPlot;
   let datasets: ExternalDatasets;
   let effectiveFieldMaps = props.fieldMaps;
+
   // DSL 入口 buildPlotIR 旁路收集的 per-mark resolveLabel（运行时函数、不进 IR）；spec 入口由 props.resolveLabel 直接给
   let collectedResolveLabel: ResolveLabelMap | undefined;
   if (props.spec) {
@@ -202,6 +211,7 @@ export const resolvePlotAuthoring = <TSource = never>(
     datasets = { [dataRef]: props.data };
     if (props.fieldMap) effectiveFieldMaps = { [dataRef]: props.fieldMap };
   }
+
   return {
     spec,
     ...(props.dataBindings === undefined ? { datasets } : { dataBindings: props.dataBindings }),
@@ -215,9 +225,11 @@ export const resolvePlotLineage = <TSource = never>(
   options: { embedded?: boolean } = {},
 ): PlotLineageRun | undefined => {
   if (props.lineage === false) return undefined;
+
   const { spec, datasets, lowerOptions } = resolvePlotAuthoring(props, options);
   if (datasets === undefined || props.dataTransformExecutor !== undefined)
     throw new RetikzPlotReactError('Plot async lineage is delivered from the committed processing result');
+
   return lowerPlotWithLineage(spec, datasets, {
     ...lowerOptions,
     lineage: props.lineage ?? {},

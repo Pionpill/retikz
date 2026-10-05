@@ -197,5 +197,6 @@ export const translateNodeApiReference = (source: string): string => {
   const translated = translations[source.replace(/\r/g, '')];
   if (translated !== undefined) return translated;
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
+
   throw new Error(`Missing Node API translation: ${source}`);
 };

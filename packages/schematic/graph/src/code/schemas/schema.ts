@@ -43,10 +43,12 @@ const CodeLogicTextSchema = strictObject({
   kind: literal('text').describe('Text logic discriminator.'),
   text: string().min(1).describe('Nonempty logic description.'),
 });
+
 const CodeLogicStepsSchema = strictObject({
   kind: literal('steps').describe('Ordered steps discriminator.'),
   steps: array(string().min(1)).min(1).describe('Nonempty ordered descriptive steps; positions are not identities.'),
 });
+
 export const CodeLogicSchema = strictObject({
   id: BlockSchema.shape.id,
   title: string().optional().describe('Optional logic title.'),

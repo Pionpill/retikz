@@ -30,6 +30,7 @@ describe('FrameSchema', () => {
     });
 
     const canonical = resolveFrame(parsed);
+
     expect(parsed.padding).toBe(8);
     expect(canonical).toMatchObject({
       padding: { top: 8, right: 8, bottom: 8, left: 8 },
@@ -153,7 +154,9 @@ describe('FrameSchema', () => {
 
     cases.forEach(({ input, path }) => {
       const result = FrameSchema.safeParse(input);
+
       expect(result.success).toBe(false);
+
       if (!result.success) expect(result.error.issues[0]?.path).toEqual(path);
     });
   });
@@ -172,8 +175,11 @@ describe('FrameSchema', () => {
         id: 'group',
         ...makePart('group'),
       });
+
       expect(result.success).toBe(false);
+
       if (!result.success) expect(result.error.issues[0]?.path.at(-1)).toBe('id');
+
       expect(
         FrameSchema.safeParse({
           namespace: 'standard',

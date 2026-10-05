@@ -29,11 +29,13 @@ export const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
         node: createMap({ namespace: 'standard', type: 'map', ...props }),
         providerDependencies: { roots: [MapProvider.key], providers: [MapProvider, PathClipProvider] },
       };
+
     if (props.data !== undefined)
       return {
         node: createMap({ namespace: 'standard', type: 'map', ...props }),
         providerDependencies: dataCellDependencies,
       };
+
     const { entries, ...input } = props;
     const normalized = normalizeCells(
       entries.flatMap(entry =>
@@ -42,6 +44,7 @@ export const MapInputEmbedAdapter: SynchronousInputEmbedAdapter<InputMap> = {
       context,
       MapProvider,
     );
+
     return {
       node: createMap({
         namespace: 'standard',

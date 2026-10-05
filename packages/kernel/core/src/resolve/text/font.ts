@@ -15,19 +15,23 @@ export const resolveFontSize = (size: IRFont['size'] | undefined, context: FontS
       `CompileOptions.fontSize must be a positive finite number; received ${rootFontSize}.`,
     );
   }
+
   if (!Number.isFinite(inheritedFontSize) || inheritedFontSize <= 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `resolveFontSize: inherited font size must be positive and finite; received ${inheritedFontSize}.`,
     );
   }
+
   if (size === undefined) return inheritedFontSize;
   if (typeof size === 'number') return size;
   if (Object.hasOwn(WebFontSizeRatio, size)) {
     return rootFontSize * WebFontSizeRatio[size as WebFontSizePreset];
   }
+
   if (size.endsWith('rem')) return Number.parseFloat(size) * rootFontSize;
   if (size.endsWith('em')) return Number.parseFloat(size) * inheritedFontSize;
+
   throw new RetikzCoreError(RetikzCoreErrorCode.Compile, `resolveFontSize: unsupported font size '${size}'.`);
 };
 

@@ -33,6 +33,7 @@ describe('[lower-mathjax-svg] drawable paint contract', () => {
 
   it('宿主哨兵只在未设置内部 color 时保留 currentColor', () => {
     const result = lowerSvgForTest('<svg viewBox="0 0 10 10"><path d="M0 0 L1 1" fill="currentColor"/></svg>', 1000);
+
     expect(result.paths[0].fill).toEqual({ kind: 'currentColor' });
   });
 
@@ -61,6 +62,7 @@ describe('[lower-mathjax-svg] drawable paint contract', () => {
     ],
   ])('%s 令整次 lowering 返回 unsupported-svg', (_name, svg) => {
     const result = lowerMathJaxSvg(svg, 1000);
+
     expect(result).toMatchObject({ ok: false, diagnostic: { kind: 'unsupported-svg' } });
   });
 
@@ -69,12 +71,14 @@ describe('[lower-mathjax-svg] drawable paint contract', () => {
       '<svg viewBox="0 0 20 20"><g transform="scale(2)"><path d="M0 0 L1 1" fill="none" stroke="red" stroke-width="3"/></g></svg>',
       1000,
     );
+
     expect(accepted.paths[0].strokeWidth).toBe(6);
 
     const rejected = lowerMathJaxSvg(
       '<svg viewBox="0 0 20 20"><g transform="scale(2,1)"><path d="M0 0 L1 1" fill="none" stroke="red" stroke-width="3"/></g></svg>',
       1000,
     );
+
     expect(rejected).toMatchObject({ ok: false, diagnostic: { kind: 'unsupported-svg' } });
   });
 });

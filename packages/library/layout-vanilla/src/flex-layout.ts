@@ -15,6 +15,7 @@ export const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlex
   lower: (props, context) => {
     const { children, ...input } = props;
     const normalized = normalizeLayoutItems<FlexLayoutItemInput>(children, context);
+
     return {
       runtimeInputs: normalized.runtimeInputs,
       node: createFlexLayout({ ...input, children: normalized.items }),
@@ -28,6 +29,7 @@ export const FlexLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputFlex
   prepare: async (props, context) => {
     const { children, ...input } = props;
     const execute = await prepareLayoutItems<FlexLayoutItemInput>(children, context);
+
     return {
       execute: async () => {
         const normalized = await execute();

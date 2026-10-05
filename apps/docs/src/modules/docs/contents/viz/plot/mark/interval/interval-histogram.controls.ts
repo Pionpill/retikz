@@ -7,7 +7,9 @@ import { intervalHistogramOperationOf, measurements } from './interval-histogram
 
 /** 连续区间 playground 的稳定控件 id */
 export const INTERVAL_CONTINUOUS_MODE_ID = 'interval-continuous-mode';
+
 export const INTERVAL_HISTOGRAM_COUNT_ID = 'interval-histogram-thresholds';
+
 export const INTERVAL_CONTINUOUS_COORDINATE_ID = 'interval-continuous-coordinate';
 
 /** 连续区间左右留白的稳定控件 id */

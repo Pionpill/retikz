@@ -30,6 +30,7 @@ export const PreviewSizeControls: FC<PreviewSizeControlsProps> = props => {
     state.previewSizePresetId === LabPreviewSizePresetId.Custom
       ? t('config.customSize')
       : t(`config.previewSizePresets.${state.previewSizePresetId}`);
+
   return (
     <section className="space-y-4">
       <div>
@@ -77,6 +78,7 @@ export const PreviewSizeControls: FC<PreviewSizeControlsProps> = props => {
               onChange={event => {
                 const width = event.currentTarget.valueAsNumber;
                 if (!Number.isFinite(width)) return;
+
                 dispatch({
                   type: LabActionType.PreviewSizeChanged,
                   width,
@@ -100,6 +102,7 @@ export const PreviewSizeControls: FC<PreviewSizeControlsProps> = props => {
               onChange={event => {
                 const height = event.currentTarget.valueAsNumber;
                 if (!Number.isFinite(height)) return;
+
                 dispatch({
                   type: LabActionType.PreviewSizeChanged,
                   width: state.previewWidth,
@@ -124,6 +127,7 @@ export type ConfigurationSheetProps = Readonly<{
 export const ConfigurationSheet: FC<ConfigurationSheetProps> = props => {
   const { state, dispatch } = props;
   const { t } = useTranslation();
+
   return (
     <Sheet
       open={state.detailsOpen}

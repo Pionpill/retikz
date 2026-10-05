@@ -16,6 +16,7 @@ const RegressionCustom: FC<RegressionCustomProps> = props => {
   const { lang = 'zh' } = props;
   const { slope } = usePreviewControls(createPreviewControlContract(lang).controls);
   const dimensions = usePreviewDimensions();
+
   return renderRegressionCustomPreview({ slope, dimensions });
 };
 

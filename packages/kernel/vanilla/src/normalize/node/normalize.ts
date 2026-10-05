@@ -16,6 +16,7 @@ export const normalizeNode = (input: InputNode): IRNode => {
   const { type: _type, label, position, authoring: _authoring, ...node } = input;
   void _type;
   void _authoring;
+
   return {
     type: 'node',
     ...node,

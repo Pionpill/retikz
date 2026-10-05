@@ -27,10 +27,12 @@ export const PreviewControlBar: FC<PreviewControlBarProps> = props => {
   const { t } = useTranslation();
 
   if (!definition) return null;
+
   const sections = resolveVisiblePreviewControlSections(
     definition.presentation === 'panel' ? definition.sections : [{ controls: definition.controls }],
     controlState.values,
   );
+
   return (
     <TooltipProvider delayDuration={250}>
       <div data-slot="preview-control-bar" className="flex flex-wrap items-center gap-2 py-3">

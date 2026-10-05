@@ -11,6 +11,7 @@ describe('CorpusPromptSchema', () => {
       difficulty: 'single',
       prompt: '画一个写着 Hello 的矩形节点。',
     });
+
     expect(ok.success).toBe(true);
   });
 
@@ -25,6 +26,7 @@ describe('CorpusPromptSchema', () => {
         { kind: 'primitiveCount', primitive: 'rect', op: '>=', value: 1 },
       ],
     });
+
     expect(parsed.assertions?.length).toBe(2);
   });
 
@@ -35,6 +37,7 @@ describe('CorpusPromptSchema', () => {
       difficulty: 'medium',
       prompt: 'p',
     });
+
     expect(bad.success).toBe(false);
   });
 });
@@ -43,7 +46,9 @@ describe('loadCorpus', () => {
   it('加载内置 core 语料且每条过 schema', () => {
     const url = new URL('../../corpus/core.json', import.meta.url);
     const corpus = loadCorpus(url);
+
     expect(corpus.length).toBeGreaterThanOrEqual(24);
+
     for (const item of corpus) {
       expect(CorpusPromptSchema.safeParse(item).success).toBe(true);
     }
@@ -52,12 +57,14 @@ describe('loadCorpus', () => {
   it('语料覆盖全部四个难度档', () => {
     const corpus = loadCorpus(new URL('../../corpus/core.json', import.meta.url));
     const tiers = new Set(corpus.map(c => c.difficulty));
+
     expect(tiers).toEqual(new Set(['single', 'composite', 'complex', 'advanced']));
   });
 
   it('语料 id 无重复', () => {
     const corpus = loadCorpus(new URL('../../corpus/core.json', import.meta.url));
     const ids = corpus.map(c => c.id);
+
     expect(new Set(ids).size).toBe(ids.length);
   });
 });

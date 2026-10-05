@@ -25,10 +25,12 @@ const cell = (s: string): string => s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' 
 
 const failureSection = (report: Report): Array<string> => {
   if (report.failures.length === 0) return [];
+
   const shown = report.failures.slice(0, MAX_FAILURE_ROWS);
   const rows = shown.map(f => `| ${f.promptId} | ${f.model} | ${f.kIndex} | ${f.stage} | ${cell(f.reason)} |`);
   const more =
     report.failures.length > shown.length ? [`> 另有 ${report.failures.length - shown.length} 条失败未列出。`, ''] : [];
+
   return [
     `## 失败明细（前 ${shown.length} 条）`,
     '',
@@ -43,6 +45,7 @@ const failureSection = (report: Report): Array<string> => {
 const l2Section = (report: Report): Array<string> => {
   const { l2, assertionFailures } = report;
   if (l2.reached === 0) return [];
+
   const kindRows = Object.entries(l2.byKind).map(
     ([k, v]) => `| ${k} | ${v.total} | ${pct(v.total === 0 ? 0 : v.passed / v.total)} |`,
   );
@@ -52,6 +55,7 @@ const l2Section = (report: Report): Array<string> => {
     assertionFailures.length > shown.length
       ? [`> 另有 ${assertionFailures.length - shown.length} 条断言失败未列出。`, '']
       : [];
+
   return [
     '## L2 语义断言',
     '',

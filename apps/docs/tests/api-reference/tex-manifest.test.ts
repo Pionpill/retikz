@@ -35,10 +35,14 @@ describe('TeX API Reference MDX', () => {
     expect(source).toContain('| `onDiagnostic?` |');
     expect(source).toContain('### LowerTexOptions');
     expect(source).not.toContain('```ts\n{ onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void }\n```');
+
     const lowerTexState = source.split('### MathJaxLowerTexState\n')[1]?.split('\n### ')[0] ?? '';
+
     expect(lowerTexState).not.toContain('#### 展开类型');
+
     for (const value of ['loading', 'ready', 'error', 'definition'])
       expect(lowerTexState).toContain(`value="${value}"`);
+
     expect(lowerTexState).toContain('初始化失败的诊断，source 为空字符串');
     expect(source).toContain(
       '<p><ApiSourceLink label={"createLowerTex"} path={"packages/kernel/tex/src/lower/lower-tex.ts"}',
@@ -90,10 +94,13 @@ describe('TeX API Reference MDX', () => {
 
   it('写出的 include 可由站点的 MDX 编译器直接编译', async () => {
     const outputDirectory = mkdtempSync(resolve(tmpdir(), 'retikz-tex-api-reference-'));
+
     try {
       await writeTexApiReferenceMdx(outputDirectory);
+
       for (const lang of ['zh', 'en'] as const) {
         const source = readFileSync(resolve(outputDirectory, `generated.${lang}.mdx`), 'utf8');
+
         await expect(compile(source, compileOptions)).resolves.toBeTruthy();
       }
     } finally {

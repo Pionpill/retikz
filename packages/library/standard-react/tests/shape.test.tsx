@@ -40,6 +40,7 @@ it('keeps the complete family equivalent across adapters with Path authoring con
     }),
     { adapters: StandardInputEmbedAdapters },
   );
+
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.contributions).toEqual(vanilla.contributions);
   expect(react.ir.children[0]).toMatchObject({
@@ -54,6 +55,7 @@ it('shares the Circle Source and provider contribution across React and Vanilla'
   const vanilla = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }), {
     adapters: StandardInputEmbedAdapters,
   });
+
   expect(react.ir.children).toEqual(vanilla.ir.children);
   expect(react.contributions).toEqual(vanilla.contributions);
 });
@@ -61,6 +63,7 @@ it('shares the Circle Source and provider contribution across React and Vanilla'
 it('does not persist a generated occurrence id when React omits the authored id', () => {
   const input = createInputScene(<Circle center={[0, 0]} radius={20} />);
   const result = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+
   expect(result.ir.children[0]).not.toHaveProperty('id');
 });
 

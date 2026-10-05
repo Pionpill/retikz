@@ -72,6 +72,7 @@ export const resolvePlotTheme = (
       throw new RetikzPlotError("Plot theme style '" + style + "' resolution failed.", { cause });
     }
   }
+
   if (input.plotDefaults !== undefined || input.plotRules !== undefined) {
     layers.push({
       kind: PlotThemeLayerKind.Source,

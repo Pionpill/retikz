@@ -32,6 +32,7 @@ export const normalizeComponentPreviewFiles = (files: ComponentPreviewFiles): No
 
   const [mainFileInput, ...sourceFileInputs] = files;
   const mainFile = normalizeComponentPreviewFile(mainFileInput);
+
   return {
     name: mainFile.file,
     ...(mainFile.diffFrom !== undefined ? { diffFrom: mainFile.diffFrom } : {}),

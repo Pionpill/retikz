@@ -6,7 +6,9 @@ import type { MathJaxEngineOptions } from './types';
 export const resolveMathJaxExtensions = (options?: MathJaxEngineOptions): Array<MathJaxExtension> => {
   const profile = options?.profile ?? MathJaxProfile.Base;
   const requested = new Set<MathJaxExtension>(profile === MathJaxProfile.Math ? MATHJAX_EXTENSION_ORDER : undefined);
+
   for (const extension of options?.extensions ?? []) requested.add(extension);
+
   return MATHJAX_EXTENSION_ORDER.filter(extension => requested.has(extension));
 };
 

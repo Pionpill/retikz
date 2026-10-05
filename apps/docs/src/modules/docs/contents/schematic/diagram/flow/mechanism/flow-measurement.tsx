@@ -13,6 +13,7 @@ export type FlowMeasurementProps = Readonly<{ lang?: Lang }>;
 const FlowMeasurement: FC<FlowMeasurementProps> = props => {
   const { lang = 'zh' } = props;
   const t = flowMeasurementI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Node

@@ -7,6 +7,7 @@ export type ChainPreviewValues = {
   arrow: 'none' | '->' | '<->';
   label: string;
 };
+
 /** 由公开参数绘制链 */
 export const renderChainPreview = (values: ChainPreviewValues) => (
   <Layout>

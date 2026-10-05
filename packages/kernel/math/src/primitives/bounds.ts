@@ -52,16 +52,19 @@ export type BoundsInsets = {
  */
 export const boundsOf = (points: ReadonlyArray<Position>): AxisAlignedBounds | undefined => {
   if (points.length === 0) return undefined;
+
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+
   for (const [x, y] of points) {
     if (x < minX) minX = x;
     if (y < minY) minY = y;
     if (x > maxX) maxX = x;
     if (y > maxY) maxY = y;
   }
+
   return { maxX, maxY, minX, minY };
 };
 
@@ -74,6 +77,7 @@ export const boundsOf = (points: ReadonlyArray<Position>): AxisAlignedBounds | u
 export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisAlignedBounds | undefined => {
   if (a === undefined) return b === undefined ? undefined : { ...b };
   if (b === undefined) return { ...a };
+
   return {
     minX: Math.min(a.minX, b.minX),
     minY: Math.min(a.minY, b.minY),

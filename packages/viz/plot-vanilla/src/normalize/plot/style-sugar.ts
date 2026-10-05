@@ -71,7 +71,9 @@ const CSS_COLOR_KEYWORDS = new Set([
 const canUseCssColor = (value: string): boolean => {
   const css = globalThis.CSS as { supports?: (property: string, value: string) => boolean } | undefined;
   if (css?.supports?.('color', value)) return true;
+
   const normalized = value.trim().toLowerCase();
+
   return (
     /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i.test(value) ||
     /^(?:rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color)\(/i.test(normalized) ||
@@ -115,7 +117,9 @@ const channelBindingOf = (value: InputPlotExtensionChannel): IRPlotChannel => {
   if (isMarkValue(value)) {
     return value.kind === 'field' ? { field: String(value.value) } : { value: value.value };
   }
+
   if (isChannelBinding(value)) return value;
+
   return typeof value === 'string' ? { field: value } : { value };
 };
 
@@ -124,8 +128,11 @@ export const extensionChannelEncoding = (
   channels: InputPlotDatumLabel['channels'],
 ): Pick<IRPlotEncoding, 'channels'> => {
   if (channels === undefined) return {};
+
   const out: Record<string, IRPlotChannel> = {};
+
   for (const [name, value] of Object.entries(channels)) out[name] = channelBindingOf(value);
+
   return Object.keys(out).length > 0 ? { channels: out } : {};
 };
 
@@ -142,7 +149,9 @@ export const paintStyleOf = <T extends IRPlotPointFillStyle | IRPlotPointStrokeS
   if (typeof value !== 'string') return { kind: 'constant', value } as T;
   if (context.fieldNames.has(value)) return { kind: 'field', value } as T;
   if (canUseCssColor(value)) return { kind: 'constant', value } as T;
+
   warnSkippedStyle(prop, value);
+
   return undefined;
 };
 
@@ -155,7 +164,9 @@ export const pointColorStyleOf = (
   if (typeof value !== 'string') return value.kind === 'field' ? { ...value, scale: value.scale ?? AUTO_COLOR } : value;
   if (context.fieldNames.has(value)) return { kind: 'field', value, scale: AUTO_COLOR };
   if (canUseCssColor(value)) return { kind: 'constant', value };
+
   warnSkippedStyle('color', value);
+
   return undefined;
 };
 
@@ -176,7 +187,9 @@ export const strokeWidthStyleOf = (
   if (isMarkValue(strokeWidth)) return strokeWidth;
   if (typeof strokeWidth === 'number') return { kind: 'constant', value: strokeWidth };
   if (context.fieldNames.has(strokeWidth)) return { kind: 'field', value: strokeWidth };
+
   warnSkippedStyle('strokeWidth', strokeWidth);
+
   return undefined;
 };
 
@@ -190,7 +203,9 @@ export const numberStyleOf = <T extends PlotMarkValue<number>>(
   if (isMarkValue(value)) return value as T;
   if (typeof value === 'number') return { kind: 'constant', value } as T;
   if (context.fieldNames.has(value)) return { kind: 'field', value } as T;
+
   warnSkippedStyle(prop, value);
+
   return undefined;
 };
 
@@ -214,7 +229,9 @@ export const enumStyleOf = <T extends string>(
   if (isMarkValue(value)) return value;
   if (context.fieldNames.has(value)) return { kind: 'field', value };
   if (allowed.has(value)) return { kind: 'constant', value: value as T };
+
   warnSkippedStyle(prop, value);
+
   return undefined;
 };
 
@@ -228,7 +245,9 @@ export const booleanStyleOf = (
   if (isMarkValue(value)) return value;
   if (typeof value === 'boolean') return { kind: 'constant', value };
   if (context.fieldNames.has(value)) return { kind: 'field', value };
+
   warnSkippedStyle(prop, value);
+
   return undefined;
 };
 
@@ -244,6 +263,7 @@ const jsonStyleOf = <T>(
     warnSkippedStyle(prop, value);
     return undefined;
   }
+
   return { kind: 'constant', value };
 };
 
@@ -260,6 +280,7 @@ export const boxSpacingStyleOf = (
     warnSkippedStyle(prop, value);
     return undefined;
   }
+
   return { kind: 'constant', value };
 };
 
@@ -282,9 +303,11 @@ export const nodeStylePropsOf = (
   context: StyleSugarContext,
 ): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
+
   const put = (name: string, value: unknown): void => {
     if (value !== undefined) out[name] = value;
   };
+
   put('align', enumStyleOf(props.align, 'align', new Set(['start', 'middle', 'end']), context));
   put('lineHeight', numberStyleOf(props.lineHeight, 'lineHeight', context));
   put('maxTextWidth', numberStyleOf(props.maxTextWidth, 'maxTextWidth', context));
@@ -329,6 +352,7 @@ export const nodeStylePropsOf = (
       context,
     ),
   );
+
   return out;
 };
 
@@ -338,9 +362,11 @@ export const pathStylePropsOf = (
   context: StyleSugarContext,
 ): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
+
   const put = (name: string, value: unknown): void => {
     if (value !== undefined) out[name] = value;
   };
+
   put('fill', paintStyleOf<IRPlotPointFillStyle>(props.fill, 'fill', context));
   put('stroke', paintStyleOf<IRPlotPointStrokeStyle>(props.stroke, 'stroke', context));
   put('strokeOpacity', numberStyleOf(props.strokeOpacity, 'strokeOpacity', context));
@@ -391,6 +417,7 @@ export const pathStylePropsOf = (
       context,
     ),
   );
+
   return out;
 };
 
@@ -403,5 +430,6 @@ export const shapeStyleOf = (
   if (isMarkValue(value)) return value;
   if (typeof value !== 'string') return { kind: 'constant', value };
   if (context.fieldNames.has(value)) return { kind: 'field', value };
+
   return { kind: 'constant', value };
 };

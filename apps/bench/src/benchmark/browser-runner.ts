@@ -20,6 +20,7 @@ export type BrowserRunnerEnvironment = Readonly<{
 }>;
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+
 const repoRoot = resolve(appRoot, '../..');
 
 /** 返回与交互式 Performance Lab 隔离的无头 runner 页面 */
@@ -41,6 +42,7 @@ const readPlaywrightVersion = (): string => {
     readFileSync(resolve(appRoot, 'node_modules/playwright/package.json'), 'utf8'),
   ) as Readonly<{ version?: unknown }>;
   if (typeof packageJson.version !== 'string') throw new Error('playwright package version is unavailable');
+
   return packageJson.version;
 };
 
@@ -53,6 +55,7 @@ const assertBrowserEnvironment = (
   if (readPlaywrightVersion() !== expected.playwright) {
     throw new Error(`bench environment mismatch: expected Playwright ${expected.playwright}`);
   }
+
   if (
     actual.viewport.width !== expected.viewport.width ||
     actual.viewport.height !== expected.viewport.height ||
@@ -60,12 +63,15 @@ const assertBrowserEnvironment = (
   ) {
     throw new Error('bench browser viewport or devicePixelRatio mismatch');
   }
+
   if (actual.language !== expected.locale || actual.timezone !== expected.timezone) {
     throw new Error('bench browser locale or timezone mismatch');
   }
+
   if (!Number.isSafeInteger(actual.hardwareConcurrency) || actual.hardwareConcurrency <= 0) {
     throw new Error('bench browser hardwareConcurrency is unavailable');
   }
+
   if (!actual.reducedMotion || expected.animations || !actual.fontAvailable || expected.font !== 'Arial') {
     throw new Error('bench browser motion or font environment mismatch');
   }
@@ -83,6 +89,7 @@ export const runBrowserBenchmark = async (
     server: { host: '127.0.0.1', open: false, port, strictPort: true },
   });
   let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+
   try {
     await server.listen();
     browser = await chromium.launch({ headless: true });
@@ -109,11 +116,13 @@ export const runBrowserBenchmark = async (
     );
     assertBrowserEnvironment(environment, result.environment);
     await context.close();
+
     return result;
   } catch (error) {
     if (error instanceof Error && /Executable doesn't exist|browserType\.launch/.test(error.message)) {
       throw new Error('Chromium is not installed; run pnpm bench:install-browser', { cause: error });
     }
+
     throw error;
   } finally {
     await browser?.close();

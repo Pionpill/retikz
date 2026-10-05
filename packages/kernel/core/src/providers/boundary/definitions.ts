@@ -28,6 +28,7 @@ const withGap = (rect: Rect, halfWidth: number, halfHeight: number, gap: number,
       `${provider} boundary gap ${gap} produced a non-positive half-axis from [${halfWidth}, ${halfHeight}]`,
     );
   }
+
   return { ...rect, width: effectiveHalfWidth * 2, height: effectiveHalfHeight * 2 };
 };
 
@@ -51,6 +52,7 @@ const outlineFromShape = (shape: ShapeDefinition, rect: Rect): ReadonlyArray<Pat
       `Builtin shape '${shape.name}' must provide an outline for its builtin boundary.`,
     );
   }
+
   return shape.outline(rect, {});
 };
 
@@ -69,6 +71,7 @@ const circleBoundary = defineBoundary({
       params.fit === BoundaryFit.Tight
         ? { halfWidth: base.width / 2, halfHeight: base.height / 2 }
         : boundsCircleHalfAxes(base);
+
     return withGap(base, halfAxes.halfWidth, halfAxes.halfHeight, params.gap, BuiltinShape.Circle);
   },
   boundaryPoint: ellipseShape.boundaryPoint,
@@ -104,6 +107,7 @@ const ellipseBoundary = defineBoundary({
       params.fit === BoundaryFit.Tight
         ? { halfWidth: base.width / 2, halfHeight: base.height / 2 }
         : boundsEllipseHalfAxes(base);
+
     return withGap(base, halfAxes.halfWidth, halfAxes.halfHeight, params.gap, BuiltinShape.Ellipse);
   },
   boundaryPoint: ellipseShape.boundaryPoint,

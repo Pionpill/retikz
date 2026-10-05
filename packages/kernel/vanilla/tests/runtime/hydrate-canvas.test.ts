@@ -15,6 +15,7 @@ import { mountCanvas } from '../../src/dom';
  */
 
 type Pt = [number, number];
+
 type SubPath = { points: Array<Pt>; closed: boolean };
 
 /** 几何忠实的 2D context harness（compact 版，足够 hitTest 的路径构建 + 点测） */
@@ -30,6 +31,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
     const [a, b, c, d, e, f] = matrix;
     return [a * x + c * y + e, b * x + d * y + f];
   };
+
   const multiply = (m: [number, number, number, number, number, number]): void => {
     const [a, b, c, d, e, f] = matrix;
     const [a2, b2, c2, d2, e2, f2] = m;
@@ -42,11 +44,13 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
       b * e2 + d * f2 + f,
     ];
   };
+
   const ensure = (): SubPath => {
     if (current === null) {
       current = { points: [cursor], closed: false };
       subPaths.push(current);
     }
+
     return current;
   };
 
@@ -93,14 +97,17 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
     },
     arc(cx: number, cy: number, r: number, start: number, end: number): void {
       const sp = ensure();
+
       for (let i = 0; i <= 24; i++) {
         const ang = start + ((end - start) * i) / 24;
         sp.points.push(apply(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r));
       }
+
       sp.closed = true;
     },
     ellipse(cx: number, cy: number, rx: number, ry: number, rot: number, start: number, end: number): void {
       const sp = ensure();
+
       for (let i = 0; i <= 24; i++) {
         const ang = start + ((end - start) * i) / 24;
         const ex = Math.cos(ang) * rx;
@@ -109,6 +116,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
           apply(cx + ex * Math.cos(rot) - ey * Math.sin(rot), cy + ex * Math.sin(rot) + ey * Math.cos(rot)),
         );
       }
+
       sp.closed = true;
     },
     save(): void {
@@ -144,9 +152,11 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
     },
     isPointInPath(px: number, py: number): boolean {
       let inside = false;
+
       for (const sp of subPaths) {
         const pts = sp.points;
         if (pts.length < 3) continue;
+
         for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
           const xi = pts[i][0];
           const yi = pts[i][1];
@@ -155,13 +165,16 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
           if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
         }
       }
+
       return inside;
     },
     isPointInStroke(px: number, py: number): boolean {
       const half = lineWidth / 2;
+
       for (const sp of subPaths) {
         const pts = sp.points;
         const limit = sp.closed ? pts.length : pts.length - 1;
+
         for (let i = 0; i < limit; i++) {
           const a = pts[i];
           const b = pts[(i + 1) % pts.length];
@@ -172,9 +185,11 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
           if (Math.hypot(px - (a[0] + t * dx), py - (a[1] + t * dy)) <= half) return true;
         }
       }
+
       return false;
     },
   };
+
   return ctx as unknown as CanvasRenderingContext2D;
 };
 
@@ -185,9 +200,13 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
  * ⇒ Scene 点 s → CSS px：cssX = 50 + s.x，cssY = s.y（canvas 局部）；client = canvas rect 左上 + cssX/cssY
  */
 const SCENE_SIZE = 100;
+
 const CSS_WIDTH = 200;
+
 const CSS_HEIGHT = 100;
+
 const RECT_LEFT = 10;
+
 const RECT_TOP = 20;
 
 /** 把 Scene 点换成模拟的 client 坐标（rect 左上偏移 + letterbox offsetX） */
@@ -202,6 +221,7 @@ beforeEach(() => {
   geometryCtx = createGeometryContext();
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => geometryCtx);
   vi.spyOn(globalThis, 'devicePixelRatio', 'get').mockReturnValue(1);
+
   // CSS 显示盒固定 200×100，位于 (RECT_LEFT, RECT_TOP)
   vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({
     x: RECT_LEFT,
@@ -241,9 +261,11 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
   it('coord-mapping：受限容器 letterbox 下 client 坐标经逆 fit → 正确 Scene 点', () => {
     const container = document.createElement('div');
     const view = mountCanvas(container, boxIr, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
+
     // Scene 中心 (50,50) → client (RECT_LEFT+50+50, RECT_TOP+50)
     const { clientX, clientY } = sceneToClient(50, 50);
     const scene = view.clientToScene(clientX, clientY);
+
     expect(scene.x).toBeCloseTo(50, 5);
     expect(scene.y).toBeCloseTo(50, 5);
   });
@@ -257,6 +279,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
 
     const { clientX, clientY } = sceneToClient(50, 50);
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+
     expect(onClick).toHaveBeenCalledTimes(1);
 
     container.remove();
@@ -294,12 +317,14 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
 
     const { clientX, clientY } = sceneToClient(50, 50);
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+
     expect(context?.id).toBe('box');
     expect(context?.renderer).toBe('canvas');
     expect(context?.element).toBeNull();
     expect(context?.meta).toEqual({ series: 'sales', i: 3 });
     expect(context?.geometry?.bbox.width).toBeGreaterThan(0);
     expect(context?.point?.x).toBeCloseTo(50, 5);
+
     // per-id 动画控制可调用、不抛（registry-backed，作用于命中元素）
     expect(typeof context?.animation.restart).toBe('function');
     expect(() => context?.animation.restart()).not.toThrow();
@@ -320,6 +345,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     view.root.dispatchEvent(
       new MouseEvent('click', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }),
     );
+
     expect(onClick).not.toHaveBeenCalled();
 
     container.remove();
@@ -337,17 +363,21 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     view.root.dispatchEvent(
       new MouseEvent('pointermove', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }),
     );
+
     expect(onEnter).not.toHaveBeenCalled();
+
     const center = sceneToClient(50, 50);
     view.root.dispatchEvent(
       new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX, clientY: center.clientY }),
     );
+
     expect(onEnter).toHaveBeenCalledTimes(1);
 
     // 图元内部继续 move（命中仍是 box）→ 不重复触发
     view.root.dispatchEvent(
       new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX + 1, clientY: center.clientY + 1 }),
     );
+
     expect(onEnter).toHaveBeenCalledTimes(1);
 
     container.remove();
@@ -364,10 +394,12 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     view.root.dispatchEvent(
       new MouseEvent('pointermove', { bubbles: true, clientX: center.clientX, clientY: center.clientY }),
     );
+
     // 移到 letterbox 黑边（命中 null）→ box 的 leave 一次
     view.root.dispatchEvent(
       new MouseEvent('pointermove', { bubbles: true, clientX: RECT_LEFT + 10, clientY: RECT_TOP + 50 }),
     );
+
     expect(onLeave).toHaveBeenCalledTimes(1);
 
     container.remove();
@@ -383,6 +415,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
 
     const { clientX, clientY } = sceneToClient(50, 50);
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+
     expect(onClick).not.toHaveBeenCalled();
 
     container.remove();
@@ -421,12 +454,14 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     document.body.appendChild(container);
     const view = mountCanvas(container, ir, { output: { width: CSS_WIDTH, height: CSS_HEIGHT } });
     view.hydrate({ handlers: {} });
+
     expect(rafSpy).not.toHaveBeenCalled();
 
     const { clientX, clientY } = sceneToClient(50, 50);
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
 
     expect(rafSpy).toHaveBeenCalled();
+
     container.remove();
   });
 
@@ -434,6 +469,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
     const rafSpy = vi.fn(() => 1);
     vi.stubGlobal('requestAnimationFrame', rafSpy);
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
+
     // 初始 scene 无任何动画 track
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -442,6 +478,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
 
     const { clientX, clientY } = sceneToClient(50, 50);
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+
     expect(rafSpy).not.toHaveBeenCalled(); // 旧图无 onEvent track → 点击不起时钟
 
     // update 换入同 id 但带 {onEvent:click} 动画 track 的 scene
@@ -471,8 +508,10 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
       ],
     };
     view.update(animatedIr);
+
     // 同一已存活水合，无需重新 hydrate；点击现应激活 per-id 时钟（rebind 反映新 onEvent track）
     view.root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+
     expect(rafSpy).toHaveBeenCalled();
 
     container.remove();
@@ -489,6 +528,7 @@ describe('@retikz/vanilla mountCanvas 水合（坐标映射 + hitTest）', () =>
 
     const { clientX, clientY } = sceneToClient(50, 50);
     root.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+
     expect(onClick).not.toHaveBeenCalled();
 
     container.remove();

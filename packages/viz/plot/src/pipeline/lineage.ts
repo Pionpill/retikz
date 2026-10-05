@@ -42,20 +42,25 @@ const toJsonValue = (value: unknown): JsonValue | undefined => {
     const values = value.map(item => toJsonValue(item)).filter((item): item is JsonValue => item !== undefined);
     return values;
   }
+
   if (typeof value === 'object') {
     const out: Record<string, JsonValue> = {};
+
     for (const [key, item] of Object.entries(value)) {
       const json = toJsonValue(item);
       if (json !== undefined) out[key] = json;
     }
+
     return out;
   }
+
   return String(value);
 };
 
 /** 读取 channel 中的字段引用 */
 const encodingFieldOf = (channel: unknown): { field: string; scale?: string } | undefined => {
   if (channel === null || typeof channel !== 'object') return undefined;
+
   const record = channel as { field?: unknown; kind?: unknown; value?: unknown; scale?: unknown };
   const field =
     typeof record.field === 'string'
@@ -64,6 +69,7 @@ const encodingFieldOf = (channel: unknown): { field: string; scale?: string } | 
         ? record.value
         : undefined;
   if (field === undefined) return undefined;
+
   return typeof record.scale === 'string' ? { field, scale: record.scale } : { field };
 };
 
@@ -71,12 +77,15 @@ const encodingFieldOf = (channel: unknown): { field: string; scale?: string } | 
 const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encoding'] => {
   const encoding = (mark as { encoding?: Record<string, unknown> }).encoding;
   if (encoding === undefined) return [];
+
   const out: NonNullable<PlotMarkLineage['encoding']> = [];
+
   for (const [channel, value] of Object.entries(encoding)) {
     if (channel === 'channels') continue;
     const field = encodingFieldOf(value);
     if (field !== undefined) out.push({ channel, ...field });
   }
+
   const extensionChannels = encoding.channels;
   if (extensionChannels !== null && typeof extensionChannels === 'object' && !Array.isArray(extensionChannels)) {
     for (const [channel, value] of Object.entries(extensionChannels)) {
@@ -84,6 +93,7 @@ const markEncodingFields = (mark: IRPlotMarkOperation): PlotMarkLineage['encodin
       if (field !== undefined) out.push({ channel, ...field });
     }
   }
+
   return out;
 };
 
@@ -105,16 +115,19 @@ const hostMetadataOf = (
   metadata: PlotHostLineageMetadata | undefined,
 ): PlotHostLineageMetadata | undefined => {
   if (options === false || metadata === undefined) return undefined;
+
   const out: PlotHostLineageMetadata = {};
   if (options.query) {
     if (metadata.queryId !== undefined) out.queryId = metadata.queryId;
     if (metadata.datasetVersion !== undefined) out.datasetVersion = metadata.datasetVersion;
   }
+
   if (options.ai?.planReference && metadata.aiPlanId !== undefined) out.aiPlanId = metadata.aiPlanId;
   if (options.ai?.promptReference && metadata.promptHash !== undefined) out.promptHash = metadata.promptHash;
   if (options.permission && metadata.permissionPolicyId !== undefined)
     out.permissionPolicyId = metadata.permissionPolicyId;
   if (options.extra && metadata.extra !== undefined) out.extra = metadata.extra;
+
   return Object.keys(out).length === 0 ? undefined : out;
 };
 
@@ -141,6 +154,7 @@ const layoutLineageOf = (spec: IRPlot): NonNullable<PlotLineageLowerResult['line
         ? [{ id: arrangement.id, count: arrangement.tracks.length }]
         : [],
     );
+
   return {
     coordinateType: spec.coordinate?.type,
     hasComposition: spec.composition !== undefined,
@@ -177,6 +191,7 @@ const scaleLineageOf = (spec: IRPlot, scales: Array<IRPlotScaleOperation> | unde
     const domain = toJsonValue(record.domain);
     const range = toJsonValue(record.range);
     const channels = scaleChannelsOf(spec, name);
+
     return {
       name,
       type: typeof record.type === 'string' ? record.type : '',
@@ -198,7 +213,9 @@ const sourceIdentityOfMeta = (meta: Record<string, unknown>): DataSourceIdentity
       truncated: visible.length < sourceIndices.length,
     };
   }
+
   const sourceIndex = meta.sourceIndex;
+
   return typeof sourceIndex === 'number'
     ? { mode: 'summary', count: 1, indices: [sourceIndex], truncated: false }
     : undefined;
@@ -216,6 +233,7 @@ const buildPlotLineage = (
   if (rootLineage === undefined || markLineages === undefined) {
     throw new RetikzPlotError('plot lineage: lowering data artifact is missing lineage events');
   }
+
   const rootKinds = operationKindsOf(spec.transform);
   const markData: Array<PlotMarkDataLineage> = [];
   const marks: Array<PlotMarkLineage> = [];
@@ -238,12 +256,14 @@ const buildPlotLineage = (
     if (lineageOptions.transformScopes) {
       markLineage.transformScope = { root: rootKinds, mark: operationKindsOf(transform) };
     }
+
     if (lineageOptions.rowValues !== false) {
       const markRows =
         dataArtifact.markDataViews.find(markDataView => markDataView.markIndex === markIndex)?.dataView.rows ??
         dataArtifact.rootDataView.rows;
       markLineage.rowValues = sampleRows(markRows, lineageOptions.rowValues);
     }
+
     marks.push(markLineage);
   });
 
@@ -301,8 +321,10 @@ export const createPlotLineageLocator = (
     anchor: ReturnType<typeof locator.datum> | null,
   ): PlotLineageAnchorResolution | null => {
     if (anchor === null) return null;
+
     const meta = anchor.meta as Record<string, unknown>;
     if (typeof meta.markIndex !== 'number' || typeof meta.transformedIndex !== 'number') return null;
+
     const datumLineage: PlotDatumLineage = {
       queryKind: 'datum',
       markIndex: meta.markIndex,
@@ -310,6 +332,7 @@ export const createPlotLineageLocator = (
       sourceIdentity: sourceIdentityOfMeta(meta),
       mark: lineage.marks.find(mark => mark.markIndex === meta.markIndex),
     };
+
     return { anchor, lineage: withLocatorAnchor(datumLineage, address, anchor) };
   };
 
@@ -319,6 +342,7 @@ export const createPlotLineageLocator = (
     anchor: ReturnType<typeof locator.series> | null,
   ): PlotLineageAnchorResolution | null => {
     if (anchor === null) return null;
+
     const markIndex = anchor.meta.markIndex;
     const seriesLineage: PlotSeriesLineage = {
       queryKind: 'series',
@@ -327,10 +351,12 @@ export const createPlotLineageLocator = (
         : {}),
       seriesValue,
     };
+
     return { anchor, lineage: withLocatorAnchor(seriesLineage, address, anchor) };
   };
 
   const prefix = spec.id === undefined ? '' : `${spec.id}.`;
+
   const seriesValueOfAddress = (address: string): string | undefined => {
     const parts = address.split('.');
     const rest = spec.id !== undefined && parts[0] === spec.id ? parts.slice(1) : parts;

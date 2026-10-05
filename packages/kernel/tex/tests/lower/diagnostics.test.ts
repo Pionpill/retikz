@@ -85,6 +85,7 @@ describe('[lower-tex] diagnostics and cache', () => {
 
     lower({ tex: 'x' }, { fontSize: 16, color: 'red' });
     lower({ tex: 'x' }, { fontSize: 16, color: 'blue' });
+
     expect(calls).toBe(2);
   });
 });

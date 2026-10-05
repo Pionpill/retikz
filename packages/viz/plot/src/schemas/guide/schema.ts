@@ -115,6 +115,7 @@ export const AxisPlacementSchema = discriminatedUnion('kind', [
 const textBlockHasContent = (value: unknown): boolean => {
   if (typeof value === 'string') return value.length > 0;
   if (!Array.isArray(value)) return false;
+
   return value.some(line => {
     if (typeof line === 'string') return line.length > 0;
     if (line && typeof line === 'object' && 'text' in line && typeof line.text === 'string')
@@ -124,9 +125,11 @@ const textBlockHasContent = (value: unknown): boolean => {
         if (!run || typeof run !== 'object') return false;
         if ('text' in run && typeof run.text === 'string') return run.text.length > 0;
         if ('tex' in run && typeof run.tex === 'string') return run.tex.length > 0;
+
         return false;
       });
     }
+
     return false;
   });
 };
@@ -137,6 +140,7 @@ const nonEmptyTextBlockSchema = (label: string) =>
   });
 
 const AxisTitleTextSchema = nonEmptyTextBlockSchema('axis title');
+
 const LegendTitleTextSchema = nonEmptyTextBlockSchema('legend title');
 
 export const GuideLineStyleSchema = strictObject({
@@ -348,6 +352,7 @@ export const AxisTicksSchema = strictObject({
         message: 'ticks.length cannot be used together with ticks.mark',
       });
     }
+
     if (ticks.mark !== undefined && ticks.line !== undefined) {
       ctx.addIssue({
         code: 'custom',
@@ -605,6 +610,7 @@ const refineAxisGridProjection = (grid: { applyTo?: string; select?: unknown }, 
       message: 'selected axis grid requires a select target selector',
     });
   }
+
   if (grid.applyTo !== undefined && grid.applyTo !== AxisGridApplyTo.Selected && grid.select !== undefined) {
     ctx.addIssue({
       code: 'custom',

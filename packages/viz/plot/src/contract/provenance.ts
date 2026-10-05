@@ -98,6 +98,7 @@ export const datumMeta = (
   if (sourceIndices !== undefined && sourceIndices.length > 0) meta.sourceIndices = [...sourceIndices];
   else if (sourceIndex !== undefined) meta.sourceIndex = sourceIndex;
   if (series !== undefined) meta.series = toJsonValue(series);
+
   return meta;
 };
 
@@ -124,5 +125,6 @@ export const guideLayerId = (
   if (coordinateView !== undefined) {
     return `${plotId}.view.${slug(coordinateView)}.${layer}.${dimension}`;
   }
+
   return `${plotId}.${layer}.${dimension}`;
 };

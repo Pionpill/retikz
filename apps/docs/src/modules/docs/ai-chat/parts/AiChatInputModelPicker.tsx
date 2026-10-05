@@ -60,6 +60,7 @@ export const AiChatInputModelPicker: FC = () => {
       models: [...cp.models, ...(customModels[cp.id] ?? [])],
       isCustom: true,
     }));
+
     return [...builtin, ...custom];
   }, [apiKeys, customProviders, customModels]);
 
@@ -76,6 +77,7 @@ export const AiChatInputModelPicker: FC = () => {
   const handleSubmitCustom = () => {
     const name = customInput.trim();
     if (!name) return;
+
     addCustomModel(providerId, name);
     setModel(providerId, name);
     setCustomInput('');
@@ -120,6 +122,7 @@ export const AiChatInputModelPicker: FC = () => {
                 {g.models.map(m => {
                   const isActive = providerId === g.providerId && currentModel === m;
                   const isCustomModel = (customModels[g.providerId] ?? []).includes(m);
+
                   return (
                     <li key={m}>
                       <button

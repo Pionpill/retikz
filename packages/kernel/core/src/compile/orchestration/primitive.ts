@@ -27,7 +27,9 @@ export const recordPrimitiveZIndex = (
 export const stableSortByZIndex = (arr: Array<ScenePrimitive>, table: PrimitiveZIndexTable): Array<ScenePrimitive> => {
   const decorated = arr.map((prim, index) => ({ prim, index, z: table.get(prim) ?? 0 }));
   decorated.sort((a, b) => a.z - b.z || a.index - b.index);
+
   for (let i = 0; i < arr.length; i++) arr[i] = decorated[i].prim;
+
   return arr;
 };
 
@@ -44,5 +46,6 @@ export const collectPlaceholderLocators = (
       locators.push(...collectPlaceholderLocators(prim.children, `${prefix}[${idx}].children`));
     }
   });
+
   return locators;
 };

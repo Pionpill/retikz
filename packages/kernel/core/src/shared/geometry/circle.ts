@@ -35,6 +35,7 @@ export const circle = {
     const r = c.radius;
     let lx = 0;
     let ly = 0;
+
     switch (name) {
       case Anchor.Top:
         ly = -r;
@@ -65,6 +66,7 @@ export const circle = {
         ly = r * SQRT_HALF;
         break;
     }
+
     return localToWorld(c, [lx, ly]);
   },
   /** 从圆心向 toward 方向射线与圆周交点（Path 端点贴 Node 边界用） */
@@ -72,7 +74,9 @@ export const circle = {
     const [lx, ly] = worldToLocal(c, toward);
     const len = Math.sqrt(lx * lx + ly * ly);
     if (len === 0) return [c.x, c.y];
+
     const t = c.radius / len;
+
     return localToWorld(c, [lx * t, ly * t]);
   },
   /** 边上比例点：side 的 90° 周长弧段 t∈[0,1] 处（等角，落真实圆周；含旋转） */

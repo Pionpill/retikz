@@ -27,6 +27,7 @@ export const chartSourceOf = <TRoot extends { coordinate?: InputChartCoordinate 
   const { coordinate: coordinateInput, ...sourceRoot } = root;
   const normalizedPresentation = normalizeChartPresentation({ title, subtitle, note, source });
   const coordinate = normalizeChartCoordinate(coordinateInput);
+
   return {
     namespace: CHART_NAMESPACE,
     ...(normalizedPresentation === undefined ? {} : { presentation: normalizedPresentation }),

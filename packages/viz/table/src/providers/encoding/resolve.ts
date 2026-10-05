@@ -20,6 +20,7 @@ const EdgesSchema = array(number()).superRefine((edges, context) => {
     }
   });
 });
+
 const LegendFormSchema = zodEnum(['ramp', 'swatch']);
 
 /** package-private visual scale 消费输入 */
@@ -40,20 +41,24 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
     const result = ScalarValueSchema.safeParse(value);
     if (!result.success)
       throw new RetikzTableError(`table: visual scale "${name}" domain ${index} must be a JSON scalar`);
+
     return result.data;
   });
   const range = resolution.range.map((color, index) => {
     const result = CssColorSchema.safeParse(color);
     if (!result.success)
       throw new RetikzTableError(`table: visual scale "${name}" range ${index} must be a valid color string`);
+
     return result.data;
   });
   if (range.length === 0) throw new RetikzTableError(`table: visual scale "${name}" range must be non-empty`);
+
   const edges = resolution.edges === undefined ? undefined : EdgesSchema.parse([...resolution.edges]);
   const legendForm = LegendFormSchema.safeParse(resolution.legendForm);
   if (!legendForm.success) {
     throw new RetikzTableError(`table: visual scale "${name}" legendForm must be ramp or swatch`);
   }
+
   if (legendForm.data === 'ramp') {
     if (domain.length !== 2 || range.length !== 2 || edges !== undefined) {
       throw new RetikzTableError(
@@ -76,7 +81,9 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
   if (typeof evaluator !== 'function') {
     throw new RetikzTableError(`table: visual scale "${name}" evaluator must be a function`);
   }
+
   const observed = new Map<IRDataScalarValue, string | undefined>();
+
   const guardedOf = (value: IRDataScalarValue): string | undefined => {
     const output = evaluator(value);
     const guarded = output === undefined ? undefined : CssColorSchema.safeParse(output);
@@ -85,15 +92,19 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
         `table: visual scale "${name}" evaluator output must be a valid color string or undefined`,
       );
     }
+
     const color = guarded === undefined ? undefined : guarded.data;
     if (observed.has(value) && observed.get(value) !== color) {
       throw new RetikzTableError(
         `table: visual scale "${name}" evaluator must be deterministic for repeated scalar values`,
       );
     }
+
     observed.set(value, color);
+
     return color;
   };
+
   return deepFreeze({
     of: guardedOf,
     legendForm: legendForm.data,
@@ -113,5 +124,6 @@ export const resolveCellVisualScale = (input: ResolveCellVisualScaleInput): Cell
     deepFreeze([...input.values]),
     deepFreeze(structuredClone(input.context)),
   );
+
   return resolution === undefined ? undefined : guardResolution(definition.name, resolution);
 };

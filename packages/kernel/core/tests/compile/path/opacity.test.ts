@@ -20,6 +20,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).opacity).toBe(0.5);
   });
 
@@ -40,6 +41,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).fillOpacity).toBe(0.3);
   });
 
@@ -58,6 +60,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
         },
       ],
     };
+
     expect(findPathPrim(compileToScene(ir).scene.primitives).strokeOpacity).toBe(0.7);
   });
 
@@ -76,6 +79,7 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
       ],
     };
     const p = findPathPrim(compileToScene(ir).scene.primitives);
+
     expect(p.opacity).toBeUndefined();
     expect(p.fillOpacity).toBeUndefined();
     expect(p.strokeOpacity).toBeUndefined();

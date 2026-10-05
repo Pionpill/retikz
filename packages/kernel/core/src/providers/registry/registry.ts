@@ -84,22 +84,27 @@ export const resolveProviderRegistry = <TDefinition>({
   keyOf,
 }: ProviderRegistryOptions<TDefinition>): ReadonlyMap<string, TDefinition> => {
   const registry = new Map<string, TDefinition>();
+
   for (const definition of builtins) {
     const key = keyOf(definition);
     assertProviderKey(capability, key);
     if (registry.has(key)) {
       throw new RetikzCoreError(RetikzCoreErrorCode.Provider, `duplicate ${capability} registration: "${key}"`);
     }
+
     registry.set(key, definition);
   }
+
   for (const definition of custom ?? []) {
     const key = keyOf(definition);
     assertProviderKey(capability, key);
     if (registry.has(key)) {
       throw new RetikzCoreError(RetikzCoreErrorCode.Provider, `duplicate ${capability} registration: "${key}"`);
     }
+
     registry.set(key, definition);
   }
+
   return registry;
 };
 
@@ -112,6 +117,7 @@ export const providerDefinitionOf = <TDefinition>(
     ? registry.find(item => item.name === key)
     : (registry as ReadonlyMap<string, TDefinition>).get(key);
   if (definition !== undefined) return definition;
+
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Provider,
     `Unknown ${capability} '${key}'; available: ${registeredNames(registry)}. Pass a definition via options.${optionName}.`,

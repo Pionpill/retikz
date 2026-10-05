@@ -27,17 +27,20 @@ export const ArrayInputEmbedAdapter: SynchronousInputEmbedAdapter<InputArray> = 
         node: createArray({ namespace: 'standard', type: 'array', ...props }),
         providerDependencies: { roots: [ArrayProvider.key], providers: [ArrayProvider, PathClipProvider] },
       };
+
     if (props.data !== undefined)
       return {
         node: createArray({ namespace: 'standard', type: 'array', ...props }),
         providerDependencies: dataCellDependencies,
       };
+
     const { items, ...input } = props;
     const normalized = normalizeCells(
       items.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
       context,
       ArrayProvider,
     );
+
     return {
       node: createArray({
         namespace: 'standard',

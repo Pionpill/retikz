@@ -6,6 +6,7 @@ import { compileInspectionToScene, createDefaultInspectorRegistry } from '../../
 import { getResolvedInspectorRegistry } from '../../src/providers';
 
 const registry = createDefaultInspectorRegistry();
+
 const nodeScene: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', position: [0, 0], text: 'A' }] };
 
 /** 读取辅助路径的实际顶点，不把容器层级作为断言目标 */
@@ -13,6 +14,7 @@ const pathVertices = (primitives: ReadonlyArray<ScenePrimitive>): Array<readonly
   primitives.flatMap(primitive => {
     if (primitive.type === 'group') return pathVertices(primitive.children);
     if (primitive.type !== 'path') return [];
+
     return primitive.commands.flatMap(command =>
       command.kind === 'move' || command.kind === 'line' ? [command.to] : [],
     );
@@ -25,7 +27,9 @@ describe('内置几何检查', () => {
         .definitions.map(definition => definition.type)
         .sort(),
     ).toEqual(['clip', 'coordinate', 'node', 'path', 'scope']);
+
     const result = compileInspectionToScene(nodeScene, { registry, selection: { rules: [] } });
+
     expect(result.inspection).toBeNull();
     expect(result.diagnostics).toEqual([]);
     expect(result.primary).toEqual(compileToScene(nodeScene));
@@ -74,13 +78,16 @@ describe('内置几何检查', () => {
         ],
       },
     });
+
     expect(result.inspection?.entries.length).toBeGreaterThan(0);
     expect(result.inspection?.entries.every(entry => JSON.stringify(entry.transform) === '[1,0,0,1,0,0]')).toBe(true);
+
     const vertices = pathVertices(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? []);
     const xs = vertices.map(point => point[0]);
     const ys = vertices.map(point => point[1]);
     const halfWidth = Math.abs(scale) * (20 * Math.cos(Math.PI / 6) + 10 * Math.sin(Math.PI / 6));
     const halfHeight = 3 * (20 * Math.sin(Math.PI / 6) + 10 * Math.cos(Math.PI / 6));
+
     expect(Math.min(...xs)).toBeCloseTo(100 - halfWidth, 2);
     expect(Math.max(...xs)).toBeCloseTo(100 + halfWidth, 2);
     expect(Math.min(...ys)).toBeCloseTo(200 - halfHeight, 2);
@@ -132,12 +139,17 @@ describe('内置几何检查', () => {
         ],
       },
     });
+
     expect(result.inspection?.entries).toHaveLength(2);
+
     const [local, world] = result.inspection?.entries ?? [];
+
     expect(local.transform[1]).toBeCloseTo(2);
     expect(local.transform[2]).toBeCloseTo(-3);
     expect(world.transform).toEqual([1, 0, 0, 1, 0, 0]);
+
     const vertices = pathVertices(world.scene.primitives);
+
     expect(vertices).toEqual([
       [70, 160],
       [130, 160],
@@ -160,12 +172,15 @@ describe('内置几何检查', () => {
         },
       });
     const all = compile(true);
+
     expect(all.inspection?.entries.length).toBeGreaterThan(0);
+
     for (const field of fields) {
       expect(compile({ [field]: false }).inspection?.entries.length ?? 0).toBeLessThan(
         all.inspection?.entries.length ?? 0,
       );
     }
+
     expect(compile(Object.fromEntries(fields.map(field => [field, false]))).inspection).toBeNull();
     expect(all.primary).toEqual(compileToScene(nodeScene));
   });
@@ -195,6 +210,7 @@ describe('内置几何检查', () => {
         },
       });
     const enabled = compile({ boundary: true, outline: true, keyPoints: true });
+
     expect(enabled.inspection?.entries.length).toBeGreaterThan(0);
     expect(enabled.diagnostics).toHaveLength(3);
     expect(

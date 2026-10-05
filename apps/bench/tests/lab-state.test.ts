@@ -32,11 +32,13 @@ describe('Performance Lab state', () => {
       '2560x1440',
       '3840x2160',
     ]);
+
     const initial = createInitialLabState();
     const twoK = reduceLabState(initial, {
       type: 'preview-size-preset-selected',
       presetId: '2560x1440',
     });
+
     expect(twoK).toMatchObject({
       previewSizePresetId: '2560x1440',
       previewWidth: 2560,
@@ -47,6 +49,7 @@ describe('Performance Lab state', () => {
       type: 'preview-size-preset-selected',
       presetId: 'custom',
     });
+
     expect(custom).toMatchObject({
       previewSizePresetId: 'custom',
       previewWidth: 2560,
@@ -58,6 +61,7 @@ describe('Performance Lab state', () => {
       width: 1024,
       height: 512,
     });
+
     expect(resized).toMatchObject({
       previewSizePresetId: 'custom',
       previewWidth: 1024,
@@ -81,6 +85,7 @@ describe('Performance Lab state', () => {
     const initial = { ...createInitialLabState(), session: { id: 'previous' } as never };
     const running = reduceLabState(initial, { type: 'run-started' });
     const failed = reduceLabState(running, { type: 'run-failed', error: 'boom' });
+
     expect(failed.status).toBe('error');
     expect(failed.error).toBe('boom');
     expect(failed.session).toBe(initial.session);

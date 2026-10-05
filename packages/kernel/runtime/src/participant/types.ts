@@ -10,6 +10,7 @@ import type { RuntimeTracePhaseDefinition } from '../trace';
 import type { RuntimeSnapshot } from '../transaction';
 
 declare const RuntimeCommitParticipantTokenBrand: unique symbol;
+
 declare const RuntimeCommitParticipantReadBrand: unique symbol;
 
 /** 动态 runtime options 只暴露的 commit participant token */

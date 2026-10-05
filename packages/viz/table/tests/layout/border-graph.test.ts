@@ -72,12 +72,14 @@ const contribution = (
     ownerSideRank: options.ownerSideRank ?? 0,
     sourceOrderKey,
   };
+
   return options.kind === 'none'
     ? { kind: 'none', origin: 'explicit', ...base }
     : { kind: 'line', origin: 'explicit', ...base, line: options.borderLine ?? line() };
 };
 
 const rows = [track('r0', 0, 0, 10), track('r1', 1, 14, 20)];
+
 const columns = [track('c0', 0, 0, 20), track('c1', 1, 26, 30)];
 
 const fullGridInput = (): BuildTableBorderGraphInput => ({
@@ -99,6 +101,7 @@ describe('Table Border Graph', () => {
       color: '#336699',
       stroke: 0.8,
     });
+
     const resolvedLine = ResolvedTableBorderLineSchema.parse(line());
     const atomKey = 'c:h:0:0';
     const winner = contribution(atomKey, { kind: 'default', scope: 'outer', side: 'top' });
@@ -124,7 +127,9 @@ describe('Table Border Graph', () => {
       }),
     ).toEqual({ kind: 'tableBorder', tableId: 'table', edgeKey: 'edge', atomicKeys: [atomKey] });
     expect(() => ResolvedTableBorderLineSchema.parse({ ...line(), extra: true })).toThrow();
+
     const hidden = contribution(atomKey, { kind: 'default', scope: 'outer', side: 'top' }, { kind: 'none' });
+
     expect(() => TableBorderContributionSchema.parse({ ...hidden, line: line() })).toThrow();
     expect(() =>
       TableBorderContributionSchema.parse({
@@ -242,6 +247,7 @@ describe('Table Border Graph', () => {
     const horizontalKey = 'c:h:1:0';
     const upperSource = { kind: 'cell', cellId: 'upper', row: 0, column: 0, side: 'bottom' } as const;
     const lowerSource = { kind: 'cell', cellId: 'lower', row: 1, column: 0, side: 'top' } as const;
+
     expect(
       resolveTableBorderAtoms([
         {
@@ -283,6 +289,7 @@ describe('Table Border Graph', () => {
 
     const lexicalA = { kind: 'cell', cellId: 'z', row: 0, column: 0, side: 'left' } as const;
     const lexicalB = { kind: 'cell', cellId: 'a', row: 0, column: 0, side: 'top' } as const;
+
     expect(
       resolveTableBorderAtoms([atom([contribution(atomKey, lexicalB), contribution(atomKey, lexicalA)])])[0].winner
         .source,
@@ -457,12 +464,14 @@ describe('Table Border Graph', () => {
     expect(mergeTableBorderAtoms(resolveTableBorderAtoms(horizontalAtoms(gradient)), 'collapse')).toHaveLength(2);
     expect(mergeTableBorderAtoms(resolveTableBorderAtoms(horizontalAtoms(pattern)), 'collapse')).toHaveLength(2);
     expect(mergeTableBorderAtoms(resolveTableBorderAtoms(horizontalAtoms(image)), 'collapse')).toHaveLength(2);
+
     const differentMasters = horizontalAtoms(line()).map((atom, index) => ({
       ...atom,
       contributors: atom.contributors.map(item =>
         item.kind === 'line' ? { ...item, line: { ...item.line, color: index === 0 ? '#336699' : '#993333' } } : item,
       ),
     }));
+
     expect(mergeTableBorderAtoms(resolveTableBorderAtoms(differentMasters), 'collapse')).toHaveLength(2);
 
     const verticalKey = 'c:v:1:0';
@@ -533,9 +542,11 @@ describe('Table Border Graph', () => {
         if (cell.rowIndex === 0 && cell.columnIndex === 0) {
           return { ...cell, borders: { right: lineCandidate() } };
         }
+
         if (cell.rowIndex === 0 && cell.columnIndex === 1) {
           return { ...cell, borders: { left: lineCandidate() } };
         }
+
         return cell;
       }),
     };

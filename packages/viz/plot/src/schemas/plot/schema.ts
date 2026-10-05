@@ -210,6 +210,7 @@ export const CoordinateCompositionSchema = strictObject({
   .superRefine((composition, ctx) => {
     const ids = new Set<string>();
     const views = composition.views ?? [];
+
     for (let index = 0; index < views.length; index += 1) {
       const view = views[index];
       if (ids.has(view.id)) {
@@ -219,8 +220,10 @@ export const CoordinateCompositionSchema = strictObject({
           message: `duplicate coordinate view id "${view.id}"`,
         });
       }
+
       ids.add(view.id);
     }
+
     for (let index = 0; index < views.length; index += 1) {
       const view = views[index];
       if (view.placement?.kind === CoordinateViewPlacementKind.Overlay && !ids.has(view.placement.target)) {
@@ -230,6 +233,7 @@ export const CoordinateCompositionSchema = strictObject({
           message: `overlay target "${view.placement.target}" does not reference a registered coordinate view`,
         });
       }
+
       if (view.placement?.kind === CoordinateViewPlacementKind.Overlay && view.placement.target === view.id) {
         ctx.addIssue({
           code: 'custom',
@@ -238,14 +242,17 @@ export const CoordinateCompositionSchema = strictObject({
         });
       }
     }
+
     const overlayTargetOf = new Map(
       views.flatMap(view =>
         view.placement?.kind === CoordinateViewPlacementKind.Overlay ? [[view.id, view.placement.target] as const] : [],
       ),
     );
+
     for (const view of views) {
       const visiting = new Set<string>();
       let current: string | undefined = view.id;
+
       while (current !== undefined) {
         if (visiting.has(current)) {
           const index = views.findIndex(candidate => candidate.id === view.id);
@@ -256,10 +263,12 @@ export const CoordinateCompositionSchema = strictObject({
           });
           break;
         }
+
         visiting.add(current);
         current = overlayTargetOf.get(current);
       }
     }
+
     const arrangementIds = new Set<string>();
     const registeredViewIds = new Set(ids);
     const arrangementKinds = new Set((composition.arrangements ?? []).map(arrangement => arrangement.kind));
@@ -273,6 +282,7 @@ export const CoordinateCompositionSchema = strictObject({
         message: 'composition cannot mix facet and track arrangements in the same plot',
       });
     }
+
     composition.arrangements?.forEach((arrangement, arrangementIndex) => {
       if (arrangementIds.has(arrangement.id)) {
         ctx.addIssue({
@@ -281,6 +291,7 @@ export const CoordinateCompositionSchema = strictObject({
           message: `duplicate arrangement id "${arrangement.id}"`,
         });
       }
+
       arrangementIds.add(arrangement.id);
       if (ids.has(arrangement.id)) {
         ctx.addIssue({
@@ -289,6 +300,7 @@ export const CoordinateCompositionSchema = strictObject({
           message: `arrangement id "${arrangement.id}" conflicts with a registered coordinate view id`,
         });
       }
+
       if (arrangement.kind === CoordinateArrangementKind.Facet && !ids.has(arrangement.view)) {
         ctx.addIssue({
           code: 'custom',
@@ -296,6 +308,7 @@ export const CoordinateCompositionSchema = strictObject({
           message: `facet view "${arrangement.view}" does not reference a registered coordinate view`,
         });
       }
+
       if (arrangement.kind === CoordinateArrangementKind.Tracks) {
         if (arrangement.sharedRoles.length === 0 && arrangement.frame === ScaffoldFrameMode.Independent) {
           ctx.addIssue({
@@ -304,6 +317,7 @@ export const CoordinateCompositionSchema = strictObject({
             message: `tracks arrangement "${arrangement.id}" with independent frame must declare at least one shared role`,
           });
         }
+
         const trackIds = new Set<string>();
         const tracksByRole = new Map<string, Array<(typeof arrangement.tracks)[number]>>();
         arrangement.tracks.forEach((track, trackIndex) => {
@@ -319,6 +333,7 @@ export const CoordinateCompositionSchema = strictObject({
               message: `track view id "${trackView}" conflicts with another coordinate view id`,
             });
           }
+
           registeredViewIds.add(trackView);
           if (trackIds.has(track.id)) {
             ctx.addIssue({
@@ -327,6 +342,7 @@ export const CoordinateCompositionSchema = strictObject({
               message: `duplicate track id "${track.id}" in arrangement "${arrangement.id}"`,
             });
           }
+
           trackIds.add(track.id);
           if (track.band.start >= track.band.end) {
             ctx.addIssue({
@@ -335,6 +351,7 @@ export const CoordinateCompositionSchema = strictObject({
               message: `track "${track.id}" band start must be less than end`,
             });
           }
+
           if (arrangement.sharedRoles.includes(track.band.role)) {
             ctx.addIssue({
               code: 'custom',
@@ -342,12 +359,15 @@ export const CoordinateCompositionSchema = strictObject({
               message: `track "${track.id}" band role "${track.band.role}" must not appear in sharedRoles`,
             });
           }
+
           const roleTracks = tracksByRole.get(track.band.role) ?? [];
           roleTracks.push(track);
           tracksByRole.set(track.band.role, roleTracks);
         });
+
         for (const [role, tracks] of tracksByRole) {
           const sorted = [...tracks].sort((a, b) => a.band.start - b.band.start || a.band.end - b.band.end);
+
           for (let trackIndex = 1; trackIndex < sorted.length; trackIndex += 1) {
             const previous = sorted[trackIndex - 1];
             const current = sorted[trackIndex];
@@ -369,6 +389,7 @@ export const CoordinateCompositionSchema = strictObject({
         message: 'composition requires at least one explicit or arrangement-derived coordinate view',
       });
     }
+
     if (!registeredViewIds.has(composition.defaultView)) {
       ctx.addIssue({
         code: 'custom',
@@ -441,6 +462,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
           message: `scale name "${scale.name}" must be unique within a plot`,
         });
       }
+
       scaleNames.add(scale.name);
     });
     if (spec.coordinate === undefined && spec.composition === undefined) {
@@ -450,6 +472,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
         message: 'IRPlot requires either coordinate shorthand or composition',
       });
     }
+
     if (spec.coordinate !== undefined && spec.composition !== undefined) {
       ctx.addIssue({
         code: 'custom',
@@ -457,6 +480,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
         message: 'IRPlot cannot use coordinate shorthand and composition together',
       });
     }
+
     const viewIds =
       spec.composition !== undefined
         ? new Set([
@@ -474,6 +498,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
             ),
           ])
         : new Set(['default']);
+
     spec.marks.forEach((mark, index) => {
       if (mark.coordinateView !== undefined && !viewIds.has(mark.coordinateView)) {
         ctx.addIssue({
@@ -483,6 +508,7 @@ export const PlotSchema = CompositeBaseSchema.extend({
         });
       }
     });
+
     spec.guides?.forEach((guide, index) => {
       if (guide.type !== 'axis') return;
       if (guide.coordinateView !== undefined && !viewIds.has(guide.coordinateView)) {

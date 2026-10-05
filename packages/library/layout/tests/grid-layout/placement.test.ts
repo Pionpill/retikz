@@ -104,6 +104,7 @@ describe('GridLayout placement solver', () => {
         { explicitColumns: 1, explicitRows: 1, autoFlow: GridAutoFlow.Row, overlap: GridOverlap.Reject },
       ).columnCount,
     ).toBe(GRID_LAYOUT_MAX_TRACKS_PER_AXIS);
+
     for (const column of [
       { start: GRID_LAYOUT_MAX_TRACKS_PER_AXIS - 1, span: 2 },
       { start: GRID_LAYOUT_MAX_TRACKS_PER_AXIS, span: 1 },

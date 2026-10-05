@@ -45,4 +45,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['Matrix.dataExpand', 'MatrixRow', 'MatrixCell'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

@@ -14,6 +14,7 @@ import SurfaceOverflowZhDemo from '@/modules/docs/contents/library/standard/pres
 import { librarySection } from '@/modules/docs/data/library';
 
 const surfaceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/standard/presentation/surface');
+
 const readPage = (language: 'zh' | 'en'): string => readFileSync(resolve(surfaceRoot, `index.${language}.mdx`), 'utf8');
 
 describe('Standard Surface documentation', () => {
@@ -63,6 +64,7 @@ describe('Standard Surface documentation', () => {
       ]) {
         expect(source).toContain(value);
       }
+
       expect(source).not.toContain('IRSurfaceSchema');
       expect(source).toContain('visible');
       expect(source).toContain('cornerRadius');
@@ -79,10 +81,12 @@ describe('Standard Surface documentation', () => {
       );
 
       expect(surfaces.length).toBeGreaterThan(0);
+
       surfaces.forEach(surface =>
         expect(SurfaceSchema.parse(surface)).toEqual({ padding: 0, overflow: 'visible', cornerRadius: 0, ...surface }),
       );
       const vanilla = buildVanillaPreview(preview);
+
       expect(vanilla.code).toContain('surface(');
       expect(vanilla.code).toContain('surfaceChild(');
       expect(vanilla.svg).toContain('<svg');

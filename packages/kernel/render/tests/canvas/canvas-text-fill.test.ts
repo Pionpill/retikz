@@ -25,8 +25,10 @@ const makeRecordingCtx = (captured: Array<string>): CanvasRenderingContext2D => 
       if (prop === 'createLinearGradient' || prop === 'createRadialGradient' || prop === 'createPattern') {
         return () => ({ addColorStop() {} });
       }
+
       if (prop === 'measureText') return () => ({ width: 0 });
       if (prop in target) return target[prop as string];
+
       return () => undefined;
     },
     set(target, prop, value) {
@@ -61,6 +63,7 @@ describe('canvas drawText fill 基线', () => {
     const ctx = makeRecordingCtx(captured);
     ctx.fillStyle = '#ff0000'; // 模拟上一帧 / 上个 prim 残留脏色
     drawScene(ctx, textScene(), {});
+
     expect(captured).toEqual(['#000000']);
   });
 
@@ -68,12 +71,14 @@ describe('canvas drawText fill 基线', () => {
     const captured: Array<string> = [];
     const ctx = makeRecordingCtx(captured);
     drawScene(ctx, textScene('#00ff00'), {});
+
     expect(captured).toEqual(['#00ff00']);
   });
 
   it.each(['#000000', '#ffffff'])('Core 已解析的 auto-contrast 颜色 %s 原样进入 Canvas', fill => {
     const captured: Array<string> = [];
     drawScene(makeRecordingCtx(captured), textScene(fill), {});
+
     expect(captured).toEqual([fill]);
   });
 });

@@ -44,6 +44,7 @@ export const renderFlowContainerWidthPreview = (
       />
     </FlowLayout>
   );
+
   return (
     <PreviewFlowDiagram style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout

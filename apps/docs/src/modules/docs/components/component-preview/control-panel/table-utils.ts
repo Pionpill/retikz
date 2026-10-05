@@ -20,9 +20,11 @@ export const resolvePreviewTableColumns = (
   if (field.columns !== undefined) return field.columns.map(column => ({ ...column }));
 
   const keys = new Set<string>();
+
   for (const row of rows) {
     Object.keys(row).forEach(key => keys.add(key));
   }
+
   return Array.from(keys, key => ({ key }));
 };
 

@@ -13,12 +13,14 @@ export const triangle = {
   circumCircle: (a: Position, b: Position, c: Position): Circle | null => {
     const d = 2 * (a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1]));
     if (Math.abs(d) < DEFAULT_EPSILON) return null;
+
     const a2 = a[0] * a[0] + a[1] * a[1];
     const b2 = b[0] * b[0] + b[1] * b[1];
     const c2 = c[0] * c[0] + c[1] * c[1];
     const ux = (a2 * (b[1] - c[1]) + b2 * (c[1] - a[1]) + c2 * (a[1] - b[1])) / d;
     const uy = (a2 * (c[0] - b[0]) + b2 * (a[0] - c[0]) + c2 * (b[0] - a[0])) / d;
     const center: Position = [ux, uy];
+
     return { center, radius: vector2.length([a[0] - ux, a[1] - uy]) };
   },
   /**
@@ -32,12 +34,15 @@ export const triangle = {
     const sideLengthC = vector2.length([a[0] - b[0], a[1] - b[1]]);
     const perimeter = sideLengthA + sideLengthB + sideLengthC;
     if (perimeter < DEFAULT_EPSILON) return null;
+
     const area = Math.abs(vector2.cross([b[0] - a[0], b[1] - a[1]], [c[0] - a[0], c[1] - a[1]])) / 2;
     if (area < DEFAULT_EPSILON) return null;
+
     const center: Position = [
       (sideLengthA * a[0] + sideLengthB * b[0] + sideLengthC * c[0]) / perimeter,
       (sideLengthA * a[1] + sideLengthB * b[1] + sideLengthC * c[1]) / perimeter,
     ];
+
     return { center, radius: area / (perimeter / 2) };
   },
 };

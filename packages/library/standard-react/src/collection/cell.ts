@@ -8,6 +8,7 @@ import type { FC, ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
 type CellLayoutSource = IRArrayCell['layout'];
+
 type CellWithLayout<TLayout extends CellLayoutSource> = Omit<IRCell, 'layout'> & { layout?: TLayout };
 
 /** React 数据入口的文本单元格；复杂内容使用组合组件 */
@@ -53,6 +54,7 @@ export const collectCellMarkers = <T extends object>(children: ReactNode, marker
       invalidCellAuthoring(`${label} accepts only its direct marker children.`);
     }
   });
+
   return result;
 };
 
@@ -76,14 +78,19 @@ export const createCellsInput = <TLayout extends CellLayoutSource>(
       void content;
       return empty;
     }
+
     if (typeof cell.content === 'string') return { ...cell, content: cell.content };
+
     const collected = createInputScene(cell.content, { embedIdPrefix: `${context.id}:cell:${index}` });
     const children = collected.scene.children;
     if (children === undefined || children.length !== 1) {
       return invalidCellAuthoring('Each collection cell requires exactly one authoring child.');
     }
+
     adapters.push(...collected.adapters);
+
     return { ...cell, content: children[0] };
   });
+
   return { cells: inputs, adapters };
 };

@@ -70,6 +70,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '传给 GraphDefinitionOptions.relationRoles 的定义；此函数不执行注册或校验':
     'Definition supplied through GraphDefinitionOptions.relationRoles; this function does not register or validate it',
 };
+
 /** 共用 Graph 字段复用已有译文，缺译时阻止生成 */
 export const translateRelationApiReference = (source: string): string =>
   translations[source.replace(/\r/g, '')] ?? translateEntityApiReference(source);

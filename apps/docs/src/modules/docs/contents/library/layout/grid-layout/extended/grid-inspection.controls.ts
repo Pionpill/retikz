@@ -21,11 +21,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { width: 350, slots: true, allocation: true, details: true },
     relatedApis: ['GridLayout.size', 'GridLayoutInspectOptions.bounds'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

@@ -17,7 +17,9 @@ import { TableCellSourceSchema } from '../structure';
 import { TableBorderContributionOrigin } from './constants';
 
 const TableBorderSideSchema = zodEnum(['top', 'right', 'bottom', 'left']);
+
 const TableBorderOrientationSchema = zodEnum(['horizontal', 'vertical']);
+
 const TableBorderPrioritySchema = number().refine(Number.isInteger, {
   message: 'Border priority must be a finite integer.',
 });
@@ -234,6 +236,7 @@ export const TableManifestStyleSchema: ReturnType<
         message: 'Table defaults cascade must begin with the effective neutral source',
       });
     }
+
     const seen = new Set<string>();
     style.layers.forEach((layer, index) => {
       if (seen.has(layer.path)) {
@@ -243,6 +246,7 @@ export const TableManifestStyleSchema: ReturnType<
           message: 'Table defaults source paths must be unique',
         });
       }
+
       seen.add(layer.path);
       if (layer.kind === 'style') {
         const expected = style.style === undefined ? undefined : `$style/${style.style}/${style.themeMode}`;
@@ -254,6 +258,7 @@ export const TableManifestStyleSchema: ReturnType<
           });
         }
       }
+
       if (layer.kind === 'source' && !layer.path.startsWith('$spec/')) {
         context.addIssue({
           code: 'custom',
@@ -266,14 +271,17 @@ export const TableManifestStyleSchema: ReturnType<
   .describe('Resolved Table defaults metadata.');
 
 type ManifestContribution = ZodInfer<typeof TableBorderContributionSchema>;
+
 type ManifestStyle = ZodInfer<typeof TableManifestStyleSchema>;
 
 const hasOwnPath = (value: unknown, path: ReadonlyArray<string>): boolean => {
   let current: unknown = value;
+
   for (const segment of path) {
     if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment)) return false;
     current = Reflect.get(current, segment);
   }
+
   return current !== undefined;
 };
 
@@ -295,11 +303,13 @@ const validateAppearanceDefaultsProvenance = (
   path: ReadonlyArray<string | number>,
 ): void => {
   if (trace.source.kind !== 'defaults') return;
+
   const defaultsPath = defaultsPathOfAppearanceTrace(cell, trace.path);
   const winner = [...style.layers]
     .reverse()
     .find(layer => layer.defaults !== undefined && hasOwnPath(layer.defaults, defaultsPath));
   if (winner?.path === trace.source.path) return;
+
   context.addIssue({
     code: 'custom',
     path: [...path, 'source', 'path'],
@@ -324,6 +334,7 @@ const validateBorderDefaultsProvenance = (
     });
     return;
   }
+
   const source = contribution.source;
   const defaultsPath = (() => {
     if (source.kind === 'cell') {
@@ -331,17 +342,21 @@ const validateBorderDefaultsProvenance = (
         candidate => candidate.rowIndex === source.row && candidate.columnIndex === source.column,
       );
       const location = cell?.location === 'columnHeader' ? 'columnHeader' : 'body';
+
       return ['appearanceDefaults', location, 'borders', source.side];
     }
+
     if (source.scope === 'outer') {
       return ['layout', 'borders', 'outer', source.side];
     }
+
     return ['layout', 'borders', source.scope];
   })();
   const winner = [...style.layers]
     .reverse()
     .find(layer => layer.defaults !== undefined && hasOwnPath(layer.defaults, defaultsPath));
   if (winner?.path === contribution.defaults.path) return;
+
   context.addIssue({
     code: 'custom',
     path: [...path, 'defaults', 'path'],
@@ -405,9 +420,11 @@ export const TableLayoutManifestSchema: ReturnType<
         });
         return;
       }
+
       encodingsById.set(encoding.id, encoding);
       encodingOrder.set(encoding.id, index);
     });
+
     manifest.cells.forEach((cell, cellIndex) => {
       cell.appearanceTrace.forEach((trace, traceIndex) => {
         validateAppearanceDefaultsProvenance(cell, trace, manifest.style, context, [
@@ -428,6 +445,7 @@ export const TableLayoutManifestSchema: ReturnType<
           });
           return;
         }
+
         if (order <= previousOrder) {
           context.addIssue({
             code: 'custom',
@@ -435,9 +453,11 @@ export const TableLayoutManifestSchema: ReturnType<
             message: 'Cell encoding ids must be unique and follow manifest encoding order',
           });
         }
+
         previousOrder = order;
       });
     });
+
     manifest.encodings.forEach((encoding, encodingIndex) => {
       const expectedCellIndices = manifest.cells.flatMap((cell, cellIndex) =>
         cell.encodingIds.includes(encoding.id) ? [cellIndex] : [],
@@ -453,6 +473,7 @@ export const TableLayoutManifestSchema: ReturnType<
         });
       }
     });
+
     const descriptorEncodingIds = new Set<string>();
     manifest.legendDescriptors.forEach((descriptor, descriptorIndex) => {
       const encoding = encodingsById.get(descriptor.encodingId);
@@ -470,6 +491,7 @@ export const TableLayoutManifestSchema: ReturnType<
             message: 'Legend descriptor channel must match its manifest encoding',
           });
         }
+
         if (descriptor.scaleName !== encoding.scaleName) {
           context.addIssue({
             code: 'custom',
@@ -478,6 +500,7 @@ export const TableLayoutManifestSchema: ReturnType<
           });
         }
       }
+
       if (descriptorEncodingIds.has(descriptor.encodingId)) {
         context.addIssue({
           code: 'custom',
@@ -485,8 +508,10 @@ export const TableLayoutManifestSchema: ReturnType<
           message: 'Each manifest encoding may produce at most one Legend descriptor',
         });
       }
+
       descriptorEncodingIds.add(descriptor.encodingId);
     });
+
     manifest.borders.forEach((border, borderIndex) => {
       border.atoms.forEach((atom, atomIndex) => {
         const contributionKeys = new Set(atom.contributors.map(contribution => contribution.key));
@@ -497,6 +522,7 @@ export const TableLayoutManifestSchema: ReturnType<
             message: 'Border atom contribution keys must be unique',
           });
         }
+
         const matchingWinner = atom.contributors.find(contribution => contribution.key === atom.winner.key);
         if (matchingWinner === undefined || JSON.stringify(matchingWinner) !== JSON.stringify(atom.winner)) {
           context.addIssue({
@@ -505,6 +531,7 @@ export const TableLayoutManifestSchema: ReturnType<
             message: 'Border atom winner must exactly match one contributor',
           });
         }
+
         validateBorderDefaultsProvenance(atom.winner, manifest.cells, manifest.style, context, [
           'borders',
           borderIndex,

@@ -25,6 +25,7 @@ export type SectionNavProps = {
 };
 
 const normalizePath = (value: string): string => (value.replace(/\/+$/, '') || '/').toLowerCase();
+
 const packageVersionTooltipClassName =
   'pointer-events-none absolute top-full left-1/2 z-50 mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 font-mono text-xs text-background opacity-0 transition-opacity duration-150 group-hover/package-link:opacity-100 group-hover/package-link:delay-500 group-focus-visible/package-link:opacity-100 group-focus-visible/package-link:delay-500';
 
@@ -45,6 +46,7 @@ export const SectionNav: FC<SectionNavProps> = props => {
   const displayLabel = (label: I18nKey): string => resolveHeaderSectionLabel(String(t(label)), i18n.resolvedLanguage);
   const currentPath = normalizePath(pathname);
   const navigationSections = getNavigationSectionsByArea(areaId);
+
   const links: Array<SectionNavLink> = navigationSections.flatMap(section => {
     if (!section.label) {
       return section.pages.map(page => ({
@@ -56,6 +58,7 @@ export const SectionNav: FC<SectionNavProps> = props => {
     }
 
     if (!section.id) return [];
+
     return [
       {
         id: section.id,
@@ -67,12 +70,14 @@ export const SectionNav: FC<SectionNavProps> = props => {
       },
     ];
   });
+
   const linkClassName = (active: boolean): string =>
     cn(
       'inline-flex h-8 items-center rounded-md px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors outline-none focus-visible:ring-0 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
       mobile && 'px-2 py-1.5',
       active && 'font-medium text-foreground',
     );
+
   const linkContent = (link: SectionNavLink): ReactNode => {
     const Icon = link.icon;
     return (
@@ -82,6 +87,7 @@ export const SectionNav: FC<SectionNavProps> = props => {
       </>
     );
   };
+
   const linkClass = (link: SectionNavLink): string => cn(linkClassName(link.active), link.icon && 'gap-1.5');
 
   if (withinNavigationMenu) {

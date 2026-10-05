@@ -63,6 +63,7 @@ const aggregateConstraints = (
   trackCount: number,
 ): ReadonlyArray<GridTrackConstraint> => {
   const aggregated = new Map<string, GridTrackConstraint>();
+
   for (const constraint of constraints) {
     if (
       !Number.isSafeInteger(constraint.start) ||
@@ -77,6 +78,7 @@ const aggregateConstraints = (
         details: { start: constraint.start, span: constraint.span, trackCount },
       });
     }
+
     if (
       !Number.isFinite(constraint.minimum) ||
       constraint.minimum < 0 ||
@@ -89,6 +91,7 @@ const aggregateConstraints = (
         details: { minimum: constraint.minimum, natural: constraint.natural },
       });
     }
+
     const key = `${constraint.start}:${constraint.span}`;
     const previous = aggregated.get(key);
     aggregated.set(key, {
@@ -98,6 +101,7 @@ const aggregateConstraints = (
       natural: Math.max(previous?.natural ?? 0, constraint.natural),
     });
   }
+
   return Object.freeze(
     [...aggregated.values()].sort((first, second) => first.span - second.span || first.start - second.start),
   );
@@ -117,6 +121,7 @@ const growSelected = (
   const current = compensatedLayoutSum(range);
   const deficit = target - current;
   if (deficit <= layoutEpsilon(target, current) || indexes.length === 0) return Math.max(0, deficit);
+
   const selected = indexes.map(index => ({
     base: sizes[index],
     min: sizes[index],
@@ -129,6 +134,7 @@ const growSelected = (
   const distributed = distributeWeightedLayoutSizes(selected, selectedCurrent + deficit);
   indexes.forEach((index, position) => (sizes[index] = distributed.values[position]));
   const after = compensatedLayoutSum(sizes.slice(constraint.start, constraint.start + constraint.span));
+
   return Math.max(0, target - after);
 };
 
@@ -140,6 +146,7 @@ const solveProfiles = (
 ): Readonly<{ minimum: ReadonlyArray<number>; natural: ReadonlyArray<number> }> => {
   const ordered = aggregateConstraints(constraints, tracks.length);
   const minimum = tracks.map(initialBase);
+
   for (const constraint of ordered) {
     const rangeIndexes = Array.from({ length: constraint.span }, (_, offset) => constraint.start + offset);
     const naturalMinIndexes = rangeIndexes.filter(index => isMinNatural(tracks[index]));
@@ -163,7 +170,9 @@ const solveProfiles = (
       );
     }
   }
+
   const natural = [...minimum];
+
   for (const constraint of ordered) {
     const rangeIndexes = Array.from({ length: constraint.span }, (_, offset) => constraint.start + offset);
     const remaining = growSelected(
@@ -185,6 +194,7 @@ const solveProfiles = (
       );
     }
   }
+
   return { minimum: Object.freeze(minimum), natural: Object.freeze(natural) };
 };
 
@@ -198,6 +208,7 @@ const resolveFractionTracks = (
     .map((track, index) => (isFractionGrowth(track) ? index : -1))
     .filter(index => index >= 0);
   const active = new Set(fractionIndexes);
+
   while (active.size > 0) {
     const fixedTotal = compensatedLayoutSum(sizes.filter((_, index) => !active.has(index)));
     const factorTotal = compensatedLayoutSum([...active].map(index => fractionFactor(tracks[index])));
@@ -209,6 +220,7 @@ const resolveFractionTracks = (
       frozen.forEach(index => active.delete(index));
       continue;
     }
+
     [...active].forEach(index => (sizes[index] = Math.max(sizes[index], fractionFactor(tracks[index]) * unit)));
     break;
   }
@@ -227,19 +239,23 @@ const distributionOffsets = (
     if (distribution === LayoutDistribution.Center) return { leading: free / 2, between: gap };
     return { leading: 0, between: gap };
   }
+
   if (distribution === LayoutDistribution.End) return { leading: free, between: gap };
   if (distribution === LayoutDistribution.Center) return { leading: free / 2, between: gap };
   if (distribution === LayoutDistribution.SpaceBetween && count > 1) {
     return { leading: 0, between: gap + free / (count - 1) };
   }
+
   if (distribution === LayoutDistribution.SpaceAround) {
     const extra = free / count;
     return { leading: extra / 2, between: gap + extra };
   }
+
   if (distribution === LayoutDistribution.SpaceEvenly) {
     const extra = free / (count + 1);
     return { leading: extra, between: gap + extra };
   }
+
   return { leading: 0, between: gap };
 };
 
@@ -256,6 +272,7 @@ export const solveGridTracks = (
       details: { gap: options.gap },
     });
   }
+
   if (options.availableSize !== undefined && (!Number.isFinite(options.availableSize) || options.availableSize < 0)) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.SolverInvariant,
@@ -263,6 +280,7 @@ export const solveGridTracks = (
       details: { availableSize: options.availableSize },
     });
   }
+
   const profiles = solveProfiles(tracks, constraints, options.availableSize !== undefined);
   const sizes = [...profiles.natural];
   let leading = 0;
@@ -282,8 +300,10 @@ export const solveGridTracks = (
         free = 0;
       }
     }
+
     ({ leading, between } = distributionOffsets(options.distribution, free, tracks.length, options.gap));
   }
+
   return Object.freeze({
     minimumProfile: profiles.minimum,
     naturalProfile: profiles.natural,

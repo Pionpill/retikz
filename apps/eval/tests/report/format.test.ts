@@ -32,6 +32,7 @@ const records: Array<RunRecord> = [
 describe('formatMarkdown', () => {
   it('含标题、总览百分比与分组表', () => {
     const md = formatMarkdown(aggregate(records), { generatedAt: '2026-06-13T00:00:00Z' });
+
     expect(md).toContain('# retikz eval ·');
     expect(md).toContain('2026-06-13T00:00:00Z');
     expect(md).toContain('50.0%'); // overall zod pass rate
@@ -42,6 +43,7 @@ describe('formatMarkdown', () => {
 
   it('失败明细列出 promptId/model/stage/reason', () => {
     const md = formatMarkdown(aggregate(records), { generatedAt: '2026-06-13T00:00:00Z' });
+
     expect(md).toContain('失败明细');
     expect(md).toContain('c2');
     expect(md).toContain('zod');
@@ -62,6 +64,7 @@ describe('formatMarkdown', () => {
       },
     ];
     const md = formatMarkdown(aggregate(ok), { generatedAt: 't' });
+
     expect(md).not.toContain('失败明细');
   });
 });
@@ -88,6 +91,7 @@ describe('formatMarkdown L2', () => {
 
   it('含 L2 段、断言级通过率与断言失败明细', () => {
     const md = formatMarkdown(base, { generatedAt: '2026-06-14' });
+
     expect(md).toContain('L2 语义断言');
     expect(md).toContain('75.0%'); // 断言级
     expect(md).toContain('primitiveCount');
@@ -96,6 +100,7 @@ describe('formatMarkdown L2', () => {
 
   it('reached=0 时省略 L2 段', () => {
     const md = formatMarkdown({ ...base, l2: { ...base.l2, reached: 0 }, assertionFailures: [] }, { generatedAt: 'x' });
+
     expect(md).not.toContain('L2 语义断言');
   });
 });

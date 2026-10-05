@@ -33,13 +33,17 @@ const RoutingScene: FC<RoutingSceneProps> = props => {
       },
     );
     const bounds = result.spatialHandles.entries.find(handle => handle.id === 'element:a')!.geometry.bounds;
+
     return { x: bounds.x + bounds.width / 2 - 120, y: bounds.y + bounds.height / 2 - 140, width: 400, height: 330 };
   }, [values, theme, themeStyles]);
+
   return renderFlowRoutingPreview(values, { viewBox });
 };
+
 const createPreview = (lang: Lang) => {
   const contract = createPreviewControlContract(lang);
   const controlled = defineControlledPreview(contract, values => <RoutingScene values={values} />);
+
   return {
     ...controlled,
     source: { ...controlled.source, canonicalRender: () => renderFlowRoutingPreview(contract.canonicalValues) },
@@ -47,9 +51,12 @@ const createPreview = (lang: Lang) => {
 };
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
+
 /** 当前语言的连线路由交互示例 */
 export type FlowRoutingProps = Readonly<{ lang?: Lang }>;
+
 /** 比较直线、折线与三类曲线路由 */
 const Demo: FC<FlowRoutingProps> = props => {
   const { lang = 'zh' } = props;

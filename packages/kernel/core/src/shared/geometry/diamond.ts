@@ -48,6 +48,7 @@ export const diamond = {
   anchor: (d: Diamond, name: Anchor): Position => {
     let lx = 0;
     let ly = 0;
+
     switch (name) {
       case Anchor.Top:
         ly = -d.halfB;
@@ -78,6 +79,7 @@ export const diamond = {
         ly = d.halfB / 2;
         break;
     }
+
     return localToWorld(d, [lx, ly]);
   },
   /**
@@ -86,10 +88,13 @@ export const diamond = {
    */
   boundaryPoint: (d: Diamond, toward: Position): Position => {
     if (d.halfA === 0 || d.halfB === 0) return [d.x, d.y]; // 退化菱形（零半轴）：边界塌缩到中心，避免除零产 NaN
+
     const [lx, ly] = worldToLocal(d, toward);
     const denom = Math.abs(lx) / d.halfA + Math.abs(ly) / d.halfB;
     if (denom === 0) return [d.x, d.y];
+
     const t = 1 / denom;
+
     return localToWorld(d, [lx * t, ly * t]);
   },
   /** 边上比例点：side 过 cardinal 顶点的两段折线 t∈[0,1] 处（落真实斜边；含旋转） */

@@ -23,7 +23,9 @@ export type FlowBasicPreviewValues = {
 };
 
 const subtitleFontSizes = ['xs', 'sm', 'base', 'lg'] as const;
+
 const textAlignValues = ['start', 'middle', 'end'] as const;
+
 const graphStatusValues: ReadonlyArray<GraphStatus> = ['error', 'success', 'warning', 'disabled'];
 
 /** 判断副标题字号是否来自当前面板公开选项 */
@@ -61,6 +63,7 @@ const formTextOf = (values: FlowBasicPreviewValues, lang: Lang): IRTextBlock => 
     if (!isSubtitleFontSize(values.formSubtitleSize)) {
       throw new Error(`Unsupported Flow subtitle font size: ${values.formSubtitleSize}`);
     }
+
     text.push({ text: subtitle, fill: values.formSubtitleColor, font: { size: values.formSubtitleSize } });
   }
 

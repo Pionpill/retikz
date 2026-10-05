@@ -78,6 +78,7 @@ describe('runtime runtime ownership', () => {
 
     runtime.dispose();
     runtime.dispose();
+
     expect(ownerDispose).toHaveBeenCalledTimes(3);
     expect(ownerDispose.mock.calls.at(0)?.[0]).toBe(capturedSources[1]);
     expect(ownerDispose.mock.calls.at(1)?.[0]).toBe(capturedSources[0]);
@@ -135,6 +136,7 @@ describe('runtime runtime ownership', () => {
     expect(runtime.artifact(computation)).toEqual({ revision: 1, value: 2 });
 
     runtime.dispose();
+
     expect(artifactDispose).toHaveBeenCalledTimes(2);
     expect(artifactDispose.mock.calls.at(1)?.[0]).toBe(capturedArtifacts[1]);
   });

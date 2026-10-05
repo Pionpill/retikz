@@ -47,6 +47,7 @@ export const splitPreviewControlSections = (
     if (rightControls.length > 0) {
       rightSections.push({ ...section, controls: rightControls, showTitle: leftControls.length === 0 });
     }
+
     remainingLeftCount -= leftControlCount;
   });
 

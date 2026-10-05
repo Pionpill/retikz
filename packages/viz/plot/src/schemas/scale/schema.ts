@@ -50,7 +50,9 @@ const DomainPaddingObjectSchema = strictObject({
       message: 'domainPadding object requires lower or upper',
     });
   }
+
   if (padding.kind !== PlotDomainPaddingKind.Ratio) return;
+
   for (const side of ['lower', 'upper'] as const) {
     const value = padding[side];
     if (value !== undefined && value >= 1) {

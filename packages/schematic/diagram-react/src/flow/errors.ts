@@ -41,8 +41,10 @@ export class RetikzDiagramReactFlowError extends RetikzError<
 > {
   /** 稳定错误码 */
   readonly code: RetikzDiagramReactFlowErrorCode;
+
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzDiagramReactFlowErrorDetails;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 

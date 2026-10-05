@@ -157,6 +157,7 @@ describe('transform schema', () => {
     for (const selector of accepted) {
       expect(AnnotateSelectorSchema.safeParse({ selector, as: 'annotation' }).success).toBe(true);
     }
+
     for (const selector of rejected) {
       expect(AnnotateSelectorSchema.safeParse({ selector, as: 'annotation' }).success).toBe(false);
     }
@@ -196,6 +197,7 @@ describe('transform schema', () => {
       const result = schema.safeParse({ kind: 'host-operation', payload: { nested: [0, { bad: value }] } });
 
       expect(result.success).toBe(false);
+
       if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
     }
   });

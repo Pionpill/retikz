@@ -28,6 +28,7 @@ export const graphPreviewAuthoringInput = (graph: IRGraph): GraphPreviewAuthorin
   const { namespace: _namespace, type: _type, children, ...input } = graph;
   void _namespace;
   void _type;
+
   return {
     ...input,
     ...(children === undefined

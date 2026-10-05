@@ -10,6 +10,7 @@ import { createApiReferenceMdx } from '../../scripts/api-reference/tex';
 
 it('JSDoc 正文可编译为 MDX，类型签名过滤注释并保留代码片段', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'retikz-mdx-prose-'));
+
   try {
     const entry = join(directory, 'index.ts');
     const tsconfigPath = join(directory, 'tsconfig.json');
@@ -44,6 +45,7 @@ export type Direction = (typeof Direction)[keyof typeof Direction];
 export type Content = { text: string } | { count: number };`,
       'utf8',
     );
+
     for (const lang of ['zh', 'en'] as const) {
       const source = await createApiReferenceMdx(
         {
@@ -55,6 +57,7 @@ export type Content = { text: string } | { count: number };`,
         },
         lang,
       );
+
       expect(source).toContain('Tension &lt;1 uses &#123; x, y &#125;; preserve `Map<T>`');
       expect(source).toContain('Offset &#123; x, y &#125; &lt;1; `Array<T>`');
       expect(source).toContain('`(x: number, y: number) => number`');

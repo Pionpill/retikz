@@ -35,4 +35,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['Matrix.cellIdMode', 'Matrix.label', 'Matrix.layout.overflow'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

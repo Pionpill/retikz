@@ -39,6 +39,7 @@ const themedBox = defineComposite({
 });
 
 const makeThemedBoxDefinition = () => themedBox;
+
 const themedBoxAdapter: InputEmbedAdapter = {
   kind: 'ThemedBox',
   lower: () => ({
@@ -56,6 +57,7 @@ const themedBoxAdapter: InputEmbedAdapter = {
     },
   }),
 };
+
 const ThemedBox = Object.assign(() => null, {
   isTier2Embeddable: true as const,
   inputEmbedAdapter: themedBoxAdapter,

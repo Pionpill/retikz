@@ -63,6 +63,7 @@ const disposeValue = <TInput, TValue, TRead, TChange>(
   value: TValue,
 ): ReadonlyArray<RuntimeSourceLifecycleDiagnostic> => {
   if (executor.dispose === undefined) return Object.freeze([]);
+
   try {
     executor.dispose(value);
     return Object.freeze([]);
@@ -114,6 +115,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
         cause: prepared,
       });
     }
+
     if (!active.has(prepared)) {
       throw new RetikzRuntimeError({
         code: RetikzRuntimeErrorCode.InternalInvariant,
@@ -132,6 +134,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
     assertPrepared(definition, prepared);
     active.delete(prepared);
     const executor = getRuntimeSourceRegistryExecutor(registry, definition);
+
     return Object.freeze({ value: undefined, diagnostics: disposeValue(definition, executor, prepared.value) });
   };
 
@@ -143,6 +146,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
     ): RuntimeSourceExecutionResult<RuntimePreparedSourceValue<TValue, TRead>> => {
       const executor = getRuntimeSourceRegistryExecutor(registry, definition);
       let value: TValue;
+
       try {
         value = executor.capture<TInput, TValue>(source);
       } catch (cause) {
@@ -153,6 +157,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
           cause,
         );
       }
+
       if (current !== undefined && executor.dispose !== undefined && value === current.value) {
         throw new RetikzRuntimeError({
           code: RetikzRuntimeErrorCode.SourceOwnershipAlias,
@@ -180,6 +185,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
       }
 
       let read: TRead;
+
       try {
         read = executor.read<TValue, TRead>(value);
       } catch (cause) {
@@ -196,6 +202,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
       const prepared = Object.freeze({ value, read, identities });
       preparedDefinitions.set(prepared, definition);
       active.add(prepared);
+
       return Object.freeze({ value: prepared, diagnostics: Object.freeze([]) });
     },
 
@@ -207,6 +214,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
       assertPrepared(definition, left);
       assertPrepared(definition, right);
       const executor = getRuntimeSourceRegistryExecutor(registry, definition);
+
       try {
         return Object.freeze({ value: executor.equals(left.value, right.value), diagnostics: Object.freeze([]) });
       } catch (cause) {
@@ -231,6 +239,7 @@ export const createRuntimeSourceExecutor = (registry: RuntimeSourceRegistry): Ru
       if (executor.validateChangeSet === undefined) {
         return Object.freeze({ value: 'valid', diagnostics: Object.freeze([]) });
       }
+
       try {
         return Object.freeze({
           value: executor.validateChangeSet(previous.read, candidate.read, changeSet),

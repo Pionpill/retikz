@@ -9,6 +9,7 @@ export const defineCompileObserver = <TOutput>(
 ): CompileObserverDefinition<TOutput> => {
   if (typeof definition.key !== 'string')
     throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: key must be a non-empty string.');
+
   assertNonEmptyString(
     definition.key,
     'defineCompileObserver: key',
@@ -17,5 +18,6 @@ export const defineCompileObserver = <TOutput>(
   if (typeof definition.createSession !== 'function') {
     throw new RetikzCoreError(RetikzCoreErrorCode.Contract, 'defineCompileObserver: createSession must be a function.');
   }
+
   return definition;
 };

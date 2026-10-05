@@ -8,6 +8,7 @@ export const resolveFlowThemeStyleRegistry = (
   custom: ReadonlyArray<FlowThemeStyleDefinition> | undefined = undefined,
 ): ReadonlyMap<string, FlowThemeStyleDefinition> => {
   const registry = new Map<string, FlowThemeStyleDefinition>();
+
   for (const definition of custom ?? []) {
     assertNonEmptyString(
       definition.name,
@@ -31,7 +32,9 @@ export const resolveFlowThemeStyleRegistry = (
         },
       });
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };

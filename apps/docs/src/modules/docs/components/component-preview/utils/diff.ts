@@ -10,6 +10,7 @@ export const computeUnifiedDiff = (baseline: string, current: string): UnifiedDi
   const lcs: Array<Array<number>> = Array.from({ length: baselineLength + 1 }, () =>
     new Array<number>(currentLength + 1).fill(0),
   );
+
   for (let baselineIndex = baselineLength - 1; baselineIndex >= 0; baselineIndex--) {
     for (let currentIndex = currentLength - 1; currentIndex >= 0; currentIndex--) {
       lcs[baselineIndex][currentIndex] =
@@ -23,6 +24,7 @@ export const computeUnifiedDiff = (baseline: string, current: string): UnifiedDi
   const outKinds: Array<DiffLineKind> = [];
   let baselineIndex = 0;
   let currentIndex = 0;
+
   while (baselineIndex < baselineLength && currentIndex < currentLength) {
     if (baselineLines[baselineIndex] === currentLines[currentIndex]) {
       outLines.push(currentLines[currentIndex]);
@@ -39,11 +41,13 @@ export const computeUnifiedDiff = (baseline: string, current: string): UnifiedDi
       currentIndex++;
     }
   }
+
   while (baselineIndex < baselineLength) {
     outLines.push(baselineLines[baselineIndex]);
     outKinds.push('removed');
     baselineIndex++;
   }
+
   while (currentIndex < currentLength) {
     outLines.push(currentLines[currentIndex]);
     outKinds.push('added');

@@ -8,10 +8,12 @@ import { figureI18n } from './span-figure.i18n';
 
 /** 图示语言 */
 export type FigureProps = { lang?: Lang };
+
 /** 用固定几何参照展示本节的独立事实 */
 const Figure: FC<FigureProps> = props => {
   const { lang = 'zh' } = props;
   const text = figureI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Rectangle corner1={[0, 30]} width={100} height={60} style={{ stroke: 'dodgerblue', fill: 'none' }} />

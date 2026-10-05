@@ -18,15 +18,20 @@ export const jsonStructuralEquals = (left: unknown, right: unknown): boolean => 
   if (Object.is(left, right)) return true;
   if (Array.isArray(left) || Array.isArray(right)) {
     if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
+
     for (let index = 0; index < left.length; index += 1) {
       if (!Object.hasOwn(left, index) || !Object.hasOwn(right, index)) return false;
       if (!jsonStructuralEquals(left[index], right[index])) return false;
     }
+
     return true;
   }
+
   if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
+
   const leftKeys = Object.keys(left);
   const rightKeys = Object.keys(right);
+
   return (
     leftKeys.length === rightKeys.length &&
     leftKeys.every(

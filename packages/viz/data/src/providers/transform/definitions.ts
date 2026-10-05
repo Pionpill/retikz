@@ -128,6 +128,7 @@ export const createAsyncBuiltinTransformImplementations = (
       runTransformComputationAsync(computeSmooth(rows, operation, context, regression)),
   }),
 ];
+
 /** 内置 sort transform definition；读取排序字段并稳定重排输入行 */
 const sortTransformDefinition = defineTransform<IRDataSortTransform>({
   schema: SortTransformSchema,
@@ -280,6 +281,7 @@ const binOutputModel = (operation: IRDataBinTransform, context: TransformSemanti
     { field: output.endField, type: DataFieldType.Continuous },
     ...metricDescriptors,
   ];
+
   return { kind: 'replace' as const, fields };
 };
 
@@ -406,6 +408,7 @@ const jitterTransformDefinition = defineTransform<IRDataJitterTransform>({
       axis === JitterAxis.X || axis === JitterAxis.Both ? (operation.xField ?? DEFAULT_JITTER_X_FIELD) : undefined,
       axis === JitterAxis.Y || axis === JitterAxis.Both ? (operation.yField ?? DEFAULT_JITTER_Y_FIELD) : undefined,
     ].filter((field): field is string => field !== undefined);
+
     return {
       kind: 'preserve',
       outputs: fields.map(field => ({ field, type: { from: field } })),
@@ -501,13 +504,16 @@ export const resolveTransformRegistry = (
   custom?: ReadonlyArray<AnyTransformDefinition>,
 ): Map<string, AnyTransformDefinition> => {
   const registry = new Map(BUILTIN_TRANSFORM_REGISTRY);
+
   for (const def of custom ?? []) {
     const kind = extractTransformKind(def.schema);
     if (registry.has(kind)) {
       throw new RetikzDataError(`data: duplicate transform registration: "${kind}"`);
     }
+
     registry.set(kind, def);
   }
+
   return registry;
 };
 

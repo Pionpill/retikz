@@ -24,24 +24,30 @@ const serializeStyle = (style: SvgStyle): string =>
 /** attrs 对象 → ` key="value"` 串（值逐字吐，本就是 SVG 真名，零名字转换） */
 const serializeAttrs = (node: SvgNode): string => {
   const parts: Array<string> = [];
+
   for (const [k, v] of Object.entries(node.attrs)) {
     if (v === undefined) continue;
     parts.push(`${k}="${escapeAttr(String(v))}"`);
   }
+
   if (node.style) {
     const s = serializeStyle(node.style);
     if (s) parts.push(`style="${escapeAttr(s)}"`);
   }
+
   return parts.length ? ` ${parts.join(' ')}` : '';
 };
 
 /** 单个 `SvgNode`（或文本）→ SVG 字符串 */
 const serializeNode = (node: SvgNode | string): string => {
   if (typeof node === 'string') return escapeText(node);
+
   const attrs = serializeAttrs(node);
   const children = node.children ?? [];
   if (children.length === 0) return `<${node.tag}${attrs} />`;
+
   const inner = children.map(serializeNode).join('');
+
   return `<${node.tag}${attrs}>${inner}</${node.tag}>`;
 };
 

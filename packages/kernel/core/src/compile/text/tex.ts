@@ -57,12 +57,15 @@ const snapshotLoweredTexPaint = (owner: string, value: unknown, path: string): L
     assertProviderOutputKeys(owner, paint, ['kind'], path);
     return { kind: paint.kind };
   }
+
   if (paint.kind === 'color') {
     assertProviderOutputKeys(owner, paint, ['kind', 'value'], path);
     const color = paint.value;
     if (typeof color === 'string') return { kind: 'color', value: color };
+
     return failProviderOutput(owner, `an invalid ${path}.value`);
   }
+
   return failProviderOutput(owner, `an invalid ${path}.kind`);
 };
 
@@ -84,9 +87,11 @@ const snapshotLoweredTexPath = (owner: string, value: unknown, index: number): L
   if (path.fillRule !== undefined && path.fillRule !== 'nonzero' && path.fillRule !== 'evenodd') {
     failProviderOutput(owner, `an invalid ${pathName}.fillRule`);
   }
+
   const commands = providerOutputArray(owner, path.commands, `${pathName}.commands`).map(command =>
     PathCommandSchema.parse(command),
   );
+
   return {
     commands,
     fill: snapshotLoweredTexPaint(owner, path.fill, `${pathName}.fill`),
@@ -111,9 +116,11 @@ export const snapshotLoweredTex = (value: unknown): LoweredTex =>
     if ((lowered.depth as number) > (lowered.height as number)) {
       failProviderOutput('lowerTex', 'result.depth greater than result.height');
     }
+
     const paths = providerOutputArray('lowerTex', lowered.paths, 'result.paths').map((path, index) =>
       snapshotLoweredTexPath('lowerTex', path, index),
     );
+
     return cloneAndFreezeJson(
       {
         paths,

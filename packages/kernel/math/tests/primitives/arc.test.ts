@@ -20,24 +20,28 @@ import {
 describe('pointAtArcAngle 圆周点投影', () => {
   it('center=[0,0], radius=10, angle=0 → [10, 0]', () => {
     const [x, y] = pointAtArcAngle([0, 0], 10, 0);
+
     expect(x).toBeCloseTo(10);
     expect(y).toBeCloseTo(0);
   });
 
   it('center=[0,0], radius=10, angle=90 → [0, 10]（与 polar.toPosition 同约定）', () => {
     const [x, y] = pointAtArcAngle([0, 0], 10, 90);
+
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(10);
   });
 
   it('center=[0,0], radius=10, angle=180 → [-10, 0]', () => {
     const [x, y] = pointAtArcAngle([0, 0], 10, 180);
+
     expect(x).toBeCloseTo(-10);
     expect(y).toBeCloseTo(0);
   });
 
   it('center=[0,0], radius=10, angle=270 → [0, -10]', () => {
     const [x, y] = pointAtArcAngle([0, 0], 10, 270);
+
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(-10);
   });
@@ -45,18 +49,21 @@ describe('pointAtArcAngle 圆周点投影', () => {
   it('angle=360 与 angle=0 同点', () => {
     const a = pointAtArcAngle([0, 0], 10, 360);
     const b = pointAtArcAngle([0, 0], 10, 0);
+
     expect(a[0]).toBeCloseTo(b[0]);
     expect(a[1]).toBeCloseTo(b[1]);
   });
 
   it('center=[5, 5], radius=3, angle=0 → [8, 5]', () => {
     const [x, y] = pointAtArcAngle([5, 5], 3, 0);
+
     expect(x).toBeCloseTo(8);
     expect(y).toBeCloseTo(5);
   });
 
   it('负角度 angle=-90 等价 270 → [0, -10]', () => {
     const [x, y] = pointAtArcAngle([0, 0], 10, -90);
+
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(-10);
   });
@@ -69,6 +76,7 @@ describe('collectArcBoundingCandidates 弧 bbox 极值候选点', () => {
 
   it('0°→90° 无穿越基本方向：仅返回端点', () => {
     const pts = collectArcBoundingCandidates({ center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 90 });
+
     // 起点 [10, 0]、终点 [0, 10]，不应再有其它点
     expect(pts.length).toBe(2);
     expect(containsPoint(pts, [10, 0])).toBe(true);
@@ -77,6 +85,7 @@ describe('collectArcBoundingCandidates 弧 bbox 极值候选点', () => {
 
   it('0°→180° 穿越 90°：含三个点（起点、90°、终点）', () => {
     const pts = collectArcBoundingCandidates({ center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 180 });
+
     expect(pts.length).toBe(3);
     expect(containsPoint(pts, [10, 0])).toBe(true);
     expect(containsPoint(pts, [0, 10])).toBe(true); // 90° 投影
@@ -91,6 +100,7 @@ describe('collectArcBoundingCandidates 弧 bbox 极值候选点', () => {
       startAngleDeg: 270,
       endAngleDeg: 450,
     });
+
     // 起点 [0, -10], 0° → [10, 0], 90° → [0, 10], 终点（450°=90°）= [0, 10]
     // 终点与 90° 重合——实现可去重也可保留，先验证至少包含这 3 个不同的点
     expect(containsPoint(pts, [0, -10])).toBe(true);
@@ -100,6 +110,7 @@ describe('collectArcBoundingCandidates 弧 bbox 极值候选点', () => {
 
   it('全圆 0°→360°：包含 4 个基本方向', () => {
     const pts = collectArcBoundingCandidates({ center: [0, 0], radius: 10, startAngleDeg: 0, endAngleDeg: 360 });
+
     expect(containsPoint(pts, [10, 0])).toBe(true);
     expect(containsPoint(pts, [0, 10])).toBe(true);
     expect(containsPoint(pts, [-10, 0])).toBe(true);
@@ -108,6 +119,7 @@ describe('collectArcBoundingCandidates 弧 bbox 极值候选点', () => {
 
   it('偏移圆心 [5, 5], radius=3, 0°→180°：穿越 90°', () => {
     const pts = collectArcBoundingCandidates({ center: [5, 5], radius: 3, startAngleDeg: 0, endAngleDeg: 180 });
+
     expect(containsPoint(pts, [8, 5])).toBe(true); // 0°
     expect(containsPoint(pts, [5, 8])).toBe(true); // 90°
     expect(containsPoint(pts, [2, 5])).toBe(true); // 180°
@@ -118,6 +130,7 @@ describe('collectArcBoundingCandidates 弧 bbox 极值候选点', () => {
     // 此处 bounding 只关心 [start, end] 区间扫到了哪些 90°*k。
     // start=180, end=0：归一化后区间是从 180° 一路下降到 0°，扫到 90°。
     const pts = collectArcBoundingCandidates({ center: [0, 0], radius: 10, startAngleDeg: 180, endAngleDeg: 0 });
+
     expect(containsPoint(pts, [-10, 0])).toBe(true);
     expect(containsPoint(pts, [10, 0])).toBe(true);
     expect(containsPoint(pts, [0, 10])).toBe(true); // 90°

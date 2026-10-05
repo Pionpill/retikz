@@ -14,11 +14,14 @@ export const createEffectiveLayoutItems = <TItem extends Readonly<{ key?: string
     const baseKey = `item:${sourceIndex}`;
     let effectiveKey = baseKey;
     let suffix = 1;
+
     while (usedKeys.has(effectiveKey)) {
       effectiveKey = `${baseKey}:${suffix}`;
       suffix += 1;
     }
+
     usedKeys.add(effectiveKey);
+
     return { ...item, key: effectiveKey };
   });
 };

@@ -93,6 +93,7 @@ describe('collectHydrationHandlers', () => {
 
     // 同事件后者覆盖
     expect(handlers.dup.click).toBe(secondClick);
+
     // 合并不同事件
     expect(handlers.dup.pointerEnter).toBe(enter);
     expect(warn).toHaveBeenCalled();
@@ -159,6 +160,7 @@ describe('collectHydrationHandlers', () => {
     const handlers = collectHydrationHandlers(<TestPathSugar id="ring" onClick={click} />);
 
     expect(handlers.ring.click).toBe(click);
+
     // 内层展开的 Path 虽透传了 id="ring"，但无 handler → 不触发重复 id warn
     expect(warn).not.toHaveBeenCalled();
   });

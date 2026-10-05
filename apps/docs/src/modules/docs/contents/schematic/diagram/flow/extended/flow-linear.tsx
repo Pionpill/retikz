@@ -39,10 +39,12 @@ const createPreview = (lang: Lang) =>
   });
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
 
 /** 线性排列示例语言 */
 export type FlowLinearProps = Readonly<{ lang?: Lang }>;
+
 /** 线性排列交互示例 */
 const Demo: FC<FlowLinearProps> = props => {
   const { lang = 'zh' } = props;

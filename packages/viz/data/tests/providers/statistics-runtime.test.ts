@@ -149,8 +149,10 @@ describe('statistics provider runtime', () => {
     for (const operation of identityOperations) {
       expect(applyReducerOperation([], operation, DEFAULT_TRANSFORM_CONTEXT)).toEqual({ result: 0 });
     }
+
     for (const operation of undefinedScalarOperations) {
       const out = applyReducerOperation([], operation, DEFAULT_TRANSFORM_CONTEXT);
+
       expect(Number.isNaN(out.result)).toBe(true);
     }
 
@@ -159,6 +161,7 @@ describe('statistics provider runtime', () => {
       { kind: ReducerOperationKind.Extent, field: 'value', as: 'result' },
       DEFAULT_TRANSFORM_CONTEXT,
     ).result;
+
     expect(Array.isArray(extent)).toBe(true);
     expect((extent as Array<unknown>).every(value => typeof value === 'number' && Number.isNaN(value))).toBe(true);
 
@@ -186,9 +189,12 @@ describe('statistics provider runtime', () => {
       },
       DEFAULT_TRANSFORM_CONTEXT,
     );
+
     expect(band.count).toBe(0);
+
     for (const [field, value] of Object.entries(band)) {
       if (field === 'count') continue;
+
       expect(Number.isNaN(value)).toBe(true);
     }
   });
@@ -366,6 +372,7 @@ describe('statistics provider runtime', () => {
     for (const operation of operations) {
       expect(applySelectorOperation([], operation, DEFAULT_TRANSFORM_CONTEXT)).toEqual([]);
     }
+
     expect(
       applySelectorOperation(
         [{ value: Number.NaN }, { value: Infinity }],

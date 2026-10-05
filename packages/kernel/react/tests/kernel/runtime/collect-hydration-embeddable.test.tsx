@@ -35,10 +35,12 @@ const makeEmbeddableFixture = (
   options: { marked: boolean; withAdapter: boolean },
 ): { Component: EmbeddableType<{ id?: string; onClick?: () => void }>; wasCalled: () => boolean } => {
   let called = false;
+
   const Component: EmbeddableType<{ id?: string; onClick?: () => void }> = () => {
     called = true;
     throw new Error('可嵌入子组件 body 不应在 collect 阶段被调用');
   };
+
   Component.displayName = displayName;
   if (options.marked) {
     Component.isTier2Embeddable = true;
@@ -46,6 +48,7 @@ const makeEmbeddableFixture = (
       Component.inputEmbedAdapter = makeAdapter(displayName);
     }
   }
+
   return { Component, wasCalled: () => called };
 };
 

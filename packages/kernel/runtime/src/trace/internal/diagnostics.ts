@@ -1,6 +1,7 @@
 import type { PerformanceTraceDiagnostic, RuntimeTraceReporter } from '../types';
 
 const traceDiagnosticObservers = new WeakMap<RuntimeTraceReporter, (diagnostic: PerformanceTraceDiagnostic) => void>();
+
 const traceDiagnosticDrainCounts = new WeakMap<RuntimeTraceReporter['report'], number>();
 
 /** 让 Runtime 内部 owner 在不提前 drain 的前提下观察 reporter diagnostics */

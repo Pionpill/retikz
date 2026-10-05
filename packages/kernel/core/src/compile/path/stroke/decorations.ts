@@ -51,6 +51,7 @@ export const emitPathEndpointDecorations = (
     boundaryOuterInsetEnd: 0,
   };
   const inlineMarks: NonNullable<IRPathBase['marks']> = [];
+
   for (const [index, item] of (path.marks ?? []).entries()) {
     if (item.pos === 0 && arrows.arrowStart === undefined) {
       const resolved = emitEndpointArrowMark(
@@ -69,6 +70,7 @@ export const emitPathEndpointDecorations = (
       arrows.boundaryOuterInsetStart = resolved.boundaryOuterInset;
       continue;
     }
+
     if (item.pos === 1 && arrows.arrowEnd === undefined) {
       const resolved = emitEndpointArrowMark(
         arrowResolutions.get(item.mark) ??
@@ -86,14 +88,17 @@ export const emitPathEndpointDecorations = (
       arrows.boundaryOuterInsetEnd = resolved.boundaryOuterInset;
       continue;
     }
+
     if (item.endpointOverlap !== undefined) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Compile,
         `Path endpoint arrow overlap at ${irPath}.marks[${index}].endpointOverlap requires the selected start or end arrow placement.`,
       );
     }
+
     inlineMarks.push(item);
   }
+
   return { arrows, inlineMarks };
 };
 
@@ -135,9 +140,11 @@ export const emitInlineMarkPrimitives = ({
   }
 
   const strokeWidth = baseProps.strokeWidth;
+
   for (const { pos, mark } of inlineMarks) {
     const sample = sampleStrokePath({ commands, segmentSamplers, roundedCommands, position: pos });
     if (sample === undefined) continue;
+
     const resolution = arrowResolutions.get(mark);
     if (resolution === undefined) {
       throw new RetikzCoreError(
@@ -145,6 +152,7 @@ export const emitInlineMarkPrimitives = ({
         `Path arrow mark '${mark.shape ?? 'stealth'}' has no resolving-phase provider binding.`,
       );
     }
+
     const spec = emitMarkArrow(resolution, round);
     primitives.push(
       buildMarkMarkerGroup(spec, sample, {
@@ -155,6 +163,7 @@ export const emitInlineMarkPrimitives = ({
     );
     boundsPoints.push(sample.point);
   }
+
   return { primitives, boundsPoints };
 };
 
@@ -165,5 +174,6 @@ export const pathEndpointArrows = (
   const endpointSpecs: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd } = {};
   if (arrows.arrowStart) endpointSpecs.arrowStart = arrows.arrowStart;
   if (arrows.arrowEnd) endpointSpecs.arrowEnd = arrows.arrowEnd;
+
   return endpointSpecs;
 };

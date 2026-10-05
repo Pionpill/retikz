@@ -93,9 +93,11 @@ const createInputScene = (
     void _children;
     return { type: 'scene', ...config, layers: input.layers };
   }
+
   const childrenInput = input as InputSceneChildrenOptions;
   const { layers: _layers, ...config } = childrenInput;
   void _layers;
+
   return { type: 'scene', ...config, children: childrenInput.children };
 };
 

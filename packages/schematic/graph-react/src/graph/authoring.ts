@@ -98,9 +98,11 @@ void graphLayoutHostPropKeysCheck;
 /** 按 own-property 语义提取 Graph standalone Layout 宿主属性 */
 export const graphLayoutHostPropsOf = (props: GraphLayoutHostProps): GraphLayoutHostProps => {
   const output: GraphLayoutHostProps = {};
+
   for (const key of graphLayoutHostPropKeys) {
     if (Object.hasOwn(props, key)) Object.assign(output, { [key]: props[key] });
   }
+
   return output;
 };
 
@@ -118,6 +120,7 @@ const visitTransparentChildren = (children: ReactNode, visit: (child: ReactNode)
       visitTransparentChildren((child.props as { children?: ReactNode }).children, visit);
       return;
     }
+
     visit(child);
   });
 };
@@ -136,6 +139,7 @@ const renderFunctionElement = (element: ReactElement, label: string): ReactNode 
       details: { label },
     });
   }
+
   try {
     return component(element.props);
   } catch (cause) {
@@ -156,10 +160,12 @@ const collectEntityTextNodes = (children: ReactNode): Array<ReactNode> => {
       nodes.push(child);
       return;
     }
+
     if (isValidElement(child) && child.type === Text) {
       nodes.push(child);
       return;
     }
+
     if (
       isValidElement(child) &&
       typeof child.type === 'function' &&
@@ -170,12 +176,14 @@ const collectEntityTextNodes = (children: ReactNode): Array<ReactNode> => {
       nodes.push(...collectEntityTextNodes(renderFunctionElement(child, 'Entity')));
       return;
     }
+
     throw new RetikzGraphReactError({
       code: RetikzGraphReactErrorCode.EntityChildInvalid,
       message: 'Entity children accept only strings, numbers, Fragment, or Core Text.',
       details: { label: 'Entity', expectedType: 'Node-compatible text' },
     });
   });
+
   return nodes;
 };
 
@@ -193,6 +201,7 @@ const entityTextOf = (children: ReactNode, embedIdPrefix: string): InputEntity['
       details: { label: 'Entity', expectedType: 'Node-compatible text' },
     });
   }
+
   return child.text;
 };
 
@@ -207,6 +216,7 @@ export const collectEntityInput = (props: EntityProps, embedIdPrefix: string): E
       details: { label: 'Entity', reason: 'text-and-children' },
     });
   }
+
   return {
     ...mergeProperties([input], { shouldOverride: value => value !== undefined }),
     role: input.role,
@@ -222,6 +232,7 @@ const collectRelationStepNodes = (children: ReactNode): Array<ReactNode> => {
       nodes.push(child);
       return;
     }
+
     if (
       isValidElement(child) &&
       typeof child.type === 'function' &&
@@ -232,12 +243,14 @@ const collectRelationStepNodes = (children: ReactNode): Array<ReactNode> => {
       nodes.push(...collectRelationStepNodes(renderFunctionElement(child, 'Relation')));
       return;
     }
+
     throw new RetikzGraphReactError({
       code: RetikzGraphReactErrorCode.RelationInputInvalid,
       message: 'Relation children accept only Core Step declarations.',
       details: { label: 'Relation', expectedType: 'Step' },
     });
   });
+
   return nodes;
 };
 
@@ -253,9 +266,12 @@ const relationRouteOf = (children: ReactNode, embedIdPrefix: string): InputRelat
       details: { label: 'Relation', expectedType: 'Path' },
     });
   }
+
   const path = child as InputPath;
   if (path.children === undefined || path.children.length === 0) return undefined;
+
   const route = normalizePath(path).children;
+
   return route.length === 0 ? undefined : route;
 };
 
@@ -270,6 +286,7 @@ export const collectRelationInput = (props: RelationProps, embedIdPrefix: string
       details: { label: 'Relation', reason: 'route-or-way-and-children' },
     });
   }
+
   return {
     ...mergeProperties([input], { shouldOverride: value => value !== undefined }),
     role: input.role,
@@ -301,6 +318,7 @@ export const collectGroupInput = (
 ): Readonly<{ input: GroupInputEmbedProps; adapters: ReadonlyArray<AnyInputEmbedAdapter> }> => {
   const { children, ...input } = props;
   const collected = collectGraphChildren(children, embedIdPrefix);
+
   return {
     input: {
       ...input,

@@ -55,6 +55,7 @@ describe('Table Source defaults resolution', () => {
     expect(resolved.visualDefaults?.categorical).toEqual(['pink', 'purple']);
 
     categorical[0] = 'mutated';
+
     expect(resolved.visualDefaults?.categorical).toEqual(['pink', 'purple']);
   });
 
@@ -100,6 +101,7 @@ describe('Table Source defaults resolution', () => {
 
   it('accepts an empty tableDefaults no-op but rejects empty nested defaults groups', () => {
     expect(TableDefaultsSchema.parse({})).toEqual({});
+
     for (const invalid of [
       { appearanceDefaults: {} },
       { appearanceDefaults: { body: {} } },

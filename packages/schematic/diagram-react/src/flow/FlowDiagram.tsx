@@ -46,6 +46,7 @@ const FlowDiagramComponent: FC<FlowDiagramProps> = props => {
     themeStyles,
     ...hostProps
   } = flowDiagramLayoutHostPropsOf(props);
+
   return (
     <Layout
       {...hostProps}

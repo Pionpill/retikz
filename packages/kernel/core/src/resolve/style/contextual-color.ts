@@ -23,6 +23,7 @@ const backdropOf = (mode: ThemeMode): '#ffffff' | '#000000' => (mode === ThemeMo
  */
 export const resolveContextualColor = (value: IRContextualColor, context: ContextualColorResolveContext): string => {
   if (typeof value === 'string') return value;
+
   const { fieldPath, masterColor, mode } = context;
   if (masterColor === undefined) {
     throw new RetikzCoreError(
@@ -33,6 +34,7 @@ export const resolveContextualColor = (value: IRContextualColor, context: Contex
       },
     );
   }
+
   try {
     return compositeOpaqueColor(masterColor, backdropOf(mode), value);
   } catch (cause) {

@@ -51,7 +51,9 @@ export type RuntimeSourceCommandExecutor = Readonly<{
 }>;
 
 const runtimeChangeSets = new WeakSet<object>();
+
 const runtimeSourceCommands = new WeakSet<object>();
+
 const runtimeSourceCommandExecutors = new WeakMap<object, RuntimeSourceCommandExecutor>();
 
 /** 判断一个值是否是合法 Runtime revision number */
@@ -63,6 +65,7 @@ export const createRuntimeRevision = (value: number): RuntimeRevision => {
   if (!isRuntimeRevision(value)) {
     throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: value });
   }
+
   return value;
 };
 
@@ -71,9 +74,11 @@ export const createNextRuntimeRevision = (current: RuntimeRevision): RuntimeRevi
   if (!isRuntimeRevision(current)) {
     throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionInvalid, phase: 'revision', cause: current });
   }
+
   if (current === Number.MAX_SAFE_INTEGER) {
     throw new RetikzRuntimeError({ code: RetikzRuntimeErrorCode.RevisionExhausted, phase: 'revision', cause: current });
   }
+
   return createRuntimeRevision(current + 1);
 };
 
@@ -93,11 +98,13 @@ export const createRuntimeChangeSet = <TChange>(
       cause: baseRevision,
     });
   }
+
   const changeSet = Object.freeze({
     baseRevision,
     changes: Object.freeze([...changes]),
   }) as RuntimeChangeSet<TChange>;
   runtimeChangeSets.add(changeSet);
+
   return changeSet;
 };
 
@@ -140,6 +147,7 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
           cause: requestedSource,
         });
       }
+
       return Object.freeze({ revision, value: prepared.read });
     },
     changeSet: (
@@ -153,6 +161,7 @@ const createRuntimeSourceCommandExecutor = <TInput, TValue, TRead, TChange>(
           cause: requestedSource,
         });
       }
+
       return changeSet;
     },
   });
@@ -168,6 +177,7 @@ export const createRuntimeSourceInput = <TInput, TValue, TRead, TChange>(
   const executor = createRuntimeSourceCommandExecutor(source, value);
   runtimeSourceCommands.add(command);
   runtimeSourceCommandExecutors.set(command, executor);
+
   return command;
 };
 
@@ -185,10 +195,12 @@ export const createRuntimeSourceUpdate = <TInput, TValue, TRead, TChange>(
       cause: changeSet,
     });
   }
+
   const command = Object.freeze({ source, kind: 'update' as const }) as unknown as RuntimeSourceUpdate;
   const executor = createRuntimeSourceCommandExecutor(source, value, changeSet);
   runtimeSourceCommands.add(command);
   runtimeSourceCommandExecutors.set(command, executor);
+
   return command;
 };
 
@@ -203,6 +215,7 @@ export const getRuntimeSourceCommandExecutor = (
       cause: command,
     });
   }
+
   const executor = runtimeSourceCommandExecutors.get(command);
   if (executor === undefined) {
     throw new RetikzRuntimeError({
@@ -212,5 +225,6 @@ export const getRuntimeSourceCommandExecutor = (
       cause: command,
     });
   }
+
   return executor;
 };

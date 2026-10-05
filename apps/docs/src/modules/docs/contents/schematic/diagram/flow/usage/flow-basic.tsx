@@ -15,7 +15,9 @@ import { flowBasicI18n } from './flow-basic.i18n';
 export const previewControls = flowBasicControls;
 
 const subtitleFontSizes = ['xs', 'sm', 'base', 'lg'] as const;
+
 const textAlignValues = ['start', 'middle', 'end'] as const;
+
 const graphStatusValues: ReadonlyArray<GraphStatus> = ['error', 'success', 'warning', 'disabled'];
 
 /** 判断副标题字号是否来自当前面板公开选项 */
@@ -52,6 +54,7 @@ const formTextOf = (values: PreviewControlValuesFor<typeof flowBasicControls>, l
     if (!isSubtitleFontSize(values.formSubtitleSize)) {
       throw new Error(`Unsupported Flow subtitle font size: ${values.formSubtitleSize}`);
     }
+
     text.push({ text: subtitle, fill: values.formSubtitleColor, font: { size: values.formSubtitleSize } });
   }
 
@@ -111,10 +114,12 @@ const createPreview = (lang: Lang) =>
   defineControlledPreview(createPreviewControlContract(lang), values => renderFlowBasicPreview(values, lang));
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
 
 /** Flow 示例语言 */
 export type FlowPreviewProps = Readonly<{ lang?: Lang }>;
+
 /** 当前语言的 Flow 交互示例 */
 const Demo: FC<FlowPreviewProps> = props => {
   const { lang = 'zh' } = props;

@@ -24,6 +24,7 @@ describe('Table Cell rule schema', () => {
       structure: { kind: 'manual', rows: [[1]] },
       rules: [rule, { selector: { payloadKinds: ['value'] }, presentation: { name: 'text' } }],
     });
+
     expect(spec.rules).toEqual([rule, { selector: { payloadKinds: ['value'] }, presentation: { name: 'text' } }]);
   });
 

@@ -124,7 +124,9 @@ const refineGridLayout = (layout: GridLayoutRefinementInput, context: Refinement
         message: `Duplicate GridLayout item key '${item.key}'.`,
       });
     }
+
     if (item.key !== undefined) seen.add(item.key);
+
     for (const axis of ['column', 'row'] as const) {
       const placement = item[axis];
       if (
@@ -181,9 +183,11 @@ const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBa
         message: 'sourceIndex must be contiguous.',
       });
     }
+
     if (keys.has(item.key)) {
       context.addIssue({ code: 'custom', path: ['items', index, 'key'], message: `Duplicate item key '${item.key}'.` });
     }
+
     keys.add(item.key);
     if (item.column + item.columnSpan > artifact.columns.length) {
       context.addIssue({
@@ -192,6 +196,7 @@ const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBa
         message: 'Column span exceeds resolved columns.',
       });
     }
+
     if (item.row + item.rowSpan > artifact.rows.length) {
       context.addIssue({
         code: 'custom',
@@ -200,11 +205,13 @@ const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBa
       });
     }
   });
+
   const refineTracks = (tracks: typeof artifact.columns, path: 'columns' | 'rows') => {
     tracks.forEach((track, index) => {
       if (track.index !== index) {
         context.addIssue({ code: 'custom', path: [path, index, 'index'], message: 'Track index must be contiguous.' });
       }
+
       if (index > 0 && track.start < tracks[index - 1].start) {
         context.addIssue({
           code: 'custom',
@@ -214,6 +221,7 @@ const refineGridLayoutArtifact = (artifact: ZodInfer<typeof GridLayoutArtifactBa
       }
     });
   };
+
   refineTracks(artifact.columns, 'columns');
   refineTracks(artifact.rows, 'rows');
 };

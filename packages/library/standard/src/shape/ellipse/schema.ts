@@ -20,6 +20,7 @@ const properties = {
   ...ShapeAnglesSchema.shape,
   closed: ShapeClosedSchema.unwrap().optional().describe('Closure of a partial outline: open, chord, or sector.'),
 };
+
 /** Ellipse 的持久化几何契约 */
 export const EllipseSchema = union([
   strictObject({

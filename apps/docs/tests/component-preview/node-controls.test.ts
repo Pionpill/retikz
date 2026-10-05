@@ -25,6 +25,7 @@ describe('Node controls', () => {
       }).flatMap(section => section.controls.map(field => field.id));
 
     expect(visibleIds('none')).not.toContain('keepUpright');
+
     for (const rotateMode of ['radial', 'tangent', 'angle']) {
       expect(visibleIds(rotateMode)).toContain('keepUpright');
     }

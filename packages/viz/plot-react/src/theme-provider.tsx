@@ -19,5 +19,6 @@ export const PlotThemeProvider: FC<PlotThemeProviderProps> = props => {
     if (plotThemeStyles === undefined) return parent;
     return [...parent, ...plotThemeStyles];
   }, [parent, plotThemeStyles]);
+
   return <PlotThemeStylesContext.Provider value={merged}>{children}</PlotThemeStylesContext.Provider>;
 };

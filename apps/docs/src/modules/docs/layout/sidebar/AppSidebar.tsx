@@ -43,6 +43,7 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
         ];
       }
     }
+
     return areaId === 'about' ? sections : selectedSection ? [selectedSection] : [];
   }, [areaId, sections, selectedSection]);
 

@@ -21,17 +21,20 @@ const leafDefinition = defineComposite({
   schema: CompositeBaseSchema.extend({ namespace: literal('fixture'), type: literal('prepared') }),
   expand: (_node, context) => ({ children: [{ type: 'node', position: [0, 0], text: String(context.runtimeInput) }] }),
 });
+
 const makeContribution = (text: string): InputEmbedContribution => ({
   node: { namespace: 'fixture', type: 'prepared' },
   providerDependencies: { roots: [], providers: [] },
   runtimeInputs: [{ path: [], input: text }],
 });
+
 const adapter: InputEmbedAdapter<{ text: string }> &
   Required<Pick<InputEmbedAdapter<{ text: string }>, 'prepare' | 'lower'>> = {
   kind: 'prepared',
   lower: props => makeContribution(props.text),
   prepare: props => ({ execute: () => Promise.resolve(makeContribution(props.text)) }),
 };
+
 const source = (text: string): InputSceneChildren => ({
   children: [{ type: 'embed', kind: 'prepared', props: { text } }],
 });
@@ -44,6 +47,7 @@ describe('prepared composite input consumption', () => {
     const options = { adapters: [adapter], compile: { composites: [leafDefinition] } };
     const sync = processToStaticInputResult(input, options);
     const async = await processToStaticInputResultAsync(input, options);
+
     expect(async.scene).toEqual(sync.scene);
     expect(JSON.stringify(async.scene)).toContain('left-ready');
     expect(JSON.stringify(async.scene)).toContain('right-ready');
@@ -55,10 +59,12 @@ describe('prepared composite input consumption', () => {
       compile: { composites: [leafDefinition] },
     });
     const outcome = await controller.update(source('second-ready'));
+
     expect(outcome.kind).toBe('committed');
     expect(controller.read().revision).toBe(1);
     expect(JSON.stringify(controller.read().scene)).toContain('second-ready');
     expect(JSON.stringify(controller.read().scene)).not.toContain('first-ready');
+
     controller.dispose();
   });
 
@@ -71,6 +77,7 @@ describe('prepared composite input consumption', () => {
         const child = context.sourceChild(['child']);
         const probe = context.layoutChild(child, NaturalLayoutProposal);
         if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
         return { children: [context.replay(probe.result)] };
       },
     });
@@ -97,6 +104,7 @@ describe('prepared composite input consumption', () => {
       { children: [{ type: 'embed', kind: 'outer', props: {} }] },
       { adapters: [adapter, outer], compile: { composites: [leafDefinition, outerDefinition] } },
     );
+
     expect(JSON.stringify(result.scene)).toContain('slot-ready');
     expect(JSON.stringify(result.scene)).not.toContain('undefined');
   });

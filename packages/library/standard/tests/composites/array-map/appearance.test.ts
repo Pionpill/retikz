@@ -12,8 +12,10 @@ const content: IRChild = {
   style: { fill: 'none', stroke: 'none' },
   layout: { padding: 0, margin: 0 },
 };
+
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));
+
 const compile = (children: Array<IRChild>) =>
   compileToScene(
     { type: 'scene', version: 1, children },
@@ -40,6 +42,7 @@ describe('Array / Map appearance and identity', () => {
       },
     ]);
     const texts = flat(result.scene.primitives).filter(node => node.type === 'text');
+
     expect(texts.find(node => node.lines[0]?.text === '7')).toMatchObject({
       fontFamily: 'monospace',
       fontSize: 28,
@@ -52,6 +55,7 @@ describe('Array / Map appearance and identity', () => {
       fill: 'blue',
     });
   });
+
   it('clips oversized content by default in fixed cells without scaling text', () => {
     const result = compile([
       {
@@ -63,10 +67,13 @@ describe('Array / Map appearance and identity', () => {
       },
     ]);
     const primitives = flat(result.scene.primitives);
+
     expect(primitives.filter(node => node.type === 'text')).toEqual(
       expect.arrayContaining([expect.objectContaining({ fontSize: 30, lines: [{ text: 'Unscaled long text' }] })]),
     );
+
     const clipped = primitives.find(node => node.type === 'group' && node.clipRef !== undefined);
+
     expect(clipped?.type === 'group' ? clipped.clipRef : undefined).toBeDefined();
     expect(
       result.scene.resources
@@ -84,6 +91,7 @@ describe('Array / Map appearance and identity', () => {
       height: 8,
     });
   });
+
   it('merges overall, role, and cell styles without dimming text with fillOpacity', () => {
     const result = compile([
       {
@@ -99,16 +107,20 @@ describe('Array / Map appearance and identity', () => {
       },
     ]);
     const primitives = flat(result.scene.primitives);
+
     expect(primitives.filter(node => node.type === 'path' && node.fill !== 'none')).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ fill: 'blue', fillOpacity: 0.2 }),
         expect.objectContaining({ fill: 'green', fillOpacity: 0 }),
       ]),
     );
+
     const texts = primitives.filter(node => node.type === 'text');
+
     expect(texts).toEqual(expect.arrayContaining([expect.objectContaining({ fontFamily: 'monospace', fontSize: 16 })]));
     expect(texts.every(node => node.opacity === undefined || node.opacity === 1)).toBe(true);
   });
+
   it('publishes cell allocation when background and border are absent', () => {
     const result = compile([
       {
@@ -128,6 +140,7 @@ describe('Array / Map appearance and identity', () => {
         ],
       },
     ]);
+
     expect(result.spatialHandles.entries.find(entry => entry.role === 'array-cell')?.geometry.bounds).toEqual({
       x: 10,
       y: 20,
@@ -140,13 +153,16 @@ describe('Array / Map appearance and identity', () => {
         .at(-1)?.commands[0],
     ).toMatchObject({ kind: 'move', to: [110, 50] });
   });
+
   it('does not create cell handles without authored ids, including indexed lists', () => {
     const result = compile([{ namespace: 'standard', type: 'array', index: { start: 4 }, items: [{ content }] }]);
+
     expect(result.spatialHandles.entries.filter(entry => entry.role === 'array-cell')).toHaveLength(0);
     expect(flat(result.scene.primitives).filter(node => node.type === 'text')).toEqual(
       expect.arrayContaining([expect.objectContaining({ lines: [{ text: '4' }] })]),
     );
   });
+
   it('applies root font defaults during allocation and clips each cell separately', () => {
     const result = compile([
       {
@@ -160,6 +176,7 @@ describe('Array / Map appearance and identity', () => {
         ],
       },
     ]);
+
     expect(
       flat(result.scene.primitives)
         .filter(node => node.type === 'text')
@@ -206,12 +223,15 @@ it('preserves Core namespace isolation, duplicate diagnostics, and delayed cell 
         padding: 0,
       },
     );
+
     expect(warnings.filter(warning => warning.code === CompileWarningCode.DuplicateNodeId)).toHaveLength(
       localNamespace ? 0 : 1,
     );
+
     const line = flat(result.scene.primitives).find(
       node => node.type === 'path' && node.commands.some(command => command.kind === 'line' && command.to[0] === 400),
     );
+
     expect(line?.type === 'path' ? line.commands[0] : undefined).toMatchObject({
       kind: 'move',
       to: localNamespace ? [300, 300] : [50, 30],
@@ -241,6 +261,7 @@ it('compiles persistent text cells exactly like explicit undecorated nodes witho
       entries: [{ key: { content: textNode }, value: { content: textNode, style: { fill: 'blue' } } }],
     },
   ]);
+
   expect(actual.scene.primitives).toEqual(explicit.scene.primitives);
   expect(actual.spatialHandles).toEqual(explicit.spatialHandles);
   expect(JSON.stringify(source)).toBe(before);

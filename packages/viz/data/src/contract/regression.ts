@@ -79,9 +79,11 @@ export type AnySynchronousRegressionImplementation = Omit<AnyRegressionImplement
 export const extractRegressionKind = (schema: ZodType): string => {
   if (!(schema instanceof ZodObject))
     throw new RetikzDataError('data: regression schema must be an object with a literal kind');
+
   const kind = schema.shape.kind;
   if (!(kind instanceof ZodLiteral) || typeof kind.value !== 'string' || kind.value.trim().length === 0)
     throw new RetikzDataError('data: regression kind must be a non-blank literal');
+
   return kind.value;
 };
 

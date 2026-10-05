@@ -8,10 +8,12 @@ import { relationFlowI18n } from './relation-flow.i18n';
 
 /** 关系链路插图的语言 */
 export type RelationFlowProps = { lang?: Lang };
+
 /** 仅展示 Relation 自身的处理阶段，不重复全局编译管线 */
 const RelationFlow: FC<RelationFlowProps> = props => {
   const { lang = 'zh' } = props;
   const text = relationFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="relation-flow" kind="linear" direction="right">

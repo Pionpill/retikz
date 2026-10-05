@@ -1,5 +1,7 @@
 const DEFAULT_DEV_SLOT = '01';
+
 const DOCS_DEV_PORT_BASE = 7100;
+
 const BENCH_DEV_PORT_BASE = 7200;
 
 /** 校验显式服务端口并保留原始配置值用于诊断 */

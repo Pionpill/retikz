@@ -16,12 +16,19 @@ import {
 export const ScatterPositionScaleBindingSchema = PointPositionScaleBindingSchema.describe(
   'Scatter position scale binding',
 );
+
 export const ScatterColorScaleBindingSchema = PointColorScaleBindingSchema.describe('Scatter color scale binding');
+
 export const ScatterXEncodingSchema = createPointPositionEncodingSchema('x', 'Scatter');
+
 export const ScatterYEncodingSchema = createPointPositionEncodingSchema('y', 'Scatter');
+
 export const ScatterColorEncodingSchema = PointColorEncodingSchema.describe('Scatter color field mapping');
+
 export const ScatterSizeEncodingSchema = PointSizeEncodingSchema.describe('Scatter size field mapping');
+
 export const ScatterOpacityEncodingSchema = PointOpacityEncodingSchema.describe('Scatter opacity field mapping');
+
 export const ScatterShapeEncodingSchema = PointShapeEncodingSchema.describe('Scatter shape field mapping');
 
 export const ScatterChartEncodingsSchema = strictObject({

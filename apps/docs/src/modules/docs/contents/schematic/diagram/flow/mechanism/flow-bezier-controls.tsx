@@ -7,10 +7,12 @@ import { flowBezierControlsI18n } from './flow-bezier-controls.i18n';
 
 /** 经过点与控制点示意语言 */
 export type FlowBezierControlsProps = Readonly<{ lang?: Lang }>;
+
 /** 固定 τ 下反求控制点，曲线经过目标而不经过控制点 */
 const Demo: FC<FlowBezierControlsProps> = props => {
   const { lang = 'zh' } = props;
   const copy = flowBezierControlsI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Path style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}>

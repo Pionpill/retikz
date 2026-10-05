@@ -12,6 +12,7 @@ const createPreview = (lang: Lang) =>
   defineControlledPreview(createPreviewControlContract(lang), values => RelationStatusPreview(values.status, lang));
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
 
 /** 语义状态示例语言 */

@@ -28,11 +28,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { overflow: 'visible', offset: 100 },
     relatedApis: ['OverlayLayout.overflow', 'OverlayLayoutItem.offset', 'OverlayLayoutItem.sizeParticipation'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

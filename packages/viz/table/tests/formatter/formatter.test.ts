@@ -99,6 +99,7 @@ describe('formatted Table model', () => {
     expect(Object.isFrozen(formatted.semantic.cells[0].payload)).toBe(true);
 
     model.cells[0].payload.value = 'after';
+
     expect(formatted.semantic.cells[0].payload).toMatchObject({ kind: 'value', value: 'before' });
   });
 
@@ -116,6 +117,7 @@ describe('formatted Table model', () => {
 
   it('formats numbers with a private deterministic locale', () => {
     const before = formatDefaultTable(modelOf(-1234.5, { name: 'number', options: { specifier: '$,.2f' } }));
+
     try {
       formatDefaultLocale({
         decimal: ',',
@@ -210,6 +212,7 @@ describe('formatted Table model', () => {
         throw providerCause;
       },
     });
+
     try {
       formatDefaultTable(modelOf(1, { name: 'thrown' }), [thrown]);
       throw new Error('expected formatter failure');
@@ -310,7 +313,9 @@ describe('formatted Table model', () => {
     const formatted = formatDefaultTable(model);
 
     expect(formatted.cells[0]).toEqual({ kind: 'content', cellId: 'cell.0', content: sourceContent });
+
     if (formatted.cells[0].kind !== TableCellPayloadKind.Content) throw new Error('expected content Cell');
+
     expect(formatted.cells[0].content).not.toBe(sourceContent);
     expect(Object.isFrozen(formatted)).toBe(true);
     expect(Object.isFrozen(formatted.cells)).toBe(true);

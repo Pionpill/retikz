@@ -5,6 +5,7 @@ import { ArraySchema } from '../../../src/collection/array/schema';
 import { MapLayoutSchema, MapSchema } from '../../../src/collection/map/schema';
 
 const content = { type: 'node', position: [0, 0], text: 'a' };
+
 const parseExternal = (schema: ZodType, source: unknown) => schema.safeParse(source);
 it('保留 Map 的默认间距以及显式零和独立行列间距', () => {
   expect(MapLayoutSchema.parse({}).gap).toBe(2);
@@ -13,21 +14,27 @@ it('保留 Map 的默认间距以及显式零和独立行列间距', () => {
 });
 it('parses index shorthand, object defaults, and JSON text styles', () => {
   const base = { namespace: 'standard', type: 'array', items: ['A'] };
+
   expect(ArraySchema.parse(base).index).toBe(false);
   expect(ArraySchema.parse({ ...base, index: true }).index).toBe(true);
   expect(ArraySchema.parse({ ...base, index: {} }).index).toEqual({ position: 'before', start: 0 });
+
   const index = { position: 'after', start: 2, style: { font: { size: 24 }, textColor: 'red', opacity: 0 } };
+
   expect(ArraySchema.parse(JSON.parse(JSON.stringify({ ...base, index }))).index).toEqual(index);
 });
 it('treats Array strings as content by default and validates derived ids when enabled', () => {
   const base = { namespace: 'standard', type: 'array' };
   const items = ['A', 'A', '', '   ', { content: 'B', id: 'A' }];
+
   expect(ArraySchema.parse({ ...base, items }).items).toEqual(items);
   expect(ArraySchema.parse({ ...base, items }).cellIdMode).toBe('explicit');
   expect(ArraySchema.parse({ ...base, items: ['A'], cellIdMode: 'string' }).cellIdMode).toBe('string');
+
   for (const invalidItems of [[''], ['   '], ['A', 'A'], ['A', { content: 'B', id: 'A' }]]) {
     expect(ArraySchema.safeParse({ ...base, items: invalidItems, cellIdMode: 'string' }).success).toBe(false);
   }
+
   expect(ArraySchema.parse({ ...base, items: [{ content: 'A' }, { content: 'A' }] }).items).toHaveLength(2);
   expect(
     ArraySchema.safeParse({
@@ -46,19 +53,27 @@ describe('Array / Map Source contracts', () => {
       [MapSchema, { namespace: 'standard', type: 'map', data: { value: { a: 1 } } }],
     ] as const) {
       expect(schema.parse(source).dataExpand).toBe(true);
+
       for (const dataExpand of [true, false, [], ['map'], ['array'], ['array', 'map'], ['map', 'map']]) {
         const parsed = schema.parse(JSON.parse(JSON.stringify({ ...source, dataExpand })));
+
         expect(parsed.dataExpand).toEqual(dataExpand);
         expect(JSON.stringify(parsed.data)).toBe(JSON.stringify(source.data));
       }
+
       for (const dataExpand of ['map', 'text', null, {}, 0, ['unknown'], [false]]) {
         expect(parseExternal(schema, { ...source, dataExpand }).success).toBe(false);
       }
+
       const result = parseExternal(schema, { ...source, dataExpand: ['map', 'unknown'] });
+
       expect(result.success).toBe(false);
+
       if (!result.success) expect(JSON.stringify(result.error.issues)).toContain('dataExpand');
+
       expect(parseExternal(schema, { ...source, dataObjectDisplay: 'text' }).success).toBe(false);
     }
+
     expect(ArraySchema.safeParse({ namespace: 'standard', type: 'array', items: [], dataExpand: false }).success).toBe(
       false,
     );
@@ -66,6 +81,7 @@ describe('Array / Map Source contracts', () => {
       false,
     );
   });
+
   it('accepts content width only for Array overall and direct cells after JSON round-trip', () => {
     const source = {
       namespace: 'standard',
@@ -74,11 +90,14 @@ describe('Array / Map Source contracts', () => {
       items: [{ content: 'A', layout: { width: 'content' } }],
     };
     const parsed = ArraySchema.parse(JSON.parse(JSON.stringify(source)));
+
     expect(parsed.layout?.width).toBe('content');
     expect(parsed.items?.[0]).toMatchObject({ layout: { width: 'content' } });
+
     for (const layout of [{ width: 'content' }, { key: { width: 'content' } }, { value: { width: 'content' } }]) {
       expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [], layout }).success).toBe(false);
     }
+
     expect(
       MapSchema.safeParse({
         namespace: 'standard',
@@ -87,6 +106,7 @@ describe('Array / Map Source contracts', () => {
       }).success,
     ).toBe(false);
   });
+
   it('keeps cell styles sparse until role and overall inheritance', () => {
     const source = {
       namespace: 'standard',
@@ -95,10 +115,12 @@ describe('Array / Map Source contracts', () => {
       entries: [{ key: { content }, value: { content, style: { fill: 'none' } } }],
     };
     const parsed = MapSchema.parse(JSON.parse(JSON.stringify(source)));
+
     expect(parsed.entries?.[0].key).not.toHaveProperty('style');
     expect(parsed.style?.fillOpacity).toBe(0);
     expect(parsed.entries?.[0].value).toMatchObject({ style: { fill: 'none' } });
   });
+
   it('allows repeated display keys and empty structures', () => {
     expect(
       MapSchema.parse({
@@ -109,15 +131,19 @@ describe('Array / Map Source contracts', () => {
     ).toHaveLength(2);
     expect(ArraySchema.parse({ namespace: 'standard', type: 'array', items: [] }).items).toEqual([]);
   });
+
   it('points duplicate identities at the offending cell', () => {
     const parsed = MapSchema.safeParse({
       namespace: 'standard',
       type: 'map',
       entries: [{ key: { id: 'same', content }, value: { id: 'same', content } }],
     });
+
     expect(parsed.success).toBe(false);
+
     if (!parsed.success) expect(parsed.error.issues[0].path).toEqual(['entries', 0, 'value', 'id']);
   });
+
   it.each([
     { layout: { gap: -1 } },
     { layout: { gap: Infinity } },
@@ -168,6 +194,7 @@ it('preserves sparse grouped Map role overrides through JSON parsing', () => {
       }),
     ),
   );
+
   expect(parsed.style).toEqual(style);
   expect(parsed.layout).toMatchObject(layout);
   expect(parsed.layout?.key).toEqual({ width: 'auto' });

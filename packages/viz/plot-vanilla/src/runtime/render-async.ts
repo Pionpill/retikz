@@ -18,6 +18,7 @@ export type RenderPlotAsyncRuntimeOptions<TSource> = Readonly<{
 
 /** 异步 Plot 默认渲染配置 */
 export type RenderPlotAsyncOptions<TSource = never> = RenderPlotOptions & RenderPlotAsyncRuntimeOptions<TSource>;
+
 /** 异步 Plot 图元链路配置 */
 export type RenderPlotAsyncLineageOptions<TSource = never> = RenderPlotLineageOptions &
   RenderPlotAsyncRuntimeOptions<TSource>;
@@ -58,6 +59,7 @@ const renderPlotAsyncImpl = async <TSource = never>(
       };
     },
   };
+
   const result = await processToStaticInputResultAsync(
     scene({
       ...(options.theme === undefined ? {} : { theme: options.theme }),
@@ -69,9 +71,11 @@ const renderPlotAsyncImpl = async <TSource = never>(
       compile: { themeStyles: options.themeStyles },
     },
   );
+
   const svg = renderToSvgString(result.scene, { output: { width: options.width, height: options.height } });
   if (options.lineage === undefined || options.lineage === false) return svg;
   if (preparedData === undefined) throw new RetikzPlotVanillaError('Plot async result is missing its prepared data');
+
   return { svg, lineage: lowerPlotWithLineage(spec, {}, options, preparedData).lineage };
 };
 

@@ -27,6 +27,7 @@ const selectorKeySchema = (keySchema: ZodType<string>, label: string) =>
           if (seen.has(key)) {
             context.addIssue({ code: 'custom', path: [index], message: `Duplicate ${label} selector key '${key}'.` });
           }
+
           seen.add(key);
         });
       }),

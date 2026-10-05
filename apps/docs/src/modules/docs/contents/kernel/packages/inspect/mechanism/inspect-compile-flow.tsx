@@ -14,6 +14,7 @@ export type InspectCompileFlowFigureProps = Readonly<{ lang?: Lang }>;
 export const InspectCompileFlowFigure: FC<InspectCompileFlowFigureProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = inspectCompileFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps(false)} layout={{ nodeGap: 24 }}>
       <FlowLayout kind="linear" id="flow" direction="down" align="center">

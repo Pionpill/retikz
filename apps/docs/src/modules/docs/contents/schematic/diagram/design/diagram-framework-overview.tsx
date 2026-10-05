@@ -15,6 +15,7 @@ export type DiagramFrameworkOverviewProps = { lang?: Lang };
 const DiagramFrameworkOverview: FC<DiagramFrameworkOverviewProps> = props => {
   const { lang = 'zh' } = props;
   const t = diagramFrameworkOverviewI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Surface

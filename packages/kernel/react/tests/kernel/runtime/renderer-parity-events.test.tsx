@@ -29,6 +29,7 @@ const installCanvasHarness = (): { restore: () => void } => {
     y: 0,
     toJSON: () => ({}),
   }));
+
   return {
     restore: () => {
       getContext.mockRestore();
@@ -64,7 +65,9 @@ describe('renderer 双模事件等价', () => {
       );
     });
     const svgTarget = svgContainer.querySelector('[data-retikz-id="a"]');
+
     expect(svgTarget).not.toBeNull();
+
     await act(() => {
       svgTarget!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -86,7 +89,9 @@ describe('renderer 双模事件等价', () => {
       );
     });
     const canvas = canvasContainer.querySelector('canvas');
+
     expect(canvas).not.toBeNull();
+
     await act(() => {
       canvas!.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: SIZE / 2, clientY: SIZE / 2 }));
     });

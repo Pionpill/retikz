@@ -42,6 +42,7 @@ describe('[text-runs] run schemas', () => {
         },
       ],
     });
+
     expect(NodeSchema.parse(JSON.parse(JSON.stringify(node)))).toEqual(node);
   });
 });

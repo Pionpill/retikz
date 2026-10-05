@@ -19,11 +19,13 @@ import {
 
 const expectCoreNonEmptyError = (action: () => unknown, code: RetikzCoreErrorCode, label: string): void => {
   let caught: unknown;
+
   try {
     action();
   } catch (error) {
     caught = error;
   }
+
   expect(caught).toBeInstanceOf(RetikzCoreError);
   expect(caught).toMatchObject({
     code,

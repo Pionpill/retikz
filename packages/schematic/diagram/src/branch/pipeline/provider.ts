@@ -15,7 +15,9 @@ export const BranchDiagramProviderKey: CompositeCoreProviderKey = Object.freeze(
   namespace: 'diagram',
   type: 'branch',
 });
+
 const optionsKey = Symbol('branch-options');
+
 let sequence = 0;
 
 const makeDefinition: CoreDependencyProvider['makeDefinition'] = datasets => {
@@ -25,6 +27,7 @@ const makeDefinition: CoreDependencyProvider['makeDefinition'] = datasets => {
       : [],
   );
   const { definition, options } = resolveBranchDefinitionOptions(optionSets);
+
   return defineComposite({
     namespace: 'diagram',
     type: 'branch',

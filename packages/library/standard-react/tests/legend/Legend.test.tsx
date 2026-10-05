@@ -29,6 +29,7 @@ const itemLabel = <Node position={[0, 0]} text="Active" />;
 const contribute = ({ children, ...props }: LegendProps) => {
   const input = createInputScene(<Legend {...props}>{children}</Legend>);
   const normalized = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+
   return {
     node: normalized.ir.children[0],
     providerDependencies: normalized.contributions[0],
@@ -181,6 +182,7 @@ describe('<Legend>', () => {
       { offset: -0.1, error: /offset/i },
       { offset: 1.1, error: /offset/i },
     ];
+
     for (const { offset, error } of invalidOffsets) {
       expect(() =>
         LegendSchema.parse(
@@ -196,6 +198,7 @@ describe('<Legend>', () => {
         ),
       ).toThrow(error);
     }
+
     expect(() =>
       LegendSchema.parse(
         contribute({
@@ -229,6 +232,7 @@ describe('<Legend>', () => {
     for (const children of invalidChildren) {
       expect(() => contribute({ kind: LegendContentKind.Items, children })).toThrow(/Legend/i);
     }
+
     expect(() =>
       contribute({
         kind: LegendContentKind.Items,
@@ -279,11 +283,13 @@ describe('<Legend>', () => {
       [itemLabel, <Node key="second" position={[0, 0]} text="Second" />],
       [itemLabel, 'extra'],
     ];
+
     for (const children of invalidTitles) {
       expect(() =>
         contribute({ kind: LegendContentKind.Items, children: <LegendTitle>{children}</LegendTitle> }),
       ).toThrow(/LegendTitle.*exactly one/i);
     }
+
     expect(() =>
       contribute({
         kind: LegendContentKind.Items,

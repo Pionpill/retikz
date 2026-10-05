@@ -16,6 +16,7 @@ const LegendPipeline: FC<LegendPipelineProps> = props => {
   const labels = legendPipelineI18n[lang];
   const text = (index: number) =>
     labels[index].map((line, row) => ({ text: line, ...(row === 0 ? {} : { fill: 'gray', font: { size: 12 } }) }));
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="pipeline" kind="linear" direction="right">

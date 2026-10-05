@@ -6,13 +6,16 @@ import { BUILTIN_COORDINATES } from './private';
 /** 校验坐标系定位角色可作为稳定、无歧义的 encoding key */
 const assertCoordinateRoles = (type: string, roles: ReadonlyArray<string>): void => {
   const seen = new Set<string>();
+
   for (const role of roles) {
     if (role.trim() === '') {
       throw new RetikzPlotError(`lowerPlots: coordinate "${type}" must declare a non-empty coordinate role`);
     }
+
     if (seen.has(role)) {
       throw new RetikzPlotError(`lowerPlots: coordinate "${type}" has duplicate coordinate role: "${role}"`);
     }
+
     seen.add(role);
   }
 };
@@ -27,18 +30,22 @@ export const resolveCoordinateRegistry = (
   custom?: ReadonlyArray<AnyCoordinateDefinition>,
 ): Map<string, AnyCoordinateDefinition> => {
   const registry = new Map<string, AnyCoordinateDefinition>();
+
   for (const def of BUILTIN_COORDINATES) {
     const type = extractCoordinateType(def.schema);
     assertCoordinateRoles(type, def.roles);
     registry.set(type, def);
   }
+
   for (const def of custom ?? []) {
     const type = extractCoordinateType(def.schema);
     assertCoordinateRoles(type, def.roles);
     if (registry.has(type)) {
       throw new RetikzPlotError(`lowerPlots: duplicate coordinate registration: "${type}"`);
     }
+
     registry.set(type, def);
   }
+
   return registry;
 };

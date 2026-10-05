@@ -44,9 +44,11 @@ describe('surface()', () => {
         compile: { composites: [definition] },
       },
     );
+
     expect(JSON.stringify(result.scene)).toContain('surface-ready');
     expect(executions).toBe(1);
   });
+
   it('wraps a raw Core child without inventing child dependencies', () => {
     const child = surfaceChild({ type: 'node', position: [0, 0], text: 'A' });
     const normalized = normalizeScene(scene({ children: [surface({ padding: 4, child })] }), {
@@ -70,6 +72,7 @@ describe('surface()', () => {
     const explicit = normalizeScene(scene({ children: [surface({ id: 'surface-model', padding: 4, child })] }), {
       adapters: [SurfaceInputEmbedAdapter],
     });
+
     expect(explicit.ir.children[0]).toHaveProperty('id', 'surface-model');
   });
 

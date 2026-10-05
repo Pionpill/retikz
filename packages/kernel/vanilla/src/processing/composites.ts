@@ -94,6 +94,7 @@ const createDelegate = (slot: CompositeSlot): AnyCompositeDefinition => {
 const isCompatibleDefinition = (initial: AnyCompositeDefinition, next: AnyCompositeDefinition): boolean => {
   const initialExpand = typeof initial.expand === 'function';
   const nextExpand = typeof next.expand === 'function';
+
   return (
     initial.namespace === next.namespace &&
     initial.type === next.type &&
@@ -114,6 +115,7 @@ export const createRetainedCompositeDefinitions = (
   const initial = initialDefinitions ?? [];
   const slots: Array<CompositeSlot> = initial.map(current => ({ current }));
   const definitions = Object.freeze(slots.map(createDelegate));
+
   return Object.freeze({
     definitions,
     isCompatible: nextDefinitions => {
@@ -131,12 +133,14 @@ export const createRetainedCompositeDefinitions = (
       ) {
         invalidDefinitions({ initial, next });
       }
+
       const previous = slots.map(slot => slot.current);
       const changed = next.some((definition, index) => definition !== previous[index]);
       next.forEach((definition, index) => {
         slots[index].current = definition;
       });
       let settled = false;
+
       return Object.freeze({
         changed,
         commit: () => {
@@ -144,6 +148,7 @@ export const createRetainedCompositeDefinitions = (
         },
         rollback: () => {
           if (settled) return;
+
           previous.forEach((definition, index) => {
             slots[index].current = definition;
           });

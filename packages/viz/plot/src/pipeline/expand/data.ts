@@ -43,6 +43,7 @@ export const applyMarkTransforms = (
 ): DataView => {
   const transform = (mark as { transform?: Array<IRDataTransformDeclaration> }).transform;
   if (transform === undefined) return dataView;
+
   return applyTransformsToDataView(
     dataView,
     transform.map(declaration => declaration.operation),
@@ -60,18 +61,23 @@ export const validateFieldMaps = (
   fieldMaps: LowerPlotsOptions['fieldMaps'],
 ): void => {
   if (fieldMaps === undefined) return;
+
   for (const ref of Object.keys(fieldMaps)) {
     if (!Object.hasOwn(datasets, ref))
       throw new RetikzPlotError(`lowerPlots: fieldMaps references unknown dataset "${ref}"`);
   }
+
   if (!Object.hasOwn(fieldMaps, spec.data.reference)) return;
+
   const fieldMap = fieldMaps[spec.data.reference];
   if (spec.data.model === undefined) {
     throw new RetikzPlotError(
       `lowerPlots: fieldMaps for "${spec.data.reference}" requires data.model (no logical field contract without a model)`,
     );
   }
+
   const declared = new Set(spec.data.model.map(field => field.name));
+
   for (const logical of Object.keys(fieldMap)) {
     if (!declared.has(logical)) {
       throw new RetikzPlotError(
@@ -105,12 +111,14 @@ export const prepareRows = (
   const { transformRegistry, transformContext, scaleRegistry, markRegistry, positionAdjustmentRegistry } =
     preparePlotRegistries(options);
   const userSourceFields = collectSourceFields(spec, transformRegistry, markRegistry, transformContext);
+
   for (const field of spec.data.model ?? []) userSourceFields.add(field.name);
   const baseTypes = resolveFieldTypes(spec.data.model, ingested, userSourceFields);
   const fieldMap =
     options.fieldMaps !== undefined && Object.hasOwn(options.fieldMaps, spec.data.reference)
       ? options.fieldMaps[spec.data.reference]
       : undefined;
+
   const formatRegistry = resolveFormatRegistry(options.formatDefinitions);
   const { fieldTypeMap: formatTypes, parsers: formatParsers } = collectFormatFields(
     spec.data.model,
@@ -123,6 +131,7 @@ export const prepareRows = (
       .filter(field => userSourceFields.has(field.name) && (field.type !== undefined || field.format !== undefined))
       .map(field => field.name),
   );
+
   const resolveField = options.resolveField;
   const trackedResolveField: LowerPlotsOptions['resolveField'] =
     resolveField === undefined
@@ -140,8 +149,10 @@ export const prepareRows = (
     fieldMap,
     trackedResolveField,
   );
+
   const parsers = new Map([...formatParsers, ...resolverParsers]);
   const normalized = normalizeRows(ingested, fieldTypeMap, fieldMap, parsers);
+
   for (const field of userSourceFields) {
     const hasUsableObservation = normalized.some(row => {
       const value = resolveFieldPath(row, field);
@@ -149,6 +160,7 @@ export const prepareRows = (
     });
     if (hasUsableObservation) fieldTypeEvidence.add(field);
   }
+
   return {
     dataView: createDataView(
       normalized,
@@ -196,5 +208,6 @@ export const preparePlotRegistries = (options: LowerPlotsOptions) => {
   const scaleRegistry = resolveScaleRegistry(options.scaleDefinitions);
   const markRegistry = resolveMarkRegistry(options.markDefinitions);
   const positionAdjustmentRegistry = resolvePositionAdjustmentRegistry(options.positionAdjustmentDefinitions);
+
   return { transformRegistry, transformContext, scaleRegistry, markRegistry, positionAdjustmentRegistry };
 };

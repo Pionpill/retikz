@@ -22,6 +22,7 @@ export const ScatterChartInputEmbedAdapter = createChartInputEmbedAdapter(
       ...(input.guides === undefined ? {} : { guides: input.guides }),
       ...(input.marks === undefined ? {} : { marks: input.marks }),
     });
+
     return buildPointChartRuntime(
       source,
       parts,

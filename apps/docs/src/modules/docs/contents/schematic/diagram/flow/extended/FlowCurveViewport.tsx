@@ -9,6 +9,7 @@ import { browserMeasurer } from '@/modules/docs/components/component-preview/van
 
 /** 固定端点取景的曲线示例 */
 export type FlowCurveViewportProps = Readonly<{ diagram: ReactElement<FlowDiagramProps>; orthogonal?: boolean }>;
+
 /** 使用当前编译的端点中点定位，避免曲线包络改变时产生二次校正 */
 export const FlowCurveViewport: FC<FlowCurveViewportProps> = props => {
   const { diagram, orthogonal = false } = props;
@@ -26,6 +27,7 @@ export const FlowCurveViewport: FC<FlowCurveViewportProps> = props => {
     );
     const a = result.spatialHandles.entries.find(handle => handle.id === 'element:a')!.geometry.bounds;
     const b = result.spatialHandles.entries.find(handle => handle.id === 'element:b')!.geometry.bounds;
+
     return {
       x: (a.x + a.width / 2 + b.x + b.width / 2) / 2 - 300,
       y: a.y + a.height / 2 - (orthogonal ? 65 : 220),
@@ -33,5 +35,6 @@ export const FlowCurveViewport: FC<FlowCurveViewportProps> = props => {
       height: orthogonal ? 260 : 340,
     };
   }, [diagram, theme, themeStyles, orthogonal]);
+
   return cloneElement(diagram, { viewBox });
 };

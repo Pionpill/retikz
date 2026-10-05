@@ -45,6 +45,7 @@ afterAll(() => {
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
+
 const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
 
 afterEach(() => {
@@ -92,13 +93,18 @@ describe('ComponentPreview 资源加载', () => {
           });
           const error = container.querySelector<HTMLElement>('.text-destructive');
           if (error) throw new Error(error.textContent);
+
           expect(container.querySelector('[data-slot="preview-workspace"] svg')).not.toBeNull();
         },
         { timeout: 15_000 },
       );
+
       expect(container.querySelector('button[aria-label="Theme style"]')).toBeNull();
+
       const darkButton = container.querySelector<HTMLButtonElement>('button[aria-label="Preview theme dark"]');
+
       expect(darkButton).not.toBeNull();
+
       const preview = container.querySelector('[data-slot="preview-workspace"]');
       const shapes = () =>
         Array.from(preview?.querySelectorAll('svg [fill]') ?? []).map(shape => ({
@@ -107,8 +113,11 @@ describe('ComponentPreview 资源加载', () => {
         }));
       const lightShapes = shapes();
       act(() => useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Clean));
+
       expect(shapes()).toEqual(lightShapes);
+
       act(() => darkButton?.click());
+
       expect(shapes()).not.toEqual(lightShapes);
     },
     20_000,
@@ -118,12 +127,14 @@ describe('ComponentPreview 资源加载', () => {
     const segments = ['kernel', 'components', 'introduction'];
     const name = '/about/blog/core-philosophy/pipeline';
     const prefix = '../../contents/about/blog/core-philosophy/pipeline';
+
     expect(buildControlsKey(segments, name)).toBe(`${prefix}.controls.ts`);
     expect(buildLangControlsKey(segments, name, 'en')).toBe(`${prefix}.en.controls.ts`);
     expect(buildIrJsonKey(segments, name)).toBe(`${prefix}.ir.json`);
     expect(buildVanillaKey(segments, name)).toBe(`${prefix}.vanilla.ts`);
     expect(buildSourceFileKey(segments, `${name}.i18n.ts`)).toBe(`${prefix}.i18n.ts`);
   });
+
   it.each(['zh', 'en'])('跨目录引用加载同一份 demo 与源码（%s）', async lang => {
     const request = {
       segments: ['about', 'blog', 'core-philosophy'],
@@ -139,6 +150,7 @@ describe('ComponentPreview 资源加载', () => {
       segments: ['kernel', 'components', 'introduction'],
       name: '/about/blog/core-philosophy/pipeline',
     });
+
     expect(local.status).toBe('ready');
     expect(shared).toEqual(local);
   });
@@ -152,6 +164,7 @@ describe('ComponentPreview 资源加载', () => {
       controlsDisabled: false,
       sourceFiles: [],
     });
+
     expect(result).toEqual({
       status: 'missing',
       key: '../../contents/about/blog/core-philosophy/missing-demo.demo.tsx',
@@ -182,9 +195,11 @@ describe('ComponentPreview 资源加载', () => {
 
     expect(rawLoader).toBeDefined();
     expect(moduleLoader).toBeDefined();
+
     if (rawLoader === undefined || moduleLoader === undefined) return;
 
     const [source, module] = await Promise.all([rawLoader(), moduleLoader()]);
+
     expect(source).toContain('browserMeasurer');
     expect(source).toContain('renderToSvgString');
     expect(module.svg).toContain('<svg');
@@ -234,6 +249,7 @@ describe('ComponentPreview 资源加载', () => {
       () => {
         const error = container.querySelector<HTMLElement>('.text-destructive');
         if (error) throw new Error(error.textContent);
+
         expect(container.querySelector('[data-slot="preview-workspace"]')).toBeInstanceOf(HTMLElement);
       },
       { timeout: 10_000 },

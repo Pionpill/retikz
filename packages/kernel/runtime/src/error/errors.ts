@@ -15,14 +15,19 @@ type RetikzRuntimeErrorDetails = Readonly<{
 export class RetikzRuntimeError extends RetikzError<RetikzRuntimeErrorCode, RetikzRuntimeErrorDetails> {
   /** 稳定错误分类 */
   readonly code: RetikzRuntimeErrorCode;
+
   /** 发生失败的 Runtime 阶段 */
   readonly phase: string;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
+
   /** 可选来源归属，例如 Source key 或 participant key */
   readonly owner?: string;
+
   /** 可选 Computation context */
   readonly computation?: RuntimeComputationId;
+
   /** cleanup 等 secondary diagnostics */
   readonly diagnostics: ReadonlyArray<RuntimeDiagnostic>;
 

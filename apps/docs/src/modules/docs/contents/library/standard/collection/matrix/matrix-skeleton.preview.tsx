@@ -3,6 +3,7 @@ import { Matrix } from '@retikz/standard-react/collection';
 
 /** 本节图形的交互参数 */
 export type MatrixPreviewValues = { rows: number; columns: number; mode: 'empty' | 'symbols'; index: 'none' | 'auto' };
+
 /** 按当前参数绘制矩阵 */
 export const renderMatrixPreview = (values: MatrixPreviewValues) => {
   const skeleton =

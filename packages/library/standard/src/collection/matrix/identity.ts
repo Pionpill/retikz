@@ -21,5 +21,6 @@ export const getMatrixCellId = (matrixId: string, row: number, column: number): 
       message: 'Matrix cell identity requires a nonblank id and nonnegative integer coordinates.',
       details: { matrixId, row, column },
     });
+
   return `${matrixId}-${row}-${column}`;
 };

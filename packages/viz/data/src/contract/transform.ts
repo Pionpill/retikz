@@ -226,9 +226,11 @@ export const extractTransformKind = (schema: ZodType): string => {
   if (!(schema instanceof ZodObject)) {
     throw new RetikzDataError('data: transform registration schema must be a ZodObject with a literal kind field');
   }
+
   const kindSchema = schema.shape.kind;
   if (!(kindSchema instanceof ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
     throw new RetikzDataError('data: transform registration schema must declare kind as a non-empty z.literal string');
   }
+
   return kindSchema.value;
 };

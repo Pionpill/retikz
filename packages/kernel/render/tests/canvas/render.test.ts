@@ -83,6 +83,7 @@ const createSpyCanvasContext = (): SpyCanvasContext => {
     stroke: record('stroke'),
     transform: record('transform'),
   };
+
   return context;
 };
 
@@ -202,9 +203,12 @@ describe('renderToCanvas 规格', () => {
 
     const rectIndex = context.calls.findIndex(call => call.name === 'rect');
     const lineIndex = context.calls.findIndex(call => call.name === 'lineTo');
+
     expect(rectIndex).toBeGreaterThanOrEqual(0);
     expect(lineIndex).toBeGreaterThan(rectIndex);
+
     const fillIndices = context.calls.flatMap((call, index) => (call.name === 'fill' ? [index] : []));
+
     expect(fillIndices).toHaveLength(3);
     expect(context.calls.some(call => call.name === 'createLinearGradient')).toBe(true);
     expect(context.calls.some(call => call.name === 'createPattern')).toBe(true);

@@ -45,6 +45,7 @@ export const resolveDropShadow = (shadow: ShadowPreset | IRDropShadow | undefine
   const merged: Omit<IRDropShadow, 'preset'> = { ...(base ?? {}), ...explicit };
 
   if (merged.offsetX === undefined || merged.offsetY === undefined) return undefined;
+
   return {
     ...merged,
     offsetX: merged.offsetX,
@@ -62,5 +63,6 @@ export const resolveDashPattern = (
   if (dashPattern !== undefined) return dashPattern;
   if (dashed) return DASHED_PATTERN;
   if (dotted) return DOTTED_PATTERN;
+
   return undefined;
 };

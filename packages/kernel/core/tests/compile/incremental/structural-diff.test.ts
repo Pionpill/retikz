@@ -13,8 +13,11 @@ import type { CoreChange, IRScene } from '../../../src';
 import { CompileWarningCode, CORE_SOURCE_KEY, CoreSourceDefinition, createCoreComputation } from '../../../src';
 
 const rootIdentity = createRuntimeIdentity(CORE_SOURCE_KEY, ['root']);
+
 const nodeIdentity = (id: string) => createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'node', id]);
+
 const scopeIdentity = (id: string) => createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'scope', id]);
+
 const scopedNodeIdentity = (scopeId: string, id: string) =>
   createRuntimeIdentity(CORE_SOURCE_KEY, ['root', 'scope', scopeId, 'node', id]);
 
@@ -39,6 +42,7 @@ const updateWithHint = (initial: IRScene, next: IRScene, changes: ReadonlyArray<
     initialSnapshots: [createRuntimeSourceInput(CoreSourceDefinition, initial)],
   });
   const baseRevision = session.revision();
+
   return session.update({
     baseRevision,
     sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next, createRuntimeChangeSet(baseRevision, changes))],

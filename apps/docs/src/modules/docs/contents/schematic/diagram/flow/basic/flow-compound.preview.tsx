@@ -17,6 +17,7 @@ export type FlowCompoundPreviewValues = {
 };
 
 const flowDirections: ReadonlyArray<FlowDirection> = ['up', 'right', 'down', 'left'];
+
 const flowLayoutAlignments: ReadonlyArray<FlowLayoutAlignment> = ['start', 'center', 'end'];
 
 /** 将 controls 值收窄为公开 Flow direction */

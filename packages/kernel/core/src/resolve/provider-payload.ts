@@ -22,6 +22,7 @@ export type ParseProviderPayloadInput<TOutput> = {
 /** 格式化 Zod issue 的嵌套字段路径，用于补充 provider payload 定位信息 */
 const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string => {
   let formatted = '';
+
   for (const segment of path) {
     if (typeof segment === 'number') {
       formatted += `[${segment}]`;
@@ -29,14 +30,17 @@ const formatIssuePath = (path: ReadonlyArray<PropertyKey>): string => {
       formatted += `${formatted.length === 0 ? '' : '.'}${String(segment)}`;
     }
   }
+
   return formatted;
 };
 
 /** 为 path kind 的完整 subject schema 失败补充 schema 内字段定位 */
 const appendPathKindIssuePath = (capability: string, payloadName: string, irPath: string, error: unknown): string => {
   if (capability !== 'path kind' || payloadName !== 'path' || !(error instanceof ZodError)) return irPath;
+
   const issuePath = formatIssuePath(error.issues[0]?.path ?? []);
   if (issuePath.length === 0) return irPath;
+
   return `${irPath}${issuePath.startsWith('[') ? '' : '.'}${issuePath}`;
 };
 

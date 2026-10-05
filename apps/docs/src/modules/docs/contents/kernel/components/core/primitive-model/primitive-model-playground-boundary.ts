@@ -5,7 +5,9 @@ import type { JsonObject } from '@retikz/foundation';
 import { z } from 'zod';
 
 const shapeChoiceSchema = z.enum(['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector']);
+
 const boundaryChoiceSchema = z.enum(['shape', 'circle', 'rectangle', 'ellipse']);
+
 const boundaryFitSchema = z.enum(['tight', 'bounds']);
 
 /** 图元模型 playground 的可选视觉形状 */
@@ -84,6 +86,7 @@ const guideRect = (
     boundary === 'rectangle' || fit === 'bounds'
       ? boundsConnectionEnvelope(rect, kind)
       : (visual.definition.connectionEnvelope?.(rect, kind, visual.params) ?? boundsConnectionEnvelope(rect, kind));
+
   return {
     ...rect,
     width: (envelope.halfWidth + gap) * 2,
@@ -117,6 +120,7 @@ export const primitiveModelBoundaryGuideShape = defineShape<BoundaryGuideParams>
       yield* rectangle.emit(resolvedRect, style, round, {});
       return;
     }
+
     yield* ellipseShape.emit(resolvedRect, style, round, {});
   },
 });

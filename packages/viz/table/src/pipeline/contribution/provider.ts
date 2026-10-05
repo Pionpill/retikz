@@ -16,11 +16,17 @@ import { lowerTables } from '../resolve';
 import type { LowerTablesOptions } from '../types';
 
 const TableRuntimeEnvelopeMarker = Symbol('retikz.table.runtimeEnvelope');
+
 const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';
+
 const FORMATTER_DEFINITIONS_KEY = 'formatterDefinitions';
+
 const PRESENTATION_DEFINITIONS_KEY = 'presentationDefinitions';
+
 const VISUAL_SCALE_DEFINITIONS_KEY = 'visualScaleDefinitions';
+
 const TABLE_THEME_STYLES_KEY = 'tableThemeStyles';
+
 const DATA_OPTIONS_KEYS = new Set([
   'formatDefinitions',
   'transformDefinitions',
@@ -32,6 +38,7 @@ const DATA_OPTIONS_KEYS = new Set([
   'rowSelectorImplementations',
   'regressionImplementations',
 ]);
+
 const NestedDefinitionReference = '@@retikz/table/nested-definition';
 
 /** Table runtime-only envelope；只在宿主聚合阶段存在 */
@@ -61,6 +68,7 @@ const mergeByIdentity = <T>(
   label: string,
 ): Array<T> => {
   const merged = new Map<string, T>();
+
   for (const entries of values) {
     for (const value of entries ?? []) {
       const key = keyOf(value);
@@ -68,15 +76,18 @@ const mergeByIdentity = <T>(
       if (current !== undefined && !Object.is(current, value)) {
         throw new RetikzTableError(`table: runtime contribution ${label} conflict for "${key}"`);
       }
+
       if (current === undefined) merged.set(key, value);
     }
   }
+
   return [...merged.values()];
 };
 
 /** 合并当前与未来的非 definition lowering options */
 const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>): Record<string, unknown> => {
   const merged: Record<string, unknown> = {};
+
   for (const options of optionSets) {
     for (const [key, value] of Object.entries(options as Record<string, unknown>)) {
       if (
@@ -89,12 +100,15 @@ const mergeSharedLowerOptions = (optionSets: ReadonlyArray<LowerTablesOptions>):
         DATA_OPTIONS_KEYS.has(key)
       )
         continue;
+
       if (Object.hasOwn(merged, key) && !Object.is(merged[key], value)) {
         throw new RetikzTableError(`table: runtime contribution lower option "${key}" conflict`);
       }
+
       merged[key] = value;
     }
   }
+
   return merged;
 };
 
@@ -126,6 +140,7 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
     definition => definition.name,
     'theme style definition',
   );
+
   return {
     ...mergeSharedLowerOptions(optionSets),
     formatDefinitions: mergeByIdentity(
@@ -185,6 +200,7 @@ const mergeLowerOptions = (envelopes: ReadonlyArray<TableRuntimeEnvelope>): Lowe
 const makeTableDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
   const envelopes: Array<TableRuntimeEnvelope> = [];
   const datasetEntries: Array<[string, unknown]> = [];
+
   for (const [reference, value] of Object.entries(mergedDatasets)) {
     const envelope = runtimeEnvelopeOf(value);
     if (envelope === undefined) datasetEntries.push([reference, value]);
@@ -192,6 +208,7 @@ const makeTableDefinition: CoreDependencyProvider['makeDefinition'] = mergedData
   }
 
   const datasets = Object.fromEntries(datasetEntries) as ExternalDatasets;
+
   return lowerTables(datasets, mergeLowerOptions(envelopes))[0];
 };
 

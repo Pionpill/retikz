@@ -8,8 +8,10 @@ import type { SvgAttrs } from '../types';
  */
 export const compact = (attrs: SvgAttrs): SvgAttrs => {
   const out: Record<string, unknown> = {};
+
   for (const [k, v] of Object.entries(attrs)) {
     if (v !== undefined) out[k] = v;
   }
+
   return out as SvgAttrs;
 };

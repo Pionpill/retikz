@@ -44,4 +44,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['Matrix.skeleton', 'Matrix.index'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

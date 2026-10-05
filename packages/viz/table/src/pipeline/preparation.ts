@@ -40,6 +40,7 @@ const tableDataRegistries = (options: TableDataOptions) => {
     rowSelectorRegistry: resolveRowSelectorRegistry(options.rowSelectorDefinitions),
     regressionRegistry: resolveRegressionRegistry(options.regressionDefinitions),
   };
+
   return { transformRegistry, context };
 };
 
@@ -49,9 +50,11 @@ const tableRowsResult = (spec: IRTable, rows: Array<ExternalRow>, options: Table
   const registries = tableDataRegistries(options);
   const required = new Set<string>();
   const derived = new Set<string>();
+
   const addField = (field: string | undefined): void => {
     if (field !== undefined) required.add(field);
   };
+
   for (const declaration of spec.transform ?? [])
     collectTransformFields(
       declaration.operation,
@@ -60,6 +63,7 @@ const tableRowsResult = (spec: IRTable, rows: Array<ExternalRow>, options: Table
       registries.transformRegistry,
       { ...registries.context, model: spec.data?.model },
     );
+
   if (spec.structure.kind === 'detail')
     for (const column of (spec as IRDetailTable).structure.columns) required.add(column.field);
   if (spec.data?.model === undefined) for (const field of required) if (!derived.has(field)) fields.add(field);
@@ -80,6 +84,7 @@ const tableRowsResult = (spec: IRTable, rows: Array<ExternalRow>, options: Table
         rows.some(row => resolveFieldPath(row, name) != null)
           ? formats.fieldTypeMap.get(name)
           : undefined);
+
       return {
         name,
         ...(type === undefined ? {} : { type }),
@@ -87,6 +92,7 @@ const tableRowsResult = (spec: IRTable, rows: Array<ExternalRow>, options: Table
       };
     }),
   );
+
   return { rows: view.rows, model: view.model };
 };
 
@@ -104,12 +110,15 @@ const resolveTableDataImpl = (
 ): DataTransformResult | undefined => {
   assertTableDataScope(spec);
   if (spec.data === undefined || spec.transform === undefined) return undefined;
+
   for (const declaration of spec.transform) {
     if (resolveDataExecution(undefined, spec.dataExecution, declaration.dataExecution).mode !== 'builtin')
       throw new RetikzTableError('Table external/hybrid transforms require async processing');
   }
+
   if (!Object.hasOwn(datasets, spec.data.reference))
     throw new RetikzTableError(`Table dataset "${spec.data.reference}" not found`);
+
   const result = tableRowsResult(spec, datasets[spec.data.reference], options);
   const { transformRegistry, context } = tableDataRegistries(options);
   const completeContext = {
@@ -136,6 +145,7 @@ const resolveTableDataImpl = (
     spec.transform.map(declaration => declaration.operation),
     { registry: transformRegistry, context: completeContext },
   );
+
   return { rows: view.rows, model: view.model };
 };
 
@@ -147,10 +157,12 @@ const prepareTableDataImpl = async <TSource = never>(
 ): Promise<TableDataPreparation> => {
   assertTableDataScope(spec);
   let consumed = false;
+
   const once = (): void => {
     if (consumed) throw new RetikzTableError('Table data preparation can execute only once');
     consumed = true;
   };
+
   if (spec.data === undefined)
     return {
       execute: () => {
@@ -158,9 +170,11 @@ const prepareTableDataImpl = async <TSource = never>(
         return Promise.resolve(undefined);
       },
     };
+
   const reference = spec.data.reference;
   if (!Object.hasOwn(request.dataBindings, reference))
     throw new RetikzTableError(`Table data binding "${reference}" not found`);
+
   const binding = request.dataBindings[reference];
   let input: DataTransformStageInput<TSource>;
   if (binding.kind === 'rows') input = { kind: 'result', result: tableRowsResult(spec, binding.rows, options) };
@@ -178,11 +192,13 @@ const prepareTableDataImpl = async <TSource = never>(
         const copy = { ...row };
         Reflect.deleteProperty(copy, SOURCE_INDEX);
         Reflect.deleteProperty(copy, SOURCE_INDICES);
+
         return copy;
       });
       input = { kind: 'result', result: { ...binding.result, rows } };
     }
   }
+
   if (binding.kind === 'rows' && spec.transform === undefined && input.kind === 'result') {
     const result = input.result;
     return {
@@ -192,6 +208,7 @@ const prepareTableDataImpl = async <TSource = never>(
       },
     };
   }
+
   const { transformRegistry, context } = tableDataRegistries(options);
   const descriptor = describeDataTransformInput(input);
   const resolution = resolveDataTransforms(spec.transform ?? [], descriptor.model, { transformRegistry, ...context });
@@ -205,6 +222,7 @@ const prepareTableDataImpl = async <TSource = never>(
     throw new RetikzTableError(
       `Table data preparation: ${preparation.diagnostics.map(diagnostic => diagnostic.message).join('; ')}`,
     );
+
   return {
     execute: async () => {
       once();

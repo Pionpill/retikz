@@ -292,11 +292,17 @@ const markValueSchema = <T extends ZodType>(
   ]).describe(`${schemaDescription}: field-bound datum value or constant value`);
 
 const StylePaintSchema = union([CssColorSchema, PaintSchema]);
+
 const StyleNumberSchema = number();
+
 const StyleShadowSchema = union([zodEnum(ShadowPreset), DropShadowSchema]);
+
 const StyleBlendModeSchema = zodEnum(BlendMode);
+
 const StyleBoxSpacingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]);
+
 const StyleAxisScaleSchema = union([PositiveNumberSchema, AxisScaleSchema]);
+
 const StyleBoxSizeSchema = union([NonNegativeNumberSchema, BoxSizeSchema]);
 
 export const PointFillStyleSchema = markValueSchema(
@@ -305,150 +311,175 @@ export const PointFillStyleSchema = markValueSchema(
   'Constant core Node fill paint',
   'point fill style value',
 );
+
 export const PointColorStyleSchema = markValueSchema(
   CssColorSchema,
   'Data field path bound to point color',
   'Constant point color',
   'point color value',
 );
+
 export const PointSizeStyleSchema = markValueSchema(
   NonNegativeNumberSchema,
   'Data field path bound to point size',
   'Constant final glyph radius',
   'point size value',
 );
+
 export const PointShapeStyleSchema = markValueSchema(
   ShapeValueSchema,
   'Data field path bound to point shape',
   'Constant core Node shape name or shape ref',
   'point shape value',
 );
+
 export const PointStrokeStyleSchema = markValueSchema(
   StylePaintSchema,
   'Data field path bound to point stroke paint',
   'Constant core Node stroke paint',
   'point stroke style value',
 );
+
 export const PointNumberStyleSchema = markValueSchema(
   StyleNumberSchema,
   'Data field path bound to a numeric point style value',
   'Constant numeric style value',
   'point numeric style value',
 );
+
 export const PointNonnegativeNumberStyleSchema = markValueSchema(
   NonNegativeNumberSchema,
   'Data field path bound to a non-negative point style value',
   'Constant non-negative style value',
   'point non-negative numeric style value',
 );
+
 export const PointOpacityStyleSchema = markValueSchema(
   OpacitySchema,
   'Data field path bound to an opacity style value',
   'Constant opacity value 0..1',
   'point opacity style value',
 );
+
 export const PointZIndexStyleSchema = markValueSchema(
   number().int(),
   'Data field path bound to zIndex',
   'Constant integer zIndex value',
   'point zIndex style value',
 );
+
 export const NodePositiveNumberStyleSchema = markValueSchema(
   PositiveNumberSchema,
   'Data field path bound to a positive node style value',
   'Constant positive node style value',
   'node positive numeric style value',
 );
+
 export const NodeTextAlignStyleSchema = markValueSchema(
   zodEnum(NodeTextAlign),
   'Data field path bound to node text align',
   'Constant core Node align',
   'node text align style value',
 );
+
 export const NodeBooleanStyleSchema = markValueSchema(
   boolean(),
   'Data field path bound to a boolean node style value',
   'Constant boolean node style value',
   'node boolean style value',
 );
+
 export const NodeDashPatternStyleSchema = markValueSchema(
   StrokeDashPatternSchema,
   'Data field path bound to node dashPattern',
   'Constant core Node dashPattern',
   'node dashPattern style value',
 );
+
 export const NodeFontStyleSchema = markValueSchema(
   FontSchema,
   'Data field path bound to node font',
   'Constant core Node font',
   'node font style value',
 );
+
 export const NodeBoundaryStyleSchema = markValueSchema(
   BoundarySchema,
   'Data field path bound to node boundary',
   'Constant core Node boundary',
   'node boundary style value',
 );
+
 export const NodeBoxSpacingStyleSchema = markValueSchema(
   StyleBoxSpacingSchema,
   'Data field path bound to node box spacing',
   'Constant core Node box spacing',
   'node box spacing style value',
 );
+
 export const NodeAxisScaleStyleSchema = markValueSchema(
   StyleAxisScaleSchema,
   'Data field path bound to node scale',
   'Constant core Node scale',
   'node scale style value',
 );
+
 export const NodeBoxSizeStyleSchema = markValueSchema(
   StyleBoxSizeSchema,
   'Data field path bound to node box size',
   'Constant core Node box size',
   'node box size style value',
 );
+
 export const ShadowStyleSchema = markValueSchema(
   StyleShadowSchema,
   'Data field path bound to shadow',
   'Constant core shadow preset or object',
   'shadow style value',
 );
+
 export const BlendModeStyleSchema = markValueSchema(
   StyleBlendModeSchema,
   'Data field path bound to blendMode',
   'Constant core blendMode',
   'blendMode style value',
 );
+
 export const PathLineCapStyleSchema = markValueSchema(
   PathLineCapSchema,
   'Data field path bound to a path lineCap value',
   'Constant core Path lineCap',
   'path lineCap style value',
 );
+
 export const PathLineJoinStyleSchema = markValueSchema(
   PathLineJoinSchema,
   'Data field path bound to a path lineJoin value',
   'Constant core Path lineJoin',
   'path lineJoin style value',
 );
+
 export const PathRoundedCornersStyleSchema = markValueSchema(
   NonNegativeNumberSchema,
   'Data field path bound to path roundedCorners',
   'Constant core Path roundedCorners radius',
   'path roundedCorners style value',
 );
+
 export const PathFillRuleStyleSchema = markValueSchema(
   PathFillRuleSchema,
   'Data field path bound to path fillRule',
   'Constant core Path fillRule',
   'path fillRule style value',
 );
+
 export const PathThicknessStyleSchema = markValueSchema(
   zodEnum(PathThickness),
   'Data field path bound to path thickness',
   'Constant core Path thickness preset',
   'path thickness style value',
 );
+
 export const PathScaleStyleSchema = markValueSchema(
   PathScaleSchema,
   'Data field path bound to path scale',
@@ -911,6 +942,7 @@ export const ReferenceMarkSchema = strictObject({
 })
   .superRefine((mark, ctx) => {
     if (mark.label === undefined) return;
+
     const usesNodeHost = mark.kind === ReferenceMarkKind.Region || mark.xTo !== undefined || mark.yTo !== undefined;
     const result = usesNodeHost
       ? MarkNodeLabelListSchema.safeParse(mark.label)
@@ -956,6 +988,7 @@ export const RelationPathGeometrySchema = strictObject({
         message: 'relation mark cannot use route and routing together; use explicit route steps or a routing strategy',
       });
     }
+
     if (path.via !== undefined && path.route !== undefined) {
       ctx.addIssue({
         code: 'custom',
@@ -1032,6 +1065,7 @@ export const RelationMarkSchema = strictObject({
         message: 'path relation marks cannot use ribbon options',
       });
     }
+
     if (kind === RelationGeometryKind.Ribbon && mark.path !== undefined) {
       ctx.addIssue({
         code: 'custom',
@@ -1042,6 +1076,7 @@ export const RelationMarkSchema = strictObject({
             : 'relation interpolation override is not supported for ribbon geometry',
       });
     }
+
     if (kind === RelationGeometryKind.Ribbon && mark.ribbon === undefined) {
       ctx.addIssue({
         code: 'custom',
@@ -1049,6 +1084,7 @@ export const RelationMarkSchema = strictObject({
         message: 'ribbon relation marks require ribbon options',
       });
     }
+
     if (mark.endpoints !== undefined) {
       if (kind !== RelationGeometryKind.Path) {
         ctx.addIssue({
@@ -1057,6 +1093,7 @@ export const RelationMarkSchema = strictObject({
           message: 'relation endpoint glyphs require a path relation',
         });
       }
+
       if (!('project' in mark.source) || !('project' in mark.target)) {
         ctx.addIssue({
           code: 'custom',
@@ -1064,6 +1101,7 @@ export const RelationMarkSchema = strictObject({
           message: 'relation endpoint glyphs require projected source and target refs',
         });
       }
+
       for (const [role, ref] of [
         ['source', mark.source],
         ['target', mark.target],
@@ -1082,6 +1120,7 @@ export const RelationMarkSchema = strictObject({
           });
         }
       }
+
       if (mark.path?.via !== undefined || mark.path?.route !== undefined) {
         ctx.addIssue({
           code: 'custom',

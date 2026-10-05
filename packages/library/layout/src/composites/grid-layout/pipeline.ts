@@ -79,6 +79,7 @@ const trackSourceKindOf = (track: CanonicalGridLayout['columns'][number]): Layou
   if (track.kind === 'fixed') return LayoutTrackSourceKind.Fixed;
   if (track.kind === 'fraction') return LayoutTrackSourceKind.Fraction;
   if (track.kind === 'minmax') return LayoutTrackSourceKind.Minmax;
+
   return track.mode === 'minimum' ? LayoutTrackSourceKind.ContentMinimum : LayoutTrackSourceKind.ContentNatural;
 };
 
@@ -144,6 +145,7 @@ const finiteYLimitOf = (
       naturalContribution: 0,
     }).allocationSize;
   }
+
   return allocation === undefined ? undefined : Math.max(0, allocation - padding.top - padding.bottom);
 };
 
@@ -180,10 +182,12 @@ const placedGuideCoordinate = (
     value => value.dimension === LayoutAlignmentGuideDimension.Y && value.name === name,
   );
   if (guide !== undefined) return { coordinate: guide.position + placed.translation.y, real: true };
+
   const edge =
     name === LayoutAlignmentGuideName.FirstBaseline
       ? placed.result.allocationBounds.y
       : placed.result.allocationBounds.y + placed.result.allocationBounds.height;
+
   return { coordinate: edge + placed.translation.y, real: false };
 };
 
@@ -194,6 +198,7 @@ const outgoingRowGuide = (name: 'first-baseline' | 'last-baseline', items: Reado
   if (participants.length > 0) {
     const candidates = participants.map(item => ({ item, ...placedGuideCoordinate(item, name) }));
     const canonical = candidates.find(candidate => candidate.real) ?? candidates[0];
+
     for (const candidate of candidates) {
       if (
         Math.abs(candidate.coordinate - canonical.coordinate) >
@@ -206,12 +211,16 @@ const outgoingRowGuide = (name: 'first-baseline' | 'last-baseline', items: Reado
         });
       }
     }
+
     return canonical.coordinate;
   }
+
   const traversal = name === LayoutAlignmentGuideName.FirstBaseline ? ordered : [...ordered].reverse();
   const real = traversal.map(item => placedGuideCoordinate(item, name)).find(candidate => candidate.real);
   if (real !== undefined) return real.coordinate;
+
   const fallback = traversal[0];
+
   return placedGuideCoordinate(fallback, name).coordinate;
 };
 
@@ -237,6 +246,7 @@ export const compileGridLayout = (
       overlap: node.overlap,
     },
   );
+
   const columns = materializeGridTracks(node.columns, node.implicitColumn, placements.columnCount);
   const rows = materializeGridTracks(node.rows, node.implicitRow, placements.rowCount);
   const measured: ReadonlyArray<MeasuredGridItem> = authoredItems.map((authored, sourceIndex) => {
@@ -251,6 +261,7 @@ export const compileGridLayout = (
       rowSpan: placement.rowSpan,
     });
   });
+
   const finiteYLimit = finiteYLimitOf(node, context.proposal.y, padding);
   const xCrossProposal = finiteYLimit === undefined ? intrinsicProposal('natural') : boundedProposal(finiteYLimit);
   const xMinimum = measured.map(item =>
@@ -259,12 +270,14 @@ export const compileGridLayout = (
   const xNatural = measured.map(item =>
     requiredProbe(context, item.sourceIndex, { x: intrinsicProposal('natural'), y: xCrossProposal }),
   );
+
   const columnConstraints: ReadonlyArray<GridTrackConstraint> = measured.map((item, index) => ({
     start: item.columnStart,
     span: item.columnSpan,
     minimum: trackTargetOf(xMinimum[index], 'x', item.margin, node.columnGap * (item.columnSpan - 1)),
     natural: trackTargetOf(xNatural[index], 'x', item.margin, node.columnGap * (item.columnSpan - 1)),
   }));
+
   const intrinsicColumns = solveGridTracks(columns, columnConstraints, {
     gap: node.columnGap,
     distribution: node.justifyContent,
@@ -276,6 +289,7 @@ export const compileGridLayout = (
     minimumContribution: axisContribution(intrinsicColumns.minimumProfile, node.columnGap, padding.left, padding.right),
     naturalContribution: axisContribution(intrinsicColumns.naturalProfile, node.columnGap, padding.left, padding.right),
   }).allocationSize;
+
   const preliminary = contentRectOf({ x: 0, y: 0, width, height: 0 }, padding);
   const solvedColumns = solveGridTracks(columns, columnConstraints, {
     gap: node.columnGap,
@@ -293,6 +307,7 @@ export const compileGridLayout = (
     const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
     const innerWidth = Math.max(0, column.size - item.margin.left - item.margin.right);
     const justify = item.authored.justifySelf ?? node.justifyItems;
+
     return requiredProbe(context, item.sourceIndex, {
       x: itemAxisProposal(justify, innerWidth),
       y: intrinsicProposal('minimum'),
@@ -302,6 +317,7 @@ export const compileGridLayout = (
     const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
     const innerWidth = Math.max(0, column.size - item.margin.left - item.margin.right);
     const justify = item.authored.justifySelf ?? node.justifyItems;
+
     return requiredProbe(context, item.sourceIndex, {
       x: itemAxisProposal(justify, innerWidth),
       y: intrinsicProposal('natural'),
@@ -313,9 +329,11 @@ export const compileGridLayout = (
     minimum: trackTargetOf(yMinimum[index], 'y', item.margin, node.rowGap * (item.rowSpan - 1)),
     natural: trackTargetOf(yNatural[index], 'y', item.margin, node.rowGap * (item.rowSpan - 1)),
   }));
+
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
     const singleRow = measured.filter(item => item.rowStart === rowIndex && item.rowSpan === 1);
     if (singleRow.length === 0) continue;
+
     const minimumMetrics = resolveGridRowMetrics(
       singleRow.map(item => ({
         sourceIndex: item.sourceIndex,
@@ -339,6 +357,7 @@ export const compileGridLayout = (
       natural: naturalMetrics.size,
     });
   }
+
   const intrinsicRows = solveGridTracks(rows, rowConstraints, {
     gap: node.rowGap,
     distribution: node.alignContent,
@@ -363,6 +382,7 @@ export const compileGridLayout = (
     const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
     const row = gridSpanRange(positionedRows, item.rowStart, item.rowSpan);
     const slot = gridItemSlot({ x: column.start, y: row.start, width: column.size, height: row.size }, item.margin);
+
     return requiredProbe(context, item.sourceIndex, {
       x: itemAxisProposal(item.authored.justifySelf ?? node.justifyItems, slot.width),
       y: itemAxisProposal(item.authored.alignSelf ?? node.alignItems, slot.height),
@@ -379,7 +399,9 @@ export const compileGridLayout = (
       })),
     );
   });
+
   const placedBySource: Array<PlacedGridItem | undefined> = Array.from({ length: measured.length });
+
   for (const item of measured) {
     const result = finalResults[item.sourceIndex];
     const column = gridSpanRange(positionedColumns, item.columnStart, item.columnSpan);
@@ -417,6 +439,7 @@ export const compileGridLayout = (
     } else {
       y = alignAllocationInSlot(slot, result.allocationBounds, 'y', alignment);
     }
+
     placedBySource[item.sourceIndex] = Object.freeze({
       sourceIndex: item.sourceIndex,
       columnStart: item.columnStart,
@@ -430,6 +453,7 @@ export const compileGridLayout = (
       translation: Object.freeze({ x, y }),
     });
   }
+
   const outputChildren = placedBySource.map(placed => {
     if (placed === undefined) {
       throw new RetikzLayoutError({
@@ -438,6 +462,7 @@ export const compileGridLayout = (
         details: { layout: 'grid', phase: 'placement' },
       });
     }
+
     return context.replay(placed.result, {
       transforms: [{ kind: 'translate', x: placed.translation.x, y: placed.translation.y }],
     });
@@ -473,6 +498,7 @@ export const compileGridLayout = (
       }),
     ]);
   }
+
   const items = placedBySource.map((placed, sourceIndex) => {
     if (placed === undefined) {
       throw new RetikzLayoutError({
@@ -481,10 +507,12 @@ export const compileGridLayout = (
         details: { layout: 'grid', phase: 'artifact' },
       });
     }
+
     const authored = measured[sourceIndex].authored;
     const usesBaseline =
       placed.rowSpan === 1 &&
       (placed.alignment === LayoutAlignment.FirstBaseline || placed.alignment === LayoutAlignment.LastBaseline);
+
     return Object.freeze({
       ...createLayoutArtifactItem({
         key: authored.key,
@@ -507,6 +535,7 @@ export const compileGridLayout = (
       rowSpan: placed.rowSpan,
     });
   });
+
   const trackArtifacts = (tracks: typeof columns, positioned: typeof positionedColumns, explicitCount: number) =>
     positioned.map((track, index) =>
       Object.freeze({
@@ -517,13 +546,16 @@ export const compileGridLayout = (
         implicit: index >= explicitCount,
       }),
     );
+
   const spacing: Array<LayoutSpacingArtifact> = [];
+
   const collectTrackSpacing = (
     axis: LayoutSpacingArtifact['axis'],
     positioned: typeof positionedColumns,
     gap: number,
   ) => {
     if (positioned.length === 0) return;
+
     const mainStart = axis === LayoutAlignmentGuideDimension.X ? content.x : content.y;
     const mainSize = axis === LayoutAlignmentGuideDimension.X ? content.width : content.height;
     const crossStart = axis === LayoutAlignmentGuideDimension.X ? content.y : content.x;
@@ -536,6 +568,7 @@ export const compileGridLayout = (
       crossStart,
       crossSize,
     });
+
     for (let index = 1; index < positioned.length; index += 1) {
       const previous = positioned[index - 1];
       appendLayoutSpacingInterval(spacing, {
@@ -547,6 +580,7 @@ export const compileGridLayout = (
         crossSize,
       });
     }
+
     const last = positioned.at(-1)!;
     appendLayoutSpacing(spacing, {
       kind: LayoutSpacingKind.Distributed,
@@ -557,8 +591,10 @@ export const compileGridLayout = (
       crossSize,
     });
   };
+
   collectTrackSpacing(LayoutAlignmentGuideDimension.X, positionedColumns, node.columnGap);
   collectTrackSpacing(LayoutAlignmentGuideDimension.Y, positionedRows, node.rowGap);
+
   return {
     children: [scope],
     allocationBounds: allocation,

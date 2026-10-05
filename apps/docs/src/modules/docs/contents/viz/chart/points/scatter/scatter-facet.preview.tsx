@@ -18,6 +18,7 @@ export type ScatterFacetPreviewOptions = {
 export const renderScatterFacetPreview = (options: ScatterFacetPreviewOptions) => {
   const { lang, layout, header, panelGap, size, opacity } = options;
   const i18n = scatterFacetI18n[lang];
+
   return (
     <ScatterChart
       rows={fertilityWorkData}

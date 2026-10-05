@@ -58,6 +58,7 @@ describe('Plot Source defaults and rules contract', () => {
     };
 
     const parsed = PlotSchema.parse(source);
+
     expect(parsed).toEqual(source);
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
   });
@@ -65,7 +66,9 @@ describe('Plot Source defaults and rules contract', () => {
   it('拒绝旧 theme root、flat token 与 palette sector', () => {
     for (const key of ['plotThemeTokens', 'plotThemeTokenRules', 'plotTheme']) {
       const result = PlotSchema.safeParse({ ...baseSpec, [key]: {} });
+
       expect(result.success).toBe(false);
+
       if (!result.success) {
         expect(result.error.issues).toEqual(
           expect.arrayContaining([expect.objectContaining({ code: 'unrecognized_keys', path: [] })]),
@@ -74,7 +77,9 @@ describe('Plot Source defaults and rules contract', () => {
     }
 
     const sector = PlotSchema.safeParse({ ...baseSpec, plotDefaults: { palette: { sector: ['#ef4444'] } } });
+
     expect(sector.success).toBe(false);
+
     if (!sector.success) {
       expect(sector.error.issues).toEqual(
         expect.arrayContaining([
@@ -95,7 +100,9 @@ describe('Plot Source defaults and rules contract', () => {
 
     for (const [value, path] of invalid) {
       const result = PlotDefaultsSchema.safeParse(value);
+
       expect(result.success).toBe(false);
+
       if (!result.success)
         expect(result.error.issues.some(issue => issue.path.join('.') === path.join('.'))).toBe(true);
     }
@@ -103,6 +110,7 @@ describe('Plot Source defaults and rules contract', () => {
 
   it('保留 Source palette 的顺序与结构化 shape 引用', () => {
     const shape = ['circle', { type: 'polygon', params: { sides: 5 } }] as const;
+
     expect(PlotShapePaletteSchema.parse(shape)).toEqual(shape);
     expect(PlotShapePaletteSchema.safeParse([{}]).success).toBe(false);
     expect(
@@ -157,6 +165,7 @@ describe('Plot Source defaults and rules contract', () => {
         shape: ['circle'],
       },
     };
+
     expect(PlotThemeResolutionSchema.safeParse(valid).success).toBe(true);
     expect(
       PlotThemeResolutionSchema.safeParse({

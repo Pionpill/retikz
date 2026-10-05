@@ -41,6 +41,7 @@ export const materializeGridTracks = (
       details: { count, explicitCount: explicit.length },
     });
   }
+
   return Object.freeze(Array.from({ length: count }, (_, index) => explicit[index] ?? implicit));
 };
 
@@ -76,6 +77,7 @@ export const gridSpanRange = (
       details: { start, span, trackCount: tracks.length },
     });
   }
+
   return Object.freeze({ start: first.start, size: last.start + last.size - first.start });
 };
 
@@ -97,6 +99,7 @@ export const gridStructuralGuideOffset = (
       real: false,
     });
   }
+
   return Object.freeze({
     offset: Math.min(Math.max(guide.position - result.allocationBounds.y, 0), slotHeight),
     real: true,
@@ -112,6 +115,7 @@ export const resolveGridRowMetrics = (participants: ReadonlyArray<GridBaselinePa
   let lastDescent = 0;
   let hasFirst = false;
   let hasLast = false;
+
   for (const participant of participants) {
     const slotHeight = slotHeightOf(participant.result);
     ordinary = Math.max(
@@ -124,6 +128,7 @@ export const resolveGridRowMetrics = (participants: ReadonlyArray<GridBaselinePa
       firstDescent = Math.max(firstDescent, slotHeight - guide.offset + participant.margin.bottom);
       hasFirst = true;
     }
+
     if (participant.alignment === LayoutAlignment.LastBaseline) {
       const guide = gridStructuralGuideOffset(participant.result, LayoutAlignmentGuideName.LastBaseline);
       lastAscent = Math.max(lastAscent, participant.margin.top + guide.offset);
@@ -131,7 +136,9 @@ export const resolveGridRowMetrics = (participants: ReadonlyArray<GridBaselinePa
       hasLast = true;
     }
   }
+
   const size = Math.max(ordinary, firstAscent + firstDescent, lastAscent + lastDescent);
+
   return Object.freeze({
     size,
     ...(hasFirst ? { firstTarget: firstAscent } : {}),

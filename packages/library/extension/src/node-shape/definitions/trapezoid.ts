@@ -24,6 +24,7 @@ const TrapezoidShapeParamsSchema = strictObject({
 export type TrapezoidShapeParams = ZodInfer<typeof TrapezoidShapeParamsSchema>;
 
 const shortSideOf = (params: TrapezoidShapeParams): Side => params.shortSide ?? 'top';
+
 const shortSideRatioOf = (params: TrapezoidShapeParams): number => params.shortSideRatio ?? 0.72;
 
 /** 根据最终外接矩形生成 Trapezoid 局部顶点 */
@@ -31,6 +32,7 @@ const trapezoidVertices =
   (params: TrapezoidShapeParams) =>
   (halfWidth: number, halfHeight: number): Array<Position> => {
     const ratio = shortSideRatioOf(params);
+
     switch (shortSideOf(params)) {
       case 'top':
         return [
@@ -73,6 +75,7 @@ export const TrapezoidShapeDefinition = defineShape<TrapezoidShapeParams>({
       shortSideOf(params) === 'top' || shortSideOf(params) === 'bottom'
         ? { halfWidth: innerHalfWidth / ratio, halfHeight: innerHalfHeight }
         : { halfWidth: innerHalfWidth, halfHeight: innerHalfHeight / ratio };
+
     return circumscribeRoundedPolygon(
       ExtensionShapeName.Trapezoid,
       innerHalfWidth,

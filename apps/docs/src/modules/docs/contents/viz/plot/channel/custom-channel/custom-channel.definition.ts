@@ -20,14 +20,18 @@ export const intensityChannel = defineNodeChannel<number>({
       if (typeof binding.value !== 'number' || !Number.isFinite(binding.value)) {
         throw new Error('lowerPlots: intensity constant must be a finite number');
       }
+
       const value = clampIntensity(binding.value);
+
       return { resolver: () => value };
     }
+
     if (binding.field === undefined) return undefined;
 
     const field = binding.field;
     const values = ctx.rows.map(row => Number(row[field])).filter(Number.isFinite);
     if (values.length === 0) return undefined;
+
     const lo = Math.min(...values);
     const hi = Math.max(...values);
     const map = (value: number): number => clampIntensity(0.3 + (hi === lo ? 0.5 : (value - lo) / (hi - lo)) * 0.7);

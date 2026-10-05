@@ -24,14 +24,17 @@ const ParallelogramShapeParamsSchema = strictObject({
 export type ParallelogramShapeParams = ZodInfer<typeof ParallelogramShapeParamsSchema>;
 
 const directionOf = (params: ParallelogramShapeParams): 'left' | 'right' => params.slantDirection ?? 'right';
+
 const angleOf = (params: ParallelogramShapeParams): number => params.slantAngle ?? 70;
 
 /** 根据高度计算上下边的水平错位 */
 const slantOffset = (halfHeight: number, params: ParallelogramShapeParams): number => {
   const angle = angleOf(params);
   if (angle === 90) return 0;
+
   const offset = (2 * halfHeight) / Math.tan(angle * DEG_TO_RAD);
   const integer = Math.round(offset);
+
   return Math.abs(offset - integer) <= 1e-12 * Math.max(1, Math.abs(offset)) ? integer : offset;
 };
 
@@ -48,6 +51,7 @@ const parallelogramVertices =
         [-halfWidth, halfHeight],
       ];
     }
+
     return [
       [-halfWidth, -halfHeight],
       [halfWidth - offset, -halfHeight],

@@ -24,6 +24,7 @@ const renderPreview = (inspecting: boolean, lang: Lang = 'zh') => {
   const text = entryI18n[lang];
   const PreviewLayout = inspecting ? LayoutInspectLayout : Layout;
   const Container = inspecting ? InspectOverlayLayout : OverlayLayout;
+
   return (
     <PreviewLayout viewBox={{ x: -20, y: -20, width: 400, height: 184 }}>
       <Container
@@ -61,6 +62,7 @@ const renderPreview = (inspecting: boolean, lang: Lang = 'zh') => {
     </PreviewLayout>
   );
 };
+
 export const previewSource = createLayoutInspectPreviewSource(lang => renderPreview(false, lang), {
   rules: [
     { kind: 'request', inspector: OVERLAY_LAYOUT_INSPECTOR_KEY, target: { kind: 'scene' }, options: inspectOptions },

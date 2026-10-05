@@ -18,6 +18,7 @@ const inspectOptions = {
 const renderPreview = (inspecting: boolean) => {
   const PreviewLayout = inspecting ? LayoutInspectLayout : Layout;
   const Container = inspecting ? InspectFlexLayout : FlexLayout;
+
   return (
     <PreviewLayout viewBox={{ x: -20, y: -20, width: 400, height: 136 }}>
       <Container

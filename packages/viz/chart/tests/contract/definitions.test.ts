@@ -15,10 +15,12 @@ const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, un
   positionScales: {},
   removedRecipeScales: new Set<string>(),
 });
+
 const recipeSourceSchema = createChartSourceSchema(
   'fixture',
   strictObject({ chartType: literal('fixture'), encodings: strictObject({}) }),
 );
+
 const recipe = defineChartRecipe({
   chartType: 'fixture',
   encodingSlots: [],
@@ -31,6 +33,7 @@ const recipe = defineChartRecipe({
     semanticMarks: [{ kind: 'fixture', plotMarks: [{ type: 'point', encoding: {} }] }],
   }),
 });
+
 const mark = defineChartMark({
   kind: 'fixture',
   schema: strictObject({ kind: literal('fixture') }),
@@ -72,6 +75,7 @@ describe('Chart Definition contracts', () => {
       data: { reference: 'rows' },
       recipe: { chartType: 'fixture', encodings: {} },
     });
+
     expect(
       resolveSelectedChart(source, {
         theme: DEFAULT_RESOLVED_THEME,

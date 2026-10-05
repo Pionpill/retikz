@@ -101,6 +101,7 @@ describe('Kernel Performance Lab runner', () => {
     );
 
     expect(session.startedAt).toBe(10);
+
     now.mockRestore();
   });
 });

@@ -39,6 +39,7 @@ export const createCodeBlockContentDefinition = <TSource extends IRCodeBlock>(
     expand: ({ source }, context) => {
       const codeBlockTokens = resolveCodeBlockTokens(context.theme, options.graphThemeStyles);
       const surface = resolveCodeBlockSurface(source);
+
       try {
         return {
           children: [

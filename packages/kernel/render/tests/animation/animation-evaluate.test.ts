@@ -26,6 +26,7 @@ describe('数值线性 + easing', () => {
 
   it('ease-out 中点输出 > 线性（前快）', () => {
     const eased = evaluateTrack(num({ easing: 'ease-out' }), 200)?.value as number;
+
     expect(eased).toBeGreaterThan(50);
   });
 
@@ -45,6 +46,7 @@ describe('颜色 oklch + viewBox 分量', () => {
       duration: 400,
     };
     const mid = evaluateTrack(track, 200)?.value as string;
+
     expect(mid).toMatch(/^#[0-9a-f]{6}$/);
     expect(mid).not.toBe('#ff0000');
     expect(mid).not.toBe('#0000ff');
@@ -59,6 +61,7 @@ describe('颜色 oklch + viewBox 分量', () => {
       ],
       duration: 400,
     };
+
     expect(evaluateTrack(track, 200)?.value).toEqual([5, 5, 75, 75]);
   });
 });
@@ -75,6 +78,7 @@ describe('iteration / direction / fill', () => {
       iterations: 'infinite',
       direction: 'alternate',
     };
+
     expect(evaluateTrack(spin, 250)?.value).toBeCloseTo(90); // iter0 正向 0.25
     expect(evaluateTrack(spin, 1250)?.value).toBeCloseTo(270); // iter1 反向 → p=0.75
   });
@@ -105,6 +109,7 @@ describe('自定义插值器', () => {
         px: (from as { px: number }).px + ((to as { px: number }).px - (from as { px: number }).px) * t,
       }),
     });
+
     expect(r?.value).toEqual({ px: 2 });
   });
 });

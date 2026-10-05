@@ -11,6 +11,7 @@ const LENGTH_SUBDIVISIONS = 16;
 
 const assertCursor = (cursor: IRPosition | undefined, command: PathCommand): IRPosition => {
   if (cursor !== undefined) return cursor;
+
   throw new RetikzExtensionError({
     code: RetikzExtensionErrorCode.GeometryInvalid,
     message: `Ribbon centerline command "${command.kind}" has no current point; start with a move step.`,
@@ -28,6 +29,7 @@ export const normalizeVector = (vector: Vector2, source: string): Vector2 => {
       details: { source, vector },
     });
   }
+
   return normalized;
 };
 
@@ -39,9 +41,11 @@ export const directionToSectionAxis = (direction: IRRibbonDirection, source: str
   if (typeof direction === 'number') {
     return vector2.fromAngleDegrees(direction);
   }
+
   if (isPositionTuple(direction)) {
     return normalizeVector(direction, source);
   }
+
   try {
     return normalizeVector(polar.toPosition(direction), source);
   } catch (cause) {
@@ -58,11 +62,13 @@ export const directionToSectionAxis = (direction: IRRibbonDirection, source: str
 export const estimateLength = (sampleAt: (t: number) => CurveSegmentSample): number => {
   let total = 0;
   let prev = sampleAt(0).point;
+
   for (let i = 1; i <= LENGTH_SUBDIVISIONS; i += 1) {
     const curr = sampleAt(i / LENGTH_SUBDIVISIONS).point;
     total += point.distance(prev, curr);
     prev = curr;
   }
+
   return total;
 };
 
@@ -77,6 +83,7 @@ export const commandsToSegmentInputs = (
   const inputs: Array<RibbonSegmentInput> = [];
   let cursor: IRPosition | undefined;
   let moveCount = 0;
+
   for (const command of commands) {
     switch (command.kind) {
       case 'move':
@@ -88,6 +95,7 @@ export const commandsToSegmentInputs = (
             details: { moveCount, source },
           });
         }
+
         cursor = command.to;
         break;
       case 'line': {
@@ -104,6 +112,7 @@ export const commandsToSegmentInputs = (
         if (estimateLength(sampleAt) > 0) {
           inputs.push({ kind: 'quad', from, control: command.control, to: command.to });
         }
+
         cursor = command.to;
         break;
       }
@@ -123,6 +132,7 @@ export const commandsToSegmentInputs = (
             to: command.to,
           });
         }
+
         cursor = command.to;
         break;
       }
@@ -149,6 +159,7 @@ export const commandsToSegmentInputs = (
             to: sampleAt(1).point,
           });
         }
+
         cursor = sampleAt(1).point;
         break;
       }
@@ -177,6 +188,7 @@ export const commandsToSegmentInputs = (
             to: sampleAt(1).point,
           });
         }
+
         cursor = sampleAt(1).point;
         break;
       }
@@ -188,6 +200,7 @@ export const commandsToSegmentInputs = (
         });
     }
   }
+
   return inputs;
 };
 
@@ -196,6 +209,7 @@ export const segmentInputToCurve = (input: RibbonSegmentInput): CurveSegment => 
   if (input.kind === 'line') return input;
   if (input.kind === 'quad') return { ...input, kind: 'quadraticBezier' };
   if (input.kind === 'cubic') return { ...input, kind: 'cubicBezier' };
+
   return { ...input, startAngleDeg: input.startAngle, endAngleDeg: input.endAngle };
 };
 
@@ -205,6 +219,7 @@ export const segmentInputsToSegments = (inputs: ReadonlyArray<RibbonSegmentInput
     .map(input => {
       const geometry = segmentInputToCurve(input);
       const length = curve.approximateLength(geometry);
+
       return {
         sampleAt: (t: number) => curve.sampleAt(geometry, t),
         sampleAtDistance: (distance: number) =>
@@ -221,13 +236,16 @@ export const sampleAtDistance = (
   target: number,
 ): CurveSegmentSample => {
   let acc = 0;
+
   for (const segment of segments) {
     const end = acc + segment.length;
     if (target <= end || segment === segments[segments.length - 1]) {
       return segment.sampleAtDistance(target - acc);
     }
+
     acc = end;
   }
+
   return segments[segments.length - 1].sampleAt(1);
 };
 
@@ -254,5 +272,6 @@ export const segmentsFromCommands = ({
       details: { source, totalLength },
     });
   }
+
   return { segments, totalLength };
 };

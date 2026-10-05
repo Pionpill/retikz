@@ -48,6 +48,7 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
   type Definition = NonNullable<GraphDefinitionOptions[TKey]>[number];
   const definitions = new Map<string, Definition>();
   const keyOf = definitionKeyOf[collectionKey] as (definition: Definition) => string;
+
   for (const options of optionSets) {
     for (const definition of options[collectionKey] ?? []) {
       const key = keyOf(definition);
@@ -56,6 +57,7 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
         definitions.set(key, definition);
         continue;
       }
+
       if (!Object.is(existing, definition)) {
         throw new RetikzGraphError({
           code: RetikzGraphErrorCode.DefinitionConflict,
@@ -65,6 +67,7 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
       }
     }
   }
+
   return Object.freeze([...definitions.values()]) as NonNullable<GraphDefinitionOptions[TKey]>;
 };
 
@@ -100,6 +103,7 @@ export const resolveGraphDefinitionOptions = (options: GraphDefinitionOptions = 
   const relationRoles = resolveRelationRoleRegistry(options.relationRoles);
   const relationKinds = resolveRelationKindRegistry(options.relationKinds, relationRoles);
   const relationPredicates = resolveRelationPredicateRegistry(options.relationPredicates, relationRoles, relationKinds);
+
   return {
     entityRoles,
     entityKinds,

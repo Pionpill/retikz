@@ -60,10 +60,12 @@ type _TableLayoutHostPropKeysCheck = AssertEqual<
   (typeof TABLE_LAYOUT_HOST_PROP_KEYS)[number],
   keyof TableLayoutHostProps
 >;
+
 const _assertTableLayoutHostPropKeys: _TableLayoutHostPropKeysCheck = true;
 void _assertTableLayoutHostPropKeys;
 
 const EMPTY_COMPOSITES: ReadonlyArray<AnyCompositeDefinition> = Object.freeze([]);
+
 const EMPTY_DATASETS: ExternalDatasets = Object.freeze({});
 
 /** 三个 React Table 组件共享的规范化运行时输入 */
@@ -128,6 +130,7 @@ const unsupportedEmbeddedPropsOf = (props: TableCommonProps): Array<string> => {
   if (Object.hasOwn(props, 'onManifest')) unsupported.push('onManifest');
   const plainProps = props as TableCommonProps & { embeddables?: unknown };
   if (Object.hasOwn(plainProps, 'embeddables')) unsupported.push('embeddables');
+
   return unsupported;
 };
 
@@ -140,6 +143,7 @@ const detailColumnsOf = (props: DetailTableProps<unknown>): Array<TableDetailCol
 /** 统一 ManualTable 的 rows props 与 Row marker children authoring */
 const manualStructureOf = (props: ManualTableProps): Pick<ManualTableInput, 'rows' | 'rowKinds'> => {
   if (props.rows === undefined) return buildManualStructure(props.children);
+
   return {
     rows: props.rows,
     ...(props.rowKinds === undefined ? {} : { rowKinds: props.rowKinds }),
@@ -206,15 +210,18 @@ export const resolveReactTableRuntime = (
     const tableProps = props as TableProps<unknown>;
     if (tableProps.dataExecution !== undefined && tableProps.spec.dataExecution !== undefined)
       throw new RetikzTableReactError('Table dataExecution cannot be supplied in both spec and root props');
+
     table = inputTableFromIR(tableProps.spec);
     if (tableProps.dataExecution !== undefined) {
       if (table.kind === InputTableKind.Manual)
         throw new RetikzTableReactError('Manual Table does not accept dataExecution');
+
       table =
         table.kind === InputTableKind.Detail
           ? { kind: InputTableKind.Detail, input: { ...table.input, dataExecution: tableProps.dataExecution } }
           : { kind: InputTableKind.Custom, input: { ...table.input, dataExecution: tableProps.dataExecution } };
     }
+
     datasets = tableProps.data ?? EMPTY_DATASETS;
     datasetSource = datasets;
     dataBindings = tableProps.dataBindings;

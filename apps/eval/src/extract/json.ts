@@ -13,6 +13,7 @@ export const extractJson = (text: string): unknown | null => {
   let depth = 0;
   let inString = false;
   let escaped = false;
+
   for (let i = start; i < body.length; i += 1) {
     const ch = body[i];
     if (inString) {
@@ -21,12 +22,14 @@ export const extractJson = (text: string): unknown | null => {
       else if (ch === '"') inString = false;
       continue;
     }
+
     if (ch === '"') inString = true;
     else if (ch === '{') depth += 1;
     else if (ch === '}') {
       depth -= 1;
       if (depth === 0) {
         const candidate = body.slice(start, i + 1);
+
         try {
           return JSON.parse(candidate);
         } catch {
@@ -35,5 +38,6 @@ export const extractJson = (text: string): unknown | null => {
       }
     }
   }
+
   return null;
 };

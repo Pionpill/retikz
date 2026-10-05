@@ -106,6 +106,7 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   void _onCompileResult;
 
   const collected = collectGraphChildren(children, embedId);
+
   return {
     input: {
       ...input,
@@ -143,6 +144,7 @@ const GraphComponent: FC<GraphProps> = props => {
   const collected = useMemo(() => {
     const result = collectGraphInput(props, props.id ?? generatedId, false);
     if (ambientGraphThemeStyles === undefined) return result;
+
     return {
       ...result,
       input: {
@@ -166,6 +168,7 @@ const GraphComponent: FC<GraphProps> = props => {
     themeStyles,
     ...hostProps
   } = graphLayoutHostPropsOf(props);
+
   return (
     <Layout
       {...hostProps}

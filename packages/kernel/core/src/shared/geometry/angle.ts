@@ -55,5 +55,6 @@ export const alignAngleSweep = (
     : normalized === 0
       ? 360
       : normalized;
+
   return { start, end: start + alignedSweep };
 };

@@ -99,6 +99,7 @@ describe('Plot defaults resolver', () => {
 
     const x = resolvePlotAxisDefaults(result, 'x');
     const y = resolvePlotAxisDefaults(result, 'y');
+
     expect(x.axis?.line).toMatchObject({ stroke: '#source-line' });
     expect(x.axis?.grid).toBe(false);
     expect(y.axis?.line).toMatchObject({ stroke: '#source-line' });
@@ -108,6 +109,7 @@ describe('Plot defaults resolver', () => {
   it('默认 preset 使用当前 mode 的 Core categorical palette，并保持 Source shape', () => {
     for (const mode of Object.values(ThemeMode)) {
       const defaults = getNeutralPlotDefaults(mode, resolveDefaultCoreThemeColors(mode).categorical);
+
       expect(defaults.palette?.categorical).toEqual(resolveDefaultCoreThemeColors(mode).categorical);
       expect(defaults.palette?.series).toEqual(resolveDefaultCoreThemeColors(mode).categorical);
       expect(defaults.axis?.grid).toBe(false);
@@ -121,6 +123,7 @@ describe('Plot defaults resolver', () => {
     );
 
     const duplicate = plot.definePlotThemeStyle({ name: 'duplicate', resolve: () => ({}) });
+
     expect(() => plot.resolvePlotTheme(themeOf('duplicate', ThemeMode.Light), {}, [duplicate, duplicate])).toThrow(
       /already registered/,
     );
@@ -132,6 +135,7 @@ describe('Plot defaults resolver', () => {
         throw cause;
       },
     };
+
     expect(() => plot.resolvePlotTheme(themeOf(throwing.name, ThemeMode.Light), {}, [throwing])).toThrowError(
       expect.objectContaining({ cause }),
     );

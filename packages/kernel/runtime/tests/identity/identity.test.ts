@@ -54,6 +54,7 @@ describe('runtime identity', () => {
     const create = () => createRuntimeIdentity(input.owner, input.path);
 
     let failure: unknown;
+
     try {
       create();
     } catch (error) {
@@ -71,6 +72,7 @@ describe('runtime identity', () => {
   it('rejects a Unicode-whitespace path segment as a Runtime identity error', () => {
     const rejectedValue = '\u00a0';
     let failure: unknown;
+
     try {
       createRuntimeIdentity('owner', ['group', rejectedValue]);
     } catch (error) {
@@ -130,6 +132,7 @@ describe('runtime identity', () => {
 
   it('接受空 identity 集合', () => {
     const lookup = createRuntimeIdentityLookup('owner', []);
+
     expect(lookup.size).toBe(0);
     expect(lookup.values()).toEqual([]);
   });

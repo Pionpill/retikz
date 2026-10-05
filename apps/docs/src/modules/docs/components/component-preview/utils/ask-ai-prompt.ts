@@ -4,11 +4,14 @@
  */
 export const findPrecedingHeading = (el: HTMLElement | null): HTMLElement | null => {
   if (!el) return null;
+
   let sib: Element | null = el.previousElementSibling;
+
   while (sib) {
     if (/^H[1-6]$/.test(sib.tagName)) return sib as HTMLElement;
     sib = sib.previousElementSibling;
   }
+
   return el.parentElement ? findPrecedingHeading(el.parentElement) : null;
 };
 
@@ -21,7 +24,9 @@ export const buildAskAiPrompt = (lang: 'zh' | 'en', pageTitle: string, heading: 
 - Implementation rationale + key retikz APIs used
 - How could I modify or extend it`;
   }
+
   const ref = heading ? `${pageTitle}「${heading}」小节` : pageTitle;
+
   return `请基于${ref}里的 \`${demoName}\` 示例：
 
 - 解释它的实现思路 + 关键 retikz API 用法

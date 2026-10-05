@@ -6,6 +6,7 @@ import { createPreviewControlContract as createEnglishPreviewContract } from './
 import { PathLabelRoutePlaygroundPreview } from './path-label-route-playground.preview';
 
 const pathLabelRoutePlaygroundControls = createEnglishPreviewContract('en').controls;
+
 const previewControlContract = createEnglishPreviewContract('en');
 
 export const previewControls = pathLabelRoutePlaygroundControls;

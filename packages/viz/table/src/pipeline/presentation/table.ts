@@ -41,10 +41,12 @@ const defaultCarrierOf = (
       appearance,
     });
   }
+
   if (semantic.payload.kind !== TableCellPayloadKind.Value) {
     const cellLabel = formatted.cellId ?? `${semantic.rowIndex}:${semantic.columnIndex}`;
     throw new RetikzTableError(`table: presentation Cell "${cellLabel}" kind differs from semantic model`);
   }
+
   return deepFreeze({
     kind: TableCellPayloadKind.Value,
     ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
@@ -61,22 +63,27 @@ const resolvePresentationCarriers = (
   if (model.semantic.cells.length !== model.cells.length) {
     throw new RetikzTableError('table: presentation Cell count differs from semantic model');
   }
+
   if (cells !== undefined && cells.length !== model.cells.length) {
     throw new RetikzTableError('table: presentation carrier Cell count differs from formatted model');
   }
+
   return deepFreeze(
     model.cells.map((formatted, index) => {
       const semantic = model.semantic.cells[index];
       if (semantic.id !== formatted.cellId || semantic.payload.kind !== formatted.kind) {
         throw new RetikzTableError(`table: presentation Cell ${index} identity differs from formatted model`);
       }
+
       const carrier = cells === undefined ? defaultCarrierOf(formatted, semantic) : structuredClone(cells[index]);
       if (carrier.cellId !== formatted.cellId) {
         throw new RetikzTableError(`table: presentation carrier Cell ${index} identity differs from formatted model`);
       }
+
       if (carrier.kind !== formatted.kind) {
         throw new RetikzTableError(`table: presentation carrier Cell ${index} kind differs from formatted model`);
       }
+
       return carrier;
     }),
   );
@@ -99,6 +106,7 @@ export const presentTable = (model: FormattedTableModel, options: PresentTableOp
         content,
       };
     }
+
     if (
       formatted.kind !== TableCellPayloadKind.Value ||
       carrier.kind !== TableCellPayloadKind.Value ||
@@ -106,6 +114,7 @@ export const presentTable = (model: FormattedTableModel, options: PresentTableOp
     ) {
       throw new RetikzTableError(`table: presentation Cell ${index} kind differs from formatted model`);
     }
+
     const appearance = carrier.appearance;
     const content = applyTableCellContentStyle(
       presentCellValue(
@@ -120,6 +129,7 @@ export const presentTable = (model: FormattedTableModel, options: PresentTableOp
       ),
       appearance.content,
     );
+
     return {
       kind: TableCellPayloadKind.Value,
       ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
@@ -131,5 +141,6 @@ export const presentTable = (model: FormattedTableModel, options: PresentTableOp
       content,
     };
   });
+
   return deepFreeze({ semantic: model.semantic, cells });
 };

@@ -16,9 +16,11 @@ const inputOf = <TProps,>(component: InputEmbeddableTableComponent, props: TProp
   if (component.inputEmbedAdapter !== TableInputEmbedAdapter) {
     throw new Error('expected the shared Table Vanilla adapter');
   }
+
   if (component.createInputEmbedProps === undefined) {
     throw new Error('expected a React-to-Vanilla input factory');
   }
+
   return component.createInputEmbedProps(props as Readonly<Record<string, unknown>>);
 };
 

@@ -20,6 +20,7 @@ export const freezeComputationOutput = <T>(value: T): T => {
   } else {
     Object.values(value).forEach(item => freezeComputationOutput(item));
   }
+
   return Object.isFrozen(value) ? value : Object.freeze(value);
 };
 
@@ -31,6 +32,7 @@ const createFullTopology = (
   metadata: RuntimePrimitiveMetadataTable,
 ): ReadonlyArray<SceneRuntimeNode> => {
   const topology: Array<SceneRuntimeNode> = [];
+
   const visit = (
     items: ReadonlyArray<RuntimeScenePrimitive>,
     parent: SceneRuntimeNode['parent'],
@@ -45,6 +47,7 @@ const createFullTopology = (
           `createFullSceneRuntimeSnapshot: missing primitive identity at ${primitivePath.join('.')}`,
         );
       }
+
       topology.push(
         Object.freeze({
           identity: record.identity,
@@ -58,7 +61,9 @@ const createFullTopology = (
       if (primitive.type === 'group') visit(primitive.children, record.identity, primitivePath);
     });
   };
+
   visit(primitives, rootIdentity, []);
+
   return Object.freeze(topology);
 };
 

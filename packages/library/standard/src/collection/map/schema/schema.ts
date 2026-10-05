@@ -66,6 +66,7 @@ export const MapSchema = union([
               path: ['entries', index, role, 'id'],
               message: `Duplicate cell id '${id}'.`,
             });
+
           seen.add(id);
         }
       });

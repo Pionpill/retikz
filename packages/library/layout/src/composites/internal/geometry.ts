@@ -45,6 +45,7 @@ const finiteNonNegative = (value: number, label: string): number => {
       details: { label, value },
     });
   }
+
   return value;
 };
 
@@ -57,8 +58,10 @@ const finiteLayoutRect = (rect: LayoutRect, label: string): LayoutRect => {
       details: { label, x: rect.x, y: rect.y },
     });
   }
+
   finiteNonNegative(rect.width, `${label} width`);
   finiteNonNegative(rect.height, `${label} height`);
+
   return rect;
 };
 
@@ -109,6 +112,7 @@ export const resolveLayoutAxisSize = (input: ResolveLayoutAxisSizeInput): Resolv
         details: { axis: input.axis, policy: input.policy.kind },
       });
     }
+
     return { allocationSize: clampAuthoredSize(finiteAvailable, input.policy), finiteAvailable };
   }
 
@@ -118,6 +122,7 @@ export const resolveLayoutAxisSize = (input: ResolveLayoutAxisSizeInput): Resolv
   } else if (input.proposal.kind === 'exact') {
     candidate = input.proposal.value;
   }
+
   let allocationSize = clampAuthoredSize(candidate, input.policy);
   if (input.proposal.kind === 'range') {
     const intersectionMin = Math.max(input.policy.min ?? 0, input.proposal.min);
@@ -175,9 +180,11 @@ export const alignAllocationInSlot = (
   if (alignment === LayoutAlignment.End || alignment === LayoutAlignment.LastBaseline) {
     return slotStart + slotSize - allocationStart - allocationSize;
   }
+
   if (alignment === LayoutAlignment.Center) {
     return slotStart + slotSize / 2 - allocationStart - allocationSize / 2;
   }
+
   return slotStart - allocationStart;
 };
 

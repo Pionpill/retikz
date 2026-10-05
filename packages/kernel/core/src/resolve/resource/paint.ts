@@ -6,6 +6,7 @@ import { resolvePatternStyle } from './pattern';
 import type { PaintResolution, PatternResolution } from './types';
 
 const DEFAULT_PATTERN_SIZE = 8;
+
 const DEFAULT_MOTIF_COLOR = 'currentColor';
 
 /** Pattern paint 解析所需的 registry 和 round 上下文 */
@@ -34,12 +35,14 @@ const resolvePattern = (
       `Pattern '${spec.shape}' has an invalid size (${String(rawSize)}); it must be a finite number greater than 0.`,
     );
   }
+
   if (spec.rotation !== undefined && !Number.isFinite(spec.rotation)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Resolve,
       `Pattern '${spec.shape}' has a non-finite rotation (${String(spec.rotation)}); it must be a finite number.`,
     );
   }
+
   return {
     spec,
     name: spec.shape,
@@ -55,6 +58,7 @@ export const resolvePaint = (
   context: PaintResolveContext,
 ): string | PaintResolution | undefined => {
   if (paint === undefined || typeof paint === 'string') return paint;
+
   return {
     kind: 'paint',
     spec: paint,

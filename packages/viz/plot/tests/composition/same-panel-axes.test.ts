@@ -93,7 +93,9 @@ const expandOf = (spec: IRPlot): IRScope => {
 };
 
 const isScope = (child: IRChild): child is IRScope => child.type === 'scope';
+
 const isNode = (child: IRChild): child is IRNode => child.type === 'node';
+
 const isPath = (child: IRChild): child is IRPath => child.type === 'path';
 
 const innerContentOf = (scope: IRScope): IRScope => scope.children.filter(isScope)[0];
@@ -141,6 +143,7 @@ const spanOf = (values: ReadonlyArray<number>): number => Math.max(...values) - 
 describe('same-panel multi-axis overlay schema', () => {
   it('axis_placement_and_overlay_zindex_round_trip', () => {
     const parsed = parsePlotIR(JSON.parse(JSON.stringify(dualAxisSpec)));
+
     expect(parsed).toEqual(dualAxisSpec);
   });
 
@@ -149,6 +152,7 @@ describe('same-panel multi-axis overlay schema', () => {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'corner' } }],
     };
+
     expect(() => parsePlotIR(spec)).toThrow();
   });
 
@@ -157,6 +161,7 @@ describe('same-panel multi-axis overlay schema', () => {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'center' } }],
     };
+
     expect(() => parsePlotIR(spec)).toThrow();
   });
 
@@ -191,6 +196,7 @@ describe('same-panel multi-axis overlay schema', () => {
         { type: 'axis', dimension: 'y', coordinateView: 'b' },
       ],
     };
+
     expect(() => parsePlotIR(spec)).toThrow(/cycle|overlay/i);
   });
 });
@@ -199,6 +205,7 @@ describe('same-panel multi-axis overlay lowering', () => {
   it('left_and_right_y_axes_can_coexist', () => {
     const outer = expandOf(parsePlotIR(dualAxisSpec));
     const yAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'y');
+
     expect(yAxes).toHaveLength(2);
     expect(moveXOf(firstPathOf(yAxes[1]))).toBeGreaterThan(moveXOf(firstPathOf(yAxes[0])));
   });
@@ -211,6 +218,7 @@ describe('same-panel multi-axis overlay lowering', () => {
         { type: 'axis', dimension: 'y', coordinateView: 'temp', placement: { kind: 'side', side: 'left' } },
       ],
     };
+
     expect(() => expandOf(parsePlotIR(spec))).toThrow(/duplicate axis/i);
   });
 
@@ -219,6 +227,7 @@ describe('same-panel multi-axis overlay lowering', () => {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'x', placement: { kind: 'side', side: 'right' } }],
     };
+
     expect(() => expandOf(parsePlotIR(spec))).toThrow(/cartesian x axis.*top or bottom/i);
   });
 
@@ -227,6 +236,7 @@ describe('same-panel multi-axis overlay lowering', () => {
       ...dualAxisSpec,
       guides: [{ type: 'axis', dimension: 'y', placement: { kind: 'edge', edge: 'hypotenuse' } }],
     };
+
     expect(() => expandOf(parsePlotIR(spec))).toThrow(/cartesian axis edge.*top, right, bottom, or left/i);
   });
 
@@ -238,6 +248,7 @@ describe('same-panel multi-axis overlay lowering', () => {
     const intervalYMin = Math.min(
       ...intervalNodes.map(node => (node.position as [number, number])[1] - nodeHeight(node) / 2),
     );
+
     expect(intervalYMin).toBeCloseTo(pathYMin, 6);
   });
 
@@ -246,18 +257,21 @@ describe('same-panel multi-axis overlay lowering', () => {
     const marks = markLayersOf(outer);
     const temperatureSpan = spanOf(pathYValues(firstPathOf(marks[0])));
     const rainfallSpan = spanOf(pathYValues(firstPathOf(marks[1])));
+
     expect(temperatureSpan).toBeLessThan(rainfallSpan / 5);
   });
 
   it('overlay_zindex_changes_mark_layer_order', () => {
     const outer = expandOf(parsePlotIR(dualAxisSpec));
     const marks = markLayersOf(outer);
+
     expect(marks.map(mark => mark.meta?.mark)).toEqual(['path', 'interval']);
   });
 
   it('x_axis_declared_only_on_target_scope_is_not_copied_to_overlay', () => {
     const outer = expandOf(parsePlotIR(dualAxisSpec));
     const xAxes = axisLayersOf(outer).filter(axis => axis.meta?.dimension === 'x');
+
     expect(xAxes).toHaveLength(1);
   });
 });

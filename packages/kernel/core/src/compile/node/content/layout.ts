@@ -53,12 +53,14 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
     maxTextWidth,
     minimumTextWidth = false,
   } = input;
+
   const rawLines = node.text;
   let textWidth = 0;
   let textHeight = 0;
   let lines: Array<TextLine> | undefined;
   let inlineBlock: { lines: Array<{ laid: LaidLine; baselineOffset: number }> } | undefined;
   let textBaselineOffsets: Array<number> | undefined;
+
   const texGatingOn = texLowering?.lowerTex !== undefined;
   const inlineWarn = texLowering?.warn ?? ((): void => {});
   if (rawLines) {
@@ -96,6 +98,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
         const baselineOffset = cursor + (slot - (laid.ascent + laid.descent)) / 2 + laid.ascent;
         cursor += slot;
         if (laid.width > textWidth) textWidth = laid.width;
+
         return { laid, baselineOffset };
       });
       inlineBlock = { lines: blockLines };
@@ -103,6 +106,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
       textHeight = cursor;
     } else {
       const metricsByFont = new Map<TextFont, Map<string, ReturnType<TextMeasurer>>>();
+
       /** 在单次正文 layout 内复用同一 authored font/text 的真实测量结果 */
       const measurePhysicalText: TextMeasurer = (text, font) => {
         let metricsByText = metricsByFont.get(font);
@@ -110,12 +114,16 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
           metricsByText = new Map();
           metricsByFont.set(font, metricsByText);
         }
+
         const cached = metricsByText.get(text);
         if (cached !== undefined) return cached;
+
         const measured = normalizeTextMetrics(measureText(text, font));
         metricsByText.set(text, measured);
+
         return measured;
       };
+
       const plainLines = rawLines.map(spec => {
         const line = resolveTextLine(spec, {
           rootFontSize,
@@ -135,8 +143,10 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
           weight: lineStyle?.fontWeight ?? fontWeight,
           style: lineStyle?.fontStyle ?? fontStyle,
         };
+
         return { text: line.plainText, lineStyle, lineFontSize, font };
       });
+
       const intrinsicMinimumWidth = minimumTextWidth
         ? plainLines.reduce(
             (width, line) =>
@@ -153,15 +163,18 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
             0,
           )
         : undefined;
+
       const wrappingWidth =
         intrinsicMinimumWidth === undefined
           ? maxTextWidth
           : maxTextWidth === undefined
             ? intrinsicMinimumWidth
             : Math.min(intrinsicMinimumWidth, maxTextWidth);
+
       lines = [];
       textBaselineOffsets = [];
       let firstPlainBaselineOffset: number | undefined;
+
       for (const { text, lineStyle, lineFontSize, font } of plainLines) {
         const hardLines = text.split('\n');
         const physical = hardLines.flatMap(hardLine =>
@@ -169,6 +182,7 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
             ? wrapText(hardLine, { font, maxWidth: wrappingWidth, measureText: measurePhysicalText })
             : [hardLine],
         );
+
         for (const ptext of physical) {
           const m = normalizeTextMetrics(measurePhysicalText(ptext, font));
           if (m.width > textWidth) textWidth = m.width;
@@ -183,11 +197,14 @@ export const layoutNodeContent = (input: LayoutNodeContentInput): NodeContentLay
             if (lineStyle.fontWeight !== undefined) out.fontWeight = lineStyle.fontWeight;
             if (lineStyle.fontStyle !== undefined) out.fontStyle = lineStyle.fontStyle;
           }
+
           lines.push(out);
         }
       }
+
       textHeight = lines.length * lineHeight;
     }
   }
+
   return { lines, inlineBlock, textWidth, textHeight, textBaselineOffsets };
 };

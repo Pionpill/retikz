@@ -58,5 +58,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     relatedApis: ['RangedDotChart.coordinate', 'RangedDotMark.properties'],
   } satisfies PreviewControlContract;
 };
+
 /** 当前示例的控件值 */
 export type DemoValues = PreviewControlValuesFor<ReturnType<typeof createPreviewControlContract>['controls']>;

@@ -137,9 +137,11 @@ export const StrokePathSchema = PathBaseSchema.extend({
       });
       return;
     }
+
     if (path.children === undefined) {
       ctx.addIssue({ code: 'custom', path: ['children'], message: 'Stroke paths require `children` steps.' });
     }
+
     if (path.kindOptions !== undefined) {
       ctx.addIssue({
         code: 'custom',

@@ -31,6 +31,7 @@ const doubleDefinition = defineTransform({
   inputFields: operation => [operation.field],
   outputModel: operation => ({ kind: 'preserve', outputs: [{ field: operation.as }] }),
 });
+
 const doubleDefinitionImplementation = defineTransformImplementation({
   definition: doubleDefinition,
   apply: (rows, operation) =>
@@ -56,14 +57,17 @@ const groupSumDefinition = defineTransform({
     ],
   }),
 });
+
 const groupSumDefinitionImplementation = defineTransformImplementation({
   definition: groupSumDefinition,
   apply: (rows, operation, context) => {
     const groups = new Map<string, Array<ExternalRow>>();
+
     for (const row of rows) {
       const key = String(row[operation.groupBy]);
       groups.set(key, [...(groups.get(key) ?? []), row]);
     }
+
     return [...groups.entries()].map(([key, members]) =>
       context.groupProvenance(
         {
@@ -114,11 +118,13 @@ const pointSpec = (transform: IRPlot['transform']): IRPlot =>
 describe('transform registry (contract)', () => {
   it('builtin_registry_contains_all_transform_kinds', () => {
     const registry = resolveTransformRegistry();
+
     expect([...registry.keys()].sort()).toEqual(Object.values(DataTransform).sort());
   });
 
   it('publishes schedules for field-bindable plot transforms', () => {
     const registry = resolveTransformRegistry();
+
     expect(registry.get(DataTransform.Stack)?.schedule).toEqual({
       phase: DataTransformPhase.CumulativeDerive,
       bindingClass: DataTransformBindingClass.Field,
@@ -160,10 +166,12 @@ describe('transform registry (contract)', () => {
     expect(() => resolveTransformRegistry([doubleDefinition, doubleDefinition])).toThrow(
       /duplicate transform registration/i,
     );
+
     const builtinCollision = defineTransform({
       schema: object({ kind: literal('sort') }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
+
     expect(() => resolveTransformRegistry([builtinCollision])).toThrow(/duplicate transform registration/i);
   });
 
@@ -172,6 +180,7 @@ describe('transform registry (contract)', () => {
       schema: object({ kind: string() }),
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     };
+
     expect(() => extractTransformKind(string())).toThrow(/ZodObject/i);
     expect(() => resolveTransformRegistry([missingLiteralKind])).toThrow(/literal/i);
   });
@@ -182,17 +191,20 @@ describe('transform registry (contract)', () => {
       registry,
       transformImplementations: [doubleDefinitionImplementation],
     });
+
     expect(rows).toEqual([{ x: 2, y: 5, x2: 4 }]);
   });
 
   it('input_and_output_fields_feed_source_field_collection', () => {
     const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
     const fields = collectSourceFields(spec, resolveTransformRegistry([doubleDefinition]));
+
     expect([...fields].sort()).toEqual(['x', 'y']);
   });
 
   it('unknown_or_invalid_custom_operation_throws_at_lowering', () => {
     const spec = pointSpec([{ operation: { kind: 'double', field: 'x' } }]);
+
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).toThrow();
     expect(() =>
       compile(pointSpec([{ operation: { kind: 'unknown-transform', field: 'x', as: 'x2' } }]), { d: [{ x: 2, y: 5 }] }),
@@ -201,6 +213,7 @@ describe('transform registry (contract)', () => {
 
   it('custom_output_fields_strict_model_passes_when_registered', () => {
     const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
+
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] })).not.toThrow();
   });
 
@@ -211,6 +224,7 @@ describe('transform registry (contract)', () => {
       outputModel: () => ({ kind: 'preserve', outputs: [] }),
     });
     const spec = pointSpec([{ operation: { kind: 'double', field: 'x', as: 'x2' } }]);
+
     expect(() => compile(spec, { d: [{ x: 2, y: 5 }] }, [missingOutputDefinition])).toThrow(/x2/);
   });
 
@@ -225,6 +239,7 @@ describe('transform registry (contract)', () => {
       [{ kind: 'group-sum', groupBy: 'group', field: 'value', as: 'total' }],
       { registry, transformImplementations: [groupSumDefinitionImplementation] },
     );
+
     expect(rows).toEqual([
       expect.objectContaining({ group: 'A', total: 5 }),
       expect.objectContaining({ group: 'B', total: 5 }),
@@ -243,6 +258,7 @@ describe('transform registry (contract)', () => {
       ],
       { registry, transformImplementations: [doubleDefinitionImplementation] },
     );
+
     expect(rows.map(row => row.x2)).toEqual([4, 2]);
   });
 });

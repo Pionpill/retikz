@@ -14,6 +14,7 @@ export const computeGridBounds = (bounds: IRGrid['bounds']): GridNumericBounds =
   if ('start' in bounds) {
     const [startX, startY] = bounds.start;
     const [endX, endY] = bounds.end;
+
     return {
       minX: Math.min(startX, endX),
       minY: Math.min(startY, endY),

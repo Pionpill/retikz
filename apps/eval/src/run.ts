@@ -46,8 +46,10 @@ const scoreText = (
       l2: null,
     };
   }
+
   const l1 = scoreL1(candidate);
   const l2 = l1.compileOk && l1.scene && assertions && assertions.length > 0 ? scoreL2(l1.scene, assertions) : null;
+
   return { zodOk: l1.zodOk, compileOk: l1.compileOk, failure: l1.failure, l2 };
 };
 
@@ -58,6 +60,7 @@ export const runEval = async (options: RunOptions): Promise<Array<RunRecord>> =>
 
   for (const task of corpus) {
     const prompt = buildPrompt(task, schemaJson);
+
     for (const client of clients) {
       for (let kIndex = 0; kIndex < k; kIndex += 1) {
         const base = {
@@ -68,6 +71,7 @@ export const runEval = async (options: RunOptions): Promise<Array<RunRecord>> =>
           kIndex,
         };
         let record: RunRecord;
+
         try {
           const text = await client.generate(prompt);
           record = { ...base, ...scoreText(text, task.assertions) };
@@ -81,6 +85,7 @@ export const runEval = async (options: RunOptions): Promise<Array<RunRecord>> =>
             l2: null,
           };
         }
+
         records.push(record);
         onRecord?.(record);
       }

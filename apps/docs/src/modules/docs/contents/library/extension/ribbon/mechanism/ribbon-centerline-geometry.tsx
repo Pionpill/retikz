@@ -29,6 +29,7 @@ const RibbonCenterlineGeometry: FC<RibbonCenterlineGeometryProps> = props => {
       curve.parameterAtDistance(geometry, (index / 6) * totalLength, { totalLength }),
     );
     const normal = vector2.normal(sample.tangent);
+
     return {
       center: sample.point,
       left: vector2.add(sample.point, vector2.scale(normal, 12)),

@@ -13,11 +13,14 @@ import type { ExternalRow } from '../../shared';
  */
 export const resolveFieldPath = (row: ExternalRow, path: string): unknown => {
   if (Object.prototype.hasOwnProperty.call(row, path)) return row[path];
+
   let current: unknown = row;
+
   for (const key of path.split('.')) {
     if (current === null || typeof current !== 'object') return undefined;
     current = (current as Record<string, unknown>)[key];
   }
+
   return current;
 };
 
@@ -52,6 +55,7 @@ export const compareRowsByFieldPath = (
         : String(va) < String(vb)
           ? -1
           : 1;
+
   return order === DataSortOrder.Descending ? -compared : compared;
 };
 
@@ -60,10 +64,13 @@ export const compareRowsByFieldPath = (
  * @description 采样上限保证推断成本有界；需要稳定语义时应在 data.model 显式声明字段 type
  */
 const MAX_SCAN_ROWS = 1000;
+
 /** 字段类型自动推断最多采集的非空样本数 */
 const MAX_SAMPLE_VALUES = 100;
+
 /** 严格 ISO 日期字面量；用于 temporal 自动推断 */
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 /** 带时间部分的 ISO 日期时间字面量；用于 temporal 自动推断 */
 const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
@@ -76,10 +83,12 @@ export const isIsoDateString = (value: string): boolean => ISO_DATE_RE.test(valu
  */
 export const inferCategoryDomain = (values: Array<unknown>): Array<string | number> => {
   const domain = new Set<string | number>();
+
   for (const value of values) {
     if (typeof value !== 'string' && !isFiniteNumber(value)) continue;
     domain.add(value);
   }
+
   return [...domain];
 };
 
@@ -90,6 +99,7 @@ const classifyFieldType = (value: unknown): DataFieldType | undefined => {
   if (typeof value === 'number') return isFiniteNumber(value) ? DataFieldType.Continuous : undefined;
   if (typeof value === 'string') return isIsoDateString(value) ? DataFieldType.Temporal : DataFieldType.Categorical;
   if (typeof value === 'boolean') return DataFieldType.Categorical;
+
   return undefined;
 };
 
@@ -98,16 +108,21 @@ export const inferFieldType = (rows: Array<ExternalRow>, path: string): DataFiel
   const observedTypes = new Set<DataFieldType>();
   let sampleCount = 0;
   const scanLimit = Math.min(rows.length, MAX_SCAN_ROWS);
+
   for (let index = 0; index < scanLimit && sampleCount < MAX_SAMPLE_VALUES; index++) {
     const value = resolveFieldPath(rows[index], path);
     if (value === null || value === undefined) continue;
+
     const type = classifyFieldType(value);
     if (type === undefined) continue;
+
     observedTypes.add(type);
     sampleCount++;
   }
+
   if (sampleCount === 0) return DataFieldType.Categorical;
   if (observedTypes.size > 1) return DataFieldType.Categorical;
+
   return observedTypes.has(DataFieldType.Temporal)
     ? DataFieldType.Temporal
     : observedTypes.has(DataFieldType.Continuous)
@@ -128,19 +143,23 @@ export const resolveFieldTypes = (
   if (model !== undefined) {
     const declaredNameMap = new Set<string>();
     const declaredTypeMap: DataFieldTypeMap = new Map();
+
     for (const field of model) {
       if (declaredNameMap.has(field.name)) {
         throw new RetikzDataError(`data: duplicate field "${field.name}" in data.model`);
       }
+
       declaredNameMap.add(field.name);
       if (field.type !== undefined) declaredTypeMap.set(field.name, field.type);
     }
+
     for (const field of sourceFields) {
       if (!declaredNameMap.has(field)) {
         throw new RetikzDataError(
           `data: unknown field "${field}" (data.model is declared; all referenced source fields must be listed)`,
         );
       }
+
       fieldTypeMap.set(field, declaredTypeMap.get(field) ?? inferFieldType(rows, field));
     }
   } else {
@@ -148,5 +167,6 @@ export const resolveFieldTypes = (
       fieldTypeMap.set(field, inferFieldType(rows, field));
     }
   }
+
   return fieldTypeMap;
 };

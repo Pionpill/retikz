@@ -16,6 +16,7 @@ const AnimationFlow: FC<AnimationFlowProps> = props => {
   const labels = animationFlowI18n[lang];
   const text = (index: number) =>
     labels[index].map((line, row) => ({ text: line, ...(row === 0 ? {} : { fill: 'gray', font: { size: 12 } }) }));
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

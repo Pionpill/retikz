@@ -44,6 +44,7 @@ describe('Performance Lab report history', () => {
     });
     const container = document.createElement('div');
     document.body.append(container);
+
     const Harness = () => {
       const [selectedRunId, setSelectedRunId] = useState<string>();
       return createElement(ReportHistory, {
@@ -52,10 +53,12 @@ describe('Performance Lab report history', () => {
         onSelectReport: setSelectedRunId,
       });
     };
+
     const root = createRoot(container);
 
     await act(() => root.render(createElement(I18nextProvider, { i18n }, createElement(Harness))));
     const reportButton = container.querySelector<HTMLButtonElement>('button[data-run-id="run-1"]');
+
     expect(reportButton?.getAttribute('aria-pressed')).toBe('false');
     expect(reportButton?.textContent).not.toContain('run-1');
     expect(reportButton?.textContent).toContain('2026');
@@ -63,6 +66,7 @@ describe('Performance Lab report history', () => {
     expect(reportButton?.querySelector('time')?.getAttribute('datetime')).toBe('2026-08-01T00:00:01.000Z');
 
     await act(() => reportButton?.click());
+
     expect(reportButton?.getAttribute('aria-pressed')).toBe('true');
 
     await act(() => root.unmount());
@@ -90,6 +94,7 @@ describe('Performance Lab report history', () => {
     );
     const container = document.createElement('div');
     document.body.append(container);
+
     const Probe = () => {
       const history = useReportHistory('kernel', 'single-entity-update');
       return createElement(
@@ -99,6 +104,7 @@ describe('Performance Lab report history', () => {
         createElement('output', null, history.selectedReport?.runId ?? ''),
       );
     };
+
     const root = createRoot(container);
 
     await act(async () => {
@@ -114,6 +120,7 @@ describe('Performance Lab report history', () => {
     });
 
     expect(container.querySelector('output')?.textContent).toBe('run-1');
+
     await act(() => root.unmount());
   });
 
@@ -130,19 +137,23 @@ describe('Performance Lab report history', () => {
           }),
         );
       }
+
       if (url.includes('runId=run-2')) {
         return new Promise(resolve => {
           resolveDetailB = resolve;
         });
       }
+
       return Promise.resolve(new Response(JSON.stringify({ reports, diagnostics: [] }), { status: 200 }));
     });
     const snapshots: Array<string> = [];
     const container = document.createElement('div');
     document.body.append(container);
+
     const Probe = () => {
       const history = useReportHistory('kernel', 'single-entity-update');
       snapshots.push(`${history.selectedRunId ?? '-'}:${history.selectedReport?.runId ?? '-'}`);
+
       return createElement(
         'div',
         null,
@@ -150,6 +161,7 @@ describe('Performance Lab report history', () => {
         createElement('button', { type: 'button', onClick: () => history.selectReport('run-2') }, 'B'),
       );
     };
+
     const root = createRoot(container);
 
     await act(async () => {
@@ -162,12 +174,15 @@ describe('Performance Lab report history', () => {
       await Promise.resolve();
       await Promise.resolve();
     });
+
     expect(snapshots).toContain('run-1:run-1');
+
     snapshots.length = 0;
 
     await act(() => container.querySelectorAll<HTMLButtonElement>('button')[1].click());
 
     expect(snapshots).not.toContain('run-2:run-1');
+
     resolveDetailB?.(
       new Response(JSON.stringify({ report: { ...detailA, runId: 'run-2' } }), {
         status: 200,
@@ -208,6 +223,7 @@ describe('Performance Lab report history', () => {
 
     expect(container.textContent).toContain('运行失败');
     expect(container.textContent).toContain('renderer crashed');
+
     await act(() => root.unmount());
   });
 
@@ -238,6 +254,7 @@ describe('Performance Lab report history', () => {
     );
 
     expect(container.textContent).toContain('broken-run: Report schema is invalid');
+
     await act(() => root.unmount());
   });
 });

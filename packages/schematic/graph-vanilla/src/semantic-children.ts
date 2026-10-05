@@ -49,6 +49,7 @@ const visitSemanticChildren = (child: InputGraphMember, visit: (nestedChild: Inp
       if ('children' in child) {
         child.children?.forEach(visit);
       }
+
       return;
     case 'entity':
     case 'relation':
@@ -77,6 +78,7 @@ const mapSemanticChildren = (
       };
     case 'blockRow':
       if (!('children' in child) || child.children === undefined) return child;
+
       return {
         ...child,
         children: child.children.map(map),
@@ -102,19 +104,23 @@ export const normalizeGraphAuthoringChildren = (
   const authoredChildren: Array<InputChild> = [];
   const providerRoots: Array<GraphSemanticProviderKey> = [];
   const providerTokens = new Set<string>();
+
   const collect = (child: InputGraphChild): void => {
     if (isGraphAuthoringChild(child)) {
       authoredChildren.push(child);
       return;
     }
+
     const providerKey = providerKeyByType[child.type];
     const providerToken = providerKeyToken(providerKey);
     if (!providerTokens.has(providerToken)) {
       providerTokens.add(providerToken);
       providerRoots.push(providerKey);
     }
+
     visitSemanticChildren(child, collect);
   };
+
   children.forEach(collect);
 
   if (authoredChildren.length === 0) return { children, providerRoots };
@@ -128,9 +134,11 @@ export const normalizeGraphAuthoringChildren = (
 
   const nested = context.normalizeChildren(authoredChildren);
   let childCursor = 0;
+
   const replace = (child: InputGraphChild): InputGraphChild => {
     if (!isGraphSemanticInput(child)) return nested.children[childCursor++];
     return mapSemanticChildren(child, replace);
   };
+
   return { children: children.map(replace), providerRoots, nested };
 };

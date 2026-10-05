@@ -17,23 +17,28 @@ export const collectFormatFields = (
   const fieldTypeMap: DataFieldTypeMap = new Map(baseTypes);
   const parsers = new Map<string, (raw: unknown) => ParsedFieldValue>();
   if (model === undefined) return { fieldTypeMap, parsers };
+
   for (const field of model) {
     if (field.format === undefined) continue;
     if (!userSourceFields.has(field.name)) continue;
+
     const definition = registry.get(field.format);
     if (definition === undefined) {
       throw new RetikzDataError(
         `data: field format "${field.format}" is not registered; pass a FieldFormatDefinition via options.formatDefinitions`,
       );
     }
+
     const impliedType = definition.impliedType;
     if (field.type !== undefined && field.type !== impliedType) {
       throw new RetikzDataError(
         `data: field "${field.name}" declares type "${field.type}" but format "${field.format}" implies "${impliedType}" (incompatible)`,
       );
     }
+
     fieldTypeMap.set(field.name, impliedType);
     parsers.set(field.name, definition.parse);
   }
+
   return { fieldTypeMap, parsers };
 };

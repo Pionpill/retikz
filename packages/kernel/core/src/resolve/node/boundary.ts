@@ -47,6 +47,7 @@ export const resolveBoundaryReference = (
       isShape: true,
     };
   }
+
   const type = typeof boundary === 'string' ? boundary : boundary.type;
   const rawParams = typeof boundary === 'string' ? {} : (boundary.params ?? {});
   const paramsPath = `${context.irPath ?? 'node'}.boundary.params`;
@@ -66,6 +67,7 @@ export const resolveBoundaryReference = (
       isShape: false,
     };
   }
+
   const shapeDef = providerOf(context.shapeRegistry, type);
   if (shapeDef !== undefined) {
     return {
@@ -82,6 +84,7 @@ export const resolveBoundaryReference = (
       isShape: true,
     };
   }
+
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Resolve,
     `Unknown connection surface provider '${type}'; registered boundaries: ${registeredNames(context.boundaryRegistry)}; registered shapes: ${registeredNames(context.shapeRegistry)}. Pass boundary definitions via options.boundaries or shape definitions via options.shapes.`,

@@ -13,6 +13,7 @@ export const assertFiniteWidth = (width: number, source: string): number => {
       details: { source, width },
     });
   }
+
   return width;
 };
 
@@ -43,20 +44,24 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
   if (width.kind === 'stops') {
     const stops = width.stops;
     const mode = width.interpolation;
+
     return offset => {
       if (offset <= stops[0].offset) return assertFiniteWidth(stops[0].value, 'first stop');
+
       for (let i = 1; i < stops.length; i += 1) {
         const prev = stops[i - 1];
         const next = stops[i];
         if (offset <= next.offset) {
           const span = next.offset - prev.offset;
           const localT = span === 0 ? 1 : (offset - prev.offset) / span;
+
           return assertFiniteWidth(
             interpolate({ from: prev.value, to: next.value, t: localT, mode }),
             `stops profile at offset ${offset}`,
           );
         }
       }
+
       return assertFiniteWidth(stops[stops.length - 1].value, 'last stop');
     };
   }
@@ -70,12 +75,15 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
       details: { profile: width.name },
     });
   }
+
   return offset => {
     let rawWidth: number;
+
     try {
       rawWidth = profile.widthAt({ offset, length: totalLength, params });
     } catch (cause) {
       if (cause instanceof RetikzExtensionError) throw cause;
+
       throw new RetikzExtensionError({
         code: RetikzExtensionErrorCode.ResolutionInvalid,
         message: `Ribbon width profile '${width.name}' widthAt failed at offset ${String(offset)}.`,
@@ -83,6 +91,7 @@ export const widthFunction = (resolution: RibbonWidthResolution, totalLength: nu
         cause,
       });
     }
+
     return assertFiniteWidth(rawWidth, `profile "${width.name}" at offset ${offset}`);
   };
 };

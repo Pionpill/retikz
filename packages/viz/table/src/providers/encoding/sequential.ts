@@ -25,6 +25,7 @@ export const SEQUENTIAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
       return value;
     });
     if (options.domain === undefined && numbers.length === 0) return undefined;
+
     const domain: [number, number] =
       options.domain === undefined
         ? [Math.min(...numbers), Math.max(...numbers)]
@@ -33,8 +34,10 @@ export const SEQUENTIAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
     if (selectedRange === undefined) {
       throw new RetikzTableError('sequential-color requires a range or sequential Table defaults');
     }
+
     const range: [string, string] = [selectedRange[0], selectedRange[1]];
     const scale = d3ScaleLinear<string>().domain(domain).range(range).clamp(true);
+
     return {
       of: value => {
         if (typeof value !== 'number') throw new RetikzTableError('sequential-color values must be numbers');

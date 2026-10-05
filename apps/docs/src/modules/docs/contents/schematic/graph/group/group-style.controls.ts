@@ -120,5 +120,7 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     relatedApis: ['Group.background', 'Group.border', 'Group.cornerRadius', 'Group.padding'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const groupStyleControls = previewControlContract.controls;

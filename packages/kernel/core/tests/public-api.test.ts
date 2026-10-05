@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import * as core from '../src';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
 const root = resolve(here, '..');
 
 const sourceFiles = (directory: string): Array<string> => {
@@ -66,6 +67,7 @@ describe('Core public API', () => {
   it('公开 occurrence 和 observation owner 的稳定比较工具', () => {
     const first = { sourcePath: 'children[0]', expansionPath: [{ kind: 'expand', index: 0 }] } as const;
     const second = { sourcePath: 'children[1]', expansionPath: [{ kind: 'expand', index: 0 }] } as const;
+
     expect(core.isCompileOccurrenceEqual(first, first)).toBe(true);
     expect(core.isCompileOccurrenceEqual(first, second)).toBe(false);
     expect(core.compareCompileOccurrences(first, second)).toBeLessThan(0);

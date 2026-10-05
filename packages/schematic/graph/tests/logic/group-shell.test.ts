@@ -23,6 +23,7 @@ type MeasureGroupShell = (
 type CreateGroupBodyAllocation = (bounds: Readonly<BoundsRect>) => IRChild;
 
 const isMeasureGroupShell = (value: unknown): value is MeasureGroupShell => typeof value === 'function';
+
 const isCreateGroupBodyAllocation = (value: unknown): value is CreateGroupBodyAllocation => typeof value === 'function';
 
 const metricSchema = strictObject({
@@ -74,6 +75,7 @@ const compileMeasurement = (
       candidate.kind === 'composite' && candidate.namespace === 'graph-shell-test' && candidate.type === 'measurement',
   );
   if (artifact === undefined || artifact.kind !== 'composite') throw new Error('Expected Group shell metrics');
+
   return metricSchema.parse(artifact.value);
 };
 
@@ -84,7 +86,9 @@ describe('Graph Group shell composition', () => {
       typeof candidate === 'object' && candidate !== null && 'measureGroupShell' in candidate
         ? candidate.measureGroupShell
         : undefined;
+
     expect(isMeasureGroupShell(measureGroupShell)).toBe(true);
+
     if (!isMeasureGroupShell(measureGroupShell)) return;
 
     const base = {
@@ -113,7 +117,9 @@ describe('Graph Group shell composition', () => {
       typeof candidate === 'object' && candidate !== null && 'measureGroupShell' in candidate
         ? candidate.measureGroupShell
         : undefined;
+
     expect(isMeasureGroupShell(measureGroupShell)).toBe(true);
+
     if (!isMeasureGroupShell(measureGroupShell)) return;
 
     const group = Graph.createGroup({
@@ -151,7 +157,9 @@ describe('Graph Group shell composition', () => {
       typeof candidate === 'object' && candidate !== null && 'createGroupBodyAllocation' in candidate
         ? candidate.createGroupBodyAllocation
         : undefined;
+
     expect(isCreateGroupBodyAllocation(createGroupBodyAllocation)).toBe(true);
+
     if (!isCreateGroupBodyAllocation(createGroupBodyAllocation)) return;
 
     const allocation = createGroupBodyAllocation({ x: 4, y: 6, width: 120, height: 80 });

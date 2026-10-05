@@ -28,10 +28,12 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { status: 'available', critical: false },
     relatedApis: ['Entity.predicate', 'Graph.graphRules'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

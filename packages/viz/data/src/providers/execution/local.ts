@@ -26,11 +26,13 @@ const indexImplementations = <T extends { definition: { schema: Parameters<typeo
   kindOf: typeof extractTransformKind,
 ): Map<string, T> => {
   const registry = new Map<string, T>();
+
   for (const implementation of [...builtin, ...custom]) {
     const kind = kindOf(implementation.definition.schema);
     if (registry.has(kind)) throw new RetikzDataError(`data: duplicate implementation registration: "${kind}"`);
     registry.set(kind, implementation);
   }
+
   return registry;
 };
 
@@ -48,6 +50,7 @@ export const prepareLocalDataTransform = <TSource>(
   if (transform === undefined) return undefined;
   if (transform.definition !== stage.definition)
     throw new RetikzDataError(`data: "${stage.operation.kind}" references a different Definition`);
+
   const reducers = indexImplementations<AnyStatisticsReducerImplementation>(
     BUILTIN_STATISTICS_REDUCER_IMPLEMENTATIONS,
     options.statisticsReducerImplementations ?? [],
@@ -63,6 +66,7 @@ export const prepareLocalDataTransform = <TSource>(
     options.regressionImplementations ?? [],
     extractRegressionKind,
   );
+
   for (const dependency of stage.dependencies) {
     const implementation =
       dependency.type === 'reducer'
@@ -76,6 +80,7 @@ export const prepareLocalDataTransform = <TSource>(
         `data: ${dependency.type} "${dependency.operation.kind}" references a different Definition`,
       );
   }
+
   return context => {
     const reducerDependencies = stage.dependencies.filter(dependency => dependency.type === 'reducer');
     const selectorDependencies = stage.dependencies.filter(dependency => dependency.type === 'selector');
@@ -103,6 +108,7 @@ export const prepareLocalDataTransform = <TSource>(
     ]);
     context.statisticsReducerRegistry = reducerDefinitions;
     context.rowSelectorRegistry = selectorDefinitions;
+
     let reducerIndex = 0;
     let selectorIndex = 0;
     const computation = {
@@ -113,8 +119,10 @@ export const prepareLocalDataTransform = <TSource>(
         const dependency = reducerDependencies[reducerIndex++ % reducerDependencies.length];
         if (dependency.operation.kind !== operation.kind)
           throw new RetikzDataError('data: undeclared reducer dependency');
+
         const implementation = reducers.get(operation.kind);
         if (implementation === undefined) throw new RetikzDataError('data: missing prepared reducer');
+
         const result = await implementation.reduce(rows, dependency.operation as never, context);
         context.lineage?.recordReducerOperation({
           operation,
@@ -122,6 +130,7 @@ export const prepareLocalDataTransform = <TSource>(
           inputFields: dependency.definition.inputFields?.(dependency.operation as never) ?? [],
           outputFields: dependency.definition.outputs(dependency.operation as never).map(field => field.field),
         });
+
         return result;
       },
       select: async (
@@ -131,8 +140,10 @@ export const prepareLocalDataTransform = <TSource>(
         const dependency = selectorDependencies[selectorIndex++ % selectorDependencies.length];
         if (dependency.operation.kind !== operation.kind)
           throw new RetikzDataError('data: undeclared selector dependency');
+
         const implementation = selectors.get(operation.kind);
         if (implementation === undefined) throw new RetikzDataError('data: missing prepared selector');
+
         const result = await implementation.select(rows, dependency.operation as never);
         context.lineage?.recordSelectorOperation({
           operation,
@@ -140,21 +151,27 @@ export const prepareLocalDataTransform = <TSource>(
           selectedRows: result.map(selection => selection.row),
           inputFields: dependency.definition.inputFields?.(dependency.operation as never) ?? [],
         });
+
         return result;
       },
     };
+
     const dependency = stage.dependencies.find(candidate => candidate.type === 'regression');
     const regression = {
       fit: async (pairs: Parameters<AnyRegressionImplementation['fit']>[0]) => {
         if (dependency?.type !== 'regression') throw new RetikzDataError('data: undeclared regression dependency');
+
         const implementation = regressions.get(dependency.operation.kind);
         if (implementation === undefined) throw new RetikzDataError('data: missing prepared regression');
+
         const model = await implementation.fit(pairs, dependency.operation as never);
+
         return {
           predict: (x: number) => {
             const prediction = model.predict(x);
             if (!Number.isFinite(prediction))
               throw new RetikzDataError('data: regression produced a non-finite prediction');
+
             return prediction;
           },
         };
@@ -164,6 +181,7 @@ export const prepareLocalDataTransform = <TSource>(
           dependency.definition.validateExtent?.(dependency.operation as never, extent);
       },
     };
+
     const asyncTransforms = indexImplementations<AnyTransformImplementation>(
       createAsyncBuiltinTransformImplementations(computation, regression),
       options.transformImplementations ?? [],
@@ -172,6 +190,7 @@ export const prepareLocalDataTransform = <TSource>(
     const implementation = asyncTransforms.get(stage.operation.kind);
     if (implementation === undefined || implementation.definition !== stage.definition)
       throw new RetikzDataError(`data: "${stage.operation.kind}" has no matching local implementation`);
+
     return implementation;
   };
 };

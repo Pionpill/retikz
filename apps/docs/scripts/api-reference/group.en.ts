@@ -16,6 +16,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Group 结构化 caption': 'Structured Group caption',
   'Group caption 文本项': 'Group caption text item',
 };
+
 /** 共享 Graph 说明复用 Entity 译文 */
 export const translateGroupApiReference = (source: string): string =>
   translations[source.replace(/\r/g, '')] ?? translateEntityApiReference(source);

@@ -21,6 +21,7 @@ export type ChainItemProps =
   | (Omit<Extract<InputChainItem, { kind: 'parallel' }>, 'branches'> & {
       branches: Array<{ items: Array<ChainItemProps> }>;
     });
+
 /** Chain 的属性入口与 JSX 入口互斥 */
 export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataExpand'> &
   (
@@ -41,6 +42,7 @@ export type ChainProps = Omit<InputChain, 'items' | 'data' | 'skeleton' | 'dataE
       }
     | { children?: ReactNode; items?: never; data?: never; skeleton?: never; dataExpand?: never }
   );
+
 /** 展开结构 marker，先统一收集内容以保证 occurrence 唯一 */
 const createChainInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { children, items, data, skeleton, dataExpand, ...rest } = props as ChainProps;
@@ -48,8 +50,10 @@ const createChainInput = (props: Readonly<Record<string, unknown>>, context: Rea
   if (data !== undefined)
     return { ...rest, data, ...(dataExpand === undefined ? {} : { dataExpand }) } satisfies InputChain;
   if (items !== undefined) return { ...rest, items } satisfies InputChain;
+
   const input = rest;
   const cells: Array<DrawableCell> = [];
+
   const collect = (nodes: ReactNode): Array<InputChainItem> => {
     const result: Array<InputChainItem> = [];
     Children.forEach(nodes, child => {
@@ -58,11 +62,13 @@ const createChainInput = (props: Readonly<Record<string, unknown>>, context: Rea
         result.push(...collect(child.props.children));
         return;
       }
+
       if (isValidElement(child) && child.type === ChainCell) {
         cells.push(markerCell((child as ReactElement<ChainCellProps>).props));
         result.push({ kind: 'cell' });
         return;
       }
+
       if (isValidElement(child) && child.type === ChainParallel) {
         const { children: branchNodes, ...block } = (child as ReactElement<ChainParallelProps>).props;
         result.push({
@@ -72,12 +78,16 @@ const createChainInput = (props: Readonly<Record<string, unknown>>, context: Rea
             items: collect(branch.children),
           })),
         });
+
         return;
       }
+
       invalidCellAuthoring('Chain and ChainBranch accept only ChainCell or ChainParallel.');
     });
+
     return result;
   };
+
   const structure = collect(children);
   const collected = createCellsInput(cells, context);
   let cursor = 0;
@@ -89,9 +99,12 @@ const createChainInput = (props: Readonly<Record<string, unknown>>, context: Rea
           ? { kind: 'cell', ...collected.cells[cursor++] }
           : { ...item, branches: item.branches.map(branch => ({ items: populate(branch.items) })) },
     );
+
   return withInputEmbedAdapters({ ...input, items: populate(structure) } satisfies InputChain, collected.adapters);
 };
+
 const ChainComponent: FC<ChainProps> = () => null;
+
 /** 串并联内容容器 */
 export const Chain = ChainComponent as StandardEmbeddableComponent<ChainProps>;
 Chain.displayName = 'Chain';

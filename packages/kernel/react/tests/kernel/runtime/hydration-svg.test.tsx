@@ -59,6 +59,7 @@ describe('SVG 水合', () => {
     });
 
     expect(container.querySelector('[data-retikz-id="ball"]')).not.toBeNull();
+
     await act(() => root.unmount());
     container.remove();
   });
@@ -78,6 +79,7 @@ describe('SVG 水合', () => {
     });
 
     const target = container.querySelector('[data-retikz-id="a"]');
+
     expect(target).not.toBeNull();
 
     await act(() => {
@@ -109,6 +111,7 @@ describe('SVG 水合', () => {
     });
 
     expect(onClick).toHaveBeenCalledTimes(1);
+
     root.unmount();
     container.remove();
   });
@@ -168,6 +171,7 @@ describe('SVG 水合', () => {
     });
 
     const other = container.querySelector('[data-retikz-id="b"]');
+
     expect(other).not.toBeNull();
 
     await act(() => {

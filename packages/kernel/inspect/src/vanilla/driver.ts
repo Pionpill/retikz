@@ -34,23 +34,28 @@ const allocateObservationOwnerIndex = (
     counts = { pathKinds: new Map(), composites: new Map(), kernel: new Map() };
     countsBySourcePath.set(sourcePath, counts);
   }
+
   if (owner.kind === 'path') {
     const index = counts.pathKinds.get(owner.name) ?? 0;
     counts.pathKinds.set(owner.name, index + 1);
     return index;
   }
+
   if (owner.kind !== 'composite') {
     const index = counts.kernel.get(owner.kind) ?? 0;
     counts.kernel.set(owner.kind, index + 1);
     return index;
   }
+
   let typeCounts = counts.composites.get(owner.namespace);
   if (typeCounts === undefined) {
     typeCounts = new Map();
     counts.composites.set(owner.namespace, typeCounts);
   }
+
   const index = typeCounts.get(owner.type) ?? 0;
   typeCounts.set(owner.type, index + 1);
+
   return index;
 };
 
@@ -88,6 +93,7 @@ const deliverCommit = (options: CreateInspectionVanillaDriverOptions, output: Va
       }
     }
   }
+
   if (options.onCommit !== undefined) {
     try {
       options.onCommit(result);
@@ -112,13 +118,16 @@ const resolveVanillaSelection = (
         'Inspect nested Scope inside an embeddable contribution cannot be located',
       );
     }
+
     const owner = site.owner;
     const occurrenceIndex =
       owner === undefined ? undefined : allocateObservationOwnerIndex(occurrenceCounts, site.sourcePath, owner);
+
     return siteRules.map(rule => {
       if (rule.kind !== 'request' || rule.target.kind !== 'self') {
         return rule;
       }
+
       const definitionOwner = getResolvedInspectorRegistry(registry).require(rule.inspector).owner;
       if (owner !== undefined && !isCompileObservationOwnerEqual(owner, definitionOwner)) {
         throw new RetikzInspectError(
@@ -126,7 +135,9 @@ const resolveVanillaSelection = (
           'Inspect self request owner does not match authored site owner',
         );
       }
+
       if (occurrenceIndex === undefined) return rule;
+
       return {
         ...rule,
         target: {
@@ -136,6 +147,7 @@ const resolveVanillaSelection = (
       };
     });
   });
+
   return { rules: [...selection.rules, ...authoredRules] };
 };
 
@@ -156,6 +168,7 @@ export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDr
         existing.updateInput(input);
         return existing.session;
       }
+
       let currentInput = input;
       const observer = Object.freeze({
         key: '@retikz/inspect',
@@ -168,6 +181,7 @@ export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDr
           return createInspectionObserver(currentInput.source, options.registry, selection).createSession();
         },
       });
+
       const session: VanillaCompileDriverSession = Object.freeze({
         observers: Object.freeze([observer]),
         resolve: coreOutput => {
@@ -181,12 +195,14 @@ export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDr
         },
         commit: output => deliverCommit(options, output),
       });
+
       sessions.set(input.instance, {
         updateInput: nextInput => {
           currentInput = nextInput;
         },
         session,
       });
+
       return session;
     },
   });

@@ -52,8 +52,10 @@ export type RetikzGraphErrorOptions = Readonly<{
 export class RetikzGraphError extends RetikzError<RetikzGraphErrorCode, RetikzGraphErrorDetails> {
   /** 稳定错误码 */
   readonly code: RetikzGraphErrorCode;
+
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzGraphErrorDetails;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 

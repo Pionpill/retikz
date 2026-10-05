@@ -14,13 +14,16 @@ const base = (overrides: Record<string, unknown> = {}) => ({
 describe('GridSchema', () => {
   it('keeps factory and persisted source sparse while resolving default-dependent limits', () => {
     const source = createGrid({ bounds: { start: [0, 0], end: [120, 80] }, line: { major: { every: 2 } }, border: {} });
+
     expect(resolveGrid(GridSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual(resolveGrid(source));
     expect(source.line).toEqual({ major: { every: 2 } });
     expect(resolveGrid(source)).toMatchObject({
       line: { vertical: { spacing: 10, origin: 0, includeBoundary: false, major: { offset: 0 } } },
       border: { padding: 0, order: 'front', extendLines: false },
     });
+
     const excessive = GridSchema.parse(base({ line: { spacing: 0.000001 } }));
+
     expect(() => resolveGrid(excessive)).toThrow(/exceeds/);
   });
 
@@ -40,6 +43,7 @@ describe('GridSchema', () => {
     const result = GridSchema.safeParse(base());
 
     expect(result.success).toBe(true);
+
     if (result.success) {
       expect(result.data.bounds).toEqual({ start: [0, 0], end: [120, 80] });
       expect(result.data.line).toBe(true);
@@ -62,6 +66,7 @@ describe('GridSchema', () => {
     );
 
     expect(result.success).toBe(true);
+
     if (result.success) {
       expect(result.data.line).toEqual({
         spacing: 10,
@@ -85,6 +90,7 @@ describe('GridSchema', () => {
     );
 
     expect(result.success).toBe(true);
+
     if (result.success) {
       expect(result.data.line).toEqual({
         vertical: { spacing: 10, origin: 0, includeBoundary: false, style: { stroke: '#ef4444' } },
@@ -97,6 +103,7 @@ describe('GridSchema', () => {
     const result = GridSchema.safeParse(base({ line: false, border: { padding: 4, style: { stroke: '#64748b' } } }));
 
     expect(result.success).toBe(true);
+
     if (result.success) expect(result.data.line).toBe(false);
   });
 
@@ -152,6 +159,7 @@ describe('GridSchema', () => {
     );
 
     expect(result.success).toBe(true);
+
     if (result.success) {
       expect(result.data.bounds).toEqual({
         position: { origin: { origin: [10, 5], angle: 90, radius: 10 }, angle: 0, radius: 20 },
@@ -165,9 +173,12 @@ describe('GridSchema', () => {
     const unknownStyle = GridSchema.safeParse(base({ line: { style: { strokeWidth: 1, unsupported: true } } }));
 
     expect(unknownStyle.success).toBe(false);
+
     if (!unknownStyle.success) {
       const issue = unknownStyle.error.issues[0];
+
       expect(issue.code).toBe('invalid_union');
+
       if (issue.code === 'invalid_union') {
         expect(issue.errors[1]?.[0]?.path).toEqual(['style']);
       }
@@ -187,6 +198,7 @@ describe('GridSchema', () => {
 
     expect(corner.success).toBe(false);
     expect(center.success).toBe(false);
+
     if (!corner.success) expect(corner.error.issues[0]?.path).toEqual(['line', 'spacing']);
     if (!center.success) expect(center.error.issues[0]?.path).toEqual(['line', 'spacing']);
   });
@@ -199,6 +211,7 @@ describe('GridSchema', () => {
     );
 
     expect(result.success).toBe(false);
+
     if (!result.success) expect(result.error.issues[0]?.path).toEqual(['line', 'vertical', 'spacing']);
   });
 });

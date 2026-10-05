@@ -56,6 +56,7 @@ const createControls = (lang: Lang) => {
     ],
   });
 };
+
 /** 控件与源码共享的稳定契约 */
 export const createPreviewControlContract = (lang: Lang) =>
   ({
@@ -63,5 +64,6 @@ export const createPreviewControlContract = (lang: Lang) =>
     canonicalValues: { mode: 'labels', count: 4, labels: 'x₁|x₂||xₙ', index: 'auto' },
     relatedApis: ['Array.skeleton', 'Array.index'],
   }) satisfies PreviewControlContract;
+
 /** 默认语言契约 */
 export const previewControlContract = createPreviewControlContract('zh');

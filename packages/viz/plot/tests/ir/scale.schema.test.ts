@@ -10,11 +10,13 @@ describe('ScaleSchema linear', () => {
 
   it('scale_linear_full_fields_valid', () => {
     const s = { type: 'linear', name: 'y', domain: [0, 100], range: [0, 480], nice: true, clamp: true };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('scale_linear_nice_only_valid', () => {
     const s = { type: 'linear', name: 'y', nice: true };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -48,6 +50,7 @@ describe('ScaleSchema log / pow / sqrt', () => {
   // Happy path
   it('log_schema_valid', () => {
     const s = { type: 'log', name: 'y', base: 10, nice: true };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -57,11 +60,13 @@ describe('ScaleSchema log / pow / sqrt', () => {
 
   it('pow_schema_valid', () => {
     const s = { type: 'pow', name: 'y', exponent: 2, domain: [0, 100] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('sqrt_schema_valid', () => {
     const s = { type: 'sqrt', name: 'r', domain: [0, 50], range: [0, 20] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -91,12 +96,14 @@ describe('ScaleSchema symlog / radial', () => {
 
   it('symlog_full_fields_valid', () => {
     const s = { type: 'symlog', name: 'y', domain: [-100, 100], range: [0, 480], constant: 2, nice: true, clamp: true };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('symlog_negative_domain_accepted_by_schema', () => {
     // symlog 全域有定义（含零 / 负），schema 不拦负 domain
     const s = { type: 'symlog', name: 'y', domain: [-50, 50] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -110,6 +117,7 @@ describe('ScaleSchema symlog / radial', () => {
 
   it('radial_full_fields_valid', () => {
     const s = { type: 'radial', name: 'r', domain: [0, 50], range: [0, 120], nice: true, clamp: false };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 });
@@ -118,22 +126,26 @@ describe('ScaleSchema band / point', () => {
   // Happy path
   it('band_schema_valid', () => {
     const s = { type: 'band', name: 'x', domain: ['a', 'b'] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('band_full_fields_valid', () => {
     const s = { type: 'band', name: 'x', domain: ['a', 'b'], paddingInner: 0.2, paddingOuter: 0.1, align: 0 };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('point_schema_valid', () => {
     const s = { type: 'point', name: 'x', padding: 0.5 };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('band_numeric_domain_valid', () => {
     // 类别可为数值（如年份）
     const s = { type: 'band', name: 'x', domain: [2021, 2022, 2023] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -157,11 +169,13 @@ describe('ScaleSchema band / point', () => {
 describe('ScaleSchema ordinal', () => {
   it('ordinal_schema_valid', () => {
     const s = { type: 'ordinal', name: 'col' };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('ordinal_with_range_valid', () => {
     const s = { type: 'ordinal', name: 'col', domain: ['a', 'b'], range: ['#a', '#b'] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -177,11 +191,13 @@ describe('ScaleSchema ordinal', () => {
 describe('ScaleSchema time', () => {
   it('time_schema_valid', () => {
     const s = { type: 'time', name: 'x' };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('time_with_domain_nice_valid', () => {
     const s = { type: 'time', name: 'x', domain: [1704067200000, 1735689600000], nice: true };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -198,11 +214,13 @@ describe('ScaleSchema sequential 连续顺序色阶', () => {
 
   it('全字段合法（domain + scheme + nice + clamp）', () => {
     const s = { type: 'sequential', name: 'col', domain: [0, 100], scheme: 'viridis', nice: true, clamp: true };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('range 端点颜色合法', () => {
     const s = { type: 'sequential', name: 'col', range: ['#fff', '#000'] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -214,6 +232,7 @@ describe('ScaleSchema sequential 连续顺序色阶', () => {
   // 边界：schema 只校结构，domain 乱序（min > max）的正性 / 顺序由 lowering fail-loud
   it('schema 接受乱序 domain（顺序校验留 lowering）', () => {
     const s = { type: 'sequential', name: 'col', domain: [100, 0] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -262,6 +281,7 @@ describe('ScaleSchema sequential 连续顺序色阶', () => {
       nice: true,
       clamp: false,
     };
+
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
   });
 });
@@ -274,11 +294,13 @@ describe('ScaleSchema diverging 连续发散色阶', () => {
 
   it('全字段合法（三元 domain + scheme + nice + clamp）', () => {
     const s = { type: 'diverging', name: 'col', domain: [-100, 0, 100], scheme: 'rdbu', nice: true, clamp: true };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('range 三端点颜色合法', () => {
     const s = { type: 'diverging', name: 'col', range: ['#f00', '#eee', '#00f'] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -290,6 +312,7 @@ describe('ScaleSchema diverging 连续发散色阶', () => {
   // 边界：domain 乱序结构上合法（low<mid<high 序校验留 lowering）
   it('schema 接受乱序 domain（顺序校验留 lowering）', () => {
     const s = { type: 'diverging', name: 'col', domain: [100, 0, -100] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -330,6 +353,7 @@ describe('ScaleSchema diverging 连续发散色阶', () => {
       nice: false,
       clamp: true,
     };
+
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
   });
 });
@@ -342,11 +366,13 @@ describe('ScaleSchema quantize 等宽离散化', () => {
 
   it('全字段合法（domain + count + scheme）', () => {
     const s = { type: 'quantize', name: 'col', domain: [0, 100], count: 5, scheme: 'blues' };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('range 显式离散色数组合法', () => {
     const s = { type: 'quantize', name: 'col', range: ['#fff', '#888', '#000'] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -400,6 +426,7 @@ describe('ScaleSchema quantize 等宽离散化', () => {
   // 边界：domain 乱序结构上合法（序校验留 lowering）
   it('schema 接受乱序 domain（顺序校验留 lowering）', () => {
     const s = { type: 'quantize', name: 'col', domain: [100, 0] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -413,13 +440,16 @@ describe('ScaleSchema quantize 等宽离散化', () => {
       scheme: 'viridis',
       range: ['#a', '#b', '#c', '#d'],
     };
+
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
   });
 
   // zod 错误路径：count < 2 的 issue 落在 count
   it('zod 错误路径定位到 count', () => {
     const r = ScaleSchema.safeParse({ type: 'quantize', name: 'col', count: 1 });
+
     expect(r.success).toBe(false);
+
     if (!r.success) expect(r.error.issues[0]?.path).toContain('count');
   });
 });
@@ -428,16 +458,19 @@ describe('ScaleSchema threshold 阈值离散化', () => {
   // Happy path
   it('单断点合法（type + name + breakpoints）', () => {
     const s = { type: 'threshold', name: 'col', breakpoints: [50] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('多断点 + range 合法', () => {
     const s = { type: 'threshold', name: 'col', breakpoints: [60, 80], range: ['#e74c3c', '#f1c40f', '#2ecc71'] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('断点 + scheme 合法', () => {
     const s = { type: 'threshold', name: 'col', breakpoints: [10, 20, 30], scheme: 'reds' };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
@@ -471,19 +504,23 @@ describe('ScaleSchema threshold 阈值离散化', () => {
   // 边界：断点乱序结构上合法（升序校验留 lowering）
   it('schema 接受乱序断点（升序校验留 lowering）', () => {
     const s = { type: 'threshold', name: 'col', breakpoints: [80, 60] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   // JSON round-trip
   it('JSON round-trip 不丢字段', () => {
     const s = { type: 'threshold', name: 'col', breakpoints: [60, 80], scheme: 'rdylgn', range: ['#a', '#b', '#c'] };
+
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
   });
 
   // zod 错误路径：缺 breakpoints 的 issue 落在 breakpoints
   it('zod 错误路径定位到 breakpoints', () => {
     const r = ScaleSchema.safeParse({ type: 'threshold', name: 'col' });
+
     expect(r.success).toBe(false);
+
     if (!r.success) expect(r.error.issues[0]?.path).toContain('breakpoints');
   });
 });
@@ -496,17 +533,20 @@ describe('ScaleSchema quantile 分位离散化', () => {
 
   it('count + scheme 合法', () => {
     const s = { type: 'quantile', name: 'col', count: 4, scheme: 'viridis' };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   it('range 显式离散色合法', () => {
     const s = { type: 'quantile', name: 'col', range: ['#fff', '#000'] };
+
     expect(ScaleSchema.parse(s)).toEqual(s);
   });
 
   // 关键：schema 非 strict，显式 domain 被静默 strip（不在 schema 层报错，fail-loud 留 lowering）
   it('显式 domain 被 schema 静默 strip（fail-loud 留 lowering）', () => {
     const parsed = ScaleSchema.parse({ type: 'quantile', name: 'col', domain: [0, 100] });
+
     expect(parsed).not.toHaveProperty('domain');
     expect(parsed).toEqual({ type: 'quantile', name: 'col' });
   });
@@ -543,13 +583,16 @@ describe('ScaleSchema quantile 分位离散化', () => {
   // JSON round-trip
   it('JSON round-trip 不丢字段', () => {
     const s = { type: 'quantile', name: 'col', count: 4, scheme: 'magma', range: ['#a', '#b', '#c', '#d'] };
+
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
   });
 
   // zod 错误路径：count < 2 的 issue 落在 count
   it('zod 错误路径定位到 count', () => {
     const r = ScaleSchema.safeParse({ type: 'quantile', name: 'col', count: 1 });
+
     expect(r.success).toBe(false);
+
     if (!r.success) expect(r.error.issues[0]?.path).toContain('count');
   });
 });
@@ -566,16 +609,19 @@ describe('离散化 / 连续色阶 · 非有限数值字段被 schema 拒（自 
       }),
     ).toThrow();
   });
+
   it('quantize domain 含 Infinity 被拒', () => {
     expect(() =>
       ScaleSchema.parse({ type: 'quantize', name: 'col', domain: [0, Number.POSITIVE_INFINITY], count: 3 }),
     ).toThrow();
   });
+
   it('sequential domain 含 -Infinity 被拒', () => {
     expect(() =>
       ScaleSchema.parse({ type: 'sequential', name: 'col', domain: [Number.NEGATIVE_INFINITY, 100] }),
     ).toThrow();
   });
+
   it('diverging domain 含 Infinity 被拒', () => {
     expect(() =>
       ScaleSchema.parse({ type: 'diverging', name: 'col', domain: [-100, 0, Number.POSITIVE_INFINITY] }),
@@ -591,6 +637,7 @@ describe('ScaleSchema position domain padding', () => {
     ['explicit ratio object', { kind: 'ratio', lower: 0.1, upper: 0.2 }],
   ])('preserves %s through parse and JSON round-trip', (_name, domainPadding) => {
     const source = { type: 'linear', name: 'x', domainPadding, singleValueSpan: 2 };
+
     expect(ScaleSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
   });
 
@@ -613,7 +660,9 @@ describe('ScaleSchema position domain padding', () => {
     ['upper', { kind: 'ratio', upper: 1 }],
   ])('locates an invalid ratio at the %s side', (side, domainPadding) => {
     const result = ScaleSchema.safeParse({ type: 'linear', name: 'x', domainPadding });
+
     expect(result.success).toBe(false);
+
     if (!result.success) expect(result.error.issues[0]?.path).toEqual(['domainPadding', side]);
   });
 

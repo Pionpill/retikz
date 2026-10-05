@@ -56,18 +56,22 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     const fromClip = penOverride ?? clipTarget(previous.step.to, currentAnchor, targetContext);
     const toClip = clipTarget(step.to, penOverride ?? previous.anchor, targetContext);
     if (!fromClip || !toClip) return false;
+
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitLine(toClip, isAutoBoundaryTarget(step.to));
     sampling.collect(step, t => curve.sampleAt({ kind: 'line', from: fromClip, to: toClip }, t));
+
     return true;
   }
 
   if (step.kind === 'axis-line') {
     const fromClip = penOverride ?? clipTarget(previous.step.to, currentAnchor, targetContext);
     if (!fromClip) return false;
+
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitLine(currentAnchor);
     sampling.collect(step, t => curve.sampleAt({ kind: 'line', from: fromClip, to: currentAnchor }, t));
+
     return true;
   }
 
@@ -75,11 +79,13 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     const fromClip = penOverride ?? clipTarget(previous.step.to, step.control, targetContext);
     const toClip = clipTarget(step.to, step.control, targetContext);
     if (!fromClip || !toClip) return false;
+
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitQuad(step.control, toClip, isAutoBoundaryTarget(step.to));
     sampling.collect(step, t =>
       curve.sampleAt({ kind: 'quadraticBezier', from: fromClip, control: step.control, to: toClip }, t),
     );
+
     return true;
   }
 
@@ -87,6 +93,7 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     const fromClip = penOverride ?? clipTarget(previous.step.to, step.control1, targetContext);
     const toClip = clipTarget(step.to, step.control2, targetContext);
     if (!fromClip || !toClip) return false;
+
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitCubic({
       control1: step.control1,
@@ -100,6 +107,7 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
         t,
       ),
     );
+
     return true;
   }
 
@@ -118,6 +126,7 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     const fromClip = penOverride ?? clipTarget(previous.step.to, control1, targetContext);
     const toClip = clipTarget(step.to, control2, targetContext);
     if (!fromClip || !toClip) return false;
+
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitCubic({
       control1,
@@ -128,6 +137,7 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     sampling.collect(step, t =>
       curve.sampleAt({ kind: 'cubicBezier', from: fromClip, control1, control2, to: toClip }, t),
     );
+
     return true;
   }
 
@@ -141,12 +151,15 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
     const fromClip = penOverride ?? clipTarget(previous.step.to, corner, targetContext);
     const toClip = clipTarget(step.to, corner, targetContext);
     if (!fromClip || !toClip) return false;
+
     startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
     emitLine(corner);
     emitLine(toClip, isAutoBoundaryTarget(step.to));
     sampling.collect(step, t => foldSegmentSample(fromClip, corner, toClip, t));
+
     return true;
   }
+
   const fromToward =
     [...corners, currentAnchor].find(candidate => !samePoint(candidate, fromReference)) ?? currentAnchor;
   const toToward =
@@ -154,16 +167,22 @@ export const lowerSegmentStep = (step: StrokeSegmentStep, context: LowerSegmentS
   const fromClip = penOverride ?? clipTarget(previous.step.to, fromToward, targetContext);
   const toClip = clipTarget(step.to, toToward, targetContext);
   if (!fromClip || !toClip) return false;
+
   const emittedCorners = corners.map(corner => [...corner] as IRPosition);
+
   for (let index = 0; index < emittedCorners.length && samePoint(corners[index], fromReference); index += 1) {
     emittedCorners[index] = fromClip;
   }
+
   for (let index = emittedCorners.length - 1; index >= 0 && samePoint(corners[index], currentAnchor); index -= 1) {
     emittedCorners[index] = toClip;
   }
+
   startSegment(fromClip, penOverride === null && isAutoBoundaryTarget(previous.step.to));
+
   for (const corner of emittedCorners) emitLine(corner);
   emitLine(toClip, isAutoBoundaryTarget(step.to));
   sampling.collect(step, t => foldSegmentSample(fromClip, emittedCorners, toClip, t));
+
   return true;
 };

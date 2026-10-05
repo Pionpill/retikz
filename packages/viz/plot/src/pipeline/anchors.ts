@@ -19,6 +19,7 @@ const renderTemplate = (template: string, row: ExternalRow, owner: AnchorOwner, 
     if (token === 'markId') return owner.markId ?? '';
     if (token === 'markIndex') return String(owner.markIndex);
     if (token === 'index') return String(owner.transformedIndex);
+
     const field = token.slice('field:'.length);
     const value = resolveFieldPath(row, field);
     if (value === undefined) {
@@ -26,6 +27,7 @@ const renderTemplate = (template: string, row: ExternalRow, owner: AnchorOwner, 
         `lowerPlots: anchorId template references missing field "${field}" for ${ownerText(owner)}`,
       );
     }
+
     return slug(value);
   });
 
@@ -51,15 +53,19 @@ export const createAnchorRegistry = (options: {
       if (raw === undefined) {
         throw new RetikzPlotError(`lowerPlots: anchorId field "${spec.field}" missing for ${ownerText(owner)}`);
       }
+
       return makeScopedId(prefix, raw);
     }
+
     if (spec.template !== undefined) {
       const rendered = renderTemplate(spec.template, row, owner, options.plotId);
       if (rendered.length === 0) {
         throw new RetikzPlotError(`lowerPlots: anchorId template produced an empty id for ${ownerText(owner)}`);
       }
+
       return rendered.includes('.') || options.plotId === undefined ? rendered : `${options.plotId}.${rendered}`;
     }
+
     if (spec.generator !== undefined) {
       const generator = options.generators?.[spec.generator];
       if (generator === undefined) {
@@ -67,6 +73,7 @@ export const createAnchorRegistry = (options: {
           `lowerPlots: anchorId generator "${spec.generator}" is not registered for ${ownerText(owner)}`,
         );
       }
+
       const generated = generator(row, {
         plotId: options.plotId,
         markId: owner.markId,
@@ -80,8 +87,10 @@ export const createAnchorRegistry = (options: {
           `lowerPlots: anchorId generator "${spec.generator}" produced an empty id for ${ownerText(owner)}`,
         );
       }
+
       return generated.includes('.') || options.plotId === undefined ? generated : `${options.plotId}.${generated}`;
     }
+
     throw new RetikzPlotError(`lowerPlots: anchorId requires field, template, or generator for ${ownerText(owner)}`);
   };
 
@@ -92,6 +101,7 @@ export const createAnchorRegistry = (options: {
         `lowerPlots: duplicate anchor id "${id}" from ${ownerText(owner)}; already registered by ${ownerText(prior)}`,
       );
     }
+
     registered.set(id, owner);
   };
 

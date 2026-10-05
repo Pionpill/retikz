@@ -8,10 +8,12 @@ import { flowEndpointAllocationI18n } from './flow-endpoint-allocation.i18n';
 
 /** 端点等分示意图语言 */
 export type FlowEndpointAllocationProps = Readonly<{ lang?: Lang }>;
+
 /** 用相同侧边长度对照一个、两个和三个自动分离位置 */
 const Demo: FC<FlowEndpointAllocationProps> = props => {
   const { lang = 'zh' } = props;
   const copy = flowEndpointAllocationI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[1, 2, 3].map((count, column) => {
@@ -42,6 +44,7 @@ const Demo: FC<FlowEndpointAllocationProps> = props => {
             {Array.from({ length: count }, (_, index) => {
               const fraction = (index + 1) / (count + 1);
               const y = fraction * 160;
+
               return (
                 <Fragment key={index}>
                   <Path style={{ stroke: 'dodgerblue' }}>

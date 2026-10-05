@@ -14,5 +14,6 @@ export const useStableMdxSource = (source: string | null, sourceSegments: Array<
     setStableSource(source);
     setStableSegments(sourceSegments);
   }
+
   return { stableSource, stableSegments };
 };

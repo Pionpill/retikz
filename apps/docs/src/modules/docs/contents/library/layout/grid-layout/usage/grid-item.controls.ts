@@ -42,11 +42,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { margin: 4, justifySelf: 'start', alignSelf: 'start' },
     relatedApis: ['GridLayoutItem.margin', 'GridLayoutItem.justifySelf', 'GridLayoutItem.alignSelf'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

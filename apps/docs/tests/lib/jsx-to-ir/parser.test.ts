@@ -26,6 +26,7 @@ const typeName = (element: ReactElement): string | undefined => {
   const type = element.type as { displayName?: string; name?: string };
   const raw = type.displayName ?? type.name;
   if (raw === undefined) return undefined;
+
   return raw.startsWith('@retikz/') ? raw.slice('@retikz/'.length) : raw;
 };
 
@@ -38,37 +39,49 @@ const normalizeReactChildren = (children: ReactNode) => {
 describe('parseRetikzJsx — happy path', () => {
   it('解析空 Layout（顶层容器，可作根）', () => {
     const element = parseOk('<Layout />');
+
     expect(isValidElement(element)).toBe(true);
     expect(typeName(element)).toBe('Layout');
   });
 
   it('Layout 作根 + Node child', () => {
     const element = parseOk('<Layout><Node>Hi</Node></Layout>');
+
     expect(typeName(element)).toBe('Layout');
+
     const node = (element.props as { children?: ReactNode }).children as ReactElement;
+
     expect(typeName(node)).toBe('Node');
   });
 
   it('解析带文本 child 的 Node', () => {
     const element = parseOk('<Layout><Node>Hello</Node></Layout>');
+
     expect(typeName(element)).toBe('Layout');
+
     const props = element.props as { children?: ReactNode };
+
     // React 单 child 时 props.children 不裹数组
     const node = props.children as ReactElement;
+
     expect(typeName(node)).toBe('Node');
+
     const nodeProps = node.props as { children?: ReactNode };
+
     expect(nodeProps.children).toBe('Hello');
   });
 
   it('字面量 props：string / number / boolean / null / undefined', () => {
     const element = parseOk('<Layout a="x" b={1} c={true} d={false} e={null} f={undefined} g />');
     const props = element.props as Record<string, unknown>;
+
     expect(props.a).toBe('x');
     expect(props.b).toBe(1);
     expect(props.c).toBe(true);
     expect(props.d).toBe(false);
     expect(props.e).toBeNull();
     expect(props.f).toBeUndefined();
+
     // 简写 attr 无 value → true
     expect(props.g).toBe(true);
   });
@@ -76,6 +89,7 @@ describe('parseRetikzJsx — happy path', () => {
   it('一元 -/+ 数字字面量', () => {
     const element = parseOk('<Layout a={-1.5} b={+0.5} />');
     const props = element.props as Record<string, unknown>;
+
     expect(props.a).toBe(-1.5);
     expect(props.b).toBe(0.5);
   });
@@ -83,18 +97,21 @@ describe('parseRetikzJsx — happy path', () => {
   it('对象字面量 prop', () => {
     const element = parseOk('<Layout position={{ x: 0, y: 0 }} />');
     const props = element.props as { position: unknown };
+
     expect(props.position).toEqual({ x: 0, y: 0 });
   });
 
   it('数组字面量 prop', () => {
     const element = parseOk('<Layout values={[1, 2, "three"]} />');
     const props = element.props as { values: unknown };
+
     expect(props.values).toEqual([1, 2, 'three']);
   });
 
   it('模板字符串（无插值）当字符串处理', () => {
     const element = parseOk('<Layout label={`hello world`} />');
     const props = element.props as { label: unknown };
+
     expect(props.label).toBe('hello world');
   });
 
@@ -103,6 +120,7 @@ describe('parseRetikzJsx — happy path', () => {
     const tikzProps = element.props as { children?: ReactNode };
     const node = tikzProps.children as ReactElement;
     const nodeProps = node.props as { children?: ReactNode };
+
     expect(nodeProps.children).toBe(1.5);
   });
 
@@ -110,6 +128,7 @@ describe('parseRetikzJsx — happy path', () => {
     const element = parseOk('<Layout><Node>a</Node><Node>b</Node><Node>c</Node></Layout>');
     const props = element.props as { children?: ReactNode };
     const children = props.children as Array<ReactElement>;
+
     expect(Array.isArray(children)).toBe(true);
     expect(children).toHaveLength(3);
     expect((children[0].props as { children: string }).children).toBe('a');
@@ -119,6 +138,7 @@ describe('parseRetikzJsx — happy path', () => {
 
   it('源码前后空白容忍', () => {
     const element = parseOk('   \n  <Layout />  \n  ');
+
     expect(typeName(element)).toBe('Layout');
   });
 
@@ -128,6 +148,7 @@ describe('parseRetikzJsx — happy path', () => {
     );
     const tikzProps = element.props as { children?: ReactNode };
     const ir = normalizeReactChildren(tikzProps.children).ir;
+
     // 不深究 IR 内部细节，但顶层应是 children 数组、长度 2 的 'node' kind
     expect(Array.isArray(ir.children)).toBe(true);
     expect(ir.children.length).toBe(2);
@@ -169,6 +190,7 @@ describe('parseRetikzJsx — error cases', () => {
 
   it('白名单外的组件（原生 div）', () => {
     const err = parseErr('<div />');
+
     expect(err).toMatch(/不支持的组件：div/);
     expect(err).toMatch(/Layout/);
   });
@@ -187,16 +209,19 @@ describe('parseRetikzJsx — error cases', () => {
 
   it('表达式 prop：函数调用', () => {
     const err = parseErr('<Layout a={Math.cos(0)} />');
+
     expect(err).toMatch(/不支持的表达式类型：CallExpression/);
   });
 
   it('表达式 prop：二元算式', () => {
     const err = parseErr('<Layout a={1 + 2} />');
+
     expect(err).toMatch(/不支持的表达式类型：BinaryExpression/);
   });
 
   it('children 含 .map 调用', () => {
     const err = parseErr('<Layout>{nodes.map(n => <Node>{n}</Node>)}</Layout>');
+
     expect(err).toMatch(/不支持的表达式类型：CallExpression/);
   });
 

@@ -19,6 +19,7 @@ const GraphLayers: FC<GraphLayersProps> = props => {
     { id: 'graph', title: t.graph, detail: t.graphDetail, y: 130 },
     { id: 'drawing', title: t.drawing, detail: t.drawingDetail, y: 230 },
   ];
+
   return (
     <LogicFigure semanticColors={false}>
       {rows.map(row => (

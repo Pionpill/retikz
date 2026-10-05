@@ -28,11 +28,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { overlap: false, overflow: 'visible' },
     relatedApis: ['GridLayout.overlap', 'GridLayout.overflow', 'GridLayoutItem.column', 'GridLayoutItem.row'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

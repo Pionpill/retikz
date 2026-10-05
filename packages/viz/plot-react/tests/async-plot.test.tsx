@@ -13,6 +13,7 @@ const rows = [
   { x: 1, y: 2 },
   { x: 2, y: 4 },
 ];
+
 const spec = () =>
   PlotSchema.parse({
     namespace: 'plot',
@@ -38,12 +39,15 @@ const fixture = () => {
         execute: async input => {
           await Promise.resolve();
           if (input.kind !== 'result') throw new Error('fixture requires canonical result');
+
           execute();
+
           return { rows: input.result.rows.map(row => ({ ...row, ratio: 0.75 })), model: stage.outputModel };
         },
       },
     }),
   };
+
   return { execute, executor: createDataTransformExecutor({ externalProviders: [{ name: 'fixture', provider }] }) };
 };
 
@@ -52,6 +56,7 @@ describe('Plot client async preparation', () => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   });
+
   afterEach(() => {
     document.body.replaceChildren();
     vi.restoreAllMocks();
@@ -75,12 +80,14 @@ describe('Plot client async preparation', () => {
       );
       await Promise.resolve();
     });
+
     expect(container.querySelectorAll('svg')).toHaveLength(1);
     expect(container.querySelectorAll('ellipse')).toHaveLength(2);
     expect(new Set([...container.querySelectorAll('ellipse')].map(point => point.getAttribute('cy'))).size).toBe(1);
     expect(onLineage).toHaveBeenCalledOnce();
     expect(JSON.stringify(onLineage.mock.calls[0])).toContain('0.75');
     expect(execute).toHaveBeenCalledOnce();
+
     act(() => root.unmount());
   });
 
@@ -103,9 +110,11 @@ describe('Plot client async preparation', () => {
       );
       await Promise.resolve();
     });
+
     expect(container.querySelectorAll('svg')).toHaveLength(1);
     expect(container.querySelectorAll('ellipse')).toHaveLength(3);
     expect(execute).toHaveBeenCalledTimes(2);
+
     act(() => root.unmount());
   });
 

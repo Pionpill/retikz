@@ -47,6 +47,7 @@ export const easingToCss = (
   if (easing === undefined) return 'linear';
   if (Array.isArray(easing)) return `cubic-bezier(${easing.join(', ')})`;
   if (CSS_NAMED_EASINGS.has(easing)) return easing;
+
   const custom = registry !== undefined && Object.hasOwn(registry, easing) ? registry[easing] : undefined;
   if (Array.isArray(custom)) return `cubic-bezier(${custom.join(', ')})`;
   if (typeof custom === 'function') {
@@ -55,7 +56,9 @@ export const easingToCss = (
     );
     return 'linear';
   }
+
   onWarn(`SVG animation: unknown easing "${easing}"; falling back to linear.`);
+
   return 'linear';
 };
 
@@ -85,6 +88,7 @@ export type ExpandedTrack = {
 export type ExpandSkip = { skip: string };
 
 const asNumber = (value: unknown): number => (typeof value === 'number' ? value : Number(value));
+
 const asColor = (value: unknown): string => (typeof value === 'string' ? value : String(value));
 
 /**
@@ -117,6 +121,7 @@ export const expandTrack = (
         frames: track.keyframes.map(kf => ({ offset: kf.at, value: String(asNumber(kf.value)), ...ease(kf) })),
       };
     }
+
     // 颜色：相邻 keyframe 段在 oklch 预采样成多帧
     const frames: Array<ExpandedFrame> = [];
     track.keyframes.forEach((kf, index) => {
@@ -124,12 +129,15 @@ export const expandTrack = (
         frames.push({ offset: kf.at, value: asColor(kf.value) });
         return;
       }
+
       const prev = track.keyframes[index - 1];
       const samples = sampleColorOklch(asColor(prev.value), asColor(kf.value), COLOR_SAMPLES);
+
       for (let s = 1; s <= COLOR_SAMPLES; s++) {
         frames.push({ offset: prev.at + ((kf.at - prev.at) * s) / COLOR_SAMPLES, value: samples[s], easing: 'linear' });
       }
     });
+
     return { cssProperty, frames };
   }
 

@@ -105,6 +105,7 @@ export const computePlotArea = (
   const fontSize = options.fontSize ?? DEFAULT_FONT_SIZE;
   const reserve = context.legendReserve ?? {};
   const layoutReserve = options.reserve ?? {};
+
   // legend 预留叠加在 axis margin 之外：legend 占某边 → 该边 margin += 预留带宽，plotArea 在该边收窄
   const auto: Margins = {
     top: (context.hasYAxis ? fontSize * 0.5 : 0) + (reserve.top ?? 0) + (layoutReserve.top ?? 0),
@@ -124,6 +125,7 @@ export const computePlotArea = (
       (layoutReserve.left ?? 0),
   };
   const margins: Margins = { ...auto, ...options.margin };
+
   // 用户 margin 可能传入 NaN / 负值——会一路污染出坏坐标，逐边校验有限非负（与 width/height 入口校验同思路）
   for (const side of ['top', 'right', 'bottom', 'left'] as const) {
     const value = margins[side];
@@ -131,6 +133,7 @@ export const computePlotArea = (
       throw new RetikzPlotError(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
     }
   }
+
   const plotArea: Rect = {
     x: margins.left,
     y: margins.top,
@@ -142,6 +145,7 @@ export const computePlotArea = (
       `lowerPlots: margins (left ${margins.left} + right ${margins.right}, top ${margins.top} + bottom ${margins.bottom}) exceed the ${width}×${height} canvas, leaving no plot area`,
     );
   }
+
   return { margins, plotArea };
 };
 
@@ -195,6 +199,7 @@ export const layoutPolarAngularLabel = (
   const width = estimateLabelWidth(label.text, fontSize);
   const support = polarLabelRadialSupport(projectedHorizontal, projectedVertical, width, fontSize);
   const labelRadius = outerRadius + radialOffset + support;
+
   return {
     position: [center[0] + projectedHorizontal * labelRadius, center[1] + projectedVertical * labelRadius],
     align: horizontalSign < 0 ? 'end' : horizontalSign > 0 ? 'start' : 'middle',
@@ -236,12 +241,14 @@ export const computePolarCoordinate = (
     bottom: explicit.bottom ?? layoutReserve.bottom ?? 0,
     left: explicit.left ?? layoutReserve.left ?? 0,
   };
+
   for (const side of ['top', 'right', 'bottom', 'left'] as const) {
     const value = margins[side];
     if (!Number.isFinite(value) || value < 0) {
       throw new RetikzPlotError(`lowerPlots: margin.${side} must be a non-negative finite number, got ${value}`);
     }
   }
+
   const availableWidth = width - margins.left - margins.right;
   const availableHeight = height - margins.top - margins.bottom;
   const center: [number, number] = [margins.left + availableWidth / 2, margins.top + availableHeight / 2];
@@ -254,6 +261,7 @@ export const computePolarCoordinate = (
 
   for (const label of context.angularLabels) {
     if (!Number.isFinite(label.angle)) continue;
+
     const radians = (label.angle * Math.PI) / 180;
     const horizontal = Math.cos(radians);
     const vertical = Math.sin(radians);
@@ -284,10 +292,12 @@ export const computePolarCoordinate = (
       outerRadius = Math.min(outerRadius, verticalLimit);
     }
   }
+
   if (outerRadius <= 0) {
     throw new RetikzPlotError(
       `lowerPlots: polar label reserve / margins exceed the ${width}×${height} canvas, leaving no radius`,
     );
   }
+
   return { center, outerRadius };
 };

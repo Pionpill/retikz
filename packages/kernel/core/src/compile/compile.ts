@@ -114,6 +114,7 @@ export const compileCoreSnapshot = <const TComposites extends ReadonlyArray<AnyC
       changed: context.trace.visited,
     });
   }
+
   return Object.freeze({
     result: Object.freeze({
       scene,
@@ -144,6 +145,7 @@ export const observeCompileToScene = <const TComposites extends ReadonlyArray<An
 ): ObservedCompileResult => {
   const snapshot = compileCoreSnapshot(ir, options, { observers });
   dispatchCompileDiagnostics(snapshot.diagnostics, options?.onWarn);
+
   return Object.freeze({
     primary: snapshot.result,
     observerOutputs: snapshot.observerOutputs,

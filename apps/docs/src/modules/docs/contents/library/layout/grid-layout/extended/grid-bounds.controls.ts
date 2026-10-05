@@ -31,11 +31,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { mode: 'natural', minimum: 70, maximum: 160, childWidth: 220, width: 350 },
     relatedApis: ['GridLayout.columns', 'GridLayout.size', 'Node.layout.minimumSize'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

@@ -7,6 +7,7 @@ import { normalizeShapeInput } from './shared';
 
 /** Ellipse 的 Vanilla 作者输入 */
 export type InputEllipse = InputShape<IREllipse>;
+
 /** 将 Ellipse 作者输入归一为持久化的 Standard 意图 */
 export const EllipseInputEmbedAdapter: SynchronousInputEmbedAdapter<InputEllipse & { id?: string }> = {
   kind: 'standard.ellipse',

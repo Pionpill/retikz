@@ -11,6 +11,7 @@ describe('Data external execution documentation', () => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   });
+
   afterEach(() => {
     document.body.replaceChildren();
     vi.restoreAllMocks();
@@ -20,6 +21,7 @@ describe('Data external execution documentation', () => {
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
+
     const render = async (mode: 'builtin' | 'external' | 'hybrid', factor: number) => {
       await act(async () => {
         root.render(
@@ -38,22 +40,29 @@ describe('Data external execution documentation', () => {
         await Promise.resolve();
       });
     };
+
     const points = () => [...container.querySelectorAll('ellipse')].map(point => point.outerHTML);
     await render('builtin', 2);
     const localPoints = points();
+
     expect(localPoints.length).toBeGreaterThan(0);
     expect(container.querySelector('p')?.textContent).toContain('0');
 
     await render('external', 2);
+
     expect(points()).toEqual(localPoints);
     expect(container.querySelector('p')?.textContent).toContain('1');
+
     await render('hybrid', 2);
+
     expect(points()).toEqual(localPoints);
     expect(container.querySelector('p')?.textContent).toContain('2');
 
     await render('hybrid', 3);
+
     expect(points()).not.toEqual(localPoints);
     expect(container.querySelector('p')?.textContent).toContain('3');
+
     act(() => root.unmount());
   });
 });

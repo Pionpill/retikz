@@ -102,6 +102,7 @@ export const createProbeLeafDefinition = (records: Array<ProbeRecord> = []): Any
 
       const width = resolvedAxis(context.proposal.x, node.minimumWidth, node.naturalWidth, node.ignoreExact);
       const height = resolvedAxis(context.proposal.y, node.minimumHeight, node.naturalHeight, node.ignoreExact);
+
       return {
         allocationBounds: { x: 0, y: 0, width, height },
         children: [context.scope({ id: node.id }, [pathForVisualBounds(node)])],
@@ -117,7 +118,9 @@ export const createHarnessDefinition = (observed: { result?: LayoutChildResult }
     compile: (node, context) => {
       const probe = context.layoutChild(node.child, node.proposal);
       if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+
       observed.result = probe.result;
+
       return { children: [context.replay(probe.result)] };
     },
   });
@@ -150,6 +153,7 @@ export const compileInHarness = (
   );
 
   if (observed.result === undefined) throw new Error('Expected Core to resolve the logic child probe');
+
   return { output, result: observed.result };
 };
 
@@ -160,6 +164,7 @@ export const compositeArtifact = (output: LogicCompileOutput, type: string): Rea
   if (artifact === undefined || artifact.kind !== 'composite') {
     throw new Error(`Expected Graph composite artifact '${type}'`);
   }
+
   return artifact;
 };
 

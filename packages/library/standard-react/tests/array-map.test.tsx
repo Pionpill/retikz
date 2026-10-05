@@ -17,13 +17,16 @@ it('preserves index identities with explicit JSX cell ids and data through both 
   const vanillaInput = scene({
     children: [array({ id: 'array', cellIdMode: 'index', items: [{ id: 'named', content: 'A' }] })],
   });
+
   expect(normalizeScene(marker.scene, { adapters: synchronousAdapters(marker.adapters) }).ir).toEqual(
     normalizeScene(vanillaInput, { adapters: [ArrayInputEmbedAdapter] }).ir,
   );
   expect(renderToSvgString(marker.scene, { adapters: synchronousAdapters(marker.adapters) })).toEqual(
     renderToSvgString(vanillaInput, { adapters: [ArrayInputEmbedAdapter] }),
   );
+
   const data = createInputScene(<Array id="data" cellIdMode="index" data={['A', 'A']} />);
+
   expect(normalizeScene(data.scene, { adapters: synchronousAdapters(data.adapters) }).ir).toEqual(
     normalizeScene(scene({ children: [array({ id: 'data', cellIdMode: 'index', data: ['A', 'A'] })] }), {
       adapters: [ArrayInputEmbedAdapter],
@@ -35,6 +38,7 @@ it('preserves mixed Array string and object items across React and Vanilla', () 
   const input = createInputScene(<Array items={items} />);
   const react = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
   const vanilla = normalizeScene(scene({ children: [array({ items })] }), { adapters: [ArrayInputEmbedAdapter] });
+
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.ir.children[0]).toMatchObject({ items });
 });
@@ -45,6 +49,7 @@ it('preserves the string identity option across React and Vanilla', () => {
   const vanilla = normalizeScene(scene({ children: [array({ items, cellIdMode: 'string' })] }), {
     adapters: [ArrayInputEmbedAdapter],
   });
+
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.ir.children[0]).toMatchObject({ items, cellIdMode: 'string' });
 });
@@ -61,9 +66,11 @@ describe('Array / Map adapter parity', () => {
     const fromVanilla = normalizeScene(scene({ children: [array({ items, layout: { width: 'content' } })] }), {
       adapters: [ArrayInputEmbedAdapter],
     });
+
     expect(normalizeScene(fromItems.scene, { adapters: synchronousAdapters(fromItems.adapters) }).ir).toEqual(
       fromVanilla.ir,
     );
+
     const markerInput = normalizeScene(fromMarkers.scene, { adapters: synchronousAdapters(fromMarkers.adapters) });
     const markerVanilla = normalizeScene(
       scene({
@@ -76,8 +83,10 @@ describe('Array / Map adapter parity', () => {
       }),
       { adapters: [ArrayInputEmbedAdapter] },
     );
+
     expect(markerInput.ir).toEqual(markerVanilla.ir);
   });
+
   it.each([
     true,
     false,
@@ -90,10 +99,12 @@ describe('Array / Map adapter parity', () => {
     const vanilla = normalizeScene(scene({ children: [array({ items, index })] }), {
       adapters: [ArrayInputEmbedAdapter],
     });
+
     expect(react.ir).toEqual(vanilla.ir);
     expect(react.ir.children[0]).toMatchObject({ index });
     expect(react.contributions).toEqual(vanilla.contributions);
   });
+
   it('retains nested providers, styles and sparse IR equally across React and Vanilla', () => {
     const input = createInputScene(
       <Map
@@ -132,6 +143,7 @@ describe('Array / Map adapter parity', () => {
       }),
       { adapters: [ArrayInputEmbedAdapter, MapInputEmbedAdapter] },
     );
+
     expect(react.ir.children[0]).toMatchObject({
       style: { key: { fill: 'green' }, value: { fillOpacity: 0.3 } },
       layout: { key: { width: 60 }, value: { height: 40 } },
@@ -139,6 +151,7 @@ describe('Array / Map adapter parity', () => {
     expect(react.ir).toEqual(vanilla.ir);
     expect(react.contributions).toEqual(vanilla.contributions);
   });
+
   it('produces identical text IR and contributions from data, markers and Vanilla', () => {
     const data = createInputScene(
       <Map entries={[{ key: { content: '' }, value: { content: 'B', style: { fill: 'blue' } } }]} />,
@@ -163,13 +176,17 @@ describe('Array / Map adapter parity', () => {
       }),
       { adapters: [MapInputEmbedAdapter] },
     );
+
     for (const input of [data, markers]) {
       const actual = normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) });
+
       expect(actual.ir).toEqual(vanilla.ir);
       expect(actual.contributions).toEqual(vanilla.contributions);
     }
+
     expect(JSON.stringify(vanilla.ir)).toContain('"content":""');
   });
+
   it('preserves array data and marker styles, order, fragments and empty lists', () => {
     const data = createInputScene(
       <Array
@@ -185,15 +202,19 @@ describe('Array / Map adapter parity', () => {
         </>
       </Array>,
     );
+
     expect(normalizeScene(data.scene, { adapters: synchronousAdapters(data.adapters) }).ir).toEqual(
       normalizeScene(markers.scene, { adapters: synchronousAdapters(markers.adapters) }).ir,
     );
+
     const empty = createInputScene(<Array />);
     const emptyData = createInputScene(<Array items={[]} />);
+
     expect(normalizeScene(empty.scene, { adapters: synchronousAdapters(empty.adapters) }).ir).toEqual(
       normalizeScene(emptyData.scene, { adapters: synchronousAdapters(emptyData.adapters) }).ir,
     );
   });
+
   it('rejects missing or multiple drawable children', () => {
     expect(() =>
       createInputScene(
@@ -218,6 +239,7 @@ describe('Array / Map adapter parity', () => {
       ),
     ).toThrow(/exactly one/);
   });
+
   it('rejects malformed marker topology and incomplete or duplicate Map slots', () => {
     expect(() =>
       createInputScene(
@@ -264,15 +286,18 @@ it('passes mixed JSON data through React and Vanilla with identical contribution
   const vanilla = normalizeScene(scene({ children: [map({ data, layout: { value: { width: 70 } } })] }), {
     adapters: [MapInputEmbedAdapter],
   });
+
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.contributions).toEqual(vanilla.contributions);
   expect(react.ir.children[0]).toMatchObject({ data });
   expect(react.ir.children[0]).not.toHaveProperty('entries');
+
   const listInput = createInputScene(<Array data={['', '', data]} />);
   const reactArray = normalizeScene(listInput.scene, { adapters: synchronousAdapters(listInput.adapters) });
   const vanillaArray = normalizeScene(scene({ children: [array({ data: ['', '', data] })] }), {
     adapters: [ArrayInputEmbedAdapter],
   });
+
   expect(reactArray.ir).toEqual(vanillaArray.ir);
   expect(reactArray.contributions).toEqual(vanillaArray.contributions);
   expect(renderToSvgString(input.scene, { adapters: synchronousAdapters(input.adapters) })).toEqual(
@@ -296,6 +321,7 @@ it.each([false, [], ['map'], ['array']] as const)(
     const vanillaInput = scene({ children: [array({ data, dataExpand }), map({ data: { value: data }, dataExpand })] });
     const react = normalizeScene(reactInput.scene, { adapters: synchronousAdapters(reactInput.adapters) });
     const vanilla = normalizeScene(vanillaInput, { adapters: StandardInputEmbedAdapters });
+
     expect(react.ir).toEqual(vanilla.ir);
     expect(react.ir.children[0]).toMatchObject({ data, dataExpand });
     expect(react.ir.children[1]).toMatchObject({ data: { value: data }, dataExpand });
@@ -322,10 +348,13 @@ it('preserves container labels in data and marker inputs with matching Vanilla o
     ],
   });
   const adapters = [ArrayInputEmbedAdapter, MapInputEmbedAdapter];
+
   expect(normalizeScene(input.scene, { adapters: synchronousAdapters(input.adapters) }).ir).toEqual(
     normalizeScene(vanillaInput, { adapters }).ir,
   );
+
   const svg = renderToSvgString(input.scene, { adapters: synchronousAdapters(input.adapters) });
+
   expect(svg).toEqual(renderToSvgString(vanillaInput, { adapters }));
   expect(svg).toContain('Container title');
   expect(svg).toContain('Below');
@@ -348,8 +377,11 @@ it('骨架的格内外标号与 Map 键在 React 和 Vanilla 中等价', () => {
     ],
   });
   const adapters = react.adapters.filter(adapter => adapter.lower !== undefined);
+
   expect(adapters).toHaveLength(react.adapters.length);
+
   const normalized = normalizeScene(react.scene, { adapters });
+
   expect(normalized.ir).toEqual(normalizeScene(vanilla, { adapters: StandardInputEmbedAdapters }).ir);
   expect(renderToSvgString(react.scene, { adapters })).toEqual(
     renderToSvgString(vanilla, { adapters: StandardInputEmbedAdapters }),
@@ -374,8 +406,11 @@ it('空 marker 保留格子与 Map 角色，显式空文字仍然保留', () => 
     children: [array({ items: [{ id: 'slot' }, { content: '' }] }), map({ entries: [{ key: {}, value: {} }] })],
   });
   const adapters = react.adapters.filter(adapter => adapter.lower !== undefined);
+
   expect(adapters).toHaveLength(react.adapters.length);
+
   const normalized = normalizeScene(react.scene, { adapters });
+
   expect(normalized.ir).toEqual(normalizeScene(vanilla, { adapters: StandardInputEmbedAdapters }).ir);
   expect(renderToSvgString(react.scene, { adapters })).toEqual(
     renderToSvgString(vanilla, { adapters: StandardInputEmbedAdapters }),

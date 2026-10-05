@@ -14,8 +14,10 @@ const SLASH_DATE_RE = /^(\d{4})\/(\d{2})\/(\d{2})$/;
 /** 将严格 slashDate 转为 UTC 零点 epoch ms；布局或日历日期非法时返回 NaN */
 const parseSlashDate = (raw: unknown): number => {
   if (typeof raw !== 'string') return NaN;
+
   const match = SLASH_DATE_RE.exec(raw.trim());
   if (!match) return NaN;
+
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
@@ -23,6 +25,7 @@ const parseSlashDate = (raw: unknown): number => {
   date.setUTCFullYear(year, month - 1, day);
   date.setUTCHours(0, 0, 0, 0);
   const stamp = date.getTime();
+
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? stamp : NaN;
 };
 
@@ -32,9 +35,12 @@ const toEpochNumber = (raw: unknown): number => {
   if (typeof raw === 'string') {
     const trimmed = raw.trim();
     if (trimmed === '') return NaN;
+
     const parsed = Number(trimmed);
+
     return isFiniteNumber(parsed) ? parsed : NaN;
   }
+
   return NaN;
 };
 
@@ -42,9 +48,12 @@ const toEpochNumber = (raw: unknown): number => {
 const parseNumberString = (raw: unknown): number => {
   if (typeof raw === 'number') return isFiniteNumber(raw) ? raw : NaN;
   if (typeof raw !== 'string') return NaN;
+
   const cleaned = raw.trim().replace(/,/g, '');
   if (cleaned === '') return NaN;
+
   const parsed = Number(cleaned);
+
   return isFiniteNumber(parsed) ? parsed : NaN;
 };
 
@@ -52,11 +61,15 @@ const parseNumberString = (raw: unknown): number => {
 const parsePercent = (raw: unknown): number => {
   if (typeof raw === 'number') return isFiniteNumber(raw) ? raw / 100 : NaN;
   if (typeof raw !== 'string') return NaN;
+
   const trimmed = raw.trim();
   if (!trimmed.endsWith('%')) return NaN;
+
   const numeric = trimmed.slice(0, -1).trim();
   if (numeric === '') return NaN;
+
   const parsed = Number(numeric);
+
   return isFiniteNumber(parsed) ? parsed / 100 : NaN;
 };
 
@@ -130,14 +143,18 @@ export const resolveFormatRegistry = (
   custom?: ReadonlyArray<FieldFormatDefinition>,
 ): Map<string, FieldFormatDefinition> => {
   const registry = new Map(BUILTIN_FORMAT_REGISTRY);
+
   for (const def of custom ?? []) {
     if (def.name.length === 0) {
       throw new RetikzDataError('data: field format name must be a non-empty string');
     }
+
     if (registry.has(def.name)) {
       throw new RetikzDataError(`data: duplicate field format registration: "${def.name}"`);
     }
+
     registry.set(def.name, def);
   }
+
   return registry;
 };

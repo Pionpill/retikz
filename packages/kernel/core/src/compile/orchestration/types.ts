@@ -392,8 +392,11 @@ export type RuntimeTopologyTracker = Readonly<{
 }>;
 
 export type NodeChild = Extract<IRChild, { type: 'node' }>;
+
 export type CoordinateChild = Extract<IRChild, { type: 'coordinate' }>;
+
 export type ScopeChild = Extract<IRChild, { type: 'scope' }>;
+
 export type PathChild = Extract<IRChild, { type: 'path' }>;
 
 /** scope.id layout 占位注册结果 */

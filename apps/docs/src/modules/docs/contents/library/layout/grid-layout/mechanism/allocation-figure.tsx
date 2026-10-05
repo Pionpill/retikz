@@ -8,10 +8,12 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 import { allocationFigureI18n } from './allocation-figure.i18n';
 
 export type AllocationFigureProps = { lang?: Lang };
+
 /** 展示列宽到文字高度的单向尺寸依赖 */
 const AllocationFigure: FC<AllocationFigureProps> = props => {
   const { lang = 'zh' } = props;
   const text = allocationFigureI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()}>
       <FlowLayout kind="linear" id="grid-order" direction="right">

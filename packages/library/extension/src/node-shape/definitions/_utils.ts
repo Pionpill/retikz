@@ -59,10 +59,13 @@ const containsContentCorners = (
     [innerHalfWidth, innerHalfHeight],
     [-innerHalfWidth, innerHalfHeight],
   ];
+
   return corners.every(corner => {
     const requiredDistance = Math.hypot(...corner);
     if (requiredDistance === 0) return true;
+
     const hit = boundaryFromContour(segments, cornerRadius, [0, 0], corner);
+
     return hit !== undefined && Math.hypot(...hit) >= requiredDistance - 1e-9;
   });
 };
@@ -90,6 +93,7 @@ export const circumscribeRoundedPolygon = (
 
   let lower = 1;
   let upper = 2;
+
   while (
     Number.isFinite(upper) &&
     !containsContentCorners(shape, innerHalfWidth, innerHalfHeight, atScale(upper), cornerRadius, verticesFor)
@@ -97,6 +101,7 @@ export const circumscribeRoundedPolygon = (
     lower = upper;
     upper *= 2;
   }
+
   if (!Number.isFinite(upper)) invalidGeometry(shape, { ...sharpHalfAxes, cornerRadius });
 
   for (let iteration = 0; iteration < 48; iteration += 1) {
@@ -107,6 +112,7 @@ export const circumscribeRoundedPolygon = (
       lower = middle;
     }
   }
+
   return atScale(upper);
 };
 

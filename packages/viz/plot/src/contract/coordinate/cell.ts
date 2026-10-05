@@ -47,16 +47,19 @@ export const cellInterval = (cell: Cell, role: DimensionRole): [number, number] 
  */
 export const contourAabbCenter = (points: ReadonlyArray<Position>): Position | null => {
   if (points.length < 3) return null;
+
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+
   for (const [x, y] of points) {
     if (x < minX) minX = x;
     if (y < minY) minY = y;
     if (x > maxX) maxX = x;
     if (y > maxY) maxY = y;
   }
+
   return [(minX + maxX) / 2, (minY + maxY) / 2];
 };
 
@@ -70,8 +73,10 @@ export const cellGeometryAnchor = (geometry: CellGeometry): Position | null => {
     const midAngle = (geometry.startAngle + geometry.endAngle) / 2;
     const midRadius =
       (Math.min(geometry.innerRadius, geometry.outerRadius) + Math.max(geometry.innerRadius, geometry.outerRadius)) / 2;
+
     return pointAtArcAngle(geometry.center, midRadius, midAngle);
   }
+
   return contourAabbCenter(geometry.points);
 };
 
@@ -115,6 +120,7 @@ export const densifyCellContour = (
   const primarySegments = options?.curvedPrimary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
   const secondarySegments = options?.curvedSecondary ? RETIKZ_POLAR_SEGMENT_SAMPLES + 1 : 1;
   const points: Array<Position> = [];
+
   // 沿某条边在 (primary, secondary) 输出空间线性走，逐点投影；只推「不含起点」的中间点 + 终点
   const walk = (from: [number, number], to: [number, number], segments: number): void => {
     for (let step = 1; step <= segments; step += 1) {
@@ -125,10 +131,12 @@ export const densifyCellContour = (
       if (point) points.push(point);
     }
   };
+
   // 底边（s0，primary p0→p1）→ 右边（p1，secondary s0→s1）→ 顶边（s1，primary p1→p0）→ 左边（p0，secondary s1→s0）
   walk([p0, s0], [p1, s0], primarySegments);
   walk([p1, s0], [p1, s1], secondarySegments);
   walk([p1, s1], [p0, s1], primarySegments);
   walk([p0, s1], [p0, s0], secondarySegments);
+
   return points;
 };

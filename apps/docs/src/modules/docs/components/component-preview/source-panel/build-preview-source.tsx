@@ -119,6 +119,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   let irJson = '';
   if (irJsonOverride !== undefined) {
     irJson = irJsonOverride.replace(/\n$/, '');
+
     try {
       const ir: unknown = JSON.parse(irJson);
       resolvedPreviewIr = {
@@ -139,6 +140,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
       width: undefined,
       height: undefined,
     };
+
     try {
       irJson = formatIR(exportedPreviewIR);
     } catch (error) {
@@ -177,6 +179,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
         sourceIr: validatedSource.data,
       };
       previewIr = validatedPreviewIr;
+
       try {
         hasComposite = irHasComposite(validatedPreviewIr.ir);
       } catch (error) {
@@ -204,6 +207,7 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   } else if (automaticVanilla !== undefined) {
     vanillaCode = automaticVanilla.code;
   }
+
   const resolvedVanillaSvg = vanillaOverride !== undefined ? vanillaSvg : (vanillaSvg ?? automaticVanilla?.svg);
   const replacePreviewRender =
     vanillaOverride !== undefined || vanillaSvg !== undefined || automaticVanilla?.replacePreviewRender !== false;

@@ -53,6 +53,7 @@ export const TableValueBetweenPredicateSchema = strictObject({
       context.addIssue({ code: 'custom', path: ['max'], message: 'max must have the same scalar type as min' });
       return;
     }
+
     if (predicate.min > predicate.max) {
       context.addIssue({ code: 'custom', path: ['max'], message: 'max must be greater than or equal to min' });
     }

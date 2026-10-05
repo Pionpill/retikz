@@ -70,7 +70,9 @@ const GridBaseSchema = CompositeBaseSchema.extend({
 });
 
 type GridRefinementInput = ZodInfer<typeof GridBaseSchema>;
+
 type GridLineConfig = ZodInfer<typeof GridLineInputSchema>;
+
 type GridLinePair = { vertical: GridLineConfig; horizontal: GridLineConfig };
 
 const refineGrid = (grid: GridRefinementInput, ctx: RefinementCtx): void => {
@@ -106,6 +108,7 @@ const refineGrid = (grid: GridRefinementInput, ctx: RefinementCtx): void => {
       message: verticalError,
     });
   }
+
   if (horizontalError !== undefined) {
     ctx.addIssue({
       code: 'custom',

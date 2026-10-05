@@ -90,6 +90,7 @@ export const PatternLineStyleCycleSchema = strictObject({
           path: ['overrides', overrideIndex, 'index'],
         });
       }
+
       if (seen.has(override.index)) {
         context.addIssue({
           code: 'custom',
@@ -97,6 +98,7 @@ export const PatternLineStyleCycleSchema = strictObject({
           path: ['overrides', overrideIndex, 'index'],
         });
       }
+
       seen.add(override.index);
     });
   })

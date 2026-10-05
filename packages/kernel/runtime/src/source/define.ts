@@ -8,6 +8,7 @@ import type {
 } from './types';
 
 const runtimeSourceTokens = new WeakSet<object>();
+
 const runtimeSourceExecutors = new WeakMap<object, RuntimeSourceErasedExecutor>();
 
 /** registry 私有保存的 source callback 擦除视图 */
@@ -43,6 +44,7 @@ export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
       cause: input,
     });
   }
+
   const { capture, read, equals, dispose } = input.value;
   const token = Object.freeze({ key: input.key }) as RuntimeSourceDefinition<TInput, TValue, TRead, TChange>;
   const erasedExecutor = Object.freeze({
@@ -55,6 +57,7 @@ export const defineRuntimeSource = <TInput, TValue, TRead, TChange>(
   }) as RuntimeSourceErasedExecutor;
   runtimeSourceTokens.add(token);
   runtimeSourceExecutors.set(token, erasedExecutor);
+
   return token;
 };
 
@@ -72,5 +75,6 @@ export const getRuntimeSourceDefinitionExecutor = (definition: RuntimeSourceToke
       cause: definition,
     });
   }
+
   return executor;
 };

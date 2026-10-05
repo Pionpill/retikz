@@ -177,12 +177,14 @@ export const extractPositionAdjustmentKind = (schema: ZodType): string => {
       'lowerPlots: position adjustment registration schema must be a ZodObject with a literal kind field',
     );
   }
+
   const kindSchema = schema.shape.kind;
   if (!(kindSchema instanceof ZodLiteral) || typeof kindSchema.value !== 'string' || kindSchema.value.length === 0) {
     throw new RetikzPlotError(
       'lowerPlots: position adjustment registration schema must declare kind as a non-empty z.literal string',
     );
   }
+
   return kindSchema.value;
 };
 

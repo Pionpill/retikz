@@ -20,9 +20,13 @@ const isPreviewControlPoint = (value: unknown): value is [number, number] =>
 
 /** 判断控件值是否是原生颜色输入可直接消费的六位十六进制颜色 */
 const isPreviewColorHex = (value: string): boolean => /^#[0-9a-fA-F]{6}$/.test(value);
+
 const PREVIEW_COLOR_CUSTOM_VALUE = 'custom';
+
 const PREVIEW_COLOR_CURRENT_VALUE = 'currentColor';
+
 const PREVIEW_COLOR_CONTRAST_VALUE = 'contrast';
+
 const PREVIEW_SELECT_VALUE_PREFIX = 'preview-control-value:';
 
 /** 把任意 control 字符串编码为 Radix Select 可选的非空内部值 */
@@ -33,6 +37,7 @@ const decodePreviewSelectValue = (value: string): string => value.slice(PREVIEW_
 
 const releaseSelectDocumentLock = (): void => {
   if (document.querySelector('[role="dialog"]')) return;
+
   document.body.style.pointerEvents = '';
   document.body.style.setProperty('overflow', 'visible', 'important');
   document.documentElement.style.setProperty('overflow', 'visible', 'important');
@@ -47,12 +52,16 @@ const restoreSelectDocumentLockOverride = (): void => {
 const useReleaseSelectDocumentLock = (open: boolean): void => {
   useEffect(() => {
     if (!open) return undefined;
+
     let frame = 0;
+
     const tick = () => {
       releaseSelectDocumentLock();
       frame = window.requestAnimationFrame(tick);
     };
+
     tick();
+
     return () => {
       window.cancelAnimationFrame(frame);
       window.requestAnimationFrame(restoreSelectDocumentLockOverride);
@@ -164,6 +173,7 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
           />
         );
       }
+
       return (
         <Input
           type="text"
@@ -193,6 +203,7 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
     case 'select': {
       const selectedValue = typeof value === 'string' ? value : field.defaultValue;
       const selected = field.options.find(option => option.value === selectedValue);
+
       return (
         <Select
           value={encodePreviewSelectValue(selectedValue)}
@@ -237,6 +248,7 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
           : colorValue === PREVIEW_COLOR_CONTRAST_VALUE && field.contrast === true
             ? PREVIEW_COLOR_CONTRAST_VALUE
             : PREVIEW_COLOR_CUSTOM_VALUE;
+
       return (
         <div className={cn('flex w-full min-w-0 items-center', compact && 'text-xs')}>
           <ToggleGroup
@@ -297,6 +309,7 @@ export const PreviewControlFieldInput: FC<PreviewControlFieldInputProps> = props
       const rangeValue = typeof value === 'number' ? value : field.defaultValue;
       const playing = playingRangeId === field.id;
       const playbackLabel = t(playing ? 'preview.pauseRange' : 'preview.playRange');
+
       return (
         <div className={cn('flex w-full min-w-0 items-center gap-3', compact && 'gap-2')}>
           <Slider

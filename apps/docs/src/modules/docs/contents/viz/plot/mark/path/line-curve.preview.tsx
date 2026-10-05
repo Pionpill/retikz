@@ -34,6 +34,7 @@ export const LineCurvePreview = (values: LineCurvePreviewValues) => {
   const curve: PathCurve = values.pathCurveControl;
   const showPoints = values.pathCurveShowPoints;
   const x = coordinate === 'polar2D' ? 'category' : 'index';
+
   return (
     <Layout viewBox={{ x: -12, y: 0, width: 420, height: 292 }}>
       <Plot data={curveSamples} width={400} height={280} coordinate={coordinate === 'polar2D' ? 'polar2D' : undefined}>

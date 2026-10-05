@@ -61,6 +61,7 @@ export const AiChatInputContextModePicker: FC = () => {
           {MODES.map(mode => {
             const isActive = mode === contextMode;
             const Icon = MODE_ICON[mode];
+
             return (
               <li key={mode}>
                 <button

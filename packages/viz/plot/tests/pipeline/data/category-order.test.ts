@@ -9,6 +9,7 @@ import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
+
 const sharedCategorical = resolveDefaultCoreThemeColors(ThemeMode.Light).categorical;
 
 /** 下沉一个 plot spec，取外层 plot scope */
@@ -54,24 +55,28 @@ const bandCategorySequence = (layer: IRScope, rows: Array<Record<string, unknown
   paired.sort((a, b) => a.x - b.x);
   const seen = new Set<string | number>();
   const out: Array<string | number> = [];
+
   for (const { cat } of paired) {
     if (!seen.has(cat)) {
       seen.add(cat);
       out.push(cat);
     }
   }
+
   return out;
 };
 
 describe('IRDataFieldDefinition.order — schema 接受 / 拒绝', () => {
   it('explicit_array_order_accepted_by_schema', () => {
     const def = { name: 'size', type: 'categorical', order: ['S', 'M', 'L', 'XL'] };
+
     expect(FieldDefinitionSchema.parse(def)).toEqual(def);
   });
 
   it('enum_order_accepted_by_schema', () => {
     for (const order of ['appearance', 'ascending', 'descending'] as const) {
       const def = { name: 'grade', type: 'categorical', order };
+
       expect(FieldDefinitionSchema.parse(def)).toEqual(def);
     }
   });
@@ -87,6 +92,7 @@ describe('IRDataFieldDefinition.order — 显式数组域', () => {
       ],
       [{ type: 'linear', name: 'yv' }],
     );
+
     // 数据故意打乱出现序：L 先出现，但域应是 S,M,L（数组序，非出现序）
     const rows = [
       { cat: 'L', val: 1 },
@@ -94,6 +100,7 @@ describe('IRDataFieldDefinition.order — 显式数组域', () => {
       { cat: 'M', val: 3 },
     ];
     const layer = firstLayer(spec, { d: rows });
+
     expect(bandCategorySequence(layer, rows)).toEqual(['S', 'M', 'L']);
   });
 });
@@ -114,6 +121,7 @@ describe('IRDataFieldDefinition.order — 排序枚举', () => {
       { cat: 1, val: 3 },
     ];
     const layer = firstLayer(spec, { d: rows });
+
     // 域应为 [1, 2, 10]：数值升序，而非字符串字典序（那会给 1,10,2）
     expect(bandCategorySequence(layer, rows)).toEqual([1, 2, 10]);
   });
@@ -132,10 +140,14 @@ describe('IRDataFieldDefinition.order — 排序枚举', () => {
       { cat: 2, val: 2 },
       { cat: 'a', val: 3 },
     ];
+
     expect(() => firstLayer(spec, { d: rows })).not.toThrow();
+
     const layer = firstLayer(spec, { d: rows });
+
     // 统一 String() locale 比 → '2' < 'a' < 'b'；关键是不崩且三类别全在域
     const sequence = bandCategorySequence(layer, rows);
+
     expect(sequence).toHaveLength(3);
     expect(sequence).toEqual([2, 'a', 'b']);
   });
@@ -167,9 +179,11 @@ describe('IRDataFieldDefinition.order — 默认与边界', () => {
     };
     const a = firstLayer(noOrder, rows);
     const b = firstLayer(explicitData, rows);
+
     // 'appearance' 与缺省等价：两布局 node 位置逐一相同（出现序 c,a,b 而非排序后）
     const ax = a.children.map(c => ((c as IRNode).position as [number, number])[0]);
     const bx = b.children.map(c => ((c as IRNode).position as [number, number])[0]);
+
     expect(ax).toEqual(bx);
   });
 
@@ -189,6 +203,7 @@ describe('IRDataFieldDefinition.order — 默认与边界', () => {
       { cat: 'L', val: 4 },
     ];
     const layer = firstLayer(spec, { d: rows });
+
     // XL 不在 order 数组 → 追加末尾、不丢：域序 = S,M,L,XL
     expect(bandCategorySequence(layer, rows)).toEqual(['S', 'M', 'L', 'XL']);
   });
@@ -204,6 +219,7 @@ describe('IRDataFieldDefinition.order — 默认与边界', () => {
     );
     const rows = [{ cat: 'only', val: 1 }];
     const layer = firstLayer(spec, { d: rows });
+
     expect(layer.children).toHaveLength(1);
     expect(bandCategorySequence(layer, rows)).toEqual(['only']);
   });
@@ -229,6 +245,7 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
       coordinate: { type: 'cartesian2D', x: 'xv', y: 'yv' },
       marks: [{ type: 'point', encoding: { x: { field: 'cx' }, y: { field: 'val' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ cx: 1, val: 2 }] })).toThrow();
   });
 
@@ -252,12 +269,14 @@ describe('IRDataFieldDefinition.order — 错误契约', () => {
         { type: 'point', encoding: { x: { field: 'b' }, y: { field: 'val' } } },
       ],
     });
+
     expect(() => expandOf(spec, { d: [{ a: 'x', b: 'p', val: 1 }] })).toThrow();
   });
 
   it('empty_array_order_rejected', () => {
     // order:[] 被 FieldDefinitionSchema.parse 拒（.min(1)）—— zod parse 错误路径
     expect(() => FieldDefinitionSchema.parse({ name: 'cat', type: 'categorical', order: [] })).toThrow();
+
     // 整 model 内含空数组 order 同样被拒
     expect(() => DataModelSchema.parse([{ name: 'cat', type: 'categorical', order: [] }])).toThrow();
   });
@@ -292,9 +311,11 @@ describe('IRDataFieldDefinition.order — 交互', () => {
       { cat: 'M', val: 3 },
     ];
     const layer = firstLayer(spec, { d: rows });
+
     // color 合成 ordinal，域按 order S,M,L → 颜色 S→scheme[0]、M→[1]、L→[2]（与位置同序，与数据出现序 L,S,M 无关）
     // 每个 color 子 scope 内是同色一组 node；用每个 node 的 band x 反查类别（最左=S、中=M、右=L），核对该组 fill
     const subScopes = layer.children.map(child => child as IRScope);
+
     // band 中心 x：S 最小、L 最大；按 x 升序映射域序 S,M,L
     const allX = subScopes.flatMap(scope =>
       (scope.children as Array<IRNode>).map(node => (node.position as [number, number])[0]),
@@ -306,11 +327,13 @@ describe('IRDataFieldDefinition.order — 交互', () => {
       [sortedX[2], 'L'],
     ]);
     const fillByCategory = new Map<string, unknown>();
+
     for (const scope of subScopes) {
       const node = scope.children[0] as IRNode;
       const category = categoryByX.get((node.position as [number, number])[0]);
       if (category !== undefined) fillByCategory.set(category, scope.defaults?.node?.style?.fill);
     }
+
     expect(fillByCategory.get('S')).toBe(sharedCategorical[0]);
     expect(fillByCategory.get('M')).toBe(sharedCategorical[1]);
     expect(fillByCategory.get('L')).toBe(sharedCategorical[2]);
@@ -322,6 +345,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
       { name: 'cat', type: 'categorical', order: ['S', 'M', 'L'] },
       { name: 'val', type: 'continuous' },
     ]);
+
     // 注意：bandSpec 省略 coordinate.x → 触发派生 band；y 仍需 scale，补一个
     const withYScale = PlotSchema.parse({
       ...spec,
@@ -333,6 +357,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
       { cat: 'M', val: 3 },
     ];
     const layer = firstLayer(withYScale, { d: rows });
+
     // 派生 band 的域按 order：S,M,L（非数据出现序 L,S,M）
     expect(bandCategorySequence(layer, rows)).toEqual(['S', 'M', 'L']);
   });
@@ -365,6 +390,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
       ],
     };
     const layer = firstLayer(spec, rows);
+
     // 与「无 order、仅显式反序 domain」的布局逐一相同 → 证明 order 被忽略
     const reference = PlotSchema.parse({
       namespace: 'plot',
@@ -386,6 +412,7 @@ describe('IRDataFieldDefinition.order — 交互', () => {
     const refLayer = firstLayer(reference, rows);
     const xs = layer.children.map(c => ((c as IRNode).position as [number, number])[0]);
     const refXs = refLayer.children.map(c => ((c as IRNode).position as [number, number])[0]);
+
     expect(xs).toEqual(refXs);
   });
 });
@@ -400,6 +427,7 @@ describe('IRDataFieldDefinition.order — JSON round-trip', () => {
       { name: 'city', type: 'categorical' },
     ]);
     const roundTripped = JSON.parse(JSON.stringify(model));
+
     expect(DataModelSchema.parse(roundTripped)).toEqual(model);
   });
 });

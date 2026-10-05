@@ -452,6 +452,7 @@ describe('normalizePlotBindings', () => {
       scales: [],
       coordinate: { type: 'cartesian2D' as const, x: '__x', y: '__y' },
     };
+
     expect(() =>
       normalizePlotBindings({
         ...base,

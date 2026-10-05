@@ -33,8 +33,10 @@ export const compileChain = (source: IRChain, context: LayoutCompositeCompileCon
   void _type;
   const down = resolved.direction === 'down';
   let occurrence = 0;
+
   const build = (items: Array<CanonicalChainItem>): Array<ChainBlock> => {
     const blocks: Array<ChainBlock> = [];
+
     for (const item of items) {
       if (item.kind === 'cell') {
         const measured = measureCell(item.cell, context, occurrence++, scope);
@@ -64,21 +66,26 @@ export const compileChain = (source: IRChain, context: LayoutCompositeCompileCon
           ),
         );
     }
+
     return blocks;
   };
+
   const block = layoutChainSequence(build(resolved.items), resolved.layout, resolved.connection);
   const position = ([x, y]: [number, number]): [number, number] => (down ? [y, x] : [x, y]);
   const paths: Array<IRPath> = block.edges.map(edge => {
     const points = edge.points.map(position);
     const children: Array<IRStep> = [{ type: 'step', kind: 'move', to: points[0] }];
+
     for (let i = 1; i < points.length; i++)
       children.push(
         edge.connection.route === '|-' || edge.connection.route === '-|'
           ? { type: 'step', kind: 'fold', via: edge.connection.route, to: points[i] }
           : { type: 'step', kind: 'line', to: points[i] },
       );
+
     return { ...edge.connection.path, type: 'path', children };
   });
+
   return compileCells(
     block.cells.map(cell => ({
       measured: cell.measured,

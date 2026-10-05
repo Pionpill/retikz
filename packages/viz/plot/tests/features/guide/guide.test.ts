@@ -73,6 +73,7 @@ const ctx: GuideContext = {
 const polarAngularGuideContext = (values: Array<number>, labels: Array<string>): GuideContext => {
   const angularScale = fakeScale(value => value, values, [0, 360]);
   const radialScale = fakeScale(value => value);
+
   return {
     ...ctx,
     fontSize: 10,
@@ -113,6 +114,7 @@ const nodeChildren = (layer: IRScope): Array<IRNode> =>
 
 const nodeByText = (layer: IRScope, text: string): IRNode => {
   const node = nodeChildren(layer).find(child => child.text === text);
+
   expect(node).toBeDefined();
   return node as IRNode;
 };
@@ -121,14 +123,20 @@ describe('lowerGuide (contract)', () => {
   // Happy path
   it('lower_axis_x_structure', () => {
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x' }, ctx);
+
     expect(gridLayer).toBeNull();
     expect(axisLayer).not.toBeNull();
+
     const layer = axisLayer as IRScope;
+
     // 1 条 Path（轴线 + 刻度线）+ 3 个 label Node
     expect(layer.children).toHaveLength(5);
     expect((layer.children[0] as IRPath).type).toBe('path');
+
     const labels = nodeChildren(layer);
+
     expect(labels.map(n => n.text)).toEqual(['0', '1', '2']);
+
     // 轴线起点 = plot area 底边左端
     expect((layer.children[0] as IRPath).children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 260] });
   });
@@ -137,7 +145,9 @@ describe('lowerGuide (contract)', () => {
     const { axisLayer } = lowerGuide({ type: 'axis', dimension: 'y' }, ctx);
     const layer = axisLayer as IRScope;
     const labels = nodeChildren(layer);
+
     expect(labels.map(n => n.text)).toEqual(['9', '10', '11']);
+
     // y label 垂直居中于 tick y（projectY(9)=35），水平在左侧轴外
     expect((labels[0].position as [number, number])[1]).toBe(35);
     expect((labels[0].position as [number, number])[0]).toBeLessThan(40);
@@ -432,6 +442,7 @@ describe('lowerGuide (contract)', () => {
     const { gridLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, ctx);
     const layer = gridLayer as IRScope;
     const path = layer.children[0] as IRPath;
+
     // 3 条竖线 = 3 段 = 6 steps
     expect(path.children).toHaveLength(6);
     expect(path.children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 10] });
@@ -441,6 +452,7 @@ describe('lowerGuide (contract)', () => {
   it('lower_axis_y_grid_lines', () => {
     const { gridLayer } = lowerGuide({ type: 'axis', dimension: 'y', grid: true }, ctx);
     const path = (gridLayer as IRScope).children[0] as IRPath;
+
     // 横线：y=projectY(9)=35，从 left 到 right
     expect(path.children[0]).toEqual({ type: 'step', kind: 'move', to: [40, 35] });
     expect(path.children[1]).toEqual({ type: 'step', kind: 'line', to: [440, 35] });
@@ -791,6 +803,7 @@ describe('lowerGuide (contract)', () => {
   it('tick_pixels_match_projector', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x' }, ctx).axisLayer as IRScope;
     const labels = nodeChildren(layer);
+
     // tick value 1 → projectX(1)=80
     expect((labels[1].position as [number, number])[0]).toBe(80);
   });
@@ -802,6 +815,7 @@ describe('lowerGuide (contract)', () => {
 
   it('axis_ticklabels_false_no_text', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x', tickLabels: false }, ctx).axisLayer as IRScope;
+
     // 只剩轴线 + 刻度线 Path，无 label Node
     expect(layer.children).toHaveLength(2);
     expect((layer.children[0] as IRPath).type).toBe('path');
@@ -811,7 +825,9 @@ describe('lowerGuide (contract)', () => {
   it('grid_empty_ticks_skipped', () => {
     const emptyCtx: GuideContext = { ...ctx, xTicks: { values: [], labels: [] } };
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, emptyCtx);
+
     expect(gridLayer).toBeNull();
+
     // 轴线仍在（即便无刻度）
     expect(axisLayer).not.toBeNull();
   });
@@ -819,6 +835,7 @@ describe('lowerGuide (contract)', () => {
   // 错误路径 / 退化
   it('guide_styles_hoisted', () => {
     const { gridLayer, axisLayer } = lowerGuide({ type: 'axis', dimension: 'x', grid: true }, ctx);
+
     expect((axisLayer as IRScope).defaults?.path?.style?.stroke).toBe('currentColor');
     expect((axisLayer as IRScope).defaults?.node?.style?.font?.size).toBe(11);
     expect((axisLayer as IRScope).defaults?.node?.style?.stroke).toBe('none');
@@ -1264,6 +1281,7 @@ describe('lowerGuide (contract)', () => {
 
   it('axis_id_to_scope_id', () => {
     const layer = lowerGuide({ type: 'axis', dimension: 'x', id: 'xAxis' }, ctx).axisLayer as IRScope;
+
     expect(layer.id).toBe('xAxis');
   });
 
@@ -1336,11 +1354,14 @@ describe('lowerPlots guide orchestration (contract)', () => {
         { type: 'axis', dimension: 'y', grid: true },
       ]),
     );
+
     // children = [x 网格层, y 网格层, mark 层, x 轴层, y 轴层]
     expect(outer.children).toHaveLength(5);
+
     // 前两个是网格层（带 strokeOpacity）
     expect(((outer.children[0] as IRScope).children[0] as IRPath).style?.strokeOpacity).toBe(0.15);
     expect(((outer.children[1] as IRScope).children[0] as IRPath).style?.strokeOpacity).toBe(0.15);
+
     // 最后一个是轴层（纯文字 nodeDefault）
     expect((outer.children[4] as IRScope).defaults?.node?.style?.stroke).toBe('none');
   });
@@ -1354,6 +1375,7 @@ describe('lowerPlots guide orchestration (contract)', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots({ sales: SALES }, { width: 480, height: 300 }) },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -1383,9 +1405,11 @@ describe('lowerPlots guide orchestration (contract)', () => {
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const outer = expandOf(spec);
+
     // children = [mark 层, x 轴层]；轴线起止 x 须落在显式 range [100,200] 上（domain [0,2] → x [100,200]）
     const axisLayer = outer.children[outer.children.length - 1] as IRScope;
     const axisLine = (axisLayer.children[0] as IRPath).children;
+
     expect((axisLine[0] as { to: [number, number] }).to[0]).toBe(100);
     expect((axisLine[1] as { to: [number, number] }).to[0]).toBe(200);
   });

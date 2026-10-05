@@ -5,10 +5,13 @@ import type { Transform } from '../types';
 
 /** 单次按钮点击平移步长（px） */
 export const PAN_STEP = 24;
+
 /** 缩放因子：放大 ×1.2 / 缩小 ÷1.2 */
 export const ZOOM_FACTOR = 1.2;
+
 /** 最小缩放比例。 */
 export const ZOOM_MIN = 0.25;
+
 /** 最大缩放比例。 */
 export const ZOOM_MAX = 4;
 
@@ -40,27 +43,34 @@ export const usePanZoom = () => {
 
   useEffect(() => {
     if (!isDragging) return;
+
     const apply = (clientX: number, clientY: number) => {
       if (!dragRef.current) return;
+
       const dx = clientX - dragRef.current.startX;
       const dy = clientY - dragRef.current.startY;
       setTransform(t => ({ ...t, x: dragRef.current!.baseX + dx, y: dragRef.current!.baseY + dy }));
     };
+
     const onMouseMove = (e: MouseEvent) => apply(e.clientX, e.clientY);
+
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       e.preventDefault();
       apply(e.touches[0].clientX, e.touches[0].clientY);
     };
+
     const onUp = () => {
       dragRef.current = null;
       setIsDragging(false);
     };
+
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onUp);
     window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('touchend', onUp);
     window.addEventListener('touchcancel', onUp);
+
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onUp);
@@ -72,8 +82,10 @@ export const usePanZoom = () => {
 
   useEffect(() => {
     if (!isPinching) return;
+
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length < 2 || !pinchRef.current) return;
+
       e.preventDefault();
       const dist = touchDistance(e.touches[0], e.touches[1]);
       const center = touchCenter(e.touches[0], e.touches[1]);
@@ -83,15 +95,18 @@ export const usePanZoom = () => {
       const y = baseY + (center.y - startCenterY);
       setTransform({ x, y, scale });
     };
+
     const onTouchEnd = (e: TouchEvent) => {
       if (e.touches.length < 2) {
         pinchRef.current = null;
         setIsPinching(false);
       }
     };
+
     window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('touchend', onTouchEnd);
     window.addEventListener('touchcancel', onTouchEnd);
+
     return () => {
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
@@ -124,14 +139,18 @@ export const usePanZoom = () => {
           dragRef.current = null;
           setIsDragging(false);
           setIsPinching(true);
+
           return;
         }
+
         if (e.touches.length !== 1) return;
+
         const t = e.touches[0];
         dragRef.current = { startX: t.clientX, startY: t.clientY, baseX: transform.x, baseY: transform.y };
         setIsDragging(true);
       } else {
         if (e.button !== 0) return;
+
         e.preventDefault();
         dragRef.current = { startX: e.clientX, startY: e.clientY, baseX: transform.x, baseY: transform.y };
         setIsDragging(true);

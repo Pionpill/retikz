@@ -21,6 +21,7 @@ describe('Node shape multimorphism', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
     const scene = compileToScene(ir).scene;
+
     expect(findByType(scene.primitives, 'rect')).toBeDefined();
     expect(findByType(scene.primitives, 'ellipse')).toBeUndefined();
   });
@@ -33,6 +34,7 @@ describe('Node shape multimorphism', () => {
     };
     const scene = compileToScene(ir).scene;
     const el = findByType(scene.primitives, 'ellipse');
+
     expect(el).toBeDefined();
     expect(el!.rx).toBe(el!.ry); // 圆形 rx = ry
   });
@@ -48,6 +50,7 @@ describe('Node shape multimorphism', () => {
     };
     const scene = compileToScene(ir).scene;
     const el = findByType(scene.primitives, 'ellipse');
+
     expect(el).toBeDefined();
     expect(el!.rx).toBeGreaterThan(el!.ry);
   });
@@ -60,8 +63,11 @@ describe('Node shape multimorphism', () => {
     };
     const scene = compileToScene(ir).scene;
     const p = findByType(scene.primitives, 'path');
+
     expect(p).toBeDefined();
+
     const cmds = p!.commands;
+
     expect(cmds[0].kind).toBe('move'); // move 开头
     expect(cmds[cmds.length - 1].kind).toBe('close'); // close 结尾
     expect(cmds.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
@@ -78,6 +84,7 @@ describe('Node shape multimorphism', () => {
       type: 'scene',
       children: [{ type: 'node', id: 'A', shape: 'rectangle', position: [0, 0], text: 'A' }],
     };
+
     expect(compileToScene(ir1).scene.primitives).toEqual(compileToScene(ir2).scene.primitives);
   });
 });
@@ -154,7 +161,9 @@ describe('Target 字符串锚点扩展', () => {
       if (linePath?.type === 'path') {
         // top 的 x = 0（中心 x），y < 0（节点上方）
         const first = linePath.commands[0];
+
         expect(first.kind).toBe('move');
+
         if (first.kind === 'move') {
           expect(first.to[0]).toBe(0);
           expect(first.to[1]).toBeLessThan(0);
@@ -195,6 +204,7 @@ describe('ellipse nested params IR round-trip', () => {
     };
     const parsed = NodeSchema.parse(node);
     const roundTripped = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
+
     expect(roundTripped).toEqual(parsed);
     expect(roundTripped.shape).toEqual({ type: 'ellipse', params: { circumscribe: 'equal' } });
   });
@@ -214,6 +224,7 @@ describe('ellipse nested params IR round-trip', () => {
         },
       ],
     };
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 });
@@ -239,6 +250,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
         },
       ],
     };
+
     expect(compileToScene(bareIr).scene.primitives).toEqual(compileToScene(explicitIr).scene.primitives);
   });
 
@@ -250,6 +262,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
       children: [{ type: 'node', id: 'A', shape: 'circle', position: [0, 0], text: 'long text' }],
     };
     const el = findByType(compileToScene(ir).scene.primitives, 'ellipse');
+
     expect(el).toBeDefined();
     expect(el!.rx).toBe(el!.ry);
   });
@@ -268,6 +281,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
         },
       ],
     };
+
     expect(() => compileToScene(ir).scene).toThrow();
   });
 
@@ -284,6 +298,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
     }).scene;
     const baseEl = findByType(base.primitives, 'ellipse');
     const scaledEl = findByType(scaled.primitives, 'ellipse');
+
     expect(baseEl).toBeDefined();
     expect(scaledEl).toBeDefined();
     expect(scaledEl!.rx).toBe(scaledEl!.ry); // 仍正圆
@@ -324,6 +339,7 @@ describe('circle 内置 shape preset 解析到 ellipse equal', () => {
         );
       const circleLine = findLine(mk('circle'));
       const ellipseLine = findLine(mk({ type: 'ellipse', params: { circumscribe: 'equal' } }));
+
       expect(circleLine?.commands[0]).toEqual(ellipseLine?.commands[0]);
     }
   });
@@ -350,6 +366,7 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
         },
       ],
     };
+
     expect(compileToScene(bareIr).scene.primitives).toEqual(compileToScene(explicitIr).scene.primitives);
   });
 
@@ -360,7 +377,9 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
       children: [{ type: 'node', id: 'A', shape: 'diamond', position: [0, 0], text: 'A' }],
     };
     const p = findByType(compileToScene(ir).scene.primitives, 'path');
+
     expect(p).toBeDefined();
+
     // polygon sides:4 → move + 3 line + close（与旧 diamond E/N/W/S 同拓扑）
     expect(p!.commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'close']);
   });
@@ -400,6 +419,7 @@ describe('diamond 内置 shape preset 解析到 polygon 4/0', () => {
         );
       const diamondLine = findLine(mk('diamond'));
       const polygonLine = findLine(mk({ type: 'polygon', params: { sides: 4, rotate: 0 } }));
+
       expect(diamondLine?.commands[0]).toEqual(polygonLine?.commands[0]);
     }
   });
@@ -425,9 +445,12 @@ describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', ()
       ],
     };
     const scene = compileToScene(ir).scene;
+
     // circle 走 EllipsePrim，不会和 line PathPrim 撞；直接拿 path
     const linePath = scene.primitives.find(p => p.type === 'path');
+
     expect(linePath).toBeDefined();
+
     // d 形如 "M r 0 L 100 0"，r = 圆形半径（无 text 时 r = sqrt(p²+p²) = p√2）
     // 默认 padding=8 → r = 8√2 ≈ 11.31 → "M 11.31 0 L 100 0"
     if (linePath?.type === 'path') {
@@ -453,12 +476,15 @@ describe('Node shape boundary clip 在 path 端点贴边时按 shape 多态', ()
       ],
     };
     const scene = compileToScene(ir, { precision: 4 }).scene;
+
     // 找连接 line（不带 close 的 path，diamond 形状自带 close）
     const linePath = scene.primitives.find(
       (p): p is Extract<ScenePrimitive, { type: 'path' }> =>
         p.type === 'path' && !p.commands.some(c => c.kind === 'close'),
     );
+
     expect(linePath).toBeDefined();
+
     // 菱形 halfA = halfB = 16（无 text 时 innerHalf = padding = 8，diamond bound = 2 × 8 = 16）
     // 沿 (1, 1) 方向求边界：|t|/16 + |t|/16 = 1 → t = 8
     // 端点 = (8, 8)

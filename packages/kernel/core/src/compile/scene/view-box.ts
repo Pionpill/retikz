@@ -13,12 +13,14 @@ const assertViewBoxInput = (viewBox: IRViewBox): void => {
       `viewBox has a non-finite origin (x=${String(viewBox.x)}, y=${String(viewBox.y)}); both must be finite.`,
     );
   }
+
   if (!Number.isFinite(viewBox.width) || viewBox.width <= 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `viewBox has an invalid width (${String(viewBox.width)}); it must be a finite number greater than 0.`,
     );
   }
+
   if (!Number.isFinite(viewBox.height) || viewBox.height <= 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
@@ -35,6 +37,7 @@ const assertRoundedViewBoxLayout = (layout: BoundsRect): BoundsRect => {
       `viewBox rounds to an invalid layout (x=${String(layout.x)}, y=${String(layout.y)}, width=${String(layout.width)}, height=${String(layout.height)}); check precision and coordinate magnitude.`,
     );
   }
+
   return layout;
 };
 

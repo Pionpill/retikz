@@ -26,6 +26,7 @@ const createControls = (lang: Lang) => {
     ],
   });
 };
+
 /** 控件与源码共享的稳定契约 */
 export const createPreviewControlContract = (lang: Lang) =>
   ({
@@ -33,5 +34,6 @@ export const createPreviewControlContract = (lang: Lang) =>
     canonicalValues: { keys: 'k₁|k₂|k₁', empty: false },
     relatedApis: ['Map.skeleton'],
   }) satisfies PreviewControlContract;
+
 /** 默认语言契约 */
 export const previewControlContract = createPreviewControlContract('zh');

@@ -72,6 +72,7 @@ export const renderFlowRoutingPreview = (
               : kind === 'straight'
                 ? { kind }
                 : { kind, cornerRadius: values.cornerRadius };
+
   return (
     <PreviewFlowDiagram
       viewBox={{ x: -48, y: -56, width: 400, height: 330 }}

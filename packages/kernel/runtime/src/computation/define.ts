@@ -77,6 +77,7 @@ export type RuntimeComputationErasedExecutor = Readonly<{
 }>;
 
 const runtimeComputationTokens = new WeakSet<object>();
+
 const runtimeComputationExecutors = new WeakMap<object, RuntimeComputationErasedExecutor>();
 
 /** 创建 artifact dispose 失败的非致命诊断 */
@@ -112,9 +113,12 @@ const copyTracePhases = (
         cause: definition,
       });
     }
+
     seen.add(key);
+
     return Object.freeze({ phase, unit, outcomes: Object.freeze([...outcomes]) });
   });
+
   return Object.freeze(copied);
 };
 
@@ -131,6 +135,7 @@ export const defineRuntimeComputation = <
   if (owner.length === 0 || key.length === 0) {
     throw invalidComputation(RetikzRuntimeErrorCode.ComputationIdInvalid, input.id);
   }
+
   // 公开条件类型保证只有同类型转换可省略；在定义入口恢复完整执行契约
   const capture = input.artifact?.capture ?? ((value: TArtifactInput) => value as unknown as TArtifact);
   const readForComputation =
@@ -148,9 +153,11 @@ export const defineRuntimeComputation = <
     TComputationRead,
     TPublicRead
   >;
+
   /** 释放一个已捕获 artifact，并把 throw 隔离为 secondary diagnostic */
   const retireArtifact = (artifact: TArtifact): ReadonlyArray<RuntimeDiagnostic> => {
     if (dispose === undefined) return Object.freeze([]);
+
     try {
       dispose(artifact);
       return Object.freeze([]);
@@ -191,11 +198,13 @@ export const defineRuntimeComputation = <
       current?: RuntimePreparedComputationArtifact<TArtifact, TComputationRead, TPublicRead>,
     ): RuntimePreparedComputationArtifact<TArtifact, TComputationRead, TPublicRead> => {
       let artifact: TArtifact;
+
       try {
         artifact = capture(source);
       } catch (cause) {
         throw artifactError(RetikzRuntimeErrorCode.ArtifactCaptureFailed, 'artifact-capture', cause);
       }
+
       if (current !== undefined && dispose !== undefined && artifact === current.artifact) {
         throw new RetikzRuntimeError({
           code: RetikzRuntimeErrorCode.ArtifactOwnershipAlias,
@@ -207,6 +216,7 @@ export const defineRuntimeComputation = <
       }
 
       let computationRead: TComputationRead;
+
       try {
         computationRead = readForComputation(artifact);
       } catch (cause) {
@@ -219,6 +229,7 @@ export const defineRuntimeComputation = <
       }
 
       let publicRead: TPublicRead;
+
       try {
         publicRead = read(artifact);
       } catch (cause) {
@@ -249,6 +260,7 @@ export const defineRuntimeComputation = <
           cause: definition,
         });
       }
+
       return Object.freeze({ revision, value: prepared.publicRead });
     },
     snapshotToken: (
@@ -264,6 +276,7 @@ export const defineRuntimeComputation = <
           cause: definition,
         });
       }
+
       return Object.freeze({ revision, value: prepared.publicRead });
     },
     retire: (
@@ -274,9 +287,11 @@ export const defineRuntimeComputation = <
     update,
     observeCommit,
   });
+
   const erasedExecutor = typedExecutor as unknown as RuntimeComputationErasedExecutor;
   runtimeComputationTokens.add(token);
   runtimeComputationExecutors.set(token, erasedExecutor);
+
   return token;
 };
 
@@ -291,6 +306,7 @@ export const getRuntimeComputationDefinitionExecutor = (
   if (!isRuntimeComputationDefinition(definition)) {
     throw invalidComputation(RetikzRuntimeErrorCode.ComputationTokenInvalid, definition);
   }
+
   const executor = runtimeComputationExecutors.get(definition);
   if (executor === undefined) {
     throw new RetikzRuntimeError({
@@ -300,5 +316,6 @@ export const getRuntimeComputationDefinitionExecutor = (
       cause: definition,
     });
   }
+
   return executor;
 };

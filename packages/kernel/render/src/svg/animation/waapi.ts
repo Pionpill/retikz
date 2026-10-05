@@ -59,6 +59,7 @@ export const buildWaapiDescriptor = (
     [key]: frame.value,
     ...(frame.easing ? { easing: frame.easing } : {}),
   }));
+
   return {
     property: track.property,
     keyframes,

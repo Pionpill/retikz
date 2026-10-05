@@ -43,4 +43,5 @@ export type IRNode = Omit<ZodInput<typeof NodeSchema>, 'position'> & {
 export type NodeShape = OpenString<BuiltinShape>;
 
 export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
+
 export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;

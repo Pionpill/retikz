@@ -34,6 +34,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
       undefined,
       field => (field === 'x' ? { type: DataFieldType.Categorical, parse } : undefined),
     );
+
     expect(fieldTypeMap.get('x')).toBe(DataFieldType.Categorical);
     expect(parsers.get('x')).toBe(parse);
     expect(resolverHit).toBe(true);
@@ -42,6 +43,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
   it('apply_resolver_undefined_no_hit', () => {
     const base = new Map([['x', DataFieldType.Continuous]]);
     const result = applyFieldResolver(base, new Set(['x']), undefined, 'd', undefined, undefined);
+
     expect(result.resolverHit).toBe(false);
     expect(result.fieldTypeMap).toBe(base);
   });
@@ -60,11 +62,13 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
         return undefined;
       },
     );
+
     expect(seen).toEqual({ dataReference: 'd', physicalPath: 'when', declaredType: DataFieldType.Temporal });
   });
 
   it('parse_only_without_declared_type_throws', () => {
     const base = new Map([['x', DataFieldType.Continuous]]);
+
     expect(() =>
       applyFieldResolver(base, new Set(['x']), undefined, 'd', undefined, () => ({ parse: raw => Number(raw) })),
     ).toThrow(/needs a type/i);
@@ -80,6 +84,7 @@ describe('applyFieldResolver — 类型覆盖 + parser 收集（contract）', ()
       undefined,
       () => ({ parse: parseSlashDate }),
     );
+
     expect(parsers.has('x')).toBe(true);
   });
 });
@@ -92,6 +97,7 @@ describe('normalizeRows — 自定义 parser（contract）', () => {
       undefined,
       new Map([['x', parseSlashDate]]),
     );
+
     expect(out[0].x).toBe(Date.parse('2024-01-01'));
   });
 
@@ -102,6 +108,7 @@ describe('normalizeRows — 自定义 parser（contract）', () => {
       undefined,
       new Map([['a', () => true as unknown as ParsedFieldValue]]),
     );
+
     expect(out[0].a).toBeUndefined();
   });
 
@@ -112,6 +119,7 @@ describe('normalizeRows — 自定义 parser（contract）', () => {
       undefined,
       new Map([['a', () => undefined]]),
     );
+
     expect(out[0].a).toBeUndefined();
   });
 });
@@ -126,6 +134,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
       { resolveField: field => (field === 'x' ? { type: 'temporal', parse: parseSlashDate } : undefined) },
       rows,
     );
+
     expect(normalized[0].x).toBe(Date.parse('2024-01-01'));
   });
 
@@ -141,6 +150,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
       { resolveField: field => (field === 'x' ? { type: 'categorical' } : undefined) },
       rows,
     );
+
     expect(fieldTypeMap.get('x')).toBe(DataFieldType.Categorical); // 覆盖推断的 continuous
     expect(normalized[0].x).toBe(0); // resolver 命中 → 归一化跑，类别键原样
   });
@@ -154,6 +164,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
       { resolveField: field => (field === 'x' ? { parse: parseSlashDate } : undefined) },
       rows,
     );
+
     expect(fieldTypeMap.get('x')).toBe(DataFieldType.Temporal); // 类型沿用 model
     expect(normalized[0].x).toBe(Date.parse('2024-03-04'));
   });
@@ -161,6 +172,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
   it('parse_only_without_model_throws', () => {
     const spec = pointSpec();
     const rows = [{ x: 1, y: 2 }];
+
     expect(() => prepareRows(spec, { d: rows }, { resolveField: () => ({ parse: raw => Number(raw) }) }, rows)).toThrow(
       /needs a type/i,
     );
@@ -170,6 +182,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     // model 仅声明 x，mark 引用了未声明的 y；resolver 返类型也不能让 y 通过 strict
     const spec = pointSpec([{ name: 'x', type: 'continuous' }]);
     const rows = [{ x: 1, y: 2 }];
+
     expect(() => prepareRows(spec, { d: rows }, { resolveField: () => ({ type: 'continuous' }) }, rows)).toThrow(
       /unknown field/i,
     );
@@ -180,6 +193,7 @@ describe('prepareRows — resolveField 集成（contract）', () => {
     const rows = [{ x: 5, y: 1 }];
     const withoutResolver = prepareRows(spec, { d: rows }, {}, rows);
     const withUndefinedResolver = prepareRows(spec, { d: rows }, { resolveField: () => undefined }, rows);
+
     expect(withUndefinedResolver).toEqual(withoutResolver);
   });
 
@@ -197,11 +211,13 @@ describe('prepareRows — resolveField 集成（contract）', () => {
             seenPath = context.physicalPath;
             return { type: 'temporal', parse: parseSlashDate };
           }
+
           return undefined;
         },
       },
       rows,
     );
+
     expect(seenPath).toBe('when');
   });
 });
@@ -221,6 +237,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
       { version: 1, type: 'scene', children: [spec] },
       { composites: lowerPlots(datasets, { resolveField }) },
     ).scene;
+
     expect(scene.primitives.length).toBeGreaterThan(0);
   });
 
@@ -247,6 +264,7 @@ describe('render ⟺ locator parity + scale 兼容', () => {
       coordinate: { type: 'cartesian2D', x: 'xs', y: 'ys' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     });
+
     expect(
       () =>
         compileToScene(

@@ -30,6 +30,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
   let subPaths: Array<SubPath> = [];
   let current: SubPath | null = null;
   let cursor: Pt = [0, 0];
+
   // 仿射矩阵 [a, b, c, d, e, f]：x' = a*x + c*y + e，y' = b*x + d*y + f
   let matrix: [number, number, number, number, number, number] = [1, 0, 0, 1, 0, 0];
   const stack: Array<[number, number, number, number, number, number]> = [];
@@ -39,6 +40,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
     const [a, b, c, d, e, f] = matrix;
     return [a * x + c * y + e, b * x + d * y + f];
   };
+
   const multiply = (m: [number, number, number, number, number, number]): void => {
     const [a, b, c, d, e, f] = matrix;
     const [a2, b2, c2, d2, e2, f2] = m;
@@ -51,11 +53,13 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
       b * e2 + d * f2 + f,
     ];
   };
+
   const ensure = (): SubPath => {
     if (current === null) {
       current = { points: [cursor], closed: false };
       subPaths.push(current);
     }
+
     return current;
   };
 
@@ -95,6 +99,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
       const from = cursor;
       const ctrl = apply(cx, cy);
       const to = apply(x, y);
+
       for (let i = 1; i <= 8; i++) {
         const t = i / 8;
         const mt = 1 - t;
@@ -103,6 +108,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
           mt * mt * from[1] + 2 * mt * t * ctrl[1] + t * t * to[1],
         ]);
       }
+
       cursor = to;
     },
     bezierCurveTo(c1x: number, c1y: number, c2x: number, c2y: number, x: number, y: number): void {
@@ -111,6 +117,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
       const c1 = apply(c1x, c1y);
       const c2 = apply(c2x, c2y);
       const to = apply(x, y);
+
       for (let i = 1; i <= 12; i++) {
         const t = i / 12;
         const mt = 1 - t;
@@ -119,20 +126,24 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
           mt * mt * mt * from[1] + 3 * mt * mt * t * c1[1] + 3 * mt * t * t * c2[1] + t * t * t * to[1],
         ]);
       }
+
       cursor = to;
     },
     arc(cx: number, cy: number, r: number, start: number, end: number): void {
       const sp = ensure();
       const steps = 24;
+
       for (let i = 0; i <= steps; i++) {
         const ang = start + ((end - start) * i) / steps;
         sp.points.push(apply(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r));
       }
+
       sp.closed = true;
     },
     ellipse(cx: number, cy: number, rx: number, ry: number, rot: number, start: number, end: number): void {
       const sp = ensure();
       const steps = 24;
+
       for (let i = 0; i <= steps; i++) {
         const ang = start + ((end - start) * i) / steps;
         const ex = Math.cos(ang) * rx;
@@ -141,6 +152,7 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
         const ry2 = ex * Math.sin(rot) + ey * Math.cos(rot);
         sp.points.push(apply(cx + rx2, cy + ry2));
       }
+
       sp.closed = true;
     },
     save(): void {
@@ -169,9 +181,11 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
     isPointInPath(px: number, py: number): boolean {
       // 射线法（even-odd）对所有闭合子路径求并集
       let inside = false;
+
       for (const sp of subPaths) {
         const pts = sp.points;
         if (pts.length < 3) continue;
+
         for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
           const xi = pts[i][0];
           const yi = pts[i][1];
@@ -181,13 +195,16 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
           if (intersect) inside = !inside;
         }
       }
+
       return inside;
     },
     isPointInStroke(px: number, py: number): boolean {
       const half = lineWidth / 2;
+
       for (const sp of subPaths) {
         const pts = sp.points;
         const limit = sp.closed ? pts.length : pts.length - 1;
+
         for (let i = 0; i < limit; i++) {
           const a = pts[i];
           const b = pts[(i + 1) % pts.length];
@@ -201,9 +218,11 @@ const createGeometryContext = (): CanvasRenderingContext2D => {
           if (dist <= half) return true;
         }
       }
+
       return false;
     },
   };
+
   return ctx as unknown as CanvasRenderingContext2D;
 };
 
@@ -218,6 +237,7 @@ describe('Canvas hitTest', () => {
         { type: 'rect', id: 'upper', x: 25, y: 25, width: 50, height: 50, fill: '#00f' },
       ],
     };
+
     expect(hitTest(scene, { x: 30, y: 30 }, { context2d: ctx() })).toBe('upper');
   });
 
@@ -229,6 +249,7 @@ describe('Canvas hitTest', () => {
         { type: 'rect', id: 'upper', x: 25, y: 25, width: 50, height: 50, fill: '#00f' },
       ],
     };
+
     expect(hitTest(scene, { x: 5, y: 5 }, { context2d: ctx() })).toBe('lower');
   });
 
@@ -252,8 +273,10 @@ describe('Canvas hitTest', () => {
         },
       ],
     };
+
     // 中心落在「填充区」但 fill=none → 不命中
     expect(hitTest(scene, { x: 50, y: 50 }, { context2d: ctx() })).toBeNull();
+
     // 落在上边描边线上（含 strokeWidth/2 容差）→ 命中
     expect(hitTest(scene, { x: 50, y: 20 }, { context2d: ctx() })).toBe('ring');
   });
@@ -275,6 +298,7 @@ describe('Canvas hitTest', () => {
         },
       ],
     };
+
     // 距线 4 units：默认 strokeWidth/2=1 容差不命中，给足 tolerance 后命中
     expect(hitTest(scene, { x: 50, y: 54 }, { context2d: ctx() })).toBeNull();
     expect(hitTest(scene, { x: 50, y: 54 }, { context2d: ctx(), strokeTolerance: 5 })).toBe('line');
@@ -292,6 +316,7 @@ describe('Canvas hitTest', () => {
         },
       ],
     };
+
     // group translate(10,10) → 子 rect 在 [10,10]~[40,40]；点 (20,20) 命中子 rect → 归到 group id
     expect(hitTest(scene, { x: 20, y: 20 }, { context2d: ctx() })).toBe('scope1');
   });
@@ -301,6 +326,7 @@ describe('Canvas hitTest', () => {
       layout: { x: 0, y: 0, width: 100, height: 100 },
       primitives: [{ type: 'rect', id: 'a', x: 0, y: 0, width: 20, height: 20, fill: '#f00' }],
     };
+
     expect(hitTest(scene, { x: 90, y: 90 }, { context2d: ctx() })).toBeNull();
   });
 
@@ -309,6 +335,7 @@ describe('Canvas hitTest', () => {
       layout: { x: 0, y: 0, width: 100, height: 100 },
       primitives: [{ type: 'rect', x: 0, y: 0, width: 20, height: 20, fill: '#f00' }],
     };
+
     expect(hitTest(scene, { x: 10, y: 10 }, { context2d: ctx() })).toBeNull();
   });
 
@@ -397,6 +424,7 @@ describe('Scene 禁用命中', () => {
         },
       ],
     };
+
     expect(hitTest(base, { x: 50, y: 50 }, { context2d: createGeometryContext() })).toBe('below');
   });
 });

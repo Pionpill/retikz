@@ -23,6 +23,7 @@ export const PreviewViewport: FC<PreviewViewportProps> = props => {
   const [ready, setReady] = useState(() => typeof IntersectionObserver === 'undefined');
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
+
     const observer = new IntersectionObserver(
       entries => {
         if (!entries.some(entry => entry.isIntersecting)) return;
@@ -32,8 +33,10 @@ export const PreviewViewport: FC<PreviewViewportProps> = props => {
       { rootMargin: '600px 0px' },
     );
     if (host.current) observer.observe(host.current);
+
     return () => observer.disconnect();
   }, []);
+
   return (
     <div ref={host} data-preview-viewport={ready ? 'ready' : 'pending'}>
       {ready ? (

@@ -145,29 +145,34 @@ export type RetainedRendererExecutor = Readonly<{
 }>;
 
 const retainedRenderers = new WeakSet<object>();
+
 const retainedRendererExecutors = new WeakMap<object, RetainedRendererExecutor>();
 
 /** 判断动态宿主是否为 SVGSVGElement，兼容跨 realm 与无 DOM 构造器测试环境 */
 export const isSvgHost = (value: unknown): value is SVGSVGElement => {
   if (typeof value !== 'object' || value === null) return false;
+
   const constructor = (globalThis as { SVGSVGElement?: typeof SVGSVGElement }).SVGSVGElement;
   if (constructor !== undefined) {
     if (value instanceof constructor) return true;
     const realmConstructor = Reflect.get(Reflect.get(value, 'ownerDocument') ?? {}, 'defaultView')?.SVGSVGElement;
     return typeof realmConstructor === 'function' && value instanceof realmConstructor;
   }
+
   return Reflect.get(value, 'tagName')?.toString().toLowerCase() === 'svg';
 };
 
 /** 判断动态宿主是否为 HTMLCanvasElement，兼容跨 realm 与无 DOM 构造器测试环境 */
 export const isCanvasHost = (value: unknown): value is HTMLCanvasElement => {
   if (typeof value !== 'object' || value === null) return false;
+
   const constructor = (globalThis as { HTMLCanvasElement?: typeof HTMLCanvasElement }).HTMLCanvasElement;
   if (constructor !== undefined) {
     if (value instanceof constructor) return true;
     const realmConstructor = Reflect.get(Reflect.get(value, 'ownerDocument') ?? {}, 'defaultView')?.HTMLCanvasElement;
     return typeof realmConstructor === 'function' && value instanceof realmConstructor;
   }
+
   return Reflect.get(value, 'tagName')?.toString().toLowerCase() === 'canvas';
 };
 
@@ -186,6 +191,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
   if (!validHost) {
     throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererInvalid, cause: input });
   }
+
   const token = Object.freeze({
     backend,
     host,
@@ -193,9 +199,11 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
     readonlyLayerCapability,
   }) as RetainedRenderer;
   let state: 'live' | 'disposing' | 'disposed' = 'live';
+
   const assertLive = (): void => {
     if (state !== 'live') throw new RetikzRenderError({ code: RetikzRenderErrorCode.RetainedRendererDisposed });
   };
+
   retainedRendererExecutors.set(
     token,
     Object.freeze({
@@ -213,6 +221,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
       },
       dispose: () => {
         if (state === 'disposed') return;
+
         state = 'disposing';
         dispose();
         state = 'disposed';
@@ -220,6 +229,7 @@ const defineRetainedRendererUnsafe = (input: RetainedRendererDefinitionInput): R
     }),
   );
   retainedRenderers.add(token);
+
   return token;
 };
 

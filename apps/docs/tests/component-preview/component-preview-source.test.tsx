@@ -162,6 +162,7 @@ const renderPreview = async (
       await Promise.resolve();
     });
   }
+
   return capture.read();
 };
 
@@ -172,14 +173,18 @@ describe('ComponentPreview Vanilla source', () => {
       <ComponentPreview mode="showcase" files="coordinate-cartesian" />,
       false,
     );
+
     expect(initial.source?.vanilla).toBeUndefined();
+
     await act(async () => {
       initial.onSourceRequested?.();
       await Promise.resolve();
     });
+
     expect(capture.read().source?.vanilla?.files[0]?.code).toContain('renderPlot');
     expect(capture.read().source?.vanilla?.render).toBeTypeOf('function');
   });
+
   it('不再从组件预览根 barrel 暴露旧卡片入口', () => {
     expect(componentPreviewExports).not.toHaveProperty(['Component', 'Render'].join(''));
   });

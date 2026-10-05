@@ -4,7 +4,9 @@ import { translateMathApiReference } from './math.en';
 import { createApiReferenceMdx, writeApiReferenceMdx } from './tex';
 
 const docsRoot = path.resolve(import.meta.dirname, '../..');
+
 const repositoryRoot = path.resolve(docsRoot, '../..');
+
 const packageRoot = path.resolve(repositoryRoot, 'packages/kernel/math');
 
 const config = {

@@ -34,6 +34,7 @@ export const usePreviewResources = (request: PreviewResourceRequest | null): Pre
 
   useEffect(() => {
     if (request === null || target === null || target.status === 'missing' || requestKey === null) return;
+
     let active = true;
     void loadPreviewResources(request)
       .then(result => {
@@ -42,6 +43,7 @@ export const usePreviewResources = (request: PreviewResourceRequest | null): Pre
       })
       .catch(error => {
         if (!active) return;
+
         setStored({
           requestKey,
           state: {
@@ -51,6 +53,7 @@ export const usePreviewResources = (request: PreviewResourceRequest | null): Pre
           },
         });
       });
+
     return () => {
       active = false;
     };
@@ -59,6 +62,7 @@ export const usePreviewResources = (request: PreviewResourceRequest | null): Pre
   if (request === null || target === null || requestKey === null) return { status: 'idle', key: null };
   if (target.status === 'missing') return target;
   if (stored?.requestKey !== requestKey) return { status: 'loading', key: target.key };
+
   return stored.state;
 };
 
@@ -82,6 +86,7 @@ export const usePreviewDemoModule = (key: string | null): PreviewDemoModuleState
 
   useEffect(() => {
     if (key === null || loader === undefined) return;
+
     let active = true;
     void loader()
       .then(module => {
@@ -89,6 +94,7 @@ export const usePreviewDemoModule = (key: string | null): PreviewDemoModuleState
       })
       .catch(error => {
         if (!active) return;
+
         setStored({
           key,
           state: {
@@ -98,6 +104,7 @@ export const usePreviewDemoModule = (key: string | null): PreviewDemoModuleState
           },
         });
       });
+
     return () => {
       active = false;
     };
@@ -106,5 +113,6 @@ export const usePreviewDemoModule = (key: string | null): PreviewDemoModuleState
   if (key === null) return { status: 'idle', key: null };
   if (loader === undefined) return { status: 'missing', key };
   if (stored?.key !== key) return { status: 'loading', key };
+
   return stored.state;
 };

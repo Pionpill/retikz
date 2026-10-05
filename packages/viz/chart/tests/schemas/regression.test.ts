@@ -25,6 +25,7 @@ describe('Regression exact Source schema', () => {
         { method: { kind: 'quadratic' }, extent: [1, 3], sampleCount: 8, trend: { stroke: '#f00' } },
       ],
     };
+
     expect(RegressionChartPropertiesSchema.parse(JSON.parse(JSON.stringify(properties)))).toEqual(properties);
     expect(RegressionChartPropertiesSchema.parse({ extraMethods: [] })).toEqual({ extraMethods: [] });
   });
@@ -40,9 +41,12 @@ describe('Regression exact Source schema', () => {
     const result = RegressionChartPropertiesSchema.safeParse({
       extraMethods: [{ method: { kind: 'linear' }, extent: [3, 1] }],
     });
+
     expect(result.success).toBe(false);
+
     if (!result.success) expect(result.error.issues[0].path).toEqual(['extraMethods', 0, 'extent']);
   });
+
   it('accepts the minimal Source without materializing runtime defaults', () => {
     expect(RegressionChartSchema.parse(minimalSource)).toEqual(minimalSource);
   });

@@ -21,6 +21,7 @@ const unwrap = (schema: z.ZodType): z.ZodType => {
     schema instanceof z.ZodNonOptional
   )
     return unwrap(schema.unwrap() as z.ZodType);
+
   return schema;
 };
 
@@ -33,6 +34,7 @@ const addDescription = (
 ): void => {
   const schema = unwrap(input);
   if (segments.length === 0) return;
+
   const [segment, ...rest] = segments;
   if (schema instanceof z.ZodUnion) {
     if (segment.kind === 'union') {
@@ -65,6 +67,7 @@ const shared = {
   PathBaseSchema: { descriptions: pathSchemaDescriptions },
   ...nodeSchemas,
 };
+
 const registry = {
   ...SCHEMA_REGISTRY,
   ...Object.fromEntries(
@@ -74,6 +77,7 @@ const registry = {
     }),
   ),
 };
+
 /** 为一组真实 Schema 建立独立的分支说明查询，后列出的词典覆盖同对象字段 */
 export const createSchemaLocalizationResolver = (
   entries: ReadonlyArray<{
@@ -82,17 +86,21 @@ export const createSchemaLocalizationResolver = (
   }>,
 ) => {
   const descriptions = new WeakMap<z.ZodObject, Record<string, string>>();
+
   for (const entry of entries) {
     const localization = entry.localizations?.zh;
     if (!localization) continue;
+
     for (const [key, text] of Object.entries(localization.descriptions)) {
       if (!text) continue;
+
       const segments = key.startsWith('/')
         ? parseSchemaPath(key)
         : key.split('.').map(field => ({ kind: 'field' as const, key: field }));
       addDescription(descriptions, entry.schema, segments, text);
     }
   }
+
   return (schema: z.ZodObject) => {
     const fields = descriptions.get(schema);
     return fields ? { descriptions: fields } : undefined;

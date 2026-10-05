@@ -16,11 +16,13 @@ export type HydrationController = {
 /** 收集 handlers 注册表中实际用到的 RetikzEvent 集合（决定要在 root 上挂哪些 DOM listener） */
 const collectUsedEvents = (handlers: HydrationHandlers): Set<RetikzEvent> => {
   const used = new Set<RetikzEvent>();
+
   for (const id of Object.keys(handlers)) {
     for (const name of Object.keys(handlers[id]) as Array<RetikzEvent>) {
       if (handlers[id][name] !== undefined) used.add(name);
     }
   }
+
   return used;
 };
 
@@ -45,8 +47,10 @@ const invoke = (
   renderer: 'svg' | 'canvas',
 ): void => {
   if (id === null || !Object.hasOwn(handlers, id)) return;
+
   const handler: ElementHandlers[RetikzEvent] = handlers[id][name];
   if (handler === undefined) return;
+
   const context = buildContext ? buildContext(event, id) : minimalContext(root, id, renderer);
   handler(event, context);
 };
@@ -68,6 +72,7 @@ const runTeardowns = (teardowns: Array<() => void>, reverse = false): void => {
   const pending = reverse ? [...teardowns].reverse() : [...teardowns];
   let failed = false;
   let firstCause: unknown;
+
   for (const teardown of pending) {
     try {
       teardown();
@@ -80,6 +85,7 @@ const runTeardowns = (teardowns: Array<() => void>, reverse = false): void => {
       }
     }
   }
+
   if (failed) throw firstCause;
 };
 
@@ -125,6 +131,7 @@ export const createHydrationController = (
     // 直接委托的事件（enter/leave 除外，它们走 pointermove 合成）：locate(event) → 查 handler → 调用。
     for (const name of used) {
       if (name === RetikzEvent.PointerEnter || name === RetikzEvent.PointerLeave) continue;
+
       listen(EVENT_DOM_TYPE[name], event =>
         invoke(handlers, publicIdOf(locate(event)), name, event, root, buildContext, renderer),
       );
@@ -141,6 +148,7 @@ export const createHydrationController = (
       listen('pointermove', event => {
         const currentTarget = locate(event);
         if (hydrationTargetEquals(currentTarget, lastTarget)) return;
+
         const previousId = publicIdOf(lastTarget);
         const currentId = publicIdOf(currentTarget);
         lastTarget = currentTarget;
@@ -153,13 +161,17 @@ export const createHydrationController = (
       // 离开整图：清空命中态、把 last target 的 leave 补一次（同样先清状态再 invoke）
       const leaveWhole = (event: Event): void => {
         if (lastTarget === null) return;
+
         const previousId = publicIdOf(lastTarget);
         lastTarget = null;
         if (previousId === null) return;
+
         invoke(handlers, previousId, RetikzEvent.PointerLeave, event, root, buildContext, renderer);
       };
+
       // pointerleave 不冒泡、只在指针真正离开 root 时触发——最干净的「离开整图」信号
       listen('pointerleave', leaveWhole);
+
       // 退化兜底：某些环境 pointerleave 缺失，用 pointerout 且 relatedTarget 落在 root 外判定离开整图
       listen('pointerout', event => {
         const related = (event as MouseEvent).relatedTarget;
@@ -177,6 +189,7 @@ export const createHydrationController = (
     } catch (cleanupCause) {
       throw createHydrationSetupError(cause, cleanupCause, controller);
     }
+
     throw cause;
   }
 

@@ -58,6 +58,7 @@ export const SummarizeTransformSchema = strictObject({
     operation.metrics.forEach((metric, metricIndex) => {
       for (const { field, path } of reducerOutputFieldsOf(metric)) {
         if (!groupFields.has(field)) continue;
+
         ctx.addIssue({
           code: 'custom',
           path: ['metrics', metricIndex, ...path],
@@ -113,6 +114,7 @@ export const AnnotateTransformSchema = strictObject({
         message: 'annotate transform requires metrics or selectors',
       });
     }
+
     const outputFields = new Set(
       (operation.metrics ?? []).flatMap(metric => reducerOutputFieldsOf(metric).map(output => output.field)),
     );
@@ -124,6 +126,7 @@ export const AnnotateTransformSchema = strictObject({
           message: `duplicate annotate output field "${selector.as}"`,
         });
       }
+
       outputFields.add(selector.as);
     });
   })
@@ -336,6 +339,7 @@ export const DensityTransformSchema = strictObject({
         message: 'density extent lower bound must be less than upper bound',
       });
     }
+
     if (operation.xAs === operation.densityAs) {
       ctx.addIssue({
         code: 'custom',
@@ -343,6 +347,7 @@ export const DensityTransformSchema = strictObject({
         message: 'density output fields xAs and densityAs must be different',
       });
     }
+
     for (const [index, field] of (operation.groupBy ?? []).entries()) {
       if (field === operation.xAs || field === operation.densityAs) {
         ctx.addIssue({
@@ -381,6 +386,7 @@ export const SmoothTransformSchema = strictObject({
         message: 'smooth extent lower bound must be less than upper bound',
       });
     }
+
     if (operation.xAs === operation.yAs) {
       ctx.addIssue({
         code: 'custom',
@@ -388,6 +394,7 @@ export const SmoothTransformSchema = strictObject({
         message: 'smooth output fields xAs and yAs must be different',
       });
     }
+
     for (const [index, field] of (operation.groupBy ?? []).entries()) {
       if (field === operation.xAs || field === operation.yAs) {
         ctx.addIssue({

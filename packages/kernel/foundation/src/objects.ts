@@ -26,13 +26,17 @@ export const mergeProperties = <T extends object>(
   options: MergePropertiesOptions<NoInfer<T>> = {},
 ): Partial<T> => {
   const merged: Partial<T> = {};
+
   try {
     for (const source of sources) {
       if (source === undefined) continue;
+
       for (const key of Reflect.ownKeys(source)) {
         if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+
         const value = source[key as keyof T];
         if (options.shouldOverride !== undefined && !options.shouldOverride(value, key)) continue;
+
         Object.defineProperty(merged, key, { value, enumerable: true, configurable: true, writable: true });
       }
     }
@@ -44,5 +48,6 @@ export const mergeProperties = <T extends object>(
       cause,
     });
   }
+
   return merged;
 };

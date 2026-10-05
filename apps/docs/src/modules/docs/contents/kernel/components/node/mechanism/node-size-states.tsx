@@ -10,6 +10,7 @@ export type NodeSizeStatesProps = Readonly<{ lang?: Lang }>;
 const NodeSizeStates: FC<NodeSizeStatesProps> = props => {
   const { lang } = props;
   const i18n = nodeSizeStatesI18n[lang ?? 'zh'];
+
   return (
     <Layout>
       {[0, 1, 2].map(stage => (

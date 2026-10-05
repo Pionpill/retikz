@@ -13,6 +13,7 @@ export const channelValue = (channel: IRPlotChannel | undefined, row: ExternalRo
   if (!channel) return undefined;
   if (channel.value !== undefined) return channel.value;
   if (channel.field !== undefined) return resolveFieldPath(row, channel.field);
+
   return undefined;
 };
 
@@ -26,7 +27,9 @@ const applyDisplayFormat = (value: unknown, displayFormat: string, fieldType: Da
       if (!isFiniteNumber(value)) return String(value);
       return d3UtcFormat(displayFormat)(new Date(value));
     }
+
     if (!isFiniteNumber(value)) return String(value);
+
     return d3Format(displayFormat)(value);
   } catch {
     return String(value);
@@ -47,11 +50,14 @@ export const labelOf = (
   if (content.field !== undefined) {
     const value = resolveFieldPath(row, content.field);
     if (value === null || value === undefined) return undefined;
+
     return content.displayFormat !== undefined
       ? applyDisplayFormat(value, content.displayFormat, fieldType)
       : String(value);
   }
+
   if (content.value !== undefined) return content.value;
+
   return undefined;
 };
 
@@ -71,6 +77,7 @@ export const createFieldCollector = (fields: Set<string>): FieldCollector => ({
       if (channel.kind === 'field') fields.add(String(channel.value));
       return;
     }
+
     if (channel.field !== undefined) fields.add(channel.field);
   },
 });

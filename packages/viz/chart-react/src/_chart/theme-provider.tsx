@@ -20,5 +20,6 @@ export const ChartThemeProvider: FC<ChartThemeProviderProps> = props => {
     if (themeDefinitions === undefined) return parent;
     return [...parent, ...themeDefinitions];
   }, [parent, themeDefinitions]);
+
   return <ChartThemeDefinitionsContext.Provider value={merged}>{children}</ChartThemeDefinitionsContext.Provider>;
 };

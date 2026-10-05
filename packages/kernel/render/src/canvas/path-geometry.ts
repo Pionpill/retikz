@@ -18,6 +18,7 @@ export const roundedRectPath = (
     ctx.rect(x, y, width, height);
     return;
   }
+
   const right = x + width;
   const bottom = y + height;
   ctx.moveTo(x + r, y);
@@ -84,11 +85,13 @@ export const pathCommand = (ctx: CanvasRenderingContext2D, command: PathCommand)
 /** 重放结构化路径，并让 inactive subpath 上的弧从其声明起点开始 */
 const replayPathCommands = (ctx: CanvasRenderingContext2D, commands: ReadonlyArray<PathCommand>): void => {
   let activeSubpath = false;
+
   for (const command of commands) {
     if ((command.kind === 'arc' || command.kind === 'ellipseArc') && !activeSubpath) {
       const start = commandArcStart(command);
       ctx.moveTo(start[0], start[1]);
     }
+
     pathCommand(ctx, command);
     activeSubpath = command.kind !== 'close';
   }

@@ -36,6 +36,7 @@ const setupRoot = (): {
   root.appendChild(nodeA);
   root.appendChild(nodeB);
   document.body.appendChild(root);
+
   return { root, nodeA, childA1, childA2, nodeB };
 };
 
@@ -58,6 +59,7 @@ describe('Hydration 控制器', () => {
     dispatch(childA1, 'click');
 
     expect(onClick).toHaveBeenCalledTimes(1);
+
     controller.dispose();
   });
 
@@ -70,6 +72,7 @@ describe('Hydration 控制器', () => {
     dispatch(nodeB, 'contextmenu');
 
     expect(onRightClick).toHaveBeenCalledTimes(1);
+
     controller.dispose();
   });
 
@@ -86,16 +89,19 @@ describe('Hydration 控制器', () => {
 
     // 进入图元 a 的子节点 → a 的 enter 一次
     dispatch(childA1, 'pointermove');
+
     expect(onEnterA).toHaveBeenCalledTimes(1);
     expect(onLeaveA).toHaveBeenCalledTimes(0);
 
     // 在图元 a 内部 childA1 → childA2 移动（命中 id 仍是 a）→ 不重复触发 enter / leave
     dispatch(childA2, 'pointermove');
+
     expect(onEnterA).toHaveBeenCalledTimes(1);
     expect(onLeaveA).toHaveBeenCalledTimes(0);
 
     // 跨 id 移动到图元 b → a 的 leave 一次、b 的 enter 一次
     dispatch(nodeB, 'pointermove');
+
     expect(onLeaveA).toHaveBeenCalledTimes(1);
     expect(onEnterB).toHaveBeenCalledTimes(1);
 
@@ -126,6 +132,7 @@ describe('Hydration 控制器', () => {
 
     expect(onEnter).toHaveBeenCalledTimes(1);
     expect(onLeave).not.toHaveBeenCalled();
+
     controller.dispose();
   });
 
@@ -137,14 +144,17 @@ describe('Hydration 控制器', () => {
 
     // 先进入图元 a 建立命中态
     dispatch(childA1, 'pointermove');
+
     expect(onLeaveA).toHaveBeenCalledTimes(0);
 
     // 离开整图（root pointerleave，不冒泡）→ a 的 leave 一次
     root.dispatchEvent(new MouseEvent('pointerleave', { bubbles: false, relatedTarget: null }));
+
     expect(onLeaveA).toHaveBeenCalledTimes(1);
 
     // 命中态已清空：再 pointerleave 不重复触发
     root.dispatchEvent(new MouseEvent('pointerleave', { bubbles: false, relatedTarget: null }));
+
     expect(onLeaveA).toHaveBeenCalledTimes(1);
 
     controller.dispose();
@@ -157,10 +167,12 @@ describe('Hydration 控制器', () => {
     const controller = createHydrationController(root, handlers, locateSvg);
 
     dispatch(childA1, 'click');
+
     expect(onClick).toHaveBeenCalledTimes(1);
 
     controller.dispose();
     dispatch(childA1, 'click');
+
     expect(onClick).toHaveBeenCalledTimes(1); // 解绑后不再增加
     expect(() => controller.dispose()).not.toThrow(); // 再次 dispose 不抛
   });
@@ -176,6 +188,7 @@ describe('Hydration 控制器', () => {
         rejectClickRemoval = false;
         throw new Error('click listener removal rejected');
       }
+
       originalRemove(type, listener, options);
     });
     const controller = createHydrationController(
@@ -185,14 +198,18 @@ describe('Hydration 控制器', () => {
     );
 
     expect(() => controller.dispose()).toThrow('click listener removal rejected');
+
     dispatch(childA1, 'click');
     dispatch(childA1, 'dblclick');
+
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(onDoubleClick).not.toHaveBeenCalled();
     expect(remove.mock.calls.map(([type]) => type)).toEqual(['click', 'dblclick']);
 
     expect(() => controller.dispose()).not.toThrow();
+
     dispatch(childA1, 'click');
+
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(remove.mock.calls.map(([type]) => type)).toEqual(['click', 'dblclick', 'click']);
   });
@@ -203,6 +220,7 @@ describe('Hydration 控制器', () => {
     const controller = createHydrationController(root, handlers, locateSvg);
 
     expect(() => dispatch(nodeB, 'click')).not.toThrow();
+
     controller.dispose();
   });
 
@@ -239,11 +257,13 @@ describe('Hydration 控制器', () => {
           rejectRemoval = false;
           throw cleanupCause;
         }
+
         listeners.delete(type);
       },
     } as unknown as EventTarget;
 
     let failure: unknown;
+
     try {
       createHydrationController(root, { node: { click: vi.fn(), doubleClick: vi.fn() } }, () => null);
     } catch (cause) {
@@ -261,8 +281,11 @@ describe('Hydration 控制器', () => {
       }),
     );
     expect(listeners.has('click')).toBe(true);
+
     if (!(failure instanceof RetikzRenderError)) throw new Error('expected hydration setup error');
+
     const controller = failure.details.controller as HydrationController;
+
     expect(() => controller.dispose()).not.toThrow();
     expect(listeners.size).toBe(0);
   });
@@ -273,6 +296,7 @@ describe('locateSvg 定位', () => {
     const { childA1 } = setupRoot();
     const event = new Event('click', { bubbles: true });
     Object.defineProperty(event, 'target', { value: childA1, configurable: true });
+
     expect(locateSvg(event)).toBe('a');
   });
 
@@ -280,6 +304,7 @@ describe('locateSvg 定位', () => {
     const bare = document.createElement('div');
     const event = new Event('click', { bubbles: true });
     Object.defineProperty(event, 'target', { value: bare, configurable: true });
+
     expect(locateSvg(event)).toBeNull();
   });
 });

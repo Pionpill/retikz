@@ -93,6 +93,7 @@ describe('layout-aware composite transactions and artifacts', () => {
             y: { kind: LayoutAxisProposalKind.Exact, value: 30 },
           },
         );
+
         return { children: [context.replay(exact)] };
       },
     });
@@ -109,6 +110,7 @@ describe('layout-aware composite transactions and artifacts', () => {
     expect(result.scene.resources).toEqual([{ kind: 'paint', id: 'paint-1', spec: gradient('#500', '#600') }]);
     expect(result.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
   });
+
   it('publishes only replayed resources and preserves final resource ordering', () => {
     const discarded = gradient('#f00', '#0f0');
     const selected = gradient('#00f', '#fff');
@@ -135,6 +137,7 @@ describe('layout-aware composite transactions and artifacts', () => {
           text: 'selected',
           style: { fill: selected },
         });
+
         return { children: [context.replay(final)] };
       },
     });
@@ -211,7 +214,9 @@ describe('layout-aware composite transactions and artifacts', () => {
           },
           NaturalLayoutProposal,
         );
+
         expect(probe.kind).toBe(LayoutChildProbeKind.Failed);
+
         return { children: [] };
       },
     });
@@ -501,6 +506,7 @@ describe('layout-aware composite transactions and artifacts', () => {
           type: 'scope',
           children: [{ namespace: 'test', type: 'replayedLeaf' }],
         });
+
         return { children: [context.replay(selected)] };
       },
     });
@@ -538,6 +544,7 @@ describe('layout-aware composite transactions and artifacts', () => {
 
     const withoutLayouts = compileToScene(ir, { composites: [definition] });
     payload.width = 99;
+
     expect(withoutLayouts.artifacts).toHaveLength(1);
     expect(withoutLayouts.artifacts[0]?.value).toEqual({ width: 10 });
     expect(Object.isFrozen(withoutLayouts.artifacts)).toBe(true);
@@ -547,6 +554,7 @@ describe('layout-aware composite transactions and artifacts', () => {
       composites: [definition],
       artifacts: { nodeLayouts: true },
     });
+
     expect(withLayouts.artifacts.filter(isNodeLayoutCompileArtifact)).toHaveLength(1);
   });
 

@@ -1,8 +1,11 @@
 import type { RuntimeIdentity } from '../identity';
 
 declare const RuntimeRevisionType: unique symbol;
+
 declare const RuntimeChangeSetType: unique symbol;
+
 declare const RuntimeSourceTokenBrand: unique symbol;
+
 declare const RuntimeSourceType: unique symbol;
 
 /** 单调递增且不超过 safe integer 的 Runtime revision */

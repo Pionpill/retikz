@@ -50,6 +50,7 @@ const facetValueOf = (row: ExternalRow, field: string): FacetScalar => {
       `lowerPlots: facet field "${field}" must resolve to a JSON scalar (string, number, boolean, or null)`,
     );
   }
+
   return value;
 };
 
@@ -80,14 +81,19 @@ const facetValueKey = (value: FacetTuple | undefined): string => (value === unde
 const orderedFacetValues = (dimension: FacetDimensionItem, rows: ReadonlyArray<ExternalRow>): Array<FacetScalar> => {
   const out: Array<FacetScalar> = [];
   const seen = new Set<string>();
+
   const add = (value: FacetScalar): void => {
     const key = JSON.stringify(value);
     if (seen.has(key)) return;
+
     seen.add(key);
     out.push(value);
   };
+
   for (const value of dimension.order ?? []) add(value);
+
   for (const row of rows) add(facetValueOf(row, dimension.field));
+
   return out;
 };
 
@@ -119,6 +125,7 @@ const facetPanelId = (facet: FacetGrid, row: FacetTuple | undefined, column: Fac
   const panel = defaultFacetPanelId(facet, row, column);
   const template = facet.viewIdTemplate;
   if (template === undefined) return panel;
+
   return template
     .replaceAll('{arrangement}', facet.id)
     .replaceAll('{row}', slugFacetValue(row))
@@ -135,6 +142,7 @@ export const resolveFacetPanels = (
   const rowValues = orderedFacetTuples(facet.row, rows);
   const columnValues = orderedFacetTuples(facet.column, rows);
   const groups = new Map<string, Array<ExternalRow>>();
+
   for (const row of rows) {
     const rowValue = facetTupleOf(row, facet.row);
     const columnValue = facetTupleOf(row, facet.column);
@@ -143,13 +151,16 @@ export const resolveFacetPanels = (
   }
 
   const panels: Array<FacetPanel> = [];
+
   for (const [rowIndex, rowValue] of rowValues.entries()) {
     for (const [columnIndex, columnValue] of columnValues.entries()) {
       const key = `${facetValueKey(rowValue)}\u0000${facetValueKey(columnValue)}`;
       const panelRows = groups.get(key) ?? [];
       if (panelRows.length === 0 && facet.empty !== FacetEmptyPolicy.Show) continue;
+
       const id = facetPanelId(facet, rowValue, columnValue);
       if (usedIds.has(id)) throw new RetikzPlotError(`lowerPlots: facet panel view id "${id}" is duplicated`);
+
       usedIds.add(id);
       panels.push({
         id,
@@ -162,6 +173,7 @@ export const resolveFacetPanels = (
       });
     }
   }
+
   return panels;
 };
 
@@ -170,11 +182,13 @@ const orderedFacetPanelValuesByIndex = (
   dimension: FacetLabelDimension,
 ): Array<{ index: number; tuple: FacetTuple }> => {
   const values = new Map<number, FacetTuple>();
+
   for (const panel of panels) {
     const index = dimension === 'column' ? panel.columnIndex : panel.rowIndex;
     if (values.has(index)) continue;
     values.set(index, facetPanelTupleOf(dimension === 'column' ? panel.column : panel.row));
   }
+
   return [...values.entries()].sort(([a], [b]) => a - b).map(([index, tuple]) => ({ index, tuple }));
 };
 
@@ -188,6 +202,7 @@ export const buildFacetLabelGroups = (
 ): Array<{ startIndex: number; span: number; value: FacetScalar }> => {
   const values = orderedFacetPanelValuesByIndex(panels, dimension).filter(({ tuple }) => tuple.length > level);
   const groups: Array<{ startIndex: number; endIndex: number; key: string; value: FacetScalar }> = [];
+
   for (const { index, tuple } of values) {
     const key = facetLabelGroupKey(tuple, level);
     const value = tuple[level];
@@ -196,8 +211,10 @@ export const buildFacetLabelGroups = (
       last.endIndex = index;
       continue;
     }
+
     groups.push({ startIndex: index, endIndex: index, key, value });
   }
+
   return groups.map(group => ({
     startIndex: group.startIndex,
     span: group.endIndex - group.startIndex + 1,

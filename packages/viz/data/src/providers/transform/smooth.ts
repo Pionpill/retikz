@@ -20,25 +20,31 @@ type SmoothPair = {
 
 const finitePairsOf = (rows: Array<ExternalRow>, xField: string, yField: string): Array<SmoothPair> => {
   const pairs: Array<SmoothPair> = [];
+
   for (const row of rows) {
     const x = resolveFieldPath(row, xField);
     const y = resolveFieldPath(row, yField);
     if (isFiniteNumber(x) && isFiniteNumber(y)) pairs.push({ x, y });
   }
+
   return pairs;
 };
 
 const sampleExtentOf = (operation: IRDataSmoothTransform, pairs: Array<SmoothPair>): [number, number] => {
   if (operation.extent !== undefined) return operation.extent;
+
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
+
   for (const pair of pairs) {
     min = Math.min(min, pair.x);
     max = Math.max(max, pair.x);
   }
+
   if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) {
     throw new RetikzDataError('data: smooth inferred extent requires at least two distinct finite x values');
   }
+
   return [min, max];
 };
 
@@ -72,6 +78,7 @@ export function* computeSmooth(
 ): TransformComputation<Array<ExternalRow>> {
   const method = smoothMethodOf(operation);
   const output: Array<ExternalRow> = [];
+
   for (const group of groupRowsByFields(rows, operation.groupBy)) {
     try {
       const pairs = finitePairsOf(group.rows, operation.x, operation.y);
@@ -98,6 +105,7 @@ export function* computeSmooth(
       );
     }
   }
+
   return output;
 }
 

@@ -49,6 +49,7 @@ const finiteDomain = (domain: readonly [number, number], scaleName: string): [nu
       `lowerPlots: scale "${scaleName}" domain must contain finite numbers (got [${lower}, ${upper}])`,
     );
   }
+
   return [lower, upper];
 };
 
@@ -56,10 +57,12 @@ const resolveDomainPadding = (padding: IRPlotDomainPadding | undefined): DomainP
   if (typeof padding === 'object' && padding.kind === 'mark') {
     throw new RetikzPlotError('mark domainPadding requires coordinate and mark context');
   }
+
   if (padding === undefined) return { kind: PlotDomainPaddingKind.Range, lower: 0, upper: 0 };
   if (typeof padding === 'number') {
     return { kind: PlotDomainPaddingKind.Range, lower: padding, upper: padding };
   }
+
   return {
     kind: padding.kind ?? PlotDomainPaddingKind.Range,
     lower: padding.lower ?? 0,
@@ -105,6 +108,7 @@ const expandLogSingleValue = (value: number, singleValueSpan: number | undefined
   const power = (sourceValue: number): number => Math.pow(base, sourceValue);
   const span = singleValueSpan ?? 1;
   const center = logarithm(value);
+
   return [power(center - span / 2), power(center + span / 2)];
 };
 
@@ -116,6 +120,7 @@ const applyAdditiveRatioPadding = (
   const span = Math.abs(domain[1] - domain[0]);
   const lower = domain[0] <= domain[1] ? domain[0] - span * padding.lower : domain[0] + span * padding.lower;
   const upper = domain[0] <= domain[1] ? domain[1] + span * padding.upper : domain[1] - span * padding.upper;
+
   return [clampLowerZero ? Math.max(0, lower) : lower, upper];
 };
 
@@ -129,6 +134,7 @@ const applyLogRatioPadding = (
   const lower = logarithm(domain[0]);
   const upper = logarithm(domain[1]);
   const span = Math.abs(upper - lower);
+
   return lower <= upper
     ? [power(lower - span * padding.lower), power(upper + span * padding.upper)]
     : [power(lower + span * padding.lower), power(upper - span * padding.upper)];
@@ -191,6 +197,7 @@ const applyRangePadding = (
       `lowerPlots: scale "${options.scaleName}" domainPadding range units require a finite non-zero range`,
     );
   }
+
   if (padding.lower + padding.upper >= rangeLength) {
     throw new RetikzPlotError(
       `lowerPlots: scale "${options.scaleName}" domainPadding range-unit sum must be less than range length ${rangeLength}`,
@@ -199,6 +206,7 @@ const applyRangePadding = (
 
   const direction = Math.sign(rangeEnd - rangeStart);
   const innerRange: [number, number] = [rangeStart + direction * padding.lower, rangeEnd - direction * padding.upper];
+
   return finiteDomain(invertRangeEndpoints(options, domain, innerRange), options.scaleName);
 };
 
@@ -234,5 +242,6 @@ export const resolvePaddedDomain = (options: ResolvePaddedDomainOptions): [numbe
 
   if (options.family === 'log') assertStrictlyPositive(padded, options.scaleName, 'padded');
   if (clampLowerZero) assertNonNegative(padded, options.scaleName, options.family, 'padded');
+
   return padded;
 };

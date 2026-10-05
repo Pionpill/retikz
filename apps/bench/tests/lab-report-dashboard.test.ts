@@ -82,6 +82,7 @@ const createI18n = async () => {
       },
     },
   });
+
   return i18n;
 };
 
@@ -103,6 +104,7 @@ describe('Performance Lab report dashboard', () => {
     const i18n = await createI18n();
     const testCase = getBenchTestCase('kernel', 'node-selection');
     if (testCase === undefined) throw new Error('Kernel default case is unavailable');
+
     const session = {
       id: 'benchmark-1',
       mode: LabRunMode.Benchmark,

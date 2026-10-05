@@ -23,11 +23,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { enabled: true, offsetX: 8, offsetY: 10, blur: 8, color: '#4682b4', opacity: 0.7 },
     relatedApis: ['Path.style.shadow'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文回退契约 */
 export const previewControlContract = createPreviewControlContract('zh');

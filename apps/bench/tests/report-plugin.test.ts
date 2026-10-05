@@ -31,6 +31,7 @@ describe('Bench report HTTP API', () => {
     await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
     const address = server.address();
     if (address === null || typeof address === 'string') throw new Error('Test report server address is unavailable');
+
     const origin = `http://127.0.0.1:${address.port.toString()}`;
 
     try {
@@ -46,10 +47,12 @@ describe('Bench report HTTP API', () => {
           payload: { sessionId: 'session-1' },
         }),
       });
+
       expect(writeResponse.status).toBe(201);
       await expect(writeResponse.json()).resolves.toMatchObject({ report: { runId: 'run-1' } });
 
       const listResponse = await fetch(`${origin}/__bench/reports?moduleId=kernel&caseId=single-entity-update`);
+
       expect(listResponse.status).toBe(200);
       await expect(listResponse.json()).resolves.toMatchObject({
         reports: [{ runId: 'run-1', status: 'passed' }],
@@ -59,12 +62,14 @@ describe('Bench report HTTP API', () => {
       const detailResponse = await fetch(
         `${origin}/__bench/reports?moduleId=kernel&caseId=single-entity-update&runId=run-1`,
       );
+
       expect(detailResponse.status).toBe(200);
       await expect(detailResponse.json()).resolves.toMatchObject({
         report: { runId: 'run-1', payload: { sessionId: 'session-1' } },
       });
 
       const invalidResponse = await fetch(`${origin}/__bench/reports?moduleId=..%2Fkernel`);
+
       expect(invalidResponse.status).toBe(400);
 
       const forgedIdentityResponse = await fetch(`${origin}/__bench/reports`, {
@@ -81,6 +86,7 @@ describe('Bench report HTTP API', () => {
           payload: {},
         }),
       });
+
       expect(forgedIdentityResponse.status).toBe(400);
     } finally {
       await new Promise<void>((resolve, reject) =>

@@ -48,8 +48,10 @@ export type RetikzGraphVanillaErrorOptions = Readonly<{
 export class RetikzGraphVanillaError extends RetikzError<RetikzGraphVanillaErrorCode, RetikzGraphVanillaErrorDetails> {
   /** 稳定错误码 */
   readonly code: RetikzGraphVanillaErrorCode;
+
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzGraphVanillaErrorDetails;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 

@@ -15,6 +15,7 @@ export type RibbonWidthResolution = Readonly<{
 /** 对已解析的节点宽度排序，保留模式分支与 Schema 默认值 */
 export const resolveRibbonOptions = (options: CanonicalRibbonOptions): CanonicalRibbonOptions => {
   if (options.mode === 'boundary' || options.width.kind !== 'stops') return options;
+
   return {
     ...options,
     width: { ...options.width, stops: [...options.width.stops].sort((a, b) => a.offset - b.offset) },
@@ -37,9 +38,11 @@ export const resolveRibbonWidth = (
       details: { name: width.name, path: irPath },
     });
   }
+
   const paramsPath = `${irPath}.params`;
   const rawParams = width.params ?? {};
   let params: JsonObject;
+
   try {
     params = definition.paramsSchema?.parse(rawParams) ?? JsonObjectSchema.parse(rawParams);
   } catch (cause) {
@@ -50,5 +53,6 @@ export const resolveRibbonWidth = (
       cause,
     });
   }
+
   return { width, definition, params };
 };

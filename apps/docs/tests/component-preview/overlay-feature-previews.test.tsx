@@ -15,7 +15,9 @@ describe('Overlay 功能预览', () => {
     for (const [source, values] of [[overlayPosition.previewSource, { anchor: 'left' }]] as const) {
       const before = source.buildViews!({ lang: 'en' });
       const after = source.buildViews!({ lang: 'en', values });
+
       expect(after.ir?.files[0].code).not.toEqual(before.ir?.files[0].code);
+
       for (const key of ['vanilla', 'ir'] as const) {
         expect(renderToStaticMarkup(after[key]!.render!('svg'))).not.toEqual(
           renderToStaticMarkup(before[key]!.render!('svg')),
@@ -23,6 +25,7 @@ describe('Overlay 功能预览', () => {
       }
     }
   });
+
   it.each([
     ['overlay-alignment', overlayAlignment],
     ['overlay-box', overlayBox],
@@ -34,18 +37,24 @@ describe('Overlay 功能预览', () => {
   ])('%s 在 API 切换及控件边界保留检查图层', (_name, demo) => {
     const zh = demo.createPreviewControlContract('zh');
     const en = demo.createPreviewControlContract('en');
+
     expect(en.canonicalValues).toEqual(zh.canonicalValues);
     expect(en.controls.title).not.toEqual(zh.controls.title);
+
     const definition: PreviewControlsDefinition = zh.controls;
     const controls = definition.sections.flatMap(section => section.controls);
     const canonical = demo.previewSource.buildViews!({ lang: 'zh' });
+
     expect(canonical.vanilla?.files[0].code).toContain('createLayoutInspectionVanillaDriver');
     expect(canonical.ir?.files[0].code).not.toContain('inspector');
+
     for (const view of [canonical.vanilla, canonical.ir]) {
       const svg = renderToStaticMarkup(view!.render!('svg'));
+
       expect(svg).toContain('data-retikz-readonly-layer');
       expect(svg).toContain('<text');
     }
+
     for (const control of controls) {
       const candidates =
         control.kind === 'range'
@@ -55,12 +64,14 @@ describe('Overlay 功能预览', () => {
             : control.kind === 'switch'
               ? [false, true]
               : [];
+
       for (const value of candidates) {
         const views = demo.previewSource.buildViews!({
           lang: 'en',
           values: { ...zh.canonicalValues, [control.id]: value },
         });
         const svg = renderToStaticMarkup(views.vanilla!.render!('svg'));
+
         expect(svg).toContain('data-retikz-readonly-layer');
         expect(svg).not.toContain('NaN');
       }

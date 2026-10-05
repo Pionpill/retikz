@@ -27,6 +27,7 @@ export const DataModelSchema = array(FieldDefinitionSchema)
           message: `duplicate data model field "${field.name}"`,
         });
       }
+
       names.add(field.name);
     });
   })

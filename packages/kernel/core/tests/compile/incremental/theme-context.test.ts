@@ -52,6 +52,7 @@ const runUpdate = (initial: IRScene, next: IRScene) => {
     baseRevision: session.revision(),
     sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
   });
+
   return { result, actual: session.artifact(program).value.output.result, expected: compileToScene(next, options) };
 };
 

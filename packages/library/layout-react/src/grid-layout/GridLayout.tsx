@@ -25,6 +25,7 @@ const createGridLayoutInput = (props: Readonly<Record<string, unknown>>, context
   const { authoring: _authoring, children, ...input } = props as GridLayoutProps;
   void _authoring;
   const collected = createInputLayoutItems(children, LayoutItemKind.Grid, context);
+
   return withInputEmbedAdapters({ ...input, children: collected.items } satisfies InputGridLayout, collected.adapters);
 };
 

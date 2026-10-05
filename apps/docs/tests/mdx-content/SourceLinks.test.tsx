@@ -16,6 +16,7 @@ type SourceLinksProbeProps = {
 
 const getSourceLinks = (): FC<SourceLinksProbeProps> => {
   const SourceLinks = mdxComponents.SourceLinks;
+
   expect(SourceLinks).toBeTypeOf('function');
   return SourceLinks as FC<SourceLinksProbeProps>;
 };
@@ -90,11 +91,13 @@ describe('<SourceLinks>', () => {
     );
 
     expect(html).toContain('Source:');
+
     await i18n.changeLanguage('zh');
   });
 
   it('没有源码项时不渲染容器', () => {
     const SourceLinks = getSourceLinks();
+
     expect(renderToStaticMarkup(<SourceLinks sources={[]} />)).toBe('');
   });
 });

@@ -16,5 +16,6 @@ export const DocHostProvider: FC<DocHostProviderProps> = props => {
   const { children } = props;
   const [host, setHost] = useState(() => useDocHostStore.getState().host);
   useEffect(() => useDocHostStore.subscribe(state => setHost(state.host)), []);
+
   return <DocHostContext.Provider value={{ host, setHost }}>{children}</DocHostContext.Provider>;
 };

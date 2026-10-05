@@ -126,6 +126,7 @@ export const createDrawApiReferenceMdx = async (lang: ApiReferenceLanguage): Pro
 /** 写出绘制双语参考，字段和声明继续由通用生成器拥有 */
 export const writeDrawApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const) {
     const source = await createDrawApiReferenceMdx(lang);
     writeFileSync(

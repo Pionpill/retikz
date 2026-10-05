@@ -18,10 +18,12 @@ const buildKey = (segments: ReadonlyArray<string>, lang: Lang): string =>
 /** 按当前语言优先级读取 Showcase 目标页面的 description */
 export const loadShowcasePageDescription = async (segments: ReadonlyArray<string>, lang: Lang): Promise<string> => {
   const candidates = [lang, ...LANGS.filter(candidate => candidate !== lang)];
+
   for (const candidate of candidates) {
     const loader = mdxLoaders[buildKey(segments, candidate)];
     if (loader) return parseDocSource(await loader()).frontmatter.description;
   }
+
   return '';
 };
 
@@ -42,6 +44,7 @@ export const useShowcasePageDescription = (segments: ReadonlyArray<string>): str
       .catch(() => {
         if (active) setState({ requestKey, description: '' });
       });
+
     return () => {
       active = false;
     };

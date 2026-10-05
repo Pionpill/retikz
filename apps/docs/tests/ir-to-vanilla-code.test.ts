@@ -44,6 +44,7 @@ describe('irToVanillaCode', () => {
         }),
       ]),
     );
+
     expect(explicitCode).toContain('children: []');
   });
 
@@ -125,6 +126,7 @@ describe('irToVanillaCode', () => {
 
   it('import-header：恒定 vanilla import + scene 装配', () => {
     const code = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]));
+
     expect(code).toContain("from '@retikz/vanilla'");
     expect(code).toContain('scene(');
     expect(code).toContain('const input = scene({ children: [');
@@ -132,15 +134,18 @@ describe('irToVanillaCode', () => {
 
   it('node-codegen：具名 / 匿名 / 字段映射', () => {
     const named = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]));
+
     expect(named).toContain("node({ id: 'a', position: [0, 0], text: 'A' })");
 
     const anon = irToVanillaCode(ir([{ type: 'node', position: [60, 0], text: '匿名' }]));
+
     expect(anon).toContain("node({ position: [60, 0], text: '匿名' })");
     expect(anon).not.toContain("node('");
   });
 
   it('coordinate-codegen：coordinate({ id, position })', () => {
     const code = irToVanillaCode(ir([{ type: 'coordinate', id: 'm', position: [60, 40] }]));
+
     expect(code).toContain("coordinate({ id: 'm', position: [60, 40] })");
   });
 
@@ -157,6 +162,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
+
     expect(code).toContain("path({ way: [[0, 0], [50, 50]], arrow: '->' })");
   });
 
@@ -173,6 +179,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
+
     expect(code).toContain("'-|'");
     expect(code).toContain('DrawWay.Cycle');
     expect(code).toContain("import { DrawWay } from '@retikz/core'");
@@ -190,10 +197,13 @@ describe('irToVanillaCode', () => {
       },
     ]);
     const code = irToVanillaCode(scene);
+
     expect(code).toContain("'-|-'");
     expect(code).toContain("{ via: '|-|', fraction: 0.3 }");
+
     const path = scene.children[0];
     if (path.type !== 'path') throw new Error('expected path fixture');
+
     expect(parseWay([[0, 0], '-|-', [40, 20], { via: '|-|', fraction: 0.3 }, [80, 40]])).toEqual(path.children);
   });
 
@@ -215,11 +225,14 @@ describe('irToVanillaCode', () => {
       },
     ]);
     const code = irToVanillaCode(scene);
+
     expect(code).toContain("{ label: { text: 'x' } }");
     expect(code).toContain("{ horizontalTo: { id: 'target', anchor: 'center' } }");
     expect(code).toContain('{ verticalTo: [40, 60] }');
+
     const path = scene.children[0];
     if (path.type !== 'path') throw new Error('expected path fixture');
+
     expect(
       parseWay([
         [0, 0],
@@ -242,6 +255,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
+
     expect(code).toContain('{ curve: [20, 30] }');
     expect(code).toContain('[60, 60]');
   });
@@ -260,6 +274,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
+
     expect(code).toContain('{ arc: { startAngle: 0, endAngle: 90, radius: 10 } }');
     expect(code).toContain('{ circle: { radius: 8 } }');
     expect(code).toContain('{ ellipse: { radius: { x: 12, y: 6 } } }');
@@ -279,6 +294,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
+
     expect(code).toContain("scope({ transforms: [{ kind: 'translate', x: 40, y: 20 }] }, [");
     expect(code).toContain("node({ id: 'c'");
   });
@@ -287,9 +303,11 @@ describe('irToVanillaCode', () => {
     const withVb = irToVanillaCode(
       ir([{ type: 'node', id: 'a', position: [0, 0] }], { x: 0, y: 0, width: 100, height: 80 }),
     );
+
     expect(withVb).toContain('viewBox: { x: 0, y: 0, width: 100, height: 80 }');
 
     const noVb = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0] }]));
+
     expect(noVb).toContain('scene({ children: [');
     expect(noVb).not.toContain('scene({}');
   });
@@ -297,6 +315,7 @@ describe('irToVanillaCode', () => {
   it('import-tailoring：只用 node 时 import 不含 draw/scope/coordinate', () => {
     const code = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0] }]));
     const importLine = code.split('\n')[0];
+
     expect(importLine).toContain('node');
     expect(importLine).not.toContain('draw');
     expect(importLine).not.toContain('scope');
@@ -314,6 +333,7 @@ describe('irToVanillaCode', () => {
         },
       ]),
     );
+
     expect(code).toContain("fill: '#f00'");
     expect(code).toContain('position: [0, 0]');
     expect(code).not.toContain('"position"');
@@ -336,6 +356,7 @@ describe('irToVanillaCode fallback', () => {
         },
       ]),
     );
+
     expect(code).toContain('raw IR child');
     expect(code).toContain("type: 'path'");
     expect(code).toContain("kind: 'rectangle'");

@@ -10,6 +10,7 @@ export type ChainParallelProps = {
   /** 连接覆盖 */ connection?: InputChainConnection;
   /** 支路声明 */ children?: ReactNode;
 };
+
 /** 结构化分叉与汇合 */
 export const ChainParallel: FC<ChainParallelProps> = () =>
   invalidCellAuthoring('ChainParallel must be a direct child of Chain or ChainBranch.');

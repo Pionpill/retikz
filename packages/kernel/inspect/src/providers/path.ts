@@ -10,8 +10,11 @@ import { arcAnglesOf, labelNode, markerNode, pathStyle, pointAtArcCommand, sameP
 export const PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'path' });
 
 type ControlPoint = Readonly<{ position: IRPosition; label: string }>;
+
 type ControlHandle = Readonly<{ from: IRPosition; to: IRPosition }>;
+
 type PathVertex = Readonly<{ position: IRPosition; label: string }>;
+
 type ArcGeometry = Readonly<{
   label: string;
   center: IRPosition;
@@ -31,11 +34,13 @@ const collectControls = (commands: ReadonlyArray<PathCommand>) => {
   const points: Array<ControlPoint> = [];
   let current: IRPosition | undefined;
   let subpathStart: IRPosition | undefined;
+
   for (const [index, command] of commands.entries()) {
     if (command.kind === 'move') {
       current = command.to;
       subpathStart = command.to;
     }
+
     if (command.kind === 'line') current = command.to;
     if (command.kind === 'quad') {
       if (current !== undefined) handles.push({ from: current, to: command.control });
@@ -43,6 +48,7 @@ const collectControls = (commands: ReadonlyArray<PathCommand>) => {
       points.push({ position: command.control, label: `Q${index}` });
       current = command.to;
     }
+
     if (command.kind === 'cubic') {
       if (current !== undefined) handles.push({ from: current, to: command.control1 });
       handles.push({ from: command.control2, to: command.to });
@@ -52,9 +58,11 @@ const collectControls = (commands: ReadonlyArray<PathCommand>) => {
       );
       current = command.to;
     }
+
     if (command.kind === 'arc' || command.kind === 'ellipseArc') current = endpointOfArc(command);
     if (command.kind === 'close') current = subpathStart;
   }
+
   return { handles, points };
 };
 
@@ -94,14 +102,17 @@ const collectVertices = (
         break;
     }
   }
+
   return vertices;
 };
 
 /** 收集圆弧中心、端点半径和椭圆旋转主轴 */
 const collectArcGeometry = (commands: ReadonlyArray<PathCommand>): Array<ArcGeometry> => {
   const geometry: Array<ArcGeometry> = [];
+
   for (const [index, command] of commands.entries()) {
     if (command.kind !== 'arc' && command.kind !== 'ellipseArc') continue;
+
     const angles = arcAnglesOf(command);
     const start = pointAtArcCommand(command, angles.start);
     const end = pointAtArcCommand(command, angles.end);
@@ -109,6 +120,7 @@ const collectArcGeometry = (commands: ReadonlyArray<PathCommand>): Array<ArcGeom
       geometry.push({ label: `A${index}`, center: command.center, start, end });
       continue;
     }
+
     const rotation = (command.rotation ?? 0) * (Math.PI / 180);
     const cos = Math.cos(rotation);
     const sin = Math.sin(rotation);
@@ -122,6 +134,7 @@ const collectArcGeometry = (commands: ReadonlyArray<PathCommand>): Array<ArcGeom
     };
     geometry.push({ label: `A${index}`, center: command.center, start, end, axisX, axisY });
   }
+
   return geometry;
 };
 
@@ -141,6 +154,7 @@ const inspectionChildrenOf = (
   const arcs = options.arcGeometry || options.ellipseAxes ? collectArcGeometry(subject.commands) : [];
   const output: Array<IRChild> = [];
   const markedPositions: Array<IRPosition> = [];
+
   const addMarker = (position: IRPosition, size = 6): void => {
     if (markedPositions.some(marked => isPositionEqual(marked, position))) return;
     markedPositions.push(position);
@@ -175,6 +189,7 @@ const inspectionChildrenOf = (
           { type: 'step' as const, kind: 'line' as const, to: arc.end },
         );
       }
+
       return lines;
     });
     output.push({
@@ -200,6 +215,7 @@ const inspectionChildrenOf = (
           { type: 'step' as const, kind: 'line' as const, to: arc.axisY.to },
         );
       }
+
       return lines;
     });
     if (children.length > 0)
@@ -221,6 +237,7 @@ const inspectionChildrenOf = (
         : []),
     );
   }
+
   return output;
 };
 

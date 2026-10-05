@@ -32,13 +32,16 @@ export type OutlineCommandsInput = {
 /** 独立侧边过点曲线，不跨越显式分段平滑 */
 const sideCommands = (chunks: ReadonlyArray<ReadonlyArray<IRPosition>>): Array<PathCommand> => {
   const commands: Array<PathCommand> = [];
+
   for (const chunk of chunks) {
     const knots = chunk.filter((position, index) => index === 0 || point.distance(position, chunk[index - 1]) > 1e-10);
     if (knots.length === 0) continue;
+
     commands.push({ kind: commands.length === 0 ? 'move' : 'line', to: knots[0] });
     if (knots.length === 2) commands.push({ kind: 'line', to: knots[1] });
     else for (const segment of curve.catmullRomToCubic(knots, 1)) commands.push({ kind: 'cubic', ...segment });
   }
+
   return commands;
 };
 
@@ -53,9 +56,11 @@ export const outlineCommands = (
 } => {
   const { segments, totalLength, sampleCount, widthAt, endpointAxes, align, round } = input;
   const offsets = new Set<number>([0, 1, ...input.featureOffsets]);
+
   for (let index = 0; index < sampleCount; index++) offsets.add(index / (sampleCount - 1));
   const breaks = new Set<number>([0, 1, ...input.jumpOffsets]);
   let lengthBefore = 0;
+
   for (let index = 0; index < segments.length - 1; index++) {
     lengthBefore += segments[index].length;
     const offset = lengthBefore / totalLength;
@@ -69,10 +74,13 @@ export const outlineCommands = (
         message: 'Ribbon centerline reverses at a section.',
         details: { offset },
       });
+
     if (dot < 1 - 1e-8) breaks.add(offset);
   }
+
   const boundaries = [...breaks].sort((a, b) => a - b);
   const chunks: Array<Array<RibbonCrossSection>> = [];
+
   for (let index = 1; index < boundaries.length; index++) {
     const from = boundaries[index - 1];
     const to = boundaries[index];
@@ -84,10 +92,12 @@ export const outlineCommands = (
         const near = Math.max(0, Math.min(1, offset + side * 1e-9));
         const sample = sampleAtDistance(segments, totalLength, near * totalLength);
         sample.point = sampleAtDistance(segments, totalLength, offset * totalLength).point;
+
         return ribbonCrossSection({ sample, offset, widthAt: () => widthAt(near), endpointAxes, align, round });
       }),
     );
   }
+
   const first = chunks[0][0];
   const lastChunk = chunks[chunks.length - 1];
   const last = lastChunk[lastChunk.length - 1];
@@ -105,10 +115,12 @@ export const outlineCommands = (
     registry: input.capRegistry,
     round,
   });
+
   first.left = start.left;
   first.right = start.right;
   last.left = end.left;
   last.right = end.right;
+
   const left = sideCommands(chunks.map(chunk => chunk.map(section => section.left)));
   const right = reverseCommands(sideCommands(chunks.map(chunk => chunk.map(section => section.right))));
   const commands: Array<PathCommand> = [
@@ -118,6 +130,7 @@ export const outlineCommands = (
     ...(start.commands.length === 2 && start.commands[1].kind === 'line' ? [] : start.commands.slice(1)),
     { kind: 'close' },
   ];
+
   const rounded = commands.map(command => {
     const position = (value: IRPosition): IRPosition => [round(value[0]), round(value[1])];
     if (command.kind === 'move' || command.kind === 'line') return { ...command, to: position(command.to) };
@@ -129,7 +142,9 @@ export const outlineCommands = (
         control1: position(command.control1),
         control2: position(command.control2),
       };
+
     return command;
   });
+
   return { commands: rounded, points: commandBoundsPoints(rounded), start, end };
 };

@@ -56,6 +56,7 @@ export const captureLayoutRuntimeOptions = (runtime: LayoutRuntimeOptions | unde
   if (runtime === undefined) return Object.freeze({ mode: LayoutRuntimeMode.Retained });
   if (runtime.mode === LayoutRuntimeMode.Static)
     return Object.freeze({ mode: runtime.mode, preparation: runtime.preparation, signal: runtime.signal });
+
   return Object.freeze({
     mode: LayoutRuntimeMode.Retained,
     preparation: runtime.preparation,

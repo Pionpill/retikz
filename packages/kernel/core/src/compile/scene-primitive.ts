@@ -27,12 +27,14 @@ export const snapshotProviderPosition = (owner: string, value: unknown): Positio
     if (!Array.isArray(value)) {
       throw createCompositeContractError(`${owner} returned an invalid position; expected a finite [x, y] tuple.`);
     }
+
     const length = value.length;
     const x = value[0];
     const y = value[1];
     if (length !== 2 || typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y)) {
       throw createCompositeContractError(`${owner} returned an invalid position; expected a finite [x, y] tuple.`);
     }
+
     return [x, y];
   });
 
@@ -44,6 +46,7 @@ export const failProviderOutput = (owner: string, detail: string): never => {
 /** 物化 provider plain JSON 输出，并保留对象 undefined 字段供完整契约校验 */
 export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: string): T => {
   const active = new WeakSet<object>();
+
   const readDataDescriptor = (
     input: object,
     key: string,
@@ -54,24 +57,29 @@ export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: str
     if (descriptor === undefined || !('value' in descriptor) || (requireEnumerable && !descriptor.enumerable)) {
       failProviderOutput(owner, `${currentPath} with a hidden or accessor field '${key}'`);
     }
+
     return descriptor as PropertyDescriptor & Readonly<{ value: unknown }>;
   };
+
   const snapshot = (input: unknown, currentPath: string): unknown => {
     if (input === null || typeof input === 'string' || typeof input === 'boolean') return input;
     if (typeof input === 'number') {
       if (!Number.isFinite(input)) failProviderOutput(owner, `a ${currentPath} with a non-finite number`);
       return input;
     }
+
     if (typeof input === 'function') failProviderOutput(owner, `a ${currentPath} containing a function`);
     if (typeof input !== 'object') failProviderOutput(owner, `a non-JSON ${currentPath}`);
 
     const objectInput = input as object;
     if (active.has(objectInput)) failProviderOutput(owner, `a cyclic ${currentPath}`);
     active.add(objectInput);
+
     try {
       const prototype = Object.getPrototypeOf(objectInput);
       const keys = Reflect.ownKeys(objectInput);
       const stringKeys: Array<string> = [];
+
       for (const key of keys) {
         if (typeof key === 'string') {
           stringKeys.push(key);
@@ -83,9 +91,11 @@ export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: str
       if (Array.isArray(objectInput)) {
         if (prototype !== Array.prototype) failProviderOutput(owner, `a non-plain ${currentPath}`);
         const descriptors = new Map<string, PropertyDescriptor & Readonly<{ value: unknown }>>();
+
         for (const key of stringKeys) {
           descriptors.set(key, readDataDescriptor(objectInput, key, currentPath, key !== 'length'));
         }
+
         const lengthDescriptor = descriptors.get('length');
         const length = lengthDescriptor?.value;
         if (
@@ -96,30 +106,38 @@ export const snapshotProviderOutputJson = <T>(owner: string, value: T, path: str
         ) {
           failProviderOutput(owner, `a sparse or extended ${currentPath}`);
         }
+
         const output: Array<unknown> = [];
+
         for (let index = 0; index < length; index += 1) {
           const descriptor = descriptors.get(String(index));
           if (descriptor === undefined) {
             return failProviderOutput(owner, `a sparse or accessor ${currentPath}`);
           }
+
           output.push(snapshot(descriptor.value, `${currentPath}[${index}]`));
         }
+
         return output;
       }
 
       if (prototype !== Object.prototype && prototype !== null) {
         failProviderOutput(owner, `a non-plain ${currentPath}`);
       }
+
       const output = Object.create(null) as Record<string, unknown>;
+
       for (const key of stringKeys) {
         const descriptor = readDataDescriptor(objectInput, key, currentPath);
         output[key] = descriptor.value === undefined ? undefined : snapshot(descriptor.value, `${currentPath}.${key}`);
       }
+
       return output;
     } finally {
       active.delete(objectInput);
     }
   };
+
   return snapshot(value, path) as T;
 };
 
@@ -130,7 +148,9 @@ export const omitProviderOutputUndefined = <T>(value: T): T => {
     value.forEach(omitProviderOutputUndefined);
     return value;
   }
+
   const record = value as Record<string, unknown>;
+
   for (const key of Object.keys(record)) {
     if (record[key] === undefined) {
       delete record[key];
@@ -138,6 +158,7 @@ export const omitProviderOutputUndefined = <T>(value: T): T => {
       omitProviderOutputUndefined(record[key]);
     }
   }
+
   return value;
 };
 
@@ -150,10 +171,12 @@ const providerOutputOwnStringKeys = (
 ): Array<string> => {
   const keys = Reflect.ownKeys(value);
   const stringKeys: Array<string> = [];
+
   for (const key of keys) {
     if (typeof key === 'symbol') {
       failProviderOutput(owner, `${path} with an unsupported symbol field`);
     }
+
     const stringKey = key as string;
     const descriptor = Object.getOwnPropertyDescriptor(value, stringKey);
     if (
@@ -162,8 +185,10 @@ const providerOutputOwnStringKeys = (
     ) {
       failProviderOutput(owner, `${path} with a hidden or accessor field '${stringKey}'`);
     }
+
     stringKeys.push(stringKey);
   }
+
   return stringKeys;
 };
 
@@ -174,6 +199,7 @@ export const providerOutputRecord = (owner: string, value: unknown, path: string
   const prototype = Object.getPrototypeOf(value);
   if (prototype !== Object.prototype && prototype !== null) failProviderOutput(owner, `a non-plain ${path}`);
   providerOutputOwnStringKeys(owner, value as object, path);
+
   return value as Record<string, unknown>;
 };
 
@@ -182,21 +208,25 @@ export const providerOutputArray = (owner: string, value: unknown, path: string)
   if (!Array.isArray(value)) {
     failProviderOutput(owner, `an invalid ${path}`);
   }
+
   if (Object.getPrototypeOf(value) !== Array.prototype) failProviderOutput(owner, `an invalid ${path}`);
   const keys = providerOutputOwnStringKeys(owner, value as object, path, true);
   const entries = value as Array<unknown>;
+
   for (const key of keys) {
     if (key === 'length') continue;
     if (!/^(?:0|[1-9]\d*)$/.test(key) || Number(key) >= entries.length) {
       failProviderOutput(owner, `${path} with an unsupported field '${key}'`);
     }
   }
+
   for (let index = 0; index < entries.length; index += 1) {
     const descriptor = Object.getOwnPropertyDescriptor(entries, String(index));
     if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
       failProviderOutput(owner, `a sparse or accessor ${path}`);
     }
   }
+
   return entries;
 };
 
@@ -218,6 +248,7 @@ export const assertProviderOutputFinite = (owner: string, value: unknown, path: 
   if (typeof value === 'number' && !Number.isFinite(value)) {
     failProviderOutput(owner, `a non-finite ${path}`);
   }
+
   if (typeof value !== 'number' || (nonNegative && value < 0)) {
     failProviderOutput(owner, `an invalid ${path}`);
   }
@@ -244,6 +275,7 @@ export const assertProviderOutputUnitInterval = (
   path: string,
 ): void => {
   if (value[field] === undefined) return;
+
   assertProviderOutputFinite(owner, value[field], `${path}.${field}`);
   if ((value[field] as number) < 0 || (value[field] as number) > 1) {
     failProviderOutput(owner, `an invalid ${path}.${field}`);
@@ -253,6 +285,7 @@ export const assertProviderOutputUnitInterval = (
 /** 校验 Scene 或 Marker 的 paint 值，Marker 模式禁止 resourceRef */
 export const assertProviderOutputPaint = (owner: string, value: unknown, path: string, markerOnly = false): void => {
   if (value === undefined || typeof value === 'string') return;
+
   const candidate = providerOutputRecord(owner, value, path);
   const keyCount = providerOutputOwnStringKeys(owner, candidate, path).length;
   const contextStroke = candidate.kind === 'contextStroke' && keyCount === 1;
@@ -275,6 +308,7 @@ export const assertProviderOutputPaint = (owner: string, value: unknown, path: s
 /** 校验 dash pattern 是 dense finite 非负数组 */
 export const assertProviderOutputDashPattern = (owner: string, value: Record<string, unknown>, path: string): void => {
   if (value.dashPattern === undefined) return;
+
   providerOutputArray(owner, value.dashPattern, `${path}.dashPattern`).forEach((entry, index) =>
     assertProviderOutputFinite(owner, entry, `${path}.dashPattern[${index}]`, true),
   );
@@ -283,6 +317,7 @@ export const assertProviderOutputDashPattern = (owner: string, value: Record<str
 /** 校验 Scene/Marker 的结构化 transform 数组 */
 export const assertProviderOutputTransforms = (owner: string, value: unknown, path: string): void => {
   if (value === undefined) return;
+
   providerOutputArray(owner, value, path).forEach((transform, index) => {
     const candidate = providerOutputRecord(owner, transform, `${path}[${index}]`);
     if (candidate.kind === 'translate') {
@@ -322,9 +357,11 @@ export const assertProviderOutputPathEnums = (owner: string, value: Record<strin
   if (value.fillRule !== undefined && !Object.values(PathFillRule).includes(value.fillRule as never)) {
     failProviderOutput(owner, `an invalid ${path}.fillRule`);
   }
+
   if (value.strokeLinecap !== undefined && !Object.values(PathLineCap).includes(value.strokeLinecap as never)) {
     failProviderOutput(owner, `an invalid ${path}.strokeLinecap`);
   }
+
   if (value.strokeLinejoin !== undefined && !Object.values(PathLineJoin).includes(value.strokeLinejoin as never)) {
     failProviderOutput(owner, `an invalid ${path}.strokeLinejoin`);
   }
@@ -342,10 +379,12 @@ const assertProviderOutputJsonValueWithActive = (
     assertProviderOutputFinite(owner, value, path);
     return;
   }
+
   if (typeof value !== 'object') failProviderOutput(owner, `a non-JSON ${path}`);
   const objectValue = value as object;
   if (active.has(objectValue)) failProviderOutput(owner, `a cyclic ${path}`);
   active.add(objectValue);
+
   try {
     if (Array.isArray(value)) {
       providerOutputArray(owner, value, path).forEach((entry, index) =>
@@ -353,7 +392,9 @@ const assertProviderOutputJsonValueWithActive = (
       );
       return;
     }
+
     const record = providerOutputRecord(owner, value, path);
+
     for (const key of providerOutputOwnStringKeys(owner, record, path)) {
       assertProviderOutputJsonValueWithActive(owner, record[key], `${path}.${key}`, active);
     }
@@ -375,11 +416,13 @@ const equalProviderOutputJson = (left: unknown, right: unknown): boolean => {
     if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
     return left.every((entry, index) => equalProviderOutputJson(entry, right[index]));
   }
+
   const leftRecord = left as Record<string, unknown>;
   const rightRecord = right as Record<string, unknown>;
   const leftKeys = Reflect.ownKeys(leftRecord);
   const rightKeys = Reflect.ownKeys(rightRecord);
   if (leftKeys.length !== rightKeys.length || leftKeys.some(key => typeof key !== 'string')) return false;
+
   return leftKeys.every(
     key =>
       typeof key === 'string' &&
@@ -419,6 +462,7 @@ const assertSceneCommon = (owner: string, value: Record<string, unknown>, path: 
 /** 校验 Scene resolved shadow 的 required 字段与范围 */
 const assertResolvedShadow = (owner: string, value: unknown, path: string): void => {
   if (value === undefined) return;
+
   const shadow = providerOutputRecord(owner, value, path);
   assertProviderOutputKeys(owner, shadow, ['offsetX', 'offsetY', 'blur', 'color', 'opacity'], path);
   assertProviderOutputFinite(owner, shadow.offsetX, `${path}.offsetX`);
@@ -441,6 +485,7 @@ const assertSceneStyle = (owner: string, value: Record<string, unknown>, path: s
   if (value.blendMode !== undefined && !Object.values(BlendMode).includes(value.blendMode as never)) {
     failProviderOutput(owner, `an invalid ${path}.blendMode`);
   }
+
   assertResolvedShadow(owner, value.shadow, `${path}.shadow`);
 };
 
@@ -459,6 +504,7 @@ const visitScenePrimitive = (
 ): void => {
   const value = providerOutputRecord(owner, primitive, path);
   const commonFields = ['type', 'id', 'meta', 'animations', 'hitTest'];
+
   switch (value.type) {
     case 'rect':
       assertProviderOutputKeys(
@@ -491,6 +537,7 @@ const visitScenePrimitive = (
       assertProviderOutputFinite(owner, value.height, `${path}.height`, true);
       assertProviderOutputOptionalFinite(owner, value, 'cornerRadius', path, true);
       assertSceneStyle(owner, value, path);
+
       return;
     case 'ellipse':
       assertProviderOutputKeys(
@@ -523,6 +570,7 @@ const visitScenePrimitive = (
       assertProviderOutputFinite(owner, value.ry, `${path}.ry`, true);
       assertProviderOutputOptionalFinite(owner, value, 'rotate', path);
       assertSceneStyle(owner, value, path);
+
       return;
     case 'path': {
       assertProviderOutputKeys(
@@ -552,8 +600,10 @@ const visitScenePrimitive = (
       assertSceneCommon(owner, value, path);
       assertProviderOutputPathCommands(owner, value.commands, `${path}.commands`);
       assertProviderOutputPathEnums(owner, value, path);
+
       for (const field of ['arrowStart', 'arrowEnd'] as const) {
         if (value[field] === undefined) continue;
+
         const arrow = providerOutputRecord(owner, value[field], `${path}.${field}`);
         assertProviderOutputKeys(
           owner,
@@ -570,7 +620,9 @@ const visitScenePrimitive = (
         const marker = providerOutputArray(owner, arrow.marker, `${path}.${field}.marker`);
         context.validateMarkerPrimitives(`${owner} ${field}`, marker);
       }
+
       assertSceneStyle(owner, value, path);
+
       return;
     }
     case 'text': {
@@ -596,6 +648,7 @@ const visitScenePrimitive = (
         ],
         path,
       );
+
       assertSceneCommon(owner, value, path);
       assertProviderOutputFinite(owner, value.x, `${path}.x`);
       assertProviderOutputFinite(owner, value.y, `${path}.y`);
@@ -603,6 +656,7 @@ const visitScenePrimitive = (
       assertProviderOutputFinite(owner, value.lineHeight, `${path}.lineHeight`, true);
       assertProviderOutputFinite(owner, value.measuredWidth, `${path}.measuredWidth`, true);
       assertProviderOutputFinite(owner, value.measuredHeight, `${path}.measuredHeight`, true);
+
       const lines = providerOutputArray(owner, value.lines, `${path}.lines`);
       if (lines.length === 0) failProviderOutput(owner, `an invalid ${path}.lines`);
       lines.forEach((line, index) => {
@@ -623,6 +677,7 @@ const visitScenePrimitive = (
           typeof candidate.fontWeight !== 'number'
         )
           failProviderOutput(owner, `an invalid ${path}.lines[${index}].fontWeight`);
+
         if (typeof candidate.fontWeight === 'number')
           assertProviderOutputFinite(owner, candidate.fontWeight, `${path}.lines[${index}].fontWeight`, true);
         if (candidate.fontStyle !== undefined && !Object.values(FontStyle).includes(candidate.fontStyle as never))
@@ -631,6 +686,7 @@ const visitScenePrimitive = (
           failProviderOutput(owner, `an invalid ${path}.lines[${index}].fill`);
         assertProviderOutputUnitInterval(owner, candidate, 'opacity', `${path}.lines[${index}]`);
       });
+
       if (value.fontFamily !== undefined && typeof value.fontFamily !== 'string')
         failProviderOutput(owner, `an invalid ${path}.fontFamily`);
       if (
@@ -639,6 +695,7 @@ const visitScenePrimitive = (
         typeof value.fontWeight !== 'number'
       )
         failProviderOutput(owner, `an invalid ${path}.fontWeight`);
+
       if (typeof value.fontWeight === 'number')
         assertProviderOutputFinite(owner, value.fontWeight, `${path}.fontWeight`, true);
       if (value.fontStyle !== undefined && !Object.values(FontStyle).includes(value.fontStyle as never))
@@ -650,6 +707,7 @@ const visitScenePrimitive = (
       if (value.fill !== undefined && typeof value.fill !== 'string')
         failProviderOutput(owner, `an invalid ${path}.fill`);
       assertProviderOutputUnitInterval(owner, value, 'opacity', path);
+
       return;
     }
     case 'group': {
@@ -661,11 +719,13 @@ const visitScenePrimitive = (
       const children = providerOutputArray(owner, value.children, `${path}.children`);
       if (context.active.has(value)) failProviderOutput(owner, `a cyclic ${path}`);
       context.active.add(value);
+
       try {
         children.forEach((child, index) => visitScenePrimitive(owner, child, `${path}.children[${index}]`, context));
       } finally {
         context.active.delete(value);
       }
+
       return;
     }
     default:
@@ -699,6 +759,7 @@ export const validateScenePrimitives = (
     ) {
       throw createCompositeContractError(`${owner} emit must return an iterable of Scene primitives.`);
     }
+
     return [...(emitted as Iterable<unknown>)].map(primitive => {
       const snapshot = snapshotProviderOutputJson(owner, primitive, 'Scene primitive');
       assertValidScenePrimitive(owner, snapshot, validateMarkerPrimitives);

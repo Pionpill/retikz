@@ -31,9 +31,11 @@ export const sampleStrokePath = ({
 }: SampleStrokePathInput): CurveSegmentSample | undefined => {
   if (segmentSamplers.length === 0) return undefined;
   if (roundedCommands) return sampleRoundedCommands(commands, position);
+
   const scaled = position * segmentSamplers.length;
   const segmentIndex = Math.min(Math.floor(scaled), segmentSamplers.length - 1);
   const localPosition = scaled - segmentIndex;
+
   return segmentSamplers[segmentIndex](position === 1 ? 1 : localPosition);
 };
 
@@ -176,6 +178,7 @@ export const createStrokeSamplingCollector = ({
       emitLegacyLabel(step.label, sampleAt(step.label.position));
       return;
     }
+
     labelRequests.push({
       label: step.label,
       sourceStepIndex: activeStepIndex,
@@ -188,6 +191,7 @@ export const createStrokeSamplingCollector = ({
     geometry: Parameters<typeof sampleStrokeStepGeometry>[0],
   ): Array<StrokeLabelMaterialization> => {
     const materialized: Array<StrokeLabelMaterialization> = [];
+
     for (const request of labelRequests) {
       const sample =
         request.mode === 'distance'
@@ -199,6 +203,7 @@ export const createStrokeSamplingCollector = ({
               parameterBoundaryOwnerOfStep(request.stepKind),
             );
       if (sample === undefined) continue;
+
       const result = emitLabelPrimitive(request.label, sample.sample, {
         measureText,
         round,
@@ -219,6 +224,7 @@ export const createStrokeSamplingCollector = ({
         sample,
       });
     }
+
     return materialized;
   };
 
@@ -232,7 +238,9 @@ export const createStrokeSamplingCollector = ({
       if (finalGeometrySample === undefined) return undefined;
       return { visualSample: finalGeometrySample.sample, logicalSample: finalGeometrySample };
     }
+
     if (samplerRecords.length === 0) return undefined;
+
     const scaled = position * samplerRecords.length;
     const samplerIndex = Math.min(Math.floor(scaled), samplerRecords.length - 1);
     const localPosition = position === 1 ? 1 : scaled - samplerIndex;
@@ -247,6 +255,7 @@ export const createStrokeSamplingCollector = ({
             parameterBoundaryOwnerOfStep(record.stepKind),
           );
     if (logicalSample === undefined) return undefined;
+
     return {
       visualSample: record.mode === 'distance' ? logicalSample.sample : record.sampleAt(localPosition),
       logicalSample,

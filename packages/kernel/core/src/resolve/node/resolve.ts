@@ -44,7 +44,9 @@ const boxInsets = (value: number): BoundsInsets => ({
 /** 展开 Node 的单值或 CSS-like 四边间距 */
 const expandBoxSpacing = (value: number | IRBoxSpacing | undefined, fallback: number): BoundsInsets => {
   if (typeof value === 'number') return boxInsets(value);
+
   const base = value?.default ?? fallback;
+
   return {
     top: value?.top ?? value?.y ?? base,
     right: value?.right ?? value?.x ?? base,
@@ -56,7 +58,9 @@ const expandBoxSpacing = (value: number | IRBoxSpacing | undefined, fallback: nu
 /** 展开 Node 的单值或轴向缩放 */
 const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode['scale'] => {
   if (typeof value === 'number') return { x: value, y: value };
+
   const base = value?.default ?? 1;
+
   return {
     x: value?.x ?? base,
     y: value?.y ?? base,
@@ -66,7 +70,9 @@ const expandAxisScale = (value: number | IRAxisScale | undefined): CanonicalNode
 /** 展开 Node 的单值或宽高最小尺寸 */
 const expandBoxSize = (value: number | IRBoxSize | undefined): CanonicalNode['minimumSize'] => {
   if (typeof value === 'number') return { width: value, height: value };
+
   const base = value?.default ?? 0;
+
   return {
     width: value?.width ?? base,
     height: value?.height ?? base,
@@ -132,7 +138,9 @@ const expandNodeLabel = (
     };
     if (Object.keys(font).length > 0) normalized.font = font;
   }
+
   if (normalized.opacity === undefined && labelDefault.opacity !== undefined) normalized.opacity = labelDefault.opacity;
+
   return normalized;
 };
 
@@ -153,6 +161,7 @@ const canonicalizeNode = (node: ResolvedNodeSource): CanonicalNode => {
   const { style, layout, ...structure } = node;
   const { dashed, dotted, ...visual } = style ?? {};
   const source = { ...structure, ...visual, ...layout };
+
   return {
     ...source,
     position: source.position ?? NodeSchema.shape.position.parse(undefined),
@@ -196,6 +205,7 @@ const resolveNodePrimaryColors = (
 ): PrimaryColorResolvedMaterializedNode => {
   const { style, ...source } = node;
   const { fill, stroke, textColor, ...visual } = style ?? {};
+
   return {
     ...source,
     style: {
@@ -244,7 +254,9 @@ const resolveNodeLineColors = (
       runs: line.runs.map((run, index) => resolveInlineRunColor(run, masterColor, mode, `${fieldPath}.runs[${index}]`)),
     };
   }
+
   const { fill, ...source } = line;
+
   return {
     ...source,
     ...(fill === undefined
@@ -304,6 +316,7 @@ const resolveNodeLabelColors = (
   } else {
     resolvedPin = pin;
   }
+
   return {
     ...source,
     ...(resolvedTextColor === undefined ? {} : { textColor: resolvedTextColor }),
@@ -321,6 +334,7 @@ const resolveNodeDependentColors = (
 ): ResolvedNodeSource => {
   const { text, label, ...source } = node;
   const textMaster = node.style?.textColor;
+
   return {
     ...source,
     ...(text === undefined
@@ -373,6 +387,7 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
       `${context.irPath}.layout.width must not be smaller than the effective minimum width`,
     );
   }
+
   const shape = resolveNodeShape({
     node,
     shapes: context.shapes,
@@ -401,5 +416,6 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     ...(fill === undefined ? {} : { fill }),
     ...(stroke === undefined ? {} : { stroke }),
   };
+
   return { irPath: context.irPath, node, shape, boundary, paint };
 };

@@ -16,8 +16,10 @@ const assertConsumedSlots = (
   for (const owner of ['encodings', 'properties'] as const) {
     const consumers = new Set([...recipe.consumes[owner], ...markConsumption[owner]]);
     const values = owner === 'encodings' ? source.recipe.encodings : (source.recipe.properties ?? {});
+
     for (const slot of Object.keys(values)) {
       if (consumers.has(slot)) continue;
+
       throw new RetikzChartError({
         code: RetikzChartErrorCode.InvalidChartIR,
         message: `Chart ${owner} slot "${slot}" has no active consumer`,
@@ -66,5 +68,6 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
     theme.plotDefaults,
   );
   const presentation = resolveChartPresentation(source, plot, theme.defaults);
+
   return { source, theme, plot, warnings: semanticMarkResolution.warnings, presentation };
 };

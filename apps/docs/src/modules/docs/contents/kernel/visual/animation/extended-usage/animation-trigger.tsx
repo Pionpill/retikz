@@ -11,6 +11,7 @@ import { AnimationTriggerPreview } from './animation-trigger.preview';
 export type AnimationTriggerProps = { lang?: Lang };
 
 export const previewControls = createAnimationTriggerControls('zh');
+
 export const previewSource = { deriveIR: false } satisfies PreviewSourceConfig;
 
 /** 从预览 controls 读取触发方式 */

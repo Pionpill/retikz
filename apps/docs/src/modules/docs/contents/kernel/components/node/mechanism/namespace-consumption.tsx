@@ -13,6 +13,7 @@ export type NamespaceConsumptionProps = { lang?: Lang };
 const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
   const { lang = 'zh' } = props;
   const t = namespaceConsumptionI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Array

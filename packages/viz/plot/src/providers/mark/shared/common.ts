@@ -62,17 +62,20 @@ export const colorGroupedScope = (
   styleFor: (fill: string) => IRNodeDefault,
 ): IRScope => {
   const groups = new Map<string, Array<IRNode>>();
+
   for (const { color, node } of placed) {
     const fill = color ?? DEFAULT_FILL;
     const bucket = groups.get(fill);
     if (bucket) bucket.push(node);
     else groups.set(fill, [node]);
   }
+
   const children: Array<IRChild> = [...groups].map(([fill, nodes]) => ({
     type: 'scope',
     children: nodes,
     defaults: { node: styleFor(fill) },
   }));
+
   return { type: 'scope', children };
 };
 
@@ -84,6 +87,7 @@ export const constantNodeStyleOverrides = (mark: IRPlotMark): Partial<IRNodeDefa
   const fillOpacity =
     'fillOpacity' in mark && mark.fillOpacity?.kind === 'constant' ? mark.fillOpacity.value : undefined;
   const opacity = 'opacity' in mark && mark.opacity?.kind === 'constant' ? mark.opacity.value : undefined;
+
   return {
     style: {
       ...(stroke === undefined ? {} : { stroke }),
@@ -107,6 +111,7 @@ export const decorateDatum = (
   seriesValue: unknown,
 ): IRNode => {
   if (!markProvenance) return node;
+
   const { context, markIndex, registerDatumId } = markProvenance;
   const decorated: IRNode = { ...node };
   if (context.datumProvenance) {
@@ -120,12 +125,15 @@ export const decorateDatum = (
       readSourceIndices(row),
     );
   }
+
   const datumId = registerDatumId?.(row);
   if (datumId !== undefined) decorated.id = datumId;
+
   return decorated;
 };
 
 type LabelText = IRNodeLabel['text'];
+
 type MarkLabelFieldSource =
   | IRPlotMarkNodeLabel
   | IRPlotMarkGeometryLabel
@@ -133,6 +141,7 @@ type MarkLabelFieldSource =
   | ReadonlyArray<IRPlotMarkGeometryLabel>
   | ReadonlyArray<IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel>
   | undefined;
+
 type MarkLabelFieldEntry = IRPlotMarkNodeLabel | IRPlotMarkGeometryLabel;
 
 const normalizeNodeLabels = (
@@ -146,6 +155,7 @@ const normalizeGeometryLabels = (
   labels: IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
 ): Array<IRPlotMarkGeometryLabel> => {
   if (labels === undefined) return [];
+
   return Array.isArray(labels)
     ? [...(labels as ReadonlyArray<IRPlotMarkGeometryLabel>)]
     : [labels as IRPlotMarkGeometryLabel];
@@ -179,19 +189,23 @@ const normalizeNodeLabelPosition = (position: IRNodeLabel['position']): IRNodeLa
   if (typeof position !== 'string') {
     return position;
   }
+
   if (position === 'center') return position;
+
   return position;
 };
 
 const normalizeNodeLabel = (label: IRNodeLabel): IRNodeLabel => {
   const position = normalizeNodeLabelPosition(label.position);
   if (position === label.position) return label;
+
   const next: IRNodeLabel = { ...label };
   if (position === undefined) {
     delete next.position;
   } else {
     next.position = position;
   }
+
   return next;
 };
 
@@ -240,11 +254,13 @@ export const attachDatumLabel = (
   labelResolver: ChannelValueResolver<LabelText> | undefined,
 ): IRNode => {
   if (!('label' in mark) || mark.label === undefined) return node;
+
   const label = resolveNodeMarkLabels(
     mark.label as IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
     row,
     labelResolver,
   );
+
   return label === undefined ? node : { ...node, label };
 };
 
@@ -273,6 +289,7 @@ export const applyPathChannelDeliveries = (
     const value = entry.resolver(row);
     if (value !== undefined) entry.deliver(path, value, { mark, row });
   }
+
   return path;
 };
 
@@ -290,8 +307,10 @@ export const attachMarkLayer = (
       ? markLayerId(markContext?.plotId ?? markProvenance?.context.plotId, mark.id, layerContext.markIndex)
       : undefined;
   if (!markProvenance) return explicitId === undefined ? layer : { ...layer, id: explicitId };
+
   const { context, markIndex } = markProvenance;
   const id = markLayerId(context.plotId, mark.id, markIndex);
+
   return {
     ...layer,
     ...(id !== undefined ? { id } : {}),
@@ -330,9 +349,11 @@ export const attachDatumAnchor = (
   role?: string,
 ): IRNode => {
   if (mark.anchorId === undefined || ctx?.anchors === undefined) return node;
+
   const owner = anchorOwnerOf(mark, transformedIndex, ctx, role);
   const id = ctx.anchors.makeId(mark.anchorId, row, owner);
   ctx.anchors.register(id, owner);
+
   return { ...node, id };
 };
 
@@ -359,6 +380,7 @@ export const collectPositionRoleFields = (mark: PositionEncodedMark, fields: Fie
  */
 export const collectEncodingChannelFields = (mark: PositionEncodedMark, fields: FieldCollector): void => {
   if ('color' in mark.encoding) fields.addChannel(mark.encoding.color);
+
   for (const channel of Object.values(mark.encoding.channels ?? {})) {
     fields.addChannel(channel);
   }
@@ -380,8 +402,10 @@ export const collectMarkLabelFields = (label: MarkLabelFieldSource, fields: Fiel
 /** 收集锚点 id 配置引用的源字段。 */
 export const collectAnchorIdFields = (anchorId: IRPlotAnchorId | undefined, fields: FieldCollector): void => {
   if (anchorId === undefined) return;
+
   fields.addField(anchorId.field);
   if (anchorId.template === undefined) return;
+
   for (const match of anchorId.template.matchAll(/\{field:([^}]+)\}/g)) fields.addField(match[1]);
 };
 

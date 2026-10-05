@@ -12,6 +12,7 @@ export type RibbonNonlinearWidthPreviewValues = {
 /** 直线中心线隔离宽度变化，圆点标出中心线与两侧边界的采样位置 */
 export const renderRibbonNonlinearWidthPreview = (values: RibbonNonlinearWidthPreviewValues) => {
   const sampleCount = 16;
+
   // 单段直线的弧长比例就是横坐标比例；与 Ribbon 一样额外合入宽度节点并去重
   const offsets = [
     ...new Set([...Array.from({ length: sampleCount }, (_, index) => index / (sampleCount - 1)), 0, 0.5, 1]),
@@ -21,8 +22,10 @@ export const renderRibbonNonlinearWidthPreview = (values: RibbonNonlinearWidthPr
     const from = offset <= 0.5 ? values.startWidth : values.middleWidth;
     const to = offset <= 0.5 ? values.middleWidth : values.endWidth;
     const ratio = values.interpolation === 'smooth' ? local * local * (3 - 2 * local) : local;
+
     return { x: offset * 360, width: from + (to - from) * ratio };
   });
+
   return (
     <Layout
       width={470}

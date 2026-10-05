@@ -68,6 +68,7 @@ const buildBandContext = (
   const seriesRank = new Map(seriesValues.map((series, index) => [series, index] as const));
   const subCount = seriesValues.length || 1;
   const subWidth = bandwidth / subCount;
+
   return { bandwidth, group, seriesRank, subWidth };
 };
 
@@ -76,6 +77,7 @@ const assertProportionalWidth = (field: string, value: unknown): number | null =
   if (value < 0) {
     throw new RetikzPlotError(`lowerPlots: interval proportional bound requires a non-negative numeric ${field} field`);
   }
+
   return value;
 };
 
@@ -86,21 +88,25 @@ export const buildProportionalIntervals = (
 ): Map<ExternalRow, [number, number]> => {
   let cursor = 0;
   const intervals = new Map<ExternalRow, [number, number]>();
+
   for (const row of rows) {
     const width = assertProportionalWidth(field, resolveFieldPath(row, field));
     if (width === null) {
       intervals.set(row, [Number.NaN, Number.NaN]);
       continue;
     }
+
     const next = cursor + width;
     if (!Number.isFinite(next)) {
       throw new RetikzPlotError(
         `lowerPlots: interval proportional bound overflows while accumulating ${field}; use smaller magnitudes`,
       );
     }
+
     intervals.set(row, [cursor, next]);
     cursor = next;
   }
+
   return intervals;
 };
 
@@ -108,18 +114,22 @@ export const buildProportionalIntervals = (
 export const proportionalIntervalDomainValues = (field: string, rows: Array<ExternalRow>): Array<number> => {
   const values: Array<number> = [0];
   let cursor = 0;
+
   for (const row of rows) {
     const width = assertProportionalWidth(field, resolveFieldPath(row, field));
     if (width === null) continue;
+
     const next = cursor + width;
     if (!Number.isFinite(next)) {
       throw new RetikzPlotError(
         `lowerPlots: interval proportional bound overflows while accumulating ${field}; use smaller magnitudes`,
       );
     }
+
     values.push(cursor, next);
     cursor = next;
   }
+
   return values;
 };
 
@@ -129,10 +139,12 @@ const buildProportionalContext = (
   rows: Array<ExternalRow>,
 ): IntervalContext['proportionalByRole'] => {
   const byRole: NonNullable<IntervalContext['proportionalByRole']> = {};
+
   for (const role of roles) {
     const bound = resolveIntervalBound(mark, role);
     if (bound.kind === IntervalBoundKind.Proportional) byRole[role] = buildProportionalIntervals(bound.field, rows);
   }
+
   return Object.values(byRole)[0] === undefined ? undefined : byRole;
 };
 
@@ -160,30 +172,37 @@ export const buildIntervalContext = (
       rows,
     );
     const proportionalByRole = buildProportionalContext(mark, ['x', 'y'], rows);
+
     return {
       byRole: { x: xContext, y: yContext },
       ...(proportionalByRole !== undefined ? { proportionalByRole } : {}),
     };
   }
+
   if (isGenericCoordinateFrame(frame)) {
     const byRole: IntervalContext['byRole'] = {};
     const proportionalByRole = buildProportionalContext(mark, frame.roles, rows);
+
     for (const role of frame.roles) {
       const bound = resolveIntervalBound(mark, role);
       const group = bound.kind === IntervalBoundKind.Band ? bound.group : undefined;
       if (group === undefined) continue;
+
       const scale = frame.roleScales?.[role];
       if (!scale) {
         throw new RetikzPlotError(
           `lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build grouped band cells`,
         );
       }
+
       byRole[role] = buildBandContext(scale.bandwidth, group, rows);
     }
+
     return Object.values(byRole)[0] === undefined && proportionalByRole === undefined
       ? undefined
       : { byRole, ...(proportionalByRole !== undefined ? { proportionalByRole } : {}) };
   }
+
   return undefined;
 };
 
@@ -211,6 +230,7 @@ const boundOutputInterval = (
   const channel = axis === 'primary' ? mark.encoding.x : mark.encoding.y;
   const role = axis === 'primary' ? 'x' : 'y';
   const bandCtx = ctx.byRole[role];
+
   switch (bound.kind) {
     case IntervalBoundKind.Band: {
       const center = scale.coordinate(channelValue(channel, row));
@@ -220,12 +240,14 @@ const boundOutputInterval = (
         const start = center - bandCtx.bandwidth / 2 + index * bandCtx.subWidth;
         return [start, start + bandCtx.subWidth];
       }
+
       return [center - scale.bandwidth / 2, center + scale.bandwidth / 2];
     }
     case IntervalBoundKind.Span: {
       const base = scale.coordinate(bound.baseline ?? 0);
       const value = scale.coordinate(channelValue(channel, row));
       if (!Number.isFinite(base) || !Number.isFinite(value)) return null;
+
       return [base, value];
     }
     case IntervalBoundKind.Extent: {
@@ -236,9 +258,11 @@ const boundOutputInterval = (
           `lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields (run the stack / bin / derive-interval transform first)`,
         );
       }
+
       const lo = scale.coordinate(rawLo);
       const hi = scale.coordinate(rawHi);
       if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+
       return [lo, hi];
     }
     case IntervalBoundKind.Proportional: {
@@ -246,9 +270,11 @@ const boundOutputInterval = (
       if (raw === undefined) {
         throw new RetikzPlotError(`lowerPlots: interval proportional bound requires context for role ${role}`);
       }
+
       const lo = scale.coordinate(raw[0]);
       const hi = scale.coordinate(raw[1]);
       if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+
       return [lo, hi];
     }
     case IntervalBoundKind.Full: {
@@ -271,6 +297,7 @@ export const intervalCell = (
 ): Cell | null => {
   const primary = boundOutputInterval(resolveIntervalBound(mark, 'x'), 'primary', frame.primary, mark, row, frame, ctx);
   if (primary === null) return null;
+
   const secondary = boundOutputInterval(
     resolveIntervalBound(mark, 'y'),
     'secondary',
@@ -285,6 +312,7 @@ export const intervalCell = (
     if (Math.abs(primary[1] - primary[0]) < DEFAULT_EPSILON) return null;
     if (Math.abs(secondary[1] - secondary[0]) < DEFAULT_EPSILON) return null;
   }
+
   return { intervals: { x: primary, y: secondary } };
 };
 
@@ -307,7 +335,9 @@ const genericBoundOutputInterval = (
       `lowerPlots: interval mark under the ${frame.type} coordinate system requires roleScales.${role} to build cells`,
     );
   }
+
   const channel = channelForRole(mark, role);
+
   switch (bound.kind) {
     case IntervalBoundKind.Band: {
       const center = scale.coordinate(channelValue(channel, row));
@@ -318,22 +348,27 @@ const genericBoundOutputInterval = (
             `lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`,
           );
         }
+
         const bandCtx = ctx.byRole[role];
         if (bandCtx === undefined) {
           throw new RetikzPlotError(
             `lowerPlots: interval mark under the ${frame.type} coordinate system requires grouped band context for bounds.${role}.group`,
           );
         }
+
         const index = subBandIndexOf(bandCtx, row);
         const start = center - bandCtx.bandwidth / 2 + index * bandCtx.subWidth;
+
         return [start, start + bandCtx.subWidth];
       }
+
       return [center - scale.bandwidth / 2, center + scale.bandwidth / 2];
     }
     case IntervalBoundKind.Span: {
       const base = scale.coordinate(bound.baseline ?? 0);
       const value = scale.coordinate(channelValue(channel, row));
       if (!Number.isFinite(base) || !Number.isFinite(value)) return null;
+
       return [base, value];
     }
     case IntervalBoundKind.Extent: {
@@ -344,9 +379,11 @@ const genericBoundOutputInterval = (
           `lowerPlots: interval extent bound requires numeric ${bound.from} / ${bound.to} fields`,
         );
       }
+
       const lo = scale.coordinate(rawLo);
       const hi = scale.coordinate(rawHi);
       if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+
       return [lo, hi];
     }
     case IntervalBoundKind.Proportional: {
@@ -356,9 +393,11 @@ const genericBoundOutputInterval = (
           `lowerPlots: interval proportional bound under the ${frame.type} coordinate system requires proportional context for bounds.${role}`,
         );
       }
+
       const lo = scale.coordinate(raw[0]);
       const hi = scale.coordinate(raw[1]);
       if (!Number.isFinite(lo) || !Number.isFinite(hi)) return null;
+
       return [lo, hi];
     }
     case IntervalBoundKind.Full:
@@ -374,11 +413,13 @@ const genericIntervalCell = (
   ctx?: IntervalContext,
 ): Cell | null => {
   const intervals: Cell['intervals'] = {};
+
   for (const role of frame.roles) {
     const interval = genericBoundOutputInterval(resolveIntervalBound(mark, role), role, mark, row, frame, ctx);
     if (interval === null) return null;
     intervals[role] = interval;
   }
+
   return { intervals };
 };
 
@@ -397,6 +438,7 @@ export const markCell = (
   if (isCartesianCoordinateFrame(frame) || isPolarCoordinateFrame(frame))
     return ctx ? intervalCell(mark, row, frame, ctx) : null;
   if (isGenericCoordinateFrame(frame) && hasProjectCell(frame)) return genericIntervalCell(mark, row, frame, ctx);
+
   return null;
 };
 
@@ -407,12 +449,14 @@ const cellSeriesValue = (mark: IRPlotMark, row: ExternalRow): unknown =>
 const resolvePolarCellPull = (mark: IRPlotIntervalMark, row: ExternalRow): number => {
   const pull = mark.pull;
   if (pull === undefined) return 0;
+
   const value = pull.kind === 'field' ? resolveFieldPath(row, pull.value) : pull.value;
   if (!isFiniteNumber(value) || value < 0) {
     throw new RetikzPlotError(
       'lowerPlots: interval pull requires a finite non-negative numeric value for polar cell geometry',
     );
   }
+
   return value;
 };
 
@@ -420,14 +464,18 @@ const resolvePolarCellPull = (mark: IRPlotIntervalMark, row: ExternalRow): numbe
 const paddedPolarCell = (cell: Cell, mark: IRPlotIntervalMark): Cell => {
   const interval = cell.intervals.x;
   if (interval === undefined) return cell;
+
   const [startAngle, endAngle] = interval;
   const padAngle = mark.padAngle;
   if (padAngle === undefined) return cell;
+
   const sweep = endAngle - startAngle;
   const maxInset = Math.max(0, Math.abs(sweep) - 1e-6);
   const inset = Math.min(padAngle, maxInset);
   if (inset <= 0) return cell;
+
   const direction = sweep >= 0 ? 1 : -1;
+
   return {
     intervals: {
       ...cell.intervals,
@@ -444,6 +492,7 @@ export const intervalCellGeometry = (
   ctx: IntervalContext | undefined,
 ): CellGeometry | null => {
   if (!hasProjectCell(frame)) return null;
+
   const cell = markCell(mark, row, frame, ctx);
   if (!cell) return null;
   if (isPolarCoordinateFrame(frame)) {
@@ -452,12 +501,15 @@ export const intervalCellGeometry = (
       pull: resolvePolarCellPull(mark, row),
     });
   }
+
   if (mark.interpolation !== undefined) {
     throw new RetikzPlotError('lowerPlots: interval interpolation override is only supported under polar2D');
   }
+
   if (mark.pull !== undefined) {
     throw new RetikzPlotError('lowerPlots: interval pull is only supported for polar2D cell geometry');
   }
+
   return frame.projectCell(cell);
 };
 
@@ -465,6 +517,7 @@ const moveSectorCornerRadiusToShapeParams = (node: IRNode): void => {
   const cornerRadius = node.cornerRadius;
   const shape = node.shape;
   if (cornerRadius === undefined || typeof shape !== 'object' || shape.type !== 'sector') return;
+
   node.shape = {
     ...shape,
     params: {
@@ -497,14 +550,17 @@ const lowerCells = (
   const strokeOf =
     'stroke' in mark && mark.stroke?.kind === 'field' ? channelValueOf<MarkPaint>(channels, 'stroke') : undefined;
   let kind: CellGeometry['kind'] | undefined;
+
   for (let transformedIndex = 0; transformedIndex < rows.length; transformedIndex++) {
     const row = rows[transformedIndex];
     const geometry = intervalCellGeometry(mark, row, frame, intervalContext);
     if (!geometry) continue;
     if (!isRenderableCellGeometry(geometry)) continue;
+
     kind = geometry.kind;
     const cellNode = cellGeometryNode(geometry);
     if (cellNode === null) continue;
+
     const fill = fillOf?.(row);
     if (fill !== undefined) cellNode.style = { ...cellNode.style, fill };
     const stroke = strokeOf?.(row);
@@ -525,8 +581,10 @@ const lowerCells = (
     );
     placed.push({ color: colorOf?.(row), node });
   }
+
   const defaultFill = channelDefaultOf<MarkPaint>(channels, 'fill') ?? defaultColor ?? undefined;
   const defaultStroke = channelDefaultOf<MarkPaint>(channels, 'stroke');
+
   return placed.length === 0 || kind === undefined
     ? null
     : cellLayer(placed, kind, mark, colorOf, defaultFill, defaultStroke);
@@ -541,10 +599,12 @@ export const lowerIntervalLayer = (
   ctx: MarkLoweringContext | undefined,
 ): IRChild | null => {
   if (mark.type !== PlotMark.Interval) return null;
+
   // interval 需要坐标帧提供 cell 几何投影；内置和自定义帧都走同一 projectCell 契约。
   if (!hasProjectCell(frame)) {
     throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
+
   const intervalContext = buildIntervalContext(mark, frame, rows);
   const layer = lowerCells(
     mark,
@@ -557,6 +617,7 @@ export const lowerIntervalLayer = (
     ctx,
     channelValueOf<IRNodeLabel['text']>(channels, 'label'),
   );
+
   return layer === null ? null : attachMarkLayer(layer, mark, ctx);
 };
 

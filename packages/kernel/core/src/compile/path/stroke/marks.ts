@@ -27,10 +27,12 @@ export const assertArrowCanInheritStroke = (
   arrows: { arrowStart?: ResolvedArrowEnd; arrowEnd?: ResolvedArrowEnd },
 ): void => {
   if (stroke === undefined || typeof stroke === 'string') return;
+
   const usesContextStroke =
     (arrows.arrowStart?.marker.some(markerPrimUsesContextStroke) ?? false) ||
     (arrows.arrowEnd?.marker.some(markerPrimUsesContextStroke) ?? false);
   if (!usesContextStroke) return;
+
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Compile,
     'Path arrow cannot inherit a IRPaint stroke; set arrowDetail.color or endpoint color to an explicit CSS color.',
@@ -40,6 +42,7 @@ export const assertArrowCanInheritStroke = (
 export const markerContextStroke = (stroke: PaintValue | undefined): string => {
   if (stroke === undefined) return 'currentColor';
   if (typeof stroke === 'string') return stroke;
+
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Compile,
     'Path mark cannot inherit a IRPaint stroke; set the mark or arrow color to an explicit CSS color.',
@@ -58,6 +61,7 @@ const markerPrimToScene = (prim: MarkerPrimitive, contextStroke: string): SceneP
   if (prim.type === 'group') {
     return { ...prim, children: prim.children.map(c => markerPrimToScene(c, contextStroke)) };
   }
+
   // marker 窄子集 ⊂ Scene 图元；解析 contextStroke 后即合法 Scene 图元，cast 作用域仅此一处
   return {
     ...prim,
@@ -86,5 +90,6 @@ export const buildMarkMarkerGroup = (
     { kind: 'scale', x: round(sx), y: round(sy) },
     { kind: 'translate', x: round(-spec.refX), y: round(-refY) },
   ];
+
   return { type: 'group', transforms, children: spec.marker.map(p => markerPrimToScene(p, contextStroke)) };
 };

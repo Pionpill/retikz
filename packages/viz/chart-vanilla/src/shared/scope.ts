@@ -5,6 +5,7 @@ import type { InputChartPanel } from './types';
 /** 把 Chart 包装为可选的根 Scope */
 export const wrapChartPanel = <TChart extends IRChild>(chart: TChart, panel: InputChartPanel | undefined): IRChild => {
   if (panel === undefined) return chart;
+
   const { x, y, transforms, placement, zIndex, clip, theme } = panel;
   const scopeTransforms =
     x !== undefined || y !== undefined
@@ -21,6 +22,7 @@ export const wrapChartPanel = <TChart extends IRChild>(chart: TChart, panel: Inp
   ) {
     return chart;
   }
+
   return {
     type: 'scope',
     ...(scopeTransforms === undefined ? {} : { transforms: scopeTransforms }),

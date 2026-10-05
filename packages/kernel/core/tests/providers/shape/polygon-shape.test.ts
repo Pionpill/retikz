@@ -40,24 +40,34 @@ describe('polygon — happy path 几何', () => {
     // precision 高些避免默认 2 位小数 round 引入的微小半径抖动（属渲染量化、非几何误差）
     const compiled = compileToScene(scene([polyNode({ sides: 6 })]), { precision: 6 }).scene;
     const path = findByType(compiled.primitives, 'path');
+
     expect(path).toBeDefined();
+
     const verts = vertexPoints(path!.commands);
+
     expect(verts.length).toBe(6);
+
     // 6 顶点到几何中心的距离应全相等（外接圆上）。几何中心 = 顶点均值。
     const mx = verts.reduce((s, v) => s + v[0], 0) / verts.length;
     const my = verts.reduce((s, v) => s + v[1], 0) / verts.length;
     const radii = verts.map(v => Math.hypot(v[0] - mx, v[1] - my));
+
     for (const r of radii) expect(r).toBeCloseTo(radii[0], 4);
+
     expect(radii[0]).toBeGreaterThan(0);
   });
 
   it('polygon_emit_closed：emit 产闭合多边形（首 move、末 close、中间 line）', () => {
     const compiled = compileToScene(scene([polyNode({ sides: 5 })])).scene;
     const path = findByType(compiled.primitives, 'path');
+
     expect(path).toBeDefined();
+
     const cmds = path!.commands;
+
     expect(cmds[0].kind).toBe('move');
     expect(cmds[cmds.length - 1].kind).toBe('close');
+
     // sides=5 → move + 4 line + close
     expect(cmds.map(c => c.kind)).toEqual(['move', 'line', 'line', 'line', 'line', 'close']);
   });
@@ -65,6 +75,7 @@ describe('polygon — happy path 几何', () => {
   it('polygon_sides_3_minimum：sides:3 → 三角形（3 顶点 + close）', () => {
     const compiled = compileToScene(scene([polyNode({ sides: 3 })])).scene;
     const path = findByType(compiled.primitives, 'path');
+
     expect(path).toBeDefined();
     expect(vertexPoints(path!.commands).length).toBe(3);
     expect(path!.commands.map(c => c.kind)).toEqual(['move', 'line', 'line', 'close']);
@@ -84,8 +95,11 @@ describe('polygon — happy path 几何', () => {
       { precision: 6 },
     ).scene;
     const path = findByType(compiled.primitives, 'path');
+
     expect(path).toBeDefined();
+
     const verts = vertexPoints(path!.commands);
+
     expect(verts).toEqual([
       [126, 0],
       [0, 70],
@@ -101,14 +115,19 @@ describe('polygon — 边界（边数极值）', () => {
   it('polygon_large_sides_near_circle：sides:64 → 64 顶点近圆轮廓（相邻顶点间距远小于半径）', () => {
     const compiled = compileToScene(scene([polyNode({ sides: 64 })])).scene;
     const path = findByType(compiled.primitives, 'path');
+
     expect(path).toBeDefined();
+
     const verts = vertexPoints(path!.commands);
+
     expect(verts.length).toBe(64);
+
     // 近圆：相邻顶点弦长 << 外接半径（2·R·sin(π/64) ≈ 0.098·R）
     const mx = verts.reduce((s, v) => s + v[0], 0) / verts.length;
     const my = verts.reduce((s, v) => s + v[1], 0) / verts.length;
     const R = Math.hypot(verts[0][0] - mx, verts[0][1] - my);
     const chord = Math.hypot(verts[1][0] - verts[0][0], verts[1][1] - verts[0][1]);
+
     expect(R).toBeGreaterThan(0);
     expect(chord).toBeLessThan(R * 0.2);
   });
@@ -117,6 +136,7 @@ describe('polygon — 边界（边数极值）', () => {
     // rotate 改起始顶点方向、不改顶点数；验证 rotate 进入顶点角度（首顶点角 = rotate）。
     const compiled = compileToScene(scene([polyNode({ sides: 3, rotate: 90 })])).scene;
     const path = findByType(compiled.primitives, 'path');
+
     expect(path).toBeDefined();
     expect(vertexPoints(path!.commands).length).toBe(3);
   });
@@ -127,6 +147,7 @@ describe('polygon — 边界（边数极值）', () => {
 describe('polygon — 错误路径（paramsSchema 拒绝）', () => {
   it('polygon_sides_lt_3_rejected：sides:2 → paramsSchema reject', () => {
     expect(() => polygon.paramsSchema.parse({ sides: 2 })).toThrow();
+
     // 端到端：compile 同样在 paramsSchema.parse 抛
     expect(() => compileToScene(scene([polyNode({ sides: 2 })])).scene).toThrow();
   });
@@ -157,33 +178,44 @@ describe('polygon — 交互（self-rotate + Node.rotate）', () => {
       precision: 6,
     }).scene;
     const group = findByType(compiled.primitives, 'group');
+
     expect(group).toBeDefined();
     expect(group!.transforms?.some(t => t.kind === 'rotate' && t.degrees === 15)).toBe(true);
+
     const path = findByType(compiled.primitives, 'path');
+
     expect(path).toBeDefined();
+
     const verts = vertexPoints(path!.commands);
     const mx = verts.reduce((s, v) => s + v[0], 0) / verts.length;
     const my = verts.reduce((s, v) => s + v[1], 0) / verts.length;
     const angle0 = (Math.atan2(verts[0][1] - my, verts[0][0] - mx) * 180) / Math.PI;
     const norm = ((angle0 % 360) + 360) % 360;
+
     expect(norm).toBeCloseTo(30, 3);
   });
 
   it('polygon_sides_not_scaled：node scale=2 → sides/rotate 不变，只内框×scale（外接放大）', () => {
     // scaleParams 返回原 params（不缩 sides / rotate）；内框随 scale×2 → 外接半径×2、顶点数不变。
     const params = { sides: 6, rotate: 10 };
+
     expect(polygon.scaleParams!(params, 2, 2)).toEqual({ sides: 6, rotate: 10 });
+
     const base = compileToScene(scene([polyNode({ sides: 6 }, { text: 'X' })])).scene;
     const big = compileToScene(scene([polyNode({ sides: 6 }, { text: 'X', scale: 2 })])).scene;
     const basePath = findByType(base.primitives, 'path');
     const bigPath = findByType(big.primitives, 'path');
+
     expect(basePath).toBeDefined();
     expect(bigPath).toBeDefined();
+
     // 顶点数不变（sides 未被缩坏）
     expect(vertexPoints(bigPath!.commands).length).toBe(6);
     expect(vertexPoints(basePath!.commands).length).toBe(6);
+
     // 内框 ×2 → 外接尺寸协同放大（去掉常量 padding 后 bbox 跨度近翻倍）
     const PAD = 10;
+
     expect(big.layout.width - 2 * PAD).toBeGreaterThan((base.layout.width - 2 * PAD) * 1.5);
   });
 });
@@ -200,12 +232,14 @@ describe('polygon — round-trip / schema', () => {
     };
     const parsed = NodeSchema.parse(node);
     const roundTripped = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
+
     expect(roundTripped).toEqual(parsed);
     expect(roundTripped.shape).toEqual({ type: 'polygon', params: { sides: 6, rotate: 30 } });
   });
 
   it('ShapeRefSchema 解析 polygon nested params（rotate 省略合法）', () => {
     const ref = { type: 'polygon', params: { sides: 5 } };
+
     expect(ShapeRefSchema.parse(ref)).toEqual(ref);
   });
 });

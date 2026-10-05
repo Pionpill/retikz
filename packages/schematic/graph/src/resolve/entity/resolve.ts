@@ -17,6 +17,7 @@ import type {
 const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, capability: string): T => {
   const definition = registry.get(key);
   if (definition !== undefined) return definition;
+
   throw new RetikzGraphError({
     code: RetikzGraphErrorCode.DefinitionNotRegistered,
     message: `${capability} '${key}' is not registered.`,
@@ -27,6 +28,7 @@ const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, ca
 const requiredEntityKindDefinition = (registry: EntityKindRegistry, role: string, kind: string, capability: string) => {
   const definition = entityKindDefinitionOf(registry, role, kind);
   if (definition !== undefined) return definition;
+
   throw new RetikzGraphError({
     code: RetikzGraphErrorCode.DefinitionNotRegistered,
     message: `${capability} '${kind}' is not registered for role '${role}'.`,
@@ -79,6 +81,7 @@ export const resolveEntity = (source: IRGraphEntity, context: EntityResolveConte
       });
     }
   }
+
   return {
     source,
     roleDefinition,
@@ -130,14 +133,17 @@ const resolveEntityAuthorAppearance = (
   const selectorContext = selectorContextOf(context);
   const subject = entitySubjectOf(entity);
   let appearance: EffectiveEntityAppearance = {};
+
   for (const layer of context.layers) {
     appearance = mergeEntityAppearance(appearance, layer.defaults?.entity);
+
     for (const rule of layer.rules ?? []) {
       if (rule.type !== 'entity') continue;
       validateGraphThemeSelector(rule.selector, selectorContext);
       appearance = mergeEntityAppearance(appearance, matchingEntityRule(rule, subject));
     }
   }
+
   return appearance;
 };
 
@@ -148,7 +154,9 @@ export const projectEntityGraphLayers = (
 ): IRGraphEntity => {
   const authorAppearance = resolveEntityAuthorAppearance(entity, context);
   if (Object.keys(authorAppearance).length === 0) return entity.source;
+
   const projected = mergeEntityAppearance(authorAppearance, sourceAppearanceOf(entity.source));
+
   return {
     ...entity.source,
     ...(projected.style === undefined ? {} : { style: projected.style }),
@@ -165,10 +173,12 @@ export const resolveEntityAppearance = (
   const selectorContext = selectorContextOf(context);
   const subject = entitySubjectOf(entity);
   let appearance: EffectiveEntityAppearance = graphTheme.defaults.entity ?? {};
+
   for (const rule of graphTheme.rules) {
     if (rule.type !== 'entity') continue;
     validateGraphThemeSelector(rule.selector, selectorContext);
     appearance = mergeEntityAppearance(appearance, matchingEntityRule(rule, subject));
   }
+
   return mergeEntityAppearance(appearance, sourceAppearanceOf(entity.source));
 };

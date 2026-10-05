@@ -8,10 +8,12 @@ import { entityFlowI18n } from './entity-flow.i18n';
 
 /** 实体链路插图的语言 */
 export type EntityFlowProps = { lang?: Lang };
+
 /** 仅展示 Entity 自身的处理阶段，不重复全局编译管线 */
 const EntityFlow: FC<EntityFlowProps> = props => {
   const { lang = 'zh' } = props;
   const text = entityFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="entity-flow" kind="linear" direction="right">

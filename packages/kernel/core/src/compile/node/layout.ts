@@ -45,8 +45,10 @@ const localDeltaOf = (
       'Cannot resolve anchor position through a Scope transform with a zero scale axis',
     );
   }
+
   const before = inverseTransformChain(globalOrigin, scopeChain);
   const after = inverseTransformChain([globalOrigin[0] + deltaGlobal[0], globalOrigin[1] + deltaGlobal[1]], scopeChain);
+
   return [after[0] - before[0], after[1] - before[1]];
 };
 
@@ -64,6 +66,7 @@ const placeAnchorPositionedLayout = (
       `Node anchor position cannot reference itself ('${node.id}')`,
     );
   }
+
   const reference = positionContext.lookupReference(position.target.id);
   if (reference === undefined) {
     throw new RetikzCoreError(
@@ -71,12 +74,14 @@ const placeAnchorPositionedLayout = (
       `Cannot resolve anchor position target '${position.target.id}'; it is undefined or defined later in the IR`,
     );
   }
+
   if (reference.state === 'scope-placeholder') {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `Cannot resolve anchor position target '${position.target.id}'; the referenced Scope is still being laid out`,
     );
   }
+
   const target = resolvePositionTargetWorld(position.target, positionContext);
   if (target.referencePoint === null) {
     throw new RetikzCoreError(
@@ -84,6 +89,7 @@ const placeAnchorPositionedLayout = (
       `Cannot resolve anchor position target '${position.target.id}'; it is undefined or defined later in the IR`,
     );
   }
+
   const projected =
     scopeChain.length === 0
       ? { ...provisional, rect: { ...provisional.rect } }
@@ -132,6 +138,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
     warn,
     allocationWidthProposal,
   } = context;
+
   // 缩放影响节点尺寸与字体。
   // 字号取 min(sx,sy) 保 glyph 形状，避免非均匀缩放下文字被拉变形。
   const { x: sx, y: sy } = node.scale;
@@ -147,6 +154,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   const fontFamily = baseFont.family;
   const fontWeight = baseFont.weight;
   const fontStyle = baseFont.style;
+
   // spacing 受 node scale 影响。
   const padding = node.padding;
   const paddingLeft = padding.left * sx;
@@ -198,8 +206,10 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   const minimumSize = node.minimumSize;
   const minHalfW = (minimumSize.width * sx) / 2;
   const minHalfH = (minimumSize.height * sy) / 2;
+
   const circumscribeContent = (textWidth: number, textHeight: number) => {
     let raw: unknown;
+
     try {
       raw = shapeDef.circumscribe(
         (textWidth + paddingLeft + paddingRight) / 2,
@@ -208,17 +218,20 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
       );
     } catch (thrown) {
       if (isFatalProbeError(thrown) || isLayoutProbeRecoverableError(thrown)) throw thrown;
+
       throw createLayoutProbeRecoverableError(
         `Shape '${shapeDef.name}' circumscribe failed: ${safeThrownDetail(thrown)}`,
         { cause: thrown, providerKey: `shape:${shapeDef.name}` },
       );
     }
+
     return withProviderOutputValidationBoundary(`Shape '${shapeDef.name}' circumscribe`, () => {
       if (raw === null || typeof raw !== 'object') {
         throw createCompositeContractError(
           `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
         );
       }
+
       const halfWidth = 'halfWidth' in raw ? raw.halfWidth : undefined;
       const halfHeight = 'halfHeight' in raw ? raw.halfHeight : undefined;
       if (
@@ -233,20 +246,26 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
           `Shape '${shapeDef.name}' returned invalid circumscribe geometry; halfWidth and halfHeight must be finite non-negative numbers`,
         );
       }
+
       return { halfWidth, halfHeight };
     });
   };
+
   const rotateDeg = node.rotate;
+
   const allocationWidthOf = (halfWidth: number, halfHeight: number): number => {
     const outerWidth = 2 * Math.max(halfWidth, minHalfW) + margin.left + margin.right;
     const outerHeight = 2 * Math.max(halfHeight, minHalfH) + margin.top + margin.bottom;
     const rotateRad = rotateDeg * DEG_TO_RAD;
+
     return Math.abs(outerWidth * Math.cos(rotateRad)) + Math.abs(outerHeight * Math.sin(rotateRad));
   };
+
   /** 前向求值一个正文 budget 对应的真实 content、shape 与 allocation width */
   const evaluateContentCandidate = (textWidthBudget: number | undefined) => {
     const contentLayout = layoutContent(textWidthBudget);
     const circumscribed = circumscribeContent(contentLayout.textWidth, contentLayout.textHeight);
+
     return {
       contentLayout,
       circumscribed,
@@ -266,6 +285,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   ) {
     let currentCandidate = selectedCandidate;
     let textWidthBudget = explicitMaxTextWidth ?? currentCandidate.contentLayout.textWidth;
+
     for (let attempt = 0; attempt < MAX_ALLOCATION_REFLOW_ATTEMPTS; attempt += 1) {
       if (textWidthBudget === 0) break;
       const ratio = widthConstraint / candidateWidth(currentCandidate);
@@ -284,12 +304,14 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
       }
     }
   }
+
   if (fixedVisualWidth !== undefined && selectedCandidate.visualWidth > fixedVisualWidth) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `${resolution.irPath}.layout.width cannot contain the Node content, padding, and shape geometry`,
     );
   }
+
   const { contentLayout, circumscribed } = selectedCandidate;
   const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock } = contentLayout;
 
@@ -307,12 +329,14 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
   } else {
     center = resolvePosition(node.position, positionContext)?.localPoint ?? null;
   }
+
   if (!center) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `Cannot resolve position for node ${node.id ?? '(unnamed)'}; polar.origin / at.of / between endpoint may reference an undefined node`,
     );
   }
+
   // shape 可声明 AABB 中心相对 position 的偏移。
   const rawAabbOffset: unknown = shapeDef.circumscribeOffset?.(shapeParams);
   const aabbOffset =
@@ -389,6 +413,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
     ...provisional,
     labels: layoutNodeLabels(provisional, measuredLabels),
   };
+
   return anchorPosition
     ? placeAnchorPositionedLayout(node, anchorPosition, resolved, positionContext, scopeChain)
     : resolved;

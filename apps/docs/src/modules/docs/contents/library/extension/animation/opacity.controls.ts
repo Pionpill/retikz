@@ -29,6 +29,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { effect: 'flash', duration: 500, dim: 0 },

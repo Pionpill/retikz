@@ -12,10 +12,12 @@ const createPreview = (lang: Lang) =>
   defineControlledPreview(createPreviewControlContract(lang), values => renderFlowContainerWidthPreview(values, lang));
 
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewSource = previews.zh.source;
 
 /** 容器宽度示例语言 */
 export type FlowContainerWidthProps = Readonly<{ lang?: Lang }>;
+
 /** 容器宽度交互示例 */
 const Demo: FC<FlowContainerWidthProps> = props => {
   const { lang = 'zh' } = props;

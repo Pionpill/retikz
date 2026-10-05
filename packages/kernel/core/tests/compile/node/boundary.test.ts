@@ -20,15 +20,18 @@ describe('BoundarySchema', () => {
     expect(BoundarySchema.parse('circle')).toBe('circle');
     expect(BoundarySchema.parse('rectangle')).toBe('rectangle');
   });
+
   it('parses nested {type, params}', () => {
     expect(BoundarySchema.parse({ type: 'star', params: { points: 5 } })).toEqual({
       type: 'star',
       params: { points: 5 },
     });
   });
+
   it('rejects empty string', () => {
     expect(() => BoundarySchema.parse('')).toThrow();
   });
+
   it('exposes reserved-keyword constant', () => {
     expect(BoundaryKeyword.Self).toBe('shape');
     expect(BoundaryKeyword.Circle).toBe('circle');
@@ -38,14 +41,19 @@ describe('BoundarySchema', () => {
 describe('boundary IR fields', () => {
   it('NodeSchema accepts boundary', () => {
     const n = NodeSchema.parse({ type: 'node', id: 'a', shape: 'rectangle', position: [0, 0], boundary: 'circle' });
+
     expect(n.boundary).toBe('circle');
   });
+
   it('NodeSchema boundary optional', () => {
     const n = NodeSchema.parse({ type: 'node', id: 'a', position: [0, 0] });
+
     expect(n.boundary).toBeUndefined();
   });
+
   it('NodeTargetSchema accepts boundary', () => {
     const t = NodeTargetSchema.parse({ id: 'a', boundary: 'shape' });
+
     expect(t.boundary).toBe('shape');
   });
 });
@@ -71,6 +79,7 @@ const layoutBoundaryNode = (node: IRNode, namespaceStack: NamespaceStack) =>
       warn: () => {},
       labelDistance: 12,
     });
+
     return layoutNode(resolution, {
       measureText,
       positionContext: createPositionResolveContext({ namespaceStack, nodeDistance: 24 }),
@@ -90,6 +99,7 @@ describe('boundary-aware boundary/canonical', () => {
       namespaceStack,
     );
     const toward: [number, number] = [100, 0];
+
     // 缺省与显式 'shape' 结果相同
     expect(boundaryPointOf(layout, toward)).toEqual(boundaryPointOf(layout, toward, 'shape'));
   });
@@ -105,6 +115,7 @@ describe('boundary-aware boundary/canonical', () => {
       },
       namespaceStack,
     );
+
     expect(angleBoundaryOf(layout, 0)).toEqual(angleBoundaryOf(layout, 0, 'shape'));
     expect(angleBoundaryOf(layout, 90)).toEqual(angleBoundaryOf(layout, 90, 'shape'));
   });
@@ -167,6 +178,7 @@ describe('public export + remaining quadrants', () => {
         },
       ],
     };
+
     expect(() => core.compileToScene(ir)).toThrow(/Unknown connection surface provider 'nope'/);
   });
 
@@ -192,14 +204,20 @@ describe('public export + remaining quadrants', () => {
       ],
     };
     const roundtripped = core.SceneSchema.parse(JSON.parse(JSON.stringify(ir)));
+
     // 节点 boundary 字段正确保留
     const node = roundtripped.children.find(c => c.type === 'node') as core.IRNode;
+
     expect(node.boundary).toBe('circle');
+
     // path 端点 boundary 字段正确保留
     const path = roundtripped.children.find(c => c.type === 'path') as core.IRPath;
     const lineStep = path.children.find(s => s.kind === 'line');
+
     expect(lineStep).toBeDefined();
+
     const to = lineStep!.to as core.IRNodeTarget;
+
     expect(to.boundary).toBe('shape');
   });
 
@@ -231,10 +249,14 @@ describe('public export + remaining quadrants', () => {
         },
       ],
     };
+
     expect(() => core.compileToScene(ir)).not.toThrow();
+
     const scene = core.compileToScene(ir).scene;
+
     // 产出包含路径
     const paths = scene.primitives.filter(p => p.type === 'path');
+
     expect(paths.length).toBeGreaterThan(0);
   });
 });

@@ -8,13 +8,16 @@ export const captureTimingRunnerEnvironment = (environment: TimingRunnerEnvironm
   if (capturedCpuModels.length === 0 || capturedCpuModels.some(model => model.length === 0)) {
     throw new Error('bench runner CPU model is unavailable');
   }
+
   const cpuModels = [...new Set(capturedCpuModels)].sort((left, right) => left.localeCompare(right, 'en'));
   if (!Number.isSafeInteger(environment.logicalCpuCount) || environment.logicalCpuCount <= 0) {
     throw new Error('bench runner logical CPU count is unavailable');
   }
+
   if (!Number.isSafeInteger(environment.totalMemoryBytes) || environment.totalMemoryBytes <= 0) {
     throw new Error('bench runner total memory is unavailable');
   }
+
   return Object.freeze({ ...environment, cpuModels: Object.freeze(cpuModels) });
 };
 
@@ -22,6 +25,7 @@ export const captureTimingRunnerEnvironment = (environment: TimingRunnerEnvironm
 export const readTimingRunnerEnvironment = (): TimingRunnerEnvironment => {
   const configuredRunnerId = process.env.RETIKZ_BENCH_RUNNER_ID?.trim();
   const processors = cpus();
+
   return captureTimingRunnerEnvironment({
     runnerId: configuredRunnerId === undefined || configuredRunnerId.length === 0 ? hostname() : configuredRunnerId,
     platform: platform(),

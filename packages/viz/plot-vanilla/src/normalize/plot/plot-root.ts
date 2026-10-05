@@ -25,8 +25,11 @@ import {
 import { assembledTransformsOf } from './topology';
 
 const AUTO_X = '__x';
+
 const AUTO_Y = '__y';
+
 const AUTO_ANGLE = '__angle';
+
 const AUTO_RADIUS = '__radius';
 
 type PlotRootNormalizationContext = PlotAuthoringContext & {
@@ -39,6 +42,7 @@ export const normalizePlotRoot = (
   collected: NormalizationState,
 ): { fragment: PlotMemberFragment; runtime: PlotAuthoringRuntime } => {
   const rootContext = context as PlotRootNormalizationContext;
+
   // transform 装配序：<Plot transforms> 直传 → <PlotTransform> 收集 → mark shortcut transforms
   // 按 stack 签名（x / y / groupBy）去重：仅抑制与某条显式 stack 完全同签名的 shortcut stack（那条会二次堆叠），
   // 不同签名的 shortcut stack 保留——否则该 mark 仍是 arrangement='stack' 却没有对应 y0/y1，lower 阶段读空累积界出错
@@ -48,14 +52,17 @@ export const normalizePlotRoot = (
   if (collected.hasSector && coordKind !== 'polar2D') {
     throw new RetikzPlotVanillaError('buildPlotIR: <IntervalMark angle> is only valid under coordinate="polar2D"');
   }
+
   if (collected.hasHorizontalBar && coordKind !== 'cartesian2D') {
     throw new RetikzPlotVanillaError(
       'buildPlotIR: <IntervalMark direction="horizontal"> is only valid under coordinate="cartesian2D"',
     );
   }
+
   if (coordKind === 'polar2D' && collected.marks.some(mark => mark.type === PlotMark.Path && mark.closed !== false)) {
     collected.hasClosedLine = true;
   }
+
   const explicitScales = collectExplicitScales(collected.scales, coordKind);
 
   // 有 model 或 Plot 入口要求延迟推断时，未显式声明 <PlotScale> 的维度省略 AUTO 绑定，交给 expand 按字段类型派生
@@ -124,6 +131,7 @@ export const normalizePlotRoot = (
         'buildPlotIR: custom coordinates must use a non-built-in type string, for example { type: "arch", archHeight: 30 }',
       );
     }
+
     coordinate = { ...coordinateInput };
     scales = [];
   } else {
@@ -141,6 +149,7 @@ export const normalizePlotRoot = (
       ...(!shouldDeferPositionScales || explicitScales.y !== undefined ? [yScale] : []),
     ];
   }
+
   if (collected.colored) scales.push(buildColorScale(collected.colorFields, context.model));
 
   // 薄 Plot 不补默认轴：只有用户显式声明 <PlotAxis>/<PlotLegend> 才生成 guides
@@ -157,6 +166,7 @@ export const normalizePlotRoot = (
     facets: collected.facets,
     scaffolds: collected.scaffolds,
   });
+
   // topology 规范化会为 framework-neutral plain authoring 补 cartesian 默认 scale；React defer 路径只移除本次补出的维度，
   // 保留用户显式 <PlotScale> 与多轴 binding 需要的派生 scale，让 lowering 继续按实际字段类型推断
   const normalizedScales =
@@ -181,5 +191,6 @@ export const normalizePlotRoot = (
   };
   const runtime: PlotAuthoringRuntime =
     Object.keys(collected.resolveLabels).length === 0 ? {} : { resolveLabel: collected.resolveLabels };
+
   return { fragment, runtime };
 };

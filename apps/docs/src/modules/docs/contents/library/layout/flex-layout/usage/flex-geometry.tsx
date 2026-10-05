@@ -8,6 +8,7 @@ import { previewControlContract } from './flex-geometry.controls';
 
 export { createPreviewControlContract } from './flex-geometry.controls';
 export const previewControls = previewControlContract.controls;
+
 const preview = defineFlexPreview(
   previewControlContract,
   values => (
@@ -56,7 +57,9 @@ const preview = defineFlexPreview(
     ],
   }),
 );
+
 export const previewSource = preview.source;
+
 /** 当前功能的交互示例 */
 const Demo: FC = preview.Component;
 export default Demo;

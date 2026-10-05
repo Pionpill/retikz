@@ -30,6 +30,7 @@ describe('Extension container shape geometry', () => {
     ]);
 
     const rightParams = { shortSide: 'right', shortSideRatio: 0.5 } as const;
+
     expect(TrapezoidShapeDefinition.circumscribe(20, 10, rightParams)).toEqual({
       halfWidth: 20,
       halfHeight: 20,
@@ -58,6 +59,7 @@ describe('Extension container shape geometry', () => {
   it('mirrors parallelogram slant direction and degenerates 90 degrees to a rectangle', () => {
     const right = { slantAngle: 45, slantDirection: 'right' } as const;
     const left = { slantAngle: 45, slantDirection: 'left' } as const;
+
     expect(ParallelogramShapeDefinition.circumscribe(20, 10, right)).toEqual({
       halfWidth: 40,
       halfHeight: 10,
@@ -135,6 +137,7 @@ describe('Extension container shape geometry', () => {
 
   it('transposes cylinder geometry for a horizontal axis and clamps only the emitted cap depth', () => {
     const params = { axis: 'horizontal', capDepth: 8 } as const;
+
     expect(CylinderShapeDefinition.circumscribe(20, 10, params)).toEqual({ halfWidth: 28, halfHeight: 10 });
     expect(pathOf(CylinderShapeDefinition, { x: 0, y: 0, width: 56, height: 20 }, params).commands).toEqual([
       { kind: 'move', to: [-20, -10] },
@@ -175,6 +178,7 @@ describe('Extension container shape geometry', () => {
       { x: 0, y: 0, width: 10, height: 20 },
       { axis: 'horizontal', capDepth: 20 },
     );
+
     expect(clamped.commands[0]).toEqual({ kind: 'move', to: [0, -10] });
     expect(clamped.commands[1]).toMatchObject({ center: [0, 0], radiusX: 5, radiusY: 10 });
   });
@@ -192,6 +196,7 @@ describe('Extension container shape geometry', () => {
 
   it('transposes the elliptic capsule and degenerates zero cap depth to a rectangle', () => {
     const horizontal = { axis: 'horizontal', capDepth: 8 } as const;
+
     expect(EllipticCapsuleShapeDefinition.circumscribe(20, 10, horizontal)).toEqual({
       halfWidth: 28,
       halfHeight: 10,
@@ -234,10 +239,12 @@ describe('Extension container shape geometry', () => {
     const sharp = TrapezoidShapeDefinition.circumscribe(36, 20, {});
     const roundedParams = { cornerRadius: 10 };
     const rounded = TrapezoidShapeDefinition.circumscribe(36, 20, roundedParams);
+
     expect(rounded.halfWidth).toBeGreaterThan(sharp.halfWidth);
     expect(rounded.halfHeight).toBeGreaterThan(sharp.halfHeight);
 
     const rect: Rect = { x: 0, y: 0, width: rounded.halfWidth * 2, height: rounded.halfHeight * 2 };
+
     for (const corner of [
       [-36, -20],
       [36, -20],
@@ -245,6 +252,7 @@ describe('Extension container shape geometry', () => {
       [-36, 20],
     ] as const) {
       const hit = TrapezoidShapeDefinition.boundaryPoint(rect, [corner[0], corner[1]], roundedParams);
+
       expect(Math.hypot(...hit)).toBeGreaterThanOrEqual(Math.hypot(corner[0], corner[1]) - 1e-6);
     }
   });
@@ -281,6 +289,7 @@ describe('Extension container shape geometry', () => {
       [100, 0],
       {},
     );
+
     expect(rotated[0]).toBeCloseTo(18);
     expect(rotated[1]).toBeCloseTo(0);
   });

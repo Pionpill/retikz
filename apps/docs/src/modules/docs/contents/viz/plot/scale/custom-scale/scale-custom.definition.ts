@@ -17,6 +17,7 @@ export const brandColorScale = defineScale({
     const domain = [...new Set(values.filter((value): value is string => typeof value === 'string'))];
     const colors = domain.map((_category, index) => palette[index % palette.length]);
     const colorByCategory = new Map(domain.map((category, index) => [category, colors[index]] as const));
+
     return {
       of: value => (typeof value === 'string' ? colorByCategory.get(value) : undefined),
       legendForm: 'swatch' as const,
@@ -51,8 +52,10 @@ export const easePositionScale = defineScale({
       coordinate: value => {
         const numericValue = Number(value);
         if (!Number.isFinite(numericValue)) return Number.NaN;
+
         const normalized = domainMax === domainMin ? 0.5 : (numericValue - domainMin) / (domainMax - domainMin);
         const eased = Math.min(1, Math.max(0, normalized)) ** exponent;
+
         return currentRange[0] + eased * (currentRange[1] - currentRange[0]);
       },
       domain: () => [domainMin, domainMax],
@@ -60,11 +63,13 @@ export const easePositionScale = defineScale({
       step: 0,
       ticks: count => {
         if (domainMax === domainMin) return { values: [domainMin], labels: [String(domainMin)] };
+
         const total = Math.max(2, Math.floor(count ?? 5));
         const tickValues = Array.from(
           { length: total },
           (_value, index) => domainMin + (index / (total - 1)) * (domainMax - domainMin),
         );
+
         return {
           values: tickValues,
           labels: tickValues.map(value => String(Number(value.toFixed(2)))),

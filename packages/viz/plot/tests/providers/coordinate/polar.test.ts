@@ -61,6 +61,7 @@ const resolvedInterpolationOf = (spec: IRPlot, datasets: Datasets, options?: Low
     ...options,
     markDefinitions: [...(options?.markDefinitions ?? []), probe],
   });
+
   return captured;
 };
 
@@ -209,9 +210,11 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     expect(center[0]).toBeCloseTo(184, 6);
     expect(center[1]).toBeCloseTo(181, 6);
     expect(outerRadius).toBeGreaterThan(80);
+
     for (const label of axisLayer.children.filter(isNode)) {
       const width = String(label.text).length * 11 * 0.6;
       const [x, y] = label.position as [number, number];
+
       expect(x - width / 2).toBeGreaterThanOrEqual(-1e-6);
       expect(x + width / 2).toBeLessThanOrEqual(368 + 1e-6);
       expect(y - 11 / 2).toBeGreaterThanOrEqual(-1e-6);
@@ -239,6 +242,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
         },
       ],
     });
+
     // 两行：一行落圆心（r=0），一行 angle=0 / r=max
     const rows = [
       { theta: 0, value: 0 }, // 圆心
@@ -246,6 +250,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     ];
     const layer = firstLayer(spec, { d: rows }, opts);
     const [center, rightmost] = positionsOf(layer);
+
     // angle=0、radius=0 → 圆心
     // angle=0、radius=max → [cx + outerRadius, cy]：同 y、x 更大
     expect(rightmost[1]).toBeCloseTo(center[1], 6);
@@ -270,6 +275,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 90, value: 10 }, // 圆心正下方 outerRadius 处
     ];
     const [center, quarter] = positionsOf(firstLayer(spec, { d: rows }, opts));
+
     expect(quarter[0]).toBeCloseTo(center[0], 6); // 同 x
     expect(quarter[1]).toBeGreaterThan(center[1]); // 屏幕下方（y 更大）
   });
@@ -283,7 +289,9 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     const positions = positionsOf(
       firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts),
     );
+
     expect(positions).toHaveLength(2);
+
     for (const [px, py] of positions) {
       expect(Number.isFinite(px)).toBe(true);
       expect(Number.isFinite(py)).toBe(true);
@@ -321,6 +329,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     });
     const [fullCenter, fullMid] = positionsOf(firstLayer(fullSpec, { d: rows }, opts));
     const [halfCenter, halfMid] = positionsOf(firstLayer(halfSpec, { d: rows }, opts));
+
     // 整圆 domain 中点 θ=180° → 圆心左侧（x < cx）；半圆 domain 中点 θ=90° → 圆心下方（x ≈ cx, y > cy）
     expect(fullMid[0]).toBeLessThan(fullCenter[0]);
     expect(halfMid[0]).toBeCloseTo(halfCenter[0], 4);
@@ -333,6 +342,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 0, value: 0 }, // radius domain min
       { theta: 0, value: 10 }, // radius domain max
     ];
+
     // 先求圆心：用 innerRadius=0 时 r=0 → 圆心
     const solidSpec = PlotSchema.parse({
       namespace: 'plot',
@@ -346,6 +356,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
     });
     const [solidMin] = positionsOf(firstLayer(solidSpec, { d: rows }, opts)); // = 圆心
+
     // donut：innerRadius=0.5 → radius domain min 映射到 frame.innerRadius（圆心右侧、非圆心）
     const donutSpec = PlotSchema.parse({
       namespace: 'plot',
@@ -359,6 +370,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
     });
     const [donutMin, donutMax] = positionsOf(firstLayer(donutSpec, { d: rows }, opts));
+
     // angle=0 → 全在圆心 y 上、向右展开。donut 的 min 不在圆心（x 比 solid 的圆心大），且仍小于 max
     expect(donutMin[0]).toBeGreaterThan(solidMin[0]);
     expect(donutMin[0]).toBeLessThan(donutMax[0]);
@@ -385,9 +397,12 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { cat: 'D', value: 10 },
     ];
     const positions = positionsOf(firstLayer(spec, { d: rows }, opts));
+
     expect(positions).toHaveLength(4);
+
     // 等半径、不同类别 → 不同角度 → 各点互异（绕圆周分布）
     const distinctX = new Set(positions.map(p => p[0].toFixed(3)));
+
     expect(distinctX.size).toBeGreaterThan(1);
   });
 
@@ -398,6 +413,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 1, value: 'oops' }, // 非有限径向 → 跳过
       { theta: 2, value: 9 },
     ];
+
     expect(
       positionsOf(firstLayer(polarPointSpec({ x: { field: 'theta' }, y: { field: 'value' } }), { d: rows }, opts)),
     ).toHaveLength(2);
@@ -418,6 +434,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { d: rows },
       opts,
     );
+
     expect(layer.defaults?.node?.shape).toBe('circle');
     expect(positionsOf(layer)).toHaveLength(3);
     expect(positionsOf(layer).every(p => Number.isFinite(p[0]) && Number.isFinite(p[1]))).toBe(true);
@@ -449,6 +466,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { theta: 180, value: 7, g: 'X' },
     ];
     const layer = firstLayer(spec, { d: rows }, opts);
+
     expect(layer.children).toHaveLength(2); // 2 类别 → 2 子 Scope
     expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#aa');
     expect((layer.children[1] as IRScope).defaults?.node?.style?.fill).toBe('#bb');
@@ -467,6 +485,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       coordinate: { type: 'polar2D', angle: 'missing', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'theta' }, y: { field: 'value' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ theta: 0, value: 1 }] }, opts)).toThrow(/missing|unknown scale/);
   });
 
@@ -483,6 +502,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'cat' }, y: { field: 'value' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ cat: 'A', value: 1 }] }, opts)).toThrow(/ordinal/);
   });
 
@@ -500,6 +520,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       coordinate: { type: 'polar2D', angle: 'a', radius: 'r' },
       marks: [{ type: 'point', encoding: { x: { field: 'theta' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ theta: 0 }] }, opts)).toThrow(/polar2D|requires|y/i);
   });
 
@@ -512,6 +533,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       coordinate: { type: 'cartesian2D', x: 'x', y: 'x' },
       marks: [{ type: 'point', encoding: { y: { field: 'value' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ value: 1 }] }, opts)).toThrow(/cartesian2D|requires|x/i);
   });
 });
@@ -539,6 +561,7 @@ describe('lowerPlots cartesian 回归 (contract)', () => {
     // 无 guides → plot area 满；domain x[0,2]->[0,480]、y[9,14]->[300,0]
     const layer = firstLayer(cartPointSpec, { sales: SALES }, opts);
     const positions = positionsOf(layer);
+
     expect(positions[0]).toEqual([0, 240]);
     expect(positions[2][0]).toBe(480);
   });

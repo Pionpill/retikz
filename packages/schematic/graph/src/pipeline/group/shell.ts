@@ -37,6 +37,7 @@ export const composeGroupShell = (
     bottom: padding.bottom + (caption?.side === 'bottom' ? captionHeightWithGap : 0),
     left: padding.left,
   };
+
   return {
     surface,
     metrics: {

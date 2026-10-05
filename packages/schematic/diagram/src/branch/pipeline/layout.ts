@@ -7,6 +7,7 @@ export const executeBranchLayout = (
   input: BranchLayoutInput,
 ): BranchLayoutOutput => {
   let output: BranchLayoutOutput;
+
   try {
     output = structuredClone(definition.layout(structuredClone(input)));
   } catch (cause) {
@@ -17,6 +18,7 @@ export const executeBranchLayout = (
       cause,
     });
   }
+
   const fail = (reason: string, outputPath: Array<string | number>): never => {
     throw new RetikzDiagramError({
       code: RetikzDiagramErrorCode.BranchLayoutOutputInvalid,
@@ -24,6 +26,7 @@ export const executeBranchLayout = (
       details: { stage: 'layout', definition: definition.name, outputPath },
     });
   };
+
   const nodes = new Map(output.nodes.map(node => [node.id, node]));
   if (
     nodes.size !== input.nodes.length ||
@@ -31,6 +34,7 @@ export const executeBranchLayout = (
     input.nodes.some(node => !nodes.has(node.id))
   )
     fail('Branch layout must return each node exactly once.', ['nodes']);
+
   const vertical = input.layout.direction === 'down' || input.layout.direction === 'up';
   const sign = input.layout.direction === 'left' || input.layout.direction === 'up' ? -1 : 1;
   output.nodes.forEach((node, index) => {
@@ -38,8 +42,10 @@ export const executeBranchLayout = (
       fail('Branch node geometry must be finite.', ['nodes', index]);
   });
   const expected = new Set<string>();
+
   for (const branch of input.branches) {
     const first = nodes.get(branch.nodes[0])!;
+
     for (const [index, id] of branch.nodes.entries()) {
       const node = nodes.get(id)!;
       if (
@@ -47,6 +53,7 @@ export const executeBranchLayout = (
         (node.lane !== first.lane || node.position[vertical ? 0 : 1] !== first.position[vertical ? 0 : 1])
       )
         fail('Main branch must remain on one lane.', ['nodes']);
+
       if (index > 0) {
         const previous = nodes.get(branch.nodes[index - 1])!;
         if ((node.position[vertical ? 1 : 0] - previous.position[vertical ? 1 : 0]) * sign <= 0)
@@ -55,6 +62,7 @@ export const executeBranchLayout = (
       }
     }
   }
+
   const seen = new Set<string>();
   output.segments.forEach((segment, index) => {
     const key = JSON.stringify([segment.source, segment.target]);
@@ -67,6 +75,7 @@ export const executeBranchLayout = (
       segment.cornerRadius < 0
     )
       fail('Branch route geometry must be finite.', ['segments', index]);
+
     const source = nodes.get(segment.source)!.position;
     const target = nodes.get(segment.target)!.position;
     if (
@@ -76,6 +85,7 @@ export const executeBranchLayout = (
       fail('Reference route endpoints must match node positions.', ['segments', index, 'points']);
   });
   if (seen.size !== expected.size) fail('Branch layout omitted a segment.', ['segments']);
+
   for (let index = 0; index < input.nodes.length; index += 1)
     for (let other = index + 1; other < input.nodes.length; other += 1) {
       const a = input.nodes[index];
@@ -94,5 +104,6 @@ export const executeBranchLayout = (
       if (gap + 1e-8 < (ap.lane === bp.lane ? input.layout.nodeGap : input.layout.laneGap))
         fail('Branch node occupancy violates net gaps.', ['nodes']);
     }
+
   return output;
 };

@@ -6,6 +6,7 @@ import { parallelogramExampleControls, previewControlContract } from './parallel
 import { renderParallelogramExamplePreview } from './parallelogram-example.preview';
 
 export const previewControls = parallelogramExampleControls;
+
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   renderParallelogramExamplePreview({
     slantDirection: values.slantDirection,
@@ -13,7 +14,9 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     cornerRadius: values.cornerRadius,
   }),
 );
+
 export const previewSource = controlledPreview.source;
+
 /** 固定 Parallelogram 并调整其专有几何参数 */
 const Demo: FC = controlledPreview.Component;
 export default Demo;

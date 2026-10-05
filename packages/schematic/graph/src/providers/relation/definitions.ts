@@ -4,6 +4,7 @@ import { RelationDirection } from '../../schemas';
 import { RelationRole } from '../../shared';
 
 const noMarker = false as const;
+
 const solid = false as const;
 
 export const AssociationRelationRoleDefinition = defineRelationRole({

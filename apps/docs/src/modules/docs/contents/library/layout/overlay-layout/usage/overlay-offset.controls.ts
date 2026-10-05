@@ -31,11 +31,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { x: 30, y: 25, alignSelf: 'center' },
     relatedApis: ['OverlayLayoutItem.offset', 'OverlayLayoutItem.alignSelf'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

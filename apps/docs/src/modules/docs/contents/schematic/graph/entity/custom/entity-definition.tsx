@@ -16,11 +16,16 @@ const createPreview = (lang: Lang) =>
       lang,
     ),
   );
+
 const previews = { zh: createPreview('zh'), en: createPreview('en') };
+
 export const previewControls = previewControlContract.controls;
+
 export const previewSource = withGraphPreviewSource(previews.zh.source);
+
 /** 自定义实体示例的语言 */
 export type EntityDefinitionProps = { lang?: Lang };
+
 /** 通过 predicate 输入驱动固定的主题规则 */
 const EntityDefinition: FC<EntityDefinitionProps> = props => {
   const { lang = 'zh' } = props;

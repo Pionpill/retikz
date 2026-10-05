@@ -8,6 +8,7 @@ export const assertDataTransformModel = (expected: DataTransformModel, actual: D
   const names = new Set(actual.map(field => field.name));
   if (names.size !== actual.length || actual.length !== expected.length)
     throw new RetikzDataError('data: result field model does not match the expected output');
+
   for (const field of expected) {
     const found = actual.find(candidate => candidate.name === field.name);
     if (
@@ -23,11 +24,14 @@ export const assertDataTransformModel = (expected: DataTransformModel, actual: D
 /** 检查规范结果的值域，未知和非标量字段不伪装测量类型 */
 export const assertDataTransformResult = (expected: DataTransformModel, result: DataTransformResult): void => {
   assertDataTransformModel(expected, result.model);
+
   for (const field of result.model) {
     if (field.type === undefined) continue;
+
     for (const row of result.rows) {
       const value = resolveFieldPath(row, field.name);
       if (value === undefined || (typeof value === 'number' && Number.isNaN(value))) continue;
+
       const valid =
         field.type === 'categorical'
           ? typeof value === 'string' || (typeof value === 'number' && Number.isFinite(value))

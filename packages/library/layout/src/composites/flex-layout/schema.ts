@@ -100,6 +100,7 @@ const refineFlexLayout = (layout: FlexLayoutRefinementInput, context: Refinement
         message: `Duplicate FlexLayout item key '${item.key}'.`,
       });
     }
+
     if (item.key !== undefined) seenKeys.add(item.key);
     if (isColumn && isBaseline(item.alignSelf)) {
       context.addIssue({
@@ -148,16 +149,20 @@ const refineFlexLayoutArtifact = (artifact: ZodInfer<typeof FlexLayoutArtifactBa
         message: 'sourceIndex must be contiguous.',
       });
     }
+
     if (keys.has(item.key)) {
       context.addIssue({ code: 'custom', path: ['items', index, 'key'], message: `Duplicate item key '${item.key}'.` });
     }
+
     keys.add(item.key);
   });
+
   const partition = new Map<string, number>();
   artifact.lines.forEach((line, index) => {
     if (line.index !== index) {
       context.addIssue({ code: 'custom', path: ['lines', index, 'index'], message: 'Line index must be contiguous.' });
     }
+
     line.itemKeys.forEach((key, keyIndex) => {
       if (!keys.has(key)) {
         context.addIssue({
@@ -166,6 +171,7 @@ const refineFlexLayoutArtifact = (artifact: ZodInfer<typeof FlexLayoutArtifactBa
           message: `Unknown item key '${key}'.`,
         });
       }
+
       if (partition.has(key)) {
         context.addIssue({
           code: 'custom',
@@ -173,9 +179,11 @@ const refineFlexLayoutArtifact = (artifact: ZodInfer<typeof FlexLayoutArtifactBa
           message: `Duplicate line item key '${key}'.`,
         });
       }
+
       partition.set(key, index);
     });
   });
+
   artifact.items.forEach((item, index) => {
     if (item.line >= artifact.lines.length || partition.get(item.key) !== item.line) {
       context.addIssue({

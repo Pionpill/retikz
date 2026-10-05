@@ -14,6 +14,7 @@ const FlowBendSubdivision: FC<FlowBendSubdivisionProps> = props => {
   const { lang = 'zh' } = props;
   const t = copy[lang];
   const segment = bendFigureCurve();
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {t.stages.map((title, stage) => {
@@ -30,6 +31,7 @@ const FlowBendSubdivision: FC<FlowBendSubdivisionProps> = props => {
                   box.y <= node.y + node.height &&
                   node.y <= box.y + box.height,
               );
+
               return (
                 <Path
                   key={index}

@@ -16,6 +16,7 @@ import type {
 import { StandardLegendEmbedKind } from '../shared/constants';
 
 type InputLegendChild = InputChild;
+
 type InputLegendItemsContent = Omit<Extract<LegendInput['content'], { kind: 'items' }>, 'items'> & {
   items: Array<
     Omit<Extract<LegendInput['content'], { kind: 'items' }>['items'][number], 'sample' | 'label'> & {
@@ -24,6 +25,7 @@ type InputLegendItemsContent = Omit<Extract<LegendInput['content'], { kind: 'ite
     }
   >;
 };
+
 type InputLegendRampContent = Omit<Extract<LegendInput['content'], { kind: 'ramp' }>, 'sample' | 'ticks'> & {
   sample: InputLegendChild;
   ticks: Array<
@@ -60,6 +62,7 @@ const normalizeLegendSlot = (
       details: { operation: 'LegendInputEmbedAdapter' },
     });
   }
+
   const normalized = normalizeChildren([child]);
   if (normalized.children.length !== 1) {
     throw new RetikzStandardError({
@@ -68,9 +71,11 @@ const normalizeLegendSlot = (
       details: { childCount: normalized.children.length, label },
     });
   }
+
   collected.roots.push(...normalized.providerDependencies.roots);
   collected.providers.push(...normalized.providerDependencies.providers);
   collected.authoringSites.push(...normalized.authoringSites);
+
   return normalized.children[0];
 };
 
@@ -82,6 +87,7 @@ export const LegendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> 
     const { title: _title, content: _content, ...sourceProps } = props;
     void _title;
     void _content;
+
     const title =
       props.title === undefined
         ? undefined
@@ -112,6 +118,7 @@ export const LegendInputEmbedAdapter: SynchronousInputEmbedAdapter<InputLegend> 
                   }),
             })),
           };
+
     return {
       node: createLegend({
         ...sourceProps,

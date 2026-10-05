@@ -69,6 +69,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { justifyContent: 'center', alignContent: 'center', justifyItems: 'center', alignItems: 'center' },
@@ -80,5 +81,6 @@ export const createPreviewControlContract = (lang: Lang) => {
     ],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

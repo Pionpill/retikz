@@ -18,6 +18,7 @@ it('keeps React key metadata out of persistent node and branch props', () => {
     },
     false,
   );
+
   expect(Object.getOwnPropertyNames(source.nodes[0])).toEqual(['id']);
   expect(Object.getOwnPropertyNames(source.branches[0])).toEqual(['id', 'nodes']);
 });
@@ -40,6 +41,7 @@ it('preserves shared ordered branches through the same Vanilla source', () => {
     nodes: [{ id: 'a', labels: [{ text: 'A' }] }, { id: 'b' }],
     branches: [{ id: 'main', nodes: ['a', 'b'] }],
   });
+
   expect(BranchDiagramSchema.parse(result.ir.children[0])).toEqual(BranchDiagramSchema.parse(vanilla));
 });
 

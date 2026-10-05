@@ -36,6 +36,7 @@ const commandPoint = (command: PathPrim['commands'][number]): [number, number] =
 const compileToRibbonScene = (input: IRScene, options: Parameters<typeof compileCoreToScene>[1] = {}) => {
   const supplied = options.pathKinds ?? [];
   const ribbonDefinition = supplied.find(definition => definition.name === 'ribbon') ?? RibbonPathKindDefinition;
+
   return compileCoreToScene(input, {
     ...options,
     pathKinds: [ribbonDefinition, ...supplied.filter(definition => definition.name !== 'ribbon')],
@@ -93,6 +94,7 @@ describe('builtin path generator and Extension Ribbon width profile', () => {
     expect(() => defineRibbonWidthProfile({ name, widthAt: () => 4 })).toThrow(/non-empty string/);
 
     const invalidProfile: RibbonWidthProfileDefinition = { name, widthAt: () => 4 };
+
     expect(() => createRibbonPathKindDefinition({ profiles: [invalidProfile] })).toThrow(/non-empty string/);
   });
 
@@ -181,8 +183,11 @@ describe('builtin path generator and Extension Ribbon width profile', () => {
 
     expect(prim.commands.length).toBeGreaterThan(5);
     expect(commandPoint(prim.commands[0])).toEqual([0, 4]);
+
     const lowerStart = prim.commands.at(-2);
+
     expect(lowerStart).toBeDefined();
+
     if (lowerStart !== undefined) expect(commandPoint(lowerStart)).toEqual([0, 0]);
   });
 

@@ -92,6 +92,7 @@ const createPointJitterMappingSchema = (role: 'x' | 'y', chartType: string) =>
           message: `${chartType} ${role} jitter must target only the ${role} axis`,
         });
       }
+
       if (mapping.output !== field) {
         context.addIssue({
           code: 'custom',
@@ -174,7 +175,9 @@ export const refinePointFacetEncodings = (
       message: `${chartType} facet options require row or column encoding`,
     });
   }
+
   if (!hasFacet) return;
+
   for (const role of ['x', 'y'] as const) {
     const mapping = encodings[role];
     if (typeof mapping !== 'string' && 'transform' in mapping && mapping.transform.operation.kind === 'bin') {

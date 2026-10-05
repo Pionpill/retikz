@@ -13,6 +13,7 @@ import { CollectionIndexOptionsSchema, CollectionIndexStyleSchema } from '../../
 import { ArrayCellIdMode, ArrayDirection } from '../constants';
 
 export const ArrayIndexStyleSchema = CollectionIndexStyleSchema;
+
 export const ArrayIndexOptionsSchema = CollectionIndexOptionsSchema;
 
 export const ArraySkeletonSchema = union([
@@ -85,6 +86,7 @@ export const ArraySchema = union([
         context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a Array id.' });
         return;
       }
+
       const seen = new Set<string>();
       node.items.forEach((cell, index) => {
         if (
@@ -99,11 +101,13 @@ export const ArraySchema = union([
           });
           return;
         }
+
         const explicitId =
           typeof cell === 'string' ? (node.cellIdMode === ArrayCellIdMode.String ? cell : undefined) : cell.id;
         const ids = new Set<string>();
         if (node.cellIdMode === ArrayCellIdMode.Index) ids.add(`${node.id}-${index}`);
         if (explicitId !== undefined) ids.add(explicitId);
+
         for (const id of ids) {
           if (seen.has(id))
             context.addIssue({
@@ -111,6 +115,7 @@ export const ArraySchema = union([
               path: typeof cell === 'string' ? ['items', index] : ['items', index, 'id'],
               message: `Duplicate cell id '${id}'.`,
             });
+
           seen.add(id);
         }
       });
@@ -128,6 +133,7 @@ export const ArraySchema = union([
           path: ['cellIdMode'],
           message: 'String cell identity only supports items.',
         });
+
       if (node.cellIdMode === ArrayCellIdMode.Index && node.id === undefined)
         context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a Array id.' });
     }),
@@ -144,6 +150,7 @@ export const ArraySchema = union([
           path: ['cellIdMode'],
           message: 'String cell identity only supports items.',
         });
+
       if (node.cellIdMode === ArrayCellIdMode.Index && node.id === undefined)
         context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a Array id.' });
     }),

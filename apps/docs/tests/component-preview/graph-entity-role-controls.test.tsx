@@ -63,12 +63,15 @@ describe('Entity role and style playground', () => {
   it('双语共享语义值，覆盖全部内置角色与状态，不泄漏站点私有 kind', () => {
     const zh = createPreviewControlContract('zh');
     const en = createPreviewControlContract('en');
+
     expect(en.canonicalValues).toEqual(zh.canonicalValues);
     expect(en.relatedApis).toEqual(zh.relatedApis);
+
     for (const contract of [zh, en]) {
       const fields = getPreviewControlFields(contract.controls);
       const role = fields.find(field => field.id === 'role');
       const status = fields.find(field => field.id === 'status');
+
       expect(role?.kind === 'select' && role.options.map(option => option.value)).toEqual(Object.values(EntityRole));
       expect(status?.kind === 'select' && status.options.map(option => option.value)).toEqual([
         '',
@@ -76,7 +79,9 @@ describe('Entity role and style playground', () => {
       ]);
       expect(fields.find(field => field.id === 'group')).toMatchObject({ kind: 'switch', defaultValue: false });
       expect(fields.some(field => field.id === 'kind')).toBe(false);
+
       const color = fields.find(field => field.id === 'color');
+
       expect(isPreviewControlVisible(color?.visibleWhen, contract.canonicalValues)).toBe(false);
       expect(isPreviewControlVisible(color?.visibleWhen, { ...contract.canonicalValues, override: true })).toBe(true);
     }
@@ -108,11 +113,15 @@ describe('Entity role and style playground', () => {
     for (const role of Object.values(EntityRole)) {
       const values = { ...previewControlContract.canonicalValues, role };
       const baseline = renderWithValues(EntityPlayground, previewControlContract, values);
+
       expect(baseline).toContain('<svg');
       expect(baseline).toMatch(/fill="(?!none")[^"]+"/u);
+
       for (const status of Object.values(GraphStatus)) {
         const markup = renderWithValues(EntityPlayground, previewControlContract, { ...values, status });
+
         expect(markup).not.toBe(baseline);
+
         if (status === 'disabled') expect(markup).toContain('stroke-dasharray');
         const overridden = renderWithValues(EntityPlayground, previewControlContract, {
           ...values,
@@ -120,8 +129,10 @@ describe('Entity role and style playground', () => {
           override: true,
           color: '#2563eb',
         });
+
         expect(overridden).toContain('stroke="#2563eb"');
       }
+
       expect(renderWithValues(EntityPlayground, previewControlContract, { ...values, color: '#ff0000' })).toBe(
         baseline,
       );
@@ -130,6 +141,7 @@ describe('Entity role and style playground', () => {
 
   it('保持固定视口与可读的双语默认文字，Source 不物化状态或站点主题', () => {
     const ir = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null).ir;
+
     expect(ir.viewBox).toEqual({ x: 0, y: 0, width: 360, height: 180 });
     expect(ir.children[0]).toMatchObject({
       children: [
@@ -154,6 +166,7 @@ describe('Entity role and style playground', () => {
 describe('Entity style and size playground', () => {
   it('双语使用相同默认值，六个控件均映射到公开样式和排布字段', () => {
     const en = createStyleSizeContract('en');
+
     expect(en.canonicalValues).toEqual(styleSizeContract.canonicalValues);
     expect(en.relatedApis).toEqual(styleSizeContract.relatedApis);
     expect(getPreviewControlFields(en.controls).map(field => field.id)).toEqual([
@@ -168,10 +181,12 @@ describe('Entity style and size playground', () => {
 
   it('样式与排布控件改变绘制结果，Source 保留规范默认值', () => {
     const baseline = renderWithValues(EntityStyleSize, styleSizeContract, styleSizeContract.canonicalValues);
+
     expect(baseline).toContain('stroke="#2563eb"');
     expect(
       renderWithValues(EntityStyleSize, styleSizeContract, { ...styleSizeContract.canonicalValues, color: '#dc2626' }),
     ).toContain('stroke="#dc2626"');
+
     for (const [field, value] of [
       ['fill', 0.6],
       ['strokeWidth', 6],
@@ -183,7 +198,9 @@ describe('Entity style and size playground', () => {
         renderWithValues(EntityStyleSize, styleSizeContract, { ...styleSizeContract.canonicalValues, [field]: value }),
       ).not.toBe(baseline);
     }
+
     const ir = buildPreviewIR(() => styleSizeSource.canonicalRender?.() ?? null).ir;
+
     expect(ir.children[0]).toMatchObject({
       children: [
         {
@@ -203,10 +220,13 @@ describe('Entity custom predicate playground', () => {
   it('双语参数契约一致，predicate 规则按参数计算颜色并独立叠加描边', () => {
     expect(createDefinitionContract('en').canonicalValues).toEqual(definitionContract.canonicalValues);
     expect(createDefinitionContract('en').relatedApis).toEqual(definitionContract.relatedApis);
+
     for (const [status, color] of Object.entries({ available: '#16a34a', degraded: '#d97706', offline: '#dc2626' })) {
       for (const critical of [false, true]) {
         const markup = renderWithValues(EntityDefinition, definitionContract, { status, critical });
+
         expect(markup).toContain(`stroke="${color}"`);
+
         if (critical) expect(markup).toContain('stroke-width="3"');
       }
     }
@@ -214,6 +234,7 @@ describe('Entity custom predicate playground', () => {
 
   it('Source 保留 predicate 输入与固定规则，实体本身不直接写颜色', () => {
     const ir = buildPreviewIR(() => definitionSource.canonicalRender?.() ?? null).ir;
+
     expect(ir.viewBox).toEqual({ x: 0, y: 0, width: 420, height: 180 });
     expect(ir.children[0]).toMatchObject({
       graphRules: expect.arrayContaining([

@@ -57,6 +57,7 @@ export const DetailTableStructureSchema = strictObject({
           message: `duplicate detail column id "${column.id}"`,
         });
       }
+
       ids.add(column.id);
     });
   })

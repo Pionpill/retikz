@@ -34,6 +34,7 @@ export const createBuiltinInspectPreviewSource = (
     if (!isValidElement<InspectLayoutProps>(element) || element.type !== InspectLayout) {
       throw new Error('An Inspect preview must return InspectLayout directly.');
     }
+
     const props = element.props;
     const authoring = createInputScene(props.children);
     const input: InputScene = {
@@ -42,6 +43,7 @@ export const createBuiltinInspectPreviewSource = (
       ...(theme === undefined ? {} : { theme }),
       ...(props.request === undefined ? {} : { authoring: createInspectionVanillaAuthoring(props.request) }),
     };
+
     // 本入口只消费内置 Inspect demo；序列化公开 request 参数，不序列化 opaque token
     const configCode = JSON.stringify(
       { input, selection: props.selection ?? { rules: [] } },
@@ -64,6 +66,7 @@ export const createBuiltinInspectPreviewSource = (
       },
       compileDriver: createInspectionVanillaDriver({ registry: props.registry, selection: config.selection }),
     });
+
     const configFile = { filename: `${name}.config.json`, code: configCode, lang: 'json' as const };
     const hasClip = (props.extensions?.clips?.length ?? 0) > 0;
     const vanillaCode = `import type { InputScene } from '@retikz/vanilla';
@@ -87,7 +90,9 @@ export const svg = renderToSvgString(input, {
     selection: config.selection as InspectionSelection,
   }),
 });`;
+
     const render = () => <RawSvgFrame svg={svg} />;
+
     return {
       vanilla: {
         files: [{ filename: `${name}.vanilla.ts`, code: vanillaCode, lang: 'ts' }, configFile],
@@ -109,6 +114,7 @@ export const defineControlledBuiltinInspectPreview = <const TDefinition extends 
     const lang = props.lang ?? 'zh';
     return render(usePreviewControls(contractFor(lang).controls), lang);
   };
+
   const sourceRender: FC<{ lang?: Lang; values?: Readonly<PreviewControlValues> }> = props => {
     const lang = props.lang ?? 'zh';
     const contract = contractFor(lang);
@@ -117,8 +123,10 @@ export const defineControlledBuiltinInspectPreview = <const TDefinition extends 
       ...contract.canonicalValues,
       ...props.values,
     } as PreviewControlValuesFor<TDefinition>;
+
     return render(values, lang);
   };
+
   return {
     Component,
     source: {

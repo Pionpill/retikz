@@ -4,6 +4,7 @@ import type { AssertEqual } from '@retikz/foundation';
 /** 递归收集 scene 里所有 PathPrim 用到的 arrow 端点 spec —— 按需注入 marker defs */
 export const collectArrowEnds = (prims: ReadonlyArray<ScenePrimitive>): Array<ResolvedArrowEnd> => {
   const out: Array<ResolvedArrowEnd> = [];
+
   const visit = (p: ScenePrimitive | undefined | null): void => {
     // 防御：上游（如非法 IR、有空槽位的 group.children）可能塞 undefined，命中后直接 noop，别让属性访问抛
     if (!p) return;
@@ -14,7 +15,9 @@ export const collectArrowEnds = (prims: ReadonlyArray<ScenePrimitive>): Array<Re
       for (const c of p.children) visit(c);
     }
   };
+
   for (const p of prims) visit(p);
+
   return out;
 };
 
@@ -38,6 +41,7 @@ type _KeyFieldsCheck = AssertEqual<
   (typeof ARROW_END_SPEC_KEY_FIELDS)[number],
   Exclude<keyof ResolvedArrowEnd, 'shape'>
 >;
+
 const _assertKeyFieldsCheck: _KeyFieldsCheck = true;
 void _assertKeyFieldsCheck;
 
@@ -49,11 +53,13 @@ void _assertKeyFieldsCheck;
  */
 export const stableArrowKey = (spec: ResolvedArrowEnd): string => {
   const parts: Array<string> = [`shape=${spec.shape}`];
+
   for (const field of ARROW_END_SPEC_KEY_FIELDS) {
     const value = spec[field];
     if (value === undefined) continue;
     parts.push(`${field}=${typeof value === 'object' ? JSON.stringify(value) : value}`);
   }
+
   return parts.join('|');
 };
 
@@ -64,8 +70,10 @@ export const stableArrowKey = (spec: ResolvedArrowEnd): string => {
  */
 export const hashKey = (key: string): string => {
   let h = 5381;
+
   for (let i = 0; i < key.length; i++) {
     h = ((h << 5) + h + key.charCodeAt(i)) | 0;
   }
+
   return (h >>> 0).toString(16).padStart(8, '0');
 };

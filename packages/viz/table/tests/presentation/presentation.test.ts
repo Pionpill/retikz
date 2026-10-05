@@ -15,6 +15,7 @@ const presentedCellOf = (
   const identifiedCell =
     typeof cell === 'object' ? { ...cell, id: cell.id ?? 'cell.r0.c0' } : { id: 'cell.r0.c0', value: cell };
   const formatted = formatDefaultTable(normalizeTableStructure({ kind: 'manual', rows: [[identifiedCell]] }));
+
   return presentTable(formatted, { presentationDefinitions }).cells[0];
 };
 

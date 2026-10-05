@@ -18,6 +18,7 @@ const ir = (jsx: React.ReactNode) => normalizeReactInput(jsx);
 describe('Draw: 基础展开', () => {
   it('两个 id：展开为 Path + move + line', () => {
     const out = ir(<Draw way={['a', 'b']} />);
+
     expect(out.children[0]).toMatchObject({
       type: 'path',
       children: [
@@ -35,6 +36,7 @@ describe('Draw: 基础展开', () => {
         <Step kind="line" to="b" />
       </Path>,
     );
+
     expect(sugarIR.children).toEqual(kernelIR.children);
   });
 
@@ -81,6 +83,7 @@ describe('Draw: 基础展开', () => {
         }}
       />,
     );
+
     expect(out.children[0]).toMatchObject({
       type: 'path',
       roundedCorners: 6,
@@ -131,6 +134,7 @@ describe('Draw: 基础展开', () => {
         <Step kind="line" to="b" />
       </Path>,
     );
+
     expect(sugarIR.children).toEqual(kernelIR.children);
   });
 });
@@ -145,18 +149,21 @@ describe('Draw: 各 step kind 分派', () => {
         <Step kind="axis-line" axis="vertical" to={[40, 60]} />
       </Path>,
     );
+
     expect(sugarIR.children).toEqual(kernelIR.children);
   });
 
   it('cycle 算子 → kind=cycle', () => {
     const out = ir(<Draw way={['a', 'b', DrawWay.Cycle]} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
+
     expect(steps[steps.length - 1]).toMatchObject({ kind: 'cycle' });
   });
 
   it('折角算子 -| → kind=fold + via', () => {
     const out = ir(<Draw way={['a', '-|', 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string; via?: string }> }).children;
+
     expect(steps[1]).toMatchObject({ kind: 'fold', via: '-|', to: { id: 'b' } });
   });
 
@@ -168,12 +175,14 @@ describe('Draw: 各 step kind 分派', () => {
         <Step kind="fold" via="-|-" fraction={0.3} to="b" />
       </Path>,
     );
+
     expect(sugarIR.children).toEqual(kernelIR.children);
   });
 
   it('curve 算子 → kind=curve + control', () => {
     const out = ir(<Draw way={['a', { curve: [10, 20] }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
+
     expect(steps[1]).toMatchObject({ kind: 'curve', to: { id: 'b' }, control: [10, 20] });
   });
 
@@ -193,18 +202,21 @@ describe('Draw: 各 step kind 分派', () => {
       />,
     );
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
+
     expect(steps[1]).toMatchObject({ kind: 'cubic', to: { id: 'b' }, control1: [10, 0], control2: [10, 20] });
   });
 
   it('bend 算子（带 angle）→ kind=bend + bendDirection + bendAngle', () => {
     const out = ir(<Draw way={['a', { bend: 'left', angle: 45 }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
+
     expect(steps[1]).toMatchObject({ kind: 'bend', to: { id: 'b' }, bendDirection: 'left', bendAngle: 45 });
   });
 
   it('bend 算子（缺省 angle）→ 不写 bendAngle 字段', () => {
     const out = ir(<Draw way={['a', { bend: 'right' }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ kind: string; bendAngle?: number }> }).children;
+
     expect(steps[1]).toMatchObject({ kind: 'bend', to: { id: 'b' }, bendDirection: 'right' });
     expect(steps[1].bendAngle).toBeUndefined();
   });
@@ -212,18 +224,21 @@ describe('Draw: 各 step kind 分派', () => {
   it('arc 算子 → kind=arc，不消耗下一项', () => {
     const out = ir(<Draw way={['a', { arc: { startAngle: 0, endAngle: 90, radius: 20 } }]} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
+
     expect(steps[1]).toMatchObject({ kind: 'arc', startAngle: 0, endAngle: 90, radius: 20 });
   });
 
   it('circle 算子 → kind=circlePath', () => {
     const out = ir(<Draw way={['a', { circle: { radius: 15 } }]} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
+
     expect(steps[1]).toMatchObject({ kind: 'circlePath', radius: 15 });
   });
 
   it('ellipse 算子 → kind=ellipsePath', () => {
     const out = ir(<Draw way={['a', { ellipse: { radius: { x: 20, y: 10 } } }]} />);
     const steps = (out.children[0] as { children: Array<{ kind: string }> }).children;
+
     expect(steps[1]).toMatchObject({ kind: 'ellipsePath', radius: { x: 20, y: 10 } });
   });
 });
@@ -232,12 +247,14 @@ describe('Draw: 边标注 label 透传', () => {
   it('line 段 label：短记字符串 → IR step.label.text', () => {
     const out = ir(<Draw way={['a', { label: 'yes' }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ label?: { text: string } }> }).children;
+
     expect(steps[1].label).toMatchObject({ text: 'yes' });
   });
 
   it('对象 label：text + side 透传到 IR', () => {
     const out = ir(<Draw way={['a', { label: { text: 'no', side: 'bottom' } }, 'b']} />);
     const steps = (out.children[0] as { children: Array<{ label?: { text: string; side?: string } }> }).children;
+
     expect(steps[1].label).toMatchObject({ text: 'no', side: 'bottom' });
   });
 });
@@ -246,18 +263,21 @@ describe('Draw: 相对偏移', () => {
   it('对象形态 { position, type: Relative } → IR target.relative', () => {
     const out = ir(<Draw way={['a', { position: [10, 0], type: DrawWay.Relative }]} />);
     const steps = (out.children[0] as { children: Array<{ to: { relative?: [number, number] } }> }).children;
+
     expect(steps[1].to).toMatchObject({ relative: [10, 0] });
   });
 
   it('对象形态 { position, type: Accumulate } → IR target.relativeAccumulate', () => {
     const out = ir(<Draw way={['a', { position: [10, 0], type: DrawWay.Accumulate }]} />);
     const steps = (out.children[0] as { children: Array<{ to: { relativeAccumulate?: [number, number] } }> }).children;
+
     expect(steps[1].to).toMatchObject({ relativeAccumulate: [10, 0] });
   });
 
   it('sugar 字符串 "+x,y" → IR target.relative', () => {
     const out = ir(<Draw way={['a', '+10,5']} />);
     const steps = (out.children[0] as { children: Array<{ to: { relative?: [number, number] } }> }).children;
+
     expect(steps[1].to).toMatchObject({ relative: [10, 5] });
   });
 });

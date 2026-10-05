@@ -15,6 +15,7 @@ export const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputO
   lower: (props, context) => {
     const { children, ...input } = props;
     const normalized = normalizeLayoutItems<OverlayLayoutItemInput>(children, context);
+
     return {
       runtimeInputs: normalized.runtimeInputs,
       node: createOverlayLayout({ ...input, children: normalized.items }),
@@ -28,6 +29,7 @@ export const OverlayLayoutInputEmbedAdapter: SynchronousInputEmbedAdapter<InputO
   prepare: async (props, context) => {
     const { children, ...input } = props;
     const execute = await prepareLayoutItems<OverlayLayoutItemInput>(children, context);
+
     return {
       execute: async () => {
         const normalized = await execute();

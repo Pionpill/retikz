@@ -5,6 +5,7 @@ import { FoldStepSchema, StepSchema } from '../../../src/schemas';
 describe('fold step schema', () => {
   it.each(['-|', '|-'] as const)('两段 via=%s 保持原结构且拒绝 fraction', via => {
     const step = { type: 'step', kind: 'fold', via, to: [100, 60] } as const;
+
     expect(FoldStepSchema.parse(step)).toEqual(step);
     expect(FoldStepSchema.safeParse({ ...step, fraction: 0.3 }).success).toBe(false);
   });
@@ -36,6 +37,7 @@ describe('fold step schema', () => {
 
   it('保持 strict object 并由 StepSchema 总入口解析', () => {
     const step = { type: 'step', kind: 'fold', via: '|-|', fraction: 0.75, to: { id: 'target' } } as const;
+
     expect(StepSchema.parse(step)).toEqual(step);
     expect(FoldStepSchema.safeParse({ ...step, unknown: true }).success).toBe(false);
   });

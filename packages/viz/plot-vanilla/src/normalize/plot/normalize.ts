@@ -31,6 +31,7 @@ export const normalizePlot = (input: InputPlot): IRPlot => {
     facets,
     scaffolds,
   });
+
   return {
     namespace: PLOT_NAMESPACE,
     type: PlotComposite.Plot,
@@ -67,20 +68,25 @@ export const normalizePlotDeclarations = (
   };
   if (context.mode === 'chart-extension') assertChartExtensionCollection(collection, context);
   const styleContext = styleSugarContext(context);
+
   for (const declaration of collection.declarations) {
     if (declaration.kind === 'unsupported') continue;
     applyDeclaration(declaration, collected, styleContext);
   }
+
   for (const source of collection.runtimeSources) {
     if (source.markId === undefined) {
       throw new RetikzPlotVanillaError(
         'buildPlotIR: resolveLabel needs a mark id to be injected at runtime; set the mark id prop',
       );
     }
+
     collected.resolveLabels[source.markId] = source.resolveLabel;
   }
+
   if (context.mode === 'chart-extension') {
     return normalizeChartExtension(collection, context, collected);
   }
+
   return normalizePlotRoot(context, collected);
 };

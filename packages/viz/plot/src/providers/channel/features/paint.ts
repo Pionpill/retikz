@@ -27,6 +27,7 @@ const parsePaintConstant = (channelName: string, value: unknown, allowPaintSpec:
     const result = PaintSchema.safeParse(value);
     if (result.success) return result.data;
   }
+
   throw new RetikzPlotError(
     `lowerPlots: constant ${channelName} channel must be a CSS color string${allowPaintSpec ? ' or core IRPaint' : ''}`,
   );
@@ -50,7 +51,9 @@ export const makeColorChannelDefinition = (
         const constant = parsePaintConstant(options.channel, channel.value, options.constantPaint ?? false);
         return { resolver: () => constant, defaultValue: constant };
       }
+
       if (channel.field === undefined) return undefined;
+
       const field = channel.field;
       const definition = ctx.model.find(candidate => candidate.name === field);
       const colorFieldType = definition?.type;
@@ -62,6 +65,7 @@ export const makeColorChannelDefinition = (
           `lowerPlots: continuous/temporal ${options.channel} field "${field}" requires an explicit sequential/diverging/quantize/threshold/quantile color scale reference`,
         );
       }
+
       let scaleOperation: IRPlotScaleOperation;
       if (channel.scale !== undefined) {
         const found = scaleByName.get(channel.scale);
@@ -69,10 +73,12 @@ export const makeColorChannelDefinition = (
           throw new RetikzPlotError(
             `lowerPlots: ${options.channel} channel references unknown scale "${channel.scale}"`,
           );
+
         scaleOperation = found;
       } else {
         scaleOperation = { type: PlotScale.Ordinal, name: `__${options.channel}_${field}` };
       }
+
       const rawValues = ctx.rows.map(row => resolveFieldPath(row, field));
       if (
         isBuiltinScaleOperation(scaleOperation) &&
@@ -84,11 +90,13 @@ export const makeColorChannelDefinition = (
           scaleOperation = { ...scaleOperation, domain: ctx.resolveCategoryDomain(rawValues, order) };
         }
       }
+
       const resolution = ctx.resolveChannelScale(
         scaleOperation,
         rawValues,
         colorResolveContext(colorFieldType, ctx.resolveColorScheme, ctx.palette),
       );
+
       return {
         resolver: row => resolution.of(resolveFieldPath(row, field)),
         descriptor: {
@@ -130,13 +138,16 @@ export type BuiltinPaintChannels = {
 const markValueChannel = (value: unknown): IRPlotChannel | undefined => {
   if (value === undefined) return undefined;
   if (value === null || typeof value !== 'object') return undefined;
+
   const candidate = value as { kind?: unknown; value?: unknown; scale?: unknown };
   if (candidate.kind === 'field')
     return {
       field: String(candidate.value),
       ...(typeof candidate.scale === 'string' ? { scale: candidate.scale } : {}),
     };
+
   if (candidate.kind === 'constant') return { value: candidate.value as IRPlotChannel['value'] };
+
   return undefined;
 };
 

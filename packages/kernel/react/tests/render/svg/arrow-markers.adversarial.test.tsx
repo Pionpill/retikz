@@ -36,6 +36,7 @@ describe('arrow marker arc 物化', () => {
     const el = render(spec({ marker: [{ type: 'path', commands: arcCmds, fill: 'red' }] }));
     const children = el.props.children as Array<AnyEl>;
     const d = children[0].props.d as string;
+
     expect(d).toContain('A');
     expect(d.startsWith('M 0 5')).toBe(true);
     expect(d.endsWith('Z')).toBe(true);
@@ -48,6 +49,7 @@ describe('arrow marker arc 物化', () => {
     ];
     const el = render(spec({ marker: [{ type: 'path', commands: cmds, stroke: 'blue' }] }));
     const children = el.props.children as Array<AnyEl>;
+
     expect(children[0].props.d as string).toContain('A 5 3');
   });
 });

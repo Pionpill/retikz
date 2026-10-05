@@ -9,6 +9,7 @@ import { CollectionIndexOptionsSchema } from '../../_index';
 
 /** Matrix 单轴的自动或自定义索引 */
 export const MatrixAxisIndexSchema = CollectionIndexOptionsSchema;
+
 /** 分别控制行列索引，空对象不启用任一轴 */
 export const MatrixIndexSchema = union([
   boolean(),
@@ -23,10 +24,12 @@ export const MatrixIndexSchema = union([
 ])
   .default(false)
   .describe('False hides both axes; true enables both; objects configure axes independently.');
+
 /** Matrix 的普通单格布局与行列间距 */
 export const MatrixLayoutSchema = CellLayoutSchema.extend({
   gap: LayoutRowColumnGapSchema.default(2).describe('Uniform or separate gaps between rows and columns.'),
 });
+
 /** 空矩形或二维格内符号；两种配置互斥 */
 export const MatrixSkeletonSchema = union([
   strictObject({
@@ -43,6 +46,7 @@ export const MatrixSkeletonSchema = union([
     columns: never().optional().describe('Derived from labels.'),
   }),
 ]);
+
 const MatrixBaseSchema = CompositeBaseSchema.extend({
   namespace: literal('standard').describe('Standard composite namespace.'),
   type: literal('matrix').describe('Rectangular cell presentation.'),
@@ -55,6 +59,7 @@ const MatrixBaseSchema = CompositeBaseSchema.extend({
     .default('explicit')
     .describe('Explicit cell ids or zero-based row/column ids derived from the Matrix id.'),
 });
+
 /** 三种互斥的矩形输入，结构校验只在 Source 边界执行 */
 export const MatrixSchema = union([
   MatrixBaseSchema.extend({
@@ -105,6 +110,7 @@ export const MatrixSchema = union([
             message: 'Index labels must match the axis length.',
           });
       }
+
     if (node.cellIdMode === 'index' && node.id === undefined)
       context.addIssue({ code: 'custom', path: ['id'], message: 'Index cell identity requires a Matrix id.' });
     const seen = new Set<string>();
@@ -114,6 +120,7 @@ export const MatrixSchema = union([
         const ids = new Set<string>();
         if (explicit !== undefined) ids.add(explicit);
         if (node.cellIdMode === 'index' && node.id !== undefined) ids.add(`${node.id}-${rowIndex}-${columnIndex}`);
+
         for (const id of ids) {
           if (seen.has(id))
             context.addIssue({
@@ -121,6 +128,7 @@ export const MatrixSchema = union([
               path: ['items', rowIndex, columnIndex, 'id'],
               message: `Duplicate cell id '${id}'.`,
             });
+
           seen.add(id);
         }
       }),

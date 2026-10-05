@@ -11,8 +11,10 @@ const wan = defineFieldFormat({
   parse: raw => {
     if (typeof raw === 'number') return raw;
     if (typeof raw !== 'string') return undefined;
+
     const trimmed = raw.trim();
     const numeric = trimmed.endsWith('万') ? Number(trimmed.slice(0, -1)) * 10000 : Number(trimmed);
+
     return Number.isFinite(numeric) ? numeric : undefined;
   },
 });

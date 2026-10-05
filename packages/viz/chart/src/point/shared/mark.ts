@@ -12,7 +12,9 @@ export const markValueOf = (encodings: JsonObject, properties: JsonObject, name:
     const mapping = pointFieldMappingOf(encodings[name], ['recipe', 'encodings', name]);
     return { kind: 'field', value: mapping.field, ...(mapping.scale === undefined ? {} : { scale: mapping.scale }) };
   }
+
   if (Object.hasOwn(properties, name)) return { kind: 'constant', value: properties[name] };
+
   return undefined;
 };
 
@@ -88,8 +90,11 @@ export const resolvePointMark = (
     const value = markValueOf(encodings, properties, name);
     if (value !== undefined) mark[name] = value;
   }
+
   for (const name of pointConstantPropertySlots) copyConstantProperty(mark, properties, name);
+
   for (const name of pointRawPropertySlots) copyRawProperty(mark, properties, name);
+
   return PointMarkSchema.parse(mark);
 };
 
@@ -106,7 +111,9 @@ export const markSlotsOf = (
   const explicitEncodings = objectOf(context.source, 'encodings');
   const explicitProperties = objectOf(context.source, 'properties');
   const encodings = { ...context.inherited.encodings };
+
   for (const name of Object.keys(explicitProperties)) delete encodings[name];
+
   return {
     encodings: { ...encodings, ...explicitEncodings },
     properties: { ...context.inherited.properties, ...explicitProperties },

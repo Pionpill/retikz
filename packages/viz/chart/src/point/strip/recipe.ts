@@ -44,12 +44,14 @@ const scaleContinuityOf = (
   if (definition === undefined) {
     throw invalidStripTopology(`Strip position scale type "${scale.type}" is not registered`, ['recipe', 'encodings']);
   }
+
   if (definition.family !== 'position') {
     throw invalidStripTopology(`Strip scale "${scale.name}" must use a position Scale Definition`, [
       'recipe',
       'encodings',
     ]);
   }
+
   return definition.continuity;
 };
 
@@ -62,14 +64,17 @@ const stripContinuityByRole = (
       'composition',
     ]);
   }
+
   const coordinate = context.spatial.coordinate;
   const coordinateDefinition = context.runtime.coordinates.get(coordinate.type);
   if (coordinateDefinition === undefined) {
     throw invalidStripTopology(`Strip coordinate type "${coordinate.type}" is not registered`, ['coordinate']);
   }
+
   const scaleNames = readCoordinateScaleNames(coordinateDefinition, coordinate);
   const scaleByName = new Map(context.scales.map(scale => [scale.name, scale]));
   const continuityByRole: Partial<Record<'x' | 'y', 'continuous' | 'discrete'>> = {};
+
   for (const role of ['x', 'y'] as const) {
     const scaleName = scaleNames[role];
     const scale = scaleName === undefined ? undefined : scaleByName.get(scaleName);
@@ -81,8 +86,10 @@ const stripContinuityByRole = (
         'scale',
       ]);
     }
+
     continuityByRole[role] = scaleContinuityOf(scale, context);
   }
+
   return continuityByRole as Readonly<Record<'x' | 'y', 'continuous' | 'discrete'>>;
 };
 
@@ -101,16 +108,20 @@ export const resolveStripGuideDefaults = (context: ChartGuideDefaultsResolveCont
       'encodings',
     ]);
   }
+
   if (context.source.plotExtension?.guides !== undefined) return context.guides;
 
   const continuousRole = continuousRoles[0];
   const guides = resolvePointGuideDefaults(context);
   const grid = (context.source.recipe.guides as IRPointRecipeGuides | undefined)?.grid;
+
   return guides.map(guide => {
     if (guide.type !== PlotGuide.Axis || (guide.dimension !== 'x' && guide.dimension !== 'y')) return guide;
+
     const { grid: previousGrid, ...guideWithoutGrid } = guide;
     void previousGrid;
     if (guide.dimension !== continuousRole) return { ...guideWithoutGrid, grid: false };
+
     return grid === undefined ? guideWithoutGrid : { ...guideWithoutGrid, grid };
   });
 };
@@ -140,6 +151,7 @@ export const StripChartDefinition: ChartRecipeDefinition<IRStripChart> = defineC
     const properties = slots.properties as IRStripChartProperties;
     const mark = resolveStripPointMark(slots.encodings, properties);
     const sizeGuide = sizeGuideOf(slots.encodings);
+
     return pointResolutionOf(ChartType.Strip, [{ kind: ChartType.Strip, plotMarks: [mark] }], {
       guides: sizeGuide === undefined ? [] : [sizeGuide],
     });

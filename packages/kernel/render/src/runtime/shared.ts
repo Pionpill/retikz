@@ -34,11 +34,13 @@ export const createRuntimeIdentityMap = <TValue>(
 ): RuntimeIdentityMap<TValue> => {
   const roots = new Map<string, RuntimeIdentityMapNode<TValue>>();
   const byOwner = new Map<string, Array<RuntimeIdentity>>();
+
   for (const [identity] of entries) {
     const identities = byOwner.get(identity.owner) ?? [];
     identities.push(identity);
     byOwner.set(identity.owner, identities);
   }
+
   for (const [owner, identities] of byOwner) createRuntimeIdentityLookup(owner, identities);
 
   const locate = (identity: RuntimeIdentity, create: boolean): RuntimeIdentityMapNode<TValue> | undefined => {
@@ -50,6 +52,7 @@ export const createRuntimeIdentityMap = <TValue>(
       current = { children: new Map() };
       roots.set(identity.owner, current);
     } else current = existingRoot;
+
     for (const segment of identity.path) {
       let child: RuntimeIdentityMapNode<TValue> | undefined = current.children.get(segment);
       if (child === undefined) {
@@ -57,30 +60,41 @@ export const createRuntimeIdentityMap = <TValue>(
         child = { children: new Map() };
         current.children.set(segment, child);
       }
+
       current = child;
     }
+
     return current;
   };
+
   const get = (identity: RuntimeIdentity): TValue | undefined => {
     const entry = locate(identity, false)?.entry;
     return entry !== undefined && runtimeIdentityEquals(entry.identity, identity) ? entry.value : undefined;
   };
+
   const set = (identity: RuntimeIdentity, value: TValue): boolean => {
     const node = locate(identity, true);
     if (node === undefined || node.entry !== undefined) return false;
+
     node.entry = Object.freeze({ identity, value });
+
     return true;
   };
+
   const remove = (identity: RuntimeIdentity): boolean => {
     const node = locate(identity, false);
     if (node?.entry === undefined || !runtimeIdentityEquals(node.entry.identity, identity)) return false;
+
     delete node.entry;
+
     return true;
   };
+
   for (const [identity, value] of entries) {
     if (!set(identity, value))
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'Runtime identity map received a duplicate identity');
   }
+
   return Object.freeze({ get, has: identity => get(identity) !== undefined, set, delete: remove });
 };
 
@@ -101,8 +115,10 @@ export const createSemanticOwnerPublicIdMap = (
 ): RuntimeIdentityMap<string> => {
   const stateByOwner = createRuntimeIdentityMap<SemanticOwnerPublicIdState>([]);
   const states: Array<readonly [RuntimeIdentity, SemanticOwnerPublicIdState]> = [];
+
   for (const node of topology) {
     if (node.publicId === undefined) continue;
+
     const existing = stateByOwner.get(node.semanticOwner);
     if (existing === undefined) {
       const state = { publicId: node.publicId, ambiguous: false };
@@ -110,6 +126,7 @@ export const createSemanticOwnerPublicIdMap = (
       states.push([node.semanticOwner, state]);
     } else if (existing.publicId !== node.publicId) existing.ambiguous = true;
   }
+
   return createRuntimeIdentityMap(
     states.flatMap(([identity, state]) => (state.ambiguous ? [] : ([[identity, state.publicId]] as const))),
   );
@@ -123,13 +140,16 @@ export const createPublicIdPrimitivePathMap = (
 ): ReadonlyMap<string, ReadonlyArray<ReadonlyArray<number>>> => {
   const publicIdByOwner = createSemanticOwnerPublicIdMap(topology);
   const pathsByPublicId = new Map<string, Array<ReadonlyArray<number>>>();
+
   for (const node of topology) {
     const publicId = node.publicId ?? publicIdByOwner.get(node.semanticOwner);
     if (publicId === undefined) continue;
+
     const paths = pathsByPublicId.get(publicId) ?? [];
     paths.push(node.primitivePath);
     pathsByPublicId.set(publicId, paths);
   }
+
   return new Map(Array.from(pathsByPublicId, ([publicId, paths]) => [publicId, Object.freeze(paths.slice())] as const));
 };
 
@@ -142,6 +162,7 @@ export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<
       RetikzRenderErrorCode.Runtime,
       'Render runtime config must not contain cyclic plain data',
     );
+
   ancestors.add(value);
   let copied: unknown;
   if (Array.isArray(value)) {
@@ -152,7 +173,9 @@ export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<
         'Render runtime config arrays must be dense data-property arrays',
       );
     }
+
     const array: Array<unknown> = [];
+
     for (let index = 0; index < value.length; index += 1) {
       const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
       if (descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
@@ -161,11 +184,14 @@ export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<
           'Render runtime config arrays must be dense data-property arrays',
         );
       }
+
       array.push(cloneAndFreezeRuntimeValue(descriptor.value, ancestors));
     }
+
     copied = array;
   } else {
     const record = Object.create(null) as Record<PropertyKey, unknown>;
+
     for (const key of Reflect.ownKeys(value)) {
       const descriptor = Object.getOwnPropertyDescriptor(value, key);
       if (typeof key !== 'string' || descriptor === undefined || !descriptor.enumerable || !('value' in descriptor)) {
@@ -174,6 +200,7 @@ export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<
           'Render runtime config objects must contain enumerable data properties',
         );
       }
+
       Object.defineProperty(record, key, {
         value: cloneAndFreezeRuntimeValue(descriptor.value, ancestors),
         enumerable: true,
@@ -181,9 +208,12 @@ export const cloneAndFreezeRuntimeValue = <T>(value: T, ancestors = new WeakSet<
         writable: false,
       });
     }
+
     copied = record;
   }
+
   ancestors.delete(value);
+
   return Object.freeze(copied) as T;
 };
 
@@ -193,17 +223,22 @@ export const runtimeStructuralEquals = (left: unknown, right: unknown): boolean 
   if (typeof left !== 'object' || left === null || typeof right !== 'object' || right === null) return false;
   if (Array.isArray(left) || Array.isArray(right)) {
     if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
+
     for (let index = 0; index < left.length; index += 1) {
       const leftHasValue = index in left;
       if (leftHasValue !== index in right) return false;
       if (leftHasValue && !runtimeStructuralEquals(left[index], right[index])) return false;
     }
+
     return true;
   }
+
   if (!isPlainObject(left) || !isPlainObject(right)) return false;
+
   const leftKeys = Reflect.ownKeys(left);
   const rightKeys = Reflect.ownKeys(right);
   if (leftKeys.length !== rightKeys.length || leftKeys.some(key => !rightKeys.includes(key))) return false;
+
   return leftKeys.every(key => runtimeStructuralEquals(Reflect.get(left, key), Reflect.get(right, key)));
 };
 
@@ -211,6 +246,7 @@ export const runtimeStructuralEquals = (left: unknown, right: unknown): boolean 
 export const runBestEffortCleanup = (cleanups: ReadonlyArray<() => void>): void => {
   let failed = false;
   let firstCause: unknown;
+
   for (const cleanup of cleanups) {
     try {
       cleanup();
@@ -221,6 +257,7 @@ export const runBestEffortCleanup = (cleanups: ReadonlyArray<() => void>): void 
       }
     }
   }
+
   if (failed) throw firstCause;
 };
 
@@ -235,6 +272,7 @@ type HydrationCleanupQueue = Readonly<{
 /** 创建跨 prepared token 生命周期保留失败 candidate controller 的清理队列 */
 export const createHydrationCleanupQueue = (): HydrationCleanupQueue => {
   const pending = new Set<HydrationController>();
+
   const dispose = (controller: HydrationController): void => {
     try {
       controller.dispose();
@@ -244,9 +282,11 @@ export const createHydrationCleanupQueue = (): HydrationCleanupQueue => {
       throw cause;
     }
   };
+
   const disposePending = (): void => {
     runBestEffortCleanup([...pending].map(controller => () => dispose(controller)));
   };
+
   return Object.freeze({ dispose, disposePending });
 };
 

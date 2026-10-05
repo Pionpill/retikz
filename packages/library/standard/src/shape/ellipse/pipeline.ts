@@ -18,7 +18,9 @@ export const lowerEllipse = (source: IREllipse): IRPath => {
     center = box.center;
     radius = { x: box.width / 2, y: box.height / 2 };
   }
+
   const angles = shapeAngles(source);
+
   return {
     ...shapePathProperties(source),
     type: 'path',

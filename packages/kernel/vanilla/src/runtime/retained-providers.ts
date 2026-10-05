@@ -49,6 +49,7 @@ export const captureCoreProviderDefinitions = (
   definitions: CoreProviderDefinitions | undefined,
 ): CoreProviderDefinitions => {
   if (definitions === undefined) return Object.freeze({});
+
   return Object.freeze(
     Object.fromEntries(
       providerCollections
@@ -85,7 +86,9 @@ const definitionKey = (definition: ProviderDefinition): string => {
     'lower' in definition
   )
     return `clip:${definition.kind}`;
+
   if ('kind' in definition) return invalidDefinitions(definition);
+
   return `${definition.name}`;
 };
 
@@ -114,6 +117,7 @@ const copyDefinition = (definition: ProviderDefinition): ProviderDefinition => {
           },
     ) as ProviderDefinition;
   }
+
   if ('schema' in definition && 'compile' in definition) {
     return Object.freeze({
       name: definition.name,
@@ -122,12 +126,14 @@ const copyDefinition = (definition: ProviderDefinition): ProviderDefinition => {
       ...(definition.ownerOutput === undefined ? {} : { ownerOutput: definition.ownerOutput }),
     });
   }
+
   return Object.freeze({ ...definition });
 };
 
 const createDelegate = (slot: ProviderSlot): ProviderDefinition => {
   const initial = slot.current as unknown as Record<string, unknown>;
   const delegate: Record<string, unknown> = {};
+
   for (const [key, value] of Object.entries(initial)) {
     delegate[key] =
       typeof value === 'function'
@@ -138,6 +144,7 @@ const createDelegate = (slot: ProviderSlot): ProviderDefinition => {
           }
         : value;
   }
+
   return Object.freeze(delegate) as ProviderDefinition;
 };
 
@@ -180,6 +187,7 @@ const definitionsEqual = (initial: ProviderDefinition, next: ProviderDefinition)
   const initialRecord = initial as unknown as Record<string, unknown>;
   const nextRecord = next as unknown as Record<string, unknown>;
   const keys = Object.keys(initialRecord);
+
   return (
     keys.length === Object.keys(nextRecord).length &&
     keys.every(key => {
@@ -209,11 +217,13 @@ export const createRetainedProviderDefinitions = (
       presentCollections.map(collection => [collection, Object.freeze(slots(collection).map(createDelegate))]),
     ),
   ) as CoreProviderDefinitions;
+
   return Object.freeze({
     definitions,
     prepare: nextDefinitions => {
       const previous: Array<{ slot: ProviderSlot; definition: ProviderDefinition }> = [];
       let changed = false;
+
       for (const collection of providerCollections) {
         const initialSlots = slots(collection);
         const next = nextDefinitions[collection] ?? [];
@@ -225,6 +235,7 @@ export const createRetainedProviderDefinitions = (
           changed ||= !definitionsEqual(slot.current, definition);
         });
       }
+
       for (const collection of providerCollections) {
         const next = nextDefinitions[collection] ?? [];
         next.forEach((definition, index) => {
@@ -232,7 +243,9 @@ export const createRetainedProviderDefinitions = (
           slot.current = definition;
         });
       }
+
       let settled = false;
+
       return Object.freeze({
         changed,
         commit: () => {
@@ -240,6 +253,7 @@ export const createRetainedProviderDefinitions = (
         },
         rollback: () => {
           if (settled) return;
+
           previous.forEach(({ slot, definition }) => {
             slot.current = definition;
           });

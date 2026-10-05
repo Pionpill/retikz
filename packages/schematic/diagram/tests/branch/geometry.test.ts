@@ -25,6 +25,7 @@ const compile = (source: Record<string, unknown>, options: BranchDiagramDefiniti
       measureText: text => ({ width: text.length * 8, height: 10, ascent: 8, descent: 2 }),
     },
   );
+
 const source = {
   nodes: ['a', 'b', 'c'].map(id => ({ id, labels: [{ text: `long label ${id}` }] })),
   branches: [
@@ -37,11 +38,14 @@ const source = {
 it('keeps layout deterministic when catalog order differs from branch progression', () => {
   const reversed = { ...source, nodes: [...source.nodes].reverse() };
   const first = compile(reversed);
+
   expect(compile(reversed).artifacts).toEqual(first.artifacts);
+
   const artifact = BranchDiagramArtifactSchema.parse(
     first.artifacts.find(value => value.kind === 'composite' && value.type === 'branch')?.value,
   );
   const positions = new Map(artifact.nodes.map(node => [node.id, node.position[0]]));
+
   expect(positions.get('a')).toBeLessThan(positions.get('b')!);
   expect(positions.get('b')).toBeLessThan(positions.get('c')!);
 });
@@ -89,6 +93,7 @@ it.each(invalidOutputs)('rejects custom layout output: $name', ({ change }) => {
     description: 'Invalid geometry fixture',
     layout: input => change(LanesBranchLayoutDefinition.layout(input)),
   });
+
   expect(() => compile(source, { branchLayouts: [definition], defaultBranchLayout: definition.name })).toThrow();
 });
 
@@ -105,16 +110,22 @@ it.each(['right', 'left', 'up', 'down'])(
       artifact => artifact.kind === 'composite' && artifact.namespace === 'diagram' && artifact.type === 'branch',
     );
     const artifact = BranchDiagramArtifactSchema.parse(envelope?.value);
+
     expect(artifact.nodes).toHaveLength(3);
     expect(artifact.segments).toHaveLength(3);
     expect(artifact.nodes.find(node => node.id === 'a')?.lane).toBe(artifact.nodes.find(node => node.id === 'c')?.lane);
+
     for (const node of artifact.nodes) {
       expect(node.markerBounds.width).toBe(10);
       expect(node.visualBounds.width).toBeGreaterThan(10);
+
       const observations = result.artifacts.filter(value => value.kind === 'nodeLayout' && value.value.id === node.id);
+
       expect(observations).toHaveLength(1);
+
       const observed = observations[0];
       if (observed.kind !== 'nodeLayout') throw new Error('Expected node layout');
+
       expect(observed.value.rect.x).toBeCloseTo(node.position[0]);
       expect(observed.value.rect.y).toBeCloseTo(node.position[1]);
     }
@@ -132,16 +143,20 @@ it('merges identical directed segments while retaining both branch correspondenc
   const artifact = BranchDiagramArtifactSchema.parse(
     result.artifacts.find(value => value.kind === 'composite' && value.type === 'branch')?.value,
   );
+
   expect(artifact.segments).toHaveLength(1);
   expect(artifact.branches.map(branch => branch.segments)).toEqual([[0], [0]]);
 });
 
 it('uses custom layout through the same registry and rejects omitted geometry', () => {
   const custom = defineBranchLayout({ ...LanesBranchLayoutDefinition, name: 'custom' });
+
   expect(
     compile(source, { branchLayouts: [custom], defaultBranchLayout: custom.name }).scene.primitives.length,
   ).toBeGreaterThan(0);
+
   const invalid = defineBranchLayout({ ...custom, layout: input => ({ ...custom.layout(input), segments: [] }) });
+
   expect(() => compile(source, { branchLayouts: [invalid], defaultBranchLayout: invalid.name })).toThrow();
   expect(() => compile(source, { defaultBranchLayout: 'missing' })).toThrow();
   expect(() => compile(source, { branchLayouts: [{ ...custom, name: 'lanes' }] })).toThrow();
@@ -159,6 +174,7 @@ it('supports standalone nodes and keeps local namespaces independent', () => {
     { version: 1, type: 'scene', children: [child, child] },
     resolveCoreProviderDependencies({ contributions: [createBranchDiagramProviderContribution()] }),
   );
+
   expect(result.artifacts.filter(artifact => artifact.kind === 'composite' && artifact.type === 'branch')).toHaveLength(
     2,
   );
@@ -173,10 +189,13 @@ it('preserves explicit root defaults and publishes geometry after the root trans
   const artifact = BranchDiagramArtifactSchema.parse(
     result.artifacts.find(value => value.kind === 'composite' && value.type === 'branch')?.value,
   );
+
   for (const node of artifact.nodes) {
     const handle = result.spatialHandles.entries.find(value => value.id === `node:${node.id}`);
+
     expect(handle?.geometry.bounds.x).toBeCloseTo(node.visualBounds.x + 100);
     expect(handle?.geometry.bounds.y).toBeCloseTo(node.visualBounds.y + 50);
   }
+
   expect(JSON.stringify(result.scene)).toContain('red');
 });

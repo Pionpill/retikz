@@ -120,6 +120,7 @@ const renderMobileNav = (initialEntry: string): HTMLElement => {
 
 const click = (element: Element | null): void => {
   expect(element).not.toBeNull();
+
   act(() => {
     element?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   });

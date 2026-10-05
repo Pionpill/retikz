@@ -89,12 +89,15 @@ export const createLegendRampStructure = (
               tick.label.slotSize.width,
               tick.label.slotSize.height,
             );
+
     return Object.freeze({ key: tick.key, sourceIndex: tick.sourceIndex, anchor, labelSlot });
   });
+
   const provisionalUnion = unionLayoutArtifactRects([
     provisionalSample,
     ...provisionalTicks.flatMap(tick => (tick.labelSlot === null ? [] : [tick.labelSlot])),
   ]);
+
   const translation = Object.freeze({ x: -provisionalUnion.x, y: -provisionalUnion.y });
   const translateRect = (rect: LayoutRect): LayoutRect =>
     Object.freeze({
@@ -103,6 +106,7 @@ export const createLegendRampStructure = (
       width: rect.width,
       height: rect.height,
     });
+
   const canonicalTicks = provisionalTicks.map(tick =>
     Object.freeze({
       ...tick,
@@ -110,6 +114,7 @@ export const createLegendRampStructure = (
       labelSlot: tick.labelSlot === null ? null : translateRect(tick.labelSlot),
     }),
   );
+
   return Object.freeze({
     bounds: Object.freeze({ x: 0, y: 0, width: provisionalUnion.width, height: provisionalUnion.height }),
     sampleSlot: translateRect(provisionalSample),

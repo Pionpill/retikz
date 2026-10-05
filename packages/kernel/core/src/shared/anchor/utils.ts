@@ -4,6 +4,7 @@ import { AnchorValues, SideValues } from './indexes';
 import type { AnchorInput, DirectionalAnchorInput } from './types';
 
 const AnchorSet = new Set<string>(AnchorValues);
+
 const SideSet = new Set<string>(SideValues);
 
 /** 判断字符串是否为标准方向 anchor 或 center */

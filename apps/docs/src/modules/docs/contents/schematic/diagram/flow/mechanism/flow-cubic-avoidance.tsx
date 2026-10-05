@@ -15,6 +15,7 @@ const Demo: FC<FlowCubicAvoidanceProps> = props => {
   const copy = flowCubicAvoidanceI18n[lang];
   const armY = (36 * 4) / 3;
   const armX = armY / Math.tan(Math.PI / 6);
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[0, 1].map(stage => {

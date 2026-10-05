@@ -8,10 +8,12 @@ import { blockComposeFlowI18n } from './block-compose-flow.i18n';
 
 /** 内容组合插图的语言 */
 export type BlockComposeFlowProps = { lang?: Lang };
+
 /** 展示局部主题与内容组合的先后关系 */
 const BlockComposeFlow: FC<BlockComposeFlowProps> = props => {
   const { lang = 'zh' } = props;
   const text = blockComposeFlowI18n[lang];
+
   return (
     <PreviewFlowDiagram style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout id="block-compose-flow" kind="linear" direction="right">

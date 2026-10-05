@@ -25,6 +25,7 @@ export const TableFractionTrackSizeSchema = strictObject({
 }).describe('Table track that receives a weighted share of constrained remaining space.');
 
 const TableMinTrackSizeSchema = union([TableFixedTrackSizeSchema, TableAutoTrackSizeSchema]);
+
 const TableMaxTrackSizeSchema = union([
   TableFixedTrackSizeSchema,
   TableAutoTrackSizeSchema,
@@ -74,6 +75,7 @@ export const TableTrackOverridesSchema = array(TableTrackOverrideSchema)
           message: `duplicate Table track override index ${override.index}`,
         });
       }
+
       indexes.add(override.index);
     });
   })

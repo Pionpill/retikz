@@ -150,12 +150,15 @@ const SharedNodePositionSchema = union([
 const NodePositionSchema = preprocess(
   (value, ctx) => {
     if (typeof value !== 'object' || value === null || Array.isArray(value) || !('kind' in value)) return value;
+
     const result = AnchorPositionSchema.safeParse(value);
     if (result.success) return result.data;
+
     ctx.addIssue({
       code: 'custom',
       message: `Node position objects with 'kind' must match AnchorPositionSchema: ${result.error.issues[0]?.message ?? 'invalid anchor position'}`,
     });
+
     return NEVER;
   },
   union([SharedNodePositionSchema, AnchorPositionSchema]),
@@ -253,6 +256,7 @@ export const NodeSchema = NodeBaseSchema.superRefine((node, context) => {
     context.addIssue({ code: 'custom', path: ['aliasIds'], message: 'Node aliases require a primary id.' });
     return;
   }
+
   const ids = new Set([node.id]);
   node.aliasIds.forEach((id, index) => {
     if (ids.has(id))

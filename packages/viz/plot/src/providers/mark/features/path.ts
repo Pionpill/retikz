@@ -58,11 +58,13 @@ export const resolveRolePosition = (mark: IRPlotPathMark, row: ExternalRow): [un
 /** 把若干屏幕点连成 move + line steps（按需尾部加 cycle 闭合）；点数 < 2 返回 null */
 export const pointsToSteps = (points: ReadonlyArray<[number, number]>, closed: boolean): Array<IRStep> | null => {
   if (points.length < 2) return null;
+
   const steps: Array<IRStep> = [
     { type: 'step', kind: 'move', to: points[0] },
     ...points.slice(1).map((point): IRStep => ({ type: 'step', kind: 'line', to: point })),
   ];
   if (closed) steps.push({ type: 'step', kind: 'cycle' });
+
   return steps;
 };
 
@@ -83,7 +85,9 @@ const pointsToStepCurveSteps = (
 ): Array<IRStep> | null => {
   const pathPoints = withClosingPoint(points, closed);
   if (pathPoints.length < 2) return null;
+
   const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: pathPoints[0] }];
+
   for (let i = 1; i < pathPoints.length; i++) {
     const prev = pathPoints[i - 1];
     const next = pathPoints[i];
@@ -96,9 +100,12 @@ const pointsToStepCurveSteps = (
       steps.push({ type: 'step', kind: 'line', to: [midX, prev[1]] });
       steps.push({ type: 'step', kind: 'line', to: [midX, next[1]] });
     }
+
     steps.push({ type: 'step', kind: 'line', to: next });
   }
+
   if (closed) steps.push({ type: 'step', kind: 'cycle' });
+
   return steps;
 };
 
@@ -108,6 +115,7 @@ const cardinalSegments = (
 ): Array<Extract<IRStep, { kind: 'cubic' }>> => {
   const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
   const k = (1 - tension) / 6;
+
   for (let i = 0; i < points.length - 1; i++) {
     const p0 = points[i - 1] ?? points[i];
     const p1 = points[i];
@@ -121,11 +129,13 @@ const cardinalSegments = (
       ),
     );
   }
+
   return segments;
 };
 
 const basisSegments = (points: ReadonlyArray<[number, number]>): Array<Extract<IRStep, { kind: 'cubic' }>> => {
   if (points.length < 3) return cardinalSegments(points, 0);
+
   const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
   let p0 = points[0];
   let p1 = points[1];
@@ -136,6 +146,7 @@ const basisSegments = (points: ReadonlyArray<[number, number]>): Array<Extract<I
       [(p0[0] + 4 * p1[0] + points[2][0]) / 6, (p0[1] + 4 * p1[1] + points[2][1]) / 6],
     ),
   );
+
   for (let i = 2; i < points.length - 1; i++) {
     const p2 = points[i];
     segments.push(
@@ -148,6 +159,7 @@ const basisSegments = (points: ReadonlyArray<[number, number]>): Array<Extract<I
     p0 = p1;
     p1 = p2;
   }
+
   const last = points[points.length - 1];
   segments.push(
     cubicStep(
@@ -156,6 +168,7 @@ const basisSegments = (points: ReadonlyArray<[number, number]>): Array<Extract<I
       last,
     ),
   );
+
   return segments;
 };
 
@@ -163,13 +176,17 @@ const monotoneSlopes = (values: Array<number>, positions: Array<number>): Array<
   const n = values.length;
   const slopes = new Array<number>(n).fill(0);
   const deltas: Array<number> = [];
+
   for (let i = 0; i < n - 1; i++) {
     const dx = positions[i + 1] - positions[i];
     deltas.push(dx === 0 ? 0 : (values[i + 1] - values[i]) / dx);
   }
+
   slopes[0] = deltas[0] ?? 0;
   slopes[n - 1] = deltas[n - 2] ?? 0;
+
   for (let i = 1; i < n - 1; i++) slopes[i] = deltas[i - 1] * deltas[i] <= 0 ? 0 : (deltas[i - 1] + deltas[i]) / 2;
+
   for (let i = 0; i < n - 1; i++) {
     const delta = deltas[i];
     if (delta === 0) {
@@ -177,6 +194,7 @@ const monotoneSlopes = (values: Array<number>, positions: Array<number>): Array<
       slopes[i + 1] = 0;
       continue;
     }
+
     const a = slopes[i] / delta;
     const b = slopes[i + 1] / delta;
     const sum = a * a + b * b;
@@ -186,6 +204,7 @@ const monotoneSlopes = (values: Array<number>, positions: Array<number>): Array<
       slopes[i + 1] = tau * b * delta;
     }
   }
+
   return slopes;
 };
 
@@ -197,6 +216,7 @@ const monotoneSegments = (
   const secondary = points.map(point => (dimension === 'x' ? point[1] : point[0]));
   const slopes = monotoneSlopes(secondary, primary);
   const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
+
   for (let i = 0; i < points.length - 1; i++) {
     const d = (primary[i + 1] - primary[i]) / 3;
     const c1Primary = primary[i] + d;
@@ -207,6 +227,7 @@ const monotoneSegments = (
     const control2: [number, number] = dimension === 'x' ? [c2Primary, c2Secondary] : [c2Secondary, c2Primary];
     segments.push(cubicStep(control1, control2, points[i + 1]));
   }
+
   return segments;
 };
 
@@ -214,17 +235,21 @@ const naturalSecondDerivatives = (values: Array<number>, positions: Array<number
   const n = values.length;
   const second = new Array<number>(n).fill(0);
   const temp = new Array<number>(n).fill(0);
+
   for (let i = 1; i < n - 1; i++) {
     const h0 = positions[i] - positions[i - 1];
     const h1 = positions[i + 1] - positions[i];
     if (h0 === 0 || h1 === 0) continue;
+
     const sig = h0 / (h0 + h1);
     const p = sig * second[i - 1] + 2;
     second[i] = (sig - 1) / p;
     temp[i] =
       ((6 * ((values[i + 1] - values[i]) / h1 - (values[i] - values[i - 1]) / h0)) / (h0 + h1) - sig * temp[i - 1]) / p;
   }
+
   for (let k = n - 2; k >= 0; k--) second[k] = second[k] * second[k + 1] + temp[k];
+
   return second;
 };
 
@@ -235,6 +260,7 @@ const naturalSegments = (points: ReadonlyArray<[number, number]>): Array<Extract
   const secondX = naturalSecondDerivatives(xs, t);
   const secondY = naturalSecondDerivatives(ys, t);
   const segments: Array<Extract<IRStep, { kind: 'cubic' }>> = [];
+
   for (let i = 0; i < points.length - 1; i++) {
     const h = t[i + 1] - t[i];
     segments.push(
@@ -251,6 +277,7 @@ const naturalSegments = (points: ReadonlyArray<[number, number]>): Array<Extract
       ),
     );
   }
+
   return segments;
 };
 
@@ -263,6 +290,7 @@ const pointsToCurveSteps = (
   if (curve === PathCurve.Step || curve === PathCurve.StepBefore || curve === PathCurve.StepAfter) {
     return pointsToStepCurveSteps(points, closed, curve);
   }
+
   const pathPoints = withClosingPoint(points, closed);
   if (pathPoints.length < 2) return null;
   if (curve === PathCurve.CatmullRom) {
@@ -271,8 +299,10 @@ const pointsToCurveSteps = (
       { type: 'step', kind: 'smooth', points: pathPoints.slice(1), tension: 1 },
     ];
     if (closed) steps.push({ type: 'step', kind: 'cycle' });
+
     return steps;
   }
+
   const segments =
     curve === PathCurve.Basis
       ? basisSegments(pathPoints)
@@ -284,8 +314,10 @@ const pointsToCurveSteps = (
             ? naturalSegments(pathPoints)
             : cardinalSegments(pathPoints, 0);
   if (segments.length === 0) return null;
+
   const steps: Array<IRStep> = [{ type: 'step', kind: 'move', to: pathPoints[0] }, ...segments];
   if (closed) steps.push({ type: 'step', kind: 'cycle' });
+
   return steps;
 };
 
@@ -294,6 +326,7 @@ const effectivePathCurve = (curve: PathCurve | undefined, frame: CoordinateFrame
   if (isPolarCoordinateFrame(frame) && (curve === PathCurve.MonotoneX || curve === PathCurve.MonotoneY)) {
     return PathCurve.Linear;
   }
+
   return curve ?? PathCurve.Linear;
 };
 
@@ -320,11 +353,13 @@ export const buildOutlinePoints = (
       .filter((vertex): vertex is PolarVertex => vertex !== null);
     return densifyPolarSegments(frame, vertices, { closed });
   }
+
   if (isGenericCoordinateFrame(frame)) {
     return ordered
       .map(row => roleAnchor(mark, row, frame))
       .filter((point): point is [number, number] => point !== null);
   }
+
   return ordered
     .map(row => {
       const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
@@ -337,25 +372,31 @@ const ZERO_BASELINE = 0;
 
 const pathDefaultBaseline = (frame: CoordinateFrame): number => {
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame)) return ZERO_BASELINE;
+
   const numericDomain = frame.secondary
     .domain()
     .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
   if (numericDomain.length < 2) return ZERO_BASELINE;
+
   const min = Math.min(...numericDomain);
   const max = Math.max(...numericDomain);
   if (min <= ZERO_BASELINE && max >= ZERO_BASELINE) return ZERO_BASELINE;
+
   return Math.abs(min - ZERO_BASELINE) <= Math.abs(max - ZERO_BASELINE) ? min : max;
 };
 
 const pathClosureOf = (mark: IRPlotPathMark): IRPlotPathClosure | undefined => mark.closure;
 
 type PathRowSegment = Array<ExternalRow>;
+
 type PathStepSegment = { rows: PathRowSegment; steps: Array<IRStep>; bridgesNulls?: boolean };
 
 const projectableTopPoint = (mark: IRPlotPathMark, row: ExternalRow, frame: CoordinateFrame): boolean => {
   if (isGenericCoordinateFrame(frame)) return roleAnchor(mark, row, frame) !== null;
+
   const [primaryValue, secondaryValue] = resolveRolePosition(mark, row);
   if (isPolarCoordinateFrame(frame)) return toPolarVertex(frame, primaryValue, secondaryValue) !== null;
+
   return frame.project(primaryValue, secondaryValue) !== null;
 };
 
@@ -366,11 +407,13 @@ const projectableClosurePoint = (
   closure: IRPlotPathClosure,
 ): boolean => {
   if (!projectableTopPoint(mark, row, frame)) return false;
+
   const [primaryValue] = resolveRolePosition(mark, row);
   if (closure.kind === PathClosureKind.Baseline)
     return frame.project(primaryValue, closure.baseline ?? pathDefaultBaseline(frame)) !== null;
   if (closure.kind === PathClosureKind.Stack)
     return frame.project(primaryValue, resolveFieldPath(row, closure.baselineField)) !== null;
+
   return true;
 };
 
@@ -383,8 +426,10 @@ const splitRowsByProjectability = (
     const segment = rows.filter(projectable);
     return segment.length > 0 ? [segment] : [];
   }
+
   const segments: Array<PathRowSegment> = [];
   let current: PathRowSegment = [];
+
   for (const row of rows) {
     if (projectable(row)) {
       current.push(row);
@@ -393,7 +438,9 @@ const splitRowsByProjectability = (
       current = [];
     }
   }
+
   if (current.length > 0) segments.push(current);
+
   return segments;
 };
 
@@ -407,6 +454,7 @@ const pathRowSegments = (
   const connectNulls = mark.connectNulls !== undefined && mark.connectNulls !== false;
   const projectable = (row: ExternalRow): boolean =>
     closure === undefined ? projectableTopPoint(mark, row, frame) : projectableClosurePoint(mark, row, frame, closure);
+
   return splitRowsByProjectability(ordered, projectable, connectNulls);
 };
 
@@ -447,9 +495,11 @@ const buildClosureReturnPoints = (
   if (closure.kind === PathClosureKind.Baseline) {
     return buildConstantBaselinePoints(mark, ordered, frame, closure.baseline ?? pathDefaultBaseline(frame));
   }
+
   if (closure.kind === PathClosureKind.Stack) {
     return buildStackBaselinePoints(mark, ordered, frame, closure.baselineField);
   }
+
   return [];
 };
 
@@ -467,6 +517,7 @@ const buildLineStepSegments = (
       false,
     );
     const segments: Array<PathStepSegment> = [];
+
     for (const [index, run] of runs.entries()) {
       if (index > 0) {
         const previous = runs[index - 1];
@@ -478,6 +529,7 @@ const buildLineStepSegments = (
         );
         if (steps !== null) segments.push({ rows: bridgeRows, steps, bridgesNulls: true });
       }
+
       const steps = pointsToCurveSteps(
         buildOutlinePoints(mark, run, frame, false),
         false,
@@ -485,8 +537,10 @@ const buildLineStepSegments = (
       );
       if (steps !== null) segments.push({ rows: run, steps });
     }
+
     return segments;
   }
+
   return pathRowSegments(mark, rows, frame, undefined).flatMap(segmentRows => {
     const steps = pointsToCurveSteps(
       buildOutlinePoints(mark, segmentRows, frame, closed),
@@ -509,7 +563,9 @@ const applyNullConnectionStyle = (path: IRPath, segment: PathStepSegment, mark: 
 const returnCurveSteps = (points: ReadonlyArray<[number, number]>, curve: PathCurve): Array<IRStep> | null => {
   const steps = pointsToCurveSteps(points, false, curve);
   if (steps === null) return null;
+
   const [, ...rest] = steps;
+
   return [{ type: 'step', kind: 'line', to: points[0] }, ...rest];
 };
 
@@ -528,15 +584,18 @@ const buildClosureStepSegment = (
     );
     return steps === null ? null : { rows: segmentRows, steps };
   }
+
   const top = buildOutlinePoints(mark, segmentRows, frame, closed);
   const bottom = buildClosureReturnPoints(mark, segmentRows, frame, closure);
   if (top.length < 2 || bottom.length < 2) return null;
+
   const topLoop = closed ? [...top, top[0]] : top;
   const bottomLoop = closed ? [bottom[bottom.length - 1], ...bottom] : bottom;
   const curve = effectivePathCurve(mark.curve, frame);
   const topSteps = pointsToCurveSteps(topLoop, false, curve);
   const bottomSteps = returnCurveSteps(bottomLoop, curve);
   if (!topSteps || !bottomSteps) return null;
+
   return {
     rows: segmentRows,
     steps: [...topSteps, ...bottomSteps, { type: 'step', kind: 'cycle' }],
@@ -578,6 +637,7 @@ export const buildSeriesPathScopes = (
   const plotId = markProvenance?.context.plotId;
   const seenIds = markProvenance && plotId !== undefined ? new Map<string, unknown>() : undefined;
   const scopes: Array<IRScope> = [];
+
   for (const series of seriesValues) {
     const seriesRows = rows.filter(row => resolveFieldPath(row, seriesField) === series);
     const segments = buildSteps(seriesRows);
@@ -589,9 +649,12 @@ export const buildSeriesPathScopes = (
           `lowerPlots: series values "${String(prior)}" and "${String(series)}" collide to the same series id "${baseId}"; series anchors must be unique`,
         );
       }
+
       seenIds.set(baseId, series);
     }
+
     const paths: Array<IRPath> = [];
+
     for (let index = 0; index < segments.length; index += 1) {
       const segment = segments[index];
       const row = segment.rows[0] ?? {};
@@ -611,9 +674,12 @@ export const buildSeriesPathScopes = (
       if (baseId !== undefined && segments.length > 1) {
         path.id = `${baseId}.segment.${index + 1}`;
       }
+
       paths.push(applyNullConnectionStyle(path, segment, mark));
     }
+
     if (paths.length === 0) continue;
+
     scopes.push({
       type: 'scope',
       ...(baseId !== undefined ? { id: baseId } : {}),
@@ -621,6 +687,7 @@ export const buildSeriesPathScopes = (
       children: paths,
     });
   }
+
   return scopes;
 };
 
@@ -642,6 +709,7 @@ export const markPaintOf = (
  */
 const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: string, colorField: string): void => {
   const colorsBySeries = new Map<unknown, Set<unknown>>();
+
   for (const row of rows) {
     const seriesValue = resolveFieldPath(row, seriesField);
     const colorValue = resolveFieldPath(row, colorField);
@@ -649,6 +717,7 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
     set.add(colorValue);
     colorsBySeries.set(seriesValue, set);
   }
+
   for (const [seriesValue, colors] of colorsBySeries) {
     if (colors.size > 1) {
       throw new RetikzPlotError(
@@ -665,11 +734,13 @@ const assertColorConstantWithinSeries = (rows: Array<ExternalRow>, seriesField: 
  */
 export const pathSeriesField = (mark: IRPlotMark, rows: Array<ExternalRow>): string | undefined => {
   if (mark.type !== PlotMark.Path) return undefined;
+
   const colorField = mark.encoding.color?.field;
   if (mark.series) {
     if (colorField && colorField !== mark.series) assertColorConstantWithinSeries(rows, mark.series, colorField);
     return mark.series;
   }
+
   return colorField;
 };
 
@@ -687,6 +758,7 @@ const lowerPath = (
   if (mark.interpolation !== undefined && !isPolarCoordinateFrame(frame)) {
     throw new RetikzPlotError('lowerPlots: path interpolation override is only supported under polar2D');
   }
+
   const closure = pathClosureOf(mark);
   const closed = mark.closed ?? isPolarCoordinateFrame(frame);
   const seriesField = pathSeriesField(mark, rows);
@@ -701,6 +773,7 @@ const lowerPath = (
   if (typeof mark.connectNulls === 'object' && (closed || closure !== undefined || filled)) {
     throw new RetikzPlotError('lowerPlots: connectNulls stroke configuration requires an open unfilled path');
   }
+
   const lineSegments = (segmentRows: Array<ExternalRow>): Array<PathStepSegment> =>
     filled && !closed && !closure
       ? pathRowSegments(mark, segmentRows, frame, undefined).flatMap(run => {
@@ -742,15 +815,19 @@ const lowerPath = (
           },
         };
   }
+
   const segments = closure ? buildClosureStepSegments(mark, rows, frame, closure, closed) : lineSegments(rows);
   if (segments.length === 0) return null;
+
   const colorValue = mark.encoding.color?.value;
   const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
+
   return {
     type: 'scope',
     children: segments.map(segment => {
       const row = segment.rows[0] ?? {};
       const label = resolveGeometryMarkLabels(mark.label, row, channelValueOf<IRNodeLabel['text']>(channels, 'label'));
+
       return applyNullConnectionStyle(
         applyPathChannelDeliveries(
           {
@@ -787,12 +864,15 @@ const pathAnchorCoordinates = (
   ctx: MarkLoweringContext | undefined,
 ): Array<IRCoordinate> => {
   if (mark.anchorId === undefined || ctx?.anchors === undefined) return [];
+
   const coordinates: Array<IRCoordinate> = [];
   const ordered = orderRows(rows, mark.order);
+
   for (let transformedIndex = 0; transformedIndex < ordered.length; transformedIndex += 1) {
     const row = ordered[transformedIndex];
     const position = roleAnchor(mark, row, frame);
     if (position === null) continue;
+
     const owner = {
       markType: mark.type,
       markId: mark.id,
@@ -802,6 +882,7 @@ const pathAnchorCoordinates = (
     const id = ctx.anchors.makeId(mark.anchorId, row, owner);
     coordinates.push(ctx.anchors.coordinate(id, position, owner));
   }
+
   return coordinates;
 };
 
@@ -821,6 +902,7 @@ export const lowerPathLayer = (
   if (!isCartesianCoordinateFrame(frame) && !isPolarCoordinateFrame(frame) && !supportsGenericOpenPath) {
     throw new RetikzPlotError(failLoudMessage(mark.type, frame.type));
   }
+
   const layer = lowerPath(
     mark,
     rows,
@@ -831,8 +913,10 @@ export const lowerPathLayer = (
     ctx?.provenance,
   );
   if (layer === null || mark.type !== PlotMark.Path) return layer;
+
   const coordinates = pathAnchorCoordinates(mark, rows, frame, ctx);
   const anchoredLayer = coordinates.length === 0 ? layer : { ...layer, children: [...coordinates, ...layer.children] };
+
   return attachMarkLayer(anchoredLayer, mark, ctx);
 };
 

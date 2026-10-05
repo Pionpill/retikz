@@ -49,6 +49,7 @@ const monoScale = defineScale({
     ];
     const colors = domain.map((_category, index) => (index % 2 === 0 ? '#111111' : '#eeeeee'));
     const colorByCategory = new Map(domain.map((category, index) => [category, colors[index]] as const));
+
     return {
       of: value => (typeof value === 'string' || typeof value === 'number' ? colorByCategory.get(value) : undefined),
       legendForm: 'swatch',
@@ -68,6 +69,7 @@ const channelCtx = (over: Partial<ChannelScaleResolveContext> = {}): ChannelScal
 
 const collectNodes = (layer: IRScope): Array<IRNode> => {
   const out: Array<IRNode> = [];
+
   const walk = (children: ReadonlyArray<unknown>): void => {
     for (const child of children) {
       const node = child as { type?: string; children?: ReadonlyArray<unknown> };
@@ -75,7 +77,9 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
       else if (node.type === 'scope' && node.children) walk(node.children);
     }
   };
+
   walk(layer.children);
+
   return out;
 };
 
@@ -119,7 +123,9 @@ describe('scale registry（contract spec）', () => {
       'discrete',
       'discrete',
     ]);
+
     if (unitScale.family !== 'position') throw new TypeError('unitScale must remain a position definition');
+
     expect(unitScale.continuity).toBe('continuous');
   });
 
@@ -132,6 +138,7 @@ describe('scale registry（contract spec）', () => {
 
   it('resolveScaleRegistry 注册内置 + 自定义', () => {
     const registry = resolveScaleRegistry([unitScale, monoScale]);
+
     expect(registry.get('unit')).toBe(unitScale);
     expect(registry.get('mono')).toBe(monoScale);
     expect(registry.get('linear')).toBeDefined();
@@ -142,6 +149,7 @@ describe('scale registry（contract spec）', () => {
       ...unitScale,
       schema: object({ type: literal('linear'), name: NonBlankStringSchema }),
     } as AnyScaleDefinition;
+
     expect(() => resolveScaleRegistry([collide])).toThrow(/duplicate scale registration: "linear"/);
   });
 
@@ -151,11 +159,13 @@ describe('scale registry（contract spec）', () => {
 
   it('malformed_scale_schema_throws（type 非 literal）', () => {
     const malformed = { ...unitScale, schema: object({ type: string(), name: string() }) } as AnyScaleDefinition;
+
     expect(() => resolveScaleRegistry([malformed])).toThrow(/must declare type as a non-empty z.literal string/);
   });
 
   it('unknown_scale_type_throws', () => {
     const registry = resolveScaleRegistry();
+
     expect(() => resolvePositionScale({ type: 'nope', name: 'x' }, [], [0, 1], { registry })).toThrow(
       /scale type "nope" is not registered/,
     );
@@ -164,6 +174,7 @@ describe('scale registry（contract spec）', () => {
   it('custom_position_scale_projects', () => {
     const registry = resolveScaleRegistry([unitScale]);
     const scale = resolvePositionScale({ type: 'unit', name: 'x' }, [0, 0.5, 1], [0, 100], { registry });
+
     expect(scale.coordinate(0)).toBe(0);
     expect(scale.coordinate(1)).toBe(100);
     expect(scale.coordinate(0.5)).toBe(50);
@@ -182,6 +193,7 @@ describe('scale registry（contract spec）', () => {
 
   it('channel_scale_as_position_fails_loud', () => {
     const registry = resolveScaleRegistry();
+
     expect(() => resolvePositionScale({ type: 'ordinal', name: 'c' }, [], [0, 1], { registry })).toThrow(
       /cannot drive a positional/,
     );
@@ -189,6 +201,7 @@ describe('scale registry（contract spec）', () => {
 
   it('position_scale_as_color_fails_loud', () => {
     const registry = resolveScaleRegistry();
+
     expect(() => resolveChannelScale({ type: 'linear', name: 'x' }, [], channelCtx(), { registry })).toThrow(
       /is not a color scale/,
     );
@@ -202,6 +215,7 @@ describe('scale registry（contract spec）', () => {
       channelCtx({ fieldType: DataFieldType.Categorical }),
       { registry },
     );
+
     expect(resolution.legendForm).toBe('swatch');
     expect(resolution.of('a')).toBe('#111111');
     expect(resolution.of('b')).toBe('#eeeeee');
@@ -210,6 +224,7 @@ describe('scale registry（contract spec）', () => {
 
   it('custom_channel_field_incompatible_fails', () => {
     const registry = resolveScaleRegistry([monoScale]);
+
     expect(() =>
       resolveChannelScale({ type: 'mono', name: 'c' }, [1, 2], channelCtx({ fieldType: DataFieldType.Continuous }), {
         registry,
@@ -226,11 +241,13 @@ describe('scale registry（contract spec）', () => {
     const resolution = resolveChannelScale({ type: 'sequential', name: 'c', scheme: 'brand' }, [0, 1], ctx, {
       registry,
     });
+
     expect(resolution.of(0.5)).toBe('#ff00ff');
   });
 
   it('isFieldCompatible 谓词驱动 position compat', () => {
     const registry = resolveScaleRegistry();
+
     expect(() => assertScaleFieldCompatible('x', 'linear', DataFieldType.Categorical, 'xs', { registry })).toThrow(
       /incompatible/i,
     );
@@ -239,6 +256,7 @@ describe('scale registry（contract spec）', () => {
 
   it('allowsBaseline 谓词驱动 baseline guard', () => {
     const registry = resolveScaleRegistry();
+
     expect(() => assertBaselineScaleCompatible('log', [{ type: 'interval' }], { registry })).toThrow(
       /cannot be used with interval\/area/,
     );
@@ -268,9 +286,12 @@ describe('scale registry（contract spec）', () => {
       { width: 200, height: 200, scaleDefinitions: [unitScale] },
     ).children[0] as IRScope;
     const nodes = collectNodes(layer);
+
     expect(nodes.length).toBe(2);
+
     for (const node of nodes) {
       const [cx] = node.position as [number, number];
+
       expect(Number.isFinite(cx)).toBe(true);
     }
   });
@@ -305,6 +326,7 @@ describe('scale registry（contract spec）', () => {
       { width: 200, height: 200, scaleDefinitions: [monoScale] },
     ).children[0] as IRScope;
     const json = JSON.stringify(layer);
+
     expect(json).toContain('#111111');
     expect(json).toContain('#eeeeee');
   });
@@ -322,6 +344,7 @@ describe('scale registry（contract spec）', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
     };
     const roundtrip = PlotSchema.parse(JSON.parse(JSON.stringify(spec)));
+
     expect(roundtrip.scales[0]).toMatchObject({ type: 'unit', name: 'x', foo: 7 });
   });
 });

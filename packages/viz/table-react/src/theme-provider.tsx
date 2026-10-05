@@ -19,5 +19,6 @@ export const TableThemeProvider: FC<TableThemeProviderProps> = props => {
     if (tableThemeStyles === undefined) return parent;
     return [...parent, ...tableThemeStyles];
   }, [parent, tableThemeStyles]);
+
   return <TableThemeStylesContext.Provider value={merged}>{children}</TableThemeStylesContext.Provider>;
 };

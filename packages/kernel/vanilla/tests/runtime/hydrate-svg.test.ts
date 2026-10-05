@@ -57,8 +57,11 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     hydrate(view.root, { handlers: { a: { click: onClick } } });
 
     const target = findById(view.root, 'a');
+
     expect(target).not.toBeNull();
+
     target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(onClick).toHaveBeenCalledTimes(1);
 
     container.remove();
@@ -66,23 +69,29 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
 
   it('ssr-then-hydrate：renderToSvgString 产静态串 → 注入 DOM → hydrate 绑定成功、不重渲染', () => {
     const svg = renderToSvgString(idIr);
+
     expect(svg).toContain('data-retikz-id="a"');
 
     const container = document.createElement('div');
     document.body.appendChild(container);
     container.innerHTML = svg;
     const root = container.querySelector('svg');
+
     expect(root).not.toBeNull();
 
     const before = root!.outerHTML;
     const onClick = vi.fn();
     hydrate(root!, { handlers: { a: { click: onClick } } });
+
     // 水合不重渲染：DOM 结构不变
     expect(root!.outerHTML).toBe(before);
 
     const target = findById(root!, 'a');
+
     expect(target).not.toBeNull();
+
     target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(onClick).toHaveBeenCalledTimes(1);
 
     container.remove();
@@ -105,6 +114,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
 
     const target = findById(view.root, 'a');
     target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(context?.id).toBe('a');
     expect(context?.renderer).toBe('svg');
     expect(context?.meta).toEqual({ series: 'sales', i: 3 });
@@ -133,6 +143,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
       scene: compileToScene(metaIr).scene,
     });
     findById(richRoot, 'a')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(richCtx?.renderer).toBe('svg');
     expect(richCtx?.meta).toEqual({ series: 'sales', i: 3 });
     expect(richCtx?.geometry).toBeDefined();
@@ -152,6 +163,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
       },
     });
     findById(minRoot, 'a')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(minCtx?.id).toBe('a');
     expect(minCtx?.renderer).toBe('svg');
     expect(minCtx?.meta).toBeUndefined();
@@ -172,8 +184,11 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
     handle.dispose();
 
     const target = findById(view.root, 'a');
+
     expect(target).not.toBeNull();
+
     target!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(onClick).not.toHaveBeenCalled();
 
     container.remove();
@@ -190,6 +205,7 @@ describe('@retikz/vanilla hydrate（SVG 水合）', () => {
 
     // root 已移除；即便再派发事件也不触发（listener 随 view.dispose 解绑）
     root.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
     expect(onClick).not.toHaveBeenCalled();
 
     container.remove();

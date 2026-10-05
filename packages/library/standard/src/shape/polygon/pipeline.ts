@@ -16,5 +16,6 @@ export const lowerPolygon = (source: IRPolygon): IRPath => {
       angleDeg: rotate + (index * 360) / source.sides,
     }),
   );
+
   return shapeVertexPath(source, vertices);
 };

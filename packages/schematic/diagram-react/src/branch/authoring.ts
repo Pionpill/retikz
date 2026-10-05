@@ -97,9 +97,11 @@ void branchDiagramLayoutHostPropKeysCheck;
 /** 按 own-property 语义提取 Branch standalone Layout 宿主属性 */
 export const branchDiagramLayoutHostPropsOf = (props: BranchDiagramLayoutHostProps): BranchDiagramLayoutHostProps => {
   const output: BranchDiagramLayoutHostProps = {};
+
   for (const key of branchDiagramLayoutHostPropKeys) {
     if (Object.hasOwn(props, key)) Object.assign(output, { [key]: props[key] });
   }
+
   return output;
 };
 
@@ -122,6 +124,7 @@ export const collectBranchDiagramInput = (
       message: 'Embedded BranchDiagram host properties belong on the outer Layout.',
       details: { label: 'BranchDiagram', reason: 'invalid-authoring' },
     });
+
   const {
     children,
     authoring: _authoring,
@@ -200,10 +203,12 @@ export const collectBranchDiagramInput = (
         nodes.push({ ...child.props });
         return;
       }
+
       if (isValidElement<InputBranch>(child) && child.type === Branch) {
         branches.push({ ...child.props });
         return;
       }
+
       throw new RetikzDiagramReactBranchError({
         code: RetikzDiagramReactBranchErrorCode.ChildInvalid,
         message: 'BranchDiagram only accepts flat BranchNode and Branch declarations.',
@@ -211,6 +216,7 @@ export const collectBranchDiagramInput = (
       });
     });
   collect(children);
+
   return { ...input, nodes, branches };
 };
 

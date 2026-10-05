@@ -30,14 +30,18 @@ it('removes and restores Group captions and labels during retained updates', () 
   const controller = createProcessingController(source(true), {
     adapters: FlowVanilla.createFlowDiagramVanillaAdapters(),
   });
+
   try {
     const initial = controller.read();
     controller.update(source(false));
     const hidden = controller.read();
+
     expect(JSON.stringify(hidden.scene)).not.toContain('Description');
     expect(JSON.stringify(hidden.scene)).not.toContain('Boundary');
     expect(JSON.stringify(hidden.scene)).toContain('Item');
+
     controller.update(source(true));
+
     expect(controller.read().scene).toEqual(initial.scene);
   } finally {
     controller.dispose();
@@ -57,6 +61,7 @@ it('preserves local Layout exclusion through Vanilla authoring', () => {
     children: ['row'],
   };
   const source = FlowVanilla.normalizeFlowDiagram(input);
+
   expect(source.layouts[0].excludeFromBounds).toEqual(['png']);
   expect(DiagramFlow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(
     DiagramFlow.FlowDiagramSchema.parse(source),
@@ -64,6 +69,7 @@ it('preserves local Layout exclusion through Vanilla authoring', () => {
 });
 
 type NormalizeFlowDiagram = (input: Readonly<Record<string, unknown>>) => DiagramFlow.IRFlowDiagram;
+
 type CreateFlowDiagramEmbed = (
   input: Readonly<Record<string, unknown>>,
 ) => InputEmbed<Readonly<Record<string, unknown>>>;
@@ -71,7 +77,9 @@ type CreateFlowDiagramEmbed = (
 const functionExport = <TFunction extends (...arguments_: never) => unknown>(name: string): TFunction | undefined => {
   const value: unknown = FlowVanilla;
   if (typeof value !== 'object' || value === null || !(name in value)) return undefined;
+
   const candidate = value[name as keyof typeof value];
+
   return typeof candidate === 'function' ? candidate : undefined;
 };
 
@@ -147,8 +155,10 @@ describe('@retikz/diagram-vanilla/flow', () => {
       },
       { adapters: FlowVanilla.createFlowDiagramVanillaAdapters(), compile: { measureText } },
     );
+
     expect(artifactValueOf(result)).toMatchObject({ relations: [{ route: { kind, cornerRadius: 0 } }] });
   });
+
   it('exports the complete Flow authoring surface from the explicit subpath', () => {
     expect(functionExport('normalizeFlowDiagram')).toBeDefined();
     expect(functionExport('flowDiagram')).toBeDefined();
@@ -158,7 +168,9 @@ describe('@retikz/diagram-vanilla/flow', () => {
 
   it('normalizes flat authoring input to the exact Direct Flow Source without adding defaults', () => {
     const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
+
     expect(normalizeFlowDiagram).toBeDefined();
+
     if (normalizeFlowDiagram === undefined) return;
 
     const source = normalizeFlowDiagram(sourceInput);
@@ -169,7 +181,9 @@ describe('@retikz/diagram-vanilla/flow', () => {
 
   it('normalizes a Core-compatible Entity text block and Source text layout without adapter defaults', () => {
     const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
+
     expect(normalizeFlowDiagram).toBeDefined();
+
     if (normalizeFlowDiagram === undefined) return;
 
     const input = {
@@ -190,7 +204,9 @@ describe('@retikz/diagram-vanilla/flow', () => {
 
   it('preserves id-keyed Grid placements in typed Vanilla authoring', () => {
     const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
+
     expect(normalizeFlowDiagram).toBeDefined();
+
     if (normalizeFlowDiagram === undefined) return;
 
     const input = {
@@ -219,8 +235,10 @@ describe('@retikz/diagram-vanilla/flow', () => {
   it('keeps definition options out of Source and contributes the same Flow provider root', () => {
     const flowDiagram = functionExport<CreateFlowDiagramEmbed>('flowDiagram');
     const adapter = adapterExport();
+
     expect(flowDiagram).toBeDefined();
     expect(adapter).toBeDefined();
+
     if (flowDiagram === undefined || adapter === undefined) return;
 
     const flowThemeStyle = DiagramFlow.defineFlowThemeStyle({ name: 'brand', resolve: () => ({}) });
@@ -235,8 +253,10 @@ describe('@retikz/diagram-vanilla/flow', () => {
   it('compiles the normalized Source to the public Flow artifact through the contributed providers', () => {
     const flowDiagram = functionExport<CreateFlowDiagramEmbed>('flowDiagram');
     const adapter = adapterExport();
+
     expect(flowDiagram).toBeDefined();
     expect(adapter).toBeDefined();
+
     if (flowDiagram === undefined || adapter === undefined) return;
 
     const vanillaResult = processToStaticInputResult(
@@ -279,6 +299,7 @@ it('容器宽度策略通过 Vanilla 归一化和 JSON 往返保留', () => {
     children: ['rows'],
     relations: [{ source: 'a', target: 'b' }],
   });
+
   expect(source.layouts[0]).toMatchObject({ containerWidth: 'match-largest' });
   expect(source.layouts[1]).toMatchObject({ itemWidth: 'fill' });
   expect(DiagramFlow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);

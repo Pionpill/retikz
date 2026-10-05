@@ -9,10 +9,12 @@ import { drawAnatomyI18n } from './draw-anatomy.i18n';
 
 /** 绘制关系图的语言 */
 export type DrawAnatomyProps = Readonly<{ lang?: Lang }>;
+
 /** 简写、路径动作与装饰的职责关系 */
 const DrawAnatomy: FC<DrawAnatomyProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = drawAnatomyI18n[lang];
+
   return (
     <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout

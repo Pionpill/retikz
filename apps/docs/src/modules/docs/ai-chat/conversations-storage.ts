@@ -32,7 +32,9 @@ const idbStore = createStore('retikz-ai-chat', 'conversations');
 
 const isConversation = (raw: unknown): raw is Conversation => {
   if (!raw || typeof raw !== 'object') return false;
+
   const c = raw as Partial<Conversation>;
+
   return (
     typeof c.id === 'string' &&
     typeof c.title === 'string' &&
@@ -45,8 +47,10 @@ const isConversation = (raw: unknown): raw is Conversation => {
 /** 一次性把所有会话读进内存；schema 不匹配的记录跳过（不抛错，让 panel 仍可启动） */
 export const loadAllConversations = async (): Promise<Record<string, Conversation>> => {
   const result: Record<string, Conversation> = {};
+
   try {
     const all = await entries<string, unknown>(idbStore);
+
     for (const [key, value] of all) {
       if (isConversation(value) && value.id === key) result[key] = value;
     }
@@ -54,6 +58,7 @@ export const loadAllConversations = async (): Promise<Record<string, Conversatio
     // IDB 在隐私模式 / 老浏览器可能 reject；面板降级到无历史模式
     console.warn('[ai-chat] failed to load conversations from IDB:', e);
   }
+
   return result;
 };
 
@@ -78,7 +83,9 @@ export const deleteConversationFromStorage = async (id: string): Promise<void> =
 export const deriveTitleFromMessages = (messages: ReadonlyArray<ChatMessage>, fallback: string): string => {
   const firstUser = messages.find(m => m.role === 'user' && !m.autoSent);
   if (!firstUser) return fallback;
+
   const trimmed = firstUser.content.trim();
   if (!trimmed) return fallback;
+
   return trimmed.length > 40 ? `${trimmed.slice(0, 40)}…` : trimmed;
 };

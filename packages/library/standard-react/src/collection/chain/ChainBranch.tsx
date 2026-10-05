@@ -7,6 +7,7 @@ export type ChainBranchProps = {
   /** 单元与嵌套并行块 */
   children?: ReactNode;
 };
+
 /** 并行块的直属支路 */
 export const ChainBranch: FC<ChainBranchProps> = () =>
   invalidCellAuthoring('ChainBranch must be a direct child of ChainParallel.');

@@ -27,6 +27,7 @@ type _NodeFieldsCheck = AssertEqual<
   (typeof NODE_FIELDS)[number],
   Exclude<keyof IRNode, 'type' | 'position' | 'text' | 'label'>
 >;
+
 const _assertNodeFieldsCheck: _NodeFieldsCheck = true;
 void _assertNodeFieldsCheck;
 
@@ -50,6 +51,7 @@ export const PATH_FIELDS = [
 ] as const satisfies ReadonlyArray<keyof IRPath>;
 
 type _PathFieldsCheck = AssertEqual<(typeof PATH_FIELDS)[number], Exclude<keyof IRPath, 'type' | 'children'>>;
+
 const _assertPathFieldsCheck: _PathFieldsCheck = true;
 void _assertPathFieldsCheck;
 
@@ -75,6 +77,7 @@ export const SCOPE_FIELDS = [
 ] as const satisfies ReadonlyArray<keyof IRScope>;
 
 type _ScopeFieldsCheck = AssertEqual<(typeof SCOPE_FIELDS)[number], Exclude<keyof IRScope, 'type' | 'children'>>;
+
 const _assertScopeFieldsCheck: _ScopeFieldsCheck = true;
 void _assertScopeFieldsCheck;
 
@@ -86,6 +89,7 @@ void _assertScopeFieldsCheck;
 export const SCOPE_STYLE_FIELDS = ['style', 'defaults'] as const satisfies ReadonlyArray<keyof ScopeStyleProps>;
 
 type _ScopeStyleFieldsCheck = AssertEqual<(typeof SCOPE_STYLE_FIELDS)[number], keyof ScopeStyleProps>;
+
 const _assertScopeStyleFieldsCheck: _ScopeStyleFieldsCheck = true;
 void _assertScopeStyleFieldsCheck;
 
@@ -98,8 +102,10 @@ export const pickDefined = <TSource extends object, TKey extends keyof TSource>(
   fields: ReadonlyArray<TKey>,
 ): Partial<Pick<TSource, TKey>> => {
   const out: Partial<Pick<TSource, TKey>> = {};
+
   for (const key of fields) {
     if (source[key] !== undefined) out[key] = source[key];
   }
+
   return out;
 };

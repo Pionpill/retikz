@@ -50,7 +50,9 @@ export const foldCornersOf = (
       [x, curr[1]],
     ];
   }
+
   const y = prev[1] + (curr[1] - prev[1]) * fraction;
+
   return [
     [prev[0], y],
     [curr[0], y],

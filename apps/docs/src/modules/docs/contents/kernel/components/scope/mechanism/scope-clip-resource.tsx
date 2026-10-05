@@ -15,6 +15,7 @@ export type ScopeClipResourceProps = Readonly<{ lang?: Lang }>;
 const ScopeClipResource: FC<ScopeClipResourceProps> = props => {
   const { lang = 'zh' } = props;
   const t = scopeClipResourceI18n[lang];
+
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}

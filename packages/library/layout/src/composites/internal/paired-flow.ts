@@ -104,6 +104,7 @@ export const translatePairedFlowPlan = (
       }),
     ),
   );
+
   return Object.freeze({
     ...plan,
     bounds: translate(plan.bounds),
@@ -142,6 +143,7 @@ const trackProfileOf = (
     gap: hasSecondary ? pairGap : 0,
     distribution: LayoutDistribution.Start,
   });
+
   return mode === 'minimum' ? solved.minimumProfile : solved.naturalProfile;
 };
 
@@ -169,6 +171,7 @@ const pairProfileOf = (item: PairedFlowItem, pairGap: number, mode: 'minimum' | 
           },
         ]),
   ]).size;
+
   return Object.freeze({
     width: compensatedLayoutSum([primaryWidth, ...(secondary === undefined ? [] : [pairGap, secondaryWidth])]),
     height,
@@ -188,6 +191,7 @@ const mainItemsOf = (
       const natural = pairProfileOf(item, pairGap, 'natural');
       const mainMinimum = direction === 'horizontal' ? minimum.width : minimum.height;
       const mainNatural = direction === 'horizontal' ? natural.width : natural.height;
+
       return Object.freeze({
         key: item.key,
         sourceIndex,
@@ -212,11 +216,13 @@ export const resolvePairedFlowIntrinsicMainProfile = (
       details: { pairGap: options.pairGap },
     });
   }
+
   const mainGap = options.direction === 'horizontal' ? options.gap.column : options.gap.row;
   const mainItems = mainItemsOf(options.items, options.direction, options.pairGap);
   const indexes = options.items.map((_, index) => index);
   const unwrapped = resolveFlexLineMainProfile(mainItems, indexes, mainGap);
   if (options.wrap === 'nowrap' || indexes.length === 0) return Object.freeze(unwrapped);
+
   return Object.freeze({
     minimum: Math.max(...indexes.map(index => resolveFlexLineMainProfile(mainItems, [index], 0).minimum)),
     natural: unwrapped.natural,
@@ -243,7 +249,9 @@ const lineCrossProfileOf = (
       primaryTrackSize: 0,
     };
   }
+
   const tracks = trackProfileOf(items, indexes, pairGap, mode);
+
   return {
     size: compensatedLayoutSum([...tracks, ...(tracks.length > 1 ? [pairGap] : [])]),
     primaryTrackSize: tracks[0] ?? 0,
@@ -260,6 +268,7 @@ const profileLine = (
   const minimumCross = lineCrossProfileOf(items, indexes, options.direction, options.pairGap, 'minimum');
   const naturalCross = lineCrossProfileOf(items, indexes, options.direction, options.pairGap, 'natural');
   const mainProfile = resolveFlexLineMainProfile(mainItems, indexes, mainGap);
+
   return Object.freeze({
     itemIndexes: Object.freeze([...indexes]),
     minimumMainSize: mainProfile.minimum,
@@ -290,6 +299,7 @@ export const resolvePairedFlowPlan = (
       details: { pairGap: options.pairGap },
     });
   }
+
   const origin = options.origin ?? { x: 0, y: 0 };
   const mainGap = options.direction === 'horizontal' ? options.gap.column : options.gap.row;
   const mainItems = mainItemsOf(options.items, options.direction, options.pairGap);
@@ -305,8 +315,10 @@ export const resolvePairedFlowPlan = (
 
   if (options.direction === 'horizontal') {
     let rowY = origin.y;
+
     for (const line of lines) {
       let itemX = origin.x;
+
       for (const sourceIndex of line.itemIndexes) {
         const item = options.items[sourceIndex];
         const primary = item.primary.natural;
@@ -335,12 +347,15 @@ export const resolvePairedFlowPlan = (
         slotsBySource[sourceIndex] = Object.freeze({ sourceIndex, primary: primarySlot, secondary: secondarySlot });
         itemX += pair.width + mainGap;
       }
+
       rowY += line.naturalCrossSize + options.gap.row;
     }
   } else {
     let columnX = origin.x;
+
     for (const line of lines) {
       let itemY = origin.y;
+
       for (const sourceIndex of line.itemIndexes) {
         const item = options.items[sourceIndex];
         const primary = item.primary.natural;
@@ -369,6 +384,7 @@ export const resolvePairedFlowPlan = (
         slotsBySource[sourceIndex] = Object.freeze({ sourceIndex, primary: primarySlot, secondary: secondarySlot });
         itemY += pair.height + options.gap.row;
       }
+
       columnX += line.naturalCrossSize + options.gap.column;
     }
   }
@@ -382,6 +398,7 @@ export const resolvePairedFlowPlan = (
           details: { phase: 'placement' },
         });
       }
+
       return slot;
     }),
   );
@@ -395,6 +412,7 @@ export const resolvePairedFlowPlan = (
   );
   const width = options.direction === 'horizontal' ? mainProfile.natural : crossProfile.natural;
   const height = options.direction === 'horizontal' ? crossProfile.natural : mainProfile.natural;
+
   return Object.freeze({
     bounds: Object.freeze({ x: origin.x, y: origin.y, width, height }),
     lines,

@@ -45,10 +45,12 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { role: 'activity', status: '', group: false, override: false, color: '#2563eb' },
     relatedApis: ['Entity.role', 'Entity.status', 'Entity.group', 'Entity.style.color'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

@@ -22,7 +22,9 @@ export const createBenchRoutes = (createModuleElement: BenchModuleElementFactory
   const moduleRoutes = benchModules.flatMap<RouteObject>(module => {
     const testCases = getModuleTestCases(module.id);
     if (testCases.length === 0) return [{ path: module.path, element: createModuleElement(module) }];
+
     const moduleDefaultPath = getBenchCasePath(module.id, testCases[0].id, BenchCaseView.Preview);
+
     return [
       { path: module.path, loader: () => redirect(moduleDefaultPath) },
       {

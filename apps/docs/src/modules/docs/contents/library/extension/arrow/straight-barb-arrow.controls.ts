@@ -21,6 +21,7 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { length: 8, width: 8, lineWidth: 1.5, color: '#2563eb' },

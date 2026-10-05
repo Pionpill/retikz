@@ -99,6 +99,7 @@ export const placeLayoutChild = (
     containerAllocation: input.containerAllocation,
     overflow: input.overflow,
   });
+
   return Object.freeze({
     result,
     slotBounds: input.slotBounds,

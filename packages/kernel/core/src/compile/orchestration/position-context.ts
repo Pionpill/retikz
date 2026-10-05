@@ -40,6 +40,7 @@ const targetBoundaryResolutionOf = (
   if (boundary === undefined || boundary === 'shape') return shapeBoundaryResolutionOf(node);
   if (boundaryKey(boundary) === boundaryKey(node.boundary)) return node.boundaryResolution;
   if (resolveExplicitBoundary === undefined) return undefined;
+
   return resolveExplicitBoundary(boundary, {
     visualDef: node.shapeDef,
     visualParams: node.shapeParams,
@@ -67,16 +68,19 @@ export const createPositionResolveContext = (
   input: CreatePositionResolveContextInput,
 ): PositionTargetResolveContext => {
   const { namespaceStack, nodeDistance, scopeChain = [], resolveExplicitBoundary } = input;
+
   const lookupReference = (id: string): PositionReferenceView | undefined => {
     const entry = namespaceStack.lookupEntry(id);
     return entry === undefined ? undefined : { state: entry.state, node: nodeReferenceViewOf(entry.layout) };
   };
+
   const toLocal = (world: IRPosition): IRPosition =>
     scopeChain.length === 0 ? [world[0], world[1]] : inverseTransformChain(world, scopeChain);
   const toWorld = (local: IRPosition): IRPosition =>
     scopeChain.length === 0 ? [local[0], local[1]] : applyTransformChain(local, scopeChain);
   const boundaryResolutionOf = (target: IRNodeTarget, reference: PositionReferenceView) =>
     targetBoundaryResolutionOf(reference.node, target, resolveExplicitBoundary);
+
   const pointOfNodeTarget = (
     target: IRNodeTarget,
     reference: PositionReferenceView,
@@ -86,6 +90,7 @@ export const createPositionResolveContext = (
     if (target.anchor === undefined) return [node.rect.x, node.rect.y];
     return resolveAnchorRef(node, target.anchor, target.boundary ?? node.boundary, boundaryResolution);
   };
+
   const resolveBetweenWorld = (between: IRBetweenPosition): IRPosition | null =>
     resolvePositionTarget(between, context).referencePoint;
   const context: PositionTargetResolveContext = {
@@ -97,5 +102,6 @@ export const createPositionResolveContext = (
     pointOfNodeTarget,
     resolveBetweenWorld,
   };
+
   return context;
 };

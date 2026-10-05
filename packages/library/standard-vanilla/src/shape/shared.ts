@@ -41,6 +41,7 @@ export type InputShapeProperties = Pick<InputPath, 'thickness' | 'arrow' | 'arro
 type NormalizedShapeProperties<TInput> = TInput extends object
   ? Omit<TInput, keyof InputShapeProperties> & Pick<InputPath, 'style' | 'marks'>
   : never;
+
 /** 复用完整路径归一化，固定步骤仅满足路径结构，不参与形状几何 */
 export const normalizeShapeProperties = <TInput extends InputShapeProperties>(
   input: TInput,
@@ -58,5 +59,6 @@ export const normalizeShapeProperties = <TInput extends InputShapeProperties>(
   });
   void _type;
   void _children;
+
   return source as NormalizedShapeProperties<TInput>;
 };

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 const targetsOf = (values: StepTargetingPreviewValues): ReactNode => {
   const offset: [number, number] = [values.offsetX, values.offsetY];
+
   switch (values.targetKind) {
     case 'offset':
       return (

@@ -30,11 +30,13 @@ export const createPreviewControlContract = (lang: Lang) => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { participation: 'exclude', offsetX: 0, offsetY: 0, zIndex: 1 },
     relatedApis: ['OverlayLayoutItem.sizeParticipation', 'OverlayLayoutItem.zIndex', 'OverlayLayoutItem.offset'],
   } satisfies PreviewControlContract;
 };
+
 /** 中文注册基线 */
 export const previewControlContract = createPreviewControlContract('zh');

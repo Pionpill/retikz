@@ -25,15 +25,19 @@ const createPresentationMarker = (slot: ChartPresentationMarkerSlot): ChartPrese
   const component = Marker as ChartPresentationMarkerComponent;
   component.presentationSlot = slot;
   component.displayName = `Chart${slot.slice(0, 1).toUpperCase()}${slot.slice(1)}`;
+
   return component;
 };
 
 /** Chart 标题的 headless JSX marker */
 export const ChartTitle = createPresentationMarker('title');
+
 /** Chart 副标题的 headless JSX marker */
 export const ChartSubtitle = createPresentationMarker('subtitle');
+
 /** Chart 注记的 headless JSX marker */
 export const ChartNote = createPresentationMarker('note');
+
 /** Chart 来源的 headless JSX marker */
 export const ChartSource = createPresentationMarker('source');
 
@@ -44,20 +48,24 @@ type ChartTextLine = IRLine;
 
 const textLinesOf = (children: ReactNode): Array<ChartTextLine> => {
   const lines: Array<ChartTextLine> = [];
+
   const append = (value: ReactNode): void => {
     if (value === null || value === undefined || typeof value === 'boolean') return;
     if (Array.isArray(value)) {
       value.forEach(append);
       return;
     }
+
     if (typeof value === 'string') {
       lines.push(value);
       return;
     }
+
     if (isValidElement(value) && value.type === Fragment) {
       append(value.props.children as ReactNode);
       return;
     }
+
     if (isValidElement(value) && value.type === Text) {
       const props = value.props as { children: string | number; fill?: string; opacity?: number; font?: IRFont };
       const text = String(props.children);
@@ -71,13 +79,17 @@ const textLinesOf = (children: ReactNode): Array<ChartTextLine> => {
               ...(props.font === undefined ? {} : { font: props.font }),
             };
       lines.push(line);
+
       return;
     }
+
     throw new RetikzChartReactError('chart react: presentation marker children accept only strings, Fragment, or Text');
   };
+
   append(children);
   if (lines.length === 0)
     throw new RetikzChartReactError('chart react: presentation marker requires at least one text line');
+
   return lines;
 };
 
@@ -86,6 +98,7 @@ const textBlockOf = (children: ReactNode): IRTextBlock => {
   const first = lines.at(0);
   if (first === undefined)
     throw new RetikzChartReactError('chart react: presentation marker requires at least one text line');
+
   return lines.length === 1 && typeof first === 'string' ? first : lines;
 };
 
@@ -102,18 +115,23 @@ export type ChartPresentationMarkerSplit = Readonly<{
  */
 export const splitPresentationMarkers = (children: ReactNode): ChartPresentationMarkerSplit => {
   const presentation: Partial<Record<ChartPresentationMarkerSlot, IRTextBlock>> = {};
+
   const visit = (value: ReactNode): ReactNode => {
     if (Array.isArray(value)) return value.map(visit);
     if (!isValidElement(value)) return value;
     if (value.type === Fragment) return createElement(Fragment, null, visit(value.props.children as ReactNode));
     if (!isPresentationMarker(value.type)) return value;
+
     const slot = value.type.presentationSlot;
     if (presentation[slot] !== undefined) {
       throw new RetikzChartReactError(`chart react: presentation marker '${slot}' may appear at most once`);
     }
+
     presentation[slot] = textBlockOf((value.props as ChartPresentationMarkerProps).children);
+
     return null;
   };
+
   return { presentation, chartChildren: visit(children) };
 };
 
@@ -122,5 +140,6 @@ export const hasPlotChild = (value: ReactNode): boolean => {
   if (value === null || value === undefined || typeof value === 'boolean') return false;
   if (Array.isArray(value)) return value.some(hasPlotChild);
   if (isValidElement(value) && value.type === Fragment) return hasPlotChild(value.props.children as ReactNode);
+
   return true;
 };

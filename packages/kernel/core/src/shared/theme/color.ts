@@ -14,5 +14,6 @@ export const categoricalColorAt = <TColor extends CssColorValue>(
       'categoricalColorAt: index must be a non-negative safe integer.',
     );
   }
+
   return palette[index % palette.length];
 };

@@ -32,6 +32,7 @@ const installCanvasHarness = (): { restore: () => void } => {
     y: 0,
     toJSON: () => ({}),
   }));
+
   return {
     restore: () => {
       getContext.mockRestore();
@@ -65,6 +66,7 @@ describe('Canvas 水合', () => {
     });
 
     const canvas = container.querySelector('canvas');
+
     expect(canvas).not.toBeNull();
 
     // 单节点即整图内容，bbox 中心映射到画布显示中心；点画布中心命中该节点
@@ -99,6 +101,7 @@ describe('Canvas 水合', () => {
     });
 
     expect(onClick).toHaveBeenCalledTimes(1);
+
     root.unmount();
     container.remove();
     harness.restore();

@@ -53,7 +53,9 @@ const paintToSvg = (
   if (typeof paint === 'string') {
     return paint.includes('var(') ? { attr: undefined, stylePaint: paint } : { attr: paint, stylePaint: undefined };
   }
+
   if (paint.kind === 'resourceRef') return { attr: paintRefUrl(paint.id), stylePaint: undefined };
+
   return { attr: 'context-stroke', stylePaint: undefined };
 };
 
@@ -70,6 +72,7 @@ const mergeFillStrokeStyle = (styleFill: string | undefined, styleStroke: string
   const out: SvgStyle = {};
   if (styleFill !== undefined) out.fill = styleFill;
   if (styleStroke !== undefined) out.stroke = styleStroke;
+
   return out.fill !== undefined || out.stroke !== undefined ? out : undefined;
 };
 
@@ -109,10 +112,12 @@ const shadowFilterRef = (
  */
 const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
   const paintRefUrl = context.paintRefUrl ?? ((id: string) => `url(#${id})`);
+
   switch (p.type) {
     case 'rect': {
       const f = paintToSvg(p.fill, paintRefUrl);
       const s = paintToSvg(p.stroke, paintRefUrl);
+
       return withStyle(
         {
           tag: 'rect',
@@ -142,6 +147,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
       const transform = p.rotate ? `rotate(${p.rotate} ${p.cx} ${p.cy})` : undefined;
       const f = paintToSvg(p.fill, paintRefUrl);
       const s = paintToSvg(p.stroke, paintRefUrl);
+
       return withStyle(
         {
           tag: 'ellipse',
@@ -189,6 +195,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
           fillOnlyStyle(line.fill),
         ),
       );
+
       return withStyle(
         {
           tag: 'text',
@@ -215,6 +222,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
       const endId = p.arrowEnd && context.arrowMarkerIdFor ? context.arrowMarkerIdFor(p.arrowEnd) : undefined;
       const f = paintToSvg(p.fill, paintRefUrl);
       const s = paintToSvg(p.stroke, paintRefUrl);
+
       return withStyle(
         {
           tag: 'path',
@@ -243,8 +251,10 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
     case 'group': {
       const clipRefUrl = context.clipRefUrl ?? ((id: string) => `url(#${id})`);
       const clipPath = p.clipRef !== undefined ? clipRefUrl(p.clipRef) : undefined;
+
       // 防御：跳过 undefined 子槽位（非法 Scene 不致抛）
       const children = p.children.filter((c): c is ScenePrimitive => Boolean(c)).map(c => buildPrim(c, context));
+
       return {
         tag: 'g',
         attrs: compact({
@@ -267,5 +277,6 @@ export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNod
   const node = buildPrimRaw(p, context);
   const decorated = context.decorate ? context.decorate(node, p) : node;
   if (p.hitTest === false) decorated.attrs['pointer-events'] = 'none';
+
   return decorated;
 };

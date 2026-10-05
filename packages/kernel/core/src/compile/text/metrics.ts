@@ -71,12 +71,14 @@ export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetric
     const height = candidate.height;
     const rawAscent = candidate.ascent;
     const rawDescent = candidate.descent;
+
     const assertMetric = (name: keyof TextMetrics, value: unknown): number => {
       if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
         throw createCompositeContractError(
           `normalizeTextMetrics: invalid ${name} '${String(value)}'; must be a non-negative finite number`,
         );
       }
+
       return value;
     };
 
@@ -94,6 +96,7 @@ export const normalizeTextMetrics = (metrics: TextMetrics): NormalizedTextMetric
           `normalizeTextMetrics: invalid ascent/descent sum '${measuredVerticalSpan}'; must be a non-negative finite number`,
         );
       }
+
       const visualHeight = Math.max(normalizedHeight, measuredVerticalSpan);
       const leadingHalf = (visualHeight - measuredVerticalSpan) / 2;
       ascent = measuredAscent + leadingHalf;
@@ -133,6 +136,7 @@ export const fallbackMeasurer: TextMeasurer = (text, font) => {
       `fallbackMeasurer: invalid font.size '${font.size}'; must be a non-negative finite number`,
     );
   }
+
   return {
     width: text.length * font.size * 0.55,
     height: font.size * 1.2,

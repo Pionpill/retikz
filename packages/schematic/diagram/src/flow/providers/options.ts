@@ -17,6 +17,7 @@ const mergeNamedDefinitions = <TDefinition extends NamedDefinition>(
   capability: string,
 ): ReadonlyArray<TDefinition> => {
   const definitionsByName = new Map<string, TDefinition>();
+
   for (const options of optionSets) {
     for (const definition of selectDefinitions(options) ?? []) {
       const existingDefinition = definitionsByName.get(definition.name);
@@ -24,6 +25,7 @@ const mergeNamedDefinitions = <TDefinition extends NamedDefinition>(
         definitionsByName.set(definition.name, definition);
         continue;
       }
+
       if (!Object.is(existingDefinition, definition)) {
         throw new RetikzDiagramError({
           code: RetikzDiagramErrorCode.DefinitionDuplicate,
@@ -33,12 +35,14 @@ const mergeNamedDefinitions = <TDefinition extends NamedDefinition>(
       }
     }
   }
+
   return [...definitionsByName.values()];
 };
 
 const mergeDefaultFlowLayout = (optionSets: ReadonlyArray<FlowDiagramDefinitionOptions>): string | undefined => {
   const names = [...new Set(optionSets.flatMap(options => options.defaultFlowLayout ?? []))];
   if (names.length <= 1) return names[0];
+
   throw new RetikzDiagramError({
     code: RetikzDiagramErrorCode.DefinitionInvalid,
     message: 'Flow Diagram provider assembly received conflicting default Flow Layout names.',
@@ -76,6 +80,7 @@ export const resolveFlowDiagramDefinitionOptions = (
   const flowThemeStyles = mergeNamedDefinitions(optionSets, options => options.flowThemeStyles, 'flow-theme-style');
   const flowLayouts = mergeNamedDefinitions(optionSets, options => options.flowLayouts, 'flow-layout');
   const defaultFlowLayout = mergeDefaultFlowLayout(optionSets);
+
   return {
     diagramThemeStyles: resolveDiagramThemeStyleRegistry(diagramThemeStyles),
     flowThemeStyles: resolveFlowThemeStyleRegistry(flowThemeStyles),

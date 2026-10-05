@@ -73,7 +73,9 @@ const renderPlotImpl = (
   ).scene;
   const svg = renderToSvgString(scene, { output: { width: options.width, height: options.height } });
   if (!isLineageOptions(options)) return svg;
+
   const { lineage } = lowerPlotWithLineage(spec, data, options);
+
   return { svg, lineage };
 };
 

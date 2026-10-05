@@ -40,6 +40,7 @@ const createArrayInput = (props: Readonly<Record<string, unknown>>, context: Rea
   if (skeleton !== undefined) return { ...input, skeleton } satisfies InputArray;
   if (data !== undefined)
     return { ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) } satisfies InputArray;
+
   const cells = items ?? collectCellMarkers(children, ArrayItem, 'Array').map(markerCell<IRArrayCell['layout']>);
   const collected = createCellsInput(
     cells.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
@@ -49,9 +50,12 @@ const createArrayInput = (props: Readonly<Record<string, unknown>>, context: Rea
     ...input,
     items: collected.cells.map((cell, index) => (typeof cells[index] === 'string' ? cells[index] : cell)),
   };
+
   return withInputEmbedAdapters(result, collected.adapters);
 };
+
 const ArrayComponent: FC<ArrayProps> = () => null;
+
 /** Standard Array 呈现组件 */
 export const Array = ArrayComponent as StandardEmbeddableComponent<ArrayProps>;
 Array.displayName = 'Array';

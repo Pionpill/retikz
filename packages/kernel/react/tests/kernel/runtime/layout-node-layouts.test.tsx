@@ -85,11 +85,13 @@ describe('<Layout onArtifacts>', () => {
     await act(() => {
       root.render(renderLayout(0));
     });
+
     expect(onArtifacts).toHaveBeenCalledTimes(1);
 
     await act(() => {
       root.render(renderLayout(1));
     });
+
     expect(onArtifacts).toHaveBeenCalledTimes(1);
 
     root.unmount();
@@ -121,11 +123,13 @@ describe('<Layout onArtifacts>', () => {
     await act(() => {
       root.render(renderLayout(0));
     });
+
     expect(notificationCount).toBe(1);
 
     await act(() => {
       root.render(renderLayout(1));
     });
+
     expect(notificationCount).toBe(1);
 
     root.unmount();

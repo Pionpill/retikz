@@ -11,23 +11,29 @@ const samples = [
 describe('逐点留白约束', () => {
   it('中央大点不迫使两端采用最大半径', () => {
     const result = solveMarkPadding(samples, {}, 0.0001);
+
     expect(result.lower).toBeLessThan(0.021);
     expect(result.upper).toBeLessThan(0.021);
+
     for (const sample of samples) {
       const position = result.lower + sample.position * (1 - result.lower - result.upper);
+
       expect(position).toBeGreaterThanOrEqual(sample.lower);
       expect(position).toBeLessThanOrEqual(1 - sample.upper);
     }
+
     expect(solveMarkPadding([...samples].reverse(), {}, 0.0001)).toEqual(result);
   });
 
   it('靠内的大点也参与边缘约束', () => {
     const result = solveMarkPadding([...samples, { position: 0.05, lower: 0.2, upper: 0.2 }], {}, 0.0001);
+
     expect(result.lower + 0.05 * (1 - result.lower - result.upper)).toBeGreaterThanOrEqual(0.2);
   });
 
   it('显式零关闭该端保护，另一端仍求解', () => {
     const result = solveMarkPadding(samples, { lower: 0 }, 0.0001);
+
     expect(result.lower).toBe(0);
     expect(result.upper).toBeGreaterThanOrEqual(0.02);
   });

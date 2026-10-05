@@ -38,7 +38,9 @@ describe('applyArrowShrinks arc commands', () => {
     const move = commands[0];
     const angle = (arc.startAngle * Math.PI) / 180;
     const expected: [number, number] = [-4 * Math.sin(angle), 8 * Math.cos(angle)];
+
     expect(move.kind).toBe('move');
+
     if (move.kind === 'move') {
       expect(move.to[0]).toBeCloseTo(expected[0], 8);
       expect(move.to[1]).toBeCloseTo(expected[1], 8);
@@ -80,10 +82,14 @@ describe('applyArrowShrinks arc commands', () => {
 
     const delta = (1 / 10) * (180 / Math.PI);
     const arc = arcOf(commands);
+
     expect(arc.startAngle).toBeCloseTo(direction * delta, 8);
     expect(arc.endAngle).toBeCloseTo(direction * (360 - delta), 8);
+
     const move = commands[0];
+
     expect(move.kind).toBe('move');
+
     if (move.kind === 'move') {
       expect(move.to[0]).toBeCloseTo(10 * Math.cos((direction * delta * Math.PI) / 180), 8);
       expect(move.to[1]).toBeCloseTo(10 * Math.sin((direction * delta * Math.PI) / 180), 8);

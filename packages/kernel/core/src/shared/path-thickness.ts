@@ -34,5 +34,6 @@ export const THICKNESS_TO_WIDTH = {
 
 /** 确保每个语义线宽关键字都有对应数值 */
 type ThicknessCheck = AssertEqual<keyof typeof THICKNESS_TO_WIDTH, PathThickness>;
+
 const thicknessCheck: ThicknessCheck = true;
 void thicknessCheck;

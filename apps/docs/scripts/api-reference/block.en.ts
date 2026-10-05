@@ -87,6 +87,7 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '冻结后的同一个 Definition 对象；注册由 createCodeBlockContribution 完成':
     'The same Definition object, frozen; register through createCodeBlockContribution',
 };
+
 /** 复用共享 Graph 译文，缺失时停止生成 */
 export const translateBlockApiReference = (source: string): string =>
   translations[source.replace(/\r/g, '')] ?? translateEntityApiReference(source);

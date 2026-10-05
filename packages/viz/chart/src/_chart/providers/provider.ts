@@ -20,6 +20,7 @@ import { resolveChartFromProvider } from './resolve';
 import type { ChartProviderContribution, ChartRecipeProviderContribution } from './types';
 
 const ChartRecipeProviderEnvelopeKey = Symbol('retikz.chart.recipeProvider');
+
 const ChartRecipeProviderReferencePrefix = '@@retikz/chart/recipeProvider/';
 
 type ChartRecipeProviderEnvelope = Readonly<{
@@ -37,11 +38,14 @@ const recipeContributionOf = (value: unknown): ChartRecipeProviderContribution |
 /** Core 合并后共享的 Chart composite Definition maker；所有 chartType provider 必须引用同一个函数 */
 const makeChartDefinition: CoreDependencyProvider['makeDefinition'] = mergedDatasets => {
   const contributions: Array<ChartRecipeProviderContribution> = [];
+
   for (const value of Object.values(mergedDatasets)) {
     const contribution = recipeContributionOf(value);
     if (contribution !== undefined) contributions.push(contribution);
   }
+
   const registry = resolveChartProviderRegistry(contributions);
+
   return createChartDefinition(registry);
 };
 
@@ -68,6 +72,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
       details: { path: ['family'] },
     });
   }
+
   const contribution: ChartRecipeProviderContribution = Object.freeze({
     family: input.family,
     recipe: eraseChartRecipeDefinition(input.recipe),
@@ -91,8 +96,10 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
         : { scaleDefinitions: input.lowerOptions.scaleDefinitions }),
     }),
   });
+
   const runtimeReference = `${ChartRecipeProviderReferencePrefix}${chartRecipeProviderReferenceSeed}`;
   chartRecipeProviderReferenceSeed += 1;
+
   const provider: CoreDependencyProvider = Object.freeze({
     key: chartProviderKeyOf(input.family),
     dependencies: chartProviderDependencies,
@@ -103,6 +110,7 @@ export const createChartProviderContribution = <TSource extends IRChartSource>(
     }),
     makeDefinition: makeChartDefinition,
   });
+
   return Object.freeze({
     roots: Object.freeze([provider.key]),
     providers: Object.freeze([SurfaceProvider, FlexLayoutProvider, provider]),
@@ -121,14 +129,17 @@ export const prepareChartData = async <TSource = never>(
   lowerOptions: LowerPlotsOptions = {},
 ) => {
   const contributions: Array<ChartRecipeProviderContribution> = [];
+
   for (const provider of contribution.providers) {
     for (const value of Object.values(provider.datasets)) {
       const recipe = recipeContributionOf(value);
       if (recipe !== undefined) contributions.push(recipe);
     }
   }
+
   const registry = resolveChartProviderRegistry(contributions);
   const parsed = registry.schema.parse(source);
   const resolution = resolveChartFromProvider(parsed, { registry, theme });
+
   return preparePlotData(resolution.plot, request, lowerOptions);
 };

@@ -18,6 +18,7 @@ describe('browserMeasurer (SSR / node 环境降级路径)', () => {
       { text: 'a', font: { size: 16, weight: 'bold' } },
       { text: 'abcdefghijklmnop', font: { size: 10, family: 'serif', style: 'italic' as const } },
     ];
+
     for (const { text, font } of cases) {
       expect(browserMeasurer(text, font)).toEqual(fallbackMeasurer(text, font));
     }

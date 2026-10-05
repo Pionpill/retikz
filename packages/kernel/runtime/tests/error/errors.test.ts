@@ -5,6 +5,7 @@ import type { RuntimeDiagnostic, RuntimeComputationId } from '../../src';
 import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeDiagnosticCode, RuntimeSourcePhase } from '../../src';
 
 const computation: RuntimeComputationId = { owner: 'owner', key: 'computation' };
+
 const diagnostics: ReadonlyArray<RuntimeDiagnostic> = [
   {
     code: RuntimeDiagnosticCode.ChangeSetFallback,
@@ -46,6 +47,7 @@ describe('runtime structured errors', () => {
     expect(Object.isFrozen(error.details.diagnostics)).toBe(true);
     expect(error.details.diagnostics).toBe(error.diagnostics);
     expect(isRetikzError(error)).toBe(true);
+
     expectOwnCause(error, cause);
   });
 
@@ -78,6 +80,7 @@ describe('runtime structured errors', () => {
     expect(error.phase).toBe('runtime-update');
     expect(error.details).toEqual({ phase: 'runtime-update', diagnostics: [] });
     expect(isRetikzError(error)).toBe(true);
+
     expectOwnCause(error, cause);
   });
 
@@ -115,6 +118,7 @@ describe('runtime structured errors', () => {
     expect(Object.isFrozen(error.details.diagnostics)).toBe(true);
     expect(error.details.diagnostics).toBe(error.diagnostics);
     expect(isRetikzError(error)).toBe(true);
+
     expectOwnCause(error, cause);
   });
 
@@ -133,6 +137,7 @@ describe('runtime structured errors', () => {
     expect(error.owner).toBe('owner');
     expect(error.details).toEqual({ owner: 'owner', phase: 'source-registry', diagnostics: [] });
     expect(isRetikzError(error)).toBe(true);
+
     expectOwnCause(error, undefined);
   });
 
@@ -153,6 +158,7 @@ describe('runtime structured errors', () => {
     expect(error.owner).toBe('owner');
     expect(error.details).toEqual({ owner: 'owner', phase: 'identity', diagnostics: [] });
     expect(isRetikzError(error)).toBe(true);
+
     expectOwnCause(error, rejectedValue);
   });
 });

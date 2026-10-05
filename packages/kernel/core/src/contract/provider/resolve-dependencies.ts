@@ -64,8 +64,10 @@ const assertProviderKey = (key: CoreProviderKey, path: string): void => {
         `resolveCoreProviderDependencies: ${path} must have a non-empty namespace and type`,
       );
     }
+
     return;
   }
+
   if (key.name.length === 0) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
@@ -79,6 +81,7 @@ const providerAt = (index: ProviderIndex, key: CoreProviderKey): ProviderEntry |
   if (key.capability === CoreProviderCapability.Composite) {
     return index.composites.get(key.namespace)?.get(key.type);
   }
+
   return index.named.get(key.capability)?.get(key.name);
 };
 
@@ -90,14 +93,18 @@ const setProvider = (index: ProviderIndex, entry: ProviderEntry): void => {
       index.composites.set(entry.key.namespace, new Map([[entry.key.type, entry]]));
       return;
     }
+
     namespaceProviders.set(entry.key.type, entry);
+
     return;
   }
+
   const capabilityProviders = index.named.get(entry.key.capability);
   if (capabilityProviders === undefined) {
     index.named.set(entry.key.capability, new Map([[entry.key.name, entry]]));
     return;
   }
+
   capabilityProviders.set(entry.key.name, entry);
 };
 
@@ -114,6 +121,7 @@ const sameDependencies = (left: ReadonlyArray<CoreProviderKey>, right: ReadonlyA
         dependency.type === candidate.type
       );
     }
+
     return candidate.capability !== CoreProviderCapability.Composite && dependency.name === candidate.name;
   });
 
@@ -126,10 +134,12 @@ const mergeDatasets = (entry: ProviderEntry, provider: CoreDependencyProvider, p
         `resolveCoreProviderDependencies: ${path}.datasets contains an empty reference`,
       );
     }
+
     if (!entry.datasets.has(reference)) {
       entry.datasets.set(reference, value);
       continue;
     }
+
     if (!Object.is(entry.datasets.get(reference), value)) {
       throw new RetikzCoreError(
         RetikzCoreErrorCode.Contract,
@@ -154,6 +164,7 @@ const buildProviderIndex = (
       assertProviderKey(root, `contributions[${contributionIndex}].roots[${rootIndex}]`);
       roots.push(root);
     }
+
     for (const [providerIndex, provider] of contribution.providers.entries()) {
       const path = `contributions[${contributionIndex}].providers[${providerIndex}]`;
       assertProviderKey(provider.key, `${path}.key`);
@@ -173,18 +184,21 @@ const buildProviderIndex = (
         setProvider(index, entry);
         continue;
       }
+
       if (existing.makeDefinition !== provider.makeDefinition) {
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Contract,
           `resolveCoreProviderDependencies: provider ${keyName(provider.key)} has conflicting maker references`,
         );
       }
+
       if (!sameDependencies(existing.dependencies, dependencies)) {
         throw new RetikzCoreError(
           RetikzCoreErrorCode.Contract,
           `resolveCoreProviderDependencies: provider ${keyName(provider.key)} has conflicting ordered dependencies`,
         );
       }
+
       mergeDatasets(existing, provider, path);
     }
   }
@@ -203,6 +217,7 @@ const buildProviderIndex = (
           ...(explicit.pathKinds === undefined ? {} : { pathKinds: [...explicit.pathKinds] }),
           ...(explicit.composites === undefined ? {} : { composites: [...explicit.composites] }),
         };
+
   return { index, roots, definitions };
 };
 
@@ -222,6 +237,7 @@ const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProvi
         `resolveCoreProviderDependencies: missing ${relation} provider in chain ${chain}`,
       );
     }
+
     const currentState = state.get(entry);
     if (currentState === 'visited') return;
     if (currentState === 'visiting') {
@@ -237,6 +253,7 @@ const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProvi
 
     state.set(entry, 'visiting');
     stack.push(entry);
+
     for (const dependency of entry.dependencies) visit(dependency, entry);
     stack.pop();
     state.set(entry, 'visited');
@@ -244,6 +261,7 @@ const reachableProviders = (index: ProviderIndex, roots: ReadonlyArray<CoreProvi
   };
 
   for (const root of roots) visit(root);
+
   return ordered;
 };
 
@@ -269,8 +287,10 @@ const definitionCapabilityOf = (definition: AnyCoreProviderDefinition): CoreProv
     'lower' in definition
   )
     return CoreProviderCapability.Clip;
+
   if ('paramsSchema' in definition && 'boundaryPoint' in definition) return CoreProviderCapability.Boundary;
   if ('compile' in definition && 'schema' in definition) return CoreProviderCapability.PathKind;
+
   throw new RetikzCoreError(
     RetikzCoreErrorCode.Contract,
     'resolveCoreProviderDependencies: maker returned an unrecognized definition capability',
@@ -288,6 +308,7 @@ const definitionIdentity = (
       `resolveCoreProviderDependencies: expected ${capability} definition but received ${definitionCapabilityOf(definition)}`,
     );
   }
+
   switch (capability) {
     case CoreProviderCapability.Shape:
       return { capability, name: (definition as ShapeDefinition).name };
@@ -367,6 +388,7 @@ const appendDefinition = (
       : definitionIndex.named.get(identity.capability)?.get(identity.name);
   if (existing !== undefined) {
     if (existing === definition) return;
+
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Contract,
       `resolveCoreProviderDependencies: definition conflict for ${keyName(
@@ -380,6 +402,7 @@ const appendDefinition = (
       )} uses different objects`,
     );
   }
+
   if (identity.capability === CoreProviderCapability.Composite) {
     const namespaceDefinitions = definitionIndex.composites.get(identity.namespace);
     if (namespaceDefinitions === undefined) {
@@ -395,6 +418,7 @@ const appendDefinition = (
       capabilityDefinitions.set(identity.name, definition);
     }
   }
+
   appendByCapability(definitions, capability, definition);
 };
 
@@ -414,6 +438,7 @@ const appendExplicitDefinitions = (
     [CoreProviderCapability.PathKind, explicit.pathKinds],
     [CoreProviderCapability.Composite, explicit.composites],
   ];
+
   for (const [capability, entries] of collections) {
     for (const definition of entries ?? []) appendDefinition(definitions, definitionIndex, capability, definition);
   }
@@ -472,8 +497,11 @@ export const resolveCoreProviderDependencies = (
         }`,
       );
     }
+
     appendDefinition(definitions, definitionIndex, provider.key.capability, definition);
   }
+
   appendExplicitDefinitions(definitions, definitionIndex, explicit);
+
   return freezeResolvedDefinitions(definitions);
 };

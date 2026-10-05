@@ -19,6 +19,7 @@ export const lowerRectangle = (source: IRRectangle): IRPath => {
     from = source.corner1;
     to = [from[0] + source.width, from[1] + source.height];
   }
+
   return {
     ...shapePathProperties(source),
     type: 'path',

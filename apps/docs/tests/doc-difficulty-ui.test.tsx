@@ -23,6 +23,7 @@ vi.mock('react-i18next', async importOriginal => ({
       if (options?.difficulty) return `${key}:${String(options.difficulty)}`;
       if (key === 'page.docStats') return `desktop:${String(options?.minutes)}`;
       if (key === 'page.docStatsCompact') return `mobile:${String(options?.minutes)}`;
+
       return key;
     },
     i18n: { resolvedLanguage: 'zh' },
@@ -120,6 +121,7 @@ describe('<HeaderActions>', () => {
     const more = container.querySelector<HTMLButtonElement>('button:has(svg.lucide-ellipsis)');
 
     expect(more).not.toBeNull();
+
     act(() => {
       more?.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0 }));
     });
@@ -182,6 +184,7 @@ describe('<DocPageActions>', () => {
     expect(desktopStats?.getAttribute('class')).toContain('hidden');
     expect(desktopStats?.getAttribute('class')).toContain('md:inline');
     expect(arrows.length).toBeGreaterThan(0);
+
     arrows.forEach(arrow => {
       expect(arrow.parentElement?.getAttribute('class')).toContain('hidden');
       expect(arrow.parentElement?.getAttribute('class')).toContain('md:inline-flex');

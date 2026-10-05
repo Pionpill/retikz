@@ -35,10 +35,12 @@ export const useDocPageEffects = (input: DocPageEffectsInput): void => {
 
   useEffect(() => {
     if (!loc || !titleKey) return;
+
     const mdx = isChangelog
       ? changelogToMarkdown(changelogVersion ? [changelogVersion] : changelogReleases, lang)
       : stableSource;
     if (mdx == null) return;
+
     const title = String(t(titleKey));
     const { rawUrl } = buildDocPageLinks(loc, lang);
     const path = `/${docPathSegments(loc).join('/')}`;
@@ -55,8 +57,10 @@ export const useDocPageEffects = (input: DocPageEffectsInput): void => {
 
   useEffect(() => {
     if (!titleKey) return;
+
     const fallback = 'retikz — Draw TikZ figures the React way';
     document.title = `${String(t(titleKey))} · retikz`;
+
     return () => {
       document.title = fallback;
     };

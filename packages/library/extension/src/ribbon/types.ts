@@ -23,9 +23,13 @@ export type IRRibbonDirection = number | Vector2 | PolarPosition;
 export type IRRibbonWidthStop = ZodInfer<typeof RibbonWidthStopSchema>;
 
 export type IRFixedRibbonWidth = ZodInput<typeof FixedRibbonWidthSchema>;
+
 export type IRTaperRibbonWidth = ZodInput<typeof TaperRibbonWidthSchema>;
+
 export type IRStopsRibbonWidth = ZodInput<typeof StopsRibbonWidthSchema>;
+
 export type IRProfileRibbonWidth = ZodInput<typeof ProfileRibbonWidthSchema>;
+
 export type IRRibbonWidth = ZodInput<typeof RibbonWidthSchema>;
 
 export type IRRibbonArcCap = ZodInfer<typeof RibbonArcCapSchema>;
@@ -43,9 +47,12 @@ export type IRRibbonPath = ZodInfer<typeof CompleteRibbonPathSchema>;
 
 /** 已物化端点默认值 */
 export type CanonicalRibbonEndpoint = ZodInfer<typeof RibbonEndpointSchema>;
+
 /** 已物化宽度默认值 */
 export type CanonicalRibbonWidth = ZodInfer<typeof RibbonWidthSchema>;
+
 /** 已物化采样默认值 */
 export type CanonicalRibbonSampling = ZodInfer<typeof RibbonSamplingSchema>;
+
 /** 按模式区分的编译消费形态 */
 export type CanonicalRibbonOptions = ZodInfer<typeof RibbonPathOptionsSchema>;

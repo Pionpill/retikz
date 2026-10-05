@@ -126,6 +126,7 @@ export const resolveCoreThemeStyleColors = (
 ): ResolvedThemeColors => {
   const preset = CORE_COLOR_PRESETS[mode];
   const parsed = ThemeStyleColorOverridesSchema.parse(overrides);
+
   return freezeColorView(
     {
       error: parsed.semantic?.error ?? preset.semantic.error,

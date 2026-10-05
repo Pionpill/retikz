@@ -230,8 +230,11 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'isolated-surface');
 
     expect(root?.children.map(child => child.type)).toEqual(['path', 'group', 'path']);
+
     const content = root?.children[1];
+
     expect(content?.type).toBe('group');
+
     if (content?.type === 'group') expect(content.children.length).toBeGreaterThan(0);
   });
 
@@ -255,6 +258,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
     const clip = (result.scene.resources ?? []).find(resource => resource.kind === 'clip');
 
     expect(clip?.path).toMatchObject({ fillRule: 'nonzero', commands: expect.any(Array) });
+
     if (clip !== undefined) expect(JSON.stringify(clip.path.commands)).not.toMatch(/NaN|Infinity/);
   });
 });

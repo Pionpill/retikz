@@ -59,6 +59,7 @@ const PLOT_STANDALONE_PROP_KEYS = [
 ] as const satisfies ReadonlyArray<keyof PlotStandaloneProps>;
 
 type PlotStandalonePropKeysCheck = AssertEqual<(typeof PLOT_STANDALONE_PROP_KEYS)[number], keyof PlotStandaloneProps>;
+
 const plotStandalonePropKeysCheck: PlotStandalonePropKeysCheck = true;
 void plotStandalonePropKeysCheck;
 
@@ -137,6 +138,7 @@ const createPlotPanelInput = (props: PlotPanelProps): InputPlotPanel | undefined
   ) {
     return undefined;
   }
+
   return {
     ...(x === undefined ? {} : { x }),
     ...(y === undefined ? {} : { y }),
@@ -156,8 +158,10 @@ const createPlotInput = (props: Readonly<Record<string, unknown>>): InputPlotEmb
       `plot react: embedded Plot does not support standalone props: ${unsupportedStandaloneProps.join(', ')}; move Layout host props to the outer <Layout> and remove standalone lineage props`,
     );
   }
+
   const authored = resolvePlotAuthoring(plotProps, { embedded: true });
   const panel = createPlotPanelInput(plotProps);
+
   return {
     ...authored,
     dataTransformExecutor: plotProps.dataTransformExecutor,
@@ -185,6 +189,7 @@ const plotContentPropsOf = <TSource,>(props: PlotProps<TSource>): PlotProps<TSou
   void _lineage;
   void _hostLineageMetadata;
   void _onLineage;
+
   return contentProps;
 };
 
@@ -199,6 +204,7 @@ type InputEmbeddablePlotComponent = (<TSource = never>(
 
 /** Plot React 组件 */
 const PlotContent: FC<InputPlotEmbed<unknown>> = () => null;
+
 const EmbeddablePlotContent = Object.assign(PlotContent, {
   isTier2Embeddable: true as const,
   inputEmbedAdapter: PlotInputEmbedAdapter,

@@ -31,8 +31,10 @@ const childAxisProposal = (proposal: LayoutAxisProposal, padding: number, axis: 
         details: { axis, padding, proposal: proposal.value },
       });
     }
+
     return { kind: LayoutAxisProposalKind.Exact, value: proposal.value - padding };
   }
+
   if (proposal.max !== undefined && proposal.max < padding) {
     throw new RetikzStandardError({
       code: RetikzStandardErrorCode.PipelineInvariant,
@@ -40,6 +42,7 @@ const childAxisProposal = (proposal: LayoutAxisProposal, padding: number, axis: 
       details: { axis, padding, proposalMax: proposal.max },
     });
   }
+
   return {
     kind: LayoutAxisProposalKind.Range,
     min: Math.max(0, proposal.min - padding),
@@ -68,10 +71,12 @@ export const compileSurface = (
     { child: context.sourceChild(['child']), occurrence: 0 },
     childProposal(surface, context.proposal),
   );
+
   const width = surfaceAxisSize(context.proposal.x, child.slotSize.width, axisPadding(surface, 'x'));
   const height = surfaceAxisSize(context.proposal.y, child.slotSize.height, axisPadding(surface, 'y'));
   const allocationBounds = { x: 0, y: 0, width, height };
   const cornerRadius = Math.min(surface.cornerRadius, width / 2, height / 2);
+
   const replay = context.replay(child, {
     transforms: [
       {
@@ -88,6 +93,7 @@ export const compileSurface = (
     },
     [replay],
   );
+
   const background =
     surface.background === undefined
       ? []
@@ -110,6 +116,7 @@ export const compileSurface = (
             style: { ...surface.border, fill: 'none' },
           }),
         ];
+
   const {
     namespace: _namespace,
     type: _type,

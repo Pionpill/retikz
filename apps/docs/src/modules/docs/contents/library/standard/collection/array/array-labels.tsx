@@ -5,6 +5,7 @@ import { renderArrayLabelsPreview } from './array-labels.preview';
 
 /** Fallback controls for preview registration. */
 export const previewControls = previewControlContract.controls;
+
 const controlledPreview = defineControlledPreview(previewControlContract, values =>
   renderArrayLabelsPreview({
     text: values.text,
@@ -20,6 +21,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     pin: values.pin,
   }),
 );
+
 export const previewSource = controlledPreview.source;
+
 const Demo = controlledPreview.Component;
 export default Demo;

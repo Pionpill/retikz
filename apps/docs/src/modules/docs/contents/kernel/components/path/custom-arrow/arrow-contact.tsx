@@ -8,10 +8,12 @@ import { arrowContactI18n } from './arrow-contact.i18n';
 
 /** 箭头接合图的语言 */
 export type ArrowContactProps = Readonly<{ lang?: Lang }>;
+
 /** 对照轮廓后缘、描边接合点与尖端，展示后缘对齐端点的平移 */
 const ArrowContact: FC<ArrowContactProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = arrowContactI18n[lang];
+
   return (
     <Layout>
       <Draw
@@ -27,6 +29,7 @@ const ArrowContact: FC<ArrowContactProps> = props => {
       {[0, 1].map(overlap => {
         const y = overlap * 120;
         const back = 90 + overlap * 60;
+
         return (
           <Fragment key={overlap}>
             <Draw

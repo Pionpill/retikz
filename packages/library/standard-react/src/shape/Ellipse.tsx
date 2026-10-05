@@ -8,7 +8,9 @@ import { shapeEmbedProps } from './shared';
 
 /** React Ellipse 的作者输入与宿主事件 */
 export type EllipseProps = InputEllipse & HydrationEventProps & { /** 显式路径身份 */ id?: string };
+
 const EllipseComponent: FC<EllipseProps> = () => null;
+
 /** 通过 Vanilla adapter 声明 Standard Ellipse */
 export const Ellipse = EllipseComponent as StandardEmbeddableComponent<EllipseProps>;
 Ellipse.displayName = 'Ellipse';

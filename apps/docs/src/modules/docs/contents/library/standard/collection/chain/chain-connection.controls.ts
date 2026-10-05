@@ -46,4 +46,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['Chain.layout', 'Chain.connection'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

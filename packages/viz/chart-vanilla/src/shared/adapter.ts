@@ -22,6 +22,7 @@ export const createChartInputEmbedAdapter = <TInput>(
         runtime.signal !== undefined
       )
         throw new RetikzChartVanillaError('Chart dataBindings, executor or signal require async processing');
+
       return {
         node: wrapChartPanel(runtime.source, runtime.panel),
         providerDependencies: buildChartProviderContribution(runtime),
@@ -47,6 +48,7 @@ export const createChartInputEmbedAdapter = <TInput>(
         runtime.lowerOptions,
       );
       const providerDependencies = buildChartProviderContribution({ ...runtime, datasets: {} });
+
       return {
         execute: async () => ({
           node,

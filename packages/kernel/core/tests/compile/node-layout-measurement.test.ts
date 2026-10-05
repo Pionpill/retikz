@@ -23,6 +23,7 @@ const fractionalMeasureText: TextMeasurer = () => ({
 
 const lowerTex: LowerTex = (content, style) => {
   if (content.tex === 'INVALID') return null;
+
   return {
     paths: [
       {
@@ -63,6 +64,7 @@ const collectLayouts = (
   const out = result.scene;
   const layouts = result.artifacts.filter(isNodeLayoutCompileArtifact).map(artifact => artifact.value);
   const textPrims = flattenPrims(out.primitives).filter((prim): prim is TextPrim => prim.type === 'text');
+
   return { layouts, warnings, textPrims };
 };
 

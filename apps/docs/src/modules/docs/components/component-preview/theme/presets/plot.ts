@@ -91,6 +91,7 @@ const rulesOf = (style: ReferenceStyle, mode: ThemeMode): ReadonlyArray<IRPlotAx
   if (style === PreviewThemeStyle.Academic) {
     return [{ select: { dimension: ['x', 'y'] }, axis: { grid: false } }];
   }
+
   if (style === PreviewThemeStyle.Clean) {
     return [
       {
@@ -111,6 +112,7 @@ const rulesOf = (style: ReferenceStyle, mode: ThemeMode): ReadonlyArray<IRPlotAx
       },
     ];
   }
+
   return [{ select: { dimension: ['x', 'y'] }, axis: { grid: gridDefaultsOf(mode) } }];
 };
 
@@ -120,6 +122,7 @@ const defaultsOf = (style: ReferenceStyle, theme: ResolvedTheme): IRPlotDefaults
     preset.axis.tick === false
       ? { kind: 'line' as const, length: 0, line: false as const }
       : { kind: 'line' as const, length: preset.axis.tick, line: { stroke: 'currentColor' } };
+
   return PlotDefaultsSchema.parse({
     ...(style === PreviewThemeStyle.Academic
       ? { plotArea: { border: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 1 } } }

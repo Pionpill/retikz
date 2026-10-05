@@ -67,10 +67,12 @@ export const DocsSearchPanel: FC<DocsSearchPanelProps> = ({
 
   useEffect(() => {
     if (!active) return;
+
     let stillActive = true;
     void loadSearchIndex().then(index => {
       if (stillActive) setSearchIndex(index);
     });
+
     return () => {
       stillActive = false;
     };
@@ -90,18 +92,22 @@ export const DocsSearchPanel: FC<DocsSearchPanelProps> = ({
 
   const grouped = useMemo(() => {
     const matched: Array<{ entry: SearchEntry; match: Match }> = [];
+
     for (const entry of entries) {
       if (pinnedSet.has(entry.path)) continue; // 已在顶部置顶组渲染，避免重复
       const match = findMatch(debouncedInput, entry);
       if (match) matched.push({ entry, match });
     }
+
     matched.sort((a, b) => b.match.score - a.match.score);
     const map = new Map<string, Array<{ entry: SearchEntry; match: Match }>>();
+
     for (const item of matched) {
       const list = map.get(item.entry.moduleLabel) ?? [];
       list.push(item);
       map.set(item.entry.moduleLabel, list);
     }
+
     return Array.from(map.entries());
   }, [entries, debouncedInput, pinnedSet]);
 

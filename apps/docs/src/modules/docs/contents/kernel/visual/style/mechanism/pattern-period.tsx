@@ -7,10 +7,12 @@ import { periodI18n } from './pattern-period.i18n';
 
 /** 重复周期示意参数 */
 export type PatternPeriodProps = { lang?: Lang };
+
 /** 比较单个周期与平铺区域 */
 const PatternPeriod: FC<PatternPeriodProps> = props => {
   const { lang = 'zh' } = props;
   const text = periodI18n[lang];
+
   return (
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Scope

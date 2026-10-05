@@ -11,21 +11,25 @@ describe('buildPlotIR mark-local transform', () => {
 
   it('point_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(<PointMark x="x" y="score" transform={markTransform} />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({ type: 'point', transform: markTransform });
   });
 
   it('path_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(<PathMark x="x" y="score" order="x" transform={markTransform} />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({ type: 'path', transform: markTransform });
   });
 
   it('interval_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(<IntervalMark x="x" y="score" transform={markTransform} />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({ type: 'interval', transform: markTransform });
   });
 
   it('reference_mark_forwards_local_transform', () => {
     const spec = buildPlotIR(<ReferenceMark y={80} transform={markTransform} />, '__plot');
+
     expect(spec.marks[0]).toMatchObject({ type: 'reference', transform: markTransform });
   });
 

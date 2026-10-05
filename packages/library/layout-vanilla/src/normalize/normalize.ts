@@ -10,7 +10,9 @@ import type {
 } from '@retikz/vanilla';
 
 type LayoutItem = FlexLayoutItemInput | GridLayoutItemInput | OverlayLayoutItemInput;
+
 type CoreProviderContribution = InputEmbedContribution['providerDependencies'];
+
 type InputEmbedAuthoringSites = NonNullable<InputEmbedContribution['authoringSites']>;
 
 /** 汇合已归一化的 Layout 子项与显式 Source 字段绑定 */
@@ -40,9 +42,11 @@ const collectLayoutItems = <TItem extends LayoutItem>(
         details: { childCount: normalized.children.length },
       });
     }
+
     roots.push(...normalized.providerDependencies.roots);
     providers.push(...normalized.providerDependencies.providers);
     authoringSites.push(...normalized.authoringSites);
+
     for (const binding of normalized.runtimeInputs ?? [])
       runtimeInputs.push({ ...binding, path: ['children', items.length, 'child', ...binding.path.slice(1)] });
     items.push({ ...item, child: normalized.children[0] } as TItem);
@@ -68,7 +72,9 @@ export const normalizeLayoutItems = <TItem extends LayoutItem>(
       message: 'Layout inputs require Kernel Vanilla normalizeScene.',
       details: { operation: 'normalizeLayoutItems' },
     });
+
   const items = inputs ?? [];
+
   return collectLayoutItems(
     items,
     items.map(input => normalizeChildren([input.child])),
@@ -81,7 +87,9 @@ export const prepareLayoutItems = async <TItem extends LayoutItem>(
   context: InputEmbedPreparationContext,
 ): Promise<() => Promise<ReturnType<typeof normalizeLayoutItems<TItem>>>> => {
   const preparations: Array<InputEmbedChildrenPreparation> = [];
+
   for (const input of inputs ?? []) preparations.push(await context.prepareChildren([input.child]));
+
   return async () => {
     const normalized: Array<NormalizedInputEmbedChildren> = [];
     for (const preparation of preparations) normalized.push(await preparation.execute());

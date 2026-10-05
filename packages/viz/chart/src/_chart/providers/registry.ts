@@ -42,6 +42,7 @@ const literalStringOf = (schema: ZodObject, field: string, path: ReadonlyArray<s
   if (!(fieldSchema instanceof ZodLiteral) || typeof fieldSchema.value !== 'string') {
     throw invalidRegistry(`Chart recipe schema field "${field}" must be a string literal`, [...path, field]);
   }
+
   return fieldSchema.value;
 };
 
@@ -54,6 +55,7 @@ const validateRecipeSchemaIdentity = (
   if (!(sourceSchema instanceof ZodObject)) {
     throw invalidRegistry('Chart recipe schema must be a strict Source object schema', path);
   }
+
   const namespace = literalStringOf(sourceSchema, 'namespace', path);
   if (namespace !== CHART_NAMESPACE) {
     throw invalidRegistry(`Chart recipe "${recipe.chartType}" schema namespace must be "${CHART_NAMESPACE}"`, [
@@ -61,14 +63,17 @@ const validateRecipeSchemaIdentity = (
       'namespace',
     ]);
   }
+
   const schemaFamily = literalStringOf(sourceSchema, 'type', path);
   if (schemaFamily !== family) {
     throw invalidRegistry(`Chart recipe "${recipe.chartType}" schema family must match "${family}"`, [...path, 'type']);
   }
+
   const recipeSchema = sourceSchema.shape.recipe;
   if (!(recipeSchema instanceof ZodObject)) {
     throw invalidRegistry('Chart recipe schema field "recipe" must be an object schema', [...path, 'recipe']);
   }
+
   const schemaChartType = literalStringOf(recipeSchema, 'chartType', [...path, 'recipe']);
   if (schemaChartType !== recipe.chartType) {
     throw invalidRegistry(`Chart recipe schema chartType must match "${recipe.chartType}"`, [
@@ -81,6 +86,7 @@ const validateRecipeSchemaIdentity = (
 
 const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<string | number>): void => {
   const encodingSlots = new Set<string>();
+
   for (const [slotIndex, slot] of recipe.encodingSlots.entries()) {
     if (slot.length === 0 || encodingSlots.has(slot)) {
       throw invalidRegistry(`Chart recipe "${recipe.chartType}" contains an invalid or duplicate encoding slot`, [
@@ -89,11 +95,13 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
         slotIndex,
       ]);
     }
+
     encodingSlots.add(slot);
   }
 
   for (const [owner, slots] of Object.entries(recipe.consumes)) {
     const seen = new Set<string>();
+
     for (const [slotIndex, slot] of slots.entries()) {
       if (slot.length === 0 || seen.has(slot)) {
         throw invalidRegistry(`Chart recipe "${recipe.chartType}" contains an invalid or duplicate consumed slot`, [
@@ -103,6 +111,7 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
           slotIndex,
         ]);
       }
+
       if (owner === 'encodings' && !encodingSlots.has(slot)) {
         throw invalidRegistry(`Chart recipe "${recipe.chartType}" consumes unknown encoding slot "${slot}"`, [
           ...path,
@@ -111,11 +120,13 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
           slotIndex,
         ]);
       }
+
       seen.add(slot);
     }
   }
 
   const kinds = new Set<string>();
+
   for (const [bindingIndex, binding] of recipe.marks.entries()) {
     const kind = binding.definition.kind;
     if (kind.length === 0 || kinds.has(kind)) {
@@ -125,7 +136,9 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
         bindingIndex,
       ]);
     }
+
     kinds.add(kind);
+
     for (const [owner, slots] of Object.entries(binding.inherit)) {
       if (owner !== 'encodings' && owner !== 'properties') {
         throw invalidRegistry(`Chart mark binding has an unknown inherited owner "${owner}"`, [
@@ -136,7 +149,9 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
           owner,
         ]);
       }
+
       const seen = new Set<string>();
+
       for (const [slotIndex, slot] of slots.entries()) {
         if (slot.length === 0 || seen.has(slot)) {
           throw invalidRegistry(`Chart mark binding contains an invalid or duplicate inherited slot "${slot}"`, [
@@ -148,6 +163,7 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
             slotIndex,
           ]);
         }
+
         if (owner === 'encodings' && !encodingSlots.has(slot)) {
           throw invalidRegistry(`Chart mark binding inherits unknown recipe encoding slot "${slot}"`, [
             ...path,
@@ -158,6 +174,7 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
             slotIndex,
           ]);
         }
+
         seen.add(slot);
       }
     }
@@ -167,6 +184,7 @@ const validateSlots = (recipe: AnyChartRecipeDefinition, path: ReadonlyArray<str
 const validateRecipe = (recipe: AnyChartRecipeDefinition, family: string, index: number): void => {
   const path = ['recipes', index, recipe.chartType] as const;
   if (recipe.chartType.length === 0) throw invalidRegistry('Chart recipe chartType must be non-empty', path);
+
   validateRecipeSchemaIdentity(recipe, family, [...path, 'schema']);
   validateSlots(recipe, [...path]);
 };
@@ -185,6 +203,7 @@ const sharedRuntimeDefinitionsOf = (
   contributions: ReadonlyArray<Pick<ChartRecipeProviderContribution, 'runtimeDefinitions'>>,
 ): ChartRuntimeDefinitionOptions => {
   const shared: Partial<ChartRuntimeDefinitionOptions> = {};
+
   for (const key of runtimeDefinitionKeys) {
     const values = contributions.map(contribution => contribution.runtimeDefinitions?.[key]);
     const first = values[0];
@@ -194,8 +213,10 @@ const sharedRuntimeDefinitionsOf = (
         key,
       ]);
     }
+
     if (first !== undefined) Object.assign(shared, { [key]: first });
   }
+
   return shared;
 };
 
@@ -221,6 +242,7 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
 ): ChartProviderRegistry => {
   if (contributions.length === 0)
     throw invalidRegistry('Chart provider requires at least one active recipe', ['recipes']);
+
   const family = contributions[0].family;
   if (family.length === 0) throw invalidRegistry('Chart provider family must be non-empty', ['family']);
 
@@ -230,24 +252,29 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
   const parsedThemes = new Map<ChartThemeDefinition, ChartThemeDefinition>();
   const themeDefinitions: Array<ChartThemeDefinition> = [];
   const seenContributions = new Set<ChartRecipeProviderContributionInput<TSource>>();
+
   for (const [index, contribution] of contributions.entries()) {
     if (seenContributions.has(contribution)) continue;
+
     seenContributions.add(contribution);
     if (contribution.family !== family) {
       throw invalidRegistry('Chart provider contributions must belong to one family', ['family', contribution.family]);
     }
+
     const recipe = eraseChartRecipeDefinition(contribution.recipe);
     validateRecipe(recipe, family, index);
     const existingRecipe = recipes.get(recipe.chartType);
     if (existingRecipe !== undefined && existingRecipe !== recipe) {
       throw duplicateDefinition('recipes', recipe.chartType);
     }
+
     recipes.set(recipe.chartType, recipe);
 
     for (const theme of contribution.themeDefinitions) themeDefinitions.push(theme);
   }
 
   const recipeMap = createReadonlyMap(recipes);
+
   for (const theme of themeDefinitions) {
     const parsedTheme = parsedThemes.get(theme) ?? parseChartThemeDefinition(theme, recipeMap);
     parsedThemes.set(theme, parsedTheme);
@@ -255,9 +282,11 @@ export const resolveChartProviderRegistry = <TSource extends IRChartSource>(
     if (existingThemeSource !== undefined && existingThemeSource !== theme) {
       throw duplicateDefinition('themes', parsedTheme.name);
     }
+
     themeSources.set(parsedTheme.name, theme);
     themes.set(parsedTheme.name, parsedTheme);
   }
+
   validateChartThemeBases(themes);
 
   const runtime = resolveEncodingRuntime(sharedRuntimeDefinitionsOf([...seenContributions]));

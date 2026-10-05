@@ -41,8 +41,10 @@ export class RetikzDiagramReactBranchError extends RetikzError<
 > {
   /** 稳定错误码 */
   readonly code: RetikzDiagramReactBranchErrorCode;
+
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzDiagramReactBranchErrorDetails;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 

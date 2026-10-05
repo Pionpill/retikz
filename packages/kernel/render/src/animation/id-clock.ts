@@ -52,19 +52,24 @@ export type IdClockRegistry = {
 /** 创建按 id 的虚拟时钟登记表 */
 export const createIdClockRegistry = (): IdClockRegistry => {
   const map = new Map<string, IdEntry>();
+
   const ensure = (id: string): IdEntry => {
     let entry = map.get(id);
     if (!entry) {
       entry = { offset: 0, pausedAt: null, active: false, stopped: false };
       map.set(id, entry);
     }
+
     return entry;
   };
+
   return {
     timeFor: (id, globalTime) => {
       if (id === undefined) return globalTime;
+
       const entry = map.get(id);
       if (!entry) return globalTime;
+
       return entry.pausedAt ?? globalTime - entry.offset;
     },
     isActive: id => (id === undefined ? false : (map.get(id)?.active ?? false)),
@@ -76,6 +81,7 @@ export const createIdClockRegistry = (): IdClockRegistry => {
         entry.offset = globalTime - entry.pausedAt;
         entry.pausedAt = null;
       }
+
       entry.active = true;
       entry.stopped = false;
     },
@@ -106,6 +112,7 @@ export const createIdClockRegistry = (): IdClockRegistry => {
     },
     rekey: (from, to) => {
       if (from === to) return;
+
       const entry = map.get(from);
       map.delete(from);
       if (entry !== undefined) map.set(to, entry);

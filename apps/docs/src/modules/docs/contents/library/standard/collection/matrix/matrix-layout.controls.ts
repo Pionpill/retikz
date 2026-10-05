@@ -56,4 +56,5 @@ export const createPreviewControlContract = (lang: Lang) => {
     relatedApis: ['Matrix.layout', 'Matrix.index', 'Matrix.style'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract('zh');

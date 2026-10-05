@@ -45,7 +45,9 @@ export const createCodeBlockContribution = <TSource extends IRCodeBlock>(
     };
     makers.set(definition, pair);
   }
+
   const datasets = createGraphRuntimeDatasets(options);
+
   return {
     roots: [key],
     providers: [

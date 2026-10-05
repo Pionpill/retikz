@@ -32,7 +32,9 @@ const isNumericPosition = (value: unknown): value is [number, number] =>
   Array.isArray(value) && value.length === 2 && value.every(part => typeof part === 'number');
 
 const WIDTH = 480;
+
 const HEIGHT = 240;
+
 const opts = (coordinates: Array<AnyCoordinateDefinition>): LowerPlotsOptions => ({
   width: WIDTH,
   height: HEIGHT,
@@ -40,8 +42,11 @@ const opts = (coordinates: Array<AnyCoordinateDefinition>): LowerPlotsOptions =>
 });
 
 const MID_Y = HEIGHT / 2;
+
 const AMPLITUDE = 50;
+
 const CYCLES = 1.5;
+
 /** 示例工厂：一维曲线坐标系——单值沿正弦曲线落点（curve = 屏幕x → 屏幕y） */
 const sineCoordinate = defineCoordinate({
   schema: object({
@@ -56,6 +61,7 @@ const sineCoordinate = defineCoordinate({
     const scale = context.buildPositionScale(scaleDef, values, [0, context.width]);
     const amplitude = operation.amplitude ?? AMPLITUDE;
     const cycles = operation.cycles ?? CYCLES;
+
     return {
       frame: createCoordinateFrame('sine', ['x'], roleValues => {
         const screenX = scale.coordinate(roleValues[0]);
@@ -70,6 +76,7 @@ const sineCoordinate = defineCoordinate({
 });
 
 const ARCH_HEIGHT = 70;
+
 /** 示例工厂：二维桥坐标系——x 沿拱、y 竖直偏移（加性可分离）；回传解析 frameAlong 让曲线轴精确 */
 const bridgeCoordinate = defineCoordinate({
   schema: object({
@@ -89,34 +96,44 @@ const bridgeCoordinate = defineCoordinate({
       40,
     ]);
     const archHeight = operation.archHeight ?? ARCH_HEIGHT;
+
     const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
       const screenX = xScale.coordinate(values[0]);
       const yOffset = yScale.coordinate(values[1]);
       if (!Number.isFinite(screenX) || !Number.isFinite(yOffset)) return null;
+
       const t = screenX / context.width;
+
       return [screenX, yOffset - archHeight * (1 - (2 * t - 1) ** 2)];
     };
+
     const xSlope = xScale.coordinate(1) - xScale.coordinate(0);
     const ySlope = yScale.coordinate(1) - yScale.coordinate(0);
+
     const frameAlong = (role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
       const origin = projectRoles(values);
       if (!origin) return null;
       if (role === 'y') return { origin, tangent: [0, ySlope] };
+
       const screenX = xScale.coordinate(values[0]);
       const u = (2 * screenX) / context.width - 1;
+
       return { origin, tangent: [xSlope, (4 * archHeight * u * xSlope) / context.width] };
     };
+
     const frame = createCoordinateFrame('bridge', ['x', 'y'], projectRoles, {
       roleScales: { x: xScale, y: yScale },
       frameAlong,
     });
     const gridLayers: Array<IRScope> = [];
     const axisLayers: Array<IRScope> = [];
+
     for (const guide of context.axisGuides) {
       const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
       if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
     }
+
     return {
       frame,
       plotArea: { x: 0, y: 0, width: context.width, height: context.height },
@@ -162,19 +179,23 @@ const uvCoordinate = defineCoordinate({
       context.height,
       0,
     ]);
+
     const projectRoles = (values: ReadonlyArray<unknown>): [number, number] | null => {
       const u = uScale.coordinate(values[0]);
       const v = vScale.coordinate(values[1]);
       return Number.isFinite(u) && Number.isFinite(v) ? [u, v] : null;
     };
+
     const frame = createCoordinateFrame('uv', ['u', 'v'], projectRoles, { roleScales: { u: uScale, v: vScale } });
     const gridLayers: Array<IRScope> = [];
     const axisLayers: Array<IRScope> = [];
+
     for (const guide of context.axisGuides) {
       const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
       if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
       if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
     }
+
     return {
       frame,
       plotArea: { x: 0, y: 0, width: context.width, height: context.height },
@@ -189,24 +210,30 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const scaleAt = (v: number): number => (v / 12) * WIDTH;
     const positions = positionsOf(firstLayer(sineSpec(), { d: rows }, opts([sineCoordinate])));
+
     expect(positions).toHaveLength(13);
+
     for (const row of rows) {
       const sx = scaleAt(row.v);
       const expectedY = MID_Y - AMPLITUDE * Math.sin((sx / WIDTH) * 2 * Math.PI * CYCLES);
       const found = positions.find(p => Math.abs(p[0] - sx) < 1e-6)!;
+
       expect(found[1]).toBeCloseTo(expectedY, 6);
     }
+
     // 曲线确有起伏（非退化直线）
     expect(new Set(positions.map(p => p[1].toFixed(2))).size).toBeGreaterThan(3);
   });
 
   it('下沉产物是合法 core IR（compileToScene 不抛）', () => {
     const layer = firstLayer(sineSpec(), { d: [{ v: 0 }, { v: 6 }, { v: 12 }] }, opts([sineCoordinate]));
+
     expect(() => compileToScene({ version: 1, type: 'scene', children: [layer] }).scene).not.toThrow();
   });
 
   it('custom 坐标系 IR JSON round-trip（投影函数不在 IR）', () => {
     const ir = sineSpec().coordinate;
+
     expect(JSON.parse(JSON.stringify(ir))).toEqual({ type: 'sine' });
   });
 
@@ -218,6 +245,7 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
         return { ...resolution, frame: { ...resolution.frame, type: 'other' } };
       },
     });
+
     expect(() => firstLayer(sineSpec(), { d: [{ v: 1 }] }, opts([malformed]))).toThrow(/sine.*frame type/);
   });
 
@@ -229,6 +257,7 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
         return { ...resolution, frame: { ...resolution.frame, roles: ['y'] } };
       },
     });
+
     expect(() => firstLayer(sineSpec(), { d: [{ v: 1 }] }, opts([malformed]))).toThrow(/frame roles.*x/);
   });
 });
@@ -236,20 +265,26 @@ describe('custom coordinate — 一维曲线（projectRoles 沿正弦）', () =>
 describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
   it('点落在「拱形 x 基线 + 竖直 y」上（坐标系形态任意切换）', () => {
     const rows: Array<Record<string, number>> = [];
+
     for (const x of [0, 5, 10]) for (const y of [0, 10]) rows.push({ x, y });
     const xAt = (x: number): number => (x / 10) * WIDTH;
     const yAt = (y: number): number => HEIGHT - 40 + (y / 10) * (40 - (HEIGHT - 40));
     const positions = positionsOf(firstLayer(bridgeSpec(), { d: rows }, opts([bridgeCoordinate])));
+
     expect(positions).toHaveLength(6);
+
     rows.forEach((row, index) => {
       const sx = xAt(row.x);
       const t = sx / WIDTH;
       const expected: [number, number] = [sx, yAt(row.y) - ARCH_HEIGHT * (1 - (2 * t - 1) ** 2)];
+
       expect(positions[index][0]).toBeCloseTo(expected[0], 6);
       expect(positions[index][1]).toBeCloseTo(expected[1], 6);
     });
+
     // 拱弯曲：y=0 行中点比两端更靠上（y 更小）
     const base = rows.map((row, index) => ({ x: row.x, y: row.y, p: positions[index] })).filter(entry => entry.y === 0);
+
     expect(base.find(entry => entry.x === 5)!.p[1]).toBeLessThan(base.find(entry => entry.x === 0)!.p[1]);
   });
 
@@ -274,6 +309,7 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
       opts([uvCoordinate]),
     );
     const points = positionsOf(root.children[0] as IRScope);
+
     expect(points).toHaveLength(2);
     expect(points[0]).toEqual([0, HEIGHT]);
     expect(points[1]).toEqual([WIDTH, 0]);
@@ -284,6 +320,7 @@ describe('custom coordinate — 二维桥（x 沿拱、y 竖直）', () => {
 describe('custom coordinate — 契约 / fail-loud', () => {
   it('coordinate_frame_preserves_registered_coordinate_type', () => {
     const frame = createCoordinateFrame('bridge', ['x', 'y'], values => [Number(values[0]), Number(values[1])]);
+
     expect(frame.type).toBe('bridge');
   });
 
@@ -304,6 +341,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       coordinate: { type: 'bridge' },
       marks: [{ type: 'point', encoding: { x: { field: 'x' } } }],
     });
+
     expect(() => expandOf(spec, { d: [{ x: 1 }] }, opts([bridgeCoordinate]))).toThrow(
       /bridge coordinate system requires the "y" position channel/i,
     );
@@ -320,6 +358,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       marks: [{ type: 'point', encoding: { x: { field: 'x' }, y: { field: 'y' } } }],
       guides: [{ type: 'axis', dimension: 'angle' }],
     });
+
     expect(() => expandOf(spec, { d: [{ x: 0, y: 0 }] }, opts([bridgeCoordinate]))).toThrow(
       /does not support axis dimension "angle"/,
     );
@@ -348,10 +387,12 @@ describe('custom coordinate — 契约 / fail-loud', () => {
     });
 
     expect(positions).toHaveLength(3);
+
     rows.forEach((row, index) => {
       const screenX = (row.x / 10) * WIDTH;
       const screenY = HEIGHT - 40 + (row.y / 10) * (40 - (HEIGHT - 40));
       const t = screenX / WIDTH;
+
       expect(positions[index][0]).toBeCloseTo(screenX, 6);
       expect(positions[index][1]).toBeCloseTo(screenY - ARCH_HEIGHT * (1 - (2 * t - 1) ** 2), 6);
     });
@@ -377,6 +418,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
         },
       ],
     });
+
     expect(() =>
       firstLayer(
         spec,
@@ -415,14 +457,17 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       },
       opts([bridgeCoordinate]),
     );
+
     // mark 层 + 2 条轴层
     expect(root.children.length).toBeGreaterThanOrEqual(3);
+
     // x 轴层含一条多点折线（弯曲轴线）：找到带 ≥4 个 step 的 path（密采样）
     const axisLayer = root.children[root.children.length - 2] as IRScope;
     const hasPolyline = axisLayer.children.some(child => {
       const path = child as { type?: string; children?: Array<unknown> };
       return path.type === 'path' && (path.children?.length ?? 0) >= 4;
     });
+
     expect(hasPolyline).toBe(true);
   });
 
@@ -446,6 +491,7 @@ describe('custom coordinate — 契约 / fail-loud', () => {
       },
       opts([sineCoordinate]),
     );
+
     expect(layer.children).toHaveLength(2);
   });
 });
@@ -456,15 +502,18 @@ describe('custom coordinate — 契约 / fail-loud', () => {
 
 /** 线性对角坐标系（projectRoles=[10x,10x]）：解析切向为常量 [10,10]，frame 级断言用（不依赖 context） */
 const DIAGONAL_K = 10;
+
 const diagonalFrame = (): CoordinateFrame => {
   const project = (values: ReadonlyArray<unknown>): [number, number] | null => {
     const x = Number(values[0]);
     return Number.isFinite(x) ? [x * DIAGONAL_K, x * DIAGONAL_K] : null;
   };
+
   const frameAlong = (_role: DimensionRole, values: ReadonlyArray<unknown>): AxisFrame | null => {
     const origin = project(values);
     return origin ? { origin, tangent: [DIAGONAL_K, DIAGONAL_K] } : null;
   };
+
   return createCoordinateFrame('diagonal', ['x'], project, { frameAlong });
 };
 
@@ -484,11 +533,13 @@ const defineSineCoordinate = (
         0,
         context.width,
       ]);
+
       const projectRoles = (roleValues: ReadonlyArray<unknown>): [number, number] | null => {
         const sx = scale.coordinate(roleValues[0]);
         if (!Number.isFinite(sx)) return null;
         return flat ? [sx, MID_Y] : [sx, MID_Y - AMPLITUDE * Math.sin((sx / context.width) * 2 * Math.PI * CYCLES)];
       };
+
       const frameAlong = frameAlongOf?.(projectRoles);
       const frame = createCoordinateFrame(type, ['x'], projectRoles, {
         roleScales: { x: scale },
@@ -496,11 +547,13 @@ const defineSineCoordinate = (
       });
       const gridLayers: Array<IRScope> = [];
       const axisLayers: Array<IRScope> = [];
+
       for (const guide of context.axisGuides) {
         const lowered = context.lowerCustomAxis(frame, guide, context.fontSize, context.provenance);
         if (lowered.gridLayer) gridLayers.push(lowered.gridLayer);
         if (lowered.axisLayer) axisLayers.push(lowered.axisLayer);
       }
+
       return {
         frame,
         plotArea: { x: 0, y: 0, width: context.width, height: context.height },
@@ -542,7 +595,9 @@ const sineAxisSpec = (type = 'sineFramed'): IRPlot =>
 
 // 轴层 = root 下含 path 子节点的 scope（point mark 层只有 node、被过滤掉）
 type StepLike = { kind?: string; to?: [number, number] };
+
 type PathLike = { type?: string; children?: Array<StepLike> };
+
 const axisLayersOf = (root: IRScope): Array<IRScope> =>
   (root.children as ReadonlyArray<unknown>).filter(
     (child): child is IRScope =>
@@ -551,23 +606,30 @@ const axisLayersOf = (root: IRScope): Array<IRScope> =>
         grandchild => grandchild.type === 'path',
       ),
   );
+
 const pathsOf = (layer: IRScope): Array<PathLike> =>
   (layer.children as Array<PathLike>).filter(child => child.type === 'path');
+
 const moveCount = (path: PathLike): number => (path.children ?? []).filter(step => step.kind === 'move').length;
+
 /** 轴线 polyline（恰 1 个 move 的 path）的步数 */
 const polylineStepsOf = (layer: IRScope): number =>
   pathsOf(layer).find(path => moveCount(path) === 1)?.children?.length ?? 0;
+
 /** 刻度短线（> 1 个 move 的 path）各段向量 [Δx, Δy] */
 const tickSegmentsOf = (layer: IRScope): Array<[number, number]> => {
   const steps = pathsOf(layer).find(path => moveCount(path) > 1)?.children ?? [];
   const segments: Array<[number, number]> = [];
+
   for (let i = 0; i + 1 < steps.length; i += 2) {
     const from = steps[i].to;
     const to = steps[i + 1].to;
     if (from && to) segments.push([to[0] - from[0], to[1] - from[1]]);
   }
+
   return segments;
 };
+
 const labelNodesOf = (layer: IRScope): Array<IRNode> =>
   (layer.children as Array<IRNode>).filter(child => (child as { type?: string }).type === 'node');
 
@@ -575,14 +637,17 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
   it('framealong_origin_matches_project_roles', () => {
     // frameAlong(role,p).origin 与 projectRoles(p) 逐分量近似相等；projectRoles 为 null 时同返 null（非引用相等）
     const frame = diagonalFrame();
+
     for (const x of [0, 1, 3.5, 7]) {
       const local = frame.frameAlong!('x', [x]);
       const projected = frame.projectRoles([x]);
+
       expect(local).not.toBeNull();
       expect(projected).not.toBeNull();
       expect(local!.origin[0]).toBeCloseTo(projected![0], 6);
       expect(local!.origin[1]).toBeCloseTo(projected![1], 6);
     }
+
     expect(frame.projectRoles(['oops'])).toBeNull();
     expect(frame.frameAlong!('x', ['oops'])).toBeNull();
   });
@@ -595,12 +660,15 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
     const after = frame.projectRoles([4 + h])!;
     const numeric: [number, number] = [after[0] - before[0], after[1] - before[1]];
     const analytic = frame.frameAlong!('x', [4])!.tangent;
+
     const unit = (vector: [number, number]): [number, number] => {
       const length = Math.hypot(vector[0], vector[1]);
       return [vector[0] / length, vector[1] / length];
     };
+
     const a = unit(numeric);
     const b = unit(analytic);
+
     expect(a[0] * b[0] + a[1] * b[1]).toBeCloseTo(1, 6);
   });
 
@@ -610,7 +678,9 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
     const root = expandOf(sineAxisSpec('sineFramed'), { d: rows }, opts([sineFramedTangentX]));
     const axisLayer = axisLayersOf(root)[0];
     const segments = tickSegmentsOf(axisLayer);
+
     expect(segments.length).toBeGreaterThan(0);
+
     for (const [dx] of segments) expect(Math.abs(dx)).toBeLessThan(1e-6);
   });
 
@@ -619,8 +689,11 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
     const rows = Array.from({ length: 13 }, (_unused, i) => ({ v: i }));
     const root = expandOf(sineAxisSpec('sineNumeric'), { d: rows }, opts([sineNumeric]));
     const axisLayer = axisLayersOf(root)[0];
+
     expect(polylineStepsOf(axisLayer)).toBeGreaterThanOrEqual(4);
+
     const segments = tickSegmentsOf(axisLayer);
+
     expect(segments.some(([dx]) => Math.abs(dx) > 1e-6)).toBe(true);
   });
 
@@ -629,9 +702,12 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
     const rows = Array.from({ length: 5 }, (_unused, i) => ({ v: i }));
     const root = expandOf(sineAxisSpec('degenerate'), { d: rows }, opts([degenerateFramed]));
     const labels = labelNodesOf(axisLayersOf(root)[0]);
+
     expect(labels.length).toBeGreaterThan(0);
+
     for (const node of labels) {
       const position = node.position as [number, number];
+
       expect(Number.isFinite(position[0])).toBe(true);
       expect(Number.isFinite(position[1])).toBe(true);
     }
@@ -649,14 +725,20 @@ describe('custom coordinate — frameAlong 局部标架契约（contract）', ()
       guides: [{ type: 'axis', dimension: 'x' }],
     });
     const rows: Array<Record<string, number>> = [];
+
     for (const x of [0, 5, 10]) for (const y of [0, 10]) rows.push({ x, y });
     const root = expandOf(spec, { d: rows }, opts([bridgeCoordinate]));
     const axisLayer = axisLayersOf(root)[0];
+
     expect(polylineStepsOf(axisLayer)).toBeGreaterThanOrEqual(4);
+
     const labels = labelNodesOf(axisLayer);
+
     expect(labels.length).toBeGreaterThan(0);
+
     for (const node of labels) {
       const position = node.position as [number, number];
+
       expect(Number.isFinite(position[0])).toBe(true);
       expect(Number.isFinite(position[1])).toBe(true);
     }

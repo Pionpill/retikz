@@ -10,8 +10,10 @@ export type RgbBytes = { r: number; g: number; b: number };
 export const parseHexColor = (color: string): RgbBytes | null => {
   const value = color.trim();
   if (!/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)) return null;
+
   const parsed = parseStaticCssColor(value);
   if (parsed === null || parsed.a !== 1) return null;
+
   return {
     r: Math.round(parsed.r * 255),
     g: Math.round(parsed.g * 255),

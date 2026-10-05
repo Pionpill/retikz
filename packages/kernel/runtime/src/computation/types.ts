@@ -7,6 +7,7 @@ import type { RuntimeSnapshot } from '../transaction';
 import type { RuntimeComputationExecution, RuntimeComputationKind, RuntimeComputationPhase } from './constants';
 
 declare const RuntimeComputationTokenBrand: unique symbol;
+
 declare const RuntimeComputationType: unique symbol;
 
 /** 动态 graph lookup 只暴露的 opaque Computation token */

@@ -7,8 +7,11 @@ type ObserverFactory = (definition: CompileObserverDefinition) => CompileObserve
 
 const defineObserver = (definition: CompileObserverDefinition): CompileObserverDefinition => {
   const factory = Reflect.get(core, 'defineCompileObserver') as ObserverFactory | undefined;
+
   expect(factory).toBeTypeOf('function');
+
   if (factory === undefined) throw new Error('defineCompileObserver is not available');
+
   return factory(definition);
 };
 

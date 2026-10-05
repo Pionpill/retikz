@@ -24,11 +24,14 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
       },
     ],
   });
+
   return {
     controls,
     canonicalValues: { turnPosition: 'auto' as const, obstacleX: 260, obstacleY: 80 },
     relatedApis: ['FlowRelation.routing.turnPosition', 'routeFlowRelations'],
   } satisfies PreviewControlContract;
 };
+
 export const previewControlContract = createPreviewControlContract();
+
 export const previewControls = previewControlContract.controls;

@@ -10,10 +10,12 @@ import { createApiReferenceMdx } from './tex';
 import type { ApiReferencePackageConfig } from './tex';
 
 const root = path.resolve(import.meta.dirname, '../../../..');
+
 const schemaPage = path.join(
   root,
   'apps/docs/src/modules/docs/contents/schematic/diagram/branch/schema-reference/index.zh.mdx',
 );
+
 const localize = createSchemaLocalizationResolver([
   ...(
     [
@@ -43,6 +45,7 @@ const localize = createSchemaLocalizationResolver([
     },
   },
 ]);
+
 /** Branch 三个公开子路径的源码投影配置 */
 export const branchApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   {
@@ -119,11 +122,14 @@ export const branchApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   translate: translateBranchApiReference,
   resolveSchemaLocalization: schema => localize(schema) ?? resolveStandardSchemaLocalization(schema),
 }));
+
 /** 生成 Branch 双语 API include */
 export const writeBranchApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const) {
     const sections: Array<string> = [];
+
     for (const config of branchApiConfigs) sections.push(await createApiReferenceMdx(config, lang));
     if (lang === 'en') assertBranchApiReferenceTranslated();
     writeFileSync(

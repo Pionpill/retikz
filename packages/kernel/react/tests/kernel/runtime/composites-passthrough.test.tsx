@@ -35,6 +35,7 @@ describe('<Layout composites> Tier 2 透传', () => {
     const svg = renderToStaticMarkup(
       <Layout width={100} height={100} ir={ir} extensions={{ composites: [labeledBox] }} />,
     );
+
     expect(svg).toContain('<rect');
   });
 

@@ -54,8 +54,10 @@ const RibbonBoundaryGeometry: FC<RibbonBoundaryGeometryProps> = props => {
           {sides.map((side, index) => {
             const reverse = stage > 0 && index === 1;
             const sliced = curve.slice(side, 0.3, 0.65);
+
             // slice 保留输入曲线阶数，箭头沿真实边界而非手绘近似切线
             if (sliced.kind !== 'cubicBezier') return null;
+
             return (
               <Scope key={index}>
                 <Path style={{ stroke: side.color, strokeWidth: 2 }}>

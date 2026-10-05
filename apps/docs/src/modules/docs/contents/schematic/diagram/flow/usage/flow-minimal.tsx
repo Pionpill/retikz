@@ -12,6 +12,7 @@ export type FlowMinimalProps = { lang?: Lang };
 const FlowMinimal: FC<FlowMinimalProps> = props => {
   const { lang = 'zh' } = props;
   const t = flowMinimalI18n[lang];
+
   return (
     <FlowDiagram style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowEntities

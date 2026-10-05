@@ -69,9 +69,11 @@ const useSvgRootBinding = (
   const setRoot = useCallback((element: SVGSVGElement | null) => {
     rootRef.current = element;
   }, []);
+
   useEffect(() => {
     const root = rootRef.current;
     if (root === null) return undefined;
+
     const context = createContextBuilder({
       renderer: 'svg',
       root,
@@ -81,18 +83,23 @@ const useSvgRootBinding = (
       makeAnimation: id => createSvgAnimationControls(root, id),
     });
     const controller = createHydrationController(root, handlers, locateSvg, context);
+
     return () => controller.dispose();
   }, [handlers, result]);
+
   useEffect(() => {
     const root = rootRef.current;
     if (root === null || !hasAnimations) return undefined;
+
     const controls = bindWaapiDescriptors(root);
     publishAnimation(controls);
+
     return () => {
       controls.dispose();
       publishAnimation(null);
     };
   }, [hasAnimations, result, publishAnimation]);
+
   return setRoot;
 };
 
@@ -115,6 +122,7 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
     onArtifacts,
     onCompileResult,
   } = props;
+
   const frame = useMemo(() => Object.freeze({ primary: result.scene, layers: result.layers }), [result]);
   const document = useMemo(
     () =>
@@ -128,12 +136,14 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
           }),
     [backend, frame, idPrefix, animate, snapshotAt, easings],
   );
+
   const hasAnimations = backend === 'svg' && animate && sceneHasAnimations(result.scene);
   const publishAnimation = useCallback(
     (controls: AnimationControls | null) => assignRef(animationRef, controls),
     [animationRef],
   );
   const setRoot = useSvgRootBinding(handlers, result, hasAnimations, publishAnimation);
+
   const onArtifactsRef = useRef(onArtifacts);
   const onCompileResultRef = useRef(onCompileResult);
 
@@ -177,5 +187,6 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
 
   const svg = svgToReact(document as NonNullable<typeof document>) as ReactElement;
   const size = computeDisplaySize(result.scene.layout, width, height);
+
   return cloneElement(svg, { ...size, className, style, ref: setRoot });
 };

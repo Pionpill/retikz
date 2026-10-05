@@ -50,8 +50,10 @@ export type RetikzGraphReactErrorOptions = Readonly<{
 export class RetikzGraphReactError extends RetikzError<RetikzGraphReactErrorCode, RetikzGraphReactErrorDetails> {
   /** 稳定错误码 */
   readonly code: RetikzGraphReactErrorCode;
+
   /** 与错误码关联的结构化详情 */
   readonly details: RetikzGraphReactErrorDetails;
+
   /** 原始错误或无效输入 */
   override readonly cause: unknown;
 

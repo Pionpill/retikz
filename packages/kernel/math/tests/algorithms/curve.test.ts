@@ -17,6 +17,7 @@ describe('curve.catmullRomToCubic', () => {
       [10, 10],
     ];
     const segments = curve.catmullRomToCubic(knots, 1);
+
     expect(segments).toHaveLength(knots.length - 1);
     expect(segments[0].to).toEqual(knots[1]);
     expect(segments[1].to).toEqual(knots[2]);
@@ -31,7 +32,9 @@ describe('curve.catmullRomToCubic', () => {
       [20, 0],
     ];
     const segments = curve.catmullRomToCubic(knots, 1);
+
     expect(segments).toHaveLength(4);
+
     for (let index = 0; index < segments.length; index += 1) {
       expect(segments[index].to).toEqual(knots[index + 1]);
     }
@@ -55,6 +58,7 @@ describe('curve.catmullRomToCubic', () => {
     const looseFirstControlDistance = distance(looseSegments[0].control1, knots[0]);
     const baseSecondControlDistance = distance(baseSegments[0].control2, baseSegments[0].to);
     const looseSecondControlDistance = distance(looseSegments[0].control2, looseSegments[0].to);
+
     expect(looseFirstControlDistance).toBeGreaterThan(baseFirstControlDistance);
     expect(looseSecondControlDistance).toBeGreaterThan(baseSecondControlDistance);
   });
@@ -65,6 +69,7 @@ describe('curve.catmullRomToCubic', () => {
       [4, 3],
     ];
     const segments = curve.catmullRomToCubic(knots, 1);
+
     expect(segments).toHaveLength(1);
     expect(segments[0].to).toEqual(knots[1]);
     expect(isCubicSegmentFinite(segments[0])).toBe(true);
@@ -78,7 +83,9 @@ describe('curve.catmullRomToCubic', () => {
       [101, 5],
     ];
     const segments = curve.catmullRomToCubic(knots, 1);
+
     expect(segments).toHaveLength(3);
+
     for (const segment of segments) {
       expect(isCubicSegmentFinite(segment)).toBe(true);
     }
@@ -245,7 +252,9 @@ describe('curve.slice', () => {
     const sliced = curve.slice(segment, 0.25, 0.75);
 
     expect(sliced.kind).toBe('cubicBezier');
+
     if (sliced.kind !== 'cubicBezier') throw new Error('Expected a cubic Bezier slice.');
+
     expect(sliced.from).toEqual(curve.sampleAt(segment, 0.25).point);
     expect(sliced.to).toEqual(curve.sampleAt(segment, 0.75).point);
   });

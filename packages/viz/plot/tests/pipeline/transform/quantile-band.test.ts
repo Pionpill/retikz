@@ -298,6 +298,7 @@ describe('quantile-band statistics behavior (contract)', () => {
 
     expect(out[0]).toMatchObject({ group: 'A', low: 5, high: 5, mid: 5, min: 5, max: 5, count: 1 });
     expect(out[1]).toMatchObject({ group: 'B', count: 0 });
+
     for (const field of ['low', 'high', 'mid', 'min', 'max']) expect(Number.isNaN(out[1][field])).toBe(true);
   });
 

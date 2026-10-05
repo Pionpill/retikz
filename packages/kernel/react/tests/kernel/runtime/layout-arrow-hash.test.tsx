@@ -36,9 +36,11 @@ const extractMarkerIds = (svg: string): Array<string> => {
   const ids: Array<string> = [];
   const re = /<marker[^>]*\bid="([^"]+)"/g;
   let m: RegExpExecArray | null;
+
   while ((m = re.exec(svg)) !== null) {
     ids.push(m[1]);
   }
+
   return ids;
 };
 
@@ -53,6 +55,7 @@ describe('Layout arrow marker dedup：同 detail 复用、不同 detail 分离',
       </Layout>,
     );
     const ids = extractMarkerIds(svg);
+
     expect(ids).toHaveLength(1);
   });
 
@@ -66,6 +69,7 @@ describe('Layout arrow marker dedup：同 detail 复用、不同 detail 分离',
       </Layout>,
     );
     const ids = extractMarkerIds(svg);
+
     expect(ids).toHaveLength(2);
     expect(new Set(ids).size).toBe(2);
   });
@@ -87,6 +91,7 @@ describe('Layout arrow marker dedup：同 detail 复用、不同 detail 分离',
       </Layout>,
     );
     const ids = extractMarkerIds(svg);
+
     expect(ids).toHaveLength(2);
   });
 
@@ -104,6 +109,7 @@ describe('Layout arrow marker dedup：同 detail 复用、不同 detail 分离',
       </Layout>,
     );
     const ids = extractMarkerIds(svg);
+
     expect(ids).toHaveLength(1);
   });
 
@@ -127,6 +133,7 @@ describe('Layout arrow marker dedup：同 detail 复用、不同 detail 分离',
       </Layout>,
     );
     const ids = extractMarkerIds(svg);
+
     expect(ids).toHaveLength(1);
   });
 });
@@ -141,6 +148,7 @@ describe('Layout arrow marker：marker 元素属性按 spec 写到 SVG', () => {
         </Path>
       </Layout>,
     );
+
     // marker 块内出现 fill="red"
     expect(svg).toMatch(/<marker[^>]*>[^<]*<path[^>]*fill="red"/);
   });
@@ -154,10 +162,13 @@ describe('Layout arrow marker：marker 元素属性按 spec 写到 SVG', () => {
         </Path>
       </Layout>,
     );
+
     // marker 块内 path 是 fill="none"（不是 "red"）
     expect(svg).toMatch(/<marker[^>]*>[^<]*<path[^>]*fill="none"/);
+
     // 加强：marker 块内不出现 fill="red"
     const markerSection = svg.match(/<marker[\s\S]*?<\/marker>/);
+
     expect(markerSection).toBeTruthy();
     expect(markerSection![0]).not.toContain('fill="red"');
   });
@@ -171,6 +182,7 @@ describe('Layout arrow marker：marker 元素属性按 spec 写到 SVG', () => {
         </Path>
       </Layout>,
     );
+
     expect(svg).toMatch(/<marker[^>]*markerWidth="16"/);
     expect(svg).toMatch(/<marker[^>]*markerHeight="16"/);
   });

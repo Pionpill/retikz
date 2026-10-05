@@ -42,6 +42,7 @@ export const makeMarkValueResolver = <T>(
     if (options.constants === 'skip') return undefined;
     return { resolver: () => value.value };
   }
+
   const field = value.value;
   const fieldType = model.find(definition => definition.name === field)?.type;
   if (options.expectedFieldType !== undefined && fieldType !== undefined && fieldType !== options.expectedFieldType) {
@@ -49,6 +50,7 @@ export const makeMarkValueResolver = <T>(
       `lowerPlots: ${options.channelName} channel field "${field}" is ${fieldType}; ${options.channelName} requires a ${options.expectedFieldType} field`,
     );
   }
+
   return {
     field,
     fieldType,

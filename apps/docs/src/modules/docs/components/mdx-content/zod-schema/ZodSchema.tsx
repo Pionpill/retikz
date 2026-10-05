@@ -29,6 +29,7 @@ export type ZodSchemaProps = {
 /** 递归把嵌套 object 字段平铺为 TableRow 列表（父行后紧跟匿名子行） */
 function flattenFields(fields: Array<ObjectField>): Array<TableRow> {
   const rows: Array<TableRow> = [];
+
   for (const f of fields) {
     rows.push({ ...f, isChild: false });
     if (f.type.kind === 'object') {
@@ -37,6 +38,7 @@ function flattenFields(fields: Array<ObjectField>): Array<TableRow> {
       }
     }
   }
+
   return rows;
 }
 
@@ -53,6 +55,7 @@ function applyDescriptions(
     if (type.kind === 'object') {
       type = { ...type, fields: applyDescriptions(type.fields, descs, key) };
     }
+
     return {
       ...f,
       description: override ?? f.description,
@@ -64,6 +67,7 @@ function applyDescriptions(
 /** 收集所有合法的字段路径（含嵌套），用于 descriptions key 拼写检查 */
 function collectFieldPaths(fields: Array<ObjectField>, prefix = ''): Array<string> {
   const out: Array<string> = [];
+
   for (const f of fields) {
     const key = prefix === '' ? f.name : `${prefix}.${f.name}`;
     out.push(key);
@@ -71,6 +75,7 @@ function collectFieldPaths(fields: Array<ObjectField>, prefix = ''): Array<strin
       out.push(...collectFieldPaths(f.type.fields, key));
     }
   }
+
   return out;
 }
 
@@ -82,7 +87,9 @@ const appendPath = (paths: PathVariants, segment: SchemaPathSegment): PathVarian
 const branchLabel = (type: TypeRepr & { kind: 'union' }, index: number): string => {
   const branch = type.branches?.[index];
   if (branch === undefined || branch.values.length === 0) return `union[${index}]`;
+
   const values = branch.values.map(value => (typeof value === 'string' ? `"${value}"` : String(value))).join(' | ');
+
   return `case ${branch.discriminator}: ${values}`;
 };
 
@@ -90,6 +97,7 @@ const expandTypeRows = (type: TypeRepr, paths: PathVariants, depth: number): Arr
   if (type.kind === 'default') {
     return expandTypeRows(type.inner, paths, depth);
   }
+
   if (type.kind === 'object') return flattenNestedFields(type.fields, paths, depth);
   if (type.kind === 'array') return expandTypeRows(type.element, appendPath(paths, { kind: 'array' }), depth);
   if (type.kind === 'tuple') {
@@ -99,6 +107,7 @@ const expandTypeRows = (type: TypeRepr, paths: PathVariants, depth: number): Arr
       return [syntheticRow(label, element, variants, depth), ...expandTypeRows(element, variants, depth + 1)];
     });
   }
+
   if (type.kind === 'union') {
     return type.members.flatMap((member, index) => {
       const branch = type.branches?.[index];
@@ -108,9 +117,11 @@ const expandTypeRows = (type: TypeRepr, paths: PathVariants, depth: number): Arr
           : [{ kind: 'union', index }];
       const variants = paths.flatMap(path => segments.map(segment => [...path, segment]));
       const label = branchLabel(type, index);
+
       return [syntheticRow(label, member, variants, depth), ...expandTypeRows(member, variants, depth + 1)];
     });
   }
+
   return [];
 };
 
@@ -136,6 +147,7 @@ function flattenNestedFields(fields: Array<ObjectField>, parents: PathVariants =
       aliasPaths: paths.slice(1).map(serializeSchemaPath),
       depth,
     };
+
     return [row, ...expandTypeRows(field.type, paths, depth + 1)];
   });
 }
@@ -146,8 +158,10 @@ const applyCanonicalDescriptions = (
 ): Array<TableRow> =>
   rows.map(row => {
     if (row.isSynthetic === true) return row;
+
     const candidates = [row.path, ...(row.aliasPaths ?? [])].filter((path): path is string => path !== undefined);
     const override = candidates.map(path => descriptions[path]).find(value => value !== undefined);
+
     return { ...row, description: override ?? row.description };
   });
 
@@ -169,6 +183,7 @@ export const ZodSchema: FC<ZodSchemaProps> = props => {
       </div>
     );
   }
+
   if (repr == null) return null;
 
   const language = i18n.resolvedLanguage ?? i18n.language;
@@ -202,6 +217,7 @@ export const ZodSchema: FC<ZodSchemaProps> = props => {
           ? collectFieldPaths(repr.fields)
           : [],
     );
+
     for (const k of Object.keys(effectiveDescriptions)) {
       if (expandNested) {
         try {
@@ -212,12 +228,15 @@ export const ZodSchema: FC<ZodSchemaProps> = props => {
           continue;
         }
       }
+
       if (!validPaths.has(k)) {
         console.warn(`[ZodSchema] "${name}" has no field path "${k}" — typo in descriptions?`);
       }
     }
+
     for (const r of rows) {
       if (r.isSynthetic === true) continue;
+
       const paths = [r.path, ...(r.aliasPaths ?? [])].filter((path): path is string => path !== undefined);
       const hasOverride = paths.some(path => effectiveDescriptions[path] != null);
       if ((expandNested && !hasOverride) || r.description == null || r.description === '') {

@@ -47,6 +47,7 @@ const validateTableRoot = (spec: TableRootSemanticInput, context: RefinementCtx)
     if (seen.has(encoding.id)) {
       context.addIssue({ code: 'custom', path: ['encodings', index, 'id'], message: 'duplicate Table encoding id' });
     }
+
     seen.add(encoding.id);
   });
 };

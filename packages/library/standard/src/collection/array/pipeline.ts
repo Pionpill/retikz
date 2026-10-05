@@ -28,17 +28,20 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
   void _type;
   if (items.length === 0)
     return compileCells([], { width: 0, height: 0, scope, decoration: { label, style } }, context);
+
   const { direction, gap } = layout;
   const horizontal = direction === ArrayDirection.Row;
   const measured: Array<MeasuredCell> = [];
   let width = 0;
   let height = 0;
+
   for (let index = 0; index < items.length; index++) {
     const cell = measureCell(items[index], context, index, scope);
     measured.push(cell);
     width = Math.max(width, cell.width);
     height = Math.max(height, cell.height);
   }
+
   const indices: Array<LayoutChildResult | undefined> = [];
   let hasIndices = false;
   let indexWidth = 0;
@@ -50,6 +53,7 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
         indices.push(undefined);
         continue;
       }
+
       hasIndices = true;
       const child: IRNode = {
         type: 'node',
@@ -68,6 +72,7 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
       indexHeight = Math.max(indexHeight, result.slotSize.height);
     }
   }
+
   const offset = hasIndices ? (horizontal ? indexHeight : indexWidth) + gap : 0;
   const isBefore = indexOptions && indexOptions.position === ArrayIndexPosition.Before;
   const cellOffset = isBefore ? offset : 0;
@@ -75,6 +80,7 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
   const extra: Array<CompositeCompileChild> = [];
   let cursor = 0;
   const cells: Array<CellPlacement> = [];
+
   for (let index = 0; index < measured.length; index++) {
     const value = measured[index];
     const cellWidth =
@@ -88,6 +94,7 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
       height: cellHeight,
       role: 'array-cell',
     };
+
     const indexResult = indices[index];
     if (indexResult !== undefined)
       extra.push(
@@ -107,9 +114,11 @@ export const compileArray = (node: IRArray, context: LayoutCompositeCompileConte
           ],
         }),
       );
+
     cursor += (horizontal ? cellWidth : cellHeight) + gap;
     cells.push(placed);
   }
+
   return compileCells(
     cells,
     {

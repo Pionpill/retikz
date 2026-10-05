@@ -15,12 +15,14 @@ const canonicalDeclarationProps = (source: PreviewSourceConfig): Record<string, 
   if (!isValidElement<{ children?: ReactNode }>(chart)) {
     throw new Error('Connected Scatter preview must provide a canonical element');
   }
+
   const declaration = Children.toArray(chart.props.children).find(
     child => isValidElement(child) && child.type === ConnectedScatterEncodings,
   );
   if (!isValidElement<Record<string, unknown>>(declaration)) {
     throw new Error('Connected Scatter preview is missing its encoding declaration');
   }
+
   return declaration.props;
 };
 

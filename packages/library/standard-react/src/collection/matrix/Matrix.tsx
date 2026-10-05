@@ -25,12 +25,14 @@ export type MatrixProps = Omit<IRMatrix, 'namespace' | 'type' | 'items' | 'data'
     | { skeleton: NonNullable<IRMatrix['skeleton']>; items?: never; data?: never; children?: never; dataExpand?: never }
     | { children?: ReactNode; items?: never; data?: never; skeleton?: never; dataExpand?: never }
   );
+
 /** 收集行格 marker，并将 drawable 交给统一输入适配 */
 const createMatrixInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
   const { items, data, skeleton, children, dataExpand, ...input } = props as MatrixProps;
   if (skeleton !== undefined) return { ...input, skeleton } satisfies InputMatrix;
   if (data !== undefined)
     return { ...input, data, ...(dataExpand === undefined ? {} : { dataExpand }) } satisfies InputMatrix;
+
   const rows =
     items ??
     collectCellMarkers(children, MatrixRow, 'Matrix').map(row =>
@@ -50,9 +52,12 @@ const createMatrixInput = (props: Readonly<Record<string, unknown>>, context: Re
       }),
     ),
   };
+
   return withInputEmbedAdapters(result, collected.adapters);
 };
+
 const MatrixComponent: FC<MatrixProps> = () => null;
+
 /** Standard Matrix 呈现组件 */
 export const Matrix = MatrixComponent as StandardEmbeddableComponent<MatrixProps>;
 Matrix.displayName = 'Matrix';

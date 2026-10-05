@@ -18,6 +18,7 @@ export type ChangelogVersionDetailProps = {
 export const ChangelogVersionDetail: FC<ChangelogVersionDetailProps> = ({ release }) => {
   const { i18n, t } = useTranslation();
   const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('en') ? 'en' : 'zh';
+
   return (
     <div className="space-y-6">
       <p className="text-sm tabular-nums text-muted-foreground">{release.stableDate ?? t('changelog.inDevelopment')}</p>

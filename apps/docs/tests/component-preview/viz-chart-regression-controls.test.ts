@@ -46,14 +46,17 @@ const dataModules = import.meta.glob<DataModule>(
   '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.data.ts',
   { eager: true },
 );
+
 const controlsModules = import.meta.glob<ControlsModule>(
   '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic*.controls.ts',
   { eager: true },
 );
+
 const demoModules = import.meta.glob<DemoModule>(
   '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.*.demo.tsx',
   { eager: true },
 );
+
 const styleModules = import.meta.glob<StyleModule>(
   '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic-style.ts',
   { eager: true },
@@ -64,6 +67,7 @@ const modulePath = (suffix: string): string =>
 
 const requiredModule = <T>(modules: Record<string, T | undefined>, path: string): T => {
   const module = modules[path];
+
   expect(module, path).toBeDefined();
   return module as T;
 };
@@ -83,23 +87,31 @@ const canonicalDeclarationProps = <TProps extends object = Record<string, unknow
   component: unknown,
 ): TProps => {
   const chart = source.canonicalRender?.();
+
   expect(isValidElement<{ children?: ReactNode }>(chart), 'canonical Regression element').toBe(true);
+
   const declaration = Children.toArray((chart as { props: { children?: ReactNode } }).props.children).find(
     child => isValidElement(child) && child.type === component,
   );
+
   expect(isValidElement<TProps>(declaration), `Regression declaration ${String(component)}`).toBe(true);
+
   return (declaration as { props: TProps }).props;
 };
 
 const canonicalPresentation = (source: PreviewSourceConfig): Record<'title' | 'subtitle' | 'source', ReactNode> => {
   const chart = source.canonicalRender?.();
+
   expect(isValidElement<{ children?: ReactNode }>(chart), 'canonical Regression element').toBe(true);
+
   const children = Children.toArray((chart as { props: { children?: ReactNode } }).props.children);
+
   const textOf = (marker: typeof ChartTitle | typeof ChartSubtitle | typeof ChartSource): ReactNode => {
     const child = children.find(candidate => isValidElement(candidate) && candidate.type === marker);
     if (!isValidElement<{ children?: ReactNode }>(child)) return undefined;
     return (child as { props: { children?: ReactNode } }).props.children;
   };
+
   return {
     title: textOf(ChartTitle),
     subtitle: textOf(ChartSubtitle),
@@ -145,6 +157,7 @@ describe('Viz Chart Regression controls', () => {
     });
 
     const fields = getPreviewControlFields(zh.controls);
+
     expect(fields.map(field => field.id)).toEqual([
       'regression-basic-coordinate-system',
       'regression-basic-group-by-species',
@@ -160,7 +173,9 @@ describe('Viz Chart Regression controls', () => {
     ]);
 
     const method = fields.find(field => field.id === 'regression-basic-method');
+
     expect(method).toMatchObject({ kind: 'select', defaultValue: 'linear' });
+
     if (method?.kind === 'select') {
       expect(method.options.map(option => option.value)).toEqual([
         'linear',
@@ -191,11 +206,15 @@ describe('Viz Chart Regression controls', () => {
       defaultValue: '#e11d48',
       visibleWhen: { controlId: 'regression-basic-group-by-species', oneOf: [false] },
     });
+
     const lineStyle = fields.find(field => field.id === 'regression-basic-trend-line-style');
+
     expect(lineStyle).toMatchObject({ kind: 'select', defaultValue: 'solid' });
+
     if (lineStyle?.kind === 'select') {
       expect(lineStyle.options.map(option => option.value)).toEqual(['solid', 'dashed']);
     }
+
     expect(fields.find(field => field.id === 'regression-basic-trend-stroke-opacity')).toMatchObject({
       kind: 'range',
       defaultValue: 0.9,
@@ -259,6 +278,7 @@ describe('Viz Chart Regression controls', () => {
   it('双语基础 demo 不内嵌 presentation', () => {
     for (const suffix of ['zh.demo.tsx', 'en.demo.tsx']) {
       const source = requiredModule(demoModules, modulePath(suffix)).previewSource;
+
       expect(canonicalPresentation(source)).toEqual({ title: undefined, subtitle: undefined, source: undefined });
     }
   });

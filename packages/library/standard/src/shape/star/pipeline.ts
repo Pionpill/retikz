@@ -18,5 +18,6 @@ export const lowerStar = (source: IRStar): IRPath => {
       angleDeg: rotate + (index * 180) / source.points,
     });
   });
+
   return shapeVertexPath(source, vertices);
 };

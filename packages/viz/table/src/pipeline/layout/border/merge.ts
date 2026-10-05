@@ -15,11 +15,14 @@ const equalJson = (left: unknown, right: unknown): boolean => {
       left.every((value, index) => equalJson(value, right[index]))
     );
   }
+
   if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object') return false;
+
   const leftRecord = left as Record<string, unknown>;
   const rightRecord = right as Record<string, unknown>;
   const leftKeys = Object.keys(leftRecord).sort();
   const rightKeys = Object.keys(rightRecord).sort();
+
   return equalJson(leftKeys, rightKeys) && leftKeys.every(key => equalJson(leftRecord[key], rightRecord[key]));
 };
 
@@ -40,20 +43,26 @@ const compareVisibleAtoms = (left: ResolvedTableBorderAtom, right: ResolvedTable
   if (left.orientation !== right.orientation && left.key.startsWith('c:') && right.key.startsWith('c:')) {
     return left.orientation === 'horizontal' ? -1 : 1;
   }
+
   const leftParts = left.key.split(':');
   const rightParts = right.key.split(':');
   if (leftParts[0] === 'c' && rightParts[0] === 'c') {
     const boundary = Number(leftParts[2]) - Number(rightParts[2]);
     return boundary === 0 ? Number(leftParts[3]) - Number(rightParts[3]) : boundary;
   }
+
   if (leftParts[0] === 's' && rightParts[0] === 's') {
     const row = Number(leftParts[1]) - Number(rightParts[1]);
     if (row !== 0) return row;
+
     const column = Number(leftParts[2]) - Number(rightParts[2]);
     if (column !== 0) return column;
+
     return SideRank[leftParts[3] as keyof typeof SideRank] - SideRank[rightParts[3] as keyof typeof SideRank];
   }
+
   if (left.orientation !== right.orientation) return left.orientation === 'horizontal' ? -1 : 1;
+
   return left.key.localeCompare(right.key);
 };
 
@@ -62,11 +71,13 @@ const edgeOf = (atom: ResolvedTableBorderAtom): TableBorderEdge => {
   if (atom.winner.kind !== 'line') {
     throw new RetikzTableError(`table: visible Border Graph atom "${atom.key}" must have a line winner`);
   }
+
   const contributors = atom.contributors.map(contribution => TableBorderContributionSchema.parse(contribution));
   const winner = contributors.find(contribution => contribution.key === atom.winner.key);
   if (winner?.kind !== 'line') {
     throw new RetikzTableError(`table: visible Border Graph atom "${atom.key}" winner must match its contributors`);
   }
+
   return {
     key: `m:${atom.orientation}:${atom.key}:${atom.key}`,
     orientation: atom.orientation,
@@ -85,6 +96,7 @@ export const mergeTableBorderAtoms = (
   if (!isTableBorderMode(mode)) {
     throw new RetikzTableError('table: Border Graph mode must be collapse or separate');
   }
+
   const visible = atoms.filter(atom => atom.visible).sort(compareVisibleAtoms);
   const perpendicularVertices = new Map<'horizontal' | 'vertical', Set<string>>([
     ['horizontal', new Set<string>()],
@@ -102,11 +114,13 @@ export const mergeTableBorderAtoms = (
       edges.push(next);
       return;
     }
+
     const previous = edges.at(-1);
     if (previous === undefined) {
       edges.push(next);
       return;
     }
+
     const opposite = atom.orientation === 'horizontal' ? 'vertical' : 'horizontal';
     const canMerge =
       previous.orientation === next.orientation &&
@@ -120,6 +134,7 @@ export const mergeTableBorderAtoms = (
       edges.push(next);
       return;
     }
+
     const atomsInEdge = [...previous.atoms, ...next.atoms];
     edges[edges.length - 1] = {
       ...previous,
@@ -128,5 +143,6 @@ export const mergeTableBorderAtoms = (
       atoms: atomsInEdge,
     };
   });
+
   return deepFreeze(edges);
 };

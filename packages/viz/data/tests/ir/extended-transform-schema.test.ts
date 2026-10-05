@@ -6,26 +6,31 @@ describe('TransformSchema sort / stack', () => {
   // Happy path
   it('sort_schema_valid', () => {
     const t = { kind: 'sort', field: 'month' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('sort_with_order_valid', () => {
     const t = { kind: 'sort', field: 'month', order: 'descending' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('stack_schema_valid', () => {
     const t = { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('stack_custom_output_fields_valid', () => {
     const t = { kind: 'stack', x: 'm', y: 'r', groupBy: 'p', startField: 'lo', endField: 'hi' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('stack_offset_valid', () => {
     const t = { kind: 'stack', x: 'm', y: 'r', groupBy: 'p', offset: 'diverging' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -50,27 +55,32 @@ describe('TransformSchema sort / stack', () => {
   it('stack_omits_x_and_group_valid', () => {
     // 单链累积：只给 y，按数据序累加（饼图用法）
     const t = { kind: 'stack', y: 'value' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('stack_omits_only_group_valid', () => {
     const t = { kind: 'stack', x: 'month', y: 'value' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('stack_omits_only_x_valid', () => {
     const t = { kind: 'stack', y: 'value', groupBy: 'product' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('stack_full_form_still_valid', () => {
     // 回归：原有完整堆叠柱写法（x + groupBy）依旧通过
     const t = { kind: 'stack', x: 'month', y: 'revenue', groupBy: 'product' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('stack_single_chain_with_custom_fields_valid', () => {
     const t = { kind: 'stack', y: 'value', startField: 'lo', endField: 'hi' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -87,6 +97,7 @@ describe('TransformSchema external operations', () => {
 
   it('external_kind_open_config_valid', () => {
     const operation = { kind: 'regression', x: 'year', y: 'value', degree: 1 };
+
     expect(TransformSchema.parse(operation)).toEqual(operation);
   });
 
@@ -96,6 +107,7 @@ describe('TransformSchema external operations', () => {
 
   it('external_operation_json_roundtrip_equivalent', () => {
     const operation = { kind: 'regression', x: 'year', y: 'value', options: { robust: false, weights: [1, 2, 3] } };
+
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
@@ -111,6 +123,7 @@ describe('TransformSchema external operations', () => {
     });
 
     expect(result.success).toBe(false);
+
     if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 });
@@ -118,16 +131,19 @@ describe('TransformSchema external operations', () => {
 describe('BinTransformSchema', () => {
   it('bin_count_strategy_valid', () => {
     const t = { kind: 'bin', field: 'measurement', count: 20, metrics: [{ kind: 'count', as: 'binCount' }] };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('bin_step_strategy_valid', () => {
     const t = { kind: 'bin', field: 'x', step: 5 };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('bin_thresholds_strategy_valid', () => {
     const t = { kind: 'bin', field: 'x', thresholds: [10, 20, 30] };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -142,11 +158,13 @@ describe('BinTransformSchema', () => {
       endField: 'hi',
       metrics: [{ kind: 'mean', field: 'weight', as: 'avg' }],
     };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('bin_minimal_valid', () => {
     const t = { kind: 'bin', field: 'measurement' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -174,6 +192,7 @@ describe('BinTransformSchema', () => {
       metrics: [{ kind: 'sum', field: 'w', as: 'totalWeight' }],
     };
     const round = TransformSchema.parse(JSON.parse(JSON.stringify(t)));
+
     expect(round).toEqual(t);
   });
 });
@@ -189,6 +208,7 @@ describe('Statistical transform algebra schema', () => {
         { kind: 'count', as: 'orders' },
       ],
     };
+
     expect(TransformSchema.parse(operation)).toEqual(operation);
   });
 
@@ -220,6 +240,7 @@ describe('Statistical transform algebra schema', () => {
       target: { selector: { kind: 'max', by: 'value' }, fields: { x: 'month', y: 'value', id: 'id' } },
       measures: [{ op: 'difference', field: 'value', as: 'delta', labelAs: 'deltaLabel' }],
     };
+
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
@@ -233,6 +254,7 @@ describe('Statistical transform algebra schema', () => {
         { kind: 'mean', field: 'weight', as: 'binMean' },
       ],
     };
+
     expect(TransformSchema.parse(operation)).toEqual(operation);
     expect(() =>
       TransformSchema.parse({ kind: 'bin', field: 'measurement', reduce: 'sum', reduceField: 'weight' }),
@@ -247,21 +269,25 @@ describe('SummarizeTransformSchema', () => {
       groupBy: ['region'],
       metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }],
     };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('summarize_count_valid', () => {
     const t = { kind: 'summarize', groupBy: ['region', 'product'], metrics: [{ kind: 'count', as: 'count' }] };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('summarize_global_group_valid', () => {
     const t = { kind: 'summarize', metrics: [{ kind: 'sum', field: 'revenue', as: 'totalRevenue' }] };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('summarize_empty_groupby_valid', () => {
     const t = { kind: 'summarize', groupBy: [], metrics: [{ kind: 'sum', field: 'r', as: 'total' }] };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -295,6 +321,7 @@ describe('SummarizeTransformSchema', () => {
       metrics: [{ kind: 'mean', field: 'revenue', as: 'avgRevenue' }],
     };
     const round = TransformSchema.parse(JSON.parse(JSON.stringify(t)));
+
     expect(round).toEqual(t);
   });
 });
@@ -302,11 +329,13 @@ describe('SummarizeTransformSchema', () => {
 describe('NormalizeTransformSchema', () => {
   it('normalize_full_form_valid', () => {
     const t = { kind: 'normalize', field: 'amount', groupBy: ['quarter'], basis: 'percent', as: 'share' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('normalize_minimal_valid', () => {
     const t = { kind: 'normalize', field: 'amount' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -326,11 +355,13 @@ describe('NormalizeTransformSchema', () => {
 describe('DeriveIntervalTransformSchema', () => {
   it('derive_interval_two_field_valid', () => {
     const t = { kind: 'derive-interval', startFrom: 'start', endFrom: 'end' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('derive_interval_from_baseline_valid', () => {
     const t = { kind: 'derive-interval', from: 'value', baseline: 10, startField: 'lo', endField: 'hi' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -340,6 +371,7 @@ describe('DeriveIntervalTransformSchema', () => {
 
   it('derive_interval_json_roundtrip_equivalent', () => {
     const t = { kind: 'derive-interval', startFrom: 's', endFrom: 'e', startField: 'a', endField: 'b' };
+
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(t)))).toEqual(t);
   });
 });
@@ -347,11 +379,13 @@ describe('DeriveIntervalTransformSchema', () => {
 describe('JitterTransformSchema', () => {
   it('jitter_full_form_valid', () => {
     const t = { kind: 'jitter', axis: 'x', xField: 'dose', amount: 0.3, seed: 42 };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
   it('jitter_minimal_valid', () => {
     const t = { kind: 'jitter' };
+
     expect(TransformSchema.parse(t)).toEqual(t);
   });
 
@@ -369,6 +403,7 @@ describe('JitterTransformSchema', () => {
 
   it('jitter_json_roundtrip_equivalent', () => {
     const t = { kind: 'jitter', axis: 'both', xField: 'dx', yField: 'dy', amount: 2, seed: 7 };
+
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(t)))).toEqual(t);
   });
 });
@@ -385,6 +420,7 @@ describe('DensityTransformSchema', () => {
       xAs: 'densityX',
       densityAs: 'density',
     };
+
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
@@ -396,6 +432,7 @@ describe('DensityTransformSchema', () => {
       xAs: 'x',
       densityAs: 'd',
     };
+
     expect(TransformSchema.parse(operation)).toEqual(operation);
   });
 
@@ -452,6 +489,7 @@ describe('SmoothTransformSchema', () => {
       xAs: 'trendX',
       yAs: 'trendY',
     };
+
     expect(TransformSchema.parse(JSON.parse(JSON.stringify(operation)))).toEqual(operation);
   });
 
@@ -463,6 +501,7 @@ describe('SmoothTransformSchema', () => {
       xAs: 'trendX',
       yAs: 'trendY',
     };
+
     expect(BuiltinTransformSchema.parse(operation)).toEqual(operation);
   });
 

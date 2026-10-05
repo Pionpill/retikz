@@ -430,7 +430,9 @@ const translations: Record<string, string> = {
 /** 缺少受审阅英文说明时终止生成，避免中文回退进入英文参考 */
 export const translateInspectApiReference = (source: string): string => {
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
+
   const translation = translations[source];
   if (translation) return translation;
+
   throw new Error(`缺少 @retikz/inspect API Reference 的审阅后英文翻译：${source}`);
 };

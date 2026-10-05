@@ -18,6 +18,7 @@ export const renderStripEncodingsPreview = (
     scale: { operation: { type: 'point', name: 'site' } },
   } as const;
   const value = { field: 'yield', scale: { operation: { type: 'linear', name: 'yield' } } } as const;
+
   return (
     <StripChart
       coordinate={values.coordinateSystem === 'polar2D' ? { type: 'polar2D' } : { type: 'cartesian2D' }}

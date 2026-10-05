@@ -9,6 +9,7 @@ export const resolveCellFormatterRegistry = (
   custom?: ReadonlyArray<AnyCellFormatterDefinition>,
 ): ReadonlyMap<string, AnyCellFormatterDefinition> => {
   const registry = new Map<string, AnyCellFormatterDefinition>();
+
   for (const definition of [...BUILTIN_CELL_FORMATTERS, ...(custom ?? [])]) {
     assertNonEmptyString(
       definition.name,
@@ -18,8 +19,10 @@ export const resolveCellFormatterRegistry = (
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell formatter registration: "${definition.name}"`);
     }
+
     registry.set(definition.name, definition);
   }
+
   return registry;
 };
 
@@ -30,6 +33,7 @@ export const cellFormatterDefinitionOf = (
 ): AnyCellFormatterDefinition => {
   const definition = registry.get(name);
   if (definition !== undefined) return definition;
+
   throw new RetikzTableError(
     `Cell formatter "${name}" is not registered; pass a definition via options.formatterDefinitions`,
   );

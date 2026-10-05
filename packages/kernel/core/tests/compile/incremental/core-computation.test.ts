@@ -64,6 +64,7 @@ const primitivePaths = (
     paths.push(path);
     if (primitive.type === 'group') paths.push(...primitivePaths(primitive.children, path));
   });
+
   return paths;
 };
 
@@ -158,6 +159,7 @@ describe('Core Runtime Computation initial full run', () => {
     });
 
     const artifact = session.artifact(program).value;
+
     expect(artifact.output.result.scene).toEqual(compileToScene(next, { measureText }).scene);
     expect(artifact.patch?.operations).toEqual([expect.objectContaining({ kind: 'replaceScene' })]);
   });
@@ -345,16 +347,20 @@ describe('Core Runtime Computation initial full run', () => {
     expect(semanticOwnerPaths).toContain('root/scope/scope-a');
     expect(semanticOwnerPaths).toContain('root/scope/scope-a/node/node-b');
     expect(semanticOwnerPaths).toContain('root/path/path-a');
+
     for (const node of snapshot.topology) {
       expect(node.identity.path.slice(0, node.semanticOwner.path.length)).toEqual(node.semanticOwner.path);
       expect(node.identity.path[node.semanticOwner.path.length]).toBe('emission');
+
       const parentPath = node.primitivePath.slice(0, -1).join('.');
       const parentNode = topologyByPath.get(parentPath);
       let expectedParent = snapshot.root;
       if (node.primitivePath.length > 1 && parentNode === undefined) {
         throw new Error(`missing topology parent at ${parentPath}`);
       }
+
       if (node.primitivePath.length > 1 && parentNode !== undefined) expectedParent = parentNode.identity;
+
       expect(identityKey(node.parent)).toBe(identityKey(expectedParent));
       expect(node.order).toBe(node.primitivePath.at(-1));
     }
@@ -474,6 +480,7 @@ describe('Core Runtime Computation initial full run', () => {
     const program = createCoreComputation({ onWarn: warning => observedWarnings.push(warning) });
     const sources = createRuntimeSourceRegistry({ builtins: [CoreSourceDefinition] });
     const computations = createRuntimeComputationRegistry({ sources, builtins: [program] });
+
     expect(() =>
       createRuntime({
         sources,
@@ -1024,6 +1031,7 @@ describe('Core Runtime Computation incremental style update', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, next)],
     });
+
     expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
   });
 
@@ -1084,9 +1092,13 @@ describe('Core Runtime Computation incremental style update', () => {
     expect(result.outcome).toBe(RuntimeComputationKind.Incremental);
     expect(after.output.result).toEqual(compileToScene(next, { onWarn: () => {} }));
     expect(after.patch?.operations).toHaveLength(1);
+
     const operation = after.patch?.operations[0];
+
     expect(operation).toMatchObject({ kind: 'update' });
+
     if (operation?.kind !== 'update') throw new Error('expected one update operation');
+
     expect(operation.identity.path).toEqual(['root', 'node', 'a', 'emission', 'node:group', '0']);
     expect(operation.subtree.root).toEqual(operation.identity);
     expect(operation.subtree.topology.map(node => node.primitivePath)).toEqual([[], [0], [1]]);
@@ -1228,6 +1240,7 @@ describe('Core Runtime Computation incremental style update', () => {
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, changedReferenceNode)],
     });
+
     expect(changedReferenceResult.outcome).toBe(RuntimeComputationKind.Fallback);
     expect(session.artifact(program).value.output.result).toEqual(
       compileToScene(changedReferenceNode, { onWarn: () => {} }),
@@ -1316,11 +1329,13 @@ it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', (
     { ...initial, children: [{ type: 'scope', children: [{ type: 'node', position: [80, 0], text: 'B' }] }] },
     initial,
   ];
+
   for (const ir of states) {
     session.update({
       baseRevision: session.revision(),
       sources: [createRuntimeSourceUpdate(CoreSourceDefinition, ir)],
     });
+
     expect(session.artifact(program).value.output.result.scene).toEqual(compileToScene(ir).scene);
   }
 });

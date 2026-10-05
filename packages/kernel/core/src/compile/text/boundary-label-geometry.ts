@@ -10,12 +10,14 @@ export const resolveBoundaryLabelRotation = (
   outward: Position,
 ): number => {
   if (rotate === undefined || rotate === 'none') return 0;
+
   let degrees =
     typeof rotate === 'number'
       ? rotate
       : Math.atan2(outward[1], outward[0]) * RAD_TO_DEG + (rotate === 'tangent' ? 90 : 0);
   const normalized = normalizeDegrees(degrees);
   if (keepUpright && normalized > 90 && normalized < 270) degrees += 180;
+
   return degrees;
 };
 
@@ -24,6 +26,7 @@ export const labelProjectedHalfExtent = (vector: Position, width: number, height
   const angle = degrees * DEG_TO_RAD;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
+
   return (
     (Math.abs(vector[0] * cos + vector[1] * sin) * width) / 2 +
     (Math.abs(-vector[0] * sin + vector[1] * cos) * height) / 2
@@ -57,6 +60,7 @@ export const placeBoundaryLabelBox = ({
   const alignment =
     (label.align === 'start' ? 1 : label.align === 'end' ? -1 : 0) *
     labelProjectedHalfExtent(tangent, width, height, rotateDeg);
+
   return {
     center: [
       point[0] + outward[0] * offset + tangent[0] * alignment,

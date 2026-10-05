@@ -22,6 +22,7 @@ export const createRelationDefinitionFromOptions = (
       const relation = resolveRelation(source, options);
       const structure = resolveRelationStructure(relation, { ...options, theme: context.theme });
       const appearance = resolveRelationAppearance(relation, { ...options, theme: context.theme });
+
       return { children: [lowerRelation(relation, structure, appearance)] };
     },
   });

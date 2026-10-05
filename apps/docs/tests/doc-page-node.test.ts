@@ -6,6 +6,7 @@ import { resolveDocPageNode } from '@/modules/docs/layout/useDocPageNode';
 describe('resolveDocPageNode', () => {
   it('解析组件组内的入门页面', () => {
     const node = resolveDocPageNode({ moduleId: 'kernel', sectionId: 'components', pageId: 'get-start' });
+
     expect(node.section?.label).toBe('kernel.components');
     expect(node.target?.id).toBe('get-start');
     expect(node.target?.difficulty).toBe(DocDifficulty.Beginner);
@@ -18,6 +19,7 @@ describe('resolveDocPageNode', () => {
       pageId: 'layout',
       subPageId: 'usage',
     });
+
     expect(node.section?.id).toBe('components');
     expect(node.page?.id).toBe('layout');
     expect(node.target?.id).toBe('usage');
@@ -25,6 +27,7 @@ describe('resolveDocPageNode', () => {
 
   it('解析分组文档页面', () => {
     const node = resolveDocPageNode({ moduleId: 'viz', sectionId: 'table', pageId: null });
+
     expect(node.section?.id).toBe('table');
     expect(node.target?.id).toBe('table');
     expect(node.target?.label).toBe('viz.table');
@@ -32,6 +35,7 @@ describe('resolveDocPageNode', () => {
 
   it('缺失页面时返回空 target', () => {
     const node = resolveDocPageNode({ moduleId: 'kernel', sectionId: 'missing', pageId: 'missing' });
+
     expect(node.target).toBeUndefined();
   });
 });

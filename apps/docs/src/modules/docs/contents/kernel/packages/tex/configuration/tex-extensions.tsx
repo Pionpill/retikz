@@ -23,6 +23,7 @@ export const previewSource = controlledPreview.source;
 const Demo: FC = () => {
   const values = usePreviewControls(texExtensionsControls);
   const lowerTexState = useLowerTex({ extensions });
+
   return lowerTexState.status === 'ready'
     ? TexExtensionsPreview(values, lowerTexState.lowerTex)
     : renderTexExtensionsLoading();

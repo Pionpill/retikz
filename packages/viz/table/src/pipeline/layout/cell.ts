@@ -65,6 +65,7 @@ const validateBoundsRect = (rect: BoundsRect, name: string): void => {
   if (!Number.isFinite(rect.x) || !Number.isFinite(rect.y)) {
     throw new RetikzTableError(`table: ${name} must have finite x and y`);
   }
+
   assertFiniteNonnegative(rect.width, `${name} width`);
   assertFiniteNonnegative(rect.height, `${name} height`);
 };
@@ -81,9 +82,11 @@ const validateTrackLayouts = (tracks: ReadonlyArray<TableTrackLayout>, axis: str
     if (track.index !== index) {
       throw new RetikzTableError(`table: ${axis} track ${index} has non-canonical index ${track.index}`);
     }
+
     if (!Number.isFinite(track.offset)) {
       throw new RetikzTableError(`table: ${axis} track ${index} offset must be finite`);
     }
+
     assertFiniteNonnegative(track.size, `${axis} track ${index} size`);
   });
 };
@@ -92,9 +95,11 @@ const validateStartAndSpan = (start: number, span: number, count: number, axis: 
   if (!Number.isInteger(start) || start < 0) {
     throw new RetikzTableError(`table: ${axis}Index must be a nonnegative integer`);
   }
+
   if (!Number.isInteger(span) || span <= 0) {
     throw new RetikzTableError(`table: ${axis}Span must be a positive integer`);
   }
+
   if (start + span > count) {
     throw new RetikzTableError(`table: ${axis} span range exceeds ${count} tracks`);
   }
@@ -126,6 +131,7 @@ export const computeTableCellOuterSize = (
   if (!Number.isFinite(width) || !Number.isFinite(height)) {
     throw new RetikzTableError('table: Cell outer size must be finite');
   }
+
   return deepFreeze({ width, height });
 };
 
@@ -150,6 +156,7 @@ export const computeTableCellBox = (input: ComputeTableCellBoxInput): BoundsRect
     (input.rowSpan - 1) * input.rowGap;
   const box = { x: column.offset, y: row.offset, width, height };
   validateBoundsRect(box, 'Cell box');
+
   return deepFreeze(box);
 };
 
@@ -164,6 +171,7 @@ export const computeTableCellContentBox = (box: BoundsRect, padding: Readonly<Bo
     height: Math.max(0, box.height - padding.top - padding.bottom),
   };
   validateBoundsRect(contentBox, 'Cell contentBox');
+
   return deepFreeze(contentBox);
 };
 
@@ -180,5 +188,6 @@ export const computeTableCellTranslation = (input: ComputeTableCellTranslationIn
   if (!Number.isFinite(x) || !Number.isFinite(y)) {
     throw new RetikzTableError('table: Cell translation must contain finite x and y');
   }
+
   return deepFreeze({ x, y });
 };

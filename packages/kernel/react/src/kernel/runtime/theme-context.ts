@@ -8,6 +8,7 @@ export const mergeThemeOverlays = (
 ): IRScene['theme'] | undefined => {
   const merged = layers.reduce<NonNullable<IRScene['theme']>>((current, layer) => {
     if (layer === undefined) return current;
+
     return {
       ...(layer.style === undefined ? current : { ...current, style: layer.style }),
       ...(layer.mode === undefined ? {} : { mode: layer.mode }),

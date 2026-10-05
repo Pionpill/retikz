@@ -43,7 +43,9 @@ export const foldCornersOf = (
       [x, curr[1]],
     ];
   }
+
   const y = prev[1] + (curr[1] - prev[1]) * fraction;
+
   return [
     [prev[0], y],
     [curr[0], y],
@@ -67,11 +69,13 @@ export const clipForTarget = (
   context: ClipForTargetContext,
 ): IRPosition | null => {
   const { positionContext } = context;
+
   // NodeTarget 的裁剪端点可能随 toward 落在不同连接面位置。
   if (isNodeTarget(target)) {
     const resolution = resolvePositionTarget(target, positionContext);
     const node = resolution.reference?.node;
     if (node === undefined) return null;
+
     const boundary = target.boundary ?? node.boundary;
     const towardGlobal = positionContext.toWorld(toward);
     const base =
@@ -79,17 +83,22 @@ export const clipForTarget = (
         ? boundaryPointOf(node, towardGlobal, boundary, resolution.boundaryResolution)
         : resolveAnchorRef(node, target.anchor, boundary, resolution.boundaryResolution);
     const global = addOffset(base, target.offset);
+
     return positionContext.toLocal(global);
   }
+
   // relative 目标应已在进入 path emit 前预解析。
   if (isRelative(target)) return null;
+
   return resolvePositionTarget(target, positionContext).point;
 };
 
 /** 在 resolving 阶段绑定 Path target，并压缩为既有公开 TargetResolution */
 export const bindPathTarget = (target: IRTarget, context: PositionTargetResolveContext): TargetResolution | null => {
   if (isRelative(target)) return null;
+
   const resolution = resolvePositionTarget(target, context);
+
   return {
     target,
     point: resolution.point,
@@ -110,8 +119,10 @@ export const targetKeyOf = (target: IRTarget): string => {
           .map(([key, item]) => [key, stable(item)]),
       );
     }
+
     return value;
   };
+
   return JSON.stringify(stable(target));
 };
 
@@ -121,21 +132,27 @@ export const pathTargetViewOf = (
   warn?: (code: string, message: string, node?: NodeReferenceView) => void,
 ): PathTargetView => {
   const byTarget = new Map<string, TargetResolution>();
+
   for (const binding of targets.values()) byTarget.set(targetKeyOf(binding.target), binding);
 
   const bindingOf = (target: IRTarget): TargetResolution | undefined => byTarget.get(targetKeyOf(target));
+
   const pointOf = (target: IRTarget): IRPosition | null => {
     if (isRelative(target)) return null;
+
     const binding = bindingOf(target);
     if (binding !== undefined) return binding.point;
+
     return Array.isArray(target) ? target : null;
   };
+
   return {
     pointOfTarget: target => pointOf(target),
     referenceOfTarget: target => bindingOf(target)?.referencePoint ?? pointOf(target),
     clipTarget: (target, toward, scopeChain) => {
       const binding = bindingOf(target);
       if (binding?.node === undefined || !isNodeTarget(target)) return pointOf(target);
+
       const node = binding.node;
       const boundary = target.boundary ?? node.boundary;
       const towardGlobal = scopeChain.length === 0 ? toward : applyTransformChain(toward, scopeChain);
@@ -150,6 +167,7 @@ export const pathTargetViewOf = (
             )
           : resolveAnchorRef(node, target.anchor, boundary, binding.boundaryResolution);
       const global = addOffset(base, target.offset);
+
       return scopeChain.length === 0 ? global : inverseTransformChain(global, scopeChain);
     },
   };

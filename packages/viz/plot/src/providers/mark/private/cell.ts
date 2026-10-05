@@ -77,6 +77,7 @@ export const cellGeometryNode = (geometry: CellGeometry): IRNode | null => {
       layout: { minimumSize: { width: geometry.width, height: geometry.height } },
     };
   }
+
   if (geometry.kind === 'sector') {
     return {
       type: 'node',
@@ -92,8 +93,10 @@ export const cellGeometryNode = (geometry: CellGeometry): IRNode | null => {
       },
     };
   }
+
   const position = cellGeometryAnchor(geometry);
   if (position === null) return null;
+
   return {
     type: 'node',
     position,

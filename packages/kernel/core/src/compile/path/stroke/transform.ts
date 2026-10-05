@@ -26,9 +26,11 @@ export const buildPathTransforms = ({ rotate, scale, center, round }: BuildPathT
   if (rotate !== undefined) {
     out.push({ kind: 'rotate', degrees: rotate, cx: round(center[0]), cy: round(center[1]) });
   }
+
   if (scale !== undefined) {
     const sx = typeof scale === 'number' ? scale : scale.x;
     const sy = typeof scale === 'number' ? undefined : scale.y;
+
     // 绕 bbox center 缩放：translate(center) ∘ scale ∘ translate(-center)
     const scaleT: Transform = { kind: 'scale', x: sx };
     if (sy !== undefined) scaleT.y = sy;
@@ -38,6 +40,7 @@ export const buildPathTransforms = ({ rotate, scale, center, round }: BuildPathT
       y: round(-center[1]),
     });
   }
+
   return out;
 };
 
@@ -56,6 +59,7 @@ export const buildPathOwnerOutputTransforms = ({
       typeof scale === 'number' ? { kind: 'scale', x: scale, pivot } : { kind: 'scale', x: scale.x, y: scale.y, pivot },
     );
   }
+
   return out;
 };
 
@@ -65,6 +69,7 @@ export const projectPathTransformPoints = (
   transforms: ReadonlyArray<Transform>,
 ): Array<IRPosition> => {
   const transformedPoints = points.map(p => applyTransformChain(p, transforms));
+
   // scale × 坐标可能把 finite 输入放大溢出成 Infinity；非 finite 会污染 layout（round-trip 失真）
   if (!transformedPoints.every(isFinitePoint)) {
     throw new RetikzCoreError(
@@ -72,5 +77,6 @@ export const projectPathTransformPoints = (
       'Path rotate / scale produced a non-finite coordinate (scale too large); use a smaller scale.',
     );
   }
+
   return transformedPoints;
 };

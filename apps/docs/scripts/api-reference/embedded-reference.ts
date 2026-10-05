@@ -9,6 +9,7 @@ export const embedApiReferenceMdx = (source: string): string => {
         inCodeFence = !inCodeFence;
         return line;
       }
+
       if (inCodeFence) return line;
 
       const heading = line.match(/^(#{2,4}) (.+)$/);
@@ -16,6 +17,7 @@ export const embedApiReferenceMdx = (source: string): string => {
 
       const [, hashes, title] = heading;
       if (hashes.length === 2) return `**${title}**`;
+
       return `${'#'.repeat(hashes.length + 1)} ${title}`;
     })
     .join('\n');

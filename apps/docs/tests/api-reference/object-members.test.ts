@@ -35,6 +35,7 @@ vi.mock('../../scripts/api-reference/branch-labels', () => ({
 
 it('自动展开一层对象，保留映射修饰符、继承说明与索引，复杂非对象保持原签名', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'retikz-object-reference-'));
+
   try {
     const entry = join(directory, 'index.ts');
     const tsconfigPath = join(directory, 'tsconfig.json');
@@ -123,6 +124,7 @@ export type IndexedProps = IndexedMarker;
       'en',
     );
     const section = (name: string): string => source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
+
     expect(section('Selected')).toContain('| `readonly id` | `string` | — | Stable identity |');
     expect(section('Selected')).toContain('| `retries?` | `number` | `3` | Retry budget |');
     expect(section('Selected')).toContain("export type Selected = Pick<Base, 'id' | 'retries'>;");
@@ -142,9 +144,13 @@ export type IndexedProps = IndexedMarker;
     expect(section('Frozen')).toContain('| `readonly retries?`');
     expect(section('Mutable')).toContain('| `id`');
     expect(section('Mutable')).not.toContain('| `readonly id`');
+
     const marker = section('marker / MarkerProps');
+
     expect(source).not.toMatch(/^### (marker|MarkerProps)$/m);
+
     const definition = marker.match(/```ts\n([\s\S]*?)\n```/)?.[1];
+
     expect(definition).toContain('export declare function marker(input: MarkerProps): void;');
     expect(definition).toContain("export type MarkerProps = Marker<Cell['layout']>;");
     expect(marker).toContain('Render a marker');
@@ -154,21 +160,26 @@ export type IndexedProps = IndexedMarker;
     expect(section('plainMarker / PlainMarkerProps')).toContain('plainMarker(input: PlainMarkerProps)');
     expect(marker).toContain('Requires a parent container');
     expect(marker).toContain("export type MarkerProps = Marker<Cell['layout']>;");
+
     const branch = (value: string) => marker.split(`<DocTab value="${value}"`)[1]?.split('</DocTab>')[0] ?? '';
+
     for (const value of ['text', 'children']) {
       expect(branch(value)).toContain('| `readonly id?` | `string`');
       expect(branch(value)).toContain('| `layout?` | `{ width: number; }`');
       expect(branch(value)).not.toContain('Omit<');
     }
+
     expect(branch('text')).toContain('| `text` | `string`');
     expect(branch('text')).toContain('| `children?` | `never`');
     expect(branch('children')).toContain('| `children` | `Nested`');
     expect(branch('children')).toContain('| `text?` | `never`');
     expect(section('GenericMarker')).toContain('| `layout?` | `T`');
+
     for (const name of ['GenericMarker', 'IndexedProps']) {
       expect(section(name)).toContain('<DocTab value="text" label="Members · Text">');
       expect(section(name)).toContain('<DocTab value="children" label="Members · Children">');
     }
+
     for (const name of ['Omitted', 'Inherited', 'Combined']) {
       expect(section(name)).toContain('| `nested` | `Nested`');
       expect(section(name)).not.toContain('| `inside`');
@@ -179,21 +190,25 @@ export type IndexedProps = IndexedMarker;
       );
       expect(section(name)).not.toContain('<details>');
     }
+
     expect(section('Inherited')).toContain('Stable identity');
     expect(section('Combined')).toContain('| `extra` | `boolean`');
     expect(section('Dictionary')).toContain('readonly [key: string]: Nested');
     expect(section('Dictionary')).toContain('| Index signature | `readonly [key: string]: Nested`');
     expect(section('Keys')).toContain('| `one` | `Nested`');
     expect(section('Keys')).toContain('| `two` | `Nested`');
+
     for (const name of ['Callback', 'CallbackObject', 'Items', 'Pair']) {
       expect(section(name)).not.toContain('| Member |');
       expect(section(name)).not.toContain('<details>');
       expect(section(name)).toContain('```ts');
     }
+
     for (const name of ['Generic', 'Conditional']) {
       expect(section(name)).toContain('| `T` (Type parameter)');
       expect(section(name)).not.toContain('| `nested`');
     }
+
     expect(section('Either')).toContain('<DocTabs');
     expect(section('Either')).toContain('alternative');
     expect(section('Generic')).toContain('Pick<T, keyof T>');

@@ -64,6 +64,7 @@ export const overlayStructuralGuideOffset = (
       real: false,
     });
   }
+
   return Object.freeze({
     offset: Math.min(Math.max(guide.position - result.allocationBounds.y, 0), slotHeight),
     real: true,
@@ -79,13 +80,16 @@ const baselineMetricOf = (
     item => item.placement.kind === OverlayPlacementKind.Aligned && item.alignment === name,
   );
   if (participants.length === 0) return undefined;
+
   let ascent = 0;
   let descent = 0;
+
   for (const item of participants) {
     const guide = overlayStructuralGuideOffset(item.yResult, name);
     ascent = Math.max(ascent, item.margin.top + guide.offset);
     descent = Math.max(descent, item.yResult.slotSize.height - guide.offset + item.margin.bottom);
   }
+
   return Object.freeze({ ascent, descent });
 };
 
@@ -94,6 +98,7 @@ export const resolveOverlayProfile = (items: ReadonlyArray<OverlayProfileItem>):
   const included = items.filter(item => item.sizeParticipation === LayoutSizeParticipation.Include);
   let width = 0;
   let height = 0;
+
   for (const item of included) {
     if (item.placement.kind === OverlayPlacementKind.Aligned) {
       width = Math.max(width, compensatedLayoutSum([item.margin.left, item.xResult.slotSize.width, item.margin.right]));
@@ -103,6 +108,7 @@ export const resolveOverlayProfile = (items: ReadonlyArray<OverlayProfileItem>):
       );
       continue;
     }
+
     const slotWidth = item.xResult.slotSize.width;
     const slotHeight = item.yResult.slotSize.height;
     const slotX = item.placement.at.x + item.offset.x - item.placement.anchor.x * slotWidth;
@@ -110,10 +116,12 @@ export const resolveOverlayProfile = (items: ReadonlyArray<OverlayProfileItem>):
     width = Math.max(width, slotX + slotWidth + item.margin.right, 0);
     height = Math.max(height, slotY + slotHeight + item.margin.bottom, 0);
   }
+
   const firstBaseline = baselineMetricOf(included, LayoutAlignmentGuideName.FirstBaseline);
   const lastBaseline = baselineMetricOf(included, LayoutAlignmentGuideName.LastBaseline);
   if (firstBaseline !== undefined) height = Math.max(height, firstBaseline.ascent + firstBaseline.descent);
   if (lastBaseline !== undefined) height = Math.max(height, lastBaseline.ascent + lastBaseline.descent);
+
   return Object.freeze({
     contentSize: Object.freeze({ width, height }),
     ...(firstBaseline === undefined ? {} : { firstBaseline }),
@@ -144,6 +152,7 @@ export const placeOverlayItem = (input: PlaceOverlayItemInput): PlacedOverlayGeo
     x: alignAllocationInSlot(slot, input.result.allocationBounds, 'x', input.justify),
     y: alignAllocationInSlot(slot, input.result.allocationBounds, 'y', input.align),
   });
+
   return Object.freeze({
     slot,
     translation:

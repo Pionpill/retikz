@@ -9,6 +9,7 @@ export const lowerSector = (source: IRSector): IRPath => {
   const { startAngle, endAngle } = shapeAngles(source)!;
   const { label: _hostLabel, ...properties } = shapePathProperties(source);
   void _hostLabel;
+
   const { label } = source;
   const arcLabel = label === undefined ? {} : { label };
   const inner = source.innerRadius;
@@ -39,6 +40,7 @@ export const lowerSector = (source: IRSector): IRPath => {
             },
       ],
     };
+
   // 正内半径的 schema 分支只接受字面笛卡尔中心
   const center = source.center as [number, number];
   const radius = source.radius;
@@ -54,6 +56,7 @@ export const lowerSector = (source: IRSector): IRPath => {
     radiusY: typeof inner === 'number' ? inner : inner.y,
     angleDeg: endAngle,
   });
+
   return {
     ...properties,
     type: 'path',

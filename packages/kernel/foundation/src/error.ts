@@ -32,8 +32,10 @@ export class RetikzError<
 > extends Error {
   /** 结构化错误的分类代码 */
   readonly code: TCode;
+
   /** 与错误代码关联的结构化错误详情 */
   readonly details: TDetails;
+
   /**
    * 导致当前错误的原始异常或值
    * @default undefined

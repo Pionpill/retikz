@@ -7,6 +7,7 @@ import type { ShapeAngles, ShapeBox, ShapePathProperties } from './types';
 export const shapeVertexPath = (source: ShapePathProperties, vertices: Array<[number, number]>): IRPath => {
   const { rotate, ...properties } = shapePathProperties(source);
   void rotate;
+
   return {
     ...properties,
     type: 'path',
@@ -34,6 +35,7 @@ export const shapeAngles = (source: ShapeAngles): { startAngle: number; endAngle
     return { startAngle: source.startAngle, endAngle: source.startAngle + source.sweepAngle };
   if (source.endAngle !== undefined && source.sweepAngle !== undefined)
     return { startAngle: source.endAngle - source.sweepAngle, endAngle: source.endAngle };
+
   return undefined;
 };
 
@@ -54,6 +56,7 @@ export const shapeBoxGeometry = (input: {
   const width = box?.width ?? Math.abs(corner2[0] - corner1[0]);
   const height = box?.height ?? Math.abs(corner2[1] - corner1[1]);
   const delta = input.outset ?? -(input.inset ?? 0);
+
   return {
     center: [origin[0] + width / 2, origin[1] + height / 2],
     width: width + delta * 2,

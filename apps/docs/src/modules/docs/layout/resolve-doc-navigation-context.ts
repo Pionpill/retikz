@@ -30,6 +30,7 @@ export const resolveDocNavigationContext = (pathname: string): DocNavigationCont
   if (!areaId || (!isDocModuleId(areaId) && areaId !== DOC_ABOUT_ID)) return EMPTY_NAVIGATION_CONTEXT;
 
   const location = resolveDocLocation(params);
+
   return {
     areaId,
     moduleId: isDocModuleId(areaId) ? areaId : null,

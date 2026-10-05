@@ -88,6 +88,7 @@ const combineSvgAnimationControls = (children: ReadonlyArray<SvgAnimationControl
   let cleanupStarted = false;
   let cleanupInProgress = false;
   let cleanupComplete = false;
+
   return Object.freeze({
     play: () => {
       if (!cleanupStarted) controls.forEach(control => control.play());
@@ -100,8 +101,10 @@ const combineSvgAnimationControls = (children: ReadonlyArray<SvgAnimationControl
     },
     dispose: () => {
       if (cleanupComplete || cleanupInProgress) return;
+
       cleanupStarted = true;
       cleanupInProgress = true;
+
       try {
         children.forEach(child => (child.gate.enabled = false));
         runBestEffortCleanup(controls.map(control => () => control.dispose()));
@@ -132,6 +135,7 @@ type SvgAnimationCleanupQueue = Readonly<{
 /** 创建 renderer 生命周期内的 WAAPI controls 清理队列 */
 const createSvgAnimationCleanupQueue = (): SvgAnimationCleanupQueue => {
   const pending = new Set<AnimationControls>();
+
   const dispose = (controls: AnimationControls): void => {
     try {
       controls.dispose();
@@ -141,12 +145,15 @@ const createSvgAnimationCleanupQueue = (): SvgAnimationCleanupQueue => {
       throw cause;
     }
   };
+
   const retain = (controls: AnimationControls): void => {
     pending.add(controls);
   };
+
   const disposePending = (): void => {
     runBestEffortCleanup([...pending].map(controls => () => dispose(controls)));
   };
+
   return Object.freeze({ dispose, retain, disposePending });
 };
 
@@ -157,6 +164,7 @@ const createSvgAnimationControl = (
 ): SvgAnimationControl => {
   const gate = { enabled: true };
   let raw: AnimationControls;
+
   try {
     raw = bindWaapiDescriptorElements(elements, () => gate.enabled);
   } catch (cause) {
@@ -165,8 +173,10 @@ const createSvgAnimationControl = (
       cleanupQueue.retain(setupFailure.controls);
       throw setupFailure.cause;
     }
+
     throw cause;
   }
+
   const controls: AnimationControls = Object.freeze({
     play: () => {
       if (gate.enabled) raw.play();
@@ -188,6 +198,7 @@ const createSvgAnimationControl = (
       return gate.enabled && raw.running;
     },
   });
+
   return Object.freeze({ controls, suspend: () => raw.pause(), elements: Object.freeze([...elements]), gate });
 };
 
@@ -219,15 +230,19 @@ const createMutationJournal = (): MutationJournal => {
 /** 从 SvgNode descriptor 创建尚未接入 retained identity index 的 SVG subtree */
 const createSvgElement = (document: Document, node: SvgNode): SVGElement => {
   const element = document.createElementNS(SVG_NAMESPACE, node.tag);
+
   for (const [key, value] of Object.entries(node.attrs)) {
     if (value !== undefined) element.setAttribute(key, String(value));
   }
+
   for (const [key, value] of Object.entries(node.style ?? {})) {
     if (value !== undefined && value !== null) element.style.setProperty(key, String(value));
   }
+
   for (const child of node.children ?? []) {
     element.appendChild(typeof child === 'string' ? document.createTextNode(child) : createSvgElement(document, child));
   }
+
   return element;
 };
 
@@ -240,6 +255,7 @@ const reconcileAttribute = (
 ): void => {
   const previous = element.getAttribute(key);
   if (previous === value || (previous === null && value === undefined)) return;
+
   journal.mutate(
     () => (value === undefined ? element.removeAttribute(key) : element.setAttribute(key, value)),
     () => (previous === null ? element.removeAttribute(key) : element.setAttribute(key, previous)),
@@ -255,6 +271,7 @@ const reconcileStyle = (
 ): void => {
   const previous = element.style.getPropertyValue(key);
   if (previous === (value ?? '')) return;
+
   journal.mutate(
     () => (value === undefined ? element.style.removeProperty(key) : element.style.setProperty(key, value)),
     () => (previous.length === 0 ? element.style.removeProperty(key) : element.style.setProperty(key, previous)),
@@ -272,7 +289,9 @@ const descriptorKey = (node: SvgNode): string | undefined => {
 const elementKey = (element: Element): string | undefined => {
   const publicId = element.getAttribute('data-retikz-id');
   if (publicId !== null) return `public:${publicId}`;
+
   const id = element.getAttribute('id');
+
   return id === null ? undefined : `id:${id}`;
 };
 
@@ -280,12 +299,14 @@ const elementKey = (element: Element): string | undefined => {
 const findElementCandidate = (parent: SVGElement, start: number, node: SvgNode): SVGElement | undefined => {
   const key = descriptorKey(node);
   const children = Array.from(parent.childNodes);
+
   for (let index = start; index < children.length; index += 1) {
     const candidate = children[index];
     if (!(candidate instanceof parent.ownerDocument.defaultView!.SVGElement) || candidate.localName !== node.tag)
       continue;
     if (key === undefined ? index === start : elementKey(candidate) === key) return candidate;
   }
+
   return undefined;
 };
 
@@ -313,6 +334,7 @@ const reconcileElement = (
       if (!nextAttributes.has(key) && key !== 'style') reconcileAttribute(element, key, undefined, journal);
     }
   }
+
   for (const [key, value] of nextAttributes) reconcileAttribute(element, key, value, journal);
 
   const nextStyle = new Map(
@@ -334,11 +356,13 @@ const reconcileElement = (
       }
     }
   }
+
   for (const [key, value] of nextStyle) reconcileStyle(element, key, value, journal);
 
   if (!reconcileChildren) return;
 
   const desiredChildren = node.children ?? [];
+
   for (let index = 0; index < desiredChildren.length; index += 1) {
     const desired = desiredChildren[index];
     const current: Node | null = index < element.childNodes.length ? element.childNodes[index] : null;
@@ -357,6 +381,7 @@ const reconcileElement = (
         }
         continue;
       }
+
       const text = element.ownerDocument.createTextNode(desired);
       journal.mutate(
         () => element.insertBefore(text, current ?? null),
@@ -364,6 +389,7 @@ const reconcileElement = (
       );
       continue;
     }
+
     const existing = findElementCandidate(element, index, desired);
     const candidate = existing ?? createSvgElement(element.ownerDocument, desired);
     if (existing === undefined) {
@@ -378,8 +404,10 @@ const reconcileElement = (
         () => element.insertBefore(candidate, previousNext),
       );
     }
+
     reconcileElement(candidate, desired, journal, false);
   }
+
   while (element.childNodes.length > desiredChildren.length) {
     const child = element.childNodes[desiredChildren.length];
     const next = child.nextSibling;
@@ -392,17 +420,21 @@ const reconcileElement = (
 
 const descriptorMatchesElement = (element: SVGElement, node: SvgNode, root: boolean): boolean => {
   if (element.localName !== node.tag) return false;
+
   for (const [key, value] of Object.entries(node.attrs)) {
     if (value !== undefined && element.getAttribute(key) !== String(value)) return false;
   }
+
   if (!root) {
     const expectedAttributes = Object.entries(node.attrs).filter(([, value]) => value !== undefined).length;
     const actualAttributes = element.getAttributeNames().filter(key => key !== 'style').length;
     if (expectedAttributes !== actualAttributes) return false;
   }
+
   const expectedStyles = Object.entries(node.style ?? {}).filter(([, value]) => value !== undefined && value !== null);
   if (expectedStyles.some(([key, value]) => element.style.getPropertyValue(key) !== String(value))) return false;
   if (!root && element.style.length !== expectedStyles.length) return false;
+
   const children = node.children ?? [];
   const actualChildren = root
     ? Array.from(element.childNodes).filter(
@@ -412,9 +444,11 @@ const descriptorMatchesElement = (element: SVGElement, node: SvgNode, root: bool
       )
     : Array.from(element.childNodes);
   if (actualChildren.length !== children.length) return false;
+
   return children.every((child, index) => {
     const actual = actualChildren[index];
     if (typeof child === 'string') return actual.nodeType === actual.TEXT_NODE && actual.textContent === child;
+
     return (
       actual instanceof element.ownerDocument.defaultView!.SVGElement && descriptorMatchesElement(actual, child, false)
     );
@@ -443,7 +477,9 @@ const primitiveNeedsDerivedResource = (primitive: RuntimeScenePrimitive): boolea
   ) {
     return true;
   }
+
   if (primitive.type === 'group') return primitive.children.some(child => primitiveNeedsDerivedResource(child));
+
   return false;
 };
 
@@ -488,6 +524,7 @@ const animationWrapperCount = (
       track => isAutoplayTrigger(track) && evaluateTrack(track, snapshotAt, { easings }) !== null,
     ).length;
   }
+
   return config.animation?.enabled === false ? 0 : candidates.length;
 };
 
@@ -505,6 +542,7 @@ const unwrapPrimitiveContent = (
   );
   let contentDescriptor = descriptor;
   let contentElement = element;
+
   for (let index = 0; index < wrapperCount; index += 1) {
     const childDescriptor: unknown = Reflect.get(contentDescriptor.children ?? [], 0);
     const childElement = contentElement.firstElementChild;
@@ -515,9 +553,11 @@ const unwrapPrimitiveContent = (
     ) {
       break;
     }
+
     contentDescriptor = childDescriptor as SvgNode;
     contentElement = childElement;
   }
+
   return Object.freeze({ descriptor: contentDescriptor, element: contentElement });
 };
 
@@ -542,30 +582,37 @@ const buildRootDescriptorPlan = (
     const headCount = children.length - snapshot.scene.primitives.length;
     if (headCount < 0)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root descriptor primitive count is invalid');
+
     return Object.freeze({
       head: Object.freeze(children.slice(0, headCount)),
       wrappers: Object.freeze([]),
       primitives: Object.freeze(children.slice(headCount)),
     });
   }
+
   const head = children.slice(0, -1);
   let cursor = children.at(-1);
   const wrappers: Array<SvgNode> = [];
+
   for (let index = 0; index < wrapperCount; index += 1) {
     if (cursor === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper descriptor is missing');
+
     wrappers.push(cursor);
     if (index < wrapperCount - 1) {
       const child: unknown = Reflect.get(cursor.children ?? [], 0);
       if (typeof child !== 'object' || child === null)
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper chain is invalid');
+
       cursor = child as SvgNode;
     }
   }
+
   const primitives = (cursor?.children ?? []).filter((child): child is SvgNode => typeof child !== 'string');
   if (primitives.length !== snapshot.scene.primitives.length) {
     throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper primitive count is invalid');
   }
+
   return Object.freeze({
     head: Object.freeze(head),
     wrappers: Object.freeze(wrappers),
@@ -596,6 +643,7 @@ const buildSubtreeDescriptor = (
   const child = descriptor.children?.at(-1);
   if (child === undefined || typeof child === 'string')
     throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG subtree descriptor is missing');
+
   return child;
 };
 
@@ -615,15 +663,19 @@ const buildFullElementIndex = (
     if (!(outer instanceof host.ownerDocument.defaultView!.SVGElement)) {
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper element is missing');
     }
+
     contentElement = outer;
+
     for (let index = 1; index < plan.wrappers.length; index += 1) {
       const child = contentElement.firstElementChild;
       if (!(child instanceof host.ownerDocument.defaultView!.SVGElement)) {
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG camera wrapper element chain is invalid');
       }
+
       contentElement = child;
     }
   }
+
   const visit = (
     primitive: RuntimeScenePrimitive,
     primitiveDescriptor: SvgNode,
@@ -633,8 +685,10 @@ const buildFullElementIndex = (
     const topology = topologyByPath.get(topologyPathKey(path));
     if (topology === undefined)
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG topology element is missing');
+
     entries.push([topology.identity, element]);
     if (primitive.type !== 'group') return;
+
     const content = unwrapPrimitiveContent(primitive, primitiveDescriptor, element, config);
     const children = content.descriptor.children ?? [];
     primitive.children.forEach((child, index) => {
@@ -647,9 +701,11 @@ const buildFullElementIndex = (
       ) {
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG group topology element is missing');
       }
+
       visit(child, childDescriptor as SvgNode, childElement, [...path, index]);
     });
   };
+
   snapshot.scene.primitives.forEach((primitive, index) => {
     const primitiveDescriptor: unknown = Reflect.get(plan.primitives, index);
     const element = contentElement.childNodes[index + (plan.wrappers.length === 0 ? plan.head.length : 0)];
@@ -660,8 +716,10 @@ const buildFullElementIndex = (
     ) {
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root topology element is missing');
     }
+
     visit(primitive, primitiveDescriptor as SvgNode, element, [index]);
   });
+
   return createRuntimeIdentityMap(entries);
 };
 
@@ -680,7 +738,9 @@ const reconcilePrimitiveSubtree = (
     reconcileElement(element, descriptor, journal, false);
     return;
   }
+
   reconcileElement(element, descriptor, journal, false, new Set(), new Set(), false);
+
   const topologyByPath = new Map(subtree.topology.map(node => [topologyPathKey(node.primitivePath), node]));
   const content = unwrapPrimitiveContent(primitive, descriptor, element, config);
   const desiredChildren = content.descriptor.children ?? [];
@@ -690,6 +750,7 @@ const reconcilePrimitiveSubtree = (
     if (typeof childDescriptor !== 'object' || childDescriptor === null || topology === undefined) {
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG subtree topology is incomplete');
     }
+
     const descriptorNode = childDescriptor as SvgNode;
     const current = content.element.childNodes[index] ?? null;
     const indexed = currentElements.get(topology.identity);
@@ -708,11 +769,13 @@ const reconcilePrimitiveSubtree = (
         },
       );
     }
+
     reconcilePrimitiveSubtree(candidate, descriptorNode, child, subtree, config, currentElements, journal, [
       ...path,
       index,
     ]);
   });
+
   while (content.element.childNodes.length > primitive.children.length) {
     const child = content.element.childNodes[primitive.children.length];
     const next = child.nextSibling;
@@ -730,20 +793,25 @@ const indexSubtreeElements = (
   target: RuntimeIdentityMap<SVGElement>,
 ): void => {
   const topologyByPath = new Map(subtree.topology.map(node => [topologyPathKey(node.primitivePath), node]));
+
   const visit = (primitive: RuntimeScenePrimitive, element: SVGElement, path: ReadonlyArray<number>): void => {
     const topology = topologyByPath.get(topologyPathKey(path));
     if (topology === undefined || !target.set(topology.identity, element)) {
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG candidate topology index is invalid');
     }
+
     if (primitive.type !== 'group') return;
+
     primitive.children.forEach((child, index) => {
       const childElement = element.childNodes[index];
       if (!(childElement instanceof element.ownerDocument.defaultView!.SVGElement)) {
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG candidate group element is missing');
       }
+
       visit(child, childElement, [...path, index]);
     });
   };
+
   visit(subtree.primitive, root, []);
 };
 
@@ -765,6 +833,7 @@ const subtreeAtRootIndex = (snapshot: SceneRuntimeSnapshot, index: number): Scen
   const primitive: unknown = Reflect.get(snapshot.scene.primitives, index);
   if (root === undefined || primitive === undefined)
     throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG root subtree topology is missing');
+
   return Object.freeze({
     root: root.identity,
     primitive: primitive as RuntimeScenePrimitive,
@@ -795,6 +864,7 @@ const reconcileFullIdentityDocument = (
       return element === undefined ? [] : [element];
     }),
   );
+
   for (let index = 0; index < plan.head.length; index += 1) {
     const descriptorNode = plan.head[index];
     const current = host.childNodes[index] ?? null;
@@ -811,10 +881,13 @@ const reconcileFullIdentityDocument = (
         },
       );
     }
+
     reconcileElement(candidate, descriptorNode, journal, false);
   }
+
   let contentElement: SVGElement = host;
   const wrapperParents: Array<Readonly<{ parent: SVGElement; child: SVGElement }>> = [];
+
   for (let index = 0; index < plan.wrappers.length; index += 1) {
     const wrapperDescriptor = plan.wrappers[index];
     const childIndex = index === 0 ? plan.head.length : 0;
@@ -837,16 +910,19 @@ const reconcileFullIdentityDocument = (
         },
       );
     }
+
     reconcileElement(candidate, { ...wrapperDescriptor, children: [] }, journal, false);
     wrapperParents.push(Object.freeze({ parent: parentElement, child: candidate }));
     contentElement = candidate;
   }
+
   snapshot.scene.primitives.forEach((primitive, index) => {
     const descriptorNode: unknown = Reflect.get(plan.primitives, index);
     const subtree = subtreeAtRootIndex(snapshot, index);
     if (typeof descriptorNode !== 'object' || descriptorNode === null) {
       throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG primitive descriptor is invalid');
     }
+
     const primitiveDescriptor = descriptorNode as SvgNode;
     const childIndex = plan.wrappers.length === 0 ? plan.head.length + index : index;
     const current = contentElement.childNodes[childIndex] ?? null;
@@ -866,9 +942,11 @@ const reconcileFullIdentityDocument = (
         },
       );
     }
+
     reconcilePrimitiveSubtree(candidate, primitiveDescriptor, primitive, subtree, config, currentElements, journal);
   });
   const contentCount = plan.wrappers.length === 0 ? plan.head.length + plan.primitives.length : plan.primitives.length;
+
   while (contentElement.childNodes.length > contentCount) {
     const child = contentElement.childNodes[contentCount];
     const next = child.nextSibling;
@@ -877,10 +955,13 @@ const reconcileFullIdentityDocument = (
       () => contentElement.insertBefore(child, next),
     );
   }
+
   for (const { parent, child: desiredChild } of wrapperParents.toReversed()) {
     if (parent === host) continue;
+
     for (const child of Array.from(parent.childNodes)) {
       if (child === desiredChild) continue;
+
       const next = child.nextSibling;
       journal.mutate(
         () => child.remove(),
@@ -888,8 +969,10 @@ const reconcileFullIdentityDocument = (
       );
     }
   }
+
   if (plan.wrappers.length > 0) {
     const desiredTopCount = plan.head.length + 1;
+
     while (host.childNodes.length > desiredTopCount) {
       const child = host.childNodes[desiredTopCount];
       const next = child.nextSibling;
@@ -916,22 +999,27 @@ const groupSvgWaapiElements = (
   ];
   const grouped = createRuntimeIdentityMap<Array<Element>>([]);
   const root: Array<Element> = [];
+
   for (const descriptor of descriptors) {
     let owner: Readonly<{ identity: RuntimeIdentity; element: SVGElement }> | undefined;
+
     for (const node of snapshot.topology) {
       const occurrence = elements.get(node.identity);
       if (occurrence === undefined || (occurrence !== descriptor && !occurrence.contains(descriptor))) continue;
       if (owner === undefined || owner.element.contains(occurrence))
         owner = { identity: node.identity, element: occurrence };
     }
+
     if (owner === undefined) {
       root.push(descriptor);
       continue;
     }
+
     const owned = grouped.get(owner.identity) ?? [];
     owned.push(descriptor);
     grouped.set(owner.identity, owned);
   }
+
   return Object.freeze({
     root: Object.freeze(root),
     occurrences: Object.freeze(
@@ -965,6 +1053,7 @@ const createSvgAnimationState = (
     diff.occurrences.map(change => [change.identity, change.kind] as const),
   );
   const created: Array<SvgAnimationControl> = [];
+
   try {
     const retained = new Set<SvgAnimationControl>();
     const bindings = grouped.occurrences.map(group => {
@@ -978,10 +1067,13 @@ const createSvgAnimationState = (
         retained.add(existing);
         return existing;
       }
+
       const control = createSvgAnimationControl(group.elements, cleanupQueue);
       created.push(control);
+
       return Object.freeze({ identity: group.identity, ...control });
     });
+
     const root =
       preserve &&
       !diff.rootChanged &&
@@ -995,6 +1087,7 @@ const createSvgAnimationState = (
       if (root === previous?.root) retained.add(root);
       else created.push(root);
     }
+
     const retired = [
       ...(previous?.root === undefined || retained.has(previous.root) ? [] : [previous.root]),
       ...(previous?.bindings.flatMap(binding => (retained.has(binding) ? [] : [binding])) ?? []),
@@ -1005,6 +1098,7 @@ const createSvgAnimationState = (
       root === previous.root &&
       bindings.length === previous.bindings.length &&
       bindings.every((binding, index) => binding.controls === previous.bindings[index]?.controls);
+
     return Object.freeze({
       state: Object.freeze({
         controls: reuseAggregate ? previous.controls : combineSvgAnimationControls(all),
@@ -1020,6 +1114,7 @@ const createSvgAnimationState = (
     } catch {
       // 失败 controls 已进入 renderer 级队列；setup cause 保持 primary
     }
+
     throw cause;
   }
 };
@@ -1078,6 +1173,7 @@ const createSvgHydration = (
 ): HydrationController | undefined => {
   const handlers = mergeRenderHandlers(config);
   if (Object.keys(handlers).length === 0) return undefined;
+
   const scene = snapshot.scene as unknown as Scene;
   const targets = new WeakMap<Element, HydrationTarget>();
   const publicIdByOwner = createSemanticOwnerPublicIdMap(snapshot.topology);
@@ -1086,9 +1182,11 @@ const createSvgHydration = (
     groupSvgWaapiElements(host, snapshot, elements).occurrences.map(group => [group.identity, group.elements] as const),
   );
   const animationElementsByPublicId = new Map<string, Set<Element>>();
+
   for (const node of snapshot.topology) {
     const element = elements.get(node.identity);
     if (element === undefined) continue;
+
     const publicId = node.publicId ?? publicIdByOwner.get(node.semanticOwner);
     targets.set(
       element,
@@ -1101,20 +1199,25 @@ const createSvgHydration = (
     if (publicId !== undefined) {
       const owned = animationElementsByPublicId.get(publicId) ?? new Set<Element>();
       owned.add(element);
+
       for (const descriptor of animationElementsByIdentity.get(node.identity) ?? []) owned.add(descriptor);
       animationElementsByPublicId.set(publicId, owned);
     }
   }
+
   /** 从事件 target 上溯到 retained topology 已索引的 occurrence 元素 */
   const locateElement = (event: Event): Element | null => {
     let element = event.target instanceof Element ? event.target : null;
+
     while (element !== null) {
       if (targets.has(element)) return element;
       if (element === host) return null;
       element = element.parentElement;
     }
+
     return null;
   };
+
   return createHydrationController(
     host,
     handlers,
@@ -1179,8 +1282,10 @@ export const createBuiltinSvgRetainedRenderer = (
       if (!(stagedHost instanceof host.ownerDocument.defaultView!.SVGSVGElement)) {
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG full descriptor root is invalid');
       }
+
       buildFullElementIndex(stagedHost, descriptor, snapshot, config);
     }
+
     const entityOperations = entityPatch?.operations as ReadonlyArray<EntityScenePatchOperation> | undefined;
     const canAdopt = mode === 'adopt' && descriptor !== undefined && descriptorMatchesElement(host, descriptor, true);
     const replaceAdoptedSeed = mode === 'adopt' && descriptor !== undefined && !canAdopt;
@@ -1210,6 +1315,7 @@ export const createBuiltinSvgRetainedRenderer = (
         return element === undefined ? [] : ([[node.identity, element]] as const);
       }),
     ]);
+
     /** 在 prepare 阶段完成 entity target 解析与 detached subtree materialization */
     const preparedOperations: ReadonlyArray<PreparedEntityOperation> =
       entityOperations?.map(operation => {
@@ -1217,6 +1323,7 @@ export const createBuiltinSvgRetainedRenderer = (
           const element = currentElements.get(operation.identity);
           if (element === undefined || element.parentNode === null)
             throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG remove target is missing');
+
           return Object.freeze({
             kind: operation.kind,
             operation,
@@ -1225,6 +1332,7 @@ export const createBuiltinSvgRetainedRenderer = (
             before: element.nextSibling,
           });
         }
+
         if (operation.kind === 'move') {
           const element = currentElements.get(operation.identity);
           const parent = candidateElements.get(operation.parent) ?? currentElements.get(operation.parent);
@@ -1239,7 +1347,9 @@ export const createBuiltinSvgRetainedRenderer = (
           ) {
             throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG move topology is missing');
           }
+
           const before = beforeCandidate ?? null;
+
           return Object.freeze({
             kind: operation.kind,
             operation,
@@ -1248,6 +1358,7 @@ export const createBuiltinSvgRetainedRenderer = (
             before,
           });
         }
+
         const subtreeDescriptor = buildSubtreeDescriptor(snapshot, operation.subtree, config, options);
         if (operation.kind === 'insert') {
           const parent = candidateElements.get(operation.parent) ?? currentElements.get(operation.parent);
@@ -1258,9 +1369,11 @@ export const createBuiltinSvgRetainedRenderer = (
           if (parent === undefined || (operation.before !== undefined && beforeCandidate === undefined)) {
             throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG insert parent is missing');
           }
+
           const before = beforeCandidate ?? null;
           const element = createSvgElement(host.ownerDocument, subtreeDescriptor);
           indexSubtreeElements(element, operation.subtree, candidateElements);
+
           return Object.freeze({
             kind: operation.kind,
             operation,
@@ -1270,12 +1383,14 @@ export const createBuiltinSvgRetainedRenderer = (
             before,
           });
         }
+
         const existing = currentElements.get(operation.identity);
         if (existing === undefined || existing.parentNode === null)
           throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG update target is missing');
         if (existing.localName !== subtreeDescriptor.tag) {
           const element = createSvgElement(host.ownerDocument, subtreeDescriptor);
           indexSubtreeElements(element, operation.subtree, candidateElements);
+
           return Object.freeze({
             kind: operation.kind,
             operation,
@@ -1286,6 +1401,7 @@ export const createBuiltinSvgRetainedRenderer = (
             indexed: true,
           });
         }
+
         return Object.freeze({
           kind: operation.kind,
           operation,
@@ -1296,18 +1412,22 @@ export const createBuiltinSvgRetainedRenderer = (
           indexed: false,
         });
       }) ?? [];
+
     let animation: SvgAnimationState | undefined;
     let animationTransition:
       | Readonly<{ created: ReadonlyArray<SvgAnimationControl>; retired: ReadonlyArray<SvgAnimationControl> }>
       | undefined;
     const suspendedAnimation: Array<Readonly<{ control: SvgAnimationControl; running: boolean }>> = [];
     let hydration: HydrationController | undefined;
+
     const disposeCandidateHydration = (): void => {
       const candidate = hydration;
       if (candidate === undefined) return;
+
       candidateHydrationCleanup.dispose(candidate);
       hydration = undefined;
     };
+
     let journal: MutationJournal | undefined;
     let committed = false;
     let rolledBack = false;
@@ -1315,6 +1435,7 @@ export const createBuiltinSvgRetainedRenderer = (
     const animationDiff = diffSceneAnimationDescriptors(currentSnapshot, snapshot);
     const replaceScene = patch?.operations.some(operation => operation.kind === 'replaceScene') === true;
     const preserveAnimation = !replaceScene && runtimeStructuralEquals(currentAnimationConfig, config.animation);
+
     return Object.freeze({
       commit: () => {
         journal = createMutationJournal();
@@ -1330,6 +1451,7 @@ export const createBuiltinSvgRetainedRenderer = (
               );
               continue;
             }
+
             if (prepared.kind === 'move') {
               const element = prepared.element;
               const parent = prepared.parent;
@@ -1345,6 +1467,7 @@ export const createBuiltinSvgRetainedRenderer = (
               );
               continue;
             }
+
             const operation = prepared.operation;
             const subtree = operation.subtree;
             const subtreeDescriptor = prepared.descriptor;
@@ -1358,6 +1481,7 @@ export const createBuiltinSvgRetainedRenderer = (
               );
               continue;
             }
+
             const existing = prepared.existing;
             const element = prepared.element;
             if (element !== existing) {
@@ -1379,8 +1503,10 @@ export const createBuiltinSvgRetainedRenderer = (
                 journal,
               );
             }
+
             if (prepared.indexed !== true) indexSubtreeElements(element, subtree, candidateElements);
           }
+
           currentElements = candidateElements;
         } else if (!canAdopt && descriptor !== undefined) {
           if (replaceAdoptedSeed) {
@@ -1392,6 +1518,7 @@ export const createBuiltinSvgRetainedRenderer = (
               previousOwnedAttributes,
               previousOwnedStyles,
             );
+
             for (const child of descriptor.children ?? []) {
               const node =
                 typeof child === 'string'
@@ -1418,10 +1545,12 @@ export const createBuiltinSvgRetainedRenderer = (
               reconcileElement(host, descriptor, journal, true, previousOwnedAttributes, previousOwnedStyles);
             }
           }
+
           currentElements = buildFullElementIndex(host, descriptor, snapshot, config);
         } else if (descriptor !== undefined) {
           currentElements = buildFullElementIndex(host, descriptor, snapshot, config);
         }
+
         if (
           config.animation?.enabled !== false &&
           config.animation?.snapshotAt === undefined &&
@@ -1447,10 +1576,12 @@ export const createBuiltinSvgRetainedRenderer = (
             ]),
           });
         }
+
         if (previousHydration !== undefined) {
           previousHydrationDisposeAttempted = true;
           previousHydration.dispose();
         }
+
         try {
           hydration = createSvgHydration(host, snapshot, config, currentElements);
         } catch (cause) {
@@ -1459,14 +1590,17 @@ export const createBuiltinSvgRetainedRenderer = (
             hydration = setupFailure.controller;
             throw setupFailure.cause;
           }
+
           throw cause;
         }
+
         for (const control of animationTransition?.retired ?? []) {
           const suspended = Object.freeze({ control, running: control.controls.running });
           suspendedAnimation.push(suspended);
           control.gate.enabled = false;
           control.suspend();
         }
+
         currentSnapshot = snapshot;
         currentHydration = hydration;
         currentAnimation = animation;
@@ -1505,7 +1639,9 @@ export const createBuiltinSvgRetainedRenderer = (
             ) {
               return;
             }
+
             previousHydration.dispose();
+
             try {
               currentHydration = createSvgHydration(host, previousSnapshot, previousConfig, previousElements);
             } catch (cause) {
@@ -1514,6 +1650,7 @@ export const createBuiltinSvgRetainedRenderer = (
                 currentHydration = setupFailure.controller;
                 throw setupFailure.cause;
               }
+
               throw cause;
             }
           },
@@ -1556,6 +1693,7 @@ export const createBuiltinSvgRetainedRenderer = (
             (element): element is SVGElement => element instanceof host.ownerDocument.defaultView!.SVGElement,
           );
     let candidateElements: ReadonlyArray<SVGElement> = Object.freeze([]);
+
     try {
       candidateElements = Object.freeze(
         layers.map(layer =>
@@ -1577,13 +1715,18 @@ export const createBuiltinSvgRetainedRenderer = (
       } catch {
         // 辅助 Scene 物化错误保持为 prepare 的主因
       }
+
       throw cause;
     }
+
     let committed = false;
+
     return Object.freeze({
       commit: () => {
         primaryToken.commit();
+
         for (const element of previousElements) element.remove();
+
         for (const element of candidateElements) host.appendChild(element);
         currentLayers = layers;
         currentLayerElements = candidateElements;
@@ -1591,7 +1734,9 @@ export const createBuiltinSvgRetainedRenderer = (
       },
       rollback: () => {
         primaryToken.rollback();
+
         for (const element of candidateElements) element.remove();
+
         for (const element of previousElements) if (element.parentNode !== host) host.appendChild(element);
         currentLayers = previousLayers;
         currentLayerElements = previousElements;
@@ -1613,6 +1758,7 @@ export const createBuiltinSvgRetainedRenderer = (
     read: () => {
       if (currentSnapshot === undefined)
         throw new RetikzRenderError(RetikzRenderErrorCode.Runtime, 'SVG retained renderer is not committed');
+
       return Object.freeze({
         frame: Object.freeze({ primary: currentSnapshot, layers: currentLayers }),
         ...(currentAnimation === undefined ? {} : { animation: currentAnimation.controls }),

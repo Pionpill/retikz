@@ -46,6 +46,7 @@ const BranchDiagramComponent: FC<BranchDiagramProps> = props => {
     themeStyles,
     ...hostProps
   } = branchDiagramLayoutHostPropsOf(props);
+
   return (
     <Layout
       {...hostProps}

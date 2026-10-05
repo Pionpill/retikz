@@ -19,6 +19,7 @@ describe('Table visual encoding schema', () => {
       scale: { name: 'sequential-color', options: { domain: [0, 10] } },
       legend: { title: 'Score' },
     });
+
     expect(JSON.parse(JSON.stringify(encoding))).toEqual(encoding);
     expect(() => TableCellVisualEncodingSchema.parse({ ...encoding, id: '' })).toThrow(/id/i);
     expect(() => TableCellVisualEncodingSchema.parse({ ...encoding, channel: 'opacity' })).toThrow(/channel/i);
@@ -47,7 +48,9 @@ describe('Table visual encoding schema', () => {
     };
 
     expect(TableSchema.parse(spec).encodings?.map(encoding => encoding.id)).toEqual(['first', 'second']);
+
     const withoutEncodings = Object.fromEntries(Object.entries(spec).filter(([key]) => key !== 'encodings'));
+
     expect(TableSchema.parse(withoutEncodings)).not.toHaveProperty('encodings');
     expect(() =>
       TableSchema.parse({ ...spec, encodings: [spec.encodings[0], { ...spec.encodings[1], id: 'first' }] }),
@@ -63,12 +66,14 @@ describe('Table visual encoding schema', () => {
     const encoding = { id: 'score', selector, channel: 'contentColor', scale: { name: 'ordinal-color' } };
 
     const anonymous = TableSchema.parse({ ...base, encodings: [{ ...encoding, legend: { title: 'Score' } }] });
+
     expect(anonymous).not.toHaveProperty('id');
     expect(TableSchema.parse({ ...base, encodings: [{ ...encoding, legend: false }] })).not.toHaveProperty('id');
     expect(TableSchema.parse({ ...base, id: 'table-1', encodings: [{ ...encoding, legend: {} }] })).toHaveProperty(
       'id',
       'table-1',
     );
+
     const compiled = compileTable(
       {
         ...anonymous,
@@ -78,6 +83,7 @@ describe('Table visual encoding schema', () => {
       { scores: [{ score: 1 }] },
       { compile: { padding: 0 } },
     );
+
     expect(compiled.manifest).not.toHaveProperty('tableId');
     expect(compiled.manifest.legendDescriptors).toMatchObject([{ encodingId: 'score', title: 'Score' }]);
   });

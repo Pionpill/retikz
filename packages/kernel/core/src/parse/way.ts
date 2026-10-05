@@ -185,6 +185,7 @@ const WayFoldOpSchema = strictObject({
 
 const wayOperatorNamesOf = (item: WayItem): Array<string> => {
   if (!isPlainObject(item)) return [];
+
   const names = [
     'horizontalTo',
     'verticalTo',
@@ -198,6 +199,7 @@ const wayOperatorNamesOf = (item: WayItem): Array<string> => {
     'ellipse',
   ].filter(key => key in item);
   if ('position' in item && 'type' in item) names.push('relative');
+
   return names;
 };
 
@@ -214,6 +216,7 @@ const assertSingleWayOperator = (item: WayItem): void => {
 /** sugar 字符串/对象 → IR step.label（字符串 = `{text:s}`） */
 const normalizeLabel = (l: WayLabel): IRStepLabel => {
   if (typeof l === 'string') return { text: l };
+
   const { side, ...rest } = l;
   const rawSide = side as string | undefined;
   const out: IRStepLabel = { ...rest, text: l.text };
@@ -225,6 +228,7 @@ const normalizeLabel = (l: WayLabel): IRStepLabel => {
       if (normalizedSide !== undefined) out.side = normalizedSide;
     }
   }
+
   return out;
 };
 
@@ -234,6 +238,7 @@ const desugarRelativeItem = (item: WayItem): WayItem => {
   if (item.type === DrawWay.Accumulate) {
     return { relativeAccumulate: item.position };
   }
+
   return { relative: item.position };
 };
 
@@ -255,6 +260,7 @@ const classifyWayItem = (item: WayItem): ClassifiedWayItem => {
   if (isWayFoldOpInput(item)) return { kind: 'via', item };
   if (isWayCurveLike(item)) return { kind: 'curve', item };
   if (isWayShapeOp(item)) return { kind: 'shape', item };
+
   return { kind: 'target', item };
 };
 
@@ -289,8 +295,10 @@ const parseFollowingTarget = (
   nextError: (next: WayItem) => string,
 ): IRTarget => {
   if (index + 1 >= way.length) throw new RetikzCoreError(RetikzCoreErrorCode.Parse, endError);
+
   const next = way[index + 1];
   if (isWayOperator(next)) throw new RetikzCoreError(RetikzCoreErrorCode.Parse, nextError(next));
+
   return parseTargetSugar(desugarRelativeItem(next));
 };
 
@@ -311,6 +319,7 @@ const buildViaStep = (
               `parseWay: invalid fold operator: ${result.error.issues[0]?.message ?? 'invalid object'}`,
             );
           }
+
           return result.data;
         })();
   return attachLabel(
@@ -353,6 +362,7 @@ const buildCurveLikeStep = (
       label,
     );
   }
+
   if (isWayCubicOp(item)) {
     return attachLabel(
       {
@@ -365,6 +375,7 @@ const buildCurveLikeStep = (
       label,
     );
   }
+
   const bend: IRBendStep = {
     type: 'step',
     kind: 'bend',
@@ -372,6 +383,7 @@ const buildCurveLikeStep = (
     bendDirection: item.bend,
   };
   if (item.angle !== undefined) bend.bendAngle = item.angle;
+
   return attachLabel(bend, label);
 };
 
@@ -391,6 +403,7 @@ const buildShapeStep = (
       label,
     );
   }
+
   if (isWayCircleOp(item)) {
     return attachLabel(
       {
@@ -401,6 +414,7 @@ const buildShapeStep = (
       label,
     );
   }
+
   return attachLabel(
     {
       type: 'step',
@@ -432,6 +446,7 @@ const axisLineTargetOf = (item: WayAxisLineOp): IRAxisLineTarget => {
       { cause: result.error },
     );
   }
+
   return result.data;
 };
 
@@ -454,10 +469,12 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
   if (way.length < 2) {
     throw new RetikzCoreError(RetikzCoreErrorCode.Parse, 'parseWay: way must contain at least 2 items');
   }
+
   const out: Array<IRStep> = [];
 
   /** 当前未消费的 label 算子结果，下一个产生段的 way item 消耗 */
   let pendingLabel: IRStepLabel | undefined;
+
   const consumeLabel = (): IRStepLabel | undefined => {
     const l = pendingLabel;
     pendingLabel = undefined;
@@ -470,6 +487,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
       `parseWay: way[0] must be a target (move start), got label operator`,
     );
   }
+
   const rawMove = targetOf(way[0]);
   if (rawMove === null) {
     throw new RetikzCoreError(
@@ -477,12 +495,15 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
       `parseWay: way[0] must be a target (move start), got operator`,
     );
   }
+
   const moveTarget: IRTarget = parseTargetSugar(rawMove);
   const moveStep: IRMoveStep = { type: 'step', kind: 'move', to: moveTarget };
   out.push(moveStep);
   let index = 1;
+
   while (index < way.length) {
     const classified = classifyWayItem(way[index]);
+
     switch (classified.kind) {
       case 'label':
         if (pendingLabel) {
@@ -491,6 +512,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
             `parseWay: label operator at index ${index} cannot directly follow another label operator`,
           );
         }
+
         pendingLabel = normalizeLabel(classified.item.label);
         index += 1;
         break;
@@ -505,6 +527,7 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
             `parseWay: cycle step cannot carry a label (label operator at index ${index - 1})`,
           );
         }
+
         out.push({ type: 'step', kind: 'cycle' });
         index += 1;
         break;
@@ -527,11 +550,13 @@ export const parseWay = (way: WayDSL): Array<IRStep> => {
         break;
     }
   }
+
   if (pendingLabel) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Parse,
       `parseWay: label operator at end of way must be followed by a step`,
     );
   }
+
   return out;
 };

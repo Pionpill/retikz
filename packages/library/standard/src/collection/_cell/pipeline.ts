@@ -16,6 +16,7 @@ import type { CanonicalCell } from './resolve';
 
 /** 内容一次自然测量的结果与含 padding 的需求 */
 export type MeasuredCell = { cell: CanonicalCell; result?: LayoutChildResult; width: number; height: number };
+
 /** 确定的单格边框位置及引用角色 */
 export type CellPlacement = {
   measured: MeasuredCell;
@@ -71,6 +72,7 @@ export const measureCell = (
           scope,
         );
   const { padding } = cell.layout;
+
   return {
     cell,
     result,
@@ -116,6 +118,7 @@ const emitCell = (placed: CellPlacement, context: LayoutCompositeCompileContext)
   const { padding } = cell.layout;
   const cx = Math.max(0, Math.min(width, (width + padding.left - padding.right) / 2));
   const cy = Math.max(0, Math.min(height, (height + padding.top - padding.bottom) / 2));
+
   return context.scope(
     {
       transforms: [{ kind: 'translate', x, y }],
@@ -182,6 +185,7 @@ export const compileCells = (
       message: 'Collection allocation cannot fit its cells and gaps.',
       details: { width, height, allocation: allocationBounds },
     });
+
   const handles: Array<SpatialHandleDeclaration> = [{ id: 'container', role: 'container', bounds: allocationBounds }];
   const children: Array<IRChild | CompositeCompileChild> = cells.map(cell => emitCell(cell, context));
   children.push(...extra);
@@ -214,6 +218,7 @@ export const compileCells = (
       ],
     });
   }
+
   for (const {
     measured: { cell },
     role,
@@ -223,6 +228,7 @@ export const compileCells = (
     height: cellHeight,
   } of cells) {
     if (cell.id === undefined) continue;
+
     const bounds = { x, y, width: cellWidth, height: cellHeight };
     handles.push({
       id: `cell:${cell.id}`,
@@ -236,5 +242,6 @@ export const compileCells = (
       children: [cellReferenceNode(cell.id, bounds, cell.aliasIds)],
     });
   }
+
   return { allocationBounds, children: [context.scope(scope, children, handles)] };
 };

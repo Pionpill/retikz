@@ -9,7 +9,9 @@ import type { BaseLayoutInspectOptions } from '../../shared/types';
 import type { CanonicalBaseLayoutInspectOptions } from './types';
 
 const defaultOptions = BaseLayoutInspectOptionsSchema.parse({});
+
 const defaultBounds = LayoutInspectBoundsOptionsSchema.parse({});
+
 const defaultSpacing = LayoutInspectSpacingOptionsSchema.parse({});
 
 /** 解析共享观测开关；对象中的 undefined 不覆盖默认 */
@@ -18,6 +20,7 @@ export const resolveBaseLayoutInspectOptions = (
 ): CanonicalBaseLayoutInspectOptions => {
   const bounds = options.bounds;
   const spacing = options.spacing;
+
   return {
     bounds: {
       container: typeof bounds === 'boolean' ? bounds : (bounds?.container ?? defaultBounds.container),
@@ -45,11 +48,13 @@ export const mergeLayoutInspectOptionsInput = <T extends BaseLayoutInspectOption
       ...mergeProperties([local.bounds], { shouldOverride: value => value !== undefined }),
     };
   }
+
   if (typeof inherited.spacing === 'object' && typeof local.spacing === 'object') {
     merged.spacing = {
       ...inherited.spacing,
       ...mergeProperties([local.spacing], { shouldOverride: value => value !== undefined }),
     };
   }
+
   return merged;
 };

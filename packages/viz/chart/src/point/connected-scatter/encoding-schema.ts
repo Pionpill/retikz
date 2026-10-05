@@ -6,6 +6,7 @@ import { createChartDirectMappingSchema, createChartScaleBindingSchema } from '.
 import { createPointPositionEncodingSchema, PointPartitionEncodingSchema, refinePointFacetEncodings } from '../shared';
 
 const SeriesScaleBindingSchema = createChartScaleBindingSchema(OrdinalScaleSchema);
+
 const DirectFieldSchema = union([NonBlankStringSchema, createChartDirectMappingSchema()]);
 
 /** Connected Scatter exact encoding plan */

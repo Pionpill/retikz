@@ -8,7 +8,9 @@ import type {
 } from './types';
 
 const runtimeCommitParticipants = new WeakSet<object>();
+
 const participantExecutors = new WeakMap<object, RuntimeCommitParticipantExecutor>();
+
 const participantOwnership = new WeakMap<object, 'unowned' | 'owned' | 'consumed'>();
 
 /** 创建 participant definition 输入错误 */
@@ -25,6 +27,7 @@ export const defineRuntimeCommitParticipant = <TRead>(
 ): RuntimeCommitParticipant<TRead> => {
   const { key, sources, computations, revisionPolicy, tracePhases, prepare, read, dispose } = input;
   if (key.length === 0) throw invalidParticipant(input);
+
   try {
     createRuntimeTraceReporter({ owner: key, phases: tracePhases, sink: () => undefined });
   } catch (cause) {
@@ -34,6 +37,7 @@ export const defineRuntimeCommitParticipant = <TRead>(
       cause,
     });
   }
+
   const copiedTracePhases = Object.freeze(
     tracePhases.map(({ phase, unit, outcomes }) =>
       Object.freeze({ phase, unit, outcomes: Object.freeze([...outcomes]) }),
@@ -49,6 +53,7 @@ export const defineRuntimeCommitParticipant = <TRead>(
   participantExecutors.set(token, Object.freeze({ prepare, read, dispose }));
   participantOwnership.set(token, 'unowned');
   runtimeCommitParticipants.add(token);
+
   return token;
 };
 
@@ -67,7 +72,9 @@ export const claimRuntimeCommitParticipants = (
 ): RuntimeCommitParticipantToken | undefined => {
   const unavailable = participants.find(participant => participantOwnership.get(participant) !== 'unowned');
   if (unavailable !== undefined) return unavailable;
+
   for (const participant of participants) participantOwnership.set(participant, 'owned');
+
   return undefined;
 };
 

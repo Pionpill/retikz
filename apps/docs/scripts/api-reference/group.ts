@@ -8,6 +8,7 @@ import type { ApiReferencePackageConfig } from './tex';
 import { createApiReferenceMdx } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
+
 /** Group 合页使用的公开 API */
 export const groupApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   { owner: 'graph-react', symbols: ['Group', 'GroupProps'], pairs: [['Group', 'GroupProps']] },
@@ -65,11 +66,14 @@ export const groupApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
   ),
   translate: translateGroupApiReference,
 }));
+
 /** 生成合页参考，包名作为正文标签展示 */
 export const writeGroupApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
   mkdirSync(outputDirectory, { recursive: true });
+
   for (const lang of ['zh', 'en'] as const) {
     const sections: Array<string> = [];
+
     for (const config of groupApiConfigs) sections.push(await createApiReferenceMdx(config, lang));
     const content = sections.map(embedApiReferenceMdx).join('\n\n');
     writeFileSync(

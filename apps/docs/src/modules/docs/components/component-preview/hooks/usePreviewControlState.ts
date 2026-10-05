@@ -60,6 +60,7 @@ export const usePreviewControlState = (
     let animationFrame = 0;
     let startedAt: number | undefined;
     const { field, duration } = rangePlayback;
+
     const tick = (timestamp: number) => {
       startedAt ??= timestamp;
       const progress = Math.min(1, (timestamp - startedAt) / duration);
@@ -70,10 +71,12 @@ export const usePreviewControlState = (
         setRangePlayback(current => (current === rangePlayback ? undefined : current));
         return;
       }
+
       animationFrame = window.requestAnimationFrame(tick);
     };
 
     animationFrame = window.requestAnimationFrame(tick);
+
     return () => window.cancelAnimationFrame(animationFrame);
   }, [rangePlayback]);
 

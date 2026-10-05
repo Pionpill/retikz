@@ -54,5 +54,6 @@ export const createPreviewControlContract = (lang: Lang = 'zh') => {
     relatedApis: ['BubbleChart.coordinate', 'BubbleMark.properties'],
   } satisfies PreviewControlContract;
 };
+
 /** 当前示例的控件值 */
 export type DemoValues = PreviewControlValuesFor<ReturnType<typeof createPreviewControlContract>['controls']>;

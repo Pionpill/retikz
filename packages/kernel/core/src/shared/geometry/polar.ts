@@ -34,7 +34,9 @@ export const polar = {
     } else {
       origin = polar.toPosition(p.origin);
     }
+
     const rad = p.angle * DEG_TO_RAD;
+
     return [origin[0] + Math.cos(rad) * p.radius, origin[1] + Math.sin(rad) * p.radius];
   },
   /** 笛卡尔 → 极坐标（angle ∈ (-180,180]，origin 默认 [0,0]） */
@@ -56,6 +58,7 @@ export const polar = {
     const aCart = isPositionTuple(a) ? a : polar.toPosition(a);
     const bCart = isPositionTuple(b) ? b : polar.toPosition(b);
     const factor = 10 ** precision;
+
     return (
       Math.round(aCart[0] * factor) === Math.round(bCart[0] * factor) &&
       Math.round(aCart[1] * factor) === Math.round(bCart[1] * factor)

@@ -68,6 +68,7 @@ describe('toSceneResult runtime metadata', () => {
     expect(vanilla.scene).toEqual(direct.scene);
     expect(JSON.stringify(vanilla.scene)).not.toContain('theme');
   });
+
   it('为不同 Scene 输入结果创建互不共享的空 metadata', () => {
     const first = toSceneResult(scene, {});
     const second = toSceneResult(scene, {});

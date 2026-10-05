@@ -14,5 +14,6 @@ export const gradientLineFromAngle = (angle: number | undefined): GradientLine =
   const rad = ((angle ?? 0) * Math.PI) / 180;
   const dx = Math.cos(rad);
   const dy = Math.sin(rad);
+
   return { x1: 0.5 - dx * 0.5, y1: 0.5 - dy * 0.5, x2: 0.5 + dx * 0.5, y2: 0.5 + dy * 0.5 };
 };

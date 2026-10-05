@@ -68,6 +68,7 @@ describe('runtime computation definition and registry', () => {
     { id: { owner: 'x', key: '' }, code: RetikzRuntimeErrorCode.ComputationIdInvalid },
   ])('拒绝无效 Computation id：$id', ({ id, code }) => {
     const owner = defineSource('counter');
+
     expect(() => defineComputation(owner, id)).toThrowError(expect.objectContaining({ code }));
   });
 
@@ -129,6 +130,7 @@ describe('runtime computation definition and registry', () => {
       sources: createRuntimeSourceRegistry({ builtins: [owner] }),
       builtins: [definition],
     });
+
     expect(registry.definitions()).toEqual([definition]);
     expect(definition.id).toEqual({ owner: 'counter', key: 'stable' });
     expect(executor.sources).toEqual([owner]);
@@ -172,6 +174,7 @@ describe('runtime computation definition and registry', () => {
     },
   ])('拒绝无效 trace declaration', ({ tracePhases }) => {
     const owner = defineSource('counter');
+
     expect(() =>
       defineRuntimeComputation({
         id: { owner: 'counter', key: 'trace' },
@@ -252,6 +255,7 @@ describe('runtime computation definition and registry', () => {
       number,
       number
     >;
+
     expect(() => createRuntimeComputationRegistry({ sources, custom: [forged] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationTokenInvalid }),
     );
@@ -266,6 +270,7 @@ describe('runtime computation definition and registry', () => {
       artifact: { capture: (value: number) => value, readForComputation: value => value, read: value => value },
       run: () => ({ kind: RuntimeComputationKind.Full, artifact: 1 }),
     });
+
     expect(() => createRuntimeComputationRegistry({ sources, custom: [foreign] })).toThrowError(
       expect.objectContaining({ code: RetikzRuntimeErrorCode.ComputationTokenInvalid }),
     );

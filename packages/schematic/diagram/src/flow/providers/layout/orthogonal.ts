@@ -28,6 +28,7 @@ export const createFlowOrthogonalCandidates = (
 ): Array<OrthogonalRoute> => {
   const relation = input.relations[relationIndex];
   if (relation.routing.kind !== 'orthogonal') return [];
+
   const routing = relation.routing;
   const bounds = new Map(elements.map(element => [element.id, element.bounds]));
   const sourceBounds = bounds.get(relation.source.id)!,
@@ -47,23 +48,28 @@ export const createFlowOrthogonalCandidates = (
     ),
   });
   if (source[0] === target[0] || source[1] === target[1]) return [route([source, target])];
+
   const paths = new Map<string, Array<EffectiveFlowLayout>>();
+
   const visit = (items: FlowLayoutInput['elements'], ancestors: Array<EffectiveFlowLayout>): void => {
     for (const item of items) {
       paths.set(item.id, ancestors);
       if (item.kind !== 'leaf') visit(item.elements, [...ancestors, item.layout]);
     }
   };
+
   visit(input.elements, []);
   let layout = input.layout;
   const sourcePath = paths.get(relation.source.id) ?? [],
     targetPath = paths.get(relation.target.id) ?? [];
+
   for (
     let index = 0;
     index < Math.min(sourcePath.length, targetPath.length) && sourcePath[index] === targetPath[index];
     index++
   )
     layout = sourcePath[index];
+
   const horizontal = layout.direction === 'right' || layout.direction === 'left';
   const axis = horizontal ? 0 : 1;
   const sign = layout.direction === 'right' || layout.direction === 'down' ? 1 : -1;
@@ -101,6 +107,7 @@ export const createFlowOrthogonalCandidates = (
       ),
     ];
   }
+
   const authoredSign = target[axis] > source[axis] ? 1 : -1;
   const sourceSize = horizontal ? sourceBounds.width : sourceBounds.height,
     targetSize = horizontal ? targetBounds.width : targetBounds.height;
@@ -111,6 +118,7 @@ export const createFlowOrthogonalCandidates = (
     start = source[axis];
     end = target[axis];
   }
+
   return (relation.routing.turnPosition === undefined ? [0.5, 0.25, 0.75] : [relation.routing.turnPosition]).map(
     fraction => {
       const middle = start + (end - start) * fraction + laneOffset;
@@ -128,6 +136,7 @@ const obstacleIntervals = (
 ): Array<readonly [number, number]> => {
   const intervals: Array<[number, number]> = [];
   let travelled = 0;
+
   for (let index = 1; index < points.length; index++) {
     const from = points[index - 1],
       to = points[index],
@@ -135,6 +144,7 @@ const obstacleIntervals = (
       axis = horizontal ? 0 : 1;
     const length = Math.abs(to[axis] - from[axis]);
     if (length === 0) continue;
+
     const fixed = horizontal ? from[1] : from[0],
       fixedMin = horizontal ? box.y : box.x,
       fixedMax = fixedMin + (horizontal ? box.height : box.width);
@@ -151,8 +161,10 @@ const obstacleIntervals = (
       if (previous && Math.abs(previous[1] - start) <= DEFAULT_EPSILON) previous[1] = end;
       else intervals.push([start, end]);
     }
+
     travelled += length;
   }
+
   return intervals.filter(
     ([start, end]) =>
       !(exemptStart && start <= DEFAULT_EPSILON) && !(exemptEnd && Math.abs(end - travelled) <= DEFAULT_EPSILON),
@@ -170,6 +182,7 @@ export const evaluateFlowOrthogonalConflicts = (
     penetration = 0,
     labelConflicts = 0;
   const labelBounds = flowRouteLabelBounds(route, relation);
+
   for (const obstacle of obstacles) {
     const intervals = obstacleIntervals(
       route.points,
@@ -181,9 +194,11 @@ export const evaluateFlowOrthogonalConflicts = (
     penetration += intervals.reduce((total, [start, end]) => total + end - start, 0);
     if (labelBounds && doFlowBoundsOverlap(labelBounds, obstacle.bounds)) labelConflicts++;
   }
+
   for (const label of labels) {
     if (obstacleIntervals(route.points, label.bounds).length > 0) labelConflicts++;
     if (labelBounds && doFlowBoundsOverlap(labelBounds, label.bounds)) labelConflicts++;
   }
+
   return { score: [nodes, penetration, labelConflicts] as const, labelBounds };
 };

@@ -22,6 +22,7 @@ describe('Standard Hexagon controls', () => {
     expect(hexagonEn.canonicalValues).toEqual(hexagonZh.canonicalValues);
 
     const canonicalIR = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null).ir;
+
     expect(JSON.stringify(canonicalIR)).toContain('"shoulderDepth":12');
     expect(JSON.stringify(canonicalIR)).not.toContain('shoulderRatio');
   });
